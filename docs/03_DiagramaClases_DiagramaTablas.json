@@ -1,0 +1,1566 @@
+{
+  "version": "30.3.11",
+  "pages": [
+    {
+      "id": "XTUcpaMec4YFpWmvUqpp",
+      "name": "Diagrama de Clases",
+      "cells": [
+        {
+          "id": "1",
+          "type": "layer"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-16",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-1"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-1",
+          "type": "node",
+          "parent": "1",
+          "label": "Administrador + nivelAcceso: NivelAcceso\n + fechaUltimoAccesoPanel: Date\n + estadoAdmin: EstadoAdmin\n+ get/set\n+ tienePermiso(): Boolean\n+ cambiarNivelAcceso(): Void\n+ actualizarEstado(): Void",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Administrador</b></p><hr size=\"1\" style=\"border-style:solid;\">&nbsp;+&nbsp;<span style=\"background-color: transparent;\">nivelAcceso: NivelAcceso</span><div>&nbsp;+ fechaUltimoAccesoPanel: Date</div><div>&nbsp;+ estadoAdmin: EstadoAdmin</div><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set</p><p style=\"margin:0px;margin-left:4px;\">+ tienePermiso(): Boolean</p><p style=\"margin:0px;margin-left:4px;\">+ cambiarNivelAcceso(): Void</p><p style=\"margin:0px;margin-left:4px;\">+ actualizarEstado(): Void</p>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-29",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-3",
+          "target": "pHJgLgODaCwc4kW-jP36-8"
+        },
+        {
+          "id": "O0UK8lt_9qqk1wkHm6Q7-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-3"
+        },
+        {
+          "id": "O0UK8lt_9qqk1wkHm6Q7-11",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-3",
+          "target": "pHJgLgODaCwc4kW-jP36-9"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-3",
+          "type": "node",
+          "parent": "1",
+          "label": "Usuario\n+ nombre: String\n+ apellido: String\n+ fechaNacimiento: Date\n+ genero: TipoGenero\n+ estado: EstadoCuenta\n + get/set \n + calcularEdad(): Integer + esMayorDeEdad(): Bool\n + cambiarEstado(): Void\n + actualizarPerfil(): Void\n + estaActivo(): Bool\n + agregarLista(): Void\n + removerLista(): Bool\n + buscarListaPorNombre(): Lista\n + tieneLista(): Bool\n + publicarCalificacion(): Void\n + removerCalificacion(): Bool\n + tieneCalificacionEn(): Bool\n + agregarNuevoChat(): Void\n + eliminarChat(): Bool",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Usuario</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ nombre: String</p><p style=\"margin:0px;margin-left:4px;\">+ apellido: String</p><p style=\"margin:0px;margin-left:4px;\">+ fechaNacimiento: Date</p><p style=\"margin:0px;margin-left:4px;\">+ genero: TipoGenero</p><p style=\"margin:0px;margin-left:4px;\">+ estado: EstadoCuenta</p><hr size=\"1\" style=\"border-style:solid;\"><div>&nbsp;+ get/set&nbsp;</div><div>&nbsp;+ calcularEdad(): Integer</div>&nbsp;+ esMayorDeEdad(): Bool<br>&nbsp;+ cambiarEstado(): Void<br>&nbsp;+ actualizarPerfil(): Void<br>&nbsp;+ estaActivo(): Bool<br>&nbsp;+ agregarLista(): Void<br>&nbsp;+ removerLista(): Bool<br>&nbsp;+ buscarListaPorNombre(): Lista<br>&nbsp;+ tieneLista(): Bool<br>&nbsp;+ publicarCalificacion(): Void<br>&nbsp;+ removerCalificacion(): Bool<br>&nbsp;+ tieneCalificacionEn(): Bool<br>&nbsp;+ agregarNuevoChat(): Void<br>&nbsp;+ eliminarChat(): Bool<br><br><div><br></div>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-5",
+          "type": "node",
+          "parent": "1",
+          "label": "<<abstract>>\nPersona\n+ idPersona: Integer\n+ nombreUsuario: String\n+ correo: String\n+ contraseña: String\n+ get/set\n+ verificarContrasena(): Bool\n+ actualizarCorreo(): Void\n+ actualizarNombreUsuario(): Void",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\">&lt;&lt;abstract&gt;&gt;<br><b>Persona</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idPersona: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ nombreUsuario: String</p><p style=\"margin:0px;margin-left:4px;\">+ correo: String</p><p style=\"margin:0px;margin-left:4px;\">+ contraseña: String</p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set</p><p style=\"margin:0px;margin-left:4px;\">+ verificarContrasena(): Bool</p><p style=\"margin:0px;margin-left:4px;\">+ actualizarCorreo(): Void<br>+ actualizarNombreUsuario(): Void</p>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-8",
+          "type": "node",
+          "parent": "1",
+          "label": "Calificacion\n+ idCalificacion: Integer\n+ valor: Integer\n+ fecha: Date\n+ activa: bool\n+ get/set\n+ adjuntarResena(): Void\n+ desvincularResena(): Void\n+ tieneResena(): Bool\n+ esValida(): Bool\n+ actualizarValor(): Void",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Calificacion</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idCalificacion: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ valor: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ fecha: Date</p><p style=\"margin:0px;margin-left:4px;\">+ activa: bool</p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set</p><p style=\"margin:0px;margin-left:4px;\">+ adjuntarResena(): Void<br>+ desvincularResena(): Void<br>+ tieneResena(): Bool<br>+ esValida(): Bool<br>+ actualizarValor(): Void<br><br><br></p>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-46",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-9",
+          "target": "pHJgLgODaCwc4kW-jP36-20"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-9",
+          "type": "node",
+          "parent": "1",
+          "label": "Lista\n+ idLista: Integer\n+ nombre: String\n+ tipo: TipoLista\n+ activa: bool\n + get/set + agregarItem(): Void\n + removerItem(): Bool\n + contieneItem(): Bool\n + vaciar(): Void\n + obtenerCantidadItems(): Integer\n + renombrar(): Bool\n + esPredeterminada(): Bool\n + estaActiva(): Bool + bajaLista(): Bool",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Lista</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idLista: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ nombre: String</p><p style=\"margin:0px;margin-left:4px;\">+ tipo: TipoLista</p><p style=\"margin:0px;margin-left:4px;\">+ activa: bool</p><hr size=\"1\" style=\"border-style:solid;\"><div>&nbsp;+ get/set</div>&nbsp;+ agregarItem(): Void<br>&nbsp;+ removerItem(): Bool<br>&nbsp;+ contieneItem(): Bool<br>&nbsp;+ vaciar(): Void<br>&nbsp;+ obtenerCantidadItems(): Integer<br>&nbsp;+ renombrar(): Bool<br><div>&nbsp;+ esPredeterminada(): Bool</div><div>&nbsp;+ estaActiva(): Bool</div>&nbsp;+ bajaLista(): Bool"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-41",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-10",
+          "target": "pHJgLgODaCwc4kW-jP36-8"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-10",
+          "type": "node",
+          "parent": "1",
+          "label": "Reseña\n + idResena: Integer\n + texto: String\n + fecha: Date\n + activa: bool\n+ get/set\n+ editarContenido(): Void\n+ eliminarReseña(): Void",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Reseña</b></p><hr size=\"1\" style=\"border-style:solid;\"><div>&nbsp;+ idResena: Integer</div><div>&nbsp;+ texto: String</div><div>&nbsp;+ fecha: Date</div><div>&nbsp;+ activa: bool</div><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set</p><p style=\"margin:0px;margin-left:4px;\">+ editarContenido(): Void<br>+ eliminarReseña(): Void<br><br><br></p>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-35",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-11",
+          "target": "pHJgLgODaCwc4kW-jP36-12"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-11",
+          "type": "node",
+          "parent": "1",
+          "label": "Chat\n+ idChat: Integer\n+ titulo: String\n+ contexto: Map <String, Object>\n+ fecha: Date\n+ activo: Bool\n+ get/set\n+ agregarMensaje(): Void\n+ obtenerHistorialCronologico(): List<Mensaje>\n+ obtenerUltimoMensaje(): Mensaje\n+ actualizarContexto(): Void\n+ estaActivo(): Bool\n+ cerrarConversacion(): Void",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Chat</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idChat: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ titulo: String</p><p style=\"margin:0px;margin-left:4px;\">+ contexto: Map &lt;String, Object&gt;</p><p style=\"margin:0px;margin-left:4px;\">+ fecha: Date</p><p style=\"margin:0px;margin-left:4px;\">+ activo: Bool</p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set<br>+ agregarMensaje(): Void<br>+ obtenerHistorialCronologico(): List&lt;Mensaje&gt;<br>+ obtenerUltimoMensaje(): Mensaje<br>+ actualizarContexto(): Void<br>+ estaActivo(): Bool<br>+ cerrarConversacion(): Void<br><br></p>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-12",
+          "type": "node",
+          "parent": "1",
+          "label": "Mensaje\n+ idMensaje: Integer\n+ texto: String\n+ autor: TipoAutor\n+ fecha: Date\n+ hora: Time\n+ get/set\n+ esDelUsuario(): Bool",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Mensaje</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idMensaje: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ texto: String</p><p style=\"margin:0px;margin-left:4px;\">+ autor: TipoAutor</p><p style=\"margin:0px;margin-left:4px;\">+ fecha: Date</p><p style=\"margin:0px;margin-left:4px;\">+ hora: Time</p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set</p><p style=\"margin:0px;margin-left:4px;\">+ esDelUsuario(): Bool</p>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-20",
+          "type": "node",
+          "parent": "1",
+          "label": "ProduccionAudiovisual\n+ idProduccion: Integer\n+ idTMDB: Integer\n+ tipo: TipoProduccion\n+ titulo: String\n+ poster: String\n+ sinopsis: String\n+ fechaLanzamiento: Date\n+ reparto: List <String>\n+ directores: List <String>\n+ estatus: String\n+ generos: List <String>\n+ calificacionPromedio: Float\n+ cantidadTemporadas: Integer\n+ cantidadEpisodios: Integer\n+ duracion: Integer\n+ get/set\n+ actualizarDatosDesdeTMDB(): Void\n+ tieneGenero(): Bool\n+ agregarCalificacion(): Void\n+ removerCalificacion(): Void\n+ calcularCalificacionPromedioLocal(): Float\n+ obtenerCantidadCalificaciones(): Integer\n+ obtenerDuracionFormateada(): String\n+ obtenerTotalCapitulos(): Integer",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>ProduccionAudiovisual</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idProduccion: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ idTMDB: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ tipo: TipoProduccion</p><p style=\"margin:0px;margin-left:4px;\">+ titulo: String</p><p style=\"margin:0px;margin-left:4px;\">+ poster: String</p><p style=\"margin:0px;margin-left:4px;\">+ sinopsis: String</p><p style=\"margin:0px;margin-left:4px;\">+ fechaLanzamiento: Date</p><p style=\"margin:0px;margin-left:4px;\">+ reparto: List &lt;String&gt;</p><p style=\"margin:0px;margin-left:4px;\">+ directores: List &lt;String&gt;</p><p style=\"margin:0px;margin-left:4px;\">+ estatus: String</p><p style=\"margin:0px;margin-left:4px;\">+ generos: List &lt;String&gt;</p><p style=\"margin:0px;margin-left:4px;\">+ calificacionPromedio: Float</p><p style=\"margin: 0px 0px 0px 4px;\">+ cantidadTemporadas: Integer</p><p style=\"margin: 0px 0px 0px 4px;\">+ cantidadEpisodios: Integer</p><p style=\"margin: 0px 0px 0px 4px;\">+ duracion: Integer</p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set<br>+ actualizarDatosDesdeTMDB(): Void<br>+ tieneGenero(): Bool<br>+ agregarCalificacion(): Void<br>+ removerCalificacion(): Void<br>+ calcularCalificacionPromedioLocal(): Float<br>+ obtenerCantidadCalificaciones(): Integer<br>+ obtenerDuracionFormateada(): String</p><p style=\"margin:0px;margin-left:4px;\">+ obtenerTotalCapitulos(): Integer<br></p>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-50",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nEstadoCuenta",
+          "html": "&lt;&lt;enumeration&gt;&gt;<br><b>EstadoCuenta</b>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-51",
+          "type": "node",
+          "parent": "pHJgLgODaCwc4kW-jP36-50",
+          "label": "PendienteConfirmacion\nActiva\nBaja",
+          "html": "<div>PendienteConfirmacion</div><div>Activa</div><div>Baja</div>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-55",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nTipoLista",
+          "html": "&lt;&lt;enumeration&gt;&gt;<br><b>TipoLista</b>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-56",
+          "type": "node",
+          "parent": "pHJgLgODaCwc4kW-jP36-55",
+          "label": "Predeterminada\nPersonalizada",
+          "html": "<div>Predeterminada</div><div>Personalizada</div>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-57",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nTipoAutor",
+          "html": "&lt;&lt;enumeration&gt;&gt;<br><b>TipoAutor</b>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-58",
+          "type": "node",
+          "parent": "pHJgLgODaCwc4kW-jP36-57",
+          "label": "Usuario\nChatbot",
+          "html": "<div>Usuario</div><div>Chatbot</div>"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-59",
+          "type": "node",
+          "parent": "1",
+          "label": "0..*"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-60",
+          "type": "node",
+          "parent": "1",
+          "label": "0..1"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-61",
+          "type": "node",
+          "parent": "1",
+          "label": "1..1"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-63",
+          "type": "node",
+          "parent": "1",
+          "label": "1..1"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-66",
+          "type": "node",
+          "parent": "1",
+          "label": "La relación entre reseña y calificación debería ser bidireccional para permitir la gestión de reseñas del administrador, de esta manera, puede conocer el usuario navegando: reseña, calificación, usuario"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-67",
+          "type": "node",
+          "parent": "1",
+          "label": "0..*"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-68",
+          "type": "node",
+          "parent": "1",
+          "label": "1..1"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-69",
+          "type": "node",
+          "parent": "1",
+          "label": "3..*"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-70",
+          "type": "node",
+          "parent": "1",
+          "label": "Cada usuario tiene por defecto las listas de Vistos, Pendientes y Favoritos, las cuales no se pueden eliminar. Luego, puede tener tantas listas Personalizadas como quiera"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-71",
+          "type": "node",
+          "parent": "1",
+          "label": "1..1"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-73",
+          "type": "node",
+          "parent": "1",
+          "label": "0..*"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-74",
+          "type": "node",
+          "parent": "1",
+          "label": "0..*"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-75",
+          "type": "node",
+          "parent": "1",
+          "label": "1..1"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-76",
+          "type": "node",
+          "parent": "1",
+          "label": "1..*"
+        },
+        {
+          "id": "pHJgLgODaCwc4kW-jP36-77",
+          "type": "node",
+          "parent": "1",
+          "label": "1..1"
+        },
+        {
+          "id": "dCti9H-oTTEsim4jFuGA-1",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nTipoGenero",
+          "html": "&lt;&lt;enumeration&gt;&gt;<br><b>TipoGenero</b>"
+        },
+        {
+          "id": "dCti9H-oTTEsim4jFuGA-2",
+          "type": "node",
+          "parent": "dCti9H-oTTEsim4jFuGA-1",
+          "label": "Masculino\nFemenino\nNoEspecifica",
+          "html": "<div>Masculino</div><div>Femenino</div><div>NoEspecifica</div>"
+        },
+        {
+          "id": "O0UK8lt_9qqk1wkHm6Q7-9",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-3",
+          "target": "pHJgLgODaCwc4kW-jP36-11"
+        },
+        {
+          "id": "O0UK8lt_9qqk1wkHm6Q7-19",
+          "type": "edge",
+          "parent": "1",
+          "source": "pHJgLgODaCwc4kW-jP36-8"
+        },
+        {
+          "id": "O0UK8lt_9qqk1wkHm6Q7-22",
+          "type": "node",
+          "parent": "1",
+          "label": "0..*"
+        },
+        {
+          "id": "og_afij2blP1Dtuflzz3-2",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nTipoProduccion",
+          "html": "&lt;&lt;enumeration&gt;&gt;<br><b>TipoProduccion</b>"
+        },
+        {
+          "id": "og_afij2blP1Dtuflzz3-3",
+          "type": "node",
+          "parent": "og_afij2blP1Dtuflzz3-2",
+          "label": "Pelicula\nSerie",
+          "html": "<div>Pelicula</div><div>Serie</div>"
+        },
+        {
+          "id": "og_afij2blP1Dtuflzz3-4",
+          "type": "node",
+          "parent": "1",
+          "label": "Se descartó la herencia entre ProducciónAudiovisual, Película y Serie porque no existe comportamiento diferenciado que justifique subclases. Además, los IDs de TMDB no garantizan unicidad entre películas y series, lo que volvería más complejo el manejo de claves y referencias. Unificar ambos tipos en una única entidad con un atributo ‘tipo’ permite un diseño más simple, consistente y adecuado al alcance del proyecto."
+        },
+        {
+          "id": "mirV_Aq12cMjePUios5g-1",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nNivelAcceso",
+          "html": "&lt;&lt;enumeration&gt;&gt;<br><b>NivelAcceso</b>"
+        },
+        {
+          "id": "mirV_Aq12cMjePUios5g-2",
+          "type": "node",
+          "parent": "mirV_Aq12cMjePUios5g-1",
+          "label": "Básico\nIntermedio\nAvanzado",
+          "html": "<div>Básico</div><div>Intermedio</div><div>Avanzado</div>"
+        },
+        {
+          "id": "mirV_Aq12cMjePUios5g-3",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nEstadoAdmin",
+          "html": "&lt;&lt;enumeration&gt;&gt;<br><b>EstadoAdmin</b>"
+        },
+        {
+          "id": "mirV_Aq12cMjePUios5g-4",
+          "type": "node",
+          "parent": "mirV_Aq12cMjePUios5g-3",
+          "label": "Activo\nSuspendido",
+          "html": "Activo<div>Suspendido</div>"
+        }
+      ]
+    },
+    {
+      "id": "8VYLNCuHE1u-VRpP7H_x",
+      "name": "Diagrama de Tablas",
+      "cells": [
+        {
+          "id": "1",
+          "type": "layer"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-16",
+          "type": "node",
+          "parent": "1",
+          "label": "Persona"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-17",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-16"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-18",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-17",
+          "label": "PK"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-19",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-17",
+          "label": "idPersona\t\tINTEGER",
+          "html": "idPersona<span style=\"white-space: pre;\">\t<span style=\"white-space: pre;\">\t</span></span><span style=\"font-weight: normal;\">INTEGER</span>"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-20",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-16"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-21",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-20",
+          "label": "A"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-22",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-20",
+          "label": "nombreUsuario\tVARCHAR(25)",
+          "html": "nombreUsuario<span style=\"white-space: pre;\">\t</span>VARCHAR(25)"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-23",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-16"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-24",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-23",
+          "label": "A"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-25",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-23",
+          "label": "correo\t\t\tVARCHAR(100)",
+          "html": "correo<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(100)"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-26",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-16"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-27",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-26",
+          "label": "A"
+        },
+        {
+          "id": "qslf3pnlIVyrfMHXXjy5-28",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-26",
+          "label": "contraseña\t\tVARCHAR(255)",
+          "html": "contraseña<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(50)"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-2",
+          "type": "node",
+          "parent": "1",
+          "label": "Administrador"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-3",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-2"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-4",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-3",
+          "label": "PK\nFK",
+          "html": "<div>PK</div><div>FK</div>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-5",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-3",
+          "label": "idPersona\tINTEGER",
+          "html": "idPersona<span style=\"white-space: pre;\">\tINTEGER</span>"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-1",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-2"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-2",
+          "type": "node",
+          "parent": "lvNapJB-6nhzquTW0aYq-1",
+          "label": "A"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-3",
+          "type": "node",
+          "parent": "lvNapJB-6nhzquTW0aYq-1",
+          "label": "nivelAcceso           VARCHAR(25)"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-4",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-2"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-5",
+          "type": "node",
+          "parent": "lvNapJB-6nhzquTW0aYq-4",
+          "label": "A"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-6",
+          "type": "node",
+          "parent": "lvNapJB-6nhzquTW0aYq-4",
+          "label": "fechaUltimoAccesoPanel    DATE"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-7",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-2"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-8",
+          "type": "node",
+          "parent": "lvNapJB-6nhzquTW0aYq-7",
+          "label": "A"
+        },
+        {
+          "id": "lvNapJB-6nhzquTW0aYq-9",
+          "type": "node",
+          "parent": "lvNapJB-6nhzquTW0aYq-7",
+          "label": "estadoAdmin        VARCHAR(25)    "
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-15",
+          "type": "node",
+          "parent": "1",
+          "label": "Usuario"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-16",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-17",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-16",
+          "label": "PK\nFK",
+          "html": "<div>PK</div><div>FK</div>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-18",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-16",
+          "label": "idPersona\tINTEGER",
+          "html": "idPersona<span style=\"white-space: pre;\">\t</span><span style=\"font-weight: normal;\">INTEGER</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-19",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-20",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-19",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-21",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-19",
+          "label": "nombre\t\tVARCHAR(50)",
+          "html": "nombre<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(50)<span style=\"white-space: pre;\">\t</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-22",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-23",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-22",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-24",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-22",
+          "label": "apellido\t\tVARCHAR(50)",
+          "html": "apellido<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(25)"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-25",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-26",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-25",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-27",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-25",
+          "label": "fechaNacimiento\tDATE",
+          "html": "fechaNacimiento<span style=\"white-space: pre;\">\t</span>DATE"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-28",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-29",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-28",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-30",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-28",
+          "label": "genero             VARCHAR(25)"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-31",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-32",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-31",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-33",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-31",
+          "label": "estado             VARCHAR(25)"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-53",
+          "type": "node",
+          "parent": "1",
+          "label": "Reseña"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-54",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-53"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-55",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-54",
+          "label": "PK"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-56",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-54",
+          "label": "idResena\tINTEGER",
+          "html": "idResena<span style=\"white-space: pre;\">\t<span style=\"font-weight: normal;\">INTEGER</span></span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-57",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-53"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-58",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-57",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-59",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-57",
+          "label": "texto\t\tVARCHAR(250)",
+          "html": "<div>texto<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(250)</div>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-60",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-53"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-61",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-60",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-62",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-60",
+          "label": "fecha\t\tDATE",
+          "html": "fecha<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>DATE"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-63",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-53"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-64",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-63",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-65",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-63",
+          "label": "activa\t\tBOOLEAN",
+          "html": "activa<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>BOOLEAN"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-123",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-53"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-124",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-123",
+          "label": "FK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-125",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-123",
+          "label": "idCalificacion\tINTEGER",
+          "html": "idCalificacion<span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-66",
+          "type": "node",
+          "parent": "1",
+          "label": "Calificacion"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-67",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-66"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-68",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-67",
+          "label": "PK"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-69",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-67",
+          "label": "idCalificacion\tINTEGER",
+          "html": "idCalificacion<span style=\"white-space: pre;\">\t</span><span style=\"font-weight: 400;\">INTEGER</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-70",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-66"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-71",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-70",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-72",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-70",
+          "label": "valor\t\t\tINTEGER",
+          "html": "valor<span style=\"white-space: pre;\">\t<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>I</span>NTEGER<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-73",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-66"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-74",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-73",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-75",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-73",
+          "label": "fecha\t\t\tDATE",
+          "html": "fecha<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>DATE<span style=\"white-space: pre;\">\t</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-76",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-66"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-77",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-76",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-78",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-76",
+          "label": "activa\t\t\tBOOLEAN",
+          "html": "activa<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>BOOLEAN"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-117",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-66"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-118",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-117",
+          "label": "FK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-119",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-117",
+          "label": "idUsuario\t\tINTEGER",
+          "html": "idUsuario<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-120",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-66"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-121",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-120",
+          "label": "FK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-122",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-120",
+          "label": "idProduccion\t\tINTEGER",
+          "html": "idProduccion<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-79",
+          "type": "node",
+          "parent": "1",
+          "label": "Lista"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-80",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-79"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-81",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-80",
+          "label": "PK"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-82",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-80",
+          "label": "idLista\t\tINTEGER",
+          "html": "idLista<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"font-weight: normal;\">INTEGER</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-83",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-79"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-84",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-83",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-85",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-83",
+          "label": "nombre\t\tVARCHAR(80)",
+          "html": "nombre<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\tVARCHAR(80)</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-86",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-79"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-87",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-86",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-88",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-86",
+          "label": "tipo\t\t\tVARCHAR(25)",
+          "html": "tipo<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\tVARCHAR(25)</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-89",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-79"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-90",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-89",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-91",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-89",
+          "label": "activa\t\tBOOLEAN",
+          "html": "activa<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>BOOLEAN"
+        },
+        {
+          "id": "0oLm-J3TMmj14YiuKMrC-7",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-79"
+        },
+        {
+          "id": "0oLm-J3TMmj14YiuKMrC-8",
+          "type": "node",
+          "parent": "0oLm-J3TMmj14YiuKMrC-7",
+          "label": "FK"
+        },
+        {
+          "id": "0oLm-J3TMmj14YiuKMrC-9",
+          "type": "node",
+          "parent": "0oLm-J3TMmj14YiuKMrC-7",
+          "label": "idUsuario\tINTEGER",
+          "html": "idUsuario<span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "wjkO4kUsS5-oM0YM-hZu-2",
+          "type": "edge",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-79",
+          "source": "0oLm-J3TMmj14YiuKMrC-7",
+          "target": "0oLm-J3TMmj14YiuKMrC-7"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-92",
+          "type": "node",
+          "parent": "1",
+          "label": "Chat"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-93",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-92"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-94",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-93",
+          "label": "PK"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-95",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-93",
+          "label": "idChat\t\tINTEGER",
+          "html": "idChat<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"font-weight: normal;\">INTEGER</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-96",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-92"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-97",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-96",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-98",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-96",
+          "label": "titulo\t\tVARCHAR(25)",
+          "html": "titulo<span style=\"white-space: pre;\">\t<span style=\"white-space: pre;\">\t</span></span>VARCHAR(25)"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-99",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-92"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-100",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-99",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-101",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-99",
+          "label": "contexto\t\tJSONB",
+          "html": "contexto<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\tJ</span>SONB<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-102",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-92"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-103",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-102",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-104",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-102",
+          "label": "fecha\t\tDATE",
+          "html": "fecha<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>DATE"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-105",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-92"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-106",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-105",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-107",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-105",
+"label": "activo               BOOLEAN"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-114",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-92"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-115",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-114",
+          "label": "FK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-116",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-114",
+          "label": "idUsuario\tINTEGER",
+          "html": "idUsuario<span style=\"white-space: pre;\">\tINTEGER</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-108",
+          "type": "node",
+          "parent": "1",
+          "label": "Mensaje"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-109",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-108"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-110",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-109",
+          "label": "PK"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-111",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-109",
+          "label": "idMensaje\tINTEGER",
+          "html": "idMensaje<span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-112",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-108"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-113",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-112",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-114",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-112",
+          "label": "texto\t\tVARCHAR(250)",
+          "html": "<span style=\"white-space: pre;\">texto<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(250)</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-115",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-108"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-116",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-115",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-117",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-115",
+          "label": "autor\t\tVARCHAR(25)",
+          "html": "autor<span style=\"white-space: pre;\">\t<span style=\"white-space: pre;\">\t</span>VARCHAR(25)</span>"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-118",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-108"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-119",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-118",
+          "label": "A"
+        },
+        {
+          "id": "ge8WpLXWiE9YZQpu8l5J-120",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-118",
+          "label": "fechaHora\tTIMESTAMP",
+          "html": "fecha<span style=\"white-space: pre;\">Hora\tTIMESTAMP</span>"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-105",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-108"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-106",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-105",
+          "label": "FK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-107",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-105",
+          "label": "idChat\t\tINTEGER",
+          "html": "idChat<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-1",
+          "type": "node",
+          "parent": "1",
+          "label": "Tiene"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-2",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-1"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-3",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-2",
+          "label": "PKFK",
+          "html": "<div>PK</div>FK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-4",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-2",
+          "label": "idLista\t\tINTEGER",
+          "html": "idLista<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-97",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-1"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-98",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-97",
+          "label": "PKFK",
+          "html": "<div>PK</div>FK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-99",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-97",
+          "label": "idProduccion\tINTEGER",
+          "html": "idProduccion<span style=\"white-space: pre;\">\t</span>INTEGER"
+        },
+        {
+          "id": "tiene-fechaAgregado-grp",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-1"
+        },
+        {
+          "id": "tiene-fechaAgregado-lbl",
+          "type": "node",
+          "parent": "tiene-fechaAgregado-grp",
+          "label": "A"
+        },
+        {
+          "id": "tiene-fechaAgregado-val",
+          "type": "node",
+          "parent": "tiene-fechaAgregado-grp",
+          "label": "fechaAgregado\tTIMESTAMP"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-37",
+          "type": "node",
+          "parent": "1",
+          "label": "ProduccionAudiovisual"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-38",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-39",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-38",
+          "label": "PK"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-40",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-38",
+          "label": "idProduccion\t\tINTEGER",
+          "html": "idProduccion<span style=\"white-space: pre; font-weight: normal;\">\t<span style=\"white-space: pre;\">\t</span></span><span style=\"font-weight: normal;\">INTEGER</span>"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-41",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-42",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-41",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-43",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-41",
+          "label": "idTMDB\t\t\tINTEGER",
+          "html": "idTMDB<span style=\"white-space: pre;\"><span style=\"white-space: pre;\"><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t<span style=\"white-space: pre;\">\t</span></span>INTEGER\t</span><span style=\"white-space: pre;\">\t</span>\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-44",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-45",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-44",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-46",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-44",
+          "label": "tipo\t\t\t\tVARCHAR(25)",
+          "html": "tipo<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t<span style=\"white-space: pre;\">\t</span>VARCHAR(25)</span>"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-47",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-48",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-47",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-49",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-47",
+          "label": "titulo\t\t\tVARCHAR(100)",
+          "html": "titulo<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t<span style=\"white-space: pre;\">\t</span>VARCHAR(100)</span><span style=\"white-space: pre;\">\t</span>"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-60",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-61",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-60",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-62",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-60",
+          "label": "poster                      VARCHAR(250)"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-63",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-64",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-63",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-65",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-63",
+          "label": "sinopsis                   VARCHAR(250)"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-66",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-67",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-66",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-68",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-66",
+          "label": "fechaLanzamiento        DATE"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-57",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-58",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-57",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-59",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-57",
+          "label": "reparto                    VARCHAR[ ]            "
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-54",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-55",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-54",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-56",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-54",
+          "label": "directores                VARCHAR[ ]"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-73",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-74",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-73",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-75",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-73",
+          "label": "estatus                    VARCHAR(25)"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-69",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-70",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-69",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-71",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-69",
+          "label": "generos                   VARCHAR[ ]"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-79",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-80",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-79",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-81",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-79",
+          "label": "calificacionPromedio    REAL"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-82",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-83",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-82",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-84",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-82",
+          "label": "cantidadTemporadas    INTEGER"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-76",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-77",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-76",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-78",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-76",
+          "label": "cantidadEspisodios       INTEGER"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-85",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-37"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-86",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-85",
+          "label": "A"
+        },
+        {
+          "id": "n4hznQhwUjweXsK5cbG3-87",
+          "type": "node",
+          "parent": "n4hznQhwUjweXsK5cbG3-85",
+          "label": "duracion                   INTEGER"
+        },
+        {
+          "id": "wjkO4kUsS5-oM0YM-hZu-3",
+          "type": "edge",
+          "parent": "1",
+          "source": "ge8WpLXWiE9YZQpu8l5J-25",
+          "target": "ge8WpLXWiE9YZQpu8l5J-80"
+        },
+        {
+          "id": "vGFozTbLufIQlt-C9oqT-5",
+          "type": "edge",
+          "parent": "1",
+          "target": "n4hznQhwUjweXsK5cbG3-114"
+        },
+        {
+          "id": "vGFozTbLufIQlt-C9oqT-6",
+          "type": "edge",
+          "parent": "1"
+        },
+        {
+          "id": "vGFozTbLufIQlt-C9oqT-7",
+          "type": "edge",
+          "parent": "1",
+          "target": "n4hznQhwUjweXsK5cbG3-120"
+        },
+        {
+          "id": "vGFozTbLufIQlt-C9oqT-8",
+          "type": "edge",
+          "parent": "1",
+          "target": "n4hznQhwUjweXsK5cbG3-105"
+        },
+        {
+          "id": "L4HEkXH9p7mNQGAopD94-5",
+          "type": "edge",
+          "parent": "1",
+          "source": "n4hznQhwUjweXsK5cbG3-114",
+          "target": "ge8WpLXWiE9YZQpu8l5J-108"
+        },
+        {
+          "id": "vGFozTbLufIQlt-C9oqT-17",
+          "type": "edge",
+          "parent": "1",
+          "source": "ge8WpLXWiE9YZQpu8l5J-66",
+          "target": "n4hznQhwUjweXsK5cbG3-123"
+        },
+        {
+          "id": "L4HEkXH9p7mNQGAopD94-10",
+          "type": "edge",
+          "parent": "1",
+          "source": "qslf3pnlIVyrfMHXXjy5-26",
+          "target": "ge8WpLXWiE9YZQpu8l5J-2"
+        },
+        {
+          "id": "L4HEkXH9p7mNQGAopD94-12",
+          "type": "edge",
+          "parent": "1",
+          "source": "qslf3pnlIVyrfMHXXjy5-26",
+          "target": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "L4HEkXH9p7mNQGAopD94-13",
+          "type": "node",
+          "parent": "1",
+          "label": "{disjoint}"
+        },
+        {
+          "id": "DMkF3kuSwAOmgM5O08PX-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "n4hznQhwUjweXsK5cbG3-66",
+          "target": "ge8WpLXWiE9YZQpu8l5J-70"
+        },
+        {
+          "id": "mzMEaoQ6UMtVuZaTvmNf-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "ge8WpLXWiE9YZQpu8l5J-22",
+          "target": "ge8WpLXWiE9YZQpu8l5J-92"
+        },
+        {
+          "id": "iE2hCi0kZ_yNfFYoHUwn-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "ge8WpLXWiE9YZQpu8l5J-19",
+          "target": "ge8WpLXWiE9YZQpu8l5J-70"
+        },
+        {
+          "id": "hRqMQdhpAHQ-3KgNcU1n-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "n4hznQhwUjweXsK5cbG3-2",
+          "target": "ge8WpLXWiE9YZQpu8l5J-86"
+        },
+        {
+          "id": "hRqMQdhpAHQ-3KgNcU1n-2",
+          "type": "edge",
+          "parent": "1"
+        },
+        {
+          "id": "vGFozTbLufIQlt-C9oqT-18",
+          "type": "edge",
+          "parent": "1",
+          "target": "n4hznQhwUjweXsK5cbG3-85"
+        }
+      ]
+    }
+  ]
+}
