@@ -2,8 +2,7 @@
 
 **FilmIA: Plataforma Web de Reseñas Cinematográficas con Recomendaciones Inteligentes**
 
-## Extra
-Proyecto dedicado a la obtención del título de **Analista Universitario en Sistemas de Información (UTN-FRSF)**, correspondiente a la materia **Seminario Integrador**.
+Se trata de un proyecto dedicado a la obtención del título de **Analista Universitario en Sistemas de Información (UTN-FRSF)**, correspondiente a la materia **Seminario Integrador**.
 
 ## Delimitación del problema / Fundamentación
 Muchas personas invierten demasiado tiempo en elegir qué ver entre la gran cantidad de películas y series disponibles. La falta de recomendaciones realmente personalizadas suele generar elecciones poco satisfactorias.
