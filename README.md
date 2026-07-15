@@ -14,8 +14,8 @@ Desarrollar una aplicación web integral para gestionar, calificar y recibir rec
 
 ### Objetivos específicos
 - Implementar registro, autenticación y gestión de usuarios.
-- Integrar un catálogo actualizado desde una base de datos externa (ej. TMDB).
-- Desarrollar reseñas, calificaciones por estrellas (1-5) y listas personalizadas.
+- Integrar un catálogo actualizado desde una base de datos externa (TMDB).
+- Desarrollar reseñas, calificaciones por estrellas (1-10) y listas personalizadas.
 - Implementar un chatbot LLM para recomendaciones contextuales y consultas sobre contenido audiovisual.
 
 ## Población objetivo

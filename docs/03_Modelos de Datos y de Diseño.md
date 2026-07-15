@@ -1,39 +1,98 @@
-﻿**SEMINARIO INTEGRADOR**
+# SEMINARIO INTEGRADOR
 
-| PLANTILLA 03: MODELOS DE DATOS Y DE DISEÃ‘O |
-| :---: |
+## PLANTILLA 03: MODELOS DE DATOS Y DE DISEÑO
 
-**TÃTULO DE LA IDEA/PROYECTO: FilmIA**
+**TÍTULO DE LA IDEA/PROYECTO: FilmIA**
 
-| Fecha de PresentaciÃ³n |
+| Fecha de Presentación |
 | :---: |
 | 12/12/2025 |
 
-| Integrantes del equipo de trabajo |
+### Integrantes del equipo de trabajo
+
+| Integrante |
 | :---- |
 | Debona, Marcos Joel |
-| Gaitan, Gonzalo AndrÃ©s |
+| Gaitan, Gonzalo Andrés |
 
-| 1\. Listado de modelos generados |
-| :---- |
-|  \- MODELO 1: Diagrama de Clases (estructura) \- MODELO 2: Diagrama de Tablas (datos)  |
+### 1. Listado de modelos generados
 
-| 2\. Modelo 1:  |
-| :---- |
+- **MODELO 1:** Diagrama de Clases (estructura)
+- **MODELO 2:** Diagrama de Tablas (datos)
 
-| 2.1 Modelo 1: GrÃ¡fico  |
-| :---- |
-| **Nota:** El Diagrama de Clases debe regenerarse desde el archivo `03_DiagramaClases_DiagramaTablas.json` (pÃ¡gina "Diagrama de Clases") para reflejar los cambios acordados. |
-| **2.2 Modelo 1: DescripciÃ³n y justificaciÃ³n de elementos mÃ¡s importantes** |
-| Relaciones: **Persona \- Administrador/Usuario:** Esta herencia fue realizada pensando al Administrador como una persona encargada de la moderaciÃ³n de reseÃ±as y gestiÃ³n de usuarios y al Usuario como un cliente tradicional de la plataforma. La implementaciÃ³n de las funcionalidades del Administrador estÃ¡ sujeta a viabilidad y anÃ¡lisis del alcance del proyecto. **Usuario \- Chat:** La cardinalidad se justifica en que un usuario pueda realizar consultas en diversos chats, permitiendo separar temas de conversaciÃ³n. Esta funcionalidad estÃ¡ sujeta a viabilidad y anÃ¡lisis del alcance del proyecto.  **Chat \- Mensaje:** La cardinalidad establecida indica que para que un chat efectivamente exista, primero debe enviarse un mensaje (consulta). A partir de ese momento comenzarÃ¡ a persistir la relaciÃ³n entre ambas entidades. En primera instancia, el usuario podrÃ¡ acceder a un chat vacÃ­o (solo vista), pero esto no implica que el chat exista lÃ³gicamente (en la BD), sino que Ã©ste se registrarÃ¡ una vez enviada la primera consulta, guardÃ¡ndose tambiÃ©n el mensaje. La relaciÃ³n se modela como composiciÃ³n porque un mensaje no puede existir sin un chat asociado sobre el cual fue enviado.  **Usuario \- CalificaciÃ³n:** La cardinalidad establecida permite que un usuario no tenga calificaciones asociadas (por ejemplo, al crear la cuenta) o tenga mÃºltiples calificaciones (cuenta con trayectoria en el sistema). **Usuario \- Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las listas de Vistos, Pendientes y Favoritos, las cuales no pueden ser eliminadas. AdemÃ¡s, cada usuario tiene la posibilidad de crear otras listas personalizadas.  **ReseÃ±a \- CalificaciÃ³n:** La cardinalidad establecida refleja que una calificaciÃ³n (numÃ©rica) opcionalmente puede tener una reseÃ±a (textual) asociada. Se modela como relaciÃ³n de composiciÃ³n dado que una reseÃ±a no puede existir sin su respectiva calificaciÃ³n.  **CalificaciÃ³n \- ProducciÃ³n Audiovisual:** La cardinalidad se debe a que una producciÃ³n puede tener mÃºltiples calificaciones (incluyendo cero) y, consecuentemente, mÃºltiples reseÃ±as. Por otro lado, cada calificaciÃ³n corresponde a una Ãºnica producciÃ³n audiovisual.  **Lista \- ProducciÃ³n Audiovisual:** La relaciÃ³n muchos a muchos se debe a que una pelÃ­cula o serie puede estar en mÃºltiples listas distintas simultÃ¡neamente. Del mismo modo, mÃºltiples listas pueden contener una misma producciÃ³n audiovisual. Observaciones: Se considera que hubiera sido conveniente para la especificaciÃ³n de los mÃ©todos haber realizado mockups (maquetas) con el objetivo de prever y evaluar de forma anticipada el ciclo de las relaciones y cÃ³mo estas pueden modificar los atributos internos de las entidades. Por cuestiones de tiempo no fue posible realizarlo, aunque estÃ¡ previsto para la entrega final. AdemÃ¡s, esto hubiera permitido analizar al detalle los atributos de las entidades en sÃ­ y agregar o eliminar segÃºn cada caso (por ejemplo, en la clase ProducciÃ³n Audiovisual). Se descartÃ³ la herencia entre ProducciÃ³n Audiovisual, PelÃ­cula y Serie porque no existe comportamiento diferenciado que justifique la creaciÃ³n de subclases. AdemÃ¡s, los IDs de TMDB no garantizan unicidad entre pelÃ­culas y series, lo que volverÃ­a mÃ¡s complejo el manejo de claves y referencias. Debido a esto, se unificaron ambos tipos en una Ãºnica entidad con un atributo â€œtipoâ€ que permite un diseÃ±o mÃ¡s simple. El desarrollo se fundamenta en una arquitectura MVC (Model-View-Controller) apoyada en un diseÃ±o por capas (Controller, Service, Repository, Entidades) para separar la lÃ³gica de negocio del origen de los datos. Las llamadas a datos se centralizan exclusivamente en la capa Repository, la cual gestionarÃ¡ 2 fuentes de informaciÃ³n distintas:  Repositorio Externo (API TMDB): Se utilizarÃ¡ para realizar consultas complejas de bÃºsqueda, filtrado y obtenciÃ³n de detalles respecto al catÃ¡logo global de peliculas y series.  Repositorio Local (base de datos propia): Se usarÃ¡ para la persistencia del dominio: Usuarios, Administradores, ReseÃ±as, Calificaciones, Chats (y Mensajes) y Listas.  Las pelÃ­culas y series se guardarÃ¡n en la base de datos local Ãºnicamente como referencias (datos esenciales como ID de TMDB, tÃ­tulo, pÃ³ster) cuando un usuario interactÃºe con ellas, por ejemplo, al agregarlas a una lista o calificarlas. Esto evita la duplicidad de la informaciÃ³n detallada que ya estÃ¡ disponible en la API de TMDB. En la entidad Mensaje, el atributo autor permite distinguir si el mensaje proviene del usuario o del chatbot, sin necesidad de crear una segunda entidad para manejar los roles dentro del chat.  |
+---
 
-| 3\. Modelo 2:  |
-| :---- |
+### 2. Modelo 1
 
-| 3.1 Modelo 2: GrÃ¡fico  |
-| :---- |
-| **Nota:** El Diagrama de Tablas debe regenerarse desde el archivo `03_DiagramaClases_DiagramaTablas.json` (pÃ¡gina "Diagrama de Tablas") para reflejar los cambios acordados. |
-| **3.2 Modelo 2: DescripciÃ³n y justificaciÃ³n de elementos mÃ¡s importantes** |
-| Relaciones: **Lista \- Produccion Audiovisual (tabla Tiene)**: Como la relaciÃ³n entre estas dos tablas es N a N, se crea la tabla intermedia â€œTieneâ€. Los campos idLista e idProduccion funcionan como PK compuesta y tambiÃ©n como FKs, lo que evita que una misma producciÃ³n se repita dentro de una lista y mantiene la integridad referencial. Adicionalmente, la tabla Tiene incluye el campo `fechaAgregado` (TIMESTAMP) para registrar el momento en que un Ã­tem fue aÃ±adido a una lista. **Usuario \- CalificaciÃ³n**: En CalificaciÃ³n se incluye como FK el idUsuario. Esto modela una relaciÃ³n 1 a N donde un usuario puede hacer varias calificaciones, pero cada calificaciÃ³n pertenece a un Ãºnico usuario. De esta forma, cualquier calificaciÃ³n siempre va a estar asociada a un usuario vÃ¡lido. **Usuario \- Lista**: La tabla Lista tiene una FK idUsuario, lo que indica que cada lista le pertenece al usuario que la creÃ³. Un usuario puede tener varias listas (tanto las predeterminadas como las personalizadas). **Usuario \- Chat:** Chat tambiÃ©n tiene una FK idUsuario, lo que muestra que cada chat es creado por un usuario en particular. Un usuario puede tener varios chats distintos. **Chat \- Mensaje**: Mensaje contiene una FK idChat, de modo que todos los mensajes pertenecen a un chat especÃ­fico. Un chat puede tener muchos mensajes, pero cada mensaje se guarda siempre dentro de un Ãºnico chat. **CalificaciÃ³n \- ReseÃ±a**: La relaciÃ³n se maneja como una composiciÃ³n: la ReseÃ±a depende de la CalificaciÃ³n. La FK idCalificacion en ReseÃ±a hace que una reseÃ±a no pueda existir por sÃ­ sola; siempre surge a partir de una calificaciÃ³n. La CalificaciÃ³n puede existir sin reseÃ±a, pero no al revÃ©s. **CalificaciÃ³n \- Produccion Audiovisual**: Toda calificaciÃ³n debe estar asociada a una producciÃ³n mediante la FK idProduccion. Esto permite que una producciÃ³n tenga muchas calificaciones, pero cada calificaciÃ³n corresponde a una Ãºnica producciÃ³n. **Produccion Audiovisual (entidad base)**: Esta tabla reÃºne todos los datos sincronizados desde TMDB (tÃ­tulo, pÃ³ster, gÃ©neros, reparto, duraciÃ³n, temporadas, etc.). Desde acÃ¡ se relacionan tanto las calificaciones como los Ã­tems que aparecen en las distintas listas. Observaciones: En la relaciÃ³n de herencia entre Persona y Usuario se usa el mismo idPersona como PK en Usuario y Administrador, y a la vez como FK hacia Persona. De esta forma, cualquier Usuario o Administrador siempre deriva de una Persona existente. El diagrama marca la especializaciÃ³n como disjoint, dando a entender que una Persona puede ser Usuario o Administrador, pero no ambas cosas a la vez. El campo â€œcontextoâ€ del Chat se guarda como JSONB (JSON Binary) porque la informaciÃ³n almacenada puede variar considerablemente segÃºn el desarrollo de la conversaciÃ³n y no siempre sigue una estructura fija. De esta forma se pueden guardar cosas como un resumen del historial, parÃ¡metros que el chatbot viene usando o cualquier otro dato que necesite en el momento, sin crear tablas nuevas solo para eso. AdemÃ¡s, PostgreSQL (la BD que tenemos pensado usar) permite buscar y actualizar partes del JSONB sin problemas, cuando con JSON hay ciertas limitantes, asÃ­ que es una forma prÃ¡ctica y flexible de manejar estos datos sin complicar el modelo. |
+#### 2.1 Modelo 1: Gráfico
 
+> **Nota:** El Diagrama de Clases debe regenerarse desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases") para reflejar los cambios acordados.
 
+#### 2.2 Modelo 1: Descripción y justificación de elementos más importantes
+
+**Relaciones:**
+
+- **Persona - Administrador/Usuario:** Esta herencia fue realizada pensando al Administrador como una persona encargada de la moderación de reseñas y gestión de usuarios y al Usuario como un cliente tradicional de la plataforma. La implementación de las funcionalidades del Administrador está sujeta a viabilidad y análisis del alcance del proyecto.
+
+- **Usuario - Chat:** La cardinalidad se justifica en que un usuario pueda realizar consultas en diversos chats, permitiendo separar temas de conversación. Esta funcionalidad está sujeta a viabilidad y análisis del alcance del proyecto.
+
+- **Chat - Mensaje:** La cardinalidad establecida indica que para que un chat efectivamente exista, primero debe enviarse un mensaje (consulta). A partir de ese momento comenzará a persistir la relación entre ambas entidades. En primera instancia, el usuario podrá acceder a un chat vacío (solo vista), pero esto no implica que el chat exista lógicamente (en la BD), sino que éste se registrará una vez enviada la primera consulta, guardándose también el mensaje. La relación se modela como composición porque un mensaje no puede existir sin un chat asociado sobre el cual fue enviado.
+
+- **Usuario - Calificación:** La cardinalidad establecida permite que un usuario no tenga calificaciones asociadas (por ejemplo, al crear la cuenta) o tenga múltiples calificaciones (cuenta con trayectoria en el sistema).
+
+- **Usuario - Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las listas de Vistos, Pendientes y Favoritos, las cuales no pueden ser eliminadas. Además, cada usuario tiene la posibilidad de crear otras listas personalizadas.
+
+- **Reseña - Calificación:** La cardinalidad establecida refleja que una calificación (numérica) opcionalmente puede tener una reseña (textual) asociada. Se modela como relación de composición dado que una reseña no puede existir sin su respectiva calificación.
+
+- **Calificación - Producción Audiovisual:** La cardinalidad se debe a que una producción puede tener múltiples calificaciones (incluyendo cero) y, consecuentemente, múltiples reseñas. Por otro lado, cada calificación corresponde a una única producción audiovisual.
+
+- **Lista - Producción Audiovisual:** La relación muchos a muchos se debe a que una película o serie puede estar en múltiples listas distintas simultáneamente. Del mismo modo, múltiples listas pueden contener una misma producción audiovisual.
+
+**Observaciones:**
+
+Se considera que hubiera sido conveniente para la especificación de los métodos haber realizado mockups (maquetas) con el objetivo de prever y evaluar de forma anticipada el ciclo de las relaciones y cómo estas pueden modificar los atributos internos de las entidades. Por cuestiones de tiempo no fue posible realizarlo, aunque está previsto para la entrega final. Además, esto hubiera permitido analizar al detalle los atributos de las entidades en sí y agregar o eliminar según cada caso (por ejemplo, en la clase Producción Audiovisual).
+
+Se descartó la herencia entre Producción Audiovisual, Película y Serie porque no existe comportamiento diferenciado que justifique la creación de subclases. Además, los IDs de TMDB no garantizan unicidad entre películas y series, lo que volvería más complejo el manejo de claves y referencias. Debido a esto, se unificaron ambos tipos en una única entidad con un atributo "tipo" que permite un diseño más simple.
+
+El desarrollo se fundamenta en una arquitectura MVC (Model-View-Controller) apoyada en un diseño por capas (Controller, Service, Repository, Entidades) para separar la lógica de negocio del origen de los datos. Las llamadas a datos se centralizan exclusivamente en la capa Repository, la cual gestionará 2 fuentes de información distintas:
+
+- **Repositorio Externo (API TMDB):** Se utilizará para realizar consultas complejas de búsqueda, filtrado y obtención de detalles respecto al catálogo global de peliculas y series.
+- **Repositorio Local (base de datos propia):** Se usará para la persistencia del dominio: Usuarios, Administradores, Reseñas, Calificaciones, Chats (y Mensajes) y Listas.
+
+Las películas y series se guardarán en la base de datos local únicamente como referencias (datos esenciales como ID de TMDB, título, póster) cuando un usuario interactúe con ellas, por ejemplo, al agregarlas a una lista o calificarlas. Esto evita la duplicidad de la información detallada que ya está disponible en la API de TMDB.
+
+En la entidad Mensaje, el atributo autor permite distinguir si el mensaje proviene del usuario o del chatbot, sin necesidad de crear una segunda entidad para manejar los roles dentro del chat.
+
+---
+
+### 3. Modelo 2
+
+#### 3.1 Modelo 2: Gráfico
+
+> **Nota:** El Diagrama de Tablas debe regenerarse desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas") para reflejar los cambios acordados.
+
+#### 3.2 Modelo 2: Descripción y justificación de elementos más importantes
+
+**Relaciones:**
+
+- **Lista - Produccion Audiovisual (tabla Tiene):** Como la relación entre estas dos tablas es N a N, se crea la tabla intermedia "Tiene". Los campos idLista e idProduccion funcionan como PK compuesta y también como FKs, lo que evita que una misma producción se repita dentro de una lista y mantiene la integridad referencial. Adicionalmente, la tabla Tiene incluye el campo `fechaAgregado` (TIMESTAMP) para registrar el momento en que un ítem fue añadido a una lista.
+
+- **Usuario - Calificación:** En Calificación se incluye como FK el idUsuario. Esto modela una relación 1 a N donde un usuario puede hacer varias calificaciones, pero cada calificación pertenece a un único usuario. De esta forma, cualquier calificación siempre va a estar asociada a un usuario válido.
+
+- **Usuario - Lista:** La tabla Lista tiene una FK idUsuario, lo que indica que cada lista le pertenece al usuario que la creó. Un usuario puede tener varias listas (tanto las predeterminadas como las personalizadas).
+
+- **Usuario - Chat:** Chat también tiene una FK idUsuario, lo que muestra que cada chat es creado por un usuario en particular. Un usuario puede tener varios chats distintos.
+
+- **Chat - Mensaje:** Mensaje contiene una FK idChat, de modo que todos los mensajes pertenecen a un chat específico. Un chat puede tener muchos mensajes, pero cada mensaje se guarda siempre dentro de un único chat.
+
+- **Calificación - Reseña:** La relación se maneja como una composición: la Reseña depende de la Calificación. La FK idCalificacion en Reseña hace que una reseña no pueda existir por sí sola; siempre surge a partir de una calificación. La Calificación puede existir sin reseña, pero no al revés.
+
+- **Calificación - Produccion Audiovisual:** Toda calificación debe estar asociada a una producción mediante la FK idProduccion. Esto permite que una producción tenga muchas calificaciones, pero cada calificación corresponde a una única producción.
+
+- **Produccion Audiovisual (entidad base):** Esta tabla reúne todos los datos sincronizados desde TMDB (título, póster, géneros, reparto, duración, temporadas, etc.). Desde acá se relacionan tanto las calificaciones como los ítems que aparecen en las distintas listas.
+
+**Observaciones:**
+
+En la relación de herencia entre Persona y Usuario se usa el mismo idPersona como PK en Usuario y Administrador, y a la vez como FK hacia Persona. De esta forma, cualquier Usuario o Administrador siempre deriva de una Persona existente. El diagrama marca la especialización como disjoint, dando a entender que una Persona puede ser Usuario o Administrador, pero no ambas cosas a la vez.
+
+El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la información almacenada puede variar considerablemente según el desarrollo de la conversación y no siempre sigue una estructura fija. De esta forma se pueden guardar cosas como un resumen del historial, parámetros que el chatbot viene usando o cualquier otro dato que necesite en el momento, sin crear tablas nuevas solo para eso. Además, PostgreSQL (la BD que tenemos pensado usar) permite buscar y actualizar partes del JSONB sin problemas, cuando con JSON hay ciertas limitantes, así que es una forma práctica y flexible de manejar estos datos sin complicar el modelo.
