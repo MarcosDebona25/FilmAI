@@ -31,7 +31,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 - El sistema deberá permitir a los usuarios calificar una serie/película con la opción de añadir una reseña.
 - El sistema deberá permitir a los usuarios modificar el contenido (texto y/o calificación) de sus propias reseñas.
 - El sistema deberá permitir a los usuarios eliminar permanentemente sus propias reseñas y/o calificaciones.
-- El sistema deberá permitir la navegación entre secciones (Inicio, Películas, Series, Listas, Perfil) mediante la barra de navegación.
+- El sistema deberá permitir la navegación entre secciones (Inicio, Buscar, Listas) mediante la barra de navegación. El acceso al perfil se realiza a través del avatar del usuario.
 - El sistema deberá exponer el catálogo de películas y series actualizado desde la fuente externa integrada (The Movie Database).
 - El sistema deberá registrar y almacenar, por usuario, el historial de visualizaciones, calificaciones y reseñas.
 - El sistema deberá aplicar control de acceso por roles (usuario, administrador) para las operaciones protegidas.
@@ -204,7 +204,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Campo | Detalle |
 | :---- | :---- |
 | **Flujos de excepción** | — |
-| **Observaciones** | El sistema debe validar la finalización segura del token de sesión. Después de cerrar sesión, las secciones de Inicio, Películas, Series, Listas y Perfil serán inaccesibles hasta que el usuario inicie sesión nuevamente. |
+| **Observaciones** | El sistema debe validar la finalización segura del token de sesión. Después de cerrar sesión, las secciones de Inicio, Buscar, Listas y Perfil serán inaccesibles hasta que el usuario inicie sesión nuevamente. |
 
 ---
 
@@ -225,7 +225,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 
 | Flujo Principal | Flujo Alternativo |
 | :---- | :---- |
-| 1. El usuario selecciona la opción "Perfil" en la barra de navegación. | — |
+| 1. El usuario hace clic en su avatar (esquina superior derecha) y selecciona "Mi perfil" en el menú desplegable. | — |
 | 2. El sistema recupera la información completa del perfil y detalles de cuenta del usuario. | — |
 | 3. El sistema presenta la sección de perfil con la siguiente información: Información personal (nombre, apellido, nombre de usuario, fecha de nacimiento, género y correo electrónico) y Reseñas recientes. | — |
 | 4. El caso de uso termina. | — |
@@ -233,7 +233,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Campo | Detalle |
 | :---- | :---- |
 | **Flujos de excepción** | — |
-| **Observaciones** | La información de perfil debe mostrarse actualizada después de cualquier modificación por parte del usuario. La navegación se realiza estrictamente a través de la barra de navegación. Si la sesión del usuario expira, es redirigido a la página de inicio de sesión. Se pueden aplicar operaciones de gestión a las reseñas recientes. |
+| **Observaciones** | La información de perfil debe mostrarse actualizada después de cualquier modificación por parte del usuario. El acceso al perfil se realiza a través del avatar del usuario en la barra de navegación. Si la sesión del usuario expira, es redirigido a la página de inicio de sesión. Se pueden aplicar operaciones de gestión a las reseñas recientes. |
 
 ---
 
@@ -308,7 +308,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | :---- | :---- |
 | **ID** | CU-008 |
 | **Nombre** | Visualizar Catálogo. |
-| **Breve Descripción** | Permite al usuario acceder al catálogo general de películas y series proveniente de la base de datos externa (TMDB), visualizando la información detallada de cada ítem con opciones de filtrado y búsqueda. |
+| **Breve Descripción** | Permite al usuario acceder al catálogo unificado de películas y series proveniente de la base de datos externa (TMDB), visualizando la información detallada de cada ítem con opciones de filtrado, búsqueda y toggle de tipo (Todo/Películas/Series). |
 | **Prioridad** | Alta. |
 | **Complejidad** | Alta. |
 | **Actor principal** | Usuario. |
@@ -319,9 +319,9 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 
 | Flujo Principal | Flujo Alternativo |
 | :---- | :---- |
-| 1. El usuario selecciona la opción "Películas" o "Series" desde la barra de navegación. | — |
+| 1. El usuario selecciona la opción "Buscar" desde la barra de navegación. | — |
 | 2. El sistema solicita los datos del catálogo a la API TMDB o desde caché local. | 2.A. No se puede establecer conexión con la API externa.<br>2.A.1 El sistema recupera el catálogo almacenado localmente (última sincronización disponible). |
-| 3. El sistema presenta la lista paginada de ítems con información básica: Título, Imagen (poster), Año de lanzamiento. | — |
+| 3. El sistema presenta la grid paginada de ítems con información básica y un toggle para alternar entre Todo, Películas y Series. Cada ítem muestra: Título, Imagen (poster), Año de lanzamiento y badge de tipo. | — |
 | 4. El usuario puede aplicar filtros o realizar una búsqueda por nombre. | 4.A. No existen coincidencias para la búsqueda.<br>4.A.1 El sistema muestra el mensaje "No se encontraron resultados para su búsqueda". |
 | 5. El usuario selecciona un ítem del catálogo. | — |
 | 6. El sistema muestra la ficha completa del ítem seleccionado con: Sinopsis, Reparto principal, Duración/Cantidad de episodios, Géneros asociados, Calificación global y botón de calificar. | 6.A. El usuario cancela la visualización detallada.<br>6.A.1 El sistema retorna al listado general. |
@@ -330,7 +330,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Campo | Detalle |
 | :---- | :---- |
 | **Flujos de excepción** | Si ocurre un error de conexión con la API y no hay datos en caché, el sistema muestra el mensaje "No se pudo recuperar el catálogo. Intente nuevamente más tarde", y finaliza el caso de uso. |
-| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él.<br><br>**Campos de la vista de catálogo:** título, año, imagen.<br>**Filtros disponibles:** tipo (película/serie), género, año, calificación mínima.<br><br>**Restricciones:** El campo de búsqueda acepta texto alfanumérico (máx. 50 caracteres). La actualización con TMDB debe respetar límites de uso de la API y emplear caché local. Tiempo máximo de respuesta para carga inicial: 2 segundos (90% de las solicitudes). El sistema debe mantener la consistencia de los datos mostrados con la información más reciente disponible. |
+| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él.<br><br>**Campos de la vista de catálogo:** título, año, imagen, badge de tipo (película/serie).<br>**Filtros disponibles:** tipo (mediante toggle Todo/Películas/Series), género, año, calificación mínima.<br><br>**Restricciones:** El campo de búsqueda acepta texto alfanumérico (máx. 50 caracteres). La actualización con TMDB debe respetar límites de uso de la API y emplear caché local. Tiempo máximo de respuesta para carga inicial: 2 segundos (90% de las solicitudes). El sistema debe mantener la consistencia de los datos mostrados con la información más reciente disponible. |
 
 ---
 
@@ -374,18 +374,18 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | :---- | :---- |
 | **ID** | CU-010 |
 | **Nombre** | Buscar Películas/Series por Nombre. |
-| **Breve Descripción** | Permite al usuario realizar una búsqueda de películas o series dentro del catálogo, escribiendo un texto parcial o completo del título. |
+| **Breve Descripción** | Permite al usuario realizar una búsqueda de películas o series dentro del catálogo unificado, escribiendo un texto parcial o completo del título. El catálogo se accede desde la opción "Buscar" en la barra de navegación, que despliega un panel con toggle de tipo (Todo/Películas/Series) y filtros. |
 | **Prioridad** | Alta. |
 | **Complejidad** | Media. |
 | **Actor principal** | Usuario. |
 | **Actores secundarios** | API externa (TMDB). |
-| **Precondiciones** | El usuario debe estar posicionado en la sección de "Películas" o "Series". El sistema debe tener conexión con la API externa o disponer de resultados almacenados en caché. |
+| **Precondiciones** | El panel de Buscar debe estar activo (accesible desde la barra de navegación). El sistema debe tener conexión con la API externa o disponer de resultados almacenados en caché. |
 | **Postcondiciones** | **Éxito:** El sistema muestra los resultados coincidentes con el texto de búsqueda. El usuario puede seleccionar un ítem y ver su detalle. |
 |  | **Fracaso:** El sistema no encuentra coincidencias o no puede obtener resultados debido a una falla de conexión. |
 
 | Flujo Principal | Flujo Alternativo |
 | :---- | :---- |
-| 1. include(CU-008): el usuario está presente en el catálogo de Películas o Series. | — |
+| 1. include(CU-008): el panel de Buscar está activo, mostrando el catálogo unificado. | — |
 | 2. El usuario ingresa un texto parcial o completo en el campo de búsqueda y presiona el botón "Buscar". | — |
 | 3. El sistema envía la consulta a la API externa o recupera resultados de la caché local. | 3.A. Ocurre un error de conexión con la API y no hay resultados en caché.<br>3.A.1. El sistema muestra el mensaje "No se pudo realizar la búsqueda. Intente nuevamente más tarde."<br>3.A.2. El caso de uso termina. |
 | 4. El sistema muestra los resultados paginados con los siguientes datos: Imagen (poster), Título, Año de lanzamiento, Calificación promedio. | — |
@@ -396,7 +396,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Campo | Detalle |
 | :---- | :---- |
 | **Flujos de excepción** | — |
-| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él. Campo de búsqueda: texto alfanumérico (máx. 50 caracteres). No se permiten caracteres especiales fuera del alfabeto estándar. El sistema debe mantener la paginación y filtros aplicados hasta que se limpie la búsqueda o se abandone la sección. Los resultados se muestran en una lista paginada. |
+| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él. Campo de búsqueda: texto alfanumérico (máx. 50 caracteres). No se permiten caracteres especiales fuera del alfabeto estándar. El sistema debe mantener la paginación y filtros aplicados hasta que se limpie la búsqueda o se cierre el panel de Buscar. Los resultados se muestran en una grid paginada con toggle de tipo (Todo/Películas/Series). |
 
 ---
 
