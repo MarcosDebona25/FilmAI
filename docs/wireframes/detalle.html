@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FilmIA — Ficha de Detalle (Wireframe)</title>
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #161625;
+    --surface2: #1e1e32;
+    --border: #2a2a45;
+    --text: #e0e0e0;
+    --text-dim: #777;
+    --accent: #f5c518;
+    --accent-glow: rgba(245,197,24,0.12);
+    --danger: #e74c3c;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --nav-h: 64px;
+    --transition: 180ms ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ─── NAVBAR ─────────────────────────────── */
+  .navbar {
+    display: flex; align-items: center; gap: 36px;
+    padding: 0 28px; height: var(--nav-h);
+    background: rgba(13,13,20,0.92);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 200;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 21px; color: #fff;
+    letter-spacing: -0.5px; cursor: pointer;
+  }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    color: var(--text-dim); text-decoration: none;
+    font-size: 14px; font-weight: 500;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    transition: all var(--transition);
+  }
+  .nav-links a:hover { color: #ccc; background: rgba(255,255,255,0.04); }
+  .nav-links a.active { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    cursor: pointer; transition: transform var(--transition);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: #fff;
+  }
+  .avatar:hover { transform: scale(1.06); }
+
+  /* ─── BREADCRUMB ──────────────────────────── */
+  .breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-dim);
+    padding: 20px 0 8px;
+  }
+  .breadcrumb a {
+    color: var(--text-dim); text-decoration: none;
+    transition: color var(--transition);
+  }
+  .breadcrumb a:hover { color: #ccc; }
+  .breadcrumb .sep { color: #444; font-size: 11px; }
+  .breadcrumb .current { color: #fff; font-weight: 600; }
+
+  /* ─── CONTENT ─────────────────────────────── */
+  .content { max-width: 1440px; margin: 0 auto; padding: 0 28px 40px; }
+
+  /* ─── DETAIL HERO ─────────────────────────── */
+  .detail-hero {
+    display: flex; gap: 36px; margin-bottom: 40px;
+  }
+  .poster-col { flex-shrink: 0; }
+  .poster {
+    width: 300px; aspect-ratio: 2/3;
+    background: var(--surface2);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px; color: #333;
+  }
+  .info-col { flex: 1; min-width: 0; }
+
+  .detail-title {
+    font-size: 32px; font-weight: 800; color: #fff;
+    letter-spacing: -0.6px; margin-bottom: 12px;
+  }
+  .detail-meta {
+    font-size: 14px; color: var(--text-dim);
+    margin-bottom: 12px; display: flex; gap: 8px; align-items: center;
+  }
+  .detail-meta .dot { color: #444; }
+  .detail-rating {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 16px; color: var(--accent); font-weight: 700;
+    margin-bottom: 18px;
+  }
+  .genre-chips {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  .genre-chip {
+    padding: 5px 14px; font-size: 12px; font-weight: 500;
+    border-radius: 20px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04); color: #aaa;
+  }
+
+  /* ─── ACTION BUTTONS ──────────────────────── */
+  .detail-actions {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 28px;
+  }
+  .btn-primary {
+    padding: 11px 26px; background: var(--accent);
+    color: #121212; border: none; border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all var(--transition);
+  }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .action-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); color: var(--text-dim);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all var(--transition);
+  }
+  .action-btn:hover { border-color: #555; color: #ccc; }
+  .action-btn.toggled {
+    border-color: var(--accent); color: var(--accent);
+    background: var(--accent-glow);
+  }
+  .action-btn .icon { font-size: 16px; }
+  .dropdown-wrap { position: relative; display: inline-block; }
+  .dropdown-menu {
+    display: none; position: absolute; top: 100%; left: 0; margin-top: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 8px 0; min-width: 220px;
+    z-index: 50; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .dropdown-wrap.open .dropdown-menu { display: block; }
+  .dropdown-menu label {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 18px; font-size: 13px; cursor: pointer;
+    transition: background var(--transition); color: #ccc;
+  }
+  .dropdown-menu label:hover { background: rgba(255,255,255,0.04); }
+  .dropdown-menu input[type="checkbox"] { accent-color: var(--accent); }
+
+  /* ─── SYNOPSIS CARD (inside info-col) ─────── */
+  .synopsis-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 22px;
+  }
+  .synopsis-card h3 {
+    font-size: 14px; font-weight: 700; color: #ccc; margin-bottom: 8px;
+  }
+  .synopsis-card p {
+    font-size: 13px; color: #aaa; line-height: 1.7;
+    max-height: 60px; overflow: hidden; transition: max-height 300ms ease;
+  }
+  .synopsis-card p.expanded { max-height: 600px; }
+  .synopsis-toggle {
+    color: var(--accent); font-size: 12px; font-weight: 500;
+    cursor: pointer; margin-top: 6px; display: inline-block;
+  }
+  .synopsis-toggle:hover { opacity: 0.8; }
+
+  /* ─── CAST CARD ───────────────────────────── */
+  .cast-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .cast-card h3 {
+    font-size: 14px; font-weight: 700; color: #ccc; margin-bottom: 6px;
+  }
+  .cast-card .director { font-size: 13px; color: var(--text); margin-bottom: 12px; }
+  .cast-card .director span { color: var(--text-dim); }
+  .cast-list {
+    font-size: 13px; color: #aaa; line-height: 1.9;
+    max-height: 70px; overflow: hidden; transition: max-height 300ms ease;
+  }
+  .cast-list.expanded { max-height: 600px; }
+  .cast-toggle {
+    color: var(--accent); font-size: 13px; font-weight: 500;
+    cursor: pointer; margin-top: 8px; display: inline-block;
+  }
+  .cast-toggle:hover { opacity: 0.8; }
+
+  /* ─── REVIEWS ─────────────────────────────── */
+  .divider {
+    border: none; border-top: 1px solid var(--border); margin-bottom: 36px;
+  }
+  .review-section-header {
+    font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px;
+  }
+  .review-section-header strong { color: var(--accent); }
+
+  .review-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 24px;
+    margin-bottom: 12px;
+  }
+  .review-card.my-review {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, var(--accent-glow), var(--surface));
+  }
+  .review-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .review-user {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 600; color: #fff;
+  }
+  .review-user .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, #444, #555);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+  }
+  .review-rating {
+    font-size: 14px; color: var(--accent); font-weight: 700;
+  }
+  .review-date { font-size: 11px; color: var(--text-dim); }
+  .review-text { font-size: 13px; color: #bbb; line-height: 1.7; margin-top: 8px; }
+
+  .icon-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-dim);
+    cursor: pointer; font-size: 15px; padding: 5px 9px;
+    transition: all var(--transition);
+  }
+  .icon-btn:hover { border-color: #555; color: #ccc; }
+  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  .load-more {
+    display: block; width: 100%; padding: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); color: var(--text-dim);
+    font-size: 13px; text-align: center; cursor: pointer;
+    transition: all var(--transition); margin-top: 8px;
+  }
+  .load-more:hover { border-color: #555; color: #ccc; }
+
+  /* ─── AUTH WALL ───────────────────────────── */
+  .auth-wall {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-size: 13px; color: var(--text-dim); margin-bottom: 20px;
+  }
+  .auth-wall a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .auth-wall a:hover { text-decoration: underline; }
+
+  /* ─── TOGGLE SWITCH ───────────────────────── */
+  .toggle-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-dim); margin-bottom: 6px;
+  }
+  .toggle-switch {
+    display: flex; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px;
+  }
+  .toggle-switch button {
+    padding: 8px 22px; background: none; border: none;
+    color: var(--text-dim); font-size: 13px; cursor: pointer;
+    transition: all var(--transition);
+  }
+  .toggle-switch button:not(:last-child) { border-right: 1px solid var(--border); }
+  .toggle-switch button.active { background: var(--accent); color: #121212; font-weight: 600; }
+
+  /* ─── FAB ─────────────────────────────────── */
+  .fab {
+    position: fixed; bottom: 32px; right: 32px;
+    width: 58px; height: 58px; border-radius: 50%;
+    background: var(--accent); color: #121212; font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    transition: all var(--transition); z-index: 300;
+    border: none;
+  }
+  .fab:hover { transform: scale(1.06); box-shadow: 0 6px 32px rgba(0,0,0,0.6); }
+
+  /* ─── MODAL ───────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 32px; width: 560px;
+    max-width: 90vw; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+  }
+  .modal-box h2 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+  .modal-box p { font-size: 14px; color: #aaa; margin-bottom: 24px; line-height: 1.6; }
+
+  /* ─── STAR WIDGET ─────────────────────────── */
+  .star-widget {
+    display: flex; gap: 4px; margin-bottom: 24px; user-select: none;
+  }
+  .star-widget .star {
+    font-size: 28px; color: #333; cursor: pointer;
+    transition: color 100ms ease, transform 100ms ease;
+  }
+  .star-widget .star.hovered { color: var(--accent); transform: scale(1.1); }
+  .star-widget .star.selected { color: var(--accent); }
+  .star-widget .star.deselected { color: rgba(245,197,24,0.22); }
+  .star-rating-label {
+    font-size: 14px; color: var(--text-dim); text-align: center; margin-bottom: 20px;
+  }
+
+  /* ─── MODAL FORM ──────────────────────────── */
+  .modal-box textarea {
+    width: 100%; padding: 12px 14px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    color: #fff; font-size: 13px; resize: none; outline: none;
+    font-family: inherit; line-height: 1.6;
+  }
+  .modal-box textarea:focus { border-color: var(--accent); }
+  .modal-box .char-count { font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 4px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+  .btn-secondary {
+    padding: 10px 24px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); color: #ccc; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all var(--transition);
+  }
+  .btn-secondary:hover { border-color: #555; }
+  .btn-danger {
+    padding: 10px 24px; background: var(--danger); border: none;
+    border-radius: var(--radius-md); color: #fff; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: filter var(--transition);
+  }
+  .btn-danger:hover { filter: brightness(1.15); }
+  .modal-box .error-msg {
+    font-size: 12px; color: var(--danger); margin-bottom: 12px; display: none;
+  }
+  .modal-box .error-msg.show { display: block; }
+
+  /* ─── BADGE ───────────────────────────────── */
+  .card-type {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; margin-bottom: 8px;
+  }
+  .card-type.tv { background: rgba(130,200,80,0.18); color: #92d850; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<header class="navbar">
+  <div class="logo">Film<span>IA</span></div>
+  <nav class="nav-links">
+    <a href="#" class="active">Inicio</a>
+    <a href="#">Buscar</a>
+    <a href="#">Listas</a>
+  </nav>
+  <div class="nav-right">
+    <div class="avatar">M</div>
+  </div>
+</header>
+
+<!-- ═══════════ CONTENT ═══════════ -->
+<main class="content">
+
+  <div class="breadcrumb">
+    <a href="#">Inicio</a><span class="sep">›</span>
+    <a href="#">Buscar</a><span class="sep">›</span>
+    <span class="current">Ficha: Breaking Bad</span>
+  </div>
+
+  <div class="toggle-label">Estado de autenticación (simulación)</div>
+  <div class="toggle-switch" id="authToggle">
+    <button class="active" onclick="setAuth(true, this)">Autenticado</button>
+    <button onclick="setAuth(false, this)">No autenticado</button>
+  </div>
+
+  <!-- ═══ HERO ═══ -->
+  <div class="detail-hero">
+    <div class="poster-col">
+      <div class="poster">🎬</div>
+    </div>
+    <div class="info-col">
+      <span class="card-type tv">Serie</span>
+      <h1 class="detail-title">Breaking Bad</h1>
+      <div class="detail-meta">
+        2008 <span class="dot">·</span> 5 temporadas <span class="dot">·</span> 62 episodios <span class="dot">·</span> 47 min
+      </div>
+      <div class="detail-rating">9.5 / 10 <span style="color:var(--text-dim);font-weight:400;font-size:13px;">(TMDB)</span></div>
+      <div class="genre-chips">
+        <span class="genre-chip">Drama</span>
+        <span class="genre-chip">Crimen</span>
+        <span class="genre-chip">Thriller</span>
+      </div>
+
+      <div class="detail-actions" id="actionAuth">
+        <button class="btn-primary" id="btnCalificar" onclick="openRatingModal('publicar')">&#9733; Calificar</button>
+        <button class="action-btn toggled" onclick="toggleAction(this)"><span class="icon">♥</span> Favoritos</button>
+        <button class="action-btn toggled" onclick="toggleAction(this)"><span class="icon">👁</span> Vista</button>
+        <button class="action-btn" onclick="toggleAction(this)"><span class="icon">🕐</span> Pendiente</button>
+        <div class="dropdown-wrap" id="listDropdown">
+          <button class="action-btn" onclick="document.getElementById('listDropdown').classList.toggle('open')">+ Agregar a lista ▾</button>
+          <div class="dropdown-menu">
+            <label><input type="checkbox" checked> Maratón finde</label>
+            <label><input type="checkbox"> Para ver con amigos</label>
+            <label><input type="checkbox"> Basadas en hechos reales</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-wall" id="actionNoAuth" style="display:none;">
+        &#128274; <a href="#">Inicia sesión</a> para calificar o guardar en tus listas.
+      </div>
+
+      <!-- Sinopsis (card dentro del info-col) -->
+      <div class="synopsis-card">
+        <h3>Sinopsis</h3>
+        <p id="synopsisText">
+          Walter White, un profesor de química de secundaria en Albuquerque, Nuevo México, recibe un diagnóstico de cáncer de pulmón inoperable. Desesperado por asegurar el futuro financiero de su familia —su esposa Skyler, su hijo Walter Jr. con parálisis cerebral y una hija en camino—, Walter decide utilizar sus conocimientos de química para cocinar metanfetamina de la más alta pureza junto a Jesse Pinkman, un exalumno suyo metido en el narcotráfico. Lo que comienza como un plan para dejar dinero suficiente se convierte en una espiral descendente hacia el mundo del crimen organizado, transformando a Walter de un hombre común y corriente en el temido capo de la droga conocido como "Heisenberg".
+        </p>
+        <span class="synopsis-toggle" onclick="toggleExpand('synopsisText', this)">leer más ▾</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CAST CARD ═══ -->
+  <div class="cast-card">
+    <h3>Director</h3>
+    <div class="director"><span>Vince Gilligan</span></div>
+    <h3>Cast</h3>
+    <div class="cast-list" id="castList">
+      Bryan Cranston, Aaron Paul, Anna Gunn, Dean Norris, Betsy Brandt, RJ Mitte, Bob Odenkirk, Giancarlo Esposito, Jonathan Banks, Jesse Plemons, Laura Fraser, Mark Margolis, Steven Michael Quezada, Charles Baker, Matt Jones, Krysten Ritter, Raymond Cruz, Lavell Crawford, David Costabile, Michael Bowen, Jeremiah Bitsui, Daniel Moncada, Luis Moncada, Emily Rios.
+    </div>
+    <span class="cast-toggle" onclick="toggleExpand('castList', this)">mostrar más ▾</span>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ TU RESEÑA ═══ -->
+  <div id="myReviewSection">
+    <h2 class="review-section-header">Tu reseña</h2>
+    <div class="review-card my-review">
+      <div class="review-meta">
+        <div class="review-user">
+          <div class="user-avatar">M</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span class="review-rating">9/10</span>
+          <button class="icon-btn" title="Editar reseña" onclick="openRatingModal('editar')">&#9998;</button>
+          <button class="icon-btn danger" title="Eliminar reseña" onclick="openDeleteModal()">&#128465;</button>
+        </div>
+      </div>
+      <div class="review-date">12/03/2025</div>
+      <div class="review-text">Una obra maestra de principio a fin. El desarrollo de Walter White es simplemente perfecto. Cada temporada supera a la anterior.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:36px;"></div>
+
+  <!-- ═══ RESEÑAS DE LA COMUNIDAD ═══ -->
+  <h2 class="review-section-header">Reseñas de la comunidad <strong>(2)</strong></h2>
+
+  <div class="review-card">
+    <div class="review-meta">
+      <div class="review-user">
+        <div class="user-avatar">ML</div> @maria_lopez
+      </div>
+      <span class="review-rating">10/10</span>
+    </div>
+    <div class="review-date">15/03/2025</div>
+    <div class="review-text">La mejor serie que he visto en mi vida. Increíble la evolución de los personajes y la tensión que maneja en cada capítulo.</div>
+  </div>
+
+  <div class="review-card">
+    <div class="review-meta">
+      <div class="review-user">
+        <div class="user-avatar">CF</div> @cinefilo_ok
+      </div>
+      <span class="review-rating">8/10</span>
+    </div>
+    <div class="review-date">20/03/2025</div>
+    <div class="review-text">Excelente desarrollo de personajes y una narrativa impecable. Solo algunos episodios de la temporada 3 se sintieron un poco lentos.</div>
+  </div>
+
+  <button class="load-more">Cargar más reseñas</button>
+
+</main>
+
+<!-- ═══════════ FAB ═══════════ -->
+<button class="fab" title="Abrir chatbot">&#128172;</button>
+
+<!-- ═══════════ MODAL: CALIFICAR / EDITAR ═══════════ -->
+<div class="modal-overlay" id="ratingModal">
+  <div class="modal-box">
+    <h2 id="modalTitle">Calificar</h2>
+    <div id="modalError" class="error-msg">Debés seleccionar una calificación.</div>
+
+    <div class="star-widget" id="starWidget"></div>
+    <div class="star-rating-label" id="starLabel">&nbsp;</div>
+
+    <textarea id="reviewText" placeholder="Escribí tu reseña (opcional)..." rows="5" maxlength="1000"
+              oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="charCount">0</span>/1000</div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRatingModal()">Cancelar</button>
+      <button class="btn-primary" id="modalSubmitBtn" onclick="submitRating()">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: ELIMINAR ═══════════ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h2>¿Eliminar reseña?</h2>
+    <p>Esta acción no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn-danger" onclick="confirmDelete()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentMode = 'publicar';
+  let selectedRating = 0;
+  let oldRating = 0;  /* only set in edit mode */
+
+  /* ─── STAR WIDGET ─────────────────────── */
+  function buildStars() {
+    const w = document.getElementById('starWidget');
+    w.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+      const s = document.createElement('span');
+      s.className = 'star';
+      s.textContent = '★';
+      s.dataset.value = i;
+      s.addEventListener('mouseenter', () => hoverStars(i));
+      s.addEventListener('click', () => selectStars(i));
+      w.appendChild(s);
+    }
+    const label = document.getElementById('starLabel');
+    w.addEventListener('mouseleave', () => {
+      w.querySelectorAll('.star').forEach(s => s.classList.remove('hovered', 'deselected'));
+      updateStarLabel();
+    });
+  }
+
+  function hoverStars(n) {
+    const stars = document.querySelectorAll('#starWidget .star');
+    stars.forEach((s, i) => {
+      const v = i + 1;
+      s.classList.remove('hovered', 'deselected');
+      if (v <= n) {
+        s.classList.add('hovered');
+      } else if (currentMode === 'editar' && v <= oldRating) {
+        s.classList.add('deselected');
+      }
+    });
+    document.getElementById('starLabel').textContent = n + '/10';
+  }
+
+  function selectStars(n) {
+    selectedRating = n;
+    const stars = document.querySelectorAll('#starWidget .star');
+    stars.forEach((s, i) => {
+      s.classList.toggle('selected', i < n);
+    });
+    document.getElementById('starLabel').textContent = n + '/10';
+    document.getElementById('modalError').classList.remove('show');
+  }
+
+  function setStars(n) {
+    selectedRating = n;
+    const stars = document.querySelectorAll('#starWidget .star');
+    stars.forEach((s, i) => {
+      s.classList.toggle('selected', i < n);
+    });
+    document.getElementById('starLabel').textContent = n > 0 ? n + '/10' : '\xA0';
+  }
+
+  function updateStarLabel() {
+    document.getElementById('starLabel').textContent = selectedRating > 0 ? selectedRating + '/10' : '\xA0';
+  }
+
+  /* ─── MODAL: RATING ──────────────────── */
+  function openRatingModal(mode) {
+    currentMode = mode;
+    document.getElementById('modalError').classList.remove('show');
+    const title = document.getElementById('modalTitle');
+    const submitBtn = document.getElementById('modalSubmitBtn');
+    const textarea = document.getElementById('reviewText');
+
+    if (mode === 'publicar') {
+      title.textContent = 'Calificar';
+      submitBtn.textContent = 'Publicar';
+      selectedRating = 0;
+      oldRating = 0;
+      textarea.value = '';
+    } else {
+      title.textContent = 'Editar reseña';
+      submitBtn.textContent = 'Actualizar';
+      selectedRating = 9;
+      oldRating = 9;  /* previous rating */
+      textarea.value = 'Una obra maestra de principio a fin. El desarrollo de Walter White es simplemente perfecto. Cada temporada supera a la anterior.';
+    }
+
+    setStars(selectedRating);
+    updateCharCount();
+    document.getElementById('ratingModal').classList.add('open');
+  }
+
+  function closeRatingModal() {
+    document.getElementById('ratingModal').classList.remove('open');
+  }
+
+  function submitRating() {
+    if (selectedRating === 0) {
+      document.getElementById('modalError').classList.add('show');
+      return;
+    }
+    closeRatingModal();
+    alert(currentMode === 'publicar' ? '¡Reseña publicada!' : '¡Reseña actualizada!');
+  }
+
+  function updateCharCount() {
+    const len = document.getElementById('reviewText').value.length;
+    document.getElementById('charCount').textContent = len;
+  }
+
+  /* ─── MODAL: DELETE ──────────────────── */
+  function openDeleteModal() {
+    document.getElementById('deleteModal').classList.add('open');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+  }
+
+  function confirmDelete() {
+    closeDeleteModal();
+    document.getElementById('myReviewSection').style.display = 'none';
+    alert('Reseña eliminada.');
+  }
+
+  /* ─── UTILS ──────────────────────────── */
+  function toggleAction(btn) { btn.classList.toggle('toggled'); }
+
+  function toggleExpand(elId, trigger) {
+    const el = document.getElementById(elId);
+    el.classList.toggle('expanded');
+    const isExp = el.classList.contains('expanded');
+    if (trigger.textContent.includes('más')) trigger.textContent = trigger.textContent.replace('más ▾', 'menos ▴');
+    else if (trigger.textContent.includes('menos')) trigger.textContent = trigger.textContent.replace('menos ▴', 'más ▾');
+    else if (trigger.textContent.includes('leer más')) trigger.textContent = 'leer menos ▴';
+    else trigger.textContent = 'leer más ▾';
+  }
+
+  function setAuth(isAuth, btn) {
+    document.querySelectorAll('#authToggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('actionAuth').style.display = isAuth ? '' : 'none';
+    document.getElementById('actionNoAuth').style.display = isAuth ? 'none' : '';
+  }
+
+  buildStars();
+</script>
+
+</body>
+</html>

@@ -24,7 +24,8 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 ### 2. Requerimientos Funcionales
 
 - El sistema deberá permitir a los usuarios crear cuentas con credenciales válidas de email, nombre y apellido, fecha de nacimiento, género, nombre de usuario y contraseña.
-- El sistema deberá permitir a los usuarios modificar la información de su perfil personal incluyendo contraseña, nombre de usuario, nombre y apellido, y mostrar la información actualizada en el momento.
+- El sistema deberá permitir a los usuarios crear cuentas e iniciar sesión mediante autenticación con Google (OAuth 2.0).
+- El sistema deberá permitir a los usuarios modificar la información de su perfil personal incluyendo contraseña, nombre de usuario, nombre, apellido y foto de perfil, y mostrar la información actualizada en el momento.
 - El sistema deberá permitir a los usuarios dar de baja sus cuentas.
 - El sistema deberá permitir a los usuarios autenticarse y acceder a sus cuentas usando credenciales válidas.
 - El sistema deberá permitir a los usuarios visualizar la información completa de su perfil y detalles de cuenta.
@@ -48,8 +49,8 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 - Cuando el usuario cree o modifique listas personales, el sistema deberá actualizar y mostrar dichas listas en la sección de Listas.
 - Cuando el usuario marque una película/serie como vista, el sistema deberá registrarla en su historial.
 - Cuando el usuario busque películas/series por nombre, el sistema deberá devolver los resultados coincidentes con paginación y, si no hay coincidencias mostrar el resultado vacío con un aviso.
-- Cuando el usuario publique o modifique una reseña, el sistema deberá almacenar la reseña y actualizar las reseñas recientes mostradas en su perfil.
-- Cuando el usuario elimine una reseña, esta deberá ser eliminada de las vistas de su perfil.
+- Cuando el usuario publique o modifique una reseña, el sistema deberá almacenar la reseña y actualizar las reseñas en la sección "Mis reseñas".
+- Cuando el usuario elimine una reseña, esta deberá ser eliminada de la sección "Mis reseñas".
 - Cuando el usuario cree su cuenta, el sistema deberá mandar un correo de confirmación.
 
 ### 3. Requerimientos No Funcionales
@@ -227,13 +228,13 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | :---- | :---- |
 | 1. El usuario hace clic en su avatar (esquina superior derecha) y selecciona "Mi perfil" en el menú desplegable. | — |
 | 2. El sistema recupera la información completa del perfil y detalles de cuenta del usuario. | — |
-| 3. El sistema presenta la sección de perfil con la siguiente información: Información personal (nombre, apellido, nombre de usuario, fecha de nacimiento, género y correo electrónico) y Reseñas recientes. | — |
+| 3. El sistema presenta la sección de perfil con la siguiente información: nombre, apellido, nombre de usuario, fecha de nacimiento, género, correo electrónico y fecha de registro. | — |
 | 4. El caso de uso termina. | — |
 
 | Campo | Detalle |
 | :---- | :---- |
 | **Flujos de excepción** | — |
-| **Observaciones** | La información de perfil debe mostrarse actualizada después de cualquier modificación por parte del usuario. El acceso al perfil se realiza a través del avatar del usuario en la barra de navegación. Si la sesión del usuario expira, es redirigido a la página de inicio de sesión. Se pueden aplicar operaciones de gestión a las reseñas recientes. |
+| **Observaciones** | La información de perfil debe mostrarse actualizada después de cualquier modificación por parte del usuario. El acceso al perfil se realiza a través del avatar del usuario en la barra de navegación, seleccionando "Mi perfil" en el menú desplegable. Si la sesión del usuario expira, es redirigido a la página de inicio de sesión. Las reseñas del usuario se consultan desde la sección "Mis reseñas" en el mismo menú desplegable del avatar. |
 
 ---
 
@@ -255,8 +256,8 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Flujo Principal | Flujo Alternativo |
 | :---- | :---- |
 | 1. extend(CU-005). | — |
-| 2. El usuario selecciona la opción "Modificar perfil". | — |
-| 3. El sistema presenta el formulario de modificación de perfil, permitiendo cambiar: Contraseña, Nombre de usuario, Nombre y apellido. | — |
+| 2. El usuario selecciona la opción "Editar perfil" desde su perfil. | — |
+| 3. El sistema transforma los campos del perfil a modo edición inline, permitiendo modificar: foto de perfil, nombre, apellido, nombre de usuario y, opcionalmente, contraseña. El correo electrónico es de solo lectura. | — |
 | 4. El usuario modifica los campos deseados y presiona "Guardar". | — |
 | 5. El sistema valida la información y el formato de los campos. | 5.A. La validación de los datos falla.<br>5.A.1. El sistema informa el error específico.<br>5.A.2. Se retorna al paso 3. |
 | 6. Si la información es válida, el sistema actualiza la base de datos con la nueva información. | — |
@@ -288,7 +289,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Flujo Principal | Flujo Alternativo |
 | :---- | :---- |
 | 1. extend(CU-005). | — |
-| 2. El usuario selecciona la opción "Dar de baja". | — |
+| 2. El usuario accede a "Preferencias" desde el menú desplegable del avatar y selecciona la opción "Dar de baja cuenta". | — |
 | 3. El sistema solicita confirmación para la baja de la cuenta. | — |
 | 4. El usuario confirma la baja de la cuenta apretando el botón "Confirmar". | 4.A. El usuario cancela la operación de baja.<br>4.A.1 Se retorna al paso 1, manteniendo al usuario en la sección del perfil. |
 | 5. El sistema elimina la cuenta del usuario y notifica la baja exitosa. | — |
