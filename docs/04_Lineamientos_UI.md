@@ -15,13 +15,13 @@ App Autenticada
 ├── Inicio (Home)          ← descubrimiento: recomendaciones, tendencias, novedades
 ├── Buscar                 ← panel overlay con catálogo unificado + toggle Películas/Series + filtros
 ├── Listas                 ← favoritos, pendientes, vistas + personalizadas
-└── [Avatar]               ← dropdown: Mi perfil / Cerrar sesión
+└── [Avatar]               ← dropdown: Mi perfil / Mis reseñas / Preferencias / Cerrar sesión
 ```
 
 **Navbar definitiva**: `[Logo]  Inicio  Buscar  Listas                    [Avatar]`
 
 - 3 links de navegación + avatar a la derecha.
-- El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil" y "Cerrar sesión".
+- El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil", "Mis reseñas", "Preferencias" y "Cerrar sesión".
 - "Buscar" abre un panel overlay que reemplaza la vista actual con el catálogo completo (grid + filtros + toggle Películas/Series).
 - El chatbot se accede desde un FAB flotante presente en todas las pantallas.
 
@@ -42,9 +42,11 @@ App Autenticada
 | 9 | Sección Listas (vista general) | CU-009 | Autenticada |
 | 10 | Detalle de Lista | CU-009 | Autenticada |
 | 11 | Modal: Crear/Renombrar lista | CU-012 | Autenticada |
-| 12 | Perfil de usuario | CU-005 | Autenticada |
-| 13 | Modificar perfil | CU-006 | Autenticada |
-| 14 | Pantallas de error/estado vacío | Varios | Mixta |
+| 12 | Perfil (con edición inline) | CU-005, CU-006 | Autenticada |
+| 13 | Mis reseñas | CU-015 | Autenticada |
+| 14 | Preferencias | CU-005, CU-007 | Autenticada |
+| 15 | 404 — Página no encontrada | Varios | Mixta |
+| 16 | Error genérico (500 / timeout) | Varios | Mixta |
 
 > \* Mixta = visible sin login, pero acciones (calificar, agregar a listas) requieren autenticación.
 
@@ -124,7 +126,7 @@ Todas las pantallas autenticadas comparten:
 
 - **Navbar**: 3 links funcionales (Inicio, Buscar, Listas) + avatar a la derecha.
   - Link activo resaltado con color de acento.
-  - Avatar click → dropdown: "Mi perfil", "Cerrar sesión".
+  - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - "Buscar" click → panel overlay que reemplaza el content area con el buscador.
 - **Footer**: mínimo, sin prioridad en esta etapa.
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
@@ -222,6 +224,756 @@ panel overlay a pantalla completa.
 
 ---
 
+## 5c. Ficha de Detalle
+
+Se accede clickeando cualquier MediaCard desde Home, Buscar, o Listas. Reemplaza el content
+area dentro del shell (navbar + FAB se mantienen). La navegación hacia atrás es vía breadcrumb.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Inicio > Breaking Bad                                             │  ← breadcrumb
+│                                                                    │
+│ ┌────────────────────────────────────────────────────────────────┐ │
+│ │  ┌──────────┐                                                  │ │
+│ │  │          │   Breaking Bad                     [Serie]       │ │
+│ │  │  POSTER  │   2008  ·  5 temporadas  ·  62 episodios        │ │
+│ │  │          │   ⭐ 9.5/10 (TMDB)                               │ │
+│ │  │  96×144  │   [Drama] [Crimen] [Thriller]                    │ │
+│ │  │          │                                                  │ │
+│ │  │          │   [⭐ Calificar] [♥ Favoritos] [👁 Vista] [🕐 Pendiente]  │ │
+│ │  │          │   [+ Agregar a lista ▾]                          │ │
+│ │  └──────────┘                                                  │ │
+│ │                                                                │ │
+│ │  ┌─────────────────────────────────────────────────────────┐   │ │
+│ │  │ Director: Vince Gilligan                                 │   │ │
+│ │  │ Cast: Bryan Cranston, Aaron Paul, Anna Gunn, Dean Norris, │   │ │
+│ │  │       Betsy Brandt, RJ Mitte, Bob Odenkirk, Giancarlo    │   │ │
+│ │  │       Esposito, Jonathan Banks, ... [mostrar más ▾]      │   │ │
+│ │  └─────────────────────────────────────────────────────────┘   │ │
+│ │                                                                │ │
+│ │  Sinopsis                                                      │ │
+│ │  Walter White, un profesor de química de secundaria...         │ │
+│ │  [leer más ▾]                                                  │ │
+│ │                                                                │ │
+│ │  ───────────────────────────────────────────────────────────── │ │
+│ │  Reseñas (42)                                                  │ │
+│ │  ┌──────────────────────────────────────────────────────────┐  │ │
+│ │  │ Tu reseña                                [Editar] [Eliminar]│  │ │
+│ │  │ 9/10                                                       │  │ │
+│ │  │ "Una obra maestra de principio a fin..."                   │  │ │
+│ │  └──────────────────────────────────────────────────────────┘  │ │
+│ │  ┌──────────────────────────────────────────────────────────┐  │ │
+│ │  │ @maria_lopez                               10/10          │  │ │
+│ │  │ "La mejor serie que he visto en mi vida..."               │  │ │
+│ │  └──────────────────────────────────────────────────────────┘  │ │
+│ │  ┌──────────────────────────────────────────────────────────┐  │ │
+│ │  │ @cinefilo_ok                               8/10           │  │ │
+│ │  │ "Excelente desarrollo de personajes..."                   │  │ │
+│ │  └──────────────────────────────────────────────────────────┘  │ │
+│ │  ...                                                            │ │
+│ │  [Cargar más reseñas]                                           │ │
+│ └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Origen y breadcrumb
+
+| Desde | Breadcrumb |
+|-------|-----------|
+| Home (fila concreta) | Inicio > {título} |
+| Buscar | Inicio > Buscar > {título} |
+| Listas (sección navbar) | Listas > {nombre lista} > {título} |
+
+El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
+
+### Bloques y contenido
+
+| Bloque | Datos | Fuente |
+|--------|-------|--------|
+| **Hero** | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`Xh Ymin` para pelis o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips | `ProduccionAudiovisual` + TMDB |
+| **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario) | `Lista` |
+| **Sinopsis** | Card dentro del info-col (columna derecha), debajo de los botones de acción. Texto completo colapsable con "[leer más ▾]" si excede 300 caracteres. | `ProduccionAudiovisual.sinopsis` |
+| **CastCard** | Card full-width debajo del Hero: Director (nombre) + Cast (lista de actores). Colapsable con "[mostrar más ▾]" si hay más de 10 actores. **Sin fotos**. | `ProduccionAudiovisual.reparto` + `.directores` |
+| **Reseñas** | Dos secciones con headers separados: "Tu reseña" (card destacada con borde acento, solo si el usuario ya publicó) y "Reseñas de la comunidad (N)". En tu reseña: acciones con iconos (✏️ editar, 🗑️ eliminar). En las de la comunidad: solo lectura. Cada ReviewCard: avatar, @usuario, rating en formato `X/10` (sin estrellas), fecha, texto. Se muestran únicamente reseñas que tengan texto. Botón "Cargar más reseñas" al pie. | `Calificacion` + `Reseña` + `Usuario` |
+
+### Acciones directas — comportamiento
+
+| Acción | Estado inicial | Click | Estado final |
+|--------|---------------|-------|-------------|
+| Favoritos (♥) | Borde (no está en favoritos) | Agrega a favoritos | Relleno sólido |
+| Favoritos (♥) | Relleno (ya está en favoritos) | Quita de favoritos | Borde |
+| Vista (👁) | Borde | Agrega a Vistas | Relleno sólido |
+| Vista (👁) | Relleno (ya está en Vistas) | Quita de Vistas | Borde (verifica: si tiene calificación, pide eliminarla primero, CU-011) |
+| Pendiente (🕐) | Borde | Agrega a Pendientes | Relleno sólido |
+| Pendiente (🕐) | Relleno | Quita de Pendientes | Borde |
+| Calificar | — | Abre modal de reseña (CU-015) | — |
+| Agregar a lista ▾ | — | Despliega checklist de listas personalizadas | Check/uncheck toggle |
+
+Los botones de acción directa son visibles solo para usuarios autenticados. Para no autenticados, se muestra "Inicia sesión para calificar o guardar" con link a Login.
+
+### Breadcrumb — comportamiento
+
+- Único elemento de navegación hacia atrás (sin botón Volver extra).
+- Desktop: top-left del content area, 14px, color secundario.
+- Mobile: mismo comportamiento, scroll horizontal si no entra en el ancho.
+- Cada tramo es un link clickeable excepto el último (página actual, en negrita).
+- El penúltimo tramo (origen) restaura la vista anterior preservando scroll y resultados si es Buscar.
+
+### Estados
+
+| Estado | Qué se muestra |
+|--------|---------------|
+| Loading | Skeleton del Hero (poster placeholder + líneas) + skeleton de 3 ReviewCards. |
+| Éxito | Contenido completo como se describe arriba. |
+| No autenticado | Contenido visible, acciones directas reemplazadas por "Inicia sesión para calificar o guardar". |
+| Error TMDB | Toast "No se pudo cargar la información. Intente nuevamente." + botón Reintentar. |
+| Sin reseñas | Encabezado "Reseñas (0)" + texto "Sé el primero en dejar una reseña." + botón Calificar. |
+
+### Responsive
+
+| Breakpoint | Layout |
+|------------|--------|
+| Desktop (1440px) | Poster left + info right (two-column, sinopsis incluida en columna derecha). CastCard y reseñas full-width debajo. |
+| Tablet (768px) | Poster más chico (200×300 px). Misma estructura two-column. |
+| Mobile (375px) | Single column. Poster centrado arriba, info debajo. Acciones en fila de iconos. |
+
+---
+
+## 5d. Modal de Calificar / Reseña
+
+Modal superpuesto (overlay) que se abre desde la Ficha de Detalle para publicar, editar o eliminar
+una reseña. No reemplaza la página. Fondo con blur + opacidad.
+
+### Variantes
+
+| Variante | Disparador | Contenido | Botones |
+|----------|-----------|-----------|---------|
+| **Publicar** | Click en "Calificar" (sin reseña previa) | Widget de estrellas interactivo (1-10, ver abajo), campo de texto opcional (máx 1000 chars, ~6 líneas), contador de caracteres | Cancelar / Publicar |
+| **Editar** | Click en icono ✏️ (desde tu reseña) | Mismo widget con calificación y texto precargados. Las estrellas del rating anterior que quedarían fuera de la nueva selección se muestran en un amarillo apagado durante el hover. | Cancelar / Actualizar |
+| **Eliminar** | Click en icono 🗑️ (desde tu reseña) | Sin formulario. Título: "¿Eliminar reseña?" — Cuerpo: "Esta acción no se puede deshacer." | Cancelar / Confirmar |
+
+### Widget de estrellas
+
+- Único lugar del sistema donde se usan estrellas visuales (en la ficha y reseñas se usa formato `X/10`).
+- 10 estrellas en fila horizontal.
+- **Hover**: las estrellas se iluminan progresivamente según la posición del puntero, mostrando la
+  calificación que se asignaría (1-10). En modo edición, las estrellas que estaban en el rating previo
+  pero quedarían fuera de la nueva selección se muestran en un amarillo apagado (`rgba(245,197,24, 0.22)`).
+- **Click**: fija la calificación seleccionada. Las estrellas quedan pintadas hasta ese valor. Las
+  que estaban apagadas (deselected) vuelven al gris default.
+- **Al quitar el mouse** sin clickear, el widget vuelve a la calificación fijada (o a 0 si no hay).
+- Debajo del widget, label que refleja el valor actual: `5/10`, o vacío si no hay selección.
+- Solo se aceptan valores enteros.
+
+### Validaciones
+
+| Regla | Comportamiento |
+|-------|---------------|
+| Publicar sin calificación | Mensaje de error inline: "Debés seleccionar una calificación." Botón Publicar se deshabilita. |
+| Editar y dejar sin calificación | Ídem. No se permite quitar la calificación y dejar solo texto. |
+| Texto > 250 caracteres | El textarea limita la entrada. Contador muestra `N/250`. |
+
+### Post-acción
+
+| Acción | Efecto |
+|--------|--------|
+| Publicar / Actualizar | Cierra modal, toast "Reseña publicada." / "Reseña actualizada.". La sección de reseñas en la ficha se actualiza al instante. |
+| Eliminar | Cierra modal, toast "Reseña eliminada.". Tu reseña desaparece de la ficha. El botón "Calificar" vuelve a mostrarse. |
+| Cancelar | Cierra modal sin cambios. |
+
+### Estados del modal
+
+| Estado | Qué se muestra |
+|--------|---------------|
+| Default | Modal limpio (publicar) o precargado (editar). |
+| Error de validación | Mensaje inline en rojo. |
+| Submitting | Spinner en el botón de acción, campos disabled. |
+
+### Modales como componentes
+
+Los tres modales comparten estructura base (overlay + caja centrada). Se definen como variants
+de un componente "Modal" en Figma:
+
+- **ModalForm**: título + campos + Cancelar/Acción (Publicar y Editar).
+- **ModalConfirm**: título + mensaje + Cancelar/Confirmar (Eliminar). Botón Confirmar en rojo (danger).
+
+---
+
+## 5e. Sección Listas (CU-009, CU-012)
+
+> Las listas son personales. Las predeterminadas (Favoritos, Pendientes, Vistas) se crean automáticamente al registrarse y no pueden renombrarse, eliminarse ni reordenarse.
+> Las listas personalizadas se gestionan con modales dedicados y se reordenan con drag & drop.
+
+### Vista General de Listas
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  [FilmIA]  Inicio  Buscar  [Listas]                [Avatar]     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Listas                                                          │
+│                                                                  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐│
+│  │  Favoritos       │  │  Pendientes      │  │  Vistas          ││
+│  │  12 películas     │  │  5 películas     │  │  28 películas    ││
+│  │  ┌──┐┌──┐┌──┐   │  │  ┌──┐┌──┐┌──┐  │  │  ┌──┐┌──┐┌──┐  ││
+│  │  └──┘└──┘└──┘   │  │  └──┘└──┘└──┘  │  │  └──┘└──┘└──┘  ││
+│  │  [Predeterminada]│  │  [Predeterminada]│  │  [Predeterminada]││
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘│
+│                                                                  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐│
+│  │  Sci-Fi        ⋮  │  │  Maratón finde ⋮  │  │  ┌────────────┐ ││
+│  │  8 películas      │  │  3 películas     │  │  │     +      │ ││
+│  │  ┌──┐┌──┐┌──┐   │  │  ┌──┐┌──┐       │  │  │            │ ││
+│  │  └──┘└──┘└──┘   │  │  └──┘└──┘       │  │  │ Crear nueva│ ││
+│  │                  │  │                  │  │  │   lista    │ ││
+│  └──────────────────┘  └──────────────────┘  │  └────────────┘ ││
+│                                               └──────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Breadcrumb
+
+| Vista | Breadcrumb |
+|-------|-----------|
+| Listas (vista general) | Listas |
+| Detalle de lista | Listas > {nombre lista} |
+| Ficha desde lista | Listas > {nombre lista} > {título} |
+
+#### ListCard
+
+- **Nombre**: texto, máx 80 chars visibles con truncado en 2 líneas.
+- **Cantidad de items**: "N películas" / "N series" / "N items" (genérico si hay mezcla).
+- **Mini preview**: 3 posters solapados en thumbnail (32×48px). Si la lista tiene menos de 3 items, se muestran los que haya. Si está vacía, se muestra un placeholder gris.
+- **Badge**: "Predeterminada" en listas del sistema. Color gris neutro, esquina superior izquierda.
+- **Menú contextual** (`⋮` vertical, esquina superior derecha): solo en listas personalizadas. Click → dropdown: Renombrar / Eliminar. Visible siempre, no solo en hover.
+- **Comportamiento**: click en la card → navega al detalle de la lista.
+
+#### Orden y reordenamiento
+
+1. **Predeterminadas fijas**: primera fila, orden inmutable: Favoritos → Pendientes → Vistas. No se arrastran ni se mueven. No tienen menú.
+2. **Personalizadas**: ordenadas por fecha de creación (más reciente al final). El usuario puede reordenarlas con **drag & drop**: al arrastrar una card, las demás se desplazan para hacer lugar (animación de transición). El nuevo orden se persiste en BD.
+
+#### Card "Agregar" (esqueleto)
+
+- Mismo tamaño y proporción que una ListCard (se integra en la grilla).
+- Apariencia de esqueleto: borde sutil, fondo más claro que las cards reales, icono `+` centrado, texto "Crear nueva lista" debajo.
+- Siempre al final del grid (última posición entre las personalizadas; si no hay personalizadas, primera celda de la segunda fila).
+- No se puede arrastrar ni reordenar.
+- Click → abre modal de creación.
+
+#### Layout y responsive
+
+| Breakpoint | Columnas |
+|-----------|---------|
+| Desktop (≥1440px) | 3 |
+| Tablet (≥768px) | 2 |
+| Mobile (<768px) | 1 |
+
+#### Estados
+
+| Estado | Qué se muestra |
+|--------|---------------|
+| Loading | 3-6 skeletons de ListCard (rectángulo con placeholder de miniaturas). |
+| Normal | Grid de ListCards (predeterminadas + personalizadas + card esqueleto "Agregar"). |
+| Empty parcial | Las 3 predeterminadas siempre existen. Si no hay personalizadas, la card esqueleto aparece en la primera celda libre. |
+| Error | Ilustración + "No se pudieron cargar las listas." + botón Reintentar. |
+
+---
+
+### Detalle de Lista
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  [FilmIA]  Inicio  Buscar  [Listas]                [Avatar]     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Listas > Sci-Fi                                 ⋮              │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
+│  │ poster  │ │ poster  │ │ poster  │ │ poster  │ │ poster  │   │
+│  │         │ │         │ │         │ │         │ │         │   │
+│  │ Título  │ │ Título  │ │ Título  │ │ Título  │ │ Título  │   │
+│  │ 2024    │ │ 2023    │ │ 2024    │ │ 2023    │ │ 2024    │   │
+│  │     ✕   │ │     ✕   │ │     ✕   │ │     ✕   │ │     ✕   │   │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘   │
+│                                                                  │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐                            │
+│  │ poster  │ │ poster  │ │ poster  │                            │
+│  │         │ │         │ │         │                            │
+│  │ Título  │ │ Título  │ │ Título  │                            │
+│  │ 2024    │ │ 2023    │ │ 2024    │                            │
+│  │     ✕   │ │     ✕   │ │     ✕   │                            │
+│  └─────────┘ └─────────┘ └─────────┘                            │
+│                                                                  │
+│  (scroll vertical — carga más resultados al hacer scroll)         │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Header de la lista
+
+- **Nombre de la lista**: título de sección (heading).
+- **Menú de acciones** (`⋮` vertical): solo en listas personalizadas. Dropdown: Renombrar / Eliminar.
+- **Listas predeterminadas**: no muestran menú de acciones sobre la lista en sí. Solo se pueden quitar ítems individuales.
+
+#### Grid de items
+
+- **5 columnas desktop → 3 tablet → 2 mobile**.
+- Cada **MediaCard** tiene un botón `✕` en la esquina superior derecha, visible solo en hover. Click → modal de confirmación para quitar el ítem.
+- Click en la card → navega a Ficha de detalle (misma pantalla de la sección 5c). El breadcrumb se extiende a: `Listas > {nombre lista} > {título}`.
+- **Scroll vertical**: sin paginación. Se cargan más resultados a medida que el usuario hace scroll.
+
+#### Estados
+
+| Estado | Qué se muestra |
+|--------|---------------|
+| Loading | Skeleton grid de MediaCards (5×2 filas). |
+| Normal | Grid de items con scroll vertical. |
+| Empty | Ilustración + "Esta lista no contiene elementos." + botón "Explorar" (navega a Buscar). |
+| Error | Mensaje + botón Reintentar. |
+
+---
+
+### Modales de Gestión de Listas
+
+Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
+
+#### Crear lista
+
+| Trigger | Botón "Crear nueva lista" en vista general. |
+|---------|-------------------------------------------|
+| **Título** | Crear nueva lista |
+| **Campo** | Text input: "Nombre de la lista" (placeholder). Máx 80 caracteres alfanuméricos. |
+| **Validación** | Nombre vacío: "El nombre no puede estar vacío." Nombre duplicado: "Ya tenés una lista con ese nombre." Mensaje inline en rojo. |
+| **Botones** | Cancelar / Crear |
+| **Post-acción** | Cierra modal, aparece nueva ListCard, toast "Lista creada." |
+
+#### Renombrar lista
+
+| Trigger | Opción "Renombrar" del menú `⋮` de una ListCard personalizada o del header en detalle. |
+|---------|-------------------------------------------|
+| **Título** | Renombrar lista |
+| **Campo** | Text input precargado con el nombre actual. Mismas reglas que Crear. |
+| **Validación** | Igual que Crear. |
+| **Botones** | Cancelar / Guardar |
+| **Post-acción** | Cierra modal, se actualiza nombre en todos los lugares donde aparece, toast "Lista renombrada." |
+
+#### Eliminar lista
+
+| Trigger | Opción "Eliminar" del menú `⋮`. |
+|---------|-------------------------------------------|
+| **Título** | ¿Eliminar lista? |
+| **Cuerpo** | "Esta acción no se puede deshacer. Todos los ítems de la lista se perderán." |
+| **Botones** | Cancelar / Eliminar (botón danger, rojo). |
+| **Post-acción** | Cierra modal, desaparece ListCard, toast "Lista eliminada." |
+
+#### Quitar ítem de lista
+
+| Trigger | Botón `✕` en MediaCard (detalle de lista). |
+|---------|-------------------------------------------|
+| **Título** | "¿Quitar "{título}" de {nombre lista}?" |
+| **Cuerpo** | — |
+| **Botones** | Cancelar / Quitar |
+| **Post-acción** | Cierra modal, desaparece la MediaCard del grid, toast "Ítem quitado." |
+
+#### Responsive de modales
+
+| Breakpoint | Ancho del modal |
+|-----------|----------------|
+| Desktop (≥768px) | 480px |
+| Mobile (<768px) | 95vw, centrado |
+
+---
+
+## 5f. Autenticación (CU-001, CU-002, CU-003)
+
+> Login y Registro comparten la misma caja centrada. La transición entre ambos es inmediata: el contenido del form se reemplaza, el logo y el layout exterior permanecen fijos.
+
+### Login
+
+```
+┌──────────────────────────────────────────┐
+│                                          │
+│               FilmIA                     │
+│                                          │
+│         Iniciar sesión                   │
+│                                          │
+│  Email o nombre de usuario               │
+│  ┌──────────────────────────────────┐    │
+│  └──────────────────────────────────┘    │
+│                                          │
+│  Contraseña                              │
+│  ┌──────────────────────────────────┐    │
+│  │                          [👁]    │    │
+│  └──────────────────────────────────┘    │
+│                                          │
+│  ¿Olvidaste tu contraseña?              │
+│                                          │
+│  ┌──────────────────────────────────┐    │
+│  │      Iniciar sesión             │    │
+│  └──────────────────────────────────┘    │
+│                                          │
+│  ────────── o ──────────                 │
+│                                          │
+│  ┌──────────────────────────────────┐    │
+│  │  G   Continuar con Google        │    │
+│  └──────────────────────────────────┘    │
+│                                          │
+│  ¿No tenés cuenta? Registrate           │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+| Elemento | Comportamiento |
+|----------|---------------|
+| **Campo principal** | Acepta email o nombre de usuario. Label: "Email o nombre de usuario". |
+| **Toggle contraseña** | Ícono 👁 para mostrar/ocultar. |
+| **¿Olvidaste tu contraseña?** | Click → modal con campo de email + botón "Enviar enlace". Toast: "Te enviamos un email con instrucciones para restablecer tu contraseña." (mismo mensaje tanto si el email existe como si no). |
+| **Google** | Botón secundario con logo de G. Inicia flujo OAuth. |
+| **"Registrate"** | Reemplaza el form con el de Registro (transición del contenido, sin recargar). |
+| **Error** | Mensaje inline: "Email, usuario o contraseña incorrectos." (genérico). |
+| **Éxito** | Redirect al Home. |
+
+---
+
+### Registro
+
+```
+┌──────────────────────────────────────────┐
+│               FilmIA                     │
+│         Crear cuenta                     │
+│                                          │
+│  Nombre                                  │
+│  ┌──────────────────────────────────┐    │
+│  └──────────────────────────────────┘    │
+│  Apellido                                │
+│  ┌──────────────────────────────────┐    │
+│  └──────────────────────────────────┘    │
+│  Nombre de usuario                       │
+│  ┌──────────────────────────────────┐    │
+│  └──────────────────────────────────┘    │
+│    De 5 a 25 caracteres alfanuméricos   │
+│  Email                                   │
+│  ┌──────────────────────────────────┐    │
+│  └──────────────────────────────────┘    │
+│  Fecha de nacimiento                     │
+│  ┌──────────────────────────────────┐    │
+│  │ dd/mm/aaaa                       │    │
+│  └──────────────────────────────────┘    │
+│    Debés tener al menos 13 años         │
+│  Género                                  │
+│  ┌──────────────────────────────────┐    │
+│  │ Seleccionar...              ▾    │    │
+│  └──────────────────────────────────┘    │
+│  Contraseña                              │
+│  ┌──────────────────────────────────┐    │
+│  │                          [👁]    │    │
+│  └──────────────────────────────────┘    │
+│    8-20 caracteres · 1 mayúscula ·      │
+│    1 minúscula · 1 número · 1 especial  │
+│    (@ # $ % & *)                         │
+│  Confirmar contraseña                    │
+│  ┌──────────────────────────────────┐    │
+│  │                          [👁]    │    │
+│  └──────────────────────────────────┘    │
+│  ┌──────────────────────────────────┐    │
+│  │        Crear cuenta              │    │
+│  └──────────────────────────────────┘    │
+│  ────────── o ──────────                 │
+│  ┌──────────────────────────────────┐    │
+│  │  G   Registrarse con Google      │    │
+│  └──────────────────────────────────┘    │
+│  ¿Ya tenés cuenta? Iniciar sesión       │
+└──────────────────────────────────────────┘
+```
+
+#### Campos y validaciones (según CU-001)
+
+| Campo | Restricción |
+|-------|------------|
+| Nombre | Solo letras, máx 50 caracteres. Obligatorio. |
+| Apellido | Solo letras, máx 50 caracteres. Obligatorio. |
+| Nombre de usuario | Alfanumérico, 5–25 caracteres, único. Validación inline de disponibilidad. |
+| Email | Formato válido usuario@dominio.com. Obligatorio. |
+| Fecha de nacimiento | Formato dd/mm/aaaa, no futura, ≥13 años. |
+| Género | Dropdown: Masculino / Femenino / No especificar. |
+| Contraseña | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*`). |
+| Confirmar contraseña | Debe coincidir con Contraseña. |
+
+#### Google OAuth
+
+- Botón "Registrarse con Google" inicia flujo OAuth.
+- Si la cuenta de Google ya está asociada → inicia sesión directamente.
+- Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género).
+- La contraseña no aplica para cuentas Google (se omite del form).
+
+#### Estados
+
+| Estado | Comportamiento |
+|--------|---------------|
+| Error de validación | Mensaje inline debajo de cada campo. Botón "Crear cuenta" deshabilitado hasta corregir. |
+| Email o usuario duplicado | Error de servidor: "El email o nombre de usuario ya está registrado." |
+| Registro exitoso | Redirect a Confirmación de cuenta. |
+
+---
+
+### Confirmación de cuenta
+
+```
+┌──────────────────────────────────────────┐
+│                                          │
+│               FilmIA                     │
+│                                          │
+│                  ✉️                      │
+│                                          │
+│        Revisá tu bandeja de entrada      │
+│                                          │
+│  Te enviamos un enlace de confirmación   │
+│  a marco@email.com. Si no lo encontrás,  │
+│  revisá la carpeta de spam.              │
+│                                          │
+│          [Reenviar enlace]              │
+│                                          │
+│  ──────────────────────────────          │
+│                                          │
+│  ¿Ya confirmaste? Iniciar sesión        │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+- Se accede tras registro exitoso o desde el link del email (ruta `/confirmar?token=...`).
+- **Token válido**: toast "Cuenta confirmada." → redirect al Login.
+- **Reenviar enlace**: toast "Enlace reenviado." Rate-limit: 1 cada 60 segundos.
+- **"Iniciar sesión"**: vuelve al Login.
+
+---
+
+## 5g. Perfil (CU-005, CU-006) — Edición inline
+
+> Una sola pantalla con dos modos: visualización y edición. Al clickear "Editar perfil" los campos pasan a inputs. El email es siempre solo lectura.
+
+### Modo visualización
+
+```
+┌──────────────────────────────────────────┐
+│  Perfil                                  │
+│                                          │
+│            ┌────────────┐                │
+│            │  (avatar)   │               │
+│            │   96×96     │               │
+│            └────────────┘                │
+│          Marco López                     │
+│         @marco_lopez                     │
+│       marco@email.com                    │
+│    Miembro desde marzo 2025              │
+│                                          │
+│        [ ✏️ Editar perfil ]             │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+### Modo edición
+
+```
+┌──────────────────────────────────────────┐
+│  Perfil                                  │
+│                                          │
+│            ┌────────────┐                │
+│            │  (avatar)   │               │
+│            │ [Cambiar]  │ ← hover        │
+│            └────────────┘                │
+│                                          │
+│  Nombre completo                         │
+│  ┌──────────────────────────────────┐    │
+│  │ Marco López                      │    │
+│  └──────────────────────────────────┘    │
+│                                          │
+│  Nombre de usuario                       │
+│  ┌──────────────────────────────────┐    │
+│  │ @ │ marco_lopez                  │    │
+│  └──────────────────────────────────┘    │
+│    Disponible                           │
+│                                          │
+│  Email                                   │
+│  marco@email.com                         │
+│  ───────────────────────────────────     │
+│                                          │
+│  ──── Cambiar contraseña ────            │
+│  (sección colapsable)                    │
+│    Contraseña actual                     │
+│    ┌────────────────────────────────┐    │
+│    └────────────────────────────────┘    │
+│    Contraseña nueva                      │
+│    ┌────────────────────────────────┐    │
+│    └────────────────────────────────┘    │
+│    Repetir contraseña nueva              │
+│    ┌────────────────────────────────┐    │
+│    └────────────────────────────────┘    │
+│                                          │
+│    [Cancelar]    [Guardar cambios]       │
+└──────────────────────────────────────────┘
+```
+
+| Elemento | Comportamiento |
+|----------|---------------|
+| **Email** | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope). |
+| **Cambiar contraseña** | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía. |
+| **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo). |
+| **Cancelar** | Revierte a modo visualización sin guardar. |
+| **Guardar** | Actualiza datos. Si se cambió contraseña, valida actual + coincidencia de nueva. Toast: "Perfil actualizado." |
+| **Avatar** | Hover → overlay "Cambiar foto". Click → file picker. Preview instantánea. |
+| **Breadcrumb** | Perfil |
+
+---
+
+## 5h. Pantallas de Error
+
+### 404 — Página no encontrada
+
+```
+┌──────────────────────────────────────────┐
+│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+├──────────────────────────────────────────┤
+│                                          │
+│                  🔍                      │
+│        Página no encontrada              │
+│  La página que buscás no existe o fue    │
+│  movida.                                 │
+│           [Volver al inicio]             │
+└──────────────────────────────────────────┘
+```
+
+- Navbar siempre visible.
+- Breadcrumb vacío.
+- CTA primario al Home.
+
+### Error genérico (500 / timeout)
+
+```
+┌──────────────────────────────────────────┐
+│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+├──────────────────────────────────────────┤
+│                                          │
+│                   ⚠️                     │
+│         Algo salió mal                   │
+│  Ocurrió un error inesperado. Intentá    │
+│  de nuevo en unos minutos.               │
+│           [Reintentar]                   │
+└──────────────────────────────────────────┘
+```
+
+- Misma estructura: navbar + ilustración + mensaje + botón.
+- "Reintentar" recarga la página actual.
+
+---
+
+## 5i. Mis reseñas
+
+> Listado cronológico de todas las reseñas publicadas por el usuario. Se accede desde el dropdown del avatar.
+
+```
+┌──────────────────────────────────────────┐
+│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+├──────────────────────────────────────────┤
+│  Mis reseñas                             │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │ 🎬 Breaking Bad      9/10          │  │
+│  │ 12/03/2025              [✏️] [🗑️]  │  │
+│  │ "Una obra maestra de principio     │  │
+│  │  a fin. El desarrollo de Walter    │  │
+│  │  White es simplemente perfecto..." │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │ 🎬 Interstellar       8/10         │  │
+│  │ 28/02/2025              [✏️] [🗑️]  │  │
+│  │ "Visualmente impresionante..."     │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  ...scroll vertical...                   │
+└──────────────────────────────────────────┘
+```
+
+### ReviewCard
+
+| Elemento | Comportamiento |
+|----------|---------------|
+| **Título + badge** | Clickeable → ficha de detalle. Muestra tipo (Película/Serie). |
+| **Rating** | Formato `X/10`. |
+| **Fecha** | Fecha de publicación. |
+| **Texto** | Truncado a 3 líneas, expandible con "[leer más ▾]". |
+| **✏️ Editar** | Abre modal de editar reseña (mismo de sección 5d). |
+| **🗑️ Eliminar** | Abre modal de eliminar reseña ("¿Eliminar reseña?"). |
+
+- **Orden**: más reciente primero.
+- **Scroll vertical** sin paginación.
+
+### Estados
+
+| Estado | Qué se muestra |
+|--------|---------------|
+| Loading | Skeleton de ReviewCards. |
+| Normal | Listado cronológico. |
+| Empty | Ilustración + "Todavía no escribiste ninguna reseña." + botón "Explorar" → Buscar. |
+| Error | Mensaje + botón Reintentar. |
+
+---
+
+## 5j. Preferencias
+
+> Se accede desde el dropdown del avatar. Configuración de cuenta y apariencia.
+
+```
+┌──────────────────────────────────────────┐
+│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+├──────────────────────────────────────────┤
+│  Preferencias                            │
+│                                          │
+│  ──── Apariencia ────                    │
+│                                          │
+│  Tema                                    │
+│  ┌──────────────────────────────────┐    │
+│  │ ● Oscuro    ○ Claro              │    │
+│  └──────────────────────────────────┘    │
+│                                          │
+│  ──── Privacidad ────                    │
+│                                          │
+│  Perfil público                          │
+│  ┌──────────────────────────────────┐    │
+│  │ [■■■■■■■■■■■■■■■■■■■■■■■■■] ●  │    │
+│  └──────────────────────────────────┘    │
+│  Tus reseñas son visibles para otros    │
+│  usuarios.                              │
+│                                          │
+│  ──── Notificaciones ────                │
+│                                          │
+│  Recomendaciones semanales     [●━━━]    │
+│  Reseñas en tus listas         [●━━━]    │
+│  Novedades de FilmIA           [━━━━]    │
+│                                          │
+│  ──── Cuenta ────                        │
+│                                          │
+│  [Dar de baja cuenta]                    │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+### Secciones
+
+| Sección | Controles | Descripción |
+|---------|----------|------------|
+| **Apariencia** | Toggle Oscuro / Claro | Cambio inmediato de tema. Default: Oscuro. |
+| **Privacidad** | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros. |
+| **Notificaciones** | 3 switches independientes | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmIA (changelog). |
+| **Cuenta** | Botón danger "Dar de baja cuenta" | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es permanente. Perderás tus listas, reseñas y calificaciones." Botones Cancelar / Dar de baja. |
+
+### Breadcrumb
+
+`Preferencias`
+
+---
+
 ## 6. Componentes Base (Design System)
 
 ### 6.1 Botones
@@ -241,15 +993,16 @@ panel overlay a pantalla completa.
 ### 6.3 Navegación
 - **Navbar**: links con estado active/inactive, avatar con dropdown.
 - **Paginación**: prev/next + números (clásica).
-- **Breadcrumb**: opcional en fichas de detalle.
+- **Breadcrumb**: obligatorio en ficha de detalle (reemplaza botón Volver).
 
 ### 6.4 Cards
 - **MediaCard**: poster (2:3), título, año, rating TMDB. Hover: escala 1.02 + sombra.
 - **ListCard**: nombre, cantidad de items, mini preview de 3-4 posters.
-- **ReviewCard**: estrellas, texto, fecha, acciones (editar/eliminar).
+- **ReviewCard**: avatar, @usuario, rating (formato `X/10`, sin estrellas), fecha, texto, acciones (editar/eliminar).
+- **CastCard**: para reparto y equipo (director + actores). Sin fotos. Colapsable si hay más de N elementos.
 
 ### 6.5 Feedback
-- **Rating stars**: widget 1-10 estrellas, solo valores enteros.
+- **Rating stars**: widget interactivo 1-10 estrellas (solo en modal de calificar). Valores enteros. Fuera del modal se muestra formato `X/10`.
 - **Spinner/Loader**: indicador de carga genérico.
 - **Skeleton**: placeholder rectangular animado para carga de contenido.
 - **Toast/Notificación**: mensaje de éxito/error, posicionado top-right o bottom-center.
@@ -331,13 +1084,13 @@ panel overlay a pantalla completa.
 
 ## 10. Pantallas Definidas
 
-- [x] **Home** — Sección 5
-- [x] **Buscar (panel overlay)** — Sección 5b
-- [ ] Ficha de detalle
-- [ ] Modales de reseña
-- [ ] Listas
-- [ ] Perfil
-- [ ] Login / Registro
-- [ ] Confirmación de cuenta
-- [ ] Modificar perfil
-- [ ] Pantallas de error/estado vacío
+- [x] Home — Sección 5
+- [x] Buscar (panel overlay) — Sección 5b
+- [x] Ficha de detalle — Sección 5c
+- [x] Modales de reseña — Sección 5d
+- [x] Listas — Sección 5e
+- [x] Login / Registro / Confirmación de cuenta — Sección 5f
+- [x] Perfil (edición inline) — Sección 5g
+- [x] Pantallas de error (404, error genérico) — Sección 5h
+- [x] Mis reseñas — Sección 5i
+- [x] Preferencias — Sección 5j
