@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FilmIA - Inicio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "primary": "#ffe5a0",
+                        "inverse-primary": "#745b00",
+                        "surface-dim": "#131313",
+                        "surface": "#131313",
+                        "surface-container-highest": "#353534",
+                        "on-secondary-fixed-variant": "#45455b",
+                        "primary-fixed-dim": "#f0c110",
+                        "on-error": "#690005",
+                        "outline-variant": "#4e4633",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#ffe08b",
+                        "inverse-surface": "#e5e2e1",
+                        "tertiary": "#bdefff",
+                        "tertiary-container": "#49dbff",
+                        "on-secondary": "#2f2e43",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary": "#c6c4df",
+                        "on-background": "#e5e2e1",
+                        "tertiary-fixed-dim": "#42d7fb",
+                        "secondary-container": "#47475d",
+                        "on-primary": "#3d2f00",
+                        "surface-variant": "#353534",
+                        "inverse-on-surface": "#313030",
+                        "secondary-fixed-dim": "#c6c4df",
+                        "outline": "#9a9078",
+                        "primary-container": "#f5c518",
+                        "on-secondary-container": "#b8b6d0",
+                        "error-container": "#93000a",
+                        "on-primary-fixed": "#241a00",
+                        "on-tertiary-fixed": "#001f27",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-tint": "#f0c110",
+                        "on-tertiary-fixed-variant": "#004e5e",
+                        "on-tertiary": "#003641",
+                        "on-tertiary-container": "#005e70",
+                        "surface-bright": "#393939",
+                        "secondary-fixed": "#e2e0fc",
+                        "on-surface-variant": "#d1c5ac",
+                        "tertiary-fixed": "#b0ecff",
+                        "on-secondary-fixed": "#1a1a2e",
+                        "on-primary-container": "#695200",
+                        "background": "#131313",
+                        "on-primary-fixed-variant": "#584400",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container": "#201f1f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xxl": "64px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "48px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "title-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .movie-card-overlay {
+            background: linear-gradient(to top, rgba(18, 18, 18, 0.9) 0%, rgba(18, 18, 18, 0) 100%);
+        }
+        .hero-overlay {
+            background: linear-gradient(to top, #131313 0%, rgba(19, 19, 19, 0.4) 50%, rgba(19, 19, 19, 0.1) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased pb-20 md:pb-0 selection:bg-primary-container selection:text-on-primary-container font-body-md text-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="hidden md:flex bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm fixed top-0 w-full z-50 transition-all duration-300">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-[1440px] mx-auto w-full">
+<div class="flex items-center gap-xl">
+<a class="font-headline-md text-headline-md font-bold text-primary tracking-tight hover:opacity-80 transition-opacity" href="#">FilmIA</a>
+<div class="flex items-center gap-md">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 active:scale-95 transition-transform font-label-md text-label-md" href="#">Inicio</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-all duration-200 active:scale-95 transition-transform font-label-md text-label-md" href="#">Buscar</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-all duration-200 active:scale-95 transition-transform font-label-md text-label-md" href="#">Listas</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-[#1A1A2E] border border-[#333333] rounded-DEFAULT pl-10 pr-4 py-2 text-on-surface font-label-sm text-label-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors w-64" placeholder="Buscar películas, series..." type="text"/>
+</div>
+<button class="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent hover:border-primary-container transition-all">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A cinematic, high-quality portrait of a user avatar in a modern, moody lighting setup. Professional photography, deep shadows, subtle neon accents, elegant dark theme aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoSLWndV8nlhQRMiu8r-XA8HiN4UQNygO7Ne-v0724e0dRFBFqicfYh_ZRrvQgbc0PK6DEEkVrIKYiNDg2p9aznmV5Kb3pL-M3zwRDhlH_0xnRvayRzUODx7iNo4Os5i7qNMjBLXZL6Fcmk46dFkK3L_6t2uyZQil4kr60XRInjFupDBPhug7NIbBo20sKrgUC04Kl-Xr-SyYJlLjyILj7aJJRQK3yQlq2fNC__DvSn17UtkBeomG8tGhYoxee9c664tj8QgLt0zo"/>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main>
+<!-- Hero Section -->
+<section class="relative w-full h-[716px] md:h-[870px] min-h-[500px] bg-surface-dim overflow-hidden flex items-end">
+<div class="absolute inset-0 bg-cover bg-center bg-no-repeat w-full h-full" data-alt="A breathtaking, cinematic wide shot of a trending sci-fi epic movie. A solitary figure stands before a massive, glowing celestial structure. Deep cosmic blues and brilliant gold accents. High contrast, atmospheric, professional film grading." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCOne8ZeFMvJi7cdmoPrBbtzyRpKmo4bsWVt7rOpHwtVToO-h9UpSXsVrpimCORMYuNr8SyEg2U56xYqS5cYYTmhlW-2aUUE7vi3Y0v_vkY6rh8PBf5FGOZ_Q4XMzMS2soPDrOB8WAgQpPc4gVI2NKjf0jNdiirAev_QSmaRyogKdug1EUTWysT8IIlRMrTqqwdyWTQOMFBIvgXvkJQ7E0I1gMRKhz2OngoilkLKq3p-Kf3Q3t0Drmg1R3iwxjHZTofnS-hYv2q3a8')"></div>
+<div class="absolute inset-0 hero-overlay"></div>
+<div class="relative z-10 w-full max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop pb-xl md:pb-xxl">
+<div class="max-w-2xl">
+<div class="flex items-center gap-2 mb-4">
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded-sm uppercase tracking-wider">Tendencia</span>
+<div class="flex items-center text-primary-container gap-1 font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>8.9</span>
+</div>
+</div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-md">El Horizonte del Tiempo</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg line-clamp-3 md:line-clamp-none">
+                        Una expedición al borde del universo conocido desata una serie de eventos que desafían la comprensión humana del tiempo y el espacio. Descubre la epopeya de ciencia ficción más aclamada del año.
+                    </p>
+<div class="flex items-center gap-md">
+<button class="bg-primary-container text-[#121212] font-label-md text-label-md font-bold px-6 py-3 rounded-DEFAULT hover:bg-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                            Ver detalle
+                        </button>
+<button class="border border-outline text-on-surface font-label-md text-label-md font-bold px-6 py-3 rounded-DEFAULT hover:bg-surface-container-high transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                            A mi lista
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Horizontal Rows -->
+<div class="max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-xl flex flex-col gap-xxl">
+<!-- Row 1: Recomendado para ti -->
+<section>
+<div class="flex justify-between items-end mb-md">
+<h2 class="font-title-lg text-title-lg text-on-surface">Recomendado para ti</h2>
+<a class="font-label-sm text-label-sm text-primary hover:underline" href="#">Ver todo</a>
+</div>
+<div class="flex gap-md overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory">
+<!-- Card 1 -->
+<div class="relative min-w-[140px] w-[140px] md:min-w-[200px] md:w-[200px] aspect-[2/3] rounded-lg overflow-hidden bg-[#1A1A2E] shrink-0 snap-start group cursor-pointer">
+<img alt="Sombras en la ciudad" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A cinematic movie poster for a dark thriller. Silhouette of a detective in a foggy, neon-lit alleyway. High contrast, moody, professional cinematography, 4k." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIDqHNlsOXL4KUt0aHjjj1sU9PEwFh56q5yDM5O-vlfsO76k9k0CHLVAPDsSvviywxLDZ4mAP20StAxp-B5A1ntjSf0PAhV-r6ywt7VORfam0CMZ6NXbx9nsQmKn6Q1-7QWfdCLy2vTDnr_U68YHyN12UPJMh5MNqpT6cjd_CcbZwAKh6ZnunwraZ_6Cx0twVeIU9LSkfXM_UtXXoMY7luKaCrwG7A08Km6sl2qk1NVqhcNjrnXj-Mbmh3ZBuS9Fbk_y3NXLRQGtE"/>
+<div class="absolute inset-0 movie-card-overlay opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="absolute bottom-0 left-0 w-full p-sm md:p-md">
+<h3 class="font-label-md text-label-md text-on-surface truncate mb-1">Sombras Urbanas</h3>
+<div class="flex items-center text-primary-container gap-1 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>7.8</span>
+</div>
+</div>
+<div class="absolute inset-0 border border-transparent group-hover:border-primary-container/50 rounded-lg transition-colors pointer-events-none"></div>
+</div>
+<!-- Card 2 -->
+<div class="relative min-w-[140px] w-[140px] md:min-w-[200px] md:w-[200px] aspect-[2/3] rounded-lg overflow-hidden bg-[#1A1A2E] shrink-0 snap-start group cursor-pointer">
+<img alt="Amanecer en Roma" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A beautiful, vibrant poster for a romantic comedy set in a colorful European city. Sun-drenched cobblestone streets, warm tones, joyful atmosphere, high quality film still." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDho8VDe_aaQAoDkYmjoQwNWRpjmPmKy7YDaYJejciHja_eunH-uptMlGfZJDh5cDyjkJbsel7XYIE13gtB3jqjTWGksbmBR780kCfVqv9JDz8AS0TizvkCu5dAWeFX1wQb7mrEyHj-SEAKIz2jPR9UEty0Ug-LrhATJBQkezWoDH7Du8o57B11YtBAdVzudpBbh-Sie9cLApD9Nje_RmgYGMVc0jMKeCmXCJnotb-1eq703lFzfgzsN2_1MfHrfZ3GXBb1ZotWIYo"/>
+<div class="absolute inset-0 movie-card-overlay opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="absolute bottom-0 left-0 w-full p-sm md:p-md">
+<h3 class="font-label-md text-label-md text-on-surface truncate mb-1">Amanecer en Roma</h3>
+<div class="flex items-center text-primary-container gap-1 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>6.5</span>
+</div>
+</div>
+<div class="absolute inset-0 border border-transparent group-hover:border-primary-container/50 rounded-lg transition-colors pointer-events-none"></div>
+</div>
+<!-- Card 3 -->
+<div class="relative min-w-[140px] w-[140px] md:min-w-[200px] md:w-[200px] aspect-[2/3] rounded-lg overflow-hidden bg-[#1A1A2E] shrink-0 snap-start group cursor-pointer">
+<img alt="Ecos de Guerra" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="An intense, gritty movie poster for a war drama. Muddy trenches, muted color palette, dramatic lighting emphasizing despair and hope. Epic cinematic scale." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD66h3pCB_t4QSqqXHYDMk17kJysq5JhHiT_TA9Xnodfa4hirpGshIKivmolfNXCqO6zIym9ZVdbE64bJV1GbFft0u6gXAQ45H_WtyC_QovFPnmQeBEUFni_GbV3m2vJE4A2DAC_KkGWBO9yFqCUEVKs3cb8S6VC8D4zQ9DgxExLXWh3w5w3hI2sfaCOA1BMbrnrD-WbFGMISR5XZAyWq7KwPbUc5xZdDy6wnmUQKOzxJIZXuMrdDk4GBTmaytXRgEdGMszu55OcNo"/>
+<div class="absolute inset-0 movie-card-overlay opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="absolute bottom-0 left-0 w-full p-sm md:p-md">
+<h3 class="font-label-md text-label-md text-on-surface truncate mb-1">Ecos de Guerra</h3>
+<div class="flex items-center text-primary-container gap-1 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>8.2</span>
+</div>
+</div>
+<div class="absolute inset-0 border border-transparent group-hover:border-primary-container/50 rounded-lg transition-colors pointer-events-none"></div>
+</div>
+<!-- Card 4 -->
+<div class="relative min-w-[140px] w-[140px] md:min-w-[200px] md:w-[200px] aspect-[2/3] rounded-lg overflow-hidden bg-[#1A1A2E] shrink-0 snap-start group cursor-pointer">
+<img alt="La Casa Vacía" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A minimalist, eerie movie poster for a psychological horror. A single lit window in an otherwise pitch-black house. High contrast, unsettling atmosphere, premium art direction." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf1rpbCIgfSdfA3IzrsL8NKrcgSyg4EVPodtbQSn0CNS8rbUz5i2C5M5RkgAl0AXwpKAmhSUSlDhmt0atRBD_QdKLrTnMMr-uaw0FVHFhKqUOBujPgqyXMO0koKjcb-tJ73K5Yp321J5hIv3WoRzmsiGqOj7po7zp6FokTNhcpzDV9UZcmmvhWUGkcHHenR9Hg7vsd2RzJE_L6Irz3dF-rMbnqayghiNYjjHaneGplIwN6w2z4HYpRvLxA8_s6v4n3BQ7U6ym8c24"/>
+<div class="absolute inset-0 movie-card-overlay opacity-80 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="absolute bottom-0 left-0 w-full p-sm md:p-md">
+<h3 class="font-label-md text-label-md text-on-surface truncate mb-1">La Casa Vacía</h3>
+<div class="flex items-center text-primary-container gap-1 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>7.1</span>
+</div>
+</div>
+<div class="absolute inset-0 border border-transparent group-hover:border-primary-container/50 rounded-lg transition-colors pointer-events-none"></div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Chatbot FAB -->
+<button aria-label="Asistente de Cine" class="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 bg-primary-container text-[#121212] rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(245,197,24,0.3)] hover:scale-110 active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined" style="font-size: 28px;">smart_toy</span>
+</button>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-lg border-t border-outline-variant shadow-2xl fixed bottom-0 w-full z-50">
+<div class="flex justify-around items-center py-3 pb-safe px-4">
+<!-- Active Tab: Inicio -->
+<a class="flex flex-col items-center justify-center text-primary active:scale-90 transition-all active:bg-surface-container-highest rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm mt-1">Inicio</span>
+</a>
+<!-- Inactive Tabs -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90 transition-all active:bg-surface-container-highest rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-sm text-label-sm mt-1">Buscar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90 transition-all active:bg-surface-container-highest rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined">movie</span>
+<span class="font-label-sm text-label-sm mt-1">Listas</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90 transition-all active:bg-surface-container-highest rounded-lg p-2 w-16" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-sm text-label-sm mt-1">Chat</span>
+</a>
+</div>
+</nav>
+</body></html>
