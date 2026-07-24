@@ -331,7 +331,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Campo | Detalle |
 | :---- | :---- |
 | **Flujos de excepción** | Si ocurre un error de conexión con la API y no hay datos en caché, el sistema muestra el mensaje "No se pudo recuperar el catálogo. Intente nuevamente más tarde", y finaliza el caso de uso. |
-| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él.<br><br>**Campos de la vista de catálogo:** título, año, imagen, badge de tipo (película/serie).<br>**Filtros disponibles:** tipo (mediante toggle Todo/Películas/Series), género, año, calificación mínima.<br><br>**Restricciones:** El campo de búsqueda acepta texto alfanumérico (máx. 50 caracteres). La actualización con TMDB debe respetar límites de uso de la API y emplear caché local. Tiempo máximo de respuesta para carga inicial: 2 segundos (90% de las solicitudes). El sistema debe mantener la consistencia de los datos mostrados con la información más reciente disponible. |
+| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él.<br><br>**Campos de la vista de catálogo:** título, año, imagen, badge de tipo (película/serie).<br>**Filtros disponibles:** tipo (mediante toggle Todo/Películas/Series), género, año, calificación mínima (valor de 0 a 10 basado en la calificación promedio de TMDB).<br><br>**Restricciones:** El campo de búsqueda acepta texto alfanumérico (máx. 50 caracteres). La actualización con TMDB debe respetar límites de uso de la API y emplear caché local. Tiempo máximo de respuesta para carga inicial: 2 segundos (90% de las solicitudes). El sistema debe mantener la consistencia de los datos mostrados con la información más reciente disponible. |
 
 ---
 
@@ -475,7 +475,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | **Complejidad** | Alta. |
 | **Actor principal** | Usuario. |
 | **Actores secundarios** | API del LLM del Chatbot. |
-| **Precondiciones** | El usuario está situado en la página de inicio, donde el chatbot es accesible. |
+| **Precondiciones** | El chatbot es accesible desde cualquier pantalla a través del FAB flotante. |
 | **Postcondiciones** | **Éxito:** El sistema procesa la consulta del usuario y entrega una respuesta/recomendación en la interfaz del chatbot. |
 |  | **Fracaso:** El sistema informa que no puede procesar la solicitud o que ha ocurrido un error de conexión. |
 
@@ -557,7 +557,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Campo | Detalle |
 | :---- | :---- |
 | **Flujos de excepción** | Si ocurre un error de conexión o base de datos al intentar almacenar, modificar o eliminar la reseña/calificación, el sistema notifica el fallo y el caso de uso finaliza sin guardar los datos. |
-| **Observaciones** | La calificación debe estar en el rango de 1 a 10. La realización de una reseña es opcional. |
+| **Observaciones** | La calificación debe estar en el rango de 1 a 10. La realización de una reseña es opcional. El texto de la reseña tiene un límite de 1000 caracteres. |
 
 ---
 
@@ -680,3 +680,66 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | :---- | :---- |
 | **Flujos de excepción** | — |
 | **Observaciones** | Este caso de uso es invocado por el CU-008. La sincronización con la API externa debe optimizarse mediante caché local para respetar límites de uso y evitar llamadas innecesarias. Las operaciones de sincronización no deben afectar la experiencia del usuario. |
+
+---
+
+#### CU-020: Recuperar contraseña
+
+| Campo | Detalle |
+| :---- | :---- |
+| **ID** | CU-020 |
+| **Nombre** | Recuperar contraseña. |
+| **Breve Descripción** | Permite al usuario solicitar el restablecimiento de su contraseña mediante un enlace enviado a su correo electrónico. |
+| **Prioridad** | Media. |
+| **Complejidad** | Media. |
+| **Actor principal** | Usuario. |
+| **Actores secundarios** | Ninguno. |
+| **Precondiciones** | El usuario debe tener una cuenta registrada con un correo electrónico válido. |
+| **Postcondiciones** | **Éxito:** El sistema envía un correo electrónico con un enlace de restablecimiento de contraseña. El enlace es válido por un tiempo limitado. |
+|  | **Fracaso:** El correo no se envía por un error del sistema. |
+
+| Flujo Principal | Flujo Alternativo |
+| :---- | :---- |
+| 1. El usuario selecciona la opción "¿Olvidaste tu contraseña?" desde la pantalla de inicio de sesión. | — |
+| 2. El sistema presenta un modal solicitando el correo electrónico asociado a la cuenta. | — |
+| 3. El usuario ingresa su correo electrónico y presiona "Enviar enlace". | 3.A. El usuario cancela la operación.<br>3.A.1 El sistema cierra el modal.<br>3.A.2 El caso de uso termina. |
+| 4. El sistema valida el formato del correo ingresado. | 4.A. El formato del correo es inválido.<br>4.A.1 El sistema informa el error.<br>4.A.2 Se retorna al paso 2. |
+| 5. El sistema envía un correo electrónico con un enlace de restablecimiento. | 5.A. El envío del correo falla.<br>5.A.1 El sistema muestra un mensaje de error e informa que el intento puede repetirse más tarde. El caso de uso termina. |
+| 6. El sistema muestra el mensaje: "Te enviamos un email con instrucciones para restablecer tu contraseña." independientemente de si el correo existe o no en la base de datos. | — |
+| 7. El caso de uso termina. | — |
+
+| Campo | Detalle |
+| :---- | :---- |
+| **Flujos de excepción** | — |
+| **Observaciones** | Por seguridad, el sistema no debe revelar si el correo electrónico ingresado está registrado o no. El mensaje de éxito debe mostrarse siempre, independientemente de la existencia de la cuenta. El enlace de restablecimiento tiene una validez de 1 hora. La nueva contraseña debe cumplir con las mismas reglas de validación que en el CU-001. Se debe aplicar rate limiting: máximo 1 solicitud cada 60 segundos por dirección IP. |
+
+---
+
+#### CU-021: Sincronizar catálogo con TMDB
+
+| Campo | Detalle |
+| :---- | :---- |
+| **ID** | CU-021 |
+| **Nombre** | Sincronizar catálogo con TMDB. |
+| **Breve Descripción** | Proceso automático que sincroniza diariamente la base de datos local con el catálogo actualizado de The Movie Database (TMDB), almacenando los metadatos completos de películas y series populares, en tendencia y novedades. |
+| **Prioridad** | Alta. |
+| **Complejidad** | Alta. |
+| **Actor principal** | Sistema (cron job). |
+| **Actores secundarios** | API TMDB. |
+| **Precondiciones** | La API de TMDB debe estar operativa. El cron job debe ejecutarse en el horario programado. |
+| **Postcondiciones** | **Éxito:** Los metadatos completos de las producciones audiovisuales se actualizan en la base de datos local. El catálogo refleja la información más reciente disponible en TMDB. |
+|  | **Fracaso:** La sincronización falla total o parcialmente. El sistema mantiene los últimos datos disponibles y registra el error para su diagnóstico. |
+
+| Flujo Principal | Flujo Alternativo |
+| :---- | :---- |
+| 1. El sistema ejecuta el cron job de sincronización diariamente en un horario de baja actividad definido en la configuración del sistema. | — |
+| 2. El sistema consulta los endpoints de TMDB para obtener las producciones populares (`/trending`), novedades (`/movie/now_playing`, `/discover`) y tendencias. | 2.A. La API de TMDB no está disponible o devuelve un error.<br>2.A.1 El sistema registra el error en los logs.<br>2.A.2 El sistema mantiene los datos de la última sincronización exitosa.<br>2.A.3 El caso de uso termina. |
+| 3. Para cada producción obtenida, el sistema almacena o actualiza los metadatos completos en la tabla ProduccionAudiovisual: título, póster, sinopsis, fecha de lanzamiento, reparto, directores, estatus, géneros, calificación promedio de TMDB, cantidad de temporadas, cantidad de episodios y duración. | 3.A. Una producción individual falla al guardarse.<br>3.A.1 El sistema registra el error específico y continúa con la siguiente producción. |
+| 4. El sistema respeta los límites de uso de la API de TMDB utilizando paginación y caché local para evitar solicitudes duplicadas. | — |
+| 5. El sistema registra un resumen de la sincronización: cantidad de producciones nuevas, actualizadas y errores. | — |
+| 6. El caso de uso termina. | — |
+
+| Campo | Detalle |
+| :---- | :---- |
+| **Flujos de excepción** | Si la sincronización completa falla (por ejemplo, por un error de base de datos), el sistema debe notificar al administrador y conservar el último estado consistente del catálogo. |
+| **Observaciones** | La sincronización se ejecuta como un proceso en segundo plano (cron job) para no afectar la experiencia del usuario (RNF #7). Los datos sincronizados incluyen metadatos completos para que la ficha de detalle funcione sin depender de llamadas on-demand a TMDB. El sistema debe implementar un mecanismo de caché para optimizar las consultas (RNF #8). Las producciones que los usuarios agregan a listas o califican se guardan como referencia en la BD local aunque no estén en el conjunto sincronizado. |

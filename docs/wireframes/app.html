@@ -709,6 +709,7 @@
       </div>
       <select class="filter-select"><option value="">Género</option><option>Acción</option><option>Drama</option><option>Comedia</option></select>
       <select class="filter-select"><option value="">Año</option><option>2024</option><option>2023</option><option>2022</option></select>
+      <select class="filter-select"><option value="">⭐ Calificación mínima</option><option>9</option><option>8</option><option>7</option><option>6</option><option>5</option></select>
     </div>
 
     <div id="resultsArea">
@@ -1184,8 +1185,12 @@
       </div>
       <div class="profile-form" style="margin-top:20px;">
         <div class="form-group">
-          <label>Nombre completo</label>
-          <input type="text" id="editName" value="Marco López">
+          <label>Nombre</label>
+          <input type="text" id="editNombre" value="Marco">
+        </div>
+        <div class="form-group">
+          <label>Apellido</label>
+          <input type="text" id="editApellido" value="López">
         </div>
         <div class="form-group">
           <label>Nombre de usuario</label>
@@ -1467,7 +1472,7 @@
     if (detailOrigin === 'lists') {
       bc.innerHTML = `<a onclick="navigate('lists')">Listas</a><span class="sep">›</span><a onclick="navigate('listDetail','${detailListName || currentListName}')">${detailListName || currentListName}</a><span class="sep">›</span><span class="current">${title}</span>`;
     } else if (detailOrigin === 'search') {
-      bc.innerHTML = `<span class="current">${title}</span>`;
+      bc.innerHTML = `<a onclick="navigate('home')">Inicio</a><span class="sep">›</span><a onclick="navigate('search'); toggleSearch(); return false;">Buscar</a><span class="sep">›</span><span class="current">${title}</span>`;
     } else {
       bc.innerHTML = `<a onclick="navigate('home')">Inicio</a><span class="sep">›</span><span class="current">${title}</span>`;
     }
@@ -1805,7 +1810,7 @@
   }
 
   function saveProfile() {
-    document.getElementById('displayName').textContent = document.getElementById('editName').value;
+    document.getElementById('displayName').textContent = document.getElementById('editNombre').value + ' ' + document.getElementById('editApellido').value;
     document.getElementById('displayUsername').textContent = '@' + document.getElementById('editUsername').value;
     alert('Perfil actualizado.');
     cancelEdit();
