@@ -61,6 +61,10 @@ El desarrollo se fundamenta en una arquitectura MVC (Model-View-Controller) apoy
 
 Las películas y series se guardarán en la base de datos local únicamente como referencias (datos esenciales como ID de TMDB, título, póster) cuando un usuario interactúe con ellas, por ejemplo, al agregarlas a una lista o calificarlas. Esto evita la duplicidad de la información detallada que ya está disponible en la API de TMDB.
 
+**Sincronización con TMDB:** La actualización del catálogo se realiza mediante un cron job diario programado en horario de baja actividad. Este proceso sincroniza los metadatos completos (título, póster, sinopsis, reparto, directores, géneros, calificación promedio, duración, temporadas y episodios) de las producciones populares, en tendencia y novedades desde TMDB hacia la tabla ProduccionAudiovisual. La sincronización respeta los límites de uso de la API de TMDB y utiliza mecanismos de caché para evitar solicitudes duplicadas (CU-021).
+
+**Chats múltiples:** El modelo de clases contempla la posibilidad de chats múltiples por usuario (1..*), pero en la versión inicial (MVP) solo se implementará un chat por usuario. La funcionalidad de chats múltiples queda documentada como mejora futura.
+
 En la entidad Mensaje, el atributo autor permite distinguir si el mensaje proviene del usuario o del chatbot, sin necesidad de crear una segunda entidad para manejar los roles dentro del chat.
 
 ---
@@ -97,4 +101,19 @@ En la relación de herencia entre Persona y Usuario se usa el mismo idPersona co
 
 El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la información almacenada puede variar considerablemente según el desarrollo de la conversación y no siempre sigue una estructura fija. De esta forma se pueden guardar cosas como un resumen del historial, parámetros que el chatbot viene usando o cualquier otro dato que necesite en el momento, sin crear tablas nuevas solo para eso. Además, PostgreSQL (la BD que tenemos pensado usar) permite buscar y actualizar partes del JSONB sin problemas, cuando con JSON hay ciertas limitantes, así que es una forma práctica y flexible de manejar estos datos sin complicar el modelo.
 
-**Preferencias de usuario (UI):** Las preferencias de interfaz (tema oscuro/claro, perfil público, notificaciones por email) definidas en los lineamientos de UI requieren persistencia. Se recomienda agregar a la tabla Usuario los campos `tema` (VARCHAR, default 'oscuro'), `perfilPublico` (BOOLEAN, default TRUE) y `notifRecomendaciones` / `notifReseñas` / `notifNovedades` (BOOLEAN, default TRUE cada uno). Para cuentas creadas con Google OAuth, el campo `contraseña` puede ser NULL ya que la autenticación se delega al proveedor externo.
+**Campos adicionales requeridos en Usuario:** Los siguientes campos deben agregarse a la tabla Usuario para dar soporte a las funcionalidades definidas en los lineamientos de UI y casos de uso:
+
+- `fechaRegistro` (DATE, NOT NULL, DEFAULT NOW()): Fecha en que el usuario creó su cuenta. Se muestra en la sección de perfil como "Miembro desde [mes] [año]".
+- `avatarId` (TINYINT, NOT NULL, DEFAULT 1): Identificador del avatar seleccionado por el usuario dentro de un conjunto de 20 avatares genéricos predefinidos. El valor por defecto es 1. No se almacenan archivos de imagen; los avatares son recursos estáticos del frontend.
+- `tema` (VARCHAR(10), NOT NULL, DEFAULT 'oscuro'): Preferencia de tema de la interfaz. Valores posibles: 'oscuro', 'claro'.
+- `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
+- `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
+- `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
+- `notifNovedades` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre novedades de FilmIA.
+
+**Campo adicional en Persona para OAuth:**
+- `googleId` (VARCHAR(100), UNIQUE, NULLABLE): Identificador único de la cuenta de Google asociada. Solo se completa para cuentas creadas mediante autenticación con Google OAuth. En estos casos, el campo `contraseña` de Persona puede ser NULL.
+
+**Cambio en Reseña:**
+- `texto` cambia de VARCHAR(250) a VARCHAR(1000) para permitir reseñas de hasta 1000 caracteres, en concordancia con los lineamientos de UI.
+- `sinopsis` en ProduccionAudiovisual cambia de VARCHAR(250) a VARCHAR(2000) para almacenar sinopsis completas sincronizadas desde TMDB.

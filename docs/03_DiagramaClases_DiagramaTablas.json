@@ -46,15 +46,15 @@
           "id": "pHJgLgODaCwc4kW-jP36-3",
           "type": "node",
           "parent": "1",
-          "label": "Usuario\n+ nombre: String\n+ apellido: String\n+ fechaNacimiento: Date\n+ genero: TipoGenero\n+ estado: EstadoCuenta\n + get/set \n + calcularEdad(): Integer + esMayorDeEdad(): Bool\n + cambiarEstado(): Void\n + actualizarPerfil(): Void\n + estaActivo(): Bool\n + agregarLista(): Void\n + removerLista(): Bool\n + buscarListaPorNombre(): Lista\n + tieneLista(): Bool\n + publicarCalificacion(): Void\n + removerCalificacion(): Bool\n + tieneCalificacionEn(): Bool\n + agregarNuevoChat(): Void\n + eliminarChat(): Bool",
-          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Usuario</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ nombre: String</p><p style=\"margin:0px;margin-left:4px;\">+ apellido: String</p><p style=\"margin:0px;margin-left:4px;\">+ fechaNacimiento: Date</p><p style=\"margin:0px;margin-left:4px;\">+ genero: TipoGenero</p><p style=\"margin:0px;margin-left:4px;\">+ estado: EstadoCuenta</p><hr size=\"1\" style=\"border-style:solid;\"><div>&nbsp;+ get/set&nbsp;</div><div>&nbsp;+ calcularEdad(): Integer</div>&nbsp;+ esMayorDeEdad(): Bool<br>&nbsp;+ cambiarEstado(): Void<br>&nbsp;+ actualizarPerfil(): Void<br>&nbsp;+ estaActivo(): Bool<br>&nbsp;+ agregarLista(): Void<br>&nbsp;+ removerLista(): Bool<br>&nbsp;+ buscarListaPorNombre(): Lista<br>&nbsp;+ tieneLista(): Bool<br>&nbsp;+ publicarCalificacion(): Void<br>&nbsp;+ removerCalificacion(): Bool<br>&nbsp;+ tieneCalificacionEn(): Bool<br>&nbsp;+ agregarNuevoChat(): Void<br>&nbsp;+ eliminarChat(): Bool<br><br><div><br></div>"
+          "label": "Usuario\n+ nombre: String\n+ apellido: String\n+ fechaNacimiento: Date\n+ genero: TipoGenero\n+ estado: EstadoCuenta\n+ fechaRegistro: Date\n+ avatarId: Integer\n+ tema: String\n+ perfilPublico: Boolean\n+ notifRecomendaciones: Boolean\n+ notifReseñas: Boolean\n+ notifNovedades: Boolean\n + get/set \n + calcularEdad(): Integer + esMayorDeEdad(): Bool\n + cambiarEstado(): Void\n + actualizarPerfil(): Void\n + estaActivo(): Bool\n + agregarLista(): Void\n + removerLista(): Bool\n + buscarListaPorNombre(): Lista\n + tieneLista(): Bool\n + publicarCalificacion(): Void\n + removerCalificacion(): Bool\n + tieneCalificacionEn(): Bool\n + agregarNuevoChat(): Void\n + eliminarChat(): Bool",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\"><b>Usuario</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ nombre: String</p><p style=\"margin:0px;margin-left:4px;\">+ apellido: String</p><p style=\"margin:0px;margin-left:4px;\">+ fechaNacimiento: Date</p><p style=\"margin:0px;margin-left:4px;\">+ genero: TipoGenero</p><p style=\"margin:0px;margin-left:4px;\">+ estado: EstadoCuenta&nbsp;+ fechaRegistro: Date<br>&nbsp;+ avatarId: Integer<br>&nbsp;+ tema: String<br>&nbsp;+ perfilPublico: Boolean<br>&nbsp;+ notifRecomendaciones: Boolean<br>&nbsp;+ notifReseñas: Boolean<br>&nbsp;+ notifNovedades: Boolean<br></p><hr size=\"1\" style=\"border-style:solid;\"><div>&nbsp;+ get/set&nbsp;</div><div>&nbsp;+ calcularEdad(): Integer</div>&nbsp;+ esMayorDeEdad(): Bool<br>&nbsp;+ cambiarEstado(): Void<br>&nbsp;+ actualizarPerfil(): Void<br>&nbsp;+ estaActivo(): Bool<br>&nbsp;+ agregarLista(): Void<br>&nbsp;+ removerLista(): Bool<br>&nbsp;+ buscarListaPorNombre(): Lista<br>&nbsp;+ tieneLista(): Bool<br>&nbsp;+ publicarCalificacion(): Void<br>&nbsp;+ removerCalificacion(): Bool<br>&nbsp;+ tieneCalificacionEn(): Bool<br>&nbsp;+ agregarNuevoChat(): Void<br>&nbsp;+ eliminarChat(): Bool<br><br><div><br></div>"
         },
         {
           "id": "pHJgLgODaCwc4kW-jP36-5",
           "type": "node",
           "parent": "1",
-          "label": "<<abstract>>\nPersona\n+ idPersona: Integer\n+ nombreUsuario: String\n+ correo: String\n+ contraseña: String\n+ get/set\n+ verificarContrasena(): Bool\n+ actualizarCorreo(): Void\n+ actualizarNombreUsuario(): Void",
-          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\">&lt;&lt;abstract&gt;&gt;<br><b>Persona</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idPersona: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ nombreUsuario: String</p><p style=\"margin:0px;margin-left:4px;\">+ correo: String</p><p style=\"margin:0px;margin-left:4px;\">+ contraseña: String</p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set</p><p style=\"margin:0px;margin-left:4px;\">+ verificarContrasena(): Bool</p><p style=\"margin:0px;margin-left:4px;\">+ actualizarCorreo(): Void<br>+ actualizarNombreUsuario(): Void</p>"
+          "label": "<<abstract>>\nPersona\n+ idPersona: Integer\n+ nombreUsuario: String\n+ correo: String\n+ contraseña: String\n+ googleId: String [0..1]\n+ get/set\n+ verificarContrasena(): Bool\n+ actualizarCorreo(): Void\n+ actualizarNombreUsuario(): Void",
+          "html": "<p style=\"margin:0px;margin-top:4px;text-align:center;\">&lt;&lt;abstract&gt;&gt;<br><b>Persona</b></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ idPersona: Integer</p><p style=\"margin:0px;margin-left:4px;\">+ nombreUsuario: String</p><p style=\"margin:0px;margin-left:4px;\">+ correo: String</p><p style=\"margin:0px;margin-left:4px;\">+ contraseña: String&nbsp;+ googleId: String [0..1]<br></p><hr size=\"1\" style=\"border-style:solid;\"><p style=\"margin:0px;margin-left:4px;\">+ get/set</p><p style=\"margin:0px;margin-left:4px;\">+ verificarContrasena(): Bool</p><p style=\"margin:0px;margin-left:4px;\">+ actualizarCorreo(): Void<br>+ actualizarNombreUsuario(): Void</p>"
         },
         {
           "id": "pHJgLgODaCwc4kW-jP36-8",
@@ -417,7 +417,7 @@
           "id": "qslf3pnlIVyrfMHXXjy5-28",
           "type": "node",
           "parent": "qslf3pnlIVyrfMHXXjy5-26",
-          "label": "contraseña\t\tVARCHAR(255)",
+          "label": "contraseña\t\tVARCHAR(50)",
           "html": "contraseña<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(50)"
         },
         {
@@ -555,7 +555,7 @@
           "type": "node",
           "parent": "ge8WpLXWiE9YZQpu8l5J-22",
           "label": "apellido\t\tVARCHAR(50)",
-          "html": "apellido<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(25)"
+          "html": "apellido<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(50)"
         },
         {
           "id": "ge8WpLXWiE9YZQpu8l5J-25",
@@ -648,8 +648,8 @@
           "id": "ge8WpLXWiE9YZQpu8l5J-59",
           "type": "node",
           "parent": "ge8WpLXWiE9YZQpu8l5J-57",
-          "label": "texto\t\tVARCHAR(250)",
-          "html": "<div>texto<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(250)</div>"
+          "label": "texto\t\tVARCHAR(1000)",
+          "html": "<div>texto<span style=\"white-space: pre;\">\t</span><span style=\"white-space: pre;\">\t</span>VARCHAR(1000)</div>"
         },
         {
           "id": "ge8WpLXWiE9YZQpu8l5J-60",
@@ -1015,7 +1015,7 @@
           "id": "ge8WpLXWiE9YZQpu8l5J-107",
           "type": "node",
           "parent": "ge8WpLXWiE9YZQpu8l5J-105",
-"label": "activo               BOOLEAN"
+          "label": "activo               BOOLEAN"
         },
         {
           "id": "n4hznQhwUjweXsK5cbG3-114",
@@ -1302,7 +1302,7 @@
           "id": "n4hznQhwUjweXsK5cbG3-65",
           "type": "node",
           "parent": "n4hznQhwUjweXsK5cbG3-63",
-          "label": "sinopsis                   VARCHAR(250)"
+          "label": "sinopsis                   VARCHAR(2000)"
         },
         {
           "id": "n4hznQhwUjweXsK5cbG3-66",
@@ -1438,7 +1438,7 @@
           "id": "n4hznQhwUjweXsK5cbG3-78",
           "type": "node",
           "parent": "n4hznQhwUjweXsK5cbG3-76",
-          "label": "cantidadEspisodios       INTEGER"
+          "label": "cantidadEpisodios       INTEGER"
         },
         {
           "id": "n4hznQhwUjweXsK5cbG3-85",
@@ -1559,6 +1559,142 @@
           "type": "edge",
           "parent": "1",
           "target": "n4hznQhwUjweXsK5cbG3-85"
+        },
+        {
+          "id": "auto-9000-mrz6kyrg",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "auto-9001-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9000-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9002-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9000-mrz6kyrg",
+          "label": "fechaRegistro\tDATE"
+        },
+        {
+          "id": "auto-9003-mrz6kyrg",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "auto-9004-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9003-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9005-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9003-mrz6kyrg",
+          "label": "avatarId\t\tTINYINT"
+        },
+        {
+          "id": "auto-9006-mrz6kyrg",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "auto-9007-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9006-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9008-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9006-mrz6kyrg",
+          "label": "tema\t\t\tVARCHAR(10)"
+        },
+        {
+          "id": "auto-9009-mrz6kyrg",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "auto-9010-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9009-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9011-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9009-mrz6kyrg",
+          "label": "perfilPublico\tBOOLEAN"
+        },
+        {
+          "id": "auto-9012-mrz6kyrg",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "auto-9013-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9012-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9014-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9012-mrz6kyrg",
+          "label": "notifRecomendaciones\tBOOLEAN"
+        },
+        {
+          "id": "auto-9015-mrz6kyrg",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "auto-9016-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9015-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9017-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9015-mrz6kyrg",
+          "label": "notifReseñas\t\tBOOLEAN"
+        },
+        {
+          "id": "auto-9018-mrz6kyrg",
+          "type": "node",
+          "parent": "ge8WpLXWiE9YZQpu8l5J-15"
+        },
+        {
+          "id": "auto-9019-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9018-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9020-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9018-mrz6kyrg",
+          "label": "notifNovedades\tBOOLEAN"
+        },
+        {
+          "id": "auto-9021-mrz6kyrg",
+          "type": "node",
+          "parent": "qslf3pnlIVyrfMHXXjy5-16"
+        },
+        {
+          "id": "auto-9022-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9021-mrz6kyrg",
+          "label": "A"
+        },
+        {
+          "id": "auto-9023-mrz6kyrg",
+          "type": "node",
+          "parent": "auto-9021-mrz6kyrg",
+          "label": "googleId\t\tVARCHAR(100)"
         }
       ]
     }

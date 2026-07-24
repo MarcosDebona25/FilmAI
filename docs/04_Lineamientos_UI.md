@@ -190,7 +190,7 @@ panel overlay a pantalla completa.
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  TOOLBAR DE BÚSQUEDA                                     │
-│  [🔍 Buscar...__________]  [Todo|Pelis|Series]  [Género] │
+│  [🔍 Buscar...__________]  [Todo|Pelis|Series]  [Género] [Año] [⭐ mín] │
 │                                                          │
 │  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐           │
 │  │    │ │    │ │    │ │    │ │    │ │    │           │
@@ -371,7 +371,7 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 |-------|---------------|
 | Publicar sin calificación | Mensaje de error inline: "Debés seleccionar una calificación." Botón Publicar se deshabilita. |
 | Editar y dejar sin calificación | Ídem. No se permite quitar la calificación y dejar solo texto. |
-| Texto > 250 caracteres | El textarea limita la entrada. Contador muestra `N/250`. |
+| Texto > 1000 caracteres | El textarea limita la entrada. Contador muestra `N/1000`. |
 
 ### Post-acción
 
@@ -783,9 +783,14 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │            │ [Cambiar]  │ ← hover        │
 │            └────────────┘                │
 │                                          │
-│  Nombre completo                         │
+│  Nombre                                  │
 │  ┌──────────────────────────────────┐    │
-│  │ Marco López                      │    │
+│  │ Marco                            │    │
+│  └──────────────────────────────────┘    │
+│                                          │
+│  Apellido                                │
+│  ┌──────────────────────────────────┐    │
+│  │ López                            │    │
 │  └──────────────────────────────────┘    │
 │                                          │
 │  Nombre de usuario                       │
@@ -816,6 +821,8 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 | Elemento | Comportamiento |
 |----------|---------------|
+| **Nombre** | Solo letras, máximo 50 caracteres. Obligatorio. |
+| **Apellido** | Solo letras, máximo 50 caracteres. Obligatorio. |
 | **Email** | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope). |
 | **Cambiar contraseña** | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía. |
 | **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo). |
@@ -1094,3 +1101,30 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - [x] Pantallas de error (404, error genérico) — Sección 5h
 - [x] Mis reseñas — Sección 5i
 - [x] Preferencias — Sección 5j
+
+---
+
+## 11. Accesibilidad (WCAG 2.1 AA)
+
+El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA. A continuación se detallan los requisitos específicos para cada componente:
+
+### 11.1 Requisitos generales
+- **Contraste de color:** Relación mínima de 4.5:1 para texto normal y 3:1 para texto grande (≥18px o ≥14px negrita) contra el fondo. Verificar los colores del tema oscuro (`#e0e0e0` sobre `#0d0d14`) y del tema claro.
+- **Navegación por teclado:** Todos los elementos interactivos deben ser accesibles y operables mediante teclado (Tab, Shift+Tab, Enter, Escape, flechas). El orden de foco debe seguir una secuencia lógica.
+- **Foco visible:** Todos los elementos interactivos deben mostrar un indicador de foco visible (anillo de 2px en color de acento) al recibir el foco del teclado.
+- **Etiquetas y textos alternativos:** Todos los campos de formulario deben tener `<label>` asociado. Las imágenes informativas (posters, avatares) deben tener texto alternativo (`alt`). Las imágenes decorativas deben tener `alt=""`.
+- **Encabezados jerárquicos:** Usar una estructura de encabezados lógica (h1 → h2 → h3) sin saltar niveles.
+- **Texto redimensionable:** El contenido debe ser legible con zoom del 200% sin pérdida de funcionalidad.
+
+### 11.2 Componentes específicos
+- **Modal:** Al abrirse, el foco debe moverse al primer elemento interactivo del modal. Al cerrarse, el foco debe retornar al elemento que lo disparó. La tecla Escape cierra el modal. El contenido detrás del modal debe estar oculto para lectores de pantalla (`aria-hidden`).
+- **Star Widget:** Las estrellas deben ser navegables con teclado (flechas izquierda/derecha para seleccionar, Enter para confirmar). Cada estrella debe tener un `aria-label` con su valor (ej: "4 de 10 estrellas").
+- **Drag & Drop de listas:** El reordenamiento de listas personalizadas debe ofrecer una alternativa accesible sin mouse: botones "Mover arriba" y "Mover abajo" visibles al recibir foco, o menú contextual con opciones "Mover arriba / Mover abajo". El drag & drop sigue siendo la interacción principal para usuarios de mouse/touch.
+- **Toggle switches:** Deben tener roles ARIA apropiados (`role="switch"`, `aria-checked`).
+- **FAB del chatbot:** Debe ser accesible por teclado y tener un `aria-label="Abrir chatbot de recomendaciones"`.
+- **Toast/Notificaciones:** Deben usar `role="alert"` o `aria-live="polite"` para ser anunciadas por lectores de pantalla.
+
+### 11.3 Validación
+- Los formularios deben mostrar mensajes de error asociados mediante `aria-describedby`.
+- Los campos con error deben tener el atributo `aria-invalid="true"`.
+- Los mensajes de error deben ser visibles y comunicados por lectores de pantalla.
