@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Perfil - Edición Inline | FilmIA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "outline-variant": "#4e4633",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary-fixed": "#e2e0fc",
+                        "on-secondary-fixed": "#1a1a2e",
+                        "inverse-surface": "#e5e2e1",
+                        "background": "#131313",
+                        "tertiary-container": "#49dbff",
+                        "secondary-container": "#47475d",
+                        "on-surface-variant": "#d1c5ac",
+                        "surface-container-highest": "#353534",
+                        "inverse-primary": "#745b00",
+                        "error": "#ffb4ab",
+                        "surface": "#131313",
+                        "secondary": "#c6c4df",
+                        "on-secondary": "#2f2e43",
+                        "on-error": "#690005",
+                        "surface-container": "#201f1f",
+                        "on-background": "#e5e2e1",
+                        "tertiary": "#bdefff",
+                        "on-primary-fixed-variant": "#584400",
+                        "on-surface": "#e5e2e1",
+                        "surface-dim": "#131313",
+                        "on-tertiary-fixed": "#001f27",
+                        "on-tertiary-container": "#005e70",
+                        "on-primary-fixed": "#241a00",
+                        "tertiary-fixed": "#b0ecff",
+                        "primary": "#ffe5a0",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error-container": "#93000a",
+                        "primary-fixed": "#ffe08b",
+                        "inverse-on-surface": "#313030",
+                        "tertiary-fixed-dim": "#42d7fb",
+                        "on-secondary-fixed-variant": "#45455b",
+                        "on-secondary-container": "#b8b6d0",
+                        "surface-container-high": "#2a2a2a",
+                        "primary-container": "#f5c518",
+                        "on-tertiary": "#003641",
+                        "secondary-fixed-dim": "#c6c4df",
+                        "on-primary": "#3d2f00",
+                        "surface-tint": "#f0c110",
+                        "outline": "#9a9078",
+                        "surface-variant": "#353534",
+                        "surface-bright": "#393939",
+                        "primary-fixed-dim": "#f0c110",
+                        "on-primary-container": "#695200",
+                        "on-tertiary-fixed-variant": "#004e5e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "margin-mobile": "16px",
+                        "base": "8px",
+                        "md": "16px",
+                        "gutter": "24px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "xxl": "64px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-sm": ["Playfair Display"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-[1440px] mx-auto w-full">
+<div class="flex items-center gap-xl">
+<a class="font-headline-md text-headline-md font-bold text-primary active:scale-95 transition-transform" href="#">FilmIA</a>
+<div class="hidden md:flex gap-md">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors hover:text-primary transition-all duration-200" href="#">Inicio</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors hover:text-primary transition-all duration-200" href="#">Buscar</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors hover:text-primary transition-all duration-200" href="#">Listas</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="md:hidden text-on-surface-variant p-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="hidden md:flex items-center">
+<button class="text-on-surface-variant p-2 hover:text-primary transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+<!-- Profile active state implicit since we are on profile page, but nav items don't have profile -->
+<div class="relative rounded-full overflow-hidden w-10 h-10 border-2 border-primary cursor-pointer active:scale-95 transition-transform">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a stylish user avatar in a cinematic lighting setting. The mood is modern and professional, fitting a high-end application. Deep dark background with subtle golden rim light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB16aNfUDBrmeiwso0JACdsCFLat2y7BAoeqcgnOl6rTtrlIFp194QaJxGQ6raJQZAGQUXsS7-j0nWvn0qK2XDEa2TH0rj42M_GzYyZuCAap0SNQZvULQGE0ZUNveWQK7JSlvd2cG2AoG8ZxigAS40s68W7-ldQ4-UsflPFHJG0vI_bcrgXR-5yePqbN7lp2r_lPnm-VTcGjnxm5QB4VLTwQWz_-1CbQDii4h7B8kmatbiEZ-2P_5LBoaRLm3AtDzRXOVCCeeCdJT0"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="pt-[100px] pb-xxl px-margin-mobile md:px-margin-desktop max-w-[800px] mx-auto min-h-screen">
+<!-- Breadcrumb -->
+<nav aria-label="Breadcrumb" class="flex text-on-surface-variant mb-xl font-body-md text-body-md">
+<ol class="inline-flex items-center space-x-1 md:space-x-2">
+<li class="inline-flex items-center">
+<a class="hover:text-primary transition-colors" href="#">Inicio</a>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mx-1" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary ml-1 md:ml-2">Perfil</span>
+</div>
+</li>
+</ol>
+</nav>
+<h1 class="font-headline-md text-headline-md text-on-surface mb-xl">Editar Perfil</h1>
+<!-- Profile Edit Card -->
+<div class="bg-surface-container-high rounded-xl p-lg md:p-xl shadow-2xl backdrop-blur-md relative overflow-hidden border border-outline-variant/30">
+<!-- Avatar Edit Section -->
+<div class="flex flex-col md:flex-row items-center gap-lg mb-xl">
+<div class="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" data-alt="A detailed, professional avatar portrait of a man with cinematic rim lighting, deep shadows, and a subtle golden glow in the background. High quality, crisp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj-rHWuSsCOEZFKbVSoZbmFVt6YPB9TgDk7NoOzq0XPiIOKr5-YGT5-uP5-3r9siYuMDJDvN56TVaG4JVAfsjY-i6rsHzRbrANTLeOZgIZAGi1nKZk50BSoPMffZGYPm5aO7XbjCd1XJUb0f1s4mE96MQIQPWusX6qg062lWmQufX-xvIgABvoLLUbpxw45QsrU14ka2DdBZd2A5k6TbIybbbltcYDiKnX3Oefy8KOo9252ZVukdDTLtN7ygIldpr1lKkw5guoiCs"/>
+<div class="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-on-surface mb-xs" data-icon="photo_camera">photo_camera</span>
+<span class="font-label-sm text-label-sm text-on-surface">Cambiar</span>
+</div>
+</div>
+</div>
+<div class="text-center md:text-left flex-1">
+<h2 class="font-title-lg text-title-lg text-on-surface">Marco López</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">marco.lopez@example.com</p>
+</div>
+</div>
+<form class="space-y-md">
+<!-- Inline Edit Fields -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="firstName">Nombre</label>
+<input class="w-full bg-surface border border-[#333333] rounded DEFAULT px-md py-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors" id="firstName" type="text" value="Marco"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="lastName">Apellido</label>
+<input class="w-full bg-surface border border-[#333333] rounded DEFAULT px-md py-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors" id="lastName" type="text" value="López"/>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="username">Nombre de usuario</label>
+<div class="relative">
+<input class="w-full bg-surface border border-[#333333] rounded DEFAULT px-md py-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors pr-[100px]" id="username" type="text" value="@marco_lopez"/>
+<div class="absolute inset-y-0 right-0 flex items-center pr-md pointer-events-none">
+<span class="font-label-sm text-label-sm text-[#4CAF50] flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+                                 Disponible
+                             </span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs" for="email">
+                         Email 
+                         <span class="material-symbols-outlined text-[16px] text-on-surface-variant/50" data-icon="lock" title="Solo lectura">lock</span>
+</label>
+<input class="w-full bg-surface-container-low border border-[#333333]/50 rounded DEFAULT px-md py-sm font-body-md text-body-md text-on-surface-variant/70 cursor-not-allowed" disabled="" id="email" type="email" value="marco.lopez@example.com"/>
+</div>
+<!-- Collapsible Password Section -->
+<div class="mt-lg border border-[#333333] rounded-lg overflow-hidden">
+<button class="w-full bg-surface-container flex items-center justify-between p-md hover:bg-surface-container-highest transition-colors" onclick="document.getElementById('password-section').classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')" type="button">
+<span class="font-title-lg text-title-lg text-on-surface">Cambiar contraseña</span>
+<span class="material-symbols-outlined text-on-surface-variant chevron transition-transform duration-300" data-icon="expand_more">expand_more</span>
+</button>
+<div class="hidden bg-surface p-md space-y-md border-t border-[#333333]" id="password-section">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="currentPassword">Contraseña actual</label>
+<input class="w-full bg-surface-container-low border border-[#333333] rounded DEFAULT px-md py-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors" id="currentPassword" type="password"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="newPassword">Nueva contraseña</label>
+<input class="w-full bg-surface-container-low border border-[#333333] rounded DEFAULT px-md py-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors" id="newPassword" type="password"/>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex justify-end gap-md mt-xl pt-lg border-t border-outline-variant/20">
+<button class="px-lg py-sm font-label-md text-label-md text-on-surface hover:text-on-surface-variant transition-colors bg-transparent border border-outline-variant/50 rounded-full" type="button">
+                         Cancelar
+                     </button>
+<button class="px-lg py-sm font-label-md text-label-md text-background bg-primary-container hover:bg-surface-tint transition-colors rounded-full font-bold shadow-[0_4px_14px_0_rgba(245,197,24,0.39)]" type="submit">
+                         Guardar cambios
+                     </button>
+</div>
+</form>
+</div>
+</main>
+<!-- BottomNavBar (Hidden on desktop, visible on mobile) -->
+<!-- Suppressed based on semantic rule: Task-focused subpage (Profile Edit) -->
+<!-- Chatbot FAB (Suppressed based on contextual rule: Profile Edit page) -->
+</body></html>

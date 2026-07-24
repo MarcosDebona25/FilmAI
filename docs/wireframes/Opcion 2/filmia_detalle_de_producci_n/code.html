@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Breaking Bad - FilmIA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "primary": "#ffe5a0",
+                        "inverse-primary": "#745b00",
+                        "surface-dim": "#131313",
+                        "surface": "#131313",
+                        "surface-container-highest": "#353534",
+                        "on-secondary-fixed-variant": "#45455b",
+                        "primary-fixed-dim": "#f0c110",
+                        "on-error": "#690005",
+                        "outline-variant": "#4e4633",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#ffe08b",
+                        "inverse-surface": "#e5e2e1",
+                        "tertiary": "#bdefff",
+                        "tertiary-container": "#49dbff",
+                        "on-secondary": "#2f2e43",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary": "#c6c4df",
+                        "on-background": "#e5e2e1",
+                        "tertiary-fixed-dim": "#42d7fb",
+                        "secondary-container": "#47475d",
+                        "on-primary": "#3d2f00",
+                        "surface-variant": "#353534",
+                        "inverse-on-surface": "#313030",
+                        "secondary-fixed-dim": "#c6c4df",
+                        "outline": "#9a9078",
+                        "primary-container": "#f5c518",
+                        "on-secondary-container": "#b8b6d0",
+                        "error-container": "#93000a",
+                        "on-primary-fixed": "#241a00",
+                        "on-tertiary-fixed": "#001f27",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-tint": "#f0c110",
+                        "on-tertiary-fixed-variant": "#004e5e",
+                        "on-tertiary": "#003641",
+                        "on-tertiary-container": "#005e70",
+                        "surface-bright": "#393939",
+                        "secondary-fixed": "#e2e0fc",
+                        "on-surface-variant": "#d1c5ac",
+                        "tertiary-fixed": "#b0ecff",
+                        "on-secondary-fixed": "#1a1a2e",
+                        "on-primary-container": "#695200",
+                        "background": "#131313",
+                        "on-primary-fixed-variant": "#584400",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container": "#201f1f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xxl": "64px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "48px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Playfair Display"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "title-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .backdrop-blur-layer { backdrop-filter: blur(12px); }
+        .glass-panel { background: rgba(26, 26, 46, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen pb-24 md:pb-0">
+<!-- TopNavBar -->
+<nav class="hidden md:flex bg-surface/80 dark:bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-sm flex justify-between items-center px-margin-desktop py-4 max-w-[1440px] mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-primary">FilmIA</div>
+<div class="flex gap-lg">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors active:scale-95 transition-transform hover:text-primary transition-all duration-200" href="#">Inicio</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 active:scale-95 transition-transform hover:text-primary transition-all duration-200" href="#">Buscar</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors active:scale-95 transition-transform hover:text-primary transition-all duration-200" href="#">Listas</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden border border-outline-variant">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A cinematic, high-contrast avatar image of a mysterious profile in shadow with subtle gold rim lighting. The style is moody and professional, fitting a premium movie streaming platform interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTe-P9r8Zq9AJS7GaanTliix_sisBRWlnm4F9mM2Na_XqRakSyG4hkv_6x6ydzFbO8_wdo7s8-ltGz7viAYMZbem5B3iRV-Zw44QbCJgwh_3gLInUqwpgbrR6tXIa_rQIX2G53tPHwLQdTVpLLhwQvveZEex05adR9vqJUWdO1P0MQdN5hEvxC4vO0L_T0ITqWJ0TU6okZHLm7ambOjn1_mDcwCFR18n3nSoqdtbLnFoSDEnLbyR1m6s3T61wSDW3CtieAnqeQNGA"/>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop pt-24 md:pt-32 pb-xl relative">
+<!-- Breadcrumb -->
+<div class="flex items-center gap-xs font-label-sm text-label-sm text-on-surface-variant mb-lg">
+<a class="hover:text-primary transition-colors" href="#">Inicio</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface">Breaking Bad</span>
+</div>
+<!-- Hero Section Bento Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg md:gap-gutter">
+<!-- Poster (Left) -->
+<div class="md:col-span-4 lg:col-span-3 flex flex-col gap-md relative group">
+<div class="rounded-lg overflow-hidden shadow-2xl relative aspect-[2/3] transform transition-transform duration-300 group-hover:scale-[1.02]">
+<img alt="Breaking Bad Poster" class="w-full h-full object-cover" data-alt="A gritty, cinematic vertical poster for a crime drama television series. It features a stark desert landscape with an RV in the background and a figure in a yellow hazmat suit holding a gas mask. High contrast, cinematic lighting, deep shadows, and subtle gold tones. Premium high-definition promotional art style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnYwpe8S9bcUCEL4cBA_8Rum9W4-6Ibq5Y51Tab1Spj0EWxNGeHOhaSXEDO36Fwif7MWAOMgyZ4CrQ8N0QzXIh8bDr_tV8gbD7MbWT2_OPSZbxxhNSstFCWXKd8i13brAGB9JqEEmA_mvI9Bdyu3xIHwTpQqjfqwLsHLeeYak-3ali74Au_WuepGiRHNDCKIqvN_QIPiV_3ptnkoEO6GhZrHfdOPvJ7QdvGyxPcHYWaJ943t_SFiwbrY5VekMLPeYQakH1N3qXL2U"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80"></div>
+</div>
+</div>
+<!-- Details & Actions (Right) -->
+<div class="md:col-span-8 lg:col-span-9 flex flex-col gap-xl">
+<!-- Title & Meta -->
+<div class="flex flex-col gap-sm">
+<div class="flex flex-wrap items-center gap-md mb-xs">
+<span class="px-3 py-1 bg-surface-container-high text-primary font-label-sm text-label-sm rounded uppercase tracking-wider border border-outline-variant">Serie</span>
+<span class="font-body-md text-on-surface-variant">2008</span>
+<span class="font-body-md text-on-surface-variant">•</span>
+<span class="font-body-md text-on-surface-variant">5 temporadas</span>
+</div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">Breaking Bad</h1>
+<div class="flex items-center gap-md mt-sm">
+<div class="flex items-center gap-xs text-primary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-title-lg text-title-lg font-bold">9.5</span>
+<span class="font-body-md text-on-surface-variant">/ 10 TMDB</span>
+</div>
+</div>
+<!-- Genre Chips -->
+<div class="flex flex-wrap gap-sm mt-md">
+<span class="px-4 py-1.5 bg-[#1A1A2E] text-on-surface font-label-sm text-label-sm rounded-full border border-outline-variant hover:border-primary transition-colors cursor-pointer uppercase">Drama</span>
+<span class="px-4 py-1.5 bg-[#1A1A2E] text-on-surface font-label-sm text-label-sm rounded-full border border-outline-variant hover:border-primary transition-colors cursor-pointer uppercase">Crimen</span>
+<span class="px-4 py-1.5 bg-[#1A1A2E] text-on-surface font-label-sm text-label-sm rounded-full border border-outline-variant hover:border-primary transition-colors cursor-pointer uppercase">Thriller</span>
+</div>
+</div>
+<!-- Action Row -->
+<div class="glass-panel p-md rounded-lg flex flex-wrap items-center gap-sm md:gap-md">
+<button class="flex items-center gap-xs px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition-colors border border-outline-variant">
+<span class="material-symbols-outlined text-primary">star</span>
+<span class="font-label-md text-label-md">Calificar</span>
+</button>
+<button class="flex items-center gap-xs px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition-colors border border-outline-variant">
+<span class="material-symbols-outlined text-error">favorite</span>
+<span class="font-label-md text-label-md">Favoritos</span>
+</button>
+<button class="flex items-center gap-xs px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition-colors border border-outline-variant">
+<span class="material-symbols-outlined">visibility</span>
+<span class="font-label-md text-label-md">Vista</span>
+</button>
+<button class="flex items-center gap-xs px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition-colors border border-outline-variant">
+<span class="material-symbols-outlined">schedule</span>
+<span class="font-label-md text-label-md">Pendiente</span>
+</button>
+<button class="flex items-center gap-xs px-4 py-2 bg-primary-container text-[#121212] rounded-lg transition-transform hover:scale-105 active:scale-95 font-bold ml-auto">
+<span class="material-symbols-outlined">add</span>
+<span class="font-label-md text-label-md">Agregar a lista</span>
+<span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+</button>
+</div>
+<!-- Synopsis Card -->
+<div class="glass-panel p-lg rounded-lg border border-outline-variant relative overflow-hidden group cursor-pointer" onclick="this.classList.toggle('expanded-synopsis')">
+<h3 class="font-title-lg text-title-lg mb-sm text-on-surface">Sinopsis</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 group-[.expanded-synopsis]:line-clamp-none transition-all duration-300">
+                        Un profesor de química de secundaria diagnosticado con cáncer de pulmón inoperable recurre a la fabricación y venta de metanfetamina para asegurar el futuro financiero de su familia. A medida que desciende en el mundo criminal, su moralidad se desmorona, llevándolo a enfrentamientos letales y una transformación completa de un hombre común a un temido capo de la droga.
+                    </p>
+<div class="absolute bottom-4 right-4 group-[.expanded-synopsis]:hidden bg-surface-container/80 backdrop-blur px-2 py-1 rounded text-primary font-label-sm">Ver más</div>
+</div>
+<!-- CastCard -->
+<div class="glass-panel p-lg rounded-lg border border-outline-variant">
+<h3 class="font-title-lg text-title-lg mb-md text-on-surface">Reparto y Equipo</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block mb-xs uppercase tracking-wider">Creador</span>
+<span class="font-body-md text-on-surface">Vince Gilligan</span>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block mb-xs uppercase tracking-wider">Reparto Principal</span>
+<span class="font-body-md text-on-surface">Bryan Cranston, Aaron Paul, Anna Gunn, Dean Norris, Betsy Brandt, RJ Mitte, Bob Odenkirk</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Reviews Section -->
+<div class="mt-xxl">
+<h2 class="font-headline-sm text-headline-sm mb-lg text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">forum</span>
+                Reseñas
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+<!-- Tu Reseña (Highlighted) -->
+<div class="md:col-span-5 glass-panel p-lg rounded-lg border border-primary/30 relative">
+<div class="absolute top-0 right-0 bg-primary/20 text-primary px-3 py-1 rounded-bl-lg rounded-tr-lg font-label-sm">Tu Reseña</div>
+<div class="flex items-center gap-xs text-primary mb-md">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star_half</span>
+<span class="ml-2 font-bold text-on-surface">9/10</span>
+</div>
+<p class="font-body-md text-on-surface-variant italic mb-4">"Una obra maestra absoluta de la televisión. La evolución de Walter White es un estudio de personaje fascinante..."</p>
+<button class="text-primary font-label-md hover:underline">Editar reseña</button>
+</div>
+<!-- Comunidad -->
+<div class="md:col-span-7 flex flex-col gap-md">
+<div class="bg-surface-container p-md rounded-lg border border-outline-variant">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-surface-bright"></div>
+<span class="font-label-md text-on-surface">Cinephile99</span>
+</div>
+<div class="flex items-center gap-xs text-primary-container text-sm">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span> 10
+                            </div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Simplemente perfecta. Cada episodio está meticulosamente escrito.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Chatbot FAB -->
+<button class="fixed bottom-20 md:bottom-8 right-4 md:right-8 w-14 h-14 bg-primary-container text-[#121212] rounded-full shadow-[0_4px_20px_rgba(245,197,24,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-[28px]">smart_toy</span>
+</button>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 w-full z-50 md:hidden bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-lg border-t border-outline-variant shadow-2xl flex justify-around items-center py-3 pb-safe px-4">
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-container-highest active:scale-90 transition-all rounded-lg p-2" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-sm text-label-sm mt-1">Inicio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary active:bg-surface-container-highest active:scale-90 transition-all rounded-lg p-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">search</span>
+<span class="font-label-sm text-label-sm mt-1">Buscar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-container-highest active:scale-90 transition-all rounded-lg p-2" href="#">
+<span class="material-symbols-outlined">movie</span>
+<span class="font-label-sm text-label-sm mt-1">Listas</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-container-highest active:scale-90 transition-all rounded-lg p-2" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-sm text-label-sm mt-1">Chat</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FilmIA — Wireframe v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════ CUSTOM PROPERTIES ═══════════ */
+:root {
+  --bg-deepest: #0e0e0e;
+  --bg: #131313;
+  --surface: #1c1b1b;
+  --surface-2: #2a2a2a;
+  --surface-3: #353534;
+  --accent: #f5c518;
+  --accent-light: #ffe5a0;
+  --accent-glow: rgba(245,197,24,0.12);
+  --text: #e5e2e1;
+  --text-secondary: #d1c5ac;
+  --text-dim: #9a9078;
+  --border: #4e4633;
+  --border-light: rgba(255,255,255,0.08);
+  --danger: #ffb4ab;
+  --danger-bg: #93000a;
+  --navy: #1a1a2e;
+  --glass-bg: rgba(26,26,46,0.6);
+  --glass-border: rgba(255,255,255,0.05);
+  --glass-blur: blur(12px);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --nav-h: 64px;
+  --max-w: 1440px;
+  --margin-desktop: 48px;
+  --margin-mobile: 16px;
+  --transition: 200ms ease;
+}
+
+/* ═══════════ RESET ═══════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 0;
+}
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+
+/* ═══════════ GLASS ═══════════ */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+/* ═══════════ NAVBAR ═══════════ */
+.navbar {
+  display: flex; align-items: center; gap: 36px;
+  height: var(--nav-h); padding: 0 var(--margin-desktop);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky; top: 0; z-index: 200;
+}
+.navbar-inner {
+  display: flex; align-items: center; gap: 36px;
+  max-width: var(--max-w); width: 100%; margin: 0 auto;
+}
+.logo {
+  font-family: var(--font-display); font-size: 21px; font-weight: 700;
+  color: #fff; cursor: pointer; white-space: nowrap; letter-spacing: -0.3px;
+}
+.logo span { color: var(--accent); }
+
+.nav-links { display: flex; gap: 4px; }
+.nav-links a {
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  transition: all var(--transition); cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.nav-links a.active {
+  color: var(--accent-light);
+  border-bottom-color: var(--accent);
+}
+
+.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; position: relative; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--border-light);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  cursor: pointer; transition: transform var(--transition);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #fff;
+}
+.avatar:hover { transform: scale(1.06); }
+
+.avatar-dropdown {
+  display: none; position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md); min-width: 190px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 250;
+}
+.avatar-dropdown.open { display: block; }
+.avatar-dropdown a {
+  display: block; padding: 12px 18px; font-size: 13px;
+  color: var(--text-secondary); text-decoration: none; cursor: pointer;
+  transition: background var(--transition);
+}
+.avatar-dropdown a:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.avatar-dropdown .logout { color: var(--danger); border-top: 1px solid var(--border-light); }
+
+/* ═══════════ MOBILE BOTTOM NAV ═══════════ */
+.mobile-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
+  padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+.mobile-nav-inner {
+  display: flex; justify-content: space-around; align-items: center;
+  max-width: 500px; margin: 0 auto;
+}
+.mobile-nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 500; color: var(--text-dim);
+  cursor: pointer; transition: color var(--transition);
+  padding: 4px 12px; border-radius: var(--radius-sm);
+}
+.mobile-nav-item:hover { color: var(--text-secondary); }
+.mobile-nav-item.active { color: var(--accent-light); }
+.mobile-nav-item .icon { font-size: 20px; line-height: 1; }
+
+/* ═══════════ SEARCH OVERLAY ═══════════ */
+.search-overlay {
+  display: none; position: fixed; inset: var(--nav-h) 0 0 0;
+  background: var(--bg); z-index: 150; overflow-y: auto;
+  animation: fadeSlideIn 200ms ease;
+}
+.search-overlay.open { display: block; }
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.search-inner { max-width: var(--max-w); margin: 0 auto; padding: 28px var(--margin-desktop); }
+.search-toolbar {
+  display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; align-items: center;
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 16px;
+}
+.search-input-wrap { flex: 1; min-width: 260px; position: relative; }
+.search-input-wrap .search-prefix {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; color: var(--text-dim); pointer-events: none;
+}
+.search-input-wrap input {
+  width: 100%; padding: 12px 18px 12px 44px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text);
+  font-size: 15px; outline: none; transition: border-color var(--transition);
+}
+.search-input-wrap input:focus { border-color: var(--accent); }
+
+.type-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.type-toggle button {
+  padding: 11px 22px; background: none; border: none;
+  color: var(--text-dim); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all var(--transition); white-space: nowrap;
+}
+.type-toggle button:not(:last-child) { border-right: 1px solid var(--border); }
+.type-toggle button.active { background: var(--accent); color: #121212; font-weight: 600; }
+
+.filter-select {
+  padding: 11px 36px 11px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  color: var(--text); font-size: 13px; cursor: pointer; outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9078'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+
+.genre-chips-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.genre-chip-pill {
+  padding: 6px 16px; font-size: 12px; font-weight: 500;
+  border-radius: var(--radius-full); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-dim);
+  cursor: pointer; transition: all var(--transition); white-space: nowrap;
+}
+.genre-chip-pill:hover { border-color: var(--accent); color: var(--accent-light); }
+.genre-chip-pill.active { background: var(--accent); color: #121212; border-color: var(--accent); }
+
+/* ═══════════ VIEW CONTAINER ═══════════ */
+.view { display: none; max-width: var(--max-w); margin: 0 auto; padding: 0 var(--margin-desktop) 40px; }
+.view.active { display: block; }
+
+/* ═══════════ BREADCRUMB ═══════════ */
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-dim);
+  padding: 20px 0 12px;
+}
+.breadcrumb a { color: var(--text-dim); cursor: pointer; transition: color var(--transition); }
+.breadcrumb a:hover { color: var(--text-secondary); }
+.breadcrumb .sep { color: var(--border); font-size: 11px; }
+.breadcrumb .current { color: var(--text); font-weight: 600; }
+
+/* ═══════════ HERO ═══════════ */
+.hero {
+  position: relative; border-radius: var(--radius-lg);
+  overflow: hidden; margin-bottom: 48px;
+  background: linear-gradient(120deg, #1a1030 0%, #0f1a2e 40%, #1a1025 100%);
+  border: 1px solid var(--border-light); min-height: 280px;
+  display: flex; align-items: center; padding: 56px 52px;
+}
+.hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 30%, var(--accent-glow) 0%, transparent 60%); }
+.hero-content { position: relative; z-index: 1; max-width: 580px; }
+.hero-tag {
+  display: inline-block; padding: 4px 14px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  background: var(--accent-glow); color: var(--accent);
+  border-radius: var(--radius-full); margin-bottom: 14px;
+}
+.hero h1 { font-family: var(--font-display); font-size: 56px; font-weight: 700; color: var(--text); letter-spacing: -0.8px; margin-bottom: 12px; line-height: 1.1; }
+.hero p { font-size: 16px; color: var(--text-dim); line-height: 1.7; margin-bottom: 24px; max-width: 480px; }
+.hero-actions { display: flex; gap: 12px; align-items: center; }
+
+/* ═══════════ SECTION ═══════════ */
+.section { margin-bottom: 48px; }
+.section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+.section-header h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.section-header a { font-size: 13px; color: var(--accent); font-weight: 500; cursor: pointer; transition: opacity var(--transition); }
+.section-header a:hover { opacity: 0.8; }
+
+.scroll-row {
+  display: flex; gap: 18px; overflow-x: auto;
+  padding-bottom: 8px; scroll-behavior: smooth;
+}
+.scroll-row::-webkit-scrollbar { height: 4px; }
+.scroll-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ═══════════ MEDIA CARD ═══════════ */
+.card {
+  flex: 0 0 175px; background: var(--surface);
+  border-radius: var(--radius-lg); overflow: hidden;
+  border: 1px solid var(--border-light);
+  cursor: pointer; transition: all 220ms ease; position: relative;
+}
+.card:hover { transform: scale(1.03); box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(0,0,0,0.5); }
+
+.card-poster {
+  width: 100%; aspect-ratio: 2/3; background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; color: #333; position: relative; overflow: hidden;
+}
+.card-poster::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 50%, rgba(0,0,0,0.7)); }
+
+.card-type {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; padding: 3px 8px; border-radius: var(--radius-sm);
+}
+.card-type.movie { background: rgba(100,160,255,0.18); color: #7ab4ff; }
+.card-type.tv    { background: rgba(130,200,80,0.18);  color: #92d850; }
+
+.card-rating {
+  position: absolute; bottom: 10px; left: 10px; z-index: 2;
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  display: flex; align-items: center; gap: 4px;
+}
+.card-body { padding: 12px 14px; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.card-year { font-size: 11px; color: var(--text-dim); }
+
+.card-remove {
+  display: none; position: absolute; top: 8px; right: 8px; z-index: 3;
+  width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.15); color: var(--text);
+  font-size: 12px; cursor: pointer; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.card-remove:hover { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+.card.remove-mode .card-remove { display: flex; }
+
+/* ═══════════ GRID ═══════════ */
+.media-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 18px; margin-bottom: 32px;
+}
+.media-grid .card { flex: none; width: 100%; }
+
+.results-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border-light);
+}
+.results-header span { font-size: 13px; color: var(--text-dim); }
+.results-header strong { color: var(--text); }
+
+/* ═══════════ PAGINATION ═══════════ */
+.pagination { display: flex; justify-content: center; gap: 6px; padding: 20px 0 40px; }
+.pagination button {
+  min-width: 38px; height: 38px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface);
+  color: var(--text-dim); font-size: 13px; cursor: pointer;
+  transition: all var(--transition); display: flex; align-items: center; justify-content: center;
+}
+.pagination button:hover { border-color: var(--accent); color: var(--text-secondary); }
+.pagination button.active { background: var(--accent); color: #121212; border-color: var(--accent); font-weight: 600; }
+
+/* ═══════════ LIST CARD ═══════════ */
+.list-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px; margin-top: 20px;
+}
+.list-card {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); padding: 22px 24px;
+  cursor: pointer; transition: all 220ms ease; position: relative;
+  display: flex; flex-direction: column; gap: 14px; user-select: none;
+}
+.list-card:hover { border-color: var(--border); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+.list-card.dragging { opacity: 0.5; border-style: dashed; }
+.list-card.drag-over { border-color: var(--accent); background: var(--accent-glow); }
+
+.list-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.list-card-menu {
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-dim); font-size: 20px;
+  transition: all var(--transition); position: relative;
+}
+.list-card-menu:hover { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+.list-card-menu .menu-dropdown {
+  display: none; position: absolute; top: 100%; right: 0; margin-top: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); min-width: 150px; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 100;
+}
+.list-card-menu.open .menu-dropdown { display: block; }
+
+.menu-dropdown a {
+  display: block; padding: 10px 16px; font-size: 13px; color: var(--text-secondary);
+  cursor: pointer; transition: background var(--transition);
+}
+.menu-dropdown a:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.menu-dropdown a.danger { color: var(--danger); }
+
+.list-card-body { flex: 1; }
+.list-card-name { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.list-card-count { font-size: 13px; color: var(--text-dim); }
+.list-card-thumbs { display: flex; gap: 4px; margin-top: 8px; }
+.list-card-thumb {
+  width: 34px; height: 51px; border-radius: 4px;
+  background: var(--surface-2); border: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.list-card-thumb.placeholder { background: var(--surface-2); opacity: 0.4; }
+
+.list-card-badge {
+  position: absolute; top: 12px; left: 12px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 3px 8px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.06); color: var(--text-dim);
+}
+
+/* Add card */
+.list-card.add-card {
+  background: transparent; border: 1px dashed var(--border);
+  justify-content: center; align-items: center; text-align: center;
+  opacity: 0.6; transition: all var(--transition); cursor: pointer;
+}
+.list-card.add-card:hover { border-color: var(--text-dim); opacity: 1; background: rgba(255,255,255,0.02); }
+.list-card.add-card .add-icon { font-size: 36px; color: var(--text-dim); margin-bottom: 8px; }
+.list-card.add-card .add-label { font-size: 14px; color: var(--text-dim); font-weight: 500; }
+
+/* ═══════════ LIST HEADER ═══════════ */
+.list-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 24px;
+}
+.list-header h2 { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--text); }
+.list-header-menu {
+  position: relative; width: 38px; height: 38px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-dim); font-size: 22px; transition: all var(--transition);
+}
+.list-header-menu:hover { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+.list-header-menu .menu-dropdown {
+  display: none; position: absolute; top: 100%; right: 0; margin-top: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); min-width: 150px; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 100;
+}
+.list-header-menu.open .menu-dropdown { display: block; }
+
+/* ═══════════ DETAIL ═══════════ */
+.detail-hero { display: flex; gap: 40px; margin-bottom: 40px; }
+.poster-col { flex-shrink: 0; }
+.poster {
+  width: 300px; aspect-ratio: 2/3; background: var(--surface-2);
+  border-radius: var(--radius-lg); border: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64px; color: #333;
+  position: sticky; top: calc(var(--nav-h) + 20px);
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+.poster:hover { transform: scale(1.05); box-shadow: 0 0 32px var(--accent-glow); }
+
+.info-col { flex: 1; min-width: 0; }
+.detail-title { font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; margin-bottom: 12px; }
+.detail-meta { font-size: 14px; color: var(--text-dim); margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.detail-meta .dot { color: var(--border); }
+.detail-rating {
+  display: flex; align-items: center; gap: 6px; font-size: 18px;
+  color: var(--accent); font-weight: 700; margin-bottom: 18px;
+}
+
+.genre-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.genre-chip {
+  padding: 5px 16px; font-size: 12px; font-weight: 500;
+  border-radius: var(--radius-full); border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--text-dim);
+}
+
+/* ═══════════ BUTTONS ═══════════ */
+.btn-primary {
+  padding: 11px 26px; background: var(--accent);
+  color: #121212; border: none; border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all var(--transition); white-space: nowrap;
+}
+.btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+.btn-ghost {
+  padding: 11px 26px; background: rgba(255,255,255,0.06);
+  color: var(--text-secondary); border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all var(--transition);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: var(--border); }
+
+.btn-danger {
+  padding: 10px 24px; background: var(--danger-bg); color: var(--danger);
+  border: 1px solid var(--danger); border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: filter var(--transition);
+}
+.btn-danger:hover { filter: brightness(1.2); }
+
+.btn-secondary {
+  padding: 10px 24px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text-secondary); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all var(--transition);
+}
+.btn-secondary:hover { border-color: var(--text-dim); }
+
+/* ═══════════ ACTION BUTTONS ═══════════ */
+.detail-actions {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 28px;
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+.action-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; background: transparent;
+  border: 1px solid var(--border-light); border-radius: var(--radius-md);
+  color: var(--text-dim); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all var(--transition);
+}
+.action-btn:hover { border-color: var(--border); color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+.action-btn.toggled { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.action-btn .icon { font-size: 16px; }
+
+.dropdown-wrap { position: relative; display: inline-block; }
+.dropdown-menu {
+  display: none; position: absolute; top: 100%; left: 0; margin-top: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 8px 0; min-width: 220px;
+  z-index: 50; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.dropdown-wrap.open .dropdown-menu { display: block; }
+.dropdown-menu label {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 18px; font-size: 13px; cursor: pointer;
+  transition: background var(--transition); color: var(--text-secondary);
+}
+.dropdown-menu label:hover { background: rgba(255,255,255,0.04); }
+.dropdown-menu input[type="checkbox"] { accent-color: var(--accent); }
+
+/* ═══════════ SYNOPSIS ═══════════ */
+.synopsis-card {
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 18px 22px; margin-bottom: 24px;
+}
+.synopsis-card h3 { font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; }
+.synopsis-card p {
+  font-size: 13px; color: var(--text-dim); line-height: 1.7;
+  max-height: 64px; overflow: hidden; transition: max-height 300ms ease;
+}
+.synopsis-card p.expanded { max-height: 600px; }
+.synopsis-toggle { color: var(--accent); font-size: 12px; font-weight: 500; cursor: pointer; margin-top: 6px; display: inline-block; }
+.synopsis-toggle:hover { opacity: 0.8; }
+
+/* ═══════════ CAST ═══════════ */
+.cast-card {
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 20px 24px; margin-bottom: 20px;
+}
+.cast-card h3 { font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+.cast-card .director { font-size: 13px; color: var(--text); margin-bottom: 12px; }
+.cast-card .director span { color: var(--text-dim); }
+.cast-list {
+  font-size: 13px; color: var(--text-dim); line-height: 1.9;
+  max-height: 72px; overflow: hidden; transition: max-height 300ms ease;
+}
+.cast-list.expanded { max-height: 600px; }
+.cast-toggle { color: var(--accent); font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 8px; display: inline-block; }
+.cast-toggle:hover { opacity: 0.8; }
+
+.cast-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px; margin-top: 12px;
+}
+.cast-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px; text-align: center; transition: transform var(--transition);
+}
+.cast-item:hover { transform: translateY(-2px); }
+.cast-photo {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--text-dim);
+}
+.cast-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.cast-character { font-size: 11px; color: var(--text-dim); }
+
+/* ═══════════ REVIEWS ═══════════ */
+.divider { border: none; border-top: 1px solid var(--border-light); margin-bottom: 36px; }
+.review-section-header { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+.review-section-header strong { color: var(--accent); }
+
+.review-card {
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 20px 24px; margin-bottom: 12px;
+}
+.review-card.my-review { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-glow), var(--surface)); }
+.review-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.review-user { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text); }
+.review-user .user-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--text-dim);
+}
+.review-rating { font-size: 15px; color: var(--accent); font-weight: 700; }
+.review-date { font-size: 11px; color: var(--text-dim); }
+.review-text { font-size: 13px; color: var(--text-dim); line-height: 1.7; margin-top: 8px; }
+
+.icon-btn {
+  background: none; border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); color: var(--text-dim);
+  cursor: pointer; font-size: 15px; padding: 5px 9px;
+  transition: all var(--transition);
+}
+.icon-btn:hover { border-color: var(--border); color: var(--text-secondary); }
+.icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+.load-more {
+  display: block; width: 100%; padding: 12px;
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); color: var(--text-dim);
+  font-size: 13px; text-align: center; cursor: pointer;
+  transition: all var(--transition); margin-top: 12px;
+}
+.load-more:hover { border-color: var(--border); color: var(--text-secondary); }
+
+/* ═══════════ AUTH WALL ═══════════ */
+.auth-wall {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 20px; background: var(--surface);
+  border: 1px solid var(--border-light); border-radius: var(--radius-md);
+  font-size: 13px; color: var(--text-dim); margin-bottom: 20px;
+}
+.auth-wall a { color: var(--accent); font-weight: 500; cursor: pointer; }
+.auth-wall a:hover { text-decoration: underline; }
+
+/* ═══════════ TOGGLE SWITCH ═══════════ */
+.toggle-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 6px; }
+.toggle-switch { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; }
+.toggle-switch button {
+  padding: 8px 22px; background: none; border: none;
+  color: var(--text-dim); font-size: 13px; cursor: pointer;
+  transition: all var(--transition);
+}
+.toggle-switch button:not(:last-child) { border-right: 1px solid var(--border); }
+.toggle-switch button.active { background: var(--accent); color: #121212; font-weight: 600; }
+
+/* ═══════════ AUTH PAGES ═══════════ */
+.auth-bg {
+  min-height: calc(100vh - var(--nav-h));
+  background: linear-gradient(135deg, #0d0d14 0%, #1a1030 50%, #0f1a2e 100%);
+  position: relative; display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px;
+}
+.auth-bg::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(245,197,24,0.04) 0%, transparent 60%);
+}
+.auth-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+.auth-box {
+  position: relative; z-index: 1; width: 420px; max-width: 100%;
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-xl);
+  padding: 40px 36px; animation: fadeSlideIn 220ms ease;
+}
+.auth-box .logo-auth { text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text); margin-bottom: 28px; letter-spacing: -0.5px; }
+.auth-box .logo-auth span { color: var(--accent); }
+.auth-box h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 24px; text-align: center; }
+
+.form-group { margin-bottom: 16px; position: relative; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select {
+  width: 100%; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text);
+  font-size: 14px; outline: none; transition: border-color var(--transition);
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9078'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px;
+}
+.form-group input.has-icon { padding-right: 44px; }
+.form-group .input-icon {
+  position: absolute; right: 14px; top: 34px; cursor: pointer;
+  font-size: 18px; color: var(--text-dim); transition: color var(--transition);
+}
+.form-group .input-icon:hover { color: var(--text-secondary); }
+.form-group .hint { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+.form-group .hint.ok { color: #4caf50; }
+.form-group .hint.err { color: var(--danger); }
+
+.btn-full { width: 100%; text-align: center; padding: 13px; margin-top: 6px; }
+
+.auth-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 24px 0; color: var(--text-dim); font-size: 12px;
+}
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-top: 1px solid var(--border-light); }
+
+.btn-google {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px; background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); color: var(--text-secondary); font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all var(--transition);
+}
+.btn-google:hover { border-color: var(--border); background: rgba(255,255,255,0.04); }
+
+.auth-switch { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 20px; }
+.auth-switch a { color: var(--accent); cursor: pointer; font-weight: 500; }
+
+/* ═══════════ CONFIRM ═══════════ */
+.confirm-box {
+  position: relative; z-index: 1; width: 400px; max-width: 100%;
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-xl);
+  padding: 48px 36px; text-align: center;
+  animation: fadeInUp 400ms ease;
+}
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.confirm-icon-wrap {
+  width: 96px; height: 96px; border-radius: 50%; margin: 0 auto 24px;
+  background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);
+  display: flex; align-items: center; justify-content: center; font-size: 48px;
+}
+.confirm-box h2 { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.confirm-box p { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
+.confirm-box strong { color: var(--text-secondary); }
+
+/* ═══════════ PROFILE ═══════════ */
+.profile-box { max-width: 520px; margin: 0 auto; text-align: center; }
+.profile-avatar {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  margin: 0 auto 16px; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 700; color: #fff;
+  border: 1px solid var(--border-light);
+}
+.profile-avatar .avatar-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0; transition: opacity var(--transition);
+  font-size: 12px; font-weight: 600;
+}
+.profile-avatar:hover .avatar-overlay { opacity: 1; }
+.profile-name { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.profile-username { font-size: 14px; color: var(--accent); margin-bottom: 4px; }
+.profile-email { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+.profile-member { font-size: 12px; color: var(--text-dim); margin-bottom: 24px; }
+.profile-form { text-align: left; }
+.profile-form .readonly {
+  padding: 12px 14px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text-dim); font-size: 14px;
+  display: flex; align-items: center; margin-top: 6px;
+}
+
+.collapsible-section {
+  border-top: 1px solid var(--border-light); margin-top: 24px; padding-top: 20px;
+}
+.collapsible-toggle {
+  font-size: 13px; color: var(--accent); cursor: pointer; font-weight: 500;
+  transition: opacity var(--transition);
+}
+.collapsible-toggle:hover { opacity: 0.8; }
+.collapsible-content { display: none; margin-top: 16px; }
+.collapsible-content.open { display: block; }
+
+/* ═══════════ ERROR PAGES ═══════════ */
+.error-box {
+  text-align: center; padding: 80px 20px; max-width: 440px; margin: 0 auto;
+}
+.error-icon { font-size: 96px; margin-bottom: 20px; position: relative; display: inline-block; }
+.error-badge {
+  position: absolute; bottom: -4px; right: -20px;
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: var(--radius-full); color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+.error-box h2 { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.error-box p { font-size: 14px; color: var(--text-dim); margin-bottom: 28px; }
+
+/* ═══════════ PREFERENCES ═══════════ */
+.pref-layout { display: flex; gap: 32px; max-width: 900px; }
+.pref-sidebar {
+  width: 200px; flex-shrink: 0;
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 4px 0; height: fit-content; position: sticky; top: calc(var(--nav-h) + 20px);
+}
+.pref-sidebar a {
+  display: block; padding: 12px 20px; font-size: 13px; font-weight: 500;
+  color: var(--text-dim); cursor: pointer; transition: all var(--transition);
+  border-left: 2px solid transparent;
+}
+.pref-sidebar a:hover { color: var(--text-secondary); background: rgba(255,255,255,0.02); }
+.pref-sidebar a.active { color: var(--accent-light); border-left-color: var(--accent); background: var(--accent-glow); }
+
+.pref-content { flex: 1; min-width: 0; }
+.pref-section {
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  padding: 24px; margin-bottom: 16px;
+}
+.pref-section h3 { font-size: 13px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+.pref-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+.pref-row .label { font-size: 14px; color: var(--text); }
+.pref-row .sub { font-size: 12px; color: var(--text-dim); }
+.pref-toggle {
+  font-size: 22px; cursor: pointer; user-select: none;
+  color: var(--text-dim); transition: color var(--transition);
+}
+.pref-toggle.on { color: var(--accent); }
+
+.app-footer { text-align: center; padding: 20px 0; font-size: 12px; color: var(--text-dim); border-top: 1px solid var(--border-light); }
+
+/* ═══════════ FAB ═══════════ */
+.fab {
+  position: fixed; bottom: 32px; right: 32px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #121212; font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 4px 24px rgba(245,197,24,0.3);
+  transition: all 220ms ease; z-index: 300; border: none;
+}
+.fab:hover { transform: scale(1.1); box-shadow: 0 6px 32px rgba(245,197,24,0.4); }
+.fab:active { transform: scale(0.95); }
+.fab-tooltip {
+  position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+  background: var(--surface); color: var(--text); font-size: 11px; font-weight: 500;
+  padding: 6px 14px; border-radius: var(--radius-sm); white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity var(--transition);
+  border: 1px solid var(--border-light);
+}
+.fab:hover .fab-tooltip { opacity: 1; }
+
+/* ═══════════ MODALS ═══════════ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7); max-width: 90vw;
+}
+.modal-box h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+.modal-box p { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
+.modal-box.w560 { width: 560px; }
+.modal-box.w480 { width: 480px; }
+
+.modal-box textarea {
+  width: 100%; padding: 12px 14px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  color: var(--text); font-size: 13px; resize: none; outline: none;
+  font-family: inherit; line-height: 1.6;
+}
+.modal-box textarea:focus { border-color: var(--accent); }
+.modal-box .char-count { font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 4px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+.modal-box .error-msg { font-size: 12px; color: var(--danger); margin-bottom: 12px; display: none; }
+.modal-box .error-msg.show { display: block; }
+.modal-box input[type="text"] {
+  width: 100%; padding: 12px 14px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  color: var(--text); font-size: 14px; outline: none;
+  font-family: inherit;
+}
+.modal-box input[type="text"]:focus { border-color: var(--accent); }
+
+/* ═══════════ STAR WIDGET ═══════════ */
+.star-widget { display: flex; gap: 4px; margin-bottom: 24px; user-select: none; }
+.star-widget .star { font-size: 30px; color: #333; cursor: pointer; transition: color 100ms ease, transform 100ms ease; }
+.star-widget .star.hovered { color: var(--accent); transform: scale(1.12); }
+.star-widget .star.selected { color: var(--accent); }
+.star-widget .star.deselected { color: rgba(245,197,24,0.2); }
+.star-rating-label { font-size: 14px; color: var(--text-dim); text-align: center; margin-bottom: 20px; }
+
+/* ═══════════ EMPTY STATE ═══════════ */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 64px 24px; text-align: center;
+}
+.empty-state .icon { font-size: 56px; margin-bottom: 16px; opacity: 0.5; }
+.empty-state h3 { font-size: 18px; color: var(--text-secondary); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; color: var(--text-dim); max-width: 340px; margin-bottom: 16px; }
+
+/* ═══════════ RESPONSIVE ═══════════ */
+@media (max-width: 1024px) {
+  .media-grid { grid-template-columns: repeat(3, 1fr); }
+  .list-grid { grid-template-columns: repeat(2, 1fr); }
+  .detail-hero { gap: 28px; }
+  .poster { width: 220px; }
+}
+
+@media (max-width: 768px) {
+  :root { --margin-desktop: var(--margin-mobile); }
+  .navbar { padding: 0 var(--margin-mobile); }
+  .nav-links a { padding: 8px 10px; font-size: 13px; }
+  .media-grid { grid-template-columns: repeat(2, 1fr); }
+  .list-grid { grid-template-columns: 1fr; }
+  .detail-hero { flex-direction: column; }
+  .poster { width: 180px; position: static; }
+  .detail-title { font-size: 28px; }
+  .hero { padding: 32px 24px; min-height: 200px; }
+  .hero h1 { font-size: 36px; }
+  .hero p { font-size: 14px; }
+  .search-toolbar { flex-direction: column; }
+  .navbar .nav-links { display: none; }
+  .mobile-nav { display: block; }
+  .view { padding-bottom: 80px; }
+  .fab { bottom: 80px; }
+  .detail-actions { flex-direction: column; align-items: stretch; }
+  .pref-layout { flex-direction: column; }
+  .pref-sidebar { width: 100%; position: static; display: flex; overflow-x: auto; border-radius: 0; border-left: none; }
+  .pref-sidebar a { border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .pref-sidebar a.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+  .modal-box { padding: 24px; border-radius: var(--radius-md); }
+  .cast-grid { grid-template-columns: repeat(2, 1fr); }
+  .navbar { gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<header class="navbar glass">
+  <div class="navbar-inner">
+    <div class="logo" onclick="navigate('home')">Film<span>IA</span></div>
+    <nav class="nav-links" id="desktopNav">
+      <a class="active" data-view="home" onclick="navigate('home')">Inicio</a>
+      <a data-view="search" onclick="toggleSearch()">Buscar</a>
+      <a data-view="lists" onclick="navigate('lists')">Listas</a>
+    </nav>
+    <div class="nav-right">
+      <div class="toggle-label" style="margin:0 8px 0 0;white-space:nowrap;display:inline-block;">Auth</div>
+      <div class="toggle-switch" id="navAuthToggle" style="margin:0;">
+        <button class="active" onclick="setAuth(true, this)">SI</button>
+        <button onclick="setAuth(false, this)">NO</button>
+      </div>
+      <div class="avatar" id="avatarBtn" onclick="document.getElementById('avatarDropdown').classList.toggle('open')" title="Menu de usuario">M</div>
+      <div class="avatar-dropdown" id="avatarDropdown">
+        <a onclick="navigate('perfil'); document.getElementById('avatarDropdown').classList.remove('open')">Mi perfil</a>
+        <a onclick="navigate('misresenas'); document.getElementById('avatarDropdown').classList.remove('open')">Mis reseñas</a>
+        <a onclick="navigate('preferencias'); document.getElementById('avatarDropdown').classList.remove('open')">Preferencias</a>
+        <a class="logout" onclick="navigate('login'); document.getElementById('avatarDropdown').classList.remove('open')">Cerrar sesion</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════ SEARCH OVERLAY ═══════════ -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-inner">
+    <div class="search-toolbar glass">
+      <div class="search-input-wrap">
+        <span class="search-prefix">&#128269;</span>
+        <input type="search" id="searchInput" placeholder="Buscar peliculas o series por titulo..." oninput="handleSearchInput()">
+      </div>
+      <div class="type-toggle" id="typeToggle">
+        <button class="active" data-type="all" onclick="setType('all', this)">Todo</button>
+        <button data-type="movie" onclick="setType('movie', this)">Peliculas</button>
+        <button data-type="tv" onclick="setType('tv', this)">Series</button>
+      </div>
+    </div>
+
+    <div class="genre-chips-row" style="margin-bottom:24px;">
+      <span class="genre-chip-pill active">Todos</span>
+      <span class="genre-chip-pill" onclick="toggleGenreChip(this)">Accion</span>
+      <span class="genre-chip-pill" onclick="toggleGenreChip(this)">Drama</span>
+      <span class="genre-chip-pill" onclick="toggleGenreChip(this)">Comedia</span>
+      <span class="genre-chip-pill" onclick="toggleGenreChip(this)">Sci-Fi</span>
+      <span class="genre-chip-pill" onclick="toggleGenreChip(this)">Terror</span>
+    </div>
+
+    <div id="resultsArea">
+      <div class="results-header">
+        <div><strong>15</strong> <span>resultados encontrados</span></div>
+        <span>Orden: popularidad</span>
+      </div>
+      <div class="media-grid" id="searchGrid">
+        <div class="card" onclick="navigate('detail','The Matrix')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.7</span></div><div class="card-body"><div class="card-title">The Matrix</div><div class="card-year">1999</div></div></div>
+        <div class="card" onclick="navigate('detail','Inception')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.3</span></div><div class="card-body"><div class="card-title">Inception</div><div class="card-year">2010</div></div></div>
+        <div class="card" onclick="navigate('detail','Chernobyl')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 9.4</span></div><div class="card-body"><div class="card-title">Chernobyl</div><div class="card-year">2019</div></div></div>
+        <div class="card" onclick="navigate('detail','Interstellar')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.6</span></div><div class="card-body"><div class="card-title">Interstellar</div><div class="card-year">2014</div></div></div>
+        <div class="card" onclick="navigate('detail','The Last of Us')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 8.8</span></div><div class="card-body"><div class="card-title">The Last of Us</div><div class="card-year">2023</div></div></div>
+        <div class="card" onclick="navigate('detail','Parasite')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.5</span></div><div class="card-body"><div class="card-title">Parasite</div><div class="card-year">2019</div></div></div>
+        <div class="card" onclick="navigate('detail','Joker')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.4</span></div><div class="card-body"><div class="card-title">Joker</div><div class="card-year">2019</div></div></div>
+        <div class="card" onclick="navigate('detail','True Detective')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 9.0</span></div><div class="card-body"><div class="card-title">True Detective</div><div class="card-year">2014</div></div></div>
+        <div class="card" onclick="navigate('detail','Arrival')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.9</span></div><div class="card-body"><div class="card-title">Arrival</div><div class="card-year">2016</div></div></div>
+        <div class="card" onclick="navigate('detail','Mindhunter')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 8.6</span></div><div class="card-body"><div class="card-title">Mindhunter</div><div class="card-year">2017</div></div></div>
+      </div>
+      <div class="pagination"><button>&larr;</button><button class="active">1</button><button>2</button><button>3</button><button>&hellip;</button><button>15</button><button>&rarr;</button></div>
+    </div>
+
+    <div class="empty-state" id="searchEmpty" style="display:none;">
+      <div class="icon">&#128269;</div>
+      <h3>No se encontraron resultados</h3>
+      <p>Proba con otro termino de busqueda o ajusta los filtros para ampliar los resultados.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ VIEW: HOME ═══════════ -->
+<section class="view active" id="view-home">
+  <section class="hero">
+    <div class="hero-content">
+      <span class="hero-tag">Tendencia</span>
+      <h1>Drive</h1>
+      <p>Un misterioso conductor especialista en doblaje de Hollywood se ve envuelto en un robo que sale mal. Thriller neo-noir con una banda sonora inolvidable.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="navigate('detail','Drive')">Ver mas</button>
+        <button class="btn-ghost">+ A mi lista</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header"><h2>Recomendado para ti</h2><a onclick="navigate('listDetail','Recomendado')">Ver mas &rarr;</a></div>
+    <div class="scroll-row">
+      <div class="card" onclick="navigate('detail','Nightcrawler')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.8</span></div><div class="card-body"><div class="card-title">Nightcrawler</div><div class="card-year">2014</div></div></div>
+      <div class="card" onclick="navigate('detail','True Detective')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 9.0</span></div><div class="card-body"><div class="card-title">True Detective</div><div class="card-year">2014</div></div></div>
+      <div class="card" onclick="navigate('detail','Prisoners')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.1</span></div><div class="card-body"><div class="card-title">Prisoners</div><div class="card-year">2013</div></div></div>
+      <div class="card" onclick="navigate('detail','Mindhunter')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 8.6</span></div><div class="card-body"><div class="card-title">Mindhunter</div><div class="card-year">2017</div></div></div>
+      <div class="card" onclick="navigate('detail','Zodiac')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.7</span></div><div class="card-body"><div class="card-title">Zodiac</div><div class="card-year">2007</div></div></div>
+      <div class="card" onclick="navigate('detail','Chernobyl')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 9.4</span></div><div class="card-body"><div class="card-title">Chernobyl</div><div class="card-year">2019</div></div></div>
+      <div class="card" onclick="navigate('detail','Gone Girl')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.1</span></div><div class="card-body"><div class="card-title">Gone Girl</div><div class="card-year">2014</div></div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header"><h2>Tendencias de la semana</h2><a onclick="navigate('listDetail','Tendencias')">Ver mas &rarr;</a></div>
+    <div class="scroll-row">
+      <div class="card" onclick="navigate('detail','Dune Part Two')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.6</span></div><div class="card-body"><div class="card-title">Dune: Part Two</div><div class="card-year">2024</div></div></div>
+      <div class="card" onclick="navigate('detail','The Last of Us')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 8.8</span></div><div class="card-body"><div class="card-title">The Last of Us</div><div class="card-year">2023</div></div></div>
+      <div class="card" onclick="navigate('detail','Oppenheimer')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.3</span></div><div class="card-body"><div class="card-title">Oppenheimer</div><div class="card-year">2023</div></div></div>
+      <div class="card" onclick="navigate('detail','Shogun')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 8.7</span></div><div class="card-body"><div class="card-title">Shogun</div><div class="card-year">2024</div></div></div>
+      <div class="card" onclick="navigate('detail','The Batman')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.8</span></div><div class="card-body"><div class="card-title">The Batman</div><div class="card-year">2022</div></div></div>
+      <div class="card" onclick="navigate('detail','Fallout')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 8.4</span></div><div class="card-body"><div class="card-title">Fallout</div><div class="card-year">2024</div></div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header"><h2>Novedades</h2><a onclick="navigate('listDetail','Novedades')">Ver mas &rarr;</a></div>
+    <div class="scroll-row">
+      <div class="card" onclick="navigate('detail','The Fall Guy')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.2</span></div><div class="card-body"><div class="card-title">The Fall Guy</div><div class="card-year">2024</div></div></div>
+      <div class="card" onclick="navigate('detail','Baby Reindeer')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 7.8</span></div><div class="card-body"><div class="card-title">Baby Reindeer</div><div class="card-year">2024</div></div></div>
+      <div class="card" onclick="navigate('detail','Challengers')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.5</span></div><div class="card-body"><div class="card-title">Challengers</div><div class="card-year">2024</div></div></div>
+      <div class="card" onclick="navigate('detail','3 Body Problem')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 8.1</span></div><div class="card-body"><div class="card-title">3 Body Problem</div><div class="card-year">2024</div></div></div>
+      <div class="card" onclick="navigate('detail','Civil War')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.4</span></div><div class="card-body"><div class="card-title">Civil War</div><div class="card-year">2024</div></div></div>
+      <div class="card" onclick="navigate('detail','Ripley')"><div class="card-poster">&#128250;<span class="card-type tv">Serie</span><span class="card-rating">&#9733; 7.9</span></div><div class="card-body"><div class="card-title">Ripley</div><div class="card-year">2024</div></div></div>
+    </div>
+  </section>
+
+  <footer class="app-footer">FilmIA &copy; 2025 &mdash; Proyecto Seminario Integrador &middot; UTN-FRSF</footer>
+</section>
+
+<!-- ═══════════ VIEW: LISTAS ═══════════ -->
+<section class="view" id="view-lists">
+  <div class="breadcrumb"><span class="current">Listas</span></div>
+  <h2 style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--text);margin-bottom:24px;">Mis Listas</h2>
+
+  <div class="list-grid drag-container">
+    <div class="list-card" onclick="navigate('listDetail','Favoritos')">
+      <span class="list-card-badge">Predeterminada</span>
+      <div class="list-card-body">
+        <div class="list-card-name">Favoritos</div>
+        <div class="list-card-count">12 peliculas</div>
+        <div class="list-card-thumbs"><div class="list-card-thumb"></div><div class="list-card-thumb"></div><div class="list-card-thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="list-card" onclick="navigate('listDetail','Pendientes')">
+      <span class="list-card-badge">Predeterminada</span>
+      <div class="list-card-body">
+        <div class="list-card-name">Pendientes</div>
+        <div class="list-card-count">5 peliculas</div>
+        <div class="list-card-thumbs"><div class="list-card-thumb"></div><div class="list-card-thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="list-card" onclick="navigate('listDetail','Vistas')">
+      <span class="list-card-badge">Predeterminada</span>
+      <div class="list-card-body">
+        <div class="list-card-name">Vistas</div>
+        <div class="list-card-count">28 peliculas</div>
+        <div class="list-card-thumbs"><div class="list-card-thumb"></div><div class="list-card-thumb"></div><div class="list-card-thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="list-card draggable" onclick="navigate('listDetail','Sci-Fi')" draggable="true" data-list="Sci-Fi">
+      <div class="list-card-header">
+        <div class="list-card-menu" onclick="event.stopPropagation(); toggleListMenu(this)">&#8942;<div class="menu-dropdown"><a onclick="event.stopPropagation(); openListModal('rename','Sci-Fi')">Renombrar</a><a class="danger" onclick="event.stopPropagation(); openListModal('delete','Sci-Fi')">Eliminar</a></div></div>
+      </div>
+      <div class="list-card-body">
+        <div class="list-card-name">Sci-Fi</div>
+        <div class="list-card-count">8 peliculas</div>
+        <div class="list-card-thumbs"><div class="list-card-thumb"></div><div class="list-card-thumb"></div><div class="list-card-thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="list-card draggable" onclick="navigate('listDetail','Maraton finde')" draggable="true" data-list="Maraton finde">
+      <div class="list-card-header">
+        <div class="list-card-menu" onclick="event.stopPropagation(); toggleListMenu(this)">&#8942;<div class="menu-dropdown"><a onclick="event.stopPropagation(); openListModal('rename','Maraton finde')">Renombrar</a><a class="danger" onclick="event.stopPropagation(); openListModal('delete','Maraton finde')">Eliminar</a></div></div>
+      </div>
+      <div class="list-card-body">
+        <div class="list-card-name">Maraton finde</div>
+        <div class="list-card-count">3 peliculas</div>
+        <div class="list-card-thumbs"><div class="list-card-thumb"></div><div class="list-card-thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="list-card add-card" onclick="openListModal('create')">
+      <div class="add-icon">+</div>
+      <div class="add-label">Crear nueva lista</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: LIST DETALLE ═══════════ -->
+<section class="view" id="view-list-detail">
+  <div class="breadcrumb" id="listDetailBreadcrumb">
+    <a onclick="navigate('lists')">Listas</a><span class="sep">&#8250;</span>
+    <span class="current" id="listDetailName">Sci-Fi</span>
+  </div>
+
+  <div class="list-header">
+    <h2 id="listDetailTitle">Sci-Fi</h2>
+    <div class="list-header-menu" id="listDetailMenu" onclick="toggleListHeaderMenu()">
+      &#8942;
+      <div class="menu-dropdown">
+        <a onclick="openListModal('rename', document.getElementById('listDetailName').textContent)">Renombrar</a>
+        <a class="danger" onclick="openListModal('delete', document.getElementById('listDetailName').textContent)">Eliminar</a>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size:13px;color:var(--text-dim);margin-bottom:24px;">Tu coleccion personal de ciencia ficcion.</p>
+
+  <div class="media-grid" id="listDetailGrid">
+    <div class="card remove-mode" onclick="if(!event.target.closest('.card-remove')) navigate('detail','Interstellar')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.6</span></div><div class="card-body"><div class="card-title">Interstellar</div><div class="card-year">2014</div></div><span class="card-remove" onclick="openRemoveItemModal('Interstellar')">&#10005;</span></div>
+    <div class="card remove-mode" onclick="if(!event.target.closest('.card-remove')) navigate('detail','The Matrix')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.7</span></div><div class="card-body"><div class="card-title">The Matrix</div><div class="card-year">1999</div></div><span class="card-remove" onclick="openRemoveItemModal('The Matrix')">&#10005;</span></div>
+    <div class="card remove-mode" onclick="if(!event.target.closest('.card-remove')) navigate('detail','Arrival')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.9</span></div><div class="card-body"><div class="card-title">Arrival</div><div class="card-year">2016</div></div><span class="card-remove" onclick="openRemoveItemModal('Arrival')">&#10005;</span></div>
+    <div class="card remove-mode" onclick="if(!event.target.closest('.card-remove')) navigate('detail','Dune Part Two')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 8.6</span></div><div class="card-body"><div class="card-title">Dune: Part Two</div><div class="card-year">2024</div></div><span class="card-remove" onclick="openRemoveItemModal('Dune: Part Two')">&#10005;</span></div>
+    <div class="card remove-mode" onclick="if(!event.target.closest('.card-remove')) navigate('detail','Oblivion')"><div class="card-poster">&#127916;<span class="card-type movie">Pelicula</span><span class="card-rating">&#9733; 7.0</span></div><div class="card-body"><div class="card-title">Oblivion</div><div class="card-year">2013</div></div><span class="card-remove" onclick="openRemoveItemModal('Oblivion')">&#10005;</span></div>
+  </div>
+
+  <div style="font-size:12px;color:var(--text-dim);text-align:center;padding:16px 0;">Scroll vertical &mdash; cargando mas resultados...</div>
+
+  <div class="empty-state" id="listEmptyState" style="display:none;">
+    <div class="icon">&#128123;</div>
+    <h3>Esta lista no contiene elementos.</h3>
+    <button class="btn-primary" onclick="toggleSearch()">Explorar</button>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: DETALLE ═══════════ -->
+<section class="view" id="view-detail">
+  <div class="breadcrumb" id="detailBreadcrumb">
+    <a onclick="navigate('home')">Inicio</a><span class="sep">&#8250;</span>
+    <span class="current" id="detailMediaName">Breaking Bad</span>
+  </div>
+
+  <div class="detail-hero">
+    <div class="poster-col"><div class="poster">&#127916;</div></div>
+    <div class="info-col">
+      <span class="card-type tv" style="position:static;display:inline-block;margin-bottom:8px;">Serie</span>
+      <h1 class="detail-title" id="detailTitle">Breaking Bad</h1>
+      <div class="detail-meta">2008 <span class="dot">&middot;</span> 5 temporadas <span class="dot">&middot;</span> 62 episodios <span class="dot">&middot;</span> 47 min</div>
+      <div class="detail-rating">&#9733; 9.5 / 10 <span style="color:var(--text-dim);font-weight:400;font-size:13px;">(TMDB)</span></div>
+      <div class="genre-chips">
+        <span class="genre-chip">Drama</span>
+        <span class="genre-chip">Crimen</span>
+        <span class="genre-chip">Thriller</span>
+      </div>
+
+      <div class="detail-actions" id="actionAuth">
+        <button class="btn-primary" onclick="openRatingModal('publicar')">&#9733; Calificar</button>
+        <button class="action-btn toggled" onclick="toggleAction(this)"><span class="icon">&#9829;</span> Favoritos</button>
+        <button class="action-btn toggled" onclick="toggleAction(this)"><span class="icon">&#128065;</span> Vista</button>
+        <button class="action-btn" onclick="toggleAction(this)"><span class="icon">&#128337;</span> Pendiente</button>
+        <div class="dropdown-wrap" id="listDropdown">
+          <button class="action-btn" onclick="document.getElementById('listDropdown').classList.toggle('open')">+ Agregar a lista &#9662;</button>
+          <div class="dropdown-menu">
+            <label><input type="checkbox" checked> Maraton finde</label>
+            <label><input type="checkbox"> Sci-Fi</label>
+            <label><input type="checkbox"> Para ver con amigos</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-wall" id="actionNoAuth" style="display:none;">
+        &#128274; <a onclick="navigate('login')">Inicia sesion</a> para calificar o guardar en tus listas.
+      </div>
+
+      <div class="synopsis-card glass">
+        <h3>Sinopsis</h3>
+        <p id="synopsisText">Walter White, un profesor de quimica de secundaria en Albuquerque, Nuevo Mexico, recibe un diagnostico de cancer de pulmon inoperable. Desesperado por asegurar el futuro financiero de su familia, Walter decide utilizar sus conocimientos de quimica para cocinar metanfetamina junto a Jesse Pinkman, un exalumno suyo. Lo que comienza como un plan para dejar dinero suficiente se convierte en una espiral descendente hacia el crimen organizado, transformando a Walter en el temido capo conocido como "Heisenberg".</p>
+        <span class="synopsis-toggle" onclick="toggleExpand('synopsisText', this)">leer mas &#9662;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cast-card glass">
+    <h3>Director</h3>
+    <div class="director"><span>Vince Gilligan</span></div>
+    <h3>Cast</h3>
+    <div class="cast-list" id="castList">Bryan Cranston, Aaron Paul, Anna Gunn, Dean Norris, Betsy Brandt, RJ Mitte, Bob Odenkirk, Giancarlo Esposito, Jonathan Banks, Jesse Plemons, Laura Fraser, Mark Margolis, Steven Michael Quezada, Charles Baker, Matt Jones, Krysten Ritter.</div>
+    <span class="cast-toggle" onclick="toggleExpand('castList', this)">Ver todo el elenco &#9662;</span>
+  </div>
+
+  <hr class="divider">
+
+  <div id="myReviewSection">
+    <h2 class="review-section-header">Tu reseña</h2>
+    <div class="review-card my-review">
+      <div class="review-meta">
+        <div class="review-user"><div class="user-avatar">M</div></div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span class="review-rating">9/10</span>
+          <button class="icon-btn" title="Editar reseña" onclick="openRatingModal('editar')">&#9998;</button>
+          <button class="icon-btn danger" title="Eliminar resena" onclick="openDeleteModal()">&#128465;</button>
+        </div>
+      </div>
+      <div class="review-date">12/03/2025</div>
+      <div class="review-text">Una obra maestra de principio a fin. El desarrollo de Walter White es simplemente perfecto. Cada temporada supera a la anterior.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:36px;"></div>
+
+  <h2 class="review-section-header">Resenas de la comunidad <strong>(2)</strong></h2>
+  <div class="review-card">
+    <div class="review-meta">
+      <div class="review-user"><div class="user-avatar">ML</div> @maria_lopez</div>
+      <span class="review-rating">10/10</span>
+    </div>
+    <div class="review-date">15/03/2025</div>
+    <div class="review-text">La mejor serie que he visto en mi vida. Increible la evolucion de los personajes y la tension que maneja en cada capitulo.</div>
+  </div>
+  <div class="review-card">
+    <div class="review-meta">
+      <div class="review-user"><div class="user-avatar">CF</div> @cinefilo_ok</div>
+      <span class="review-rating">8/10</span>
+    </div>
+    <div class="review-date">20/03/2025</div>
+    <div class="review-text">Excelente desarrollo de personajes y una narrativa impecable. Solo algunos episodios de la temporada 3 se sintieron un poco lentos.</div>
+  </div>
+  <button class="load-more">Cargar mas resenas</button>
+</section>
+
+<!-- ═══════════ VIEW: LOGIN ═══════════ -->
+<section class="view" id="view-login" style="padding:0;max-width:none;">
+  <div class="auth-bg">
+    <div class="auth-box glass">
+      <div class="logo-auth">Film<span>IA</span></div>
+      <h2>Iniciar sesion</h2>
+      <div class="form-group">
+        <label>Email o nombre de usuario</label>
+        <input type="text" placeholder="usuario@email.com">
+      </div>
+      <div class="form-group">
+        <label>Contrasena</label>
+        <input type="password" class="has-icon" value="mi-contrasena" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" id="loginPass">
+        <span class="input-icon" onclick="togglePasswordInput('loginPass', this)">&#128065;</span>
+      </div>
+      <div style="text-align:right;margin-bottom:16px;">
+        <a style="font-size:12px;color:var(--accent);cursor:pointer;" onclick="alert('Modal: recuperar contrasena')">Olvidaste tu contrasena?</a>
+      </div>
+      <button class="btn-primary btn-full" onclick="setAuth(true); navigate('home')">Iniciar sesion</button>
+      <div class="auth-divider">o continuar con</div>
+      <button class="btn-google" onclick="setAuth(true); navigate('home')"><span style="font-weight:700;color:#4285f4;">G</span> Continuar con Google</button>
+      <div class="auth-switch">No tenes cuenta? <a onclick="navigate('register')">Registrate</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: REGISTER ═══════════ -->
+<section class="view" id="view-register" style="padding:0;max-width:none;">
+  <div class="auth-bg">
+    <div class="auth-box glass">
+      <div class="logo-auth">Film<span>IA</span></div>
+      <h2>Crear cuenta</h2>
+      <div class="form-group"><label>Nombre</label><input type="text" placeholder="Tu nombre"></div>
+      <div class="form-group"><label>Apellido</label><input type="text" placeholder="Tu apellido"></div>
+      <div class="form-group"><label>Nombre de usuario</label><input type="text" placeholder="marco_lopez"><div class="hint">De 5 a 25 caracteres alfanumericos</div></div>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="usuario@email.com"></div>
+      <div class="form-group"><label>Fecha de nacimiento</label><input type="text" placeholder="dd/mm/aaaa"><div class="hint">Debes tener al menos 13 anos</div></div>
+      <div class="form-group"><label>Genero</label><select><option value="">Seleccionar...</option><option>Masculino</option><option>Femenino</option><option>No especificar</option></select></div>
+      <div class="form-group">
+        <label>Contrasena</label>
+        <input type="password" class="has-icon" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" id="regPass1">
+        <span class="input-icon" onclick="togglePasswordInput('regPass1', this)">&#128065;</span>
+        <div class="hint">8-20 caracteres &middot; 1 mayuscula &middot; 1 minuscula &middot; 1 numero &middot; 1 especial (@#$%&*)</div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar contrasena</label>
+        <input type="password" class="has-icon" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" id="regPass2">
+        <span class="input-icon" onclick="togglePasswordInput('regPass2', this)">&#128065;</span>
+      </div>
+      <button class="btn-primary btn-full" onclick="navigate('confirm')">Crear cuenta</button>
+      <div class="auth-divider">o</div>
+      <button class="btn-google" onclick="setAuth(true); navigate('home')"><span style="font-weight:700;color:#4285f4;">G</span> Registrarse con Google</button>
+      <div class="auth-switch">Ya tenes cuenta? <a onclick="navigate('login')">Inicia sesion</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: CONFIRMACION ═══════════ -->
+<section class="view" id="view-confirm" style="padding:0;max-width:none;">
+  <div class="auth-bg">
+    <div class="confirm-box glass">
+      <div class="confirm-icon-wrap">&#9993;</div>
+      <h2>Revisa tu correo</h2>
+      <p>Te enviamos un enlace de confirmacion a <strong>marco@email.com</strong>. Si no lo encontras, revisa la carpeta de spam.</p>
+      <button class="btn-secondary" onclick="alert('Enlace reenviado.')" style="margin-bottom:16px;">Reenviar correo</button>
+      <div style="border-top:1px solid var(--border-light);padding-top:16px;">
+        <a style="font-size:13px;color:var(--accent);cursor:pointer;" onclick="navigate('login')">Ya confirmaste? Iniciar sesion</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: PERFIL ═══════════ -->
+<section class="view" id="view-perfil">
+  <div class="breadcrumb"><span class="current">Perfil</span></div>
+  <div class="profile-box">
+    <div id="perfilView">
+      <div class="profile-avatar">M</div>
+      <div class="profile-name" id="displayName">Marco Lopez</div>
+      <div class="profile-username" id="displayUsername">@marco_lopez</div>
+      <div class="profile-email" id="displayEmail">marco@email.com</div>
+      <div class="profile-member">Miembro desde marzo 2025</div>
+      <button class="btn-primary" onclick="editProfile()">&#9998; Editar perfil</button>
+    </div>
+
+    <div id="perfilEdit" style="display:none;">
+      <div class="profile-avatar" style="cursor:default;">
+        M
+        <div class="avatar-overlay" onclick="alert('File picker: cambiar foto')">Cambiar foto</div>
+      </div>
+      <div class="profile-form" style="margin-top:20px;">
+        <div class="form-group"><label>Nombre</label><input type="text" id="editNombre" value="Marco"></div>
+        <div class="form-group"><label>Apellido</label><input type="text" id="editApellido" value="Lopez"></div>
+        <div class="form-group"><label>Nombre de usuario</label><input type="text" id="editUsername" value="marco_lopez"><div class="hint ok">Disponible</div></div>
+        <div class="form-group"><label>Email</label><div class="readonly">marco@email.com</div></div>
+        <div class="form-group"><label>Fecha de nacimiento</label><input type="text" value="15/03/1990"></div>
+        <div class="form-group"><label>Genero</label><select><option>Masculino</option><option>Femenino</option><option selected>No especificar</option></select></div>
+        <div class="form-group"><label>Biografia</label><textarea rows="3" style="width:100%;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);font-size:13px;resize:vertical;outline:none;font-family:inherit;">Amante del cine y las series. Fanatico de Breaking Bad y el sci-fi.</textarea></div>
+        <div class="collapsible-section">
+          <span class="collapsible-toggle" onclick="toggleCollapsible(this)">Cambiar contrasena?</span>
+          <div class="collapsible-content">
+            <div class="form-group"><label>Contrasena actual</label><input type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
+            <div class="form-group"><label>Contrasena nueva</label><input type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
+            <div class="form-group"><label>Repetir contrasena nueva</label><input type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;">
+          <button class="btn-secondary" onclick="cancelEdit()">Cancelar</button>
+          <button class="btn-primary" onclick="saveProfile()">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: MIS RESENAS ═══════════ -->
+<section class="view" id="view-misresenas">
+  <div class="breadcrumb"><span class="current">Mis resenas</span></div>
+  <div style="max-width:720px;margin:0 auto;">
+
+    <div class="review-card my-review" style="margin-bottom:12px;cursor:pointer;" onclick="navigate('detail','Breaking Bad')">
+      <div class="review-meta">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">&#127916; Breaking Bad</span>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span class="review-rating">9/10</span>
+          <button class="icon-btn" title="Editar" onclick="event.stopPropagation();openRatingModal('editar')">&#9998;</button>
+          <button class="icon-btn danger" title="Eliminar" onclick="event.stopPropagation();openDeleteModal()">&#128465;</button>
+        </div>
+      </div>
+      <div class="review-date">12/03/2025</div>
+      <div class="review-text">Una obra maestra de principio a fin. El desarrollo de Walter White es simplemente perfecto. Cada temporada supera a la anterior.</div>
+    </div>
+
+    <div class="review-card" style="margin-bottom:12px;cursor:pointer;" onclick="navigate('detail','Interstellar')">
+      <div class="review-meta">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">&#127916; Interstellar</span>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span class="review-rating">8/10</span>
+          <button class="icon-btn" title="Editar" onclick="event.stopPropagation();openRatingModal('editar')">&#9998;</button>
+          <button class="icon-btn danger" title="Eliminar" onclick="event.stopPropagation();openDeleteModal()">&#128465;</button>
+        </div>
+      </div>
+      <div class="review-date">28/02/2025</div>
+      <div class="review-text">Visualmente impresionante, aunque el tercer acto se vuelve un poco confuso. La banda sonora de Zimmer es extraordinaria.</div>
+    </div>
+
+    <div class="review-card" style="margin-bottom:12px;cursor:pointer;" onclick="navigate('detail','Dark')">
+      <div class="review-meta">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">&#128250; Dark</span>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span class="review-rating">10/10</span>
+          <button class="icon-btn" title="Editar" onclick="event.stopPropagation();openRatingModal('editar')">&#9998;</button>
+          <button class="icon-btn danger" title="Eliminar" onclick="event.stopPropagation();openDeleteModal()">&#128465;</button>
+        </div>
+      </div>
+      <div class="review-date">15/01/2025</div>
+      <div class="review-text">La serie mas compleja y satisfactoria que vi. Cada detalle importa. El casting es impecable.</div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text-dim);text-align:center;padding:16px 0;">Scroll vertical &mdash; cargando mas resenas...</div>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: PREFERENCIAS ═══════════ -->
+<section class="view" id="view-preferencias">
+  <div class="breadcrumb"><span class="current">Preferencias</span></div>
+  <div class="pref-layout">
+    <div class="pref-sidebar">
+      <a class="active" onclick="scrollPrefSection('apariencia', this)">Apariencia</a>
+      <a onclick="scrollPrefSection('privacidad', this)">Privacidad</a>
+      <a onclick="scrollPrefSection('notificaciones', this)">Notificaciones</a>
+      <a onclick="scrollPrefSection('cuenta', this)">Cuenta</a>
+    </div>
+    <div class="pref-content">
+      <div class="pref-section glass" id="pref-apariencia">
+        <h3>Apariencia</h3>
+        <div class="pref-row">
+          <span class="label">Tema</span>
+          <div class="type-toggle">
+            <button class="active" onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active');">Oscuro</button>
+            <button onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active');">Claro</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pref-section glass" id="pref-privacidad">
+        <h3>Privacidad</h3>
+        <div class="pref-row">
+          <div>
+            <div class="label">Perfil publico</div>
+            <div class="sub">Tus resenas son visibles para otros usuarios.</div>
+          </div>
+          <span class="pref-toggle on" onclick="togglePrefToggle(this)">&#9679;</span>
+        </div>
+      </div>
+
+      <div class="pref-section glass" id="pref-notificaciones">
+        <h3>Notificaciones</h3>
+        <div class="pref-row">
+          <span class="label">Recomendaciones semanales</span>
+          <span class="pref-toggle on" onclick="togglePrefToggle(this)">&#9679;</span>
+        </div>
+        <div class="pref-row">
+          <span class="label">Resenas en tus listas</span>
+          <span class="pref-toggle on" onclick="togglePrefToggle(this)">&#9679;</span>
+        </div>
+        <div class="pref-row">
+          <span class="label">Novedades de FilmIA</span>
+          <span class="pref-toggle" onclick="togglePrefToggle(this)">&#9675;</span>
+        </div>
+      </div>
+
+      <div class="pref-section glass" id="pref-cuenta">
+        <h3>Cuenta</h3>
+        <button class="btn-danger" onclick="alert('Modal: Dar de baja tu cuenta?')">Dar de baja cuenta</button>
+      </div>
+
+      <div style="text-align:center;font-size:11px;color:var(--text-dim);padding:16px 0;">FilmIA v1.0.0</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: 404 ═══════════ -->
+<section class="view" id="view-404">
+  <div class="breadcrumb"><span class="current">&nbsp;</span></div>
+  <div class="error-box">
+    <div class="error-icon">
+      &#128269;
+      <span class="error-badge">Error 404</span>
+    </div>
+    <h2>Saliste del guion</h2>
+    <p>La pagina que buscas no existe o fue movida. Volve al inicio y segui explorando.</p>
+    <button class="btn-primary" onclick="navigate('home')">Volver al inicio</button>
+  </div>
+</section>
+
+<!-- ═══════════ VIEW: ERROR ═══════════ -->
+<section class="view" id="view-error">
+  <div class="breadcrumb"><span class="current">&nbsp;</span></div>
+  <div class="error-box">
+    <div class="error-icon">&#9888;</div>
+    <h2>Algo salio mal</h2>
+    <p>Ocurrio un error inesperado. Intenta de nuevo en unos minutos.</p>
+    <button class="btn-primary" onclick="location.reload()">Volver al inicio</button>
+  </div>
+</section>
+
+<!-- ═══════════ FAB CHATBOT ═══════════ -->
+<button class="fab" id="fabChat" title="Chatea con FilmIA">
+  &#128172;
+  <span class="fab-tooltip">Chatea con FilmIA</span>
+</button>
+
+<!-- ═══════════ MOBILE BOTTOM NAV ═══════════ -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mobile-nav-item active" data-view="home" onclick="navigate('home')">
+      <span class="icon">&#127968;</span> Inicio
+    </div>
+    <div class="mobile-nav-item" data-view="search" onclick="toggleSearch()">
+      <span class="icon">&#128269;</span> Buscar
+    </div>
+    <div class="mobile-nav-item" data-view="lists" onclick="navigate('lists')">
+      <span class="icon">&#128203;</span> Listas
+    </div>
+    <div class="mobile-nav-item" data-view="chat" onclick="alert('Chatbot: abierto')">
+      <span class="icon">&#128172;</span> Chat
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════ MODAL: CALIFICAR / EDITAR ═══════════ -->
+<div class="modal-overlay" id="ratingModal">
+  <div class="modal-box w560">
+    <h2 id="modalTitle">Calificar</h2>
+    <div id="modalError" class="error-msg">Debes seleccionar una calificacion.</div>
+    <div class="star-widget" id="starWidget"></div>
+    <div class="star-rating-label" id="starLabel">&nbsp;</div>
+    <textarea id="reviewText" placeholder="Escribi tu resena (opcional)..." rows="5" maxlength="1000" oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="charCount">0</span>/1000</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRatingModal()">Cancelar</button>
+      <button class="btn-primary" id="modalSubmitBtn" onclick="submitRating()">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: ELIMINAR RESENA ═══════════ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box w560">
+    <h2>Eliminar resena?</h2>
+    <p>Esta accion no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn-danger" onclick="confirmDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: GESTION DE LISTAS ═══════════ -->
+<div class="modal-overlay" id="listModal">
+  <div class="modal-box w480">
+    <h2 id="listModalTitle">Crear nueva lista</h2>
+    <div id="listModalError" class="error-msg">El nombre no puede estar vacio.</div>
+    <div id="listModalContent">
+      <input type="text" id="listModalInput" placeholder="Nombre de la lista" maxlength="80">
+    </div>
+    <div id="listModalConfirmContent" style="display:none;">
+      <p id="listModalConfirmText"></p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeListModal()">Cancelar</button>
+      <button class="btn-primary" id="listModalActionBtn" onclick="submitListAction()">Crear</button>
+      <button class="btn-danger" id="listModalDangerBtn" onclick="submitListAction()" style="display:none;">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: QUITAR ITEM DE LISTA ═══════════ -->
+<div class="modal-overlay" id="removeItemModal">
+  <div class="modal-box w480">
+    <h2 id="removeItemTitle">Quitar "Interstellar" de Sci-Fi?</h2>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRemoveItemModal()">Cancelar</button>
+      <button class="btn-danger" onclick="confirmRemoveItem()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ JAVASCRIPT ═══════════ -->
+<script>
+(function() {
+  'use strict';
+
+  /* ═══════════ STATE ═══════════ */
+  let isAuthenticated = true;
+  let currentView = 'home';
+  let searchOpen = false;
+  let detailOrigin = 'home';
+  let detailListName = null;
+  let currentListName = 'Sci-Fi';
+  let removingItemTitle = '';
+
+  const VIEW_IDS = [
+    'home','lists','list-detail','detail',
+    'login','register','confirm',
+    'perfil','misresenas','preferencias',
+    '404','error'
+  ];
+
+  /* ═══════════ VIEW SWITCHING ═══════════ */
+  function showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById('view-' + viewId);
+    if (target) target.classList.add('active');
+    updateDesktopNav(viewId);
+    updateMobileNav(viewId);
+    window.scrollTo(0, 0);
+  }
+
+  function updateDesktopNav(viewId) {
+    document.querySelectorAll('#desktopNav a').forEach(a => a.classList.remove('active'));
+    const navMap = { home: 'home', lists: 'lists', 'list-detail': 'lists' };
+    const navId = navMap[viewId] || null;
+    if (navId) {
+      const link = document.querySelector('#desktopNav a[data-view="' + navId + '"]');
+      if (link) link.classList.add('active');
+    }
+  }
+
+  function updateMobileNav(viewId) {
+    document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+    const navMap = { home: 'home', lists: 'lists', 'list-detail': 'lists' };
+    const navId = navMap[viewId] || null;
+    if (navId) {
+      const item = document.querySelector('.mobile-nav-item[data-view="' + navId + '"]');
+      if (item) item.classList.add('active');
+    }
+  }
+
+  window.navigate = function(view, param) {
+    if (view === 'search') { toggleSearch(); return; }
+    closeSearch();
+
+    if (view === 'detail') {
+      detailOrigin = (currentView === 'lists' || currentView === 'list-detail') ? 'lists' : (currentView === 'search' || searchOpen ? 'search' : 'home');
+      if (currentView === 'list-detail') detailListName = currentListName;
+    }
+
+    currentView = view;
+
+    switch(view) {
+      case 'home': showView('home'); break;
+      case 'lists': showView('lists'); document.getElementById('listDetailMenu').style.display = 'none'; break;
+      case 'listDetail':
+        currentListName = param || 'Sci-Fi';
+        showView('list-detail');
+        document.getElementById('listDetailName').textContent = currentListName;
+        document.getElementById('listDetailTitle').textContent = currentListName;
+        document.getElementById('listDetailMenu').style.display = (['Favoritos','Pendientes','Vistas'].includes(currentListName)) ? 'none' : 'flex';
+        updateDesktopNav('lists');
+        updateMobileNav('lists');
+        break;
+      case 'detail':
+        showView('detail');
+        var title = param || 'Breaking Bad';
+        document.getElementById('detailTitle').textContent = title;
+        document.getElementById('detailMediaName').textContent = title;
+        updateDetailBreadcrumb(title);
+        break;
+      case 'login': showView('login'); break;
+      case 'register': showView('register'); break;
+      case 'confirm': showView('confirm'); break;
+      case 'perfil': showView('perfil'); break;
+      case 'misresenas': showView('misresenas'); break;
+      case 'preferencias': showView('preferencias'); break;
+      case '404': showView('404'); updateDesktopNav('home'); updateMobileNav('home'); break;
+      case 'error': showView('error'); updateDesktopNav('home'); updateMobileNav('home'); break;
+    }
+    window.scrollTo(0, 0);
+  };
+
+  function updateDetailBreadcrumb(title) {
+    var bc = document.getElementById('detailBreadcrumb');
+    if (detailOrigin === 'lists') {
+      bc.innerHTML = '<a onclick="navigate(\'lists\')">Listas</a><span class="sep">&#8250;</span><a onclick="navigate(\'listDetail\',\'' + (detailListName || currentListName) + '\')">' + (detailListName || currentListName) + '</a><span class="sep">&#8250;</span><span class="current">' + title + '</span>';
+    } else if (detailOrigin === 'search') {
+      bc.innerHTML = '<a onclick="navigate(\'home\')">Inicio</a><span class="sep">&#8250;</span><a onclick="toggleSearch()">Buscar</a><span class="sep">&#8250;</span><span class="current">' + title + '</span>';
+    } else {
+      bc.innerHTML = '<a onclick="navigate(\'home\')">Inicio</a><span class="sep">&#8250;</span><span class="current">' + title + '</span>';
+    }
+  }
+
+  /* ═══════════ SEARCH ═══════════ */
+  window.toggleSearch = function() {
+    searchOpen = !searchOpen;
+    var panel = document.getElementById('searchOverlay');
+    if (searchOpen) {
+      panel.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('searchInput').focus();
+    } else {
+      closeSearch();
+    }
+  };
+
+  function closeSearch() {
+    searchOpen = false;
+    document.getElementById('searchOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  window.setType = function(type, el) {
+    document.querySelectorAll('#typeToggle button').forEach(function(b) { b.classList.remove('active'); });
+    el.classList.add('active');
+  };
+
+  window.handleSearchInput = function() {
+    var val = document.getElementById('searchInput').value.trim();
+    document.getElementById('resultsArea').style.display = val.length > 0 ? 'none' : '';
+    document.getElementById('searchEmpty').style.display = val.length > 0 ? 'flex' : 'none';
+  };
+
+  window.toggleGenreChip = function(el) {
+    document.querySelectorAll('.genre-chips-row .genre-chip-pill').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (searchOpen) { toggleSearch(); return; }
+      document.querySelectorAll('.modal-overlay.open').forEach(function(m) { m.classList.remove('open'); });
+      document.getElementById('avatarDropdown').classList.remove('open');
+      document.querySelectorAll('.list-card-menu.open, .list-header-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    }
+  });
+
+  /* ═══════════ AUTH ═══════════ */
+  window.setAuth = function(isAuth, btn) {
+    isAuthenticated = isAuth;
+    if (btn) {
+      var parent = btn.parentElement;
+      parent.querySelectorAll('button').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    }
+
+    document.querySelectorAll('.toggle-switch').forEach(function(toggle) {
+      var btns = toggle.querySelectorAll('button');
+      btns.forEach(function(b) { b.classList.remove('active'); });
+      if (isAuth) btns[0].classList.add('active');
+      else if (btns[1]) btns[1].classList.add('active');
+    });
+
+    document.querySelectorAll('#actionAuth').forEach(function(el) { el.style.display = isAuth ? '' : 'none'; });
+    document.querySelectorAll('#actionNoAuth').forEach(function(el) { el.style.display = isAuth ? 'none' : ''; });
+  };
+
+  /* ═══════════ STAR WIDGET ═══════════ */
+  var currentMode = 'publicar';
+  var selectedRating = 0;
+  var oldRating = 0;
+
+  function buildStars() {
+    var w = document.getElementById('starWidget');
+    w.innerHTML = '';
+    for (var i = 1; i <= 10; i++) {
+      var s = document.createElement('span');
+      s.className = 'star'; s.textContent = '\u2605'; s.dataset.value = i;
+      (function(n) {
+        s.addEventListener('mouseenter', function() { hoverStars(n); });
+        s.addEventListener('click', function() { selectStars(n); });
+      })(i);
+      w.appendChild(s);
+    }
+    w.addEventListener('mouseleave', function() {
+      w.querySelectorAll('.star').forEach(function(s) { s.classList.remove('hovered', 'deselected'); });
+      updateStarLabel();
+    });
+  }
+
+  function hoverStars(n) {
+    var stars = document.querySelectorAll('#starWidget .star');
+    stars.forEach(function(s, i) {
+      var v = i + 1;
+      s.classList.remove('hovered', 'deselected');
+      if (v <= n) s.classList.add('hovered');
+      else if (currentMode === 'editar' && v <= oldRating) s.classList.add('deselected');
+    });
+    document.getElementById('starLabel').textContent = n + '/10';
+  }
+
+  function selectStars(n) {
+    selectedRating = n;
+    document.querySelectorAll('#starWidget .star').forEach(function(s, i) { s.classList.toggle('selected', i < n); });
+    document.getElementById('starLabel').textContent = n + '/10';
+    document.getElementById('modalError').classList.remove('show');
+  }
+
+  function setStars(n) {
+    selectedRating = n;
+    document.querySelectorAll('#starWidget .star').forEach(function(s, i) { s.classList.toggle('selected', i < n); });
+    document.getElementById('starLabel').textContent = n > 0 ? n + '/10' : '\xA0';
+  }
+
+  function updateStarLabel() {
+    document.getElementById('starLabel').textContent = selectedRating > 0 ? selectedRating + '/10' : '\xA0';
+  }
+
+  /* ═══════════ RATING MODAL ═══════════ */
+  window.openRatingModal = function(mode) {
+    currentMode = mode;
+    document.getElementById('modalError').classList.remove('show');
+    var submitBtn = document.getElementById('modalSubmitBtn');
+
+    if (mode === 'publicar') {
+      document.getElementById('modalTitle').textContent = 'Calificar';
+      submitBtn.textContent = 'Publicar';
+      selectedRating = 0; oldRating = 0;
+      document.getElementById('reviewText').value = '';
+    } else {
+      document.getElementById('modalTitle').textContent = 'Editar resena';
+      submitBtn.textContent = 'Actualizar';
+      selectedRating = 9; oldRating = 9;
+      document.getElementById('reviewText').value = 'Una obra maestra de principio a fin. El desarrollo de Walter White es simplemente perfecto.';
+    }
+    setStars(selectedRating);
+    updateCharCount();
+    document.getElementById('ratingModal').classList.add('open');
+  };
+
+  window.closeRatingModal = function() { document.getElementById('ratingModal').classList.remove('open'); };
+
+  window.submitRating = function() {
+    if (selectedRating === 0) { document.getElementById('modalError').classList.add('show'); return; }
+    closeRatingModal();
+    alert(currentMode === 'publicar' ? 'Resena publicada!' : 'Resena actualizada!');
+  };
+
+  window.updateCharCount = function() {
+    document.getElementById('charCount').textContent = document.getElementById('reviewText').value.length;
+  };
+
+  /* ═══════════ DELETE REVIEW MODAL ═══════════ */
+  window.openDeleteModal = function() { document.getElementById('deleteModal').classList.add('open'); };
+  window.closeDeleteModal = function() { document.getElementById('deleteModal').classList.remove('open'); };
+  window.confirmDelete = function() {
+    closeDeleteModal();
+    document.getElementById('myReviewSection').style.display = 'none';
+    alert('Resena eliminada.');
+  };
+
+  /* ═══════════ LIST MANAGEMENT MODAL ═══════════ */
+  var listModalMode = 'create';
+  var listModalTarget = '';
+
+  window.openListModal = function(mode, listName) {
+    listModalMode = mode; listModalTarget = listName || '';
+    document.getElementById('listModalError').classList.remove('show');
+    document.getElementById('listModalError').textContent = 'El nombre no puede estar vacio.';
+
+    var title = document.getElementById('listModalTitle');
+    var input = document.getElementById('listModalInput');
+    var content = document.getElementById('listModalContent');
+    var confirmC = document.getElementById('listModalConfirmContent');
+    var actionBtn = document.getElementById('listModalActionBtn');
+    var dangerBtn = document.getElementById('listModalDangerBtn');
+
+    content.style.display = ''; confirmC.style.display = 'none';
+    actionBtn.style.display = ''; dangerBtn.style.display = 'none';
+
+    switch(mode) {
+      case 'create':
+        title.textContent = 'Crear nueva lista';
+        input.value = ''; input.placeholder = 'Nombre de la lista';
+        actionBtn.textContent = 'Crear';
+        break;
+      case 'rename':
+        title.textContent = 'Renombrar lista';
+        input.value = listName; input.placeholder = 'Nombre de la lista';
+        actionBtn.textContent = 'Guardar';
+        break;
+      case 'delete':
+        title.textContent = 'Eliminar lista?';
+        content.style.display = 'none'; confirmC.style.display = '';
+        document.getElementById('listModalConfirmText').textContent = 'Esta accion no se puede deshacer. Perderas todas las peliculas de la lista.';
+        actionBtn.style.display = 'none'; dangerBtn.style.display = '';
+        dangerBtn.textContent = 'Eliminar';
+        break;
+    }
+    document.getElementById('listModal').classList.add('open');
+  };
+
+  window.closeListModal = function() { document.getElementById('listModal').classList.remove('open'); };
+
+  window.submitListAction = function() {
+    if (listModalMode === 'delete') { closeListModal(); alert('Lista eliminada.'); return; }
+    var name = document.getElementById('listModalInput').value.trim();
+    if (!name) { document.getElementById('listModalError').classList.add('show'); return; }
+    closeListModal();
+    alert(listModalMode === 'create' ? 'Lista creada.' : 'Lista renombrada.');
+  };
+
+  /* ═══════════ REMOVE ITEM MODAL ═══════════ */
+  window.openRemoveItemModal = function(title) {
+    removingItemTitle = title;
+    document.getElementById('removeItemTitle').textContent = '\u00BFQuitar "' + title + '" de ' + currentListName + '?';
+    document.getElementById('removeItemModal').classList.add('open');
+  };
+  window.closeRemoveItemModal = function() { document.getElementById('removeItemModal').classList.remove('open'); };
+  window.confirmRemoveItem = function() { closeRemoveItemModal(); alert('Item quitado: ' + removingItemTitle); };
+
+  /* ═══════════ LIST MENU TOGGLE ═══════════ */
+  window.toggleListMenu = function(menu) {
+    document.querySelectorAll('.list-card-menu.open').forEach(function(m) { if (m !== menu) m.classList.remove('open'); });
+    menu.classList.toggle('open');
+  };
+
+  window.toggleListHeaderMenu = function() {
+    document.getElementById('listDetailMenu').classList.toggle('open');
+  };
+
+  /* ═══════════ DRAG & DROP ═══════════ */
+  (function initDragDrop() {
+    document.querySelectorAll('.draggable').forEach(function(card) {
+      card.addEventListener('dragstart', function(e) {
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', function() {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.list-card.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
+      });
+      card.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+      card.addEventListener('dragenter', function(e) {
+        e.preventDefault();
+        var dragging = document.querySelector('.list-card.dragging');
+        if (dragging && dragging !== card && card.classList.contains('draggable') && !card.classList.contains('add-card')) {
+          card.classList.add('drag-over');
+        }
+      });
+      card.addEventListener('dragleave', function() { card.classList.remove('drag-over'); });
+      card.addEventListener('drop', function(e) {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        var dragging = document.querySelector('.list-card.dragging');
+        if (dragging && dragging !== card && card.classList.contains('draggable') && !card.classList.contains('add-card')) {
+          var container = card.parentNode;
+          var cards = Array.prototype.slice.call(container.querySelectorAll('.draggable'));
+          var fromIdx = cards.indexOf(dragging);
+          var toIdx = cards.indexOf(card);
+          if (fromIdx < toIdx) { container.insertBefore(dragging, card.nextSibling); }
+          else { container.insertBefore(dragging, card); }
+        }
+      });
+    });
+  })();
+
+  /* ═══════════ UTILS ═══════════ */
+  window.toggleAction = function(btn) { btn.classList.toggle('toggled'); };
+
+  window.toggleExpand = function(elId, trigger) {
+    var el = document.getElementById(elId);
+    el.classList.toggle('expanded');
+    if (trigger.textContent.indexOf('mas') !== -1) trigger.textContent = trigger.textContent.replace('mas \u25BE', 'menos \u25B4');
+    else if (trigger.textContent.indexOf('menos') !== -1) trigger.textContent = trigger.textContent.replace('menos \u25B4', 'mas \u25BE');
+    else if (trigger.textContent.indexOf('leer mas') !== -1) trigger.textContent = 'leer menos \u25B4';
+    else trigger.textContent = 'leer mas \u25BE';
+  };
+
+  window.togglePasswordInput = function(inputId, icon) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    icon.textContent = input.type === 'password' ? '\uD83D\uDC41' : '\uD83D\uDE48';
+  };
+
+  window.editProfile = function() {
+    document.getElementById('perfilView').style.display = 'none';
+    document.getElementById('perfilEdit').style.display = 'block';
+  };
+
+  window.cancelEdit = function() {
+    document.getElementById('perfilEdit').style.display = 'none';
+    document.getElementById('perfilView').style.display = 'block';
+  };
+
+  window.saveProfile = function() {
+    document.getElementById('displayName').textContent = document.getElementById('editNombre').value + ' ' + document.getElementById('editApellido').value;
+    document.getElementById('displayUsername').textContent = '@' + document.getElementById('editUsername').value;
+    alert('Perfil actualizado.');
+    cancelEdit();
+  };
+
+  window.toggleCollapsible = function(el) {
+    el.parentElement.querySelector('.collapsible-content').classList.toggle('open');
+    el.textContent = el.parentElement.querySelector('.collapsible-content').classList.contains('open') ? 'Ocultar cambio de contrasena \u25B4' : '\u00BFCambiar contrasena?';
+  };
+
+  window.togglePrefToggle = function(el) {
+    el.classList.toggle('on');
+    el.textContent = el.classList.contains('on') ? '\u25CF' : '\u25CB';
+  };
+
+  window.scrollPrefSection = function(id, link) {
+    document.querySelectorAll('.pref-sidebar a').forEach(function(a) { a.classList.remove('active'); });
+    link.classList.add('active');
+    var el = document.getElementById('pref-' + id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  /* ═══════════ OUTSIDE CLICK HANDLERS ═══════════ */
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown-wrap')) {
+      document.querySelectorAll('.dropdown-wrap.open').forEach(function(d) { d.classList.remove('open'); });
+    }
+    if (!e.target.closest('.list-card-menu')) {
+      document.querySelectorAll('.list-card-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    }
+    if (!e.target.closest('.list-header-menu') && !e.target.closest('#listDetailMenu')) {
+      document.getElementById('listDetailMenu').classList.remove('open');
+    }
+    if (!e.target.closest('.avatar') && !e.target.closest('.avatar-dropdown')) {
+      document.getElementById('avatarDropdown').classList.remove('open');
+    }
+  });
+
+  /* ═══════════ INIT ═══════════ */
+  buildStars();
+  showView('home');
+
+})();
+</script>
+</body>
+</html>
