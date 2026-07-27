@@ -10,7 +10,7 @@ Proyecto correspondiente a la materia **Seminario Integrador** de la carrera **A
 
 La sobreabundancia de contenido audiovisual disponible en plataformas de streaming genera una paradoja de eleccion: cuanto mas material existe, mas tiempo invierten los usuarios en decidir que ver. Las recomendaciones genericas, basadas unicamente en popularidad o en un historial de visualizacion superficial, rara vez capturan los matices de las preferencias individuales.
 
-FilmIA aborda esta problematica combinando un catalogo actualizado de peliculas y series con un motor de recomendacion personalizado. El sistema analiza el historial de visualizacion, las calificaciones y las resenas de cada usuario para generar sugerencias contextuales a traves de un chatbot basado en inteligencia artificial.
+FilmIA aborda esta problematica combinando un catalogo actualizado de peliculas y series con un motor de recomendacion personalizado. El sistema analiza el historial de visualizacion, las calificaciones y las reseñas de cada usuario para generar sugerencias contextuales a traves de un chatbot basado en inteligencia artificial.
 
 ---
 
@@ -137,11 +137,3 @@ La especificacion detallada de accesibilidad por componente se encuentra en [`do
 |-----------|
 | Debona, Marcos Joel |
 | Gaitan, Gonzalo Andres |
-
----
-
-## Estado del proyecto
-
-**Fase actual:** planificacion y diseno.
-
-El frontend y backend se encuentran en etapa inicial de scaffolding. La documentacion tecnica y de producto esta completa y revisada. La implementacion se organiza en 7 modulos segun el plan de desarrollo, con un cronograma estimado de 4 a 5 semanas para dos desarrolladores.
