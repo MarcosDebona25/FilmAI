@@ -119,27 +119,6 @@ La especificacion detallada de accesibilidad por componente se encuentra en [`do
 
 ---
 
-## Estructura del proyecto
-
-```
-FilmIA/
-  backend/          # Aplicacion Django + DRF
-    filmia/         # Configuracion del proyecto Django
-    usuarios/       # App de autenticacion y perfiles
-    catalogo/       # App de catalogo y sincronizacion con TMDB
-    listas/         # App de gestion de listas
-    chatbot/        # App de chatbot e integracion con LLM
-  frontend/         # Aplicacion Next.js
-    app/            # App Router (rutas publicas y autenticadas)
-    components/     # Componentes UI (Shadcn) y de funcionalidad
-    lib/            # Utilidades, clientes API, hooks
-  docs/             # Documentacion del proyecto
-    wireframes/     # Prototipos visuales
-  docker-compose.yml
-```
-
----
-
 ## Documentacion relacionada
 
 | Documento | Contenido |
