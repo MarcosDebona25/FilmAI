@@ -1,6 +1,6 @@
 # FilmIA — Plan de Desarrollo (SDD)
 
-> División granular de tareas para 2 desarrolladores. Cada tarea tiene dependencias, criterios de aceptación y esfuerzo estimado. Los módulos posteriores a Fundación se pueden paralelizar.
+> División de tareas asignada: **Marcos** y **Gonza**. Cada uno lleva sus módulos de punta a punta (back + front) para minimizar handoffs. Los módulos posteriores a Fundación se pueden paralelizar según las fases indicadas al final.
 
 ---
 
@@ -8,159 +8,138 @@
 
 El entorno y la estructura base deben estar antes que todo lo demás. Ambos trabajan en esto.
 
-| ID | Tarea | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|---------|------------------------|----------|
-| F-01 | Docker + docker-compose | Configurar `docker-compose.yml` con 4 servicios: Django backend, Next.js frontend, PostgreSQL 16, Redis. Volúmenes para desarrollo con hot-reload. | `docker compose up` levanta los 4 servicios. Cambios en código se reflejan sin rebuild. | 3h |
-| F-02 | Scaffold Django + DRF | `django-admin startproject filmia .`, instalar DRF, configurar settings (DB apunta a PostgreSQL de Docker, CORS para el frontend, variables de entorno desde `.env`). Estructura de apps: `usuarios`, `catalogo`, `listas`, `chatbot`. | `python manage.py runserver` responde en `:8000`. Admin de Django accesible. | 2h |
-| F-03 | Scaffold Next.js + Tailwind + Shadcn | `create-next-app` con App Router, Tailwind CSS v4, Shadcn/ui. Configurar variables de entorno para apuntar al backend. Estructura de carpetas: `app/(public)`, `app/(auth)`, `components/ui`, `components/features`, `lib/`. | `npm run dev` en `:3000`. Componentes de Shadcn funcionando. | 2h |
-| F-04 | Modelos Django (8 entidades + intermedia) | Implementar `models.py` para: Persona (abstracta o concreta), Usuario, Administrador, ProduccionAudiovisual, Calificacion, Reseña, Lista, Chat, Mensaje, y la tabla intermedia `Tiene`. Usar el diagrama de clases como referencia exacta. Ejecutar `makemigrations` + `migrate`. | Las 9 tablas existen en PostgreSQL. `python manage.py shell` permite crear instancias y relacionarlas. | 4h |
-| F-05 | Seeds de desarrollo | Datos fake con `factory_boy` o fixtures: 20 avatares, 2-3 usuarios de prueba, ~50 producciones audiovisuales simulando datos de TMDB, calificaciones y reseñas de prueba. | `python manage.py seed` puebla la BD con datos consistentes para desarrollar la UI. | 2h |
-| F-06 | ESLint + Prettier + Django linting | Configurar linting en ambos proyectos. `.eslintrc.json` y `.prettierrc` en frontend. `ruff` o `flake8` + `black` en backend. Husky para pre-commit hooks. | `npm run lint` y `ruff check .` pasan limpios. | 1h |
+| ID | Tarea | Detalle | Criterio de aceptación | Esfuerzo | Responsable |
+|----|-------|---------|------------------------|----------|-------------|
+| F-01 | Docker + docker-compose | Configurar `docker-compose.yml` con 4 servicios: Django backend, Next.js frontend, PostgreSQL 16, Redis. Volúmenes para desarrollo con hot-reload. | `docker compose up` levanta los 4 servicios. Cambios en código se reflejan sin rebuild. | 3h | Ambos |
+| F-02 | Scaffold Django + DRF | `django-admin startproject filmia .`, instalar DRF, configurar settings (DB apunta a PostgreSQL de Docker, CORS para el frontend, variables de entorno desde `.env`). Estructura de apps: `usuarios`, `catalogo`, `listas`, `chatbot`. | `python manage.py runserver` responde en `:8000`. Admin de Django accesible. | 2h | Ambos |
+| F-03 | Scaffold Next.js + Tailwind + Shadcn | `create-next-app` con App Router, Tailwind CSS v4, Shadcn/ui. Configurar variables de entorno para apuntar al backend. Estructura de carpetas: `app/(public)`, `app/(auth)`, `components/ui`, `components/features`, `lib/`. | `npm run dev` en `:3000`. Componentes de Shadcn funcionando. | 2h | Ambos |
+| F-04 | Modelos Django (8 entidades + intermedia) | Implementar `models.py` para: Persona (abstracta o concreta), Usuario, Administrador, ProduccionAudiovisual, Calificacion, Reseña, Lista, Chat, Mensaje, y la tabla intermedia `Tiene`. Usar el diagrama de clases como referencia exacta. Ejecutar `makemigrations` + `migrate`. | Las 9 tablas existen en PostgreSQL. `python manage.py shell` permite crear instancias y relacionarlas. | 4h | Ambos |
+| F-05 | Seeds de desarrollo | Datos fake con `factory_boy` o fixtures: 20 avatares, 2-3 usuarios de prueba, ~50 producciones audiovisuales simulando datos de TMDB, calificaciones y reseñas de prueba. | `python manage.py seed` puebla la BD con datos consistentes para desarrollar la UI. | 2h | Ambos |
+| F-06 | ESLint + Prettier + Django linting | Configurar linting en ambos proyectos. `.eslintrc.json` y `.prettierrc` en frontend. `ruff` o `flake8` + `black` en backend. Husky para pre-commit hooks. | `npm run lint` y `ruff check .` pasan limpios. | 1h | Ambos |
 
 **Total Fundación: ~14h** (1.5-2 días, trabajando juntos)
 
 ---
 
-## Módulo 1 — Autenticación
+## Módulo 1 — Autenticación · Responsable: **Marcos**
 
-| ID | Tarea | Depende de | Dev | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|-----------|-----|---------|------------------------|----------|
-| A-01 | Registro tradicional (CU-001) | F-04 | Back | Endpoint `POST /api/auth/register/`. Recibe 8 campos, valida según reglas del CU-001, hashea contraseña con bcrypt, crea Usuario + Persona, crea las 3 listas predeterminadas (señal de Django), envía email de confirmación (CU-002). | `curl` de registro exitoso → cuenta en BD con estado `pendiente`. Email llega (en modo desarrollo: console backend). Las 3 listas aparecen creadas. | 4h |
-| A-02 | Confirmación de cuenta (CU-002) | A-01 | Back | Endpoint `GET /api/auth/confirm/?token=...`. Valida token (JWT de un solo uso), activa la cuenta. Página de éxito/error en Next.js. | Click en link de confirmación → cuenta pasa a `activa`. Link inválido o expirado muestra error. | 2h |
-| A-03 | Login con credenciales (CU-003) | A-01 | Back | Endpoint `POST /api/auth/login/`. Acepta email o username + contraseña. Devuelve JWT access + refresh. Sesión expira en 8h. | Login exitoso devuelve tokens. Credenciales incorrectas devuelven 401 con mensaje genérico. Cuenta no activada devuelve 403. | 3h |
-| A-04 | Pantalla de Login (UI) | F-03 | Front | Página `/(public)/login`. Caja centrada con campos: email/username + contraseña + toggle visibilidad + "¿Olvidaste tu contraseña?" + botón Google + link a registro. Estados: default, error inline, loading. | Flujo visual completo. Error muestra mensaje genérico. Loading deshabilita el botón. | 3h |
-| A-05 | Pantalla de Registro (UI) | F-03 | Front | Página `/(public)/register`. 8 campos con validaciones inline según CU-001. Validación de disponibilidad de username en tiempo real (debounced). Botón Google. Transición sin recargar entre login y registro. | Cada campo muestra error inline al perder foco. Username muestra "Disponible" / "No disponible". Submit redirige a confirmación. | 4h |
-| A-06 | Google OAuth (CU-003) | A-03, A-04 | Ambos | Back: Configurar `social-auth-app-django` o `dj-rest-auth` con Google. Endpoint de callback que crea/identifica usuario por `googleId`. Si es nuevo: pide datos faltantes. Front: botón "Continuar con Google" que inicia el flujo OAuth. Página intermedia para completar username, fecha nacimiento y género si es primera vez. | Login con Google exitoso → usuario autenticado. Cuenta nueva → formulario de completado. Cuenta existente → Home directamente. | 5h |
-| A-07 | Recuperar contraseña (CU-020) | A-01 | Ambos | Back: `POST /api/auth/password-reset/` (rate limited 1/min). Envía email con link. `POST /api/auth/password-reset/confirm/` con token + nueva contraseña. Front: modal desde login. Pantalla de nueva contraseña desde el link del email. | Solicitud siempre muestra mensaje de éxito. Email llega con link. Link permite cambiar contraseña. | 3h |
-| A-08 | Cerrar sesión (CU-004) | A-03 | Front | Botón en menú del avatar. Modal de confirmación. Frontend elimina tokens del storage. Backend opcionalmente blacklistea el refresh token. | Click en "Cerrar sesión" → modal → confirmar → redirigido a Home. Navbar muestra estado no autenticado. | 1.5h |
-| A-09 | Middleware de rutas protegidas | A-03 | Front | Next.js middleware que verifica JWT en cookies/httpOnly. Redirige a `/login` si no está autenticado para rutas `/(auth)/*`. Backend: `IsAuthenticated` permission class en DRF. | Usuario no autenticado no puede acceder a `/perfil`, `/listas`, `/mis-resenas`, `/preferencias`. | 2h |
+| ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
+|----|-------|-----------|---------|------------------------|----------|
+| A-01 | Registro tradicional (CU-001) | F-04 | Endpoint `POST /api/auth/register/`. Recibe 8 campos, valida según reglas del CU-001, hashea contraseña con bcrypt, crea Usuario + Persona, crea las 3 listas predeterminadas (señal de Django), envía email de confirmación (CU-002). | `curl` de registro exitoso → cuenta en BD con estado `pendiente`. Email llega (en modo desarrollo: console backend). Las 3 listas aparecen creadas. | 4h |
+| A-02 | Confirmación de cuenta (CU-002) | A-01 | Endpoint `GET /api/auth/confirm/?token=...`. Valida token (JWT de un solo uso), activa la cuenta. Página de éxito/error en Next.js. | Click en link de confirmación → cuenta pasa a `activa`. Link inválido o expirado muestra error. | 2h |
+| A-03 | Login con credenciales (CU-003) | A-01 | Endpoint `POST /api/auth/login/`. Acepta email o username + contraseña. Devuelve JWT access + refresh. Sesión expira en 8h. | Login exitoso devuelve tokens. Credenciales incorrectas devuelven 401 con mensaje genérico. Cuenta no activada devuelve 403. | 3h |
+| A-04 | Pantalla de Login (UI) | F-03 | Página `/(public)/login`. Caja centrada con campos: email/username + contraseña + toggle visibilidad + "¿Olvidaste tu contraseña?" + botón Google + link a registro. Estados: default, error inline, loading. | Flujo visual completo. Error muestra mensaje genérico. Loading deshabilita el botón. | 3h |
+| A-05 | Pantalla de Registro (UI) | F-03 | Página `/(public)/register`. 8 campos con validaciones inline según CU-001. Validación de disponibilidad de username en tiempo real (debounced). Botón Google. Transición sin recargar entre login y registro. | Cada campo muestra error inline al perder foco. Username muestra "Disponible" / "No disponible". Submit redirige a confirmación. | 4h |
+| A-06 | Google OAuth (CU-003) | A-03, A-04 | Back: Configurar `social-auth-app-django` o `dj-rest-auth` con Google. Endpoint de callback que crea/identifica usuario por `googleId`. Si es nuevo: pide datos faltantes. Front: botón "Continuar con Google" que inicia el flujo OAuth. Página intermedia para completar username, fecha nacimiento y género si es primera vez. | Login con Google exitoso → usuario autenticado. Cuenta nueva → formulario de completado. Cuenta existente → Home directamente. | 5h |
+| A-07 | Recuperar contraseña (CU-020) | A-01 | Back: `POST /api/auth/password-reset/` (rate limited 1/min). Envía email con link. `POST /api/auth/password-reset/confirm/` con token + nueva contraseña. Front: modal desde login. Pantalla de nueva contraseña desde el link del email. | Solicitud siempre muestra mensaje de éxito. Email llega con link. Link permite cambiar contraseña. | 3h |
+| A-08 | Cerrar sesión (CU-004) | A-03 | Botón en menú del avatar. Modal de confirmación. Frontend elimina tokens del storage. Backend opcionalmente blacklistea el refresh token. | Click en "Cerrar sesión" → modal → confirmar → redirigido a Home. Navbar muestra estado no autenticado. | 1.5h |
+| A-09 | Middleware de rutas protegidas | A-03 | Next.js middleware que verifica JWT en cookies/httpOnly. Redirige a `/login` si no está autenticado para rutas `/(auth)/*`. Backend: `IsAuthenticated` permission class en DRF. | Usuario no autenticado no puede acceder a `/perfil`, `/listas`, `/mis-resenas`, `/preferencias`. | 2h |
 
-**Total Autenticación: ~27.5h** (3-4 días)
-
----
-
-## Módulo 2 — Catálogo y Búsqueda
-
-| ID | Tarea | Depende de | Dev | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|-----------|-----|---------|------------------------|----------|
-| C-01 | Cliente de TMDB API | F-02 | Back | Service `TMDBClient` con métodos: `get_trending()`, `get_now_playing()`, `discover(filters)`, `search(query)`, `get_movie_detail(id)` / `get_tv_detail(id)`. Manejo de rate limiting, reintentos con backoff, timeout 5s. | Cada método devuelve datos parseados. Rate limit se respeta. Errores de red se loguean y devuelven excepción controlada. | 4h |
-| C-02 | Caché de TMDB | C-01 | Back | Cache con Redis. TTL por endpoint: trending 6h, discover 6h, detalle 24h, search 1h. Key pattern: `tmdb:{endpoint}:{params_hash}`. Invalidación manual si es necesario. | Segunda llamada con mismos parámetros pega a Redis, no a TMDB. Respuesta < 50ms desde caché. | 2h |
-| C-03 | Endpoints de catálogo (CU-008) | C-01, F-04 | Back | `GET /api/catalog/trending/`, `GET /api/catalog/discover/?genre=&year=&min_rating=&type=`, `GET /api/catalog/search/?q=&type=`. Paginación. Filtros: tipo (movie/tv/all), género, año, calificación mínima de TMDB. | Respuesta paginada con estructura: `{ results: [...], count, next, previous }`. Filtros combinables. | 4h |
-| C-04 | Sincronización diaria (CU-021) | C-01, F-04 | Back | Celery task `sync_tmdb_catalog`. Ejecución diaria a las 3 AM. Sincroniza trending, now_playing y discover popular. Para cada item: `update_or_create` en ProduccionAudiovisual. Log de resultados (nuevos, actualizados, errores). | `celery -A filmia beat` ejecuta la tarea diariamente. Datos aparecen en BD. Log muestra estadísticas. | 4h |
-| C-05 | Home page (UI) | F-03, C-03 | Front | Página `/(auth)/home`. Hero section con película destacada. Filas horizontales con scroll: "Recomendado para ti" (solo si autenticado + tiene calificaciones), "Tendencias de la semana", "Novedades". Cada fila: MediaCards con poster, título, año, badge de tipo, rating TMDB. Skeleton loading mientras carga. Filas se ocultan si no tienen datos. | Home carga con skeletons. Filas aparecen progresivamente. Scroll horizontal fluido con flechas en hover. Filas vacías no se renderizan. | 5h |
-| C-06 | Panel de búsqueda (UI) | C-03, C-05 | Front | Panel overlay que se abre desde "Buscar" en navbar. Toolbar: input de búsqueda con autofocus, toggle Todo/Películas/Series, dropdowns Género, Año, ⭐ Calificación mínima. Grid responsive de 5→3→2 columnas. Paginación clásica. Empty state con ilustración. Estados: default (populares), búsqueda con resultados, sin resultados, error API. | Panel se abre/cierra con click en Buscar y tecla Escape. Filtros actualizan resultados. Búsqueda muestra contador. Sin resultados muestra empty state. | 5h |
-| C-07 | Ficha de detalle (UI) | C-03 | Front | Página `/(auth)/detalle/[id]`. Breadcrumb navegable según origen (Home, Buscar, Listas). Hero con poster 2:3, título, badge de tipo, año, duración/temporadas, rating TMDB, géneros como chips. Acciones directas (solo autenticado): ⭐ Calificar, ♥ Favoritos, 👁 Vista, 🕐 Pendiente, + Agregar a lista (dropdown con checklist). Sinopsis colapsable. CastCard sin fotos colapsable. Sección de reseñas (tu reseña + comunidad). | Ficha muestra todos los bloques. Acciones toggle correctamente (borde ↔ relleno). Sinopsis y cast se expanden/colapsan. Breadcrumb restaura origen. No autenticado ve "Inicia sesión para...". | 6h |
-| C-08 | Calificar / Reseña (CU-015) | C-07, F-04 | Ambos | Back: `POST|PUT|DELETE /api/reviews/`. Relación reseña → calificación. Validar rango 1-10. Texto opcional máx 1000 chars. Front: Modal con star widget de 10 estrellas (con teclado), textarea con contador. Variantes: publicar, editar, eliminar. Post-acción: toast + actualización instantánea de la ficha. | Publicar sin calificación → error. Estrellas navegables con teclado. Editar precarga datos. Eliminar pide confirmación. Reseña aparece en ficha al instante. | 5h |
-
-**Total Catálogo: ~35h** (4-5 días)
+**Total Autenticación: ~27.5h** (3-4 días) — **Marcos**
 
 ---
 
-## Módulo 3 — Listas
+## Módulo 2 — Catálogo y Búsqueda · Responsable: **Gonza**
 
-| ID | Tarea | Depende de | Dev | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|-----------|-----|---------|------------------------|----------|
-| L-01 | Endpoints de listas (CU-009, CU-012) | F-04, A-09 | Back | `GET /api/lists/` (todas las del usuario), `GET /api/lists/{id}/items/` (items con paginación por scroll), `POST /api/lists/` (crear personalizada), `PUT /api/lists/{id}/` (renombrar), `DELETE /api/lists/{id}/` (solo personalizadas, borra items). `POST /api/lists/{id}/items/` (agregar item), `DELETE /api/lists/{id}/items/{item_id}/` (quitar item). Validar: nombre único por usuario, máx 80 chars, predeterminadas no se pueden renombrar ni eliminar. | CRUD completo. Listas predeterminadas inmune a rename/delete. Items se agregan/quitan correctamente. `fechaAgregado` se registra. | 5h |
-| L-02 | Vista general de listas (UI) | L-01 | Front | Pantalla `/(auth)/listas`. Grid de ListCards: 3 predeterminadas fijas al inicio (Favoritos, Pendientes, Vistas) con badge "Predeterminada" + mini preview de 3 posters + cantidad de items. Personalizadas reordenables con drag & drop (y botones Mover arriba/abajo como fallback). Card esqueleto "+" al final para crear nueva lista. Menú ⋮ en personalizadas: Renombrar, Eliminar. Layout 3→2→1 columnas. | Predeterminadas siempre presentes, sin menú. Drag & drop reordena y persiste. Card "+" crea lista vía modal. Eliminar muestra confirmación. | 5h |
-| L-03 | Detalle de lista (UI) | L-01 | Front | Pantalla `/(auth)/listas/[id]`. Breadcrumb: `Listas > {nombre}`. Header con nombre + menú ⋮ (solo personalizadas). Grid de MediaCards con botón ✕ en hover para quitar ítem (modal de confirmación). Scroll vertical infinito. Estados: loading, normal, empty ("Esta lista no contiene elementos" + botón Explorar). | Cards muestran ✕ en hover. Quitar ítem actualiza la vista. Scroll carga más items. Empty state redirige a Buscar. | 4h |
-| L-04 | Acciones directas en ficha de detalle | C-07, L-01 | Front | Integrar los botones de acción de la ficha con los endpoints de listas. ♥ Favoritos, 👁 Vista, 🕐 Pendiente: toggle visual + llamada API. "+ Agregar a lista ▾": dropdown con checklist de listas personalizadas (check/uncheck toggle). Al quitar de "Vista": si tiene calificación, mostrar mensaje pidiendo eliminar calificación primero (CU-011). | Toggle instantáneo con feedback visual. Checkbox de listas refleja estado real. Restricción de calificación al desmarcar "Vista" funciona. | 3h |
+| ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
+|----|-------|-----------|---------|------------------------|----------|
+| C-01 | Cliente de TMDB API | F-02 | Service `TMDBClient` con métodos: `get_trending()`, `get_now_playing()`, `discover(filters)`, `search(query)`, `get_movie_detail(id)` / `get_tv_detail(id)`. Manejo de rate limiting, reintentos con backoff, timeout 5s. | Cada método devuelve datos parseados. Rate limit se respeta. Errores de red se loguean y devuelven excepción controlada. | 4h |
+| C-02 | Caché de TMDB | C-01 | Cache con Redis. TTL por endpoint: trending 6h, discover 6h, detalle 24h, search 1h. Key pattern: `tmdb:{endpoint}:{params_hash}`. Invalidación manual si es necesario. | Segunda llamada con mismos parámetros pega a Redis, no a TMDB. Respuesta < 50ms desde caché. | 2h |
+| C-03 | Endpoints de catálogo (CU-008) | C-01, F-04 | `GET /api/catalog/trending/`, `GET /api/catalog/discover/?genre=&year=&min_rating=&type=`, `GET /api/catalog/search/?q=&type=`. Paginación. Filtros: tipo (movie/tv/all), género, año, calificación mínima de TMDB. | Respuesta paginada con estructura: `{ results: [...], count, next, previous }`. Filtros combinables. | 4h |
+| C-04 | Sincronización diaria (CU-021) | C-01, F-04 | Celery task `sync_tmdb_catalog`. Ejecución diaria a las 3 AM. Sincroniza trending, now_playing y discover popular. Para cada item: `update_or_create` en ProduccionAudiovisual. Log de resultados (nuevos, actualizados, errores). | `celery -A filmia beat` ejecuta la tarea diariamente. Datos aparecen en BD. Log muestra estadísticas. | 4h |
+| C-05 | Home page (UI) | F-03, C-03 | Página `/(auth)/home`. Hero section con película destacada. Filas horizontales con scroll: "Recomendado para ti" (solo si autenticado + tiene calificaciones), "Tendencias de la semana", "Novedades". Cada fila: MediaCards con poster, título, año, badge de tipo, rating TMDB. Skeleton loading mientras carga. Filas se ocultan si no tienen datos. | Home carga con skeletons. Filas aparecen progresivamente. Scroll horizontal fluido con flechas en hover. Filas vacías no se renderizan. | 5h |
+| C-06 | Panel de búsqueda (UI) | C-03, C-05 | Panel overlay que se abre desde "Buscar" en navbar. Toolbar: input de búsqueda con autofocus, toggle Todo/Películas/Series, dropdowns Género, Año, ⭐ Calificación mínima. Grid responsive de 5→3→2 columnas. Paginación clásica. Empty state con ilustración. Estados: default (populares), búsqueda con resultados, sin resultados, error API. | Panel se abre/cierra con click en Buscar y tecla Escape. Filtros actualizan resultados. Búsqueda muestra contador. Sin resultados muestra empty state. | 5h |
+| C-07 | Ficha de detalle (UI) | C-03 | Página `/(auth)/detalle/[id]`. Breadcrumb navegable según origen (Home, Buscar, Listas). Hero con poster 2:3, título, badge de tipo, año, duración/temporadas, rating TMDB, géneros como chips. Acciones directas (solo autenticado): ⭐ Calificar, ♥ Favoritos, 👁 Vista, 🕐 Pendiente, + Agregar a lista (dropdown con checklist). Sinopsis colapsable. CastCard sin fotos colapsable. Sección de reseñas (tu reseña + comunidad). | Ficha muestra todos los bloques. Acciones toggle correctamente (borde ↔ relleno). Sinopsis y cast se expanden/colapsan. Breadcrumb restaura origen. No autenticado ve "Inicia sesión para...". | 6h |
+| C-08 | Calificar / Reseña (CU-015) | C-07, F-04 | Back: `POST|PUT|DELETE /api/reviews/`. Relación reseña → calificación. Validar rango 1-10. Texto opcional máx 1000 chars. Front: Modal con star widget de 10 estrellas (con teclado), textarea con contador. Variantes: publicar, editar, eliminar. Post-acción: toast + actualización instantánea de la ficha. | Publicar sin calificación → error. Estrellas navegables con teclado. Editar precarga datos. Eliminar pide confirmación. Reseña aparece en ficha al instante. | 5h |
 
-**Total Listas: ~17h** (2-3 días)
-
----
-
-## Módulo 4 — Perfil y Preferencias
-
-| ID | Tarea | Depende de | Dev | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|-----------|-----|---------|------------------------|----------|
-| P-01 | Endpoint de perfil (CU-005, CU-006) | F-04, A-09 | Back | `GET /api/profile/` (datos completos del usuario autenticado), `PUT /api/profile/` (actualizar nombre, apellido, username, avatarId). Validar disponibilidad de username en tiempo real. Cambio de contraseña: endpoint separado `POST /api/profile/change-password/` que requiere contraseña actual. Email es solo lectura. | GET devuelve todos los campos. PUT actualiza y valida. Username duplicado devuelve 409. Cambio de contraseña requiere la actual correcta. | 3h |
-| P-02 | Perfil con edición inline (UI) | P-01 | Front | Pantalla `/(auth)/perfil`. Dos modos: visualización (avatar, nombre, @username, email, "Miembro desde...", botón "Editar perfil") y edición (avatar con overlay "Cambiar foto" que abre selector de 20 avatares, campos nombre/apellido/username, email readonly, sección colapsable para cambiar contraseña). Estados: visualización normal, editing, saving, error de validación. | Transición visualización → edición sin recargar. Avatar se selecciona de grilla de 20. Username muestra disponibilidad inline. Cancelar revierte cambios. Guardar actualiza y muestra toast. | 4h |
-| P-03 | Endpoint de preferencias | F-04 | Back | `GET|PUT /api/preferences/`. Campos: `tema`, `perfilPublico`, `notifRecomendaciones`, `notifReseñas`, `notifNovedades`. Todos con defaults definidos en el modelo. | GET devuelve preferencias actuales. PUT actualiza parcialmente. | 1.5h |
-| P-04 | Pantalla de preferencias (UI) | P-03 | Front | Pantalla `/(auth)/preferencias`. Secciones: Apariencia (toggle Oscuro/Claro con cambio inmediato), Privacidad (switch "Perfil público"), Notificaciones (3 switches independientes), Cuenta (botón danger "Dar de baja cuenta" con modal de confirmación). | Toggle de tema cambia el tema al instante. Switches persisten en BD. "Dar de baja" tiene doble confirmación y redirige a Home. | 3h |
-| P-05 | Dar de baja cuenta (CU-007) | P-03 | Back | `POST /api/account/deactivate/`. Cambia estado de cuenta a `baja`. Cierra sesión activa. No elimina datos. | Cuenta pasa a estado `baja`. Login con esa cuenta devuelve error. Datos permanecen en BD. | 1.5h |
-| P-06 | Mis reseñas (UI) | C-08 | Front | Pantalla `/(auth)/mis-resenas`. Listado cronológico inverso (más reciente primero) de todas las reseñas del usuario. Cada ReviewCard: título clicable → ficha, badge de tipo, rating X/10, fecha, texto truncado a 3 líneas expandible, botones ✏️ editar y 🗑️ eliminar. Scroll vertical infinito. Estados: loading, normal, empty ("Todavía no escribiste ninguna reseña." + botón Explorar). | Cards muestran datos reales. Click en título navega a ficha. Editar abre modal precargado. Eliminar muestra confirmación. Empty state funcional. | 3h |
-| P-07 | Avatar del navbar | P-02 | Front | Avatar en navbar con iniciales (o ícono del avatar seleccionado). Click → dropdown: Mi perfil, Mis reseñas, Preferencias, Cerrar sesión. Cerrar sesión con divider y color danger. Dropdown se cierra al clickear fuera o presionar Escape. | Dropdown navega a cada sección. Cerrar sesión muestra confirmación. Click fuera cierra el menú. | 1.5h |
-
-**Total Perfil: ~17.5h** (2-3 días)
+**Total Catálogo: ~35h** (4-5 días) — **Gonza**
 
 ---
 
-## Módulo 5 — Chatbot
+## Módulo 3 — Listas · Responsable: **Marcos**
 
-| ID | Tarea | Depende de | Dev | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|-----------|-----|---------|------------------------|----------|
-| B-01 | Modelo de Chat y Mensaje | F-04 | Back | Implementar lógica de Chat con soporte para múltiples chats (aunque MVP usa 1 solo). Al crear usuario, crear automáticamente un chat por defecto. Campo `contexto` JSONB con estructura base: `{ resumenHistorial, generosPreferidos, ultimaRecomendacion, parametrosActivos }`. Mensajes con autor (`usuario`/`chatbot`). | Chat default se crea al registrar usuario. Mensajes se persisten con autor y timestamp. Contexto JSONB se puede leer/escribir por clave. | 3h |
-| B-02 | LLM Service | F-02 | Back | Service `LLMService` que: recibe lista de mensajes + contexto anonimizado del usuario, construye system prompt (recomendador de películas/series, no responde fuera de dominio), llama a la API del LLM (OpenAI/Anthropic/Groq), anonimiza email/nombre/apellido antes de enviar, parsea respuesta. Timeout: 15s. | Prompt incluye historial y preferencias anonimizados. Respuesta del LLM se recibe y se guarda como Mensaje del chatbot. Error de API se maneja con mensaje amigable. | 4h |
-| B-03 | Endpoints del chatbot (CU-013, CU-014) | B-01, B-02 | Back | `POST /api/chat/messages/` envía mensaje del usuario, procesa con LLM, devuelve respuesta. `GET /api/chat/messages/` (historial). `POST /api/chat/cancel/` cancela solicitud en curso (si es posible con el proveedor LLM). Endpoint requiere autenticación. | Mensaje se envía, respuesta del LLM se recibe y se persiste. Historial devuelve mensajes ordenados cronológicamente. Cancelar detiene el procesamiento si está en curso. | 3h |
-| B-04 | FAB + Panel del chatbot (UI) | B-03 | Front | FAB flotante (bottom-right, fixed) con ícono de chat, visible en todas las pantallas. Inactivo visualmente si no está autenticado. Click → panel drawer de ~400px (desktop) o bottom sheet (mobile) con: historial de mensajes (ChatBubble: usuario derecha, chatbot izquierda), typing indicator animado mientras procesa, campo de texto + botón enviar, botón cancelar durante procesamiento. Animación slide-in. Badge sutil si hay respuesta nueva. | FAB visible en todas las pantallas. Panel se abre/cierra con animación. Mensajes se muestran con scroll automático al último. Typing indicator aparece/desaparece correctamente. Cancelar vuelve al estado inicial. | 5h |
-| B-05 | Contexto del chatbot | B-01, B-02 | Back | Lógica que construye el contexto antes de cada consulta: géneros más valorados (calificaciones 7+ del usuario), últimas 5 películas/series vistas, calificaciones recientes, lista de favoritos. Guardar resumen en `contexto` JSONB del Chat para no recalcular siempre. | Contexto se actualiza después de cada interacción significativa. Géneros y preferencias reflejan datos reales del usuario. | 2h |
+| ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
+|----|-------|-----------|---------|------------------------|----------|
+| L-01 | Endpoints de listas (CU-009, CU-012) | F-04, A-09 | `GET /api/lists/` (todas las del usuario), `GET /api/lists/{id}/items/` (items con paginación por scroll), `POST /api/lists/` (crear personalizada), `PUT /api/lists/{id}/` (renombrar), `DELETE /api/lists/{id}/` (solo personalizadas, borra items). `POST /api/lists/{id}/items/` (agregar item), `DELETE /api/lists/{id}/items/{item_id}/` (quitar item). Validar: nombre único por usuario, máx 80 chars, predeterminadas no se pueden renombrar ni eliminar. | CRUD completo. Listas predeterminadas inmune a rename/delete. Items se agregan/quitan correctamente. `fechaAgregado` se registra. | 5h |
+| L-02 | Vista general de listas (UI) | L-01 | Pantalla `/(auth)/listas`. Grid de ListCards: 3 predeterminadas fijas al inicio (Favoritos, Pendientes, Vistas) con badge "Predeterminada" + mini preview de 3 posters + cantidad de items. Personalizadas reordenables con drag & drop (y botones Mover arriba/abajo como fallback). Card esqueleto "+" al final para crear nueva lista. Menú ⋮ en personalizadas: Renombrar, Eliminar. Layout 3→2→1 columnas. | Predeterminadas siempre presentes, sin menú. Drag & drop reordena y persiste. Card "+" crea lista vía modal. Eliminar muestra confirmación. | 5h |
+| L-03 | Detalle de lista (UI) | L-01 | Pantalla `/(auth)/listas/[id]`. Breadcrumb: `Listas > {nombre}`. Header con nombre + menú ⋮ (solo personalizadas). Grid de MediaCards con botón ✕ en hover para quitar ítem (modal de confirmación). Scroll vertical infinito. Estados: loading, normal, empty ("Esta lista no contiene elementos" + botón Explorar). | Cards muestran ✕ en hover. Quitar ítem actualiza la vista. Scroll carga más items. Empty state redirige a Buscar. | 4h |
+| L-04 | Acciones directas en ficha de detalle | C-07, L-01 | Integrar los botones de acción de la ficha con los endpoints de listas. ♥ Favoritos, 👁 Vista, 🕐 Pendiente: toggle visual + llamada API. "+ Agregar a lista ▾": dropdown con checklist de listas personalizadas (check/uncheck toggle). Al quitar de "Vista": si tiene calificación, mostrar mensaje pidiendo eliminar calificación primero (CU-011). | Toggle instantáneo con feedback visual. Checkbox de listas refleja estado real. Restricción de calificación al desmarcar "Vista" funciona. | 3h |
 
-**Total Chatbot: ~17h** (2-3 días)
-
----
-
-## Módulo 6 — Admin y Moderación (baja prioridad)
-
-| ID | Tarea | Depende de | Dev | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|-----------|-----|---------|------------------------|----------|
-| AD-01 | Endpoints de admin (CU-016) | F-04, A-09 | Back | `GET /api/admin/users/` (listar usuarios con filtros), `PUT /api/admin/users/{id}/` (modificar datos, cambiar estado), `DELETE /api/admin/users/{id}/` (baja/eliminación). Solo accesible con rol `Administrador`. | Endpoints protegidos por rol. CRUD de usuarios funciona. | 3h |
-| AD-02 | Moderar reseñas (CU-017) | C-08, AD-01 | Back | `GET /api/admin/reviews/` (listar reseñas), `PUT /api/admin/reviews/{id}/` (editar contenido), `DELETE /api/admin/reviews/{id}/` (eliminar). Solo accesible con rol `Administrador`. | Reseñas se pueden listar, editar y eliminar desde admin. | 2h |
-
-**Total Admin: ~5h** (1 día, puede ser el último módulo)
+**Total Listas: ~17h** (2-3 días) — **Marcos**
 
 ---
 
-## Módulo 7 — Polish y Calidad
+## Módulo 4 — Perfil y Preferencias · Responsable: **Gonza**
 
-| ID | Tarea | Depende de | Dev | Detalle | Criterio de aceptación | Esfuerzo |
-|----|-------|-----------|-----|---------|------------------------|----------|
-| Q-01 | Accesibilidad WCAG 2.1 AA | C-05 al B-04 | Front | Implementar todos los requisitos de la sección 11 del doc 04: contraste mínimo 4.5:1, navegación por teclado en todos los componentes interactivos, focus visible, aria-labels en star widget y FAB, focus trap en modales, role="alert" en toasts, botones Mover arriba/abajo en drag & drop, formularios con aria-describedby en errores. | Tab naviga todos los elementos en orden lógico. Escape cierra modales y panels. Focus ring visible. Lector de pantalla anuncia toasts y errores. | 6h |
-| Q-02 | Pantallas de error | F-03 | Front | 404 personalizada con ilustración + link a Home. 500 genérica con botón Reintentar. Error de API con mensaje contextual + Reintentar. | Rutas inexistentes muestran 404. Error de API muestra mensaje y permite reintentar. | 2h |
-| Q-03 | Estados de carga y empty | Todos los UI | Front | Revisar todas las pantallas: skeletons durante carga, empty states con ilustraciones y CTAs, errores con reintento. Toast notifications para acciones exitosas y errores. | No hay flashes de contenido vacío. Cada pantalla tiene skeleton, empty y error state según corresponda. | 3h |
-| Q-04 | Responsive testing | Todos los UI | Front | Verificar todos los breakpoints (1440px, 768px, 375px). Grid de catálogo: 5→3→2 cols. Grid de listas: 3→2→1 col. Ficha de detalle: two-column→stacked. Navbar: no se rompe en mobile. Modal: 480px→95vw. | En cada breakpoint, la UI es funcional y no hay overflow horizontal. Touch targets ≥ 44px en mobile. | 3h |
-| Q-05 | Variables de entorno y documentación | F-01 | Ambos | `.env.example` con todas las variables necesarias documentadas. `README.md` actualizado con instrucciones de setup. Documentar: cómo levantar el proyecto, seed de datos, correr tests, convenciones de código. | Otra persona puede clonar el repo, copiar `.env.example`, `docker compose up`, y ver la app funcionando. | 2h |
+| ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
+|----|-------|-----------|---------|------------------------|----------|
+| P-01 | Endpoint de perfil (CU-005, CU-006) | F-04, A-09 | `GET /api/profile/` (datos completos del usuario autenticado), `PUT /api/profile/` (actualizar nombre, apellido, username, avatarId). Validar disponibilidad de username en tiempo real. Cambio de contraseña: endpoint separado `POST /api/profile/change-password/` que requiere contraseña actual. Email es solo lectura. | GET devuelve todos los campos. PUT actualiza y valida. Username duplicado devuelve 409. Cambio de contraseña requiere la actual correcta. | 3h |
+| P-02 | Perfil con edición inline (UI) | P-01 | Pantalla `/(auth)/perfil`. Dos modos: visualización (avatar, nombre, @username, email, "Miembro desde...", botón "Editar perfil") y edición (avatar con overlay "Cambiar foto" que abre selector de 20 avatares, campos nombre/apellido/username, email readonly, sección colapsable para cambiar contraseña). Estados: visualización normal, editing, saving, error de validación. | Transición visualización → edición sin recargar. Avatar se selecciona de grilla de 20. Username muestra disponibilidad inline. Cancelar revierte cambios. Guardar actualiza y muestra toast. | 4h |
+| P-03 | Endpoint de preferencias | F-04 | `GET|PUT /api/preferences/`. Campos: `tema`, `perfilPublico`, `notifRecomendaciones`, `notifReseñas`, `notifNovedades`. Todos con defaults definidos en el modelo. | GET devuelve preferencias actuales. PUT actualiza parcialmente. | 1.5h |
+| P-04 | Pantalla de preferencias (UI) | P-03 | Pantalla `/(auth)/preferencias`. Secciones: Apariencia (toggle Oscuro/Claro con cambio inmediato), Privacidad (switch "Perfil público"), Notificaciones (3 switches independientes), Cuenta (botón danger "Dar de baja cuenta" con modal de confirmación). | Toggle de tema cambia el tema al instante. Switches persisten en BD. "Dar de baja" tiene doble confirmación y redirige a Home. | 3h |
+| P-05 | Dar de baja cuenta (CU-007) | P-03 | `POST /api/account/deactivate/`. Cambia estado de cuenta a `baja`. Cierra sesión activa. No elimina datos. | Cuenta pasa a estado `baja`. Login con esa cuenta devuelve error. Datos permanecen en BD. | 1.5h |
+| P-06 | Mis reseñas (UI) | C-08 | Pantalla `/(auth)/mis-resenas`. Listado cronológico inverso (más reciente primero) de todas las reseñas del usuario. Cada ReviewCard: título clicable → ficha, badge de tipo, rating X/10, fecha, texto truncado a 3 líneas expandible, botones ✏️ editar y 🗑️ eliminar. Scroll vertical infinito. Estados: loading, normal, empty ("Todavía no escribiste ninguna reseña." + botón Explorar). | Cards muestran datos reales. Click en título navega a ficha. Editar abre modal precargado. Eliminar muestra confirmación. Empty state funcional. | 3h |
+| P-07 | Avatar del navbar | P-02 | Avatar en navbar con iniciales (o ícono del avatar seleccionado). Click → dropdown: Mi perfil, Mis reseñas, Preferencias, Cerrar sesión. Cerrar sesión con divider y color danger. Dropdown se cierra al clickear fuera o presionar Escape. | Dropdown navega a cada sección. Cerrar sesión muestra confirmación. Click fuera cierra el menú. | 1.5h |
 
-**Total Polish: ~16h** (2-3 días)
+**Total Perfil: ~17.5h** (2-3 días) — **Gonza**
 
----
-
-## 📊 Resumen y distribución
-
-| Módulo | Tareas | Esfuerzo total | ¿Paralelizable? |
-|--------|--------|---------------|-----------------|
-| 0 — Fundación | 6 | 14h | ❌ Juntos |
-| 1 — Autenticación | 9 | 27.5h | ✅ Back/Front en paralelo |
-| 2 — Catálogo | 8 | 35h | ✅ Back/Front en paralelo |
-| 3 — Listas | 4 | 17h | ✅ Back/Front en paralelo |
-| 4 — Perfil | 7 | 17.5h | ✅ Back/Front en paralelo |
-| 5 — Chatbot | 5 | 17h | ✅ Back/Front en paralelo |
-| 6 — Admin | 2 | 5h | ⚠️ Solo si sobra tiempo |
-| 7 — Polish | 5 | 16h | ✅ En paralelo |
-| **Total** | **46 tareas** | **~149h** | |
-
-### División sugerida por desarrollador
-
-| Fase | Dev A (Backend-heavy) | Dev B (Frontend-heavy) |
-|------|----------------------|------------------------|
-| Fundación | F-01 al F-06 (juntos) | F-01 al F-06 (juntos) |
-| Auth | A-01, A-02, A-03, A-06(back) | A-04, A-05, A-06(front), A-07(front), A-08, A-09 |
-| Catálogo | C-01, C-02, C-03, C-04, C-08(back) | C-05, C-06, C-07, C-08(front) |
-| Listas | L-01 | L-02, L-03, L-04 |
-| Perfil | P-01, P-03, P-05 | P-02, P-04, P-06, P-07 |
-| Chatbot | B-01, B-02, B-03, B-05 | B-04 |
-| Admin | AD-01, AD-02 | — |
-| Polish | Q-05 | Q-01, Q-02, Q-03, Q-04 |
-
-### Cronograma estimado (4-5 semanas)
-
-| Semana | Módulo(s) | Hito |
-|--------|-----------|------|
-| 1 | Fundación + Auth | 🎯 Login/Registro funcional con Google OAuth |
-| 2 | Catálogo | 🎯 Home con filas, búsqueda, ficha de detalle |
-| 3 | Listas + Perfil | 🎯 CRUD de listas, perfil, preferencias |
-| 4 | Chatbot + Admin | 🎯 Chatbot funcional con LLM |
-| 5 | Polish + Entrega | 🎯 Accesibilidad, responsive, documentación final |
+> Nota: P-06 depende de C-08 (propio de Gonza en Catálogo), así que no hay dependencia cruzada con Marcos.
 
 ---
 
-> **Nota:** Las estimaciones de esfuerzo asumen conocimiento previo de los stacks. Si alguno de los dos está aprendiendo Django o Next.js desde cero, multiplicar por 1.5x-2x las primeras tareas de cada módulo.
+## Módulo 5 — Chatbot · Responsable: **Marcos**
+
+| ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
+|----|-------|-----------|---------|------------------------|----------|
+| B-01 | Modelo de Chat y Mensaje | F-04 | Implementar lógica de Chat con soporte para múltiples chats (aunque MVP usa 1 solo). Al crear usuario, crear automáticamente un chat por defecto. Campo `contexto` JSONB con estructura base: `{ resumenHistorial, generosPreferidos, ultimaRecomendacion, parametrosActivos }`. Mensajes con autor (`usuario`/`chatbot`). | Chat default se crea al registrar usuario. Mensajes se persisten con autor y timestamp. Contexto JSONB se puede leer/escribir por clave. | 3h |
+| B-02 | LLM Service | F-02 | Service `LLMService` que: recibe lista de mensajes + contexto anonimizado del usuario, construye system prompt (recomendador de películas/series, no responde fuera de dominio), llama a la API del LLM (OpenAI/Anthropic/Groq), anonimiza email/nombre/apellido antes de enviar, parsea respuesta. Timeout: 15s. | Prompt incluye historial y preferencias anonimizados. Respuesta del LLM se recibe y se guarda como Mensaje del chatbot. Error de API se maneja con mensaje amigable. | 4h |
+| B-03 | Endpoints del chatbot (CU-013, CU-014) | B-01, B-02 | `POST /api/chat/messages/` envía mensaje del usuario, procesa con LLM, devuelve respuesta. `GET /api/chat/messages/` (historial). `POST /api/chat/cancel/` cancela solicitud en curso (si es posible con el proveedor LLM). Endpoint requiere autenticación. | Mensaje se envía, respuesta del LLM se recibe y se persiste. Historial devuelve mensajes ordenados cronológicamente. Cancelar detiene el procesamiento si está en curso. | 3h |
+| B-04 | FAB + Panel del chatbot (UI) | B-03 | FAB flotante (bottom-right, fixed) con ícono de chat, visible en todas las pantallas. Inactivo visualmente si no está autenticado. Click → panel drawer de ~400px (desktop) o bottom sheet (mobile) con: historial de mensajes (ChatBubble: usuario derecha, chatbot izquierda), typing indicator animado mientras procesa, campo de texto + botón enviar, botón cancelar durante procesamiento. Animación slide-in. Badge sutil si hay respuesta nueva. | FAB visible en todas las pantallas. Panel se abre/cierra con animación. Mensajes se muestran con scroll automático al último. Typing indicator aparece/desaparece correctamente. Cancelar vuelve al estado inicial. | 5h |
+| B-05 | Contexto del chatbot | B-01, B-02 | Lógica que construye el contexto antes de cada consulta: géneros más valorados (calificaciones 7+ del usuario), últimas 5 películas/series vistas, calificaciones recientes, lista de favoritos. Guardar resumen en `contexto` JSONB del Chat para no recalcular siempre. | Contexto se actualiza después de cada interacción significativa. Géneros y preferencias reflejan datos reales del usuario. | 2h |
+
+**Total Chatbot: ~17h** (2-3 días) — **Marcos**
+
+---
+
+## Módulo 6 — Admin (nativo de Django) · Responsable: **Marcos**
+
+> Se reemplazan los endpoints REST custom originales (AD-01/AD-02) por configuración de Django Admin: cubre lo mismo (listar/filtrar/buscar/editar/eliminar usuarios y reseñas, acceso restringido por rol) sin construir API ni UI propia.
+
+| ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
+|----|-------|-----------|---------|------------------------|----------|
+| AD-01' | Configurar Django Admin | F-04 | Registrar `Usuario` y `Reseña` con `ModelAdmin` custom (`list_display`, `list_filter`, `search_fields`). Restringir acceso a `is_staff`/rol Administrador. | Django Admin permite listar, buscar, filtrar, editar y eliminar usuarios y reseñas. Solo accesible con rol Administrador. | 2h |
+
+**Total Admin: ~2h** — **Marcos**
+
+---
+
+## Módulo 7 — Polish y Calidad · Responsable: **Gonza** (Q-05 conjunta)
+
+| ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
+|----|-------|-----------|---------|------------------------|----------|
+| Q-01 | Accesibilidad WCAG 2.1 AA | C-05 al B-04 | Implementar todos los requisitos de la sección 11 del doc 04: contraste mínimo 4.5:1, navegación por teclado en todos los componentes interactivos, focus visible, aria-labels en star widget y FAB, focus trap en modales, role="alert" en toasts, botones Mover arriba/abajo en drag & drop, formularios con aria-describedby en errores. | Tab naviga todos los elementos en orden lógico. Escape cierra modales y panels. Focus ring visible. Lector de pantalla anuncia toasts y errores. | 6h |
+| Q-02 | Pantallas de error | F-03 | 404 personalizada con ilustración + link a Home. 500 genérica con botón Reintentar. Error de API con mensaje contextual + Reintentar. | Rutas inexistentes muestran 404. Error de API muestra mensaje y permite reintentar. | 2h |
+| Q-03 | Estados de carga y empty | Todos los UI | Revisar todas las pantallas: skeletons durante carga, empty states con ilustraciones y CTAs, errores con reintento. Toast notifications para acciones exitosas y errores. | No hay flashes de contenido vacío. Cada pantalla tiene skeleton, empty y error state según corresponda. | 3h |
+| Q-04 | Responsive testing | Todos los UI | Verificar todos los breakpoints (1440px, 768px, 375px). Grid de catálogo: 5→3→2 cols. Grid de listas: 3→2→1 col. Ficha de detalle: two-column→stacked. Navbar: no se rompe en mobile. Modal: 480px→95vw. | En cada breakpoint, la UI es funcional y no hay overflow horizontal. Touch targets ≥ 44px en mobile. | 3h |
+| Q-05 | Variables de entorno y documentación | F-01 | `.env.example` con todas las variables necesarias documentadas. `README.md` actualizado con instrucciones de setup. Documentar: cómo levantar el proyecto, seed de datos, correr tests, convenciones de código. | Otra persona puede clonar el repo, copiar `.env.example`, `docker compose up`, y ver la app funcionando. | 2h | Ambos |
+
+**Total Polish: ~16h** (14h Gonza + 2h conjunta) — **Gonza** (+ Ambos en Q-05)
+
+---
+
+## Resumen final
+
+| | Módulos | Horas propias | + mitad de tareas conjuntas (16h: Fundación + Q-05) | Total |
+|---|---|---|---|---|
+| **Marcos** | Autenticación, Listas, Chatbot, Admin | 63.5h | 8h | **71.5h** |
+| **Gonza** | Catálogo, Perfil, Polish | 66.5h | 8h | **74.5h** |
+
+Diferencia: 3h sobre 146h totales (~2%).
+
+## Orden sugerido de fases
+
+- **Fase 0 (juntos):** Módulo 0 — Fundación.
+- **Fase 1 (paralelo):** Marcos → Autenticación. Gonza → Catálogo.
+- **Fase 2 (paralelo):** Marcos → Listas (depende de Auth, propio). Gonza → Perfil (depende de A-09 de Marcos, ya resuelto en Fase 1).
+- **Fase 3 (paralelo):** Marcos → Chatbot + Admin nativo. Gonza → Polish (necesita que las pantallas de ambos estén terminadas).
+- **Cierre (juntos):** Q-05 — variables de entorno y documentación.
