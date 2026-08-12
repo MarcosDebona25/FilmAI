@@ -104,6 +104,53 @@ El sistema implementa 9 tablas relacionales:
 
 ---
 
+## Ejecución del proyecto
+
+### Arranque rápido (cada vez)
+
+```bash
+docker compose up --build   # primera vez, o tras cambios en los Dockerfiles
+docker compose up           # levantamiento rápido sin rebuild
+docker compose down         # detener (conserva la base de datos y Redis)
+```
+
+### URLs
+
+| Servicio            | URL                              |
+|---------------------|----------------------------------|
+| Frontend (Next.js)  | http://localhost:3000            |
+| Backend (Django)    | http://localhost:8000            |
+| Admin de Django     | http://localhost:8000/admin/     |
+| PostgreSQL          | `localhost:5432` (db `filmia_dev`) |
+| Redis               | `localhost:6379`                 |
+
+### Comandos útiles
+
+```bash
+docker compose ps               # estado de los 4 servicios
+docker compose logs -f backend  # seguir los logs de Django
+docker compose logs -f frontend # seguir los logs de Next.js
+docker compose down -v          # detener y borrar BD + Redis (datos)
+```
+
+### Configuración inicial (solo la primera vez)
+
+1. **Crear el `.env`** desde la plantilla y completar las variables obligatorias:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   - `SECRET_KEY`: generar con `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`.
+   - `POSTGRES_PASSWORD` y `DJANGO_SUPERUSER_PASSWORD`: contraseñas de desarrollo.
+   - Las claves externas (`TMDB_API_KEY`, `GOOGLE_CLIENT_ID`, `LLM_API_KEY`) pueden quedar vacías hasta que se implementen esos módulos.
+
+### Credenciales de desarrollo
+
+El backend crea automáticamente un superusuario al arrancar, usando las variables `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL` y `DJANGO_SUPERUSER_PASSWORD` del `.env`. Entrar a `/admin/` con esos datos y cambiar la contraseña tras el primer acceso.
+
+---
+
 ## Accesibilidad
 
 FilmIA se desarrolla siguiendo los principios **POUR** de las **WCAG 2.1** con nivel de conformidad **AA**:

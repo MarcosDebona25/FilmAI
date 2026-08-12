@@ -36,5 +36,5 @@ else:
     print(f'Superuser {username} ya existe.')
 "
 
-echo "🚀 Arrancando servidor Django en 0.0.0.0:8000..."
+echo "🚀 Servidor Django escuchando en 0.0.0.0:8000 (accedé en http://localhost:8000)"
 exec python manage.py runserver 0.0.0.0:8000

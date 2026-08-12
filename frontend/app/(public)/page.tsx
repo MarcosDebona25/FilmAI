@@ -6,7 +6,7 @@ export default function PublicHome() {
       <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">
         FilmIA
       </h1>
-      <p className="max-w-md text-center text-muted-foreground">
+      <p className="max-w-md text-center text-muted-foreground text">
         Plataforma de reseñas cinematográficas con recomendaciones inteligentes.
       </p>
       <div className="flex gap-3">
