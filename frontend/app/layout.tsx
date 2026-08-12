@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const roboto = Roboto({
+  variable: "--font-roboto",
   subsets: ["latin"],
 });
 
@@ -16,6 +11,9 @@ export const metadata: Metadata = {
   title: "FilmIA",
   description:
     "Plataforma de reseñas cinematográficas con recomendaciones inteligentes.",
+  icons: {
+    icon: "/icons8-movies-32.png",
+  },
 };
 
 export default function RootLayout({
@@ -25,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
-      <body className={`${inter.variable} ${playfair.variable} antialiased`}>
+      <body className={`${roboto.variable} antialiased`}>
         {children}
       </body>
     </html>
