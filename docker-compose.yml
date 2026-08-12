@@ -1,0 +1,118 @@
+# =============================================================================
+# FilmIA — Docker Compose (4 servicios)
+# =============================================================================
+# Uso:
+#   docker compose up --build   → levantar todo (primera vez o tras cambios en Dockerfiles)
+#   docker compose up           → levantar sin rebuild
+#   docker compose down         → frenar y limpiar contenedores
+#   docker compose down -v      ↑ + borrar volúmenes (BD y Redis se pierden)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. PostgreSQL 16 — la base de datos relacional
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: filmia_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"                       # expuesto para conectar desde el host (DBeaver, etc.)
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # los datos sobreviven aunque tires el contenedor
+    networks:
+      - filmia_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 2. Redis — caché de TMDB + broker de Celery
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: filmia_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - filmia_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 3. Backend — Django + Django REST Framework
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: filmia_backend
+    restart: unless-stopped
+    # Corre como tu usuario del host (UID 1000) en vez de root.
+    # Así los archivos generados (startproject, startapp, pycache) quedan con
+    # tu dueño y podés editarlos sin sudo. ${UID:-1000} = usa $UID si existe,
+    # si no, asume 1000 (el UID estándar del primer usuario en Ubuntu).
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app                  # monta TODO el código → hot-reload real
+    depends_on:
+      db:
+        condition: service_healthy     # no arranca hasta que PostgreSQL responda
+      redis:
+        condition: service_healthy
+    networks:
+      - filmia_network
+
+  # ---------------------------------------------------------------------------
+  # 4. Frontend — Next.js 15 + Tailwind + Shadcn
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: filmia_frontend
+    restart: unless-stopped
+    # Misma razón que en backend: que los archivos generados queden con tu dueño.
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./frontend:/app                 # monta TODO el código → hot-reload real
+      - /app/node_modules              # volumen anónimo: no pisar node_modules del contenedor
+    depends_on:
+      - backend
+    networks:
+      - filmia_network
+
+# ---------------------------------------------------------------------------
+# Volúmenes con nombre — persisten datos aunque hagas docker compose down
+# ---------------------------------------------------------------------------
+volumes:
+  pgdata:
+  redisdata:
+
+# ---------------------------------------------------------------------------
+# Red interna — los servicios se encuentran por su nombre de servicio
+#   Ej: el backend se conecta a PostgreSQL con host=db, no con localhost
+# ---------------------------------------------------------------------------
+networks:
+  filmia_network:
+    driver: bridge

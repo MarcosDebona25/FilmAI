@@ -1,0 +1,29 @@
+# =============================================================================
+# FilmIA Backend — Dependencias Python
+# =============================================================================
+
+# --- Django + DRF ---
+Django>=5.0,<5.2
+djangorestframework>=3.15,<3.16
+django-cors-headers>=4.4,<4.5
+
+# --- Base de datos ---
+psycopg2-binary>=2.9,<3.0
+
+# --- Variables de entorno ---
+python-decouple>=3.8,<4.0
+
+# --- Autenticación ---
+djangorestframework-simplejwt>=5.3,<6.0
+
+# --- Redis ---
+redis>=5.2,<6.0
+
+# --- Tareas asincrónicas (Celery) ---
+celery>=5.3,<5.5
+
+# --- Desarrollo ---
+factory-boy>=3.3,<4.0
+
+# --- Linting ---
+ruff>=0.11,<1.0
