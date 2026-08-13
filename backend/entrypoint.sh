@@ -29,11 +29,19 @@ User = get_user_model()
 username = '${DJANGO_SUPERUSER_USERNAME}'
 email = '${DJANGO_SUPERUSER_EMAIL}'
 password = '${DJANGO_SUPERUSER_PASSWORD}'
-if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username=username, email=email, password=password)
-    print(f'Superuser {username} creado.')
+if not User.objects.filter(correo=email).exists():
+    User.objects.create_superuser(
+        correo=email,
+        nombre_usuario=username,
+        nombre='Admin',
+        apellido='FilmIA',
+        fecha_nacimiento='2000-01-01',
+        genero='no_especifica',
+        password=password,
+    )
+    print(f'Superuser {email} creado.')
 else:
-    print(f'Superuser {username} ya existe.')
+    print(f'Superuser {email} ya existe.')
 "
 
 echo "🚀 Servidor Django escuchando en 0.0.0.0:8000 (accedé en http://localhost:8000)"

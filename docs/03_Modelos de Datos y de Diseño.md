@@ -32,7 +32,7 @@
 
 **Relaciones:**
 
-- **Persona - Administrador/Usuario:** Esta herencia fue realizada pensando al Administrador como una persona encargada de la moderación de reseñas y gestión de usuarios y al Usuario como un cliente tradicional de la plataforma. La implementación de las funcionalidades del Administrador está sujeta a viabilidad y análisis del alcance del proyecto.
+- **Usuario (entidad unificada):** Las entidades Persona, Usuario y Administrador se unificaron en una única entidad `Usuario`, que es el modelo de usuario de Django (`AUTH_USER_MODEL`). El rol administrador se gestiona a través del Django Admin nativo (flags `is_staff`/`is_superuser`) y no mediante una entidad separada. Ver `docs/decisiones.md`.
 
 - **Usuario - Chat:** La cardinalidad se justifica en que un usuario pueda realizar consultas en diversos chats, permitiendo separar temas de conversación. Esta funcionalidad está sujeta a viabilidad y análisis del alcance del proyecto.
 
@@ -97,7 +97,7 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 **Observaciones:**
 
-En la relación de herencia entre Persona y Usuario se usa el mismo idPersona como PK en Usuario y Administrador, y a la vez como FK hacia Persona. De esta forma, cualquier Usuario o Administrador siempre deriva de una Persona existente. El diagrama marca la especialización como disjoint, dando a entender que una Persona puede ser Usuario o Administrador, pero no ambas cosas a la vez.
+La herencia entre Persona, Usuario y Administrador fue eliminada: ahora existe una única tabla `Usuario` que concentra los campos de identidad (nombreUsuario, correo, contraseña, googleId) junto con los campos propios del usuario. El rol administrador se representa con el flag `is_staff` de Django y se gestiona a través del Django Admin nativo.
 
 El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la información almacenada puede variar considerablemente según el desarrollo de la conversación y no siempre sigue una estructura fija. De esta forma se pueden guardar cosas como un resumen del historial, parámetros que el chatbot viene usando o cualquier otro dato que necesite en el momento, sin crear tablas nuevas solo para eso. Además, PostgreSQL (la BD que tenemos pensado usar) permite buscar y actualizar partes del JSONB sin problemas, cuando con JSON hay ciertas limitantes, así que es una forma práctica y flexible de manejar estos datos sin complicar el modelo.
 
@@ -111,8 +111,14 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 - `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
 - `notifNovedades` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre novedades de FilmIA.
 
-**Campo adicional en Persona para OAuth:**
-- `googleId` (VARCHAR(100), UNIQUE, NULLABLE): Identificador único de la cuenta de Google asociada. Solo se completa para cuentas creadas mediante autenticación con Google OAuth. En estos casos, el campo `contraseña` de Persona puede ser NULL.
+**Campo en Usuario para OAuth:**
+- `googleId` (VARCHAR(100), UNIQUE, NULLABLE): Identificador único de la cuenta de Google asociada. Solo se completa para cuentas creadas mediante autenticación con Google OAuth. En estos casos, el campo `password` (contraseña) puede ser NULL.
+
+**Cambio en Usuario:**
+- `contraseña` cambia de VARCHAR(50) a VARCHAR(128) para alojar el hash de bcrypt (60+ caracteres), en concordancia con el RNF #2.
+
+**Cambio en Mensaje:**
+- `texto` cambia de VARCHAR(250) a TEXT para no truncar respuestas del chatbot (una respuesta del LLM puede superar 250 caracteres).
 
 **Cambio en Reseña:**
 - `texto` cambia de VARCHAR(250) a VARCHAR(1000) para permitir reseñas de hasta 1000 caracteres, en concordancia con los lineamientos de UI.

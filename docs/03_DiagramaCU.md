@@ -5,6 +5,7 @@ skinparam monochrome true
 skinparam backgroundColor #FDFDFD
 
 left to right direction
+' Nota: "Administrador" es un ROL del Usuario (is_staff/is_superuser), gestionado vía Django Admin nativo.
 actor "Usuario" as usuario
 actor "Administrador" as admin
 actor "API LLM de Chatbot" as llm

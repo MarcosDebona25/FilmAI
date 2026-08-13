@@ -141,6 +141,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # =============================================================================
+# Modelo de usuario personalizado
+# =============================================================================
+# FilmIA usa su propio modelo de usuario (usuarios.Usuario) en lugar del
+# auth.User por defecto de Django. El "rol administrador" se gestiona con los
+# flags is_staff/is_superuser a través del Django Admin nativo (Módulo 6).
+
+AUTH_USER_MODEL = 'usuarios.Usuario'
+
+
+# =============================================================================
 # Django REST Framework
 # =============================================================================
 
