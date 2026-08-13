@@ -1,3 +1,5 @@
+# Commit Type Examples
+
 | Type | Description | Example |
 |------|-------------|---------|
 | feat | A new feature for the user. | `feat(cart): add ability to save items for later` |

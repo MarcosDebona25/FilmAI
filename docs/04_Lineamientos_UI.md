@@ -1068,7 +1068,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ## 8. Lo que NO requiere pantalla
 
-- **Panel de administrador**: CU-016 y CU-017 operan vía BD/API, sin UI dedicada.
+- **Panel de administrador**: CU-016 y CU-017 operan a través del Django Admin nativo (rol administrador con `is_staff`/`is_superuser`), sin UI dedicada.
 - **Chats múltiples**: el modelo de clases los contempla, pero los CU solo definen la conversación activa en el chatbot principal.
 
 ---
