@@ -116,6 +116,50 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `settings.py`, `manage.py`, `admin.py`/`apps.py`/`tests.py`/`views.py`
   (quita imports sin usar) y los `factories.py`.
 
+## 18/08/2026 — Arquitectura de retrieval del chatbot: tool calling + pgvector + BGE-M3
+
+- **Descripción**: se definió la arquitectura de retrieval del chatbot (Módulo 5)
+  para desarrollo posterior. Consta de tres decisiones:
+  1. **Tool calling obligatorio** (no se embebe el contexto del usuario): el LLM
+     recibe herramientas `buscar_por_titulo`, `top_por_genero`, `similares_a`
+     (TMDB) y `buscar_semantico` (pgvector). El historial de gustos del usuario
+     (calificaciones, reseñas, vistas) se obtiene por SQL y se inyecta
+     anonimizado al prompt (B-05), sin pasar por ningún vector store.
+  2. **Embeddings locales con BGE-M3 vía Ollama** (gratis, cross-lingual): el
+     corpus (sinopsis de TMDB) está en inglés pero el usuario consulta en
+     español, por lo que se necesita un modelo multilingüe. Se descarta
+     `nomic-embed-text` por ser monolingüe (inglés).
+  3. **pgvector sobre el PostgreSQL 16 existente**: imagen
+     `pgvector/pgvector:pg16-alpine`, `CREATE EXTENSION vector`, vector(1024),
+     índice HNSW.
+- **Texto a embebear** (plantilla en inglés con labels):
+  `Title + Genres + Directors + Cast + Keywords + Synopsis`. Los campos
+  cuantitativos (`calificacion_promedio`, `fecha_lanzamiento`, `duracion`,
+  `tipo`, `estatus`) **no** van al vector: se aplican como filtros SQL
+  post-recuperación.
+- **Cambios de modelo asociados**: nuevo campo `keywords` (ArrayField) en
+  `ProduccionAudiovisual` sincronizado desde TMDB en C-04
+  (`/movie/{id}/keywords`, `/tv/{id}/keywords`); nuevo modelo
+  `ProduccionEmbedding` (FK + `VectorField(1024)` + índice HNSW).
+- **Motivo**: personalización basada en historial sin pagar por embeddings ni
+  exponer datos del usuario; consultas conceptuales sobre el catálogo que TMDB
+  `discover` no expresa; grounding contra datos reales para evitar
+  alucinaciones del LLM.
+- **Archivos**: `docs/05_Plan_de_Desarrollo.md` (Módulo 5, C-01, C-04),
+  `docs/06_TMDB_API_Referencia.md` (nuevo), futuros: `docker-compose.yml`
+  (servicio `ollama`), `backend/requirements.txt` (`httpx`, `pgvector`,
+  `django-pgvector`), `backend/catalogo/models.py`.
+
+## 18/08/2026 — Documento de referencia de la API de TMDB
+
+- **Descripción**: se creó `docs/06_TMDB_API_Referencia.md` con el listado
+  completo de endpoints de TMDB API v3 (base URL, autenticación, secciones y
+  notas de uso para el tool calling del chatbot). Sirve como referencia rápida
+  para implementar `TMDBClient` (C-01) y las herramientas del LLM.
+- **Motivo**: tener a mano y de forma consultable qué expone la API externa
+  integrada (RNF #14) al momento de implementar catálogo y chatbot.
+- **Archivos**: `docs/06_TMDB_API_Referencia.md`.
+
 ## 18/08/2026 — Prettier + ESLint + Husky en frontend (F-06)
 
 - **Descripción**: Prettier (`.prettierrc` + `.prettierignore`) + integración de

@@ -123,3 +123,7 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 **Cambio en Reseña:**
 - `texto` cambia de VARCHAR(250) a VARCHAR(1000) para permitir reseñas de hasta 1000 caracteres, en concordancia con los lineamientos de UI.
 - `sinopsis` en ProduccionAudiovisual cambia de VARCHAR(250) a VARCHAR(2000) para almacenar sinopsis completas sincronizadas desde TMDB.
+
+**Cambios para retrieval semántico del chatbot (decisión 18/08/2026, ver `docs/decisiones.md`):**
+- `keywords` (VARCHAR[]) en ProduccionAudiovisual: keywords temáticos de TMDB sincronizados en C-04 (`/movie/{id}/keywords`, `/tv/{id}/keywords`). Se usan como parte del texto a embebear para la búsqueda semántica.
+- `ProduccionEmbedding` (nueva, fase posterior del Módulo 5): FK a ProduccionAudiovisual + columna vectorial `vector(1024)` (extensión pgvector) + índice HNSW `vector_cosine_ops`. Almacena el embedding del texto `Title + Genres + Directors + Cast + Keywords + Synopsis`. Los campos cuantitativos (calificación promedio, año, duración, tipo, estatus) no se embedbean: se filtran por SQL sobre los resultados.
