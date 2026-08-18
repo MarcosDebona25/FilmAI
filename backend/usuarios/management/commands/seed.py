@@ -83,7 +83,7 @@ class Command(BaseCommand):
         for i in range(1, CANTIDAD_USUARIOS + 1):
             usuario = UsuarioFactory.create(
                 nombre_usuario=f"usuario{i:03d}",
-                correo=f"usuario{i:03d}@filmia.com",
+                correo=f"usuario{i:03d}@filmai.com",
                 password=SEED_PASSWORD,
             )
             usuarios.append(usuario)

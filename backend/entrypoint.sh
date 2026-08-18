@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# FilmIA Backend — Entrypoint
+# FilmAI Backend — Entrypoint
 # =============================================================================
 # Se ejecuta cada vez que el contenedor arranca:
 #   1. Espera a que PostgreSQL esté listo
@@ -34,7 +34,7 @@ if not User.objects.filter(correo=email).exists():
         correo=email,
         nombre_usuario=username,
         nombre='Admin',
-        apellido='FilmIA',
+        apellido='FilmAI',
         fecha_nacimiento='2000-01-01',
         genero='no_especifica',
         password=password,

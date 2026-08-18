@@ -1,9 +1,41 @@
-# Decisiones y Cambios — FilmIA
+# Decisiones y Cambios — FilmAI
 
 Registro de decisiones de diseño y cambios relevantes del proyecto.
 Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos afectados).
 
 ---
+
+## 18/08/2026 — Renombrado completo de la aplicación: FilmIA → FilmAI
+
+- **Descripción**: Se realizó un análisis end-to-end del repositorio para
+  reemplazar todas las ocurrencias del nombre incorrecto "FilmIA" por el
+  nombre oficial "FilmAI". El cambio afectó tanto el nombre visible de la
+  marca como los identificadores técnicos internos (`filmia` → `filmai`).
+- **Motivo**: El nombre correcto y definitivo de la aplicación es "FilmAI"
+  (con la sigla AI en mayúsculas, haciendo referencia a Artificial Intelligence).
+  "FilmIA" era un error de escritura que se había propagado en todo el proyecto.
+- **Archivos afectados**:
+  - `README.md`, `AGENTS.md`, `.gitignore`, `.env.example`
+  - `.husky/pre-commit`
+  - `docker-compose.yml` (header, container names: `filmai_db`, `filmai_redis`,
+    `filmai_backend`, `filmai_frontend`; red: `filmai_network`)
+  - `backend/filmia/` → renombrado a `backend/filmai/` (módulo Django)
+  - `backend/filmai/settings.py`, `asgi.py`, `wsgi.py`, `urls.py`
+  - `backend/manage.py`, `backend/Dockerfile`, `backend/entrypoint.sh`
+  - `backend/pyproject.toml`, `backend/requirements.txt`
+  - `backend/usuarios/models.py`, `factories.py`,
+    `management/commands/seed.py`
+  - `frontend/Dockerfile`, `frontend/app/layout.tsx`,
+    `frontend/app/globals.css`, `frontend/app/(public)/page.tsx`
+  - `docs/decisiones.md`, `docs/01_Presentación...`, `docs/03_Modelos...`,
+    `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`,
+    `docs/06_TMDB_API_Referencia.md`
+  - `docs/wireframes/Opcion 1/app.html`
+- **Nota**: Las variables de entorno de PostgreSQL (`POSTGRES_DB=filmai_dev`,
+  `POSTGRES_USER=filmai_user`) y los emails ficticios de prueba
+  (`@filmai.com`) también fueron actualizados para mantener coherencia.
+  Si ya existe un volumen Docker con datos de desarrollo bajo el nombre
+  anterior, es necesario recrearlo (`docker compose down -v`).
 
 ## 13/08/2026 — Unificación de Persona/Usuario/Administrador en un único `Usuario`
 
@@ -16,7 +48,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   nativo (Módulo 6), que usa flags `is_staff`/`is_superuser` y no una entidad
   separada. La herencia multi-tabla era especulativa (una sola subclase) y
   chocaba con el `AUTH_USER_MODEL`.
-- **Archivos**: `backend/usuarios/models.py`, `backend/filmia/settings.py`,
+- **Archivos**: `backend/usuarios/models.py`, `backend/filmai/settings.py`,
   `backend/entrypoint.sh`.
 
 ## 13/08/2026 — `estado` como fuente única de verdad del ciclo de vida

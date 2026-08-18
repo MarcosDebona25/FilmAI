@@ -15,7 +15,7 @@
 
 ### 2. Título de la propuesta
 
-FilmIA: Plataforma Web de Reseñas Cinematográficas con Recomendaciones Inteligentes
+FilmAI: Plataforma Web de Reseñas Cinematográficas con Recomendaciones Inteligentes
 
 ### 3. Delimitación del problema / Fundamentación
 

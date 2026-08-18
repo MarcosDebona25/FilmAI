@@ -1,4 +1,4 @@
-# FilmIA
+# FilmAI
 
 **Plataforma Web de Resenas Cinematograficas con Recomendaciones Inteligentes**
 
@@ -10,7 +10,7 @@ Proyecto correspondiente a la materia **Seminario Integrador** de la carrera **A
 
 La sobreabundancia de contenido audiovisual disponible en plataformas de streaming genera una paradoja de eleccion: cuanto mas material existe, mas tiempo invierten los usuarios en decidir que ver. Las recomendaciones genericas, basadas unicamente en popularidad o en un historial de visualizacion superficial, rara vez capturan los matices de las preferencias individuales.
 
-FilmIA aborda esta problematica combinando un catalogo actualizado de peliculas y series con un motor de recomendacion personalizado. El sistema analiza el historial de visualizacion, las calificaciones y las reseñas de cada usuario para generar sugerencias contextuales a traves de un chatbot basado en inteligencia artificial.
+FilmAI aborda esta problematica combinando un catalogo actualizado de peliculas y series con un motor de recomendacion personalizado. El sistema analiza el historial de visualizacion, las calificaciones y las reseñas de cada usuario para generar sugerencias contextuales a traves de un chatbot basado en inteligencia artificial.
 
 ---
 
@@ -121,7 +121,7 @@ docker compose down         # detener (conserva la base de datos y Redis)
 | Frontend (Next.js)  | http://localhost:3000            |
 | Backend (Django)    | http://localhost:8000            |
 | Admin de Django     | http://localhost:8000/admin/     |
-| PostgreSQL          | `localhost:5432` (db `filmia_dev`) |
+| PostgreSQL          | `localhost:5432` (db `filmai_dev`) |
 | Redis               | `localhost:6379`                 |
 
 ### Comandos útiles
@@ -153,7 +153,7 @@ El backend crea automáticamente un superusuario al arrancar, usando las variabl
 
 ## Accesibilidad
 
-FilmIA se desarrolla siguiendo los principios **POUR** de las **WCAG 2.1** con nivel de conformidad **AA**:
+FilmAI se desarrolla siguiendo los principios **POUR** de las **WCAG 2.1** con nivel de conformidad **AA**:
 
 - **Perceptible (Perceivable):** la informacion y los componentes de la interfaz se presentan de forma que los usuarios puedan percibirlos. Contraste minimo de 4.5:1 para texto normal y 3:1 para texto grande. Textos alternativos en imagenes informativas. Estructura jerarquica de encabezados sin saltos de nivel.
 - **Operable (Operable):** los componentes de la interfaz y la navegacion se operan completamente mediante teclado. Indicador de foco visible en todos los elementos interactivos. Alternativas accesibles para drag and drop (botones "Mover arriba" / "Mover abajo"). Tecla Escape para cerrar modales.

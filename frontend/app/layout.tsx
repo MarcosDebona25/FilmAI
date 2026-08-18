@@ -8,7 +8,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "FilmIA",
+  title: "FilmAI",
   description: "Plataforma de reseñas cinematográficas con recomendaciones inteligentes.",
   icons: {
     icon: "/icons8-movies-32.png",

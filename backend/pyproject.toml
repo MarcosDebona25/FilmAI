@@ -1,5 +1,5 @@
 # =============================================================================
-# FilmIA Backend — Configuración de Ruff (linter + formatter)
+# FilmAI Backend — Configuración de Ruff (linter + formatter)
 # =============================================================================
 # Ruff se usa para linting Y formateo. `ruff format` reemplaza a `black`
 # (es un formatter compatible: mismo line-length y estilo). Ver docs/decisiones.md.

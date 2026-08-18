@@ -1,5 +1,5 @@
 # =============================================================================
-# FilmIA — Docker Compose (4 servicios)
+# FilmAI — Docker Compose (4 servicios)
 # =============================================================================
 # Uso:
 #   docker compose up --build   → levantar todo (primera vez o tras cambios en Dockerfiles)
@@ -14,7 +14,7 @@ services:
   # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
-    container_name: filmia_db
+    container_name: filmai_db
     restart: unless-stopped
     ports:
       - "5432:5432"                       # expuesto para conectar desde el host (DBeaver, etc.)
@@ -25,7 +25,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data   # los datos sobreviven aunque tires el contenedor
     networks:
-      - filmia_network
+      - filmai_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -37,14 +37,14 @@ services:
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
-    container_name: filmia_redis
+    container_name: filmai_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redisdata:/data
     networks:
-      - filmia_network
+      - filmai_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -58,7 +58,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: filmia_backend
+    container_name: filmai_backend
     restart: unless-stopped
     # Corre como tu usuario del host (UID 1000) en vez de root.
     # Así los archivos generados (startproject, startapp, pycache) quedan con
@@ -77,7 +77,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - filmia_network
+      - filmai_network
 
   # ---------------------------------------------------------------------------
   # 4. Frontend — Next.js 15 + Tailwind + Shadcn
@@ -86,7 +86,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: filmia_frontend
+    container_name: filmai_frontend
     restart: unless-stopped
     # Misma razón que en backend: que los archivos generados queden con tu dueño.
     user: "${UID:-1000}:${GID:-1000}"
@@ -100,7 +100,7 @@ services:
     depends_on:
       - backend
     networks:
-      - filmia_network
+      - filmai_network
 
 # ---------------------------------------------------------------------------
 # Volúmenes con nombre — persisten datos aunque hagas docker compose down
@@ -114,5 +114,5 @@ volumes:
 #   Ej: el backend se conecta a PostgreSQL con host=db, no con localhost
 # ---------------------------------------------------------------------------
 networks:
-  filmia_network:
+  filmai_network:
     driver: bridge

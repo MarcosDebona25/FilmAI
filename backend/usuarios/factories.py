@@ -21,7 +21,7 @@ class UsuarioFactory(factory.django.DjangoModelFactory):
         model = Usuario
 
     nombre_usuario = factory.Sequence(lambda n: f"usuario{n:03d}")
-    correo = factory.LazyAttribute(lambda o: f"{o.nombre_usuario}@filmia.com")
+    correo = factory.LazyAttribute(lambda o: f"{o.nombre_usuario}@filmai.com")
     nombre = factory.Faker("first_name", locale="es")
     apellido = factory.Faker("last_name", locale="es")
     fecha_nacimiento = factory.Faker("date_of_birth", minimum_age=18, maximum_age=60)
