@@ -96,7 +96,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         "nombre de usuario",
         max_length=25,
         unique=True,
-        help_text="Alfanumérico, 5–25 caracteres, único (CU-001).",
+        help_text="Alfanumérico, 5-25 caracteres, único (CU-001).",
     )
     correo = models.EmailField(
         "correo electrónico",
@@ -135,9 +135,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         default=Tema.OSCURO,
     )
     perfil_publico = models.BooleanField("perfil público", default=True)
-    notif_recomendaciones = models.BooleanField(
-        "notif. recomendaciones", default=True
-    )
+    notif_recomendaciones = models.BooleanField("notif. recomendaciones", default=True)
     notif_resenas = models.BooleanField("notif. reseñas", default=True)
     notif_novedades = models.BooleanField("notif. novedades", default=True)
 
@@ -162,7 +160,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     objects = UsuarioManager()
 
     USERNAME_FIELD = "correo"
-    REQUIRED_FIELDS = ["nombre_usuario", "nombre", "apellido", "fecha_nacimiento", "genero"]
+    REQUIRED_FIELDS = [
+        "nombre_usuario",
+        "nombre",
+        "apellido",
+        "fecha_nacimiento",
+        "genero",
+    ]
 
     class Meta:
         db_table = "usuario"

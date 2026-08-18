@@ -51,17 +51,22 @@ class ProduccionAudiovisualFactory(factory.django.DjangoModelFactory):
     titulo = factory.LazyFunction(lambda: fake.sentence(nb_words=3).rstrip(".").title())
     poster = factory.Faker("image_url", width=300, height=450)
     sinopsis = factory.Faker("paragraph", nb_sentences=3)
-    fecha_lanzamiento = factory.Faker("date_between", start_date="-25y", end_date="today")
+    fecha_lanzamiento = factory.Faker(
+        "date_between", start_date="-25y", end_date="today"
+    )
     reparto = factory.LazyFunction(_lista_nombres)
     directores = factory.LazyFunction(
         lambda: [fake.name() for _ in range(random.randint(1, 2))]
     )
     estatus = "Released"
-    generos = factory.LazyFunction(
-        lambda: random.sample(GENEROS, random.randint(1, 3))
-    )
+    generos = factory.LazyFunction(lambda: random.sample(GENEROS, random.randint(1, 3)))
     calificacion_promedio = factory.Faker(
-        "pyfloat", left_digits=1, right_digits=1, positive=True, min_value=1, max_value=10
+        "pyfloat",
+        left_digits=1,
+        right_digits=1,
+        positive=True,
+        min_value=1,
+        max_value=10,
     )
     cantidad_temporadas = factory.LazyAttribute(
         lambda o: random.randint(1, 8) if o.tipo == TipoProduccion.SERIE else None

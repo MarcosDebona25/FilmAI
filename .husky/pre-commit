@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+# =============================================================================
+# FilmIA — pre-commit hook
+# =============================================================================
+# - Backend: ruff (linter + formatter) corre DENTRO del contenedor Docker.
+# - Frontend: eslint + prettier corren con las dependencias del host (node).
+# Se ejecutan siempre; para un repo chico el costo es despreciable.
+
+echo "== FilmIA pre-commit =="
+
+# --- Backend: ruff (dentro del contenedor) ---
+if [ -n "$(docker compose ps --quiet backend 2>/dev/null)" ]; then
+  echo "→ Backend: ruff check + ruff format --check"
+  docker compose exec -T backend ruff check . || exit 1
+  docker compose exec -T backend ruff format --check . || exit 1
+else
+  echo "⚠️  Backend no corriendo: se saltea ruff (levantá Docker para verificar)." >&2
+fi
+
+# --- Frontend: eslint + prettier (dependencias del host) ---
+echo "→ Frontend: eslint + prettier --check"
+cd frontend || exit 1
+npx --no-install eslint . --max-warnings=0 || exit 1
+npx --no-install prettier --check . || exit 1
+
+echo "✓ pre-commit OK"
