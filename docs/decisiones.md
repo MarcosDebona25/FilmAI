@@ -67,3 +67,35 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Descripción**: la composición "una calificación tiene 0..1 reseña" se modeló
   con `OneToOneField` (no FK simple), según el diagrama de clases.
 - **Archivos**: `backend/catalogo/models.py`.
+
+## 18/08/2026 — Seeds de desarrollo con factory_boy (F-05)
+
+- **Descripción**: se implementó el comando `python manage.py seed` que puebla
+  la BD con datos consistentes para desarrollar la UI: 3 usuarios de prueba
+  (contraseña común `Password123!`), 50 producciones (25 películas + 25 series),
+  calificaciones y reseñas asociadas, listas predeterminadas (Favoritos,
+  Pendientes, Vistas) + personalizadas, y un chat con mensajes por usuario.
+  El comando es **destructivo e idempotente**: borra los datos de las apps de
+  negocio y los recrea en cada ejecución.
+- **Motivo**: facilitar el desarrollo de la UI (Módulos 2-5) sin depender de la
+  API de TMDB ni de datos reales.
+- **Archivos**: `backend/usuarios/factories.py`, `backend/catalogo/factories.py`,
+  `backend/listas/factories.py`, `backend/chatbot/factories.py`,
+  `backend/usuarios/management/commands/seed.py` (+ `management/__init__.py`).
+- **Convención**: los factories viven en `factories.py` dentro de cada app; el
+  comando `seed` vive en `usuarios/management/commands/` (no hay app `core`).
+  El password se aplica vía `create_user` (override de `_create` en el factory)
+  para que quede hasheado.
+
+## 18/08/2026 — Reset de BD por InconsistentMigrationHistory
+
+- **Descripción**: al intentar `migrate` con el `AUTH_USER_MODEL` custom ya
+  declarado, Django lanzó `InconsistentMigrationHistory` porque `auth`/`admin`
+  estaban aplicadas sobre el `User` por defecto (migradas antes del F-04) pero
+  sus dependencias swappable (`usuarios.0001_initial`) no. Se resolvió con un
+  reset del schema (`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`) y
+  re-migración limpia. La BD no tenía datos de negocio (solo el superuser
+  auto-generado por `entrypoint.sh`, que se recrea al reiniciar el contenedor).
+- **Motivo**: documentar el gotcha para futuros resets/migraciones del entorno
+  de desarrollo.
+- **Archivos**: ninguno (operación de base de datos).
