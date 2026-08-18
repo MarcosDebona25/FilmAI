@@ -71,9 +71,7 @@ class ProduccionAudiovisual(models.Model):
     cantidad_episodios = models.IntegerField(
         "cantidad de episodios", null=True, blank=True
     )
-    duracion = models.IntegerField(
-        "duración (minutos)", null=True, blank=True
-    )
+    duracion = models.IntegerField("duración (minutos)", null=True, blank=True)
 
     class Meta:
         db_table = "produccion_audiovisual"

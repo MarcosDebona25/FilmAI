@@ -99,3 +99,33 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Motivo**: documentar el gotcha para futuros resets/migraciones del entorno
   de desarrollo.
 - **Archivos**: ninguno (operación de base de datos).
+
+## 18/08/2026 — Ruff como linter + formatter único (F-06)
+
+- **Descripción**: se configuró Ruff como linter **y** formatter (`ruff check` +
+  `ruff format`) en `backend/pyproject.toml`. `ruff format` reemplaza a `black`
+  (compatible: line-length 88, doble comilla). Config: `target-version = py312`,
+  `exclude = ["*/migrations/*"]`, `per-file-ignores` de `RUF012` en `models.py`
+  (falso positivo de Django: `ordering`, `constraints` y `REQUIRED_FIELDS` son
+  metadatos, no defaults mutables). Se omitió `E501`: la longitud la controla
+  el formatter, no el linter.
+- **Motivo**: el plan F-06 pedía "ruff o flake8 + black". Se usó el formatter de
+  Ruff en lugar de instalar `black` por separado (ya venía con ruff, es drop-in
+  compatible y evita una dependencia redundante).
+- **Archivos**: `backend/pyproject.toml` + reformateo de los `models.py`,
+  `settings.py`, `manage.py`, `admin.py`/`apps.py`/`tests.py`/`views.py`
+  (quita imports sin usar) y los `factories.py`.
+
+## 18/08/2026 — Prettier + ESLint + Husky en frontend (F-06)
+
+- **Descripción**: Prettier (`.prettierrc` + `.prettierignore`) + integración de
+  `eslint-config-prettier` en `eslint.config.mjs` (flat config). Scripts `format`
+  y `format:check` en `package.json`. Husky con hook `pre-commit` que corre
+  backend (ruff vía `docker compose exec`) y frontend (eslint + prettier con las
+  dependencias del host).
+- **Motivo**: por el layout monorepo (`package.json` en `frontend/`, `.git` en la
+  raíz), husky 9 exige ejecutarse desde el directorio que contiene `.git`; por
+  eso `prepare = "cd .. && husky"` y el hook vive en `.husky/` (raíz).
+- **Archivos**: `frontend/.prettierrc`, `frontend/.prettierignore`,
+  `frontend/eslint.config.mjs`, `frontend/package.json`,
+  `frontend/package-lock.json`, `.husky/pre-commit`.

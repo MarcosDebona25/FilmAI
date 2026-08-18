@@ -111,9 +111,7 @@ class Command(BaseCommand):
         (usuario, produccion).
         """
         for usuario in usuarios:
-            producciones_usuario = random.sample(
-                producciones, random.randint(8, 15)
-            )
+            producciones_usuario = random.sample(producciones, random.randint(8, 15))
             for produccion in producciones_usuario:
                 calificacion = CalificacionFactory.create(
                     usuario=usuario, produccion=produccion

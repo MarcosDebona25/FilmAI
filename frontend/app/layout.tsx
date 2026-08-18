@@ -9,8 +9,7 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: "FilmIA",
-  description:
-    "Plataforma de reseñas cinematográficas con recomendaciones inteligentes.",
+  description: "Plataforma de reseñas cinematográficas con recomendaciones inteligentes.",
   icons: {
     icon: "/icons8-movies-32.png",
   },
@@ -23,9 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
-      <body className={`${roboto.variable} antialiased`}>
-        {children}
-      </body>
+      <body className={`${roboto.variable} antialiased`}>{children}</body>
     </html>
   );
 }
