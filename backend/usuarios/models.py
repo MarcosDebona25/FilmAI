@@ -1,7 +1,7 @@
 """
 Modelos de la app `usuarios`.
 
-FilmIA usa un único modelo de usuario (`Usuario`) como `AUTH_USER_MODEL`,
+FilmAI usa un único modelo de usuario (`Usuario`) como `AUTH_USER_MODEL`,
 en lugar de heredar de `auth.User`. La jerarquía original del diagrama de
 clases (Persona → Usuario/Administrador) se unificó en una sola entidad:
 

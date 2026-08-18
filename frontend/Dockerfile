@@ -1,5 +1,5 @@
 # =============================================================================
-# FilmIA Frontend — Dockerfile (Next.js 15 + Tailwind + Shadcn)
+# FilmAI Frontend — Dockerfile (Next.js 15 + Tailwind + Shadcn)
 # =============================================================================
 # Estrategia de capas:
 #   1. package.json PRIMERO → Docker cachea node_modules si no cambian dependencias

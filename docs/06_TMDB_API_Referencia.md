@@ -1,4 +1,4 @@
-# FilmIA — Referencia de Endpoints TMDB API v3
+# FilmAI — Referencia de Endpoints TMDB API v3
 
 > Referencia rápida de lo que expone la API externa integrada (RNF #14).
 > Se usa para implementar `TMDBClient` (C-01), la caché (C-02), la
@@ -46,7 +46,7 @@
 - [TV Episodes](#tv-episodes)
 - [TV Episode Groups](#tv-episode-groups)
 - [Watch Providers](#watch-providers)
-- [Uso en FilmIA (tool calling)](#uso-en-filmia-tool-calling)
+- [Uso en FilmAI (tool calling)](#uso-en-filmai-tool-calling)
 
 ---
 
@@ -72,7 +72,7 @@
 | GET | `/account/{account_id}/watchlist/tv` | Series en watchlist. |
 | GET | `/account/{account_id}/lists` | Listas de la cuenta. |
 
-> Nota: la cuenta de FilmIA es propia; estos endpoints no se usan como fuente de
+> Nota: la cuenta de FilmAI es propia; estos endpoints no se usan como fuente de
 > datos del usuario (eso vive en nuestra BD).
 
 ## Certifications
@@ -132,7 +132,7 @@
 | GET | `/discover/movie` | Descubrir películas por filtros (género, año, rating, etc.). |
 | GET | `/discover/tv` | Descubrir series por filtros. |
 
-> **Uso en FilmIA**: base de la herramienta `top_por_genero` y del
+> **Uso en FilmAI**: base de la herramienta `top_por_genero` y del
 > "Recomendado para ti" (Home, doc 04 sección 3.3).
 
 ## Find
@@ -163,7 +163,7 @@
 | GET | `/keyword/{keyword_id}` | Detalle de un keyword. |
 | GET | `/keyword/{keyword_id}/movies` | Películas asociadas a un keyword. |
 
-> **Uso en FilmIA**: los keywords de cada producción se sincronizan en C-04 vía
+> **Uso en FilmAI**: los keywords de cada producción se sincronizan en C-04 vía
 > `/movie/{id}/keywords` y `/tv/{id}/keywords` (sección Movies/TV) y alimentan el
 > texto a embebear del retrieval semántico (B-06).
 
@@ -254,7 +254,7 @@
 | GET | `/trending/person/{time_window}` | Personas en tendencia. |
 | GET | `/trending/tv/{time_window}` | Series en tendencia. |
 
-> **Uso en FilmIA**: fuente de las filas "Tendencias de la semana" (Home, C-05) y
+> **Uso en FilmAI**: fuente de las filas "Tendencias de la semana" (Home, C-05) y
 > de la sync diaria (C-04).
 
 ## TV
@@ -328,7 +328,7 @@
 
 ---
 
-## Uso en FilmIA (tool calling)
+## Uso en FilmAI (tool calling)
 
 | Herramienta del LLM (B-02) | Endpoint(s) de TMDB |
 | :--- | :--- |

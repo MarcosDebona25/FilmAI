@@ -1,4 +1,4 @@
-# FilmIA — Lineamientos de Diseño de Interfaces
+# FilmAI — Lineamientos de Diseño de Interfaces
 
 > Documento de trabajo para guiar el diseño en Figma. Se actualiza incrementalmente.
 
@@ -113,7 +113,7 @@ Todas las pantallas autenticadas comparten:
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  HEADER (navbar fijo, ~64px)                             │
-│  [FilmIA]  Inicio  Buscar  Listas             [Avatar]  │
+│  [FilmAI]  Inicio  Buscar  Listas             [Avatar]  │
 ├──────────────────────────────────────────────────────────┤
 │                                                          │
 │  CONTENT AREA                                            │
@@ -408,7 +408,7 @@ de un componente "Modal" en Figma:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  [FilmIA]  Inicio  Buscar  [Listas]                [Avatar]     │
+│  [FilmAI]  Inicio  Buscar  [Listas]                [Avatar]     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  Listas                                                          │
@@ -485,7 +485,7 @@ de un componente "Modal" en Figma:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  [FilmIA]  Inicio  Buscar  [Listas]                [Avatar]     │
+│  [FilmAI]  Inicio  Buscar  [Listas]                [Avatar]     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  Listas > Sci-Fi                                 ⋮              │
@@ -594,7 +594,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ```
 ┌──────────────────────────────────────────┐
 │                                          │
-│               FilmIA                     │
+│               FilmAI                     │
 │                                          │
 │         Iniciar sesión                   │
 │                                          │
@@ -640,7 +640,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ```
 ┌──────────────────────────────────────────┐
-│               FilmIA                     │
+│               FilmAI                     │
 │         Crear cuenta                     │
 │                                          │
 │  Nombre                                  │
@@ -722,7 +722,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ```
 ┌──────────────────────────────────────────┐
 │                                          │
-│               FilmIA                     │
+│               FilmAI                     │
 │                                          │
 │                  ✉️                      │
 │                                          │
@@ -839,7 +839,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ```
 ┌──────────────────────────────────────────┐
-│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+│  [FilmAI]  Inicio  Buscar  Listas  [A]    │
 ├──────────────────────────────────────────┤
 │                                          │
 │                  🔍                      │
@@ -858,7 +858,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ```
 ┌──────────────────────────────────────────┐
-│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+│  [FilmAI]  Inicio  Buscar  Listas  [A]    │
 ├──────────────────────────────────────────┤
 │                                          │
 │                   ⚠️                     │
@@ -880,7 +880,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ```
 ┌──────────────────────────────────────────┐
-│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+│  [FilmAI]  Inicio  Buscar  Listas  [A]    │
 ├──────────────────────────────────────────┤
 │  Mis reseñas                             │
 │                                          │
@@ -933,7 +933,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ```
 ┌──────────────────────────────────────────┐
-│  [FilmIA]  Inicio  Buscar  Listas  [A]    │
+│  [FilmAI]  Inicio  Buscar  Listas  [A]    │
 ├──────────────────────────────────────────┤
 │  Preferencias                            │
 │                                          │
@@ -957,7 +957,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │                                          │
 │  Recomendaciones semanales     [●━━━]    │
 │  Reseñas en tus listas         [●━━━]    │
-│  Novedades de FilmIA           [━━━━]    │
+│  Novedades de FilmAI           [━━━━]    │
 │                                          │
 │  ──── Cuenta ────                        │
 │                                          │
@@ -972,7 +972,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 |---------|----------|------------|
 | **Apariencia** | Toggle Oscuro / Claro | Cambio inmediato de tema. Default: Oscuro. |
 | **Privacidad** | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros. |
-| **Notificaciones** | 3 switches independientes | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmIA (changelog). |
+| **Notificaciones** | 3 switches independientes | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog). |
 | **Cuenta** | Botón danger "Dar de baja cuenta" | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es permanente. Perderás tus listas, reseñas y calificaciones." Botones Cancelar / Dar de baja. |
 
 ### Breadcrumb

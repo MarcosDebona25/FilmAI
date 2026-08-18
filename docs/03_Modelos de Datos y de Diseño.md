@@ -2,7 +2,7 @@
 
 ## PLANTILLA 03: MODELOS DE DATOS Y DE DISEÑO
 
-**TÍTULO DE LA IDEA/PROYECTO: FilmIA**
+**TÍTULO DE LA IDEA/PROYECTO: FilmAI**
 
 | Fecha de Presentación |
 | :---: |
@@ -109,7 +109,7 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 - `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
 - `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
 - `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
-- `notifNovedades` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre novedades de FilmIA.
+- `notifNovedades` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre novedades de FilmAI.
 
 **Campo en Usuario para OAuth:**
 - `googleId` (VARCHAR(100), UNIQUE, NULLABLE): Identificador único de la cuenta de Google asociada. Solo se completa para cuentas creadas mediante autenticación con Google OAuth. En estos casos, el campo `password` (contraseña) puede ser NULL.

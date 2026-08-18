@@ -1,4 +1,4 @@
-# AGENTS.md — Reglas para agentes que trabajan en FilmIA
+# AGENTS.md — Reglas para agentes que trabajan en FilmAI
 
 Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 en este repositorio.
