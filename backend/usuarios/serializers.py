@@ -191,6 +191,31 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             login = self.get_social_login(
                 adapter, app, token, response={"id_token": id_token}
             )
+        except (
+            DjangoPermissionDenied,
+            OAuth2Error,
+            HTTPError,
+            RequestException,
+        ) as err:
+            raise serializers.ValidationError(
+                "No se pudo autenticar con Google."
+            ) from err
+
+        if not login.is_existing:
+            # Campos que Google no provee: obligatorios para cuentas nuevas.
+            # Validar ANTES de complete_social_login para evitar que allauth
+            # persista un usuario incompleto.
+            faltantes = [
+                campo for campo in CAMPOS_FALTANTES_GOOGLE if not attrs.get(campo)
+            ]
+            if faltantes:
+                raise serializers.ValidationError(
+                    dict.fromkeys(
+                        faltantes, "Este campo es obligatorio para completar tu cuenta."
+                    )
+                )
+
+        try:
             ret = complete_social_login(request, login)
         except (
             DjangoPermissionDenied,
@@ -205,17 +230,6 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             raise serializers.ValidationError(ret.content)
 
         if not login.is_existing:
-            # Campos que Google no provee: obligatorios para cuentas nuevas.
-            faltantes = [
-                campo for campo in CAMPOS_FALTANTES_GOOGLE if not attrs.get(campo)
-            ]
-            if faltantes:
-                raise serializers.ValidationError(
-                    dict.fromkeys(
-                        faltantes, "Este campo es obligatorio para completar tu cuenta."
-                    )
-                )
-
             if allauth_account_settings.UNIQUE_EMAIL:
                 email = getattr(login.user, "email", None)
                 if email and Usuario.objects.filter(correo__iexact=email).exists():

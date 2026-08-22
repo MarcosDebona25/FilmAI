@@ -5,31 +5,23 @@ export function apiUrl(path: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Tokens: access/refresh en localStorage (la cookie httpOnly `access` la setea
-// el backend para el middleware de Next.js; las llamadas a la API se
-// autentican con el header Authorization).
+// Token: solo el access token se guarda en localStorage para el header
+// Authorization. El refresh token viaja como cookie httpOnly (seteada por el
+// backend con JWT_AUTH_HTTPONLY=True) y no es accesible desde JavaScript.
 // ---------------------------------------------------------------------------
 const ACCESS_KEY = "filmai_access";
-const REFRESH_KEY = "filmai_refresh";
 
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(ACCESS_KEY);
 }
 
-export function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(REFRESH_KEY);
-}
-
-export function storeTokens(access: string, refresh: string): void {
+export function storeTokens(access: string, _refresh?: string): void {
   window.localStorage.setItem(ACCESS_KEY, access);
-  window.localStorage.setItem(REFRESH_KEY, refresh);
 }
 
 export function clearTokens(): void {
   window.localStorage.removeItem(ACCESS_KEY);
-  window.localStorage.removeItem(REFRESH_KEY);
 }
 
 export class ApiError extends Error {
@@ -82,7 +74,14 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
   if (res.status === 204) return undefined as T;
 
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data: unknown = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Non-JSON response body — leave data as null.
+    }
+  }
 
   if (!res.ok) {
     throw new ApiError(res.status, extractError(data) ?? `Error ${res.status}`, data);

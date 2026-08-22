@@ -5,6 +5,69 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 22/08/2026 — Datepicker de fecha de nacimiento: máximo hoy −13 años
+
+- **Descripción**: los inputs `type="date"` de fecha de nacimiento (registro
+  tradicional y completado de Google) definen `max` como la fecha de hoy menos
+  13 años. Esto brinda feedback visual inmediato al usuario, impidiendo
+  seleccionar fechas que el backend rechazaría. La validación backend
+  (`validate_fecha_nacimiento` en `serializers.py`) sigue siendo la enforcement
+  definitiva.
+- **Motivo**: mejorar la UX del datepicker sin duplicar lógica de negocio;
+  el navegador grisará las fechas no elegibles.
+- **Archivos**: `frontend/app/(public)/register/page.tsx`,
+  `frontend/app/completar-google/page.tsx`.
+
+## 22/08/2026 — JWT_AUTH_SECURE derivado del entorno; JWTCookieAuthentication
+
+- **Descripción**: `JWT_AUTH_SECURE` ahora se lee de la variable de entorno
+  (default `True`); en desarrollo local se puede setear `False` en `.env`.
+  Además, se reemplazó `JWTAuthentication` de simplejwt por
+  `JWTCookieAuthentication` de dj-rest-auth para soportar autenticación tanto
+  por header Bearer como por la cookie httpOnly `access`.
+- **Motivo**: seguridad en producción (cookies Secure) y compatibilidad con
+  el flujo de cookies httpOnly que ya usa dj-rest-auth.
+- **Archivos**: `backend/filmai/settings.py`.
+
+## 22/08/2026 — Registro de Usuario en Django Admin
+
+- **Descripción**: se registró `usuarios.Usuario` en `admin.py` con un
+  `UsuarioAdmin` personalizado que adapta los fieldsets de `UserAdmin` a los
+  campos del modelo (`correo`, `nombre_usuario`, `nombre`, `apellido`, etc.).
+- **Motivo**: permitir la gestión de usuarios desde el panel de administración
+  de Django (Módulo 6); el archivo estaba vacío y el modelo no aparecía.
+- **Archivos**: `backend/usuarios/admin.py`.
+
+## 22/08/2026 — transaction.atomic en señal de aprovisionamiento
+
+- **Descripción**: el handler `crear_recursos_por_defecto` (señal `post_save`
+  de `Usuario`) ahora envuelve la creación de listas y chat en
+  `transaction.atomic()`, de modo que un fallo en cualquier escritura revierte
+  todas las creaciones parciales.
+- **Motivo**: garantizar consistencia: si la creación del Chat falla, las
+  listas tampoco se persisten.
+- **Archivos**: `backend/usuarios/signals.py`.
+
+## 22/08/2026 — Validación de campos Google antes de complete_social_login
+
+- **Descripción**: en `GoogleSocialLoginSerializer.validate`, la validación de
+  `CAMPOS_FALTANTES_GOOGLE` ahora se ejecuta antes de `complete_social_login`
+  para evitar que allauth persista un usuario incompleto cuando faltan
+  `nombre_usuario`, `fecha_nacimiento` o `genero`.
+- **Motivo**: prevenir usuarios huérfanos en la BD cuando la pantalla de
+  completación aún no envió los campos faltantes.
+- **Archivos**: `backend/usuarios/serializers.py`.
+
+## 22/08/2026 — Refresh token fuera de localStorage
+
+- **Descripción**: `storeTokens` del frontend ya no persiste el refresh token
+  en localStorage; el refresh token viaja exclusivamente como cookie httpOnly
+  seteada por el backend (`JWT_AUTH_HTTPONLY: True`). Se eliminó
+  `getRefreshToken` y `REFRESH_KEY`.
+- **Motivo**: reducir la superficie de ataque XSS; el refresh token solo debe
+  ser accesible por el navegador (cookie httpOnly), no por JavaScript.
+- **Archivos**: `frontend/lib/api.ts`.
+
 ## 22/08/2026 — Fecha de nacimiento con datepicker nativo
 
 - **Descripción**: el campo "Fecha de nacimiento" (registro tradicional y

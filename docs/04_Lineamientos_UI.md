@@ -658,7 +658,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  └──────────────────────────────────┘    │
 │  Fecha de nacimiento                     │
 │  ┌──────────────────────────────────┐    │
-│  │ dd/mm/aaaa                       │    │
+│  │ aaaa-mm-dd               [📅]   │    │
 │  └──────────────────────────────────┘    │
 │    Debés tener al menos 13 años         │
 │  Género                                  │
@@ -671,7 +671,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  └──────────────────────────────────┘    │
 │    8-20 caracteres · 1 mayúscula ·      │
 │    1 minúscula · 1 número · 1 especial  │
-│    (@ # $ % & *)                         │
+│    (@ # $ % & * !)                       │
 │  Confirmar contraseña                    │
 │  ┌──────────────────────────────────┐    │
 │  │                          [👁]    │    │

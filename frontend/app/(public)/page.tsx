@@ -26,20 +26,23 @@ export default function PublicHome() {
           alt="Collage de posters de películas"
           fill
           priority
+          sizes="(max-width: 767px) 0px, 50vw"
           className="object-cover"
         />
-        <select
-          value={poster}
-          onChange={(e) => setPoster(e.target.value)}
-          aria-label="Elegir poster"
-          className="absolute bottom-4 left-4 rounded-lg border border-border bg-card/80 px-3 py-2 text-sm text-foreground backdrop-blur"
-        >
-          {POSTERS.map((p) => (
-            <option key={p.src} value={p.src}>
-              {p.label}
-            </option>
-          ))}
-        </select>
+        {process.env.NODE_ENV === "development" && (
+          <select
+            value={poster}
+            onChange={(e) => setPoster(e.target.value)}
+            aria-label="Elegir poster"
+            className="absolute bottom-4 left-4 rounded-lg border border-border bg-card/80 px-3 py-2 text-sm text-foreground backdrop-blur"
+          >
+            {POSTERS.map((p) => (
+              <option key={p.src} value={p.src}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        )}
       </aside>
 
       {/* Contenido centrado */}

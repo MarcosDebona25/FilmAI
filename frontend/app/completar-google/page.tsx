@@ -15,6 +15,13 @@ const GENEROS = [
   { value: "no_especifica", label: "No especificar" },
 ];
 
+/** Fecha máxima para el datepicker: hoy −13 años (enforcement visual; el backend valida). */
+function maxFechaNacimiento(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 13);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function CompletarGooglePage() {
   const router = useRouter();
   const [idToken, setIdToken] = useState<string | null>(null);
@@ -83,6 +90,7 @@ export default function CompletarGooglePage() {
             <input
               className={inputClass}
               type="date"
+              max={maxFechaNacimiento()}
               value={fechaNacimiento}
               onChange={(e) => setFechaNacimiento(e.target.value)}
               required
