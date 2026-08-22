@@ -5,6 +5,33 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 22/08/2026 — Adopción de dj-rest-auth + django-allauth para autenticación
+
+- **Descripción**: Se adoptó `dj-rest-auth` + `django-allauth` como stack de
+  autenticación, cubriendo tanto el registro tradicional (email + contraseña)
+  como el inicio de sesión con Google OAuth (proveedor `socialaccount` de
+  allauth, expuesto vía `dj-rest-auth`). La confirmación de cuenta utiliza el
+  token de confirmación de email propio de allauth (no un JWT de un solo uso).
+- **Motivo**: No reinventar el intercambio de tokens OAuth ni la verificación
+  de email; aprovechar librerías mantenidas y estándar para SPA + JWT.
+- **Decisiones asociadas**:
+  - **bcrypt** como hasher (`PASSWORD_HASHERS` con `BCryptSHA256PasswordHasher`
+    + dependencia `bcrypt`); cumple RNF #2 / RNF #12.
+  - **`is_active` (Opción A1)**: propiedad derivada de `estado` (getter
+    `estado == ACTIVA`) con *setter* (`True → estado = ACTIVA`, `False` =
+    no-op). Se elimina la columna huérfana `is_active` de la BD. `estado`
+    (PENDIENTE/ACTIVA/BAJA) es la única fuente de verdad.
+  - **Usuario Google nuevo**: `estado = ACTIVA` directo (Google ya verifica el
+    email, sin confirmación por correo) + pantalla intermedia de UI para
+    completar `nombre_usuario`, `fecha_nacimiento` y `genero` (campos que
+    Google no provee). `google_id` se mantiene y se sincroniza desde
+    `SocialAccount.uid`.
+- **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md` (A-01..A-08),
+  `docs/04_Lineamientos_UI.md`, `docs/03_Modelos de Datos y de Diseño.md`,
+  `docs/02_Especificación de Requerimientos.md` (CU-002); pendientes de
+  implementación: `backend/usuarios/models.py`, `backend/filmai/settings.py`,
+  `backend/requirements.txt`.
+
 ## 18/08/2026 — Renombrado completo de la aplicación: FilmIA → FilmAI
 
 - **Descripción**: Se realizó un análisis end-to-end del repositorio para

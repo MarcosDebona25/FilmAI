@@ -135,7 +135,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | :---- | :---- |
 | 1. El usuario accede a su bandeja de correo electrónico. | — |
 | 2. El usuario hace clic en el enlace de confirmación incluido en el correo. | — |
-| 3. El sistema valida la confirmación. | — |
+| 3. El sistema valida la confirmación mediante el token de confirmación de email de allauth (no un JWT de un solo uso). | — |
 | 4. El sistema activa la cuenta del usuario. | — |
 | 5. El sistema muestra un mensaje de confirmación exitosa. | — |
 | 6. El caso de uso termina. | — |
