@@ -94,6 +94,10 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    environment:
+      # Next.js expone a la app solo las variables prefijadas NEXT_PUBLIC_*.
+      # Se reutiliza el mismo client_id de Google del .env global.
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     volumes:
       - ./frontend:/app                 # monta TODO el código → hot-reload real
       - /app/node_modules              # volumen anónimo: no pisar node_modules del contenedor

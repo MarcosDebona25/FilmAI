@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 from decouple import config
@@ -39,9 +40,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     # Terceros
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    # Autenticación (django-allauth + dj-rest-auth)
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
     # Apps de FilmAI
     "usuarios",
     "catalogo",
@@ -56,6 +66,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -115,6 +126,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
+    {
+        "NAME": "usuarios.validators.ComplejidadContrasenaValidator",
+    },
 ]
 
 
@@ -172,3 +186,102 @@ CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
     default="http://localhost:3000",
 ).split(",")
+
+# Necesario para que el frontend (httpOnly cookies JWT) envíe credenciales.
+CORS_ALLOW_CREDENTIALS = True
+
+
+# =============================================================================
+# Autenticación — django-allauth + dj-rest-auth + JWT (simplejwt)
+# =============================================================================
+# Stack adoptado (docs/decisiones.md, 22/08/2026): registro tradicional
+# (email + contraseña) y login con Google OAuth vía dj-rest-auth sobre
+# django-allauth. Referencia: https://docs.allauth.org/en/dev/index.html
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    # Login por username/email en el Django Admin.
+    "django.contrib.auth.backends.ModelBackend",
+    # Login por email/username gestionado por allauth.
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# --- Hasheo de contraseñas (RNF #2: bcrypt) ---
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
+# --- Email (modo desarrollo: console backend) ---
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="") or (
+    "django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="") or "noreply@filmai.com"
+
+# --- URL del frontend (SPA Next.js) ---
+FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
+
+# --- django-allauth ---
+ACCOUNT_ADAPTER = "usuarios.adapter.UsuarioAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "usuarios.adapter.UsuarioSocialAccountAdapter"
+
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "nombre_usuario"
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "correo"
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "[FilmAI] "
+
+# Google verifica el email por su cuenta: no se reenvía confirmación.
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        # Credenciales OAuth desde el entorno (.env). Ver .env.example.
+        "APPS": [
+            {
+                "client_id": config("GOOGLE_CLIENT_ID", default="") or "",
+                "secret": config("GOOGLE_CLIENT_SECRET", default="") or "",
+                "key": "",
+            }
+        ],
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "VERIFIED_EMAIL": True,
+    }
+}
+
+# --- dj-rest-auth + JWT ---
+REST_AUTH = {
+    "USE_JWT": True,
+    "TOKEN_MODEL": None,
+    "JWT_AUTH_COOKIE": "access",
+    "JWT_AUTH_REFRESH_COOKIE": "refresh",
+    "JWT_AUTH_HTTPONLY": True,
+    "JWT_AUTH_SAMESITE": "Lax",
+    "JWT_AUTH_SECURE": False,
+    "REGISTER_SERIALIZER": "usuarios.serializers.RegisterSerializer",
+    "LOGIN_SERIALIZER": "usuarios.serializers.LoginSerializer",
+    "USER_DETAILS_SERIALIZER": "usuarios.serializers.UsuarioDetallesSerializer",
+}
+
+_JWT_ACCESS_MINUTES = (
+    config("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", default="480") or "480"
+)
+_JWT_REFRESH_DAYS = config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default="7") or "7"
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(_JWT_ACCESS_MINUTES)),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(_JWT_REFRESH_DAYS)),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
