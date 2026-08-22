@@ -171,7 +171,7 @@ AUTH_USER_MODEL = "usuarios.Usuario"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
 }
@@ -266,7 +266,7 @@ REST_AUTH = {
     "JWT_AUTH_REFRESH_COOKIE": "refresh",
     "JWT_AUTH_HTTPONLY": True,
     "JWT_AUTH_SAMESITE": "Lax",
-    "JWT_AUTH_SECURE": False,
+    "JWT_AUTH_SECURE": config("JWT_AUTH_SECURE", default="True", cast=bool),
     "REGISTER_SERIALIZER": "usuarios.serializers.RegisterSerializer",
     "LOGIN_SERIALIZER": "usuarios.serializers.LoginSerializer",
     "USER_DETAILS_SERIALIZER": "usuarios.serializers.UsuarioDetallesSerializer",

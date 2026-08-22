@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Inter, Roboto } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -23,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
-      <body className={`${roboto.variable} antialiased`}>
+      <body className={`${inter.variable} ${roboto.variable} antialiased`}>
         <Navbar />
         {children}
       </body>

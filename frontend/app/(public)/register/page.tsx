@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Eye, EyeOff, Info } from "lucide-react";
 
 import { GoogleButton } from "@/components/GoogleButton";
 import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch, storeTokens } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
+import { handleGoogleLogin } from "@/lib/google-auth";
 
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
@@ -18,7 +20,15 @@ const GENEROS = [
   { value: "no_especifica", label: "No especificar" },
 ];
 
+/** Fecha máxima para el datepicker: hoy −13 años (enforcement visual; el backend valida). */
+function maxFechaNacimiento(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 13);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
@@ -32,6 +42,8 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [reenviando, setReenviando] = useState(false);
+  const [reenviado, setReenviado] = useState(false);
   const [mostrarPassword1, setMostrarPassword1] = useState(false);
   const [mostrarPassword2, setMostrarPassword2] = useState(false);
 
@@ -76,28 +88,14 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      const data = await apiFetch<{ access: string; refresh: string }>("/api/auth/google/", {
-        method: "POST",
-        body: { id_token: idToken },
-        auth: false,
-      });
-      storeTokens(data.access, data.refresh);
-      window.location.href = "/";
-    } catch (err) {
-      const faltaCampos =
-        err instanceof ApiError &&
-        err.status === 400 &&
-        typeof err.details === "object" &&
-        err.details !== null &&
-        ["nombre_usuario", "fecha_nacimiento", "genero"].some(
-          (k) => k in (err.details as Record<string, unknown>)
-        );
-      if (faltaCampos) {
-        sessionStorage.setItem("google_id_token", idToken);
-        window.location.href = "/completar-google";
-        return;
+      const result = await handleGoogleLogin(idToken);
+      if (result.ok) {
+        router.push("/");
+      } else if (result.faltaCampos) {
+        router.push("/completar-google");
+      } else {
+        setError(result.error);
       }
-      setError(err instanceof ApiError ? err.message : "Error al registrarte con Google.");
     } finally {
       setLoading(false);
     }
@@ -113,9 +111,39 @@ export default function RegisterPage() {
             <span className="text-foreground">{form.correo}</span>. Si no lo encontrás, revisá la
             carpeta de spam.
           </p>
-          <Link href="/login" className="text-primary hover:underline">
-            ¿Ya confirmaste? Iniciar sesión
-          </Link>
+          <div className="flex flex-col items-center gap-3">
+            <button
+              type="button"
+              disabled={reenviando}
+              onClick={async () => {
+                setReenviando(true);
+                setError(null);
+                try {
+                  await apiFetch("/api/auth/registration/resend-email/", {
+                    method: "POST",
+                    body: { email: form.correo },
+                    auth: false,
+                  });
+                  setReenviado(true);
+                } catch (err) {
+                  setError(err instanceof ApiError ? err.message : "No se pudo reenviar el correo.");
+                } finally {
+                  setReenviando(false);
+                }
+              }}
+              className="text-sm text-primary hover:underline disabled:opacity-50"
+            >
+              {reenviando ? "Reenviando…" : reenviado ? "✓ Correo reenviado" : "Reenviar correo"}
+            </button>
+            {error && (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+            <Link href="/login" className="text-primary hover:underline">
+              ¿Ya confirmaste? Iniciar sesión
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -183,6 +211,7 @@ export default function RegisterPage() {
             <input
               className={inputClass}
               type="date"
+              max={maxFechaNacimiento()}
               value={form.fecha_nacimiento}
               onChange={(e) => setField("fecha_nacimiento", e.target.value)}
               required

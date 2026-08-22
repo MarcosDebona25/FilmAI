@@ -11,6 +11,7 @@ Los imports de `listas` y `chatbot` se hacen dentro de la función para evitar
 imports circulares en el arranque.
 """
 
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -25,24 +26,25 @@ def crear_recursos_por_defecto(sender, instance, created, **kwargs):
     if not created:
         return
 
-    from listas.models import Lista, TipoLista
+    with transaction.atomic():
+        from listas.models import Lista, TipoLista
 
-    for nombre in LISTAS_PREDETERMINADAS:
-        Lista.objects.create(
+        for nombre in LISTAS_PREDETERMINADAS:
+            Lista.objects.create(
+                usuario=instance,
+                nombre=nombre,
+                tipo=TipoLista.PREDETERMINADA,
+            )
+
+        from chatbot.models import Chat
+
+        Chat.objects.create(
             usuario=instance,
-            nombre=nombre,
-            tipo=TipoLista.PREDETERMINADA,
+            titulo="Chat",
+            contexto={
+                "resumen_historial": "",
+                "generos_preferidos": [],
+                "ultima_recomendacion": None,
+                "parametros_activos": [],
+            },
         )
-
-    from chatbot.models import Chat
-
-    Chat.objects.create(
-        usuario=instance,
-        titulo="Chat",
-        contexto={
-            "resumen_historial": "",
-            "generos_preferidos": [],
-            "ultima_recomendacion": None,
-            "parametros_activos": [],
-        },
-    )

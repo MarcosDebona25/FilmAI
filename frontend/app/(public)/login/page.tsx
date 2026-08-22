@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Eye, EyeOff } from "lucide-react";
@@ -9,23 +9,24 @@ import { Eye, EyeOff } from "lucide-react";
 import { GoogleButton } from "@/components/GoogleButton";
 import { Button } from "@/components/ui/button";
 import { ApiError, apiFetch, storeTokens } from "@/lib/api";
+import { handleGoogleLogin } from "@/lib/google-auth";
 
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
-function esFaltaDeCamposGoogle(details: unknown): boolean {
-  if (!details || typeof details !== "object") return false;
-  const keys = Object.keys(details);
-  return keys.some((k) => ["nombre_usuario", "fecha_nacimiento", "genero"].includes(k));
-}
-
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [identificador, setIdentificador] = useState("");
   const [password, setPassword] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const destino = (() => {
+    const next = searchParams.get("next");
+    return next && next.startsWith("/") ? next : "/";
+  })();
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -43,7 +44,7 @@ export default function LoginPage() {
         auth: false,
       });
       storeTokens(data.access, data.refresh);
-      router.push("/");
+      router.push(destino);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo iniciar sesión.");
     } finally {
@@ -55,20 +56,14 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const data = await apiFetch<{ access: string; refresh: string }>("/api/auth/google/", {
-        method: "POST",
-        body: { id_token: idToken },
-        auth: false,
-      });
-      storeTokens(data.access, data.refresh);
-      router.push("/");
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 400 && esFaltaDeCamposGoogle(err.details)) {
-        sessionStorage.setItem("google_id_token", idToken);
+      const result = await handleGoogleLogin(idToken);
+      if (result.ok) {
+        router.push(destino);
+      } else if (result.faltaCampos) {
         router.push("/completar-google");
-        return;
+      } else {
+        setError(result.error);
       }
-      setError(err instanceof ApiError ? err.message : "Error al iniciar con Google.");
     } finally {
       setLoading(false);
     }

@@ -49,7 +49,13 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     }
 
     if (document.getElementById(scriptId)) {
-      if (window.google?.accounts?.id) render();
+      if (window.google?.accounts?.id) {
+        render();
+      } else {
+        const existingScript = document.getElementById(scriptId)!;
+        existingScript.addEventListener("load", render);
+        return () => existingScript.removeEventListener("load", render);
+      }
       return;
     }
 
