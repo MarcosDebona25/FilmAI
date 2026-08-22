@@ -658,7 +658,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  └──────────────────────────────────┘    │
 │  Fecha de nacimiento                     │
 │  ┌──────────────────────────────────┐    │
-│  │ dd/mm/aaaa                       │    │
+│  │ aaaa-mm-dd               [📅]   │    │
 │  └──────────────────────────────────┘    │
 │    Debés tener al menos 13 años         │
 │  Género                                  │
@@ -671,7 +671,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  └──────────────────────────────────┘    │
 │    8-20 caracteres · 1 mayúscula ·      │
 │    1 minúscula · 1 número · 1 especial  │
-│    (@ # $ % & *)                         │
+│    (@ # $ % & * !)                       │
 │  Confirmar contraseña                    │
 │  ┌──────────────────────────────────┐    │
 │  │                          [👁]    │    │
@@ -695,9 +695,9 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 | Apellido | Solo letras, máx 50 caracteres. Obligatorio. |
 | Nombre de usuario | Alfanumérico, 5–25 caracteres, único. Validación inline de disponibilidad. |
 | Email | Formato válido usuario@dominio.com. Obligatorio. |
-| Fecha de nacimiento | Formato dd/mm/aaaa, no futura, ≥13 años. |
+| Fecha de nacimiento | Selector de fecha nativo (`type="date"`), no futura, ≥13 años. |
 | Género | Dropdown: Masculino / Femenino / No especificar. |
-| Contraseña | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*`). |
+| Contraseña | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*!`). |
 | Confirmar contraseña | Debe coincidir con Contraseña. |
 
 #### Google OAuth
