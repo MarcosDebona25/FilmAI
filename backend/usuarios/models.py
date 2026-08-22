@@ -157,6 +157,17 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         """
         return self.estado == EstadoCuenta.ACTIVA
 
+    @is_active.setter
+    def is_active(self, value):
+        """Permite que Django/allauth activen la cuenta (`is_active = True`).
+
+        Solo actúa sobre `True` (estado → ACTIVA). `False` es un no-op para no
+        degradar el estado: la "baja" es un flujo de negocio explícito, no un
+        toggle. Ver docs/decisiones.md (22/08/2026, Opción A1).
+        """
+        if value:
+            self.estado = EstadoCuenta.ACTIVA
+
     objects = UsuarioManager()
 
     USERNAME_FIELD = "correo"

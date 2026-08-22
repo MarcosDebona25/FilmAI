@@ -25,7 +25,7 @@ from catalogo.models import (
     Resena,
     TipoProduccion,
 )
-from chatbot.factories import ChatFactory, MensajeFactory
+from chatbot.factories import MensajeFactory
 from chatbot.models import Chat, Mensaje, TipoAutor
 from listas.factories import ListaFactory
 from listas.models import Lista, Tiene, TipoLista
@@ -124,11 +124,13 @@ class Command(BaseCommand):
         """Crea las 3 listas predeterminadas y algunas personalizadas por usuario."""
         for usuario in usuarios:
             listas = {}
+            # Las listas predeterminadas ya las crea la señal post_save de
+            # `usuarios` al dar de alta el usuario; aquí solo se reutilizan.
             for nombre in LISTAS_PREDETERMINADAS:
-                lista = Lista.objects.create(
+                lista, _ = Lista.objects.get_or_create(
                     usuario=usuario,
                     nombre=nombre,
-                    tipo=TipoLista.PREDETERMINADA,
+                    defaults={"tipo": TipoLista.PREDETERMINADA},
                 )
                 listas[nombre] = lista
 
@@ -146,9 +148,9 @@ class Command(BaseCommand):
             Tiene.objects.get_or_create(lista=lista, produccion=produccion)
 
     def _crear_chats(self, usuarios):
-        """Crea un chat por usuario con un intercambio de ejemplo."""
+        """Usa el chat por defecto (creado por la señal) y agrega mensajes."""
         for usuario in usuarios:
-            chat = ChatFactory.create(usuario=usuario)
+            chat, _ = Chat.objects.get_or_create(usuario=usuario, titulo="Chat")
             MensajeFactory.create(
                 chat=chat,
                 autor=TipoAutor.USUARIO,

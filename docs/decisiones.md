@@ -5,6 +5,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 22/08/2026 — Fecha de nacimiento con datepicker nativo
+
+- **Descripción**: el campo "Fecha de nacimiento" (registro tradicional y
+  completado de Google) usa el input HTML nativo `type="date"`, que valida
+  automáticamente y envía el valor en ISO `YYYY-MM-DD` (el backend ya acepta
+  `%Y-%m-%d` y `%d/%m/%Y`). El orden de visualización lo decide el locale del
+  navegador (mm/dd/aaaa en en-US, dd/mm/aaaa en es-ES).
+- **Motivo**: evitar la validación manual de texto libre y sus dolores de
+  cabeza; el datepicker nativo ya la hace. Se acepta la variación visual por
+  locale a cambio de validación automática.
+- **Archivos**: `frontend/app/(public)/register/page.tsx`,
+  `frontend/app/completar-google/page.tsx`,
+  `docs/02_Especificación de Requerimientos.md`, `docs/04_Lineamientos_UI.md`.
+
 ## 22/08/2026 — Adopción de dj-rest-auth + django-allauth para autenticación
 
 - **Descripción**: Se adoptó `dj-rest-auth` + `django-allauth` como stack de
@@ -12,6 +26,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   como el inicio de sesión con Google OAuth (proveedor `socialaccount` de
   allauth, expuesto vía `dj-rest-auth`). La confirmación de cuenta utiliza el
   token de confirmación de email propio de allauth (no un JWT de un solo uso).
+- **Referencia**: [django-allauth](https://docs.allauth.org/en/dev/index.html).
 - **Motivo**: No reinventar el intercambio de tokens OAuth ni la verificación
   de email; aprovechar librerías mantenidas y estándar para SPA + JWT.
 - **Decisiones asociadas**:
@@ -31,6 +46,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `docs/02_Especificación de Requerimientos.md` (CU-002); pendientes de
   implementación: `backend/usuarios/models.py`, `backend/filmai/settings.py`,
   `backend/requirements.txt`.
+
+## 22/08/2026 — Carácter `!` permitido en la contraseña
+
+- **Descripción**: Se amplió el conjunto de caracteres especiales válidos de la
+  contraseña (CU-001) para incluir `!`: ahora es `@#$%&*!`. Se actualizó el
+  validador (`usuarios/validators.py`) y la documentación (docs/02, docs/04 y
+  el wireframe).
+- **Motivo**: `!` es un carácter especial de uso común y el password de seed
+  (`Password123!`) ya lo usaba; se unifica para coherencia entre validación,
+  documentación y datos de desarrollo.
+- **Archivos**: `backend/usuarios/validators.py`,
+  `docs/02_Especificación de Requerimientos.md`,
+  `docs/04_Lineamientos_UI.md`, `docs/wireframes/Opcion 1/app.html`.
 
 ## 18/08/2026 — Renombrado completo de la aplicación: FilmIA → FilmAI
 
