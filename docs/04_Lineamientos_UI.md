@@ -704,7 +704,8 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 - Botón "Registrarse con Google" inicia flujo OAuth.
 - Si la cuenta de Google ya está asociada → inicia sesión directamente.
-- Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género).
+- Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género) en una pantalla intermedia.
+- El usuario nuevo creado con Google queda en estado **activa** directamente (Google ya verificó el correo; no requiere confirmación por email).
 - La contraseña no aplica para cuentas Google (se omite del form).
 
 #### Estados
@@ -741,7 +742,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 └──────────────────────────────────────────┘
 ```
 
-- Se accede tras registro exitoso o desde el link del email (ruta `/confirmar?token=...`).
+- Se accede tras registro exitoso o desde el link del email. El token es el de confirmación de email de **allauth** (no un JWT propio); la ruta la resuelve el backend y Next.js muestra éxito/error.
 - **Token válido**: toast "Cuenta confirmada." → redirect al Login.
 - **Reenviar enlace**: toast "Enlace reenviado." Rate-limit: 1 cada 60 segundos.
 - **"Iniciar sesión"**: vuelve al Login.

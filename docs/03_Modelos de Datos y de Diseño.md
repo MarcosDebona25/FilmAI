@@ -117,6 +117,13 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 **Cambio en Usuario:**
 - `contraseña` cambia de VARCHAR(50) a VARCHAR(128) para alojar el hash de bcrypt (60+ caracteres), en concordancia con el RNF #2.
 
+> **Consistencia de autenticación:** `is_active` NO es columna de BD; es una
+> propiedad derivada de `estado` (`is_active` es `True` solo si
+> `estado == activa`). El campo `googleId` se mantiene y se sincroniza con el
+> `uid` de la cuenta social de allauth (`SocialAccount.uid`). Así el modelo de
+> datos queda en concordia total con la autenticación (registro tradicional +
+> Google OAuth vía dj-rest-auth/allauth).
+
 **Cambio en Mensaje:**
 - `texto` cambia de VARCHAR(250) a TEXT para no truncar respuestas del chatbot (una respuesta del LLM puede superar 250 caracteres).
 
