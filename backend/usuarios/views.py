@@ -82,6 +82,8 @@ class UsernameDisponibleView(APIView):
     """
 
     permission_classes: ClassVar[list] = [permissions.AllowAny]
+    throttle_classes: ClassVar[list] = [ScopedRateThrottle]
+    throttle_scope = "username_disponible"
 
     def get(self, request):
         username = request.query_params.get("username", "")

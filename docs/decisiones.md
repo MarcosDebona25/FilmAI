@@ -402,18 +402,25 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   (confirmación de cuenta CU-002; a futuro A-07 password reset).
   1. **`filmai.email_backends.ResendBackend`**: traduce `EmailMessage` a
      `resend.Emails.send` (SDK oficial, `resend>=2.0`). Soporta texto y
-     alternativa HTML (`EmailMultiAlternatives`). Sin `RESEND_API_KEY` no
-     envía y loguea error en vez de romper el request.
+     alternativa HTML (`EmailMultiAlternatives`). Los destinatarios `to`,
+     `cc` y `bcc` van como campos separados (sin fusionar en `to` para no
+     exponer los BCC ni cambiar la semántica de los CC). En producción, la
+     ausencia de `RESEND_API_KEY` rompe el arranque (`ImproperlyConfigured`
+     vía `filmai.email_validation`) en lugar de degradar el envío a un
+     "éxito" silencioso.
   2. **Redirección de destinatario para testing sin dominio propio**: Resend
      solo permite enviar desde `onboarding@resend.dev` y únicamente al email
      dueño de la cuenta (403 con cualquier otro destinatario). Si
      `RESEND_TEST_RECIPIENT` está definido, TODO email saliente se redirige a
-     esa dirección: la confirmación de cualquier registro llega a esa bandeja
-     y el link sigue siendo válido para la cuenta registrada. Con dominio
-     propio verificado: borrar la variable y cambiar `DEFAULT_FROM_EMAIL`.
+     esa dirección (solo en entornos no productivos): la confirmación de
+     cualquier registro llega a esa bandeja y el link sigue siendo válido para
+     la cuenta registrada. En producción (`DEBUG=False`) la variable se
+     rechaza al arranque. Con dominio propio verificado: borrar la variable y
+     cambiar `DEFAULT_FROM_EMAIL`.
   3. **Variables** (`.env` + `.env.example`): `EMAIL_BACKEND`,
-     `RESEND_API_KEY`, `RESEND_TEST_RECIPIENT`, `DEFAULT_FROM_EMAIL`. Sin
-     configurar Resend, se usa console backend como antes.
+     `RESEND_API_KEY`, `RESEND_TEST_RECIPIENT`, `DEFAULT_FROM_EMAIL`. El
+     fallback a console backend solo aplica en desarrollo (sin `EMAIL_BACKEND`
+     configurado); en producción el backend debe elegirse explícitamente.
   4. **Comando de prueba**: `python manage.py send_test_email [destino]`.
   5. **Logging**: `LOGGING` mínimo en settings para ver cada envío
      (id de Resend) en `docker compose logs -f backend`.
@@ -482,6 +489,8 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
      Envía el email solo si existe cuenta ACTIVA con ese correo; la respuesta
      HTTP es idéntica siempre (no revela si el correo está registrado,
      docs/02 CU-020 obs.). Cuentas pendientes o de baja no reciben email.
+     Si el render o el envío del email falla, se loguea y se responde el
+     mismo mensaje genérico (no se rompe el request ni se revela la cuenta).
   2. **Email**: templates propios en
      `backend/templates/registration/recuperar_contrasena_{subject,message.txt,message.html}`
      — asunto "[FilmAI] Restablecimiento de contraseña", registro formal, card
@@ -501,8 +510,9 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   5. **Rate limit**: DRF `ScopedRateThrottle` con dos scopes:
      solicitud de email "recuperar_contrasena" 1/min (estricto, CU-020) y
      confirmación "restablecer_contrasena" 5/min (tolera reintentos por
-     validación inline). Caché LocMem por proceso (suficiente para dev;
-     producción usará Redis).
+     validación inline). `CACHES` usa Redis en producción (apunta al servicio
+     `redis` de Docker Compose) y LocMem en desarrollo; así los límites
+     aplican globalmente entre workers.
   6. **Frontend**: modal en login (campo email + validar formato + botones
      Enviar enlace/Cancelar, cierre por backdrop). Toast de éxito SIEMPRE
      ("Te enviamos un email..."); 429 → error inline pidiendo esperar un
@@ -538,3 +548,26 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   los 6 templates de `backend/templates/{account/email,registration}/`,
   `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`
   (asserts de saludo + test de fallback).
+
+## 24/08/2026 — Revisión de calidad: rate limit de disponibilidad, contraste de emails y pin de allauth
+
+- **Descripción**: se aplicaron correcciones surgidas de la revisión de
+  calidad:
+  1. **Rate limit de disponibilidad de username (A-05)**:
+     `UsernameDisponibleView` agrega `ScopedRateThrottle` con el scope
+     `username_disponible` (`30/min` por IP) registrado en
+     `DEFAULT_THROTTLE_RATES`, para acotar la enumeración de usernames en un
+     endpoint anónimo sin entorpecer el tipeo normal.
+  2. **Contraste del email de restablecimiento**: el texto secundario (13px)
+     del template `recuperar_contrasena_message.html` pasa de `#777777` a
+     `#a0a0a8` para cumplir el contraste 4.5:1 contra `#161625`.
+  3. **Pin de django-allauth**: se fija `django-allauth[socialaccount]==65.19.1`
+     en `requirements.txt` (antes `>=64.0.0,<66.0`) porque
+     `allauth.account.internal.flows.email_verification` (usado por
+     `ConfirmarCorreoView`) no es API pública y puede cambiar entre releases
+     menores; 65.19.1 es la versión instalada y probada en el contenedor.
+- **Motivo**: hallazgos de la revisión de calidad (seguridad anti-enumeración,
+  accesibilidad del correo y reproducibilidad de dependencias).
+- **Archivos**: `backend/usuarios/views.py`, `backend/filmai/settings.py`,
+  `backend/templates/registration/recuperar_contrasena_message.html`,
+  `backend/requirements.txt`.

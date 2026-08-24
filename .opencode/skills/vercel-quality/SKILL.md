@@ -31,8 +31,9 @@ Activate after frontend implementation is complete. This skill audits the output
 
 1. Load the implementation output (HTML/CSS/JSX/TSX files).
 2. Audit against each rule category in order.
-3. Report findings as a table: Rule | Severity | File/Line | Issue | Fix.
-4. Summarize: total violations, blockers, warnings.
+3. Report findings as a table: Category | Rule | Severity (MUST/SHOULD) | File/Line | Issue | Fix.
+4. NEVER-rule violations are blocking MUST findings.
+5. Summarize: total violations, blockers, warnings.
 
 ## Quality Rules
 
@@ -148,6 +149,6 @@ Activate after frontend implementation is complete. This skill audits the output
 
 Return a table with columns: Category | Rule | Severity (MUST/SHOULD) | File:Line | Issue | Fix.
 
-Then summarize: total violations found, blockers (MUST violations), warnings (SHOULD violations).
+NEVER-rule violations are reported as blocking MUST findings. Then summarize: total violations found, blockers (MUST violations), warnings (SHOULD violations).
 
 > La auditoría de calidad finalizó. Entregá este reporte a la skill de implementación para que corrija los bloqueantes. Los warnings quedan a criterio del equipo.

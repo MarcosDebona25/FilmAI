@@ -22,6 +22,7 @@ export default function RestablecerContrasenaPage() {
   const [password, setPassword] = useState("");
   const [confirmacion, setConfirmacion] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [errorPassword, setErrorPassword] = useState<string | null>(null);
   const [errorConfirmacion, setErrorConfirmacion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -175,8 +176,8 @@ export default function RestablecerContrasenaPage() {
             <div className="relative">
               <input
                 id="confirmar-password"
-                className={inputClass}
-                type={mostrarPassword ? "text" : "password"}
+                className={`${inputClass} pr-10`}
+                type={mostrarConfirmacion ? "text" : "password"}
                 value={confirmacion}
                 onChange={(e) => setConfirmacion(e.target.value)}
                 onBlur={() =>
@@ -187,6 +188,14 @@ export default function RestablecerContrasenaPage() {
                 autoComplete="new-password"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmacion((v) => !v)}
+                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
+                aria-label="Mostrar u ocultar confirmación"
+              >
+                {mostrarConfirmacion ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
             </div>
             {errorConfirmacion && (
               <p className="mt-1 text-sm text-destructive" role="alert">

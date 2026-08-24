@@ -14,6 +14,9 @@ from datetime import timedelta
 from pathlib import Path
 
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
+
+from filmai.email_validation import validar_configuracion_email
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -185,6 +188,9 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "recuperar_contrasena": "1/min",
         "restablecer_contrasena": "5/min",
+        # Disponibilidad de nombre de usuario (A-05): acota la enumeración de
+        # usernames sin entorpecer el tipeo normal (el frontend ya debouncea).
+        "username_disponible": "30/min",
     },
 }
 
@@ -230,17 +236,35 @@ PASSWORD_HASHERS = [
 
 # --- Email ---
 # Modo desarrollo sin configurar: console backend (los emails se imprimen).
+# El fallback a console solo aplica en desarrollo; en producción el backend
+# debe elegirse explícitamente (no hay degradación silenciosa a console).
 # Con Resend: EMAIL_BACKEND=filmai.email_backends.ResendBackend + RESEND_API_KEY.
-EMAIL_BACKEND = config("EMAIL_BACKEND", default="") or (
-    "django.core.mail.backends.console.EmailBackend"
-)
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="")
+if not EMAIL_BACKEND:
+    if DEBUG:
+        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    else:
+        raise ImproperlyConfigured(
+            "EMAIL_BACKEND es obligatorio en producción (DEBUG=False). "
+            "Configurá filmai.email_backends.ResendBackend u otro backend real."
+        )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="") or "noreply@filmai.com"
 # API key de Resend (https://resend.com/api-keys). Solo la usa ResendBackend.
 RESEND_API_KEY = config("RESEND_API_KEY", default="")
 # Sin dominio propio verificado, Resend solo permite enviar al email dueño de
 # la cuenta. Si se define, TODOS los emails salientes se redirigen a esta
-# dirección (testing end-to-end). En producción con dominio: dejar vacío.
+# dirección (testing end-to-end). Solo permitido en desarrollo: en producción
+# se rechaza al arranque (ver validar_configuracion_email).
 RESEND_TEST_RECIPIENT = config("RESEND_TEST_RECIPIENT", default="")
+
+# En producción, un backend de Resend mal configurado debe romper el arranque
+# antes que degradar el envío o redirigir emails silenciosamente.
+validar_configuracion_email(
+    debug=DEBUG,
+    email_backend=EMAIL_BACKEND,
+    resend_api_key=RESEND_API_KEY,
+    resend_test_recipient=RESEND_TEST_RECIPIENT,
+)
 
 # --- Logging ---
 # Mínimo para poder probar el envío de emails: cada envío vía Resend queda
@@ -264,6 +288,26 @@ LOGGING = {
 
 # --- URL del frontend (SPA Next.js) ---
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
+
+# --- Caché ---
+# Producción usa Redis (compartido entre workers): los `ScopedRateThrottle` de
+# DRF (recuperar_contrasena, restablecer_contrasena, username_disponible) usan
+# la caché "default" y así aplican los límites globalmente. Desarrollo usa
+# LocMem (por proceso, suficiente para un solo worker).
+REDIS_URL = config("REDIS_URL", default="redis://redis:6379/0")
+if DEBUG:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+        }
+    }
 
 # --- django-allauth ---
 ACCOUNT_ADAPTER = "usuarios.adapter.UsuarioAccountAdapter"

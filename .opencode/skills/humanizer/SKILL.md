@@ -1,6 +1,5 @@
 ---
 name: humanizer
-version: 2.8.2
 description: |
   Remove signs of AI-generated writing from text. Use when editing or reviewing
   text to make it sound more natural and human-written. Based on Wikipedia's
@@ -10,13 +9,8 @@ description: |
   voice, negative parallelisms, and filler phrases.
 license: MIT
 compatibility: any-agent
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - AskUserQuestion
+metadata:
+  version: 2.8.2
 ---
 
 # Humanizer: Remove AI Writing Patterns
@@ -49,7 +43,7 @@ If the user provides a writing sample (their own previous writing), analyze it b
 
 2. **Match their voice in the rewrite.** Don't just remove AI patterns - replace them with patterns from the sample. If they write short sentences, don't produce long ones. If they use "stuff" and "things," don't upgrade to "elements" and "components."
 
-3. **When no sample is provided,** fall back to the default behavior (natural, varied, opinionated voice from the PERSONALITY AND SOUL section below).
+3. **When no sample is provided,** fall back to the default behavior: neutral, plain prose for technical, legal, and reference content, and the natural, varied, opinionated voice from the PERSONALITY AND SOUL section for content that calls for personality (blog posts, essays, opinion, personal writing).
 
 ### How to provide a sample
 - Inline: "Humanize this text. Here's a sample of my writing for voice matching: [sample]"
@@ -258,7 +252,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ### 14. Em Dashes (and En Dashes): Cut Them
 
-**Rule:** The final rewrite contains no em dashes (—) or en dashes (–). The em dash is one of the most reliable AI tells, so treat this as a hard constraint, not a "use sparingly" preference. Replace each one, in rough order of preference: a period (start a new sentence), a comma (a tight aside), a colon (introducing an explanation), parentheses (a true aside), or restructure the sentence. Also catch spaced em dashes (` — `) and double hyphens (` -- `) used the same way.
+**Rule:** The final rewrite contains no em dashes (—) or en dashes (–) in the prose you write. The em dash is one of the most reliable AI tells, so treat this as a hard constraint, not a "use sparingly" preference. Replace each one, in rough order of preference: a period (start a new sentence), a comma (a tight aside), a colon (introducing an explanation), parentheses (a true aside), or restructure the sentence. Also catch spaced em dashes (` — `) and double hyphens (` -- `) used the same way. This rule applies only to your own generated prose: leave dashes alone inside quotations, titles, proper names, and examples where the dash is part of the source being quoted or discussed (see "What NOT to flag" below).
 
 **Before:**
 > The term is primarily promoted by Dutch institutions—not by the people themselves. You don't say "Netherlands, Europe" as an address—yet this mislabeling continues—even in official documents.
@@ -272,7 +266,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 **After:**
 > The new policy, announced without warning, affects thousands of workers. The changes, long overdue according to critics, will take effect immediately.
 
-Before returning the final rewrite, scan it for `—` and `–`. Any hit means the draft isn't done.
+Before returning the final rewrite, scan your own prose (not quotations, titles, proper names, or quoted examples) for `—` and `–`. Any hit in eligible prose means the draft isn't done.
 
 
 ### 15. Overuse of Boldface
@@ -325,13 +319,15 @@ Before returning the final rewrite, scan it for `—` and `–`. Any hit means t
 
 ### 19. Curly Quotation Marks
 
-**Problem:** ChatGPT uses curly quotes (“...”) instead of straight quotes ("...").
+**Problem:** ChatGPT uses curly quotes (“...”) instead of straight quotes ("...") in its own generated prose.
 
 **Before:**
 > He said “the project is on track” but others disagreed.
 
 **After:**
 > He said "the project is on track" but others disagreed.
+
+This applies only to prose you write. Do not convert quote characters inside quotations, titles, proper names, or examples where the curly quote is part of the source being quoted (see "What NOT to flag").
 
 
 ## COMMUNICATION PATTERNS
@@ -460,16 +456,22 @@ Before returning the final rewrite, scan it for `—` and `–`. Any hit means t
 **Problem:** LLMs often add a generic sentence after a heading as a rhetorical warm-up. It usually adds nothing and makes the prose feel padded.
 
 **Before:**
-> ## Performance
->
-> Speed matters.
->
-> When users hit a slow page, they leave.
+
+```markdown
+## Performance
+
+Speed matters.
+
+When users hit a slow page, they leave.
+```
 
 **After:**
-> ## Performance
->
-> When users hit a slow page, they leave.
+
+```markdown
+## Performance
+
+When users hit a slow page, they leave.
+```
 
 
 ### 30. Diff-Anchored Writing
@@ -562,8 +564,9 @@ When you see these, lean toward leaving the prose alone — they are evidence of
 
 1. Read the input carefully and identify every instance of the patterns above.
 2. Write a **draft rewrite**. Check that it reads naturally aloud, varies sentence length, prefers specific details and simple constructions (is/are/has), and keeps the appropriate register.
-3. Ask: **"What makes the below so obviously AI generated?"** Answer briefly with any remaining tells.
-4. Revise into a **final rewrite** that addresses them and contains no em or en dashes (see §14).
+3. **Never invent facts.** The rewrite may use only details present in the input. Do not add dates, names, places, prices, or experiences the input does not contain. Vivid specificity must come from the source, not from guessing a detail to sound human.
+4. Ask: **"What makes the below so obviously AI generated?"** Answer briefly with any remaining tells.
+5. Revise into a **final rewrite** that addresses them and contains no em or en dashes (see §14).
 
 Deliver the draft, the brief "still-AI" bullets, the final rewrite, and (optionally) a short summary of changes.
 
@@ -584,35 +587,31 @@ Deliver the draft, the brief "still-AI" bullets, the final rewrite, and (optiona
 > Would I go back? Absolutely. Lisbon isn't just a place to visit — it's a place to fall in love with, again and again. If you're dreaming of your next getaway, this is one destination that promises memories to last a lifetime. ✨
 
 **Draft rewrite:**
-> I spent five days in Lisbon last October and I am still a little split on it. The city is beautiful, but it is also more tiring than I expected.
+> I spent five days in Lisbon and I am still a little split on it. The city is beautiful, but the hills are more work than the photos let on.
 >
-> The hills are not a detail. My hotel was in Alfama, which looked great in photos and meant I had to climb a long staircase every time I wanted coffee. By the second day I was planning walks around which direction went downhill.
+> The hills are real. Every climb left my legs tired, and every climb ended in a view that made it worth it.
 >
-> I rode Tram 28 because everyone says to ride Tram 28. It was crowded, slow, and mostly full of people filming the same corners. The pastries were better. I had a warm custard tart in Graça that was worth the hype.
+> I rode Tram 28 through the historic neighborhoods because it is the thing everyone does. The pastries were better: a pastel de nata from Pastéis de Belém, still warm, was worth the line.
 >
-> The part I liked most was away from the main squares: laundry, tile, open windows, and people watching football in small cafes. The castle view was good, but the line was too long for what it was.
+> Away from the main squares the city calms down into sun-drenched alleys, tiled facades, and friendly locals going about their day. That quieter side is what I liked most.
 >
-> I would go back, but in spring and with better shoes.
+> São Jorge Castle has a great view over the rooftops, though the queue was long. I would go back.
 
 **What makes the below so obviously AI generated?**
 - The draft is too compressed compared with the original; it drops texture instead of rewriting it.
-- Some sentences still explain the point too cleanly ("The city is beautiful, but...").
+- Some sentences still state the point too cleanly ("The hills are real", "That quieter side is what I liked most").
 - The closer is flat and generic rather than a real ending in the same voice.
 
 **Now make it not obviously AI generated.**
-> I spent five days in Lisbon last October and still have mixed feelings about it. Beautiful, yes. Also harder on the knees than anyone warned me.
+> I spent five days in Lisbon and I am still deciding how I feel about it. The city is beautiful, but the hills are as steep as everyone says. Every climb was a real climb, and each one ended in a view that made the climb feel like the point.
 >
-> The hills are the whole story and somehow never make the brochures. My hotel was up in Alfama, which photographs beautifully and translates, in practice, to climbing what felt like a six-story staircase every time I wanted coffee. By the second day my calves had opinions. I started planning each walk around which way was downhill, which is a strange way to see a city but probably an honest one.
+> Tram 28 winds through the historic neighborhoods, so of course I rode it. The pastries were the better decision: a pastel de nata from Pastéis de Belém, still warm, is worth the hype it gets.
 >
-> Everyone says to ride Tram 28, so I did, wedged against a stranger's backpack for forty minutes while three tour groups filmed the same corner. I would walk the route next time, or go before breakfast. The custard tarts, though, earn the fuss. I had one at a plain little place in Graça, still warm, and for about thirty seconds I understood why people build trips around pastry.
+> What I liked most was the quieter side. A few steps off the main squares the city turns into sun-drenched alleys, tiled facades, and friendly locals going about their day. That is the Lisbon I would come back for, more than any single sight.
 >
-> What I did not expect was how quiet the city gets away from the main squares. Two blocks uphill from any plaza it turns into laundry lines, chipped tile, open windows, and old men watching football with the sound turned up. That is the Lisbon I keep thinking about, not the castle.
->
-> The castle is fine. The view is great, the queue is long, and I spent more time shuffling toward the entrance than looking at anything once I got inside. If I had only two days, I would trade it for an afternoon of getting lost.
->
-> I would go back, but in spring and with better shoes. Lisbon does not bend over backward to make things easy for you. I think I liked that, even when my legs disagreed.
+> São Jorge Castle looks out over the rooftops, and the view is as good as everyone says, but the queue is long enough to make you question it. I would go back, and I would plan the hills better this time.
 
-**Changes made:** Kept the first-person travel recap and roughly the same level of detail, but removed the chatbot framing, significance inflation, promotional language, forced enthusiasm, em dashes, rule-of-three cadence, generic upbeat conclusion, and emoji. Rebuilt the piece around concrete friction, mixed feelings, uneven rhythm, and specific scenes.
+**Changes made:** Kept the first-person travel recap and the details already in the source (five days, the hills, Tram 28, pastéis de nata at Pastéis de Belém, the quieter side, São Jorge Castle), while removing the chatbot framing, significance inflation, promotional language, forced enthusiasm, em dashes, rule-of-three cadence, generic upbeat conclusion, and emoji. Rebuilt the piece around concrete friction, mixed feelings, uneven rhythm, and the scenes from the source, with no invented dates, places, or experiences.
 
 
 ## Reference

@@ -12,7 +12,7 @@ la salida para que el resultado no confunda.
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
@@ -42,13 +42,21 @@ class Command(BaseCommand):
             )
         )
 
-        send_mail(
+        enviados = send_mail(
             subject="FilmAI — Email de prueba",
             message=mensaje,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[destino],
             fail_silently=False,
         )
+
+        # ResendBackend devuelve 0 (y loguea error) si falta RESEND_API_KEY:
+        # el comando debe fallar en vez de reportar un envío que no ocurrió.
+        if enviados != 1:
+            raise CommandError(
+                "El email no se envió (send_mail devolvió %r). Verificá "
+                "RESEND_API_KEY y la configuración de EMAIL_BACKEND." % enviados
+            )
 
         self.stdout.write(self.style.SUCCESS(f"Email enviado a {destino}"))
         if override and destino != override:

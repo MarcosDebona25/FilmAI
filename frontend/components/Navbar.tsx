@@ -20,7 +20,13 @@ type Usuario = {
 } | null;
 
 function iniciales(u: NonNullable<Usuario>): string {
-  return `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
+  const iniciales = `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
+  if (iniciales.trim()) {
+    return iniciales;
+  }
+  // Sin nombre ni apellido (p.ej. cuenta de Google sin perfil): usamos la
+  // inicial del nombre de usuario, que siempre existe, en vez de un avatar vacío.
+  return u.nombre_usuario.charAt(0).toUpperCase() || "?";
 }
 
 export function Navbar() {
@@ -31,6 +37,7 @@ export function Navbar() {
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [confirmarLogout, setConfirmarLogout] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const cancelarRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     // En las rutas sin navbar no hay sesión que consultar.
@@ -59,6 +66,18 @@ export function Navbar() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [menuAbierto]);
+
+  // Diálogo de confirmación de logout: foco inicial en "Cancelar" y cierre
+  // con Escape, con limpieza del handler al cerrarse o desmontarse.
+  useEffect(() => {
+    if (!confirmarLogout) return;
+    cancelarRef.current?.focus();
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setConfirmarLogout(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [confirmarLogout]);
 
   // La landing y las pantallas de autenticación no llevan navbar.
   if (SIN_NAVBAR.includes(pathname)) return null;
@@ -150,7 +169,7 @@ export function Navbar() {
               Tendrás que iniciar sesión nuevamente para volver a acceder a tu cuenta.
             </p>
             <div className="flex justify-end gap-3">
-              <Button variant="secondary" size="sm" onClick={() => setConfirmarLogout(false)}>
+              <Button ref={cancelarRef} variant="secondary" size="sm" onClick={() => setConfirmarLogout(false)}>
                 Cancelar
               </Button>
               <Button variant="destructive" size="sm" onClick={logout}>
