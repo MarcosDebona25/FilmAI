@@ -14,7 +14,14 @@ class UsuarioAdmin(BaseUserAdmin):
     """
 
     # --- Listado ---
-    list_display = ("correo", "nombre_usuario", "nombre", "apellido", "estado", "is_staff")
+    list_display = (
+        "correo",
+        "nombre_usuario",
+        "nombre",
+        "apellido",
+        "estado",
+        "is_staff",
+    )
     list_filter = ("estado", "is_staff", "is_superuser", "genero")
     search_fields = ("correo", "nombre_usuario", "nombre", "apellido")
     ordering = ("correo",)
@@ -22,15 +29,61 @@ class UsuarioAdmin(BaseUserAdmin):
     # --- Formulario de edición ---
     fieldsets = (
         (None, {"fields": ("correo", "password")}),
-        ("Información personal", {"fields": ("nombre_usuario", "nombre", "apellido", "fecha_nacimiento", "genero", "avatar_id")}),
-        ("Estado y permisos", {"fields": ("estado", "is_staff", "is_superuser", "groups", "user_permissions")}),
-        ("Preferencias", {"fields": ("tema", "perfil_publico", "notif_recomendaciones", "notif_resenas", "notif_novedades")}),
+        (
+            "Información personal",
+            {
+                "fields": (
+                    "nombre_usuario",
+                    "nombre",
+                    "apellido",
+                    "fecha_nacimiento",
+                    "genero",
+                    "avatar_id",
+                )
+            },
+        ),
+        (
+            "Estado y permisos",
+            {
+                "fields": (
+                    "estado",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+        (
+            "Preferencias",
+            {
+                "fields": (
+                    "tema",
+                    "perfil_publico",
+                    "notif_recomendaciones",
+                    "notif_resenas",
+                    "notif_novedades",
+                )
+            },
+        ),
     )
 
     # --- Formulario de creación ---
     add_fieldsets = (
-        (None, {
-            "classes": ("wide",),
-            "fields": ("correo", "nombre_usuario", "nombre", "apellido", "fecha_nacimiento", "genero", "password1", "password2"),
-        }),
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "correo",
+                    "nombre_usuario",
+                    "nombre",
+                    "apellido",
+                    "fecha_nacimiento",
+                    "genero",
+                    "password1",
+                    "password2",
+                ),
+            },
+        ),
     )

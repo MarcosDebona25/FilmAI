@@ -63,12 +63,14 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
         """Al confirmar el email, la cuenta pasa a estado `activa`.
 
         `is_active` es una propiedad derivada de `estado` (Opción A1), así que
-        activar la cuenta equivale a setear `estado = ACTIVA`.
+        activar la cuenta equivale a setear `estado = ACTIVA`. Devuelve el
+        resultado del super() porque allauth usa ese valor de retorno
+        (None ⇒ considera la dirección como no confirmada).
         """
         usuario = email_address.user
         usuario.estado = EstadoCuenta.ACTIVA
         usuario.save(update_fields=["estado"])
-        super().confirm_email(request, email_address)
+        return super().confirm_email(request, email_address)
 
     def get_email_confirmation_url(self, request, emailconfirmation):
         """El link de confirmación apunta al frontend (SPA Next.js).

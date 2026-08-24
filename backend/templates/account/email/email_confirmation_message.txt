@@ -1,0 +1,15 @@
+{% load nombres %}Hola {{ user|nombre_completo }},
+
+Necesitamos confirmar su dirección de correo electrónico para activar
+su cuenta en FilmAI.
+
+Confirme su cuenta tocando el siguiente enlace:
+
+{{ activate_url }}
+
+Este enlace es válido durante 24 horas. Si se venció, puede pedir otro
+desde la pantalla de registro con "Reenviar correo".
+
+Si usted no creó esta cuenta, ignore este mensaje.
+
+El equipo de FilmAI
