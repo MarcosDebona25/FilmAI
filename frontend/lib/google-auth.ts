@@ -9,19 +9,23 @@ export function esFaltaDeCamposGoogle(details: unknown): boolean {
 }
 
 export type GoogleLoginResult =
-  | { ok: true }
+  | { ok: true; usuario?: string }
   | { ok: false; faltaCampos: true }
   | { ok: false; faltaCampos: false; error: string };
 
 export async function handleGoogleLogin(idToken: string): Promise<GoogleLoginResult> {
   try {
-    const data = await apiFetch<{ access: string; refresh: string }>("/api/auth/google/", {
+    const data = await apiFetch<{
+      access: string;
+      refresh: string;
+      user?: { nombre_usuario?: string };
+    }>("/api/auth/google/", {
       method: "POST",
       body: { id_token: idToken },
       auth: false,
     });
     storeTokens(data.access, data.refresh);
-    return { ok: true };
+    return { ok: true, usuario: data.user?.nombre_usuario };
   } catch (err) {
     if (err instanceof ApiError && err.status === 400 && esFaltaDeCamposGoogle(err.details)) {
       sessionStorage.setItem("google_id_token", idToken);

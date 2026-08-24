@@ -291,6 +291,8 @@ export default function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8">
+        {/* Wireframe docs/04 §5f: el wordmark vive dentro de la caja, sin navbar. */}
+        <p className="mb-4 text-center text-2xl font-bold text-foreground">FilmAI</p>
         <h1 className="mb-1 text-2xl font-bold text-foreground">Crear cuenta</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Completá tus datos para registrarte en FilmAI.
