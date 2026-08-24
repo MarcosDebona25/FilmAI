@@ -8,7 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 import { GoogleButton } from "@/components/GoogleButton";
 import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch, storeTokens } from "@/lib/api";
+import { apiFetch, storeTokens } from "@/lib/api";
 import { handleGoogleLogin } from "@/lib/google-auth";
 
 const inputClass =
@@ -45,8 +45,9 @@ export default function LoginPage() {
       });
       storeTokens(data.access, data.refresh);
       router.push(destino);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo iniciar sesión.");
+    } catch {
+      // docs/04:634 — el error de login siempre es genérico.
+      setError("Email, usuario o contraseña incorrectos.");
     } finally {
       setLoading(false);
     }
@@ -119,6 +120,13 @@ export default function LoginPage() {
                 {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
+          </div>
+
+          {/* Solo visual: el modal de recuperación se implementa en A-07 (CU-020). */}
+          <div className="flex justify-end">
+            <button type="button" className="text-sm text-primary hover:underline">
+              ¿Olvidaste tu contraseña?
+            </button>
           </div>
 
           {error && (
