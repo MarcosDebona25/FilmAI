@@ -9,6 +9,7 @@ Serializers de autenticación: registro tradicional (CU-001) y Google OAuth.
   provee; la persistencia la hace `UsuarioSocialAccountAdapter.populate_user`.
 """
 
+import logging
 import re
 from datetime import date
 
@@ -38,6 +39,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from .models import EstadoCuenta, TipoGenero, Usuario
+
+logger = logging.getLogger(__name__)
 
 USERNAME_REGEX = re.compile(r"^[A-Za-z0-9]{5,25}$")
 
@@ -313,22 +316,31 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
         # (los de confirmación también la usan).
         contexto = {"user": usuario, "reset_url": reset_url}
 
-        asunto = render_to_string(
-            "registration/recuperar_contrasena_subject.txt", contexto
-        ).strip()
-        cuerpo_texto = render_to_string(
-            "registration/recuperar_contrasena_message.txt", contexto
-        )
-        cuerpo_html = render_to_string(
-            "registration/recuperar_contrasena_message.html", contexto
-        )
-        send_mail(
-            asunto,
-            cuerpo_texto,
-            settings.DEFAULT_FROM_EMAIL,
-            [usuario.correo],
-            html_message=cuerpo_html,
-        )
+        try:
+            asunto = render_to_string(
+                "registration/recuperar_contrasena_subject.txt", contexto
+            ).strip()
+            cuerpo_texto = render_to_string(
+                "registration/recuperar_contrasena_message.txt", contexto
+            )
+            cuerpo_html = render_to_string(
+                "registration/recuperar_contrasena_message.html", contexto
+            )
+            send_mail(
+                asunto,
+                cuerpo_texto,
+                settings.DEFAULT_FROM_EMAIL,
+                [usuario.correo],
+                html_message=cuerpo_html,
+            )
+        except Exception:
+            # Un fallo en el render o en el envío no debe romper el request ni
+            # revelar que la cuenta existe: se loguea y se responde igual que
+            # para un correo desconocido.
+            logger.exception(
+                "Error enviando email de restablecimiento para %s", usuario.correo
+            )
+            return None
         return usuario
 
 

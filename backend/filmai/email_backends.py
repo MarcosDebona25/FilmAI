@@ -61,25 +61,43 @@ class ResendBackend(BaseEmailBackend):
         return enviados
 
     def _send_one(self, message, test_recipient: str) -> None:
-        # EmailMessage puede llevar varios destinatarios; Resend acepta lista.
-        destinatarios = list(message.to) + list(message.cc) + list(message.bcc)
-        if not destinatarios:
-            return
+        # `to`, `cc` y `bcc` van como campos separados: fusionarlos en `to`
+        # expondría los BCC y cambiaría la semántica de los CC.
+        to = list(message.to)
+        cc = list(message.cc)
+        bcc = list(message.bcc)
 
         if test_recipient:
             logger.info(
                 "RESEND_TEST_RECIPIENT activo: redirigiendo email para %s hacia %s",
-                ", ".join(destinatarios),
+                ", ".join(to + cc + bcc),
                 test_recipient,
             )
-            destinatarios = [test_recipient]
+            to = [test_recipient]
+            cc = []
+            bcc = []
+        elif not to and cc:
+            # Resend exige un `to` no vacío: si solo hay CC, se promueve a `to`.
+            to = cc
+            cc = []
+        elif not to and bcc:
+            # Ídem para mensajes que solo llevan BCC.
+            to = bcc
+            bcc = []
+
+        if not to:
+            return
 
         cuerpo = message.body or ""
         params: dict = {
             "from": message.from_email,
-            "to": destinatarios,
+            "to": to,
             "subject": message.subject or "",
         }
+        if cc:
+            params["cc"] = cc
+        if bcc:
+            params["bcc"] = bcc
         # El contenido de allauth llega en text/plain (alternatives trae HTML).
         html = self._extraer_html(message)
         if html:

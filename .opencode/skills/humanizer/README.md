@@ -34,7 +34,7 @@ npx skills add blader/humanizer --agent <agent-name>
 
 Claude Code users can also install Humanizer as a plugin:
 
-```
+```bash
 /plugin marketplace add blader/humanizer
 /plugin install humanizer@humanizer
 ```
@@ -62,13 +62,13 @@ cp SKILL.md /path/to/your/skills/humanizer/
 
 Invoke the skill however your agent harness exposes installed skills. Common forms include a slash command or a direct request:
 
-```
+```text
 /humanizer
 
 [paste your text here]
 ```
 
-```
+```text
 Please humanize this text: [your text]
 ```
 
@@ -76,7 +76,7 @@ Please humanize this text: [your text]
 
 To match your personal writing style, provide a sample of your own writing:
 
-```
+```text
 /humanizer
 
 Here's a sample of my writing for voice matching:
@@ -132,7 +132,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 | 16 | **Inline-header lists** | "**Performance:** Performance improved" | Convert to prose |
 | 17 | **Title Case Headings** | "Strategic Negotiations And Partnerships" | "Strategic negotiations and partnerships" |
 | 18 | **Emojis** | "🚀 Launch Phase: 💡 Key Insight:" | Remove emojis |
-| 19 | **Curly quotes** | `said “the project”` | `said “the project”` |
+| 19 | **Curly quotes** | `said “the project”` | `said "the project"` |
 | 26 | **Hyphenated word pairs** | “cross-functional, data-driven, client-facing” | Drop hyphens on common word pairs |
 | 27 | **Persuasive authority tropes** | "At its core, what matters is..." | State the point directly |
 | 28 | **Signposting announcements** | "Let's dive in", "Here's what you need to know" | Start with the content |
@@ -174,17 +174,13 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 > Would I go back? Absolutely. Lisbon isn't just a place to visit — it's a place to fall in love with, again and again. If you're dreaming of your next getaway, this is one destination that promises memories to last a lifetime. ✨
 
 **After (Humanized):**
-> I spent five days in Lisbon last October and still have mixed feelings about it. Beautiful, yes. Also harder on the knees than anyone warned me.
+> I spent five days in Lisbon and I am still deciding how I feel about it. The city is beautiful, but the hills are as steep as everyone says. Every climb was a real climb, and each one ended in a view that made the climb feel like the point.
 >
-> The hills are the whole story and somehow never make the brochures. My hotel was up in Alfama, which photographs beautifully and translates, in practice, to climbing what felt like a six-story staircase every time I wanted coffee. By the second day my calves had opinions. I started planning each walk around which way was downhill, which is a strange way to see a city but probably an honest one.
+> Tram 28 winds through the historic neighborhoods, so of course I rode it. The pastries were the better decision: a pastel de nata from Pastéis de Belém, still warm, is worth the hype it gets.
 >
-> Everyone says to ride Tram 28, so I did, wedged against a stranger's backpack for forty minutes while three tour groups filmed the same corner. I would walk the route next time, or go before breakfast. The custard tarts, though, earn the fuss. I had one at a plain little place in Graça, still warm, and for about thirty seconds I understood why people build trips around pastry.
+> What I liked most was the quieter side. A few steps off the main squares the city turns into sun-drenched alleys, tiled facades, and friendly locals going about their day. That is the Lisbon I would come back for, more than any single sight.
 >
-> What I did not expect was how quiet the city gets away from the main squares. Two blocks uphill from any plaza it turns into laundry lines, chipped tile, open windows, and old men watching football with the sound turned up. That is the Lisbon I keep thinking about, not the castle.
->
-> The castle is fine. The view is great, the queue is long, and I spent more time shuffling toward the entrance than looking at anything once I got inside. If I had only two days, I would trade it for an afternoon of getting lost.
->
-> I would go back, but in spring and with better shoes. Lisbon does not bend over backward to make things easy for you. I think I liked that, even when my legs disagreed.
+> São Jorge Castle looks out over the rooftops, and the view is as good as everyone says, but the queue is long enough to make you question it. I would go back, and I would plan the hills better this time.
 
 ## References
 

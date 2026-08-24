@@ -21,7 +21,7 @@ Skill de validación post-implementación con reglas MUST/SHOULD/NEVER. Audita i
 
 ## Dónde encaja
 
-```
+```text
 design-discovery → Design Brief → frontend-design → emil-design-eng → vercel-quality
                                                                            ↑
                                                                    último paso

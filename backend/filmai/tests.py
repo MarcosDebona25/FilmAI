@@ -7,10 +7,12 @@ tests unitarios no dependen de la configuración global ni de la API real.
 
 from unittest.mock import patch
 
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import SimpleTestCase, override_settings
 
 from filmai.email_backends import ResendBackend
+from filmai.email_validation import validar_configuracion_email
 
 
 @override_settings(RESEND_API_KEY="re_test", RESEND_TEST_RECIPIENT="")
@@ -81,3 +83,75 @@ class ResendBackendTests(SimpleTestCase):
     def test_error_propaga_cuando_no_es_fail_silent(self, _mock_send):
         with self.assertRaises(RuntimeError):
             ResendBackend(fail_silently=False).send_messages([self._mensaje()])
+
+    @patch("resend.Emails.send")
+    def test_separa_cc_y_bcc_en_campos_propios(self, mock_send):
+        mock_send.return_value = {"id": "abc"}
+        mensaje = EmailMessage(
+            "Asunto",
+            "Cuerpo",
+            "FilmAI <onboarding@resend.dev>",
+            ["principal@example.com"],
+            cc=["copia@example.com"],
+            bcc=["oculto@example.com"],
+        )
+        ResendBackend(fail_silently=False).send_messages([mensaje])
+
+        params = mock_send.call_args[0][0]
+        # Los CC no se fusionan en `to` y los BCC no quedan expuestos.
+        self.assertEqual(params["to"], ["principal@example.com"])
+        self.assertEqual(params["cc"], ["copia@example.com"])
+        self.assertEqual(params["bcc"], ["oculto@example.com"])
+
+    @patch("resend.Emails.send")
+    def test_solo_cc_promueve_a_to(self, mock_send):
+        mock_send.return_value = {"id": "abc"}
+        mensaje = EmailMessage(
+            "Asunto",
+            "Cuerpo",
+            "FilmAI <onboarding@resend.dev>",
+            [],
+            cc=["copia@example.com"],
+        )
+        ResendBackend(fail_silently=False).send_messages([mensaje])
+
+        params = mock_send.call_args[0][0]
+        # Resend exige un `to` no vacío: el CC se promueve para poder enviar.
+        self.assertEqual(params["to"], ["copia@example.com"])
+        self.assertNotIn("cc", params)
+
+
+class ConfiguracionEmailTests(SimpleTestCase):
+    def test_rechaza_test_recipient_en_produccion(self):
+        with self.assertRaises(ImproperlyConfigured):
+            validar_configuracion_email(
+                debug=False,
+                email_backend="filmai.email_backends.ResendBackend",
+                resend_api_key="re_key",
+                resend_test_recipient="dueno@example.com",
+            )
+
+    def test_rechaza_falta_de_api_key_en_produccion(self):
+        with self.assertRaises(ImproperlyConfigured):
+            validar_configuracion_email(
+                debug=False,
+                email_backend="filmai.email_backends.ResendBackend",
+                resend_api_key="",
+                resend_test_recipient="",
+            )
+
+    def test_permite_test_recipient_en_desarrollo(self):
+        validar_configuracion_email(
+            debug=True,
+            email_backend="filmai.email_backends.ResendBackend",
+            resend_api_key="re_key",
+            resend_test_recipient="dueno@example.com",
+        )
+
+    def test_no_aplica_a_backend_no_resend(self):
+        validar_configuracion_email(
+            debug=False,
+            email_backend="django.core.mail.backends.console.EmailBackend",
+            resend_api_key="",
+            resend_test_recipient="dueno@example.com",
+        )

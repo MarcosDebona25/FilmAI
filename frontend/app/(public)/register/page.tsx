@@ -124,6 +124,12 @@ export default function RegisterPage() {
           apiUrl(`/api/auth/username-available/?username=${encodeURIComponent(valor)}`),
           { signal: controller.signal }
         );
+        if (!res.ok) {
+          // Un error (p.ej. 429 por rate limit) no es "ocupado": se vuelve a
+          // idle para no bloquear el formulario con un estado erróneo.
+          setUsernameEstado("idle");
+          return;
+        }
         const data: { disponible?: boolean } = await res.json();
         setUsernameEstado(data.disponible ? "disponible" : "ocupado");
       } catch {
