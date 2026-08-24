@@ -14,6 +14,8 @@ from datetime import date
 
 from allauth.account import app_settings as allauth_account_settings
 from allauth.account.adapter import get_adapter
+from allauth.account.forms import default_token_generator
+from allauth.account.utils import url_str_to_user_pk, user_pk_to_url_str
 from allauth.socialaccount.helpers import complete_social_login
 from allauth.socialaccount.providers.oauth2.client import OAuth2Error
 from dj_rest_auth.registration.serializers import (
@@ -23,9 +25,14 @@ from dj_rest_auth.registration.serializers import (
     SocialLoginSerializer as BaseSocialLoginSerializer,
 )
 from dj_rest_auth.serializers import LoginSerializer as BaseLoginSerializer
+from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.http import HttpResponseBadRequest
+from django.template.loader import render_to_string
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -269,3 +276,98 @@ class UsuarioDetallesSerializer(serializers.ModelSerializer):
             "fecha_registro",
         )
         read_only_fields = fields
+
+
+class EnlaceRestablecimientoInvalido(Exception):
+    """El `uid` o el `token` del enlace de restablecimiento son inválidos.
+
+    Se lanza desde `validate()` y la vista la convierte en
+    `400 {"codigo": "invalido"}` (mismo contrato que ConfirmarCorreoView).
+    Django no distingue token inválido de expirado (`check_token` devuelve
+    False en ambos casos), así que un único código alcanza.
+    """
+
+
+class RecuperarContrasenaSerializer(serializers.Serializer):
+    """Solicitud de restablecimiento de contraseña (CU-020).
+
+    Envía un email con un enlace al frontend solo si existe una cuenta ACTIVA
+    con ese correo; en cualquier otro caso no hace nada. La respuesta HTTP es
+    idéntica siempre para no revelar si el correo está registrado.
+    """
+
+    email = serializers.EmailField()
+
+    def save(self):
+        usuario = Usuario.objects.filter(
+            correo__iexact=self.validated_data["email"].strip(),
+            estado=EstadoCuenta.ACTIVA,
+        ).first()
+        if usuario is None:
+            return None
+
+        uid = user_pk_to_url_str(usuario)
+        token = default_token_generator.make_token(usuario)
+        reset_url = f"{settings.FRONTEND_URL}/restablecer-contrasena/{uid}/{token}/"
+        # Clave "user" para ser consistente con los templates de allauth
+        # (los de confirmación también la usan).
+        contexto = {"user": usuario, "reset_url": reset_url}
+
+        asunto = render_to_string(
+            "registration/recuperar_contrasena_subject.txt", contexto
+        ).strip()
+        cuerpo_texto = render_to_string(
+            "registration/recuperar_contrasena_message.txt", contexto
+        )
+        cuerpo_html = render_to_string(
+            "registration/recuperar_contrasena_message.html", contexto
+        )
+        send_mail(
+            asunto,
+            cuerpo_texto,
+            settings.DEFAULT_FROM_EMAIL,
+            [usuario.correo],
+            html_message=cuerpo_html,
+        )
+        return usuario
+
+
+class RestablecerContrasenaSerializer(serializers.Serializer):
+    """Confirmación del restablecimiento con nueva contraseña (CU-020).
+
+    Valida el par `uid`/`token` firmado, aplica la política de contraseña del
+    CU-001 vía AUTH_PASSWORD_VALIDATORS y persiste la nueva contraseña.
+    """
+
+    password1 = serializers.CharField()
+    password2 = serializers.CharField()
+    uid = serializers.CharField()
+    token = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs["password1"] != attrs["password2"]:
+            raise serializers.ValidationError(
+                {"password2": ["Las contraseñas no coinciden."]}
+            )
+
+        try:
+            self.usuario = Usuario.objects.get(pk=url_str_to_user_pk(attrs["uid"]))
+        except (TypeError, ValueError, OverflowError, Usuario.DoesNotExist) as err:
+            raise EnlaceRestablecimientoInvalido from err
+
+        # check_token devuelve False por firma inválida O enlace vencido
+        # (PASSWORD_RESET_TIMEOUT = 1 hora).
+        if not default_token_generator.check_token(self.usuario, attrs["token"]):
+            raise EnlaceRestablecimientoInvalido
+
+        try:
+            validate_password(attrs["password1"], user=self.usuario)
+        except DjangoValidationError as err:
+            raise serializers.ValidationError({"password1": err.messages}) from err
+
+        return attrs
+
+    def save(self):
+        self.usuario.set_password(self.validated_data["password1"])
+        self.usuario.save(update_fields=["password"])
+        return self.usuario

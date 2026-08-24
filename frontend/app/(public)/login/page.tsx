@@ -9,8 +9,9 @@ import { toast } from "sonner";
 
 import { GoogleButton } from "@/components/GoogleButton";
 import { Button } from "@/components/ui/button";
-import { apiFetch, storeTokens } from "@/lib/api";
+import { ApiError, apiFetch, storeTokens } from "@/lib/api";
 import { handleGoogleLogin } from "@/lib/google-auth";
+import { validarCorreo } from "@/lib/validation";
 
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
@@ -23,6 +24,12 @@ export default function LoginPage() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Modal de recuperación de contraseña (CU-020).
+  const [modalRecuperar, setModalRecuperar] = useState(false);
+  const [correoRecuperar, setCorreoRecuperar] = useState("");
+  const [errorCorreo, setErrorCorreo] = useState<string | null>(null);
+  const [loadingRecuperar, setLoadingRecuperar] = useState(false);
 
   const destino = (() => {
     const next = searchParams.get("next");
@@ -87,6 +94,42 @@ export default function LoginPage() {
     }
   }
 
+  function cerrarModalRecuperar() {
+    setModalRecuperar(false);
+    setCorreoRecuperar("");
+    setErrorCorreo(null);
+  }
+
+  // CU-020 paso 6: el mensaje de éxito se muestra siempre, exista o no el
+  // correo en la base de datos (por seguridad no se revela).
+  async function onSubmitRecuperar(e: FormEvent) {
+    e.preventDefault();
+    const errorValidacion = validarCorreo(correoRecuperar);
+    if (errorValidacion) {
+      setErrorCorreo(errorValidacion);
+      return;
+    }
+    setErrorCorreo(null);
+    setLoadingRecuperar(true);
+    try {
+      await apiFetch("/api/auth/password/reset/", {
+        method: "POST",
+        body: { email: correoRecuperar },
+        auth: false,
+      });
+      toast.success("Te enviamos un email con instrucciones para restablecer tu contraseña.");
+      cerrarModalRecuperar();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429) {
+        setErrorCorreo("Esperá un minuto antes de volver a pedir un enlace.");
+      } else {
+        setErrorCorreo("No se pudo enviar el email. Intentá de nuevo en unos minutos.");
+      }
+    } finally {
+      setLoadingRecuperar(false);
+    }
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8">
@@ -141,9 +184,13 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Solo visual: el modal de recuperación se implementa en A-07 (CU-020). */}
+          {/* CU-020: abre el modal de recuperación. */}
           <div className="flex justify-end">
-            <button type="button" className="text-sm text-primary hover:underline">
+            <button
+              type="button"
+              onClick={() => setModalRecuperar(true)}
+              className="text-sm text-primary hover:underline"
+            >
               ¿Olvidaste tu contraseña?
             </button>
           </div>
@@ -165,6 +212,66 @@ export default function LoginPage() {
             Registrate
           </Link>
         </p>
+
+        {modalRecuperar && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm"
+            onClick={cerrarModalRecuperar}
+            role="presentation"
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl border border-border bg-card p-8"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Recuperar contraseña"
+            >
+              <h2 className="mb-1 text-xl font-bold text-foreground">Recuperar contraseña</h2>
+              <p className="mb-6 text-sm text-muted-foreground">
+                Ingresá el email asociado a tu cuenta y te enviaremos un enlace para crear una
+                contraseña nueva.
+              </p>
+
+              <form onSubmit={onSubmitRecuperar} className="flex flex-col gap-4">
+                <div>
+                  <label
+                    htmlFor="correo-recuperar"
+                    className="mb-1 block text-sm text-muted-foreground"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="correo-recuperar"
+                    className={inputClass}
+                    type="email"
+                    value={correoRecuperar}
+                    onChange={(e) => {
+                      setCorreoRecuperar(e.target.value);
+                      // Si ya había un error (de submit o de red), se limpia
+                      // apenas el usuario corrige. No validamos en blur:
+                      // la validación de formato corre solo en "Enviar enlace".
+                      if (errorCorreo) setErrorCorreo(null);
+                    }}
+                    autoComplete="email"
+                    autoFocus
+                  />
+                  {errorCorreo && (
+                    <p className="mt-1 text-sm text-destructive" role="alert">
+                      {errorCorreo}
+                    </p>
+                  )}
+                </div>
+
+                <Button type="submit" disabled={loadingRecuperar} size="lg">
+                  {loadingRecuperar ? "Enviando…" : "Enviar enlace"}
+                </Button>
+                <Button type="button" variant="ghost" onClick={cerrarModalRecuperar}>
+                  Cancelar
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

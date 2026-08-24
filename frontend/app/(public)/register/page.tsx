@@ -245,8 +245,8 @@ export default function RegisterPage() {
           <h1 className="mb-3 text-2xl font-bold text-foreground">Revisá tu bandeja de entrada</h1>
           <p className="mb-6 text-sm text-muted-foreground">
             Te enviamos un enlace de confirmación a{" "}
-            <span className="text-foreground">{form.correo}</span>. Si no lo encontrás, revisá la
-            carpeta de spam.
+            <span className="text-foreground">{form.correo}</span>. El enlace es válido durante 24
+            horas. Si no lo encontrás, revisá la carpeta de spam.
           </p>
           <div className="flex flex-col items-center gap-3">
             <button

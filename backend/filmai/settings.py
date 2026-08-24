@@ -76,7 +76,7 @@ ROOT_URLCONF = "filmai.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -131,6 +131,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Validez del enlace de restablecimiento de contraseña (CU-020): 1 hora.
+# Lo usa `default_token_generator.check_token()` al confirmar.
+PASSWORD_RESET_TIMEOUT = 60 * 60
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -174,6 +178,14 @@ REST_FRAMEWORK = {
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
+    # Rate limit de recuperación de contraseña (CU-020): la SOLICITUD del
+    # email permite 1 por minuto por IP; la confirmación (envío del form con
+    # uid/token) tolera reintentos por validación inline pero sigue acotada
+    # como defensa anti fuerza bruta.
+    "DEFAULT_THROTTLE_RATES": {
+        "recuperar_contrasena": "1/min",
+        "restablecer_contrasena": "5/min",
+    },
 }
 
 
@@ -216,11 +228,39 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.ScryptPasswordHasher",
 ]
 
-# --- Email (modo desarrollo: console backend) ---
+# --- Email ---
+# Modo desarrollo sin configurar: console backend (los emails se imprimen).
+# Con Resend: EMAIL_BACKEND=filmai.email_backends.ResendBackend + RESEND_API_KEY.
 EMAIL_BACKEND = config("EMAIL_BACKEND", default="") or (
     "django.core.mail.backends.console.EmailBackend"
 )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="") or "noreply@filmai.com"
+# API key de Resend (https://resend.com/api-keys). Solo la usa ResendBackend.
+RESEND_API_KEY = config("RESEND_API_KEY", default="")
+# Sin dominio propio verificado, Resend solo permite enviar al email dueño de
+# la cuenta. Si se define, TODOS los emails salientes se redirigen a esta
+# dirección (testing end-to-end). En producción con dominio: dejar vacío.
+RESEND_TEST_RECIPIENT = config("RESEND_TEST_RECIPIENT", default="")
+
+# --- Logging ---
+# Mínimo para poder probar el envío de emails: cada envío vía Resend queda
+# visible en `docker compose logs -f backend`.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "filmai.email_backends": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
 
 # --- URL del frontend (SPA Next.js) ---
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
@@ -235,7 +275,11 @@ ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-ACCOUNT_EMAIL_SUBJECT_PREFIX = "[FilmAI] "
+# La validez del enlace de confirmación es de 1 día (allauth solo soporta
+# días enteros). La marca va en cada template: el prefijo queda vacío para
+# no duplicar "[FilmAI]" en los asuntos.
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
 # Google verifica el email por su cuenta: no se reenvía confirmación.
 SOCIALACCOUNT_EMAIL_REQUIRED = True

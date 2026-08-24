@@ -1,0 +1,14 @@
+{% load nombres %}Hola {{ user|nombre_completo }},
+
+Recibimos una solicitud para restablecer la contraseña de su cuenta de
+FilmAI. Para continuar, toque el siguiente enlace:
+
+{{ reset_url }}
+
+Este enlace es válido durante 1 hora. Si se venció, puede pedir otro desde
+la pantalla de inicio de sesión con "¿Olvidaste tu contraseña?".
+
+Si usted no solicitó este cambio, ignore este mensaje: su contraseña no se
+modificará.
+
+El equipo de FilmAI
