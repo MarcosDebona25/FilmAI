@@ -394,3 +394,147 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `frontend/app/(public)/login/page.tsx`,
   `frontend/app/(public)/register/page.tsx`, `frontend/lib/google-auth.ts`,
   `frontend/package.json`.
+
+## 24/08/2026 — Envío de emails transaccionales vía Resend (backend de email custom)
+
+- **Descripción**: se reemplaza el console backend por un `EMAIL_BACKEND`
+  custom sobre la API HTTP de Resend para los emails de allauth/dj-rest-auth
+  (confirmación de cuenta CU-002; a futuro A-07 password reset).
+  1. **`filmai.email_backends.ResendBackend`**: traduce `EmailMessage` a
+     `resend.Emails.send` (SDK oficial, `resend>=2.0`). Soporta texto y
+     alternativa HTML (`EmailMultiAlternatives`). Sin `RESEND_API_KEY` no
+     envía y loguea error en vez de romper el request.
+  2. **Redirección de destinatario para testing sin dominio propio**: Resend
+     solo permite enviar desde `onboarding@resend.dev` y únicamente al email
+     dueño de la cuenta (403 con cualquier otro destinatario). Si
+     `RESEND_TEST_RECIPIENT` está definido, TODO email saliente se redirige a
+     esa dirección: la confirmación de cualquier registro llega a esa bandeja
+     y el link sigue siendo válido para la cuenta registrada. Con dominio
+     propio verificado: borrar la variable y cambiar `DEFAULT_FROM_EMAIL`.
+  3. **Variables** (`.env` + `.env.example`): `EMAIL_BACKEND`,
+     `RESEND_API_KEY`, `RESEND_TEST_RECIPIENT`, `DEFAULT_FROM_EMAIL`. Sin
+     configurar Resend, se usa console backend como antes.
+  4. **Comando de prueba**: `python manage.py send_test_email [destino]`.
+  5. **Logging**: `LOGGING` mínimo en settings para ver cada envío
+     (id de Resend) en `docker compose logs -f backend`.
+  6. Tests unitarios con mock del SDK en `filmai/tests.py` (envío básico,
+     redirección de destinatarios, HTML alternativo, falta de API key,
+     propagación de errores).
+- **Motivo**: poder probar CU-002 end-to-end con emails reales sin dominio
+  propio ni SMTP local; dejar lista la infraestructura para A-07.
+- **Limitación conocida**: mientras no haya dominio verificado, solo recibe
+  emails reales el dueño de la API key.
+- **Archivos**: `backend/filmai/email_backends.py` (nuevo),
+  `backend/filmai/tests.py` (nuevo), `backend/filmai/settings.py`,
+  `backend/requirements.txt`, `backend/usuarios/management/commands/send_test_email.py`
+  (nuevo), `.env.example`, `.env` (local, no versionado), `Dockerfile`
+  (rebuild para incluir el SDK).
+
+## 24/08/2026 — Confirmación de correo: validez 24h, templates propios en español y errores diferenciados (CU-002)
+
+- **Descripción**:
+  1. **Validez del enlace**: `ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1`
+     (24 horas). Se descartó un token custom por horas: allauth solo soporta
+     expiración en días enteros y 1 día resultó suficiente; se mantiene el
+     mecanismo nativo de keys firmadas (HMAC + timestamp, sin tabla en DB).
+  2. **Templates propios del email** (antes usaba los built-in de allauth, en
+     inglés): `backend/templates/account/email/` con
+     `email_confirmation_{signup_,}{subject,message.txt,message.html}`.
+     Asunto "[FilmAI] Confirmación de cuenta" (se escribió completo en el
+     template porque `ACCOUNT_EMAIL_SUBJECT_PREFIX` pasó a vacío para no
+     duplicar la marca). Cuerpo en registro formal ("su cuenta", "ignore").
+     El HTML es una card oscura con la paleta de la app (#161625 sobre
+     #0d0d14, botón #e67e22), tablas y estilos inline para clientes de correo,
+     botón + link plano de fallback. Ambas variantes (signup y genérica)
+     quedan cubiertas para que los reenvíos también lleguen en español.
+     La validez de 24 horas se informa en el propio email, en la pantalla
+     "Revisá tu bandeja de entrada" del registro y en el mensaje de enlace
+     expirado del frontend.
+  3. **Errores diferenciados**: `ConfirmarCorreoView` reemplaza a
+     `VerifyEmailView` de dj-rest-auth en la ruta existente
+     `/api/auth/registration/verify-email/`. Decodifica la key firmada y
+     responde `200 {"detail":"ok"}` o
+     `400 {"codigo": "expirado"|"invalido"|"ya_confirmada"}`. El éxito delega
+     en `mark_email_address_as_verified()` de allauth (mantiene la lógica del
+     adapter). El frontend mapea cada código a su pantalla: ya_confirmada se
+     muestra como estado positivo, expirado explica las 24h y cómo reenviar.
+  4. **Bug corregido de paso**: `UsuarioAccountAdapter.confirm_email()`
+     llamaba a `super()` sin hacer `return`, devolviendo siempre `None`.
+     allauth usa ese retorno para considerar confirmada la dirección, así que
+     cualquier flujo que dependiera del resultado fallaba silenciosamente.
+  5. **Tests**: `ConfirmarCorreoTests` cubre flujo completo
+     (registro → email → confirmar → ACTIVA → login), reuso de key,
+     key corrupta y expiración (+25h mockeando `django.core.signing.time`).
+- **Motivo**: pedido del usuario tras encontrar el mensaje genérico "No se pudo
+  confirmar" (la cuenta ya estaba confirmada por una prueba previa) y necesidad
+  de branding/copy propios.
+- **Archivos**: `backend/filmai/settings.py`, `backend/templates/account/email/*`
+  (nuevos), `backend/usuarios/views.py`, `backend/usuarios/adapter.py`,
+  `backend/usuarios/tests.py`, `backend/filmai/urls.py`,
+  `frontend/app/confirmar-correo/[key]/page.tsx`,
+  `frontend/app/(public)/register/page.tsx`, `.env.example` (sin cambios).
+
+## 24/08/2026 — A-07: Recuperación de contraseña (CU-020) conectada de punta a punta
+
+- **Descripción**:
+  1. **Solicitud**: `RecuperarContrasenaView` reemplaza a la de dj-rest-auth
+     en `/api/auth/password/reset/` (rutas propias ANTES del `include()`).
+     Envía el email solo si existe cuenta ACTIVA con ese correo; la respuesta
+     HTTP es idéntica siempre (no revela si el correo está registrado,
+     docs/02 CU-020 obs.). Cuentas pendientes o de baja no reciben email.
+  2. **Email**: templates propios en
+     `backend/templates/registration/recuperar_contrasena_{subject,message.txt,message.html}`
+     — asunto "[FilmAI] Restablecimiento de contraseña", registro formal, card
+     oscura con la paleta de la app, botón + link fallback. El enlace apunta a
+     `{FRONTEND_URL}/restablecer-contrasena/{uid}/{token}/`.
+  3. **Validez**: `PASSWORD_RESET_TIMEOUT = 3600` (1 hora, CU-020). Tokens del
+     generador nativo (`allauth` `default_token_generator`, HMAC con timestamp;
+     sin estado en DB). Un token usado queda invalidado porque `_make_hash_value`
+     incluye el hash de la contraseña.
+  4. **Confirmación**: `RestablecerContrasenaView` en
+     `/api/auth/password/reset/confirm/`. Campos `password1`/`password2`
+     (consistente con registro). Enlace inválido/vencido/usado →
+     `400 {"codigo": "invalido"}` (mismo contrato que ConfirmarCorreoView);
+     contraseña que no cumple CU-001 → errores de campo DRF (la política se
+     aplica vía `validate_password` + `ComplejidadContrasenaValidator` que ya
+     estaba en AUTH_PASSWORD_VALIDATORS).
+  5. **Rate limit**: DRF `ScopedRateThrottle` con dos scopes:
+     solicitud de email "recuperar_contrasena" 1/min (estricto, CU-020) y
+     confirmación "restablecer_contrasena" 5/min (tolera reintentos por
+     validación inline). Caché LocMem por proceso (suficiente para dev;
+     producción usará Redis).
+  6. **Frontend**: modal en login (campo email + validar formato + botones
+     Enviar enlace/Cancelar, cierre por backdrop). Toast de éxito SIEMPRE
+     ("Te enviamos un email..."); 429 → error inline pidiendo esperar un
+     minuto. Página nueva `app/restablecer-contrasena/[uid]/[token]/` con dos
+     campos + toggle visibilidad, validaciones inline onBlur reutilizando
+     `validarPassword`/`validarConfirmacion`, pantallas de éxito y de enlace
+     inválido (informa validez de 1 hora).
+  7. **Tests**: `RecuperarContrasenaTests` (8 casos): envío con enlace válido,
+   no-revelación, exclusión de no activas, cambio efectivo + login, enlace
+   inválido, expiración (+2h mockeando `_now` del generador), contraseña débil
+   y rate limit 429.
+- **Motivo**: completar la última actividad del Módulo 1 Autenticación (A-07),
+  conectando el link visual que quedó en A-04.
+- **Archivos**: `backend/filmai/settings.py`, `backend/filmai/urls.py`,
+  `backend/usuarios/serializers.py`, `backend/usuarios/views.py`,
+  `backend/templates/registration/*` (nuevos), `backend/usuarios/tests.py`,
+  `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx` (nueva).
+
+## 24/08/2026 — Saludo de los emails: nombre + apellido con fallback "Hola usuario"
+
+- **Descripción**: nuevo filtro de template `nombre_completo`
+  (`usuarios/templatetags/nombres.py`) usado por TODOS los emails
+  transaccionales (confirmación, reenvío y restablecimiento): el saludo muestra
+  "Nombre Apellido"; si ambos están vacíos (seed, Google sin perfil) cae a
+  "Hola usuario". Además se corrigió un bug real: el contexto del email de
+  restablecimiento pasaba la clave `usuario` pero el template leía `{{ user }}`,
+  por lo que el nombre salía SIEMPRE vacío ("Hola ,"). Ahora el serializer pasa
+  `"user"` (misma convención que allauth).
+- **Motivo**: reporte del usuario — el email decía "Hola ," al probar con una
+  cuenta cuyo campo nombre estaba vacío.
+- **Archivos**: `backend/usuarios/templatetags/{__init__,nombres}.py` (nuevos),
+  los 6 templates de `backend/templates/{account/email,registration}/`,
+  `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`
+  (asserts de saludo + test de fallback).
