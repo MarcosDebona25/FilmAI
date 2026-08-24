@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
-from usuarios.views import GoogleLogin, RegisterView
+from usuarios.views import GoogleLogin, RegisterView, UsernameDisponibleView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -47,4 +47,10 @@ urlpatterns = [
         name="account_email_verification_sent",
     ),
     path("api/auth/google/", GoogleLogin.as_view(), name="google_login"),
+    # Disponibilidad de nombre de usuario en tiempo real (A-05, docs/04:696).
+    path(
+        "api/auth/username-available/",
+        UsernameDisponibleView.as_view(),
+        name="username_disponible",
+    ),
 ]

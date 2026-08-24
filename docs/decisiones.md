@@ -323,3 +323,39 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Archivos**: `frontend/.prettierrc`, `frontend/.prettierignore`,
   `frontend/eslint.config.mjs`, `frontend/package.json`,
   `frontend/package-lock.json`, `.husky/pre-commit`.
+
+## 24/08/2026 — A-04/A-05: link de recuperación solo visual, error genérico de login y endpoint de disponibilidad de username
+
+- **Descripción**: se cerraron los criterios pendientes de A-04 y A-05 (docs/05).
+  1. **"¿Olvidaste tu contraseña?" solo visual (A-04)**: el link aparece en la
+     pantalla de login alineado a la derecha, sin acción asociada. El mecanismo
+     completo (modal con email + "Enviar enlace", CU-020) se implementa en
+     A-07, tal como lo separa el plan. El wireframe ya lo dejaba como
+     placeholder (`alert('Modal: recuperar contraseña')`).
+  2. **Error genérico de login**: ante cualquier fallo de login por credenciales,
+     el frontend muestra el mensaje genérico "Email, usuario o contraseña
+     incorrectos." en lugar del mensaje crudo del backend (docs/04:634). No
+     revela si el email o el username existen.
+  3. **Endpoint custom de disponibilidad de username (A-05)**:
+     `GET /api/auth/username-available/?username=X` → `{"disponible": bool}`.
+     dj-rest-auth no provee este chequeo; se agregó `UsernameDisponibleView`
+     que valida formato (CU-001: alfanumérico 5–25, misma regex de
+     `validators.py`) y unicidad insensible a mayúsculas (`iexact`, igual que
+     `validate_nombre_usuario`). Formato inválido también responde
+     `{"disponible": false}` para simplificar el cliente.
+  4. **Validaciones inline onBlur + disponibilidad debounced (A-05)**:
+     nuevo `frontend/lib/validation.ts` con las reglas de CU-001; cada campo
+     valida al perder foco con mensaje inline bajo el input; el username hace
+     el chequeo de disponibilidad contra el endpoint con debounce de 400 ms
+     ("Verificando…" / "Disponible" / "No disponible"). Los errores de campo
+     del backend (DRF `{campo: [msgs]}`) se mapean a errores inline vía
+     `extraerErroresPorCampo` en `lib/api.ts`.
+  - **Nota sobre nombres/apellidos**: la restricción "solo letras" se interpreta
+    permitiendo espacios internos simples (nombres compuestos); sin números ni
+    símbolos.
+- **Motivo**: cumplir los criterios de aceptación de A-04/A-05 sin adelantar
+  A-07; unificar las reglas de validación del lado cliente con las del backend.
+- **Archivos**: `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/(public)/register/page.tsx`, `frontend/lib/api.ts`,
+  `frontend/lib/validation.ts` (nuevo), `backend/usuarios/views.py`,
+  `backend/usuarios/tests.py`, `backend/filmai/urls.py`.

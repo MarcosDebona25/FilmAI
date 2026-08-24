@@ -49,6 +49,20 @@ function extractError(data: unknown): string | null {
   return null;
 }
 
+/** Convierte errores DRF `{campo: [msgs]}` en un mapa `{campo: primerMensaje}`. */
+export function extraerErroresPorCampo(details: unknown): Record<string, string> {
+  const errores: Record<string, string> = {};
+  if (!details || typeof details !== "object") return errores;
+  for (const [campo, valor] of Object.entries(details as Record<string, unknown>)) {
+    if (Array.isArray(valor) && typeof valor[0] === "string") {
+      errores[campo] = valor[0];
+    } else if (typeof valor === "string") {
+      errores[campo] = valor;
+    }
+  }
+  return errores;
+}
+
 interface ApiOptions {
   method?: string;
   body?: unknown;
