@@ -359,3 +359,38 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `frontend/app/(public)/register/page.tsx`, `frontend/lib/api.ts`,
   `frontend/lib/validation.ts` (nuevo), `backend/usuarios/views.py`,
   `backend/usuarios/tests.py`, `backend/filmai/urls.py`.
+
+## 24/08/2026 — Menú de avatar con solo "Cerrar sesión", navbar oculto en auth y toasts con sonner
+
+- **Descripción**:
+  1. **Menú del avatar (alcance reducido de P-07/A-08)**: el navbar
+     autenticado muestra un avatar circular con las iniciales del usuario
+     (nombre + apellido) que despliega un menú con el único ítem "Cerrar
+     sesión" (divider + color danger). El dropdown se cierra al clickear fuera
+     o presionar Escape (criterio de aceptación de P-07). Antes de cerrar la
+     sesión aparece el modal de confirmación "¿Está seguro que desea cerrar
+     sesión?" (CU-004 / A-08); al confirmar se llama a `dj-rest-auth`
+     (`POST /api/auth/logout/`), se limpian los tokens y se redirige a Home.
+     *Desviación consciente del plan*: P-07 define 4 ítems (Mi perfil, Mis
+     reseñas, Preferencias, Cerrar sesión), pero esas pantallas dependen de
+     P-02+ que aún no existen. Los ítems restantes se agregan cuando se
+     implementen.
+  2. **Navbar oculto en /login y /register**: según los wireframes de auth
+     (docs/04 §5f), login y registro son pantalla completa con la caja
+     centrada y el wordmark "FilmAI" DENTRO de la caja — no llevan navbar.
+     Se agregó el check junto al existente para la landing ("/") y se agregó
+     el wordmark a ambas cajas. Esto elimina la duplicación de opciones
+     (Iniciar sesión/Registrarse) entre navbar y formulario.
+  3. **Toast de bienvenida post-login (CU-003)**: se adoptó `sonner` como
+     librería de toasts (estándar de shadcn; los docs ya prevén toasts en
+     flujos futuros: cuenta confirmada, recuperar contraseña, guardar perfil).
+     `<Toaster position="top-center">` montado en el layout raíz. Login por
+     formulario y Google muestran "¡Hola de nuevo, @{usuario}!" antes de
+     redirigir al Home. Destino actual: "/" (landing); cuando exista el
+     catálogo (A-06) se apunta allí — docs/04:635 dice "Redirect al Home".
+- **Motivo**: pedido del usuario; cumplir CU-003/CU-004 sin adelantar pantallas
+  inexistentes y resolver la duplicación visual en las rutas de autenticación.
+- **Archivos**: `frontend/components/Navbar.tsx`, `frontend/app/layout.tsx`,
+  `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/(public)/register/page.tsx`, `frontend/lib/google-auth.ts`,
+  `frontend/package.json`.

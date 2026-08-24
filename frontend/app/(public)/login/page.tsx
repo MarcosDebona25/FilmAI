@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 import { GoogleButton } from "@/components/GoogleButton";
 import { Button } from "@/components/ui/button";
@@ -38,12 +39,23 @@ export default function LoginPage() {
         password,
         ...(esEmail ? { email: identificador } : { username: identificador }),
       };
-      const data = await apiFetch<{ access: string; refresh: string }>("/api/auth/login/", {
+      const data = await apiFetch<{
+        access: string;
+        refresh: string;
+        user?: { nombre_usuario?: string };
+      }>("/api/auth/login/", {
         method: "POST",
         body: payload,
         auth: false,
       });
       storeTokens(data.access, data.refresh);
+      toast.success(
+        data.user?.nombre_usuario
+          ? `¡Hola de nuevo, @${data.user.nombre_usuario}!`
+          : "¡Sesión iniciada! Bienvenido a FilmAI."
+      );
+      // docs/04:635 — éxito de login → redirect al Home (hoy la landing "/";
+      // cuando exista el catálogo de A-06 se actualiza el destino).
       router.push(destino);
     } catch {
       // docs/04:634 — el error de login siempre es genérico.
@@ -59,6 +71,11 @@ export default function LoginPage() {
     try {
       const result = await handleGoogleLogin(idToken);
       if (result.ok) {
+        toast.success(
+          result.usuario
+            ? `¡Hola de nuevo, @${result.usuario}!`
+            : "¡Sesión iniciada! Bienvenido a FilmAI."
+        );
         router.push(destino);
       } else if (result.faltaCampos) {
         router.push("/completar-google");
@@ -73,6 +90,8 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8">
+        {/* Wireframe docs/04 §5f: el wordmark vive dentro de la caja, sin navbar. */}
+        <p className="mb-4 text-center text-2xl font-bold text-foreground">FilmAI</p>
         <h1 className="mb-1 text-2xl font-bold text-foreground">Iniciar sesión</h1>
         <p className="mb-6 text-sm text-muted-foreground">Entrá con tu cuenta de FilmAI.</p>
 
