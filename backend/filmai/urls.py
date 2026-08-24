@@ -10,24 +10,43 @@ Rutas de autenticación (docs/05 — A-01..A-09):
 - `api/auth/google/`          → login social con Google (id_token).
 """
 
-from dj_rest_auth.registration.views import (
-    ResendEmailVerificationView,
-    VerifyEmailView,
-)
+from dj_rest_auth.registration.views import ResendEmailVerificationView
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
-from usuarios.views import GoogleLogin, RegisterView
+from usuarios.views import (
+    ConfirmarCorreoView,
+    GoogleLogin,
+    RecuperarContrasenaView,
+    RegisterView,
+    RestablecerContrasenaView,
+    UsernameDisponibleView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Recuperación de contraseña custom (CU-020): serializers propios con
+    # campos `password1`/`password2`, email en español y rate limit 1/min.
+    # Van ANTES del include() para pisar las rutas de dj-rest-auth.
+    re_path(
+        r"^api/auth/password/reset/?$",
+        RecuperarContrasenaView.as_view(),
+        name="rest_password_reset",
+    ),
+    re_path(
+        r"^api/auth/password/reset/confirm/?$",
+        RestablecerContrasenaView.as_view(),
+        name="rest_password_reset_confirm",
+    ),
     path("api/auth/", include("dj_rest_auth.urls")),
     # Registro (view custom que omite `complete_signup`) + confirmación de email.
     path("api/auth/registration/", RegisterView.as_view(), name="rest_register"),
+    # Confirmación custom: distingue expirado/invalido/ya_confirmada (CU-002).
+    # Mantiene la ruta que ya usaba el frontend.
     re_path(
         r"^api/auth/registration/verify-email/?$",
-        VerifyEmailView.as_view(),
+        ConfirmarCorreoView.as_view(),
         name="rest_verify_email",
     ),
     re_path(
@@ -47,4 +66,10 @@ urlpatterns = [
         name="account_email_verification_sent",
     ),
     path("api/auth/google/", GoogleLogin.as_view(), name="google_login"),
+    # Disponibilidad de nombre de usuario en tiempo real (A-05, docs/04:696).
+    path(
+        "api/auth/username-available/",
+        UsernameDisponibleView.as_view(),
+        name="username_disponible",
+    ),
 ]

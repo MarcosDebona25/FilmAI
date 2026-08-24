@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { apiFetch, clearTokens } from "@/lib/api";
+
+// Rutas sin navbar: landing (docs/04 §5a) y pantallas de autenticación,
+// que son pantalla completa con la caja centrada (docs/04 §5f).
+const SIN_NAVBAR = ["/", "/login", "/register"];
 
 type Usuario = {
   nombre_usuario: string;
@@ -13,23 +19,68 @@ type Usuario = {
   apellido: string;
 } | null;
 
+function iniciales(u: NonNullable<Usuario>): string {
+  const iniciales = `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
+  if (iniciales.trim()) {
+    return iniciales;
+  }
+  // Sin nombre ni apellido (p.ej. cuenta de Google sin perfil): usamos la
+  // inicial del nombre de usuario, que siempre existe, en vez de un avatar vacío.
+  return u.nombre_usuario.charAt(0).toUpperCase() || "?";
+}
+
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [usuario, setUsuario] = useState<Usuario>(null);
   const [cargado, setCargado] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [confirmarLogout, setConfirmarLogout] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const cancelarRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    // En la home (landing) no hay navbar ni sesión que consultar.
-    if (pathname === "/") return;
+    // En las rutas sin navbar no hay sesión que consultar.
+    if (SIN_NAVBAR.includes(pathname)) return;
     apiFetch<Usuario>("/api/auth/user/")
       .then((u) => setUsuario(u))
       .catch(() => setUsuario(null))
       .finally(() => setCargado(true));
   }, [pathname]);
 
-  // La página principal no lleva navbar.
-  if (pathname === "/") return null;
+  // El menú se cierra al clickear fuera o presionar Escape (docs/05 P-07).
+  useEffect(() => {
+    if (!menuAbierto) return;
+    function onClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuAbierto(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuAbierto(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuAbierto]);
+
+  // Diálogo de confirmación de logout: foco inicial en "Cancelar" y cierre
+  // con Escape, con limpieza del handler al cerrarse o desmontarse.
+  useEffect(() => {
+    if (!confirmarLogout) return;
+    cancelarRef.current?.focus();
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setConfirmarLogout(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [confirmarLogout]);
+
+  // La landing y las pantallas de autenticación no llevan navbar.
+  if (SIN_NAVBAR.includes(pathname)) return null;
 
   async function logout() {
     try {
@@ -53,15 +104,41 @@ export function Navbar() {
 
         <div className="flex items-center gap-3">
           {cargado && usuario ? (
-            <>
-              <span className="text-sm text-muted-foreground">
-                Hola, <span className="text-foreground">@{usuario.nombre_usuario}</span>
-              </span>
-              <Button variant="outline" size="sm" onClick={logout}>
-                Cerrar sesión
-              </Button>
-            </>
-          ) : (
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setMenuAbierto((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuAbierto}
+                aria-label="Menú de usuario"
+                className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
+              >
+                {iniciales(usuario)}
+              </button>
+              {menuAbierto && (
+                <div
+                  role="menu"
+                  aria-label="Opciones de usuario"
+                  className="absolute right-0 top-11 z-50 w-48 overflow-hidden rounded-xl border border-border bg-popover shadow-md"
+                >
+                  {/* Alcance actual: solo Cerrar sesión. El dropdown completo
+                      (Mi perfil / Mis reseñas / Preferencias) llega con P-02+. */}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuAbierto(false);
+                      setConfirmarLogout(true);
+                    }}
+                    className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 text-left text-sm text-destructive hover:bg-destructive/10"
+                  >
+                    <LogOut className="size-4" />
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : cargado ? (
             <>
               <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
                 Iniciar sesión
@@ -70,9 +147,38 @@ export function Navbar() {
                 Registrarse
               </Button>
             </>
-          )}
+          ) : null}
         </div>
       </div>
+
+      {confirmarLogout && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titulo-cerrar-sesion"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setConfirmarLogout(false);
+          }}
+        >
+          <div className="w-full max-w-[480px] rounded-xl border border-border bg-card p-6 shadow-lg">
+            <h2 id="titulo-cerrar-sesion" className="mb-2 text-lg font-bold text-foreground">
+              ¿Está seguro que desea cerrar sesión?
+            </h2>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Tendrás que iniciar sesión nuevamente para volver a acceder a tu cuenta.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button ref={cancelarRef} variant="secondary" size="sm" onClick={() => setConfirmarLogout(false)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" size="sm" onClick={logout}>
+                Cerrar sesión
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

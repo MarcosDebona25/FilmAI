@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Roboto } from "next/font/google";
+import { Toaster } from "sonner";
+
 import { Navbar } from "@/components/Navbar";
 import "./globals.css";
 
@@ -31,6 +33,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${roboto.variable} antialiased`}>
         <Navbar />
         {children}
+        <Toaster position="top-center" />
       </body>
     </html>
   );
