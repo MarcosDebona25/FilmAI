@@ -5,6 +5,40 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/08/2026 — Cierre de gaps Fundación/Auth: keywords, navbar, A-09, bcrypt, Shadcn
+
+- **Descripción**: se cerraron gaps detectados al comparar el código con docs 01–05:
+  1. **`keywords` en `ProduccionAudiovisual`**: se agrega `ArrayField` (VARCHAR[])
+     para keywords temáticos de TMDB (`/movie/{id}/keywords`, `/tv/{id}/keywords`).
+     Queda vacío hasta C-04; se adelanta para no migrar después. Alimenta el texto
+     a embeber de B-06 (`Title + Genres + Directors + Cast + Keywords + Synopsis`).
+  2. **A-09 (middleware JWT) — opción B**: el middleware de Next.js solo comprueba
+     presencia de la cookie `access` para redirigir a `/login`. La verificación
+     real (firma, expiración, blacklist) queda en el backend
+     (`JWTCookieAuthentication` + `IsAuthenticated`). Evita compartir
+     `SECRET_KEY` con el frontend y duplicar lógica de auth.
+  3. **bcrypt confirmado**: `PASSWORD_HASHERS` ya usa
+     `BCryptSHA256PasswordHasher` y `bcrypt>=4.0` está en `requirements.txt`
+     (RNF #2 cumplido). Sin cambio de código.
+  4. **Shadcn sobre `@base-ui/react`**: desviación de F-03 (el plan decía
+     shadcn/ui sobre Radix). El `components.json` usa `style: "base-nova"` y
+     `@base-ui/react`. Se documenta para no romper expectativas en PRs futuros.
+     Hoy solo está construido `components/ui/button.tsx`.
+  5. **Navbar completa (doc 04 §4)**: links Inicio / Buscar / Listas + dropdown
+     Mi perfil / Mis reseñas / Preferencias / Cerrar sesión. Las opciones aún
+     no implementadas muestran toast `"Todavía no está implementado"`. Logo
+     apunta a `/inicio`. Landing: CTA "Explorar catálogo" navega a `/inicio`
+     (ya no `/catalogo`).
+  6. **AGENTS.md §4**: los agentes deben correr `ruff format/check` y
+     `prettier --check` antes de dar el OK.
+- **Motivo**: auditoría end-to-end vs docs 01–05; el usuario confirmó opción B
+  para A-09 y pidió adelantar `keywords`, completar la navbar visualmente y
+  dejar el formateo como gate de entrega.
+- **Archivos**: `backend/catalogo/models.py`,
+  `backend/catalogo/migrations/0003_produccionaudiovisual_keywords.py`,
+  `frontend/components/Navbar.tsx`, `frontend/app/(public)/page.tsx`,
+  `docs/05_Plan_de_Desarrollo.md` (A-09), `AGENTS.md`.
+
 ## 26/08/2026 — Fix login Google vs registro + access token solo en cookie httpOnly
 
 - **Descripción**: tres correcciones al flujo de autenticación:

@@ -32,10 +32,10 @@ export type GoogleLoginResult =
 
 export async function handleGoogleLogin(idToken: string): Promise<GoogleLoginResult> {
   try {
-    const data = await apiFetch<{ user?: { nombre_usuario?: string } }>(
-      "/api/auth/google/",
-      { method: "POST", body: { id_token: idToken } }
-    );
+    const data = await apiFetch<{ user?: { nombre_usuario?: string } }>("/api/auth/google/", {
+      method: "POST",
+      body: { id_token: idToken },
+    });
     return { ok: true, usuario: data.user?.nombre_usuario };
   } catch (err) {
     if (err instanceof ApiError && err.status === 400 && esFaltaDeCamposGoogle(err.details)) {
@@ -61,10 +61,10 @@ export async function completarRegistroGoogle(
   campos: { nombre_usuario: string; fecha_nacimiento: string; genero: string }
 ): Promise<CompletarGoogleResult> {
   try {
-    const data = await apiFetch<{ user?: { nombre_usuario?: string } }>(
-      "/api/auth/google/",
-      { method: "POST", body: { id_token: idToken, ...campos } }
-    );
+    const data = await apiFetch<{ user?: { nombre_usuario?: string } }>("/api/auth/google/", {
+      method: "POST",
+      body: { id_token: idToken, ...campos },
+    });
     limpiarGooglePendiente();
     return { ok: true, usuario: data.user?.nombre_usuario };
   } catch (err) {

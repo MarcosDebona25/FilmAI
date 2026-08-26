@@ -46,10 +46,10 @@ function LoginForm() {
         password,
         ...(esEmail ? { email: identificador } : { username: identificador }),
       };
-      const data = await apiFetch<{ user?: { nombre_usuario?: string } }>(
-        "/api/auth/login/",
-        { method: "POST", body: payload }
-      );
+      const data = await apiFetch<{ user?: { nombre_usuario?: string } }>("/api/auth/login/", {
+        method: "POST",
+        body: payload,
+      });
       toast.success(
         data.user?.nombre_usuario
           ? `¡Hola de nuevo, @${data.user.nombre_usuario}!`

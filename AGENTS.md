@@ -27,6 +27,14 @@ en este repositorio.
   o poco claro, **NO asumir**: preguntar al usuario a través del chat.
 - Nunca tomar decisiones de diseño unilaterales cuando la documentación no es clara.
 
+## 4. Antes de dar el OK al usuario
+
+- Correr el formateo/lint en ambos proyectos y asegurar que pasa limpio
+  antes de declarar terminada una consulta/tarea:
+  - Backend: `ruff format . && ruff check .`
+  - Frontend: `npx prettier --check .` (o `npm run format:check`)
+- No declarar "listo" si hay archivos sin formatear.
+
 ## Contexto técnico
 
 - **Backend**: Django 5.1 + Django REST Framework, PostgreSQL 16, Redis, Celery
