@@ -289,6 +289,11 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "usuarios": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
 }
 

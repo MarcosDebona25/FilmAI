@@ -274,7 +274,10 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 # El modelo custom expone `correo`, no `email` (dj-rest-auth
                 # copia este check con `email`; acá se corrige para que el
                 # chequeo de email duplicado realmente aplique).
-                correo = getattr(login.user, "correo", None)
+                user_obj = getattr(login, "user", None) or getattr(
+                    getattr(login, "account", None), "user", None
+                )
+                correo = getattr(user_obj, "correo", None)
                 if correo and Usuario.objects.filter(correo__iexact=correo).exists():
                     raise serializers.ValidationError("El correo ya está registrado.")
             login.lookup()

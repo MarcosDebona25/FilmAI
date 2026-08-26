@@ -3,14 +3,14 @@
 ## PLANTILLA 01: PRESENTACIÓN DE LA IDEA-PROYECTO
 
 | Fecha de Presentación |
-| :---: |
-| 25/08/2025 |
+| :-------------------: |
+|      25/08/2025       |
 
 ### 1. Integrantes del equipo de trabajo
 
-| Integrante |
-| :---- |
-| Debona, Marcos Joel |
+| Integrante             |
+| :--------------------- |
+| Debona, Marcos Joel    |
 | Gaitán, Gonzalo Andrés |
 
 ### 2. Título de la propuesta

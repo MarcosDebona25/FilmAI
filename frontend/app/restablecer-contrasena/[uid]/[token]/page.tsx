@@ -54,8 +54,8 @@ export default function RestablecerContrasenaPage() {
       await apiFetch("/api/auth/password/reset/confirm/", {
         method: "POST",
         body: {
-          uid: params?.uid,
-          token: params?.token,
+          uid: params?.uid ? decodeURIComponent(params.uid) : undefined,
+          token: params?.token ? decodeURIComponent(params.token) : undefined,
           password1: password,
           password2: confirmacion,
         },
