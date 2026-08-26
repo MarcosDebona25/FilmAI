@@ -139,8 +139,9 @@ El entorno y la estructura base deben estar antes que todo lo demás. Ambos trab
 | Q-03 | Estados de carga y empty | Todos los UI | Revisar todas las pantallas: skeletons durante carga, empty states con ilustraciones y CTAs, errores con reintento. Toast notifications para acciones exitosas y errores. | No hay flashes de contenido vacío. Cada pantalla tiene skeleton, empty y error state según corresponda. | 3h |
 | Q-04 | Responsive testing | Todos los UI | Verificar todos los breakpoints (1440px, 768px, 375px). Grid de catálogo: 5→3→2 cols. Grid de listas: 3→2→1 col. Ficha de detalle: two-column→stacked. Navbar: no se rompe en mobile. Modal: 480px→95vw. | En cada breakpoint, la UI es funcional y no hay overflow horizontal. Touch targets ≥ 44px en mobile. | 3h |
 | Q-05 | Variables de entorno y documentación | F-01 | `.env.example` con todas las variables necesarias documentadas. `README.md` actualizado con instrucciones de setup. Documentar: cómo levantar el proyecto, seed de datos, correr tests, convenciones de código. | Otra persona puede clonar el repo, copiar `.env.example`, `docker compose up`, y ver la app funcionando. | 2h | Ambos |
+| Q-06 | CI (GitHub Actions) para lint/format | F-06 | Workflow que corre `eslint` + `prettier` (frontend) y `ruff` (backend) en cada PR a `main`, para enforzar el lint independientemente de la máquina de cada dev. | PR abierto muestra el check de lint/format; falla ante warnings o errores. | 2h | Gonza |
 
-**Total Polish: ~16h** (14h Gonza + 2h conjunta) — **Gonza** (+ Ambos en Q-05)
+**Total Polish: ~18h** (16h Gonza + 2h conjunta) — **Gonza** (+ Ambos en Q-05)
 
 ---
 

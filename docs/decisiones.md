@@ -43,6 +43,24 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `frontend/app/(public)/login/page.tsx`,
   `frontend/app/completar-google/page.tsx`, `frontend/components/Navbar.tsx`.
 
+## 25/08/2026 — El lint solo corre en local; pendiente agregar CI
+
+- **Descripción**: un warning de ESLint (`_refresh` sin uso en `storeTokens`)
+  entró a `main` porque el commit que lo introdujo (`2cc3ffe`) se integró vía
+  "Merge pull request" desde GitHub, que no ejecuta el hook local de husky, y el
+  repo no tiene CI (no hay `.github/workflows/`). El hook de pre-commit corre en
+  toda rama pero solo en la máquina de cada dev (depende de husky instalado y
+  `node_modules` sincronizado), y además saltea `ruff` si Docker no está
+  levantado.
+- **Motivo**: documentar la causa y dejar registrada la tarea pendiente de
+  agregar CI para enforzar lint/format independientemente de la máquina de cada
+  integrante.
+- **Tarea pendiente (asignada a Gonza)**: crear un workflow de GitHub Actions
+  que corra `eslint` + `prettier` (frontend) y `ruff` (backend) en cada PR a
+  `main`.
+- **Archivos**: `.husky/pre-commit`, `frontend/eslint.config.mjs`,
+  `frontend/.prettierrc`. Pendiente: `.github/workflows/`.
+
 ## 25/08/2026 — Arquitectura híbrida del catálogo (TMDB + PostgreSQL)
 
 - **Descripción**: el Módulo 2 (Catálogo) adopta un modelo híbrido. El
