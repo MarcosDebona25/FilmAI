@@ -17,6 +17,7 @@ from django.views.generic import TemplateView
 
 from usuarios.views import (
     ConfirmarCorreoView,
+    CSRFTokenView,
     GoogleLogin,
     RecuperarContrasenaView,
     RegisterView,
@@ -66,6 +67,9 @@ urlpatterns = [
         name="account_email_verification_sent",
     ),
     path("api/auth/google/", GoogleLogin.as_view(), name="google_login"),
+    # Entrega la cookie `csrftoken` para que el frontend mande `X-CSRFToken`
+    # en las mutaciones (JWT_AUTH_COOKIE_USE_CSRF=True). Ver usuarios.views.
+    path("api/auth/csrf/", CSRFTokenView.as_view(), name="csrf_token"),
     # Disponibilidad de nombre de usuario en tiempo real (A-05, docs/04:696).
     path(
         "api/auth/username-available/",

@@ -5,6 +5,124 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/08/2026 — Fix login Google vs registro + access token solo en cookie httpOnly
+
+- **Descripción**: tres correcciones al flujo de autenticación:
+  1. **Login con cuenta de Google existente (bug raíz)**: en
+     `GoogleSocialLoginSerializer.validate`, el chequeo `if not
+     login.is_existing:` corría ANTES de `complete_social_login()`, que es donde
+     allauth ejecuta el `lookup()`. Como `is_existing` es una property que
+     devuelve `False` hasta ese lookup, SIEMPRE entraba a la rama de "cuenta
+     nueva" y, al no recibir `nombre_usuario`/`fecha_nacimiento`/`genero` en el
+     login, respondía 400 → el frontend mandaba a `/completar-google` incluso a
+     cuentas ya vinculadas. Ahora se consulta `SocialAccount.objects.filter(
+     provider, uid).exists()` (mismo criterio que el `_lookup_by_socialaccount`
+     interno de allauth) ANTES del chequeo: si existe, es login y no se exigen
+     los campos extra.
+  2. **Check de email duplicado muerto**: en el segundo `if not
+     login.is_existing`, `getattr(login.user, "email", None)` usaba `email`,
+     pero el modelo expone `correo`; el chequeo nunca aplicaba. Corregido a
+     `correo`.
+  3. **Access token fuera de localStorage**: el frontend ya no persiste el
+     access token en `localStorage` (superficie XSS). El backend autentica vía
+     cookie httpOnly (`JWTCookieAuthentication` ya era el auth class por
+     defecto) y el `Authorization: Bearer` desde localStorage era redundante. Se
+     eliminaron `getAccessToken`/`storeTokens`/`clearTokens` y la opción `auth`
+     de `apiFetch`; las cookies viajan con `credentials: "include"`.
+- **Motivo**: corregir el bug reportado (iniciar sesión con Google mandaba a la
+  pantalla de registro) y endurecer el manejo de tokens (el refresh ya estaba
+  fuera de localStorage; ahora el access también).
+- **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`
+  (regresión: login de cuenta existente sin campos + cuenta nueva exige campos),
+  `frontend/lib/api.ts`, `frontend/lib/google-auth.ts`,
+  `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/(public)/register/page.tsx`,
+  `frontend/app/confirmar-correo/[key]/page.tsx`,
+  `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx`,
+  `frontend/components/Navbar.tsx`.
+
+## 26/08/2026 — CSRF para el access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF)
+
+- **Descripción**: al quedar el access token solo en cookie httpOnly (sin header
+  Bearer), se habilitó protección CSRF explícita en lugar de descansar solo en
+  `SameSite=Lax`:
+  1. `JWT_AUTH_COOKIE_USE_CSRF=True`: `JWTCookieAuthentication` exige el header
+     `X-CSRFToken` en las mutaciones autenticadas por la cookie `access` (los
+     métodos seguros GET/HEAD/OPTIONS quedan exentos).
+  2. `CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS`: el frontend es otro origen
+     (localhost:3000), así que Django valida el `Origin` cross-origin contra
+     estos orígenes; sin esto, cualquier mutación legítima se rechazaba con
+     "Referer checking failed".
+  3. Endpoint `GET /api/auth/csrf/` (`CSRFTokenView` + `ensure_csrf_cookie`):
+     setea la cookie `csrftoken` (legible por JS) para que el frontend la
+     reenvíe como header.
+  4. Frontend: `apiFetch` lee la cookie `csrftoken` (o la pide al endpoint si
+     aún no existe) y manda `X-CSRFToken` en toda mutación. Relee la cookie en
+     cada request, por lo que la rotación del token tras el login (dj-rest-auth
+     hace `django_login` con `SESSION_LOGIN=True`, que llama `rotate_token`) es
+     transparente.
+- **Motivo**: resolver el pendiente del tradeoff XSS/CSRF: con cookie httpOnly la
+  protección CSRF ahora valida el token en cada mutación y no solo confía en el
+  `SameSite` de la cookie.
+- **Archivos**: `backend/filmai/settings.py`, `backend/usuarios/views.py`
+  (`CSRFTokenView`), `backend/filmai/urls.py`, `backend/usuarios/tests.py`
+  (`CsrfCookieTests`, 2 casos), `frontend/lib/api.ts`.
+
+## 26/08/2026 — Google OAuth: login abre el selector y registro completa datos (flujos distintos)
+
+- **Descripción**: se separan los dos flujos de Google. El botón de LOGIN
+  ("Iniciar sesión con Google", `GoogleButton text="signin_with"`) abre el
+  selector de cuentas de Google directamente; si la cuenta ya existe entra
+  directo, y si es nueva se deriva a `/completar-google`. El botón de REGISTRO
+  ("Crear cuenta con Google", `GoogleLinkButton`) no abre Google: marca el
+  flujo pendiente (`google_signup_pending`) y navega a `/completar-google`,
+  donde se completan los datos faltantes y se toca el botón de Google
+  (`signup_with`) — un único popup en todo el flujo de registro. Se elimina el
+  texto que explicaba el motivo de los tokens (no aporta al usuario final).
+- **Motivo**: UX — dos situaciones distintas: iniciar sesión (abrir el
+  selector) vs crear cuenta (completar datos + elegir cuenta una sola vez).
+- **Archivos**: `frontend/components/GoogleLinkButton.tsx` (nuevo),
+  `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/(public)/register/page.tsx`,
+  `frontend/app/completar-google/page.tsx`, `frontend/lib/google-auth.ts`.
+
+## 26/08/2026 — Fix del id_token de un solo uso en el flujo Google de 2 pasos
+
+- **Descripción**: tras corregir el 500 (RawPostDataException), el flujo de
+  completado de cuenta Google fallaba con `400 "No se pudo autenticar con
+  Google."` en el segundo POST. Causa: el `id_token` de Google es de UN SOLO
+  USO — allauth implementa anti-replay (`verify_jti` en
+  `allauth.socialaccount.internal.jwtkit`): la primera verificación marca el
+  `jti` del token en caché y cualquier reenvío del mismo token lanza
+  `OAuth2Error("token already used")`. El frontend reutilizaba el mismo
+  id_token (guardado en `sessionStorage`) para el paso de completado.
+- **Decisión (Opción 1)**: obtener un id_token FRESCO en la pantalla de
+  completado mediante re-autenticación con Google. El frontend ya no guarda ni
+  reutiliza el token: guarda solo un marcador (`google_signup_pending`) para
+  proteger la ruta, y `/completar-google` pide un token nuevo (botón Google con
+  `text="signup_with"` para distinguirlo del de login). Se mantiene intacta la
+  garantía anti-replay de allauth.
+- **Archivos**: `frontend/lib/google-auth.ts`,
+  `frontend/app/completar-google/page.tsx`, `frontend/components/GoogleButton.tsx`.
+
+## 26/08/2026 — Fix del 500 en Google OAuth: no releer `request.body` en `populate_user`
+
+- **Descripción**: el login con Google (`POST /api/auth/google/`) respondía 500
+  con `django.http.request.RawPostDataException: You cannot access body after
+  reading from request's data stream`. En un view de DRF, `self.request.data`
+  consume el stream del body al parsear el JSON; luego
+  `UsuarioSocialAccountAdapter.populate_user` releía `request.body` para obtener
+  los campos que Google no provee (`nombre_usuario`, `fecha_nacimiento`,
+  `genero`), lo que lanzaba la excepción y derivaba en 500.
+- **Solución**: esos campos ahora viajan pegados al request
+  (`request.google_extra`), seteado por `GoogleSocialLoginSerializer.validate`
+  desde los `attrs` ya validados antes de llamar a `complete_login`. El adapter
+  los lee con `getattr(request, "google_extra", {})` y ya no toca el body.
+  Se eliminó el helper `_extra_from_body`.
+- **Archivos**: `backend/usuarios/serializers.py`,
+  `backend/usuarios/adapter.py`, `backend/usuarios/tests.py` (regresión:
+  `GoogleOAuthTests`).
+
 ## 25/08/2026 — Pendientes de revisión del PR #3 de autenticación
 
 - **Descripción**: durante la revisión del PR #3 se identificaron los siguientes

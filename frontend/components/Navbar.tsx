@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { apiFetch, clearTokens } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 // Rutas sin navbar: landing (docs/04 §5a) y pantallas de autenticación,
 // que son pantalla completa con la caja centrada (docs/04 §5f).
@@ -84,13 +84,13 @@ export function Navbar() {
 
   async function logout() {
     try {
-      // dj-rest-auth blacklistea el refresh desde la cookie httpOnly (con
-      // `credentials: "include"` la cookie viaja automáticamente).
+      // dj-rest-auth blacklistea el refresh y borra las cookies httpOnly
+      // `access`/`refresh` (`unset_jwt_cookies`). El frontend no guarda tokens
+      // en localStorage, así que no hay estado local que limpiar.
       await apiFetch("/api/auth/logout/", { method: "POST" });
     } catch {
-      // se limpia el estado local aunque el logout remoto falle
+      // si el logout remoto falla, igual redirigimos al Home
     } finally {
-      clearTokens();
       router.push("/");
     }
   }
