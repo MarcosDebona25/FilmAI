@@ -5,6 +5,86 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 25/08/2026 — Pendientes de revisión del PR #3 de autenticación
+
+- **Descripción**: durante la revisión del PR #3 se identificaron los siguientes
+  pendientes para notificar a su autor:
+  - El frontend almacena el access token, pero no implementa la renovación
+    automática mediante el refresh token cuando aquel expira.
+  - El parseo inicial del `id_token` de Google queda fuera del manejo de
+    excepciones y podría responder con un error 500 ante un token malformado.
+  - La validación de nombres de usuario usa comparación insensible a mayúsculas,
+    pero la restricción `unique=True` de la base de datos no garantiza esa misma
+    unicidad en condiciones de carrera.
+  - Las rutas de confirmación de correo, completado de Google y restablecimiento
+    de contraseña no están incluidas entre las pantallas sin Navbar.
+  - `.env.example` deja Resend como backend activo con valores incompletos; al
+    copiarlo sin configurar la API key, el registro puede informar que envió el
+    correo aunque el backend no lo entregue.
+- **Motivo**: dejar documentados los riesgos y las diferencias detectadas entre
+  el comportamiento implementado y los criterios de autenticación, seguridad y
+  UI antes de continuar con el desarrollo. Estos puntos quedan como pendientes,
+  no como decisiones cerradas.
+- **Archivos**: `frontend/lib/api.ts`, `backend/usuarios/serializers.py`,
+  `backend/usuarios/models.py`, `frontend/components/Navbar.tsx`, `.env.example`,
+  `docs/05_Plan_de_Desarrollo.md`, `docs/04_Lineamientos_UI.md`.
+
+## 25/08/2026 — Arquitectura híbrida del catálogo (TMDB + PostgreSQL)
+
+- **Descripción**: el Módulo 2 (Catálogo) adopta un modelo híbrido. El
+  descubrimiento (trending, discover, search) se sirve en vivo desde la API de
+  TMDB con caché Redis; PostgreSQL es la fuente de verdad para los datos del
+  usuario (calificaciones, reseñas, listas) y para la búsqueda semántica
+  (pgvector). No se adopta una variante "BD como única fuente" porque
+  sincronizar todo TMDB no escala y rompería la búsqueda en vivo de títulos no
+  sincronizados.
+- **Motivo**: el plan ya describe ambos mecanismos (C-03 en vivo + C-04 sync);
+  se explicita para evitar interpretar que la BD reemplaza a TMDB en discovery.
+- **Archivos**: `docs/05_Plan_de_Desarrollo.md`, `backend/catalogo/`.
+
+## 25/08/2026 — Materialización on-demand con unicidad compuesta
+
+- **Descripción**: cuando el usuario abre el detalle o interactúa con una
+  producción, ésta se materializa en `ProduccionAudiovisual` mediante un helper
+  centralizado (`catalogo/services/materialization.py`). La búsqueda se hace por
+  `id_tmdb` + `tipo`; la creación es atómica y, ante `IntegrityError` por
+  concurrencia, se resuelve con un `get()` posterior. No se ejecutan llamadas
+  externas (TMDB/embeddings) dentro de una transacción abierta.
+- **Motivo**: `id_tmdb` no es único entre películas y series; la unicidad real
+  es compuesta `(id_tmdb, tipo)` (ya definida como `uq_produccion_tmdb_tipo`).
+  Esto permite calificar o listar una producción encontrada por búsqueda aunque
+  la sync diaria nunca la haya traído.
+- **Archivos**: `backend/catalogo/models.py`, `backend/catalogo/services/`.
+
+## 25/08/2026 — Embeddings síncronos en la materialización (adelanto parcial de B-06)
+
+- **Descripción**: el embedding se genera de forma síncrona dentro del helper
+  de materialización, después de persistir la producción. Si el proveedor de
+  embeddings falla, la producción queda creada con `embedding IS NULL` y el
+  backfill (C-04b) la completa después. Se registran `content_hash` y la versión
+  del modelo para no recomputar embeddings innecesarios.
+- **Motivo**: una producción materializada on-demand en Fase 1 quedaría sin
+  embedding hasta el cron si no se genera acá, y entonces no aparecería en
+  búsquedas semánticas. El costo es una llamada adicional similar a la de TMDB.
+- **Implicación**: adelanta infraestructura de B-06 (pgvector,
+  `ProduccionEmbedding`, servicio de embeddings y proveedor BGE-M3/Ollama).
+- **Archivos**: `backend/catalogo/`, `docker-compose.yml`,
+  `docs/05_Plan_de_Desarrollo.md`.
+
+## 25/08/2026 — División de C-04 y caché Redis en todos los entornos
+
+- **Descripción**: C-04 se divide en C-04a (Fase 1: materialización +
+  embeddings) y C-04b (Fase 3: Celery para backfill, mantenimiento del catálogo
+  popular, regeneración ante cambio de modelo y red de seguridad
+  `embedding IS NULL`). La caché de TMDB usará Redis también en desarrollo (no
+  LocMem) para probar el mismo comportamiento que en producción. El sync
+  actualizará únicamente campos provenientes de TMDB, sin pisar metadatos
+  locales.
+- **Motivo**: desacoplar el funcionamiento del catálogo de la dependencia del
+  cron; que la sync pase a ser mantenimiento y no un prerrequisito.
+- **Archivos**: `docs/05_Plan_de_Desarrollo.md`, `backend/filmai/settings.py`,
+  `backend/catalogo/`.
+
 ## 22/08/2026 — Datepicker de fecha de nacimiento: máximo hoy −13 años
 
 - **Descripción**: los inputs `type="date"` de fecha de nacimiento (registro
