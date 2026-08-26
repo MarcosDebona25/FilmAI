@@ -11,6 +11,9 @@
 echo "== FilmAI pre-commit =="
 
 # --- Backend: ruff — uvx (host) → Docker → falla si no hay ninguno ---
+# Versión de ruff alineada con backend/requirements.txt (ruff>=0.11,<1.0).
+RUFF_SPEC="ruff>=0.11,<1.0"
+
 UVX=""
 if command -v uvx >/dev/null 2>&1; then
   UVX="uvx"
@@ -18,13 +21,26 @@ elif [ -x "$HOME/.local/bin/uvx" ]; then
   UVX="$HOME/.local/bin/uvx"
 fi
 
-if [ -n "$UVX" ]; then
-  echo "→ Backend: ruff ($UVX)"
-  (cd backend && "$UVX" ruff check . && "$UVX" ruff format --check .) || exit 1
-elif [ -n "$(docker compose ps --quiet backend 2>/dev/null)" ]; then
+run_ruff_docker() {
   echo "→ Backend: ruff (docker compose)"
   docker compose exec -T backend ruff check . || exit 1
   docker compose exec -T backend ruff format --check . || exit 1
+}
+
+if [ -n "$UVX" ]; then
+  echo "→ Backend: ruff ($UVX)"
+  if ! (cd backend && "$UVX" "$RUFF_SPEC" check . && "$UVX" "$RUFF_SPEC" format --check .); then
+    # uvx falló (p. ej. sin red para bajar ruff): reintentar con Docker.
+    if [ -n "$(docker compose ps --quiet backend 2>/dev/null)" ]; then
+      echo "⚠️  uvx falló; reintentando con Docker..." >&2
+      run_ruff_docker
+    else
+      echo "❌ No se pudo correr ruff (uvx falló y Docker no está corriendo)." >&2
+      exit 1
+    fi
+  fi
+elif [ -n "$(docker compose ps --quiet backend 2>/dev/null)" ]; then
+  run_ruff_docker
 else
   echo "❌ No se pudo correr ruff. Instalá uv (curl -LsSf https://astral.sh/uv/install.sh | sh) o levantá Docker." >&2
   exit 1
