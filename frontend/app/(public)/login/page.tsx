@@ -55,7 +55,7 @@ function LoginForm() {
         body: payload,
         auth: false,
       });
-      storeTokens(data.access, data.refresh);
+      storeTokens(data.access);
       toast.success(
         data.user?.nombre_usuario
           ? `¡Hola de nuevo, @${data.user.nombre_usuario}!`

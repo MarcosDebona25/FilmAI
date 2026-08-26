@@ -169,7 +169,12 @@ export function Navbar() {
               Tendrás que iniciar sesión nuevamente para volver a acceder a tu cuenta.
             </p>
             <div className="flex justify-end gap-3">
-              <Button ref={cancelarRef} variant="secondary" size="sm" onClick={() => setConfirmarLogout(false)}>
+              <Button
+                ref={cancelarRef}
+                variant="secondary"
+                size="sm"
+                onClick={() => setConfirmarLogout(false)}
+              >
                 Cancelar
               </Button>
               <Button variant="destructive" size="sm" onClick={logout}>

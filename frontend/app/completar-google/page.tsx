@@ -56,7 +56,7 @@ export default function CompletarGooglePage() {
         },
         auth: false,
       });
-      storeTokens(data.access, data.refresh);
+      storeTokens(data.access);
       sessionStorage.removeItem("google_id_token");
       router.push("/");
     } catch (err) {
