@@ -3,19 +3,31 @@
 # =============================================================================
 # FilmAI — pre-commit hook
 # =============================================================================
-# - Backend: ruff (linter + formatter) corre DENTRO del contenedor Docker.
+# - Backend: ruff corre con uvx (host) si está; si no, con Docker; si no hay
+#   ninguno, el commit FALLA (nunca se saltea en silencio).
 # - Frontend: eslint + prettier corren con las dependencias del host (node).
 # Se ejecutan siempre; para un repo chico el costo es despreciable.
 
 echo "== FilmAI pre-commit =="
 
-# --- Backend: ruff (dentro del contenedor) ---
-if [ -n "$(docker compose ps --quiet backend 2>/dev/null)" ]; then
-  echo "→ Backend: ruff check + ruff format --check"
+# --- Backend: ruff — uvx (host) → Docker → falla si no hay ninguno ---
+UVX=""
+if command -v uvx >/dev/null 2>&1; then
+  UVX="uvx"
+elif [ -x "$HOME/.local/bin/uvx" ]; then
+  UVX="$HOME/.local/bin/uvx"
+fi
+
+if [ -n "$UVX" ]; then
+  echo "→ Backend: ruff ($UVX)"
+  (cd backend && "$UVX" ruff check . && "$UVX" ruff format --check .) || exit 1
+elif [ -n "$(docker compose ps --quiet backend 2>/dev/null)" ]; then
+  echo "→ Backend: ruff (docker compose)"
   docker compose exec -T backend ruff check . || exit 1
   docker compose exec -T backend ruff format --check . || exit 1
 else
-  echo "⚠️  Backend no corriendo: se saltea ruff (levantá Docker para verificar)." >&2
+  echo "❌ No se pudo correr ruff. Instalá uv (curl -LsSf https://astral.sh/uv/install.sh | sh) o levantá Docker." >&2
+  exit 1
 fi
 
 # --- Frontend: eslint + prettier (dependencias del host) ---
