@@ -16,7 +16,7 @@ export function getAccessToken(): string | null {
   return window.localStorage.getItem(ACCESS_KEY);
 }
 
-export function storeTokens(access: string, _refresh?: string): void {
+export function storeTokens(access: string): void {
   window.localStorage.setItem(ACCESS_KEY, access);
 }
 

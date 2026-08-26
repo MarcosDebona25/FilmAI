@@ -24,7 +24,7 @@ export async function handleGoogleLogin(idToken: string): Promise<GoogleLoginRes
       body: { id_token: idToken },
       auth: false,
     });
-    storeTokens(data.access, data.refresh);
+    storeTokens(data.access);
     return { ok: true, usuario: data.user?.nombre_usuario };
   } catch (err) {
     if (err instanceof ApiError && err.status === 400 && esFaltaDeCamposGoogle(err.details)) {
