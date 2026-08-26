@@ -395,11 +395,11 @@ class GoogleOAuthTests(TestCase):
         )
         return serializer, django_request
 
-    def _login_mock(self, provider="google", uid="google-sub-123"):
+    def _login_mock(self, provider="google", uid="google-sub-123", is_existing=False):
         return SimpleNamespace(
             # Tras `complete_social_login` (mockeado como no-op) la cuenta queda
             # persistida; el segundo `if not login.is_existing` no debe entrar.
-            is_existing=True,
+            is_existing=is_existing,
             account=SimpleNamespace(
                 provider=provider,
                 uid=uid,
@@ -426,12 +426,17 @@ class GoogleOAuthTests(TestCase):
             "genero": "no_especifica",
         }
         serializer, django_request = self._serializer_google(extra=extra)
-        login = self._login_mock()
+        login = self._login_mock(is_existing=False)
         app = self._app()
         with (
             self._patch_existencia(True),
             patch.object(serializer, "get_social_login", return_value=login),
-            patch("usuarios.serializers.complete_social_login", return_value=None),
+            patch(
+                "usuarios.serializers.complete_social_login",
+                side_effect=lambda _request, social_login: setattr(
+                    social_login, "is_existing", True
+                ),
+            ),
             patch.object(
                 GoogleOAuth2Adapter, "get_provider", return_value=SimpleNamespace(app=app)
             ),

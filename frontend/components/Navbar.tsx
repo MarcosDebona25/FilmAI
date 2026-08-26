@@ -11,7 +11,7 @@ import { apiFetch } from "@/lib/api";
 
 // Rutas sin navbar: landing (docs/04 §5a) y pantallas de autenticación,
 // que son pantalla completa con la caja centrada (docs/04 §5f).
-const SIN_NAVBAR = ["/", "/login", "/register"];
+const SIN_NAVBAR = ["/", "/login", "/register", "/completar-google"];
 
 type Usuario = {
   nombre_usuario: string;
@@ -88,10 +88,9 @@ export function Navbar() {
       // `access`/`refresh` (`unset_jwt_cookies`). El frontend no guarda tokens
       // en localStorage, así que no hay estado local que limpiar.
       await apiFetch("/api/auth/logout/", { method: "POST" });
-    } catch {
-      // si el logout remoto falla, igual redirigimos al Home
-    } finally {
       router.push("/");
+    } catch {
+      // Mantener la sesión visible y permitir reintentar el logout
     }
   }
 
