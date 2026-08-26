@@ -30,6 +30,7 @@ from django.core import signing
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
@@ -58,11 +59,19 @@ class LenientJWTCookieAuthentication(JWTCookieAuthentication):
     Esta sub-clase captura la excepción y devuelve ``None`` (no autenticado),
     igual que cuando no hay cookie.  El endpoint de login sigue funcionando
     porque su permission es ``AllowAny``.
+
+    ``PermissionDenied`` (que `enforce_csrf` lanza cuando falla CSRF con
+    ``JWT_AUTH_COOKIE_USE_CSRF``) NO se captura: propagarla produce un 403.
+    Tragarla haría que un request sin CSRF válido pase por anónimo y el login
+    pierda su protección CSRF siempre que el browser traiga alguna cookie
+    ``access`` previa.
     """
 
     def authenticate(self, request):
         try:
             return super().authenticate(request)
+        except PermissionDenied:
+            raise
         except Exception:
             logger.debug(
                 "Cookie JWT inválida ignorada en %s", request.path, exc_info=True

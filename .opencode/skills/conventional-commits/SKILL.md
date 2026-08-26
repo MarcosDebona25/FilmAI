@@ -16,7 +16,7 @@ Use this skill when writing, revising, or suggesting a commit message, or when t
 ## Hard Rules
 
 - Every commit message follows the format `type(scope): description`.
-- `type` MUST be one of the 12 types in the table below — never invent a new type.
+- `type` MUST be one of the 11 types in the table below — never invent a new type.
 - `scope` is optional; when used, it names the affected area (e.g. `cart`, `auth`, `api`).
 - `description` is lowercase, imperative mood, no trailing period.
 - Use `revert:` without a scope: `revert: "original subject"`.

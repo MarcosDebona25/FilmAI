@@ -70,11 +70,20 @@ function extractError(data: unknown): string | null {
   return null;
 }
 
-/** Convierte errores DRF `{campo: [msgs]}` en un mapa `{campo: primerMensaje}`. */
+/**
+ * Convierte errores DRF `{campo: [msgs]}` en un mapa `{campo: primerMensaje}`.
+ *
+ * Los errores globales del serializer (`non_field_errors`) y el detalle
+ * genérico (`detail`) NO son campos: excluirlos evita que una pantalla
+ * muestre "corregí los campos marcados" sin ningún campo resaltado. Esos
+ * mensajes se presentan aparte vía `extractError`.
+ */
 export function extraerErroresPorCampo(details: unknown): Record<string, string> {
+  const CLAVES_NO_CAMPO = new Set(["non_field_errors", "detail"]);
   const errores: Record<string, string> = {};
   if (!details || typeof details !== "object") return errores;
   for (const [campo, valor] of Object.entries(details as Record<string, unknown>)) {
+    if (CLAVES_NO_CAMPO.has(campo)) continue;
     if (Array.isArray(valor) && typeof valor[0] === "string") {
       errores[campo] = valor[0];
     } else if (typeof valor === "string") {

@@ -251,6 +251,27 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                     )
                 )
 
+            # Email duplicado también ANTES de complete_social_login: con
+            # SOCIALACCOUNT_AUTO_SIGNUP=True allauth puede crear el usuario
+            # dentro de esa llamada (p.ej. si el usuario existente no tiene
+            # `EmailAddress`, como los del seed), y entonces este chequeo a
+            # posteriori llegaría tarde: la fila ya estaría persistida pese a
+            # responderse 400. La unique de PostgreSQL solo cubre el caso
+            # exacto, no el insensible a mayúsculas.
+            if allauth_account_settings.UNIQUE_EMAIL:
+                user_obj = getattr(login, "user", None) or getattr(
+                    getattr(login, "account", None), "user", None
+                )
+                correo = getattr(user_obj, "correo", None)
+                if correo and Usuario.objects.filter(correo__iexact=correo).exists():
+                    # Mensaje deliberadamente explícito: la gente llega acá
+                    # intentando "crear cuenta con Google" y no entiende el
+                    # rechazo si ya registró ese correo de forma tradicional.
+                    raise serializers.ValidationError(
+                        "Ya existe una cuenta registrada con este correo."
+                        " Iniciá sesión con tu contraseña."
+                    )
+
         try:
             ret = complete_social_login(request, login)
         except (
@@ -270,16 +291,6 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             raise serializers.ValidationError(ret.content)
 
         if not login.is_existing:
-            if allauth_account_settings.UNIQUE_EMAIL:
-                # El modelo custom expone `correo`, no `email` (dj-rest-auth
-                # copia este check con `email`; acá se corrige para que el
-                # chequeo de email duplicado realmente aplique).
-                user_obj = getattr(login, "user", None) or getattr(
-                    getattr(login, "account", None), "user", None
-                )
-                correo = getattr(user_obj, "correo", None)
-                if correo and Usuario.objects.filter(correo__iexact=correo).exists():
-                    raise serializers.ValidationError("El correo ya está registrado.")
             login.lookup()
             try:
                 login.save(request, connect=True)

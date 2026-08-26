@@ -96,7 +96,7 @@
           "parent": "1",
           "source": "cls-usuario",
           "target": "cls-calificacion",
-          "label": "1..* ─ 0..*"
+          "label": "1..1 ─ 0..*"
         },
         {
           "id": "e-usuario-lista",

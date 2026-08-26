@@ -845,3 +845,123 @@ reading from request's data stream`. En un view de DRF, `self.request.data`
 - **Archivos**: `backend/usuarios/views.py`, `backend/filmai/settings.py`,
   `backend/templates/registration/recuperar_contrasena_message.html`,
   `backend/requirements.txt`.
+
+## 26/08/2026 — Revisión de PR: email duplicado en Google OAuth, CSRF del login, decodes de URL y sincronización de documentación
+
+- **Descripción**: correcciones surgidas de la revisión del PR (feat/Autenticación):
+  1. **Check de email duplicado movido ANTES de `complete_social_login`**:
+     en `GoogleSocialLoginSerializer.validate`, el chequeo
+     `Usuario.objects.filter(correo__iexact=...)` ahora corre dentro de la
+     rama `not es_existente` (junto a la validación de campos faltantes),
+     antes de llamar a allauth. Con `SOCIALACCOUNT_AUTO_SIGNUP=True`, allauth
+     puede crear el usuario dentro de `complete_social_login`
+     (`flows.signup.process_signup`) cuando el usuario existente no tiene
+     `EmailAddress` (p.ej. los del seed): un chequeo a posteriori llegaba
+     tarde y dejaba una segunda fila `Usuario` pese a responderse 400 (la
+     unique de PostgreSQL solo cubre el caso exacto). Se agrega test de
+     regresión que verifica el error 400, que la fila existente queda como
+     única (`Usuario.objects.count() == 1`) y que
+     `complete_social_login` no se invoca.
+  2. **`LenientJWTCookieAuthentication` propaga `PermissionDenied`**: el
+     `except Exception` genérico tragaba el `PermissionDenied` que
+     `JWTCookieAuthentication.enforce_csrf` lanza al fallar CSRF
+     (`JWT_AUTH_COOKIE_USE_CSRF=True`) cuando el browser trae una cookie
+     `access` previa; el login quedaba sin protección CSRF (pasaba por
+     anónimo). Ahora esa excepción se re-lanza (403) y solo las cookies
+     inválidas/vencidas se tratan como anónimas.
+  3. **URIError al decodificar parámetros URL**: `decodeURIComponent` lanza
+     URIError ante secuencias inválidas (p.ej. "%" suelto). En
+     `app/confirmar-correo/[key]/page.tsx` el throw dejaba la página trabada
+     en "cargando": ahora el decode está protegido y deriva al estado de
+     enlace inválido ("error"). En
+     `app/restablecer-contrasena/[uid]/[token]/page.tsx` un URIError caía en
+     el mensaje de fallo de contraseña: se clasifica como `enlace_invalido`.
+  4. **Sincronización con la implementación real**:
+     - A-08 (docs/05) ya no describe tokens en storage: logout basado en
+       cookies (`POST /api/auth/logout/` invalida refresh y limpia las
+       cookies httpOnly).
+     - Filas C-08 y P-03 (docs/05): los pipes internos (`POST | PUT |
+DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
+       columnas del encabezado; Q-05/Q-06 pierden la celda extra de
+       responsable (lo cubren el título del módulo y el resumen final).
+     - docs/03 JSON: arista e-usuario-calificacion pasa de `1..* ─ 0..*` a
+       `1..1 ─ 0..*` (FK obligatoria: cada calificación pertenece a
+       exactamente un usuario; un usuario puede tener cero o más).
+     - Skill conventional-commits: "12 tipos" → "11 tipos" (la tabla tiene
+       11 y coincide con references/examples.md).
+     - Skill humanizer: el ejemplo de Lisboa elimina detalles inventados
+       (fotos, popularidad del tranvía, filas, planes futuros); conserva
+       solo hechos presentes en la entrada.
+  5. **No aplicado (verificado contra settings.py)**: propuesta de
+     `SameSite=None; Secure` para JWT/CSRF cookies. El despliegue actual es
+     mismo sitio (localhost:3000 → localhost:8000 comparten host registrable)
+     y la decisión del 26/08/2026 (`JWT_AUTH_COOKIE_USE_CSRF` +
+     `CSRF_TRUSTED_ORIGINS`) hace que la protección CSRF no dependa del
+     SameSite; forzar `SameSite=None` + `Secure=True` rompería las cookies en
+     desarrollo http. Se reconsidera si el frontend y la API terminan en
+     sitios distintos.
+- **Motivo**: hallazgos verificados de la revisión del PR; el check duplicado
+  y el manejo del CSRF eran huecos reales de seguridad/atrición de datos.
+- **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/views.py`,
+  `backend/usuarios/tests.py`,
+  `frontend/app/confirmar-correo/[key]/page.tsx`,
+  `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx`,
+  `docs/05_Plan_de_Desarrollo.md`,
+  `docs/03_DiagramaClases_DiagramaTablas.json`,
+  `.opencode/skills/conventional-commits/SKILL.md`,
+  `.opencode/skills/humanizer/SKILL.md`.
+
+## 26/08/2026 — Errores globales DRF excluidos del mapa de campos en el frontend (400 de /completar-google sin campos marcados)
+
+- **Fecha**: 26/08/2026
+- **Descripción**: al completar el registro con Google en `/completar-google`
+  se mostraba "Corregí los campos marcados y tocá de nuevo el botón de
+  Google." sin ningún campo resaltado, y el backend registraba
+  `POST /api/auth/google/ 400` con body de 55 bytes. Verificación: renderizado
+  con `JSONRenderer` (dentro del contenedor, settings reales) de todos los
+  bodies posibles del endpoint; solo
+  `{"non_field_errors":["El correo ya está registrado."]}` mide exactamente
+  55 bytes. La causa era doble:
+  1. **Backend (correcto, no modificado)**: la cuenta de Google usada tiene un
+     correo que ya existe como `Usuario` local sin `SocialAccount` vinculado;
+     el serializer toma la rama de registro nuevo y rechaza por email
+     duplicado (`GoogleSocialLoginSerializer.validate`, chequeo UNIQUE_EMAIL).
+     Es un error global (no de campo), y es el comportamiento previsto hasta
+     decidir si se hace auto-vinculación.
+  2. **Frontend (bug)**: `extraerErroresPorCampo` trataba TODAS las claves del
+     body como si fueran campos, incluida `non_field_errors`. Con
+     `{non_field_errors: ["El correo ya está registrado."]}` el objeto tenía
+     claves > 0, así que `/completar-google` entraba en la rama de errores de
+     campo, mostraba el mensaje genérico de "corregí los campos" e intentaba
+     marcar el inexistente campo `non_field_errors`, que nunca se renderiza.
+     Fix: `extraerErroresPorCampo` ahora omite `non_field_errors` y `detail`;
+     esos mensajes llegan a las pantallas por la vía ya existente
+     (`extractError` → `ApiError.message`). En `/completar-google` el usuario ve
+     ahora "El correo ya está registrado."; los errores reales de campo (p.ej.
+     nombre de usuario ocupado) siguen marcándose inline, y el banner genérico
+     solo aparece cuando hay errores de campo genuinos. Los otros dos llamadores
+     (`register`, restablecer contraseña) quedan verificados: no dependían de
+     recibir claves globales en el mapa.
+- **Motivo**: error reportado por el usuario; el mensaje genérico indicaba una
+  acción imposible ("campos marcados") porque la clasificación backend/global
+  vs campo se hacía mal en el frontend.
+- **Archivos**: `frontend/lib/api.ts`.
+
+## 26/08/2026 — Mensaje personalizado para correo ya registrado en Google OAuth (se mantiene el rechazo)
+
+- **Fecha**: 26/08/2026
+- **Descripción**: ante un registro con Google cuyo correo ya existe como
+  cuenta tradicional (sin `SocialAccount` vinculado), se decide MANTENER el
+  rechazo actual (no auto-vincular cuentas) pero reemplazar el mensaje
+  genérico "El correo ya está registrado." por uno que explique la situación:
+  "Ya existe una cuenta registrada con este correo. Iniciá sesión con tu
+  contraseña." El mensaje viaja como error global (`non_field_errors`) y el
+  frontend lo muestra en la parte superior del formulario de
+  `/completar-google` gracias a la corrección previa de
+  `extraerErroresPorCampo` (ver decisión anterior del mismo día). La prueba
+  unitaria de email duplicado (`usuarios/tests.py`) se actualiza al nuevo
+  texto.
+- **Motivo**: pedido explícito del usuario; el mensaje anterior no explicaba
+  por qué Google "no funciona" cuando el problema es una cuenta preexistente
+  con contraseña.
+- **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`.
