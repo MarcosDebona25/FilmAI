@@ -509,6 +509,52 @@ class GoogleOAuthTests(TestCase):
             for campo in ("nombre_usuario", "fecha_nacimiento", "genero"):
                 self.assertIn(campo, errores)
 
+    def test_registro_cuenta_nueva_correo_duplicado_rechaza_antes_de_persistir(self):
+        """Regresión: el chequeo de email duplicado case-insensitive corre ANTES
+        de `complete_social_login`.
+
+        Con `SOCIALACCOUNT_AUTO_SIGNUP=True`, allauth puede crear el usuario
+        dentro de esa llamada cuando el usuario existente no tiene
+        `EmailAddress` (p.ej. los del seed); entonces un chequeo a posteriori
+        llega tarde y queda una segunda fila `Usuario` pese a responderse 400.
+        """
+        UsuarioFactory(
+            nombre_usuario="mariaregistrada",
+            correo="maria@filmai.com",
+            estado=EstadoCuenta.ACTIVA,
+        )
+        serializer, _ = self._serializer_google(
+            extra={
+                "nombre_usuario": "usuariogoogle",
+                "fecha_nacimiento": "1995-05-10",
+                "genero": "masculino",
+            }
+        )
+        login = self._login_mock()
+        # El perfil de Google trae el mismo correo con otras mayúsculas.
+        login.user = SimpleNamespace(correo="MARIA@filmai.com")
+        app = self._app()
+        with (
+            self._patch_existencia(False),
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch(
+                "usuarios.serializers.complete_social_login", return_value=None
+            ) as complete_mock,
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
+            ),
+        ):
+            self.assertFalse(serializer.is_valid())
+            self.assertIn(
+                "Ya existe una cuenta registrada con este correo.",
+                str(serializer.errors),
+            )
+            complete_mock.assert_not_called()
+
+        self.assertEqual(Usuario.objects.count(), 1)
+
 
 class CsrfCookieTests(TestCase):
     """Protección CSRF del access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF).

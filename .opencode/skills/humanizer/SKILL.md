@@ -623,33 +623,33 @@ Deliver the draft, the brief "still-AI" bullets, the final rewrite, and (optiona
 
 **Draft rewrite:**
 
-> I spent five days in Lisbon and I am still a little split on it. The city is beautiful, but the hills are more work than the photos let on.
+> I spent five days in Lisbon and I am still a little split on it. The city is beautiful, but the hills were more work than my legs expected.
 >
-> The hills are real. Every climb left my legs tired, and every climb ended in a view that made it worth it.
+> The pattern was simple: every climb left my legs tired, and every climb ended in a view that made it worth it.
 >
-> I rode Tram 28 through the historic neighborhoods because it is the thing everyone does. The pastries were better: a pastel de nata from Pastéis de Belém, still warm, was worth the line.
+> I rode Tram 28 through the historic neighborhoods. The food came out ahead: a pastel de nata from Pastéis de Belém, still warm, was hard to argue with.
 >
 > Away from the main squares the city calms down into sun-drenched alleys, tiled facades, and friendly locals going about their day. That quieter side is what I liked most.
 >
-> São Jorge Castle has a great view over the rooftops, though the queue was long. I would go back.
+> São Jorge Castle has a great view over the rooftops, though the queue was long. Still, five days there and I would go back.
 
 **What makes the below so obviously AI generated?**
 
 - The draft is too compressed compared with the original; it drops texture instead of rewriting it.
-- Some sentences still state the point too cleanly ("The hills are real", "That quieter side is what I liked most").
-- The closer is flat and generic rather than a real ending in the same voice.
+- Some sentences still state the point too cleanly ("The pattern was simple", "That quieter side is what I liked most").
+- It slips in details the input never mentions: photos, Tram 28 being something everyone does, lines for the pastries, and plans to tackle the hills differently next time.
 
 **Now make it not obviously AI generated.**
 
-> I spent five days in Lisbon and I am still deciding how I feel about it. The city is beautiful, but the hills are as steep as everyone says. Every climb was a real climb, and each one ended in a view that made the climb feel like the point.
+> I spent five days in Lisbon and I am still deciding how I feel about it. The city is beautiful, but the hills make their case immediately. My legs paid for every climb, and each climb ended with a view that felt like the point of the walk.
 >
-> Tram 28 winds through the historic neighborhoods, so of course I rode it. The pastries were the better decision: a pastel de nata from Pastéis de Belém, still warm, is worth the hype it gets.
+> Tram 28 winds through the historic neighborhoods, so I rode it. The pastries were the better discovery: a pastel de nata from Pastéis de Belém, still warm, is hard to beat.
 >
 > What I liked most was the quieter side. A few steps off the main squares the city turns into sun-drenched alleys, tiled facades, and friendly locals going about their day. That is the Lisbon I would come back for, more than any single sight.
 >
-> São Jorge Castle looks out over the rooftops, and the view is as good as everyone says, but the queue is long enough to make you question it. I would go back, and I would plan the hills better this time.
+> São Jorge Castle looks out over the rooftops, and the climb delivers. Would I go back? Absolutely.
 
-**Changes made:** Kept the first-person travel recap and the details already in the source (five days, the hills, Tram 28, pastéis de nata at Pastéis de Belém, the quieter side, São Jorge Castle), while removing the chatbot framing, significance inflation, promotional language, forced enthusiasm, em dashes, rule-of-three cadence, generic upbeat conclusion, and emoji. Rebuilt the piece around concrete friction, mixed feelings, uneven rhythm, and the scenes from the source, with no invented dates, places, or experiences.
+**Changes made:** Kept the first-person travel recap and only the details present in the source (five days, the beauty, the tiring hills, the views, Tram 28, pastéis de nata at Pastéis de Belém, the quieter side, São Jorge Castle), while removing the chatbot framing, significance inflation, promotional language, forced enthusiasm, em dashes, rule-of-three cadence, generic upbeat conclusion, emoji, and details absent from the input (photos, the tram's popularity, pastry queues, future plans for the hills). Rebuilt the piece around concrete friction, mixed feelings, uneven rhythm, and the scenes from the source, with no invented dates, places, or experiences.
 
 ## Reference
 

@@ -13,6 +13,18 @@ import { validarConfirmacion, validarPassword } from "@/lib/validation";
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
+class EnlaceInvalido extends Error {}
+
+// decodeURIComponent lanza URIError ante secuencias inválidas (p.ej. "%" suelto
+// en el enlace): eso es un enlace malformado, no un fallo de contraseña.
+function decodificarParametro(valor?: string): string | undefined {
+  try {
+    return valor ? decodeURIComponent(valor) : undefined;
+  } catch {
+    throw new EnlaceInvalido();
+  }
+}
+
 type Estado = "formulario" | "ok" | "enlace_invalido";
 
 export default function RestablecerContrasenaPage() {
@@ -54,14 +66,18 @@ export default function RestablecerContrasenaPage() {
       await apiFetch("/api/auth/password/reset/confirm/", {
         method: "POST",
         body: {
-          uid: params?.uid ? decodeURIComponent(params.uid) : undefined,
-          token: params?.token ? decodeURIComponent(params.token) : undefined,
+          uid: decodificarParametro(params?.uid),
+          token: decodificarParametro(params?.token),
           password1: password,
           password2: confirmacion,
         },
       });
       setEstado("ok");
     } catch (err) {
+      if (err instanceof EnlaceInvalido) {
+        setEstado("enlace_invalido");
+        return;
+      }
       if (err instanceof ApiError && err.status === 400) {
         const codigo =
           err.details && typeof err.details === "object"
