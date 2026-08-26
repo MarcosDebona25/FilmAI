@@ -18,6 +18,7 @@ from allauth.account.adapter import get_adapter
 from allauth.account.forms import default_token_generator
 from allauth.account.utils import url_str_to_user_pk, user_pk_to_url_str
 from allauth.socialaccount.helpers import complete_social_login
+from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.providers.oauth2.client import OAuth2Error
 from dj_rest_auth.registration.serializers import (
     RegisterSerializer as BaseRegisterSerializer,
@@ -147,10 +148,13 @@ class RegisterSerializer(BaseRegisterSerializer):
 class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
     """Login/registro con Google OAuth (flujo `id_token`).
 
-    Para usuarios nuevos, Google no provee `nombre_usuario`, `fecha_nacimiento`
-    ni `genero`: se validan aquí (pantalla intermedia del frontend). La
+    Distingue dos casos según exista o no un `SocialAccount` vinculado al
+    `uid` de Google: si existe, es un login (no se exigen campos extra); si no,
+    es un registro nuevo y Google no provee `nombre_usuario`, `fecha_nacimiento`
+    ni `genero`, que se validan aquí (pantalla intermedia del frontend). La
     creación del `Usuario` con estos campos la realiza
-    `UsuarioSocialAccountAdapter.populate_user` leyendo el body del request.
+    `UsuarioSocialAccountAdapter.populate_user`, que los recibe pegados al
+    request (`request.google_extra`) en vez de releer el body (consumido por DRF).
     """
 
     nombre_usuario = serializers.CharField(max_length=25, required=False)
@@ -197,6 +201,14 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
         # adaptador decodifica el id_token desde `response` en complete_login).
         token = adapter.parse_token({"access_token": id_token, "id_token": id_token})
         token.app = app
+        # Los campos que Google no provee viajan al adapter pegados al request,
+        # no releídos de `request.body`: en un view de DRF el body ya fue
+        # consumido por el parser al construir `request.data`, y releerlo dentro
+        # de `populate_user` lanza RawPostDataException (500). Ver
+        # docs/decisiones.md (26/08/2026).
+        request.google_extra = {
+            campo: attrs.get(campo) for campo in CAMPOS_FALTANTES_GOOGLE
+        }
         try:
             login = self.get_social_login(
                 adapter, app, token, response={"id_token": id_token}
@@ -207,11 +219,25 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             HTTPError,
             RequestException,
         ) as err:
+            logger.exception(
+                "Google login: error al verificar el id_token (%s)", type(err).__name__
+            )
             raise serializers.ValidationError(
                 "No se pudo autenticar con Google."
             ) from err
 
-        if not login.is_existing:
+        # Determinar si la cuenta de Google YA está vinculada (login) o es
+        # nueva (registro). `login.is_existing` todavía es False acá porque
+        # allauth recién resuelve el `lookup()` dentro de `complete_social_login`;
+        # por eso se consulta el `SocialAccount` directamente, con el mismo
+        # criterio que el `_lookup_by_socialaccount` interno de allauth. Sin
+        # esto, el login de una cuenta existente siempre caía en la rama de
+        # "campos faltantes" (400) y el frontend la mandaba a /completar-google.
+        es_existente = SocialAccount.objects.filter(
+            provider=login.account.provider, uid=login.account.uid
+        ).exists()
+
+        if not es_existente:
             # Campos que Google no provee: obligatorios para cuentas nuevas.
             # Validar ANTES de complete_social_login para evitar que allauth
             # persista un usuario incompleto.
@@ -225,6 +251,27 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                     )
                 )
 
+            # Email duplicado también ANTES de complete_social_login: con
+            # SOCIALACCOUNT_AUTO_SIGNUP=True allauth puede crear el usuario
+            # dentro de esa llamada (p.ej. si el usuario existente no tiene
+            # `EmailAddress`, como los del seed), y entonces este chequeo a
+            # posteriori llegaría tarde: la fila ya estaría persistida pese a
+            # responderse 400. La unique de PostgreSQL solo cubre el caso
+            # exacto, no el insensible a mayúsculas.
+            if allauth_account_settings.UNIQUE_EMAIL:
+                user_obj = getattr(login, "user", None) or getattr(
+                    getattr(login, "account", None), "user", None
+                )
+                correo = getattr(user_obj, "correo", None)
+                if correo and Usuario.objects.filter(correo__iexact=correo).exists():
+                    # Mensaje deliberadamente explícito: la gente llega acá
+                    # intentando "crear cuenta con Google" y no entiende el
+                    # rechazo si ya registró ese correo de forma tradicional.
+                    raise serializers.ValidationError(
+                        "Ya existe una cuenta registrada con este correo."
+                        " Iniciá sesión con tu contraseña."
+                    )
+
         try:
             ret = complete_social_login(request, login)
         except (
@@ -233,6 +280,10 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             HTTPError,
             RequestException,
         ) as err:
+            logger.exception(
+                "Google login: error en complete_social_login (%s)",
+                type(err).__name__,
+            )
             raise serializers.ValidationError(
                 "No se pudo autenticar con Google."
             ) from err
@@ -240,10 +291,6 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             raise serializers.ValidationError(ret.content)
 
         if not login.is_existing:
-            if allauth_account_settings.UNIQUE_EMAIL:
-                email = getattr(login.user, "email", None)
-                if email and Usuario.objects.filter(correo__iexact=email).exists():
-                    raise serializers.ValidationError("El correo ya está registrado.")
             login.lookup()
             try:
                 login.save(request, connect=True)

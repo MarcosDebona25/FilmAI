@@ -13,15 +13,25 @@ export default function ConfirmarCorreoPage() {
   const [estado, setEstado] = useState<Estado>("cargando");
 
   useEffect(() => {
-    const key = params?.key;
-    if (!key) {
+    const rawKey = params?.key;
+    if (!rawKey) {
+      setEstado("error");
+      return;
+    }
+    // useParams() devuelve valores URL-encoded; la key HMAC contiene ":"
+    // que llega como "%3A" y rompe signing.loads en el backend.
+    let key: string;
+    try {
+      key = decodeURIComponent(rawKey);
+    } catch {
+      // Un "%" suelto hace lanzar URIError: es un enlace inválido, no un
+      // motivo para quedar en "cargando".
       setEstado("error");
       return;
     }
     apiFetch("/api/auth/registration/verify-email/", {
       method: "POST",
       body: { key },
-      auth: false,
     })
       .then(() => setEstado("ok"))
       .catch((err: unknown) => {

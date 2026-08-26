@@ -3,14 +3,14 @@
 ## PLANTILLA 02: ESPECIFICACIÓN DE REQUERIMIENTOS
 
 | Fecha de Presentación |
-| :---: |
-| 19/10/2025 |
+| :-------------------: |
+|      19/10/2025       |
 
 ### Integrantes del equipo de trabajo
 
-| Integrante |
-| :---- |
-| Debona, Marcos. |
+| Integrante       |
+| :--------------- |
+| Debona, Marcos.  |
 | Gaitán, Gonzalo. |
 
 ### 1. Descripción del Alcance del Problema
@@ -55,24 +55,24 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 
 ### 3. Requerimientos No Funcionales
 
-| RNF | Descripción |
-| :---- | :---- |
-| **3.1 RNF #1** | El sistema deberá ser accesible desde dispositivos de escritorio y móviles mediante diseño responsive. |
-| **3.2 RNF #2** | El sistema deberá almacenar las contraseñas hasheadas con bcrypt y cifrar los datos sensibles en reposo (a nivel de base de datos). |
-| **3.3 RNF #3** | Cuando el chatbot solicite acceso a un modelo LLM externo, el sistema deberá anonimizar datos sensibles antes de enviarlos al proveedor del modelo. |
-| **3.4 RNF #4** | El sistema deberá responder a solicitudes de navegación y búsqueda en menos de 2 segundos para el 90% de las peticiones en condiciones normales de carga. |
-| **3.5 RNF #5** | El sistema deberá invalidar automáticamente la sesión del usuario después de 8 horas de inactividad por motivos de seguridad. |
-| **3.6 RNF #6** | El sistema deberá entregar respuestas del chatbot en menos de 5 segundos para interacciones simples y en menos de 15 segundos para consultas que requieren agregación adicional. |
-| **3.7 RNF #7** | Las operaciones de sincronización con la API externa deberán realizarse sin afectar la experiencia del usuario. |
-| **3.8 RNF #8** | Las consultas a la API externa deberán optimizarse respetando sus límites de uso y reutilizando resultados almacenados en caché para evitar llamadas innecesarias. |
-| **3.9 RNF #9** | El sistema deberá procesar grandes volúmenes de datos de películas y series sin exceder 3 segundos de tiempo de respuesta para consultas de búsqueda. |
-| **3.10 RNF #10** | El sistema deberá responder a las solicitudes de usuario dentro de 2 segundos bajo condiciones normales de operación. |
-| **3.11 RNF #11** | El sistema deberá validar tokens de sesión de usuario y mantener autenticación segura durante todas las interacciones del usuario. |
-| **3.12 RNF #12** | El sistema deberá hashear contraseñas con bcrypt y encriptar todos los datos sensibles del usuario incluyendo correos electrónicos. |
-| **3.13 RNF #13** | El sistema deberá implementar protección contra vulnerabilidades web comunes (inyección SQL, XSS, CSRF). |
-| **3.14 RNF #14** | El sistema deberá soportar integración con bases de datos externas de películas a través de APIs. |
-| **3.15 RNF #15** | El sistema deberá ser compatible con navegadores web incluyendo Chrome, Firefox, Safari y Edge. |
-| **3.16 RNF #16** | El sistema deberá funcionar apropiadamente en navegadores móviles iOS y Android. |
+| RNF              | Descripción                                                                                                                                                                      |
+| :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **3.1 RNF #1**   | El sistema deberá ser accesible desde dispositivos de escritorio y móviles mediante diseño responsive.                                                                           |
+| **3.2 RNF #2**   | El sistema deberá almacenar las contraseñas hasheadas con bcrypt y cifrar los datos sensibles en reposo (a nivel de base de datos).                                              |
+| **3.3 RNF #3**   | Cuando el chatbot solicite acceso a un modelo LLM externo, el sistema deberá anonimizar datos sensibles antes de enviarlos al proveedor del modelo.                              |
+| **3.4 RNF #4**   | El sistema deberá responder a solicitudes de navegación y búsqueda en menos de 2 segundos para el 90% de las peticiones en condiciones normales de carga.                        |
+| **3.5 RNF #5**   | El sistema deberá invalidar automáticamente la sesión del usuario después de 8 horas de inactividad por motivos de seguridad.                                                    |
+| **3.6 RNF #6**   | El sistema deberá entregar respuestas del chatbot en menos de 5 segundos para interacciones simples y en menos de 15 segundos para consultas que requieren agregación adicional. |
+| **3.7 RNF #7**   | Las operaciones de sincronización con la API externa deberán realizarse sin afectar la experiencia del usuario.                                                                  |
+| **3.8 RNF #8**   | Las consultas a la API externa deberán optimizarse respetando sus límites de uso y reutilizando resultados almacenados en caché para evitar llamadas innecesarias.               |
+| **3.9 RNF #9**   | El sistema deberá procesar grandes volúmenes de datos de películas y series sin exceder 3 segundos de tiempo de respuesta para consultas de búsqueda.                            |
+| **3.10 RNF #10** | El sistema deberá responder a las solicitudes de usuario dentro de 2 segundos bajo condiciones normales de operación.                                                            |
+| **3.11 RNF #11** | El sistema deberá validar tokens de sesión de usuario y mantener autenticación segura durante todas las interacciones del usuario.                                               |
+| **3.12 RNF #12** | El sistema deberá hashear contraseñas con bcrypt y encriptar todos los datos sensibles del usuario incluyendo correos electrónicos.                                              |
+| **3.13 RNF #13** | El sistema deberá implementar protección contra vulnerabilidades web comunes (inyección SQL, XSS, CSRF).                                                                         |
+| **3.14 RNF #14** | El sistema deberá soportar integración con bases de datos externas de películas a través de APIs.                                                                                |
+| **3.15 RNF #15** | El sistema deberá ser compatible con navegadores web incluyendo Chrome, Firefox, Safari y Edge.                                                                                  |
+| **3.16 RNF #16** | El sistema deberá funcionar apropiadamente en navegadores móviles iOS y Android.                                                                                                 |
 
 ### 4. Diagrama de Casos de Uso
 
@@ -84,662 +84,662 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 
 #### CU-001: Crear cuenta de usuario
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-001 |
-| **Nombre** | Crear cuenta de usuario. |
-| **Breve Descripción** | Permite al usuario registrarse en el sistema mediante la creación de una cuenta. Incluye el envío de un correo electrónico de confirmación para activar la cuenta. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Baja. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario no debe tener una cuenta registrada previamente con el mismo correo electrónico. |
-| **Postcondiciones** | **Éxito:** La cuenta del usuario se registra y queda activa luego de la confirmación del correo. Los datos críticos del usuario se almacenan cifrados en la base de datos. |
-|  | **Fracaso:** El registro no se completa y la cuenta no se crea si los datos ingresados son inválidos, incompletos o el correo ya está registrado. |
+| Campo                   | Detalle                                                                                                                                                                    |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-001                                                                                                                                                                     |
+| **Nombre**              | Crear cuenta de usuario.                                                                                                                                                   |
+| **Breve Descripción**   | Permite al usuario registrarse en el sistema mediante la creación de una cuenta. Incluye el envío de un correo electrónico de confirmación para activar la cuenta.         |
+| **Prioridad**           | Alta.                                                                                                                                                                      |
+| **Complejidad**         | Baja.                                                                                                                                                                      |
+| **Actor principal**     | Usuario.                                                                                                                                                                   |
+| **Actores secundarios** | Ninguno.                                                                                                                                                                   |
+| **Precondiciones**      | El usuario no debe tener una cuenta registrada previamente con el mismo correo electrónico.                                                                                |
+| **Postcondiciones**     | **Éxito:** La cuenta del usuario se registra y queda activa luego de la confirmación del correo. Los datos críticos del usuario se almacenan cifrados en la base de datos. |
+|                         | **Fracaso:** El registro no se completa y la cuenta no se crea si los datos ingresados son inválidos, incompletos o el correo ya está registrado.                          |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario selecciona la opción "Crear cuenta" desde la página principal. | — |
-| 2. El sistema presenta la pantalla de registro de usuario solicitando: Nombre, Apellido, Nombre de usuario, Correo electrónico, Fecha de nacimiento, Género, Contraseña, Confirmar contraseña. | — |
-| 3. El usuario completa los campos requeridos y presiona "Aceptar". | 3.A. El usuario cancela la operación.<br>3.A.1 El sistema solicita confirmación de cancelación.<br>3.A.2 Si el usuario confirma, el caso de uso termina.<br>3.A.3 Si no confirma, se retorna al paso 2 del flujo principal. |
-| 4. El sistema valida la información ingresada. | 4.A. Ya existe un usuario con el mismo correo electrónico o nombre de usuario.<br>4.A.1 El sistema informa la situación.<br>4.A.2 Se retorna al paso 2.<br>4.B. La contraseña y su confirmación no coinciden.<br>4.B.1 El sistema informa la situación.<br>4.B.2 Se retorna al paso 2.<br>4.C. El formato del correo es inválido.<br>4.C.1 El sistema informa la situación.<br>4.C.2 Se retorna al paso 2.<br>4.D. Alguno de los campos obligatorios no fue completado o tiene un formato incorrecto.<br>4.D.1 El sistema muestra un mensaje indicando los campos faltantes o erróneos.<br>4.D.2 Se retorna al paso 2. |
-| 5. Si los datos son válidos, el sistema registra la nueva cuenta con estado "pendiente de verificación". | — |
-| 6. include(CU-002): envía el correo de confirmación y gestiona la activación de la cuenta. | 6.A. El envío del correo falla.<br>6.A.1 El sistema muestra un mensaje de error e informa que el intento puede repetirse más tarde. El caso de uso termina. |
-| 7. Dentro del correo, el usuario accede al enlace de confirmación recibido y presiona "Verificar cuenta". | — |
-| 8. El sistema activa la cuenta y muestra un mensaje de confirmación exitosa. | — |
-| 9. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                                | Flujo Alternativo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El usuario selecciona la opción "Crear cuenta" desde la página principal.                                                                                                                   | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 2. El sistema presenta la pantalla de registro de usuario solicitando: Nombre, Apellido, Nombre de usuario, Correo electrónico, Fecha de nacimiento, Género, Contraseña, Confirmar contraseña. | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 3. El usuario completa los campos requeridos y presiona "Aceptar".                                                                                                                             | 3.A. El usuario cancela la operación.<br>3.A.1 El sistema solicita confirmación de cancelación.<br>3.A.2 Si el usuario confirma, el caso de uso termina.<br>3.A.3 Si no confirma, se retorna al paso 2 del flujo principal.                                                                                                                                                                                                                                                                                                                                                                                            |
+| 4. El sistema valida la información ingresada.                                                                                                                                                 | 4.A. Ya existe un usuario con el mismo correo electrónico o nombre de usuario.<br>4.A.1 El sistema informa la situación.<br>4.A.2 Se retorna al paso 2.<br>4.B. La contraseña y su confirmación no coinciden.<br>4.B.1 El sistema informa la situación.<br>4.B.2 Se retorna al paso 2.<br>4.C. El formato del correo es inválido.<br>4.C.1 El sistema informa la situación.<br>4.C.2 Se retorna al paso 2.<br>4.D. Alguno de los campos obligatorios no fue completado o tiene un formato incorrecto.<br>4.D.1 El sistema muestra un mensaje indicando los campos faltantes o erróneos.<br>4.D.2 Se retorna al paso 2. |
+| 5. Si los datos son válidos, el sistema registra la nueva cuenta con estado "pendiente de verificación".                                                                                       | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 6. include(CU-002): envía el correo de confirmación y gestiona la activación de la cuenta.                                                                                                     | 6.A. El envío del correo falla.<br>6.A.1 El sistema muestra un mensaje de error e informa que el intento puede repetirse más tarde. El caso de uso termina.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 7. Dentro del correo, el usuario accede al enlace de confirmación recibido y presiona "Verificar cuenta".                                                                                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 8. El sistema activa la cuenta y muestra un mensaje de confirmación exitosa.                                                                                                                   | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 9. El caso de uso termina.                                                                                                                                                                     | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | El usuario puede cancelar la operación en cualquier momento presionando el botón "Cancelar". En ese caso, el sistema solicita confirmación. Si la respuesta es afirmativa, muestra "Operación cancelada", el usuario presiona "Aceptar" y el caso de uso finaliza. Si no, la operación continúa. |
-| **Observaciones** | Todos los campos solicitados en el formulario son obligatorios. La contraseña se almacena hasheada con bcrypt en la BD. El correo se almacena cifrado. La cuenta no podrá utilizarse hasta completar la confirmación del correo electrónico. Los estados posibles de la cuenta son: pendiente de confirmación, activa y baja.<br><br>**Restricciones de campos:**<br>- Nombre/Apellido: sólo letras, máximo 50 caracteres.<br>- Correo electrónico: formato válido usuario@dominio.com.<br>- Nombre de usuario: alfanumérico, 5–25 caracteres, único.<br>- Contraseña: 8-20 caracteres, debe contener al menos una mayúscula, una minúscula, un dígito y un carácter especial (@\#$%&\*!).<br>- Fecha de nacimiento: selector de fecha nativo (formato según locale del navegador, se envía en ISO). No puede ser una fecha futura y el usuario debe tener al menos 13 años de edad. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | El usuario puede cancelar la operación en cualquier momento presionando el botón "Cancelar". En ese caso, el sistema solicita confirmación. Si la respuesta es afirmativa, muestra "Operación cancelada", el usuario presiona "Aceptar" y el caso de uso finaliza. Si no, la operación continúa.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Observaciones**       | Todos los campos solicitados en el formulario son obligatorios. La contraseña se almacena hasheada con bcrypt en la BD. El correo se almacena cifrado. La cuenta no podrá utilizarse hasta completar la confirmación del correo electrónico. Los estados posibles de la cuenta son: pendiente de confirmación, activa y baja.<br><br>**Restricciones de campos:**<br>- Nombre/Apellido: sólo letras, máximo 50 caracteres.<br>- Correo electrónico: formato válido usuario@dominio.com.<br>- Nombre de usuario: alfanumérico, 5–25 caracteres, único.<br>- Contraseña: 8-20 caracteres, debe contener al menos una mayúscula, una minúscula, un dígito y un carácter especial (@\#$%&\*!).<br>- Fecha de nacimiento: selector de fecha nativo (formato según locale del navegador, se envía en ISO). No puede ser una fecha futura y el usuario debe tener al menos 13 años de edad. |
 
 ---
 
 #### CU-002: Confirmar cuenta por correo electrónico
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-002 |
-| **Nombre** | Confirmar cuenta por correo electrónico. |
-| **Breve Descripción** | Proceso de verificación y activación de la cuenta del usuario a través un enlace enviado a su correo electrónico. |
-| **Prioridad** | Baja. |
-| **Complejidad** | Media. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario realizó el registro de su cuenta a través del formulario y el sistema envió el correo de confirmación. |
-| **Postcondiciones** | **Éxito:** La cuenta del usuario se activa y el estado en la base de datos cambia de "pendiente de verificación" a "activa". |
-|  | **Fracaso:** La cuenta permanece en estado "pendiente de verificación". |
+| Campo                   | Detalle                                                                                                                      |
+| :---------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-002                                                                                                                       |
+| **Nombre**              | Confirmar cuenta por correo electrónico.                                                                                     |
+| **Breve Descripción**   | Proceso de verificación y activación de la cuenta del usuario a través un enlace enviado a su correo electrónico.            |
+| **Prioridad**           | Baja.                                                                                                                        |
+| **Complejidad**         | Media.                                                                                                                       |
+| **Actor principal**     | Usuario.                                                                                                                     |
+| **Actores secundarios** | Ninguno.                                                                                                                     |
+| **Precondiciones**      | El usuario realizó el registro de su cuenta a través del formulario y el sistema envió el correo de confirmación.            |
+| **Postcondiciones**     | **Éxito:** La cuenta del usuario se activa y el estado en la base de datos cambia de "pendiente de verificación" a "activa". |
+|                         | **Fracaso:** La cuenta permanece en estado "pendiente de verificación".                                                      |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario accede a su bandeja de correo electrónico. | — |
-| 2. El usuario hace clic en el enlace de confirmación incluido en el correo. | — |
-| 3. El sistema valida la confirmación mediante el token de confirmación de email de allauth (no un JWT de un solo uso). | — |
-| 4. El sistema activa la cuenta del usuario. | — |
-| 5. El sistema muestra un mensaje de confirmación exitosa. | — |
-| 6. El caso de uso termina. | — |
+| Flujo Principal                                                                                                        | Flujo Alternativo |
+| :--------------------------------------------------------------------------------------------------------------------- | :---------------- |
+| 1. El usuario accede a su bandeja de correo electrónico.                                                               | —                 |
+| 2. El usuario hace clic en el enlace de confirmación incluido en el correo.                                            | —                 |
+| 3. El sistema valida la confirmación mediante el token de confirmación de email de allauth (no un JWT de un solo uso). | —                 |
+| 4. El sistema activa la cuenta del usuario.                                                                            | —                 |
+| 5. El sistema muestra un mensaje de confirmación exitosa.                                                              | —                 |
+| 6. El caso de uso termina.                                                                                             | —                 |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | La confirmación consiste en acceder al enlace (no se emplean códigos) y a partir de ese momento el estado de la cuenta cambia a "activa". La cuenta no es accesible hasta que se complete la confirmación. El enlace de confirmación es permanente, no tiene vencimiento. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                   |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                                                         |
+| **Observaciones**       | La confirmación consiste en acceder al enlace (no se emplean códigos) y a partir de ese momento el estado de la cuenta cambia a "activa". La cuenta no es accesible hasta que se complete la confirmación. El enlace de confirmación es permanente, no tiene vencimiento. |
 
 ---
 
 #### CU-003: Iniciar sesión
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-003 |
-| **Nombre** | Iniciar sesión. |
-| **Breve Descripción** | Permite al usuario autenticarse y obtener acceso a las funcionalidades de la plataforma. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Media. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe tener una cuenta registrada y activa. |
-| **Postcondiciones** | **Éxito:** El usuario queda autenticado, se inicia una sesión válida y se accede a las funcionalidades protegidas. |
-|  | **Fracaso:** El usuario permanece en la pantalla de inicio de sesión y el sistema notifica el error de autenticación. |
+| Campo                   | Detalle                                                                                                               |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-003                                                                                                                |
+| **Nombre**              | Iniciar sesión.                                                                                                       |
+| **Breve Descripción**   | Permite al usuario autenticarse y obtener acceso a las funcionalidades de la plataforma.                              |
+| **Prioridad**           | Alta.                                                                                                                 |
+| **Complejidad**         | Media.                                                                                                                |
+| **Actor principal**     | Usuario.                                                                                                              |
+| **Actores secundarios** | Ninguno.                                                                                                              |
+| **Precondiciones**      | El usuario debe tener una cuenta registrada y activa.                                                                 |
+| **Postcondiciones**     | **Éxito:** El usuario queda autenticado, se inicia una sesión válida y se accede a las funcionalidades protegidas.    |
+|                         | **Fracaso:** El usuario permanece en la pantalla de inicio de sesión y el sistema notifica el error de autenticación. |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario selecciona la opción "Iniciar sesión". | — |
-| 2. El sistema presenta la pantalla de inicio de sesión solicitando: Nombre de usuario o correo, Contraseña. | — |
-| 3. El usuario ingresa sus credenciales y presiona "Iniciar sesión". | — |
-| 4. El sistema valida la información ingresada. | 4.A. El usuario ingresa credenciales incorrectas.<br>4.A.1. El sistema notifica el error de credenciales incorrectas.<br>4.A.2. El sistema retorna al paso 2. |
-| 5. El sistema autentica al usuario. | — |
-| 6. El sistema redirige al usuario a la página de inicio. | — |
-| 7. El caso de uso termina. | — |
+| Flujo Principal                                                                                             | Flujo Alternativo                                                                                                                                             |
+| :---------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. El usuario selecciona la opción "Iniciar sesión".                                                        | —                                                                                                                                                             |
+| 2. El sistema presenta la pantalla de inicio de sesión solicitando: Nombre de usuario o correo, Contraseña. | —                                                                                                                                                             |
+| 3. El usuario ingresa sus credenciales y presiona "Iniciar sesión".                                         | —                                                                                                                                                             |
+| 4. El sistema valida la información ingresada.                                                              | 4.A. El usuario ingresa credenciales incorrectas.<br>4.A.1. El sistema notifica el error de credenciales incorrectas.<br>4.A.2. El sistema retorna al paso 2. |
+| 5. El sistema autentica al usuario.                                                                         | —                                                                                                                                                             |
+| 6. El sistema redirige al usuario a la página de inicio.                                                    | —                                                                                                                                                             |
+| 7. El caso de uso termina.                                                                                  | —                                                                                                                                                             |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | El tipeo de la contraseña deberá mostrarse predeterminadamente con \*, dándole la opción al usuario de cambiar esto. La sesión del usuario tiene una duración de 8 horas. |
+| Campo                   | Detalle                                                                                                                                                                   |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Flujos de excepción** | —                                                                                                                                                                         |
+| **Observaciones**       | El tipeo de la contraseña deberá mostrarse predeterminadamente con \*, dándole la opción al usuario de cambiar esto. La sesión del usuario tiene una duración de 8 horas. |
 
 ---
 
 #### CU-004: Cerrar sesión
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-004 |
-| **Nombre** | Cerrar sesión. |
-| **Breve Descripción** | Termina la sesión activa del usuario quitándole el acceso a las operaciones del sistema. |
-| **Prioridad** | Media. |
-| **Complejidad** | Baja. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado y tener una sesión activa. |
-| **Postcondiciones** | **Éxito:** La sesión del usuario finaliza. |
-|  | **Fracaso:** La sesión no se cierra y el usuario permanece autenticado. |
+| Campo                   | Detalle                                                                                  |
+| :---------------------- | :--------------------------------------------------------------------------------------- |
+| **ID**                  | CU-004                                                                                   |
+| **Nombre**              | Cerrar sesión.                                                                           |
+| **Breve Descripción**   | Termina la sesión activa del usuario quitándole el acceso a las operaciones del sistema. |
+| **Prioridad**           | Media.                                                                                   |
+| **Complejidad**         | Baja.                                                                                    |
+| **Actor principal**     | Usuario.                                                                                 |
+| **Actores secundarios** | Ninguno.                                                                                 |
+| **Precondiciones**      | El usuario debe estar autenticado y tener una sesión activa.                             |
+| **Postcondiciones**     | **Éxito:** La sesión del usuario finaliza.                                               |
+|                         | **Fracaso:** La sesión no se cierra y el usuario permanece autenticado.                  |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario autenticado selecciona la opción "Cerrar sesión". | — |
-| 2. El sistema pregunta al usuario: "¿Está seguro que desea cerrar sesión?". | — |
+| Flujo Principal                                                                      | Flujo Alternativo                                                                                      |
+| :----------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------- |
+| 1. El usuario autenticado selecciona la opción "Cerrar sesión".                      | —                                                                                                      |
+| 2. El sistema pregunta al usuario: "¿Está seguro que desea cerrar sesión?".          | —                                                                                                      |
 | 3. El usuario confirma la acción y el sistema finaliza la sesión activa del usuario. | 3.A El usuario cancela la acción.<br>3.A.1 Su sesión continúa activa.<br>3.A.2 El caso de uso termina. |
-| 4. El sistema redirige al usuario a la página de inicio. | — |
-| 5. El caso de uso termina. | — |
+| 4. El sistema redirige al usuario a la página de inicio.                             | —                                                                                                      |
+| 5. El caso de uso termina.                                                           | —                                                                                                      |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | El sistema debe validar la finalización segura del token de sesión. Después de cerrar sesión, las secciones de Inicio, Buscar, Listas y Perfil serán inaccesibles hasta que el usuario inicie sesión nuevamente. |
+| Campo                   | Detalle                                                                                                                                                                                                          |
+| :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                                |
+| **Observaciones**       | El sistema debe validar la finalización segura del token de sesión. Después de cerrar sesión, las secciones de Inicio, Buscar, Listas y Perfil serán inaccesibles hasta que el usuario inicie sesión nuevamente. |
 
 ---
 
 #### CU-005: Acceder a la sección de perfil de usuario
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-005 |
-| **Nombre** | Acceder a la sección de perfil de usuario. |
-| **Breve Descripción** | Permite al usuario visualizar su información personal y detalles de la cuenta, al igual que sus reseñas recientes. |
-| **Prioridad** | Media. |
-| **Complejidad** | Media. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado (sesión activa). |
-| **Postcondiciones** | **Éxito:** El sistema carga y presenta la sección de perfil con la información del usuario actualizada. |
-|  | **Fracaso:** El acceso no es posible o la información no se carga correctamente. |
+| Campo                   | Detalle                                                                                                            |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-005                                                                                                             |
+| **Nombre**              | Acceder a la sección de perfil de usuario.                                                                         |
+| **Breve Descripción**   | Permite al usuario visualizar su información personal y detalles de la cuenta, al igual que sus reseñas recientes. |
+| **Prioridad**           | Media.                                                                                                             |
+| **Complejidad**         | Media.                                                                                                             |
+| **Actor principal**     | Usuario.                                                                                                           |
+| **Actores secundarios** | Ninguno.                                                                                                           |
+| **Precondiciones**      | El usuario debe estar autenticado (sesión activa).                                                                 |
+| **Postcondiciones**     | **Éxito:** El sistema carga y presenta la sección de perfil con la información del usuario actualizada.            |
+|                         | **Fracaso:** El acceso no es posible o la información no se carga correctamente.                                   |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario hace clic en su avatar (esquina superior derecha) y selecciona "Mi perfil" en el menú desplegable. | — |
-| 2. El sistema recupera la información completa del perfil y detalles de cuenta del usuario. | — |
-| 3. El sistema presenta la sección de perfil con la siguiente información: nombre, apellido, nombre de usuario, fecha de nacimiento, género, correo electrónico y fecha de registro. | — |
-| 4. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                     | Flujo Alternativo |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------- |
+| 1. El usuario hace clic en su avatar (esquina superior derecha) y selecciona "Mi perfil" en el menú desplegable.                                                                    | —                 |
+| 2. El sistema recupera la información completa del perfil y detalles de cuenta del usuario.                                                                                         | —                 |
+| 3. El sistema presenta la sección de perfil con la siguiente información: nombre, apellido, nombre de usuario, fecha de nacimiento, género, correo electrónico y fecha de registro. | —                 |
+| 4. El caso de uso termina.                                                                                                                                                          | —                 |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | La información de perfil debe mostrarse actualizada después de cualquier modificación por parte del usuario. El acceso al perfil se realiza a través del avatar del usuario en la barra de navegación, seleccionando "Mi perfil" en el menú desplegable. Si la sesión del usuario expira, es redirigido a la página de inicio de sesión. Las reseñas del usuario se consultan desde la sección "Mis reseñas" en el mismo menú desplegable del avatar. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Observaciones**       | La información de perfil debe mostrarse actualizada después de cualquier modificación por parte del usuario. El acceso al perfil se realiza a través del avatar del usuario en la barra de navegación, seleccionando "Mi perfil" en el menú desplegable. Si la sesión del usuario expira, es redirigido a la página de inicio de sesión. Las reseñas del usuario se consultan desde la sección "Mis reseñas" en el mismo menú desplegable del avatar. |
 
 ---
 
 #### CU-006: Modificar perfil
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-006 |
-| **Nombre** | Modificar perfil. |
-| **Breve Descripción** | Permite al usuario autenticado actualizar su información personal y detalles de cuenta. |
-| **Prioridad** | Media. |
-| **Complejidad** | Baja. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado. |
-| **Postcondiciones** | **Éxito:** La información del perfil del usuario se actualiza en la base de datos e inmediatamente se muestra renovada. |
-|  | **Fracaso:** Los cambios no se aplican porque la validación falla o el usuario cancela la operación. |
+| Campo                   | Detalle                                                                                                                 |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-006                                                                                                                  |
+| **Nombre**              | Modificar perfil.                                                                                                       |
+| **Breve Descripción**   | Permite al usuario autenticado actualizar su información personal y detalles de cuenta.                                 |
+| **Prioridad**           | Media.                                                                                                                  |
+| **Complejidad**         | Baja.                                                                                                                   |
+| **Actor principal**     | Usuario.                                                                                                                |
+| **Actores secundarios** | Ninguno.                                                                                                                |
+| **Precondiciones**      | El usuario debe estar autenticado.                                                                                      |
+| **Postcondiciones**     | **Éxito:** La información del perfil del usuario se actualiza en la base de datos e inmediatamente se muestra renovada. |
+|                         | **Fracaso:** Los cambios no se aplican porque la validación falla o el usuario cancela la operación.                    |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. extend(CU-005). | — |
-| 2. El usuario selecciona la opción "Editar perfil" desde su perfil. | — |
-| 3. El sistema transforma los campos del perfil a modo edición inline, permitiendo modificar: foto de perfil, nombre, apellido, nombre de usuario y, opcionalmente, contraseña. El correo electrónico es de solo lectura. | — |
-| 4. El usuario modifica los campos deseados y presiona "Guardar". | — |
-| 5. El sistema valida la información y el formato de los campos. | 5.A. La validación de los datos falla.<br>5.A.1. El sistema informa el error específico.<br>5.A.2. Se retorna al paso 3. |
-| 6. Si la información es válida, el sistema actualiza la base de datos con la nueva información. | — |
-| 7. El sistema muestra los cambios en el momento y notifica el éxito de la modificación. | — |
-| 8. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                                                          | Flujo Alternativo                                                                                                        |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| 1. extend(CU-005).                                                                                                                                                                                                       | —                                                                                                                        |
+| 2. El usuario selecciona la opción "Editar perfil" desde su perfil.                                                                                                                                                      | —                                                                                                                        |
+| 3. El sistema transforma los campos del perfil a modo edición inline, permitiendo modificar: foto de perfil, nombre, apellido, nombre de usuario y, opcionalmente, contraseña. El correo electrónico es de solo lectura. | —                                                                                                                        |
+| 4. El usuario modifica los campos deseados y presiona "Guardar".                                                                                                                                                         | —                                                                                                                        |
+| 5. El sistema valida la información y el formato de los campos.                                                                                                                                                          | 5.A. La validación de los datos falla.<br>5.A.1. El sistema informa el error específico.<br>5.A.2. Se retorna al paso 3. |
+| 6. Si la información es válida, el sistema actualiza la base de datos con la nueva información.                                                                                                                          | —                                                                                                                        |
+| 7. El sistema muestra los cambios en el momento y notifica el éxito de la modificación.                                                                                                                                  | —                                                                                                                        |
+| 8. El caso de uso termina.                                                                                                                                                                                               | —                                                                                                                        |
 
-| Campo | Detalle |
-| :---- | :---- |
+| Campo                   | Detalle                                                                                                                                                                                    |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Flujos de excepción** | El usuario puede cancelar la operación en cualquier momento. El sistema solicita confirmación de cancelación y, si el usuario confirma, los datos no se guardan y el caso de uso finaliza. |
-| **Observaciones** | El sistema debe cifrar la nueva información sensible. Los cambios deben mostrar la información actualizada en el momento. Las restricciones de campos igual que en el CU-001. |
+| **Observaciones**       | El sistema debe cifrar la nueva información sensible. Los cambios deben mostrar la información actualizada en el momento. Las restricciones de campos igual que en el CU-001.              |
 
 ---
 
 #### CU-007: Dar de baja la cuenta
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-007 |
-| **Nombre** | Dar de baja la cuenta. |
-| **Breve Descripción** | Permite al usuario eliminar permanentemente su cuenta. |
-| **Prioridad** | Baja. |
-| **Complejidad** | Baja. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado. |
-| **Postcondiciones** | **Éxito:** La cuenta del usuario es eliminada permanentemente del sistema y la sesión se cierra automáticamente. |
-|  | **Fracaso:** El estado de la cuenta no se modifica porque el usuario cancela la operación o la baja no puede realizarse. |
+| Campo                   | Detalle                                                                                                                  |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-007                                                                                                                   |
+| **Nombre**              | Dar de baja la cuenta.                                                                                                   |
+| **Breve Descripción**   | Permite al usuario eliminar permanentemente su cuenta.                                                                   |
+| **Prioridad**           | Baja.                                                                                                                    |
+| **Complejidad**         | Baja.                                                                                                                    |
+| **Actor principal**     | Usuario.                                                                                                                 |
+| **Actores secundarios** | Ninguno.                                                                                                                 |
+| **Precondiciones**      | El usuario debe estar autenticado.                                                                                       |
+| **Postcondiciones**     | **Éxito:** La cuenta del usuario es eliminada permanentemente del sistema y la sesión se cierra automáticamente.         |
+|                         | **Fracaso:** El estado de la cuenta no se modifica porque el usuario cancela la operación o la baja no puede realizarse. |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. extend(CU-005). | — |
-| 2. El usuario accede a "Preferencias" desde el menú desplegable del avatar y selecciona la opción "Dar de baja cuenta". | — |
-| 3. El sistema solicita confirmación para la baja de la cuenta. | — |
-| 4. El usuario confirma la baja de la cuenta apretando el botón "Confirmar". | 4.A. El usuario cancela la operación de baja.<br>4.A.1 Se retorna al paso 1, manteniendo al usuario en la sección del perfil. |
-| 5. El sistema elimina la cuenta del usuario y notifica la baja exitosa. | — |
-| 6. El sistema finaliza la sesión y redirige al usuario a la página de inicio. | — |
-| 7. El caso de uso termina. | — |
+| Flujo Principal                                                                                                         | Flujo Alternativo                                                                                                             |
+| :---------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| 1. extend(CU-005).                                                                                                      | —                                                                                                                             |
+| 2. El usuario accede a "Preferencias" desde el menú desplegable del avatar y selecciona la opción "Dar de baja cuenta". | —                                                                                                                             |
+| 3. El sistema solicita confirmación para la baja de la cuenta.                                                          | —                                                                                                                             |
+| 4. El usuario confirma la baja de la cuenta apretando el botón "Confirmar".                                             | 4.A. El usuario cancela la operación de baja.<br>4.A.1 Se retorna al paso 1, manteniendo al usuario en la sección del perfil. |
+| 5. El sistema elimina la cuenta del usuario y notifica la baja exitosa.                                                 | —                                                                                                                             |
+| 6. El sistema finaliza la sesión y redirige al usuario a la página de inicio.                                           | —                                                                                                                             |
+| 7. El caso de uso termina.                                                                                              | —                                                                                                                             |
 
-| Campo | Detalle |
-| :---- | :---- |
+| Campo                   | Detalle                                                                                                                                                         |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Flujos de excepción** | Por un error de sistema la baja no puede ser procesada al llegar al paso 5, entonces el sistema debe informar al usuario del fallo y mantener la cuenta activa. |
-| **Observaciones** | El borrado es lógico, por lo que hay que modificar el campo de estado de la cuenta de "activa" a "baja". |
+| **Observaciones**       | El borrado es lógico, por lo que hay que modificar el campo de estado de la cuenta de "activa" a "baja".                                                        |
 
 ---
 
 #### CU-008: Visualizar Catálogo
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-008 |
-| **Nombre** | Visualizar Catálogo. |
-| **Breve Descripción** | Permite al usuario acceder al catálogo unificado de películas y series proveniente de la base de datos externa (TMDB), visualizando la información detallada de cada ítem con opciones de filtrado, búsqueda y toggle de tipo (Todo/Películas/Series). |
-| **Prioridad** | Alta. |
-| **Complejidad** | Alta. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | API externa (TMDB). |
-| **Precondiciones** | El sistema debe estar conectado a la API externa y disponer de datos actualizados del catálogo. |
-| **Postcondiciones** | **Éxito:** El sistema muestra el catálogo actualizado con las películas y series disponibles. El usuario puede navegar, filtrar o consultar detalles individuales de los ítems. |
-|  | **Fracaso:** El sistema no logra recuperar datos del catálogo o la API externa está fuera de servicio. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-008                                                                                                                                                                                                                                                 |
+| **Nombre**              | Visualizar Catálogo.                                                                                                                                                                                                                                   |
+| **Breve Descripción**   | Permite al usuario acceder al catálogo unificado de películas y series proveniente de la base de datos externa (TMDB), visualizando la información detallada de cada ítem con opciones de filtrado, búsqueda y toggle de tipo (Todo/Películas/Series). |
+| **Prioridad**           | Alta.                                                                                                                                                                                                                                                  |
+| **Complejidad**         | Alta.                                                                                                                                                                                                                                                  |
+| **Actor principal**     | Usuario.                                                                                                                                                                                                                                               |
+| **Actores secundarios** | API externa (TMDB).                                                                                                                                                                                                                                    |
+| **Precondiciones**      | El sistema debe estar conectado a la API externa y disponer de datos actualizados del catálogo.                                                                                                                                                        |
+| **Postcondiciones**     | **Éxito:** El sistema muestra el catálogo actualizado con las películas y series disponibles. El usuario puede navegar, filtrar o consultar detalles individuales de los ítems.                                                                        |
+|                         | **Fracaso:** El sistema no logra recuperar datos del catálogo o la API externa está fuera de servicio.                                                                                                                                                 |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario selecciona la opción "Buscar" desde la barra de navegación. | — |
-| 2. El sistema solicita los datos del catálogo a la API TMDB o desde caché local. | 2.A. No se puede establecer conexión con la API externa.<br>2.A.1 El sistema recupera el catálogo almacenado localmente (última sincronización disponible). |
-| 3. El sistema presenta la grid paginada de ítems con información básica y un toggle para alternar entre Todo, Películas y Series. Cada ítem muestra: Título, Imagen (poster), Año de lanzamiento y badge de tipo. | — |
-| 4. El usuario puede aplicar filtros o realizar una búsqueda por nombre. | 4.A. No existen coincidencias para la búsqueda.<br>4.A.1 El sistema muestra el mensaje "No se encontraron resultados para su búsqueda". |
-| 5. El usuario selecciona un ítem del catálogo. | — |
-| 6. El sistema muestra la ficha completa del ítem seleccionado con: Sinopsis, Reparto principal, Duración/Cantidad de episodios, Géneros asociados, Calificación global y botón de calificar. | 6.A. El usuario cancela la visualización detallada.<br>6.A.1 El sistema retorna al listado general. |
-| 7. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                                                   | Flujo Alternativo                                                                                                                                           |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El usuario selecciona la opción "Buscar" desde la barra de navegación.                                                                                                                                         | —                                                                                                                                                           |
+| 2. El sistema solicita los datos del catálogo a la API TMDB o desde caché local.                                                                                                                                  | 2.A. No se puede establecer conexión con la API externa.<br>2.A.1 El sistema recupera el catálogo almacenado localmente (última sincronización disponible). |
+| 3. El sistema presenta la grid paginada de ítems con información básica y un toggle para alternar entre Todo, Películas y Series. Cada ítem muestra: Título, Imagen (poster), Año de lanzamiento y badge de tipo. | —                                                                                                                                                           |
+| 4. El usuario puede aplicar filtros o realizar una búsqueda por nombre.                                                                                                                                           | 4.A. No existen coincidencias para la búsqueda.<br>4.A.1 El sistema muestra el mensaje "No se encontraron resultados para su búsqueda".                     |
+| 5. El usuario selecciona un ítem del catálogo.                                                                                                                                                                    | —                                                                                                                                                           |
+| 6. El sistema muestra la ficha completa del ítem seleccionado con: Sinopsis, Reparto principal, Duración/Cantidad de episodios, Géneros asociados, Calificación global y botón de calificar.                      | 6.A. El usuario cancela la visualización detallada.<br>6.A.1 El sistema retorna al listado general.                                                         |
+| 7. El caso de uso termina.                                                                                                                                                                                        | —                                                                                                                                                           |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | Si ocurre un error de conexión con la API y no hay datos en caché, el sistema muestra el mensaje "No se pudo recuperar el catálogo. Intente nuevamente más tarde", y finaliza el caso de uso. |
-| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él.<br><br>**Campos de la vista de catálogo:** título, año, imagen, badge de tipo (película/serie).<br>**Filtros disponibles:** tipo (mediante toggle Todo/Películas/Series), género, año, calificación mínima (valor de 0 a 10 basado en la calificación promedio de TMDB).<br><br>**Restricciones:** El campo de búsqueda acepta texto alfanumérico (máx. 50 caracteres). La actualización con TMDB debe respetar límites de uso de la API y emplear caché local. Tiempo máximo de respuesta para carga inicial: 2 segundos (90% de las solicitudes). El sistema debe mantener la consistencia de los datos mostrados con la información más reciente disponible. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | Si ocurre un error de conexión con la API y no hay datos en caché, el sistema muestra el mensaje "No se pudo recuperar el catálogo. Intente nuevamente más tarde", y finaliza el caso de uso.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **Observaciones**       | No se permite utilizar el buscador hasta que se ingrese texto en él.<br><br>**Campos de la vista de catálogo:** título, año, imagen, badge de tipo (película/serie).<br>**Filtros disponibles:** tipo (mediante toggle Todo/Películas/Series), género, año, calificación mínima (valor de 0 a 10 basado en la calificación promedio de TMDB).<br><br>**Restricciones:** El campo de búsqueda acepta texto alfanumérico (máx. 50 caracteres). La actualización con TMDB debe respetar límites de uso de la API y emplear caché local. Tiempo máximo de respuesta para carga inicial: 2 segundos (90% de las solicitudes). El sistema debe mantener la consistencia de los datos mostrados con la información más reciente disponible. |
 
 ---
 
 #### CU-009: Consultar Listas
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-009 |
-| **Nombre** | Consultar Listas. |
-| **Breve Descripción** | Permite al usuario visualizar las listas de su cuenta, mostrando la información básica de cada elemento y permitiendo acceder al detalle de cada película o serie. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Alta. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado en el sistema. Deben existir listas asociadas al usuario (predeterminadas o personalizadas). |
-| **Postcondiciones** | **Éxito:** El sistema muestra las listas del usuario con sus respectivos elementos actualizados. El usuario puede acceder al detalle de los ítems listados. |
-|  | **Fracaso:** El sistema no muestra las listas si ocurre un error al recuperarlas. |
+| Campo                   | Detalle                                                                                                                                                            |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-009                                                                                                                                                             |
+| **Nombre**              | Consultar Listas.                                                                                                                                                  |
+| **Breve Descripción**   | Permite al usuario visualizar las listas de su cuenta, mostrando la información básica de cada elemento y permitiendo acceder al detalle de cada película o serie. |
+| **Prioridad**           | Alta.                                                                                                                                                              |
+| **Complejidad**         | Alta.                                                                                                                                                              |
+| **Actor principal**     | Usuario.                                                                                                                                                           |
+| **Actores secundarios** | Ninguno.                                                                                                                                                           |
+| **Precondiciones**      | El usuario debe estar autenticado en el sistema. Deben existir listas asociadas al usuario (predeterminadas o personalizadas).                                     |
+| **Postcondiciones**     | **Éxito:** El sistema muestra las listas del usuario con sus respectivos elementos actualizados. El usuario puede acceder al detalle de los ítems listados.        |
+|                         | **Fracaso:** El sistema no muestra las listas si ocurre un error al recuperarlas.                                                                                  |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario accede a la opción "Listas" desde la barra de navegación. | — |
-| 2. El sistema solicita al backend las listas asociadas al usuario autenticado. | — |
-| 3. El sistema muestra las listas disponibles del usuario, tanto las predeterminadas como las personalizadas. | — |
-| 4. El usuario selecciona una lista para visualizar su contenido. | 4.A. La lista seleccionada está vacía.<br>4.A.1. El sistema muestra el mensaje "La lista seleccionada no contiene elementos".<br>4.A.2. El sistema retorna al paso 3. |
-| 5. El sistema presenta la lista seleccionada con los ítems asociados, mostrando: Título, Imagen (poster), Año de lanzamiento. | — |
-| 6. El usuario selecciona un ítem de la lista. | 6.A. El usuario cancela la visualización del ítem.<br>6.A.1. El sistema retorna a la visualización de la lista. |
-| 7. El sistema muestra la información detallada del ítem (sinopsis, reparto, géneros, duración, etc.). | — |
-| 8. El usuario puede regresar a la vista general de listas. | — |
-| 9. El caso de uso termina. | — |
+| Flujo Principal                                                                                                               | Flujo Alternativo                                                                                                                                                     |
+| :---------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El usuario accede a la opción "Listas" desde la barra de navegación.                                                       | —                                                                                                                                                                     |
+| 2. El sistema solicita al backend las listas asociadas al usuario autenticado.                                                | —                                                                                                                                                                     |
+| 3. El sistema muestra las listas disponibles del usuario, tanto las predeterminadas como las personalizadas.                  | —                                                                                                                                                                     |
+| 4. El usuario selecciona una lista para visualizar su contenido.                                                              | 4.A. La lista seleccionada está vacía.<br>4.A.1. El sistema muestra el mensaje "La lista seleccionada no contiene elementos".<br>4.A.2. El sistema retorna al paso 3. |
+| 5. El sistema presenta la lista seleccionada con los ítems asociados, mostrando: Título, Imagen (poster), Año de lanzamiento. | —                                                                                                                                                                     |
+| 6. El usuario selecciona un ítem de la lista.                                                                                 | 6.A. El usuario cancela la visualización del ítem.<br>6.A.1. El sistema retorna a la visualización de la lista.                                                       |
+| 7. El sistema muestra la información detallada del ítem (sinopsis, reparto, géneros, duración, etc.).                         | —                                                                                                                                                                     |
+| 8. El usuario puede regresar a la vista general de listas.                                                                    | —                                                                                                                                                                     |
+| 9. El caso de uso termina.                                                                                                    | —                                                                                                                                                                     |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | Si ocurre un error de conexión o falla en la recuperación de datos, el sistema muestra el mensaje "No se pudieron recuperar las listas. Intente nuevamente más tarde." y finaliza el caso de uso. |
-| **Observaciones** | Dentro de la vista de listas, se muestran los siguientes campos: título, imagen, año de lanzamiento y fecha de agregado.<br><br>**Restricciones:** El usuario solo puede consultar listas propias. Los nombres de listas personalizadas pueden tener hasta 80 caracteres alfanuméricos. La actualización de las listas debe ser instantánea al agregar o eliminar ítems. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                  |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | Si ocurre un error de conexión o falla en la recuperación de datos, el sistema muestra el mensaje "No se pudieron recuperar las listas. Intente nuevamente más tarde." y finaliza el caso de uso.                                                                                                                                                                        |
+| **Observaciones**       | Dentro de la vista de listas, se muestran los siguientes campos: título, imagen, año de lanzamiento y fecha de agregado.<br><br>**Restricciones:** El usuario solo puede consultar listas propias. Los nombres de listas personalizadas pueden tener hasta 80 caracteres alfanuméricos. La actualización de las listas debe ser instantánea al agregar o eliminar ítems. |
 
 ---
 
 #### CU-010: Buscar Películas/Series por Nombre
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-010 |
-| **Nombre** | Buscar Películas/Series por Nombre. |
-| **Breve Descripción** | Permite al usuario realizar una búsqueda de películas o series dentro del catálogo unificado, escribiendo un texto parcial o completo del título. El catálogo se accede desde la opción "Buscar" en la barra de navegación, que despliega un panel con toggle de tipo (Todo/Películas/Series) y filtros. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Media. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | API externa (TMDB). |
-| **Precondiciones** | El panel de Buscar debe estar activo (accesible desde la barra de navegación). El sistema debe tener conexión con la API externa o disponer de resultados almacenados en caché. |
-| **Postcondiciones** | **Éxito:** El sistema muestra los resultados coincidentes con el texto de búsqueda. El usuario puede seleccionar un ítem y ver su detalle. |
-|  | **Fracaso:** El sistema no encuentra coincidencias o no puede obtener resultados debido a una falla de conexión. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                  |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-010                                                                                                                                                                                                                                                                                                   |
+| **Nombre**              | Buscar Películas/Series por Nombre.                                                                                                                                                                                                                                                                      |
+| **Breve Descripción**   | Permite al usuario realizar una búsqueda de películas o series dentro del catálogo unificado, escribiendo un texto parcial o completo del título. El catálogo se accede desde la opción "Buscar" en la barra de navegación, que despliega un panel con toggle de tipo (Todo/Películas/Series) y filtros. |
+| **Prioridad**           | Alta.                                                                                                                                                                                                                                                                                                    |
+| **Complejidad**         | Media.                                                                                                                                                                                                                                                                                                   |
+| **Actor principal**     | Usuario.                                                                                                                                                                                                                                                                                                 |
+| **Actores secundarios** | API externa (TMDB).                                                                                                                                                                                                                                                                                      |
+| **Precondiciones**      | El panel de Buscar debe estar activo (accesible desde la barra de navegación). El sistema debe tener conexión con la API externa o disponer de resultados almacenados en caché.                                                                                                                          |
+| **Postcondiciones**     | **Éxito:** El sistema muestra los resultados coincidentes con el texto de búsqueda. El usuario puede seleccionar un ítem y ver su detalle.                                                                                                                                                               |
+|                         | **Fracaso:** El sistema no encuentra coincidencias o no puede obtener resultados debido a una falla de conexión.                                                                                                                                                                                         |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. include(CU-008): el panel de Buscar está activo, mostrando el catálogo unificado. | — |
-| 2. El usuario ingresa un texto parcial o completo en el campo de búsqueda y presiona el botón "Buscar". | — |
-| 3. El sistema envía la consulta a la API externa o recupera resultados de la caché local. | 3.A. Ocurre un error de conexión con la API y no hay resultados en caché.<br>3.A.1. El sistema muestra el mensaje "No se pudo realizar la búsqueda. Intente nuevamente más tarde."<br>3.A.2. El caso de uso termina. |
-| 4. El sistema muestra los resultados paginados con los siguientes datos: Imagen (poster), Título, Año de lanzamiento, Calificación promedio. | — |
-| 5. El usuario selecciona un ítem de la lista. | 5.A. El usuario cancela la visualización del ítem.<br>5.A.1. El sistema retorna a los resultados de búsqueda. |
-| 6. El sistema muestra la ficha completa del ítem seleccionado con detalles obtenidos de la API. | — |
-| 7. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                              | Flujo Alternativo                                                                                                                                                                                                    |
+| :------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. include(CU-008): el panel de Buscar está activo, mostrando el catálogo unificado.                                                         | —                                                                                                                                                                                                                    |
+| 2. El usuario ingresa un texto parcial o completo en el campo de búsqueda y presiona el botón "Buscar".                                      | —                                                                                                                                                                                                                    |
+| 3. El sistema envía la consulta a la API externa o recupera resultados de la caché local.                                                    | 3.A. Ocurre un error de conexión con la API y no hay resultados en caché.<br>3.A.1. El sistema muestra el mensaje "No se pudo realizar la búsqueda. Intente nuevamente más tarde."<br>3.A.2. El caso de uso termina. |
+| 4. El sistema muestra los resultados paginados con los siguientes datos: Imagen (poster), Título, Año de lanzamiento, Calificación promedio. | —                                                                                                                                                                                                                    |
+| 5. El usuario selecciona un ítem de la lista.                                                                                                | 5.A. El usuario cancela la visualización del ítem.<br>5.A.1. El sistema retorna a los resultados de búsqueda.                                                                                                        |
+| 6. El sistema muestra la ficha completa del ítem seleccionado con detalles obtenidos de la API.                                              | —                                                                                                                                                                                                                    |
+| 7. El caso de uso termina.                                                                                                                   | —                                                                                                                                                                                                                    |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | No se permite utilizar el buscador hasta que se ingrese texto en él. Campo de búsqueda: texto alfanumérico (máx. 50 caracteres). No se permiten caracteres especiales fuera del alfabeto estándar. El sistema debe mantener la paginación y filtros aplicados hasta que se limpie la búsqueda o se cierre el panel de Buscar. Los resultados se muestran en una grid paginada con toggle de tipo (Todo/Películas/Series). |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Observaciones**       | No se permite utilizar el buscador hasta que se ingrese texto en él. Campo de búsqueda: texto alfanumérico (máx. 50 caracteres). No se permiten caracteres especiales fuera del alfabeto estándar. El sistema debe mantener la paginación y filtros aplicados hasta que se limpie la búsqueda o se cierre el panel de Buscar. Los resultados se muestran en una grid paginada con toggle de tipo (Todo/Películas/Series). |
 
 ---
 
 #### CU-011: Marcar película/serie como vista
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-011 |
-| **Nombre** | Marcar película/serie como vista. |
-| **Breve Descripción** | Permite al usuario añadir una película o serie a su historial de visualizaciones, actualizando su lista de "Vistas". |
-| **Prioridad** | Baja. |
-| **Complejidad** | Baja. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado en el sistema. |
-| **Postcondiciones** | **Éxito:** El ítem se registra y se añade a la lista de vistas. |
-|  | **Fracaso:** La lista del usuario no se modifica y el sistema informa de un error. |
+| Campo                   | Detalle                                                                                                              |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-011                                                                                                               |
+| **Nombre**              | Marcar película/serie como vista.                                                                                    |
+| **Breve Descripción**   | Permite al usuario añadir una película o serie a su historial de visualizaciones, actualizando su lista de "Vistas". |
+| **Prioridad**           | Baja.                                                                                                                |
+| **Complejidad**         | Baja.                                                                                                                |
+| **Actor principal**     | Usuario.                                                                                                             |
+| **Actores secundarios** | Ninguno.                                                                                                             |
+| **Precondiciones**      | El usuario debe estar autenticado en el sistema.                                                                     |
+| **Postcondiciones**     | **Éxito:** El ítem se registra y se añade a la lista de vistas.                                                      |
+|                         | **Fracaso:** La lista del usuario no se modifica y el sistema informa de un error.                                   |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. extend(CU-008). | — |
-| 2. El usuario selecciona la opción "Marcar como vista". | — |
-| 3. El sistema registra el ítem en el historial de visualizaciones del usuario. | — |
-| 4. El sistema notifica el éxito: "Elemento añadido al historial". | — |
-| 5. El caso de uso termina. | — |
+| Flujo Principal                                                                | Flujo Alternativo |
+| :----------------------------------------------------------------------------- | :---------------- |
+| 1. extend(CU-008).                                                             | —                 |
+| 2. El usuario selecciona la opción "Marcar como vista".                        | —                 |
+| 3. El sistema registra el ítem en el historial de visualizaciones del usuario. | —                 |
+| 4. El sistema notifica el éxito: "Elemento añadido al historial".              | —                 |
+| 5. El caso de uso termina.                                                     | —                 |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | Si ocurre un error de conexión con la base de datos durante el paso 3, el sistema muestra el mensaje de error "No se pudo actualizar el historial. Intente nuevamente." y el caso de uso finaliza. |
-| **Observaciones** | La acción de marcar como visto actualiza automáticamente la lista "Vistas" en la sección de Listas del usuario. La opción de "Marcar como vista" permite alternar el estado en el historial del elemento en cuestión, ya sea añadiéndolo o eliminándolo.<br><br>Para desmarcar un elemento previamente marcado como "Visto", el sistema debe verificar si el elemento ha sido calificado. Si el elemento tiene una calificación asociada, se debe informar al usuario que es necesario eliminar dicha calificación antes de poder proceder con la acción de desmarcar.<br><br>Desde la ficha de cada película/serie (CU-008) también se podrá acceder a botones de acción directa para agregar o quitar de las listas predeterminadas "Favoritos", "Vistos" y "Pendientes", así como a un menú desplegable tipo checklist para agregar a listas personalizadas. Las listas no son mutuamente excluyentes: un mismo ítem puede pertenecer simultáneamente a varias listas del usuario. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Flujos de excepción** | Si ocurre un error de conexión con la base de datos durante el paso 3, el sistema muestra el mensaje de error "No se pudo actualizar el historial. Intente nuevamente." y el caso de uso finaliza.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Observaciones**       | La acción de marcar como visto actualiza automáticamente la lista "Vistas" en la sección de Listas del usuario. La opción de "Marcar como vista" permite alternar el estado en el historial del elemento en cuestión, ya sea añadiéndolo o eliminándolo.<br><br>Para desmarcar un elemento previamente marcado como "Visto", el sistema debe verificar si el elemento ha sido calificado. Si el elemento tiene una calificación asociada, se debe informar al usuario que es necesario eliminar dicha calificación antes de poder proceder con la acción de desmarcar.<br><br>Desde la ficha de cada película/serie (CU-008) también se podrá acceder a botones de acción directa para agregar o quitar de las listas predeterminadas "Favoritos", "Vistos" y "Pendientes", así como a un menú desplegable tipo checklist para agregar a listas personalizadas. Las listas no son mutuamente excluyentes: un mismo ítem puede pertenecer simultáneamente a varias listas del usuario. |
 
 ---
 
 #### CU-012: Gestionar listas
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-012 |
-| **Nombre** | Gestionar listas. |
-| **Breve Descripción** | Permite al usuario crear, modificar (renombrar, sacar películas/series) y eliminar sus listas personales. Además, se permite eliminar ítems de cualquier lista del usuario. |
-| **Prioridad** | Media. |
-| **Complejidad** | Alta. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado y haber accedido a la sección "Listas". |
-| **Postcondiciones** | **Éxito:** La lista es creada, actualizada o eliminada, o un ítem es removido de una lista. El cambio se refleja inmediatamente en la interfaz. |
-|  | **Fracaso:** No se realizan cambios en las listas. |
+| Campo                   | Detalle                                                                                                                                                                     |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-012                                                                                                                                                                      |
+| **Nombre**              | Gestionar listas.                                                                                                                                                           |
+| **Breve Descripción**   | Permite al usuario crear, modificar (renombrar, sacar películas/series) y eliminar sus listas personales. Además, se permite eliminar ítems de cualquier lista del usuario. |
+| **Prioridad**           | Media.                                                                                                                                                                      |
+| **Complejidad**         | Alta.                                                                                                                                                                       |
+| **Actor principal**     | Usuario.                                                                                                                                                                    |
+| **Actores secundarios** | Ninguno.                                                                                                                                                                    |
+| **Precondiciones**      | El usuario debe estar autenticado y haber accedido a la sección "Listas".                                                                                                   |
+| **Postcondiciones**     | **Éxito:** La lista es creada, actualizada o eliminada, o un ítem es removido de una lista. El cambio se refleja inmediatamente en la interfaz.                             |
+|                         | **Fracaso:** No se realizan cambios en las listas.                                                                                                                          |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. extend(CU-009). | — |
-| 2. El usuario selecciona una opción de gestión sobre una lista personal: "Crear Nueva Lista", "Renombrar" o "Eliminar". | — |
-| 3. Si es "Crear Nueva Lista": El sistema solicita el nombre para la nueva lista. El usuario lo ingresa y presiona "Aceptar". | — |
-| 4. Si es "Renombrar": El sistema solicita el nuevo nombre para la lista seleccionada. El usuario lo ingresa y presiona "Aceptar". | 4.A. El nombre de la lista es inválido o ya existe.<br>4.A.1. El sistema muestra un mensaje de error especificando el problema.<br>4.A.2. Se retorna al paso 1. |
-| 5. Si es "Eliminar Lista": El sistema solicita confirmación: "¿Desea eliminar esta lista permanentemente? Esta acción no puede deshacerse". El usuario presiona "Confirmar". | 5.A El usuario cancela la eliminación.<br>5.A.1. El sistema cierra el modal de confirmación y la operación no se realiza.<br>5.A.2. El caso de uso termina. |
-| 6. Si el usuario, dentro de la lista, selecciona la opción para eliminar cierto ítem: El sistema solicita confirmación: "¿Está seguro que desea quitar este elemento de la lista?". El usuario presiona "Confirmar". | 6.A El usuario cancela la eliminación.<br>6.A.1. El sistema cierra el modal de confirmación y la operación no se realiza.<br>6.A.2. El caso de uso termina. |
-| 7. El sistema actualiza la vista y muestra una notificación de éxito. | — |
-| 8. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                                                      | Flujo Alternativo                                                                                                                                               |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. extend(CU-009).                                                                                                                                                                                                   | —                                                                                                                                                               |
+| 2. El usuario selecciona una opción de gestión sobre una lista personal: "Crear Nueva Lista", "Renombrar" o "Eliminar".                                                                                              | —                                                                                                                                                               |
+| 3. Si es "Crear Nueva Lista": El sistema solicita el nombre para la nueva lista. El usuario lo ingresa y presiona "Aceptar".                                                                                         | —                                                                                                                                                               |
+| 4. Si es "Renombrar": El sistema solicita el nuevo nombre para la lista seleccionada. El usuario lo ingresa y presiona "Aceptar".                                                                                    | 4.A. El nombre de la lista es inválido o ya existe.<br>4.A.1. El sistema muestra un mensaje de error especificando el problema.<br>4.A.2. Se retorna al paso 1. |
+| 5. Si es "Eliminar Lista": El sistema solicita confirmación: "¿Desea eliminar esta lista permanentemente? Esta acción no puede deshacerse". El usuario presiona "Confirmar".                                         | 5.A El usuario cancela la eliminación.<br>5.A.1. El sistema cierra el modal de confirmación y la operación no se realiza.<br>5.A.2. El caso de uso termina.     |
+| 6. Si el usuario, dentro de la lista, selecciona la opción para eliminar cierto ítem: El sistema solicita confirmación: "¿Está seguro que desea quitar este elemento de la lista?". El usuario presiona "Confirmar". | 6.A El usuario cancela la eliminación.<br>6.A.1. El sistema cierra el modal de confirmación y la operación no se realiza.<br>6.A.2. El caso de uso termina.     |
+| 7. El sistema actualiza la vista y muestra una notificación de éxito.                                                                                                                                                | —                                                                                                                                                               |
+| 8. El caso de uso termina.                                                                                                                                                                                           | —                                                                                                                                                               |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | El usuario puede cancelar cualquier operación en cualquier momento. El sistema solicitará confirmación y, si el usuario acepta, finalizará el caso de uso sin guardar cambios. Si ocurre un error de base de datos el sistema notificará el fallo y no aplicará el cambio. |
-| **Observaciones** | Las listas predeterminadas ("Favoritos", "Pendientes", "Vistas") no pueden ser renombradas ni eliminadas, pero sí se pueden eliminar ítems de ellas. La eliminación de una lista personal es permanente y elimina todos los ítems en ella.<br><br>**Restricciones de campos:** Nombre de lista: Texto alfanumérico, longitud máxima de 80 caracteres. No puede estar vacío. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                     |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | El usuario puede cancelar cualquier operación en cualquier momento. El sistema solicitará confirmación y, si el usuario acepta, finalizará el caso de uso sin guardar cambios. Si ocurre un error de base de datos el sistema notificará el fallo y no aplicará el cambio.                                                                                                  |
+| **Observaciones**       | Las listas predeterminadas ("Favoritos", "Pendientes", "Vistas") no pueden ser renombradas ni eliminadas, pero sí se pueden eliminar ítems de ellas. La eliminación de una lista personal es permanente y elimina todos los ítems en ella.<br><br>**Restricciones de campos:** Nombre de lista: Texto alfanumérico, longitud máxima de 80 caracteres. No puede estar vacío. |
 
 ---
 
 #### CU-013: Interactuar con el chatbot
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-013 |
-| **Nombre** | Interactuar con el chatbot. |
-| **Breve Descripción** | Permite al usuario realizar consultas y solicitar recomendaciones de películas/series a través del chatbot, que utiliza el contexto del usuario para generar respuestas personalizadas. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Alta. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | API del LLM del Chatbot. |
-| **Precondiciones** | El chatbot es accesible desde cualquier pantalla a través del FAB flotante. |
-| **Postcondiciones** | **Éxito:** El sistema procesa la consulta del usuario y entrega una respuesta/recomendación en la interfaz del chatbot. |
-|  | **Fracaso:** El sistema informa que no puede procesar la solicitud o que ha ocurrido un error de conexión. |
+| Campo                   | Detalle                                                                                                                                                                                 |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-013                                                                                                                                                                                  |
+| **Nombre**              | Interactuar con el chatbot.                                                                                                                                                             |
+| **Breve Descripción**   | Permite al usuario realizar consultas y solicitar recomendaciones de películas/series a través del chatbot, que utiliza el contexto del usuario para generar respuestas personalizadas. |
+| **Prioridad**           | Alta.                                                                                                                                                                                   |
+| **Complejidad**         | Alta.                                                                                                                                                                                   |
+| **Actor principal**     | Usuario.                                                                                                                                                                                |
+| **Actores secundarios** | API del LLM del Chatbot.                                                                                                                                                                |
+| **Precondiciones**      | El chatbot es accesible desde cualquier pantalla a través del FAB flotante.                                                                                                             |
+| **Postcondiciones**     | **Éxito:** El sistema procesa la consulta del usuario y entrega una respuesta/recomendación en la interfaz del chatbot.                                                                 |
+|                         | **Fracaso:** El sistema informa que no puede procesar la solicitud o que ha ocurrido un error de conexión.                                                                              |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario abre la interfaz del chatbot accesible en la página. | — |
-| 2. El sistema muestra un mensaje de bienvenida. | — |
-| 3. El usuario escribe una consulta en el campo de texto y la envía. | — |
-| 4. El sistema muestra un indicador para mostrar que el chatbot está procesando la solicitud. | 4.A El usuario cancela la solicitud.<br>4.A.1: Se activa el CU-014. |
+| Flujo Principal                                                                                                                                                   | Flujo Alternativo                                                                                                                                                                             |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El usuario abre la interfaz del chatbot accesible en la página.                                                                                                | —                                                                                                                                                                                             |
+| 2. El sistema muestra un mensaje de bienvenida.                                                                                                                   | —                                                                                                                                                                                             |
+| 3. El usuario escribe una consulta en el campo de texto y la envía.                                                                                               | —                                                                                                                                                                                             |
+| 4. El sistema muestra un indicador para mostrar que el chatbot está procesando la solicitud.                                                                      | 4.A El usuario cancela la solicitud.<br>4.A.1: Se activa el CU-014.                                                                                                                           |
 | 5. include(CU-018): El sistema procesa la consulta, anonimiza datos sensibles y la envía a la API del LLM junto con el contexto del usuario (historial, reseñas). | 5.A. La API del LLM no está disponible o devuelve un error.<br>5.A.1. El sistema muestra el mensaje: "No podemos procesar tu solicitud. Intenta más tarde".<br>5.A.2. El caso de uso termina. |
-| 6. El sistema recibe la respuesta de la API del LLM. | — |
-| 7. El sistema muestra la respuesta formateada al usuario en la ventana del chat. | — |
-| 8. El caso de uso termina. | — |
+| 6. El sistema recibe la respuesta de la API del LLM.                                                                                                              | —                                                                                                                                                                                             |
+| 7. El sistema muestra la respuesta formateada al usuario en la ventana del chat.                                                                                  | —                                                                                                                                                                                             |
+| 8. El caso de uso termina.                                                                                                                                        | —                                                                                                                                                                                             |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | El chatbot solo está disponible para usuarios autenticados. Los datos sensibles del usuario (email, nombre, apellido) deben ser anonimizados antes de ser enviados al proveedor del LLM.<br><br>**Tiempos de respuesta esperados:**<br>- Menos de 5 segundos para interacciones simples.<br>- Menos de 15 segundos para consultas complejas que requieran agregación de datos. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                        |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                                                                                                                                                              |
+| **Observaciones**       | El chatbot solo está disponible para usuarios autenticados. Los datos sensibles del usuario (email, nombre, apellido) deben ser anonimizados antes de ser enviados al proveedor del LLM.<br><br>**Tiempos de respuesta esperados:**<br>- Menos de 5 segundos para interacciones simples.<br>- Menos de 15 segundos para consultas complejas que requieran agregación de datos. |
 
 ---
 
 #### CU-014: Cancelar recomendación en curso
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-014 |
-| **Nombre** | Cancelar recomendación en curso. |
-| **Breve Descripción** | Permite al usuario interrumpir una solicitud de recomendación enviada al chatbot mientras esta se encuentra en estado de procesamiento. |
-| **Prioridad** | Baja. |
-| **Complejidad** | Baja. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario ha enviado una consulta al chatbot y el sistema está procesándola, mostrando un indicador de progreso. |
-| **Postcondiciones** | **Éxito:** La solicitud en curso es cancelada, el indicador de progreso desaparece y la interfaz del chatbot vuelve a estar disponible para una nueva consulta. |
-|  | **Fracaso:** La cancelación no se procesa a tiempo y el sistema muestra la respuesta de la solicitud. |
+| Campo                   | Detalle                                                                                                                                                         |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-014                                                                                                                                                          |
+| **Nombre**              | Cancelar recomendación en curso.                                                                                                                                |
+| **Breve Descripción**   | Permite al usuario interrumpir una solicitud de recomendación enviada al chatbot mientras esta se encuentra en estado de procesamiento.                         |
+| **Prioridad**           | Baja.                                                                                                                                                           |
+| **Complejidad**         | Baja.                                                                                                                                                           |
+| **Actor principal**     | Usuario.                                                                                                                                                        |
+| **Actores secundarios** | Ninguno.                                                                                                                                                        |
+| **Precondiciones**      | El usuario ha enviado una consulta al chatbot y el sistema está procesándola, mostrando un indicador de progreso.                                               |
+| **Postcondiciones**     | **Éxito:** La solicitud en curso es cancelada, el indicador de progreso desaparece y la interfaz del chatbot vuelve a estar disponible para una nueva consulta. |
+|                         | **Fracaso:** La cancelación no se procesa a tiempo y el sistema muestra la respuesta de la solicitud.                                                           |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. extend(CU-013). | — |
-| 2. El usuario selecciona la opción "Cancelar" disponible junto al indicador de progreso. | 2.A. El usuario presiona "Cancelar" pero la respuesta del sistema llega en el mismo instante.<br>2.A.1. El sistema prioriza la acción de cancelación, descarta la respuesta recibida y continúa con el paso 3 del flujo principal. |
-| 3. El sistema detiene el procesamiento de la solicitud actual. | — |
-| 4. El sistema oculta el indicador de progreso. | — |
-| 5. El sistema muestra el mensaje "Solicitud cancelada" en el chat y habilita nuevamente el campo de entrada. | — |
-| 6. El caso de uso termina. | — |
+| Flujo Principal                                                                                              | Flujo Alternativo                                                                                                                                                                                                                  |
+| :----------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. extend(CU-013).                                                                                           | —                                                                                                                                                                                                                                  |
+| 2. El usuario selecciona la opción "Cancelar" disponible junto al indicador de progreso.                     | 2.A. El usuario presiona "Cancelar" pero la respuesta del sistema llega en el mismo instante.<br>2.A.1. El sistema prioriza la acción de cancelación, descarta la respuesta recibida y continúa con el paso 3 del flujo principal. |
+| 3. El sistema detiene el procesamiento de la solicitud actual.                                               | —                                                                                                                                                                                                                                  |
+| 4. El sistema oculta el indicador de progreso.                                                               | —                                                                                                                                                                                                                                  |
+| 5. El sistema muestra el mensaje "Solicitud cancelada" en el chat y habilita nuevamente el campo de entrada. | —                                                                                                                                                                                                                                  |
+| 6. El caso de uso termina.                                                                                   | —                                                                                                                                                                                                                                  |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | Si ocurre un error de comunicación que impide cancelar la solicitud en el backend, el sistema podría eventualmente mostrar la respuesta una vez que llegue, aunque el usuario haya intentado cancelar. |
+| Campo                   | Detalle                                                                                                                                                                                                |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                      |
+| **Observaciones**       | Si ocurre un error de comunicación que impide cancelar la solicitud en el backend, el sistema podría eventualmente mostrar la respuesta una vez que llegue, aunque el usuario haya intentado cancelar. |
 
 ---
 
 #### CU-015: Gestionar Reseña y Calificación (ABM)
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-015 |
-| **Nombre** | Gestionar Reseña y Calificación (ABM). |
-| **Breve Descripción** | Permite al usuario publicar, modificar y eliminar sus propias reseñas y calificaciones (rango de 1 a 10 estrellas). |
-| **Prioridad** | Alta. |
-| **Complejidad** | Alta. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe estar autenticado y estar visualizando la ficha detallada de una película o serie. |
-| **Postcondiciones** | **Éxito:** La calificación y/o reseña se almacenan, modifican o eliminan en el sistema. Las reseñas recientes se actualizan en el perfil del usuario. |
-|  | **Fracaso:** La publicación, modificación o eliminación no se realiza. |
+| Campo                   | Detalle                                                                                                                                               |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-015                                                                                                                                                |
+| **Nombre**              | Gestionar Reseña y Calificación (ABM).                                                                                                                |
+| **Breve Descripción**   | Permite al usuario publicar, modificar y eliminar sus propias reseñas y calificaciones (rango de 1 a 10 estrellas).                                   |
+| **Prioridad**           | Alta.                                                                                                                                                 |
+| **Complejidad**         | Alta.                                                                                                                                                 |
+| **Actor principal**     | Usuario.                                                                                                                                              |
+| **Actores secundarios** | Ninguno.                                                                                                                                              |
+| **Precondiciones**      | El usuario debe estar autenticado y estar visualizando la ficha detallada de una película o serie.                                                    |
+| **Postcondiciones**     | **Éxito:** La calificación y/o reseña se almacenan, modifican o eliminan en el sistema. Las reseñas recientes se actualizan en el perfil del usuario. |
+|                         | **Fracaso:** La publicación, modificación o eliminación no se realiza.                                                                                |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario accede a la funcionalidad de gestión de calificaciones/reseñas (desde CU-008 o CU-005). | — |
-| 2. El usuario selecciona una opción de gestión: "Publicar Reseña", "Modificar Reseña" o "Eliminar Reseña". | — |
-| 3. Si es "Publicar Reseña": El usuario ingresa la calificación (1-10). Opcionalmente, el usuario ingresa el contenido de la reseña. El usuario presiona "Publicar". | 3.A. El usuario cancela la publicación.<br>3.A.1. El sistema cierra el modal de publicación.<br>3.A.2. El caso de uso termina.<br>3.B El usuario intenta publicar sin calificar.<br>3.B.1. El sistema deniega la publicación y notifica el error.<br>3.B.2. Se retorna al paso 2. |
-| 4. Si es "Modificar Reseña": El sistema presenta la interfaz con la calificación y texto actuales. El usuario modifica la calificación (1-10) y/o el texto. El usuario presiona "Actualizar". | 4.A El usuario cancela la modificación.<br>4.A.1. El sistema cierra el modal de modificación.<br>4.A.2. El caso de uso termina.<br>4.B. La validación falla (ej. calificación 0).<br>4.B.1. El sistema informa el error.<br>4.B.2. Se retorna al paso 2. |
-| 5. Si es "Eliminar Reseña": El sistema solicita confirmación: "¿Desea eliminar esta reseña permanentemente?". El usuario presiona "Confirmar". | 5.A. El usuario cancela la eliminación.<br>5.A.1. El sistema cierra el modal de confirmación.<br>5.A.2. El caso de uso termina. |
-| 6. El sistema valida la información (si aplica) y la almacena, modifica o elimina en la base de datos. | — |
-| 7. El sistema actualiza la vista (ej. perfil) y notifica el éxito de la operación. | — |
-| 8. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                               | Flujo Alternativo                                                                                                                                                                                                                                                                 |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El usuario accede a la funcionalidad de gestión de calificaciones/reseñas (desde CU-008 o CU-005).                                                                                         | —                                                                                                                                                                                                                                                                                 |
+| 2. El usuario selecciona una opción de gestión: "Publicar Reseña", "Modificar Reseña" o "Eliminar Reseña".                                                                                    | —                                                                                                                                                                                                                                                                                 |
+| 3. Si es "Publicar Reseña": El usuario ingresa la calificación (1-10). Opcionalmente, el usuario ingresa el contenido de la reseña. El usuario presiona "Publicar".                           | 3.A. El usuario cancela la publicación.<br>3.A.1. El sistema cierra el modal de publicación.<br>3.A.2. El caso de uso termina.<br>3.B El usuario intenta publicar sin calificar.<br>3.B.1. El sistema deniega la publicación y notifica el error.<br>3.B.2. Se retorna al paso 2. |
+| 4. Si es "Modificar Reseña": El sistema presenta la interfaz con la calificación y texto actuales. El usuario modifica la calificación (1-10) y/o el texto. El usuario presiona "Actualizar". | 4.A El usuario cancela la modificación.<br>4.A.1. El sistema cierra el modal de modificación.<br>4.A.2. El caso de uso termina.<br>4.B. La validación falla (ej. calificación 0).<br>4.B.1. El sistema informa el error.<br>4.B.2. Se retorna al paso 2.                          |
+| 5. Si es "Eliminar Reseña": El sistema solicita confirmación: "¿Desea eliminar esta reseña permanentemente?". El usuario presiona "Confirmar".                                                | 5.A. El usuario cancela la eliminación.<br>5.A.1. El sistema cierra el modal de confirmación.<br>5.A.2. El caso de uso termina.                                                                                                                                                   |
+| 6. El sistema valida la información (si aplica) y la almacena, modifica o elimina en la base de datos.                                                                                        | —                                                                                                                                                                                                                                                                                 |
+| 7. El sistema actualiza la vista (ej. perfil) y notifica el éxito de la operación.                                                                                                            | —                                                                                                                                                                                                                                                                                 |
+| 8. El caso de uso termina.                                                                                                                                                                    | —                                                                                                                                                                                                                                                                                 |
 
-| Campo | Detalle |
-| :---- | :---- |
+| Campo                   | Detalle                                                                                                                                                                                          |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Flujos de excepción** | Si ocurre un error de conexión o base de datos al intentar almacenar, modificar o eliminar la reseña/calificación, el sistema notifica el fallo y el caso de uso finaliza sin guardar los datos. |
-| **Observaciones** | La calificación debe estar en el rango de 1 a 10. La realización de una reseña es opcional. El texto de la reseña tiene un límite de 1000 caracteres. |
+| **Observaciones**       | La calificación debe estar en el rango de 1 a 10. La realización de una reseña es opcional. El texto de la reseña tiene un límite de 1000 caracteres.                                            |
 
 ---
 
 #### CU-016: Gestionar usuarios
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-016 |
-| **Nombre** | Gestionar usuarios. |
-| **Breve Descripción** | Permite al administrador realizar operaciones sobre las cuentas de usuario. |
-| **Prioridad** | Media. |
-| **Complejidad** | Media. |
-| **Actor principal** | Administrador. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El actor debe estar autenticado con el rol de Administrador. El Administrador debe acceder al Django Admin nativo. |
-| **Postcondiciones** | **Éxito:** La cuenta del usuario es modificada, eliminada o su estado actualizado en la base de datos. |
-|  | **Fracaso:** La gestión no se realiza por error de acceso o datos inválidos. |
+| Campo                   | Detalle                                                                                                            |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-016                                                                                                             |
+| **Nombre**              | Gestionar usuarios.                                                                                                |
+| **Breve Descripción**   | Permite al administrador realizar operaciones sobre las cuentas de usuario.                                        |
+| **Prioridad**           | Media.                                                                                                             |
+| **Complejidad**         | Media.                                                                                                             |
+| **Actor principal**     | Administrador.                                                                                                     |
+| **Actores secundarios** | Ninguno.                                                                                                           |
+| **Precondiciones**      | El actor debe estar autenticado con el rol de Administrador. El Administrador debe acceder al Django Admin nativo. |
+| **Postcondiciones**     | **Éxito:** La cuenta del usuario es modificada, eliminada o su estado actualizado en la base de datos.             |
+|                         | **Fracaso:** La gestión no se realiza por error de acceso o datos inválidos.                                       |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El Administrador accede al Django Admin nativo (gestión de usuarios). | — |
-| 2. El Administrador aplica la operación de gestión deseada (ej: búsqueda, modificación de datos, cambio de estado, eliminación). | — |
-| 3. El sistema valida la solicitud y aplica el control de acceso por rol. | 3.A. El Administrador intenta una operación no permitida.<br>3.A.1. El sistema deniega la operación y notifica el error de acceso.<br>3.A.2. Se retorna al paso 2. |
-| 4. El sistema ejecuta la operación en la base de datos. | 4.A. Ocurre un error al ejecutar la operación en la BD.<br>4.A.1. El sistema notifica al Administrador sobre el fallo.<br>4.A.2. El caso de uso termina. |
-| 5. El sistema notifica al Administrador el éxito de la operación. | — |
-| 6. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                  | Flujo Alternativo                                                                                                                                                  |
+| :------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El Administrador accede al Django Admin nativo (gestión de usuarios).                                                         | —                                                                                                                                                                  |
+| 2. El Administrador aplica la operación de gestión deseada (ej: búsqueda, modificación de datos, cambio de estado, eliminación). | —                                                                                                                                                                  |
+| 3. El sistema valida la solicitud y aplica el control de acceso por rol.                                                         | 3.A. El Administrador intenta una operación no permitida.<br>3.A.1. El sistema deniega la operación y notifica el error de acceso.<br>3.A.2. Se retorna al paso 2. |
+| 4. El sistema ejecuta la operación en la base de datos.                                                                          | 4.A. Ocurre un error al ejecutar la operación en la BD.<br>4.A.1. El sistema notifica al Administrador sobre el fallo.<br>4.A.2. El caso de uso termina.           |
+| 5. El sistema notifica al Administrador el éxito de la operación.                                                                | —                                                                                                                                                                  |
+| 6. El caso de uso termina.                                                                                                       | —                                                                                                                                                                  |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | El Administrador realiza sus acciones a través del Django Admin nativo (no hay pantallas específicas de gestión en la aplicación). El sistema debe aplicar control de acceso para operaciones protegidas. |
+| Campo                   | Detalle                                                                                                                                                                                                   |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                         |
+| **Observaciones**       | El Administrador realiza sus acciones a través del Django Admin nativo (no hay pantallas específicas de gestión en la aplicación). El sistema debe aplicar control de acceso para operaciones protegidas. |
 
 ---
 
 #### CU-017: Moderar reseñas
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-017 |
-| **Nombre** | Moderar reseñas. |
-| **Breve Descripción** | Permite al Administrador revisar, editar o eliminar reseñas de películas/series publicadas por los usuarios. |
-| **Prioridad** | Baja. |
-| **Complejidad** | Media. |
-| **Actor principal** | Administrador. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El actor debe estar autenticado con el rol de Administrador. Deben existir reseñas publicadas por usuarios. |
-| **Postcondiciones** | **Éxito:** La reseña es modificada o eliminada de la base de datos. |
-|  | **Fracaso:** La moderación no se realiza. |
+| Campo                   | Detalle                                                                                                      |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-017                                                                                                       |
+| **Nombre**              | Moderar reseñas.                                                                                             |
+| **Breve Descripción**   | Permite al Administrador revisar, editar o eliminar reseñas de películas/series publicadas por los usuarios. |
+| **Prioridad**           | Baja.                                                                                                        |
+| **Complejidad**         | Media.                                                                                                       |
+| **Actor principal**     | Administrador.                                                                                               |
+| **Actores secundarios** | Ninguno.                                                                                                     |
+| **Precondiciones**      | El actor debe estar autenticado con el rol de Administrador. Deben existir reseñas publicadas por usuarios.  |
+| **Postcondiciones**     | **Éxito:** La reseña es modificada o eliminada de la base de datos.                                          |
+|                         | **Fracaso:** La moderación no se realiza.                                                                    |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El Administrador accede al Django Admin nativo (gestión de reseñas). | — |
-| 2. El Administrador selecciona una reseña para revisar. | — |
-| 3. El Administrador aplica la acción de moderación deseada (ej: eliminar o editar contenido). | — |
-| 4. El sistema valida la solicitud y aplica el control de acceso por rol. | — |
-| 5. El sistema ejecuta la operación en la base de datos. | 5.A. Ocurre un error al ejecutar la operación en la BD.<br>5.A.1. El sistema notifica al Administrador sobre el fallo.<br>5.A.2. El caso de uso termina. |
-| 6. El sistema notifica al Administrador el éxito de la moderación. | — |
-| 7. El caso de uso termina. | — |
+| Flujo Principal                                                                               | Flujo Alternativo                                                                                                                                        |
+| :-------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El Administrador accede al Django Admin nativo (gestión de reseñas).                       | —                                                                                                                                                        |
+| 2. El Administrador selecciona una reseña para revisar.                                       | —                                                                                                                                                        |
+| 3. El Administrador aplica la acción de moderación deseada (ej: eliminar o editar contenido). | —                                                                                                                                                        |
+| 4. El sistema valida la solicitud y aplica el control de acceso por rol.                      | —                                                                                                                                                        |
+| 5. El sistema ejecuta la operación en la base de datos.                                       | 5.A. Ocurre un error al ejecutar la operación en la BD.<br>5.A.1. El sistema notifica al Administrador sobre el fallo.<br>5.A.2. El caso de uso termina. |
+| 6. El sistema notifica al Administrador el éxito de la moderación.                            | —                                                                                                                                                        |
+| 7. El caso de uso termina.                                                                    | —                                                                                                                                                        |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | El Administrador realiza sus acciones a través del Django Admin nativo. El sistema debe aplicar control de acceso por rol. Esta moderación es independiente de la gestión que el usuario realiza sobre sus propias reseñas (CU-015). |
+| Campo                   | Detalle                                                                                                                                                                                                                              |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                    |
+| **Observaciones**       | El Administrador realiza sus acciones a través del Django Admin nativo. El sistema debe aplicar control de acceso por rol. Esta moderación es independiente de la gestión que el usuario realiza sobre sus propias reseñas (CU-015). |
 
 ---
 
 #### CU-018: Entrega respuestas basadas en historial y reseñas
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-018 |
-| **Nombre** | Entrega respuestas basadas en historial y reseñas. |
-| **Breve Descripción** | Permite a la API del LLM procesar la consulta del usuario usando el historial de visualizaciones y reseñas para generar una respuesta/recomendación contextualizada. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Alta. |
-| **Actor principal** | API LLM de Chatbot. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El sistema debe haber enviado una solicitud de consulta/recomendación a la API del LLM. El contexto del usuario (historial, reseñas) debe haber sido anonimizado antes de ser enviado. |
-| **Postcondiciones** | **Éxito:** La API del LLM devuelve la respuesta o recomendación basada en el contexto dado. |
-|  | **Fracaso:** La API del LLM devuelve un error o no responde. |
+| Campo                   | Detalle                                                                                                                                                                                |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-018                                                                                                                                                                                 |
+| **Nombre**              | Entrega respuestas basadas en historial y reseñas.                                                                                                                                     |
+| **Breve Descripción**   | Permite a la API del LLM procesar la consulta del usuario usando el historial de visualizaciones y reseñas para generar una respuesta/recomendación contextualizada.                   |
+| **Prioridad**           | Alta.                                                                                                                                                                                  |
+| **Complejidad**         | Alta.                                                                                                                                                                                  |
+| **Actor principal**     | API LLM de Chatbot.                                                                                                                                                                    |
+| **Actores secundarios** | Ninguno.                                                                                                                                                                               |
+| **Precondiciones**      | El sistema debe haber enviado una solicitud de consulta/recomendación a la API del LLM. El contexto del usuario (historial, reseñas) debe haber sido anonimizado antes de ser enviado. |
+| **Postcondiciones**     | **Éxito:** La API del LLM devuelve la respuesta o recomendación basada en el contexto dado.                                                                                            |
+|                         | **Fracaso:** La API del LLM devuelve un error o no responde.                                                                                                                           |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. La API del LLM recibe la consulta del usuario, junto con los datos del historial, reseñas y dominio almacenado. | — |
-| 2. La API del LLM procesa la solicitud utilizando el contexto proporcionado. | — |
-| 3. La API del LLM genera una respuesta o recomendación. | — |
-| 4. La API del LLM entrega la respuesta al sistema. | 4.A. La API del LLM devuelve un error o el tiempo de respuesta excede el límite.<br>4.A.1. El sistema muestra un mensaje de error.<br>4.A.2 El caso de uso termina. |
-| 5. El caso de uso termina. | — |
+| Flujo Principal                                                                                                    | Flujo Alternativo                                                                                                                                                   |
+| :----------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. La API del LLM recibe la consulta del usuario, junto con los datos del historial, reseñas y dominio almacenado. | —                                                                                                                                                                   |
+| 2. La API del LLM procesa la solicitud utilizando el contexto proporcionado.                                       | —                                                                                                                                                                   |
+| 3. La API del LLM genera una respuesta o recomendación.                                                            | —                                                                                                                                                                   |
+| 4. La API del LLM entrega la respuesta al sistema.                                                                 | 4.A. La API del LLM devuelve un error o el tiempo de respuesta excede el límite.<br>4.A.1. El sistema muestra un mensaje de error.<br>4.A.2 El caso de uso termina. |
+| 5. El caso de uso termina.                                                                                         | —                                                                                                                                                                   |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | Este caso de uso es invocado por el CU-013. Los datos sensibles del usuario (email, nombre, apellido) deben ser anonimizados antes de ser enviados al proveedor del LLM.<br><br>**Tiempos de respuesta esperados:**<br>- Menos de 5 segundos para interacciones simples.<br>- Menos de 15 segundos para consultas complejas que requieran agregación de datos. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                        |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                                                                                                                                              |
+| **Observaciones**       | Este caso de uso es invocado por el CU-013. Los datos sensibles del usuario (email, nombre, apellido) deben ser anonimizados antes de ser enviados al proveedor del LLM.<br><br>**Tiempos de respuesta esperados:**<br>- Menos de 5 segundos para interacciones simples.<br>- Menos de 15 segundos para consultas complejas que requieran agregación de datos. |
 
 ---
 
 #### CU-019: Exponer Catálogo
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-019 |
-| **Nombre** | Exponer Catálogo. |
-| **Breve Descripción** | Permite a la API de The Movie Database proveer el catálogo actualizado de películas y series al sistema. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Media. |
-| **Actor principal** | API TMBD. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | La API de TMDB debe estar operativa y el sistema debe realizar una solicitud de catálogo. |
-| **Postcondiciones** | **Éxito:** La API de TMDB devuelve los datos del catálogo solicitados. |
-|  | **Fracaso:** La API de TMDB no responde o devuelve un error de conexión. |
+| Campo                   | Detalle                                                                                                  |
+| :---------------------- | :------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-019                                                                                                   |
+| **Nombre**              | Exponer Catálogo.                                                                                        |
+| **Breve Descripción**   | Permite a la API de The Movie Database proveer el catálogo actualizado de películas y series al sistema. |
+| **Prioridad**           | Alta.                                                                                                    |
+| **Complejidad**         | Media.                                                                                                   |
+| **Actor principal**     | API TMBD.                                                                                                |
+| **Actores secundarios** | Ninguno.                                                                                                 |
+| **Precondiciones**      | La API de TMDB debe estar operativa y el sistema debe realizar una solicitud de catálogo.                |
+| **Postcondiciones**     | **Éxito:** La API de TMDB devuelve los datos del catálogo solicitados.                                   |
+|                         | **Fracaso:** La API de TMDB no responde o devuelve un error de conexión.                                 |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. La API de TMDB recibe la solicitud de catálogo (películas o series). | — |
-| 2. La API de TMDB procesa la solicitud. | — |
-| 3. La API de TMDB devuelve el catálogo actualizado. | — |
-| 4. El caso de uso termina. | 4.A. La API de TMDB no está disponible o el tiempo de respuesta excede el límite.<br>4.A.1. El sistema intenta recuperar datos desde la caché local.<br>4.A.2. Si falla la recuperación en caché, el sistema notifica el error.<br>4.A.3. El caso de uso termina. |
+| Flujo Principal                                                         | Flujo Alternativo                                                                                                                                                                                                                                                 |
+| :---------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. La API de TMDB recibe la solicitud de catálogo (películas o series). | —                                                                                                                                                                                                                                                                 |
+| 2. La API de TMDB procesa la solicitud.                                 | —                                                                                                                                                                                                                                                                 |
+| 3. La API de TMDB devuelve el catálogo actualizado.                     | —                                                                                                                                                                                                                                                                 |
+| 4. El caso de uso termina.                                              | 4.A. La API de TMDB no está disponible o el tiempo de respuesta excede el límite.<br>4.A.1. El sistema intenta recuperar datos desde la caché local.<br>4.A.2. Si falla la recuperación en caché, el sistema notifica el error.<br>4.A.3. El caso de uso termina. |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | Este caso de uso es invocado por el CU-008. La sincronización con la API externa debe optimizarse mediante caché local para respetar límites de uso y evitar llamadas innecesarias. Las operaciones de sincronización no deben afectar la experiencia del usuario. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                            |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                                                  |
+| **Observaciones**       | Este caso de uso es invocado por el CU-008. La sincronización con la API externa debe optimizarse mediante caché local para respetar límites de uso y evitar llamadas innecesarias. Las operaciones de sincronización no deben afectar la experiencia del usuario. |
 
 ---
 
 #### CU-020: Recuperar contraseña
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-020 |
-| **Nombre** | Recuperar contraseña. |
-| **Breve Descripción** | Permite al usuario solicitar el restablecimiento de su contraseña mediante un enlace enviado a su correo electrónico. |
-| **Prioridad** | Media. |
-| **Complejidad** | Media. |
-| **Actor principal** | Usuario. |
-| **Actores secundarios** | Ninguno. |
-| **Precondiciones** | El usuario debe tener una cuenta registrada con un correo electrónico válido. |
-| **Postcondiciones** | **Éxito:** El sistema envía un correo electrónico con un enlace de restablecimiento de contraseña. El enlace es válido por un tiempo limitado. |
-|  | **Fracaso:** El correo no se envía por un error del sistema. |
+| Campo                   | Detalle                                                                                                                                        |
+| :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-020                                                                                                                                         |
+| **Nombre**              | Recuperar contraseña.                                                                                                                          |
+| **Breve Descripción**   | Permite al usuario solicitar el restablecimiento de su contraseña mediante un enlace enviado a su correo electrónico.                          |
+| **Prioridad**           | Media.                                                                                                                                         |
+| **Complejidad**         | Media.                                                                                                                                         |
+| **Actor principal**     | Usuario.                                                                                                                                       |
+| **Actores secundarios** | Ninguno.                                                                                                                                       |
+| **Precondiciones**      | El usuario debe tener una cuenta registrada con un correo electrónico válido.                                                                  |
+| **Postcondiciones**     | **Éxito:** El sistema envía un correo electrónico con un enlace de restablecimiento de contraseña. El enlace es válido por un tiempo limitado. |
+|                         | **Fracaso:** El correo no se envía por un error del sistema.                                                                                   |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El usuario selecciona la opción "¿Olvidaste tu contraseña?" desde la pantalla de inicio de sesión. | — |
-| 2. El sistema presenta un modal solicitando el correo electrónico asociado a la cuenta. | — |
-| 3. El usuario ingresa su correo electrónico y presiona "Enviar enlace". | 3.A. El usuario cancela la operación.<br>3.A.1 El sistema cierra el modal.<br>3.A.2 El caso de uso termina. |
-| 4. El sistema valida el formato del correo ingresado. | 4.A. El formato del correo es inválido.<br>4.A.1 El sistema informa el error.<br>4.A.2 Se retorna al paso 2. |
-| 5. El sistema envía un correo electrónico con un enlace de restablecimiento. | 5.A. El envío del correo falla.<br>5.A.1 El sistema muestra un mensaje de error e informa que el intento puede repetirse más tarde. El caso de uso termina. |
-| 6. El sistema muestra el mensaje: "Te enviamos un email con instrucciones para restablecer tu contraseña." independientemente de si el correo existe o no en la base de datos. | — |
-| 7. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                | Flujo Alternativo                                                                                                                                           |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El usuario selecciona la opción "¿Olvidaste tu contraseña?" desde la pantalla de inicio de sesión.                                                                          | —                                                                                                                                                           |
+| 2. El sistema presenta un modal solicitando el correo electrónico asociado a la cuenta.                                                                                        | —                                                                                                                                                           |
+| 3. El usuario ingresa su correo electrónico y presiona "Enviar enlace".                                                                                                        | 3.A. El usuario cancela la operación.<br>3.A.1 El sistema cierra el modal.<br>3.A.2 El caso de uso termina.                                                 |
+| 4. El sistema valida el formato del correo ingresado.                                                                                                                          | 4.A. El formato del correo es inválido.<br>4.A.1 El sistema informa el error.<br>4.A.2 Se retorna al paso 2.                                                |
+| 5. El sistema envía un correo electrónico con un enlace de restablecimiento.                                                                                                   | 5.A. El envío del correo falla.<br>5.A.1 El sistema muestra un mensaje de error e informa que el intento puede repetirse más tarde. El caso de uso termina. |
+| 6. El sistema muestra el mensaje: "Te enviamos un email con instrucciones para restablecer tu contraseña." independientemente de si el correo existe o no en la base de datos. | —                                                                                                                                                           |
+| 7. El caso de uso termina.                                                                                                                                                     | —                                                                                                                                                           |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | — |
-| **Observaciones** | Por seguridad, el sistema no debe revelar si el correo electrónico ingresado está registrado o no. El mensaje de éxito debe mostrarse siempre, independientemente de la existencia de la cuenta. El enlace de restablecimiento tiene una validez de 1 hora. La nueva contraseña debe cumplir con las mismas reglas de validación que en el CU-001. Se debe aplicar rate limiting: máximo 1 solicitud cada 60 segundos por dirección IP. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | —                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Observaciones**       | Por seguridad, el sistema no debe revelar si el correo electrónico ingresado está registrado o no. El mensaje de éxito debe mostrarse siempre, independientemente de la existencia de la cuenta. El enlace de restablecimiento tiene una validez de 1 hora. La nueva contraseña debe cumplir con las mismas reglas de validación que en el CU-001. Se debe aplicar rate limiting: máximo 1 solicitud cada 60 segundos por dirección IP. |
 
 ---
 
 #### CU-021: Sincronizar catálogo con TMDB
 
-| Campo | Detalle |
-| :---- | :---- |
-| **ID** | CU-021 |
-| **Nombre** | Sincronizar catálogo con TMDB. |
-| **Breve Descripción** | Proceso automático que sincroniza diariamente la base de datos local con el catálogo actualizado de The Movie Database (TMDB), almacenando los metadatos completos de películas y series populares, en tendencia y novedades. |
-| **Prioridad** | Alta. |
-| **Complejidad** | Alta. |
-| **Actor principal** | Sistema (cron job). |
-| **Actores secundarios** | API TMDB. |
-| **Precondiciones** | La API de TMDB debe estar operativa. El cron job debe ejecutarse en el horario programado. |
-| **Postcondiciones** | **Éxito:** Los metadatos completos de las producciones audiovisuales se actualizan en la base de datos local. El catálogo refleja la información más reciente disponible en TMDB. |
-|  | **Fracaso:** La sincronización falla total o parcialmente. El sistema mantiene los últimos datos disponibles y registra el error para su diagnóstico. |
+| Campo                   | Detalle                                                                                                                                                                                                                       |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                  | CU-021                                                                                                                                                                                                                        |
+| **Nombre**              | Sincronizar catálogo con TMDB.                                                                                                                                                                                                |
+| **Breve Descripción**   | Proceso automático que sincroniza diariamente la base de datos local con el catálogo actualizado de The Movie Database (TMDB), almacenando los metadatos completos de películas y series populares, en tendencia y novedades. |
+| **Prioridad**           | Alta.                                                                                                                                                                                                                         |
+| **Complejidad**         | Alta.                                                                                                                                                                                                                         |
+| **Actor principal**     | Sistema (cron job).                                                                                                                                                                                                           |
+| **Actores secundarios** | API TMDB.                                                                                                                                                                                                                     |
+| **Precondiciones**      | La API de TMDB debe estar operativa. El cron job debe ejecutarse en el horario programado.                                                                                                                                    |
+| **Postcondiciones**     | **Éxito:** Los metadatos completos de las producciones audiovisuales se actualizan en la base de datos local. El catálogo refleja la información más reciente disponible en TMDB.                                             |
+|                         | **Fracaso:** La sincronización falla total o parcialmente. El sistema mantiene los últimos datos disponibles y registra el error para su diagnóstico.                                                                         |
 
-| Flujo Principal | Flujo Alternativo |
-| :---- | :---- |
-| 1. El sistema ejecuta el cron job de sincronización diariamente en un horario de baja actividad definido en la configuración del sistema. | — |
-| 2. El sistema consulta los endpoints de TMDB para obtener las producciones populares (`/trending`), novedades (`/movie/now_playing`, `/discover`) y tendencias. | 2.A. La API de TMDB no está disponible o devuelve un error.<br>2.A.1 El sistema registra el error en los logs.<br>2.A.2 El sistema mantiene los datos de la última sincronización exitosa.<br>2.A.3 El caso de uso termina. |
-| 3. Para cada producción obtenida, el sistema almacena o actualiza los metadatos completos en la tabla ProduccionAudiovisual: título, póster, sinopsis, fecha de lanzamiento, reparto, directores, estatus, géneros, calificación promedio de TMDB, cantidad de temporadas, cantidad de episodios y duración. | 3.A. Una producción individual falla al guardarse.<br>3.A.1 El sistema registra el error específico y continúa con la siguiente producción. |
-| 4. El sistema respeta los límites de uso de la API de TMDB utilizando paginación y caché local para evitar solicitudes duplicadas. | — |
-| 5. El sistema registra un resumen de la sincronización: cantidad de producciones nuevas, actualizadas y errores. | — |
-| 6. El caso de uso termina. | — |
+| Flujo Principal                                                                                                                                                                                                                                                                                              | Flujo Alternativo                                                                                                                                                                                                           |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. El sistema ejecuta el cron job de sincronización diariamente en un horario de baja actividad definido en la configuración del sistema.                                                                                                                                                                    | —                                                                                                                                                                                                                           |
+| 2. El sistema consulta los endpoints de TMDB para obtener las producciones populares (`/trending`), novedades (`/movie/now_playing`, `/discover`) y tendencias.                                                                                                                                              | 2.A. La API de TMDB no está disponible o devuelve un error.<br>2.A.1 El sistema registra el error en los logs.<br>2.A.2 El sistema mantiene los datos de la última sincronización exitosa.<br>2.A.3 El caso de uso termina. |
+| 3. Para cada producción obtenida, el sistema almacena o actualiza los metadatos completos en la tabla ProduccionAudiovisual: título, póster, sinopsis, fecha de lanzamiento, reparto, directores, estatus, géneros, calificación promedio de TMDB, cantidad de temporadas, cantidad de episodios y duración. | 3.A. Una producción individual falla al guardarse.<br>3.A.1 El sistema registra el error específico y continúa con la siguiente producción.                                                                                 |
+| 4. El sistema respeta los límites de uso de la API de TMDB utilizando paginación y caché local para evitar solicitudes duplicadas.                                                                                                                                                                           | —                                                                                                                                                                                                                           |
+| 5. El sistema registra un resumen de la sincronización: cantidad de producciones nuevas, actualizadas y errores.                                                                                                                                                                                             | —                                                                                                                                                                                                                           |
+| 6. El caso de uso termina.                                                                                                                                                                                                                                                                                   | —                                                                                                                                                                                                                           |
 
-| Campo | Detalle |
-| :---- | :---- |
-| **Flujos de excepción** | Si la sincronización completa falla (por ejemplo, por un error de base de datos), el sistema debe notificar al administrador y conservar el último estado consistente del catálogo. |
-| **Observaciones** | La sincronización se ejecuta como un proceso en segundo plano (cron job) para no afectar la experiencia del usuario (RNF #7). Los datos sincronizados incluyen metadatos completos para que la ficha de detalle funcione sin depender de llamadas on-demand a TMDB. El sistema debe implementar un mecanismo de caché para optimizar las consultas (RNF #8). Las producciones que los usuarios agregan a listas o califican se guardan como referencia en la BD local aunque no estén en el conjunto sincronizado. |
+| Campo                   | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flujos de excepción** | Si la sincronización completa falla (por ejemplo, por un error de base de datos), el sistema debe notificar al administrador y conservar el último estado consistente del catálogo.                                                                                                                                                                                                                                                                                                                                |
+| **Observaciones**       | La sincronización se ejecuta como un proceso en segundo plano (cron job) para no afectar la experiencia del usuario (RNF #7). Los datos sincronizados incluyen metadatos completos para que la ficha de detalle funcione sin depender de llamadas on-demand a TMDB. El sistema debe implementar un mecanismo de caché para optimizar las consultas (RNF #8). Las producciones que los usuarios agregan a listas o califican se guardan como referencia en la BD local aunque no estén en el conjunto sincronizado. |

@@ -62,6 +62,15 @@ class ProduccionAudiovisual(models.Model):
         default=list,
         verbose_name="géneros",
     )
+    keywords = ArrayField(
+        models.CharField(max_length=50),
+        blank=True,
+        default=list,
+        verbose_name="keywords",
+        help_text="Keywords temáticos de TMDB sincronizados en C-04 "
+        "(/movie/{id}/keywords, /tv/{id}/keywords). Forman parte del texto a "
+        "embeber para la búsqueda semántica (B-06, doc 03).",
+    )
     calificacion_promedio = models.FloatField(
         "calificación promedio (TMDB)", null=True, blank=True
     )

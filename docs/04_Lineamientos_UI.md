@@ -29,24 +29,24 @@ App Autenticada
 
 ## 2. Inventario de Pantallas
 
-| # | Pantalla | Caso de Uso | Acceso |
-|---|----------|-------------|--------|
-| 1 | Login | CU-003 | Pública |
-| 2 | Registro | CU-001 | Pública |
-| 3 | Confirmación de cuenta | CU-002 | Pública (vía email) |
-| 4 | Home (autenticado) | CU-013 | Autenticada |
-| 5 | Buscar (panel overlay con catálogo unificado) | CU-008, CU-010 | Mixta* |
-| 6 | Ficha de detalle | CU-008, CU-011 | Mixta* |
-| 7 | Modal: Publicar/Modificar reseña | CU-015 | Autenticada |
-| 8 | Modal: Confirmación (genérico) | Varios | Autenticada |
-| 9 | Sección Listas (vista general) | CU-009 | Autenticada |
-| 10 | Detalle de Lista | CU-009 | Autenticada |
-| 11 | Modal: Crear/Renombrar lista | CU-012 | Autenticada |
-| 12 | Perfil (con edición inline) | CU-005, CU-006 | Autenticada |
-| 13 | Mis reseñas | CU-015 | Autenticada |
-| 14 | Preferencias | CU-005, CU-007 | Autenticada |
-| 15 | 404 — Página no encontrada | Varios | Mixta |
-| 16 | Error genérico (500 / timeout) | Varios | Mixta |
+| #   | Pantalla                                      | Caso de Uso    | Acceso              |
+| --- | --------------------------------------------- | -------------- | ------------------- |
+| 1   | Login                                         | CU-003         | Pública             |
+| 2   | Registro                                      | CU-001         | Pública             |
+| 3   | Confirmación de cuenta                        | CU-002         | Pública (vía email) |
+| 4   | Home (autenticado)                            | CU-013         | Autenticada         |
+| 5   | Buscar (panel overlay con catálogo unificado) | CU-008, CU-010 | Mixta*              |
+| 6   | Ficha de detalle                              | CU-008, CU-011 | Mixta*              |
+| 7   | Modal: Publicar/Modificar reseña              | CU-015         | Autenticada         |
+| 8   | Modal: Confirmación (genérico)                | Varios         | Autenticada         |
+| 9   | Sección Listas (vista general)                | CU-009         | Autenticada         |
+| 10  | Detalle de Lista                              | CU-009         | Autenticada         |
+| 11  | Modal: Crear/Renombrar lista                  | CU-012         | Autenticada         |
+| 12  | Perfil (con edición inline)                   | CU-005, CU-006 | Autenticada         |
+| 13  | Mis reseñas                                   | CU-015         | Autenticada         |
+| 14  | Preferencias                                  | CU-005, CU-007 | Autenticada         |
+| 15  | 404 — Página no encontrada                    | Varios         | Mixta               |
+| 16  | Error genérico (500 / timeout)                | Varios         | Mixta               |
 
 > \* Mixta = visible sin login, pero acciones (calificar, agregar a listas) requieren autenticación.
 
@@ -59,12 +59,14 @@ App Autenticada
 **Decisión**: FAB (botón flotante) en esquina inferior derecha, abre/cierra un panel tipo drawer.
 
 **Justificación**:
+
 - Estándar de la industria (Intercom, Zendesk, Crisp).
 - No compite visualmente con la grilla de contenido.
 - Funciona naturalmente en desktop (drawer lateral) y mobile (bottom sheet).
 - Coincide con la semántica de los CU: el usuario "abre" la interfaz del chatbot.
 
 **Comportamiento**:
+
 - FAB fijo en bottom-right con ícono de chat/burbuja.
 - Al clickear: panel de ~400px (desktop) o bottom sheet fullscreen (mobile).
 - Animación slide-in desde derecha (desktop) / slide-up (mobile).
@@ -79,6 +81,7 @@ desde el link "Buscar" en la navbar, que abre un panel overlay con grid, toggle 
 (Todo / Películas / Series) y filtros.
 
 **Justificación**:
+
 - Distinción clara entre descubrir (Home) y buscar (panel overlay). No se mezclan.
 - El modelo IMDb/MUBI: feed principal + búsqueda como acción separada.
 - La entidad `ProduccionAudiovisual` unifica películas y series con atributo `tipo`; la UI
@@ -93,12 +96,14 @@ este modelo (Inicio, Buscar, Listas + avatar).
 **Decisión**: "Recomendado para ti" usa endpoints de TMDB (`/discover`) con heurísticas basadas en géneros mejor calificados por el usuario.
 
 **Justificación**:
+
 - Sin dependencia del LLM para esta funcionalidad (menor latencia, sin costo por llamada).
 - TMDB provee filtros por género, popularidad y puntuación suficientes para una primera versión.
 - El LLM se reserva para interacciones conversacionales del chatbot.
 - Se documenta el camino basado en LLM como mejora futura.
 
 **Lógica**:
+
 1. Géneros de producciones calificadas con 7+ por el usuario.
 2. Llamada a `/discover/movie` o `/discover/tv` con filtro de géneros, ordenado por `popularity.desc`.
 3. Excluir IDs que el usuario ya tiene en sus listas (vistas, pendientes, calificadas).
@@ -158,12 +163,12 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 ### Secciones
 
-| Fila | Visible para | Fuente de datos |
-|------|-------------|-----------------|
-| Hero | Todos | TMDB trending (rotativo o destacado fijo) |
-| Recomendado para ti | Solo autenticados con ≥1 calificación | TMDB `/discover` filtrado por géneros |
-| Tendencias | Todos | TMDB `/trending` |
-| Novedades | Todos | TMDB `/movie/now_playing`, `/discover` año actual |
+| Fila                | Visible para                          | Fuente de datos                                   |
+| ------------------- | ------------------------------------- | ------------------------------------------------- |
+| Hero                | Todos                                 | TMDB trending (rotativo o destacado fijo)         |
+| Recomendado para ti | Solo autenticados con ≥1 calificación | TMDB `/discover` filtrado por géneros             |
+| Tendencias          | Todos                                 | TMDB `/trending`                                  |
+| Novedades           | Todos                                 | TMDB `/movie/now_playing`, `/discover` año actual |
 
 - Cada fila: título + opcional "Ver más →" + scroll horizontal de MediaCards.
 - Las filas mezclan películas y series, con badge de tipo en cada card.
@@ -172,13 +177,13 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 ### Estados del Home
 
-| Estado | Comportamiento |
-|--------|---------------|
-| No autenticado | Hero + Tendencias + Novedades. FAB chatbot inactivo. |
-| Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti". |
-| Autenticado con historial | Las 3 filas completas. |
-| Loading | Skeleton cards (4-5 placeholders) por fila. |
-| Error TMDB | Toast "No se pudo cargar el contenido." + datos cacheados si existen. |
+| Estado                    | Comportamiento                                                        |
+| ------------------------- | --------------------------------------------------------------------- |
+| No autenticado            | Hero + Tendencias + Novedades. FAB chatbot inactivo.                  |
+| Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti".                     |
+| Autenticado con historial | Las 3 filas completas.                                                |
+| Loading                   | Skeleton cards (4-5 placeholders) por fila.                           |
+| Error TMDB                | Toast "No se pudo cargar el contenido." + datos cacheados si existen. |
 
 ---
 
@@ -215,12 +220,12 @@ panel overlay a pantalla completa.
 
 ### Estados
 
-| Estado | Qué se muestra |
-|--------|---------------|
-| Default (sin búsqueda) | Grilla completa con resultados populares, ordenados por popularidad. |
-| Búsqueda con resultados | Resultados paginados coincidentes. Contador "N resultados encontrados". |
+| Estado                  | Qué se muestra                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| Default (sin búsqueda)  | Grilla completa con resultados populares, ordenados por popularidad.                       |
+| Búsqueda con resultados | Resultados paginados coincidentes. Contador "N resultados encontrados".                    |
 | Búsqueda sin resultados | Empty state: ilustración + "No se encontraron resultados" + sugerencia de ajustar filtros. |
-| Error API | "No se pudo recuperar el catálogo." + botón reintentar. |
+| Error API               | "No se pudo recuperar el catálogo." + botón reintentar.                                    |
 
 ---
 
@@ -278,36 +283,36 @@ area dentro del shell (navbar + FAB se mantienen). La navegación hacia atrás e
 
 ### Origen y breadcrumb
 
-| Desde | Breadcrumb |
-|-------|-----------|
-| Home (fila concreta) | Inicio > {título} |
-| Buscar | Inicio > Buscar > {título} |
+| Desde                   | Breadcrumb                         |
+| ----------------------- | ---------------------------------- |
+| Home (fila concreta)    | Inicio > {título}                  |
+| Buscar                  | Inicio > Buscar > {título}         |
 | Listas (sección navbar) | Listas > {nombre lista} > {título} |
 
 El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 
 ### Bloques y contenido
 
-| Bloque | Datos | Fuente |
-|--------|-------|--------|
-| **Hero** | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`Xh Ymin` para pelis o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips | `ProduccionAudiovisual` + TMDB |
-| **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario) | `Lista` |
-| **Sinopsis** | Card dentro del info-col (columna derecha), debajo de los botones de acción. Texto completo colapsable con "[leer más ▾]" si excede 300 caracteres. | `ProduccionAudiovisual.sinopsis` |
-| **CastCard** | Card full-width debajo del Hero: Director (nombre) + Cast (lista de actores). Colapsable con "[mostrar más ▾]" si hay más de 10 actores. **Sin fotos**. | `ProduccionAudiovisual.reparto` + `.directores` |
-| **Reseñas** | Dos secciones con headers separados: "Tu reseña" (card destacada con borde acento, solo si el usuario ya publicó) y "Reseñas de la comunidad (N)". En tu reseña: acciones con iconos (✏️ editar, 🗑️ eliminar). En las de la comunidad: solo lectura. Cada ReviewCard: avatar, @usuario, rating en formato `X/10` (sin estrellas), fecha, texto. Se muestran únicamente reseñas que tengan texto. Botón "Cargar más reseñas" al pie. | `Calificacion` + `Reseña` + `Usuario` |
+| Bloque                | Datos                                                                                                                                                                                                                                                                                                                                                                                                                               | Fuente                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| **Hero**              | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`Xh Ymin` para pelis o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips                                                                                                                                                                                                           | `ProduccionAudiovisual` + TMDB                  |
+| **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario)                                                                                                                                                               | `Lista`                                         |
+| **Sinopsis**          | Card dentro del info-col (columna derecha), debajo de los botones de acción. Texto completo colapsable con "[leer más ▾]" si excede 300 caracteres.                                                                                                                                                                                                                                                                                 | `ProduccionAudiovisual.sinopsis`                |
+| **CastCard**          | Card full-width debajo del Hero: Director (nombre) + Cast (lista de actores). Colapsable con "[mostrar más ▾]" si hay más de 10 actores. **Sin fotos**.                                                                                                                                                                                                                                                                             | `ProduccionAudiovisual.reparto` + `.directores` |
+| **Reseñas**           | Dos secciones con headers separados: "Tu reseña" (card destacada con borde acento, solo si el usuario ya publicó) y "Reseñas de la comunidad (N)". En tu reseña: acciones con iconos (✏️ editar, 🗑️ eliminar). En las de la comunidad: solo lectura. Cada ReviewCard: avatar, @usuario, rating en formato `X/10` (sin estrellas), fecha, texto. Se muestran únicamente reseñas que tengan texto. Botón "Cargar más reseñas" al pie. | `Calificacion` + `Reseña` + `Usuario`           |
 
 ### Acciones directas — comportamiento
 
-| Acción | Estado inicial | Click | Estado final |
-|--------|---------------|-------|-------------|
-| Favoritos (♥) | Borde (no está en favoritos) | Agrega a favoritos | Relleno sólido |
-| Favoritos (♥) | Relleno (ya está en favoritos) | Quita de favoritos | Borde |
-| Vista (👁) | Borde | Agrega a Vistas | Relleno sólido |
-| Vista (👁) | Relleno (ya está en Vistas) | Quita de Vistas | Borde (verifica: si tiene calificación, pide eliminarla primero, CU-011) |
-| Pendiente (🕐) | Borde | Agrega a Pendientes | Relleno sólido |
-| Pendiente (🕐) | Relleno | Quita de Pendientes | Borde |
-| Calificar | — | Abre modal de reseña (CU-015) | — |
-| Agregar a lista ▾ | — | Despliega checklist de listas personalizadas | Check/uncheck toggle |
+| Acción            | Estado inicial                 | Click                                        | Estado final                                                             |
+| ----------------- | ------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------ |
+| Favoritos (♥)     | Borde (no está en favoritos)   | Agrega a favoritos                           | Relleno sólido                                                           |
+| Favoritos (♥)     | Relleno (ya está en favoritos) | Quita de favoritos                           | Borde                                                                    |
+| Vista (👁)         | Borde                          | Agrega a Vistas                              | Relleno sólido                                                           |
+| Vista (👁)         | Relleno (ya está en Vistas)    | Quita de Vistas                              | Borde (verifica: si tiene calificación, pide eliminarla primero, CU-011) |
+| Pendiente (🕐)    | Borde                          | Agrega a Pendientes                          | Relleno sólido                                                           |
+| Pendiente (🕐)    | Relleno                        | Quita de Pendientes                          | Borde                                                                    |
+| Calificar         | —                              | Abre modal de reseña (CU-015)                | —                                                                        |
+| Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas | Check/uncheck toggle                                                     |
 
 Los botones de acción directa son visibles solo para usuarios autenticados. Para no autenticados, se muestra "Inicia sesión para calificar o guardar" con link a Login.
 
@@ -321,21 +326,21 @@ Los botones de acción directa son visibles solo para usuarios autenticados. Par
 
 ### Estados
 
-| Estado | Qué se muestra |
-|--------|---------------|
-| Loading | Skeleton del Hero (poster placeholder + líneas) + skeleton de 3 ReviewCards. |
-| Éxito | Contenido completo como se describe arriba. |
+| Estado         | Qué se muestra                                                                                  |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| Loading        | Skeleton del Hero (poster placeholder + líneas) + skeleton de 3 ReviewCards.                    |
+| Éxito          | Contenido completo como se describe arriba.                                                     |
 | No autenticado | Contenido visible, acciones directas reemplazadas por "Inicia sesión para calificar o guardar". |
-| Error TMDB | Toast "No se pudo cargar la información. Intente nuevamente." + botón Reintentar. |
-| Sin reseñas | Encabezado "Reseñas (0)" + texto "Sé el primero en dejar una reseña." + botón Calificar. |
+| Error TMDB     | Toast "No se pudo cargar la información. Intente nuevamente." + botón Reintentar.               |
+| Sin reseñas    | Encabezado "Reseñas (0)" + texto "Sé el primero en dejar una reseña." + botón Calificar.        |
 
 ### Responsive
 
-| Breakpoint | Layout |
-|------------|--------|
+| Breakpoint       | Layout                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Desktop (1440px) | Poster left + info right (two-column, sinopsis incluida en columna derecha). CastCard y reseñas full-width debajo. |
-| Tablet (768px) | Poster más chico (200×300 px). Misma estructura two-column. |
-| Mobile (375px) | Single column. Poster centrado arriba, info debajo. Acciones en fila de iconos. |
+| Tablet (768px)   | Poster más chico (200×300 px). Misma estructura two-column.                                                        |
+| Mobile (375px)   | Single column. Poster centrado arriba, info debajo. Acciones en fila de iconos.                                    |
 
 ---
 
@@ -346,11 +351,11 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 ### Variantes
 
-| Variante | Disparador | Contenido | Botones |
-|----------|-----------|-----------|---------|
-| **Publicar** | Click en "Calificar" (sin reseña previa) | Widget de estrellas interactivo (1-10, ver abajo), campo de texto opcional (máx 1000 chars, ~6 líneas), contador de caracteres | Cancelar / Publicar |
-| **Editar** | Click en icono ✏️ (desde tu reseña) | Mismo widget con calificación y texto precargados. Las estrellas del rating anterior que quedarían fuera de la nueva selección se muestran en un amarillo apagado durante el hover. | Cancelar / Actualizar |
-| **Eliminar** | Click en icono 🗑️ (desde tu reseña) | Sin formulario. Título: "¿Eliminar reseña?" — Cuerpo: "Esta acción no se puede deshacer." | Cancelar / Confirmar |
+| Variante     | Disparador                               | Contenido                                                                                                                                                                           | Botones               |
+| ------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| **Publicar** | Click en "Calificar" (sin reseña previa) | Widget de estrellas interactivo (1-10, ver abajo), campo de texto opcional (máx 1000 chars, ~6 líneas), contador de caracteres                                                      | Cancelar / Publicar   |
+| **Editar**   | Click en icono ✏️ (desde tu reseña)      | Mismo widget con calificación y texto precargados. Las estrellas del rating anterior que quedarían fuera de la nueva selección se muestran en un amarillo apagado durante el hover. | Cancelar / Actualizar |
+| **Eliminar** | Click en icono 🗑️ (desde tu reseña)      | Sin formulario. Título: "¿Eliminar reseña?" — Cuerpo: "Esta acción no se puede deshacer."                                                                                           | Cancelar / Confirmar  |
 
 ### Widget de estrellas
 
@@ -367,27 +372,27 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 ### Validaciones
 
-| Regla | Comportamiento |
-|-------|---------------|
-| Publicar sin calificación | Mensaje de error inline: "Debés seleccionar una calificación." Botón Publicar se deshabilita. |
-| Editar y dejar sin calificación | Ídem. No se permite quitar la calificación y dejar solo texto. |
-| Texto > 1000 caracteres | El textarea limita la entrada. Contador muestra `N/1000`. |
+| Regla                           | Comportamiento                                                                                |
+| ------------------------------- | --------------------------------------------------------------------------------------------- |
+| Publicar sin calificación       | Mensaje de error inline: "Debés seleccionar una calificación." Botón Publicar se deshabilita. |
+| Editar y dejar sin calificación | Ídem. No se permite quitar la calificación y dejar solo texto.                                |
+| Texto > 1000 caracteres         | El textarea limita la entrada. Contador muestra `N/1000`.                                     |
 
 ### Post-acción
 
-| Acción | Efecto |
-|--------|--------|
+| Acción                | Efecto                                                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Publicar / Actualizar | Cierra modal, toast "Reseña publicada." / "Reseña actualizada.". La sección de reseñas en la ficha se actualiza al instante. |
-| Eliminar | Cierra modal, toast "Reseña eliminada.". Tu reseña desaparece de la ficha. El botón "Calificar" vuelve a mostrarse. |
-| Cancelar | Cierra modal sin cambios. |
+| Eliminar              | Cierra modal, toast "Reseña eliminada.". Tu reseña desaparece de la ficha. El botón "Calificar" vuelve a mostrarse.          |
+| Cancelar              | Cierra modal sin cambios.                                                                                                    |
 
 ### Estados del modal
 
-| Estado | Qué se muestra |
-|--------|---------------|
-| Default | Modal limpio (publicar) o precargado (editar). |
-| Error de validación | Mensaje inline en rojo. |
-| Submitting | Spinner en el botón de acción, campos disabled. |
+| Estado              | Qué se muestra                                  |
+| ------------------- | ----------------------------------------------- |
+| Default             | Modal limpio (publicar) o precargado (editar).  |
+| Error de validación | Mensaje inline en rojo.                         |
+| Submitting          | Spinner en el botón de acción, campos disabled. |
 
 ### Modales como componentes
 
@@ -434,11 +439,11 @@ de un componente "Modal" en Figma:
 
 #### Breadcrumb
 
-| Vista | Breadcrumb |
-|-------|-----------|
-| Listas (vista general) | Listas |
-| Detalle de lista | Listas > {nombre lista} |
-| Ficha desde lista | Listas > {nombre lista} > {título} |
+| Vista                  | Breadcrumb                         |
+| ---------------------- | ---------------------------------- |
+| Listas (vista general) | Listas                             |
+| Detalle de lista       | Listas > {nombre lista}            |
+| Ficha desde lista      | Listas > {nombre lista} > {título} |
 
 #### ListCard
 
@@ -464,20 +469,20 @@ de un componente "Modal" en Figma:
 
 #### Layout y responsive
 
-| Breakpoint | Columnas |
-|-----------|---------|
-| Desktop (≥1440px) | 3 |
-| Tablet (≥768px) | 2 |
-| Mobile (<768px) | 1 |
+| Breakpoint        | Columnas |
+| ----------------- | -------- |
+| Desktop (≥1440px) | 3        |
+| Tablet (≥768px)   | 2        |
+| Mobile (<768px)   | 1        |
 
 #### Estados
 
-| Estado | Qué se muestra |
-|--------|---------------|
-| Loading | 3-6 skeletons de ListCard (rectángulo con placeholder de miniaturas). |
-| Normal | Grid de ListCards (predeterminadas + personalizadas + card esqueleto "Agregar"). |
+| Estado        | Qué se muestra                                                                                                        |
+| ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Loading       | 3-6 skeletons de ListCard (rectángulo con placeholder de miniaturas).                                                 |
+| Normal        | Grid de ListCards (predeterminadas + personalizadas + card esqueleto "Agregar").                                      |
 | Empty parcial | Las 3 predeterminadas siempre existen. Si no hay personalizadas, la card esqueleto aparece en la primera celda libre. |
-| Error | Ilustración + "No se pudieron cargar las listas." + botón Reintentar. |
+| Error         | Ilustración + "No se pudieron cargar las listas." + botón Reintentar.                                                 |
 
 ---
 
@@ -525,12 +530,12 @@ de un componente "Modal" en Figma:
 
 #### Estados
 
-| Estado | Qué se muestra |
-|--------|---------------|
-| Loading | Skeleton grid de MediaCards (5×2 filas). |
-| Normal | Grid de items con scroll vertical. |
-| Empty | Ilustración + "Esta lista no contiene elementos." + botón "Explorar" (navega a Buscar). |
-| Error | Mensaje + botón Reintentar. |
+| Estado  | Qué se muestra                                                                          |
+| ------- | --------------------------------------------------------------------------------------- |
+| Loading | Skeleton grid de MediaCards (5×2 filas).                                                |
+| Normal  | Grid de items con scroll vertical.                                                      |
+| Empty   | Ilustración + "Esta lista no contiene elementos." + botón "Explorar" (navega a Buscar). |
+| Error   | Mensaje + botón Reintentar.                                                             |
 
 ---
 
@@ -540,48 +545,48 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 #### Crear lista
 
-| Trigger | Botón "Crear nueva lista" en vista general. |
-|---------|-------------------------------------------|
-| **Título** | Crear nueva lista |
-| **Campo** | Text input: "Nombre de la lista" (placeholder). Máx 80 caracteres alfanuméricos. |
-| **Validación** | Nombre vacío: "El nombre no puede estar vacío." Nombre duplicado: "Ya tenés una lista con ese nombre." Mensaje inline en rojo. |
-| **Botones** | Cancelar / Crear |
-| **Post-acción** | Cierra modal, aparece nueva ListCard, toast "Lista creada." |
+| Trigger         | Botón "Crear nueva lista" en vista general.                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Título**      | Crear nueva lista                                                                                                              |
+| **Campo**       | Text input: "Nombre de la lista" (placeholder). Máx 80 caracteres alfanuméricos.                                               |
+| **Validación**  | Nombre vacío: "El nombre no puede estar vacío." Nombre duplicado: "Ya tenés una lista con ese nombre." Mensaje inline en rojo. |
+| **Botones**     | Cancelar / Crear                                                                                                               |
+| **Post-acción** | Cierra modal, aparece nueva ListCard, toast "Lista creada."                                                                    |
 
 #### Renombrar lista
 
-| Trigger | Opción "Renombrar" del menú `⋮` de una ListCard personalizada o del header en detalle. |
-|---------|-------------------------------------------|
-| **Título** | Renombrar lista |
-| **Campo** | Text input precargado con el nombre actual. Mismas reglas que Crear. |
-| **Validación** | Igual que Crear. |
-| **Botones** | Cancelar / Guardar |
+| Trigger         | Opción "Renombrar" del menú `⋮` de una ListCard personalizada o del header en detalle.          |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| **Título**      | Renombrar lista                                                                                 |
+| **Campo**       | Text input precargado con el nombre actual. Mismas reglas que Crear.                            |
+| **Validación**  | Igual que Crear.                                                                                |
+| **Botones**     | Cancelar / Guardar                                                                              |
 | **Post-acción** | Cierra modal, se actualiza nombre en todos los lugares donde aparece, toast "Lista renombrada." |
 
 #### Eliminar lista
 
-| Trigger | Opción "Eliminar" del menú `⋮`. |
-|---------|-------------------------------------------|
-| **Título** | ¿Eliminar lista? |
-| **Cuerpo** | "Esta acción no se puede deshacer. Todos los ítems de la lista se perderán." |
-| **Botones** | Cancelar / Eliminar (botón danger, rojo). |
-| **Post-acción** | Cierra modal, desaparece ListCard, toast "Lista eliminada." |
+| Trigger         | Opción "Eliminar" del menú `⋮`.                                              |
+| --------------- | ---------------------------------------------------------------------------- |
+| **Título**      | ¿Eliminar lista?                                                             |
+| **Cuerpo**      | "Esta acción no se puede deshacer. Todos los ítems de la lista se perderán." |
+| **Botones**     | Cancelar / Eliminar (botón danger, rojo).                                    |
+| **Post-acción** | Cierra modal, desaparece ListCard, toast "Lista eliminada."                  |
 
 #### Quitar ítem de lista
 
-| Trigger | Botón `✕` en MediaCard (detalle de lista). |
-|---------|-------------------------------------------|
-| **Título** | "¿Quitar "{título}" de {nombre lista}?" |
-| **Cuerpo** | — |
-| **Botones** | Cancelar / Quitar |
+| Trigger         | Botón `✕` en MediaCard (detalle de lista).                            |
+| --------------- | --------------------------------------------------------------------- |
+| **Título**      | "¿Quitar "{título}" de {nombre lista}?"                               |
+| **Cuerpo**      | —                                                                     |
+| **Botones**     | Cancelar / Quitar                                                     |
 | **Post-acción** | Cierra modal, desaparece la MediaCard del grid, toast "Ítem quitado." |
 
 #### Responsive de modales
 
-| Breakpoint | Ancho del modal |
-|-----------|----------------|
-| Desktop (≥768px) | 480px |
-| Mobile (<768px) | 95vw, centrado |
+| Breakpoint       | Ancho del modal |
+| ---------------- | --------------- |
+| Desktop (≥768px) | 480px           |
+| Mobile (<768px)  | 95vw, centrado  |
 
 ---
 
@@ -624,15 +629,15 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 └──────────────────────────────────────────┘
 ```
 
-| Elemento | Comportamiento |
-|----------|---------------|
-| **Campo principal** | Acepta email o nombre de usuario. Label: "Email o nombre de usuario". |
-| **Toggle contraseña** | Ícono 👁 para mostrar/ocultar. |
+| Elemento                      | Comportamiento                                                                                                                                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Campo principal**           | Acepta email o nombre de usuario. Label: "Email o nombre de usuario".                                                                                                                          |
+| **Toggle contraseña**         | Ícono 👁 para mostrar/ocultar.                                                                                                                                                                  |
 | **¿Olvidaste tu contraseña?** | Click → modal con campo de email + botón "Enviar enlace". Toast: "Te enviamos un email con instrucciones para restablecer tu contraseña." (mismo mensaje tanto si el email existe como si no). |
-| **Google** | Botón secundario con logo de G. Inicia flujo OAuth. |
-| **"Registrate"** | Reemplaza el form con el de Registro (transición del contenido, sin recargar). |
-| **Error** | Mensaje inline: "Email, usuario o contraseña incorrectos." (genérico). |
-| **Éxito** | Redirect al Home. |
+| **Google**                    | Botón secundario con logo de G. Inicia flujo OAuth.                                                                                                                                            |
+| **"Registrate"**              | Reemplaza el form con el de Registro (transición del contenido, sin recargar).                                                                                                                 |
+| **Error**                     | Mensaje inline: "Email, usuario o contraseña incorrectos." (genérico).                                                                                                                         |
+| **Éxito**                     | Redirect al Home.                                                                                                                                                                              |
 
 ---
 
@@ -689,16 +694,16 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 #### Campos y validaciones (según CU-001)
 
-| Campo | Restricción |
-|-------|------------|
-| Nombre | Solo letras, máx 50 caracteres. Obligatorio. |
-| Apellido | Solo letras, máx 50 caracteres. Obligatorio. |
-| Nombre de usuario | Alfanumérico, 5–25 caracteres, único. Validación inline de disponibilidad. |
-| Email | Formato válido usuario@dominio.com. Obligatorio. |
-| Fecha de nacimiento | Selector de fecha nativo (`type="date"`), no futura, ≥13 años. |
-| Género | Dropdown: Masculino / Femenino / No especificar. |
-| Contraseña | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*!`). |
-| Confirmar contraseña | Debe coincidir con Contraseña. |
+| Campo                | Restricción                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| Nombre               | Solo letras, máx 50 caracteres. Obligatorio.                                                    |
+| Apellido             | Solo letras, máx 50 caracteres. Obligatorio.                                                    |
+| Nombre de usuario    | Alfanumérico, 5–25 caracteres, único. Validación inline de disponibilidad.                      |
+| Email                | Formato válido usuario@dominio.com. Obligatorio.                                                |
+| Fecha de nacimiento  | Selector de fecha nativo (`type="date"`), no futura, ≥13 años.                                  |
+| Género               | Dropdown: Masculino / Femenino / No especificar.                                                |
+| Contraseña           | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*!`). |
+| Confirmar contraseña | Debe coincidir con Contraseña.                                                                  |
 
 #### Google OAuth
 
@@ -710,11 +715,11 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 #### Estados
 
-| Estado | Comportamiento |
-|--------|---------------|
-| Error de validación | Mensaje inline debajo de cada campo. Botón "Crear cuenta" deshabilitado hasta corregir. |
-| Email o usuario duplicado | Error de servidor: "El email o nombre de usuario ya está registrado." |
-| Registro exitoso | Redirect a Confirmación de cuenta. |
+| Estado                    | Comportamiento                                                                          |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| Error de validación       | Mensaje inline debajo de cada campo. Botón "Crear cuenta" deshabilitado hasta corregir. |
+| Email o usuario duplicado | Error de servidor: "El email o nombre de usuario ya está registrado."                   |
+| Registro exitoso          | Redirect a Confirmación de cuenta.                                                      |
 
 ---
 
@@ -820,17 +825,17 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 └──────────────────────────────────────────┘
 ```
 
-| Elemento | Comportamiento |
-|----------|---------------|
-| **Nombre** | Solo letras, máximo 50 caracteres. Obligatorio. |
-| **Apellido** | Solo letras, máximo 50 caracteres. Obligatorio. |
-| **Email** | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope). |
-| **Cambiar contraseña** | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía. |
-| **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo). |
-| **Cancelar** | Revierte a modo visualización sin guardar. |
-| **Guardar** | Actualiza datos. Si se cambió contraseña, valida actual + coincidencia de nueva. Toast: "Perfil actualizado." |
-| **Avatar** | Hover → overlay "Cambiar foto". Click → file picker. Preview instantánea. |
-| **Breadcrumb** | Perfil |
+| Elemento                | Comportamiento                                                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Nombre**              | Solo letras, máximo 50 caracteres. Obligatorio.                                                                                     |
+| **Apellido**            | Solo letras, máximo 50 caracteres. Obligatorio.                                                                                     |
+| **Email**               | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope).                                                                  |
+| **Cambiar contraseña**  | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía. |
+| **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo).                                                                     |
+| **Cancelar**            | Revierte a modo visualización sin guardar.                                                                                          |
+| **Guardar**             | Actualiza datos. Si se cambió contraseña, valida actual + coincidencia de nueva. Toast: "Perfil actualizado."                       |
+| **Avatar**              | Hover → overlay "Cambiar foto". Click → file picker. Preview instantánea.                                                           |
+| **Breadcrumb**          | Perfil                                                                                                                              |
 
 ---
 
@@ -905,26 +910,26 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ### ReviewCard
 
-| Elemento | Comportamiento |
-|----------|---------------|
+| Elemento           | Comportamiento                                                |
+| ------------------ | ------------------------------------------------------------- |
 | **Título + badge** | Clickeable → ficha de detalle. Muestra tipo (Película/Serie). |
-| **Rating** | Formato `X/10`. |
-| **Fecha** | Fecha de publicación. |
-| **Texto** | Truncado a 3 líneas, expandible con "[leer más ▾]". |
-| **✏️ Editar** | Abre modal de editar reseña (mismo de sección 5d). |
-| **🗑️ Eliminar** | Abre modal de eliminar reseña ("¿Eliminar reseña?"). |
+| **Rating**         | Formato `X/10`.                                               |
+| **Fecha**          | Fecha de publicación.                                         |
+| **Texto**          | Truncado a 3 líneas, expandible con "[leer más ▾]".           |
+| **✏️ Editar**      | Abre modal de editar reseña (mismo de sección 5d).            |
+| **🗑️ Eliminar**    | Abre modal de eliminar reseña ("¿Eliminar reseña?").          |
 
 - **Orden**: más reciente primero.
 - **Scroll vertical** sin paginación.
 
 ### Estados
 
-| Estado | Qué se muestra |
-|--------|---------------|
-| Loading | Skeleton de ReviewCards. |
-| Normal | Listado cronológico. |
-| Empty | Ilustración + "Todavía no escribiste ninguna reseña." + botón "Explorar" → Buscar. |
-| Error | Mensaje + botón Reintentar. |
+| Estado  | Qué se muestra                                                                     |
+| ------- | ---------------------------------------------------------------------------------- |
+| Loading | Skeleton de ReviewCards.                                                           |
+| Normal  | Listado cronológico.                                                               |
+| Empty   | Ilustración + "Todavía no escribiste ninguna reseña." + botón "Explorar" → Buscar. |
+| Error   | Mensaje + botón Reintentar.                                                        |
 
 ---
 
@@ -969,12 +974,12 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ### Secciones
 
-| Sección | Controles | Descripción |
-|---------|----------|------------|
-| **Apariencia** | Toggle Oscuro / Claro | Cambio inmediato de tema. Default: Oscuro. |
-| **Privacidad** | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros. |
-| **Notificaciones** | 3 switches independientes | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog). |
-| **Cuenta** | Botón danger "Dar de baja cuenta" | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es permanente. Perderás tus listas, reseñas y calificaciones." Botones Cancelar / Dar de baja. |
+| Sección            | Controles                           | Descripción                                                                                                                                                     |
+| ------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                      |
+| **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                    |
+| **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).              |
+| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es permanente. Perderás tus listas, reseñas y calificaciones." Botones Cancelar / Dar de baja. |
 
 ### Breadcrumb
 
@@ -985,6 +990,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ## 6. Componentes Base (Design System)
 
 ### 6.1 Botones
+
 - **Primary**: acción principal (CTA), color de acento, full width en forms.
 - **Secondary**: acción alternativa (cancelar, volver).
 - **Danger/Ghost**: acciones destructivas (eliminar, dar de baja).
@@ -992,6 +998,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - **Toggle**: listas predeterminadas (agregar/quitar de favoritos, vistas, pendientes).
 
 ### 6.2 Inputs
+
 - **Text input**: con/sin ícono, estados: default, focus, error, disabled.
 - **Password input**: con toggle mostrar/ocultar (ícono ojo).
 - **Search input**: con ícono de lupa, disabled hasta que se ingrese texto.
@@ -999,17 +1006,20 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - **Datepicker**: fecha de nacimiento en registro.
 
 ### 6.3 Navegación
+
 - **Navbar**: links con estado active/inactive, avatar con dropdown.
 - **Paginación**: prev/next + números (clásica).
 - **Breadcrumb**: obligatorio en ficha de detalle (reemplaza botón Volver).
 
 ### 6.4 Cards
+
 - **MediaCard**: poster (2:3), título, año, rating TMDB. Hover: escala 1.02 + sombra.
 - **ListCard**: nombre, cantidad de items, mini preview de 3-4 posters.
 - **ReviewCard**: avatar, @usuario, rating (formato `X/10`, sin estrellas), fecha, texto, acciones (editar/eliminar).
 - **CastCard**: para reparto y equipo (director + actores). Sin fotos. Colapsable si hay más de N elementos.
 
 ### 6.5 Feedback
+
 - **Rating stars**: widget interactivo 1-10 estrellas (solo en modal de calificar). Valores enteros. Fuera del modal se muestra formato `X/10`.
 - **Spinner/Loader**: indicador de carga genérico.
 - **Skeleton**: placeholder rectangular animado para carga de contenido.
@@ -1017,22 +1027,26 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - **Progress bar**: indicador durante procesamiento del chatbot.
 
 ### 6.6 Chat
+
 - **ChatPanel**: drawer/popover accionado por FAB.
 - **ChatBubble**: mensaje de usuario (alineado derecha) y bot (alineado izquierda).
 - **ChatInput**: campo de texto + botón enviar.
 - **TypingIndicator**: tres puntos animados mientras el bot procesa.
 
 ### 6.7 Modales
+
 - **Modal genérico**: overlay + contenido centrado + botones de acción.
 - **Modal de confirmación**: título + mensaje + Cancelar/Confirmar.
 - **Modal de formulario**: título + campos + Cancelar/Guardar.
 
 ### 6.8 Estados
+
 - **Empty state**: ilustración + mensaje descriptivo.
 - **Error state**: ilustración + mensaje + botón "Reintentar".
 - **404**: ilustración + "Página no encontrada" + link a Home.
 
 ### 6.9 Indicadores
+
 - **Badge**: etiqueta "Predeterminada" en listas del sistema.
 - **Tag**: género de película/serie.
 - **Status dot**: estado de cuenta (activa, pendiente, baja).
@@ -1042,24 +1056,29 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ## 7. Recomendaciones Visuales
 
 ### 7.1 Tema
+
 - **Modo oscuro como default** (cine/entretenimiento), con opción de modo claro.
 - Fondo: `#121212` o `#1a1a2e`.
 - Acento: dorado/ámbar `#f5c518` o naranja `#e67e22`.
 
 ### 7.2 Tipografía
+
 - UI: Inter o Roboto.
 - Títulos (opcional): Playfair Display (serif).
 - Escala: 12, 14, 16, 18, 20, 24, 32, 40 px.
 
 ### 7.3 Espaciado
+
 - Base 8px: 4, 8, 12, 16, 24, 32, 48, 64 px.
 
 ### 7.4 Bordes
+
 - Cards: 8px.
 - Botones: 6px.
 - Inputs: 4px.
 
 ### 7.5 Breakpoints
+
 - Desktop: 1440px (12 columnas).
 - Tablet: 768px (8 columnas).
 - Mobile: 375px (4 columnas).
@@ -1080,7 +1099,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 2. **Auto layout** en todos los componentes para iteración rápida.
 3. **Variants** con propiedad "State" (default, hover, focus, disabled, error, loading, empty).
 4. Priorizar diseño por sprints:
-   - **Sprint 1**: Login, Registro, Home, Buscar (panel overlay).  ← completado
+   - **Sprint 1**: Login, Registro, Home, Buscar (panel overlay). ← completado
    - **Sprint 2**: Ficha de detalle, Modales de reseña, Listas.
    - **Sprint 3**: Perfil, Modificar perfil, Pantallas de error/estado vacío, Confirmación de cuenta.
 5. Prototipar flujos críticos:
@@ -1110,6 +1129,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA. A continuación se detallan los requisitos específicos para cada componente:
 
 ### 11.1 Requisitos generales
+
 - **Contraste de color:** Relación mínima de 4.5:1 para texto normal y 3:1 para texto grande (≥18px o ≥14px negrita) contra el fondo. Verificar los colores del tema oscuro (`#e0e0e0` sobre `#0d0d14`) y del tema claro.
 - **Navegación por teclado:** Todos los elementos interactivos deben ser accesibles y operables mediante teclado (Tab, Shift+Tab, Enter, Escape, flechas). El orden de foco debe seguir una secuencia lógica.
 - **Foco visible:** Todos los elementos interactivos deben mostrar un indicador de foco visible (anillo de 2px en color de acento) al recibir el foco del teclado.
@@ -1118,6 +1138,7 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 - **Texto redimensionable:** El contenido debe ser legible con zoom del 200% sin pérdida de funcionalidad.
 
 ### 11.2 Componentes específicos
+
 - **Modal:** Al abrirse, el foco debe moverse al primer elemento interactivo del modal. Al cerrarse, el foco debe retornar al elemento que lo disparó. La tecla Escape cierra el modal. El contenido detrás del modal debe estar oculto para lectores de pantalla (`aria-hidden`).
 - **Star Widget:** Las estrellas deben ser navegables con teclado (flechas izquierda/derecha para seleccionar, Enter para confirmar). Cada estrella debe tener un `aria-label` con su valor (ej: "4 de 10 estrellas").
 - **Drag & Drop de listas:** El reordenamiento de listas personalizadas debe ofrecer una alternativa accesible sin mouse: botones "Mover arriba" y "Mover abajo" visibles al recibir foco, o menú contextual con opciones "Mover arriba / Mover abajo". El drag & drop sigue siendo la interacción principal para usuarios de mouse/touch.
@@ -1126,6 +1147,7 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 - **Toast/Notificaciones:** Deben usar `role="alert"` o `aria-live="polite"` para ser anunciadas por lectores de pantalla.
 
 ### 11.3 Validación
+
 - Los formularios deben mostrar mensajes de error asociados mediante `aria-describedby`.
 - Los campos con error deben tener el atributo `aria-invalid="true"`.
 - Los mensajes de error deben ser visibles y comunicados por lectores de pantalla.

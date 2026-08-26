@@ -54,7 +54,7 @@ export default function PublicHome() {
           Plataforma de reseñas cinematográficas con recomendaciones inteligentes.
         </p>
         <div className="flex w-full max-w-xs flex-col gap-3">
-          <Button size="lg" className="w-full" onClick={() => router.push("/catalogo")}>
+          <Button size="lg" className="w-full" onClick={() => router.push("/inicio")}>
             Explorar catálogo
           </Button>
           <Button
