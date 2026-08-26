@@ -29,6 +29,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `backend/usuarios/models.py`, `frontend/components/Navbar.tsx`, `.env.example`,
   `docs/05_Plan_de_Desarrollo.md`, `docs/04_Lineamientos_UI.md`.
 
+## 25/08/2026 — Limpieza de `storeTokens` (quitar parámetro `refresh`)
+
+- **Descripción**: se eliminó el parámetro `refresh` de `storeTokens` en el
+  frontend (`storeTokens(access)`), y se actualizaron sus tres llamadores (login
+  por email/contraseña, login con Google y completado de cuenta Google). También
+  se reformateó `Navbar.tsx` con Prettier (una línea JSX demasiado larga).
+- **Motivo**: el refresh token ya viaja como cookie httpOnly y no se persiste en
+  el cliente (ver decisión del 22/08/2026); el parámetro `_refresh` era un
+  remanente sin uso que generaba un warning de ESLint (`--max-warnings=0`) y
+  bloqueaba el hook de pre-commit de husky para cualquier commit.
+- **Archivos**: `frontend/lib/api.ts`, `frontend/lib/google-auth.ts`,
+  `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/completar-google/page.tsx`, `frontend/components/Navbar.tsx`.
+
 ## 25/08/2026 — Arquitectura híbrida del catálogo (TMDB + PostgreSQL)
 
 - **Descripción**: el Módulo 2 (Catálogo) adopta un modelo híbrido. El
