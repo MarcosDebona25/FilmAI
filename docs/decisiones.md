@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/08/2026 — Fix decodificación de parámetros en rutas dinámicas (useParams en Next.js)
+
+- **Descripción**: se solucionó el fallo en la verificación de correo (`/confirmar-correo/[key]`) y restablecimiento de contraseña (`/restablecer-contrasena/[uid]/[token]`):
+  1. `useParams()` de Next.js (App Router) retorna los segmentos de ruta URL-encoded.
+  2. Las keys generadas por allauth (`signing.dumps`) contienen dos puntos (`:`) para separar payload, timestamp y firma HMAC (ej. `MjU:1wzFi6:sZEa...`).
+  3. Al llegar a la página vía URL, `useParams()` devolvía la clave con `%3A` en vez de `:` (ej. `MjU%3A1wzFi6%3A...`). Al enviarla en el payload JSON a `/api/auth/registration/verify-email/`, `django.core.signing.loads` fallaba con `BadSignature: No ":" found in value`, respondiendo `400 {"codigo": "invalido"}`.
+  4. Se aplicó `decodeURIComponent()` sobre los parámetros extraídos de `useParams` en `confirmar-correo/[key]/page.tsx` y `restablecer-contrasena/[uid]/[token]/page.tsx`.
+- **Motivo**: corregir el error donde los enlaces de correo informaban "No se pudo confirmar" / "El enlace es inválido".
+- **Archivos**: `frontend/app/confirmar-correo/[key]/page.tsx`, `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx`, `docs/decisiones.md`.
+
 ## 26/08/2026 — Cierre de gaps Fundación/Auth: keywords, navbar, A-09, bcrypt, Shadcn
 
 - **Descripción**: se cerraron gaps detectados al comparar el código con docs 01–05:
@@ -44,17 +54,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Descripción**: tres correcciones al flujo de autenticación:
   1. **Login con cuenta de Google existente (bug raíz)**: en
      `GoogleSocialLoginSerializer.validate`, el chequeo `if not
-     login.is_existing:` corría ANTES de `complete_social_login()`, que es donde
+login.is_existing:` corría ANTES de `complete_social_login()`, que es donde
      allauth ejecuta el `lookup()`. Como `is_existing` es una property que
      devuelve `False` hasta ese lookup, SIEMPRE entraba a la rama de "cuenta
      nueva" y, al no recibir `nombre_usuario`/`fecha_nacimiento`/`genero` en el
      login, respondía 400 → el frontend mandaba a `/completar-google` incluso a
      cuentas ya vinculadas. Ahora se consulta `SocialAccount.objects.filter(
-     provider, uid).exists()` (mismo criterio que el `_lookup_by_socialaccount`
+provider, uid).exists()` (mismo criterio que el `_lookup_by_socialaccount`
      interno de allauth) ANTES del chequeo: si existe, es login y no se exigen
      los campos extra.
   2. **Check de email duplicado muerto**: en el segundo `if not
-     login.is_existing`, `getattr(login.user, "email", None)` usaba `email`,
+login.is_existing`, `getattr(login.user, "email", None)` usaba `email`,
      pero el modelo expone `correo`; el chequeo nunca aplicaba. Corregido a
      `correo`.
   3. **Access token fuera de localStorage**: el frontend ya no persiste el
@@ -124,7 +134,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 - **Descripción**: tras corregir el 500 (RawPostDataException), el flujo de
   completado de cuenta Google fallaba con `400 "No se pudo autenticar con
-  Google."` en el segundo POST. Causa: el `id_token` de Google es de UN SOLO
+Google."` en el segundo POST. Causa: el `id_token` de Google es de UN SOLO
   USO — allauth implementa anti-replay (`verify_jti` en
   `allauth.socialaccount.internal.jwtkit`): la primera verificación marca el
   `jti` del token en caché y cualquier reenvío del mismo token lanza
@@ -143,7 +153,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 - **Descripción**: el login con Google (`POST /api/auth/google/`) respondía 500
   con `django.http.request.RawPostDataException: You cannot access body after
-  reading from request's data stream`. En un view de DRF, `self.request.data`
+reading from request's data stream`. En un view de DRF, `self.request.data`
   consume el stream del body al parsear el JSON; luego
   `UsuarioSocialAccountAdapter.populate_user` releía `request.body` para obtener
   los campos que Google no provee (`nombre_usuario`, `fecha_nacimiento`,
@@ -358,9 +368,9 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   de email; aprovechar librerías mantenidas y estándar para SPA + JWT.
 - **Decisiones asociadas**:
   - **bcrypt** como hasher (`PASSWORD_HASHERS` con `BCryptSHA256PasswordHasher`
-    + dependencia `bcrypt`); cumple RNF #2 / RNF #12.
+    - dependencia `bcrypt`); cumple RNF #2 / RNF #12.
   - **`is_active` (Opción A1)**: propiedad derivada de `estado` (getter
-    `estado == ACTIVA`) con *setter* (`True → estado = ACTIVA`, `False` =
+    `estado == ACTIVA`) con _setter_ (`True → estado = ACTIVA`, `False` =
     no-op). Se elimina la columna huérfana `is_active` de la BD. `estado`
     (PENDIENTE/ACTIVA/BAJA) es la única fuente de verdad.
   - **Usuario Google nuevo**: `estado = ACTIVA` directo (Google ya verifica el
@@ -635,7 +645,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
      sesión aparece el modal de confirmación "¿Está seguro que desea cerrar
      sesión?" (CU-004 / A-08); al confirmar se llama a `dj-rest-auth`
      (`POST /api/auth/logout/`), se limpian los tokens y se redirige a Home.
-     *Desviación consciente del plan*: P-07 define 4 ítems (Mi perfil, Mis
+     _Desviación consciente del plan_: P-07 define 4 ítems (Mi perfil, Mis
      reseñas, Preferencias, Cerrar sesión), pero esas pantallas dependen de
      P-02+ que aún no existen. Los ítems restantes se agregan cuando se
      implementen.
@@ -785,9 +795,9 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
      `validarPassword`/`validarConfirmacion`, pantallas de éxito y de enlace
      inválido (informa validez de 1 hora).
   7. **Tests**: `RecuperarContrasenaTests` (8 casos): envío con enlace válido,
-   no-revelación, exclusión de no activas, cambio efectivo + login, enlace
-   inválido, expiración (+2h mockeando `_now` del generador), contraseña débil
-   y rate limit 429.
+     no-revelación, exclusión de no activas, cambio efectivo + login, enlace
+     inválido, expiración (+2h mockeando `_now` del generador), contraseña débil
+     y rate limit 429.
 - **Motivo**: completar la última actividad del Módulo 1 Autenticación (A-07),
   conectando el link visual que quedó en A-04.
 - **Archivos**: `backend/filmai/settings.py`, `backend/filmai/urls.py`,

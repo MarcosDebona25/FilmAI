@@ -13,11 +13,14 @@ export default function ConfirmarCorreoPage() {
   const [estado, setEstado] = useState<Estado>("cargando");
 
   useEffect(() => {
-    const key = params?.key;
-    if (!key) {
+    const rawKey = params?.key;
+    if (!rawKey) {
       setEstado("error");
       return;
     }
+    // useParams() devuelve valores URL-encoded; la key HMAC contiene ":"
+    // que llega como "%3A" y rompe signing.loads en el backend.
+    const key = decodeURIComponent(rawKey);
     apiFetch("/api/auth/registration/verify-email/", {
       method: "POST",
       body: { key },

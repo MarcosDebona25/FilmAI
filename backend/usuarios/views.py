@@ -174,6 +174,7 @@ class ConfirmarCorreoView(APIView):
 
     def post(self, request):
         key = str(request.data.get("key", ""))
+        logger.info("ConfirmarCorreo: key recibida (len=%d): %r", len(key), key)
         ttl_segundos = (
             allauth_account_settings.EMAIL_CONFIRMATION_EXPIRE_DAYS * 24 * 3600
         )
@@ -185,8 +186,12 @@ class ConfirmarCorreoView(APIView):
                 salt=allauth_account_settings.SALT,
             )
         except signing.SignatureExpired:
+            logger.info("ConfirmarCorreo: key expirada")
             return Response({"codigo": "expirado"}, status=status.HTTP_400_BAD_REQUEST)
-        except (signing.BadSignature, ValueError, TypeError):
+        except (signing.BadSignature, ValueError, TypeError) as exc:
+            logger.warning(
+                "ConfirmarCorreo: key inválida — %s: %s", type(exc).__name__, exc
+            )
             return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
 
         email_address = (

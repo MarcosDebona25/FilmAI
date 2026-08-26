@@ -90,18 +90,97 @@
           "parent": "1",
           "label": "Nota: se descartó la herencia entre ProducciónAudiovisual, Película y Serie porque no existe comportamiento diferenciado y los IDs de TMDB no garantizan unicidad entre películas y series. Se unifican en una única entidad con atributo 'tipo'."
         },
-        { "id": "e-usuario-calificacion", "type": "edge", "parent": "1", "source": "cls-usuario", "target": "cls-calificacion", "label": "1..* ─ 0..*" },
-        { "id": "e-usuario-lista", "type": "edge", "parent": "1", "source": "cls-usuario", "target": "cls-lista", "label": "1..1 ─ 3..*" },
-        { "id": "e-usuario-chat", "type": "edge", "parent": "1", "source": "cls-usuario", "target": "cls-chat", "label": "1..1 ─ 1..*" },
-        { "id": "e-calificacion-produccion", "type": "edge", "parent": "1", "source": "cls-calificacion", "target": "cls-produccion", "label": "0..* ─ 1..1" },
-        { "id": "e-resena-calificacion", "type": "edge", "parent": "1", "source": "cls-resena", "target": "cls-calificacion", "label": "1..1 ─ 0..1 (composición)" },
-        { "id": "e-lista-produccion", "type": "edge", "parent": "1", "source": "cls-lista", "target": "cls-produccion", "label": "0..* ─ 0..* (vía Tiene)" },
-        { "id": "e-chat-mensaje", "type": "edge", "parent": "1", "source": "cls-chat", "target": "cls-mensaje", "label": "1..1 ─ 1..* (composición)" },
-        { "id": "e-usuario-estado", "type": "edge", "parent": "1", "source": "cls-usuario", "target": "enum-estado" },
-        { "id": "e-usuario-genero", "type": "edge", "parent": "1", "source": "cls-usuario", "target": "enum-tipogenero" },
-        { "id": "e-lista-tipolista", "type": "edge", "parent": "1", "source": "cls-lista", "target": "enum-tipolista" },
-        { "id": "e-mensaje-tipoautor", "type": "edge", "parent": "1", "source": "cls-mensaje", "target": "enum-tipoautor" },
-        { "id": "e-produccion-tipoproduccion", "type": "edge", "parent": "1", "source": "cls-produccion", "target": "enum-tipoproduccion" }
+        {
+          "id": "e-usuario-calificacion",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-usuario",
+          "target": "cls-calificacion",
+          "label": "1..* ─ 0..*"
+        },
+        {
+          "id": "e-usuario-lista",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-usuario",
+          "target": "cls-lista",
+          "label": "1..1 ─ 3..*"
+        },
+        {
+          "id": "e-usuario-chat",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-usuario",
+          "target": "cls-chat",
+          "label": "1..1 ─ 1..*"
+        },
+        {
+          "id": "e-calificacion-produccion",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-calificacion",
+          "target": "cls-produccion",
+          "label": "0..* ─ 1..1"
+        },
+        {
+          "id": "e-resena-calificacion",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-resena",
+          "target": "cls-calificacion",
+          "label": "1..1 ─ 0..1 (composición)"
+        },
+        {
+          "id": "e-lista-produccion",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-lista",
+          "target": "cls-produccion",
+          "label": "0..* ─ 0..* (vía Tiene)"
+        },
+        {
+          "id": "e-chat-mensaje",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-chat",
+          "target": "cls-mensaje",
+          "label": "1..1 ─ 1..* (composición)"
+        },
+        {
+          "id": "e-usuario-estado",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-usuario",
+          "target": "enum-estado"
+        },
+        {
+          "id": "e-usuario-genero",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-usuario",
+          "target": "enum-tipogenero"
+        },
+        {
+          "id": "e-lista-tipolista",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-lista",
+          "target": "enum-tipolista"
+        },
+        {
+          "id": "e-mensaje-tipoautor",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-mensaje",
+          "target": "enum-tipoautor"
+        },
+        {
+          "id": "e-produccion-tipoproduccion",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-produccion",
+          "target": "enum-tipoproduccion"
+        }
       ]
     },
     {
@@ -163,14 +242,70 @@
           "parent": "1",
           "label": "Mensaje\nPK  idMensaje INTEGER\n    texto TEXT\n    autor VARCHAR(25)\n    fechaHora TIMESTAMP\nFK  idChat INTEGER"
         },
-        { "id": "e-usuario-calificacion", "type": "edge", "parent": "1", "source": "tbl-usuario", "target": "tbl-calificacion", "label": "1:N" },
-        { "id": "e-usuario-lista", "type": "edge", "parent": "1", "source": "tbl-usuario", "target": "tbl-lista", "label": "1:N" },
-        { "id": "e-usuario-chat", "type": "edge", "parent": "1", "source": "tbl-usuario", "target": "tbl-chat", "label": "1:N" },
-        { "id": "e-calificacion-produccion", "type": "edge", "parent": "1", "source": "tbl-produccion", "target": "tbl-calificacion", "label": "1:N" },
-        { "id": "e-resena-calificacion", "type": "edge", "parent": "1", "source": "tbl-calificacion", "target": "tbl-resena", "label": "1:1" },
-        { "id": "e-lista-tiene", "type": "edge", "parent": "1", "source": "tbl-lista", "target": "tbl-tiene", "label": "1:N" },
-        { "id": "e-tiene-produccion", "type": "edge", "parent": "1", "source": "tbl-produccion", "target": "tbl-tiene", "label": "1:N" },
-        { "id": "e-chat-mensaje", "type": "edge", "parent": "1", "source": "tbl-chat", "target": "tbl-mensaje", "label": "1:N" }
+        {
+          "id": "e-usuario-calificacion",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-usuario",
+          "target": "tbl-calificacion",
+          "label": "1:N"
+        },
+        {
+          "id": "e-usuario-lista",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-usuario",
+          "target": "tbl-lista",
+          "label": "1:N"
+        },
+        {
+          "id": "e-usuario-chat",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-usuario",
+          "target": "tbl-chat",
+          "label": "1:N"
+        },
+        {
+          "id": "e-calificacion-produccion",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-produccion",
+          "target": "tbl-calificacion",
+          "label": "1:N"
+        },
+        {
+          "id": "e-resena-calificacion",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-calificacion",
+          "target": "tbl-resena",
+          "label": "1:1"
+        },
+        {
+          "id": "e-lista-tiene",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-lista",
+          "target": "tbl-tiene",
+          "label": "1:N"
+        },
+        {
+          "id": "e-tiene-produccion",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-produccion",
+          "target": "tbl-tiene",
+          "label": "1:N"
+        },
+        {
+          "id": "e-chat-mensaje",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-chat",
+          "target": "tbl-mensaje",
+          "label": "1:N"
+        }
       ]
     }
   ]
