@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { GoogleButton } from "@/components/GoogleButton";
 import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch, storeTokens } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { handleGoogleLogin } from "@/lib/google-auth";
 import { validarCorreo } from "@/lib/validation";
 
@@ -46,16 +46,10 @@ function LoginForm() {
         password,
         ...(esEmail ? { email: identificador } : { username: identificador }),
       };
-      const data = await apiFetch<{
-        access: string;
-        refresh: string;
-        user?: { nombre_usuario?: string };
-      }>("/api/auth/login/", {
+      const data = await apiFetch<{ user?: { nombre_usuario?: string } }>("/api/auth/login/", {
         method: "POST",
         body: payload,
-        auth: false,
       });
-      storeTokens(data.access);
       toast.success(
         data.user?.nombre_usuario
           ? `¡Hola de nuevo, @${data.user.nombre_usuario}!`
@@ -85,6 +79,8 @@ function LoginForm() {
         );
         router.push(destino);
       } else if (result.faltaCampos) {
+        // Cuenta nueva que entró por "Iniciar sesión con Google": se completa
+        // el registro en /completar-google.
         router.push("/completar-google");
       } else {
         setError(result.error);
@@ -115,7 +111,6 @@ function LoginForm() {
       await apiFetch("/api/auth/password/reset/", {
         method: "POST",
         body: { email: correoRecuperar },
-        auth: false,
       });
       toast.success("Te enviamos un email con instrucciones para restablecer tu contraseña.");
       cerrarModalRecuperar();
@@ -139,7 +134,7 @@ function LoginForm() {
         <p className="mb-6 text-sm text-muted-foreground">Entrá con tu cuenta de FilmAI.</p>
 
         <div className="mb-6 flex justify-center">
-          <GoogleButton onSuccess={onGoogle} />
+          <GoogleButton text="signin_with" onSuccess={onGoogle} />
         </div>
 
         <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">

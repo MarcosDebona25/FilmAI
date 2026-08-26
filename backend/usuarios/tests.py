@@ -2,15 +2,25 @@
 cuenta por email (CU-002) con sus errores diferenciados."""
 
 import re
+from datetime import date
+from types import SimpleNamespace
 from typing import ClassVar
 from unittest.mock import patch
 
 from allauth.account.models import EmailAddress
+from allauth.socialaccount.models import SocialApp
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from django.core import mail
-from django.test import TestCase
+from django.http import HttpRequest
+from django.test import Client, TestCase
+from rest_framework.parsers import JSONParser
+from rest_framework.request import Request
+from rest_framework.test import APIRequestFactory
 
+from .adapter import UsuarioSocialAccountAdapter
 from .factories import UsuarioFactory
-from .models import EstadoCuenta
+from .models import EstadoCuenta, Usuario
+from .serializers import GoogleSocialLoginSerializer
 
 
 class UsernameDisponibleTests(TestCase):
@@ -175,8 +185,12 @@ class RecuperarContrasenaTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "[FilmAI] Restablecimiento de contraseña")
-        match = re.search(r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body)
+        self.assertEqual(
+            mail.outbox[0].subject, "[FilmAI] Restablecimiento de contraseña"
+        )
+        match = re.search(
+            r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body
+        )
         self.assertIsNotNone(match)
         self.assertIn("válido durante 1 hora", mail.outbox[0].body)
         # El saludo muestra nombre + apellido (docs/decisiones.md 24/08/2026).
@@ -325,3 +339,272 @@ class RecuperarContrasenaTests(TestCase):
 
         self.assertEqual(primera.status_code, 200)
         self.assertEqual(segunda.status_code, 429)
+
+
+class GoogleOAuthTests(TestCase):
+    """Regresión del 500 en `/api/auth/google/` (RawPostDataException) y del
+    flujo login vs registro con Google.
+
+    En un view de DRF, `request.data` consume el stream del body. El adapter
+    releía `request.body` dentro de `populate_user` para obtener los campos que
+    Google no provee, lo que lanzaba `RawPostDataException` → 500. Ahora esos
+    campos viajan pegados al request (`request.google_extra`) y el adapter no
+    toca el body. Además se cubre que una cuenta de Google existente inicia
+    sesión sin los campos extra, y una nueva los exige. Ver docs/decisiones.md
+    (26/08/2026).
+    """
+
+    def test_populate_user_lee_campos_extra_sin_releer_el_body(self):
+        # Estado exacto que deja DRF tras parsear el body: `_read_started=True`
+        # hace que cualquier acceso a `request.body` lance RawPostDataException.
+        request = HttpRequest()
+        request._read_started = True
+        request.google_extra = {
+            "nombre_usuario": "usuariogoogle",
+            "fecha_nacimiento": "1995-05-10",
+            "genero": "masculino",
+        }
+
+        usuario = Usuario(correo="google@filmai.com")
+        sociallogin = SimpleNamespace(user=usuario)
+
+        adapter = UsuarioSocialAccountAdapter()
+        user = adapter.populate_user(
+            request, sociallogin, {"email": "google@filmai.com"}
+        )
+
+        self.assertEqual(user.nombre_usuario, "usuariogoogle")
+        self.assertEqual(user.fecha_nacimiento, date(1995, 5, 10))
+        self.assertEqual(user.genero, "masculino")
+        self.assertEqual(user.estado, EstadoCuenta.ACTIVA)
+
+    def _serializer_google(self, extra=None):
+        """Construye el serializer con el request en el estado post-parseo de DRF.
+
+        Deja `_read_started=True` para que cualquier acceso a `request.body`
+        lance `RawPostDataException` (regresión del 500).
+        """
+        factory = APIRequestFactory()
+        django_request = factory.post(
+            "/api/auth/google/",
+            {"id_token": "fake-id-token", **(extra or {})},
+            format="json",
+        )
+        drf_request = Request(django_request, parsers=[JSONParser()])
+        _ = drf_request.data  # fuerza el parseo de DRF (consume el body)
+        django_request._read_started = True
+
+        view = SimpleNamespace(adapter_class=GoogleOAuth2Adapter)
+        serializer = GoogleSocialLoginSerializer(
+            data=drf_request.data,
+            context={"request": drf_request, "view": view},
+        )
+        return serializer, django_request
+
+    def _login_mock(self, provider="google", uid="google-sub-123", is_existing=False):
+        user = SimpleNamespace(correo="google@filmai.com")
+        return SimpleNamespace(
+            # Tras `complete_social_login` (mockeado como no-op) la cuenta queda
+            # persistida; el segundo `if not login.is_existing` no debe entrar.
+            is_existing=is_existing,
+            user=user,
+            account=SimpleNamespace(
+                provider=provider,
+                uid=uid,
+                user=user,
+            ),
+        )
+
+    def _app(self):
+        return SocialApp(
+            provider="google", name="Google", client_id="test", secret="test"
+        )
+
+    def _patch_existencia(self, es_existente):
+        """Fija `SocialAccount.objects.filter(...).exists()` al valor deseado."""
+        return patch(
+            "usuarios.serializers.SocialAccount.objects.filter",
+            return_value=SimpleNamespace(exists=lambda: es_existente),
+        )
+
+    def test_validate_adjunta_campos_extra_al_request_sin_releer_el_body(self):
+        extra = {
+            "nombre_usuario": "usuariogoogle",
+            "fecha_nacimiento": "1995-05-10",
+            "genero": "no_especifica",
+        }
+        serializer, django_request = self._serializer_google(extra=extra)
+        login = self._login_mock(is_existing=False)
+        app = self._app()
+        with (
+            self._patch_existencia(True),
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch(
+                "usuarios.serializers.complete_social_login",
+                side_effect=lambda _request, social_login: setattr(
+                    social_login, "is_existing", True
+                ),
+            ),
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
+            ),
+        ):
+            self.assertTrue(serializer.is_valid())
+            attrs = serializer.validated_data
+
+        self.assertEqual(
+            django_request.google_extra,
+            {
+                "nombre_usuario": "usuariogoogle",
+                "fecha_nacimiento": date(1995, 5, 10),
+                "genero": "no_especifica",
+            },
+        )
+        self.assertIs(attrs["user"], login.account.user)
+
+    def test_login_cuenta_existente_no_exige_campos(self):
+        """Regresión: una cuenta de Google ya vinculada inicia sesión SIN los
+        campos extra (antes caía en la rama de "campos faltantes" y el frontend
+        la mandaba a /completar-google)."""
+        serializer, _ = self._serializer_google()  # solo id_token
+        login = self._login_mock()
+        app = self._app()
+        with (
+            self._patch_existencia(True),
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch(
+                "usuarios.serializers.complete_social_login",
+                side_effect=lambda _request, social_login: setattr(
+                    social_login, "is_existing", True
+                ),
+            ),
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
+            ),
+        ):
+            self.assertTrue(serializer.is_valid())
+
+    def test_registro_cuenta_nueva_sin_campos_devuelve_error(self):
+        """Una cuenta de Google NUEVA (sin SocialAccount) exige los campos que
+        Google no provee: `nombre_usuario`, `fecha_nacimiento`, `genero`."""
+        serializer, _ = self._serializer_google()  # solo id_token
+        login = self._login_mock()
+        app = self._app()
+        with (
+            self._patch_existencia(False),
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch("usuarios.serializers.complete_social_login", return_value=None),
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
+            ),
+        ):
+            self.assertFalse(serializer.is_valid())
+            errores = serializer.errors
+            for campo in ("nombre_usuario", "fecha_nacimiento", "genero"):
+                self.assertIn(campo, errores)
+
+    def test_registro_cuenta_nueva_correo_duplicado_rechaza_antes_de_persistir(self):
+        """Regresión: el chequeo de email duplicado case-insensitive corre ANTES
+        de `complete_social_login`.
+
+        Con `SOCIALACCOUNT_AUTO_SIGNUP=True`, allauth puede crear el usuario
+        dentro de esa llamada cuando el usuario existente no tiene
+        `EmailAddress` (p.ej. los del seed); entonces un chequeo a posteriori
+        llega tarde y queda una segunda fila `Usuario` pese a responderse 400.
+        """
+        UsuarioFactory(
+            nombre_usuario="mariaregistrada",
+            correo="maria@filmai.com",
+            estado=EstadoCuenta.ACTIVA,
+        )
+        serializer, _ = self._serializer_google(
+            extra={
+                "nombre_usuario": "usuariogoogle",
+                "fecha_nacimiento": "1995-05-10",
+                "genero": "masculino",
+            }
+        )
+        login = self._login_mock()
+        # El perfil de Google trae el mismo correo con otras mayúsculas.
+        login.user = SimpleNamespace(correo="MARIA@filmai.com")
+        app = self._app()
+        with (
+            self._patch_existencia(False),
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch(
+                "usuarios.serializers.complete_social_login", return_value=None
+            ) as complete_mock,
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
+            ),
+        ):
+            self.assertFalse(serializer.is_valid())
+            self.assertIn(
+                "Ya existe una cuenta registrada con este correo.",
+                str(serializer.errors),
+            )
+            complete_mock.assert_not_called()
+
+        self.assertEqual(Usuario.objects.count(), 1)
+
+
+class CsrfCookieTests(TestCase):
+    """Protección CSRF del access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF).
+
+    Al autenticar por cookie (sin header Bearer), `JWTCookieAuthentication`
+    exige el header `X-CSRFToken` en las mutaciones. El frontend obtiene la
+    cookie `csrftoken` vía `GET /api/auth/csrf/` y la reenvía.
+    """
+
+    def _crear_usuario_activo(self):
+        usuario = UsuarioFactory(
+            nombre_usuario="usuariocsrf",
+            correo="csrf@filmai.com",
+            nombre="Csrf",
+            apellido="Test",
+        )
+        usuario.set_password("Password123!")
+        usuario.save()
+        return usuario
+
+    def test_csrf_endpoint_setea_cookie(self):
+        response = self.client.get("/api/auth/csrf/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("csrftoken", response.cookies)
+
+    def test_mutacion_autenticada_exige_header_csrf(self):
+        self._crear_usuario_activo()
+
+        # El test client desactiva CSRF por defecto; acá lo activamos.
+        cliente = Client(enforce_csrf_checks=True)
+
+        # 1. Obtener la cookie csrftoken.
+        cliente.get("/api/auth/csrf/")
+
+        # 2. Login (sin cookie `access` previa no hay enforcement) → setea cookies.
+        #    OJO: dj-rest-auth con SESSION_LOGIN=True (default) hace `django_login`,
+        #    que ROTA el token CSRF (rotate_token). Hay que releerlo después.
+        login = cliente.post(
+            "/api/auth/login/",
+            {"email": "csrf@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(login.status_code, 200)
+        self.assertIn("access", cliente.cookies)
+        csrf = cliente.cookies["csrftoken"].value  # valor vigente tras el login
+
+        # 3. Mutación autenticada SIN header CSRF → rechazada (403).
+        sin_header = cliente.post("/api/auth/logout/")
+        self.assertEqual(sin_header.status_code, 403)
+
+        # 4. Con el header CSRF (valor actual) → aceptada.
+        con_header = cliente.post("/api/auth/logout/", HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(con_header.status_code, 200)

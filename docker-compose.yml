@@ -17,13 +17,13 @@ services:
     container_name: filmai_db
     restart: unless-stopped
     ports:
-      - "5432:5432"                       # expuesto para conectar desde el host (DBeaver, etc.)
+      - "5432:5432" # expuesto para conectar desde el host (DBeaver, etc.)
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - pgdata:/var/lib/postgresql/data   # los datos sobreviven aunque tires el contenedor
+      - pgdata:/var/lib/postgresql/data # los datos sobreviven aunque tires el contenedor
     networks:
       - filmai_network
     healthcheck:
@@ -70,10 +70,10 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend:/app                  # monta TODO el código → hot-reload real
+      - ./backend:/app # monta TODO el código → hot-reload real
     depends_on:
       db:
-        condition: service_healthy     # no arranca hasta que PostgreSQL responda
+        condition: service_healthy # no arranca hasta que PostgreSQL responda
       redis:
         condition: service_healthy
     networks:
@@ -99,8 +99,8 @@ services:
       # Se reutiliza el mismo client_id de Google del .env global.
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     volumes:
-      - ./frontend:/app                 # monta TODO el código → hot-reload real
-      - /app/node_modules              # volumen anónimo: no pisar node_modules del contenedor
+      - ./frontend:/app # monta TODO el código → hot-reload real
+      - /app/node_modules # volumen anónimo: no pisar node_modules del contenedor
     depends_on:
       - backend
     networks:

@@ -5,14 +5,14 @@
 **TÍTULO DE LA IDEA/PROYECTO: FilmAI**
 
 | Fecha de Presentación |
-| :---: |
-| 12/12/2025 |
+| :-------------------: |
+|      12/12/2025       |
 
 ### Integrantes del equipo de trabajo
 
-| Integrante |
-| :---- |
-| Debona, Marcos Joel |
+| Integrante             |
+| :--------------------- |
+| Debona, Marcos Joel    |
 | Gaitan, Gonzalo Andrés |
 
 ### 1. Listado de modelos generados
@@ -112,9 +112,11 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 - `notifNovedades` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre novedades de FilmAI.
 
 **Campo en Usuario para OAuth:**
+
 - `googleId` (VARCHAR(100), UNIQUE, NULLABLE): Identificador único de la cuenta de Google asociada. Solo se completa para cuentas creadas mediante autenticación con Google OAuth. En estos casos, el campo `password` (contraseña) puede ser NULL.
 
 **Cambio en Usuario:**
+
 - `contraseña` cambia de VARCHAR(50) a VARCHAR(128) para alojar el hash de bcrypt (60+ caracteres), en concordancia con el RNF #2.
 
 > **Consistencia de autenticación:** `is_active` NO es columna de BD; es una
@@ -125,12 +127,15 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 > Google OAuth vía dj-rest-auth/allauth).
 
 **Cambio en Mensaje:**
+
 - `texto` cambia de VARCHAR(250) a TEXT para no truncar respuestas del chatbot (una respuesta del LLM puede superar 250 caracteres).
 
 **Cambio en Reseña:**
+
 - `texto` cambia de VARCHAR(250) a VARCHAR(1000) para permitir reseñas de hasta 1000 caracteres, en concordancia con los lineamientos de UI.
 - `sinopsis` en ProduccionAudiovisual cambia de VARCHAR(250) a VARCHAR(2000) para almacenar sinopsis completas sincronizadas desde TMDB.
 
 **Cambios para retrieval semántico del chatbot (decisión 18/08/2026, ver `docs/decisiones.md`):**
+
 - `keywords` (VARCHAR[]) en ProduccionAudiovisual: keywords temáticos de TMDB sincronizados en C-04 (`/movie/{id}/keywords`, `/tv/{id}/keywords`). Se usan como parte del texto a embebear para la búsqueda semántica.
 - `ProduccionEmbedding` (nueva, fase posterior del Módulo 5): FK a ProduccionAudiovisual + columna vectorial `vector(1024)` (extensión pgvector) + índice HNSW `vector_cosine_ops`. Almacena el embedding del texto `Title + Genres + Directors + Cast + Keywords + Synopsis`. Los campos cuantitativos (calificación promedio, año, duración, tipo, estatus) no se embedbean: se filtran por SQL sobre los resultados.

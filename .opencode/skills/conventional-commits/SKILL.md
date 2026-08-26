@@ -16,7 +16,7 @@ Use this skill when writing, revising, or suggesting a commit message, or when t
 ## Hard Rules
 
 - Every commit message follows the format `type(scope): description`.
-- `type` MUST be one of the 12 types in the table below — never invent a new type.
+- `type` MUST be one of the 11 types in the table below — never invent a new type.
 - `scope` is optional; when used, it names the affected area (e.g. `cart`, `auth`, `api`).
 - `description` is lowercase, imperative mood, no trailing period.
 - Use `revert:` without a scope: `revert: "original subject"`.
@@ -24,19 +24,19 @@ Use this skill when writing, revising, or suggesting a commit message, or when t
 
 ## Decision Gates
 
-| Type | Use when |
-|------|----------|
-| feat | Adding a new user-facing feature |
-| fix | Fixing a bug |
-| chore | Changes not touching `src` or `test` (deps, tooling) |
-| docs | Documentation-only changes |
-| style | Formatting/whitespace; no meaning change |
+| Type     | Use when                                                |
+| -------- | ------------------------------------------------------- |
+| feat     | Adding a new user-facing feature                        |
+| fix      | Fixing a bug                                            |
+| chore    | Changes not touching `src` or `test` (deps, tooling)    |
+| docs     | Documentation-only changes                              |
+| style    | Formatting/whitespace; no meaning change                |
 | refactor | Code change that neither fixes a bug nor adds a feature |
-| perf | Improving performance |
-| test | Adding or updating tests |
-| build | Build system or external dependency changes |
-| ci | CI configuration and scripts |
-| revert | Reverting a previous commit |
+| perf     | Improving performance                                   |
+| test     | Adding or updating tests                                |
+| build    | Build system or external dependency changes             |
+| ci       | CI configuration and scripts                            |
+| revert   | Reverting a previous commit                             |
 
 ## Execution Steps
 

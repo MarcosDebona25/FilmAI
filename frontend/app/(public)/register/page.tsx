@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Check, Eye, EyeOff, Info, Loader2, X } from "lucide-react";
 
-import { GoogleButton } from "@/components/GoogleButton";
+import { GoogleLinkButton } from "@/components/GoogleLinkButton";
 import { Button } from "@/components/ui/button";
 import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
-import { handleGoogleLogin } from "@/lib/google-auth";
 import {
   validarApellido,
   validarConfirmacion,
@@ -69,7 +67,6 @@ function ErrorTexto({ mensaje }: { mensaje?: string }) {
 }
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [form, setForm] = useState<Record<Campo, string>>({
     nombre: "",
     apellido: "",
@@ -171,7 +168,6 @@ export default function RegisterPage() {
           password1: form.password1,
           password2: form.password2,
         },
-        auth: false,
       });
       setEnviado(true);
     } catch (err) {
@@ -194,23 +190,6 @@ export default function RegisterPage() {
         }
       } else {
         setError("No se pudo crear la cuenta.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function onGoogle(idToken: string) {
-    setError(null);
-    setLoading(true);
-    try {
-      const result = await handleGoogleLogin(idToken);
-      if (result.ok) {
-        router.push("/");
-      } else if (result.faltaCampos) {
-        router.push("/completar-google");
-      } else {
-        setError(result.error);
       }
     } finally {
       setLoading(false);
@@ -265,7 +244,6 @@ export default function RegisterPage() {
                   await apiFetch("/api/auth/registration/resend-email/", {
                     method: "POST",
                     body: { email: form.correo },
-                    auth: false,
                   });
                   setReenviado(true);
                 } catch (err) {
@@ -305,7 +283,7 @@ export default function RegisterPage() {
         </p>
 
         <div className="mb-6 flex justify-center">
-          <GoogleButton onSuccess={onGoogle} />
+          <GoogleLinkButton />
         </div>
 
         <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">

@@ -7,6 +7,7 @@ Skill de validación post-implementación con reglas MUST/SHOULD/NEVER. Audita i
 ## Cuándo usarla
 
 **Solo después de que la implementación está completa.** Es el último paso del pipeline. Activarla para:
+
 - Validar que el output cumple estándares de producción
 - Detectar regresiones de accesibilidad
 - Auditar performance y CLS

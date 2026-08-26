@@ -20,12 +20,12 @@ Activate after frontend implementation is complete. This skill audits the output
 
 ## Decision Gates
 
-| Situation | Action |
-| --- | --- |
-| Implementation is incomplete | Refuse. Quality check runs on finished UI only. |
-| Violation is cosmetic (SHOULD) | Flag as warning. Do not block. |
-| Violation is functional (MUST) | Flag as error. Explain impact. |
-| User asks for fix | Point to the rule; let implementation skill handle it. |
+| Situation                      | Action                                                 |
+| ------------------------------ | ------------------------------------------------------ |
+| Implementation is incomplete   | Refuse. Quality check runs on finished UI only.        |
+| Violation is cosmetic (SHOULD) | Flag as warning. Do not block.                         |
+| Violation is functional (MUST) | Flag as error. Explain impact.                         |
+| User asks for fix              | Point to the rule; let implementation skill handle it. |
 
 ## Execution Steps
 

@@ -13,16 +13,18 @@ declare global {
 type GoogleButtonProps = {
   onSuccess: (idToken: string) => void;
   onError?: (message: string) => void;
+  /** Texto del botón oficial de Google (GIS). El default es "continue_with". */
+  text?: "signin_with" | "signup_with" | "continue_with";
 };
 
 type GoogleCredentialResponse = {
   credential?: string;
 };
 
-export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
+export function GoogleButton({ onSuccess, onError, text = "continue_with" }: GoogleButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const callbacksRef = useRef({ onSuccess, onError });
-  callbacksRef.current = { onSuccess, onError };
+  const callbacksRef = useRef({ onSuccess, onError, text });
+  callbacksRef.current = { onSuccess, onError, text };
 
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -45,6 +47,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
         theme: "filled_black",
         size: "large",
         width: 320,
+        text: callbacksRef.current.text,
       });
     }
 

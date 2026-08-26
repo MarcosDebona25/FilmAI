@@ -70,21 +70,21 @@ Desarrollar una aplicacion web integral que permita gestionar, calificar y recib
 
 ### Stack tecnologico
 
-| Capa | Tecnologia |
-|------|-----------|
-| **Backend** | Python 3.12, Django 5.x, Django REST Framework |
-| **Frontend** | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui |
-| **Base de datos** | PostgreSQL 16 |
-| **Cache y colas** | Redis (cache de TMDB, broker de Celery) |
-| **Tareas asincronas** | Celery + Celery Beat (sincronizacion programada con TMDB) |
-| **Infraestructura** | Docker, docker-compose (4 servicios: backend, frontend, PostgreSQL, Redis) |
-| **Autenticacion** | JWT (access + refresh tokens, sesion de 8 horas), Google OAuth 2.0, bcrypt |
+| Capa                  | Tecnologia                                                                 |
+| --------------------- | -------------------------------------------------------------------------- |
+| **Backend**           | Python 3.12, Django 5.x, Django REST Framework                             |
+| **Frontend**          | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                        |
+| **Base de datos**     | PostgreSQL 16                                                              |
+| **Cache y colas**     | Redis (cache de TMDB, broker de Celery)                                    |
+| **Tareas asincronas** | Celery + Celery Beat (sincronizacion programada con TMDB)                  |
+| **Infraestructura**   | Docker, docker-compose (4 servicios: backend, frontend, PostgreSQL, Redis) |
+| **Autenticacion**     | JWT (access + refresh tokens, sesion de 8 horas), Google OAuth 2.0, bcrypt |
 
 ### APIs externas
 
-| Proveedor | Proposito |
-|-----------|----------|
-| **TMDB API** | Catalogo de peliculas y series, busqueda, tendencias, metadatos |
+| Proveedor                               | Proposito                                                            |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| **TMDB API**                            | Catalogo de peliculas y series, busqueda, tendencias, metadatos      |
 | **LLM API** (OpenAI / Anthropic / Groq) | Procesamiento de lenguaje natural para el chatbot de recomendaciones |
 
 ### Modelo de datos
@@ -116,13 +116,13 @@ docker compose down         # detener (conserva la base de datos y Redis)
 
 ### URLs
 
-| Servicio            | URL                              |
-|---------------------|----------------------------------|
-| Frontend (Next.js)  | http://localhost:3000            |
-| Backend (Django)    | http://localhost:8000            |
-| Admin de Django     | http://localhost:8000/admin/     |
-| PostgreSQL          | `localhost:5432` (db `filmai_dev`) |
-| Redis               | `localhost:6379`                 |
+| Servicio           | URL                                |
+| ------------------ | ---------------------------------- |
+| Frontend (Next.js) | http://localhost:3000              |
+| Backend (Django)   | http://localhost:8000              |
+| Admin de Django    | http://localhost:8000/admin/       |
+| PostgreSQL         | `localhost:5432` (db `filmai_dev`) |
+| Redis              | `localhost:6379`                   |
 
 ### Comandos útiles
 
@@ -168,19 +168,19 @@ La especificacion detallada de accesibilidad por componente se encuentra en [`do
 
 ## Documentacion relacionada
 
-| Documento | Contenido |
-|-----------|----------|
-| [`01_Presentacion Idea-Proyecto`](docs/01_Presentaci%C3%B3n%20Idea-Proyecto.docx.md) | Propuesta inicial, problematica y objetivos |
+| Documento                                                                                     | Contenido                                                 |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [`01_Presentacion Idea-Proyecto`](docs/01_Presentaci%C3%B3n%20Idea-Proyecto.docx.md)          | Propuesta inicial, problematica y objetivos               |
 | [`02_Especificacion de Requerimientos`](docs/02_Especificaci%C3%B3n%20de%20Requerimientos.md) | Requerimientos funcionales, no funcionales y casos de uso |
-| [`03_Modelos de Datos y de Diseno`](docs/03_Modelos%20de%20Datos%20y%20de%20Dise%C3%B1o.md) | Diagrama de clases y modelo relacional |
-| [`04_Lineamientos_UI`](docs/04_Lineamientos_UI.md) | Diseno de interfaces, componentes y accesibilidad |
-| [`05_Plan_de_Desarrollo`](docs/05_Plan_de_Desarrollo.md) | Plan de trabajo, modulos y estimaciones |
+| [`03_Modelos de Datos y de Diseno`](docs/03_Modelos%20de%20Datos%20y%20de%20Dise%C3%B1o.md)   | Diagrama de clases y modelo relacional                    |
+| [`04_Lineamientos_UI`](docs/04_Lineamientos_UI.md)                                            | Diseno de interfaces, componentes y accesibilidad         |
+| [`05_Plan_de_Desarrollo`](docs/05_Plan_de_Desarrollo.md)                                      | Plan de trabajo, modulos y estimaciones                   |
 
 ---
 
 ## Equipo
 
-| Integrante |
-|-----------|
-| Debona, Marcos Joel |
+| Integrante             |
+| ---------------------- |
+| Debona, Marcos Joel    |
 | Gaitan, Gonzalo Andres |

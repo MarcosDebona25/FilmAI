@@ -10,11 +10,9 @@ convención y aplican el ciclo de vida definido en `docs/decisiones.md`:
   confirmación (`confirm_email`) la pasa a `activa`.
 - Google OAuth: usuario nuevo queda `activa` directo (Google ya verifica el
   email); los campos que Google no provee (`nombre_usuario`,
-  `fecha_nacimiento`, `genero`) se leen del body del request (pantalla
-  intermedia del frontend).
+  `fecha_nacimiento`, `genero`) llegan por el request (`request.google_extra`,
+  seteado por el serializer; pantalla intermedia del frontend).
 """
-
-import json
 
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
@@ -22,17 +20,6 @@ from django.conf import settings
 from django.utils.dateparse import parse_date
 
 from .models import EstadoCuenta, TipoGenero
-
-
-def _extra_from_body(request):
-    """Lee los campos extra del body JSON del request (si lo hay)."""
-    try:
-        body = request.body
-        if isinstance(body, bytes):
-            return json.loads(body or b"{}")
-    except (json.JSONDecodeError, AttributeError, TypeError):
-        return {}
-    return {}
 
 
 class UsuarioAccountAdapter(DefaultAccountAdapter):
@@ -104,7 +91,11 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
         # Google ya verificó el email: la cuenta nace activa.
         user.estado = EstadoCuenta.ACTIVA
 
-        extra = _extra_from_body(request)
+        # Los campos extra (que Google no provee) los adjunta el serializer al
+        # request (`request.google_extra`) antes de llamar a `complete_login`.
+        # No se releen de `request.body`: en un view de DRF ese body ya fue
+        # consumido por el parser y releerlo lanza RawPostDataException (500).
+        extra = getattr(request, "google_extra", {})
         user.nombre_usuario = extra.get("nombre_usuario") or ""
         fecha = extra.get("fecha_nacimiento")
         user.fecha_nacimiento = parse_date(fecha) if isinstance(fecha, str) else fecha

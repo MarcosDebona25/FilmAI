@@ -5,6 +5,168 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/08/2026 — Fix decodificación de parámetros en rutas dinámicas (useParams en Next.js)
+
+- **Descripción**: se solucionó el fallo en la verificación de correo (`/confirmar-correo/[key]`) y restablecimiento de contraseña (`/restablecer-contrasena/[uid]/[token]`):
+  1. `useParams()` de Next.js (App Router) retorna los segmentos de ruta URL-encoded.
+  2. Las keys generadas por allauth (`signing.dumps`) contienen dos puntos (`:`) para separar payload, timestamp y firma HMAC (ej. `MjU:1wzFi6:sZEa...`).
+  3. Al llegar a la página vía URL, `useParams()` devolvía la clave con `%3A` en vez de `:` (ej. `MjU%3A1wzFi6%3A...`). Al enviarla en el payload JSON a `/api/auth/registration/verify-email/`, `django.core.signing.loads` fallaba con `BadSignature: No ":" found in value`, respondiendo `400 {"codigo": "invalido"}`.
+  4. Se aplicó `decodeURIComponent()` sobre los parámetros extraídos de `useParams` en `confirmar-correo/[key]/page.tsx` y `restablecer-contrasena/[uid]/[token]/page.tsx`.
+- **Motivo**: corregir el error donde los enlaces de correo informaban "No se pudo confirmar" / "El enlace es inválido".
+- **Archivos**: `frontend/app/confirmar-correo/[key]/page.tsx`, `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx`, `docs/decisiones.md`.
+
+## 26/08/2026 — Cierre de gaps Fundación/Auth: keywords, navbar, A-09, bcrypt, Shadcn
+
+- **Descripción**: se cerraron gaps detectados al comparar el código con docs 01–05:
+  1. **`keywords` en `ProduccionAudiovisual`**: se agrega `ArrayField` (VARCHAR[])
+     para keywords temáticos de TMDB (`/movie/{id}/keywords`, `/tv/{id}/keywords`).
+     Queda vacío hasta C-04; se adelanta para no migrar después. Alimenta el texto
+     a embeber de B-06 (`Title + Genres + Directors + Cast + Keywords + Synopsis`).
+  2. **A-09 (middleware JWT) — opción B**: el middleware de Next.js solo comprueba
+     presencia de la cookie `access` para redirigir a `/login`. La verificación
+     real (firma, expiración, blacklist) queda en el backend
+     (`JWTCookieAuthentication` + `IsAuthenticated`). Evita compartir
+     `SECRET_KEY` con el frontend y duplicar lógica de auth.
+  3. **bcrypt confirmado**: `PASSWORD_HASHERS` ya usa
+     `BCryptSHA256PasswordHasher` y `bcrypt>=4.0` está en `requirements.txt`
+     (RNF #2 cumplido). Sin cambio de código.
+  4. **Shadcn sobre `@base-ui/react`**: desviación de F-03 (el plan decía
+     shadcn/ui sobre Radix). El `components.json` usa `style: "base-nova"` y
+     `@base-ui/react`. Se documenta para no romper expectativas en PRs futuros.
+     Hoy solo está construido `components/ui/button.tsx`.
+  5. **Navbar completa (doc 04 §4)**: links Inicio / Buscar / Listas + dropdown
+     Mi perfil / Mis reseñas / Preferencias / Cerrar sesión. Las opciones aún
+     no implementadas muestran toast `"Todavía no está implementado"`. Logo
+     apunta a `/inicio`. Landing: CTA "Explorar catálogo" navega a `/inicio`
+     (ya no `/catalogo`).
+  6. **AGENTS.md §4**: los agentes deben correr `ruff format/check` y
+     `prettier --check` antes de dar el OK.
+- **Motivo**: auditoría end-to-end vs docs 01–05; el usuario confirmó opción B
+  para A-09 y pidió adelantar `keywords`, completar la navbar visualmente y
+  dejar el formateo como gate de entrega.
+- **Archivos**: `backend/catalogo/models.py`,
+  `backend/catalogo/migrations/0003_produccionaudiovisual_keywords.py`,
+  `frontend/components/Navbar.tsx`, `frontend/app/(public)/page.tsx`,
+  `docs/05_Plan_de_Desarrollo.md` (A-09), `AGENTS.md`.
+
+## 26/08/2026 — Fix login Google vs registro + access token solo en cookie httpOnly
+
+- **Descripción**: tres correcciones al flujo de autenticación:
+  1. **Login con cuenta de Google existente (bug raíz)**: en
+     `GoogleSocialLoginSerializer.validate`, el chequeo `if not
+login.is_existing:` corría ANTES de `complete_social_login()`, que es donde
+     allauth ejecuta el `lookup()`. Como `is_existing` es una property que
+     devuelve `False` hasta ese lookup, SIEMPRE entraba a la rama de "cuenta
+     nueva" y, al no recibir `nombre_usuario`/`fecha_nacimiento`/`genero` en el
+     login, respondía 400 → el frontend mandaba a `/completar-google` incluso a
+     cuentas ya vinculadas. Ahora se consulta `SocialAccount.objects.filter(
+provider, uid).exists()` (mismo criterio que el `_lookup_by_socialaccount`
+     interno de allauth) ANTES del chequeo: si existe, es login y no se exigen
+     los campos extra.
+  2. **Check de email duplicado muerto**: en el segundo `if not
+login.is_existing`, `getattr(login.user, "email", None)` usaba `email`,
+     pero el modelo expone `correo`; el chequeo nunca aplicaba. Corregido a
+     `correo`.
+  3. **Access token fuera de localStorage**: el frontend ya no persiste el
+     access token en `localStorage` (superficie XSS). El backend autentica vía
+     cookie httpOnly (`JWTCookieAuthentication` ya era el auth class por
+     defecto) y el `Authorization: Bearer` desde localStorage era redundante. Se
+     eliminaron `getAccessToken`/`storeTokens`/`clearTokens` y la opción `auth`
+     de `apiFetch`; las cookies viajan con `credentials: "include"`.
+- **Motivo**: corregir el bug reportado (iniciar sesión con Google mandaba a la
+  pantalla de registro) y endurecer el manejo de tokens (el refresh ya estaba
+  fuera de localStorage; ahora el access también).
+- **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`
+  (regresión: login de cuenta existente sin campos + cuenta nueva exige campos),
+  `frontend/lib/api.ts`, `frontend/lib/google-auth.ts`,
+  `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/(public)/register/page.tsx`,
+  `frontend/app/confirmar-correo/[key]/page.tsx`,
+  `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx`,
+  `frontend/components/Navbar.tsx`.
+
+## 26/08/2026 — CSRF para el access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF)
+
+- **Descripción**: al quedar el access token solo en cookie httpOnly (sin header
+  Bearer), se habilitó protección CSRF explícita en lugar de descansar solo en
+  `SameSite=Lax`:
+  1. `JWT_AUTH_COOKIE_USE_CSRF=True`: `JWTCookieAuthentication` exige el header
+     `X-CSRFToken` en las mutaciones autenticadas por la cookie `access` (los
+     métodos seguros GET/HEAD/OPTIONS quedan exentos).
+  2. `CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS`: el frontend es otro origen
+     (localhost:3000), así que Django valida el `Origin` cross-origin contra
+     estos orígenes; sin esto, cualquier mutación legítima se rechazaba con
+     "Referer checking failed".
+  3. Endpoint `GET /api/auth/csrf/` (`CSRFTokenView` + `ensure_csrf_cookie`):
+     setea la cookie `csrftoken` (legible por JS) para que el frontend la
+     reenvíe como header.
+  4. Frontend: `apiFetch` lee la cookie `csrftoken` (o la pide al endpoint si
+     aún no existe) y manda `X-CSRFToken` en toda mutación. Relee la cookie en
+     cada request, por lo que la rotación del token tras el login (dj-rest-auth
+     hace `django_login` con `SESSION_LOGIN=True`, que llama `rotate_token`) es
+     transparente.
+- **Motivo**: resolver el pendiente del tradeoff XSS/CSRF: con cookie httpOnly la
+  protección CSRF ahora valida el token en cada mutación y no solo confía en el
+  `SameSite` de la cookie.
+- **Archivos**: `backend/filmai/settings.py`, `backend/usuarios/views.py`
+  (`CSRFTokenView`), `backend/filmai/urls.py`, `backend/usuarios/tests.py`
+  (`CsrfCookieTests`, 2 casos), `frontend/lib/api.ts`.
+
+## 26/08/2026 — Google OAuth: login abre el selector y registro completa datos (flujos distintos)
+
+- **Descripción**: se separan los dos flujos de Google. El botón de LOGIN
+  ("Iniciar sesión con Google", `GoogleButton text="signin_with"`) abre el
+  selector de cuentas de Google directamente; si la cuenta ya existe entra
+  directo, y si es nueva se deriva a `/completar-google`. El botón de REGISTRO
+  ("Crear cuenta con Google", `GoogleLinkButton`) no abre Google: marca el
+  flujo pendiente (`google_signup_pending`) y navega a `/completar-google`,
+  donde se completan los datos faltantes y se toca el botón de Google
+  (`signup_with`) — un único popup en todo el flujo de registro. Se elimina el
+  texto que explicaba el motivo de los tokens (no aporta al usuario final).
+- **Motivo**: UX — dos situaciones distintas: iniciar sesión (abrir el
+  selector) vs crear cuenta (completar datos + elegir cuenta una sola vez).
+- **Archivos**: `frontend/components/GoogleLinkButton.tsx` (nuevo),
+  `frontend/app/(public)/login/page.tsx`,
+  `frontend/app/(public)/register/page.tsx`,
+  `frontend/app/completar-google/page.tsx`, `frontend/lib/google-auth.ts`.
+
+## 26/08/2026 — Fix del id_token de un solo uso en el flujo Google de 2 pasos
+
+- **Descripción**: tras corregir el 500 (RawPostDataException), el flujo de
+  completado de cuenta Google fallaba con `400 "No se pudo autenticar con
+Google."` en el segundo POST. Causa: el `id_token` de Google es de UN SOLO
+  USO — allauth implementa anti-replay (`verify_jti` en
+  `allauth.socialaccount.internal.jwtkit`): la primera verificación marca el
+  `jti` del token en caché y cualquier reenvío del mismo token lanza
+  `OAuth2Error("token already used")`. El frontend reutilizaba el mismo
+  id_token (guardado en `sessionStorage`) para el paso de completado.
+- **Decisión (Opción 1)**: obtener un id_token FRESCO en la pantalla de
+  completado mediante re-autenticación con Google. El frontend ya no guarda ni
+  reutiliza el token: guarda solo un marcador (`google_signup_pending`) para
+  proteger la ruta, y `/completar-google` pide un token nuevo (botón Google con
+  `text="signup_with"` para distinguirlo del de login). Se mantiene intacta la
+  garantía anti-replay de allauth.
+- **Archivos**: `frontend/lib/google-auth.ts`,
+  `frontend/app/completar-google/page.tsx`, `frontend/components/GoogleButton.tsx`.
+
+## 26/08/2026 — Fix del 500 en Google OAuth: no releer `request.body` en `populate_user`
+
+- **Descripción**: el login con Google (`POST /api/auth/google/`) respondía 500
+  con `django.http.request.RawPostDataException: You cannot access body after
+reading from request's data stream`. En un view de DRF, `self.request.data`
+  consume el stream del body al parsear el JSON; luego
+  `UsuarioSocialAccountAdapter.populate_user` releía `request.body` para obtener
+  los campos que Google no provee (`nombre_usuario`, `fecha_nacimiento`,
+  `genero`), lo que lanzaba la excepción y derivaba en 500.
+- **Solución**: esos campos ahora viajan pegados al request
+  (`request.google_extra`), seteado por `GoogleSocialLoginSerializer.validate`
+  desde los `attrs` ya validados antes de llamar a `complete_login`. El adapter
+  los lee con `getattr(request, "google_extra", {})` y ya no toca el body.
+  Se eliminó el helper `_extra_from_body`.
+- **Archivos**: `backend/usuarios/serializers.py`,
+  `backend/usuarios/adapter.py`, `backend/usuarios/tests.py` (regresión:
+  `GoogleOAuthTests`).
+
 ## 25/08/2026 — Pendientes de revisión del PR #3 de autenticación
 
 - **Descripción**: durante la revisión del PR #3 se identificaron los siguientes
@@ -206,9 +368,9 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   de email; aprovechar librerías mantenidas y estándar para SPA + JWT.
 - **Decisiones asociadas**:
   - **bcrypt** como hasher (`PASSWORD_HASHERS` con `BCryptSHA256PasswordHasher`
-    + dependencia `bcrypt`); cumple RNF #2 / RNF #12.
+    - dependencia `bcrypt`); cumple RNF #2 / RNF #12.
   - **`is_active` (Opción A1)**: propiedad derivada de `estado` (getter
-    `estado == ACTIVA`) con *setter* (`True → estado = ACTIVA`, `False` =
+    `estado == ACTIVA`) con _setter_ (`True → estado = ACTIVA`, `False` =
     no-op). Se elimina la columna huérfana `is_active` de la BD. `estado`
     (PENDIENTE/ACTIVA/BAJA) es la única fuente de verdad.
   - **Usuario Google nuevo**: `estado = ACTIVA` directo (Google ya verifica el
@@ -483,7 +645,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
      sesión aparece el modal de confirmación "¿Está seguro que desea cerrar
      sesión?" (CU-004 / A-08); al confirmar se llama a `dj-rest-auth`
      (`POST /api/auth/logout/`), se limpian los tokens y se redirige a Home.
-     *Desviación consciente del plan*: P-07 define 4 ítems (Mi perfil, Mis
+     _Desviación consciente del plan_: P-07 define 4 ítems (Mi perfil, Mis
      reseñas, Preferencias, Cerrar sesión), pero esas pantallas dependen de
      P-02+ que aún no existen. Los ítems restantes se agregan cuando se
      implementen.
@@ -633,9 +795,9 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
      `validarPassword`/`validarConfirmacion`, pantallas de éxito y de enlace
      inválido (informa validez de 1 hora).
   7. **Tests**: `RecuperarContrasenaTests` (8 casos): envío con enlace válido,
-   no-revelación, exclusión de no activas, cambio efectivo + login, enlace
-   inválido, expiración (+2h mockeando `_now` del generador), contraseña débil
-   y rate limit 429.
+     no-revelación, exclusión de no activas, cambio efectivo + login, enlace
+     inválido, expiración (+2h mockeando `_now` del generador), contraseña débil
+     y rate limit 429.
 - **Motivo**: completar la última actividad del Módulo 1 Autenticación (A-07),
   conectando el link visual que quedó en A-04.
 - **Archivos**: `backend/filmai/settings.py`, `backend/filmai/urls.py`,
@@ -683,3 +845,123 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Archivos**: `backend/usuarios/views.py`, `backend/filmai/settings.py`,
   `backend/templates/registration/recuperar_contrasena_message.html`,
   `backend/requirements.txt`.
+
+## 26/08/2026 — Revisión de PR: email duplicado en Google OAuth, CSRF del login, decodes de URL y sincronización de documentación
+
+- **Descripción**: correcciones surgidas de la revisión del PR (feat/Autenticación):
+  1. **Check de email duplicado movido ANTES de `complete_social_login`**:
+     en `GoogleSocialLoginSerializer.validate`, el chequeo
+     `Usuario.objects.filter(correo__iexact=...)` ahora corre dentro de la
+     rama `not es_existente` (junto a la validación de campos faltantes),
+     antes de llamar a allauth. Con `SOCIALACCOUNT_AUTO_SIGNUP=True`, allauth
+     puede crear el usuario dentro de `complete_social_login`
+     (`flows.signup.process_signup`) cuando el usuario existente no tiene
+     `EmailAddress` (p.ej. los del seed): un chequeo a posteriori llegaba
+     tarde y dejaba una segunda fila `Usuario` pese a responderse 400 (la
+     unique de PostgreSQL solo cubre el caso exacto). Se agrega test de
+     regresión que verifica el error 400, que la fila existente queda como
+     única (`Usuario.objects.count() == 1`) y que
+     `complete_social_login` no se invoca.
+  2. **`LenientJWTCookieAuthentication` propaga `PermissionDenied`**: el
+     `except Exception` genérico tragaba el `PermissionDenied` que
+     `JWTCookieAuthentication.enforce_csrf` lanza al fallar CSRF
+     (`JWT_AUTH_COOKIE_USE_CSRF=True`) cuando el browser trae una cookie
+     `access` previa; el login quedaba sin protección CSRF (pasaba por
+     anónimo). Ahora esa excepción se re-lanza (403) y solo las cookies
+     inválidas/vencidas se tratan como anónimas.
+  3. **URIError al decodificar parámetros URL**: `decodeURIComponent` lanza
+     URIError ante secuencias inválidas (p.ej. "%" suelto). En
+     `app/confirmar-correo/[key]/page.tsx` el throw dejaba la página trabada
+     en "cargando": ahora el decode está protegido y deriva al estado de
+     enlace inválido ("error"). En
+     `app/restablecer-contrasena/[uid]/[token]/page.tsx` un URIError caía en
+     el mensaje de fallo de contraseña: se clasifica como `enlace_invalido`.
+  4. **Sincronización con la implementación real**:
+     - A-08 (docs/05) ya no describe tokens en storage: logout basado en
+       cookies (`POST /api/auth/logout/` invalida refresh y limpia las
+       cookies httpOnly).
+     - Filas C-08 y P-03 (docs/05): los pipes internos (`POST | PUT |
+DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
+       columnas del encabezado; Q-05/Q-06 pierden la celda extra de
+       responsable (lo cubren el título del módulo y el resumen final).
+     - docs/03 JSON: arista e-usuario-calificacion pasa de `1..* ─ 0..*` a
+       `1..1 ─ 0..*` (FK obligatoria: cada calificación pertenece a
+       exactamente un usuario; un usuario puede tener cero o más).
+     - Skill conventional-commits: "12 tipos" → "11 tipos" (la tabla tiene
+       11 y coincide con references/examples.md).
+     - Skill humanizer: el ejemplo de Lisboa elimina detalles inventados
+       (fotos, popularidad del tranvía, filas, planes futuros); conserva
+       solo hechos presentes en la entrada.
+  5. **No aplicado (verificado contra settings.py)**: propuesta de
+     `SameSite=None; Secure` para JWT/CSRF cookies. El despliegue actual es
+     mismo sitio (localhost:3000 → localhost:8000 comparten host registrable)
+     y la decisión del 26/08/2026 (`JWT_AUTH_COOKIE_USE_CSRF` +
+     `CSRF_TRUSTED_ORIGINS`) hace que la protección CSRF no dependa del
+     SameSite; forzar `SameSite=None` + `Secure=True` rompería las cookies en
+     desarrollo http. Se reconsidera si el frontend y la API terminan en
+     sitios distintos.
+- **Motivo**: hallazgos verificados de la revisión del PR; el check duplicado
+  y el manejo del CSRF eran huecos reales de seguridad/atrición de datos.
+- **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/views.py`,
+  `backend/usuarios/tests.py`,
+  `frontend/app/confirmar-correo/[key]/page.tsx`,
+  `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx`,
+  `docs/05_Plan_de_Desarrollo.md`,
+  `docs/03_DiagramaClases_DiagramaTablas.json`,
+  `.opencode/skills/conventional-commits/SKILL.md`,
+  `.opencode/skills/humanizer/SKILL.md`.
+
+## 26/08/2026 — Errores globales DRF excluidos del mapa de campos en el frontend (400 de /completar-google sin campos marcados)
+
+- **Fecha**: 26/08/2026
+- **Descripción**: al completar el registro con Google en `/completar-google`
+  se mostraba "Corregí los campos marcados y tocá de nuevo el botón de
+  Google." sin ningún campo resaltado, y el backend registraba
+  `POST /api/auth/google/ 400` con body de 55 bytes. Verificación: renderizado
+  con `JSONRenderer` (dentro del contenedor, settings reales) de todos los
+  bodies posibles del endpoint; solo
+  `{"non_field_errors":["El correo ya está registrado."]}` mide exactamente
+  55 bytes. La causa era doble:
+  1. **Backend (correcto, no modificado)**: la cuenta de Google usada tiene un
+     correo que ya existe como `Usuario` local sin `SocialAccount` vinculado;
+     el serializer toma la rama de registro nuevo y rechaza por email
+     duplicado (`GoogleSocialLoginSerializer.validate`, chequeo UNIQUE_EMAIL).
+     Es un error global (no de campo), y es el comportamiento previsto hasta
+     decidir si se hace auto-vinculación.
+  2. **Frontend (bug)**: `extraerErroresPorCampo` trataba TODAS las claves del
+     body como si fueran campos, incluida `non_field_errors`. Con
+     `{non_field_errors: ["El correo ya está registrado."]}` el objeto tenía
+     claves > 0, así que `/completar-google` entraba en la rama de errores de
+     campo, mostraba el mensaje genérico de "corregí los campos" e intentaba
+     marcar el inexistente campo `non_field_errors`, que nunca se renderiza.
+     Fix: `extraerErroresPorCampo` ahora omite `non_field_errors` y `detail`;
+     esos mensajes llegan a las pantallas por la vía ya existente
+     (`extractError` → `ApiError.message`). En `/completar-google` el usuario ve
+     ahora "El correo ya está registrado."; los errores reales de campo (p.ej.
+     nombre de usuario ocupado) siguen marcándose inline, y el banner genérico
+     solo aparece cuando hay errores de campo genuinos. Los otros dos llamadores
+     (`register`, restablecer contraseña) quedan verificados: no dependían de
+     recibir claves globales en el mapa.
+- **Motivo**: error reportado por el usuario; el mensaje genérico indicaba una
+  acción imposible ("campos marcados") porque la clasificación backend/global
+  vs campo se hacía mal en el frontend.
+- **Archivos**: `frontend/lib/api.ts`.
+
+## 26/08/2026 — Mensaje personalizado para correo ya registrado en Google OAuth (se mantiene el rechazo)
+
+- **Fecha**: 26/08/2026
+- **Descripción**: ante un registro con Google cuyo correo ya existe como
+  cuenta tradicional (sin `SocialAccount` vinculado), se decide MANTENER el
+  rechazo actual (no auto-vincular cuentas) pero reemplazar el mensaje
+  genérico "El correo ya está registrado." por uno que explique la situación:
+  "Ya existe una cuenta registrada con este correo. Iniciá sesión con tu
+  contraseña." El mensaje viaja como error global (`non_field_errors`) y el
+  frontend lo muestra en la parte superior del formulario de
+  `/completar-google` gracias a la corrección previa de
+  `extraerErroresPorCampo` (ver decisión anterior del mismo día). La prueba
+  unitaria de email duplicado (`usuarios/tests.py`) se actualiza al nuevo
+  texto.
+- **Motivo**: pedido explícito del usuario; el mensaje anterior no explicaba
+  por qué Google "no funciona" cuando el problema es una cuenta preexistente
+  con contraseña.
+- **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`.
