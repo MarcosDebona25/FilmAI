@@ -5,23 +5,44 @@ export function apiUrl(path: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Token: solo el access token se guarda en localStorage para el header
-// Authorization. El refresh token viaja como cookie httpOnly (seteada por el
-// backend con JWT_AUTH_HTTPONLY=True) y no es accesible desde JavaScript.
+// Autenticación por cookie httpOnly: el backend (dj-rest-auth) setea las
+// cookies `access` y `refresh` con JWT_AUTH_HTTPONLY=True. El frontend NO
+// persiste tokens en localStorage (reduce la superficie de ataque XSS): las
+// cookies viajan automáticamente con `credentials: "include"` y el backend
+// autentica vía JWTCookieAuthentication.
+//
+// CSRF: con JWT_AUTH_COOKIE_USE_CSRF=True, las mutaciones autenticadas por
+// cookie exigen el header `X-CSRFToken`. Django setea la cookie `csrftoken`
+// (legible por JS) vía `GET /api/auth/csrf/`; acá se lee y se reenvía.
 // ---------------------------------------------------------------------------
-const ACCESS_KEY = "filmai_access";
 
-export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(ACCESS_KEY);
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
-export function storeTokens(access: string): void {
-  window.localStorage.setItem(ACCESS_KEY, access);
-}
+let csrfFetch: Promise<string> | null = null;
 
-export function clearTokens(): void {
-  window.localStorage.removeItem(ACCESS_KEY);
+async function getCsrfToken(): Promise<string> {
+  const existente = readCookie("csrftoken");
+  if (existente) return existente;
+
+  // La cookie aún no existe (primera mutación de la sesión): se pide al
+  // backend, que la setea con `ensure_csrf_cookie`. Se deduplica con una única
+  // promesa en vuelo para no disparar varias peticiones concurrentes.
+  if (!csrfFetch) {
+    csrfFetch = fetch(apiUrl("/api/auth/csrf/"), { credentials: "include" })
+      .then(() => {
+        const token = readCookie("csrftoken");
+        if (!token) throw new Error("No se pudo obtener el token CSRF.");
+        return token;
+      })
+      .finally(() => {
+        csrfFetch = null;
+      });
+  }
+  return csrfFetch;
 }
 
 export class ApiError extends Error {
@@ -66,17 +87,21 @@ export function extraerErroresPorCampo(details: unknown): Record<string, string>
 interface ApiOptions {
   method?: string;
   body?: unknown;
-  auth?: boolean;
 }
 
 export async function apiFetch<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { method = "GET", body, auth = true } = options;
+  const { method = "GET", body } = options;
 
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
-  const token = getAccessToken();
-  if (auth && token) headers["Authorization"] = `Bearer ${token}`;
+  // CSRF: solo las mutaciones requieren el header (los métodos seguros no
+  // pasan por la verificación CSRF del backend).
+  const metodo = method.toUpperCase();
+  if (metodo !== "GET" && metodo !== "HEAD" && metodo !== "OPTIONS") {
+    const csrf = await getCsrfToken();
+    if (csrf) headers["X-CSRFToken"] = csrf;
+  }
 
   const res = await fetch(apiUrl(path), {
     method,

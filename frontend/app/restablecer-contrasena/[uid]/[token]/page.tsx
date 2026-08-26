@@ -59,7 +59,6 @@ export default function RestablecerContrasenaPage() {
           password1: password,
           password2: confirmacion,
         },
-        auth: false,
       });
       setEstado("ok");
     } catch (err) {

@@ -24,6 +24,8 @@ from dj_rest_auth.registration.views import (
     SocialLoginView,
 )
 from django.core import signing
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -71,6 +73,26 @@ class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
     serializer_class = GoogleSocialLoginSerializer
+
+
+class CSRFTokenView(APIView):
+    """Entrega la cookie `csrftoken` para el frontend (SPA).
+
+    Con `JWT_AUTH_COOKIE_USE_CSRF=True`, las mutaciones autenticadas por la
+    cookie httpOnly `access` exigen el header `X-CSRFToken`. Esta vista (GET)
+    fuerza a Django a setear la cookie `csrftoken` (`ensure_csrf_cookie` →
+    `get_token` → `CsrfViewMiddleware.process_response`), que el frontend lee y
+    devuelve en cada request que modifica datos.
+    """
+
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
+
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get(self, request):
+        return Response({"detail": "ok"})
 
 
 class UsernameDisponibleView(APIView):

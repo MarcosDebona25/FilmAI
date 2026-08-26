@@ -21,7 +21,6 @@ export default function ConfirmarCorreoPage() {
     apiFetch("/api/auth/registration/verify-email/", {
       method: "POST",
       body: { key },
-      auth: false,
     })
       .then(() => setEstado("ok"))
       .catch((err: unknown) => {

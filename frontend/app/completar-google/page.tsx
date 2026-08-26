@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch, storeTokens } from "@/lib/api";
+import { GoogleButton } from "@/components/GoogleButton";
+import { completarRegistroGoogle, tieneGooglePendiente } from "@/lib/google-auth";
+import { validarFechaNacimiento, validarNombreUsuario } from "@/lib/validation";
 
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
@@ -15,6 +16,9 @@ const GENEROS = [
   { value: "no_especifica", label: "No especificar" },
 ];
 
+type Campo = "nombre_usuario" | "fecha_nacimiento" | "genero";
+type Errores = Partial<Record<Campo, string | null>>;
+
 /** Fecha máxima para el datepicker: hoy −13 años (enforcement visual; el backend valida). */
 function maxFechaNacimiento(): string {
   const d = new Date();
@@ -22,45 +26,84 @@ function maxFechaNacimiento(): string {
   return d.toISOString().slice(0, 10);
 }
 
+function ErrorTexto({ mensaje }: { mensaje?: string | null }) {
+  if (!mensaje) return null;
+  return (
+    <p className="mt-1 text-xs text-destructive" role="alert">
+      {mensaje}
+    </p>
+  );
+}
+
 export default function CompletarGooglePage() {
   const router = useRouter();
-  const [idToken, setIdToken] = useState<string | null>(null);
-  const [nombreUsuario, setNombreUsuario] = useState("");
-  const [fechaNacimiento, setFechaNacimiento] = useState("");
-  const [genero, setGenero] = useState("");
+  const [form, setForm] = useState<Record<Campo, string>>({
+    nombre_usuario: "",
+    fecha_nacimiento: "",
+    genero: "",
+  });
+  const [errores, setErrores] = useState<Errores>({});
+  const [tocados, setTocados] = useState<Partial<Record<Campo, boolean>>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Solo se llega acá tras "Continuar con Google" en login/registro (que marcó
+  // el flujo pendiente). Si no hay marca, no es un registro Google válido.
   useEffect(() => {
-    const token = sessionStorage.getItem("google_id_token");
-    if (!token) {
+    if (!tieneGooglePendiente()) {
       router.replace("/login");
-    } else {
-      setIdToken(token);
     }
   }, [router]);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!idToken) return;
+  function setField(campo: Campo, valor: string) {
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+  }
+
+  function validarCampo(campo: Campo, valor: string): string | null {
+    if (campo === "nombre_usuario") return validarNombreUsuario(valor);
+    if (campo === "fecha_nacimiento") return validarFechaNacimiento(valor);
+    return valor ? null : "Campo obligatorio.";
+  }
+
+  function onBlurCampo(campo: Campo) {
+    setTocados((prev) => ({ ...prev, [campo]: true }));
+    setErrores((prev) => ({ ...prev, [campo]: validarCampo(campo, form[campo]) }));
+  }
+
+  async function onGoogle(idToken: string) {
+    if (loading) return;
     setError(null);
+
+    // Validar ANTES de enviar: si falta algo, no se gasta el id_token fresco
+    // (es de un solo uso) y se vuelve a tocar el botón de Google.
+    const nuevosErrores: Errores = {
+      nombre_usuario: validarNombreUsuario(form.nombre_usuario),
+      fecha_nacimiento: validarFechaNacimiento(form.fecha_nacimiento),
+      genero: form.genero ? null : "Campo obligatorio.",
+    };
+    setErrores(nuevosErrores);
+    setTocados({ nombre_usuario: true, fecha_nacimiento: true, genero: true });
+    if (Object.values(nuevosErrores).some(Boolean)) {
+      setError("Completá los campos y tocá de nuevo el botón de Google.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await apiFetch<{ access: string; refresh: string }>("/api/auth/google/", {
-        method: "POST",
-        body: {
-          id_token: idToken,
-          nombre_usuario: nombreUsuario,
-          fecha_nacimiento: fechaNacimiento,
-          genero: genero,
-        },
-        auth: false,
+      const result = await completarRegistroGoogle(idToken, {
+        nombre_usuario: form.nombre_usuario,
+        fecha_nacimiento: form.fecha_nacimiento,
+        genero: form.genero,
       });
-      storeTokens(data.access);
-      sessionStorage.removeItem("google_id_token");
-      router.push("/");
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo completar tu cuenta.");
+      if (result.ok) {
+        router.push("/");
+      } else if (result.erroresPorCampo && Object.keys(result.erroresPorCampo).length > 0) {
+        // Errores de campo del backend (p.ej. username ocupado) → inline.
+        setErrores((prev) => ({ ...prev, ...result.erroresPorCampo! }));
+        setError("Corregí los campos marcados y tocá de nuevo el botón de Google.");
+      } else {
+        setError(result.error);
+      }
     } finally {
       setLoading(false);
     }
@@ -71,37 +114,53 @@ export default function CompletarGooglePage() {
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8">
         <h1 className="mb-1 text-2xl font-bold text-foreground">Completá tu cuenta</h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          Google ya nos dio tu nombre y correo. Falta completar estos datos.
+          Completá tus datos y confirmá con Google.
         </p>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={(e: FormEvent) => e.preventDefault()}
+          noValidate
+          className="flex flex-col gap-4"
+        >
           <div>
             <label className="mb-1 block text-sm text-muted-foreground">Nombre de usuario</label>
             <input
-              className={inputClass}
-              value={nombreUsuario}
-              onChange={(e) => setNombreUsuario(e.target.value)}
+              className={`${inputClass} ${
+                tocados.nombre_usuario && errores.nombre_usuario ? "border-destructive" : ""
+              }`}
+              value={form.nombre_usuario}
+              onChange={(e) => setField("nombre_usuario", e.target.value)}
+              onBlur={() => onBlurCampo("nombre_usuario")}
               placeholder="5-25 caracteres alfanuméricos"
+              aria-invalid={Boolean(tocados.nombre_usuario && errores.nombre_usuario)}
               required
             />
+            <ErrorTexto mensaje={tocados.nombre_usuario ? errores.nombre_usuario : undefined} />
           </div>
           <div>
             <label className="mb-1 block text-sm text-muted-foreground">Fecha de nacimiento</label>
             <input
-              className={inputClass}
+              className={`${inputClass} ${
+                tocados.fecha_nacimiento && errores.fecha_nacimiento ? "border-destructive" : ""
+              }`}
               type="date"
               max={maxFechaNacimiento()}
-              value={fechaNacimiento}
-              onChange={(e) => setFechaNacimiento(e.target.value)}
+              value={form.fecha_nacimiento}
+              onChange={(e) => setField("fecha_nacimiento", e.target.value)}
+              onBlur={() => onBlurCampo("fecha_nacimiento")}
+              aria-invalid={Boolean(tocados.fecha_nacimiento && errores.fecha_nacimiento)}
               required
             />
+            <ErrorTexto mensaje={tocados.fecha_nacimiento ? errores.fecha_nacimiento : undefined} />
           </div>
           <div>
             <label className="mb-1 block text-sm text-muted-foreground">Género</label>
             <select
-              className={inputClass}
-              value={genero}
-              onChange={(e) => setGenero(e.target.value)}
+              className={`${inputClass} ${tocados.genero && errores.genero ? "border-destructive" : ""}`}
+              value={form.genero}
+              onChange={(e) => setField("genero", e.target.value)}
+              onBlur={() => onBlurCampo("genero")}
+              aria-invalid={Boolean(tocados.genero && errores.genero)}
               required
             >
               <option value="" disabled>
@@ -113,6 +172,7 @@ export default function CompletarGooglePage() {
                 </option>
               ))}
             </select>
+            <ErrorTexto mensaje={tocados.genero ? errores.genero : undefined} />
           </div>
 
           {error && (
@@ -121,9 +181,9 @@ export default function CompletarGooglePage() {
             </p>
           )}
 
-          <Button type="submit" disabled={loading} size="lg">
-            {loading ? "Guardando…" : "Continuar"}
-          </Button>
+          <div className="flex flex-col items-center gap-2">
+            <GoogleButton text="signup_with" onSuccess={onGoogle} onError={(m) => setError(m)} />
+          </div>
         </form>
       </div>
     </main>

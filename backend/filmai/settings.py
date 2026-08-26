@@ -208,6 +208,12 @@ CORS_ALLOWED_ORIGINS = config(
 # Necesario para que el frontend (httpOnly cookies JWT) envíe credenciales.
 CORS_ALLOW_CREDENTIALS = True
 
+# El frontend es un origen distinto (p.ej. localhost:3000). Con la autenticación
+# por cookie httpOnly + CSRF activo, Django valida el `Origin`/`Referer` de los
+# requests cross-origin contra estos orígenes; sin esto, cualquier mutación
+# legítima del frontend sería rechazada con "CSRF Failed: Referer checking failed".
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
 
 # =============================================================================
 # Autenticación — django-allauth + dj-rest-auth + JWT (simplejwt)
@@ -355,6 +361,9 @@ REST_AUTH = {
     "JWT_AUTH_HTTPONLY": True,
     "JWT_AUTH_SAMESITE": "Lax",
     "JWT_AUTH_SECURE": config("JWT_AUTH_SECURE", default="True", cast=bool),
+    # Al autenticar por cookie httpOnly (sin header Bearer) se exige el token
+    # CSRF en mutaciones: el frontend manda `X-CSRFToken` (cookie `csrftoken`).
+    "JWT_AUTH_COOKIE_USE_CSRF": True,
     "REGISTER_SERIALIZER": "usuarios.serializers.RegisterSerializer",
     "LOGIN_SERIALIZER": "usuarios.serializers.LoginSerializer",
     "USER_DETAILS_SERIALIZER": "usuarios.serializers.UsuarioDetallesSerializer",
