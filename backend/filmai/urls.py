@@ -19,6 +19,7 @@ from usuarios.views import (
     ConfirmarCorreoView,
     CSRFTokenView,
     GoogleLogin,
+    LoginView,
     RecuperarContrasenaView,
     RegisterView,
     RestablecerContrasenaView,
@@ -39,6 +40,13 @@ urlpatterns = [
         r"^api/auth/password/reset/confirm/?$",
         RestablecerContrasenaView.as_view(),
         name="rest_password_reset_confirm",
+    ),
+    # Login custom: usa LenientJWTCookieAuthentication para no revientar
+    # cuando el browser manda una cookie JWT vieja (p.ej. después de re-seed).
+    re_path(
+        r"^api/auth/login/?$",
+        LoginView.as_view(),
+        name="rest_login",
     ),
     path("api/auth/", include("dj_rest_auth.urls")),
     # Registro (view custom que omite `complete_signup`) + confirmación de email.

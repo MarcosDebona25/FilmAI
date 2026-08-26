@@ -8,6 +8,7 @@ los endpoints de `dj_rest_auth` montados en `filmai/urls.py`.
 poder distinguir por qué falló un enlace de confirmación.
 """
 
+import logging
 from typing import ClassVar
 
 from allauth.account import app_settings as allauth_account_settings
@@ -17,12 +18,14 @@ from allauth.account.internal.flows.email_verification import (
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from dj_rest_auth.jwt_auth import JWTCookieAuthentication
 from dj_rest_auth.registration.views import (
     RegisterView as BaseRegisterView,
 )
 from dj_rest_auth.registration.views import (
     SocialLoginView,
 )
+from dj_rest_auth.views import LoginView as BaseLoginView
 from django.core import signing
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -39,6 +42,42 @@ from .serializers import (
     RestablecerContrasenaSerializer,
 )
 from .validators import USERNAME_REGEX
+
+logger = logging.getLogger(__name__)
+
+
+class LenientJWTCookieAuthentication(JWTCookieAuthentication):
+    """Variante que no revienta si la cookie JWT es inválida o está vencida.
+
+    ``JWTCookieAuthentication.authenticate`` lanza ``AuthenticationFailed``
+    cuando encuentra una cookie ``access`` que no pasa la validación (expirada,
+    de otro seed, blacklistada, etc.).  Eso bloquea endpoints públicos como el
+    login: el browser manda la cookie vieja, el auth falla *antes* de llegar a
+    la vista y el usuario recibe 401 sin entender por qué.
+
+    Esta sub-clase captura la excepción y devuelve ``None`` (no autenticado),
+    igual que cuando no hay cookie.  El endpoint de login sigue funcionando
+    porque su permission es ``AllowAny``.
+    """
+
+    def authenticate(self, request):
+        try:
+            return super().authenticate(request)
+        except Exception:
+            logger.debug(
+                "Cookie JWT inválida ignorada en %s", request.path, exc_info=True
+            )
+            return None
+
+
+class LoginView(BaseLoginView):
+    """Login que usa ``LenientJWTCookieAuthentication``.
+
+    Evita 401 cuando el browser manda una cookie JWT vieja (p.ej. después de
+    re-seed o de que la cuenta fue eliminada).
+    """
+
+    authentication_classes = (LenientJWTCookieAuthentication,)
 
 
 class RegisterView(BaseRegisterView):
