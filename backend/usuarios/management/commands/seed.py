@@ -11,6 +11,7 @@ Uso:
 
 import random
 
+from allauth.account.models import EmailAddress
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -73,6 +74,7 @@ class Command(BaseCommand):
             Chat,
             Lista,
             ProduccionAudiovisual,
+            EmailAddress,
             Usuario,
         ):
             modelo.objects.all().delete()
@@ -85,6 +87,14 @@ class Command(BaseCommand):
                 nombre_usuario=f"usuario{i:03d}",
                 correo=f"usuario{i:03d}@filmai.com",
                 password=SEED_PASSWORD,
+            )
+            # allauth necesita un EmailAddress verificado para permitir el
+            # login cuando ACCOUNT_EMAIL_VERIFICATION es "mandatory".
+            EmailAddress.objects.create(
+                user=usuario,
+                email=usuario.correo,
+                verified=True,
+                primary=True,
             )
             usuarios.append(usuario)
         return usuarios
