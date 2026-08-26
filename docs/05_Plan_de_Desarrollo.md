@@ -41,18 +41,28 @@ El entorno y la estructura base deben estar antes que todo lo demás. Ambos trab
 
 ## Módulo 2 — Catálogo y Búsqueda · Responsable: **Gonza**
 
+> **Arquitectura (25/08/2026):** híbrida. El discovery (trending, discover,
+> search) se sirve en vivo desde TMDB con caché Redis; PostgreSQL es la fuente
+> de verdad para datos del usuario y búsqueda semántica. C-04 se divide: C-04a
+> (materialización + embedding, Fase 1) y C-04b (sync Celery, Fase 3). Ver
+> `docs/decisiones.md`.
+
 | ID | Tarea | Depende de | Detalle | Criterio de aceptación | Esfuerzo |
 |----|-------|-----------|---------|------------------------|----------|
 | C-01 | Cliente de TMDB API | F-02 | Service `TMDBClient` con métodos: `get_trending()`, `get_now_playing()`, `discover(filters)`, `search(query)`, `get_movie_detail(id)` / `get_tv_detail(id)`, `get_keywords(id)`. Manejo de rate limiting, reintentos con backoff, timeout 5s. Referencia de endpoints: `docs/06_TMDB_API_Referencia.md`. | Cada método devuelve datos parseados. Rate limit se respeta. Errores de red se loguean y devuelven excepción controlada. | 4h |
 | C-02 | Caché de TMDB | C-01 | Cache con Redis. TTL por endpoint: trending 6h, discover 6h, detalle 24h, search 1h. Key pattern: `tmdb:{endpoint}:{params_hash}`. Invalidación manual si es necesario. | Segunda llamada con mismos parámetros pega a Redis, no a TMDB. Respuesta < 50ms desde caché. | 2h |
 | C-03 | Endpoints de catálogo (CU-008) | C-01, F-04 | `GET /api/catalog/trending/`, `GET /api/catalog/discover/?genre=&year=&min_rating=&type=`, `GET /api/catalog/search/?q=&type=`. Paginación. Filtros: tipo (movie/tv/all), género, año, calificación mínima de TMDB. | Respuesta paginada con estructura: `{ results: [...], count, next, previous }`. Filtros combinables. | 4h |
-| C-04 | Sincronización diaria (CU-021) | C-01, F-04 | Celery task `sync_tmdb_catalog`. Ejecución diaria a las 3 AM. Sincroniza trending, now_playing y discover popular. Para cada item: `update_or_create` en ProduccionAudiovisual + sincronizar `keywords` (`/movie/{id}/keywords`, `/tv/{id}/keywords`). En Fase B del Módulo 5, además genera/actualiza el embedding de la producción para pgvector (B-06), solo para producciones nuevas o modificadas. Log de resultados (nuevos, actualizados, errores). | `celery -A filmai beat` ejecuta la tarea diariamente. Datos y keywords aparecen en BD. Embeddings consistentes tras cada sync. Log muestra estadísticas. | 4h |
+| C-04a | Materialización on-demand + embedding (CU-021) | C-01, F-04 | Helper centralizado (`catalogo/services/materialization.py`) que crea/obtiene `ProduccionAudiovisual` por `(id_tmdb, tipo)` con resolución de carrera (`IntegrityError` → `get`). Genera el embedding de forma síncrona tras persistir; si falla, la producción queda con `embedding IS NULL` para backfill. | Materialización atómica sin duplicados. Producción persiste aunque falle el embedding. Requests concurrentes devuelven la misma fila. | 4h |
 | C-05 | Home page (UI) | F-03, C-03 | Página `/(auth)/home`. Hero section con película destacada. Filas horizontales con scroll: "Recomendado para ti" (solo si autenticado + tiene calificaciones), "Tendencias de la semana", "Novedades". Cada fila: MediaCards con poster, título, año, badge de tipo, rating TMDB. Skeleton loading mientras carga. Filas se ocultan si no tienen datos. | Home carga con skeletons. Filas aparecen progresivamente. Scroll horizontal fluido con flechas en hover. Filas vacías no se renderizan. | 5h |
 | C-06 | Panel de búsqueda (UI) | C-03, C-05 | Panel overlay que se abre desde "Buscar" en navbar. Toolbar: input de búsqueda con autofocus, toggle Todo/Películas/Series, dropdowns Género, Año, ⭐ Calificación mínima. Grid responsive de 5→3→2 columnas. Paginación clásica. Empty state con ilustración. Estados: default (populares), búsqueda con resultados, sin resultados, error API. | Panel se abre/cierra con click en Buscar y tecla Escape. Filtros actualizan resultados. Búsqueda muestra contador. Sin resultados muestra empty state. | 5h |
 | C-07 | Ficha de detalle (UI) | C-03 | Página `/(auth)/detalle/[id]`. Breadcrumb navegable según origen (Home, Buscar, Listas). Hero con poster 2:3, título, badge de tipo, año, duración/temporadas, rating TMDB, géneros como chips. Acciones directas (solo autenticado): ⭐ Calificar, ♥ Favoritos, 👁 Vista, 🕐 Pendiente, + Agregar a lista (dropdown con checklist). Sinopsis colapsable. CastCard sin fotos colapsable. Sección de reseñas (tu reseña + comunidad). | Ficha muestra todos los bloques. Acciones toggle correctamente (borde ↔ relleno). Sinopsis y cast se expanden/colapsan. Breadcrumb restaura origen. No autenticado ve "Inicia sesión para...". | 6h |
 | C-08 | Calificar / Reseña (CU-015) | C-07, F-04 | Back: `POST|PUT|DELETE /api/reviews/`. Relación reseña → calificación. Validar rango 1-10. Texto opcional máx 1000 chars. Front: Modal con star widget de 10 estrellas (con teclado), textarea con contador. Variantes: publicar, editar, eliminar. Post-acción: toast + actualización instantánea de la ficha. | Publicar sin calificación → error. Estrellas navegables con teclado. Editar precarga datos. Eliminar pide confirmación. Reseña aparece en ficha al instante. | 5h |
+| C-04b | Sincronización diaria con Celery (CU-021) — Fase 3 | C-04a, B-06 | Celery beat a las 3 AM. Sincroniza trending, now_playing y discover popular con `update_or_create` + keywords. Completa filas `embedding IS NULL`, reintenta embeddings fallidos y regenera ante cambio de modelo. Actualiza solo campos provenientes de TMDB. Log de estadísticas. | `celery -A filmai beat` corre diariamente. Embeddings quedan consistentes. No pisa datos locales. | 4h |
 
 **Total Catálogo: ~35h** (4-5 días) — **Gonza**
+
+> Nota (25/08/2026): se adelanta la infraestructura de embeddings desde B-06
+> (Fase 3); el total puede crecer a ~40h. Ver `docs/decisiones.md`.
 
 ---
 
@@ -148,5 +158,5 @@ Diferencia: 5h sobre 154h totales (~3%).
 - **Fase 0 (juntos):** Módulo 0 — Fundación.
 - **Fase 1 (paralelo):** Marcos → Autenticación. Gonza → Catálogo.
 - **Fase 2 (paralelo):** Marcos → Listas (depende de Auth, propio). Gonza → Perfil (depende de A-09 de Marcos, ya resuelto en Fase 1).
-- **Fase 3 (paralelo):** Marcos → Chatbot + Admin nativo. Gonza → Polish (necesita que las pantallas de ambos estén terminadas).
+- **Fase 3 (paralelo):** Marcos → Chatbot + Admin nativo. Gonza → Polish + C-04b (sync Celery del catálogo).
 - **Cierre (juntos):** Q-05 — variables de entorno y documentación.
