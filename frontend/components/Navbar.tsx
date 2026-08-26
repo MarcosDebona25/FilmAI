@@ -4,14 +4,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Settings, Star, User } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 
-// Rutas sin navbar: landing (docs/04 §5a) y pantallas de autenticación,
-// que son pantalla completa con la caja centrada (docs/04 §5f).
 const SIN_NAVBAR = ["/", "/login", "/register", "/completar-google"];
+
+const NAV_LINKS = [
+  { label: "Inicio", href: "/inicio" },
+  { label: "Buscar", href: "/buscar" },
+  { label: "Listas", href: "/listas" },
+] as const;
 
 type Usuario = {
   nombre_usuario: string;
@@ -24,9 +29,11 @@ function iniciales(u: NonNullable<Usuario>): string {
   if (iniciales.trim()) {
     return iniciales;
   }
-  // Sin nombre ni apellido (p.ej. cuenta de Google sin perfil): usamos la
-  // inicial del nombre de usuario, que siempre existe, en vez de un avatar vacío.
   return u.nombre_usuario.charAt(0).toUpperCase() || "?";
+}
+
+function noImplementado() {
+  toast.info("Todavía no está implementado");
 }
 
 export function Navbar() {
@@ -40,7 +47,6 @@ export function Navbar() {
   const cancelarRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    // En las rutas sin navbar no hay sesión que consultar.
     if (SIN_NAVBAR.includes(pathname)) return;
     apiFetch<Usuario>("/api/auth/user/")
       .then((u) => setUsuario(u))
@@ -48,7 +54,6 @@ export function Navbar() {
       .finally(() => setCargado(true));
   }, [pathname]);
 
-  // El menú se cierra al clickear fuera o presionar Escape (docs/05 P-07).
   useEffect(() => {
     if (!menuAbierto) return;
     function onClick(e: MouseEvent) {
@@ -67,8 +72,6 @@ export function Navbar() {
     };
   }, [menuAbierto]);
 
-  // Diálogo de confirmación de logout: foco inicial en "Cancelar" y cierre
-  // con Escape, con limpieza del handler al cerrarse o desmontarse.
   useEffect(() => {
     if (!confirmarLogout) return;
     cancelarRef.current?.focus();
@@ -79,14 +82,10 @@ export function Navbar() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [confirmarLogout]);
 
-  // La landing y las pantallas de autenticación no llevan navbar.
   if (SIN_NAVBAR.includes(pathname)) return null;
 
   async function logout() {
     try {
-      // dj-rest-auth blacklistea el refresh y borra las cookies httpOnly
-      // `access`/`refresh` (`unset_jwt_cookies`). El frontend no guarda tokens
-      // en localStorage, así que no hay estado local que limpiar.
       await apiFetch("/api/auth/logout/", { method: "POST" });
       router.push("/");
     } catch {
@@ -97,9 +96,25 @@ export function Navbar() {
   return (
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
-        <Link href="/" className="text-lg font-bold text-foreground">
-          FilmAI
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/inicio" className="text-lg font-bold text-foreground">
+            FilmAI
+          </Link>
+          {cargado && usuario ? (
+            <nav aria-label="Principal" className="flex items-center gap-1">
+              {NAV_LINKS.map((item) => (
+                <button
+                  key={item.href}
+                  type="button"
+                  onClick={noImplementado}
+                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          ) : null}
+        </div>
 
         <div className="flex items-center gap-3">
           {cargado && usuario ? (
@@ -120,8 +135,42 @@ export function Navbar() {
                   aria-label="Opciones de usuario"
                   className="absolute right-0 top-11 z-50 w-48 overflow-hidden rounded-xl border border-border bg-popover shadow-md"
                 >
-                  {/* Alcance actual: solo Cerrar sesión. El dropdown completo
-                      (Mi perfil / Mis reseñas / Preferencias) llega con P-02+. */}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuAbierto(false);
+                      noImplementado();
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
+                  >
+                    <User className="size-4" />
+                    Mi perfil
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuAbierto(false);
+                      noImplementado();
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
+                  >
+                    <Star className="size-4" />
+                    Mis reseñas
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuAbierto(false);
+                      noImplementado();
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
+                  >
+                    <Settings className="size-4" />
+                    Preferencias
+                  </button>
                   <button
                     type="button"
                     role="menuitem"

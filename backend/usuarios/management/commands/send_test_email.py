@@ -54,8 +54,8 @@ class Command(BaseCommand):
         # el comando debe fallar en vez de reportar un envío que no ocurrió.
         if enviados != 1:
             raise CommandError(
-                "El email no se envió (send_mail devolvió %r). Verificá "
-                "RESEND_API_KEY y la configuración de EMAIL_BACKEND." % enviados
+                f"El email no se envió (send_mail devolvió {enviados!r}). Verificá "
+                "RESEND_API_KEY y la configuración de EMAIL_BACKEND."
             )
 
         self.stdout.write(self.style.SUCCESS(f"Email enviado a {destino}"))

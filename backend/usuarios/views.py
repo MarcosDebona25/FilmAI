@@ -214,8 +214,6 @@ class RestablecerContrasenaView(APIView):
         try:
             serializer.is_valid(raise_exception=True)
         except EnlaceRestablecimientoInvalido:
-            return Response(
-                {"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response({"detail": "La contraseña fue restablecida."})

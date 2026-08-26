@@ -185,8 +185,12 @@ class RecuperarContrasenaTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "[FilmAI] Restablecimiento de contraseña")
-        match = re.search(r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body)
+        self.assertEqual(
+            mail.outbox[0].subject, "[FilmAI] Restablecimiento de contraseña"
+        )
+        match = re.search(
+            r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body
+        )
         self.assertIsNotNone(match)
         self.assertIn("válido durante 1 hora", mail.outbox[0].body)
         # El saludo muestra nombre + apellido (docs/decisiones.md 24/08/2026).
@@ -365,7 +369,9 @@ class GoogleOAuthTests(TestCase):
         sociallogin = SimpleNamespace(user=usuario)
 
         adapter = UsuarioSocialAccountAdapter()
-        user = adapter.populate_user(request, sociallogin, {"email": "google@filmai.com"})
+        user = adapter.populate_user(
+            request, sociallogin, {"email": "google@filmai.com"}
+        )
 
         self.assertEqual(user.nombre_usuario, "usuariogoogle")
         self.assertEqual(user.fecha_nacimiento, date(1995, 5, 10))
@@ -438,7 +444,9 @@ class GoogleOAuthTests(TestCase):
                 ),
             ),
             patch.object(
-                GoogleOAuth2Adapter, "get_provider", return_value=SimpleNamespace(app=app)
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
             ),
         ):
             self.assertTrue(serializer.is_valid())
@@ -466,7 +474,9 @@ class GoogleOAuthTests(TestCase):
             patch.object(serializer, "get_social_login", return_value=login),
             patch("usuarios.serializers.complete_social_login", return_value=None),
             patch.object(
-                GoogleOAuth2Adapter, "get_provider", return_value=SimpleNamespace(app=app)
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
             ),
         ):
             self.assertTrue(serializer.is_valid())
@@ -482,7 +492,9 @@ class GoogleOAuthTests(TestCase):
             patch.object(serializer, "get_social_login", return_value=login),
             patch("usuarios.serializers.complete_social_login", return_value=None),
             patch.object(
-                GoogleOAuth2Adapter, "get_provider", return_value=SimpleNamespace(app=app)
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
             ),
         ):
             self.assertFalse(serializer.is_valid())
