@@ -34,6 +34,15 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
 
 
+# =============================================================================
+# TMDB API
+# =============================================================================
+
+TMDB_API_KEY = config("TMDB_API_KEY", default="")
+TMDB_API_BASE_URL = config("TMDB_API_BASE_URL", default="https://api.themoviedb.org/3")
+TMDB_TIMEOUT = config("TMDB_TIMEOUT", default=5, cast=float)
+
+
 # Application definition
 
 INSTALLED_APPS = [
