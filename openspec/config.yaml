@@ -1,0 +1,53 @@
+schema: spec-driven
+
+context: |
+  FilmAI — movie/series review platform with AI recommendations (UTN-FRSF project).
+  Backend: Django 5.1 + DRF 3.15 (Python 3.12); apps: catalogo, chatbot, listas, usuarios.
+  Frontend: Next.js 15 (App Router, turbopack), React 19, Tailwind v4, Shadcn/ui.
+  Infra: PostgreSQL 16 + Redis 7 + Celery via docker-compose (4 services).
+  Tests: Django test runner only (backend); frontend has NO test framework yet.
+  Style: ruff (lint + format, line-length 88) backend; ESLint + Prettier frontend.
+  Conventions: docs/01-06 + docs/decisiones.md are source of truth (Spanish); record every
+  design decision in docs/decisiones.md; custom user model usuarios.Usuario (AUTH_USER_MODEL).
+
+strict_tdd: true
+
+testing:
+  backend:
+    runner: django
+    command: "python manage.py test" # run from backend/ — docker form: docker compose exec backend python manage.py test
+    layers:
+      unit: true
+      integration: true
+      e2e: false
+    coverage: false
+  frontend:
+    runner: none
+    command: ""
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    guidelines:
+      - Follow existing code patterns
+      - Run `ruff format . && ruff check .` (backend) and `npx prettier --check .` (frontend) before declaring done
+    tdd: true
+    test_command: "python manage.py test"
+  verify:
+    test_command: "python manage.py test"
+    build_command: ""
+    coverage_threshold: 0
+    review_budget_lines: 400
+    delivery_strategy: ask-on-risk
+  archive:
+    - Warn before merging destructive deltas
