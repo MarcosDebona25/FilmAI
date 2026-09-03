@@ -12,10 +12,11 @@ sync (C-04b), and all UI work are out of scope.
 
 ### Requirement: Configuration
 
-The client MUST read settings via `decouple.config()`: `TMDB_API_KEY`,
-`TMDB_API_BASE_URL` (base `https://api.themoviedb.org/3`), and `TMDB_TIMEOUT`
-(default `5` seconds). Requests MUST authenticate by appending `api_key` as a
-query parameter. `TMDB_TIMEOUT` MUST be added to `.env.example`.
+The client MUST read configuration from Django settings (populated by
+`python-decouple` in `settings.py`): `TMDB_API_KEY`, `TMDB_API_BASE_URL` (base
+`https://api.themoviedb.org/3`), and `TMDB_TIMEOUT` (default `5` seconds).
+Requests MUST authenticate by appending `api_key` as a query parameter.
+`TMDB_TIMEOUT` MUST be added to `.env.example`.
 
 #### Scenario: Default timeout when unset
 

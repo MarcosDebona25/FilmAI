@@ -13,7 +13,7 @@ PostgreSQL stays the source of truth for user data and semantic search.
 ### In Scope
 
 - `httpx`-based client (new dependency → `backend/requirements.txt`)
-- Settings via `python-decouple`: `TMDB_API_KEY`, `TMDB_BASE_URL`,
+- Settings via `python-decouple`: `TMDB_API_KEY`, `TMDB_API_BASE_URL`,
   `TMDB_TIMEOUT` (default 5s); timeout is new in `.env.example`
 - Exception hierarchy in `backend/catalogo/exceptions.py`
 - Retry/backoff on transitory errors only (429/5xx/network), honoring
@@ -78,6 +78,5 @@ Client is additive; nothing existing depends on it. Revert = delete
 
 ## Open Questions
 
-- Adopt the existing `TMDB_API_BASE_URL` from `.env.example`, or rename to
-  `TMDB_BASE_URL` as stated in the design? Recommend keeping
-  `TMDB_API_BASE_URL` to avoid env churn — needs confirmation before sdd-spec.
+- Resolved: use the existing `TMDB_API_BASE_URL` from `.env.example` (confirmed
+  with the maintainer before spec).
