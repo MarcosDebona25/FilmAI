@@ -23,8 +23,8 @@ build_output_hash: sha256:7df18b42c43329c0833da621f67724dca7a56dfff20a450ae0336e
 ### Completeness
 | Metric | Value |
 |--------|-------|
-| Tasks total | 11 |
-| Tasks complete | 11 |
+| Tasks total | 13 |
+| Tasks complete | 13 |
 | Tasks incomplete | 0 |
 
 ### Build & Tests Execution
@@ -76,7 +76,7 @@ build_output_hash: sha256:7df18b42c43329c0833da621f67724dca7a56dfff20a450ae0336e
 | Check | Result | Details |
 |-------|--------|---------|
 | TDD Evidence reported | ✅ | Found in apply-progress. |
-| All tasks have tests | ✅ | 11/11 tasks complete; cache behaviors covered in `backend/catalogo/tests.py`. |
+| All tasks have tests | ✅ | 13/13 tasks complete; cache behaviors covered in `backend/catalogo/tests.py`. |
 | RED confirmed | ✅ | Test file exists and contains the reported tests. |
 | GREEN confirmed | ✅ | Focused suite 16/16 and full suite 51/51 passed. |
 | Triangulation adequate | ✅ | Stable key, hit, miss, TTL groups, degradation, and nested round-trip cases are distinct. |

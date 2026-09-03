@@ -23,7 +23,7 @@ were added to `backend/catalogo/tests.py`, and `fakeredis>=2.0,<3.0` was added t
 - **Verdict**: PASS
 - **Requirements**: 6/6
 - **Scenarios**: 6/6
-- **Tasks**: 14/14 complete; no unchecked implementation tasks
+- **Tasks**: 13/13 complete; no unchecked implementation tasks
 - **Tests**: 51 passed, including 16 `catalogo` tests
 - **Ruff check**: clean
 - **Ruff format**: clean; 50 files already formatted
