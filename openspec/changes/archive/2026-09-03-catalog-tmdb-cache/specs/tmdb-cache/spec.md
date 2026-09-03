@@ -55,11 +55,11 @@ The system SHALL apply a TTL per endpoint group: lists (trending, now_playing, d
 
 ### Requirement: Stable cache key
 
-The system SHALL derive the cache key as `tmdb:{endpoint}:{params_hash}`, where `params_hash` is a stable hash of the sorted query parameters so that identical logical calls map to the same key.
+The system SHALL derive the cache key as `tmdb:{endpoint}:{params_hash}`, where `params_hash` is a stable hash of the canonical endpoint parameters (including path arguments) so that identical logical calls map to the same key.
 
 #### Scenario: Same call produces same key
 
-- GIVEN the same endpoint with query parameters in different orders
+- GIVEN the same endpoint with canonical parameters in different orders
 - WHEN the cache key is computed
 - THEN both calls produce the same key
 - AND hits resolve to the same cached entry

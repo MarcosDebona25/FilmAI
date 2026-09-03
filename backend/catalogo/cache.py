@@ -14,6 +14,11 @@ ENDPOINT_TTLS = {
     "keywords": 24 * 3600,
 }
 
+# Bounded timeouts so a hung Redis fails fast and the cache degrades to TMDB
+# instead of blocking the request indefinitely.
+REDIS_SOCKET_CONNECT_TIMEOUT = 2
+REDIS_SOCKET_TIMEOUT = 2
+
 
 def _build_key(endpoint, params):
     canonical = json.dumps(params, sort_keys=True, default=str)
@@ -107,4 +112,9 @@ class TMDBClientCache:
 
 
 def get_redis():
-    return redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
+    return redis.Redis.from_url(
+        settings.REDIS_URL,
+        decode_responses=True,
+        socket_connect_timeout=REDIS_SOCKET_CONNECT_TIMEOUT,
+        socket_timeout=REDIS_SOCKET_TIMEOUT,
+    )

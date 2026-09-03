@@ -3,9 +3,17 @@ from unittest.mock import patch
 import fakeredis
 import httpx
 import redis
+from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
-from catalogo.cache import ENDPOINT_TTLS, TMDBClientCache, _build_key
+from catalogo.cache import (
+    ENDPOINT_TTLS,
+    REDIS_SOCKET_CONNECT_TIMEOUT,
+    REDIS_SOCKET_TIMEOUT,
+    TMDBClientCache,
+    _build_key,
+    get_redis,
+)
 from catalogo.client import TMDBClient
 from catalogo.exceptions import (
     TMDBBadRequest,
@@ -262,7 +270,18 @@ class TMDBClientCacheTest(SimpleTestCase):
 
     def test_round_trip_preserves_structure(self):
         body = {"page": 1, "nested": {"genres": [28, 878], "adult": False}}
-        cache, _ = self.make_cache(body)
+        cache, calls = self.make_cache(body)
 
         self.assertEqual(cache.get_tv_detail(1399), body)
         self.assertEqual(cache.get_tv_detail(1399), body)
+        self.assertEqual(len(calls), 1)  # second call hit Redis, not TMDB
+
+    def test_get_redis_passes_bounded_timeouts(self):
+        with patch("catalogo.cache.redis.Redis.from_url") as from_url:
+            get_redis()
+            from_url.assert_called_once_with(
+                settings.REDIS_URL,
+                decode_responses=True,
+                socket_connect_timeout=REDIS_SOCKET_CONNECT_TIMEOUT,
+                socket_timeout=REDIS_SOCKET_TIMEOUT,
+            )

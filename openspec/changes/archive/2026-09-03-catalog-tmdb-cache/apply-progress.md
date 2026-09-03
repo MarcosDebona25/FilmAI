@@ -5,7 +5,7 @@
 - **Change**: `catalog-tmdb-cache`
 - **Mode**: Strict TDD
 - **Work unit**: Cache layer + tests
-- **Progress**: 11/11 tasks complete
+- **Progress**: 13/13 tasks complete
 - **Delivery**: single PR; workload forecast low (~250 lines)
 
 ## Completed Tasks
