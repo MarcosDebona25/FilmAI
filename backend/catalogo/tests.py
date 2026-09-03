@@ -37,6 +37,13 @@ class TMDBClientTest(SimpleTestCase):
 
         self.assertEqual(client.timeout, 10.0)
 
+    def test_default_timeout_when_unset(self):
+        # Sin override de TMDB_TIMEOUT: settings.TMDB_TIMEOUT cae al default
+        # del config (5.0) y el cliente lo toma.
+        client = self.make_client(lambda request: httpx.Response(200, json={}))
+
+        self.assertEqual(client.timeout, 5.0)
+
     def test_http_errors_map_to_domain_exceptions(self):
         cases = (
             (404, TMDBNotFound),
