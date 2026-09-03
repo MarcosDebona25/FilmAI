@@ -1,8 +1,11 @@
 from unittest.mock import patch
 
+import fakeredis
 import httpx
+import redis
 from django.test import SimpleTestCase, override_settings
 
+from catalogo.cache import ENDPOINT_TTLS, TMDBClientCache, _build_key
 from catalogo.client import TMDBClient
 from catalogo.exceptions import (
     TMDBBadRequest,
@@ -149,3 +152,117 @@ class TMDBClientTest(SimpleTestCase):
         self.assertEqual(str(requests[5].url.path), "/3/movie/550")
         self.assertEqual(str(requests[6].url.path), "/3/tv/1399")
         self.assertEqual(str(requests[7].url.path), "/3/movie/550/keywords")
+
+
+class TMDBClientCacheTest(SimpleTestCase):
+    def setUp(self):
+        self.redis = fakeredis.FakeRedis(decode_responses=True)
+
+    def make_cache(self, body=None, calls=None):
+        body = body or {"results": [{"id": 550, "title": "Fight Club"}]}
+        calls = calls if calls is not None else []
+
+        def handler(request):
+            calls.append(request)
+            return httpx.Response(200, json=body)
+
+        client = TMDBClient(
+            api_key="test-key",
+            transport=httpx.MockTransport(handler),
+        )
+        return TMDBClientCache(client, self.redis), calls
+
+    def test_build_key_is_stable(self):
+        first = _build_key("search", {"query": "Fight Club", "page": 1})
+        second = _build_key("search", {"page": 1, "query": "Fight Club"})
+
+        self.assertEqual(first, second)
+        self.assertTrue(first.startswith("tmdb:search:"))
+
+    def test_cache_hit_no_tmdb_call(self):
+        cache, calls = self.make_cache()
+        params = {"media_type": "all", "time_window": "week", "page": 1}
+        self.redis.set(_build_key("trending", params), '{"cached": true}')
+
+        result = cache.get_trending()
+
+        self.assertEqual(result, {"cached": True})
+        self.assertEqual(calls, [])
+
+    def test_cache_miss_calls_and_stores(self):
+        body = {"page": 1, "results": [{"id": 550}]}
+        cache, calls = self.make_cache(body)
+
+        result = cache.get_trending()
+
+        key = _build_key(
+            "trending", {"media_type": "all", "time_window": "week", "page": 1}
+        )
+        self.assertEqual(result, body)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(self.redis.get(key), '{"page": 1, "results": [{"id": 550}]}')
+        self.assertGreater(self.redis.ttl(key), 0)
+
+    def test_ttl_applied_per_endpoint(self):
+        endpoint_calls = (
+            ("trending", lambda cache: cache.get_trending()),
+            ("now_playing", lambda cache: cache.get_now_playing()),
+            ("discover", lambda cache: cache.discover("movie")),
+            ("search", lambda cache: cache.search("Fight Club", "movie")),
+            ("movie_detail", lambda cache: cache.get_movie_detail(550)),
+            ("tv_detail", lambda cache: cache.get_tv_detail(1399)),
+            ("keywords", lambda cache: cache.get_keywords(550, "movie")),
+        )
+
+        for endpoint, invoke in endpoint_calls:
+            with self.subTest(endpoint=endpoint):
+                cache, _ = self.make_cache({"endpoint": endpoint})
+                invoke(cache)
+                key_params = {
+                    "trending": {"media_type": "all", "time_window": "week", "page": 1},
+                    "now_playing": {"page": 1},
+                    "discover": {
+                        "tipo": "movie",
+                        "genero": None,
+                        "anio": None,
+                        "min_rating": None,
+                        "page": 1,
+                    },
+                    "search": {"query": "Fight Club", "tipo": "movie", "page": 1},
+                    "movie_detail": {"id_tmdb": 550},
+                    "tv_detail": {"id_tmdb": 1399},
+                    "keywords": {"id_tmdb": 550, "tipo": "movie"},
+                }[endpoint]
+                key = _build_key(endpoint, key_params)
+                self.assertAlmostEqual(
+                    self.redis.ttl(key), ENDPOINT_TTLS[endpoint], delta=1
+                )
+
+    def test_redis_get_failure_bypasses_cache(self):
+        cache, calls = self.make_cache({"direct": True})
+
+        def failing_get(key):
+            raise redis.ConnectionError("offline")
+
+        self.redis.get = failing_get
+
+        self.assertEqual(cache.get_movie_detail(550), {"direct": True})
+        self.assertEqual(len(calls), 1)
+
+    def test_redis_set_failure_still_returns_result(self):
+        cache, calls = self.make_cache({"direct": True})
+
+        def failing_set(*args, **kwargs):
+            raise redis.ConnectionError("offline")
+
+        self.redis.set = failing_set
+
+        self.assertEqual(cache.get_movie_detail(550), {"direct": True})
+        self.assertEqual(len(calls), 1)
+
+    def test_round_trip_preserves_structure(self):
+        body = {"page": 1, "nested": {"genres": [28, 878], "adult": False}}
+        cache, _ = self.make_cache(body)
+
+        self.assertEqual(cache.get_tv_detail(1399), body)
+        self.assertEqual(cache.get_tv_detail(1399), body)
