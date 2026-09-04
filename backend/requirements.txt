@@ -30,6 +30,7 @@ resend>=2.0,<3.0
 
 # --- Redis ---
 redis>=5.2,<6.0
+fakeredis>=2.0,<3.0
 
 # --- Tareas asincrónicas (Celery) ---
 celery>=5.3,<5.5
