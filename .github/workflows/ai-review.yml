@@ -45,7 +45,7 @@ jobs:
         env:
           # --- LLM: OpenRouter ---
           LLM__PROVIDER: "OPENROUTER"
-          LLM__META__MODEL: "deepseek/deepseek-r1:free"  # modelo gratuito
+          LLM__META__MODEL: "openrouter/free"
           LLM__META__MAX_TOKENS: "15000"
           LLM__META__TEMPERATURE: "0.3"
           LLM__HTTP_CLIENT__API_URL: "https://openrouter.ai/api/v1"
