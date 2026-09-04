@@ -216,6 +216,8 @@ class GetCatalogServiceTest(SimpleTestCase):
 
         self.assertIsInstance(first, TMDBClientCache)
         self.assertIs(first, second)
+        self.assertIs(first.client, tmdb_client)
+        self.assertIs(first.redis, redis_client)
         client.assert_called_once_with()
         get_redis.assert_called_once_with()
 
