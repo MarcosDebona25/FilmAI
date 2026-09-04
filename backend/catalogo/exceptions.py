@@ -37,5 +37,7 @@ TMDB_STATUS_CODES = {
 
 def tmdb_exception_handler(exc, context):
     if isinstance(exc, TMDBError):
-        return Response({"detail": str(exc)}, status=TMDB_STATUS_CODES.get(type(exc), 502))
+        return Response(
+            {"detail": str(exc)}, status=TMDB_STATUS_CODES.get(type(exc), 502)
+        )
     return drf_exception_handler(exc, context)
