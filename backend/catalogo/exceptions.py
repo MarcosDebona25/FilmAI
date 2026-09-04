@@ -26,7 +26,7 @@ class TMDBTransportError(TMDBError):
     """The request could not reach TMDB or its response could not be read."""
 
 
-_STATUS = {
+TMDB_STATUS_CODES = {
     TMDBNotFound: 404,
     TMDBBadRequest: 400,
     TMDBRateLimited: 429,
