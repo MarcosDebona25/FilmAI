@@ -135,15 +135,13 @@ docker compose down -v          # detener y borrar BD + Redis (datos)
 
 ### Configuración inicial (solo la primera vez)
 
-1. **Crear el `.env`** desde la plantilla y completar las variables obligatorias:
+1. **Crear el `.env`** desde la plantilla y completar las variables marcadas con `<completar>`:
 
    ```bash
    cp .env.example .env
    ```
 
-   - `SECRET_KEY`: generar con `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`.
-   - `POSTGRES_PASSWORD` y `DJANGO_SUPERUSER_PASSWORD`: contraseñas de desarrollo.
-   - Las claves externas (`TMDB_API_KEY`, `GOOGLE_CLIENT_ID`, `LLM_API_KEY`) pueden quedar vacías hasta que se implementen esos módulos.
+   El archivo `.env.example` incluye instrucciones breves para cada variable. Las claves externas (`TMDB_API_KEY`, `GOOGLE_CLIENT_ID`, `LLM_API_KEY`) pueden quedar vacías hasta que se implementen esos módulos.
 
 ### Credenciales de desarrollo
 

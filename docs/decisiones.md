@@ -5,6 +5,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 04/09/2026 — Limpieza del .env.example y sección de setup del README
+
+- **Descripción**: se simplificó `.env.example` eliminando los bloques de
+  comentarios extensos y separadores decorativos (de 105 a ~50 líneas). Se
+  mantienen comentarios breves por sección con la información esencial. También
+  se actualizó la sección "Configuración inicial" del `README.md` para que
+  referencie al propio `.env.example` en lugar de duplicar instrucciones.
+- **Archivos afectados**: `.env.example`, `README.md`, `docs/decisiones.md`.
+
+---
+
 ## 26/08/2026 — Fix decodificación de parámetros en rutas dinámicas (useParams en Next.js)
 
 - **Descripción**: se solucionó el fallo en la verificación de correo (`/confirmar-correo/[key]`) y restablecimiento de contraseña (`/restablecer-contrasena/[uid]/[token]`):
