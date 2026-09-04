@@ -5,6 +5,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 04/09/2026 — Corrección de arranque DRF y chequeo end-to-end
+
+- **Descripción**: durante el chequeo end-to-end se corrigió la ruta de importación
+  de `DEFAULT_PERMISSION_CLASSES` en `backend/filmai/settings.py`: DRF requiere
+  `rest_framework.permissions.IsAuthenticated`, no `rest_framework.IsAuthenticated`.
+  La imagen del backend también se reconstruyó para instalar las dependencias ya
+  declaradas, incluida `fakeredis`. Se documentaron las cuentas y comandos de
+  desarrollo en `README.md`.
+- **Motivo**: el backend estaba en `Restarting (1)` y no podía ejecutar migraciones
+  ni atender requests por el `ImportError` de DRF. El chequeo confirmó luego los
+  servicios, la BD, el login, el envío de email y los 56 tests backend.
+- **Archivos**: `backend/filmai/settings.py`, `README.md`, `docs/decisiones.md`.
+
 ## 26/08/2026 — Fix decodificación de parámetros en rutas dinámicas (useParams en Next.js)
 
 - **Descripción**: se solucionó el fallo en la verificación de correo (`/confirmar-correo/[key]`) y restablecimiento de contraseña (`/restablecer-contrasena/[uid]/[token]`):
