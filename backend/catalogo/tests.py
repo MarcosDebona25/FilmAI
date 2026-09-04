@@ -179,7 +179,8 @@ class TMDBExceptionHandlerTest(SimpleTestCase):
 
         for exception, status in cases:
             with self.subTest(exception=type(exception).__name__):
-                response = tmdb_exception_handler(exception, {})
+                context = {"view": self}
+                response = tmdb_exception_handler(exception, context)
 
                 self.assertIsInstance(response, Response)
                 self.assertEqual(response.status_code, status)
