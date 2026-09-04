@@ -5,6 +5,7 @@ import httpx
 import redis
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
+from rest_framework.response import Response
 
 from catalogo.cache import (
     ENDPOINT_TTLS,
@@ -17,11 +18,14 @@ from catalogo.cache import (
 from catalogo.client import TMDBClient
 from catalogo.exceptions import (
     TMDBBadRequest,
+    TMDBError,
     TMDBNotFound,
     TMDBRateLimited,
     TMDBServerError,
     TMDBTransportError,
+    tmdb_exception_handler,
 )
+from catalogo.service import get_catalog_service
 
 
 class TMDBClientTest(SimpleTestCase):
@@ -160,6 +164,76 @@ class TMDBClientTest(SimpleTestCase):
         self.assertEqual(str(requests[5].url.path), "/3/movie/550")
         self.assertEqual(str(requests[6].url.path), "/3/tv/1399")
         self.assertEqual(str(requests[7].url.path), "/3/movie/550/keywords")
+
+
+class TMDBExceptionHandlerTest(SimpleTestCase):
+    def test_maps_tmdb_exceptions_to_http_statuses(self):
+        cases = (
+            (TMDBNotFound("missing"), 404),
+            (TMDBBadRequest("invalid"), 400),
+            (TMDBRateLimited("slow down"), 429),
+            (TMDBServerError("upstream"), 502),
+            (TMDBTransportError("offline"), 503),
+            (TMDBError("unknown"), 502),
+        )
+
+        for exception, status in cases:
+            with self.subTest(exception=type(exception).__name__):
+                response = tmdb_exception_handler(exception, {})
+
+                self.assertIsInstance(response, Response)
+                self.assertEqual(response.status_code, status)
+                self.assertEqual(response.data, {"detail": str(exception)})
+
+    def test_delegates_non_tmdb_exceptions_to_drf(self):
+        exception = ValueError("unexpected")
+        context = {"view": self}
+
+        with patch("catalogo.exceptions.drf_exception_handler") as delegate:
+            expected = object()
+            delegate.return_value = expected
+
+            response = tmdb_exception_handler(exception, context)
+
+        self.assertIs(response, expected)
+        delegate.assert_called_once_with(exception, context)
+
+
+class GetCatalogServiceTest(SimpleTestCase):
+    def tearDown(self):
+        get_catalog_service.cache_clear()
+
+    @patch("catalogo.service.get_redis")
+    @patch("catalogo.service.TMDBClient")
+    def test_returns_singleton_tmdb_client_cache(self, client, get_redis):
+        redis_client = object()
+        tmdb_client = object()
+        get_redis.return_value = redis_client
+        client.return_value = tmdb_client
+
+        first = get_catalog_service()
+        second = get_catalog_service()
+
+        self.assertIsInstance(first, TMDBClientCache)
+        self.assertIs(first, second)
+        client.assert_called_once_with()
+        get_redis.assert_called_once_with()
+
+
+class CatalogoSettingsTest(SimpleTestCase):
+    def test_tmdb_handler_and_throttle_are_configured(self):
+        self.assertEqual(
+            settings.REST_FRAMEWORK["EXCEPTION_HANDLER"],
+            "catalogo.exceptions.tmdb_exception_handler",
+        )
+        self.assertEqual(
+            settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["catalogo"],
+            "60/min",
+        )
+        self.assertEqual(
+            settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["recuperar_contrasena"],
+            "1/min",
+        )
 
 
 class TMDBClientCacheTest(SimpleTestCase):
