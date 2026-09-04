@@ -149,6 +149,36 @@ docker compose down -v          # detener y borrar BD + Redis (datos)
 
 El backend crea automáticamente un superusuario al arrancar, usando las variables `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL` y `DJANGO_SUPERUSER_PASSWORD` del `.env`. Entrar a `/admin/` con esos datos y cambiar la contraseña tras el primer acceso.
 
+#### Cuentas de prueba
+
+El comando `seed` crea tres cuentas de desarrollo con el email verificado y la
+misma contraseña:
+
+| Email | Contraseña |
+| --- | --- |
+| `usuario001@filmai.com` | `Password123!` |
+| `usuario002@filmai.com` | `Password123!` |
+| `usuario003@filmai.com` | `Password123!` |
+
+Para recrear los datos de desarrollo:
+
+```bash
+docker compose exec backend python manage.py seed
+```
+
+> **Advertencia:** `seed` es destructivo para los datos de las aplicaciones de
+> negocio: elimina y recrea usuarios de prueba, catálogo, listas, reseñas,
+> calificaciones y chats. No elimina el superusuario creado por el entrypoint.
+
+Para verificar el envío de emails usando el backend configurado:
+
+```bash
+docker compose exec backend python manage.py send_test_email
+```
+
+En desarrollo, `RESEND_TEST_RECIPIENT` puede redirigir el envío al destinatario
+de prueba configurado en `.env`.
+
 ---
 
 ## Accesibilidad
