@@ -190,7 +190,7 @@ REST_FRAMEWORK = {
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
-    "EXCEPTION_HANDLER": "catalogo.exceptions.tmdb_exception_handler",
+"EXCEPTION_HANDLER": "catalogo.exceptions.tmdb_exception_handler",
     # Rate limit de recuperación de contraseña (CU-020): la SOLICITUD del
     # email permite 1 por minuto por IP; la confirmación (envío del form con
     # uid/token) tolera reintentos por validación inline pero sigue acotada
