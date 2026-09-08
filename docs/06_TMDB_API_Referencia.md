@@ -338,3 +338,30 @@
 | `buscar_semantico(query)`            | No usa TMDB: pgvector sobre embeddings locales (B-06) |
 | Detalle on-demand                    | `GET /movie/{id}`, `GET /tv/{id}`                     |
 | Keywords para embeddings (C-04)      | `GET /movie/{id}/keywords`, `GET /tv/{id}/keywords`   |
+
+---
+
+## Materialización y embeddings (C-04 / B-06)
+
+> Flujo acordado (08/09/2026, ver `docs/decisiones.md`). Los endpoints de esta
+> referencia alimentan el catálogo materializado global y su corpus semántico.
+
+1. **Exposición**: los listados (`/trending`, `/movie/now_playing`,
+   `/discover`, `/search`) se sirven en vivo con caché Redis (C-02) y no
+   requieren sincronización previa.
+2. **Materialización**: cada producción expuesta por el catálogo o abierta en
+   detalle se materializa en `ProduccionAudiovisual` por `(id_tmdb, tipo)`
+   usando `GET /movie/{id}` / `GET /tv/{id}` (enriquecimiento) y
+   `GET /movie/{id}/keywords` / `GET /tv/{id}/keywords` (keywords).
+3. **Encolado**: tras persistir, se crea `ProduccionEmbedding` en estado
+   `pending` y se encola la tarea Celery que genera el vector con BGE-M3 vía
+   Ollama. La generación es asíncrona: ningún endpoint de catálogo o detalle
+   espera a Ollama.
+4. **Búsqueda semántica**: `buscar_semantico` consulta solo embeddings en
+   estado `ready` (pgvector). Las producciones sin embedding `ready` siguen
+   siendo recuperables por las herramientas TMDB de la tabla anterior; si un
+   resultado de TMDB es relevante, se materializa y encola (el corpus crece
+   progresivamente con el uso).
+5. **Sync diaria (C-04b)**: el beat de Celery a las 3 AM sincroniza populares,
+   tendencias y novedades (mantenimiento/seed del corpus), nunca reemplaza al
+   discovery en vivo ni pisa datos locales.

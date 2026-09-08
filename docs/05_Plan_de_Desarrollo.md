@@ -4,6 +4,31 @@
 
 ---
 
+## Estado del repositorio (08/09/2026)
+
+> Auditoría end-to-end de código vs. documentación. Detalle de las decisiones en `docs/decisiones.md` (entradas 08/09/2026). Los criterios técnicos de las tareas pendientes están especificados dentro de cada módulo, en las subsecciones "Especificación técnica del trabajo pendiente".
+
+| Módulo            | Estado         | Detalle                                                                                                                                                              |
+| ----------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — Fundación     | ✅ Completado  | Docker (4 servicios), scaffold Django/DRF, modelos base, seed, lint/ruff + husky, CI (`.github/workflows/ci.yml`).                                                   |
+| 1 — Autenticación | ✅ Completado  | A-01..A-09: registro + confirmación (allauth), login email/username, Google OAuth en un toque, recuperación de contraseña, cookies httpOnly + CSRF, middleware.       |
+| 2 — Catálogo      | 🟡 Parcial     | C-01 (cliente TMDB) y C-02 (caché Redis) implementados con tests. **Pendiente: C-03 (endpoints), C-04a (materialización), C-04b (sync Celery), UI (C-05..C-07).**      |
+| 3 — Listas        | ⬜ Pendiente   | Modelos `Lista`/`Tiene` y creación de las 3 predeterminadas por señal. Sin API ni UI. Depende de materialización (C-04a).                                             |
+| 4 — Perfil        | ⬜ Pendiente   | Campos y preferencias en el modelo `Usuario`. Sin API ni UI (P-01..P-07).                                                                                            |
+| 5 — Chatbot       | 🟡 Parcial     | Modelos `Chat`/`Mensaje` + chat por defecto al registrar (B-01). **Pendiente: embeddings/pgvector/Ollama (B-06), LLMService (B-02), endpoints (B-03), UI (B-04), contexto (B-05).** |
+| 6 — Admin         | ⬜ Pendiente   | `admin.py` de `catalogo` vacío; falta registrar modelos (AD-01').                                                                                                    |
+| 7 — Polish        | ⬜ Pendiente   | Q-01..Q-06 (accesibilidad, errores, estados, CI ya activo, docs).                                                                                                    |
+
+**Contratos ya decididos que condicionan lo pendiente** (ver `docs/decisiones.md`, 08/09/2026):
+
+- Catálogo híbrido: discovery en vivo (TMDB + Redis); PostgreSQL = catálogo materializado global + corpus semántico.
+- Corpus semántico global y progresivo (seed inicial + materialización de lo expuesto + cola larga on-demand). Nunca un corpus por usuario.
+- Embeddings asíncronos con Celery: materializar → encolar (`pending`) → worker genera (`ready`/`failed`). Búsqueda usa solo `ready`.
+- `ProduccionEmbedding` 1:1 con `ProduccionAudiovisual` (`produccion_id` UNIQUE) + `source_hash` + `model_version` + `estado`. Sin unicidad sobre el vector.
+- Contrato de tipos: TMDB `movie`/`tv` → dominio `pelicula`/`serie` vía un único adaptador.
+
+---
+
 ## Módulo 0 — Fundación (hacer juntos)
 
 El entorno y la estructura base deben estar antes que todo lo demás. Ambos trabajan en esto.
@@ -44,29 +69,67 @@ El entorno y la estructura base deben estar antes que todo lo demás. Ambos trab
 > **Arquitectura (25/08/2026):** híbrida. El discovery (trending, discover,
 > search) se sirve en vivo desde TMDB con caché Redis; PostgreSQL es la fuente
 > de verdad para datos del usuario y búsqueda semántica. C-04 se divide: C-04a
-> (materialización + embedding, Fase 1) y C-04b (sync Celery, Fase 3). Ver
-> `docs/decisiones.md`.
+> (materialización + encolado de embedding, Fase 1) y C-04b (sync Celery, Fase
+> 3). Ver `docs/decisiones.md`.
+>
+> **Estado (08/09/2026):** C-01 y C-02 implementados y probados
+> (`backend/catalogo/client.py`, `backend/catalogo/cache.py`,
+> `backend/catalogo/service.py`, `backend/catalogo/tests.py`). `views.py`
+> vacío y sin rutas: C-03 y C-04a pendientes.
 
 | ID    | Tarea                                              | Depende de  | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                             | Criterio de aceptación                                                                                                                                                                         | Esfuerzo                                                                                                                                                                                                                                                                                        |
 | ----- | -------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | C-01  | Cliente de TMDB API                                | F-02        | Service `TMDBClient` con métodos: `get_trending()`, `get_now_playing()`, `discover(filters)`, `search(query)`, `get_movie_detail(id)` / `get_tv_detail(id)`, `get_keywords(id)`. Manejo de rate limiting, reintentos con backoff, timeout 5s. Referencia de endpoints: `docs/06_TMDB_API_Referencia.md`.                                                                                                                            | Cada método devuelve datos parseados. Rate limit se respeta. Errores de red se loguean y devuelven excepción controlada.                                                                       | 4h                                                                                                                                                                                                                                                                                              |
 | C-02  | Caché de TMDB                                      | C-01        | Cache con Redis. TTL por endpoint: trending 6h, discover 6h, detalle 24h, search 1h. Key pattern: `tmdb:{endpoint}:{params_hash}`. Invalidación manual si es necesario.                                                                                                                                                                                                                                                             | Segunda llamada con mismos parámetros pega a Redis, no a TMDB. Respuesta < 50ms desde caché.                                                                                                   | 2h                                                                                                                                                                                                                                                                                              |
 | C-03  | Endpoints de catálogo (CU-008)                     | C-01, F-04  | `GET /api/catalog/trending/`, `GET /api/catalog/discover/?genre=&year=&min_rating=&type=`, `GET /api/catalog/search/?q=&type=`. Paginación. Filtros: tipo (movie/tv/all), género, año, calificación mínima de TMDB.                                                                                                                                                                                                                 | Respuesta paginada con estructura: `{ results: [...], count, next, previous }`. Filtros combinables.                                                                                           | 4h                                                                                                                                                                                                                                                                                              |
-| C-04a | Materialización on-demand + embedding (CU-021)     | C-01, F-04  | Helper centralizado (`catalogo/services/materialization.py`) que crea/obtiene `ProduccionAudiovisual` por `(id_tmdb, tipo)` con resolución de carrera (`IntegrityError` → `get`). Genera el embedding de forma síncrona tras persistir; si falla, la producción queda con `embedding IS NULL` para backfill.                                                                                                                        | Materialización atómica sin duplicados. Producción persiste aunque falle el embedding. Requests concurrentes devuelven la misma fila.                                                          | 4h                                                                                                                                                                                                                                                                                              |
+| C-04a | Materialización on-demand + encolado de embedding (CU-021)     | C-01, F-04  | Helper centralizado (`catalogo/services/materialization.py`) que crea/obtiene `ProduccionAudiovisual` por `(id_tmdb, tipo)` con resolución de carrera (`IntegrityError` → `get`). Tras persistir, crea `ProduccionEmbedding` en estado `pending` y encola la tarea Celery de generación (decisión 08/09/2026: embeddings asíncronos; reemplaza el enfoque síncrono del 25/08/2026). La producción queda visible aunque el embedding tarde o falle. | Materialización atómica sin duplicados. Producción persiste aunque falle el embedding. Requests concurrentes devuelven la misma fila.                                                          | 4h                                                                                                                                                                                                                                                                                              |
 | C-05  | Home page (UI)                                     | F-03, C-03  | Página `/(auth)/home`. Hero section con película destacada. Filas horizontales con scroll: "Recomendado para ti" (solo si autenticado + tiene calificaciones), "Tendencias de la semana", "Novedades". Cada fila: MediaCards con poster, título, año, badge de tipo, rating TMDB. Skeleton loading mientras carga. Filas se ocultan si no tienen datos.                                                                             | Home carga con skeletons. Filas aparecen progresivamente. Scroll horizontal fluido con flechas en hover. Filas vacías no se renderizan.                                                        | 5h                                                                                                                                                                                                                                                                                              |
 | C-06  | Panel de búsqueda (UI)                             | C-03, C-05  | Panel overlay que se abre desde "Buscar" en navbar. Toolbar: input de búsqueda con autofocus, toggle Todo/Películas/Series, dropdowns Género, Año, ⭐ Calificación mínima. Grid responsive de 5→3→2 columnas. Paginación clásica. Empty state con ilustración. Estados: default (populares), búsqueda con resultados, sin resultados, error API.                                                                                    | Panel se abre/cierra con click en Buscar y tecla Escape. Filtros actualizan resultados. Búsqueda muestra contador. Sin resultados muestra empty state.                                         | 5h                                                                                                                                                                                                                                                                                              |
 | C-07  | Ficha de detalle (UI)                              | C-03        | Página `/(auth)/detalle/[id]`. Breadcrumb navegable según origen (Home, Buscar, Listas). Hero con poster 2:3, título, badge de tipo, año, duración/temporadas, rating TMDB, géneros como chips. Acciones directas (solo autenticado): ⭐ Calificar, ♥ Favoritos, 👁 Vista, 🕐 Pendiente, + Agregar a lista (dropdown con checklist). Sinopsis colapsable. CastCard sin fotos colapsable. Sección de reseñas (tu reseña + comunidad). | Ficha muestra todos los bloques. Acciones toggle correctamente (borde ↔ relleno). Sinopsis y cast se expanden/colapsan. Breadcrumb restaura origen. No autenticado ve "Inicia sesión para...". | 6h                                                                                                                                                                                                                                                                                              |
 | C-08  | Calificar / Reseña (CU-015)                        | C-07, F-04  | Back: `POST \| PUT \| DELETE /api/reviews/`. Relación reseña → calificación. Validar rango 1-10. Texto opcional máx 1000 chars. Front: Modal con star widget de 10 estrellas (con teclado), textarea con contador. Variantes: publicar, editar, eliminar. Post-acción: toast + actualización instantánea de la ficha. | Publicar sin calificación → error. Estrellas navegables con teclado. Editar precarga datos. Eliminar pide confirmación. Reseña aparece en ficha al instante. | 5h                                                                                             |
-| C-04b | Sincronización diaria con Celery (CU-021) — Fase 3 | C-04a, B-06 | Celery beat a las 3 AM. Sincroniza trending, now_playing y discover popular con `update_or_create` + keywords. Completa filas `embedding IS NULL`, reintenta embeddings fallidos y regenera ante cambio de modelo. Actualiza solo campos provenientes de TMDB. Log de estadísticas.                                                                                                                                                 | `celery -A filmai beat` corre diariamente. Embeddings quedan consistentes. No pisa datos locales.                                                                                              | 4h                                                                                                                                                                                                                                                                                              |
+| C-04b | Sincronización diaria con Celery (CU-021) — Fase 3 | C-04a, B-06 | Celery beat a las 3 AM. Sincroniza trending, now_playing y discover popular con `update_or_create` + keywords. Completa embeddings en estado `pending`/`failed` (backfill), reintenta fallos y regenera ante cambio de `source_hash` o `model_version`. Actualiza solo campos provenientes de TMDB. Log de estadísticas.                                                                                                                                                 | `celery -A filmai beat` corre diariamente. Embeddings quedan consistentes. No pisa datos locales.                                                                                              | 4h                                                                                                                                                                                                                                                                                              |
 
 **Total Catálogo: ~35h** (4-5 días) — **Gonza**
 
 > Nota (25/08/2026): se adelanta la infraestructura de embeddings desde B-06
 > (Fase 3); el total puede crecer a ~40h. Ver `docs/decisiones.md`.
 
+### Especificación técnica del trabajo pendiente (catálogo)
+
+Criterios de implementación acordados (08/09/2026) para C-03 y C-04a:
+
+**Endpoints (C-03)** — `backend/catalogo/views.py`, `serializers.py`, `urls.py`:
+
+- `GET /api/catalog/trending/`, `GET /api/catalog/discover/`, `GET /api/catalog/search/` conectados a `get_catalog_service()` (`TMDBClientCache`), hoy sin uso por ninguna vista.
+- Paginación `{ results, count, next, previous }`; filtros combinables: tipo (`movie`/`tv`/`all` en TMDB), género, año, calificación mínima.
+- Permisos: lectura anónima permitida para discovery; acciones de usuario requieren auth (ya es default global `IsAuthenticated`, así que las vistas de catálogo abren con `AllowAny` explícito).
+- Errores TMDB → HTTP vía `tmdb_exception_handler` (ya implementado y probado).
+- Throttle `catalogo` (60/min) ya registrado en settings.
+
+**Adaptador de tipos (contrato canónico)**:
+
+- Única función de conversión `movie ↔ pelicula`, `tv ↔ serie` (p. ej. `catalogo/services/adapter.py`). Prohibido persistir valores TMDB crudos en `TipoProduccion`. Las vistas/serializers aceptan `movie|tv|all` en query params y traducen antes de llegar al dominio.
+
+**Materialización (C-04a)** — `catalogo/services/materialization.py`:
+
+- `materializar(id_tmdb, tipo)` → crea/obtiene `ProduccionAudiovisual` por `(id_tmdb, tipo)`; ante `IntegrityError` por concurrencia resuelve con `get()` (sin llamadas externas dentro de transacción, decisión 25/08/2026).
+- Enriquecimiento: detalle completo (`get_movie_detail`/`get_tv_detail`) + keywords (`get_keywords`) antes de considerar la producción "buscable semánticamente"; los resúmenes de listado pueden materializarse incompletos y completarse asíncronamente.
+- Tras persistir: crear `ProduccionEmbedding` con estado `pending` y encolar la tarea Celery (`generar_embedding.delay(produccion_id)`). Nunca esperar a Ollama en el request.
+- La materialización es global: toda producción servida por el catálogo o abierta en detalle se materializa para todos los usuarios.
+
+**Seed inicial (con C-04b o comando de management)**:
+
+- Poblado inicial de populares/tendencias/novedades + muestra diversa por género, año y tipo (películas y series, éxitos y nicho, varias décadas) para evitar cold start del corpus. Orden de magnitud MVP: ~10k producciones (no todo TMDB).
+
 ---
 
 ## Módulo 3 — Listas · Responsable: **Marcos**
+
+> **Dependencia (08/09/2026):** agregar/quitar ítems recibe `(id_tmdb, tipo)` y
+> DEBE pasar por el helper de materialización (C-04a) antes de crear la fila en
+> `Tiene`: nunca se inserta un `id_tmdb` huérfano ni se llama a TMDB desde los
+> endpoints de listas. Las APIs y UI de este módulo (L-01..L-04) están
+> pendientes; los modelos y la señal de listas predeterminadas ya existen.
 
 | ID   | Tarea                                 | Depende de | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Criterio de aceptación                                                                                                                      | Esfuerzo |
 | ---- | ------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -116,6 +179,48 @@ El entorno y la estructura base deben estar antes que todo lo demás. Ambos trab
 
 **Total Chatbot: ~25h** (3 días) — **Marcos**
 
+### Especificación técnica del trabajo pendiente (embeddings, sync y RAG)
+
+Criterios de implementación acordados (08/09/2026) para B-06, C-04b y B-02..B-05:
+
+**Infraestructura pgvector/Ollama (B-06)**:
+
+- `docker-compose.yml`: reemplazar `postgres:16-alpine` por `pgvector/pgvector:pg16-alpine`; agregar servicios `ollama` (volumen `ollamadata`) y `celery-worker` + `celery-beat`. `.env.example`: `OLLAMA_BASE_URL`, `EMBEDDING_MODEL=bge-m3`, `EMBEDDING_DIM=1024`.
+- `backend/requirements.txt`: `pgvector`, `django-pgvector` (Celery ya está).
+- Modelo `ProduccionEmbedding`: `OneToOneField(ProduccionAudiovisual, related_name="embedding")` + `VectorField(1024)` + índice HNSW `vector_cosine_ops` + `source_hash` (SHA-256) + `model_version` + `estado` (`pending|processing|ready|failed`) + `fecha_actualizacion`. Migración con `CREATE EXTENSION vector`.
+- Texto canónico (plantilla EN, labels estables): `Title + Genres + Directors + Cast + Keywords + Synopsis`, normalizado (espacios, vacíos, orden de arrays). Cambios de contenido o de modelo cambian hash/versión → regeneración legítima.
+
+**Tareas Celery (generación, backfill, sync)**:
+
+- `generar_embedding(produccion_id)`: claim idempotente (`pending→processing` con actualización condicional/lease; reintentos con backoff exponencial; en fallo `failed` + reintento programado). No mantener transacciones abiertas durante la llamada a Ollama. Si `source_hash`/`model_version` no cambiaron y estado `ready`, no-op (idempotencia).
+- `backfill_embeddings()`: procesa `pending`/`failed` viejos; corre en beat o manualmente.
+- `sync_catalogo_diaria()` (C-04b): trending + now_playing + discover popular con `update_or_create` (solo campos TMDB, nunca datos de usuario) + keywords; encola embeddings de producciones nuevas/modificadas; log de estadísticas (nuevas, actualizadas, errores).
+- La sync es mantenimiento/seed, no prerrequisito del discovery (arquitectura híbrida).
+
+**Garantías de idempotencia (08/09/2026)**:
+
+- Fuerte: nunca dos filas de embedding por producción (UNIQUE en `produccion_id`), y no se recomputa si hash+versión coinciden con estado `ready`.
+- Imposible de garantizar: que un worker caído entre "generó el vector" y "persistió" no haya llamado dos veces a Ollama; se acepta como costo máximo, sin estado inconsistente persistido.
+- Sin unicidad sobre el `vector`: producciones distintas pueden tener vectores iguales.
+
+**Retrieval semántico (`buscar_semantico`, B-06)**:
+
+- Solo embeddings `estado = ready`. Recuperación con overfetch (top 50-100), filtros SQL posteriores (tipo, año, rating, duración) y corte a 5-10 resultados para el LLM. Objetivo de latencia < 100ms en consulta.
+- Fallback: producciones sin embedding siguen alcanzables por TMDB en vivo (`buscar_por_titulo`, `top_por_genero`, `similares_a`); si un resultado de TMDB es relevante se materializa y encola (corpus crece con el uso).
+- Evaluación (para justificar el feature): set de 30-50 consultas conceptuales en ES con resultados esperados; métricas Recall@10/MRR vs. baseline léxico TMDB; registrar resultados en `docs/decisiones.md`.
+
+**RAG/LLM (B-02..B-05)**:
+
+- Pipeline: consulta del usuario → (paralelo) búsqueda textual TMDB + `buscar_semantico` → fusión/rerank → post-filtros SQL con contexto anonimizado (géneros 7+, últimas 5 vistas, favoritos) → grounding de la respuesta en producciones reales (sin títulos inventados).
+- Personalización vía SQL sobre datos del usuario; el corpus semántico nunca se acota por usuario.
+
+**Pruebas mínimas de aceptación**:
+
+- Unicidad `(id_tmdb, tipo)` y `produccion_id` único en embeddings; concurrencia de materialización (dos requests → misma fila).
+- Idempotencia de la tarea: ejecutar dos veces con mismo hash/modelo → una sola fila, un solo vector, cero llamadas extra al proveedor.
+- Fallo de Ollama → estado `failed`, producción visible, backfill la recupera.
+- Endpoints de catálogo (contratos de respuesta, filtros, throttling) y degradación sin Redis (fallback directo a TMDB).
+
 ---
 
 ## Módulo 6 — Admin (nativo de Django) · Responsable: **Marcos**
@@ -150,14 +255,20 @@ El entorno y la estructura base deben estar antes que todo lo demás. Ambos trab
 |            | Módulos                               | Horas propias | + mitad de tareas conjuntas (16h: Fundación + Q-05) | Total     |
 | ---------- | ------------------------------------- | ------------- | --------------------------------------------------- | --------- |
 | **Marcos** | Autenticación, Listas, Chatbot, Admin | 71.5h         | 8h                                                  | **79.5h** |
-| **Gonza**  | Catálogo, Perfil, Polish              | 66.5h         | 8h                                                  | **74.5h** |
+| **Gonza**  | Catálogo, Perfil, Polish              | 70.5h         | 8h                                                  | **78.5h** |
 
-Diferencia: 5h sobre 154h totales (~3%).
+Diferencia: 1h sobre 158h totales (~1%). *(Corregido 08/09/2026: el resumen anterior sumaba 66.5h para Gonza, pero Catálogo 35 + Perfil 17.5 + Polish 18 = 70.5h.)*
 
-## Orden sugerido de fases
+## Orden sugerido de fases (actualizado 08/09/2026)
 
-- **Fase 0 (juntos):** Módulo 0 — Fundación.
-- **Fase 1 (paralelo):** Marcos → Autenticación. Gonza → Catálogo.
-- **Fase 2 (paralelo):** Marcos → Listas (depende de Auth, propio). Gonza → Perfil (depende de A-09 de Marcos, ya resuelto en Fase 1).
-- **Fase 3 (paralelo):** Marcos → Chatbot + Admin nativo. Gonza → Polish + C-04b (sync Celery del catálogo).
-- **Cierre (juntos):** Q-05 — variables de entorno y documentación.
+> Estado real: Fase 0 completa y Fase 1 (auth) completa. La numeración sigue
+> al plan original; los criterios técnicos de cada fase están en las
+> subsecciones "Especificación técnica del trabajo pendiente" de los Módulos 2
+> y 5.
+
+- ✅ **Fase 0 (juntos):** Módulo 0 — Fundación.
+- ✅ **Fase 1 (paralelo):** Marcos → Autenticación. Gonza → C-01/C-02 (hechos).
+- 🔜 **Fase 2 (paralelo):** Gonza → C-03 (endpoints) + C-04a (materialización + adaptador `movie/tv`). Marcos → L-01..L-04 (Listas, consumiendo el helper de materialización).
+- 🔜 **Fase 3 (paralelo):** Marcos → B-06 (pgvector/Ollama/ProduccionEmbedding + tareas Celery + `buscar_semantico`). Gonza → C-04b (sync Celery + seed inicial) + C-05..C-07 (Home, Buscar, Detalle).
+- 🔜 **Fase 4 (paralelo):** Marcos → B-02..B-05 + B-03/B-04 (RAG, endpoints y UI del chatbot) + AD-01'. Gonza → C-08 (reseñas), P-01..P-07 (perfil/preferencias), integración de acciones en la ficha.
+- 🔜 **Cierre (juntos):** Q-01..Q-06 (accesibilidad, estados, errors, docs), pruebas de integración/E2E, evaluación de recall de la búsqueda semántica, gates de lint/format.

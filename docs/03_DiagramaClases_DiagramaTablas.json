@@ -16,7 +16,7 @@
           "id": "cls-produccion",
           "type": "node",
           "parent": "1",
-          "label": "ProduccionAudiovisual\n+ idProduccion: Integer\n+ idTMDB: Integer\n+ tipo: TipoProduccion\n+ titulo: String\n+ poster: String\n+ sinopsis: String\n+ fechaLanzamiento: Date\n+ reparto: List<String>\n+ directores: List<String>\n+ estatus: String\n+ generos: List<String>\n+ calificacionPromedio: Float\n+ cantidadTemporadas: Integer\n+ cantidadEpisodios: Integer\n+ duracion: Integer\n+ actualizarDatosDesdeTMDB(): Void\n+ tieneGenero(): Bool\n+ calcularCalificacionPromedioLocal(): Float\n+ obtenerCantidadCalificaciones(): Integer\n+ obtenerDuracionFormateada(): String\n+ obtenerTotalCapitulos(): Integer"
+          "label": "ProduccionAudiovisual\n+ idProduccion: Integer\n+ idTMDB: Integer\n+ tipo: TipoProduccion\n+ titulo: String\n+ poster: String\n+ sinopsis: String\n+ fechaLanzamiento: Date\n+ reparto: List<String>\n+ directores: List<String>\n+ estatus: String\n+ generos: List<String>\n+ keywords: List<String>\n+ calificacionPromedio: Float\n+ cantidadTemporadas: Integer\n+ cantidadEpisodios: Integer\n+ duracion: Integer\n+ actualizarDatosDesdeTMDB(): Void\n+ tieneGenero(): Bool\n+ calcularCalificacionPromedioLocal(): Float\n+ obtenerCantidadCalificaciones(): Integer\n+ obtenerDuracionFormateada(): String\n+ obtenerTotalCapitulos(): Integer"
         },
         {
           "id": "cls-calificacion",
@@ -79,6 +79,18 @@
           "label": "<<enumeration>>\nTipoProduccion\nPelicula\nSerie"
         },
         {
+          "id": "cls-embedding",
+          "type": "node",
+          "parent": "1",
+          "label": "ProduccionEmbedding\n+ idEmbedding: Integer\n+ vector: Vector(1024) [pgvector]\n+ sourceHash: String\n+ modelVersion: String\n+ estado: EstadoEmbedding\n+ fechaActualizacion: DateTime\n+ generarVector(): Void\n+ requiereRegeneracion(): Bool"
+        },
+        {
+          "id": "enum-estado-embedding",
+          "type": "node",
+          "parent": "1",
+          "label": "<<enumeration>>\nEstadoEmbedding\nPending\nProcessing\nReady\nFailed"
+        },
+        {
           "id": "nota-unificacion",
           "type": "node",
           "parent": "1",
@@ -89,6 +101,12 @@
           "type": "node",
           "parent": "1",
           "label": "Nota: se descartó la herencia entre ProducciónAudiovisual, Película y Serie porque no existe comportamiento diferenciado y los IDs de TMDB no garantizan unicidad entre películas y series. Se unifican en una única entidad con atributo 'tipo'."
+        },
+        {
+          "id": "nota-embedding",
+          "type": "node",
+          "parent": "1",
+          "label": "Nota: ProduccionEmbedding es 1:1 con ProduccionAudiovisual (produccion_id UNIQUE, nunca dos embeddings por producción). Generación asíncrona vía Celery: la materialización crea el registro en 'pending' y el worker lo lleva a 'ready' (o 'failed' con reintentos/backoff). La búsqueda semántica solo usa embeddings 'ready'; no se aplica unicidad al vector."
         },
         {
           "id": "e-usuario-calificacion",
@@ -180,6 +198,21 @@
           "parent": "1",
           "source": "cls-produccion",
           "target": "enum-tipoproduccion"
+        },
+        {
+          "id": "e-produccion-embedding",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-produccion",
+          "target": "cls-embedding",
+          "label": "1..1 ─ 0..1 (composición)"
+        },
+        {
+          "id": "e-embedding-estado",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-embedding",
+          "target": "enum-estado-embedding"
         }
       ]
     },
@@ -204,7 +237,7 @@
           "id": "tbl-produccion",
           "type": "node",
           "parent": "1",
-          "label": "ProduccionAudiovisual\nPK  idProduccion INTEGER\n    idTMDB INTEGER\n    tipo VARCHAR(25)\n    titulo VARCHAR(100)\n    poster VARCHAR(250)\n    sinopsis VARCHAR(2000)\n    fechaLanzamiento DATE\n    reparto VARCHAR[]\n    directores VARCHAR[]\n    estatus VARCHAR(25)\n    generos VARCHAR[]\n    calificacionPromedio REAL\n    cantidadTemporadas INTEGER\n    cantidadEpisodios INTEGER\n    duracion INTEGER\nUNIQUE (idTMDB, tipo)"
+          "label": "ProduccionAudiovisual\nPK  idProduccion INTEGER\n    idTMDB INTEGER\n    tipo VARCHAR(25)\n    titulo VARCHAR(100)\n    poster VARCHAR(250)\n    sinopsis VARCHAR(2000)\n    fechaLanzamiento DATE\n    reparto VARCHAR[]\n    directores VARCHAR[]\n    estatus VARCHAR(25)\n    generos VARCHAR[]\n    keywords VARCHAR[]\n    calificacionPromedio REAL\n    cantidadTemporadas INTEGER\n    cantidadEpisodios INTEGER\n    duracion INTEGER\nUNIQUE (idTMDB, tipo)"
         },
         {
           "id": "tbl-calificacion",
@@ -241,6 +274,12 @@
           "type": "node",
           "parent": "1",
           "label": "Mensaje\nPK  idMensaje INTEGER\n    texto TEXT\n    autor VARCHAR(25)\n    fechaHora TIMESTAMP\nFK  idChat INTEGER"
+        },
+        {
+          "id": "tbl-embedding",
+          "type": "node",
+          "parent": "1",
+          "label": "ProduccionEmbedding\nPK  idEmbedding INTEGER\n    vector VECTOR(1024) [pgvector]\n    sourceHash VARCHAR(64)\n    modelVersion VARCHAR(50)\n    estado VARCHAR(20) (pending|processing|ready|failed)\n    fechaActualizacion TIMESTAMP\nFK  idProduccion INTEGER UNIQUE (1:1)\nINDEX HNSW (vector vector_cosine_ops)"
         },
         {
           "id": "e-usuario-calificacion",
@@ -305,6 +344,14 @@
           "source": "tbl-chat",
           "target": "tbl-mensaje",
           "label": "1:N"
+        },
+        {
+          "id": "e-produccion-embedding",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-produccion",
+          "target": "tbl-embedding",
+          "label": "1:1"
         }
       ]
     }
