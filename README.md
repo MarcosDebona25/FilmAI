@@ -77,6 +77,7 @@ Desarrollar una aplicacion web integral que permita gestionar, calificar y recib
 | **Base de datos**     | PostgreSQL 16                                                              |
 | **Cache y colas**     | Redis (cache de TMDB, broker de Celery)                                    |
 | **Tareas asincronas** | Celery + Celery Beat (sincronizacion programada con TMDB)                  |
+| **Embeddings (planificado)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generacion asincrona via Celery |
 | **Infraestructura**   | Docker, docker-compose (4 servicios: backend, frontend, PostgreSQL, Redis) |
 | **Autenticacion**     | JWT (access + refresh tokens, sesion de 8 horas), Google OAuth 2.0, bcrypt |
 
@@ -89,18 +90,31 @@ Desarrollar una aplicacion web integral que permita gestionar, calificar y recib
 
 ### Modelo de datos
 
-El sistema implementa 9 tablas relacionales:
+> Actualizado 08/09/2026. La jerarquía Persona/Usuario/Administrador fue
+> eliminada (ver `docs/decisiones.md`): existe una única entidad `Usuario`
+> (`AUTH_USER_MODEL`), con el rol administrador gestionado por los flags
+> `is_staff`/`is_superuser` del Django Admin nativo.
 
-- **Persona** (abstracta): nucleo de autenticacion con credenciales y soporte para Google OAuth.
-- **Usuario**: extiende Persona con datos demograficos, preferencias de tema y notificaciones.
-- **Administrador**: extiende Persona con nivel de acceso y estado administrativo.
-- **ProduccionAudiovisual**: entidad unificada para peliculas y series, diferenciadas por un atributo `tipo`. Sincronizada desde TMDB.
+El dominio implementa 8 tablas (más las técnicas de Django/allauth):
+
+- **Usuario**: entidad única de identidad y preferencias (nombre de usuario, correo, googleId, tema, notificaciones, estado de cuenta). Rol administrador vía flags.
+- **ProduccionAudiovisual**: entidad unificada para peliculas y series, diferenciadas por un atributo `tipo`. Catálogo global materializado progresivamente desde TMDB (discovery en vivo + seed + materialización on-demand).
 - **Calificacion**: valor numerico (1-10) emitido por un usuario sobre una produccion.
 - **Resena**: texto opcional vinculado uno a uno con una calificacion.
 - **Lista**: colecciones de producciones (predeterminadas o personalizadas) asociadas a un usuario.
-- **Chat**: conversacion asociada a un usuario, con contexto persistente en formato JSONB.
-- **Mensaje**: unidad de dialogo dentro de un chat, con indicacion de autor (usuario o chatbot).
 - **Tiene**: tabla intermedia entre Lista y ProduccionAudiovisual con fecha de agregado.
+- **Chat**: conversacion asociada a un usuario, con contexto persistente en formato JSONB (se crea al registrar el usuario).
+- **Mensaje**: unidad de dialogo dentro de un chat, con indicacion de autor (usuario o chatbot).
+
+Planificada (Módulo 5, aún no implementada):
+
+- **ProduccionEmbedding**: relación 1:1 con `ProduccionAudiovisual` + vector pgvector(1024) + índice HNSW. Generación asíncrona vía Celery (estados `pending/processing/ready/failed`, `source_hash`, `model_version`). Alimenta `buscar_semantico` del chatbot.
+
+### Estado del desarrollo (08/09/2026)
+
+Implementado y probado: autenticación completa (registro + confirmación, login, Google OAuth, recuperación de contraseña, cookies httpOnly + CSRF), modelos de dominio, seed de desarrollo, cliente TMDB (C-01), caché Redis (C-02) y CI.
+
+Pendiente (detalle en `docs/05_Plan_de_Desarrollo.md`): endpoints de catálogo (C-03), materialización (C-04a), sincronización Celery (C-04b), infraestructura pgvector/Ollama y embeddings, búsqueda semántica y chatbot (B-02..B-06), APIs/UI de catálogo, listas, perfil y preferencias. Las secciones de funcionalidades anteriores describen el producto objetivo, no el estado actual.
 
 ---
 

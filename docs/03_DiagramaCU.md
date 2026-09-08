@@ -10,7 +10,7 @@ actor "Usuario" as usuario
 actor "Administrador" as admin
 actor "API LLM de Chatbot" as llm
 actor "API TMDB" as tmdb
-actor "Sistema (cron job)" as sistema
+actor "Sistema (Celery Beat)" as sistema
 
 rectangle "Sistema" {
   usecase "CU-001: Crear cuenta de usuario" as CU001

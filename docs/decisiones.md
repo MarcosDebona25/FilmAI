@@ -5,6 +5,96 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 08/09/2026 — Auditoría de consistencia y normalización documental end-to-end
+
+- **Descripción**: se auditó el estado real del repositorio contra los docs 01–06,
+  `README.md`, el diagrama de datos y OpenSpec. Resultado: en `main` están
+  implementados autenticación (A-01..A-09), modelos base, seed, CI, C-01
+  (cliente TMDB) y C-02 (caché Redis); siguen pendientes C-03 (endpoints de
+  catálogo), C-04a (materialización), infraestructura pgvector/Ollama,
+  `ProduccionEmbedding`, C-04b (sync Celery), APIs/UI de listas, reseñas,
+  perfil y chatbot. Se corrigieron las contradicciones detectadas:
+  1. README describía la jerarquía Persona/Usuario/Administrador ya eliminada.
+  2. Docs 02/03 hablaban de "cron job" mientras el plan y la infraestructura
+     prevista usan Celery Beat + workers.
+  3. Docs 05 mencionaba `embedding IS NULL` en `ProduccionAudiovisual` mientras
+     docs 03 definía la tabla `ProduccionEmbedding`: gana la tabla separada.
+  4. El diagrama de tablas no incluía `keywords` ni `ProduccionEmbedding`.
+  5. Docs 03 describía el chat persistido "al primer mensaje", pero la
+     implementación (B-01) crea el chat por defecto al registrar el usuario.
+  6. Docs 04 marcaba Sprint 1 (Home, Buscar) como completado sin código.
+  7. Docs/decisiones documentaba CI como pendiente pese a que
+     `.github/workflows/ci.yml` ya existe.
+  Se actualizó el plan de desarrollo con el estado real por tarea, los
+  próximos trabajos (catálogo, materialización, embeddings, sync, listas,
+  chatbot/RAG) y el reparto vigente. No se crearon archivos nuevos: todo el
+  trabajo futuro queda especificado dentro de la documentación existente.
+- **Motivo**: el usuario aprobó ejecutar solo la normalización documental (pasos
+  1 y 2 del plan); la implementación de código queda para fases posteriores.
+- **Archivos**: `README.md`, `docs/02_Especificación de Requerimientos.md`,
+  `docs/03_Modelos de Datos y de Diseño.md`,
+  `docs/03_DiagramaClases_DiagramaTablas.json`, `docs/03_DiagramaCU.md`,
+  `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`,
+  `docs/06_TMDB_API_Referencia.md`, `docs/decisiones.md`.
+
+## 08/09/2026 — Embeddings asíncronos con Celery e idempotencia (reemplaza embeddings síncronos)
+
+- **Descripción**: la generación de embeddings será asíncrona mediante Celery.
+  La materialización persiste la producción y crea/encola un trabajo de
+  embedding con estado `pending`, sin esperar al proveedor (Ollama BGE-M3).
+  Estados: `pending`, `processing`, `ready`, `failed`. La búsqueda semántica
+  solo considera embeddings `ready`; las producciones pendientes o fallidas
+  siguen visibles en catálogo y son recuperables vía TMDB en vivo.
+  **Reemplaza** la decisión del 25/08/2026 ("Embeddings síncronos en la
+  materialización"), que quedaba sin efecto.
+- **Motivo**: no bloquear catálogo ni detalle por una operación externa lenta;
+  permitir reintentos con backoff, backfill y crecimiento progresivo del corpus
+  sin degradar la experiencia (RNF #6/#7).
+- **Idempotencia**: `ProduccionEmbedding` es 1:1 con `ProduccionAudiovisual`
+  (`produccion_id` UNIQUE, no una FK común); no se aplica unicidad al vector
+  (producciones distintas pueden tener vectores iguales). Antes de invocar al
+  proveedor se compara el hash del texto canónico (`source_hash`) y la
+  `model_version`: si no cambiaron y el estado es `ready`, no se recomputa.
+  Celery puede duplicar tareas: la tarea usa claim/lease con actualización
+  condicional y no mantiene transacciones abiertas durante la llamada externa.
+  Garantía fuerte: nunca habrá dos embeddings persistidos por producción ni
+  recomputación innecesaria; garantía imposible: un worker caído después de
+  generar y antes de persistir puede haber invocado a Ollama dos veces.
+- **Texto canónico a embeber**: `Title + Genres + Directors + Cast + Keywords
+  + Synopsis` normalizado (espacios, vacíos y orden de arrays).
+- **Archivos** (futuros): `backend/catalogo/models.py` (`ProduccionEmbedding`),
+  `backend/catalogo/tasks.py`, `backend/catalogo/services/`,
+  `docker-compose.yml` (worker + beat), `backend/requirements.txt`
+  (`pgvector`, `django-pgvector`), `docs/05_Plan_de_Desarrollo.md`.
+
+## 08/09/2026 — Corpus semántico global y progresivo + contrato TMDB → dominio
+
+- **Descripción**: `ProduccionAudiovisual` se define como un catálogo global
+  materializado progresivamente: la materialización no depende de que una
+  producción pertenezca a una lista o tenga calificación. El corpus de
+  búsqueda semántica es compartido por todos los usuarios; los datos personales
+  (calificaciones, listas, historial) se usan vía SQL para personalizar y
+  reordenar, nunca para acotar qué es buscable. Poblamiento:
+  1. **Seed inicial global**: populares, tendencias, novedades y muestra
+     diversa por género/año/tipo, para evitar cold start.
+  2. **Materialización de lo expuesto**: cada producción servida por el
+     catálogo/detalle se materializa y se enriquece (detalle + keywords)
+     antes de encolar su embedding.
+  3. **Cola larga**: producciones no materializadas se resuelven on-demand vía
+     TMDB y se incorporan progresivamente al corpus.
+  No se sincroniza todo TMDB de entrada. Además se fija el contrato canónico
+  de tipos: TMDB usa `movie`/`tv` y el dominio local `pelicula`/`serie`; la
+  conversión se hace en un único adaptador, nunca guardando valores TMDB
+  crudos en `TipoProduccion`. La sincronización periódica (Celery Beat 3 AM)
+  pasa a ser mantenimiento/seed, no prerrequisito del catálogo en vivo.
+- **Motivo**: un corpus limitado a interacciones personales haría inútil la
+  búsqueda semántica para descubrimiento; sincronizar todo TMDB no escala
+  (decisión 25/08/2026 de arquitectura híbrida).
+- **Archivos**: `docs/02_Especificación de Requerimientos.md` (CU-008, CU-013,
+  CU-021), `docs/03_Modelos de Datos y de Diseño.md`,
+  `docs/05_Plan_de_Desarrollo.md`, `docs/06_TMDB_API_Referencia.md`,
+  `docs/decisiones.md`.
+
 ## 04/09/2026 — Corrección de arranque DRF y chequeo end-to-end
 
 - **Descripción**: durante el chequeo end-to-end se corrigió la ruta de importación

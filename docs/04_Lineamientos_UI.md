@@ -1099,7 +1099,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 2. **Auto layout** en todos los componentes para iteración rápida.
 3. **Variants** con propiedad "State" (default, hover, focus, disabled, error, loading, empty).
 4. Priorizar diseño por sprints:
-   - **Sprint 1**: Login, Registro, Home, Buscar (panel overlay). ← completado
+   - **Sprint 1**: Login, Registro, Home, Buscar (panel overlay). ← **Login y Registro implementados; Home y Buscar diseñados pero aún no implementados en el frontend** (08/09/2026)
    - **Sprint 2**: Ficha de detalle, Modales de reseña, Listas.
    - **Sprint 3**: Perfil, Modificar perfil, Pantallas de error/estado vacío, Confirmación de cuenta.
 5. Prototipar flujos críticos:
@@ -1110,6 +1110,8 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ---
 
 ## 10. Pantallas Definidas
+
+> Estado al 08/09/2026: la marca `[x]` indica que la pantalla está **definida/diseñada** en este documento, no necesariamente implementada. Implementadas hoy: Login, Registro, confirmación/restablecimiento y completado de Google. El resto (Home, Buscar, Detalle, Listas, Perfil, Mis reseñas, Preferencias, errores) queda como diseño aprobado para implementar según `docs/05_Plan_de_Desarrollo.md`.
 
 - [x] Home — Sección 5
 - [x] Buscar (panel overlay) — Sección 5b
