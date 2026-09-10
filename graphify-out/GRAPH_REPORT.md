@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-09-10)
 
 ## Corpus Check
-- 178 files · ~614,915 words
+- 178 files · ~614,522 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9b55d055`
+- Built from commit: `422690bc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

@@ -186,9 +186,9 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1789059867.2430646,
-    "seen": 1789061268.005012,
-    "ast_hash": "7336e8cfc29b3d62ce05b45b0eeefd62",
+    "mtime": 1789073995.1744652,
+    "seen": 1789074102.5341783,
+    "ast_hash": "8ba42b07a9237222962ecf61e80ea2e1",
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
