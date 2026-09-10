@@ -6,7 +6,7 @@
 #
 # Jobs:
 #   - frontend: ESLint (sin warnings) + Prettier --check
-#   - backend:  Ruff check + Ruff format --check
+#   - backend:  Ruff check + Ruff format --check + tests (Django)
 # =============================================================================
 
 name: CI
@@ -51,14 +51,41 @@ jobs:
         run: npx prettier --check .
 
   # --------------------------------------------------------------------------
-  # Backend: Ruff check + Ruff format --check
+  # Backend: Ruff + Tests (Django)
   # --------------------------------------------------------------------------
   backend:
-    name: Backend (ruff)
+    name: Backend (ruff + tests)
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: filmai_test
+          POSTGRES_USER: filmai_user
+          POSTGRES_PASSWORD: filmai_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U filmai_user -d filmai_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: backend
+
+    env:
+      POSTGRES_DB: filmai_test
+      POSTGRES_USER: filmai_user
+      POSTGRES_PASSWORD: filmai_ci_password
+      DATABASE_HOST: localhost
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      DEBUG: "True"
+      ALLOWED_HOSTS: localhost
+      REDIS_URL: redis://localhost:6379/0
+
     steps:
       - name: Descargar el código del repo
         uses: actions/checkout@v4
@@ -76,3 +103,9 @@ jobs:
 
       - name: Ruff format --check (verificar formato)
         run: ruff format --check .
+
+      - name: Instalar dependencias del backend
+        run: pip install -r requirements.txt
+
+      - name: Correr tests (Django)
+        run: python manage.py test --verbosity=2

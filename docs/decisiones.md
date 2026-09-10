@@ -5,6 +5,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 10/09/2026 — Tests en CI, AGENTS.md con reglas de testing y skills, limpieza de archivos raíz
+
+- **Descripción**: se integraron los tests de Django al pipeline de CI (`ci.yml`) con un servicio PostgreSQL 16 en GitHub Actions. Se hizo configurable el host de base de datos en `settings.py` (`DATABASE_HOST`, default `"db"`) para permitir que CI use `localhost`. Se actualizó `AGENTS.md` agregando reglas de tests unitarios (§5) y consulta de skills (§6). Se limpió `.env.example` eliminando boilerplate. Se actualizó `.gitignore` agregando `.codegraph/` y `.ruff_cache/`. Se reescribió la Problemática del `README.md` y se agregó un diagrama ER Mermaid del modelo de datos. Testing del frontend queda pendiente para implementar cuando se analice el stack del frontend (Next.js no tiene framework de tests configurado aún).
+- **Motivo**: análisis de Etapa 1 del proyecto detectó que el CI solo verificaba lint/formato pero no ejecutaba los tests existentes. Las NOTAs del usuario solicitaron los cambios en los demás archivos.
+- **Archivos afectados**:
+  - `.github/workflows/ci.yml` — agregado job de tests con PostgreSQL service.
+  - `backend/filmai/settings.py` — `DATABASE_HOST` configurable.
+  - `AGENTS.md` — nuevas reglas §5 y §6, renumeración.
+  - `.gitignore` — agregadas entradas para `.codegraph/` y `.ruff_cache/`.
+  - `.env.example` — eliminado boilerplate de títulos con `===`.
+  - `README.md` — reescrita Problemática, agregado diagrama ER, ñ en todo el documento.
+
+---
+
 ## 10/09/2026 — Grafo de conocimiento con graphify y directiva de actualización periódica
 
 - **Descripción**: se incorporó un grafo de conocimiento del repositorio generado
