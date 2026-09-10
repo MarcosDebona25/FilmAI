@@ -45706,7 +45706,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "backend/filmai/settings.py",
-      "source_location": "L19",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -47278,7 +47278,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "backend/filmai/settings.py",
-      "source_location": "L19",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -73802,5 +73802,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "9b55d0554e89dd955ae97b448efabe962f9bd260"
+  "built_at_commit": "422690bca63eeceb63bec58768a03d59fdb270ba"
 }

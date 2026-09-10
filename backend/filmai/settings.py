@@ -12,31 +12,19 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
-
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
-
 from filmai.email_validation import validar_configuracion_email
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
-
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
 
-
-# =============================================================================
-# TMDB API
-# =============================================================================
 
 TMDB_API_KEY = config("TMDB_API_KEY", default="")
 TMDB_API_BASE_URL = config("TMDB_API_BASE_URL", default="https://api.themoviedb.org/3")
@@ -44,7 +32,6 @@ TMDB_TIMEOUT = config("TMDB_TIMEOUT", default=5, cast=float)
 
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -73,7 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # debe ir lo más arriba posible
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -106,10 +93,7 @@ WSGI_APPLICATION = "filmai.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-#
-# PostgreSQL corre en el contenedor "db". Desde el backend, el host es "db"
-# (nombre del servicio en docker-compose), NO localhost.
-
+# PostgreSQL corre en el contenedor "db". Desde el backend, el host es "db" (nombre del servicio en docker-compose), NO localhost.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -143,95 +127,53 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Validez del enlace de restablecimiento de contraseña (CU-020): 1 hora.
-# Lo usa `default_token_generator.check_token()` al confirmar.
+# Validez del enlace de restablecimiento de contraseña: 1 hora.
 PASSWORD_RESET_TIMEOUT = 60 * 60
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
+# Internationalization: https://docs.djangoproject.com/en/5.1/topics/i18n/
 LANGUAGE_CODE = "es-ar"
-
 TIME_ZONE = "America/Argentina/Buenos_Aires"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+# Static files (CSS, JavaScript, Images): https://docs.djangoproject.com/en/5.1/howto/static-files/
 STATIC_URL = "static/"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
+# Default primary key field type: https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-# =============================================================================
-# Modelo de usuario personalizado
-# =============================================================================
-# FilmAI usa su propio modelo de usuario (usuarios.Usuario) en lugar del
-# auth.User por defecto de Django. El "rol administrador" se gestiona con los
-# flags is_staff/is_superuser a través del Django Admin nativo (Módulo 6).
-
+#FilmAI usa su propio modelo de usuario (usuarios.Usuario) en lugar del auth.User por defecto de Django.
 AUTH_USER_MODEL = "usuarios.Usuario"
 
-
-# =============================================================================
 # Django REST Framework
-# =============================================================================
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "EXCEPTION_HANDLER": "catalogo.exceptions.tmdb_exception_handler",
-    # Rate limit de recuperación de contraseña (CU-020): la SOLICITUD del
-    # email permite 1 por minuto por IP; la confirmación (envío del form con
-    # uid/token) tolera reintentos por validación inline pero sigue acotada
-    # como defensa anti fuerza bruta.
     "DEFAULT_THROTTLE_RATES": {
-        "recuperar_contrasena": "1/min",
-        "restablecer_contrasena": "5/min",
-        # Disponibilidad de nombre de usuario (A-05): acota la enumeración de
-        # usernames sin entorpecer el tipeo normal (el frontend ya debouncea).
+        "recuperar_contrasena": "1/min", # 1 solicitud de email por minuto por IP para recuperar contraseña
+        "restablecer_contrasena": "5/min", # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
     },
 }
 
-
-# =============================================================================
-# CORS
-# =============================================================================
 # Permite que el frontend (localhost:3000) haga requests al backend (localhost:8000).
-
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
     default="http://localhost:3000",
 ).split(",")
 
-# Necesario para que el frontend (httpOnly cookies JWT) envíe credenciales.
 CORS_ALLOW_CREDENTIALS = True
-
-# El frontend es un origen distinto (p.ej. localhost:3000). Con la autenticación
-# por cookie httpOnly + CSRF activo, Django valida el `Origin`/`Referer` de los
-# requests cross-origin contra estos orígenes; sin esto, cualquier mutación
-# legítima del frontend sería rechazada con "CSRF Failed: Referer checking failed".
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 
-# =============================================================================
 # Autenticación — django-allauth + dj-rest-auth + JWT (simplejwt)
-# =============================================================================
-# Stack adoptado (docs/decisiones.md, 22/08/2026): registro tradicional
-# (email + contraseña) y login con Google OAuth vía dj-rest-auth sobre
-# django-allauth. Referencia: https://docs.allauth.org/en/dev/index.html
+# Stack adoptado (docs/decisiones.md, 22/08/2026): registro tradicional (email + contraseña) y login con Google OAuth vía dj-rest-auth sobre django-allauth.
+# Referencia: https://docs.allauth.org/en/dev/index.html
 
 SITE_ID = 1
 
@@ -251,11 +193,7 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.ScryptPasswordHasher",
 ]
 
-# --- Email ---
-# Modo desarrollo sin configurar: console backend (los emails se imprimen).
-# El fallback a console solo aplica en desarrollo; en producción el backend
-# debe elegirse explícitamente (no hay degradación silenciosa a console).
-# Con Resend: EMAIL_BACKEND=filmai.email_backends.ResendBackend + RESEND_API_KEY.
+# En desarrollo, sin backend configurado, los emails se imprimen; en producción se exige un backend real para evitar fallos silenciosos.
 EMAIL_BACKEND = config("EMAIL_BACKEND", default="")
 if not EMAIL_BACKEND:
     if DEBUG:
@@ -266,16 +204,10 @@ if not EMAIL_BACKEND:
             "Configurá filmai.email_backends.ResendBackend u otro backend real."
         )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="") or "noreply@filmai.com"
-# API key de Resend (https://resend.com/api-keys). Solo la usa ResendBackend.
 RESEND_API_KEY = config("RESEND_API_KEY", default="")
-# Sin dominio propio verificado, Resend solo permite enviar al email dueño de
-# la cuenta. Si se define, TODOS los emails salientes se redirigen a esta
-# dirección (testing end-to-end). Solo permitido en desarrollo: en producción
-# se rechaza al arranque (ver validar_configuracion_email).
+# Solo desarrollo: redirige todos los emails a esta dirección.
 RESEND_TEST_RECIPIENT = config("RESEND_TEST_RECIPIENT", default="")
 
-# En producción, un backend de Resend mal configurado debe romper el arranque
-# antes que degradar el envío o redirigir emails silenciosamente.
 validar_configuracion_email(
     debug=DEBUG,
     email_backend=EMAIL_BACKEND,
@@ -283,9 +215,6 @@ validar_configuracion_email(
     resend_test_recipient=RESEND_TEST_RECIPIENT,
 )
 
-# --- Logging ---
-# Mínimo para poder probar el envío de emails: cada envío vía Resend queda
-# visible en `docker compose logs -f backend`.
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -308,14 +237,9 @@ LOGGING = {
     },
 }
 
-# --- URL del frontend (SPA Next.js) ---
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
 
-# --- Caché ---
-# Producción usa Redis (compartido entre workers): los `ScopedRateThrottle` de
-# DRF (recuperar_contrasena, restablecer_contrasena, username_disponible) usan
-# la caché "default" y así aplican los límites globalmente. Desarrollo usa
-# LocMem (por proceso, suficiente para un solo worker).
+# Redis en producción comparte caché y rate limits entre workers.
 REDIS_URL = config("REDIS_URL", default="redis://redis:6379/0")
 if DEBUG:
     CACHES = {
@@ -339,12 +263,9 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = "nombre_usuario"
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "correo"
 ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
-
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-# La validez del enlace de confirmación es de 1 día (allauth solo soporta
-# días enteros). La marca va en cada template: el prefijo queda vacío para
-# no duplicar "[FilmAI]" en los asuntos.
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1 # La validez del enlace de confirmación es de 1 día (allauth solo soporta días enteros).
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
 # Google verifica el email por su cuenta: no se reenvía confirmación.
@@ -354,7 +275,6 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
-        # Credenciales OAuth desde el entorno (.env). Ver .env.example.
         "APPS": [
             {
                 "client_id": config("GOOGLE_CLIENT_ID", default="") or "",
@@ -377,8 +297,7 @@ REST_AUTH = {
     "JWT_AUTH_HTTPONLY": True,
     "JWT_AUTH_SAMESITE": "Lax",
     "JWT_AUTH_SECURE": config("JWT_AUTH_SECURE", default="True", cast=bool),
-    # Al autenticar por cookie httpOnly (sin header Bearer) se exige el token
-    # CSRF en mutaciones: el frontend manda `X-CSRFToken` (cookie `csrftoken`).
+    # Al autenticar por cookie httpOnly (sin header Bearer) se exige el token CSRF en mutaciones: el frontend manda `X-CSRFToken` (cookie `csrftoken`).
     "JWT_AUTH_COOKIE_USE_CSRF": True,
     "REGISTER_SERIALIZER": "usuarios.serializers.RegisterSerializer",
     "LOGIN_SERIALIZER": "usuarios.serializers.LoginSerializer",
