@@ -35,6 +35,21 @@ en este repositorio.
   - Frontend: `npx prettier --check .` (o `npm run format:check`)
 - No declarar "listo" si hay archivos sin formatear.
 
+## 5. Mantener actualizado el grafo de conocimiento (graphify)
+
+- El repositorio mantiene un grafo de conocimiento en `graphify-out/`
+  (ver `graph.html`, `graph.json` y `GRAPH_REPORT.md`) generado con **graphify**.
+- **Directiva**: ejecutar `graphify update .` periódicamente para mantener el
+  grafo sincronizado con el estado real del repositorio.
+- **Momento conveniente**: al finalizar una tarea que haya creado o modificado
+  archivos relevantes (código, docs, specs, config), ANTES de dar el OK al usuario
+  o de crear el commit, de modo que el grafo actualizado quede versionado en el
+  mismo commit.
+- `graphify update .` es incremental: solo re-extrae los archivos
+  nuevos/modificados y no requiere LLM cuando los cambios son solo de código.
+- `graphify-out/` se versiona en git (salvo `cache/`, `.graphify_python`,
+  `.graphify_root` y los backups automáticos, que están en `.gitignore`).
+
 ## Contexto técnico
 
 - **Backend**: Django 5.1 + Django REST Framework, PostgreSQL 16, Redis, Celery
