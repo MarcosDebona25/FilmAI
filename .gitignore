@@ -45,3 +45,10 @@ next-env.d.ts
 # --- Sistema ---
 *.atl
 Thumbs.db
+
+# --- Graphify (grafo de conocimiento) ---
+graphify-out/cache/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/.graphify_labels.json.sig
+graphify-out/20*/

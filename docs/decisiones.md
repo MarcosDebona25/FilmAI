@@ -5,6 +5,24 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 10/09/2026 — Grafo de conocimiento con graphify y directiva de actualización periódica
+
+- **Descripción**: se incorporó un grafo de conocimiento del repositorio generado
+  con **graphify** (`/graphify`, outputs en `graphify-out/`: `graph.html`,
+  `graph.json`, `GRAPH_REPORT.md`). Se agregó la directiva en `AGENTS.md` (§5)
+  de ejecutar `graphify update .` periódicamente para mantener el grafo al día.
+  Momento conveniente elegido: al finalizar una tarea que haya creado o modificado
+  archivos relevantes, ANTES de dar el OK al usuario o de crear el commit, para que
+  el grafo actualizado quede versionado en el mismo commit. `graphify-out/` se
+  versiona en git excepto `cache/`, `.graphify_python`, `.graphify_root`, la firma
+  de labels y los backups automáticos (en `.gitignore`).
+- **Motivo**: el usuario pidió mantener actualizado el grafo tras cada commit,
+  y que la actualización ocurra ANTES del commit para que el grafo actualizado se
+  suba con el cambio.
+- **Archivos**: `AGENTS.md`, `.gitignore`, `graphify-out/` (nuevo).
+
+---
+
 ## 08/09/2026 — Auditoría de consistencia y normalización documental end-to-end
 
 - **Descripción**: se auditó el estado real del repositorio contra los docs 01–06,
