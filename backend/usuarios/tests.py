@@ -11,8 +11,9 @@ from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialApp
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from django.core import mail
+from django.core.management import call_command
 from django.http import HttpRequest
-from django.test import Client, TestCase
+from django.test import Client, TestCase, TransactionTestCase
 from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
@@ -20,6 +21,7 @@ from rest_framework.test import APIRequestFactory
 from .adapter import UsuarioSocialAccountAdapter
 from .factories import UsuarioFactory
 from .models import EstadoCuenta, Usuario
+from .provisioning import LISTAS_PREDETERMINADAS
 from .serializers import GoogleSocialLoginSerializer
 
 
@@ -608,3 +610,59 @@ class CsrfCookieTests(TestCase):
         # 4. Con el header CSRF (valor actual) → aceptada.
         con_header = cliente.post("/api/auth/logout/", HTTP_X_CSRFTOKEN=csrf)
         self.assertEqual(con_header.status_code, 200)
+
+
+class RecursosPredeterminadosTests(TestCase):
+    def _crear_usuario(self, correo="recursos@filmai.com"):
+        return Usuario.objects.create_user(
+            correo=correo,
+            password="Password123!",
+            nombre_usuario="recursos123",
+            nombre="Recursos",
+            apellido="Predeterminados",
+            fecha_nacimiento="2000-01-01",
+            genero="no_especifica",
+        )
+
+    def test_usuario_nuevo_recibe_listas_y_chat_del_mvp(self):
+        usuario = self._crear_usuario()
+
+        self.assertEqual(usuario.listas.count(), 3)
+        self.assertEqual(
+            set(usuario.listas.values_list("nombre", flat=True)),
+            set(LISTAS_PREDETERMINADAS),
+        )
+        self.assertEqual(usuario.chats.count(), 1)
+
+    def test_comando_repara_recursos_faltantes_sin_duplicarlos(self):
+        usuario = self._crear_usuario()
+        usuario.listas.all().delete()
+        usuario.chats.all().delete()
+
+        call_command("reparar_recursos_usuarios", "--usuario-id", usuario.pk)
+        call_command("reparar_recursos_usuarios", "--usuario-id", usuario.pk)
+
+        self.assertEqual(usuario.listas.count(), 3)
+        self.assertEqual(usuario.chats.count(), 1)
+
+
+class RecursosPredeterminadosRollbackTests(TransactionTestCase):
+    def test_fallo_al_crear_chat_revierte_usuario_y_listas(self):
+        with (
+            patch(
+                "chatbot.models.Chat.objects.get_or_create",
+                side_effect=RuntimeError("fallo simulado"),
+            ),
+            self.assertRaisesMessage(RuntimeError, "fallo simulado"),
+        ):
+            Usuario.objects.create_user(
+                correo="rollback@filmai.com",
+                password="Password123!",
+                nombre_usuario="rollback123",
+                nombre="Rollback",
+                apellido="Prueba",
+                fecha_nacimiento="2000-01-01",
+                genero="no_especifica",
+            )
+
+        self.assertFalse(Usuario.objects.filter(correo="rollback@filmai.com").exists())

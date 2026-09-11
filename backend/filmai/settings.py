@@ -12,8 +12,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
+
 from filmai.email_validation import validar_configuracion_email
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -143,7 +145,7 @@ STATIC_URL = "static/"
 # Default primary key field type: https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-#FilmAI usa su propio modelo de usuario (usuarios.Usuario) en lugar del auth.User por defecto de Django.
+# FilmAI usa su propio modelo de usuario (usuarios.Usuario) en lugar del auth.User por defecto de Django.
 AUTH_USER_MODEL = "usuarios.Usuario"
 
 # Django REST Framework
@@ -154,8 +156,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "EXCEPTION_HANDLER": "catalogo.exceptions.tmdb_exception_handler",
     "DEFAULT_THROTTLE_RATES": {
-        "recuperar_contrasena": "1/min", # 1 solicitud de email por minuto por IP para recuperar contraseña
-        "restablecer_contrasena": "5/min", # 5 intentos de restablecer contraseña por minuto por IP
+        "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña
+        "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
     },
@@ -265,7 +267,7 @@ ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1 # La validez del enlace de confirmación es de 1 día (allauth solo soporta días enteros).
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # La validez del enlace de confirmación es de 1 día (allauth solo soporta días enteros).
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
 # Google verifica el email por su cuenta: no se reenvía confirmación.

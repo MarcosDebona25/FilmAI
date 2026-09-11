@@ -1100,3 +1100,21 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   por qué Google "no funciona" cuando el problema es una cuenta preexistente
   con contraseña.
 - **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`.
+## 11/09/2026 — Provisión atómica de recursos iniciales de usuario
+
+- **Fecha**: 11/09/2026
+- **Descripción**: se mantiene la señal `post_save` como disparador único de
+  las listas y el chat inicial, pero cada flujo de alta se envuelve en una
+  transacción para que un fallo revierta también el `Usuario`. El MVP requiere
+  exactamente un chat por usuario; se agrega una restricción de unicidad sobre
+  `Chat.usuario`. La futura funcionalidad de chats múltiples reemplazará esa
+  restricción mediante una migración. Se incorpora el comando idempotente
+  `reparar_recursos_usuarios` para auditar y reparar datos históricos o
+  importados; no se ejecuta en el login ni en cada request.
+- **Motivo**: antes, la transacción de la señal sólo protegía listas y chat,
+  por lo que una falla podía dejar una cuenta persistida e incompleta.
+- **Archivos**: `backend/usuarios/models.py`, `backend/usuarios/adapter.py`,
+  `backend/usuarios/serializers.py`, `backend/usuarios/signals.py`,
+  `backend/usuarios/provisioning.py`,
+  `backend/usuarios/management/commands/reparar_recursos_usuarios.py`,
+  `backend/chatbot/models.py`, su migración y pruebas.

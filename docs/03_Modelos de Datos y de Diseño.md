@@ -63,7 +63,7 @@ El desarrollo se fundamenta en una arquitectura MVC (Model-View-Controller) apoy
 
 **Sincronización con TMDB:** La actualización del catálogo se realiza mediante tareas Celery (beat diario a las 3 AM, ejecutadas por workers) en horario de baja actividad. Este proceso sincroniza los metadatos completos (título, póster, sinopsis, reparto, directores, géneros, calificación promedio, duración, temporadas y episodios) de las producciones populares, en tendencia y novedades desde TMDB hacia la tabla ProduccionAudiovisual, y encola la generación de embeddings de las producciones nuevas o modificadas. La sincronización respeta los límites de uso de la API de TMDB y utiliza mecanismos de caché para evitar solicitudes duplicadas (CU-021). Es un mecanismo de mantenimiento/seed, no un prerrequisito del discovery, que se sirve en vivo desde TMDB con caché Redis (decisión 25/08/2026).
 
-**Chats múltiples:** El modelo de clases contempla la posibilidad de chats múltiples por usuario (1..*), pero en la versión inicial (MVP) solo se implementará un chat por usuario. La funcionalidad de chats múltiples queda documentada como mejora futura.
+**Chats múltiples:** El modelo de clases contempla la posibilidad de chats múltiples por usuario (1..*), pero en la versión inicial (MVP) solo se implementa un chat por usuario, garantizado por una restricción de unicidad sobre `Chat.usuario`. La funcionalidad de chats múltiples queda documentada como mejora futura y requerirá reemplazar esa restricción mediante una migración.
 
 En la entidad Mensaje, el atributo autor permite distinguir si el mensaje proviene del usuario o del chatbot, sin necesidad de crear una segunda entidad para manejar los roles dentro del chat.
 
