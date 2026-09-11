@@ -1,28 +1,6 @@
-"""
-Modelos de la app `usuarios`.
-
-FilmAI usa un único modelo de usuario (`Usuario`) como `AUTH_USER_MODEL`,
-en lugar de heredar de `auth.User`. La jerarquía original del diagrama de
-clases (Persona → Usuario/Administrador) se unificó en una sola entidad:
-
-    Persona ──┬── Usuario          (antes: 3 tablas, herencia multi-tabla)
-              └── Administrador
-    --------------------------------------
-    Usuario (AbstractBaseUser + PermissionsMixin)   (ahora: 1 sola tabla)
-
-Motivo: la gestión de administradores se realiza a través del Django Admin
-nativo (Módulo 6, AD-01'), que usa flags del propio usuario (`is_staff`,
-`is_superuser`) y no una entidad separada. El "rol administrador" es un
-atributo del usuario, no una clase distinta.
-
-Nota sobre el campo `password`: se hereda de `AbstractBaseUser` (VARCHAR(128),
-compatible con el hash de bcrypt, RNF #2). En el diagrama de datos corresponde
-al campo `contraseña`.
-"""
-
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.db import models
+from django.db import models, transaction
 
 
 class EstadoCuenta(models.TextChoices):
@@ -51,8 +29,7 @@ class Tema(models.TextChoices):
 class UsuarioManager(BaseUserManager):
     """Manager que usa `correo` como identificador de autenticación.
 
-    `create_user`/`create_superuser` normalizan el correo y aplican el hash de
-    contraseña a través de `set_password`.
+    `create_user`/`create_superuser` normalizan el correo y aplican el hash de contraseña a través de `set_password`.
     """
 
     use_in_migrations = True
@@ -63,7 +40,8 @@ class UsuarioManager(BaseUserManager):
         correo = self.normalize_email(correo)
         usuario = self.model(correo=correo, **extra_fields)
         usuario.set_password(password)
-        usuario.save(using=self._db)
+        with transaction.atomic(using=self._db):
+            usuario.save(using=self._db)
         return usuario
 
     def create_user(self, correo, password=None, **extra_fields):
@@ -85,12 +63,7 @@ class UsuarioManager(BaseUserManager):
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
-    """Cliente de la plataforma y, según sus flags, administrador del panel.
-
-    Concentra los campos de identidad que antes vivían en `Persona`
-    (`nombre_usuario`, `correo`, `google_id`) junto con los campos propios
-    del usuario y los flags técnicos de Django.
-    """
+    """Cliente de la plataforma y, según sus flags, administrador del panel."""
 
     nombre_usuario = models.CharField(
         "nombre de usuario",
@@ -102,7 +75,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         "correo electrónico",
         max_length=100,
         unique=True,
-        help_text="Formato usuario@dominio.com (CU-001).",
+        help_text="Formato correo@dominio.com (CU-001).",
     )
     google_id = models.CharField(
         "id de Google",
@@ -110,7 +83,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         unique=True,
         null=True,
         blank=True,
-        help_text="Solo para cuentas creadas con Google OAuth (doc 03).",
+        help_text="Solo para cuentas creadas con Google OAuth",
     )
     nombre = models.CharField("nombre", max_length=50)
     apellido = models.CharField("apellido", max_length=50)
@@ -126,7 +99,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     avatar_id = models.PositiveSmallIntegerField(
         "id de avatar",
         default=1,
-        help_text="Identificador dentro del conjunto de 20 avatares (doc 03).",
+        help_text="Identificador dentro del conjunto de  avatares",
     )
     tema = models.CharField(
         "tema",
@@ -139,9 +112,6 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     notif_resenas = models.BooleanField("notif. reseñas", default=True)
     notif_novedades = models.BooleanField("notif. novedades", default=True)
 
-    # --- Flags técnicos de Django ---
-    # `is_staff` define el rol administrador (acceso al Django Admin). No forma
-    # parte del ciclo de vida de la cuenta, por eso no vive en `estado`.
     is_staff = models.BooleanField(
         "es staff",
         default=False,
@@ -150,21 +120,12 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     @property
     def is_active(self):
-        """Logueable solo si la cuenta está en estado Activa.
-
-        Se deriva de `estado` para no duplicar la fuente de verdad: Django
-        consulta este atributo en el login (ModelBackend.user_can_authenticate).
-        """
+        """Logueable solo si la cuenta está en estado Activa."""
         return self.estado == EstadoCuenta.ACTIVA
 
     @is_active.setter
     def is_active(self, value):
-        """Permite que Django/allauth activen la cuenta (`is_active = True`).
-
-        Solo actúa sobre `True` (estado → ACTIVA). `False` es un no-op para no
-        degradar el estado: la "baja" es un flujo de negocio explícito, no un
-        toggle. Ver docs/decisiones.md (22/08/2026, Opción A1).
-        """
+        """Permite que Django/allauth activen la cuenta (`is_active = True`)"""
         if value:
             self.estado = EstadoCuenta.ACTIVA
 

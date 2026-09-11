@@ -17,6 +17,7 @@ convención y aplican el ciclo de vida definido en `docs/decisiones.md`:
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
+from django.db import transaction
 from django.utils.dateparse import parse_date
 
 from .models import EstadoCuenta, TipoGenero
@@ -43,7 +44,8 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
         else:
             user.set_unusable_password()
         if commit:
-            user.save()
+            with transaction.atomic():
+                user.save()
         return user
 
     def confirm_email(self, request, email_address):
@@ -70,6 +72,11 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
 
 class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
     """Adaptador social (Google OAuth) para `usuarios.Usuario`."""
+
+    def save_user(self, request, sociallogin, form=None):
+        """Persiste el alta social junto con los recursos del usuario."""
+        with transaction.atomic():
+            return super().save_user(request, sociallogin, form)
 
     def populate_user(self, request, sociallogin, data):
         """Construye el `Usuario` a partir del perfil de Google.

@@ -49,6 +49,12 @@ class Chat(models.Model):
         verbose_name = "chat"
         verbose_name_plural = "chats"
         ordering = ["-fecha", "-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario"],
+                name="uq_chat_usuario_mvp",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.titulo} ({self.usuario})"

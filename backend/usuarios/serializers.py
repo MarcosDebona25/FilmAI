@@ -32,7 +32,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.http import HttpResponseBadRequest
 from django.template.loader import render_to_string
 from requests.exceptions import HTTPError, RequestException
@@ -293,7 +293,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
         if not login.is_existing:
             login.lookup()
             try:
-                login.save(request, connect=True)
+                with transaction.atomic():
+                    login.save(request, connect=True)
             except IntegrityError as err:
                 raise serializers.ValidationError(
                     "El correo o nombre de usuario ya está registrado."
