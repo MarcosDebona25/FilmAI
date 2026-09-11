@@ -863,3 +863,71 @@ class LoginDualTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 403)
+
+
+class AvatarValidacionTests(TestCase):
+    """Tests para la validación de avatar_id.
+
+    Verifica que solo se acepten avatar_id válidos según el registro
+    centralizado de avatares.
+    """
+
+    def test_avatar_id_valido_es_aceptado(self):
+        """Un avatar_id válido debe ser aceptado."""
+        from .avatares import AVATAR_IDS_VALIDOS
+
+        for avatar_id in AVATAR_IDS_VALIDOS:
+            with self.subTest(avatar_id=avatar_id):
+                usuario = UsuarioFactory(avatar_id=avatar_id)
+                self.assertEqual(usuario.avatar_id, avatar_id)
+
+    def test_avatar_id_invalido_es_rechazado_en_serializer(self):
+        """Un avatar_id inválido debe ser rechazado por el serializer."""
+        from .serializers import UsuarioPerfilSerializer
+
+        usuario = UsuarioFactory()
+        serializer = UsuarioPerfilSerializer(
+            instance=usuario,
+            data={"avatar_id": 999},
+            partial=True,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("avatar_id", serializer.errors)
+
+    def test_avatar_id_cero_es_rechazado(self):
+        """avatar_id = 0 debe ser rechazado (no está en el registro)."""
+        from .serializers import UsuarioPerfilSerializer
+
+        usuario = UsuarioFactory()
+        serializer = UsuarioPerfilSerializer(
+            instance=usuario,
+            data={"avatar_id": 0},
+            partial=True,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("avatar_id", serializer.errors)
+
+    def test_avatar_id_negativo_es_rechazado(self):
+        """avatar_id negativo debe ser rechazado."""
+        from .serializers import UsuarioPerfilSerializer
+
+        usuario = UsuarioFactory()
+        serializer = UsuarioPerfilSerializer(
+            instance=usuario,
+            data={"avatar_id": -1},
+            partial=True,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("avatar_id", serializer.errors)
+
+    def test_registro_centralizado_de_avatares(self):
+        """El registro centralizado debe existir y tener avatares válidos."""
+        from .avatares import AVATARES, AVATAR_IDS_VALIDOS, es_avatar_valido
+
+        # Debe tener al menos un avatar
+        self.assertGreater(len(AVATARES), 0)
+        # El ID 1 debe existir (default)
+        self.assertIn(1, AVATARES)
+        # es_avatar_valido debe funcionar correctamente
+        self.assertTrue(es_avatar_valido(1))
+        self.assertFalse(es_avatar_valido(999))

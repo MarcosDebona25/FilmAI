@@ -6,6 +6,7 @@ Se usan únicamente para sembrar datos de desarrollo (`python manage.py seed`).
 
 import factory
 
+from .avatares import AVATAR_IDS_VALIDOS
 from .models import EstadoCuenta, Tema, TipoGenero, Usuario
 
 
@@ -27,7 +28,7 @@ class UsuarioFactory(factory.django.DjangoModelFactory):
     fecha_nacimiento = factory.Faker("date_of_birth", minimum_age=18, maximum_age=60)
     genero = factory.Iterator(TipoGenero.values)
     estado = EstadoCuenta.ACTIVA
-    avatar_id = factory.Faker("random_int", min=1, max=20)
+    avatar_id = factory.Iterator(sorted(AVATAR_IDS_VALIDOS))
     tema = Tema.OSCURO
 
     @classmethod
