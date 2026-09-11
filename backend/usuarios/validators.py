@@ -10,12 +10,11 @@ import re
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
-# Alfanumérico, 5-25 caracteres (CU-001). Se reutiliza en los serializers.
+# Nombre de usuario alfanumérico, 5-25 caracteres (CU-001)
 USERNAME_REGEX = re.compile(r"^[A-Za-z0-9]{5,25}$")
 
-
 class ComplejidadContrasenaValidator:
-    """Validador de contraseña según las reglas del CU-001 (docs/02)."""
+    """Validador de contraseña según las reglas del CU-001"""
 
     def validate(self, password, user=None):
         if len(password) < 8 or len(password) > 20:
@@ -46,6 +45,5 @@ class ComplejidadContrasenaValidator:
 
     def get_help_text(self):
         return _(
-            "8-20 caracteres, con al menos una mayúscula, una minúscula, "
-            "un dígito y un carácter especial (@#$%&*!)."
+            "8-20 caracteres, con al menos una mayúscula, una minúscula, un dígito y un carácter especial (@#$%&*!)."
         )

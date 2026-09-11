@@ -154,7 +154,7 @@ REST_FRAMEWORK = {
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "EXCEPTION_HANDLER": "catalogo.exceptions.tmdb_exception_handler",
+    "EXCEPTION_HANDLER": "filmai.exceptions.filmai_exception_handler",
     "DEFAULT_THROTTLE_RATES": {
         "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP

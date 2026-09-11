@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/serializers.py": {
-    "mtime": 1789140367.3293393,
-    "seen": 1789140491.973989,
-    "ast_hash": "d700531e819718214783a799a841bf56",
+    "mtime": 1789152122.1652815,
+    "seen": 1789152131.5296824,
+    "ast_hash": "ba509c0f4b5f099e4ae77c436c46d9a9",
     "semantic_hash": ""
   },
   "backend/usuarios/signals.py": {
@@ -396,10 +396,10 @@
     "semantic_hash": ""
   },
   "backend/usuarios/validators.py": {
-    "mtime": 1787443168.3111043,
-    "seen": 1789054976.1081722,
-    "ast_hash": "1ef5b6580a65f75835fd5338ce2d81fd",
-    "semantic_hash": "1ef5b6580a65f75835fd5338ce2d81fd"
+    "mtime": 1789151184.3671405,
+    "seen": 1789152099.2664456,
+    "ast_hash": "8fa5a9fbaa0044bbd4cfbe12c38110c8",
+    "semantic_hash": ""
   },
   "backend/usuarios/views.py": {
     "mtime": 1788017399.1160963,
@@ -1383,6 +1383,12 @@
     "mtime": 1789140638.3782604,
     "seen": 1789140653.4060488,
     "ast_hash": "5e57ca9b9bcee5cb8e1aa9f65609a33a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/transparent-dev/SKILL.md": {
+    "mtime": 1789145014.7293766,
+    "seen": 1789152099.2695572,
+    "ast_hash": "1707702f01e55e4bc17ac7011b1b9d83",
     "semantic_hash": ""
   }
 }
