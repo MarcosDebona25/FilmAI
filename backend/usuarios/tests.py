@@ -8,7 +8,7 @@ from typing import ClassVar
 from unittest.mock import patch
 
 from allauth.account.models import EmailAddress
-from allauth.socialaccount.models import SocialApp
+from allauth.socialaccount.models import SocialAccount, SocialApp
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from django.core import mail
 from django.core.management import call_command
@@ -489,6 +489,43 @@ class GoogleOAuthTests(TestCase):
             ),
         ):
             self.assertTrue(serializer.is_valid())
+
+    def test_login_cuenta_existente_preserva_nombre_y_apellido_de_filmai(self):
+        """El login no debe sobrescribir cambios de perfil hechos en FilmAI."""
+        usuario = UsuarioFactory(
+            nombre="Nombre elegido",
+            apellido="Apellido elegido",
+        )
+        SocialAccount.objects.create(
+            user=usuario,
+            provider="google",
+            uid="google-sub-123",
+        )
+        serializer, _ = self._serializer_google()
+        login = self._login_mock()
+        login.user = usuario
+        login.account.user = usuario
+        app = self._app()
+
+        with (
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch(
+                "usuarios.serializers.complete_social_login",
+                side_effect=lambda _request, social_login: setattr(
+                    social_login, "is_existing", True
+                ),
+            ),
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=app),
+            ),
+        ):
+            self.assertTrue(serializer.is_valid())
+
+        usuario.refresh_from_db()
+        self.assertEqual(usuario.nombre, "Nombre elegido")
+        self.assertEqual(usuario.apellido, "Apellido elegido")
 
     def test_registro_cuenta_nueva_sin_campos_devuelve_error(self):
         """Una cuenta de Google NUEVA (sin SocialAccount) exige los campos que
