@@ -1,3 +1,23 @@
+"""
+Configuración de URLs de FilmAI.
+
+PARÁMETROS EN URLs:
+===================
+
+Route Parameters (en la ruta):
+- account-confirm-email/<key>: Clave de confirmación de email (allauth)
+
+Query Parameters (en el body o URL):
+- /api/auth/login/: email/username + password (body JSON)
+- /api/auth/registration/: correo, nombre_usuario, nombre, apellido, fecha_nacimiento, genero, password (body JSON)
+- /api/auth/password/reset/: email (body JSON)
+- /api/auth/password/reset/confirm/: uid, token, password1, password2 (body JSON)
+- /api/auth/username-available/: nombre_usuario (body JSON)
+- /api/auth/google/: id_token + campos extra (body JSON)
+
+Todos los parámetros son validados en los serializers correspondientes.
+"""
+
 from dj_rest_auth.registration.views import ResendEmailVerificationView
 from django.contrib import admin
 from django.urls import include, path, re_path
@@ -13,6 +33,10 @@ from usuarios.views import (
     RestablecerContrasenaView,
     UsernameDisponibleView,
 )
+
+# Manejadores personalizados de errores HTTP
+handler404 = "filmai.views.custom_404"
+handler500 = "filmai.views.custom_500"
 
 urlpatterns = [
     path("admin/", admin.site.urls),

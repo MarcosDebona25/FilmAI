@@ -1,14 +1,3 @@
-"""
-Serializers de autenticación: registro tradicional (CU-001) y Google OAuth.
-
-- `RegisterSerializer`: extiende el de dj-rest-auth para aceptar los 8 campos
-  del modelo `Usuario` (correo, nombre_usuario, nombre, apellido,
-  fecha_nacimiento, genero, password1, password2).
-- `GoogleSocialLoginSerializer`: login con Google mediante `id_token` (Google
-  Identity Services). Para usuarios nuevos valida los campos que Google no
-  provee; la persistencia la hace `UsuarioSocialAccountAdapter.populate_user`.
-"""
-
 import logging
 import re
 from datetime import date
@@ -40,22 +29,16 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from .models import EstadoCuenta, TipoGenero, Usuario
+from .validators import USERNAME_REGEX
 
 logger = logging.getLogger(__name__)
 
-USERNAME_REGEX = re.compile(r"^[A-Za-z0-9]{5,25}$")
-
-# Campos que Google no provee y debe completar un usuario nuevo (docs/04:707).
+# Campos que Google no provee y debe completar un usuario nuevo
 CAMPOS_FALTANTES_GOOGLE = ("nombre_usuario", "fecha_nacimiento", "genero")
 
 
 class LoginSerializer(BaseLoginSerializer):
-    """Login por credenciales distinguiendo cuenta no activada (403).
-
-    El backend por defecto devuelve 400 genérico para credenciales inválidas;
-    acá detectamos el caso "cuenta existe pero no está activa" (estado
-    pendiente o baja) y devolvemos 403 con un mensaje claro.
-    """
+    """Login por credenciales con errores específicos para cuentas inactivas."""
 
     def validate(self, attrs):
         email = attrs.get("email")
@@ -78,15 +61,7 @@ class LoginSerializer(BaseLoginSerializer):
 
     @staticmethod
     def validate_email_verification_status(user, email=None):
-        """No-op: la verificación de email la cubre el ciclo `estado`.
-
-        dj-rest-auth chequea `user.emailaddress_set.filter(email=user.email, ...)`
-        usando `user.email` (hardcodeado), que no existe en `usuarios.Usuario`
-        (nuestro campo es `correo`). Además bloquearía a usuarios activos sin
-        `EmailAddress` (p.ej. los del seed). Como una cuenta solo queda ACTIVA
-        tras confirmar el correo (`confirm_email`), el login ya está gated por
-        `is_active`.
-        """
+        """La activación por ``estado`` reemplaza el chequeo de allauth."""
         return None
 
 
@@ -102,7 +77,7 @@ class RegisterSerializer(BaseRegisterSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # El serializer base trae `username`/`email`; usamos `nombre_usuario`/`correo`.
+        # El serializer heredado trae los campos convencionales username y email. Se eliminan para reemplazarlos por nombre_usuario y correo.
         self.fields.pop("username", None)
         self.fields.pop("email", None)
 
@@ -146,16 +121,7 @@ class RegisterSerializer(BaseRegisterSerializer):
 
 
 class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
-    """Login/registro con Google OAuth (flujo `id_token`).
-
-    Distingue dos casos según exista o no un `SocialAccount` vinculado al
-    `uid` de Google: si existe, es un login (no se exigen campos extra); si no,
-    es un registro nuevo y Google no provee `nombre_usuario`, `fecha_nacimiento`
-    ni `genero`, que se validan aquí (pantalla intermedia del frontend). La
-    creación del `Usuario` con estos campos la realiza
-    `UsuarioSocialAccountAdapter.populate_user`, que los recibe pegados al
-    request (`request.google_extra`) en vez de releer el body (consumido por DRF).
-    """
+    """Login y registro con Google mediante ``id_token``."""
 
     nombre_usuario = serializers.CharField(max_length=25, required=False)
     fecha_nacimiento = serializers.DateField(
@@ -196,16 +162,10 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
 
         adapter = adapter_class(request)
         app = adapter.get_provider().app
-        # allauth's base `parse_token` espera la clave `access_token`; para el
-        # flujo id_token de Google se pasa el id_token en ambas claves (el
-        # adaptador decodifica el id_token desde `response` en complete_login).
+        # allauth espera `access_token`, aun en el flujo de `id_token` de Google.
         token = adapter.parse_token({"access_token": id_token, "id_token": id_token})
         token.app = app
-        # Los campos que Google no provee viajan al adapter pegados al request,
-        # no releídos de `request.body`: en un view de DRF el body ya fue
-        # consumido por el parser al construir `request.data`, y releerlo dentro
-        # de `populate_user` lanza RawPostDataException (500). Ver
-        # docs/decisiones.md (26/08/2026).
+        # DRF ya consumió el body; el adapter recibe estos datos desde el request.
         request.google_extra = {
             campo: attrs.get(campo) for campo in CAMPOS_FALTANTES_GOOGLE
         }
@@ -226,21 +186,13 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 "No se pudo autenticar con Google."
             ) from err
 
-        # Determinar si la cuenta de Google YA está vinculada (login) o es
-        # nueva (registro). `login.is_existing` todavía es False acá porque
-        # allauth recién resuelve el `lookup()` dentro de `complete_social_login`;
-        # por eso se consulta el `SocialAccount` directamente, con el mismo
-        # criterio que el `_lookup_by_socialaccount` interno de allauth. Sin
-        # esto, el login de una cuenta existente siempre caía en la rama de
-        # "campos faltantes" (400) y el frontend la mandaba a /completar-google.
+        # allauth todavía no resolvió `is_existing`; consultamos el vínculo directo.
         es_existente = SocialAccount.objects.filter(
             provider=login.account.provider, uid=login.account.uid
         ).exists()
 
         if not es_existente:
-            # Campos que Google no provee: obligatorios para cuentas nuevas.
-            # Validar ANTES de complete_social_login para evitar que allauth
-            # persista un usuario incompleto.
+            # Google no provee estos campos obligatorios del perfil FilmAI.
             faltantes = [
                 campo for campo in CAMPOS_FALTANTES_GOOGLE if not attrs.get(campo)
             ]
@@ -251,22 +203,13 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                     )
                 )
 
-            # Email duplicado también ANTES de complete_social_login: con
-            # SOCIALACCOUNT_AUTO_SIGNUP=True allauth puede crear el usuario
-            # dentro de esa llamada (p.ej. si el usuario existente no tiene
-            # `EmailAddress`, como los del seed), y entonces este chequeo a
-            # posteriori llegaría tarde: la fila ya estaría persistida pese a
-            # responderse 400. La unique de PostgreSQL solo cubre el caso
-            # exacto, no el insensible a mayúsculas.
+            # Evita que allauth persista una cuenta con correo duplicado.
             if allauth_account_settings.UNIQUE_EMAIL:
                 user_obj = getattr(login, "user", None) or getattr(
                     getattr(login, "account", None), "user", None
                 )
                 correo = getattr(user_obj, "correo", None)
                 if correo and Usuario.objects.filter(correo__iexact=correo).exists():
-                    # Mensaje deliberadamente explícito: la gente llega acá
-                    # intentando "crear cuenta con Google" y no entiende el
-                    # rechazo si ya registró ese correo de forma tradicional.
                     raise serializers.ValidationError(
                         "Ya existe una cuenta registrada con este correo."
                         " Iniciá sesión con tu contraseña."
@@ -330,22 +273,11 @@ class UsuarioDetallesSerializer(serializers.ModelSerializer):
 
 
 class EnlaceRestablecimientoInvalido(Exception):
-    """El `uid` o el `token` del enlace de restablecimiento son inválidos.
-
-    Se lanza desde `validate()` y la vista la convierte en
-    `400 {"codigo": "invalido"}` (mismo contrato que ConfirmarCorreoView).
-    Django no distingue token inválido de expirado (`check_token` devuelve
-    False en ambos casos), así que un único código alcanza.
-    """
+    """Señala un ``uid`` o token de restablecimiento inválido o vencido."""
 
 
 class RecuperarContrasenaSerializer(serializers.Serializer):
-    """Solicitud de restablecimiento de contraseña (CU-020).
-
-    Envía un email con un enlace al frontend solo si existe una cuenta ACTIVA
-    con ese correo; en cualquier otro caso no hace nada. La respuesta HTTP es
-    idéntica siempre para no revelar si el correo está registrado.
-    """
+    """Solicitud de restablecimiento sin revelar si un correo está registrado."""
 
     email = serializers.EmailField()
 
@@ -360,8 +292,6 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
         uid = user_pk_to_url_str(usuario)
         token = default_token_generator.make_token(usuario)
         reset_url = f"{settings.FRONTEND_URL}/restablecer-contrasena/{uid}/{token}/"
-        # Clave "user" para ser consistente con los templates de allauth
-        # (los de confirmación también la usan).
         contexto = {"user": usuario, "reset_url": reset_url}
 
         try:
@@ -382,9 +312,7 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
                 html_message=cuerpo_html,
             )
         except Exception:
-            # Un fallo en el render o en el envío no debe romper el request ni
-            # revelar que la cuenta existe: se loguea y se responde igual que
-            # para un correo desconocido.
+            # Mantiene la misma respuesta para no revelar la existencia de la cuenta.
             logger.exception(
                 "Error enviando email de restablecimiento para %s", usuario.correo
             )
@@ -393,11 +321,7 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
 
 
 class RestablecerContrasenaSerializer(serializers.Serializer):
-    """Confirmación del restablecimiento con nueva contraseña (CU-020).
-
-    Valida el par `uid`/`token` firmado, aplica la política de contraseña del
-    CU-001 vía AUTH_PASSWORD_VALIDATORS y persiste la nueva contraseña.
-    """
+    """Valida el enlace y persiste la nueva contraseña."""
 
     password1 = serializers.CharField()
     password2 = serializers.CharField()
@@ -415,8 +339,7 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
         except (TypeError, ValueError, OverflowError, Usuario.DoesNotExist) as err:
             raise EnlaceRestablecimientoInvalido from err
 
-        # check_token devuelve False por firma inválida O enlace vencido
-        # (PASSWORD_RESET_TIMEOUT = 1 hora).
+        # No distingue un token vencido de uno manipulado.
         if not default_token_generator.check_token(self.usuario, attrs["token"]):
             raise EnlaceRestablecimientoInvalido
 
