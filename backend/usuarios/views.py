@@ -42,6 +42,7 @@ from .serializers import (
     RecuperarContrasenaSerializer,
     RestablecerContrasenaSerializer,
 )
+from .throttles import EmailRateThrottle, EmailThrottleStatusMixin
 from .validators import USERNAME_REGEX
 
 logger = logging.getLogger(__name__)
@@ -223,16 +224,16 @@ class ConfirmarCorreoView(APIView):
         return Response({"detail": "ok"})
 
 
-class RecuperarContrasenaView(APIView):
+class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
     """POST `/api/auth/password/reset/` — solicitud de restablecimiento.
 
     CU-020: responde siempre con el mismo mensaje genérico, exista o no el
-    correo, y aplica rate limit de 1 solicitud por minuto por IP.
+    correo. Aplica rate limit de 5 solicitudes por día por email (no por IP),
+    e informa cuántos intentos restantes le quedan al usuario.
     """
 
     permission_classes: ClassVar[list] = [permissions.AllowAny]
-    throttle_classes: ClassVar[list] = [ScopedRateThrottle]
-    throttle_scope = "recuperar_contrasena"
+    throttle_classes: ClassVar[list] = [EmailRateThrottle]
 
     def post(self, request):
         serializer = RecuperarContrasenaSerializer(
