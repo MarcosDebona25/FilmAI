@@ -57,7 +57,7 @@ def filmai_exception_handler(exc, context):
         if settings.DEBUG:
             logger.exception("Error no manejado: %s", exc)
             return Response(
-                {"detail": f"Error interno del servidor: {str(exc)}"},
+                {"detail": f"Error interno del servidor: {exc!s}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         else:
@@ -69,17 +69,13 @@ def filmai_exception_handler(exc, context):
 
     # Mejorar mensajes de error para mayor claridad
     if isinstance(exc, NotAuthenticated):
-        response.data = {
-            "detail": "Autenticación requerida. Por favor, iniciá sesión."
-        }
+        response.data = {"detail": "Autenticación requerida. Por favor, iniciá sesión."}
     elif isinstance(exc, AuthenticationFailed):
         response.data = {
             "detail": "Credenciales inválidas. Verificá tu correo/nombre de usuario y contraseña."
         }
     elif isinstance(exc, PermissionDenied):
-        response.data = {
-            "detail": "No tenés permisos para realizar esta acción."
-        }
+        response.data = {"detail": "No tenés permisos para realizar esta acción."}
     elif isinstance(exc, MethodNotAllowed):
         response.data = {
             "detail": f"Método HTTP {exc.detail} no permitido para este endpoint."

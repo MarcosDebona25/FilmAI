@@ -13,6 +13,7 @@ from django.utils.translation import gettext as _
 # Nombre de usuario alfanumérico, 5-25 caracteres (CU-001)
 USERNAME_REGEX = re.compile(r"^[A-Za-z0-9]{5,25}$")
 
+
 class ComplejidadContrasenaValidator:
     """Validador de contraseña según las reglas del CU-001"""
 

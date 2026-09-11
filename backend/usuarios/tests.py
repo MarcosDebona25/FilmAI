@@ -333,14 +333,18 @@ class RecuperarContrasenaTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("password1", response.json())
 
-    def test_rate_limit_segunda_solicitud_429(self):
+    def test_rate_limit_email_5_intentos_por_dia(self):
+        """El throttle por email permite 5 solicitudes por día, luego bloquea."""
         self._crear_usuario_activo()
 
-        primera = self._solicitar("recuperar@filmai.com")
-        segunda = self._solicitar("recuperar@filmai.com")
+        # Las primeras 5 solicitudes deben funcionar
+        for i in range(5):
+            response = self._solicitar("recuperar@filmai.com")
+            self.assertEqual(response.status_code, 200, f"Fallo en intento {i + 1}")
 
-        self.assertEqual(primera.status_code, 200)
-        self.assertEqual(segunda.status_code, 429)
+        # La 6ta solicitud debe ser bloqueada (429)
+        sexta = self._solicitar("recuperar@filmai.com")
+        self.assertEqual(sexta.status_code, 429)
 
 
 class GoogleOAuthTests(TestCase):
@@ -368,7 +372,10 @@ class GoogleOAuthTests(TestCase):
         }
 
         usuario = Usuario(correo="google@filmai.com")
-        sociallogin = SimpleNamespace(user=usuario)
+        sociallogin = SimpleNamespace(
+            user=usuario,
+            account=SimpleNamespace(provider="google", uid="google-sub-123"),
+        )
 
         adapter = UsuarioSocialAccountAdapter()
         user = adapter.populate_user(
@@ -719,7 +726,13 @@ class SeguridadCamposAdministradorTests(TestCase):
             correo="comun@filmai.com",
             estado=EstadoCuenta.ACTIVA,
         )
-        self.client.login(email="comun@filmai.com", password="Password123!")
+        # Autenticar usando el endpoint de login
+        response = self.client.post(
+            "/api/auth/login/",
+            {"email": "comun@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
 
     def test_usuario_detalles_no_expone_campos_admin(self):
         """El endpoint /api/auth/user/ no debe exponer campos de administrador."""
@@ -728,7 +741,9 @@ class SeguridadCamposAdministradorTests(TestCase):
         data = response.json()
         # Campos que NO deben estar presentes
         for campo in ("is_staff", "is_superuser", "groups", "user_permissions"):
-            self.assertNotIn(campo, data, f"El campo {campo} no debe exponerse en /api/auth/user/")
+            self.assertNotIn(
+                campo, data, f"El campo {campo} no debe exponerse en /api/auth/user/"
+            )
 
     def test_registro_no_permite_establecer_campos_admin(self):
         """El registro no debe permitir establecer is_staff o is_superuser."""
@@ -785,7 +800,7 @@ class LoginDualTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
-        self.assertIn("access_token", response.json())
+        self.assertIn("access", response.json())
 
     def test_login_por_nombre_usuario_exitoso(self):
         """Login con nombre de usuario y contraseña debe funcionar."""
@@ -795,7 +810,7 @@ class LoginDualTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
-        self.assertIn("access_token", response.json())
+        self.assertIn("access", response.json())
 
     def test_login_correo_insensible_a_mayusculas(self):
         """El login por correo debe ser insensible a mayúsculas."""
@@ -922,7 +937,7 @@ class AvatarValidacionTests(TestCase):
 
     def test_registro_centralizado_de_avatares(self):
         """El registro centralizado debe existir y tener avatares válidos."""
-        from .avatares import AVATARES, AVATAR_IDS_VALIDOS, es_avatar_valido
+        from .avatares import AVATARES, es_avatar_valido
 
         # Debe tener al menos un avatar
         self.assertGreater(len(AVATARES), 0)
