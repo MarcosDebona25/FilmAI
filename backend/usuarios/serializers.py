@@ -29,6 +29,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from .models import EstadoCuenta, TipoGenero, Usuario
+from .avatares import es_avatar_valido
 from .validators import USERNAME_REGEX
 
 logger = logging.getLogger(__name__)
@@ -354,3 +355,52 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
         self.usuario.set_password(self.validated_data["password1"])
         self.usuario.save(update_fields=["password"])
         return self.usuario
+
+
+class UsuarioPerfilSerializer(serializers.ModelSerializer):
+    """Serializer para actualizar el perfil del usuario.
+
+    Solo permite modificar campos seguros (nombre, apellido, fecha_nacimiento,
+    genero, avatar_id, tema, perfil_publico, notificaciones). NO permite
+    modificar campos de administrador (is_staff, is_superuser, etc.) ni
+    campos sensibles (correo, contraseña, estado).
+
+    avatar_id se valida contra el registro centralizado de avatares.
+    """
+
+    class Meta:
+        model = Usuario
+        fields = (
+            "nombre",
+            "apellido",
+            "fecha_nacimiento",
+            "genero",
+            "avatar_id",
+            "tema",
+            "perfil_publico",
+            "notif_recomendaciones",
+            "notif_resenas",
+            "notif_novedades",
+        )
+
+    def validate_avatar_id(self, value):
+        """Valida que avatar_id sea uno de los avatares disponibles."""
+        if not es_avatar_valido(value):
+            from .avatares import AVATAR_IDS_VALIDOS
+
+            raise serializers.ValidationError(
+                f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}"
+            )
+        return value
+
+    def validate_fecha_nacimiento(self, value):
+        """Valida que la fecha de nacimiento no sea futura y el usuario tenga al menos 13 años."""
+        hoy = date.today()
+        if value > hoy:
+            raise serializers.ValidationError(
+                "La fecha de nacimiento no puede ser futura."
+            )
+        edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
+        if edad < 13:
+            raise serializers.ValidationError("Debés tener al menos 13 años.")
+        return value
