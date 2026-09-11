@@ -156,7 +156,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "EXCEPTION_HANDLER": "filmai.exceptions.filmai_exception_handler",
     "DEFAULT_THROTTLE_RATES": {
-        "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña
+        "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña (legacy)
+        "recuperar_contrasena_email": "5/day",  # 5 solicitudes de recuperación por día por email (no por IP)
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
