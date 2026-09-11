@@ -1,5 +1,4 @@
 import logging
-import re
 from datetime import date
 
 from allauth.account import app_settings as allauth_account_settings
@@ -28,8 +27,8 @@ from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from .models import EstadoCuenta, TipoGenero, Usuario
 from .avatares import es_avatar_valido
+from .models import EstadoCuenta, TipoGenero, Usuario
 from .validators import USERNAME_REGEX
 
 logger = logging.getLogger(__name__)

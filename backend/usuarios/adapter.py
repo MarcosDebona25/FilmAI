@@ -103,7 +103,9 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
             user.nombre_usuario = extra.get("nombre_usuario") or ""
 
             fecha = extra.get("fecha_nacimiento")
-            user.fecha_nacimiento = parse_date(fecha) if isinstance(fecha, str) else fecha
+            user.fecha_nacimiento = (
+                parse_date(fecha) if isinstance(fecha, str) else fecha
+            )
 
             user.genero = extra.get("genero") or TipoGenero.NO_ESPECIFICA
         else:

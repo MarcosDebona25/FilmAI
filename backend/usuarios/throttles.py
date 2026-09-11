@@ -64,7 +64,13 @@ class EmailThrottleStatusMixin:
                 }
 
                 # Obtener conteo actual desde el cache
-                current_count = throttle.cache.get(cache_key, 0)
+                # El cache puede devolver una lista o un entero dependiendo de la implementación
+                cache_value = throttle.cache.get(cache_key, 0)
+                if isinstance(cache_value, list):
+                    current_count = len(cache_value)
+                else:
+                    current_count = cache_value
+
                 max_requests = int(throttle.rate.split("/")[0])
                 remaining = max(0, max_requests - current_count)
 
