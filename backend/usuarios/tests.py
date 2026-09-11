@@ -703,3 +703,56 @@ class RecursosPredeterminadosRollbackTests(TransactionTestCase):
             )
 
         self.assertFalse(Usuario.objects.filter(correo="rollback@filmai.com").exists())
+
+
+class SeguridadCamposAdministradorTests(TestCase):
+    """Verifica que los campos de administrador no sean modificables vía API.
+
+    Regresión: un usuario autenticado no debe poder escalar privilegios
+    modificando is_staff, is_superuser, groups o user_permissions mediante
+    requests HTTP manipuladas.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory(
+            nombre_usuario="usuariocomun",
+            correo="comun@filmai.com",
+            estado=EstadoCuenta.ACTIVA,
+        )
+        self.client.login(email="comun@filmai.com", password="Password123!")
+
+    def test_usuario_detalles_no_expone_campos_admin(self):
+        """El endpoint /api/auth/user/ no debe exponer campos de administrador."""
+        response = self.client.get("/api/auth/user/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # Campos que NO deben estar presentes
+        for campo in ("is_staff", "is_superuser", "groups", "user_permissions"):
+            self.assertNotIn(campo, data, f"El campo {campo} no debe exponerse en /api/auth/user/")
+
+    def test_registro_no_permite_establecer_campos_admin(self):
+        """El registro no debe permitir establecer is_staff o is_superuser."""
+        response = self.client.post(
+            "/api/auth/registration/",
+            {
+                "correo": "nuevo@filmai.com",
+                "nombre_usuario": "nuevousuario",
+                "nombre": "Nuevo",
+                "apellido": "Usuario",
+                "fecha_nacimiento": "2000-01-01",
+                "genero": "no_especifica",
+                "password1": "Password123!",
+                "password2": "Password123!",
+                # Intento de escalada de privilegios
+                "is_staff": True,
+                "is_superuser": True,
+            },
+            content_type="application/json",
+        )
+        # El registro debe funcionar pero ignorar los campos admin
+        self.assertIn(response.status_code, [200, 201, 400])
+        if response.status_code in [200, 201]:
+            nuevo_usuario = Usuario.objects.get(correo="nuevo@filmai.com")
+            # Los campos admin deben ser False por defecto
+            self.assertFalse(nuevo_usuario.is_staff)
+            self.assertFalse(nuevo_usuario.is_superuser)
