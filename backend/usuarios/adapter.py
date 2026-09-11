@@ -57,30 +57,53 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
             return super().save_user(request, sociallogin, form)
 
     def populate_user(self, request, sociallogin, data):
-        """Construye un usuario nuevo a partir del perfil de Google."""
+        """Construye un usuario a partir del perfil de Google.
+
+        Para usuarios NUEVOS: usa nombre/apellido de Google como valores iniciales.
+        Para usuarios EXISTENTES: preserva los datos de FilmAI (no sobrescribe).
+
+        FilmAI es la fuente de verdad del perfil una vez creada la cuenta.
+        """
         user = super().populate_user(request, sociallogin, data)
 
-        nombre = data.get("given_name") or data.get("first_name") or ""
-        apellido = data.get("family_name") or data.get("last_name") or ""
+        # Determinar si es un usuario nuevo o existente
+        # sociallogin.account.uid es el identificador estable de Google
+        from allauth.socialaccount.models import SocialAccount
 
-        if not nombre and data.get("name"):
-            partes = data["name"].strip().split(" ", 1)
-            nombre = partes[0]
-            apellido = partes[1] if len(partes) > 1 else ""
+        es_existente = SocialAccount.objects.filter(
+            provider=sociallogin.account.provider,
+            uid=sociallogin.account.uid,
+        ).exists()
 
-        user.nombre = nombre
-        user.apellido = apellido
+        if not es_existente:
+            # Usuario NUEVO: usar datos de Google como valores iniciales
+            nombre = data.get("given_name") or data.get("first_name") or ""
+            apellido = data.get("family_name") or data.get("last_name") or ""
 
-        # Google ya verificó el correo.
-        user.estado = EstadoCuenta.ACTIVA
+            if not nombre and data.get("name"):
+                partes = data["name"].strip().split(" ", 1)
+                nombre = partes[0]
+                apellido = partes[1] if len(partes) > 1 else ""
 
-        # El serializer adjunta los datos del formulario intermedio.
-        extra = getattr(request, "google_extra", {})
+            user.nombre = nombre
+            user.apellido = apellido
 
-        user.nombre_usuario = extra.get("nombre_usuario") or ""
+            # Google ya verificó el correo.
+            user.estado = EstadoCuenta.ACTIVA
 
-        fecha = extra.get("fecha_nacimiento")
-        user.fecha_nacimiento = parse_date(fecha) if isinstance(fecha, str) else fecha
+            # El serializer adjunta los datos del formulario intermedio.
+            extra = getattr(request, "google_extra", {})
 
-        user.genero = extra.get("genero") or TipoGenero.NO_ESPECIFICA
+            user.nombre_usuario = extra.get("nombre_usuario") or ""
+
+            fecha = extra.get("fecha_nacimiento")
+            user.fecha_nacimiento = parse_date(fecha) if isinstance(fecha, str) else fecha
+
+            user.genero = extra.get("genero") or TipoGenero.NO_ESPECIFICA
+        else:
+            # Usuario EXISTENTE: NO sobrescribir nombre/apellido
+            # FilmAI es la fuente de verdad del perfil
+            # Solo actualizar estado si es necesario
+            user.estado = EstadoCuenta.ACTIVA
+
         return user
