@@ -5,6 +5,22 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 11/09/2026 — El perfil de FilmAI prevalece sobre el perfil de Google
+
+- **Descripción**: Google provee nombre y apellido solo para precargar el alta
+  de una cuenta nueva. Una vez creada, el perfil de FilmAI es la fuente de
+  verdad: un inicio de sesión posterior con una cuenta Google ya vinculada no
+  actualiza `nombre` ni `apellido`. Se agregó una prueba de regresión que crea
+  una cuenta social vinculada y verifica que conserva ambos valores locales.
+- **Motivo**: permitir que la persona edite su identidad visible en FilmAI sin
+  que cambios posteriores en su perfil de Google reviertan esa elección.
+- **Archivos afectados**:
+  - `backend/usuarios/adapter.py` — el mapeo de nombre y apellido permanece
+    limitado a `populate_user`, usada para altas sociales nuevas.
+  - `backend/usuarios/tests.py` — prueba de preservación del perfil local.
+
+---
+
 ## 10/09/2026 — Tests en CI, AGENTS.md con reglas de testing y skills, limpieza de archivos raíz
 
 - **Descripción**: se integraron los tests de Django al pipeline de CI (`ci.yml`) con un servicio PostgreSQL 16 en GitHub Actions. Se hizo configurable el host de base de datos en `settings.py` (`DATABASE_HOST`, default `"db"`) para permitir que CI use `localhost`. Se actualizó `AGENTS.md` agregando reglas de tests unitarios (§5) y consulta de skills (§6). Se limpió `.env.example` eliminando boilerplate. Se actualizó `.gitignore` agregando `.codegraph/` y `.ruff_cache/`. Se reescribió la Problemática del `README.md` y se agregó un diagrama ER Mermaid del modelo de datos. Testing del frontend queda pendiente para implementar cuando se analice el stack del frontend (Next.js no tiene framework de tests configurado aún).
