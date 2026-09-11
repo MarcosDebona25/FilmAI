@@ -931,3 +931,150 @@ class AvatarValidacionTests(TestCase):
         # es_avatar_valido debe funcionar correctamente
         self.assertTrue(es_avatar_valido(1))
         self.assertFalse(es_avatar_valido(999))
+
+
+class ValidadoresContrasenaTests(TestCase):
+    """Tests unitarios para las políticas de contraseña de FilmAI.
+
+    Verifica individualmente cada regla del validador ComplejidadContrasenaValidator:
+    - Longitud: 8-20 caracteres
+    - Al menos una mayúscula
+    - Al menos una minúscula
+    - Al menos un dígito
+    - Al menos un carácter especial (@#$%&*!)
+    """
+
+    def setUp(self):
+        from .validators import ComplejidadContrasenaValidator
+
+        self.validator = ComplejidadContrasenaValidator()
+
+    def test_contrasena_valida_cumple_todas_las_reglas(self):
+        """Una contraseña que cumple todas las reglas debe ser aceptada."""
+        contrasenas_validas = [
+            "Password1!",
+            "MiContrasena123@",
+            "Test1234#",
+            "Abcdefg1$",
+            "Password2024%",
+            "Secure&Pass1",
+            "MyP@ssw0rd",
+            "ValidPass*123",
+        ]
+        for password in contrasenas_validas:
+            with self.subTest(password=password):
+                # No debe lanzar excepción
+                self.validator.validate(password)
+
+    def test_contrasena_muy_corta_es_rechazada(self):
+        """Contraseñas con menos de 8 caracteres deben ser rechazadas."""
+        contrasenas_cortas = [
+            "Pass1!",  # 6 caracteres
+            "Abc12!",  # 6 caracteres
+            "Test12@",  # 7 caracteres
+        ]
+        for password in contrasenas_cortas:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("8", str(ctx.exception))
+
+    def test_contrasena_muy_larga_es_rechazada(self):
+        """Contraseñas con más de 20 caracteres deben ser rechazadas."""
+        password_larga = "Password1!" + "a" * 11  # 21 caracteres
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError) as ctx:
+            self.validator.validate(password_larga)
+        self.assertIn("20", str(ctx.exception))
+
+    def test_contrasena_sin_mayuscula_es_rechazada(self):
+        """Contraseñas sin mayúsculas deben ser rechazadas."""
+        contrasenas_sin_mayuscula = [
+            "password1!",
+            "test1234@",
+            "abcdefg1#",
+        ]
+        for password in contrasenas_sin_mayuscula:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("mayúscula", str(ctx.exception))
+
+    def test_contrasena_sin_minuscula_es_rechazada(self):
+        """Contraseñas sin minúsculas deben ser rechazadas."""
+        contrasenas_sin_minuscula = [
+            "PASSWORD1!",
+            "TEST1234@",
+            "ABCDEFG1#",
+        ]
+        for password in contrasenas_sin_minuscula:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("minúscula", str(ctx.exception))
+
+    def test_contrasena_sin_digito_es_rechazada(self):
+        """Contraseñas sin dígitos deben ser rechazadas."""
+        contrasenas_sin_digito = [
+            "Password!",
+            "MiContrasena@",
+            "TestTest#",
+        ]
+        for password in contrasenas_sin_digito:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("dígito", str(ctx.exception))
+
+    def test_contrasena_sin_caracter_especial_es_rechazada(self):
+        """Contraseñas sin caracteres especiales deben ser rechazadas."""
+        contrasenas_sin_especial = [
+            "Password1",
+            "Test12345",
+            "Abcdefg12",
+        ]
+        for password in contrasenas_sin_especial:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("especial", str(ctx.exception))
+
+    def test_caracteres_especiales_aceptados(self):
+        """Cada carácter especial permitido debe ser aceptado individualmente."""
+        caracteres_especiales = ["@", "#", "$", "%", "&", "*", "!"]
+        for char in caracteres_especiales:
+            password = f"Password1{char}"
+            with self.subTest(char=char):
+                # No debe lanzar excepción
+                self.validator.validate(password)
+
+    def test_limite_inferior_exacto(self):
+        """Una contraseña de exactamente 8 caracteres debe ser aceptada si cumple todas las reglas."""
+        password = "Pass123!"  # 8 caracteres
+        self.validator.validate(password)
+
+    def test_limite_superior_exacto(self):
+        """Una contraseña de exactamente 20 caracteres debe ser aceptada si cumple todas las reglas."""
+        password = "Password1234567!Ab"  # 20 caracteres
+        self.validator.validate(password)
+
+    def test_get_help_text(self):
+        """El texto de ayuda debe describir las reglas de contraseña."""
+        help_text = self.validator.get_help_text()
+        self.assertIn("8", help_text)
+        self.assertIn("20", help_text)
+        self.assertIn("mayúscula", help_text)
+        self.assertIn("minúscula", help_text)
+        self.assertIn("dígito", help_text)
+        self.assertIn("especial", help_text)
