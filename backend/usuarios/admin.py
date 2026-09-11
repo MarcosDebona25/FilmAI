@@ -26,6 +26,10 @@ class UsuarioAdmin(BaseUserAdmin):
     search_fields = ("correo", "nombre_usuario", "nombre", "apellido")
     ordering = ("correo",)
 
+    # --- Campos de solo lectura ---
+    # Estos campos pueden consultarse pero no modificarse manualmente
+    readonly_fields = ("fecha_registro", "last_login", "google_id")
+
     # --- Formulario de edición ---
     fieldsets = (
         (None, {"fields": ("correo", "password")}),
@@ -63,6 +67,16 @@ class UsuarioAdmin(BaseUserAdmin):
                     "notif_recomendaciones",
                     "notif_resenas",
                     "notif_novedades",
+                )
+            },
+        ),
+        (
+            "Información del sistema",
+            {
+                "fields": (
+                    "fecha_registro",
+                    "last_login",
+                    "google_id",
                 )
             },
         ),
