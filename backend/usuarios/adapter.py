@@ -37,11 +37,17 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
         return user
 
     def confirm_email(self, request, email_address):
-        """Activa la cuenta al confirmar su correo."""
-        usuario = email_address.user
-        usuario.estado = EstadoCuenta.ACTIVA
-        usuario.save(update_fields=["estado"])
-        return super().confirm_email(request, email_address)
+        """Activa la cuenta al confirmar su correo.
+
+        La operación es atómica: si super().confirm_email() falla, el cambio
+        de estado también se revierte, manteniendo consistencia entre FilmAI
+        y django-allauth.
+        """
+        with transaction.atomic():
+            usuario = email_address.user
+            usuario.estado = EstadoCuenta.ACTIVA
+            usuario.save(update_fields=["estado"])
+            return super().confirm_email(request, email_address)
 
     def get_email_confirmation_url(self, request, emailconfirmation):
         """Envía la confirmación a la pantalla correspondiente de la SPA."""
