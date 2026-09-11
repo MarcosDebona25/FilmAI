@@ -756,3 +756,110 @@ class SeguridadCamposAdministradorTests(TestCase):
             # Los campos admin deben ser False por defecto
             self.assertFalse(nuevo_usuario.is_staff)
             self.assertFalse(nuevo_usuario.is_superuser)
+
+
+class LoginDualTests(TestCase):
+    """Tests de integración para ambos mecanismos de autenticación.
+
+    Verifica que tanto el login por correo como por nombre de usuario
+    funcionen correctamente de manera independiente. Esto detecta regresiones
+    si futuras actualizaciones de django-allauth, dj-rest-auth o Django
+    rompen silenciosamente alguna de las dos variantes.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory(
+            nombre_usuario="testuser",
+            correo="test@filmai.com",
+            estado=EstadoCuenta.ACTIVA,
+        )
+        self.usuario.set_password("Password123!")
+        self.usuario.save()
+        self.login_url = "/api/auth/login/"
+
+    def test_login_por_correo_exitoso(self):
+        """Login con correo electrónico y contraseña debe funcionar."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "test@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access_token", response.json())
+
+    def test_login_por_nombre_usuario_exitoso(self):
+        """Login con nombre de usuario y contraseña debe funcionar."""
+        response = self.client.post(
+            self.login_url,
+            {"username": "testuser", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access_token", response.json())
+
+    def test_login_correo_insensible_a_mayusculas(self):
+        """El login por correo debe ser insensible a mayúsculas."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "TEST@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_nombre_usuario_insensible_a_mayusculas(self):
+        """El login por nombre de usuario debe ser insensible a mayúsculas."""
+        response = self.client.post(
+            self.login_url,
+            {"username": "TESTUSER", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_correo_incorrecto_falla(self):
+        """Login con correo incorrecto debe fallar."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "wrong@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_login_nombre_usuario_incorrecto_falla(self):
+        """Login con nombre de usuario incorrecto debe fallar."""
+        response = self.client.post(
+            self.login_url,
+            {"username": "wronguser", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_login_contrasena_incorrecta_falla(self):
+        """Login con contraseña incorrecta debe fallar."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "test@filmai.com", "password": "WrongPassword123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_login_cuenta_inactiva_por_correo_rechazado(self):
+        """Login con cuenta inactiva (por correo) debe ser rechazado con 403."""
+        self.usuario.estado = EstadoCuenta.PENDIENTE
+        self.usuario.save()
+        response = self.client.post(
+            self.login_url,
+            {"email": "test@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_login_cuenta_inactiva_por_username_rechazado(self):
+        """Login con cuenta inactiva (por username) debe ser rechazado con 403."""
+        self.usuario.estado = EstadoCuenta.PENDIENTE
+        self.usuario.save()
+        response = self.client.post(
+            self.login_url,
+            {"username": "testuser", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
