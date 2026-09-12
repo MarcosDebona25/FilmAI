@@ -387,6 +387,29 @@ class GoogleOAuthTests(TestCase):
         self.assertEqual(user.genero, "masculino")
         self.assertEqual(user.estado, EstadoCuenta.ACTIVA)
 
+    def test_populate_user_existente_conserva_perfil_y_estado_de_filmai(self):
+        usuario = UsuarioFactory(
+            nombre="Nombre FilmAI",
+            apellido="Apellido FilmAI",
+            estado=EstadoCuenta.BAJA,
+        )
+        cuenta = SocialAccount.objects.create(
+            user=usuario,
+            provider="google",
+            uid="google-sub-existente",
+        )
+
+        resultado = UsuarioSocialAccountAdapter().populate_user(
+            HttpRequest(),
+            SimpleNamespace(account=cuenta),
+            {"given_name": "Nombre Google", "family_name": "Apellido Google"},
+        )
+
+        self.assertEqual(resultado.pk, usuario.pk)
+        self.assertEqual(resultado.nombre, "Nombre FilmAI")
+        self.assertEqual(resultado.apellido, "Apellido FilmAI")
+        self.assertEqual(resultado.estado, EstadoCuenta.BAJA)
+
     def _serializer_google(self, extra=None):
         """Construye el serializer con el request en el estado post-parseo de DRF.
 
@@ -946,6 +969,8 @@ class AvatarValidacionTests(TestCase):
         # es_avatar_valido debe funcionar correctamente
         self.assertTrue(es_avatar_valido(1))
         self.assertFalse(es_avatar_valido(999))
+        self.assertFalse(es_avatar_valido(True))
+        self.assertFalse(es_avatar_valido(1.0))
 
 
 class ValidadoresContrasenaTests(TestCase):

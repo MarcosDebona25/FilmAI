@@ -1,7 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export function apiUrl(path: string): string {
-  return `${API_URL}${path}`;
+  const [pathname, query] = path.split("?", 2);
+  const normalizedPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  return `${API_URL}${normalizedPath}${query ? `?${query}` : ""}`;
 }
 
 // ---------------------------------------------------------------------------

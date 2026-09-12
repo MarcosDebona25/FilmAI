@@ -1,14 +1,5 @@
-"""
-Registro centralizado de avatares disponibles en FilmAI.
+"""Registro centralizado de avatares disponibles."""
 
-Este módulo define el conjunto válido de avatar_id y proporciona funciones
-de validación para usar en serializers y formularios.
-
-Para agregar o eliminar avatares, modificar el diccionario AVATARES.
-"""
-
-# Mapeo de avatar_id -> nombre/recurso del avatar
-# Los IDs deben ser consecutivos starting from 1
 AVATARES = {
     1: "avatar_default",
     2: "avatar_02",
@@ -22,49 +13,23 @@ AVATARES = {
     10: "avatar_10",
 }
 
-# Conjunto de IDs válidos para validación rápida
 AVATAR_IDS_VALIDOS = set(AVATARES.keys())
 
-# ID por defecto
 AVATAR_ID_DEFAULT = 1
 
 
 def es_avatar_valido(avatar_id):
-    """
-    Verifica si un avatar_id es válido.
-
-    Args:
-        avatar_id: ID del avatar a validar
-
-    Returns:
-        bool: True si el avatar_id es válido, False en caso contrario
-    """
-    return avatar_id in AVATAR_IDS_VALIDOS
+    """Indica si ``avatar_id`` pertenece al registro y es un entero."""
+    return type(avatar_id) is int and avatar_id in AVATAR_IDS_VALIDOS
 
 
 def obtener_avatar(avatar_id):
-    """
-    Obtiene el nombre/recurso del avatar dado un ID válido.
-
-    Args:
-        avatar_id: ID del avatar
-
-    Returns:
-        str: Nombre del avatar, o None si el ID es inválido
-    """
+    """Obtiene el recurso asociado o ``None``."""
     return AVATARES.get(avatar_id)
 
 
 def validar_avatar_id(avatar_id):
-    """
-    Valida un avatar_id y lanza ValidationError si es inválido.
-
-    Args:
-        avatar_id: ID del avatar a validar
-
-    Raises:
-        ValidationError: Si el avatar_id no es válido
-    """
+    """Lanza ``ValidationError`` si el avatar no es válido."""
     from django.core.exceptions import ValidationError
 
     if not es_avatar_valido(avatar_id):
