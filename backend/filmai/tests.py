@@ -7,12 +7,20 @@ tests unitarios no dependen de la configuración global ni de la API real.
 
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.http import Http404
 from django.test import SimpleTestCase, override_settings
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.exceptions import MethodNotAllowed, Throttled
 
+from catalogo.exceptions import TMDBNotFound
 from filmai.email_backends import ResendBackend
 from filmai.email_validation import validar_configuracion_email
+from filmai.exceptions import filmai_exception_handler
+from filmai.views import custom_404, custom_500
 
 
 @override_settings(RESEND_API_KEY="re_test", RESEND_TEST_RECIPIENT="")
@@ -155,3 +163,53 @@ class ConfiguracionEmailTests(SimpleTestCase):
             resend_api_key="",
             resend_test_recipient="dueno@example.com",
         )
+
+
+class ExceptionHandlerTests(SimpleTestCase):
+    def test_handler_global_conserva_el_mapeo_de_tmdb(self):
+        response = filmai_exception_handler(TMDBNotFound("No encontrada"), {})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, {"detail": "No encontrada"})
+
+    def test_404_de_django_devuelve_json_en_espanol(self):
+        response = filmai_exception_handler(Http404(), {})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["detail"], "El recurso solicitado no existe.")
+
+    def test_method_not_allowed_acepta_detail_como_lista(self):
+        exception = MethodNotAllowed("GET")
+        exception.detail = ["GET"]
+
+        response = filmai_exception_handler(exception, {})
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.data["detail"], "Método HTTP GET no permitido para este endpoint."
+        )
+
+    def test_throttled_devuelve_429_con_mensaje_consistente(self):
+        response = filmai_exception_handler(Throttled(wait=10), {})
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(
+            response.data["detail"],
+            "Demasiadas solicitudes. Intentá de nuevo más tarde.",
+        )
+        self.assertEqual(response["Retry-After"], "10")
+
+    def test_handlers_de_django_devuelven_json(self):
+        self.assertEqual(custom_404(None).status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            custom_500(None).status_code,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    def test_openapi_y_swagger_estan_configurados(self):
+        self.assertEqual(
+            settings.REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"],
+            "drf_spectacular.openapi.AutoSchema",
+        )
+        self.assertEqual(reverse("schema"), "/api/schema/")
+        self.assertEqual(reverse("swagger-ui"), "/api/docs/")

@@ -362,6 +362,7 @@ export default function RegisterPage() {
               aria-invalid={Boolean(tocados.fecha_nacimiento && errores.fecha_nacimiento)}
               required
             />
+            <p className="mt-1 text-xs text-muted-foreground">Formato: dd/mm/aaaa</p>
             <ErrorTexto mensaje={tocados.fecha_nacimiento ? errores.fecha_nacimiento : undefined} />
           </div>
           <div>
