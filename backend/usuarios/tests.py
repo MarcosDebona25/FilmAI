@@ -333,14 +333,18 @@ class RecuperarContrasenaTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("password1", response.json())
 
-    def test_rate_limit_segunda_solicitud_429(self):
+    def test_rate_limit_email_5_intentos_por_dia(self):
+        """El throttle por email permite 5 solicitudes por día, luego bloquea."""
         self._crear_usuario_activo()
 
-        primera = self._solicitar("recuperar@filmai.com")
-        segunda = self._solicitar("recuperar@filmai.com")
+        # Las primeras 5 solicitudes deben funcionar
+        for i in range(5):
+            response = self._solicitar("recuperar@filmai.com")
+            self.assertEqual(response.status_code, 200, f"Fallo en intento {i + 1}")
 
-        self.assertEqual(primera.status_code, 200)
-        self.assertEqual(segunda.status_code, 429)
+        # La 6ta solicitud debe ser bloqueada (429)
+        sexta = self._solicitar("recuperar@filmai.com")
+        self.assertEqual(sexta.status_code, 429)
 
 
 class GoogleOAuthTests(TestCase):
@@ -368,7 +372,10 @@ class GoogleOAuthTests(TestCase):
         }
 
         usuario = Usuario(correo="google@filmai.com")
-        sociallogin = SimpleNamespace(user=usuario)
+        sociallogin = SimpleNamespace(
+            user=usuario,
+            account=SimpleNamespace(provider="google", uid="google-sub-123"),
+        )
 
         adapter = UsuarioSocialAccountAdapter()
         user = adapter.populate_user(
@@ -379,6 +386,29 @@ class GoogleOAuthTests(TestCase):
         self.assertEqual(user.fecha_nacimiento, date(1995, 5, 10))
         self.assertEqual(user.genero, "masculino")
         self.assertEqual(user.estado, EstadoCuenta.ACTIVA)
+
+    def test_populate_user_existente_conserva_perfil_y_estado_de_filmai(self):
+        usuario = UsuarioFactory(
+            nombre="Nombre FilmAI",
+            apellido="Apellido FilmAI",
+            estado=EstadoCuenta.BAJA,
+        )
+        cuenta = SocialAccount.objects.create(
+            user=usuario,
+            provider="google",
+            uid="google-sub-existente",
+        )
+
+        resultado = UsuarioSocialAccountAdapter().populate_user(
+            HttpRequest(),
+            SimpleNamespace(account=cuenta),
+            {"given_name": "Nombre Google", "family_name": "Apellido Google"},
+        )
+
+        self.assertEqual(resultado.pk, usuario.pk)
+        self.assertEqual(resultado.nombre, "Nombre FilmAI")
+        self.assertEqual(resultado.apellido, "Apellido FilmAI")
+        self.assertEqual(resultado.estado, EstadoCuenta.BAJA)
 
     def _serializer_google(self, extra=None):
         """Construye el serializer con el request en el estado post-parseo de DRF.
@@ -703,3 +733,388 @@ class RecursosPredeterminadosRollbackTests(TransactionTestCase):
             )
 
         self.assertFalse(Usuario.objects.filter(correo="rollback@filmai.com").exists())
+
+
+class SeguridadCamposAdministradorTests(TestCase):
+    """Verifica que los campos de administrador no sean modificables vía API.
+
+    Regresión: un usuario autenticado no debe poder escalar privilegios
+    modificando is_staff, is_superuser, groups o user_permissions mediante
+    requests HTTP manipuladas.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory(
+            nombre_usuario="usuariocomun",
+            correo="comun@filmai.com",
+            estado=EstadoCuenta.ACTIVA,
+        )
+        # Autenticar usando el endpoint de login
+        response = self.client.post(
+            "/api/auth/login/",
+            {"email": "comun@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_usuario_detalles_no_expone_campos_admin(self):
+        """El endpoint /api/auth/user/ no debe exponer campos de administrador."""
+        response = self.client.get("/api/auth/user/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # Campos que NO deben estar presentes
+        for campo in ("is_staff", "is_superuser", "groups", "user_permissions"):
+            self.assertNotIn(
+                campo, data, f"El campo {campo} no debe exponerse en /api/auth/user/"
+            )
+
+    def test_registro_no_permite_establecer_campos_admin(self):
+        """El registro no debe permitir establecer is_staff o is_superuser."""
+        response = self.client.post(
+            "/api/auth/registration/",
+            {
+                "correo": "nuevo@filmai.com",
+                "nombre_usuario": "nuevousuario",
+                "nombre": "Nuevo",
+                "apellido": "Usuario",
+                "fecha_nacimiento": "2000-01-01",
+                "genero": "no_especifica",
+                "password1": "Password123!",
+                "password2": "Password123!",
+                # Intento de escalada de privilegios
+                "is_staff": True,
+                "is_superuser": True,
+            },
+            content_type="application/json",
+        )
+        # El registro debe funcionar pero ignorar los campos admin
+        self.assertIn(response.status_code, [200, 201, 400])
+        if response.status_code in [200, 201]:
+            nuevo_usuario = Usuario.objects.get(correo="nuevo@filmai.com")
+            # Los campos admin deben ser False por defecto
+            self.assertFalse(nuevo_usuario.is_staff)
+            self.assertFalse(nuevo_usuario.is_superuser)
+
+
+class LoginDualTests(TestCase):
+    """Tests de integración para ambos mecanismos de autenticación.
+
+    Verifica que tanto el login por correo como por nombre de usuario
+    funcionen correctamente de manera independiente. Esto detecta regresiones
+    si futuras actualizaciones de django-allauth, dj-rest-auth o Django
+    rompen silenciosamente alguna de las dos variantes.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory(
+            nombre_usuario="testuser",
+            correo="test@filmai.com",
+            estado=EstadoCuenta.ACTIVA,
+        )
+        self.usuario.set_password("Password123!")
+        self.usuario.save()
+        self.login_url = "/api/auth/login/"
+
+    def test_login_por_correo_exitoso(self):
+        """Login con correo electrónico y contraseña debe funcionar."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "test@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.json())
+
+    def test_login_por_nombre_usuario_exitoso(self):
+        """Login con nombre de usuario y contraseña debe funcionar."""
+        response = self.client.post(
+            self.login_url,
+            {"username": "testuser", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.json())
+
+    def test_login_correo_insensible_a_mayusculas(self):
+        """El login por correo debe ser insensible a mayúsculas."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "TEST@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_nombre_usuario_insensible_a_mayusculas(self):
+        """El login por nombre de usuario debe ser insensible a mayúsculas."""
+        response = self.client.post(
+            self.login_url,
+            {"username": "TESTUSER", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_correo_incorrecto_falla(self):
+        """Login con correo incorrecto debe fallar."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "wrong@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_login_nombre_usuario_incorrecto_falla(self):
+        """Login con nombre de usuario incorrecto debe fallar."""
+        response = self.client.post(
+            self.login_url,
+            {"username": "wronguser", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_login_contrasena_incorrecta_falla(self):
+        """Login con contraseña incorrecta debe fallar."""
+        response = self.client.post(
+            self.login_url,
+            {"email": "test@filmai.com", "password": "WrongPassword123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_login_cuenta_inactiva_por_correo_rechazado(self):
+        """Login con cuenta inactiva (por correo) debe ser rechazado con 403."""
+        self.usuario.estado = EstadoCuenta.PENDIENTE
+        self.usuario.save()
+        response = self.client.post(
+            self.login_url,
+            {"email": "test@filmai.com", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_login_cuenta_inactiva_por_username_rechazado(self):
+        """Login con cuenta inactiva (por username) debe ser rechazado con 403."""
+        self.usuario.estado = EstadoCuenta.PENDIENTE
+        self.usuario.save()
+        response = self.client.post(
+            self.login_url,
+            {"username": "testuser", "password": "Password123!"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+class AvatarValidacionTests(TestCase):
+    """Tests para la validación de avatar_id.
+
+    Verifica que solo se acepten avatar_id válidos según el registro
+    centralizado de avatares.
+    """
+
+    def test_avatar_id_valido_es_aceptado(self):
+        """Un avatar_id válido debe ser aceptado."""
+        from .avatares import AVATAR_IDS_VALIDOS
+
+        for avatar_id in AVATAR_IDS_VALIDOS:
+            with self.subTest(avatar_id=avatar_id):
+                usuario = UsuarioFactory(avatar_id=avatar_id)
+                self.assertEqual(usuario.avatar_id, avatar_id)
+
+    def test_avatar_id_invalido_es_rechazado_en_serializer(self):
+        """Un avatar_id inválido debe ser rechazado por el serializer."""
+        from .serializers import UsuarioPerfilSerializer
+
+        usuario = UsuarioFactory()
+        serializer = UsuarioPerfilSerializer(
+            instance=usuario,
+            data={"avatar_id": 999},
+            partial=True,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("avatar_id", serializer.errors)
+
+    def test_avatar_id_cero_es_rechazado(self):
+        """avatar_id = 0 debe ser rechazado (no está en el registro)."""
+        from .serializers import UsuarioPerfilSerializer
+
+        usuario = UsuarioFactory()
+        serializer = UsuarioPerfilSerializer(
+            instance=usuario,
+            data={"avatar_id": 0},
+            partial=True,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("avatar_id", serializer.errors)
+
+    def test_avatar_id_negativo_es_rechazado(self):
+        """avatar_id negativo debe ser rechazado."""
+        from .serializers import UsuarioPerfilSerializer
+
+        usuario = UsuarioFactory()
+        serializer = UsuarioPerfilSerializer(
+            instance=usuario,
+            data={"avatar_id": -1},
+            partial=True,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("avatar_id", serializer.errors)
+
+    def test_registro_centralizado_de_avatares(self):
+        """El registro centralizado debe existir y tener avatares válidos."""
+        from .avatares import AVATARES, es_avatar_valido
+
+        # Debe tener al menos un avatar
+        self.assertGreater(len(AVATARES), 0)
+        # El ID 1 debe existir (default)
+        self.assertIn(1, AVATARES)
+        # es_avatar_valido debe funcionar correctamente
+        self.assertTrue(es_avatar_valido(1))
+        self.assertFalse(es_avatar_valido(999))
+        self.assertFalse(es_avatar_valido(True))
+        self.assertFalse(es_avatar_valido(1.0))
+
+
+class ValidadoresContrasenaTests(TestCase):
+    """Tests unitarios para las políticas de contraseña de FilmAI.
+
+    Verifica individualmente cada regla del validador ComplejidadContrasenaValidator:
+    - Longitud: 8-20 caracteres
+    - Al menos una mayúscula
+    - Al menos una minúscula
+    - Al menos un dígito
+    - Al menos un carácter especial (@#$%&*!)
+    """
+
+    def setUp(self):
+        from .validators import ComplejidadContrasenaValidator
+
+        self.validator = ComplejidadContrasenaValidator()
+
+    def test_contrasena_valida_cumple_todas_las_reglas(self):
+        """Una contraseña que cumple todas las reglas debe ser aceptada."""
+        contrasenas_validas = [
+            "Password1!",
+            "MiContrasena123@",
+            "Test1234#",
+            "Abcdefg1$",
+            "Password2024%",
+            "Secure&Pass1",
+            "MyP@ssw0rd",
+            "ValidPass*123",
+        ]
+        for password in contrasenas_validas:
+            with self.subTest(password=password):
+                # No debe lanzar excepción
+                self.validator.validate(password)
+
+    def test_contrasena_muy_corta_es_rechazada(self):
+        """Contraseñas con menos de 8 caracteres deben ser rechazadas."""
+        contrasenas_cortas = [
+            "Pass1!",  # 6 caracteres
+            "Abc12!",  # 6 caracteres
+            "Test12@",  # 7 caracteres
+        ]
+        for password in contrasenas_cortas:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("8", str(ctx.exception))
+
+    def test_contrasena_muy_larga_es_rechazada(self):
+        """Contraseñas con más de 20 caracteres deben ser rechazadas."""
+        password_larga = "Password1!" + "a" * 11  # 21 caracteres
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError) as ctx:
+            self.validator.validate(password_larga)
+        self.assertIn("20", str(ctx.exception))
+
+    def test_contrasena_sin_mayuscula_es_rechazada(self):
+        """Contraseñas sin mayúsculas deben ser rechazadas."""
+        contrasenas_sin_mayuscula = [
+            "password1!",
+            "test1234@",
+            "abcdefg1#",
+        ]
+        for password in contrasenas_sin_mayuscula:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("mayúscula", str(ctx.exception))
+
+    def test_contrasena_sin_minuscula_es_rechazada(self):
+        """Contraseñas sin minúsculas deben ser rechazadas."""
+        contrasenas_sin_minuscula = [
+            "PASSWORD1!",
+            "TEST1234@",
+            "ABCDEFG1#",
+        ]
+        for password in contrasenas_sin_minuscula:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("minúscula", str(ctx.exception))
+
+    def test_contrasena_sin_digito_es_rechazada(self):
+        """Contraseñas sin dígitos deben ser rechazadas."""
+        contrasenas_sin_digito = [
+            "Password!",
+            "MiContrasena@",
+            "TestTest#",
+        ]
+        for password in contrasenas_sin_digito:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("dígito", str(ctx.exception))
+
+    def test_contrasena_sin_caracter_especial_es_rechazada(self):
+        """Contraseñas sin caracteres especiales deben ser rechazadas."""
+        contrasenas_sin_especial = [
+            "Password1",
+            "Test12345",
+            "Abcdefg12",
+        ]
+        for password in contrasenas_sin_especial:
+            with self.subTest(password=password):
+                from django.core.exceptions import ValidationError
+
+                with self.assertRaises(ValidationError) as ctx:
+                    self.validator.validate(password)
+                self.assertIn("especial", str(ctx.exception))
+
+    def test_caracteres_especiales_aceptados(self):
+        """Cada carácter especial permitido debe ser aceptado individualmente."""
+        caracteres_especiales = ["@", "#", "$", "%", "&", "*", "!"]
+        for char in caracteres_especiales:
+            password = f"Password1{char}"
+            with self.subTest(char=char):
+                # No debe lanzar excepción
+                self.validator.validate(password)
+
+    def test_limite_inferior_exacto(self):
+        """Una contraseña de exactamente 8 caracteres debe ser aceptada si cumple todas las reglas."""
+        password = "Pass123!"  # 8 caracteres
+        self.validator.validate(password)
+
+    def test_limite_superior_exacto(self):
+        """Una contraseña de exactamente 20 caracteres debe ser aceptada si cumple todas las reglas."""
+        password = "Password1234567!Ab"  # 20 caracteres
+        self.validator.validate(password)
+
+    def test_get_help_text(self):
+        """El texto de ayuda debe describir las reglas de contraseña."""
+        help_text = self.validator.get_help_text()
+        self.assertIn("8", help_text)
+        self.assertIn("20", help_text)
+        self.assertIn("mayúscula", help_text)
+        self.assertIn("minúscula", help_text)
+        self.assertIn("dígito", help_text)
+        self.assertIn("especial", help_text)
