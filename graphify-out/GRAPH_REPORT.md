@@ -1,31 +1,31 @@
 # Graph Report - FilmAI  (2026-09-12)
 
 ## Corpus Check
-- 187 files · ~616,866 words
+- 183 files · ~608,669 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2222 nodes · 4408 edges · 172 communities (122 shown, 30 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 223 edges (avg confidence: 0.9)
+- 2219 nodes · 4399 edges · 176 communities (125 shown, 31 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 220 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `88dafa9b`
+- Built from commit: `4c88738c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - catalogo/tests.py
 - Modelos de Datos y de Diseño (doc 03)
-- usuarios/views.py
+- urls.py
 - FilmAI
 - ResendBackend
 - TMDBClientCache
-- usuarios/tests.py
+- UsuarioFactory
 - RecuperarContrasenaTests
 - Command
 - components.json
-- ._serializer_google
+- GoogleOAuthTests
 - package.json
 - resumeSession
 - register/page.tsx
@@ -33,7 +33,7 @@
 - compilerOptions
 - initGlobalBar
 - Navbar.tsx
-- UsuarioFactory
+- UsuarioPerfilSerializer
 - completar-google/page.tsx
 - login/page.tsx
 - apiFetch
@@ -45,19 +45,19 @@
 - live-browser.js
 - scripts
 - ConfirmarCorreoTests
-- RegisterPage
+- [token]/page.tsx
 - ValidadoresContrasenaTests
 - FilmAI Collage Poster Design — Option 2
 - Command
 - UsuarioManager
-- Humanizer Skill
-- showToast
+- normalizeManualContextText
+- connectSSE
 - nombre_completo
 - modern-screenshot.umd.js
-- Conventional Commit Decision Gates
-- vercel-quality Skill README
+- usuarios/views.py
+- es_avatar_valido
 - manage.py
-- scheduleAcceptCleanup
+- mountSvelteComponentVariant
 - initPageChat
 - Collage Poster Option 3
 - middleware.ts
@@ -91,9 +91,9 @@
 - renderDesignVisual
 - captureElementToBlob
 - filmai/tests.py
-- signals.py
+- provisionar_recursos_por_defecto
 - 0004_alter_usuario_avatar_id_alter_usuario_correo_and_more.py
-- mountSvelteComponentVariant
+- handleGo
 - Responsive Design
 - handleManualEditActivity
 - onboard.md
@@ -163,10 +163,14 @@
 - UsuarioAccountAdapter
 - RegisterSerializer
 - eslint.config.mjs
-- bolder.md
+- EmailRateThrottle
 - LoginSerializer
-- utils.ts
+- GoogleSocialLoginSerializer
 - next
+- Conventional Commits
+- LenientJWTCookieAuthentication
+- RegisterView
+- examples.md
 
 ## God Nodes (most connected - your core abstractions)
 1. `UsuarioFactory` - 38 edges
@@ -202,11 +206,10 @@
 - **SDD Change Artifact Chain** — openspec_changes_archive_2026_09_03_catalog_tmdb_cache_proposal, openspec_changes_archive_2026_09_03_catalog_tmdb_cache_design, openspec_changes_archive_2026_09_03_catalog_tmdb_cache_specs_tmdb_cache_spec, openspec_changes_archive_2026_09_03_catalog_tmdb_cache_tasks, openspec_changes_archive_2026_09_03_catalog_tmdb_cache_verify_report, openspec_changes_archive_2026_09_03_catalog_tmdb_cache_archive_report [EXTRACTED 1.00]
 - **Casos de Uso del sistema FilmAI** — docs_02_especificacion_de_requerimientos_cu_001, docs_02_especificacion_de_requerimientos_cu_003, docs_02_especificacion_de_requerimientos_cu_008, docs_02_especificacion_de_requerimientos_cu_013, docs_02_especificacion_de_requerimientos_cu_015, docs_02_especificacion_de_requerimientos_cu_021 [EXTRACTED 1.00]
 - **Catálogo híbrido y corpus semántico** — docs_decisiones_arquitectura_hibrida, docs_03_modelos_de_datos_y_de_diseno_catalogo_materializado, docs_03_modelos_de_datos_y_de_diseno_produccion_embedding, docs_03_modelos_de_datos_y_de_diseno_busqueda_semantica, docs_03_modelos_de_datos_y_de_diseno_sincronizacion_celery [INFERRED 0.85]
-- **Opencode Skills Collection** — _opencode_skills_conventional_commits_skill_doc, _opencode_skills_humanizer_skill_doc, _opencode_skills_vercel_quality_skill_doc [INFERRED 0.85]
 - **Redis Failure and Error Boundaries** — graceful_degradation, redis_error_boundary, tmdb_client, tmdb_error_hierarchy [INFERRED 0.85]
 - **Stack de autenticación y modelo de usuario** — docs_03_modelos_de_datos_y_de_diseno_modelo_usuario, docs_decisiones_usuario_unificado, docs_decisiones_autenticacion_allauth, docs_decisiones_cookies_http_only_csrf, docs_decisiones_estado_ciclo_vida [INFERRED 0.85]
 
-## Communities (172 total, 30 thin omitted)
+## Communities (176 total, 31 thin omitted)
 
 ### Community 0 - "catalogo/tests.py"
 Cohesion: 0.27
@@ -216,9 +219,9 @@ Nodes (14): Exception, TMDB rejected the request because its rate limit was exce
 Cohesion: 0.09
 Nodes (57): Chatbot basado en LLM para recomendaciones personalizadas, Presentación de la Idea-Proyecto (doc 01), FilmAI — Plataforma Web de Reseñas Cinematográficas con Recomendaciones Inteligentes, CU-001: Crear cuenta de usuario, CU-003: Iniciar sesión, CU-008: Visualizar Catálogo, CU-013: Interactuar con el chatbot, CU-015: Gestionar Reseña y Calificación (ABM) (+49 more)
 
-### Community 2 - "usuarios/views.py"
-Cohesion: 0.05
-Nodes (37): APIView, EnlaceRestablecimientoInvalido, Exception, Señala un ``uid`` o token de restablecimiento inválido o vencido., Solicitud de restablecimiento sin revelar si un correo está registrado., Valida el enlace y persiste la nueva contraseña., RecuperarContrasenaSerializer, RestablecerContrasenaSerializer (+29 more)
+### Community 2 - "urls.py"
+Cohesion: 0.16
+Nodes (10): APIView, ConfirmarCorreoView, CSRFTokenView, LoginView, Entrega la cookie `csrftoken` para el frontend (SPA). Con…, Chequeo de disponibilidad de nombre de usuario en tiempo real (A-05). Devuelve…, Confirma la cuenta a partir del enlace del email (CU-002). Reemplaza al…, Login que usa ``LenientJWTCookieAuthentication``. Evita 401 cuando el browser… (+2 more)
 
 ### Community 3 - "FilmAI"
 Cohesion: 0.07
@@ -232,37 +235,37 @@ Nodes (7): Devuelve la parte HTML si el mensaje es multipart/alternative., Enví
 Cohesion: 0.20
 Nodes (33): Cache-Aside Pattern, Composition Over Inheritance, fakeredis Test Backend, get_redis() Factory, Graceful Degradation on Redis Failure, httpx.MockTransport Testing, JSON Serialization Round-Trip, Apply Progress: TMDB Redis Cache (C-02) (+25 more)
 
-### Community 6 - "usuarios/tests.py"
+### Community 6 - "UsuarioFactory"
 Cohesion: 0.08
-Nodes (27): Adaptadores de allauth para el modelo de usuario de FilmAI., Adaptador social (Google OAuth) para `usuarios.Usuario`., Persiste el alta social de forma atómica., Construye un perfil nuevo sin sobrescribir una cuenta vinculada., UsuarioSocialAccountAdapter, es_avatar_valido(), obtener_avatar(), Registro centralizado de avatares disponibles. (+19 more)
+Nodes (23): Adaptadores de allauth para el modelo de usuario de FilmAI., Adaptador social (Google OAuth) para `usuarios.Usuario`., Persiste el alta social de forma atómica., Construye un perfil nuevo sin sobrescribir una cuenta vinculada., UsuarioSocialAccountAdapter, Meta, Factories de usuarios para desarrollo y pruebas., Crea usuarios activos con contraseña hasheada. (+15 more)
 
 ### Community 7 - "RecuperarContrasenaTests"
-Cohesion: 0.15
-Nodes (7): CsrfCookieTests, Recuperación de contraseña (CU-020 / A-07). Cubre: envío del email con enlace…, Sin nombre ni apellido, el saludo es "Hola usuario"., El throttle por email permite 5 solicitudes por día, luego bloquea., Protección CSRF del access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF).…, RecuperarContrasenaTests, TestCase
+Cohesion: 0.16
+Nodes (6): CsrfCookieTests, Recuperación de contraseña (CU-020 / A-07). Cubre: envío del email con enlace…, Sin nombre ni apellido, el saludo es "Hola usuario"., El throttle por email permite 5 solicitudes por día, luego bloquea., Protección CSRF del access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF).…, RecuperarContrasenaTests
 
 ### Community 8 - "Command"
 Cohesion: 0.07
-Nodes (45): CalificacionFactory, Meta, ProduccionAudiovisualFactory, Factories de factory_boy para la app `catalogo`. Se usan únicamente para…, Crea una producción audiovisual simulando un registro de TMDB. Los campos de…, ResenaFactory, Calificacion, Meta (+37 more)
+Nodes (42): CalificacionFactory, Meta, ProduccionAudiovisualFactory, Factories de factory_boy para la app `catalogo`. Se usan únicamente para…, Crea una producción audiovisual simulando un registro de TMDB. Los campos de…, ResenaFactory, Calificacion, Meta (+34 more)
 
 ### Community 9 - "components.json"
 Cohesion: 0.09
 Nodes (21): aliases, components, hooks, lib, ui, utils, iconLibrary, menuAccent (+13 more)
 
-### Community 10 - "._serializer_google"
-Cohesion: 0.24
-Nodes (6): Construye el serializer con el request en el estado post-parseo de DRF. Deja…, Fija `SocialAccount.objects.filter(...).exists()` al valor deseado., Regresión: una cuenta de Google ya vinculada inicia sesión SIN los campos extra…, El login no debe sobrescribir cambios de perfil hechos en FilmAI., Una cuenta de Google NUEVA (sin SocialAccount) exige los campos que Google no…, Regresión: el chequeo de email duplicado case-insensitive corre ANTES de…
+### Community 10 - "GoogleOAuthTests"
+Cohesion: 0.26
+Nodes (8): GoogleOAuthTests, Regresión del 500 en `/api/auth/google/` (RawPostDataException) y del flujo…, Construye el serializer con el request en el estado post-parseo de DRF. Deja…, Fija `SocialAccount.objects.filter(...).exists()` al valor deseado., Regresión: una cuenta de Google ya vinculada inicia sesión SIN los campos extra…, El login no debe sobrescribir cambios de perfil hechos en FilmAI., Una cuenta de Google NUEVA (sin SocialAccount) exige los campos que Google no…, Regresión: el chequeo de email duplicado case-insensitive corre ANTES de…
 
 ### Community 11 - "package.json"
-Cohesion: 0.11
-Nodes (18): name, private, version, @base-ui/react, class-variance-authority, eslint, eslint-config-next, husky (+10 more)
+Cohesion: 0.10
+Nodes (19): name, private, version, @base-ui/react, clsx, eslint, eslint-config-next, husky (+11 more)
 
 ### Community 12 - "resumeSession"
-Cohesion: 0.06
-Nodes (81): applyParamDefaults(), applyParamValue(), applySavedSessionMeta(), buildParamsPanel(), clampVariantIndex(), clearHandled(), clearSession(), closedClipPath() (+73 more)
+Cohesion: 0.07
+Nodes (67): abortSvelteComponentInjection(), applySavedSessionMeta(), checkpointPayload(), clampVariantIndex(), closedClipPath(), commitAcceptedVariantToDom(), completeParameterGenerationIfReady(), completeParameterPublication() (+59 more)
 
 ### Community 13 - "register/page.tsx"
-Cohesion: 0.18
-Nodes (15): Campo, Errores, GENEROS, VALIDADORES, decodificarParametro(), EnlaceInvalido, Estado, RestablecerContrasenaPage() (+7 more)
+Cohesion: 0.15
+Nodes (15): onGoogle(), Campo, Errores, GENEROS, maxFechaNacimiento(), RegisterPage(), onBlurCampo(), validarCampo() (+7 more)
 
 ### Community 14 - ".handle"
 Cohesion: 0.12
@@ -273,20 +276,20 @@ Cohesion: 0.11
 Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+10 more)
 
 ### Community 16 - "initGlobalBar"
-Cohesion: 0.11
-Nodes (28): agentHasWorkInFlight(), agentStatusText(), barPaletteForTheme(), brandMarkSvg(), buildSteerQueueHint(), detectPageTheme(), ensureAgentPollTooltip(), ensureSpinKeyframes() (+20 more)
+Cohesion: 0.10
+Nodes (31): agentStatusText(), barPaletteForTheme(), brandMarkSvg(), buildParamsPanel(), clearSteerFocusRecoverTimer(), designPanelCss(), detectPageTheme(), ensureAgentPollTooltip() (+23 more)
 
 ### Community 17 - "Navbar.tsx"
 Cohesion: 0.16
 Nodes (11): inter, metadata, roboto, iniciales(), NAV_LINKS, Navbar(), logout(), noImplementado() (+3 more)
 
-### Community 18 - "UsuarioFactory"
-Cohesion: 0.07
-Nodes (19): Meta, Crea usuarios activos con contraseña hasheada., UsuarioFactory, Serializer para actualizar el perfil del usuario. Solo permite modificar campos…, Valida que avatar_id sea uno de los avatares disponibles., Valida que la fecha de nacimiento no sea futura y el usuario tenga al menos 13…, UsuarioPerfilSerializer, AvatarValidacionTests (+11 more)
+### Community 18 - "UsuarioPerfilSerializer"
+Cohesion: 0.11
+Nodes (14): Meta, Representación del usuario autenticado (endpoints `/api/auth/user/`). El…, Serializer para actualizar el perfil del usuario. Solo permite modificar campos…, Valida que la fecha de nacimiento no sea futura y el usuario tenga al menos 13…, UsuarioDetallesSerializer, UsuarioPerfilSerializer, AvatarValidacionTests, Tests para la validación de avatar_id. Verifica que solo se acepten avatar_id… (+6 more)
 
 ### Community 19 - "completar-google/page.tsx"
-Cohesion: 0.20
-Nodes (12): Campo, CompletarGooglePage(), onBlurCampo(), onGoogle(), validarCampo(), Errores, GENEROS, maxFechaNacimiento() (+4 more)
+Cohesion: 0.24
+Nodes (8): Campo, CompletarGooglePage(), onBlurCampo(), validarCampo(), Errores, GENEROS, maxFechaNacimiento(), tieneGooglePendiente()
 
 ### Community 20 - "login/page.tsx"
 Cohesion: 0.18
@@ -309,28 +312,28 @@ Cohesion: 0.17
 Nodes (12): dependencies, @base-ui/react, class-variance-authority, clsx, lucide-react, next, react, react-dom (+4 more)
 
 ### Community 25 - "Usuario"
-Cohesion: 0.07
-Nodes (21): AbstractBaseUser, Admin para el modelo personalizado de usuario. Adapta `UserAdmin` de Django a…, UsuarioAdmin, Command, BaseCommand, Repara listas predeterminadas y chat faltantes de usuarios existentes., Meta, Logueable solo si la cuenta está en estado Activa. (+13 more)
+Cohesion: 0.10
+Nodes (14): AbstractBaseUser, Admin para el modelo personalizado de usuario. Adapta `UserAdmin` de Django a…, UsuarioAdmin, Meta, Logueable solo si la cuenta está en estado Activa., Permite que Django/allauth activen la cuenta (`is_active = True`), Cliente de la plataforma y, según sus flags, administrador del panel., Usuario (+6 more)
 
 ### Community 26 - "button.tsx"
-Cohesion: 0.23
-Nodes (10): POSTERS, Button(), buttonVariants, cn(), Collage Posters Set (3 Design Options), Opcion 1 Collage Poster Image, FilmAI Landing Marketing / Hero Visual, Movie Poster Collage (Depicted Content) (+2 more)
+Cohesion: 0.21
+Nodes (11): POSTERS, Button(), buttonVariants, cn(), Collage Posters Set (3 Design Options), Opcion 1 Collage Poster Image, FilmAI Landing Marketing / Hero Visual, Movie Poster Collage (Depicted Content) (+3 more)
 
 ### Community 27 - "live-browser.js"
 Cohesion: 0.04
-Nodes (103): addManualContextText(), applyEditing(), applyPlaceholderSizingStyles(), attachSteerFocusGuard(), buildLocatorForLeaf(), buildPickedAnchorSnapshot(), canRestoreManualEditElement(), clampPlaceholderSize() (+95 more)
+Nodes (79): agentHasWorkInFlight(), applyGlobalBarLabelState(), applyParamDefaults(), applyParamValue(), applyPlaceholderSizingStyles(), bindEditBadgeProxy(), buildPlaceholderResizeHandles(), buildSteerQueueHint() (+71 more)
 
 ### Community 28 - "scripts"
 Cohesion: 0.25
 Nodes (8): scripts, build, dev, format, format:check, lint, prepare, start
 
-### Community 30 - "RegisterPage"
-Cohesion: 0.33
-Nodes (5): maxFechaNacimiento(), RegisterPage(), onBlurCampo(), onSubmit(), validarCampo()
+### Community 30 - "[token]/page.tsx"
+Cohesion: 0.31
+Nodes (9): onSubmit(), decodificarParametro(), EnlaceInvalido, Estado, RestablecerContrasenaPage(), onSubmit(), extraerErroresPorCampo(), validarConfirmacion() (+1 more)
 
 ### Community 31 - "ValidadoresContrasenaTests"
 Cohesion: 0.07
-Nodes (16): Contraseñas con menos de 8 caracteres deben ser rechazadas., Contraseñas con más de 20 caracteres deben ser rechazadas., Contraseñas sin mayúsculas deben ser rechazadas., Contraseñas sin minúsculas deben ser rechazadas., Contraseñas sin dígitos deben ser rechazadas., Contraseñas sin caracteres especiales deben ser rechazadas., Cada carácter especial permitido debe ser aceptado individualmente., Una contraseña de exactamente 8 caracteres debe ser aceptada si cumple todas… (+8 more)
+Nodes (15): Contraseñas con menos de 8 caracteres deben ser rechazadas., Contraseñas con más de 20 caracteres deben ser rechazadas., Contraseñas sin mayúsculas deben ser rechazadas., Contraseñas sin minúsculas deben ser rechazadas., Contraseñas sin dígitos deben ser rechazadas., Contraseñas sin caracteres especiales deben ser rechazadas., Cada carácter especial permitido debe ser aceptado individualmente., Una contraseña de exactamente 8 caracteres debe ser aceptada si cumple todas… (+7 more)
 
 ### Community 32 - "FilmAI Collage Poster Design — Option 2"
 Cohesion: 0.29
@@ -344,13 +347,13 @@ Nodes (3): Command, BaseCommand, Comando de desarrollo: verifica la integración
 Cohesion: 0.47
 Nodes (3): Manager que usa `correo` como identificador de autenticación.…, UsuarioManager, BaseUserManager
 
-### Community 35 - "Humanizer Skill"
-Cohesion: 0.70
-Nodes (5): Humanizer Skill README, 33 AI Writing Patterns, Humanizer Skill, Voice Calibration, Wikipedia: Signs of AI writing
+### Community 35 - "normalizeManualContextText"
+Cohesion: 0.13
+Nodes (20): addManualContextText(), canRestoreManualEditElement(), collectManualContextPieces(), walk(), contextElementForManualEdit(), directMixedTextRestoreNodes(), documentRefClassSuffix(), documentRefIdSuffix() (+12 more)
 
-### Community 36 - "showToast"
-Cohesion: 0.12
-Nodes (23): abandonForeignSession(), copyToClipboard(), discardOrphanedSession(), dismissToast(), finishVoiceSession(), isEmbeddedPreviewBrowser(), markSessionHandled(), maybeCompleteAcceptedSession() (+15 more)
+### Community 36 - "connectSSE"
+Cohesion: 0.08
+Nodes (45): abandonForeignSession(), cleanup(), cleanupAcceptedSession(), clearHandled(), clearScrollY(), clearSession(), connectSSE(), copyToClipboard() (+37 more)
 
 ### Community 37 - "nombre_completo"
 Cohesion: 0.40
@@ -360,25 +363,25 @@ Nodes (4): nombre_completo(), Filtros de template para saludos en emails transac
 Cohesion: 0.09
 Nodes (55): ae(), be(), bt(), Ce(), s(), Ct(), de(), dt() (+47 more)
 
-### Community 39 - "Conventional Commit Decision Gates"
-Cohesion: 0.83
-Nodes (4): Commit Type Examples, Conventional Commit Decision Gates, Conventional Commits Skill, No AI Attribution Rule
+### Community 39 - "usuarios/views.py"
+Cohesion: 0.20
+Nodes (9): EnlaceRestablecimientoInvalido, Exception, Señala un ``uid`` o token de restablecimiento inválido o vencido., Solicitud de restablecimiento sin revelar si un correo está registrado., RecuperarContrasenaSerializer, Validadores de autenticación (CU-001). - `ComplejidadContrasenaValidator`:…, Vistas de autenticación. `GoogleLogin` expone el login social de Google (flujo…, POST `/api/auth/password/reset/` — solicitud de restablecimiento. CU-020:… (+1 more)
 
-### Community 40 - "vercel-quality Skill README"
-Cohesion: 0.83
-Nodes (4): vercel-quality Skill README, emil-design-eng Skill, vercel-quality Skill, MUST/SHOULD/NEVER Quality Rules
+### Community 40 - "es_avatar_valido"
+Cohesion: 0.18
+Nodes (9): es_avatar_valido(), obtener_avatar(), Registro centralizado de avatares disponibles., Indica si ``avatar_id`` pertenece al registro y es un entero., Obtiene el recurso asociado o ``None``., Lanza ``ValidationError`` si el avatar no es válido., validar_avatar_id(), Valida que avatar_id sea uno de los avatares disponibles. (+1 more)
 
 ### Community 41 - "manage.py"
 Cohesion: 0.50
 Nodes (3): main(), Django's command-line utility for administrative tasks., Run administrative tasks.
 
-### Community 42 - "scheduleAcceptCleanup"
-Cohesion: 0.31
-Nodes (11): acceptedDomAlreadyClean(), clearHandledWrapperReloadStamp(), deferredRecoverySuperseded(), ensureAcceptedDomClean(), findAcceptedRuntimeWrappers(), handledWrapperReloadKey(), reloadAfterMissingAcceptedDom(), restoreAcceptedDomFromSnapshot() (+3 more)
+### Community 42 - "mountSvelteComponentVariant"
+Cohesion: 0.15
+Nodes (22): acceptedDomAlreadyClean(), applyOriginalAttrsToSvelteAnchor(), clearHandledWrapperReloadStamp(), commitAcceptedSvelteComponentToDom(), componentModuleCandidates(), deferredRecoverySuperseded(), describeMountFailure(), detectDevServerBase() (+14 more)
 
 ### Community 43 - "initPageChat"
-Cohesion: 0.11
-Nodes (36): applyGlobalBarLabelState(), armPageChatForTyping(), attachSteerFocusDebug(), bindEditBadgeProxy(), buildSteerProcessingDots(), clearSteerAwaitTimer(), collapsePageChat(), editBadgeProxyTargets() (+28 more)
+Cohesion: 0.15
+Nodes (31): armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), buildSteerProcessingDots(), clearSteerAwaitTimer(), collapsePageChat(), expandPageChat(), focusConfigureInput() (+23 more)
 
 ### Community 44 - "Collage Poster Option 3"
 Cohesion: 0.50
@@ -393,20 +396,20 @@ Cohesion: 0.33
 Nodes (5): Activación explícita, Calidad de la explicación, Cómo presentar la entrega, Decisiones y preguntas, Transparent Dev
 
 ### Community 90 - "setLiveState"
-Cohesion: 0.12
-Nodes (53): abortSvelteComponentInjection(), beginNewLiveConfiguration(), buildInsertPlaceholderSnapshotFromDom(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), cleanup(), cleanupAcceptedSession() (+45 more)
+Cohesion: 0.10
+Nodes (53): applyEditing(), beginNewLiveConfiguration(), buildLocatorForLeaf(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), clearAnnotations(), clearInsertPicking() (+45 more)
 
 ### Community 91 - "el"
 Cohesion: 0.08
-Nodes (54): actionLabel(), applyConfigureBarChrome(), bindConfigureCountPillTooltip(), bindConfigureInlineControlHover(), bindConfigureModifierPillHover(), buildConfigureActionControl(), buildConfigureCountControl(), buildConfigureRow() (+46 more)
+Nodes (55): actionLabel(), applyConfigureBarChrome(), bindConfigureCountPillTooltip(), bindConfigureInlineControlHover(), bindConfigureModifierPillHover(), buildConfigureActionControl(), buildConfigureCountControl(), buildConfigureRow() (+47 more)
 
 ### Community 92 - "onAnnotDown"
-Cohesion: 0.13
-Nodes (24): applyPlaceholderDimensions(), beginEditPin(), buildAnnotationsForCapture(), buildPinElement(), buildPlaceholderResizeHandles(), cancelEditingPin(), cursorForPlaceholderEdge(), finalizeEditingPin() (+16 more)
+Cohesion: 0.18
+Nodes (19): applyPlaceholderDimensions(), beginEditPin(), buildAnnotationsForCapture(), buildPinElement(), cancelEditingPin(), finalizeEditingPin(), initAnnotOverlay(), localCoords() (+11 more)
 
 ### Community 93 - "renderDesignVisual"
-Cohesion: 0.07
-Nodes (42): buildCollapsible(), buildColorModels(), buildDesignHeader(), buildListHtml(), buildRadiiModels(), buildTypographyModels(), cssSafe(), designEmptyMessage() (+34 more)
+Cohesion: 0.08
+Nodes (39): buildCollapsible(), buildColorModels(), buildDesignHeader(), buildListHtml(), buildRadiiModels(), buildTypographyModels(), cssSafe(), designEmptyMessage() (+31 more)
 
 ### Community 94 - "captureElementToBlob"
 Cohesion: 0.13
@@ -416,13 +419,13 @@ Nodes (20): averageRgb01(), bufferToBase64(), captureChromeNodes(), captureEleme
 Cohesion: 0.13
 Nodes (12): tmdb_exception_handler(), Backend de email de Django sobre la API HTTP de Resend. Motivación y diseño…, filmai_exception_handler(), Manejador global de excepciones de FilmAI., Unifica errores DRF y conserva el mapeo especializado de TMDB., ExceptionHandlerTests, Tests del backend de email sobre Resend (filmai.email_backends). Se instancia…, custom_404() (+4 more)
 
-### Community 96 - "signals.py"
-Cohesion: 0.22
-Nodes (6): AppConfig, UsuariosConfig, crear_recursos_por_defecto(), Señales de la app `usuarios`. Al crear un `Usuario` (por cualquier vía:…, Crea listas predeterminadas y chat por defecto para usuarios nuevos., receiver
+### Community 96 - "provisionar_recursos_por_defecto"
+Cohesion: 0.13
+Nodes (12): AppConfig, UsuariosConfig, Command, BaseCommand, Repara listas predeterminadas y chat faltantes de usuarios existentes., provisionar_recursos_por_defecto(), Provisión consistente de los recursos iniciales de un usuario., Asegura las listas y el único chat requeridos por el MVP. (+4 more)
 
-### Community 98 - "mountSvelteComponentVariant"
-Cohesion: 0.08
-Nodes (31): applyOriginalAttrsToSvelteAnchor(), captureAndEmit(), checkpointPayload(), clearMountErrorCard(), commitAcceptedSvelteComponentToDom(), compileShader(), componentModuleCandidates(), describeMountFailure() (+23 more)
+### Community 98 - "handleGo"
+Cohesion: 0.11
+Nodes (26): buildInsertPlaceholderSnapshotFromDom(), buildPickedAnchorSnapshot(), captureAndEmit(), clearMountErrorCard(), compileShader(), extractContext(), finishVoiceSession(), handleGo() (+18 more)
 
 ### Community 99 - "Responsive Design"
 Cohesion: 0.08
@@ -430,7 +433,7 @@ Nodes (25): Assess Adaptation Challenge, Breakpoints: Content-Driven, Content Ad
 
 ### Community 100 - "handleManualEditActivity"
 Cohesion: 0.19
-Nodes (24): clearStoredManualApplyState(), handleManualEditActivity(), hidePendingApplyDock(), manualApplyLoadingText(), manualApplyStateKey(), manualEditEventForCurrentPage(), numberOrNull(), onPendingKeepFixingClick() (+16 more)
+Nodes (23): clearStoredManualApplyState(), fetchPendingCount(), handleManualEditActivity(), hidePendingApplyDock(), manualApplyLoadingText(), manualApplyStateKey(), manualEditEventForCurrentPage(), numberOrNull() (+15 more)
 
 ### Community 101 - "onboard.md"
 Cohesion: 0.09
@@ -441,8 +444,8 @@ Cohesion: 0.13
 Nodes (14): Recommended Actions, Craft (deprecated alias), Apply, Live-mode signature params, Set the spatial thesis, Two isolated assessments, Verify, Visitor mode (+6 more)
 
 ### Community 103 - "impeccable/SKILL.md"
-Cohesion: 0.15
-Nodes (10): Craft floor, Refuse, Verify, Command guidance, No-argument routing: the context-aware menu, Workflow questions, Commands, How to design (+2 more)
+Cohesion: 0.10
+Nodes (15): Before you finish, Scope is sovereign, The amplification, The skeleton test, Why it reads flat, Craft floor, Refuse, Verify (+7 more)
 
 ### Community 104 - "The Toolkit"
 Cohesion: 0.10
@@ -688,13 +691,25 @@ Nodes (6): Adaptador de cuenta para el registro tradicional (dj-rest-auth)., Map
 Cohesion: 0.29
 Nodes (6): compat, __dirname, eslintConfig, __filename, eslint-config-prettier, @eslint/eslintrc
 
-### Community 168 - "bolder.md"
-Cohesion: 0.33
-Nodes (5): Before you finish, Scope is sovereign, The amplification, The skeleton test, Why it reads flat
+### Community 168 - "EmailRateThrottle"
+Cohesion: 0.22
+Nodes (7): EmailRateThrottle, EmailThrottleStatusMixin, Clases de throttling personalizadas para FilmAI. Proporcionan límites de…, Throttle basado en email para recuperación de contraseña. Limita las…, Usa el email del request como clave de throttle. Si el email no está presente o…, Mixin para agregar información de intentos restantes en la respuesta. Los views…, SimpleRateThrottle
 
 ### Community 169 - "LoginSerializer"
-Cohesion: 0.67
-Nodes (3): LoginSerializer, Login por credenciales con errores específicos para cuentas inactivas., La activación por ``estado`` reemplaza el chequeo de allauth.
+Cohesion: 0.20
+Nodes (7): LoginSerializer, Valida el enlace y persiste la nueva contraseña., Login por credenciales con errores específicos para cuentas inactivas., La activación por ``estado`` reemplaza el chequeo de allauth., RestablecerContrasenaSerializer, POST `/api/auth/password/reset/confirm/` — nueva contraseña. Valida el enlace…, RestablecerContrasenaView
+
+### Community 170 - "GoogleSocialLoginSerializer"
+Cohesion: 0.22
+Nodes (6): GoogleSocialLoginSerializer, Login y registro con Google mediante ``id_token``., GoogleLogin, Login/registro con Google OAuth 2.0 (Google Identity Services)., BaseSocialLoginSerializer, SocialLoginView
+
+### Community 172 - "Conventional Commits"
+Cohesion: 0.25
+Nodes (7): Activation Contract, Conventional Commits, Decision Gates, Execution Steps, Hard Rules, Output Contract, References
+
+### Community 173 - "LenientJWTCookieAuthentication"
+Cohesion: 0.50
+Nodes (3): LenientJWTCookieAuthentication, Variante que no revienta si la cookie JWT es inválida o está vencida.…, JWTCookieAuthentication
 
 ## Ambiguous Edges - Review These
 - `FilmAI Landing Marketing / Hero Visual` → `Poster Title Text (Unverified Visual Content)`  [AMBIGUOUS]
@@ -705,9 +720,9 @@ Nodes (3): LoginSerializer, Login por credenciales con errores específicos para
   frontend/public/collage-posters/Opcion 3.jpg · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **622 isolated node(s):** `Migration`, `Migration`, `Migration`, `Migration`, `Migration` (+617 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 923 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **30 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **628 isolated node(s):** `Migration`, `Migration`, `Migration`, `Migration`, `Migration` (+623 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 931 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -718,11 +733,11 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `FilmAI Hero/Marketing Asset` and `Collage Poster Option 3`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `UsuarioFactory` connect `UsuarioFactory` to `usuarios/tests.py`, `RecuperarContrasenaTests`, `Command`, `._serializer_google`, `.handle`, `LoginDualTests`, `Usuario`?**
+- **Why does `UsuarioFactory` connect `UsuarioFactory` to `RecuperarContrasenaTests`, `Command`, `GoogleOAuthTests`, `.handle`, `UsuarioPerfilSerializer`, `LoginDualTests`, `Usuario`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **Why does `Usuario` connect `Usuario` to `signals.py`, `usuarios/views.py`, `usuarios/tests.py`, `RegisterSerializer`, `Command`, `LoginSerializer`, `UsuarioFactory`, `ConfirmarCorreoTests`?**
+- **Why does `Usuario` connect `Usuario` to `provisionar_recursos_por_defecto`, `urls.py`, `UsuarioFactory`, `usuarios/views.py`, `Command`, `LoginSerializer`, `GoogleSocialLoginSerializer`, `RegisterSerializer`, `GoogleOAuthTests`, `UsuarioPerfilSerializer`, `ConfirmarCorreoTests`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Why does `ValidadoresContrasenaTests` connect `ValidadoresContrasenaTests` to `usuarios/tests.py`, `RecuperarContrasenaTests`?**
+- **Why does `ValidadoresContrasenaTests` connect `ValidadoresContrasenaTests` to `UsuarioPerfilSerializer`, `UsuarioFactory`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **Are the 15 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ChatFactory`) actually correct?**
   _`UsuarioFactory` has 15 INFERRED edges - model-reasoned connections that need verification._

@@ -35,10 +35,15 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 
 ## 6. Consultar skills disponibles
 
-- Antes de iniciar una implementación, revisar las skills disponibles en `.agents/skills/`.
+- La única fuente de skills del proyecto es `.agents/skills/`. Antes de iniciar
+  una implementación, Codex, OpenCode y Antigravity CLI deben revisar la skill
+  aplicable allí. No crear ni copiar skills en directorios específicos de un
+  harness, como `.opencode/skills/`.
 - Skills disponibles:
+  - **conventional-commits**: redactar mensajes de commit convencionales.
   - **humanizer**: eliminar señales de escritura generada por IA en textos.
   - **impeccable**: diseño, rediseño y auditoría de interfaces frontend.
+  - **transparent-dev**: explicar decisiones, alternativas y límites de una implementación.
   - **vercel-quality**: checklist de calidad post-implementación para frontend.
 - Usar la skill correspondiente cuando la tarea lo requiera.
 
