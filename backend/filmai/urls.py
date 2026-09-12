@@ -30,6 +30,7 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[]),
         name="swagger-ui",
     ),
+    path("api/catalogo/", include("catalogo.urls")),
     path(
         "api/auth/password/reset/",
         RecuperarContrasenaView.as_view(),
