@@ -5,6 +5,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 12/09/2026 — Skills centralizadas para todos los harnesses
+
+- **Descripción**: `.agents/skills/` es la única fuente versionada de skills
+  para Codex, OpenCode y Antigravity CLI. Se migró `conventional-commits` desde
+  `.opencode/skills/` y se eliminaron de allí las copias de `humanizer` y
+  `vercel-quality`. `AGENTS.md` instruye a los tres harnesses a consultar la
+  fuente central antes de implementar.
+- **Motivo**: evitar definiciones divergentes de una misma skill y conservar
+  una revisión única y auditable de las instrucciones del proyecto.
+- **Archivos afectados**: `AGENTS.md`, `.agents/skills/`,
+  `.opencode/skills/` y `docs/decisiones.md`.
+
+---
+
 ## 12/09/2026 — Contrato API centralizado y perfiles sociales inmutables al login
 
 - **Descripción**: se incorpora OpenAPI con Swagger UI en `/api/docs/` y su
