@@ -4,6 +4,23 @@ Registro de decisiones de diseño y cambios relevantes del proyecto.
 Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos afectados).
 
 ---
+## 12/09/2026 — C-03: endpoints de catálogo públicos con AllowAny explícito
+
+- **Descripción**: los 7 endpoints de catálogo (`/api/catalogo/trending/`,
+  `now-playing/`, `discover/`, `search/`, `movie/<id>/`, `tv/<id>/`,
+  `keywords/`) se sirven con `authentication_classes = []` y
+  `permission_classes = [AllowAny]` en `CatalogoBaseView`, sobrescribiendo
+  explícitamente el `DEFAULT_PERMISSION_CLASSES = IsAuthenticated` introducido
+  en PR #9. El catálogo (trending, búsqueda, detalle) es accesible sin login,
+  consistente con docs 04 y 05 (Home y Buscador muestran contenido a usuarios
+  no autenticados). El throttle `catalogo: 60/min` aplica a todos igualmente.
+- **Motivo**: arquitectura del Módulo 2 (docs/05) describe discovery público;
+  el usuario confirmó explícitamente que el catálogo es público.
+- **Archivos**: `backend/catalogo/views.py`, `backend/catalogo/urls.py`,
+  `backend/filmai/urls.py`, `backend/catalogo/tests.py`,
+  `openspec/changes/catalog-tmdb-endpoints/`.
+
+---
 
 ## 12/09/2026 — Skills centralizadas para todos los harnesses
 
