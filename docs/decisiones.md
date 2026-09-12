@@ -5,6 +5,27 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 12/09/2026 — Contrato API centralizado y perfiles sociales inmutables al login
+
+- **Descripción**: se incorpora OpenAPI con Swagger UI en `/api/docs/` y su
+  esquema en `/api/schema/`; la documentación de parámetros deja de vivir en
+  docstrings extensos de rutas. Las URLs de API usan slash final de forma
+  explícita (`APPEND_SLASH=True`) y el helper del frontend lo normaliza antes
+  de cada request. El handler global conserva los mapeos de TMDB y agrega
+  respuestas consistentes para 404, 405 y 429. En Google OAuth, una cuenta ya
+  vinculada devuelve el perfil FilmAI existente sin modificar estado ni datos
+  personales; Google solo precarga una cuenta nueva.
+- **Motivo**: consolidar el contrato público de la API, evitar discrepancias de
+  rutas entre frontend y backend y proteger las modificaciones de perfil hechas
+  dentro de FilmAI.
+- **Archivos afectados**: `backend/requirements.txt`, `backend/filmai/settings.py`,
+  `backend/filmai/urls.py`, `backend/filmai/exceptions.py`,
+  `backend/filmai/views.py`, `backend/usuarios/adapter.py`,
+  `backend/usuarios/avatares.py`, `backend/usuarios/factories.py`,
+  `frontend/lib/api.ts` y sus pruebas asociadas.
+
+---
+
 ## 11/09/2026 — El perfil de FilmAI prevalece sobre el perfil de Google
 
 - **Descripción**: Google provee nombre y apellido solo para precargar el alta

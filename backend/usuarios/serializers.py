@@ -77,7 +77,7 @@ class RegisterSerializer(BaseRegisterSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # El serializer heredado trae los campos convencionales username y email. Se eliminan para reemplazarlos por nombre_usuario y correo.
+        # FilmAI usa `nombre_usuario` y `correo`.
         self.fields.pop("username", None)
         self.fields.pop("email", None)
 

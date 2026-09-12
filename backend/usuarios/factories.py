@@ -1,8 +1,4 @@
-"""
-Factories de factory_boy para la app `usuarios`.
-
-Se usan únicamente para sembrar datos de desarrollo (`python manage.py seed`).
-"""
+"""Factories de usuarios para desarrollo y pruebas."""
 
 import factory
 
@@ -11,12 +7,7 @@ from .models import EstadoCuenta, Tema, TipoGenero, Usuario
 
 
 class UsuarioFactory(factory.django.DjangoModelFactory):
-    """Crea un `Usuario` con estado Activa y una contraseña por defecto.
-
-    La contraseña se aplica a través de `UsuarioManager.create_user` para que
-    quede correctamente hasheada: el campo `password` (heredado de
-    `AbstractBaseUser`) no se hashea con un `create` directo.
-    """
+    """Crea usuarios activos con contraseña hasheada."""
 
     class Meta:
         model = Usuario
@@ -28,7 +19,9 @@ class UsuarioFactory(factory.django.DjangoModelFactory):
     fecha_nacimiento = factory.Faker("date_of_birth", minimum_age=18, maximum_age=60)
     genero = factory.Iterator(TipoGenero.values)
     estado = EstadoCuenta.ACTIVA
-    avatar_id = factory.Iterator(sorted(AVATAR_IDS_VALIDOS))
+    avatar_id = factory.Faker(
+        "random_element", elements=tuple(sorted(AVATAR_IDS_VALIDOS))
+    )
     tema = Tema.OSCURO
 
     @classmethod

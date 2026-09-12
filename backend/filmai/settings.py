@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     # Terceros
     "rest_framework",
+    "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     # Autenticación (django-allauth + dj-rest-auth)
@@ -71,6 +72,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+APPEND_SLASH = True
 
 ROOT_URLCONF = "filmai.urls"
 
@@ -155,6 +158,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "EXCEPTION_HANDLER": "filmai.exceptions.filmai_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {
         "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña (legacy)
         "recuperar_contrasena_email": "5/day",  # 5 solicitudes de recuperación por día por email (no por IP)
@@ -162,6 +166,12 @@ REST_FRAMEWORK = {
         "username_disponible": "30/min",
         "catalogo": "60/min",
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "FilmAI API",
+    "DESCRIPTION": "API del backend de FilmAI.",
+    "VERSION": "1.0.0",
 }
 
 # Permite que el frontend (localhost:3000) haga requests al backend (localhost:8000).

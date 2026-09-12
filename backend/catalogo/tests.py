@@ -224,10 +224,10 @@ class GetCatalogServiceTest(SimpleTestCase):
 
 
 class CatalogoSettingsTest(SimpleTestCase):
-    def test_tmdb_handler_and_throttle_are_configured(self):
+    def test_global_handler_preserva_tmdb_y_throttle(self):
         self.assertEqual(
             settings.REST_FRAMEWORK["EXCEPTION_HANDLER"],
-            "catalogo.exceptions.tmdb_exception_handler",
+            "filmai.exceptions.filmai_exception_handler",
         )
         self.assertEqual(
             settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["catalogo"],
