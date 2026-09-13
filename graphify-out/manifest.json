@@ -84,16 +84,16 @@
     "semantic_hash": "21244aa8ffc7371b588784989ea2e357"
   },
   "backend/catalogo/tests.py": {
-    "mtime": 1789238232.5241694,
-    "seen": 1789239093.338365,
-    "ast_hash": "2439cf84e727f016520c1dcefb5e380e",
+    "mtime": 1789264348.062774,
+    "seen": 1789265155.592488,
+    "ast_hash": "7b3032bc52ec3d84f8364b1ddf0d3beb",
     "semantic_hash": ""
   },
   "backend/catalogo/views.py": {
-    "mtime": 1787089748.0961275,
-    "seen": 1789054976.1080241,
-    "ast_hash": "ad656aaabae09dc285884ad38d889ef9",
-    "semantic_hash": "ad656aaabae09dc285884ad38d889ef9"
+    "mtime": 1789264348.062774,
+    "seen": 1789265155.5924942,
+    "ast_hash": "951133a01b8fdedcce30e01f0b1445ae",
+    "semantic_hash": ""
   },
   "backend/chatbot/__init__.py": {
     "mtime": 1787089748.0961275,
@@ -198,9 +198,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/urls.py": {
-    "mtime": 1789238232.5241694,
-    "seen": 1789239093.3390965,
-    "ast_hash": "f39e1d0edf6500369aa4369757e69d76",
+    "mtime": 1789264931.8414214,
+    "seen": 1789265155.5935414,
+    "ast_hash": "ea87562c84282ac6f46e51c8daf32edb",
     "semantic_hash": ""
   },
   "backend/filmai/wsgi.py": {
@@ -678,9 +678,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1789239052.3352242,
-    "seen": 1789239093.3443372,
-    "ast_hash": "6cad68b4149021c7a6c23f6e490a8b25",
+    "mtime": 1789264932.1371498,
+    "seen": 1789265155.6009746,
+    "ast_hash": "efc287ca5e29f87626de5667bf15a3c7",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1389,6 +1389,42 @@
     "mtime": 1789239037.848623,
     "seen": 1789239093.3411968,
     "ast_hash": "d2f2c606e0fc73398ca2d116525a6738",
+    "semantic_hash": ""
+  },
+  "backend/catalogo/urls.py": {
+    "mtime": 1789264931.5612576,
+    "seen": 1789265155.592492,
+    "ast_hash": "b327157a82bdedf3a96eb91fc83e8210",
+    "semantic_hash": ""
+  },
+  "openspec/changes/catalog-tmdb-endpoints/apply-progress.md": {
+    "mtime": 1789264348.0667143,
+    "seen": 1789265155.601938,
+    "ast_hash": "7c16cf2147838b5a21a8813b3d3e8afe",
+    "semantic_hash": ""
+  },
+  "openspec/changes/catalog-tmdb-endpoints/design.md": {
+    "mtime": 1789264348.072953,
+    "seen": 1789265155.6019404,
+    "ast_hash": "d65ddb6294089f8b1f79d0b8e10574f3",
+    "semantic_hash": ""
+  },
+  "openspec/changes/catalog-tmdb-endpoints/proposal.md": {
+    "mtime": 1789264348.072953,
+    "seen": 1789265155.6019418,
+    "ast_hash": "5f5b87a045ae586a97cdd03ab32d21b4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/catalog-tmdb-endpoints/specs/tmdb-endpoints/spec.md": {
+    "mtime": 1789264348.0751274,
+    "seen": 1789265155.601943,
+    "ast_hash": "5929398734f577477c1f0b27a282fe80",
+    "semantic_hash": ""
+  },
+  "openspec/changes/catalog-tmdb-endpoints/tasks.md": {
+    "mtime": 1789264348.0751274,
+    "seen": 1789265155.6019442,
+    "ast_hash": "cbfe4f7f46a91fe777c9f58cf82ca9fe",
     "semantic_hash": ""
   }
 }
