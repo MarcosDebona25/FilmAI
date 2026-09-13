@@ -29,7 +29,7 @@ The system MUST expose seven read-only `GET` endpoints, each delegating to exact
 
 ### Requirement: Parameter pass-through
 
-The system MUST forward each query/path parameter to the matching cache-method argument, coercing types and rejecting invalid `tipo` or `id_tmdb`.
+The system MUST forward each query/path parameter to the matching cache-method argument, coercing `id_tmdb` to an integer and validating `tipo` (if present) is 'movie' or 'tv'.
 
 #### Scenario: Discover filters
 
