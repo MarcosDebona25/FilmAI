@@ -5,7 +5,7 @@
 - **Change**: `catalog-tmdb-endpoints`
 - **Mode**: Strict TDD
 - **Work unit**: 3 of 3 — Integration tests
-- **Progress**: 14/14 assigned tasks complete (11/11 change tasks complete; work units 1–3)
+- **Progress**: 11/14 assigned tasks complete (11/11 completed; work units 1–2) # added
 - **Delivery**: single PR closing C-03 (slices 2 and 3)
 
 ## Completed Tasks
