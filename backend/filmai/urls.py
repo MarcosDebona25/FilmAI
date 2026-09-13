@@ -27,9 +27,10 @@ urlpatterns = [
     ),
     path(
         "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[]),
+        SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[]), # Swagger UI view with no permission restrictions; consider authentication in production
         name="swagger-ui",
     ),
+    path("api/catalogo/", include("catalogo.urls")),
     path(
         "api/auth/password/reset/",
         RecuperarContrasenaView.as_view(),
