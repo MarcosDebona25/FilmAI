@@ -6,7 +6,7 @@
 - **Mode**: Strict TDD
 - **Work unit**: 3 of 3 — Integration tests
 - **Progress**: 14/14 assigned tasks complete (11/11 change tasks complete; work units 1–3)
-- **Delivery**: slice 2 PR + slice 3 PR → both merged to main
+- **Delivery**: single PR closing C-03 (slices 2 and 3)
 
 ## Completed Tasks
 
@@ -21,6 +21,9 @@
 - [x] 2.4 — Added detail-path validation and discover/search parameter mapping.
 - [x] 3.1 — Added named catalog endpoint routes with string detail path converters.
 - [x] 3.2 — Included catalog routes below `/api/catalogo/` in the project URL configuration.
+- [x] 4.1 RED — Added `EndpointIntegrationTest` with `APIClient` and mocked TMDB/Redis asserting 200, passthrough JSON, and forwarded parameters across all 7 endpoints.
+- [x] 4.2 RED — Added error-to-HTTP mappings (404/400/429/502/503), method validation (POST → 405), and rate limit enforcement (429).
+- [x] 4.3 — Ran full catalog test suite (41/41 passed) and verified ruff check/format clean.
 
 ## TDD Cycle Evidence
 
@@ -37,24 +40,27 @@
 | 2.4 | `backend/catalogo/tests.py` | Unit | N/A (new views/routes) | ✅ Written with 2.1 | ✅ 4 tests passed | ✅ Detail validation and optional discover parsing | ✅ Ruff clean |
 | 3.1 | `backend/catalogo/urls.py` | Unit | N/A (new file) | ✅ Structural route definitions | ✅ URL reverse passed | ➖ Structural routing | ✅ Ruff clean |
 | 3.2 | `backend/filmai/urls.py` | Unit | ✅ 21/21 | ✅ Include added | ✅ URL reverse passed | ➖ Structural wiring | ✅ Ruff clean |
+| 4.1 | `backend/catalogo/tests.py` | Integration | ✅ 25/25 | ✅ Tests fail before endpoint wiring | ✅ 7 endpoints 200 passthrough | ✅ Forwarded query/path arguments | ✅ Ruff clean |
+| 4.2 | `backend/catalogo/tests.py` | Integration | ✅ 32/32 | ✅ Tests fail without error handlers | ✅ 404, 400, 429, 502, 503, 405, throttle | ✅ Handlers and status mapping | ✅ Ruff clean |
+| 4.3 | `backend/catalogo/tests.py` | Full suite | ✅ 41/41 | N/A (verification) | ✅ 41/41 passed | ✅ Full test suite green | ✅ Ruff clean |
 
 ## Work Unit Evidence
 
 | Evidence | Result |
 |----------|--------|
-| Focused test command and exact result | `docker compose exec -T backend python manage.py test catalogo.tests.ParamValidationTest` — exit 0, **4 tests passed** |
+| Focused test command and exact result | `docker compose exec -T backend python manage.py test catalogo` — exit 0, **41 tests passed** |
 | Runtime harness command/scenario and exact result | `docker compose exec -T backend python manage.py shell -c "from django.urls import reverse; print(reverse('catalogo:trending'))"` — exit 0, resolved `/api/catalogo/trending/` |
-| Rollback boundary | Revert `backend/catalogo/views.py`, `backend/catalogo/urls.py`, `backend/filmai/urls.py`, the added validation test, and this task/progress artifact; slice-1 behavior and C-01/C-02 files remain untouched |
+| Rollback boundary | Revert `backend/catalogo/views.py`, `backend/catalogo/urls.py`, `backend/filmai/urls.py`, appended tests in `backend/catalogo/tests.py`, and this task/progress artifact; slice-1 behavior and C-01/C-02 files remain untouched |
 
 ## Verification
 
-- Focused tests: **4/4 passed**
-- Full `catalogo` suite: **25/25 passed**
+- Focused tests: **41/41 passed**
+- Full `catalogo` suite: **41/41 passed**
 - `docker compose exec -T backend ruff check .`: **All checks passed!**
-- `docker compose exec -T backend ruff format --check .`: **52 files already formatted**
+- `docker compose exec -T backend ruff format --check .`: **58 files already formatted**
 
 ## Remaining Tasks
 
 - [x] Work unit 2: views and parameter validation (tasks 2.1–2.4)
 - [x] Work unit 2: routing and wiring (tasks 3.1–3.2)
-- [ ] Work unit 3: integration tests (tasks 4.1–4.3)
+- [x] Work unit 3: integration tests (tasks 4.1–4.3)
