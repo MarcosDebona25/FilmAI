@@ -54,7 +54,7 @@ The system MUST forward each query/path parameter to the matching cache-method a
 - GIVEN `/api/catalogo/movie/550/`, `/api/catalogo/tv/550/`, or `/api/catalogo/keywords/` with `id_tmdb=550&tipo=movie`
 - WHEN the endpoint handles it
 - THEN the matching detail/keywords method is invoked with `id_tmdb=550`
-
+- THEN the matching detail/keywords method is invoked with the provided path and query parameters
 #### Scenario: Invalid params rejected
 
 - GIVEN a non-integer `id_tmdb` or an unsupported `tipo`
