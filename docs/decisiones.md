@@ -1186,3 +1186,17 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   `backend/usuarios/provisioning.py`,
   `backend/usuarios/management/commands/reparar_recursos_usuarios.py`,
   `backend/chatbot/models.py`, su migración y pruebas.
+
+## 13/09/2026 — Corrección de sintaxis en las rutas del catálogo
+
+- **Fecha**: 13/09/2026
+- **Descripción**: se restauraron las comas separadoras en las rutas de detalle
+  de película y serie. Su ausencia impedía importar `catalogo.urls`, por lo que
+  Django no podía ejecutar las migraciones ni sus system checks. Se ajustó además
+  el formato de la ruta de Swagger para que Ruff valide el backend sin cambios
+  pendientes.
+- **Motivo**: el backend quedaba en bucle de reinicio y CI reportaba un error de
+  sintaxis antes de evaluar los endpoints, incluido `KeywordsView`, que existe y
+  está correctamente importado.
+- **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
+  `docs/decisiones.md`.
