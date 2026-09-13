@@ -45,6 +45,10 @@ Thumbs.db
 # --- Herramientas de IA / análisis ---
 .codegraph/
 .ruff_cache/
+# symlink local a .agents/skills (Claude Code); no duplicar en git, ver AGENTS.md #6
+.claude/skills
+# CLAUDE.md local (solo apunta a AGENTS.md, no se versiona)
+/CLAUDE.md
 
 # --- Graphify ---
 graphify-out/cache/
