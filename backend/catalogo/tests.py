@@ -5,7 +5,10 @@ import httpx
 import redis
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.test import APIRequestFactory
+from rest_framework.throttling import ScopedRateThrottle
 
 from catalogo.cache import (
     ENDPOINT_TTLS,
@@ -26,6 +29,13 @@ from catalogo.exceptions import (
     tmdb_exception_handler,
 )
 from catalogo.service import get_catalog_service
+from catalogo.views import (
+    DiscoverView,
+    MovieDetailView,
+    SearchView,
+    _float_param,
+    _int_param,
+)
 
 
 class TMDBClientTest(SimpleTestCase):
@@ -362,3 +372,225 @@ class TMDBClientCacheTest(SimpleTestCase):
                 socket_connect_timeout=REDIS_SOCKET_CONNECT_TIMEOUT,
                 socket_timeout=REDIS_SOCKET_TIMEOUT,
             )
+
+
+class ParamValidationTest(SimpleTestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+
+    @patch("catalogo.views.get_catalog_service")
+    def test_invalid_tipo_returns_400_without_service_call(self, get_service):
+        request = self.factory.get("/api/catalogo/discover/?tipo=book")
+
+        response = DiscoverView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        get_service.assert_not_called()
+
+    def test_optional_integer_param_preserves_none_default(self):
+        self.assertIsNone(_int_param(None, "genero", default=None))
+
+    @patch("catalogo.views.get_catalog_service")
+    def test_non_finite_min_rating_returns_400_without_service_call(self, get_service):
+        request = self.factory.get("/api/catalogo/discover/?min_rating=nan")
+
+        response = DiscoverView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        get_service.assert_not_called()
+
+    def test_float_param_rejects_non_finite(self):
+        with self.assertRaises(ValidationError):
+            _float_param("inf", "min_rating")
+        with self.assertRaises(ValidationError):
+            _float_param("nan", "min_rating")
+
+    @patch("catalogo.views.get_catalog_service")
+    def test_non_integer_detail_id_returns_400_without_service_call(self, get_service):
+        request = self.factory.get("/api/catalogo/movie/not-an-id/")
+
+        response = MovieDetailView.as_view()(request, id_tmdb="not-an-id")
+
+        self.assertEqual(response.status_code, 400)
+        get_service.assert_not_called()
+
+    @patch("catalogo.views.get_catalog_service")
+    def test_missing_search_query_returns_400_without_service_call(self, get_service):
+        request = self.factory.get("/api/catalogo/search/?tipo=movie")
+
+        response = SearchView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        get_service.assert_not_called()
+
+
+class EndpointIntegrationTest(SimpleTestCase):
+    def setUp(self):
+        self.redis = fakeredis.FakeRedis(decode_responses=True)
+
+    def _make_service(self, body=None):
+        body = body or {"results": [{"id": 550, "title": "Fight Club"}]}
+
+        def handler(request):
+            return httpx.Response(200, json=body)
+
+        client = TMDBClient(
+            api_key="test-key",
+            transport=httpx.MockTransport(handler),
+        )
+        return TMDBClientCache(client, self.redis)
+
+    def _get(self, url):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        with patch(
+            "catalogo.views.get_catalog_service", return_value=self._make_service()
+        ):
+            return client.get(url)
+
+    def test_trending_returns_200(self):
+        response = self._get("/api/catalogo/trending/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["results"][0]["title"], "Fight Club")
+
+    def test_now_playing_returns_200(self):
+        response = self._get("/api/catalogo/now-playing/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("results", response.data)
+
+    def test_discover_returns_200(self):
+        response = self._get("/api/catalogo/discover/?tipo=movie")
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_search_returns_200(self):
+        response = self._get("/api/catalogo/search/?query=Fight%20Club&tipo=movie")
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_movie_detail_returns_200(self):
+        response = self._get("/api/catalogo/movie/550/")
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_tv_detail_returns_200(self):
+        response = self._get("/api/catalogo/tv/1399/")
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_keywords_returns_200(self):
+        response = self._get("/api/catalogo/keywords/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_returns_405(self):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        response = client.post("/api/catalogo/trending/")
+
+        self.assertEqual(response.status_code, 405)
+
+    def _make_failing_service(self, exc_class, message="TMDB error"):
+        def handler(request):
+            if exc_class is TMDBTransportError:
+                raise httpx.TransportError(message)
+            status = {
+                TMDBNotFound: 404,
+                TMDBBadRequest: 400,
+                TMDBRateLimited: 429,
+                TMDBServerError: 500,
+            }[exc_class]
+            return httpx.Response(status)
+
+        client = TMDBClient(
+            api_key="test-key",
+            transport=httpx.MockTransport(handler),
+        )
+        return TMDBClientCache(client, self.redis)
+
+    def test_tmdb_not_found_returns_404(self):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        with patch(
+            "catalogo.views.get_catalog_service",
+            return_value=self._make_failing_service(TMDBNotFound, "Not found"),
+        ):
+            response = client.get("/api/catalogo/movie/99999/")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_tmdb_bad_request_returns_400(self):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        with patch(
+            "catalogo.views.get_catalog_service",
+            return_value=self._make_failing_service(TMDBBadRequest, "Bad request"),
+        ):
+            response = client.get("/api/catalogo/discover/", {"tipo": "movie"})
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_tmdb_rate_limited_returns_429(self):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        with patch(
+            "catalogo.views.get_catalog_service",
+            return_value=self._make_failing_service(TMDBRateLimited, "Rate limited"),
+        ):
+            response = client.get("/api/catalogo/trending/")
+
+        self.assertEqual(response.status_code, 429)
+
+    def test_tmdb_server_error_returns_502(self):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        with patch(
+            "catalogo.views.get_catalog_service",
+            return_value=self._make_failing_service(TMDBServerError, "Server error"),
+        ):
+            response = client.get("/api/catalogo/trending/")
+
+        self.assertEqual(response.status_code, 502)
+
+    def test_tmdb_transport_error_returns_503(self):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        with patch(
+            "catalogo.views.get_catalog_service",
+            return_value=self._make_failing_service(
+                TMDBTransportError, "Transport error"
+            ),
+        ):
+            response = client.get("/api/catalogo/trending/")
+
+        self.assertEqual(response.status_code, 503)
+
+    def test_throttle_exceeded_returns_429(self):
+        from django.core.cache import cache as dj_cache
+        from rest_framework.test import APIClient
+
+        dj_cache.clear()
+        client = APIClient()
+        with (
+            patch(
+                "rest_framework.throttling.ScopedRateThrottle.THROTTLE_RATES",
+                {**ScopedRateThrottle.THROTTLE_RATES, "catalogo": "1/min"},
+            ),
+            patch(
+                "catalogo.views.get_catalog_service", return_value=self._make_service()
+            ),
+        ):
+            first = client.get("/api/catalogo/trending/")
+            second = client.get("/api/catalogo/trending/")
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 429)
