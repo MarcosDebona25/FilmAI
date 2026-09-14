@@ -486,6 +486,25 @@ class EndpointIntegrationTest(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    @patch("catalogo.views.get_catalog_service")
+    def test_non_integer_detail_id_returns_400_through_url_routing(self, get_service):
+        """Un `id_tmdb` no entero debe dar 400, no 404 (spec de C-03).
+
+        `ParamValidationTest` ya cubre el caso llamando a la vista en forma
+        directa, por lo que no detecta un conversor de URL que rechace el
+        request antes de llegar a ella: ambas rutas de detalle deben resolver
+        y delegar la validación a `_int_param`.
+        """
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        for url in ("/api/catalogo/movie/not-an-id/", "/api/catalogo/tv/not-an-id/"):
+            with self.subTest(url=url):
+                response = client.get(url)
+
+                self.assertEqual(response.status_code, 400)
+        get_service.assert_not_called()
+
     def test_post_returns_405(self):
         from rest_framework.test import APIClient
 
