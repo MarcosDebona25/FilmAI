@@ -1200,3 +1200,43 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   está correctamente importado.
 - **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
   `docs/decisiones.md`.
+
+## 14/09/2026 — C-04a adelanta la infraestructura mínima de embeddings; corrección de paquete pgvector
+
+- **Fecha**: 14/09/2026
+- **Descripción**: la especificación de C-04a (08/09/2026) requiere crear un
+  `ProduccionEmbedding` en estado `pending` y encolar `generar_embedding.delay(...)`,
+  pero esa infraestructura (modelo, pgvector, wiring de Celery) estaba asignada
+  a B-06 (Marcos, Fase 3), que en el plan corre en paralelo/después de C-04a.
+  Se decide **adelantar dentro de C-04a** lo mínimo necesario para no dejar el
+  helper de materialización sin poder encolar nada: modelo `ProduccionEmbedding`
+  + migración con la extensión `vector`, wiring de Celery (`filmai/celery.py`,
+  settings, servicio `celery-worker`), y la tarea `generar_embedding` con toda
+  la lógica real de idempotencia (claim `pending`/`failed`→`processing`, corte
+  por `source_hash`+`model_version`). La llamada al proveedor de embeddings en
+  sí (Ollama/bge-m3) queda como stub documentado (`generar_vector()`, lanza
+  `NotImplementedError`) — punto de extensión para que B-06 lo reemplace sin
+  tocar el resto. No se agrega el servicio `ollama` ni se hace pull de
+  `bge-m3`: eso sigue siendo 100% de B-06.
+  Decisiones asociadas:
+  - El paquete Django correcto para `VectorField`/`HnswIndex`/`VectorExtension`
+    es `pgvector` (paquete `pgvector-python`, submódulo `pgvector.django`); se
+    corrige la mención previa a `django-pgvector` en
+    `docs/05_Plan_de_Desarrollo.md`, que no es el paquete mantenido para esto.
+  - `materializar()` se invoca como side-effect desde `MovieDetailView`/
+    `TVDetailView` (C-03) dentro de la misma tarea C-04a, sin cambiar su
+    contrato de respuesta — de lo contrario el helper quedaría sin ningún
+    llamador real hasta la UI de ficha de detalle (C-07).
+  - El test de concurrencia obligatorio para mergear es determinístico (mockea
+    `IntegrityError` en `.create()` y verifica el fallback a `.get()`); un
+    test adicional con `TransactionTestCase` + `threading.Barrier` (dos
+    threads reales contra Postgres) se agrega como prueba de confianza extra,
+    pero no bloquea el merge si es inestable por timing.
+- **Motivo**: evitar que C-04a quede bloqueada esperando una fase posterior
+  del plan, sin adelantar trabajo que no le corresponde (el proveedor real de
+  embeddings sigue siendo responsabilidad de B-06).
+- **Archivos**: `docker-compose.yml`;
+  `openspec/changes/catalog-materialization/{proposal,design,tasks}.md`;
+  `docs/05_Plan_de_Desarrollo.md`. (Modelo, wiring de Celery, tarea y vistas
+  se agregan en commits siguientes de la misma rama
+  `feat/c-04a-materializacion`.)
