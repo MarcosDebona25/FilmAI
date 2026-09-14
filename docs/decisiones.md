@@ -1201,6 +1201,37 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
   `docs/decisiones.md`.
 
+## 14/09/2026 — Modelo `ProduccionEmbedding`: invariantes en la base, no en Python
+
+- **Fecha**: 14/09/2026
+- **Descripción**: se implementa `ProduccionEmbedding` (C-04a, fase 2) con dos
+  garantías delegadas al motor de base de datos en lugar de a validaciones de
+  aplicación, para que ningún camino de escritura (ORM, admin, SQL manual,
+  scripts de backfill) pueda saltearlas:
+  - `OneToOneField` con `on_delete=CASCADE` → columna `produccion_id UNIQUE`:
+    imposible tener dos embeddings de la misma producción, y borrar la
+    producción se lleva su embedding.
+  - `CheckConstraint` `ck_embedding_ready_requiere_vector`: un embedding en
+    estado `ready` no puede tener `vector` nulo. Un `ready` sin vector sería
+    invisible para la búsqueda pero contaría como procesado, dejando la
+    producción fuera del corpus en silencio.
+  Índices: `idx_embedding_estado` (btree, para que el backfill busque
+  `pending`/`failed`) e `idx_embedding_vector_hnsw` (HNSW con
+  `vector_cosine_ops`, `m=16`, `ef_construction=64`) para la búsqueda por
+  similitud que usará `buscar_semantico` (B-06).
+  La migración `0004_produccionembedding` lleva `VectorExtension()` agregado a
+  mano como primera operación: `makemigrations` no infiere que el tipo
+  `vector` proviene de una extensión, y sin eso la migración falla con `type
+  "vector" does not exist`.
+  Se registra `ProduccionEmbedding` en el admin (excluyendo el vector, que son
+  1024 números ilegibles en un formulario) para poder auditar estados en
+  desarrollo; el registro de `Usuario` y `Reseña` sigue siendo AD-01'.
+- **Motivo**: los embeddings los escribe un worker asincrónico que puede
+  fallar a mitad de camino; las invariantes tienen que sobrevivir a eso.
+- **Archivos**: `backend/catalogo/models.py`,
+  `backend/catalogo/migrations/0004_produccionembedding.py`,
+  `backend/catalogo/admin.py`, `backend/catalogo/tests.py`.
+
 ## 14/09/2026 — Entrypoint parametrizable y imagen pgvector Debian (wiring de Celery)
 
 - **Fecha**: 14/09/2026

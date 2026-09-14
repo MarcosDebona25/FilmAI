@@ -4,7 +4,8 @@ import fakeredis
 import httpx
 import redis
 from django.conf import settings
-from django.test import SimpleTestCase, override_settings
+from django.db import IntegrityError, transaction
+from django.test import SimpleTestCase, TestCase, override_settings
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory
@@ -27,6 +28,12 @@ from catalogo.exceptions import (
     TMDBServerError,
     TMDBTransportError,
     tmdb_exception_handler,
+)
+from catalogo.models import (
+    EstadoEmbedding,
+    ProduccionAudiovisual,
+    ProduccionEmbedding,
+    TipoProduccion,
 )
 from catalogo.service import get_catalog_service
 from catalogo.views import (
@@ -613,3 +620,71 @@ class EndpointIntegrationTest(SimpleTestCase):
 
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 429)
+
+
+class ProduccionEmbeddingModelTests(TestCase):
+    """Garantías que aporta la base de datos, no el código Python (C-04a).
+
+    Se prueban contra Postgres real (de ahí `TestCase` y no `SimpleTestCase`)
+    porque son restricciones del esquema: aunque alguien inserte por fuera del
+    ORM, tienen que seguir cumpliéndose.
+    """
+
+    def setUp(self):
+        self.produccion = ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Fight Club",
+        )
+
+    def test_nace_pendiente_y_sin_vector(self):
+        embedding = ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        self.assertEqual(embedding.estado, EstadoEmbedding.PENDING)
+        self.assertIsNone(embedding.vector)
+        self.assertEqual(embedding.source_hash, "")
+        self.assertEqual(embedding.model_version, "")
+
+    def test_se_accede_desde_la_produccion_como_embedding(self):
+        ProduccionEmbedding.objects.create(produccion=self.produccion)
+        self.produccion.refresh_from_db()
+
+        self.assertEqual(self.produccion.embedding.produccion_id, self.produccion.id)
+
+    def test_una_sola_fila_de_embedding_por_produccion(self):
+        ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        # `transaction.atomic` aísla el error: sin él, el fallo dejaría la
+        # transacción del test rota para las consultas siguientes.
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        self.assertEqual(ProduccionEmbedding.objects.count(), 1)
+
+    def test_estado_ready_exige_vector(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            ProduccionEmbedding.objects.create(
+                produccion=self.produccion,
+                estado=EstadoEmbedding.READY,
+                vector=None,
+            )
+
+    def test_estado_ready_con_vector_es_valido(self):
+        embedding = ProduccionEmbedding.objects.create(
+            produccion=self.produccion,
+            estado=EstadoEmbedding.READY,
+            vector=[0.0] * 1024,
+            source_hash="a" * 64,
+            model_version="stub-v1",
+        )
+        embedding.refresh_from_db()
+
+        self.assertEqual(embedding.estado, EstadoEmbedding.READY)
+        self.assertEqual(len(embedding.vector), 1024)
+
+    def test_borrar_la_produccion_borra_su_embedding(self):
+        ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        self.produccion.delete()
+
+        self.assertEqual(ProduccionEmbedding.objects.count(), 0)

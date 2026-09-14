@@ -18,6 +18,7 @@ puede existir sin reseña, pero una reseña no puede existir sin su calificació
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from pgvector.django import HnswIndex, VectorField
 
 
 class TipoProduccion(models.TextChoices):
@@ -98,6 +99,100 @@ class ProduccionAudiovisual(models.Model):
 
     def __str__(self):
         return f"{self.titulo} ({self.get_tipo_display()})"
+
+
+class EstadoEmbedding(models.TextChoices):
+    """Ciclo de vida del embedding (decisión 08/09/2026).
+
+    `pending` → `processing` → `ready` | `failed`. La búsqueda semántica solo
+    consulta los `ready`; el resto no existe para el usuario final.
+    """
+
+    PENDING = "pending", "Pendiente"
+    PROCESSING = "processing", "Procesando"
+    READY = "ready", "Listo"
+    FAILED = "failed", "Falló"
+
+
+class ProduccionEmbedding(models.Model):
+    """Representación semántica de una producción para búsqueda por similitud.
+
+    Se crea junto con la producción (materialización, C-04a) en estado
+    `pending`; un worker de Celery la completa después. Que el vector tarde o
+    falle nunca debe impedir que la producción se vea en el catálogo, por eso
+    vive en una tabla aparte y no como columnas de `ProduccionAudiovisual`.
+    """
+
+    produccion = models.OneToOneField(
+        ProduccionAudiovisual,
+        on_delete=models.CASCADE,
+        related_name="embedding",
+        verbose_name="producción audiovisual",
+    )
+    vector = VectorField(
+        "vector semántico",
+        dimensions=1024,
+        null=True,
+        blank=True,
+        help_text="Generado por el proveedor de embeddings (bge-m3, 1024 "
+        "dimensiones). Nulo mientras el estado no sea 'ready'.",
+    )
+    estado = models.CharField(
+        "estado",
+        max_length=20,
+        choices=EstadoEmbedding.choices,
+        default=EstadoEmbedding.PENDING,
+    )
+    source_hash = models.CharField(
+        "hash del texto fuente",
+        max_length=64,
+        blank=True,
+        default="",
+        help_text="SHA-256 del texto canónico embebido. Si cambia, el vector "
+        "quedó viejo y hay que regenerarlo.",
+    )
+    model_version = models.CharField(
+        "versión del modelo",
+        max_length=50,
+        blank=True,
+        default="",
+        help_text="Modelo que generó el vector: vectores de modelos distintos "
+        "no son comparables entre sí.",
+    )
+    fecha_creacion = models.DateTimeField("fecha de creación", auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField("fecha de actualización", auto_now=True)
+
+    class Meta:
+        db_table = "produccion_embedding"
+        verbose_name = "embedding de producción"
+        verbose_name_plural = "embeddings de producción"
+        indexes = [
+            # Búsquedas del worker/backfill: "dame los pendientes o fallidos".
+            models.Index(fields=["estado"], name="idx_embedding_estado"),
+            # HNSW resuelve "los N vectores más parecidos a este" sin comparar
+            # contra toda la tabla. `vector_cosine_ops` = distancia coseno, que
+            # es la métrica con la que se entrenó bge-m3.
+            HnswIndex(
+                name="idx_embedding_vector_hnsw",
+                fields=["vector"],
+                m=16,
+                ef_construction=64,
+                opclasses=["vector_cosine_ops"],
+            ),
+        ]
+        constraints = [
+            # Un embedding `ready` sin vector sería invisible para la búsqueda
+            # pero contaría como "listo": se prohíbe en la base, no solo en
+            # Python, para que ningún camino de escritura pueda saltearlo.
+            models.CheckConstraint(
+                condition=~models.Q(estado=EstadoEmbedding.READY)
+                | models.Q(vector__isnull=False),
+                name="ck_embedding_ready_requiere_vector",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Embedding de {self.produccion} ({self.get_estado_display()})"
 
 
 class Calificacion(models.Model):
