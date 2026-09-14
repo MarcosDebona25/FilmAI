@@ -1201,6 +1201,27 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
   `docs/decisiones.md`.
 
+## 14/09/2026 — Rutas de detalle sin conversor `int:`: 400 en vez de 404 ante `id_tmdb` no entero
+
+- **Fecha**: 14/09/2026
+- **Descripción**: `catalogo/urls.py` declaraba la ruta de detalle de película
+  con `<int:id_tmdb>` y la de serie con `<id_tmdb>`. Con el conversor `int:`,
+  un `id_tmdb` no entero no matchea la URL y Django responde 404 antes de
+  llegar a la vista, mientras que la ruta de serie sí llegaba a `_int_param` y
+  devolvía 400: dos endpoints hermanos con comportamientos distintos ante la
+  misma entrada inválida. La spec de C-03
+  (`openspec/specs/tmdb-endpoints/spec.md`, "Invalid params rejected") exige
+  400 sin llamar a TMDB. Se quita el conversor `int:` de la ruta de película
+  para que ambas deleguen la validación en `_int_param`.
+  El bug no fue detectado por `ParamValidationTest` porque ese test invoca
+  `MovieDetailView.as_view()(request, id_tmdb="not-an-id")` directamente,
+  salteando el ruteo de Django. Se agrega
+  `EndpointIntegrationTest.test_non_integer_detail_id_returns_400_through_url_routing`,
+  que recorre la URL real con `APIClient` sobre ambas rutas.
+- **Motivo**: hallazgo durante la auditoría de `docs/05_Plan_de_Desarrollo.md`
+  contra el código (14/09/2026); incumplía la spec ya archivada de C-03.
+- **Archivos**: `backend/catalogo/urls.py`, `backend/catalogo/tests.py`.
+
 ## 14/09/2026 — C-04a adelanta la infraestructura mínima de embeddings; corrección de paquete pgvector
 
 - **Fecha**: 14/09/2026
