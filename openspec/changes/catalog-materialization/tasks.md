@@ -48,12 +48,16 @@ Chain strategy: pending
 
 ## Phase 3: Adapter + embedding text
 
-- [ ] 3.1 RED: add `AdapterTest` — `tmdb_a_dominio("movie") == TipoProduccion.PELICULA`, `"tv" == SERIE`, unknown value raises `ValueError`; `dominio_a_tmdb` round-trips
-- [ ] 3.2 GREEN: create `backend/catalogo/services/adapter.py`
-- [ ] 3.3 RED: add `EmbeddingTextTest` — `construir_texto_canonico` sorts `generos`/`directores`/`reparto`/`keywords` alphabetically, tolerates empty/whitespace entries, produces the `Title/Genres/Directors/Cast/Keywords/Synopsis` label order; `calcular_source_hash` is deterministic and content-sensitive
-- [ ] 3.4 RED: add a case asserting `generar_vector(...)` raises `NotImplementedError` (documents the stub contract)
-- [ ] 3.5 GREEN: create `backend/catalogo/services/embeddings.py` (`construir_texto_canonico`, `calcular_source_hash`, `EmbeddingProviderError`, `generar_vector` stub, `MODEL_VERSION`)
-- [ ] 3.6 `python manage.py test catalogo` — all green; `ruff format . && ruff check .`
+> Nota (14/09/2026): al crear `catalogo/services/` se movio tambien
+> `catalogo/service.py` (C-03) a `catalogo/services/tmdb.py`, para no dejar
+> `service.py` y `services/` conviviendo. Ver `docs/decisiones.md`.
+
+- [x] 3.1 RED: add `AdapterTest` — `tmdb_a_dominio("movie") == TipoProduccion.PELICULA`, `"tv" == SERIE`, unknown value raises `ValueError`; `dominio_a_tmdb` round-trips
+- [x] 3.2 GREEN: create `backend/catalogo/services/adapter.py`
+- [x] 3.3 RED: add `EmbeddingTextTest` — `construir_texto_canonico` sorts `generos`/`directores`/`reparto`/`keywords` alphabetically, tolerates empty/whitespace entries, produces the `Title/Genres/Directors/Cast/Keywords/Synopsis` label order; `calcular_source_hash` is deterministic and content-sensitive
+- [x] 3.4 RED: add a case asserting `generar_vector(...)` raises `NotImplementedError` (documents the stub contract)
+- [x] 3.5 GREEN: create `backend/catalogo/services/embeddings.py` (`construir_texto_canonico`, `calcular_source_hash`, `EmbeddingProviderError`, `generar_vector` stub, `MODEL_VERSION`)
+- [x] 3.6 `python manage.py test catalogo` — all green; `ruff format . && ruff check .`
 
 ## Phase 4: TMDB credits + Celery task
 

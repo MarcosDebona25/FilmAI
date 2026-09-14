@@ -1201,6 +1201,35 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
   `docs/decisiones.md`.
 
+## 14/09/2026 — Capa `catalogo/services/`, adaptador de tipos y texto canónico
+
+- **Fecha**: 14/09/2026
+- **Descripción**: fase 3 de C-04a, tres decisiones:
+  1. **Se unifica la capa de servicios en `catalogo/services/`.** Iba a quedar
+     `catalogo/service.py` (C-03, singleton de TMDB) conviviendo con
+     `catalogo/services/` (C-04a), dos nombres casi idénticos en la misma app.
+     `service.py` pasa a ser `catalogo/services/tmdb.py`; se actualizan sus
+     dos importadores (`views.py`, `tests.py`, incluidos los destinos de
+     `patch()`). Cambio mecánico, verificado con la suite de C-03 en verde.
+  2. **`services/adapter.py` es la única traducción `movie`/`tv` ↔
+     `pelicula`/`serie`.** Lanza `ValueError` ante cualquier otro valor,
+     incluido `"all"`: es un filtro válido de discovery (C-03) pero no un tipo
+     de producción. Las vistas siguen hablando `movie`/`tv` de cara al
+     exterior; la traducción ocurre al cruzar hacia el modelo.
+  3. **`services/embeddings.py` normaliza el texto antes de hashearlo.** Los
+     arrays (`generos`, `directores`, `reparto`, `keywords`) se ordenan
+     alfabéticamente y se descartan los vacíos. TMDB no garantiza un orden
+     estable entre respuestas: sin normalizar, dos respuestas con el mismo
+     contenido darían hashes distintos y el sistema regeneraría embeddings
+     indefinidamente. El proveedor real queda aislado en `generar_vector()`,
+     que hoy lanza `NotImplementedError` a propósito — es el único punto que
+     B-06 debe reemplazar, y su falla deja el embedding en `failed` sin
+     afectar la visibilidad de la producción.
+- **Motivo**: aislar en un solo lugar cada traducción y cada decisión de
+  formato, que son las que generan bugs silenciosos si se repiten dispersas.
+- **Archivos**: `backend/catalogo/services/{__init__,adapter,embeddings,tmdb}.py`,
+  `backend/catalogo/views.py`, `backend/catalogo/tests.py`.
+
 ## 14/09/2026 — Modelo `ProduccionEmbedding`: invariantes en la base, no en Python
 
 - **Fecha**: 14/09/2026

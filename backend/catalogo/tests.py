@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import fakeredis
@@ -35,7 +36,14 @@ from catalogo.models import (
     ProduccionEmbedding,
     TipoProduccion,
 )
-from catalogo.service import get_catalog_service
+from catalogo.services.adapter import dominio_a_tmdb, tmdb_a_dominio
+from catalogo.services.embeddings import (
+    MODEL_VERSION,
+    calcular_source_hash,
+    construir_texto_canonico,
+    generar_vector,
+)
+from catalogo.services.tmdb import get_catalog_service
 from catalogo.views import (
     DiscoverView,
     MovieDetailView,
@@ -221,8 +229,8 @@ class GetCatalogServiceTest(SimpleTestCase):
     def tearDown(self):
         get_catalog_service.cache_clear()
 
-    @patch("catalogo.service.get_redis")
-    @patch("catalogo.service.TMDBClient")
+    @patch("catalogo.services.tmdb.get_redis")
+    @patch("catalogo.services.tmdb.TMDBClient")
     def test_returns_singleton_tmdb_client_cache(self, client, get_redis):
         redis_client = object()
         tmdb_client = object()
@@ -620,6 +628,127 @@ class EndpointIntegrationTest(SimpleTestCase):
 
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 429)
+
+
+class AdapterTests(SimpleTestCase):
+    """Única traducción entre el vocabulario de TMDB y el del dominio (C-04a).
+
+    Existe para que ningún `"movie"` crudo termine guardado en la columna
+    `tipo`: si eso pasa, las consultas por tipo dejan de encontrar la fila y
+    el error no se nota hasta mucho después.
+    """
+
+    def test_traduce_de_tmdb_a_dominio(self):
+        casos = (
+            ("movie", TipoProduccion.PELICULA),
+            ("tv", TipoProduccion.SERIE),
+        )
+        for tipo_tmdb, esperado in casos:
+            with self.subTest(tipo_tmdb=tipo_tmdb):
+                self.assertEqual(tmdb_a_dominio(tipo_tmdb), esperado)
+
+    def test_traduce_de_dominio_a_tmdb(self):
+        casos = (
+            (TipoProduccion.PELICULA, "movie"),
+            (TipoProduccion.SERIE, "tv"),
+        )
+        for tipo_dominio, esperado in casos:
+            with self.subTest(tipo_dominio=tipo_dominio):
+                self.assertEqual(dominio_a_tmdb(tipo_dominio), esperado)
+
+    def test_ida_y_vuelta_conserva_el_valor(self):
+        for tipo_tmdb in ("movie", "tv"):
+            with self.subTest(tipo_tmdb=tipo_tmdb):
+                self.assertEqual(dominio_a_tmdb(tmdb_a_dominio(tipo_tmdb)), tipo_tmdb)
+
+    def test_rechaza_valores_desconocidos(self):
+        # "all" es un filtro válido de discovery (C-03) pero NO un tipo de
+        # producción: materializar algo "all" no significa nada.
+        for invalido in ("all", "pelicula", "", None, "MOVIE"):
+            with self.subTest(invalido=invalido), self.assertRaises(ValueError):
+                tmdb_a_dominio(invalido)
+
+    def test_rechaza_tipos_de_dominio_desconocidos(self):
+        for invalido in ("movie", "documental", "", None):
+            with self.subTest(invalido=invalido), self.assertRaises(ValueError):
+                dominio_a_tmdb(invalido)
+
+
+class TextoCanonicoTests(SimpleTestCase):
+    """Texto que se embebe y su huella (C-04a).
+
+    No toca la base: `construir_texto_canonico` recibe cualquier objeto con
+    los atributos de una producción, así que se puede probar con un doble.
+    """
+
+    def _produccion(self, **overrides):
+        datos = {
+            "titulo": "Fight Club",
+            "generos": ["Drama", "Thriller"],
+            "directores": ["David Fincher"],
+            "reparto": ["Edward Norton", "Brad Pitt"],
+            "keywords": ["insomnia", "dual identity"],
+            "sinopsis": "An insomniac office worker...",
+        }
+        datos.update(overrides)
+        return SimpleNamespace(**datos)
+
+    def test_incluye_las_seis_secciones_en_orden(self):
+        texto = construir_texto_canonico(self._produccion())
+
+        self.assertEqual(
+            [linea.split(":")[0] for linea in texto.splitlines()],
+            ["Title", "Genres", "Directors", "Cast", "Keywords", "Synopsis"],
+        )
+
+    def test_el_orden_de_los_arrays_no_altera_el_texto(self):
+        # TMDB no garantiza un orden estable entre respuestas: sin normalizar,
+        # el hash cambiaría solo, disparando regeneraciones infinitas.
+        a = construir_texto_canonico(
+            self._produccion(generos=["Drama", "Thriller"], reparto=["B", "A"])
+        )
+        b = construir_texto_canonico(
+            self._produccion(generos=["Thriller", "Drama"], reparto=["A", "B"])
+        )
+
+        self.assertEqual(a, b)
+
+    def test_ignora_entradas_vacias_o_con_espacios(self):
+        texto = construir_texto_canonico(
+            self._produccion(generos=["  Drama  ", "", "   "], sinopsis="  hola  ")
+        )
+
+        self.assertIn("Genres: Drama", texto)
+        self.assertIn("Synopsis: hola", texto)
+
+    def test_tolera_una_produccion_sin_datos_opcionales(self):
+        texto = construir_texto_canonico(
+            self._produccion(
+                generos=[], directores=[], reparto=[], keywords=[], sinopsis=""
+            )
+        )
+
+        self.assertIn("Title: Fight Club", texto)
+        self.assertIn("Genres: ", texto)
+
+    def test_hash_es_estable_y_sensible_al_contenido(self):
+        texto = construir_texto_canonico(self._produccion())
+        otro = construir_texto_canonico(self._produccion(titulo="Se7en"))
+
+        self.assertEqual(calcular_source_hash(texto), calcular_source_hash(texto))
+        self.assertNotEqual(calcular_source_hash(texto), calcular_source_hash(otro))
+        # SHA-256 en hexadecimal: 64 caracteres, que es el max_length del campo.
+        self.assertEqual(len(calcular_source_hash(texto)), 64)
+
+    def test_el_proveedor_todavia_no_esta_implementado(self):
+        # Contrato explícito para B-06: hasta que Marcos conecte Ollama, la
+        # tarea de Celery captura esto y deja el embedding en `failed`.
+        with self.assertRaises(NotImplementedError):
+            generar_vector("cualquier texto")
+
+    def test_hay_una_version_de_modelo_declarada(self):
+        self.assertTrue(MODEL_VERSION)
+        self.assertLessEqual(len(MODEL_VERSION), 50)
 
 
 class ProduccionEmbeddingModelTests(TestCase):
