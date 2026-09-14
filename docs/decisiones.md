@@ -1201,6 +1201,49 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
   `docs/decisiones.md`.
 
+## 14/09/2026 — Entrypoint parametrizable y imagen pgvector Debian (wiring de Celery)
+
+- **Fecha**: 14/09/2026
+- **Descripción**: al conectar Celery (C-04a, Fase 1) surgieron dos cambios de
+  infraestructura:
+  1. **Entrypoint al patrón estándar de Docker.** `backend/entrypoint.sh`
+     terminaba con `exec python manage.py runserver 0.0.0.0:8000` hardcodeado,
+     por lo que ignoraba el `command:` del servicio: el `celery-worker`
+     habría levantado un segundo servidor Django y corrido `migrate` + creación
+     de superuser en paralelo con `backend`. Ahora el script termina con
+     `exec "$@"` y el `Dockerfile` define
+     `CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]`, de modo que el
+     backend arranca igual que antes y cada servicio elige su comando. Las
+     migraciones y el superuser quedan detrás de `RUN_MIGRATIONS` (default
+     `true`); el `celery-worker` la define en `false` para que migre un solo
+     contenedor.
+  2. **Imagen de la base: `pgvector/pgvector:pg16` (Debian), no
+     `pg16-alpine`.** El tag Alpine que figuraba en la documentación no
+     existe: pgvector solo publica imágenes Debian. Como el cambio implica
+     pasar de musl a glibc —y las reglas de ordenamiento (collation) de los
+     índices de texto difieren entre ambas—, se decide **recrear el volumen
+     `pgdata`** en lugar de reutilizarlo. En desarrollo el costo es nulo (el
+     entrypoint recrea migraciones y superuser, y las listas predeterminadas
+     las repone la señal). **Acción requerida para el equipo**: al traer estos
+     cambios hay que correr `docker volume rm filmai_pgdata` (con los
+     contenedores frenados) y `docker compose up --build -d`.
+  Se verificó en la imagen nueva que la extensión `vector` 0.8.6 está
+  disponible y que el rol de Postgres del `.env` tiene `rolsuper = true`, es
+  decir que podrá ejecutar `CREATE EXTENSION` en la migración de la Fase 2.
+- **Configuración de Celery**: broker en la DB 1 de Redis y backend de
+  resultados en la DB 2, separadas de la DB 0 que usa el caché de TMDB, para
+  que las claves de la cola no se mezclen con las `tmdb:*` ni las borre un
+  flush del otro rol. Serialización JSON únicamente y
+  `CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True` (explícito porque el
+  default cambia en Celery 6).
+- **Motivo**: sin el arreglo del entrypoint el servicio `celery-worker` no
+  podía funcionar; sin el cambio de imagen no hay extensión `vector` para
+  `ProduccionEmbedding`.
+- **Archivos**: `backend/entrypoint.sh`, `backend/Dockerfile`,
+  `docker-compose.yml`, `backend/filmai/celery.py`, `backend/filmai/__init__.py`,
+  `backend/filmai/settings.py`, `backend/filmai/tests.py`,
+  `backend/requirements.txt`, `.env.example`, `README.md`.
+
 ## 14/09/2026 — Rutas de detalle sin conversor `int:`: 400 en vez de 404 ante `id_tmdb` no entero
 
 - **Fecha**: 14/09/2026

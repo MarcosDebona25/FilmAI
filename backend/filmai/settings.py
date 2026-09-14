@@ -268,6 +268,19 @@ else:
         }
     }
 
+# --- Celery (tareas asincrónicas) ---
+# Redis cumple doble rol: caché (DB 0, `REDIS_URL`) y cola de tareas. Se usan
+# DBs lógicas distintas para que las claves de Celery no se mezclen con las
+# `tmdb:*` del caché ni las borre un flush del otro rol.
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/1")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://redis:6379/2")
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+# Explícito porque el default cambia en Celery 6: si el worker arranca antes
+# que Redis, reintenta en vez de morir.
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
 # --- django-allauth ---
 ACCOUNT_ADAPTER = "usuarios.adapter.UsuarioAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "usuarios.adapter.UsuarioSocialAccountAdapter"

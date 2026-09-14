@@ -6,11 +6,13 @@
 
 services:
   # 1. PostgreSQL 16 — la base de datos relacional
-  # Imagen con la extensión pgvector precompilada (mismo Postgres 16 de
-  # postgres:16-alpine, solo agrega los archivos de la extensión "vector"
-  # que necesita ProduccionEmbedding, C-04a). No requiere recrear pgdata.
+  # Imagen con la extensión pgvector precompilada, que necesita
+  # ProduccionEmbedding (C-04a). OJO: pgvector no publica variantes Alpine,
+  # solo Debian, así que este cambio pasa de musl a glibc: al adoptarlo hay
+  # que recrear el volumen `pgdata` (las reglas de ordenamiento de texto de
+  # los índices difieren entre ambas librerías). Ver docs/decisiones.md.
   db:
-    image: pgvector/pgvector:pg16-alpine
+    image: pgvector/pgvector:pg16
     container_name: filmai_db
     restart: unless-stopped
     ports:
@@ -109,6 +111,10 @@ services:
     command: celery -A filmai worker -l info
     env_file:
       - .env
+    environment:
+      # Las migraciones y el superuser los corre solo el backend: si ambos
+      # contenedores migraran, tocarían la misma base al mismo tiempo.
+      RUN_MIGRATIONS: "false"
     volumes:
       - ./backend:/app
     depends_on:
