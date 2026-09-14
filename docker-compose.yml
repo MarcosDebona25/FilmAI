@@ -6,8 +6,11 @@
 
 services:
   # 1. PostgreSQL 16 — la base de datos relacional
+  # Imagen con la extensión pgvector precompilada (mismo Postgres 16 de
+  # postgres:16-alpine, solo agrega los archivos de la extensión "vector"
+  # que necesita ProduccionEmbedding, C-04a). No requiere recrear pgdata.
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16-alpine
     container_name: filmai_db
     restart: unless-stopped
     ports:
@@ -89,6 +92,30 @@ services:
       - /app/node_modules # volumen anónimo: no pisar node_modules del contenedor
     depends_on:
       - backend
+    networks:
+      - filmai_network
+
+  # 5. Celery worker — procesa tareas en segundo plano (hoy: generar_embedding, C-04a)
+  # Misma imagen que el backend (mismo código, mismas dependencias), pero en
+  # vez de levantar el servidor HTTP corre el proceso que escucha la cola de
+  # tareas en Redis y las ejecuta una por una.
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: filmai_celery_worker
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    command: celery -A filmai worker -l info
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - filmai_network
 
