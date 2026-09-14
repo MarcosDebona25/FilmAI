@@ -31,7 +31,7 @@ stays a documented stub for B-06 (Marcos) to implement later.
 - Minimal Celery app wiring (`filmai/celery.py`, `filmai/__init__.py`,
   `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` settings) and a `celery-worker`
   docker-compose service
-- `db` image swapped to `pgvector/pgvector:pg16-alpine` (same Postgres 16
+- `db` image swapped to `pgvector/pgvector:pg16` (same Postgres 16
   binary, adds the `vector` extension files)
 - Wiring `materializar()` as a side effect of `MovieDetailView`/`TVDetailView`
   (C-03), without changing their existing passthrough response contract
@@ -91,7 +91,7 @@ exception — never leaving the row stuck or blocking the caller.
 | `backend/filmai/celery.py` | New | Celery app |
 | `backend/filmai/__init__.py` | Modified | import `celery_app` |
 | `backend/filmai/settings.py` | Modified | `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` |
-| `docker-compose.yml` | Modified | `pgvector/pgvector:pg16-alpine`, `celery-worker` service |
+| `docker-compose.yml` | Modified | `pgvector/pgvector:pg16`, `celery-worker` service |
 | `backend/requirements.txt` | Modified | `pgvector` |
 | `.env.example` | Modified | Celery broker/result vars |
 | `README.md` | Modified | 5-service topology, `ProduccionEmbedding` no longer "planned" |
@@ -102,7 +102,7 @@ exception — never leaving the row stuck or blocking the caller.
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
 | TMDB detail endpoints lack cast/crew | High (confirmed) | Additive `get_movie_credits`/`get_tv_credits`, no change to existing C-01/C-02 contracts |
-| `pgvector/pgvector:pg16-alpine` vs `postgres:16-alpine` volume compatibility | Low–Med | Same upstream Postgres 16 binary/data format, only extra extension files; verify in dev before merging, documented rollback |
+| `pgvector/pgvector:pg16` vs `postgres:16-alpine` volume compatibility | Low–Med | Same upstream Postgres 16 binary/data format, only extra extension files; verify in dev before merging, documented rollback |
 | `pgvector` vs `django-pgvector` package naming in existing docs | Med | Use `pgvector` (pgvector-python), which ships `pgvector.django`; correct the docs in this change (see design) |
 | Real DB-race concurrency test flakiness (`TransactionTestCase` + threads) | Med | Required test is a deterministic mocked-`IntegrityError` unit test; real-thread test is best-effort, not a merge gate (confirmed with repo owner 14/09/2026) |
 | Wiring `materializar()` into detail views adds sync DB+TMDB latency per request | Med | Bounded by `TMDBClientCache` TTLs (24h); acceptable for a detail-page open |

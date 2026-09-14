@@ -18,7 +18,7 @@ can swap it for a real Ollama client with no changes to `tasks.py`,
 | Cast/crew retrieval | Change `get_movie_detail`/`get_tv_detail` to `append_to_response=credits,keywords` · Add new `get_*_credits` methods | `append_to_response` cuts TMDB calls from 3→1 but mutates the response shape of two methods already covered by closed C-01/C-02 tests and consumed unchanged by C-03's passthrough contract. New methods are additive, zero risk to existing tests, cost 2 extra cached calls only on first materialization. | Additive `get_movie_credits`/`get_tv_credits` on `TMDBClient` + `TMDBClientCache` |
 | Enrichment timing | Synchronous in `materializar()` · Deferred to the Celery task | The embedding's canonical text needs Title+Genres+Directors+Cast+Keywords+Synopsis *before* it is queued, and TMDB calls are Redis-cached (24h), so sync cost is bounded. Deferring would need the task to re-derive enrichment, duplicating logic and re-opening the "no external calls in the task without a claim" concern. | Enrichment stays synchronous inside `materializar()`, gated by a completeness check so rows created incomplete elsewhere (future C-04b bulk sync) get repaired on next open |
 | Package for `VectorField` | `pgvector` (pgvector-python, ships `pgvector.django`) · `django-pgvector` (named in `docs/05_Plan_de_Desarrollo.md`/`decisiones.md`) | `django-pgvector` is not the maintained package for this; `pgvector`'s own `pgvector.django` submodule provides `VectorField`, `HnswIndex`, `VectorExtension` and is what the ecosystem uses with Django 5.x. | `pgvector` only; correct the docs (see Documentation Updates) |
-| `db` image swap risk | Recreate `pgdata` volume · Swap image in place | `pgvector/pgvector:pg16-alpine` is built `FROM postgres:16-alpine` with only extra extension `.so`/`.control` files added — same Postgres 16 data format. No `pg_upgrade` needed. | Swap in place; verify with `docker compose exec db psql -c "\dx"` after `CREATE EXTENSION` migration; keep `pgdata` |
+| `db` image swap risk | Recreate `pgdata` volume · Swap image in place | `pgvector/pgvector:pg16` is built `FROM postgres:16-alpine` with only extra extension `.so`/`.control` files added — same Postgres 16 data format. No `pg_upgrade` needed. | Swap in place; verify with `docker compose exec db psql -c "\dx"` after `CREATE EXTENSION` migration; keep `pgdata` |
 | Claim/lease mechanism | Dedicated lease/expiry column · Plain conditional `UPDATE ... WHERE estado IN (...)` | A full lease-with-expiry (for reclaiming stuck `processing` rows) is backfill/C-04b's job. C-04a only needs to prevent double-processing from duplicate Celery deliveries. | Conditional `.filter(estado__in=[PENDING, FAILED]).update(estado=PROCESSING)`; `fecha_actualizacion` is left as the hook C-04b's backfill will use to detect stale `processing` rows |
 | Detail-view wiring | Call `materializar()` from `MovieDetailView`/`TVDetailView` · Leave wiring for a later task | CU-021 requires "any production opened in detail is materialized"; nothing else in the current codebase calls the helper yet (Listas doesn't exist, frontend detail pages don't exist). Not wiring it makes C-04a dead code. Confirmed with repo owner 14/09/2026. | Views call `materializar()` as a side effect; response body is untouched (still raw TMDB JSON passthrough per C-03) |
 | Concurrency test technique | Real `TransactionTestCase` + threads · Deterministic mocked `IntegrityError` | Real thread-based races against Postgres are valuable but flaky across CI environments (connection sharing, GIL timing) — a good PR could get blocked by test timing, not a real bug. Confirmed with repo owner 14/09/2026. | Required test: mock `ProduccionAudiovisual.objects.create` to raise `IntegrityError`, assert fallback to `.get()` returns the existing row. Optional/best-effort: a `TransactionTestCase` with a `threading.Barrier` for real-DB confidence, not a merge gate |
@@ -96,7 +96,7 @@ class Migration(migrations.Migration):
 ```
 
 `VectorExtension()` runs `CREATE EXTENSION IF NOT EXISTS vector;` and requires
-the `db` service to already be `pgvector/pgvector:pg16-alpine` (superuser
+the `db` service to already be `pgvector/pgvector:pg16` (superuser
 privilege for the extension is available to the dev Postgres role by default
 in this project's compose setup — verify before merging PR2).
 
@@ -309,7 +309,7 @@ which stay on `REDIS_URL` (`/0`).
 
 ```yaml
 db:
-  image: pgvector/pgvector:pg16-alpine   # was postgres:16-alpine
+  image: pgvector/pgvector:pg16   # was postgres:16-alpine
 
 celery-worker:
   build:
@@ -382,7 +382,7 @@ Python invoked by the worker process, not shell dispatch.
 ## Migration / Rollout
 
 `VectorExtension()` requires the `db` service already running
-`pgvector/pgvector:pg16-alpine` before `python manage.py migrate` — sequence
+`pgvector/pgvector:pg16` before `python manage.py migrate` — sequence
 these in PR1→PR2 (see tasks.md). No destructive volume operation; verify with
 `docker compose exec db psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dx"`
 before/after in dev to confirm data survives the image swap.

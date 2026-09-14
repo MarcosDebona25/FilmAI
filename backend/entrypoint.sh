@@ -2,11 +2,15 @@
 # =============================================================================
 # FilmAI Backend — Entrypoint
 # =============================================================================
-# Se ejecuta cada vez que el contenedor arranca:
-#   1. Espera a que PostgreSQL esté listo
-#   2. Corre las migraciones pendientes
-#   3. Crea el superuser de Django si no existe
-#   4. Arranca el servidor de desarrollo
+# Se ejecuta cada vez que el contenedor arranca, ANTES del comando del
+# servicio (el `command:` del docker-compose, o el CMD del Dockerfile):
+#   1. Espera a que PostgreSQL esté listo            (todos los servicios)
+#   2. Corre migraciones + crea superuser            (solo si RUN_MIGRATIONS)
+#   3. Ejecuta el comando recibido                   (`exec "$@"`)
+#
+# RUN_MIGRATIONS existe porque este mismo entrypoint lo usan varios servicios
+# (backend, celery-worker): si todos migraran, varios contenedores tocarían la
+# misma base a la vez. Migra únicamente el backend.
 # =============================================================================
 set -e
 
@@ -18,6 +22,12 @@ until PGPASSWORD="${POSTGRES_PASSWORD}" pg_isready \
   sleep 1
 done
 echo "✅ PostgreSQL está listo."
+
+if [ "${RUN_MIGRATIONS:-true}" != "true" ]; then
+  echo "⏭️  RUN_MIGRATIONS=${RUN_MIGRATIONS}: se omiten migraciones y superuser."
+  echo "🚀 Ejecutando: $*"
+  exec "$@"
+fi
 
 echo "⏳ Aplicando migraciones..."
 python manage.py migrate --noinput
@@ -44,5 +54,7 @@ else:
     print(f'Superuser {email} ya existe.')
 "
 
-echo "🚀 Servidor Django escuchando en 0.0.0.0:8000 (accedé en http://localhost:8000)"
-exec python manage.py runserver 0.0.0.0:8000
+# `exec "$@"` ejecuta el comando del servicio (CMD del Dockerfile para el
+# backend: runserver; `command:` del compose para el celery-worker).
+echo "🚀 Ejecutando: $*"
+exec "$@"

@@ -28,21 +28,21 @@ Chain strategy: pending
 
 ## Phase 1: Celery infrastructure
 
-- [ ] 1.1 RED: add `CeleryAppTest` asserting `filmai.celery.app` is a `Celery` instance named `"filmai"` and that `filmai.celery_app` is importable from `filmai`
-- [ ] 1.2 GREEN: create `backend/filmai/celery.py`, update `backend/filmai/__init__.py` to import `celery_app`
-- [ ] 1.3 Add `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND`/serializer settings to `backend/filmai/settings.py`, reading from `.env` via `decouple.config`
-- [x] 1.4 Update `docker-compose.yml`: swap `db` image to `pgvector/pgvector:pg16-alpine`; add `celery-worker` service (`command: celery -A filmai worker -l info`)
-- [ ] 1.5 Add `pgvector>=0.3,<0.4` to `backend/requirements.txt`
-- [ ] 1.6 Add `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` to `.env.example`; update `README.md` (5-service topology)
-- [ ] 1.7 Record the "adelantar infraestructura mínima de embeddings" decision + `pgvector` vs `django-pgvector` correction in `docs/decisiones.md`
-- [ ] 1.8 `docker compose up --build -d db redis backend celery-worker` — confirm all healthy, `docker compose exec db psql -c "\dx"` (extension not yet created, just confirms image works)
+- [x] 1.1 RED: add `CeleryAppTest` asserting `filmai.celery.app` is a `Celery` instance named `"filmai"` and that `filmai.celery_app` is importable from `filmai`
+- [x] 1.2 GREEN: create `backend/filmai/celery.py`, update `backend/filmai/__init__.py` to import `celery_app`
+- [x] 1.3 Add `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND`/serializer settings to `backend/filmai/settings.py`, reading from `.env` via `decouple.config`
+- [x] 1.4 Update `docker-compose.yml`: swap `db` image to `pgvector/pgvector:pg16`; add `celery-worker` service (`command: celery -A filmai worker -l info`)
+- [x] 1.5 Add `pgvector>=0.3,<0.5` to `backend/requirements.txt`
+- [x] 1.6 Add `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` to `.env.example`; update `README.md` (5-service topology)
+- [x] 1.7 Record the "adelantar infraestructura mínima de embeddings" decision + `pgvector` vs `django-pgvector` correction in `docs/decisiones.md`
+- [x] 1.8 `docker compose up --build -d db redis backend celery-worker` — confirm all healthy, `docker compose exec db psql -c "\dx"` (extension not yet created, just confirms image works)
 
 ## Phase 2: `ProduccionEmbedding` model
 
 - [ ] 2.1 RED: add `ProduccionEmbeddingModelTest` — default `estado="pending"`, `OneToOneField` rejects a second embedding for the same `produccion`, `ck_embedding_ready_requiere_vector` rejects `estado="ready"` with `vector=None`
 - [ ] 2.2 GREEN: add `EstadoEmbedding` + `ProduccionEmbedding` to `backend/catalogo/models.py` (`VectorField(1024)`, `HnswIndex`, check constraint)
 - [ ] 2.3 `python manage.py makemigrations catalogo`; edit the generated migration to prepend `VectorExtension()` from `pgvector.django`
-- [ ] 2.4 `docker compose exec backend python manage.py migrate catalogo` — confirm `CREATE EXTENSION vector` succeeds against `pgvector/pgvector:pg16-alpine`
+- [ ] 2.4 `docker compose exec backend python manage.py migrate catalogo` — confirm `CREATE EXTENSION vector` succeeds against `pgvector/pgvector:pg16`
 - [ ] 2.5 (optional, skip if PR nears budget) register `ProduccionEmbedding` in `backend/catalogo/admin.py` (`list_display`: producción, estado, model_version, fecha_actualizacion)
 - [ ] 2.6 `python manage.py test catalogo` — all green; `ruff format . && ruff check .`
 

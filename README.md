@@ -74,11 +74,11 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 | --------------------- | -------------------------------------------------------------------------- |
 | **Backend**           | Python 3.12, Django 5.x, Django REST Framework                             |
 | **Frontend**          | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                        |
-| **Base de datos**     | PostgreSQL 16                                                              |
-| **Caché y colas**     | Redis (caché de TMDB, broker de Celery)                                    |
-| **Tareas asíncronas** | Celery + Celery Beat (sincronización programada con TMDB)                  |
-| **Embeddings (planificado)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generación asíncrona vía Celery |
-| **Infraestructura**   | Docker, docker-compose (4 servicios: backend, frontend, PostgreSQL, Redis) |
+| **Base de datos**     | PostgreSQL 16 con pgvector (imagen `pgvector/pgvector:pg16`)               |
+| **Caché y colas**     | Redis (DB 0: caché de TMDB · DB 1-2: broker y resultados de Celery)        |
+| **Tareas asíncronas** | Celery (worker activo; Celery Beat para la sync programada, pendiente)     |
+| **Embeddings (en curso)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generación asíncrona vía Celery. El proveedor real de embeddings todavía es un stub (llega en B-06). |
+| **Infraestructura**   | Docker, docker-compose (5 servicios: backend, frontend, PostgreSQL, Redis, celery-worker) |
 | **Autenticación**     | JWT (access + refresh tokens, sesión de 8 horas), Google OAuth 2.0, bcrypt |
 
 ### APIs externas
@@ -231,7 +231,8 @@ docker compose down         # detener (conserva la base de datos y Redis)
 ### Comandos útiles
 
 ```bash
-docker compose ps               # estado de los 4 servicios
+docker compose ps                     # estado de los 5 servicios
+docker compose logs -f celery-worker  # seguir los logs del worker de Celery
 docker compose logs -f backend  # seguir los logs de Django
 docker compose logs -f frontend # seguir los logs de Next.js
 docker compose down -v          # detener y borrar BD + Redis (datos)
