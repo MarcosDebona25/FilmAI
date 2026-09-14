@@ -17,7 +17,11 @@ urlpatterns = [
     path("now-playing/", NowPlayingView.as_view(), name="now_playing"),
     path("discover/", DiscoverView.as_view(), name="discover"),
     path("search/", SearchView.as_view(), name="search"),
-    path("movie/<int:id_tmdb>/", MovieDetailView.as_view(), name="movie_detail"),
+    # Sin conversor `int:` a propósito: la validación de `id_tmdb` la hace
+    # `_int_param` dentro de la vista, que devuelve 400 ante un valor no
+    # entero. Con `<int:...>` la URL no matchearía y Django respondería 404,
+    # incumpliendo la spec de C-03 (openspec/specs/tmdb-endpoints/spec.md).
+    path("movie/<id_tmdb>/", MovieDetailView.as_view(), name="movie_detail"),
     path("tv/<id_tmdb>/", TVDetailView.as_view(), name="tv_detail"),
     path("keywords/", KeywordsView.as_view(), name="keywords"),
 ]
