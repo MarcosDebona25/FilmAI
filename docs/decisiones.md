@@ -1559,3 +1559,39 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   una primera estimación; conviene revisarla cuando haya corpus real (C-04c) y
   datos de cuánto cambia TMDB una producción ya estrenada.
 - **Archivos**: `openspec/changes/catalog-daily-sync/{proposal,design,tasks}.md`.
+
+## 15/09/2026 — La frescura la responde TMDB, no una ventana de tiempo
+
+- **Fecha**: 15/09/2026
+- **Descripción**: refina la decisión 2 tomada horas antes en esta misma
+  jornada. El diseño inicial de C-04b resolvía "¿esta fila está vieja?" con una
+  ventana fija de 30 días sobre `fecha_enriquecimiento`. Al revisarlo se
+  verificó que **TMDB publica la respuesta exacta**: `GET /movie/changes` y
+  `GET /tv/changes` devuelven los IDs modificados en las últimas 24 h
+  (comprobado en vivo: 7.351 películas, 74 páginas). La sync cruza esa lista
+  con los IDs que tenemos guardados y refresca solo la intersección.
+  El criterio queda partido en **tres capas**, cada una respondiendo una
+  pregunta distinta:
+  1. **Completitud** — `fecha_enriquecimiento is None`: la fila nunca se
+     enriqueció.
+  2. **Cambio real** — el ID aparece en la lista de cambios del día.
+  3. **Red de seguridad** — `_DIAS_RED_DE_SEGURIDAD = 90`, por si la lista de
+     cambios se perdió (la sync no corrió una noche, la API falló).
+- **Motivo**: una ventana de tiempo refresca filas **hayan cambiado o no**.
+  Sobre un corpus de 10.000, una ventana de 30 días re-pide ~333 filas por
+  noche, la mayoría idénticas a lo que ya tenemos. La intersección refresca
+  exactamente lo que se movió, y además resulta más barata que el barrido que
+  reemplaza. La diferencia de fondo es que la ventana **adivina** y la lista de
+  cambios **pregunta a la fuente**.
+- **Consecuencia**: se agrega `get_changes(tipo, page)` a `TMDBClient` y
+  `TMDBClientCache` (aditivo, con la forma de los métodos existentes) y un TTL
+  `"changes"` de 6 h. La intersección se hace **en Python**, no con un
+  `id_tmdb__in` de miles de elementos. La fase 2 pasa a entregarse en dos PR,
+  cortando en la costura natural entre "hacer crecer el corpus" y "mantenerlo
+  fresco".
+- **Queda por medir**: cuán grande es la intersección diaria con un corpus
+  real. Si resultara que una porción significativa de 10.000 filas cambia cada
+  noche, el costo por corrida crece y puede necesitar su propio tope.
+- **Origen**: pregunta del usuario — "¿no se podría usar algo más robusto?,
+  ¿buscar otra estrategia más de raíz?". La tenía.
+- **Archivos**: `openspec/changes/catalog-daily-sync/{proposal,design,tasks}.md`.
