@@ -213,3 +213,42 @@ class ExceptionHandlerTests(SimpleTestCase):
         )
         self.assertEqual(reverse("schema"), "/api/schema/")
         self.assertEqual(reverse("swagger-ui"), "/api/docs/")
+
+
+class CeleryAppTests(SimpleTestCase):
+    """Wiring de Celery con Django (C-04a).
+
+    Se verifica configuración, no ejecución: no hace falta un worker ni un
+    Redis real para saber que la app quedó bien conectada.
+    """
+
+    def test_app_es_una_instancia_celery_llamada_filmai(self):
+        from celery import Celery
+
+        from filmai.celery import app
+
+        self.assertIsInstance(app, Celery)
+        self.assertEqual(app.main, "filmai")
+
+    def test_celery_app_se_expone_en_el_paquete(self):
+        # Django debe cargar la app al importar `filmai`, para que las tareas
+        # queden registradas con `shared_task`.
+        import filmai
+        from filmai.celery import app
+
+        self.assertIs(filmai.celery_app, app)
+
+    def test_broker_y_backend_usan_db_de_redis_distinta_del_cache(self):
+        from filmai.celery import app
+
+        # La DB 0 la usa el caché de TMDB (`REDIS_URL`): si la cola compartiera
+        # esa DB, las claves de Celery se mezclarían con las `tmdb:*`.
+        self.assertEqual(app.conf.broker_url, settings.CELERY_BROKER_URL)
+        self.assertNotEqual(app.conf.broker_url, settings.REDIS_URL)
+        self.assertNotEqual(settings.CELERY_RESULT_BACKEND, settings.REDIS_URL)
+
+    def test_solo_acepta_serializacion_json(self):
+        from filmai.celery import app
+
+        self.assertEqual(app.conf.task_serializer, "json")
+        self.assertEqual(list(app.conf.accept_content), ["json"])

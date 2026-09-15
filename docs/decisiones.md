@@ -1201,6 +1201,161 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
   `docs/decisiones.md`.
 
+## 14/09/2026 — Créditos de TMDB, tarea `generar_embedding` idempotente y auto-reload del worker
+
+- **Fecha**: 14/09/2026
+- **Descripción**: fase 4 de C-04a.
+  1. **`get_credits(id_tmdb, tipo)`, un método y no dos.** Los endpoints de
+     detalle de TMDB no incluyen `cast` ni `crew`: sin pedirlos aparte, los
+     campos `reparto` y `directores` quedarían vacíos y la búsqueda semántica
+     no encontraría nada por actor ni director. Se implementa con la firma de
+     `get_keywords(id_tmdb, tipo)` —misma forma de URL, `/{tipo}/{id}/credits`
+     vs `/{tipo}/{id}/keywords`— en lugar de los dos métodos por tipo que
+     preveía el diseño. TTL de 24 h en `ENDPOINT_TTLS["credits"]`, igual que
+     el detalle: el reparto de una producción estrenada casi no cambia.
+  2. **`generar_embedding` con tres defensas contra el trabajo duplicado.**
+     Celery entrega "al menos una vez": la misma tarea puede llegar dos veces
+     o a dos workers en paralelo.
+     - Corte por huella: si el embedding ya está `ready` con el mismo
+       `source_hash` y `model_version`, se sale sin llamar al proveedor.
+     - Claim atómico: `UPDATE ... SET estado='processing' WHERE estado IN
+       ('pending','failed')` devuelve la cantidad de filas afectadas; de dos
+       ejecuciones simultáneas exactamente una recibe 1 y la otra 0, sin locks
+       explícitos. Los `ready` quedan fuera de los estados reclamables a
+       propósito: un vector utilizable no se degrada a `failed` por un
+       proveedor caído. Refrescar los `ready` cuyo texto cambió es trabajo del
+       backfill de C-04b, que los devuelve a `pending`.
+     - La llamada al proveedor ocurre fuera de toda transacción (puede tardar
+       segundos) y cualquier excepción se captura: la fila termina en `failed`
+       y la tarea reporta éxito, porque propagar haría que Celery reintentara
+       en loop sin aportar nada — la producción sigue visible igual.
+  Verificado de punta a punta contra el worker real: la tarea se recibe, el
+  stub falla con `NotImplementedError`, la fila queda en `failed` y la
+  producción permanece visible.
+  3. **Auto-reload del worker en desarrollo (`watchmedo`).** Celery NO recarga
+     código como el `runserver` de Django, y eso tiene dos síntomas de muy
+     distinta gravedad: agregar o renombrar una tarea produce un error
+     explícito (`KeyError: 'catalogo.generar_embedding'`, el worker rechaza el
+     mensaje), pero **editar el cuerpo de una tarea existente no produce
+     ningún error: el worker sigue ejecutando en memoria la versión vieja**,
+     en silencio, mientras en el editor se ve el código nuevo. Ese segundo
+     caso es el que hace perder horas. Se agrega `watchdog[watchmedo]` a
+     `requirements.txt` y el `command` del servicio `celery-worker` se envuelve
+     en `watchmedo auto-restart --directory=/app --pattern=*.py --recursive`.
+     Se evaluó `docker compose watch` (disponible, Compose 2.40): se descartó
+     porque el proyecto ya usa bind mounts (la mitad `sync` sería redundante),
+     obliga a correr `docker compose watch` en primer plano en lugar del
+     `docker compose up -d` que documenta el README —y si alguien se olvida,
+     vuelve el bug silencioso— y reinicia el contenedor entero en vez del
+     proceso. La envoltura es solo de desarrollo: en producción se despliega
+     una imagen nueva y se corre `celery` directo.
+- **Archivos**: `backend/catalogo/client.py`, `backend/catalogo/cache.py`,
+  `backend/catalogo/tasks.py`, `backend/catalogo/tests.py`,
+  `backend/requirements.txt`, `docker-compose.yml`.
+
+## 14/09/2026 — Capa `catalogo/services/`, adaptador de tipos y texto canónico
+
+- **Fecha**: 14/09/2026
+- **Descripción**: fase 3 de C-04a, tres decisiones:
+  1. **Se unifica la capa de servicios en `catalogo/services/`.** Iba a quedar
+     `catalogo/service.py` (C-03, singleton de TMDB) conviviendo con
+     `catalogo/services/` (C-04a), dos nombres casi idénticos en la misma app.
+     `service.py` pasa a ser `catalogo/services/tmdb.py`; se actualizan sus
+     dos importadores (`views.py`, `tests.py`, incluidos los destinos de
+     `patch()`). Cambio mecánico, verificado con la suite de C-03 en verde.
+  2. **`services/adapter.py` es la única traducción `movie`/`tv` ↔
+     `pelicula`/`serie`.** Lanza `ValueError` ante cualquier otro valor,
+     incluido `"all"`: es un filtro válido de discovery (C-03) pero no un tipo
+     de producción. Las vistas siguen hablando `movie`/`tv` de cara al
+     exterior; la traducción ocurre al cruzar hacia el modelo.
+  3. **`services/embeddings.py` normaliza el texto antes de hashearlo.** Los
+     arrays (`generos`, `directores`, `reparto`, `keywords`) se ordenan
+     alfabéticamente y se descartan los vacíos. TMDB no garantiza un orden
+     estable entre respuestas: sin normalizar, dos respuestas con el mismo
+     contenido darían hashes distintos y el sistema regeneraría embeddings
+     indefinidamente. El proveedor real queda aislado en `generar_vector()`,
+     que hoy lanza `NotImplementedError` a propósito — es el único punto que
+     B-06 debe reemplazar, y su falla deja el embedding en `failed` sin
+     afectar la visibilidad de la producción.
+- **Motivo**: aislar en un solo lugar cada traducción y cada decisión de
+  formato, que son las que generan bugs silenciosos si se repiten dispersas.
+- **Archivos**: `backend/catalogo/services/{__init__,adapter,embeddings,tmdb}.py`,
+  `backend/catalogo/views.py`, `backend/catalogo/tests.py`.
+
+## 14/09/2026 — Modelo `ProduccionEmbedding`: invariantes en la base, no en Python
+
+- **Fecha**: 14/09/2026
+- **Descripción**: se implementa `ProduccionEmbedding` (C-04a, fase 2) con dos
+  garantías delegadas al motor de base de datos en lugar de a validaciones de
+  aplicación, para que ningún camino de escritura (ORM, admin, SQL manual,
+  scripts de backfill) pueda saltearlas:
+  - `OneToOneField` con `on_delete=CASCADE` → columna `produccion_id UNIQUE`:
+    imposible tener dos embeddings de la misma producción, y borrar la
+    producción se lleva su embedding.
+  - `CheckConstraint` `ck_embedding_ready_requiere_vector`: un embedding en
+    estado `ready` no puede tener `vector` nulo. Un `ready` sin vector sería
+    invisible para la búsqueda pero contaría como procesado, dejando la
+    producción fuera del corpus en silencio.
+  Índices: `idx_embedding_estado` (btree, para que el backfill busque
+  `pending`/`failed`) e `idx_embedding_vector_hnsw` (HNSW con
+  `vector_cosine_ops`, `m=16`, `ef_construction=64`) para la búsqueda por
+  similitud que usará `buscar_semantico` (B-06).
+  La migración `0004_produccionembedding` lleva `VectorExtension()` agregado a
+  mano como primera operación: `makemigrations` no infiere que el tipo
+  `vector` proviene de una extensión, y sin eso la migración falla con `type
+  "vector" does not exist`.
+  Se registra `ProduccionEmbedding` en el admin (excluyendo el vector, que son
+  1024 números ilegibles en un formulario) para poder auditar estados en
+  desarrollo; el registro de `Usuario` y `Reseña` sigue siendo AD-01'.
+- **Motivo**: los embeddings los escribe un worker asincrónico que puede
+  fallar a mitad de camino; las invariantes tienen que sobrevivir a eso.
+- **Archivos**: `backend/catalogo/models.py`,
+  `backend/catalogo/migrations/0004_produccionembedding.py`,
+  `backend/catalogo/admin.py`, `backend/catalogo/tests.py`.
+
+## 14/09/2026 — Entrypoint parametrizable y imagen pgvector Debian (wiring de Celery)
+
+- **Fecha**: 14/09/2026
+- **Descripción**: al conectar Celery (C-04a, Fase 1) surgieron dos cambios de
+  infraestructura:
+  1. **Entrypoint al patrón estándar de Docker.** `backend/entrypoint.sh`
+     terminaba con `exec python manage.py runserver 0.0.0.0:8000` hardcodeado,
+     por lo que ignoraba el `command:` del servicio: el `celery-worker`
+     habría levantado un segundo servidor Django y corrido `migrate` + creación
+     de superuser en paralelo con `backend`. Ahora el script termina con
+     `exec "$@"` y el `Dockerfile` define
+     `CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]`, de modo que el
+     backend arranca igual que antes y cada servicio elige su comando. Las
+     migraciones y el superuser quedan detrás de `RUN_MIGRATIONS` (default
+     `true`); el `celery-worker` la define en `false` para que migre un solo
+     contenedor.
+  2. **Imagen de la base: `pgvector/pgvector:pg16` (Debian), no
+     `pg16-alpine`.** El tag Alpine que figuraba en la documentación no
+     existe: pgvector solo publica imágenes Debian. Como el cambio implica
+     pasar de musl a glibc —y las reglas de ordenamiento (collation) de los
+     índices de texto difieren entre ambas—, se decide **recrear el volumen
+     `pgdata`** en lugar de reutilizarlo. En desarrollo el costo es nulo (el
+     entrypoint recrea migraciones y superuser, y las listas predeterminadas
+     las repone la señal). **Acción requerida para el equipo**: al traer estos
+     cambios hay que correr `docker volume rm filmai_pgdata` (con los
+     contenedores frenados) y `docker compose up --build -d`.
+  Se verificó en la imagen nueva que la extensión `vector` 0.8.6 está
+  disponible y que el rol de Postgres del `.env` tiene `rolsuper = true`, es
+  decir que podrá ejecutar `CREATE EXTENSION` en la migración de la Fase 2.
+- **Configuración de Celery**: broker en la DB 1 de Redis y backend de
+  resultados en la DB 2, separadas de la DB 0 que usa el caché de TMDB, para
+  que las claves de la cola no se mezclen con las `tmdb:*` ni las borre un
+  flush del otro rol. Serialización JSON únicamente y
+  `CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True` (explícito porque el
+  default cambia en Celery 6).
+- **Motivo**: sin el arreglo del entrypoint el servicio `celery-worker` no
+  podía funcionar; sin el cambio de imagen no hay extensión `vector` para
+  `ProduccionEmbedding`.
+- **Archivos**: `backend/entrypoint.sh`, `backend/Dockerfile`,
+  `docker-compose.yml`, `backend/filmai/celery.py`, `backend/filmai/__init__.py`,
+  `backend/filmai/settings.py`, `backend/filmai/tests.py`,
+  `backend/requirements.txt`, `.env.example`, `README.md`.
+
 ## 14/09/2026 — Rutas de detalle sin conversor `int:`: 400 en vez de 404 ante `id_tmdb` no entero
 
 - **Fecha**: 14/09/2026
@@ -1221,3 +1376,43 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Motivo**: hallazgo durante la auditoría de `docs/05_Plan_de_Desarrollo.md`
   contra el código (14/09/2026); incumplía la spec ya archivada de C-03.
 - **Archivos**: `backend/catalogo/urls.py`, `backend/catalogo/tests.py`.
+
+## 14/09/2026 — C-04a adelanta la infraestructura mínima de embeddings; corrección de paquete pgvector
+
+- **Fecha**: 14/09/2026
+- **Descripción**: la especificación de C-04a (08/09/2026) requiere crear un
+  `ProduccionEmbedding` en estado `pending` y encolar `generar_embedding.delay(...)`,
+  pero esa infraestructura (modelo, pgvector, wiring de Celery) estaba asignada
+  a B-06 (Marcos, Fase 3), que en el plan corre en paralelo/después de C-04a.
+  Se decide **adelantar dentro de C-04a** lo mínimo necesario para no dejar el
+  helper de materialización sin poder encolar nada: modelo `ProduccionEmbedding`
+  + migración con la extensión `vector`, wiring de Celery (`filmai/celery.py`,
+  settings, servicio `celery-worker`), y la tarea `generar_embedding` con toda
+  la lógica real de idempotencia (claim `pending`/`failed`→`processing`, corte
+  por `source_hash`+`model_version`). La llamada al proveedor de embeddings en
+  sí (Ollama/bge-m3) queda como stub documentado (`generar_vector()`, lanza
+  `NotImplementedError`) — punto de extensión para que B-06 lo reemplace sin
+  tocar el resto. No se agrega el servicio `ollama` ni se hace pull de
+  `bge-m3`: eso sigue siendo 100% de B-06.
+  Decisiones asociadas:
+  - El paquete Django correcto para `VectorField`/`HnswIndex`/`VectorExtension`
+    es `pgvector` (paquete `pgvector-python`, submódulo `pgvector.django`); se
+    corrige la mención previa a `django-pgvector` en
+    `docs/05_Plan_de_Desarrollo.md`, que no es el paquete mantenido para esto.
+  - `materializar()` se invoca como side-effect desde `MovieDetailView`/
+    `TVDetailView` (C-03) dentro de la misma tarea C-04a, sin cambiar su
+    contrato de respuesta — de lo contrario el helper quedaría sin ningún
+    llamador real hasta la UI de ficha de detalle (C-07).
+  - El test de concurrencia obligatorio para mergear es determinístico (mockea
+    `IntegrityError` en `.create()` y verifica el fallback a `.get()`); un
+    test adicional con `TransactionTestCase` + `threading.Barrier` (dos
+    threads reales contra Postgres) se agrega como prueba de confianza extra,
+    pero no bloquea el merge si es inestable por timing.
+- **Motivo**: evitar que C-04a quede bloqueada esperando una fase posterior
+  del plan, sin adelantar trabajo que no le corresponde (el proveedor real de
+  embeddings sigue siendo responsabilidad de B-06).
+- **Archivos**: `docker-compose.yml`;
+  `openspec/changes/catalog-materialization/{proposal,design,tasks}.md`;
+  `docs/05_Plan_de_Desarrollo.md`. (Modelo, wiring de Celery, tarea y vistas
+  se agregan en commits siguientes de la misma rama
+  `feat/c-04a-materializacion`.)

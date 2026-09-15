@@ -59,7 +59,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        # Misma imagen que el servicio `db` del docker-compose: las migraciones
+        # crean la extensión `vector` (C-04a), que postgres:16-alpine no trae.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_DB: filmai_test
           POSTGRES_USER: filmai_user

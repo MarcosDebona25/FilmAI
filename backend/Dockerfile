@@ -39,10 +39,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # volumen montado que pisa esta copia, así que esto es más para producción.
 COPY . .
 
-# --- Entrypoint ---
-# El entrypoint se ejecuta SIEMPRE antes del comando principal.
-# Espera a que la DB esté lista, corre migraciones, crea superuser.
+# --- Entrypoint + comando por defecto ---
+# El entrypoint se ejecuta SIEMPRE antes del comando principal: espera a que
+# la DB esté lista, corre migraciones y crea superuser (salvo RUN_MIGRATIONS
+# != true), y termina con `exec "$@"`, o sea, ejecuta el CMD de abajo.
+#
+# El CMD es el comando POR DEFECTO y se puede reemplazar por servicio: el
+# `backend` no define `command:` en docker-compose, así que usa este; el
+# `celery-worker` define el suyo (`celery -A filmai worker`) y pisa este.
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

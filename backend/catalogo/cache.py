@@ -12,6 +12,9 @@ ENDPOINT_TTLS = {
     "movie_detail": 24 * 3600,
     "tv_detail": 24 * 3600,
     "keywords": 24 * 3600,
+    # El reparto de una producción ya estrenada casi no cambia: mismo TTL
+    # largo que el detalle y las keywords.
+    "credits": 24 * 3600,
 }
 
 # Bounded timeouts so a hung Redis fails fast and the cache degrades to TMDB
@@ -108,6 +111,12 @@ class TMDBClientCache:
         params = {"id_tmdb": id_tmdb, "tipo": tipo}
         return self._cached_call(
             "keywords", params, lambda: self.client.get_keywords(id_tmdb, tipo)
+        )
+
+    def get_credits(self, id_tmdb, tipo):
+        params = {"id_tmdb": id_tmdb, "tipo": tipo}
+        return self._cached_call(
+            "credits", params, lambda: self.client.get_credits(id_tmdb, tipo)
         )
 
 
