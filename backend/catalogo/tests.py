@@ -5,11 +5,12 @@ import fakeredis
 import httpx
 import redis
 from django.conf import settings
+from django.core.cache import cache as dj_cache
 from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase, override_settings
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIClient, APIRequestFactory
 from rest_framework.throttling import ScopedRateThrottle
 
 from catalogo.cache import (
@@ -510,6 +511,14 @@ class ParamValidationTest(SimpleTestCase):
 class EndpointIntegrationTest(SimpleTestCase):
     def setUp(self):
         self.redis = fakeredis.FakeRedis(decode_responses=True)
+        # Estos tests cubren el contrato HTTP de C-03 (passthrough de TMDB) y
+        # corren sin base de datos. La materialización que C-04a agregó a las
+        # vistas de detalle se anula acá para no arrastrar escrituras a
+        # Postgres a un `SimpleTestCase`; tiene su propia cobertura en
+        # `VistasDeDetalleMaterializanTests`.
+        parche = patch("catalogo.views.materializar")
+        parche.start()
+        self.addCleanup(parche.stop)
 
     def _make_service(self, body=None):
         body = body or {"results": [{"id": 550, "title": "Fight Club"}]}
@@ -1292,3 +1301,72 @@ class MaterializacionCarreraTests(MaterializacionBase):
             self.assertRaises(IntegrityError),
         ):
             materializar(550, "movie")
+
+
+class VistasDeDetalleMaterializanTests(TestCase):
+    """El detalle sigue siendo passthrough de TMDB y además materializa (C-04a).
+
+    Se parchea `get_catalog_service` en los dos módulos que lo usan: la vista
+    lo llama para armar la respuesta y el enriquecimiento lo llama de nuevo
+    (en producción esa segunda llamada es un acierto de caché en Redis).
+    """
+
+    def setUp(self):
+        # El throttle `catalogo` (60/min) guarda su contador en la caché
+        # compartida: sin limpiarla, otros tests de la suite podrían dejarla
+        # gastada y estos responderían 429.
+        dj_cache.clear()
+        self.servicio = _servicio_tmdb_falso()
+        for modulo in ("catalogo.views", "catalogo.services.materialization"):
+            parche = patch(f"{modulo}.get_catalog_service", return_value=self.servicio)
+            parche.start()
+            self.addCleanup(parche.stop)
+        parche_tarea = patch("catalogo.services.materialization.generar_embedding")
+        self.tarea = parche_tarea.start()
+        self.addCleanup(parche_tarea.stop)
+        self.api = APIClient()
+
+    def test_detalle_de_pelicula_materializa_sin_tocar_la_respuesta(self):
+        response = self.api.get("/api/catalogo/movie/550/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, _DETALLE_MOVIE)
+
+        produccion = ProduccionAudiovisual.objects.get(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA
+        )
+        self.assertEqual(produccion.titulo, "Fight Club")
+        self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
+        self.tarea.delay.assert_called_once_with(produccion.id)
+
+    def test_detalle_de_serie_materializa_sin_tocar_la_respuesta(self):
+        response = self.api.get("/api/catalogo/tv/1396/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, _DETALLE_TV)
+
+        produccion = ProduccionAudiovisual.objects.get(
+            id_tmdb=1396, tipo=TipoProduccion.SERIE
+        )
+        self.assertEqual(produccion.titulo, "Breaking Bad")
+        self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
+
+    def test_abrir_el_detalle_dos_veces_no_duplica_nada(self):
+        self.api.get("/api/catalogo/movie/550/")
+        self.api.get("/api/catalogo/movie/550/")
+
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
+        self.assertEqual(ProduccionEmbedding.objects.count(), 1)
+        self.tarea.delay.assert_called_once()
+
+    def test_un_fallo_al_materializar_no_rompe_la_respuesta(self):
+        # Contrato de C-03: el detalle es passthrough puro de TMDB. Si nuestra
+        # base o el enriquecimiento fallan, el usuario igual ve la ficha.
+        with patch(
+            "catalogo.views.materializar", side_effect=RuntimeError("base caída")
+        ):
+            response = self.api.get("/api/catalogo/movie/550/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, _DETALLE_MOVIE)
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 0)
