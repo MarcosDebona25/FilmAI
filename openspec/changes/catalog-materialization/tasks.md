@@ -74,12 +74,12 @@ Chain strategy: pending
 
 ## Phase 5: Materialization + view wiring
 
-- [ ] 5.1 RED: add `MaterializationRaceTest` — mock `ProduccionAudiovisual.objects.create` to raise `IntegrityError`; assert `materializar()` falls back to `.get()` and returns the existing row without raising
-- [ ] 5.2 RED: add `MaterializationEnrichmentTest` — mock `get_catalog_service()` (detail+credits+keywords fixtures for both `movie` and `tv`) → assert every mapped field (see design.md table), `ProduccionEmbedding(estado=pending)` created, `generar_embedding.delay` called once with the new `produccion.id`
-- [ ] 5.3 RED: add a case where the row already exists and is complete (`titulo` set) → no TMDB calls made, no duplicate `ProduccionEmbedding`, no re-enqueue
-- [ ] 5.4 GREEN: create `backend/catalogo/services/materialization.py` (`materializar`, `_obtener_o_crear`, `_enriquecer`, `_encolar_embedding`)
-- [ ] 5.5 RED: add `MovieDetailViewMaterializationTest`/`TVDetailViewMaterializationTest` (`APIClient`, mocked `get_catalog_service`) — GET response body is unchanged TMDB passthrough, and a `ProduccionAudiovisual` row now exists for that `(id_tmdb, tipo)`
-- [ ] 5.6 GREEN: wire `materializar(id_tmdb, tipo_tmdb)` into `MovieDetailView.get`/`TVDetailView.get` in `backend/catalogo/views.py`
-- [ ] 5.7 Best-effort (not a merge gate): add `MaterializationConcurrencyTransactionTest(TransactionTestCase)` with `threading.Barrier` — two threads materializing the same `(id_tmdb, tipo)` end with exactly one row
-- [ ] 5.8 Update `docs/decisiones.md` with the final acceptance-criteria confirmation (unicidad, concurrencia, idempotencia, fallo→failed)
-- [ ] 5.9 `docker compose exec -T backend python manage.py test catalogo` — all green; `ruff format . && ruff check .`; manual smoke: `docker compose up -d`, `curl localhost:8000/api/catalogo/movie/550/` twice, confirm one row + one `pending`/`failed` embedding via `python manage.py shell`
+- [x] 5.1 RED: add `MaterializationRaceTest` — mock `ProduccionAudiovisual.objects.create` to raise `IntegrityError`; assert `materializar()` falls back to `.get()` and returns the existing row without raising
+- [x] 5.2 RED: add `MaterializationEnrichmentTest` — mock `get_catalog_service()` (detail+credits+keywords fixtures for both `movie` and `tv`) → assert every mapped field (see design.md table), `ProduccionEmbedding(estado=pending)` created, `generar_embedding.delay` called once with the new `produccion.id`
+- [x] 5.3 RED: add a case where the row already exists and is complete (`titulo` set) → no TMDB calls made, no duplicate `ProduccionEmbedding`, no re-enqueue
+- [x] 5.4 GREEN: create `backend/catalogo/services/materialization.py` (`materializar`, `_obtener_o_crear`, `_enriquecer`, `_encolar_embedding`)
+- [x] 5.5 RED: add `MovieDetailViewMaterializationTest`/`TVDetailViewMaterializationTest` (`APIClient`, mocked `get_catalog_service`) — GET response body is unchanged TMDB passthrough, and a `ProduccionAudiovisual` row now exists for that `(id_tmdb, tipo)`
+- [x] 5.6 GREEN: wire `materializar(id_tmdb, tipo_tmdb)` into `MovieDetailView.get`/`TVDetailView.get` in `backend/catalogo/views.py`
+- [x] 5.7 Best-effort (not a merge gate): add `MaterializationConcurrencyTransactionTest(TransactionTestCase)` with `threading.Barrier` — two threads materializing the same `(id_tmdb, tipo)` end with exactly one row
+- [x] 5.8 Update `docs/decisiones.md` with the final acceptance-criteria confirmation (unicidad, concurrencia, idempotencia, fallo→failed)
+- [x] 5.9 `docker compose exec -T backend python manage.py test catalogo` — all green; `ruff format . && ruff check .`; manual smoke: `docker compose up -d`, `curl localhost:8000/api/catalogo/movie/550/` twice, confirm one row + one `pending`/`failed` embedding via `python manage.py shell`
