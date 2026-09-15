@@ -151,6 +151,7 @@ sección es C-04a (más abajo).
 - **Política de fallo (15/09/2026):** `materializar()` propaga sus errores y quien la llama decide. Las vistas de detalle la envuelven en `_materializar_sin_interrumpir()` (registra y sigue) para no romper el passthrough de C-03; el backfill de C-04b va a querer el comportamiento contrario.
 - **Encolado (15/09/2026):** solo cuando el `ProduccionEmbedding` se acaba de crear. Reencolar en cada visita llenaría la cola de trabajo repetido; refrescar los `failed` o desactualizados es del backfill de C-04b.
 - **Keywords (15/09/2026):** TMDB devuelve la misma lista bajo `keywords` en películas y `results` en series; lo normaliza `_extraer_keywords()`.
+- **Directores (15/09/2026):** una serie no tiene `job == "Director"` en su crew (en TV los directores son por episodio), así que `_directores()` toma `created_by` del detalle para series y el crew para películas. Verificado contra la API real. Sin esto, `Directors` quedaba vacío en el texto embebido de toda serie. La `duracion` de series sí queda en NULL cuando TMDB devuelve `episode_run_time` vacío: limitación aceptada, no entra al texto embebido.
 - **Limitación conocida (15/09/2026):** el criterio de "fila incompleta" (`_necesita_enriquecimiento()`) solo mira el título, así que una fila con título pero sin géneros no se repararía. Hoy no puede ocurrir; es el único lugar a endurecer cuando C-04b cree filas parciales desde listados.
 - La materialización es global: toda producción servida por el catálogo o abierta en detalle se materializa para todos los usuarios.
 

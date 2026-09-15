@@ -1461,3 +1461,35 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   `backend/catalogo/views.py`, `backend/catalogo/tests.py`,
   `openspec/changes/catalog-materialization/tasks.md`,
   `docs/05_Plan_de_Desarrollo.md`.
+
+## 15/09/2026 — Las series se acreditan por `created_by`, no por el crew
+
+- **Fecha**: 15/09/2026
+- **Descripción**: al verificar C-04a contra la API real de TMDB (una vez
+  cargada la `TMDB_API_KEY`) se detectó que **toda serie quedaba sin
+  directores**. La causa no es un bug del mapeo sino una asimetría de la API:
+  en TV los directores son por episodio, así que `/tv/{id}/credits` no expone
+  ningún `job == "Director"` a nivel serie. Se comprobó sobre Breaking Bad
+  (1396): el crew devuelve Executive Producer, Casting, Costume Design,
+  Original Music Composer y demás, ninguno Director. En su lugar, el detalle
+  de la serie trae `created_by` (para Breaking Bad, `Vince Gilligan`).
+  Se decide que `_directores()` use `created_by` en series y el crew en
+  películas, con fallback al crew cuando una serie no declara creadores
+  (miniseries y documentales a veces sí traen un Director).
+- **Motivo**: `Directors` es una de las seis secciones del texto canónico que
+  se embebe. Con el campo vacío, ninguna serie podría encontrarse por su autor
+  —que es justamente el dato que un usuario recuerda de una serie—. Además, el
+  `source_hash` se calcula sobre ese texto: corregirlo **después** de que B-06
+  conecte Ollama obligaría a regenerar el embedding de todas las series. Hoy
+  no cuesta nada, porque todos terminan en `failed` por el stub.
+- **Limitación aceptada (no se corrige)**: TMDB devuelve `episode_run_time`
+  vacío en muchas series, así que `duracion` queda en NULL para ellas. No
+  forma parte del texto embebido y `last_episode_to_air.runtime` no es un
+  sustituto representativo.
+- **Lección sobre los tests**: el fixture `_CREDITS_TV` incluía un
+  `{"job": "Director"}` inventado, que la API real nunca devuelve. Por eso los
+  tests pasaban mientras la realidad fallaba. Se corrigió el fixture para que
+  refleje la forma real de la respuesta.
+- **Archivos**: `backend/catalogo/services/materialization.py`,
+  `backend/catalogo/tests.py`,
+  `openspec/specs/catalog-materialization/spec.md`.
