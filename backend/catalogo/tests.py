@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import fakeredis
 import httpx
@@ -43,6 +43,7 @@ from catalogo.services.embeddings import (
     construir_texto_canonico,
     generar_vector,
 )
+from catalogo.services.materialization import materializar
 from catalogo.services.tmdb import get_catalog_service
 from catalogo.tasks import generar_embedding
 from catalogo.views import (
@@ -1002,3 +1003,292 @@ class ProduccionEmbeddingModelTests(TestCase):
         self.produccion.delete()
 
         self.assertEqual(ProduccionEmbedding.objects.count(), 0)
+
+
+# ---------------------------------------------------------------------------
+# Materialización on-demand (C-04a, fase 5)
+# ---------------------------------------------------------------------------
+# Respuestas de TMDB recortadas a los campos que consume el enriquecimiento.
+# El reparto de la película trae 12 personas a propósito: el mapeo se queda con
+# las 10 primeras, que en TMDB vienen ordenadas por `order` (billing).
+
+_DETALLE_MOVIE = {
+    "id": 550,
+    "title": "Fight Club",
+    "poster_path": "/fight-club.jpg",
+    "overview": "An insomniac office worker...",
+    "release_date": "1999-10-15",
+    "status": "Released",
+    "genres": [{"id": 18, "name": "Drama"}, {"id": 53, "name": "Thriller"}],
+    "vote_average": 8.4,
+    "runtime": 139,
+}
+
+_CREDITS_MOVIE = {
+    "cast": [{"name": f"Actor {numero:02d}"} for numero in range(1, 13)],
+    "crew": [
+        {"name": "David Fincher", "job": "Director"},
+        {"name": "Jim Uhls", "job": "Screenplay"},
+    ],
+}
+
+_KEYWORDS_MOVIE = {"keywords": [{"name": "insomnia"}, {"name": "dual identity"}]}
+
+_DETALLE_TV = {
+    "id": 1396,
+    "name": "Breaking Bad",
+    "poster_path": "/breaking-bad.jpg",
+    "overview": "A chemistry teacher diagnosed with cancer...",
+    "first_air_date": "2008-01-20",
+    "status": "Ended",
+    "genres": [{"id": 18, "name": "Drama"}],
+    "vote_average": 8.9,
+    "number_of_seasons": 5,
+    "number_of_episodes": 62,
+    "episode_run_time": [47],
+}
+
+_CREDITS_TV = {
+    "cast": [{"name": "Bryan Cranston"}, {"name": "Aaron Paul"}],
+    "crew": [{"name": "Vince Gilligan", "job": "Director"}],
+}
+
+# Mismo contenido que en películas, pero TMDB lo devuelve bajo otra clave.
+_KEYWORDS_TV = {"results": [{"name": "new mexico"}, {"name": "drug dealer"}]}
+
+
+def _servicio_tmdb_falso():
+    """Doble del `TMDBClientCache` con las tres respuestas del enriquecimiento."""
+    return Mock(
+        get_movie_detail=Mock(return_value=_DETALLE_MOVIE),
+        get_tv_detail=Mock(return_value=_DETALLE_TV),
+        get_credits=Mock(
+            side_effect=lambda id_tmdb, tipo: (
+                _CREDITS_MOVIE if tipo == "movie" else _CREDITS_TV
+            )
+        ),
+        get_keywords=Mock(
+            side_effect=lambda id_tmdb, tipo: (
+                _KEYWORDS_MOVIE if tipo == "movie" else _KEYWORDS_TV
+            )
+        ),
+    )
+
+
+class MaterializacionBase(TestCase):
+    """Aísla la materialización de TMDB y del broker de Celery.
+
+    Se usa `TestCase` (no `SimpleTestCase`) porque acá lo que se prueba es
+    justamente qué queda escrito en Postgres.
+    """
+
+    def setUp(self):
+        self.servicio = _servicio_tmdb_falso()
+        parche_servicio = patch(
+            "catalogo.services.materialization.get_catalog_service",
+            return_value=self.servicio,
+        )
+        parche_tarea = patch("catalogo.services.materialization.generar_embedding")
+        parche_servicio.start()
+        self.tarea = parche_tarea.start()
+        self.addCleanup(parche_servicio.stop)
+        self.addCleanup(parche_tarea.stop)
+
+
+class MaterializacionPeliculaTests(MaterializacionBase):
+    """Alta de una película nueva: mapeo de campos y encolado (C-04a)."""
+
+    def test_mapea_los_campos_del_detalle(self):
+        produccion = materializar(550, "movie")
+
+        self.assertEqual(produccion.id_tmdb, 550)
+        self.assertEqual(produccion.tipo, TipoProduccion.PELICULA)
+        self.assertEqual(produccion.titulo, "Fight Club")
+        self.assertEqual(produccion.poster, "/fight-club.jpg")
+        self.assertEqual(produccion.sinopsis, "An insomniac office worker...")
+        self.assertEqual(str(produccion.fecha_lanzamiento), "1999-10-15")
+        self.assertEqual(produccion.estatus, "Released")
+        self.assertEqual(produccion.generos, ["Drama", "Thriller"])
+        self.assertEqual(produccion.calificacion_promedio, 8.4)
+        self.assertEqual(produccion.duracion, 139)
+
+    def test_una_pelicula_no_tiene_temporadas_ni_episodios(self):
+        produccion = materializar(550, "movie")
+
+        self.assertIsNone(produccion.cantidad_temporadas)
+        self.assertIsNone(produccion.cantidad_episodios)
+
+    def test_reparto_se_recorta_a_diez_y_directores_se_filtran_por_job(self):
+        produccion = materializar(550, "movie")
+
+        self.assertEqual(len(produccion.reparto), 10)
+        self.assertEqual(produccion.reparto[0], "Actor 01")
+        self.assertEqual(produccion.directores, ["David Fincher"])
+
+    def test_keywords_de_pelicula_salen_de_la_clave_keywords(self):
+        produccion = materializar(550, "movie")
+
+        self.assertEqual(produccion.keywords, ["insomnia", "dual identity"])
+
+    def test_crea_el_embedding_pendiente_y_lo_encola_una_sola_vez(self):
+        produccion = materializar(550, "movie")
+
+        embedding = ProduccionEmbedding.objects.get(produccion=produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.PENDING)
+        self.assertIsNone(embedding.vector)
+        self.tarea.delay.assert_called_once_with(produccion.id)
+
+    def test_fecha_de_lanzamiento_vacia_queda_en_null(self):
+        # TMDB devuelve "" (no null) para estrenos sin fecha confirmada.
+        self.servicio.get_movie_detail.return_value = {
+            **_DETALLE_MOVIE,
+            "release_date": "",
+        }
+
+        produccion = materializar(550, "movie")
+
+        self.assertIsNone(produccion.fecha_lanzamiento)
+
+    def test_la_fila_queda_persistida(self):
+        materializar(550, "movie")
+
+        self.assertTrue(
+            ProduccionAudiovisual.objects.filter(
+                id_tmdb=550, tipo=TipoProduccion.PELICULA
+            ).exists()
+        )
+
+
+class MaterializacionSerieTests(MaterializacionBase):
+    """Alta de una serie: TMDB usa otras claves para la misma información."""
+
+    def test_mapea_los_campos_propios_de_una_serie(self):
+        produccion = materializar(1396, "tv")
+
+        self.assertEqual(produccion.tipo, TipoProduccion.SERIE)
+        # `name` en vez de `title`, `first_air_date` en vez de `release_date`.
+        self.assertEqual(produccion.titulo, "Breaking Bad")
+        self.assertEqual(str(produccion.fecha_lanzamiento), "2008-01-20")
+        self.assertEqual(produccion.cantidad_temporadas, 5)
+        self.assertEqual(produccion.cantidad_episodios, 62)
+        # Una serie no tiene `runtime`: se usa el primer `episode_run_time`.
+        self.assertEqual(produccion.duracion, 47)
+
+    def test_keywords_de_serie_salen_de_la_clave_results(self):
+        produccion = materializar(1396, "tv")
+
+        self.assertEqual(produccion.keywords, ["new mexico", "drug dealer"])
+
+    def test_serie_sin_duracion_de_episodio_queda_en_null(self):
+        self.servicio.get_tv_detail.return_value = {
+            **_DETALLE_TV,
+            "episode_run_time": [],
+        }
+
+        produccion = materializar(1396, "tv")
+
+        self.assertIsNone(produccion.duracion)
+
+    def test_consulta_los_endpoints_de_series(self):
+        materializar(1396, "tv")
+
+        self.servicio.get_tv_detail.assert_called_once_with(1396)
+        self.servicio.get_movie_detail.assert_not_called()
+        self.servicio.get_credits.assert_called_once_with(1396, "tv")
+        self.servicio.get_keywords.assert_called_once_with(1396, "tv")
+
+
+class MaterializacionIdempotenteTests(MaterializacionBase):
+    """Abrir dos veces el mismo detalle no duplica ni reencola nada (C-04a)."""
+
+    def test_fila_existente_y_completa_no_vuelve_a_consultar_tmdb(self):
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+
+        materializar(550, "movie")
+
+        self.servicio.get_movie_detail.assert_not_called()
+        self.servicio.get_credits.assert_not_called()
+        self.servicio.get_keywords.assert_not_called()
+
+    def test_materializar_dos_veces_deja_una_fila_y_un_embedding(self):
+        primera = materializar(550, "movie")
+        segunda = materializar(550, "movie")
+
+        self.assertEqual(primera.pk, segunda.pk)
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
+        self.assertEqual(ProduccionEmbedding.objects.count(), 1)
+
+    def test_no_reencola_si_el_embedding_ya_existia(self):
+        materializar(550, "movie")
+        self.tarea.delay.reset_mock()
+
+        materializar(550, "movie")
+
+        self.tarea.delay.assert_not_called()
+
+    def test_fila_incompleta_se_repara_con_datos_de_tmdb(self):
+        # Sin título: la dejó a medias otro proceso (p. ej. el backfill C-04b).
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo=""
+        )
+
+        produccion = materializar(550, "movie")
+
+        self.assertEqual(produccion.titulo, "Fight Club")
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
+
+    def test_tipo_no_soportado_no_materializa_nada(self):
+        with self.assertRaises(ValueError):
+            materializar(550, "all")
+
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 0)
+
+
+class MaterializacionCarreraTests(MaterializacionBase):
+    """Dos requests simultáneos sobre la misma producción (C-04a).
+
+    La constraint `uq_produccion_tmdb_tipo` garantiza que solo uno inserte; lo
+    que se prueba acá es que el que pierde se recupere en vez de reventar.
+    """
+
+    def test_colision_de_insert_devuelve_la_fila_que_gano(self):
+        ganadora = ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+
+        # La búsqueda previa no la ve (cuando consultamos todavía no existía) y
+        # el INSERT choca contra la constraint; el rescate sí la encuentra.
+        with (
+            patch(
+                "catalogo.services.materialization._buscar_produccion",
+                side_effect=[None, ganadora],
+            ),
+            patch.object(
+                ProduccionAudiovisual.objects,
+                "create",
+                side_effect=IntegrityError("uq_produccion_tmdb_tipo"),
+            ),
+        ):
+            produccion = materializar(550, "movie")
+
+        self.assertEqual(produccion.pk, ganadora.pk)
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
+
+    def test_un_integrityerror_ajeno_a_la_carrera_se_propaga(self):
+        # Si tras la colisión la fila sigue sin aparecer, el error no venía de
+        # la carrera y disfrazarlo de "ya existía" ocultaría un bug real.
+        with (
+            patch(
+                "catalogo.services.materialization._buscar_produccion",
+                side_effect=[None, None],
+            ),
+            patch.object(
+                ProduccionAudiovisual.objects,
+                "create",
+                side_effect=IntegrityError("otra violación cualquiera"),
+            ),
+            self.assertRaises(IntegrityError),
+        ):
+            materializar(550, "movie")
