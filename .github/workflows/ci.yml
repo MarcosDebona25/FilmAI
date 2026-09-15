@@ -12,11 +12,25 @@
 name: CI
 
 # Cuándo se ejecuta:
-#   - pull_request: en cada PR hacia `main` (lo importante: bloquea el merge).
+#   - pull_request: en cada PR hacia `main` o hacia una rama `feat/**`
+#                   (lo importante: bloquea el merge).
 #   - push:         en cada push directo a `main` (re-verifica lo que ya entró).
+#
+# `branches` filtra por la rama DESTINO del PR, no por la de origen. Incluir
+# `feat/**` es lo que hace que un PR apilado —uno cuya base es otra rama de
+# feature, para que la revisión muestre solo el tramo nuevo— también corra los
+# tests. Sin esto solo se disparaba "AI Review" y el PR quedaba sin gate real
+# (pasó con el PR #13 de C-04a, 15/09/2026).
+#
+# Ojo: reapuntar la base de un PR ya abierto NO dispara el workflow, porque
+# GitHub emite el evento `edited` y no está entre los tipos por defecto
+# (`opened`, `synchronize`, `reopened`). Para forzarlo alcanza con cerrar y
+# reabrir el PR, o con pushear un commit.
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - "feat/**"
   push:
     branches: [main]
 
