@@ -75,7 +75,7 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 | **Backend**           | Python 3.12, Django 5.x, Django REST Framework                             |
 | **Frontend**          | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                        |
 | **Base de datos**     | PostgreSQL 16 con pgvector (imagen `pgvector/pgvector:pg16`)               |
-| **Caché y colas**     | Redis (DB 0: caché de TMDB · DB 1-2: broker y resultados de Celery)        |
+| **Caché y colas**     | Redis (DB 0: caché de TMDB · DB 1: broker de Celery · DB 2: resultados)    |
 | **Tareas asíncronas** | Celery (worker activo; Celery Beat para la sync programada, pendiente)     |
 | **Embeddings (en curso)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generación asíncrona vía Celery. El proveedor real de embeddings todavía es un stub (llega en B-06). |
 | **Infraestructura**   | Docker, docker-compose (5 servicios: backend, frontend, PostgreSQL, Redis, celery-worker) |
@@ -239,14 +239,19 @@ docker compose logs -f frontend # seguir los logs de Next.js
 docker compose down -v          # detener y borrar BD + Redis (datos)
 ```
 
-> **Tareas de Celery y recarga de código.** Celery, a diferencia del
-> `runserver` de Django, no recarga código por su cuenta. El servicio
-> `celery-worker` corre envuelto en `watchmedo auto-restart`, que lo reinicia
-> al guardar cualquier `.py`. Si alguna vez el auto-reload no se dispara,
-> reiniciá el worker a mano: mientras no se reinicie, **sigue ejecutando en
-> memoria la versión vieja de la tarea, sin ningún error visible** (agregar o
-> renombrar una tarea sí avisa, con un `KeyError`; editar el cuerpo de una
-> existente no avisa nada).
+> **⚠️ Si editás una tarea de Celery y el worker no se reinició, sigue
+> corriendo la versión vieja sin avisarte.** No hay error, no hay log: el
+> código que ves en el editor y el que ejecuta el worker son distintos.
+>
+> Agregar o renombrar una tarea sí avisa (el worker rechaza el mensaje con
+> `KeyError: 'catalogo.generar_embedding'`). **Editar el cuerpo de una tarea
+> existente no avisa nada.** Ese es el caso que hace perder horas.
+
+Celery, a diferencia del `runserver` de Django, no recarga código por su
+cuenta. Por eso el servicio `celery-worker` corre envuelto en
+`watchmedo auto-restart`, que lo reinicia al guardar cualquier `.py`. Si
+alguna vez el auto-reload no se dispara, reiniciá el worker a mano con
+`docker compose restart celery-worker`.
 
 ### Configuración inicial (solo la primera vez)
 
