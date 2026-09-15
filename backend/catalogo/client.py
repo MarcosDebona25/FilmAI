@@ -119,3 +119,7 @@ class TMDBClient:
 
     def get_keywords(self, id_tmdb, tipo):
         return self._get(f"/{tipo}/{id_tmdb}/keywords")
+
+    def get_credits(self, id_tmdb, tipo):
+        # Los endpoints de detalle no incluyen cast ni crew: se piden aparte.
+        return self._get(f"/{tipo}/{id_tmdb}/credits")

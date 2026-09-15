@@ -233,10 +233,20 @@ docker compose down         # detener (conserva la base de datos y Redis)
 ```bash
 docker compose ps                     # estado de los 5 servicios
 docker compose logs -f celery-worker  # seguir los logs del worker de Celery
+docker compose restart celery-worker  # solo si el auto-reload falla (ver nota abajo)
 docker compose logs -f backend  # seguir los logs de Django
 docker compose logs -f frontend # seguir los logs de Next.js
 docker compose down -v          # detener y borrar BD + Redis (datos)
 ```
+
+> **Tareas de Celery y recarga de código.** Celery, a diferencia del
+> `runserver` de Django, no recarga código por su cuenta. El servicio
+> `celery-worker` corre envuelto en `watchmedo auto-restart`, que lo reinicia
+> al guardar cualquier `.py`. Si alguna vez el auto-reload no se dispara,
+> reiniciá el worker a mano: mientras no se reinicie, **sigue ejecutando en
+> memoria la versión vieja de la tarea, sin ningún error visible** (agregar o
+> renombrar una tarea sí avisa, con un `KeyError`; editar el cuerpo de una
+> existente no avisa nada).
 
 ### Configuración inicial (solo la primera vez)
 

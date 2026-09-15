@@ -101,6 +101,12 @@ services:
   # Misma imagen que el backend (mismo código, mismas dependencias), pero en
   # vez de levantar el servidor HTTP corre el proceso que escucha la cola de
   # tareas en Redis y las ejecuta una por una.
+  #
+  # El comando va envuelto en `watchmedo auto-restart` porque Celery, a
+  # diferencia del runserver de Django, NO recarga código solo: sin esto el
+  # worker sigue ejecutando en memoria la versión vieja de cada tarea que
+  # edites, en silencio y sin ningún error. Es una envoltura de desarrollo; en
+  # producción se despliega una imagen nueva y se corre `celery` directo.
   celery-worker:
     build:
       context: ./backend
@@ -108,7 +114,9 @@ services:
     container_name: filmai_celery_worker
     restart: unless-stopped
     user: "${UID:-1000}:${GID:-1000}"
-    command: celery -A filmai worker -l info
+    command: >
+      watchmedo auto-restart --directory=/app --pattern=*.py --recursive --
+      celery -A filmai worker -l info
     env_file:
       - .env
     environment:
