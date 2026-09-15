@@ -63,12 +63,24 @@ Field mapping MUST follow the type-specific shapes of the TMDB API:
 | `titulo` | `title` | `name` |
 | `fecha_lanzamiento` | `release_date` (empty ⇒ NULL) | `first_air_date` (empty ⇒ NULL) |
 | `reparto` | first 10 of `credits.cast` | same |
-| `directores` | `credits.crew` filtered by `job == "Director"` | same |
+| `directores` | `credits.crew` filtered by `job == "Director"` | `created_by` from the detail payload, falling back to crew directors |
 | `generos` | `genres[].name` | same |
 | `keywords` | `keywords` key | `results` key |
 | `duracion` | `runtime` | `episode_run_time[0]`, else NULL |
 | `cantidad_temporadas` / `cantidad_episodios` | NULL | `number_of_seasons` / `number_of_episodes` |
 | `poster` | raw `poster_path` (CDN URL built by the frontend) | same |
+
+Two type asymmetries were confirmed against the live API on 2026-09-15 and are load-bearing:
+
+- A series carries no `job == "Director"` in its crew, because TV directors are per-episode. Its authorship MUST come from `created_by`, or the canonical text of every series would ship an empty `Directors:` line and no series could be retrieved by its author.
+- TMDB frequently returns an empty `episode_run_time`, so `duracion` is legitimately NULL for many series. ACCEPTED as-is: duration is not part of the embedded text, and `last_episode_to_air.runtime` is not a representative substitute.
+
+#### Scenario: A series is credited to its creators
+
+- GIVEN a series whose crew contains no `job == "Director"`
+- WHEN the row is enriched
+- THEN `directores` is taken from the detail payload's `created_by`
+- AND a series with neither creators nor crew directors is left empty
 
 #### Scenario: Keywords key differs by type
 
