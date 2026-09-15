@@ -36,8 +36,18 @@ fakeredis>=2.0,<3.0
 # --- Tareas asincrónicas (Celery) ---
 celery>=5.3,<5.5
 
+# --- Búsqueda semántica (pgvector) ---
+# El submódulo `pgvector.django` aporta VectorField, HnswIndex y
+# VectorExtension, usados por ProduccionEmbedding (C-04a / B-06).
+# Nota: el paquete es `pgvector`, no `django-pgvector` (ver docs/decisiones.md).
+pgvector>=0.3,<0.5
+
 # --- Desarrollo ---
 factory-boy>=3.3,<4.0
+# Auto-reload del worker de Celery en desarrollo: a diferencia del runserver
+# de Django, Celery no recarga código solo. El extra [watchmedo] aporta el
+# comando `watchmedo` que usa el servicio celery-worker del docker-compose.
+watchdog[watchmedo]>=4.0,<7.0
 
 # --- Linting ---
 ruff>=0.11,<1.0

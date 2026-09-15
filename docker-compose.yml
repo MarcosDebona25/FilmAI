@@ -6,8 +6,13 @@
 
 services:
   # 1. PostgreSQL 16 — la base de datos relacional
+  # Imagen con la extensión pgvector precompilada, que necesita
+  # ProduccionEmbedding (C-04a). OJO: pgvector no publica variantes Alpine,
+  # solo Debian, así que este cambio pasa de musl a glibc: al adoptarlo hay
+  # que recrear el volumen `pgdata` (las reglas de ordenamiento de texto de
+  # los índices difieren entre ambas librerías). Ver docs/decisiones.md.
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: filmai_db
     restart: unless-stopped
     ports:
@@ -89,6 +94,42 @@ services:
       - /app/node_modules # volumen anónimo: no pisar node_modules del contenedor
     depends_on:
       - backend
+    networks:
+      - filmai_network
+
+  # 5. Celery worker — procesa tareas en segundo plano (hoy: generar_embedding, C-04a)
+  # Misma imagen que el backend (mismo código, mismas dependencias), pero en
+  # vez de levantar el servidor HTTP corre el proceso que escucha la cola de
+  # tareas en Redis y las ejecuta una por una.
+  #
+  # El comando va envuelto en `watchmedo auto-restart` porque Celery, a
+  # diferencia del runserver de Django, NO recarga código solo: sin esto el
+  # worker sigue ejecutando en memoria la versión vieja de cada tarea que
+  # edites, en silencio y sin ningún error. Es una envoltura de desarrollo; en
+  # producción se despliega una imagen nueva y se corre `celery` directo.
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: filmai_celery_worker
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    command: >
+      watchmedo auto-restart --directory=/app --pattern=*.py --recursive --
+      celery -A filmai worker -l info
+    env_file:
+      - .env
+    environment:
+      # Las migraciones y el superuser los corre solo el backend: si ambos
+      # contenedores migraran, tocarían la misma base al mismo tiempo.
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - filmai_network
 

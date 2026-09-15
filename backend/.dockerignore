@@ -1,0 +1,27 @@
+# Qué NO copiar a la imagen en el `COPY . .` del Dockerfile.
+# El contexto de build es `./backend`, así que las rutas son relativas a esa
+# carpeta (el `.env` del proyecto vive en la raíz y nunca entra acá).
+
+# Cachés de herramientas: no aportan nada adentro y engordan la imagen.
+.ruff_cache/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Entornos virtuales locales: la imagen instala sus propias dependencias
+# desde requirements.txt.
+.venv/
+venv/
+env/
+
+# Secretos: defensivo. Hoy no hay ningún .env en esta carpeta, pero si alguien
+# crea uno para pruebas locales no debe terminar horneado en la imagen.
+.env
+.env.*
+
+# Base de datos local de SQLite, por si alguien prueba sin Docker.
+*.sqlite3
+
+# Archivos de sistema y de editores.
+.DS_Store
+*.swp

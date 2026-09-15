@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from catalogo.service import get_catalog_service
+from catalogo.services.tmdb import get_catalog_service
 
 _MISSING = object()
 
