@@ -1514,3 +1514,48 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   `chore/**` seguiría sin CI; si eso llegara a pasar, la alternativa es quitar
   el filtro `branches` por completo para que corra en todo PR.
 - **Archivos**: `.github/workflows/ci.yml`.
+
+## 15/09/2026 — C-04b: la sync escribe por `materializar()`, y la frescura se vuelve explícita
+
+- **Fecha**: 15/09/2026
+- **Descripción**: al planificar C-04b (sync diaria) se detectó que el plan
+  original del 08/09/2026 —"sincroniza con `update_or_create`"— ya no encaja
+  con lo que C-04a dejó construido. Se toman cuatro decisiones:
+  1. **La sync no escribe: llama a `materializar()` por ítem.** El spec
+     canónico de `catalog-materialization` exige un único camino de escritura,
+     y un ítem de listado de TMDB no alcanza para llenar una fila. Verificado
+     contra la API en vivo: un ítem de `trending` trae `genre_ids` (IDs
+     numéricos, no nombres) y **no trae** `genres`, `status`, `runtime`,
+     reparto, crew ni keywords — es decir, **cuatro de las seis secciones** del
+     texto que se embebe. Una fila creada así quedaría embebida sobre un texto
+     mutilado y, con el criterio viejo, contaría como completa para siempre.
+     Pasar por `materializar()` cuesta 3 llamadas por ítem, todas cacheadas 24 h.
+  2. **Nuevo campo `ProduccionAudiovisual.fecha_enriquecimiento`**
+     (`DateTimeField`, nulo) que registra cuándo se trajo por última vez el
+     detalle completo. Reemplaza el criterio `not titulo` de C-04a, que no
+     distinguía una fila completa de una creada desde un listado y que además
+     no permitía refrescar nada. Se evaluó usar `estatus` vacío como centinela
+     —es confiable, porque solo lo devuelve el detalle— pero no lleva edad, así
+     que la sync nunca podría actualizar una fila existente.
+  3. **El seed inicial (~10k producciones) sale de C-04b** y pasa a ser una
+     tarea aparte (C-04c). Necesita paginado, control de ritmo y reanudación, y
+     conviene correrlo recién cuando el mapeo esté probado: hacerlo antes
+     significa escribir diez mil filas mal. El plan ya lo contemplaba ("con
+     C-04b **o** comando de management").
+  4. **Se adopta `transaction.on_commit()` para el `.delay()`** del embedding,
+     sugerencia del review del PR #12 que había quedado pendiente. Hoy es
+     idéntico (sin transacción abierta se ejecuta al instante) y protege el día
+     que algo envuelva la materialización en un `atomic()` —la sync por lotes
+     es candidata—, para que el worker nunca reciba el id de una fila que
+     todavía no se commiteó. Cuesta mover dos tests a
+     `captureOnCommitCallbacks(execute=True)`.
+- **Motivo**: cerrar CU-021 por el lado proactivo sin romper las garantías que
+  C-04a acababa de establecer, y sin dejar filas a medio llenar que después
+  nadie repararía.
+- **Consecuencia sobre C-04a**: `materializar()` suma un parámetro `forzar` —
+  la única forma de re-enriquecer sin abrir un segundo camino de escritura— y
+  la limitación conocida de `_necesita_enriquecimiento()` deja de existir.
+- **Pendiente de calibrar**: la ventana de frescura (`_DIAS_FRESCURA = 30`) es
+  una primera estimación; conviene revisarla cuando haya corpus real (C-04c) y
+  datos de cuánto cambia TMDB una producción ya estrenada.
+- **Archivos**: `openspec/changes/catalog-daily-sync/{proposal,design,tasks}.md`.
