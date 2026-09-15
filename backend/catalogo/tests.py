@@ -1430,6 +1430,10 @@ class MaterializacionConcurrenciaTests(_ParchesDeMaterializacion, TransactionTes
             hilo.join(timeout=10)
 
         self.assertEqual(errores, [])
+        # Los dos hilos llegaron al final. Sin esto, un hilo colgado (el
+        # `join` se rinde por timeout y el test sigue) dejaría una sola
+        # entrada en la lista y la aserción de abajo daría verde igual.
+        self.assertEqual(len(ids_devueltos), 2)
         # Los dos hilos terminan apuntando a la misma fila, exista una carrera
         # real o haya ganado uno por varios milisegundos.
         self.assertEqual(len(set(ids_devueltos)), 1)
