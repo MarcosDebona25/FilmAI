@@ -1061,11 +1061,21 @@ _DETALLE_TV = {
     "number_of_seasons": 5,
     "number_of_episodes": 62,
     "episode_run_time": [47],
+    # Quien firma una serie. TMDB lo publica acá, no en el crew.
+    "created_by": [{"id": 66633, "name": "Vince Gilligan"}],
 }
 
+# El crew de una serie NO trae `job: "Director"`: en TV los directores son por
+# episodio, así que TMDB no los expone a nivel serie. Verificado contra la API
+# real el 15/09/2026 — `/tv/1396/credits` devuelve Executive Producer, Casting,
+# Costume Design y demás, ningún Director. Este fixture lo refleja: cuando
+# llevaba un Director inventado, los tests pasaban y la realidad no.
 _CREDITS_TV = {
     "cast": [{"name": "Bryan Cranston"}, {"name": "Aaron Paul"}],
-    "crew": [{"name": "Vince Gilligan", "job": "Director"}],
+    "crew": [
+        {"name": "Michelle MacLaren", "job": "Executive Producer"},
+        {"name": "Dave Porter", "job": "Original Music Composer"},
+    ],
 }
 
 # Mismo contenido que en películas, pero TMDB lo devuelve bajo otra clave.
@@ -1202,6 +1212,36 @@ class MaterializacionSerieTests(MaterializacionBase):
         produccion = materializar(1396, "tv")
 
         self.assertEqual(produccion.keywords, ["new mexico", "drug dealer"])
+
+    def test_directores_de_serie_salen_de_created_by(self):
+        # Sin esto, `Directors:` quedaría vacío en el texto canónico de TODA
+        # serie y nadie podría encontrarlas por su autor.
+        produccion = materializar(1396, "tv")
+
+        self.assertEqual(produccion.directores, ["Vince Gilligan"])
+
+    def test_serie_sin_created_by_cae_al_crew(self):
+        # Algunas miniseries y documentales sí traen un Director en el crew.
+        self.servicio.get_tv_detail.return_value = {
+            **_DETALLE_TV,
+            "created_by": [],
+        }
+        self.servicio.get_credits.side_effect = None
+        self.servicio.get_credits.return_value = {
+            "cast": [],
+            "crew": [{"name": "Ava DuVernay", "job": "Director"}],
+        }
+
+        produccion = materializar(1396, "tv")
+
+        self.assertEqual(produccion.directores, ["Ava DuVernay"])
+
+    def test_serie_sin_autor_conocido_queda_vacia(self):
+        self.servicio.get_tv_detail.return_value = {**_DETALLE_TV, "created_by": []}
+
+        produccion = materializar(1396, "tv")
+
+        self.assertEqual(produccion.directores, [])
 
     def test_serie_sin_duracion_de_episodio_queda_en_null(self):
         self.servicio.get_tv_detail.return_value = {
