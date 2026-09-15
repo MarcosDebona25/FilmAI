@@ -4,14 +4,14 @@
 
 | Field | Value |
 |-------|-------|
-| Estimated changed lines | ~520-620 |
+| Estimated changed lines | ~660-780 |
 | 400-line budget risk | Medium |
 | Chained PRs recommended | Yes |
-| Suggested split | PR1 → PR2 → PR3 |
+| Suggested split | PR1 → PR2 → PR3 → PR4 |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked on `feat/c-04b-sync-diaria` |
 
-Decision needed before apply: No — the four open decisions were resolved with
+Decision needed before apply: No — the five open decisions were resolved with
 the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 
 > Lesson carried from C-04a: the review budget was ignored until the branch had
@@ -24,8 +24,14 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 | Unit | Goal | Likely PR | Est. lines | Focused test command | Rollback boundary |
 |------|------|-----------|-----------:|----------------------|-------------------|
 | 1 | `on_commit` + `fecha_enriquecimiento` + `forzar` (changes to existing C-04a code) | PR 1 | ~180 | `docker compose exec -T backend python manage.py test catalogo.tests.MaterializacionIdempotenteTests catalogo.tests.MaterializacionFrescuraTests` | `migrate catalogo <prev>`, then revert model + materialization |
-| 2 | `celery-beat` service + schedule + `sync_catalogo_diaria` | PR 2 | ~230 | `docker compose exec -T backend python manage.py test catalogo.tests.SyncCatalogoTests` | Revert the compose service and the task; unit 1 stays useful on its own |
-| 3 | `backfill_embeddings` + docs + spec sync | PR 3 | ~180 | `docker compose exec -T backend python manage.py test catalogo` | Revert the task; the schedule keeps running the sync |
+| 2 | `celery-beat` service + schedule + the discovery pass of `sync_catalogo_diaria` (tasks 2.1-2.7) | PR 2 | ~230 | `docker compose exec -T backend python manage.py test catalogo.tests.SyncCatalogoTests` | Revert the compose service and the task; unit 1 stays useful on its own |
+| 3 | `get_changes` on client/cache + the refresh pass (tasks 2.8-2.14) | PR 3 | ~140 | `docker compose exec -T backend python manage.py test catalogo.tests.TMDBChangesTest catalogo.tests.IdsCambiadosTests` | Revert the refresh pass; discovery keeps working and the safety-net window still catches stale rows eventually |
+| 4 | `backfill_embeddings` + docs + spec sync | PR 4 | ~180 | `docker compose exec -T backend python manage.py test catalogo` | Revert the task; the schedule keeps running the sync |
+
+> Units 2 and 3 are both inside Phase 2 but ship separately: adding the changes
+> API pushed the phase to ~370 lines, close enough to the 400-line budget that
+> one more discovery brings it over. Splitting at the seam between "grow the
+> corpus" and "keep it fresh" also keeps each PR reviewable as one idea.
 
 ## Phase 1: Changes to existing C-04a code
 
@@ -50,9 +56,14 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 - [ ] 2.4 RED: add a case asserting `person` entries (and any unsupported `media_type`) are skipped without raising
 - [ ] 2.5 RED: add a case asserting one failing item does not abort the run — the rest are still processed and the failure is counted
 - [ ] 2.6 RED: add a case asserting the returned statistics (`nuevas`, `actualizadas`, `omitidas`, `errores`) reflect what happened
-- [ ] 2.7 GREEN: implement `sync_catalogo_diaria()` in `backend/catalogo/tasks.py`
-- [ ] 2.8 RED: **acceptance criterion, tested directly** — rate and review a production, run the sync, assert the rating and review survive untouched
-- [ ] 2.9 `docker compose exec -T backend python manage.py test catalogo` — all green; `ruff format . && ruff check .`
+- [ ] 2.7 GREEN: implement the discovery pass of `sync_catalogo_diaria()` in `backend/catalogo/tasks.py`
+- [ ] 2.8 RED: add `TMDBChangesTest` (`httpx.MockTransport`) — `get_changes(tipo, page)` hits `/{tipo}/changes` and reuses the existing retry/error-mapping path; add the cache-layer case for the new `"changes"` TTL
+- [ ] 2.9 GREEN: add `get_changes` to `backend/catalogo/client.py` and `backend/catalogo/cache.py`
+- [ ] 2.10 RED: add `IdsCambiadosTests` — paginates until `total_pages`, stops at `_MAX_PAGINAS_CAMBIOS`, tolerates entries without `id`
+- [ ] 2.11 RED: add the refresh-pass case — a complete row whose id TMDB reports as changed is re-enriched; a complete row it does not report is left untouched
+- [ ] 2.12 GREEN: implement `_ids_cambiados()` and the refresh pass, intersecting in Python (not via a huge `id_tmdb__in`)
+- [ ] 2.13 RED: **acceptance criterion, tested directly** — rate and review a production, run the sync, assert the rating and review survive untouched
+- [ ] 2.14 `docker compose exec -T backend python manage.py test catalogo` — all green; `ruff format . && ruff check .`
 
 ## Phase 3: Backfill, documentation and verification
 

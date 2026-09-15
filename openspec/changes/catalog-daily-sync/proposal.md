@@ -25,12 +25,15 @@ the application keeps working.
 - `catalogo/tasks.py::backfill_embeddings()`: picks up `pending` and `failed`
   rows in bounded batches, and regenerates `ready` rows whose `source_hash` or
   `model_version` no longer match
+- `get_changes(tipo, page)` on `TMDBClient` and `TMDBClientCache` (additive, same shape as the existing methods) + a `"changes"` TTL
 - New `ProduccionAudiovisual.fecha_enriquecimiento` field + migration: records
-  when full detail was last pulled, driving both the completeness check and
-  staleness-based refresh
+  when full detail was last pulled: it answers the completeness question and
+  backs the safety net. Staleness itself comes from TMDB's own changes list
 - `materializar(id_tmdb, tipo_tmdb, forzar=False)`: an explicit refresh flag, so
   the sync can re-enrich without opening a second write path
 - `_necesita_enriquecimiento()` hardened to use `fecha_enriquecimiento`
+- Refresh pass in the sync: intersect our ids with the ids TMDB reports as
+  changed in the last 24 h, and re-materialize that set with `forzar=True`
 - `generar_embedding.delay(...)` wrapped in `transaction.on_commit()`
 - `.env.example`, `README.md`, `docs/decisiones.md` updates
 
@@ -81,6 +84,8 @@ the next run continue.
 | Area | Impact | Description |
 |------|--------|-------------|
 | `backend/catalogo/tasks.py` | Modified | `sync_catalogo_diaria`, `backfill_embeddings` |
+| `backend/catalogo/client.py` | Modified | `get_changes(tipo, page)` (additive) |
+| `backend/catalogo/cache.py` | Modified | cached `get_changes` + `"changes"` TTL |
 | `backend/catalogo/services/materialization.py` | Modified | `forzar` flag, `fecha_enriquecimiento`, `on_commit` |
 | `backend/catalogo/models.py` | Modified | `fecha_enriquecimiento` field |
 | `backend/catalogo/migrations/` | New | `AddField` |
@@ -122,9 +127,10 @@ lost because the column is derived, not authored.
 
 - [ ] `celery -A filmai beat` fires `sync_catalogo_diaria` on schedule, in the declared timezone
 - [ ] A sync run materializes every item it walks, with no partial rows
+- [ ] A row TMDB reports as changed is refreshed; a complete row it does not report is left untouched
 - [ ] Two consecutive runs produce no duplicates and no redundant TMDB calls
 - [ ] A rated and reviewed production keeps its rating and review after a sync
-- [ ] `fecha_enriquecimiento` is set on enrichment and drives both the completeness check and the refresh window
+- [ ] `fecha_enriquecimiento` is set on enrichment and answers the completeness check
 - [ ] The backfill picks up `pending` and `failed` rows in bounded batches
 - [ ] The backfill regenerates a `ready` row whose `source_hash` changed
 - [ ] No change to the C-03 endpoint response contract
