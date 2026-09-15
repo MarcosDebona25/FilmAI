@@ -1493,3 +1493,24 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Archivos**: `backend/catalogo/services/materialization.py`,
   `backend/catalogo/tests.py`,
   `openspec/specs/catalog-materialization/spec.md`.
+
+## 15/09/2026 — El CI corre también en PRs apilados sobre ramas `feat/**`
+
+- **Fecha**: 15/09/2026
+- **Descripción**: `.github/workflows/ci.yml` solo se disparaba en PRs cuya
+  rama destino era `main`, así que un **PR apilado** (uno cuya base es otra
+  rama de feature, para que la revisión muestre solo el tramo nuevo) quedaba
+  sin tests: únicamente corría "AI Review". Pasó con el PR #13 de C-04a. Se
+  agrega `feat/**` al filtro `branches` del disparador `pull_request`.
+- **Motivo**: el presupuesto de revisión del proyecto (400 líneas,
+  `openspec/config.yaml`) empuja a partir el trabajo en PRs encadenados, y esa
+  práctica no puede salir a costa de perder el gate de tests.
+- **Detalle no obvio**: `branches` filtra por la rama **destino** del PR, no
+  por la de origen. Y **reapuntar la base de un PR ya abierto no dispara el
+  workflow**, porque GitHub emite el evento `edited`, que no está entre los
+  tipos por defecto (`opened`, `synchronize`, `reopened`); para forzarlo hay
+  que cerrar y reabrir el PR, o pushear un commit.
+- **Alcance**: solo `feat/**`. Un PR apilado sobre una rama `fix/**` o
+  `chore/**` seguiría sin CI; si eso llegara a pasar, la alternativa es quitar
+  el filtro `branches` por completo para que corra en todo PR.
+- **Archivos**: `.github/workflows/ci.yml`.
