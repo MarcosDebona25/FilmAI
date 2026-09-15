@@ -1416,3 +1416,48 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   `docs/05_Plan_de_Desarrollo.md`. (Modelo, wiring de Celery, tarea y vistas
   se agregan en commits siguientes de la misma rama
   `feat/c-04a-materializacion`.)
+
+## 15/09/2026 — C-04a completa: `materializar()` y su política de fallo en las vistas
+
+- **Fecha**: 15/09/2026
+- **Descripción**: se cierra C-04a con la fase 5, que junta las piezas de las
+  fases 1-4 en `catalogo/services/materialization.py::materializar(id_tmdb,
+  tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
+  asociadas:
+  - **`materializar()` propaga sus errores; quien la llama fija la política.**
+    Las vistas de detalle la envuelven en `_materializar_sin_interrumpir()`,
+    que registra y sigue: el contrato de C-03 es passthrough puro de TMDB y un
+    problema nuestro (base, red, broker) nunca debe impedir que el usuario vea
+    la ficha. Tragarse el error dentro de `materializar()` la haría mentirosa
+    para el backfill de C-04b, que sí necesita enterarse.
+  - **El INSERT de la producción va dentro de `transaction.atomic()`.** En
+    PostgreSQL un error aborta la transacción completa; sin ese savepoint, la
+    consulta de rescate posterior al `IntegrityError` de la carrera también
+    fallaría. Un `IntegrityError` que no venga de la carrera (la fila sigue
+    sin aparecer) se propaga en vez de disfrazarse de "ya existía".
+  - **El embedding se crea con `get_or_create`**, que ya resuelve internamente
+    la misma carrera para el `OneToOneField`. **Solo se encola cuando la fila
+    se acaba de crear**: reencolar en cada visita llenaría la cola de trabajo
+    repetido. Refrescar los `failed` o desactualizados es del backfill C-04b.
+  - **`_extraer_keywords()`** aísla una rareza de la API: TMDB devuelve la
+    misma lista bajo `keywords` en películas y bajo `results` en series.
+  - **Limitación conocida y aceptada** en `_necesita_enriquecimiento()`: el
+    criterio de "fila incompleta" solo mira el título, así que una fila con
+    título pero sin géneros no se repararía. Hoy no puede ocurrir porque
+    `materializar()` es el único camino de escritura de la tabla y completa
+    todos los campos juntos; queda documentado en el docstring como el único
+    lugar a endurecer cuando C-04b agregue el sync masivo.
+- **Criterios de aceptación verificados**: unicidad por `(id_tmdb, tipo)`;
+  concurrencia resuelta (test determinista con `IntegrityError` mockeado, más
+  uno best-effort con dos hilos reales contra Postgres, cinco corridas en
+  verde); idempotencia (dos visitas → una fila, un embedding, un encolado);
+  fallo del proveedor → `failed` sin afectar la visibilidad de la producción.
+  Smoke de punta a punta con el worker real: la tarea se consume una sola vez
+  y el stub de B-06 deja el embedding en `failed`.
+- **Motivo**: cerrar CU-021 (toda producción abierta en detalle se
+  materializa) y desbloquear el Módulo 3 (Listas, Marcos), que necesita filas
+  reales de `ProduccionAudiovisual` para referenciar.
+- **Archivos**: `backend/catalogo/services/materialization.py`,
+  `backend/catalogo/views.py`, `backend/catalogo/tests.py`,
+  `openspec/changes/catalog-materialization/tasks.md`,
+  `docs/05_Plan_de_Desarrollo.md`.
