@@ -1,3 +1,4 @@
+import threading
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -6,8 +7,13 @@ import httpx
 import redis
 from django.conf import settings
 from django.core.cache import cache as dj_cache
-from django.db import IntegrityError, transaction
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.db import IntegrityError, connection, transaction
+from django.test import (
+    SimpleTestCase,
+    TestCase,
+    TransactionTestCase,
+    override_settings,
+)
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APIRequestFactory
@@ -1084,14 +1090,15 @@ def _servicio_tmdb_falso():
     )
 
 
-class MaterializacionBase(TestCase):
+class _ParchesDeMaterializacion:
     """Aísla la materialización de TMDB y del broker de Celery.
 
-    Se usa `TestCase` (no `SimpleTestCase`) porque acá lo que se prueba es
-    justamente qué queda escrito en Postgres.
+    Es un mixin para poder combinarlo tanto con `TestCase` como con
+    `TransactionTestCase`, según lo que necesite cada grupo de tests.
     """
 
     def setUp(self):
+        super().setUp()
         self.servicio = _servicio_tmdb_falso()
         parche_servicio = patch(
             "catalogo.services.materialization.get_catalog_service",
@@ -1102,6 +1109,14 @@ class MaterializacionBase(TestCase):
         self.tarea = parche_tarea.start()
         self.addCleanup(parche_servicio.stop)
         self.addCleanup(parche_tarea.stop)
+
+
+class MaterializacionBase(_ParchesDeMaterializacion, TestCase):
+    """Base de los tests que verifican qué queda escrito en Postgres.
+
+    Se usa `TestCase` (y no `SimpleTestCase`) porque acá lo que se prueba es
+    justamente el estado de la base después de materializar.
+    """
 
 
 class MaterializacionPeliculaTests(MaterializacionBase):
@@ -1370,3 +1385,53 @@ class VistasDeDetalleMaterializanTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, _DETALLE_MOVIE)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 0)
+
+
+class MaterializacionConcurrenciaTests(_ParchesDeMaterializacion, TransactionTestCase):
+    """Dos hilos reales materializando la misma producción (C-04a).
+
+    `MaterializacionCarreraTests` fuerza el `IntegrityError` con un mock; acá
+    se provoca de verdad, con dos conexiones a Postgres compitiendo por la
+    constraint `uq_produccion_tmdb_tipo`.
+
+    Requiere `TransactionTestCase` y no `TestCase`: este último encierra el
+    test entero en una transacción que nadie más ve, así que un segundo hilo
+    ni siquiera encontraría la fila del primero. `TransactionTestCase` commitea
+    de verdad y limpia truncando las tablas al final.
+
+    Acordado el 14/09/2026: es una prueba de confianza extra y **no bloquea el
+    merge**. Si resultara inestable por timing, se marca con `@skip` dejando
+    escrito el motivo — el test determinístico de la carrera sigue cubriendo
+    el criterio de aceptación.
+    """
+
+    def test_dos_hilos_simultaneos_dejan_una_sola_fila(self):
+        barrera = threading.Barrier(2)
+        ids_devueltos = []
+        errores = []
+
+        def materializar_en_paralelo():
+            try:
+                # Suelta a los dos hilos lo más cerca posible en el tiempo.
+                barrera.wait(timeout=5)
+                ids_devueltos.append(materializar(550, "movie").pk)
+            except Exception as error:
+                errores.append(error)
+            finally:
+                # Cada hilo abre su propia conexión a Postgres; si no la
+                # cierra, queda ocupando la tabla y el truncado final del
+                # TransactionTestCase se cuelga esperándola.
+                connection.close()
+
+        hilos = [threading.Thread(target=materializar_en_paralelo) for _ in range(2)]
+        for hilo in hilos:
+            hilo.start()
+        for hilo in hilos:
+            hilo.join(timeout=10)
+
+        self.assertEqual(errores, [])
+        # Los dos hilos terminan apuntando a la misma fila, exista una carrera
+        # real o haya ganado uno por varios milisegundos.
+        self.assertEqual(len(set(ids_devueltos)), 1)
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
+        self.assertEqual(ProduccionEmbedding.objects.count(), 1)
