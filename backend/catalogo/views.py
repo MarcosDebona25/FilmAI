@@ -1,3 +1,4 @@
+import logging
 from typing import ClassVar
 
 from rest_framework.exceptions import ValidationError
@@ -6,7 +7,10 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from catalogo.services.materialization import materializar
 from catalogo.services.tmdb import get_catalog_service
+
+logger = logging.getLogger(__name__)
 
 _MISSING = object()
 
@@ -41,6 +45,24 @@ def _validate_tipo(value):
     if value not in {"movie", "tv"}:
         raise ValidationError({"tipo": "Must be either 'movie' or 'tv'."})
     return value
+
+
+def _materializar_sin_interrumpir(id_tmdb, tipo_tmdb):
+    """Materializa la producción sin que un fallo afecte la respuesta.
+
+    El contrato de estos endpoints (C-03) es passthrough puro de TMDB: si
+    nuestra base está caída o el enriquecimiento falla, el usuario igual tiene
+    que ver la ficha. `materializar()` propaga sus errores a propósito para que
+    quien la llama fije la política; acá la política es registrar y seguir.
+    """
+    try:
+        materializar(id_tmdb, tipo_tmdb)
+    except Exception:
+        # Amplio a propósito: es el límite entre el contrato de C-03 y todo lo
+        # que puede salir mal del lado nuestro (base, red, TMDB, broker).
+        logger.exception(
+            "No se pudo materializar la producción (%s, %s)", id_tmdb, tipo_tmdb
+        )
 
 
 class CatalogoBaseView(APIView):
@@ -98,6 +120,7 @@ class MovieDetailView(CatalogoBaseView):
     def get(self, request, id_tmdb):
         id_tmdb = _int_param(id_tmdb, "id_tmdb")
         data = get_catalog_service().get_movie_detail(id_tmdb)
+        _materializar_sin_interrumpir(id_tmdb, "movie")
         return Response(data)
 
 
@@ -105,6 +128,7 @@ class TVDetailView(CatalogoBaseView):
     def get(self, request, id_tmdb):
         id_tmdb = _int_param(id_tmdb, "id_tmdb")
         data = get_catalog_service().get_tv_detail(id_tmdb)
+        _materializar_sin_interrumpir(id_tmdb, "tv")
         return Response(data)
 
 
