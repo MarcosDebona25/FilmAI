@@ -204,7 +204,7 @@ erDiagram
 - **Lista**: colecciones de producciones (predeterminadas o personalizadas) asociadas a un usuario. La tabla intermedia **Tiene** registra la fecha de agregado.
 - **Chat**: conversación asociada a un usuario, con contexto persistente en formato JSONB.
 - **Mensaje**: unidad de diálogo dentro de un chat, con indicación de autor (usuario o chatbot).
-- **ProducciónEmbedding** *(planificada)*: relación 1:1 con `ProducciónAudiovisual` + vector pgvector(1024) + índice HNSW. Generación asíncrona vía Celery. Alimenta la búsqueda semántica del chatbot.
+- **ProducciónEmbedding**: relación 1:1 con `ProducciónAudiovisual` + vector pgvector(1024) + índice HNSW. Generación asíncrona vía Celery. Alimenta la búsqueda semántica del chatbot. Implementada en C-04a (15/09/2026); el proveedor de vectores sigue siendo un stub hasta B-06, así que hoy los embeddings quedan en estado `failed` sin afectar la visibilidad del catálogo.
 
 ---
 
