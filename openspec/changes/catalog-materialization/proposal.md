@@ -21,8 +21,9 @@ stays a documented stub for B-06 (Marcos) to implement later.
   (detail + credits + keywords), embedding row creation + enqueue
 - New `ProduccionEmbedding` model (`pending|processing|ready|failed`) +
   migration enabling the `vector` Postgres extension
-- Two additive TMDB client/cache methods: `get_movie_credits`/`get_tv_credits`
-  (cast/crew are absent from the existing detail endpoints)
+- One additive TMDB client/cache method: `get_credits(id_tmdb, tipo)`
+  (cast/crew are absent from the existing detail endpoints; same URL shape as
+  `get_keywords`, so it follows that signature)
 - `catalogo/services/embeddings.py`: canonical-text builder, `source_hash`,
   and a documented `generar_vector()` stub (raises `NotImplementedError`)
 - `catalogo/tasks.py`: `generar_embedding` Celery task with real
@@ -84,7 +85,7 @@ exception — never leaving the row stuck or blocking the caller.
 | `backend/catalogo/models.py` | Modified | `ProduccionEmbedding` + `EstadoEmbedding` |
 | `backend/catalogo/migrations/` | New | `VectorExtension()` + `CreateModel` |
 | `backend/catalogo/tasks.py` | New | `generar_embedding` Celery task |
-| `backend/catalogo/client.py` | Modified | `get_movie_credits`/`get_tv_credits` (additive) |
+| `backend/catalogo/client.py` | Modified | `get_credits(id_tmdb, tipo)` (additive) |
 | `backend/catalogo/cache.py` | Modified | cached wrappers for credits (additive) |
 | `backend/catalogo/views.py` | Modified | detail views call `materializar()` |
 | `backend/catalogo/admin.py` | Modified | register `ProduccionEmbedding` (dev visibility) |
@@ -101,7 +102,7 @@ exception — never leaving the row stuck or blocking the caller.
 
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
-| TMDB detail endpoints lack cast/crew | High (confirmed) | Additive `get_movie_credits`/`get_tv_credits`, no change to existing C-01/C-02 contracts |
+| TMDB detail endpoints lack cast/crew | High (confirmed) | Additive `get_credits(id_tmdb, tipo)`, no change to existing C-01/C-02 contracts |
 | `pgvector/pgvector:pg16` vs `postgres:16-alpine` volume compatibility | Low–Med | Same upstream Postgres 16 binary/data format, only extra extension files; verify in dev before merging, documented rollback |
 | `pgvector` vs `django-pgvector` package naming in existing docs | Med | Use `pgvector` (pgvector-python), which ships `pgvector.django`; correct the docs in this change (see design) |
 | Real DB-race concurrency test flakiness (`TransactionTestCase` + threads) | Med | Required test is a deterministic mocked-`IntegrityError` unit test; real-thread test is best-effort, not a merge gate (confirmed with repo owner 14/09/2026) |

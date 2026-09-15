@@ -15,10 +15,10 @@ can swap it for a real Ollama client with no changes to `tasks.py`,
 
 | Decision | Options | Tradeoff | Choice |
 |---|---|---|---|
-| Cast/crew retrieval | Change `get_movie_detail`/`get_tv_detail` to `append_to_response=credits,keywords` · Add new `get_*_credits` methods | `append_to_response` cuts TMDB calls from 3→1 but mutates the response shape of two methods already covered by closed C-01/C-02 tests and consumed unchanged by C-03's passthrough contract. New methods are additive, zero risk to existing tests, cost 2 extra cached calls only on first materialization. | Additive `get_movie_credits`/`get_tv_credits` on `TMDBClient` + `TMDBClientCache` |
+| Cast/crew retrieval | Change `get_movie_detail`/`get_tv_detail` to `append_to_response=credits,keywords` · Add new `get_*_credits` methods | `append_to_response` cuts TMDB calls from 3→1 but mutates the response shape of two methods already covered by closed C-01/C-02 tests and consumed unchanged by C-03's passthrough contract. New methods are additive, zero risk to existing tests, cost 2 extra cached calls only on first materialization. | Additive `get_credits(id_tmdb, tipo)` on `TMDBClient` + `TMDBClientCache` |
 | Enrichment timing | Synchronous in `materializar()` · Deferred to the Celery task | The embedding's canonical text needs Title+Genres+Directors+Cast+Keywords+Synopsis *before* it is queued, and TMDB calls are Redis-cached (24h), so sync cost is bounded. Deferring would need the task to re-derive enrichment, duplicating logic and re-opening the "no external calls in the task without a claim" concern. | Enrichment stays synchronous inside `materializar()`, gated by a completeness check so rows created incomplete elsewhere (future C-04b bulk sync) get repaired on next open |
 | Package for `VectorField` | `pgvector` (pgvector-python, ships `pgvector.django`) · `django-pgvector` (named in `docs/05_Plan_de_Desarrollo.md`/`decisiones.md`) | `django-pgvector` is not the maintained package for this; `pgvector`'s own `pgvector.django` submodule provides `VectorField`, `HnswIndex`, `VectorExtension` and is what the ecosystem uses with Django 5.x. | `pgvector` only; correct the docs (see Documentation Updates) |
-| `db` image swap risk | Recreate `pgdata` volume · Swap image in place | `pgvector/pgvector:pg16` is built `FROM postgres:16-alpine` with only extra extension `.so`/`.control` files added — same Postgres 16 data format. No `pg_upgrade` needed. | Swap in place; verify with `docker compose exec db psql -c "\dx"` after `CREATE EXTENSION` migration; keep `pgdata` |
+| `db` image swap risk | Recreate `pgdata` volume · Swap image in place | **Corrected 14/09/2026:** pgvector publishes no Alpine variant (the `pg16-alpine` tag assumed here does not exist), so the image is Debian-based. Moving musl → glibc changes text collation, which affects index ordering, so reusing the volume risks silently mis-ordered text indexes. | `pgvector/pgvector:pg16` (Debian) + **recreate** `pgdata`. Cost is nil in dev (the entrypoint re-runs migrations and recreates the superuser). Team action: `docker compose down && docker volume rm filmai_pgdata && docker compose up --build -d` |
 | Claim/lease mechanism | Dedicated lease/expiry column · Plain conditional `UPDATE ... WHERE estado IN (...)` | A full lease-with-expiry (for reclaiming stuck `processing` rows) is backfill/C-04b's job. C-04a only needs to prevent double-processing from duplicate Celery deliveries. | Conditional `.filter(estado__in=[PENDING, FAILED]).update(estado=PROCESSING)`; `fecha_actualizacion` is left as the hook C-04b's backfill will use to detect stale `processing` rows |
 | Detail-view wiring | Call `materializar()` from `MovieDetailView`/`TVDetailView` · Leave wiring for a later task | CU-021 requires "any production opened in detail is materialized"; nothing else in the current codebase calls the helper yet (Listas doesn't exist, frontend detail pages don't exist). Not wiring it makes C-04a dead code. Confirmed with repo owner 14/09/2026. | Views call `materializar()` as a side effect; response body is untouched (still raw TMDB JSON passthrough per C-03) |
 | Concurrency test technique | Real `TransactionTestCase` + threads · Deterministic mocked `IntegrityError` | Real thread-based races against Postgres are valuable but flaky across CI environments (connection sharing, GIL timing) — a good PR could get blocked by test timing, not a real bug. Confirmed with repo owner 14/09/2026. | Required test: mock `ProduccionAudiovisual.objects.create` to raise `IntegrityError`, assert fallback to `.get()` returns the existing row. Optional/best-effort: a `TransactionTestCase` with a `threading.Barrier` for real-DB confidence, not a merge gate |
@@ -96,29 +96,33 @@ class Migration(migrations.Migration):
 ```
 
 `VectorExtension()` runs `CREATE EXTENSION IF NOT EXISTS vector;` and requires
-the `db` service to already be `pgvector/pgvector:pg16` (superuser
-privilege for the extension is available to the dev Postgres role by default
-in this project's compose setup — verify before merging PR2).
+the `db` service to already be `pgvector/pgvector:pg16`. Verified 14/09/2026:
+the extension is available (v0.8.6) and the dev Postgres role has
+`rolsuper = true`, so `CREATE EXTENSION` succeeds.
 
 ## TMDB Enrichment Mapping
 
-New additive client methods (no changes to existing `get_movie_detail`/`get_tv_detail`):
+New additive client method (no changes to existing `get_movie_detail`/`get_tv_detail`).
+
+**Implemented (14/09/2026) as a single `get_credits(id_tmdb, tipo)`**, not the
+two methods originally sketched here: the credits URL has the same shape as
+keywords (`/{tipo}/{id}/credits` vs `/{tipo}/{id}/keywords`), so it follows the
+existing `get_keywords(id_tmdb, tipo)` signature instead of mirroring the
+detail methods. One method less and consistent with its neighbour.
 
 ```python
 # client.py
-def get_movie_credits(self, id_tmdb):
-    return self._get(f"/movie/{id_tmdb}/credits")
-
-def get_tv_credits(self, id_tmdb):
-    return self._get(f"/tv/{id_tmdb}/credits")
+def get_credits(self, id_tmdb, tipo):
+    return self._get(f"/{tipo}/{id_tmdb}/credits")
 ```
 
 ```python
-# cache.py — ENDPOINT_TTLS gains "movie_credits": 24*3600, "tv_credits": 24*3600
-def get_movie_credits(self, id_tmdb):
-    return self._cached_call("movie_credits", {"id_tmdb": id_tmdb},
-                              lambda: self.client.get_movie_credits(id_tmdb))
-# get_tv_credits mirrors it
+# cache.py — ENDPOINT_TTLS gains "credits": 24*3600
+def get_credits(self, id_tmdb, tipo):
+    params = {"id_tmdb": id_tmdb, "tipo": tipo}
+    return self._cached_call(
+        "credits", params, lambda: self.client.get_credits(id_tmdb, tipo)
+    )
 ```
 
 Field mapping in `materialization.py` (pure function, unit-testable without DB):
@@ -352,8 +356,7 @@ here — they belong to B-06 when the real `ollama` service lands.
   `ProduccionEmbedding`, note the provider is stubbed.
 - `docs/decisiones.md`: new entry (14/09/2026) recording: (1) advancing
   minimal embedding infra (model + Celery + pgvector image) inside C-04a
-  while the provider stays stubbed for B-06; (2) the `get_movie_credits`/
-  `get_tv_credits` addition and why detail endpoints alone were insufficient;
+  while the provider stays stubbed for B-06; (2) the `get_credits(id_tmdb, tipo)` addition and why detail endpoints alone were insufficient;
   (3) the `pgvector` vs `django-pgvector` package correction; (4) `poster`
   stores the raw TMDB `poster_path`, consistent with C-03's passthrough
   convention; (5) concurrency test strategy (mock required, real threads

@@ -44,6 +44,7 @@ from catalogo.services.embeddings import (
     generar_vector,
 )
 from catalogo.services.tmdb import get_catalog_service
+from catalogo.tasks import generar_embedding
 from catalogo.views import (
     DiscoverView,
     MovieDetailView,
@@ -189,6 +190,49 @@ class TMDBClientTest(SimpleTestCase):
         self.assertEqual(str(requests[5].url.path), "/3/movie/550")
         self.assertEqual(str(requests[6].url.path), "/3/tv/1399")
         self.assertEqual(str(requests[7].url.path), "/3/movie/550/keywords")
+
+
+class TMDBCreditsTest(SimpleTestCase):
+    """Reparto y directores (C-04a).
+
+    Los endpoints de detalle de TMDB NO traen cast ni crew: viven en
+    `/{tipo}/{id}/credits`, con la misma forma que `/keywords`. Sin esto, los
+    campos `reparto` y `directores` quedarían siempre vacíos y la búsqueda
+    semántica no podría encontrar nada por actor ni director.
+    """
+
+    def _client(self, sink):
+        def handler(request):
+            sink.append(request)
+            return httpx.Response(200, json={"cast": [], "crew": []})
+
+        return TMDBClient(api_key="test-key", transport=httpx.MockTransport(handler))
+
+    def test_pega_al_endpoint_de_credits_de_cada_tipo(self):
+        casos = (
+            (550, "movie", "/3/movie/550/credits"),
+            (1399, "tv", "/3/tv/1399/credits"),
+        )
+        for id_tmdb, tipo, path in casos:
+            with self.subTest(tipo=tipo):
+                requests = []
+                client = self._client(requests)
+
+                resultado = client.get_credits(id_tmdb, tipo)
+
+                self.assertEqual(resultado, {"cast": [], "crew": []})
+                self.assertEqual(str(requests[0].url.path), path)
+
+    def test_reutiliza_el_mapeo_de_errores_del_cliente(self):
+        # No reimplementa manejo de errores: pasa por el mismo `_request` que
+        # el resto de los métodos (C-01), con sus reintentos y excepciones.
+        client = TMDBClient(
+            api_key="test-key",
+            transport=httpx.MockTransport(lambda request: httpx.Response(404)),
+        )
+
+        with self.assertRaises(TMDBNotFound):
+            client.get_credits(550, "movie")
 
 
 class TMDBExceptionHandlerTest(SimpleTestCase):
@@ -377,6 +421,29 @@ class TMDBClientCacheTest(SimpleTestCase):
         self.assertEqual(cache.get_tv_detail(1399), body)
         self.assertEqual(cache.get_tv_detail(1399), body)
         self.assertEqual(len(calls), 1)  # second call hit Redis, not TMDB
+
+    def test_credits_se_cachea_por_id_y_tipo(self):
+        cache, calls = self.make_cache(body={"cast": [{"name": "Brad Pitt"}]})
+
+        primera = cache.get_credits(550, "movie")
+        segunda = cache.get_credits(550, "movie")
+
+        # La segunda llamada sale de Redis: una sola ida a TMDB.
+        self.assertEqual(primera, segunda)
+        self.assertEqual(len(calls), 1)
+
+        # Distinto tipo con el mismo id es otra producción, no un cache hit.
+        cache.get_credits(550, "tv")
+        self.assertEqual(len(calls), 2)
+
+    def test_credits_tiene_ttl_propio(self):
+        self.assertIn("credits", ENDPOINT_TTLS)
+
+        cache, _ = self.make_cache()
+        cache.get_credits(550, "movie")
+        key = _build_key("credits", {"id_tmdb": 550, "tipo": "movie"})
+
+        self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["credits"])
 
     def test_get_redis_passes_bounded_timeouts(self):
         with patch("catalogo.cache.redis.Redis.from_url") as from_url:
@@ -749,6 +816,124 @@ class TextoCanonicoTests(SimpleTestCase):
     def test_hay_una_version_de_modelo_declarada(self):
         self.assertTrue(MODEL_VERSION)
         self.assertLessEqual(len(MODEL_VERSION), 50)
+
+
+class GenerarEmbeddingTaskTests(TestCase):
+    """Idempotencia de la tarea de Celery (C-04a).
+
+    Celery entrega "al menos una vez": la misma tarea puede llegar dos veces
+    (reinicio del worker) o a dos workers en paralelo. Cada test acá cubre una
+    de esas formas de duplicación.
+    """
+
+    def setUp(self):
+        self.produccion = ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Fight Club",
+            generos=["Drama"],
+            sinopsis="An insomniac office worker...",
+        )
+
+    def _hash_actual(self):
+        return calcular_source_hash(construir_texto_canonico(self.produccion))
+
+    @patch("catalogo.tasks.generar_vector")
+    def test_sin_fila_de_embedding_no_hace_nada(self, generar):
+        # Puede pasar si la producción se borró entre el encolado y el consumo.
+        generar_embedding(self.produccion.id)
+
+        generar.assert_not_called()
+
+    @patch("catalogo.tasks.generar_vector", return_value=[0.5] * 1024)
+    def test_pendiente_genera_y_queda_ready(self, generar):
+        ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        generar_embedding(self.produccion.id)
+
+        embedding = ProduccionEmbedding.objects.get(produccion=self.produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.READY)
+        self.assertEqual(len(embedding.vector), 1024)
+        self.assertEqual(embedding.source_hash, self._hash_actual())
+        self.assertEqual(embedding.model_version, MODEL_VERSION)
+        generar.assert_called_once()
+
+    @patch("catalogo.tasks.generar_vector")
+    def test_ready_con_mismo_hash_no_recalcula(self, generar):
+        ProduccionEmbedding.objects.create(
+            produccion=self.produccion,
+            estado=EstadoEmbedding.READY,
+            vector=[0.1] * 1024,
+            source_hash=self._hash_actual(),
+            model_version=MODEL_VERSION,
+        )
+
+        generar_embedding(self.produccion.id)
+
+        # Nada cambió: no se gasta una llamada al proveedor.
+        generar.assert_not_called()
+
+    @patch("catalogo.tasks.generar_vector")
+    def test_una_fila_ya_reclamada_no_se_procesa_dos_veces(self, generar):
+        # `processing` = otro worker ya la agarró.
+        ProduccionEmbedding.objects.create(
+            produccion=self.produccion,
+            estado=EstadoEmbedding.PROCESSING,
+        )
+
+        generar_embedding(self.produccion.id)
+
+        generar.assert_not_called()
+        embedding = ProduccionEmbedding.objects.get(produccion=self.produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.PROCESSING)
+
+    @patch("catalogo.tasks.generar_vector", side_effect=RuntimeError("Ollama caído"))
+    def test_si_el_proveedor_falla_queda_failed_y_no_rompe_el_worker(self, generar):
+        ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        # No propaga: si explotara, el worker reintentaría en loop.
+        generar_embedding(self.produccion.id)
+
+        embedding = ProduccionEmbedding.objects.get(produccion=self.produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.FAILED)
+        self.assertIsNone(embedding.vector)
+        # La producción sigue visible en el catálogo pase lo que pase.
+        self.assertTrue(
+            ProduccionAudiovisual.objects.filter(pk=self.produccion.pk).exists()
+        )
+
+    def test_con_el_stub_real_queda_failed(self):
+        # Sin mocks: hoy `generar_vector` lanza NotImplementedError (B-06).
+        ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        generar_embedding(self.produccion.id)
+
+        embedding = ProduccionEmbedding.objects.get(produccion=self.produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.FAILED)
+
+    @patch("catalogo.tasks.generar_vector", return_value=[0.5] * 1024)
+    def test_un_failed_se_reintenta(self, generar):
+        # El backfill de C-04b reencola los fallidos: tienen que ser
+        # reclamables igual que los pendientes.
+        ProduccionEmbedding.objects.create(
+            produccion=self.produccion, estado=EstadoEmbedding.FAILED
+        )
+
+        generar_embedding(self.produccion.id)
+
+        embedding = ProduccionEmbedding.objects.get(produccion=self.produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.READY)
+        generar.assert_called_once()
+
+    @patch("catalogo.tasks.generar_vector", return_value=[0.5] * 1024)
+    def test_dos_ejecuciones_seguidas_llaman_al_proveedor_una_sola_vez(self, generar):
+        ProduccionEmbedding.objects.create(produccion=self.produccion)
+
+        generar_embedding(self.produccion.id)
+        generar_embedding(self.produccion.id)
+
+        self.assertEqual(generar.call_count, 1)
+        self.assertEqual(ProduccionEmbedding.objects.count(), 1)
 
 
 class ProduccionEmbeddingModelTests(TestCase):

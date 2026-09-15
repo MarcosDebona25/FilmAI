@@ -44,6 +44,10 @@ pgvector>=0.3,<0.5
 
 # --- Desarrollo ---
 factory-boy>=3.3,<4.0
+# Auto-reload del worker de Celery en desarrollo: a diferencia del runserver
+# de Django, Celery no recarga código solo. El extra [watchmedo] aporta el
+# comando `watchmedo` que usa el servicio celery-worker del docker-compose.
+watchdog[watchmedo]>=4.0,<7.0
 
 # --- Linting ---
 ruff>=0.11,<1.0

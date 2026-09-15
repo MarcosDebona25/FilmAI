@@ -1201,6 +1201,58 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Archivos**: `backend/catalogo/urls.py`, `backend/filmai/urls.py`,
   `docs/decisiones.md`.
 
+## 14/09/2026 — Créditos de TMDB, tarea `generar_embedding` idempotente y auto-reload del worker
+
+- **Fecha**: 14/09/2026
+- **Descripción**: fase 4 de C-04a.
+  1. **`get_credits(id_tmdb, tipo)`, un método y no dos.** Los endpoints de
+     detalle de TMDB no incluyen `cast` ni `crew`: sin pedirlos aparte, los
+     campos `reparto` y `directores` quedarían vacíos y la búsqueda semántica
+     no encontraría nada por actor ni director. Se implementa con la firma de
+     `get_keywords(id_tmdb, tipo)` —misma forma de URL, `/{tipo}/{id}/credits`
+     vs `/{tipo}/{id}/keywords`— en lugar de los dos métodos por tipo que
+     preveía el diseño. TTL de 24 h en `ENDPOINT_TTLS["credits"]`, igual que
+     el detalle: el reparto de una producción estrenada casi no cambia.
+  2. **`generar_embedding` con tres defensas contra el trabajo duplicado.**
+     Celery entrega "al menos una vez": la misma tarea puede llegar dos veces
+     o a dos workers en paralelo.
+     - Corte por huella: si el embedding ya está `ready` con el mismo
+       `source_hash` y `model_version`, se sale sin llamar al proveedor.
+     - Claim atómico: `UPDATE ... SET estado='processing' WHERE estado IN
+       ('pending','failed')` devuelve la cantidad de filas afectadas; de dos
+       ejecuciones simultáneas exactamente una recibe 1 y la otra 0, sin locks
+       explícitos. Los `ready` quedan fuera de los estados reclamables a
+       propósito: un vector utilizable no se degrada a `failed` por un
+       proveedor caído. Refrescar los `ready` cuyo texto cambió es trabajo del
+       backfill de C-04b, que los devuelve a `pending`.
+     - La llamada al proveedor ocurre fuera de toda transacción (puede tardar
+       segundos) y cualquier excepción se captura: la fila termina en `failed`
+       y la tarea reporta éxito, porque propagar haría que Celery reintentara
+       en loop sin aportar nada — la producción sigue visible igual.
+  Verificado de punta a punta contra el worker real: la tarea se recibe, el
+  stub falla con `NotImplementedError`, la fila queda en `failed` y la
+  producción permanece visible.
+  3. **Auto-reload del worker en desarrollo (`watchmedo`).** Celery NO recarga
+     código como el `runserver` de Django, y eso tiene dos síntomas de muy
+     distinta gravedad: agregar o renombrar una tarea produce un error
+     explícito (`KeyError: 'catalogo.generar_embedding'`, el worker rechaza el
+     mensaje), pero **editar el cuerpo de una tarea existente no produce
+     ningún error: el worker sigue ejecutando en memoria la versión vieja**,
+     en silencio, mientras en el editor se ve el código nuevo. Ese segundo
+     caso es el que hace perder horas. Se agrega `watchdog[watchmedo]` a
+     `requirements.txt` y el `command` del servicio `celery-worker` se envuelve
+     en `watchmedo auto-restart --directory=/app --pattern=*.py --recursive`.
+     Se evaluó `docker compose watch` (disponible, Compose 2.40): se descartó
+     porque el proyecto ya usa bind mounts (la mitad `sync` sería redundante),
+     obliga a correr `docker compose watch` en primer plano en lugar del
+     `docker compose up -d` que documenta el README —y si alguien se olvida,
+     vuelve el bug silencioso— y reinicia el contenedor entero en vez del
+     proceso. La envoltura es solo de desarrollo: en producción se despliega
+     una imagen nueva y se corre `celery` directo.
+- **Archivos**: `backend/catalogo/client.py`, `backend/catalogo/cache.py`,
+  `backend/catalogo/tasks.py`, `backend/catalogo/tests.py`,
+  `backend/requirements.txt`, `docker-compose.yml`.
+
 ## 14/09/2026 — Capa `catalogo/services/`, adaptador de tipos y texto canónico
 
 - **Fecha**: 14/09/2026

@@ -61,15 +61,16 @@ Chain strategy: pending
 
 ## Phase 4: TMDB credits + Celery task
 
-- [ ] 4.1 RED: add `TMDBCreditsTest` (`httpx.MockTransport`) — `TMDBClient.get_movie_credits`/`get_tv_credits` hit `/movie/{id}/credits`/`/tv/{id}/credits` and reuse the existing retry/error-mapping path
-- [ ] 4.2 GREEN: add `get_movie_credits`/`get_tv_credits` to `backend/catalogo/client.py`
-- [ ] 4.3 RED: add cache-layer test asserting `TMDBClientCache.get_movie_credits`/`get_tv_credits` are cached under new `ENDPOINT_TTLS` keys
-- [ ] 4.4 GREEN: add wrapper methods + TTL entries to `backend/catalogo/cache.py`
-- [ ] 4.5 RED: add `GenerarEmbeddingTaskTest` — missing `ProduccionEmbedding` row → no-op; `estado="ready"` + matching hash/version → provider not called; `estado="pending"` → claimed, provider mocked to return a vector → `ready` + `source_hash`/`model_version` persisted
-- [ ] 4.6 RED: add failure case — provider mocked to raise (and separately, the real stub's `NotImplementedError`) → `estado="failed"`, no exception propagates out of the task
-- [ ] 4.7 RED: add concurrent-claim case — pre-set `estado="processing"` → task call is a no-op (`claimed == 0`, provider not called)
-- [ ] 4.8 GREEN: create `backend/catalogo/tasks.py` with `generar_embedding`
-- [ ] 4.9 `python manage.py test catalogo` — all green; `ruff format . && ruff check .`
+- [x] 4.1 RED: add `TMDBCreditsTest` (`httpx.MockTransport`) — `TMDBClient.get_movie_credits`/`get_tv_credits` hit `/movie/{id}/credits`/`/tv/{id}/credits` and reuse the existing retry/error-mapping path
+- [x] 4.2 GREEN: add `get_credits(id_tmdb, tipo)` to `backend/catalogo/client.py` (single method, mirroring `get_keywords`)
+- [x] 4.3 RED: add cache-layer test asserting `TMDBClientCache.get_credits` is cached under the new `ENDPOINT_TTLS["credits"]` key
+- [x] 4.4 GREEN: add wrapper methods + TTL entries to `backend/catalogo/cache.py`
+- [x] 4.5 RED: add `GenerarEmbeddingTaskTest` — missing `ProduccionEmbedding` row → no-op; `estado="ready"` + matching hash/version → provider not called; `estado="pending"` → claimed, provider mocked to return a vector → `ready` + `source_hash`/`model_version` persisted
+- [x] 4.6 RED: add failure case — provider mocked to raise (and separately, the real stub's `NotImplementedError`) → `estado="failed"`, no exception propagates out of the task
+- [x] 4.7 RED: add concurrent-claim case — pre-set `estado="processing"` → task call is a no-op (`claimed == 0`, provider not called)
+- [x] 4.8 GREEN: create `backend/catalogo/tasks.py` with `generar_embedding`
+- [x] 4.9 `python manage.py test catalogo` — all green; `ruff format . && ruff check .`
+- [x] 4.10 Auto-reload del worker en dev: `watchdog[watchmedo]` + `command` envuelto en `watchmedo auto-restart` (Celery no recarga codigo solo; editar una tarea existente corre la version vieja EN SILENCIO). Ver `docs/decisiones.md`.
 
 ## Phase 5: Materialization + view wiring
 

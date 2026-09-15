@@ -133,7 +133,7 @@ sección es C-04a (más abajo).
 **Materialización (C-04a) — 🔜 en progreso** — `catalogo/services/materialization.py`:
 
 - `materializar(id_tmdb, tipo)` → crea/obtiene `ProduccionAudiovisual` por `(id_tmdb, tipo)`; ante `IntegrityError` por concurrencia resuelve con `get()` (sin llamadas externas dentro de transacción, decisión 25/08/2026).
-- Enriquecimiento: detalle completo (`get_movie_detail`/`get_tv_detail`) + keywords (`get_keywords`) antes de considerar la producción "buscable semánticamente"; los resúmenes de listado pueden materializarse incompletos y completarse asíncronamente. **Corrección (14/09/2026):** los endpoints de detalle de TMDB no traen reparto/directores; se agregan además `get_movie_credits`/`get_tv_credits` (aditivos a C-01/C-02, sin tocar sus métodos existentes) para poder completar esos campos.
+- Enriquecimiento: detalle completo (`get_movie_detail`/`get_tv_detail`) + keywords (`get_keywords`) antes de considerar la producción "buscable semánticamente"; los resúmenes de listado pueden materializarse incompletos y completarse asíncronamente. **Corrección (14/09/2026):** los endpoints de detalle de TMDB no traen reparto/directores; se agrega además `get_credits(id_tmdb, tipo)` (aditivo a C-01/C-02, con la misma firma que `get_keywords`, sin tocar sus métodos existentes) para poder completar esos campos.
 - Tras persistir: crear `ProduccionEmbedding` con estado `pending` y encolar la tarea Celery (`generar_embedding.delay(produccion_id)`). Nunca esperar a Ollama en el request.
 - La materialización es global: toda producción servida por el catálogo o abierta en detalle se materializa para todos los usuarios.
 
