@@ -117,3 +117,23 @@ The system MUST forward the `page` query parameter to the cache method and retur
 - WHEN the endpoint handles it
 - THEN `page=3` is passed to the cache method
 - AND TMDB's own `page`, `total_pages`, `results` fields are returned unchanged
+
+### Requirement: Detail views materialize as a side effect
+
+Added by C-04a (2026-09-15). The detail endpoints MUST materialize the production they serve, by calling `catalogo.services.materialization.materializar(id_tmdb, tipo_tmdb)` after resolving the response.
+
+This MUST NOT alter the response contract defined above: the body stays the raw TMDB passthrough. A materialization failure MUST be logged and swallowed, never surfaced to the client — the catalog remains readable even when local persistence is degraded.
+
+#### Scenario: Row exists after a detail request
+
+- GIVEN `GET /api/catalogo/movie/550/` or `GET /api/catalogo/tv/1396/`
+- WHEN the request succeeds
+- THEN the response body is unchanged TMDB JSON
+- AND a `ProduccionAudiovisual` row exists for that `(id_tmdb, tipo)`
+- AND a `ProduccionEmbedding` exists for it in state `pending`
+
+#### Scenario: Materialization failure is invisible to the client
+
+- GIVEN materialization raises
+- WHEN the detail endpoint handles the request
+- THEN the client still receives 200 with the unchanged TMDB body
