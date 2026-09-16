@@ -1165,12 +1165,32 @@ class MaterializacionPeliculaTests(MaterializacionBase):
         self.assertEqual(produccion.keywords, ["insomnia", "dual identity"])
 
     def test_crea_el_embedding_pendiente_y_lo_encola_una_sola_vez(self):
-        produccion = materializar(550, "movie")
+        # `captureOnCommitCallbacks(execute=True)` ejecuta los callbacks de
+        # `on_commit` al salir del bloque. Hace falta porque `TestCase` envuelve
+        # cada test en una transacción que revierte a propósito: sin COMMIT,
+        # Django nunca correría el callback y el encolado no ocurriría.
+        with self.captureOnCommitCallbacks(execute=True):
+            produccion = materializar(550, "movie")
 
         embedding = ProduccionEmbedding.objects.get(produccion=produccion)
         self.assertEqual(embedding.estado, EstadoEmbedding.PENDING)
         self.assertIsNone(embedding.vector)
         self.tarea.delay.assert_called_once_with(produccion.id)
+
+    def test_el_encolado_espera_a_que_la_transaccion_se_confirme(self):
+        """El worker nunca debe recibir el id de una fila que aún no existe.
+
+        `generar_embedding` corre en otro proceso, con otra conexión: si el
+        mensaje sale antes del COMMIT, el worker busca la fila, no la encuentra
+        y se va sin generar nada. Encolar en `on_commit` lo vuelve imposible.
+        """
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            materializar(550, "movie")
+            # Todavía dentro de la transacción: no puede haberse encolado nada.
+            self.tarea.delay.assert_not_called()
+
+        # Y el encolado quedó registrado para ejecutarse al confirmar.
+        self.assertEqual(len(callbacks), 1)
 
     def test_fecha_de_lanzamiento_vacia_queda_en_null(self):
         # TMDB devuelve "" (no null) para estrenos sin fecha confirmada.
@@ -1285,10 +1305,12 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
 
     def test_no_reencola_si_el_embedding_ya_existia(self):
-        materializar(550, "movie")
+        with self.captureOnCommitCallbacks(execute=True):
+            materializar(550, "movie")
         self.tarea.delay.reset_mock()
 
-        materializar(550, "movie")
+        with self.captureOnCommitCallbacks(execute=True):
+            materializar(550, "movie")
 
         self.tarea.delay.assert_not_called()
 
@@ -1382,7 +1404,8 @@ class VistasDeDetalleMaterializanTests(TestCase):
         self.api = APIClient()
 
     def test_detalle_de_pelicula_materializa_sin_tocar_la_respuesta(self):
-        response = self.api.get("/api/catalogo/movie/550/")
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.api.get("/api/catalogo/movie/550/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, _DETALLE_MOVIE)
@@ -1407,8 +1430,9 @@ class VistasDeDetalleMaterializanTests(TestCase):
         self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
 
     def test_abrir_el_detalle_dos_veces_no_duplica_nada(self):
-        self.api.get("/api/catalogo/movie/550/")
-        self.api.get("/api/catalogo/movie/550/")
+        with self.captureOnCommitCallbacks(execute=True):
+            self.api.get("/api/catalogo/movie/550/")
+            self.api.get("/api/catalogo/movie/550/")
 
         self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)

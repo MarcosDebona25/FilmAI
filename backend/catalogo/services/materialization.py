@@ -228,11 +228,15 @@ def _encolar_embedding(produccion):
     llenaría la cola de trabajo repetido; refrescar embeddings viejos o en
     `failed` es responsabilidad del backfill de C-04b.
 
-    Nota: el `.delay()` va directo porque el proyecto no usa `ATOMIC_REQUESTS`,
-    así que la fila ya está commiteada cuando el worker la busca. Si eso
-    cambiara, hay que envolverlo en `transaction.on_commit()` o el worker
-    podría consumir la tarea antes de que la fila sea visible.
+    El encolado va dentro de `transaction.on_commit()`: `generar_embedding`
+    corre en otro proceso, con otra conexión, y si el mensaje saliera antes del
+    COMMIT el worker buscaría una fila que todavía no es visible, no la
+    encontraría y se iría sin generar nada. Sin transacción abierta el callback
+    se ejecuta al instante, así que hoy el comportamiento es idéntico; protege
+    el día que algo envuelva la materialización en un `atomic()` —la sync por
+    lotes de C-04b es candidata—. Además, si esa transacción termina en
+    rollback, no se encola nada: la fila nunca existió.
     """
     _, creado = ProduccionEmbedding.objects.get_or_create(produccion=produccion)
     if creado:
-        generar_embedding.delay(produccion.id)
+        transaction.on_commit(lambda: generar_embedding.delay(produccion.id))
