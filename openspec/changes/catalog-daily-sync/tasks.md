@@ -43,10 +43,10 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 - [x] 1.3 RED: add `MaterializacionFrescuraTests` — `fecha_enriquecimiento is None` ⇒ needs enrichment; set to now ⇒ does not; set beyond `_DIAS_FRESCURA` ⇒ does
 - [x] 1.4 GREEN: add `fecha_enriquecimiento` to `ProduccionAudiovisual`; `makemigrations catalogo`; confirm the migration is additive and nullable
 - [x] 1.5 GREEN: rewrite `_necesita_enriquecimiento()` against `fecha_enriquecimiento`; set the timestamp inside `_enriquecer()`, in the same `save()`
-- [ ] 1.6 RED: add a case asserting `materializar(..., forzar=True)` re-enriches a row the criterion would have skipped, and that `forzar=False` still skips it
-- [ ] 1.7 GREEN: add the `forzar` parameter to `materializar()`
-- [ ] 1.8 Update `openspec/specs/catalog-materialization/spec.md`: the "Incompleteness criterion" requirement now describes `fecha_enriquecimiento` and the refresh window, and the known limitation about `titulo` is removed — it no longer applies
-- [ ] 1.9 `docker compose exec -T backend python manage.py test catalogo` — all green; `ruff format . && ruff check .`
+- [x] 1.6 RED: add a case asserting `materializar(..., forzar=True)` re-enriches a row the criterion would have skipped, and that `forzar=False` still skips it
+- [x] 1.7 GREEN: add the `forzar` parameter to `materializar()`
+- [x] 1.8 Update `openspec/specs/catalog-materialization/spec.md`: the "Incompleteness criterion" requirement now describes `fecha_enriquecimiento` and the refresh window, and the known limitation about `titulo` is removed — it no longer applies
+- [x] 1.9 `docker compose exec -T backend python manage.py test catalogo` — all green; `ruff format . && ruff check .`
 
 ## Phase 2: Scheduler and daily sync
 

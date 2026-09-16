@@ -8,7 +8,7 @@ On-demand, concurrency-safe persistence of `ProduccionAudiovisual` (CU-021). Any
 
 ### Requirement: Single materialization entry point
 
-The system MUST expose exactly one write path into `ProduccionAudiovisual`: `catalogo.services.materialization.materializar(id_tmdb, tipo_tmdb)`. Callers MUST NOT insert catalog rows directly, and MUST NOT call TMDB themselves to build them.
+The system MUST expose exactly one write path into `ProduccionAudiovisual`: `catalogo.services.materialization.materializar(id_tmdb, tipo_tmdb, forzar=False)`. Callers MUST NOT insert catalog rows directly, and MUST NOT call TMDB themselves to build them. This includes bulk processes such as the daily sync: they iterate and call the helper per item.
 
 The helper MUST accept TMDB vocabulary (`"movie"` / `"tv"`) and translate it to the domain (`TipoProduccion.PELICULA` / `SERIE`) through `catalogo.services.adapter`. It MUST return the `ProduccionAudiovisual` instance.
 
@@ -100,12 +100,21 @@ After persisting the production, the system MUST ensure a `ProduccionEmbedding` 
 
 The task MUST be enqueued only when the embedding row is newly created. Re-enqueuing on every visit would fill the queue with duplicated work; refreshing `failed` or stale embeddings is the responsibility of the C-04b backfill.
 
+The enqueue MUST be deferred to `transaction.on_commit()`. The worker runs in another process with its own connection: a message sent before the row is committed would point at a row the worker cannot yet see. With no open transaction the callback runs immediately, so the behavior is unchanged in that case; inside an `atomic()` block it waits for the commit, and a rollback enqueues nothing.
+
 #### Scenario: Enqueued once across repeated visits
 
 - GIVEN a production opened twice in detail
 - WHEN both requests are handled
 - THEN exactly one `ProduccionEmbedding` exists
 - AND the task was enqueued exactly once
+
+#### Scenario: Enqueue waits for the commit
+
+- GIVEN materialization runs inside an open transaction
+- WHEN `materializar()` returns
+- THEN the task has not been sent yet
+- AND exactly one on-commit callback is registered to send it
 
 ### Requirement: Failure isolation
 
@@ -118,15 +127,47 @@ The task MUST be enqueued only when the embedding row is newly created. Re-enque
 - THEN the response is still 200 with the unchanged TMDB body
 - AND the failure is recorded in the logs
 
-### Requirement: Incompleteness criterion
+### Requirement: Enrichment is recorded, not inferred
 
-The system MUST re-enrich a row it considers incomplete. The current criterion is the absence of `titulo`.
+The system MUST record on each row when it last pulled the full TMDB detail, in `ProduccionAudiovisual.fecha_enriquecimiento`. A row whose value is `NULL` MUST be treated as never enriched and MUST be enriched on the next materialization, regardless of which other fields it holds.
 
-This is a KNOWN LIMITATION: a row holding a title but missing genres or synopsis is treated as complete. It cannot occur while `materializar()` is the only write path, and `_necesita_enriquecimiento()` is the single place to harden when C-04b starts creating partial rows from listing summaries.
+Completeness MUST NOT be inferred from the presence of any content field. Revised 16/09/2026 (C-04b): the previous criterion — "the row has no `titulo`" — only held while a single writer filled every column at once. A row built from a TMDB listing item carries a title but no genres, cast, crew or keywords, and under that criterion would have counted as complete forever.
 
-#### Scenario: Incomplete row is repaired on next open
+The timestamp MUST be written in the same `save()` as the enriched fields, so a failed write never leaves a row marked as enriched.
 
-- GIVEN a row that exists with an empty `titulo`
+#### Scenario: A listing-shaped row is repaired on next open
+
+- GIVEN a row that exists with a `titulo` but `fecha_enriquecimiento` is `NULL`
 - WHEN `materializar()` is called for it
-- THEN TMDB is queried and the row is completed in place
+- THEN TMDB is queried and cast, crew, genres and keywords are filled in place
+- AND `fecha_enriquecimiento` is set
 - AND no duplicate row is created
+
+#### Scenario: A recently enriched row is left alone
+
+- GIVEN a row whose `fecha_enriquecimiento` is recent
+- WHEN `materializar()` is called for it without `forzar`
+- THEN no TMDB request is issued
+
+### Requirement: Staleness safety net
+
+The system MUST re-enrich a row whose `fecha_enriquecimiento` is older than a long safety window (`_DIAS_RED_DE_SEGURIDAD`, 90 days at the time of writing).
+
+This window is NOT the primary refresh mechanism. Actual change detection belongs to the daily sync (`catalog-daily-sync`), which asks TMDB's own changes list and forces a refresh through `forzar`. The window only guarantees that a row can never go unrefreshed forever if that list is missed.
+
+#### Scenario: Window boundary
+
+- GIVEN a row enriched 91 days ago and another enriched 89 days ago
+- WHEN `_necesita_enriquecimiento()` evaluates each
+- THEN the first needs enrichment and the second does not
+
+### Requirement: Forced refresh
+
+`materializar()` MUST accept `forzar=True`, which re-enriches the row even when the completeness and staleness checks would skip it. This is the only sanctioned way to refresh a complete row: callers MUST NOT blank `fecha_enriquecimiento` to provoke the path, and MUST NOT write the row themselves.
+
+#### Scenario: Forced refresh re-queries TMDB
+
+- GIVEN a row enriched one hour ago
+- WHEN `materializar(id_tmdb, tipo_tmdb, forzar=True)` is called
+- THEN TMDB is queried again
+- AND the row's fields and `fecha_enriquecimiento` are updated in place
