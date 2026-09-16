@@ -12,8 +12,10 @@ masivo de C-04b sí va a querer enterarse de los errores.
 """
 
 import logging
+from datetime import timedelta
 
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from catalogo.models import ProduccionAudiovisual, ProduccionEmbedding
 from catalogo.services.adapter import tmdb_a_dominio
@@ -26,6 +28,12 @@ logger = logging.getLogger(__name__)
 # los diez primeros son los que un usuario reconoce y los que aportan señal
 # real al embedding. El resto es ruido que además engordaría el texto canónico.
 _MAX_REPARTO = 10
+
+# Red de seguridad, NO el mecanismo principal de refresco: lo que cambió de
+# verdad lo dice la lista de cambios de TMDB (C-04b, fase 2). Esta ventana solo
+# garantiza que nada quede sin refrescar para siempre si esa lista se pierde.
+# Es una estimación de bajo riesgo: equivocarse cuesta unos refrescos de más.
+_DIAS_RED_DE_SEGURIDAD = 90
 
 
 def materializar(id_tmdb, tipo_tmdb):
@@ -84,16 +92,25 @@ def _obtener_o_crear(id_tmdb, tipo):
 
 
 def _necesita_enriquecimiento(produccion):
-    """Decide si hay que traer datos de TMDB para esta fila.
+    """Decide si hay que traer el detalle de TMDB para esta fila.
 
-    LIMITACIÓN CONOCIDA: solo mira el título. Una fila con título pero sin
-    géneros ni sinopsis se considera completa y no se repara. Hoy eso no puede
-    pasar, porque `materializar()` es el único camino de escritura de la tabla
-    y completa todos los campos de una sola vez. Cuando C-04b agregue el sync
-    masivo —que crea filas a partir de listados, sin créditos ni keywords—
-    habrá que endurecer el criterio: esta función es el único lugar a tocar.
+    Reemplaza el criterio de C-04a (`not titulo`), que dejó de servir cuando
+    C-04b empezó a crear filas desde listados: un ítem de listado trae título
+    pero no géneros, reparto, créditos ni keywords, y con el criterio viejo
+    contaba como completo para siempre. Ahora el hecho se registra en vez de
+    deducirse: `fecha_enriquecimiento` dice cuándo se trajo el detalle.
+
+    Acá NO se decide si la fila quedó desactualizada. Eso lo responde TMDB por
+    su lista de cambios (`/movie/changes`, `/tv/changes`) y la sync lo fuerza
+    con `forzar=True`. La ventana de abajo es solo una red de seguridad por si
+    esa lista se pierde —la sync no corrió una noche, la API falló—, no el
+    mecanismo principal.
     """
-    return not produccion.titulo
+    if produccion.fecha_enriquecimiento is None:
+        return True
+    return timezone.now() - produccion.fecha_enriquecimiento > timedelta(
+        days=_DIAS_RED_DE_SEGURIDAD
+    )
 
 
 def _enriquecer(produccion, id_tmdb, tipo_tmdb):
@@ -114,6 +131,9 @@ def _enriquecer(produccion, id_tmdb, tipo_tmdb):
 
     for campo, valor in _mapear(detalle, credits, keywords, tipo_tmdb).items():
         setattr(produccion, campo, valor)
+    # En el mismo save() que los datos: si la escritura falla, tampoco queda
+    # anotado que se enriqueció.
+    produccion.fecha_enriquecimiento = timezone.now()
     produccion.save()
 
 
