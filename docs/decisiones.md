@@ -1514,3 +1514,84 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   `chore/**` seguiría sin CI; si eso llegara a pasar, la alternativa es quitar
   el filtro `branches` por completo para que corra en todo PR.
 - **Archivos**: `.github/workflows/ci.yml`.
+
+## 15/09/2026 — C-04b: la sync escribe por `materializar()`, y la frescura se vuelve explícita
+
+- **Fecha**: 15/09/2026
+- **Descripción**: al planificar C-04b (sync diaria) se detectó que el plan
+  original del 08/09/2026 —"sincroniza con `update_or_create`"— ya no encaja
+  con lo que C-04a dejó construido. Se toman cuatro decisiones:
+  1. **La sync no escribe: llama a `materializar()` por ítem.** El spec
+     canónico de `catalog-materialization` exige un único camino de escritura,
+     y un ítem de listado de TMDB no alcanza para llenar una fila. Verificado
+     contra la API en vivo: un ítem de `trending` trae `genre_ids` (IDs
+     numéricos, no nombres) y **no trae** `genres`, `status`, `runtime`,
+     reparto, crew ni keywords — es decir, **cuatro de las seis secciones** del
+     texto que se embebe. Una fila creada así quedaría embebida sobre un texto
+     mutilado y, con el criterio viejo, contaría como completa para siempre.
+     Pasar por `materializar()` cuesta 3 llamadas por ítem, todas cacheadas 24 h.
+  2. **Nuevo campo `ProduccionAudiovisual.fecha_enriquecimiento`**
+     (`DateTimeField`, nulo) que registra cuándo se trajo por última vez el
+     detalle completo. Reemplaza el criterio `not titulo` de C-04a, que no
+     distinguía una fila completa de una creada desde un listado y que además
+     no permitía refrescar nada. Se evaluó usar `estatus` vacío como centinela
+     —es confiable, porque solo lo devuelve el detalle— pero no lleva edad, así
+     que la sync nunca podría actualizar una fila existente.
+  3. **El seed inicial (~10k producciones) sale de C-04b** y pasa a ser una
+     tarea aparte (C-04c). Necesita paginado, control de ritmo y reanudación, y
+     conviene correrlo recién cuando el mapeo esté probado: hacerlo antes
+     significa escribir diez mil filas mal. El plan ya lo contemplaba ("con
+     C-04b **o** comando de management").
+  4. **Se adopta `transaction.on_commit()` para el `.delay()`** del embedding,
+     sugerencia del review del PR #12 que había quedado pendiente. Hoy es
+     idéntico (sin transacción abierta se ejecuta al instante) y protege el día
+     que algo envuelva la materialización en un `atomic()` —la sync por lotes
+     es candidata—, para que el worker nunca reciba el id de una fila que
+     todavía no se commiteó. Cuesta mover dos tests a
+     `captureOnCommitCallbacks(execute=True)`.
+- **Motivo**: cerrar CU-021 por el lado proactivo sin romper las garantías que
+  C-04a acababa de establecer, y sin dejar filas a medio llenar que después
+  nadie repararía.
+- **Consecuencia sobre C-04a**: `materializar()` suma un parámetro `forzar` —
+  la única forma de re-enriquecer sin abrir un segundo camino de escritura— y
+  la limitación conocida de `_necesita_enriquecimiento()` deja de existir.
+- **Pendiente de calibrar**: la ventana de frescura (`_DIAS_FRESCURA = 30`) es
+  una primera estimación; conviene revisarla cuando haya corpus real (C-04c) y
+  datos de cuánto cambia TMDB una producción ya estrenada.
+- **Archivos**: `openspec/changes/catalog-daily-sync/{proposal,design,tasks}.md`.
+
+## 15/09/2026 — La frescura la responde TMDB, no una ventana de tiempo
+
+- **Fecha**: 15/09/2026
+- **Descripción**: refina la decisión 2 tomada horas antes en esta misma
+  jornada. El diseño inicial de C-04b resolvía "¿esta fila está vieja?" con una
+  ventana fija de 30 días sobre `fecha_enriquecimiento`. Al revisarlo se
+  verificó que **TMDB publica la respuesta exacta**: `GET /movie/changes` y
+  `GET /tv/changes` devuelven los IDs modificados en las últimas 24 h
+  (comprobado en vivo: 7.351 películas, 74 páginas). La sync cruza esa lista
+  con los IDs que tenemos guardados y refresca solo la intersección.
+  El criterio queda partido en **tres capas**, cada una respondiendo una
+  pregunta distinta:
+  1. **Completitud** — `fecha_enriquecimiento is None`: la fila nunca se
+     enriqueció.
+  2. **Cambio real** — el ID aparece en la lista de cambios del día.
+  3. **Red de seguridad** — `_DIAS_RED_DE_SEGURIDAD = 90`, por si la lista de
+     cambios se perdió (la sync no corrió una noche, la API falló).
+- **Motivo**: una ventana de tiempo refresca filas **hayan cambiado o no**.
+  Sobre un corpus de 10.000, una ventana de 30 días re-pide ~333 filas por
+  noche, la mayoría idénticas a lo que ya tenemos. La intersección refresca
+  exactamente lo que se movió, y además resulta más barata que el barrido que
+  reemplaza. La diferencia de fondo es que la ventana **adivina** y la lista de
+  cambios **pregunta a la fuente**.
+- **Consecuencia**: se agrega `get_changes(tipo, page)` a `TMDBClient` y
+  `TMDBClientCache` (aditivo, con la forma de los métodos existentes) y un TTL
+  `"changes"` de 6 h. La intersección se hace **en Python**, no con un
+  `id_tmdb__in` de miles de elementos. La fase 2 pasa a entregarse en dos PR,
+  cortando en la costura natural entre "hacer crecer el corpus" y "mantenerlo
+  fresco".
+- **Queda por medir**: cuán grande es la intersección diaria con un corpus
+  real. Si resultara que una porción significativa de 10.000 filas cambia cada
+  noche, el costo por corrida crece y puede necesitar su propio tope.
+- **Origen**: pregunta del usuario — "¿no se podría usar algo más robusto?,
+  ¿buscar otra estrategia más de raíz?". La tenía.
+- **Archivos**: `openspec/changes/catalog-daily-sync/{proposal,design,tasks}.md`.
