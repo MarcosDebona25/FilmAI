@@ -1306,6 +1306,25 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
         self.servicio.get_credits.assert_not_called()
         self.servicio.get_keywords.assert_not_called()
 
+    def test_forzar_reenriquece_una_fila_que_el_criterio_saltearia(self):
+        # La puerta por la que la sync refresca lo que TMDB reporta como
+        # cambiado, aunque `fecha_enriquecimiento` sea reciente. Sin esto, la
+        # sync tendría que borrar la fecha (acción a distancia) o escribir por
+        # su cuenta (el segundo camino de escritura que el spec prohíbe).
+        hace_una_hora = timezone.now() - timedelta(hours=1)
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Fight Club",
+            fecha_enriquecimiento=hace_una_hora,
+        )
+
+        produccion = materializar(550, "movie", forzar=True)
+
+        self.servicio.get_movie_detail.assert_called_once_with(550)
+        self.assertEqual(produccion.directores, ["David Fincher"])
+        self.assertGreater(produccion.fecha_enriquecimiento, hace_una_hora)
+
     def test_materializar_dos_veces_deja_una_fila_y_un_embedding(self):
         primera = materializar(550, "movie")
         segunda = materializar(550, "movie")

@@ -36,7 +36,7 @@ _MAX_REPARTO = 10
 _DIAS_RED_DE_SEGURIDAD = 90
 
 
-def materializar(id_tmdb, tipo_tmdb):
+def materializar(id_tmdb, tipo_tmdb, forzar=False):
     """Garantiza que la producción exista en la base con su embedding encolado.
 
     Recibe el vocabulario de TMDB (`"movie"` / `"tv"`) porque es lo que traen
@@ -44,11 +44,16 @@ def materializar(id_tmdb, tipo_tmdb):
 
     Es idempotente: llamarla mil veces sobre la misma producción deja una sola
     fila, un solo embedding y una sola tarea encolada.
+
+    `forzar=True` vuelve a pedir el detalle a TMDB aunque la fila cuente como
+    completa. Es la puerta por la que la sync diaria (C-04b) refresca lo que
+    TMDB reporta como cambiado, sin abrir un segundo camino de escritura ni
+    tener que borrar `fecha_enriquecimiento` para provocar el refresco.
     """
     tipo = tmdb_a_dominio(tipo_tmdb)
     produccion = _obtener_o_crear(id_tmdb, tipo)
 
-    if _necesita_enriquecimiento(produccion):
+    if forzar or _necesita_enriquecimiento(produccion):
         _enriquecer(produccion, id_tmdb, tipo_tmdb)
 
     _encolar_embedding(produccion)
