@@ -82,6 +82,17 @@ class ProduccionAudiovisual(models.Model):
         "cantidad de episodios", null=True, blank=True
     )
     duracion = models.IntegerField("duración (minutos)", null=True, blank=True)
+    fecha_enriquecimiento = models.DateTimeField(
+        "fecha de enriquecimiento",
+        null=True,
+        blank=True,
+        help_text="Cuándo se trajo por última vez el detalle completo de TMDB "
+        "(detalle + créditos + keywords). Nulo significa que la fila nunca se "
+        "enriqueció: puede haber nacido de un listado, que trae título pero no "
+        "géneros, reparto ni keywords. La sync diaria (C-04b) refresca lo que "
+        "TMDB reporta como cambiado; esta fecha es además la red de seguridad "
+        "si esa lista se pierde.",
+    )
 
     class Meta:
         db_table = "produccion_audiovisual"

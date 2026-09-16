@@ -1,4 +1,5 @@
 import threading
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -14,6 +15,7 @@ from django.test import (
     TransactionTestCase,
     override_settings,
 )
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APIRequestFactory
@@ -50,7 +52,10 @@ from catalogo.services.embeddings import (
     construir_texto_canonico,
     generar_vector,
 )
-from catalogo.services.materialization import materializar
+from catalogo.services.materialization import (
+    _necesita_enriquecimiento,
+    materializar,
+)
 from catalogo.services.tmdb import get_catalog_service
 from catalogo.tasks import generar_embedding
 from catalogo.views import (
@@ -1286,8 +1291,13 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
     """Abrir dos veces el mismo detalle no duplica ni reencola nada (C-04a)."""
 
     def test_fila_existente_y_completa_no_vuelve_a_consultar_tmdb(self):
+        # "Completa" es un hecho registrado, no una deducción a partir del
+        # título: lo declara `fecha_enriquecimiento` (C-04b, fase 1).
         ProduccionAudiovisual.objects.create(
-            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Fight Club",
+            fecha_enriquecimiento=timezone.now(),
         )
 
         materializar(550, "movie")
@@ -1315,14 +1325,21 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
         self.tarea.delay.assert_not_called()
 
     def test_fila_incompleta_se_repara_con_datos_de_tmdb(self):
-        # Sin título: la dejó a medias otro proceso (p. ej. el backfill C-04b).
+        # Con título pero sin `fecha_enriquecimiento`: la forma exacta de una
+        # fila nacida de un listado de TMDB, que trae título pero no géneros,
+        # reparto ni keywords. Con el criterio viejo (`not titulo`) esta fila
+        # habría contado como completa para siempre.
         ProduccionAudiovisual.objects.create(
-            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo=""
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
         )
 
         produccion = materializar(550, "movie")
 
-        self.assertEqual(produccion.titulo, "Fight Club")
+        # Se verifica sobre lo que un listado NO puede traer: si el reparto y
+        # los directores aparecen, el detalle se pidió de verdad.
+        self.assertEqual(produccion.directores, ["David Fincher"])
+        self.assertEqual(len(produccion.reparto), 10)
+        self.assertIsNotNone(produccion.fecha_enriquecimiento)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
 
     def test_tipo_no_soportado_no_materializa_nada(self):
@@ -1378,6 +1395,47 @@ class MaterializacionCarreraTests(MaterializacionBase):
             self.assertRaises(IntegrityError),
         ):
             materializar(550, "movie")
+
+
+class MaterializacionFrescuraTests(SimpleTestCase):
+    """Cuándo una fila necesita (re)traer el detalle de TMDB (C-04b, fase 1).
+
+    `_necesita_enriquecimiento()` es una decisión pura sobre un atributo, así
+    que se prueba sin base de datos, con un objeto que finge ser la producción.
+
+    Reemplaza el criterio de C-04a (`not titulo`), que dejaba de servir en
+    cuanto la sync creara filas desde listados: esas traen título pero no
+    géneros, reparto ni keywords, y con el criterio viejo contaban como
+    completas para siempre.
+    """
+
+    def _produccion(self, fecha_enriquecimiento):
+        # Con título a propósito: así el criterio viejo (`not titulo`) dice
+        # "completa" y el RED falla por aserción, no por un AttributeError.
+        return SimpleNamespace(
+            titulo="Fight Club", fecha_enriquecimiento=fecha_enriquecimiento
+        )
+
+    def test_una_fila_que_nunca_se_enriquecio_lo_necesita(self):
+        self.assertTrue(_necesita_enriquecimiento(self._produccion(None)))
+
+    def test_una_fila_recien_enriquecida_no_lo_necesita(self):
+        self.assertFalse(_necesita_enriquecimiento(self._produccion(timezone.now())))
+
+    def test_una_fila_mas_vieja_que_la_red_de_seguridad_lo_necesita(self):
+        # La ventana es solo una red de seguridad: lo que cambió de verdad lo
+        # dice la lista de cambios de TMDB (fase 2). Pero si esa lista se
+        # perdiera, nada debería quedar sin refrescar para siempre.
+        hace_91_dias = timezone.now() - timedelta(days=91)
+
+        self.assertTrue(_necesita_enriquecimiento(self._produccion(hace_91_dias)))
+
+    def test_una_fila_dentro_de_la_ventana_no_lo_necesita(self):
+        # Fija el borde: 89 días adentro, 91 afuera. Si alguien mueve la
+        # constante sin querer, uno de los dos tests lo delata.
+        hace_89_dias = timezone.now() - timedelta(days=89)
+
+        self.assertFalse(_necesita_enriquecimiento(self._produccion(hace_89_dias)))
 
 
 class VistasDeDetalleMaterializanTests(TestCase):

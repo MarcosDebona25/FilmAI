@@ -40,9 +40,9 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 
 - [x] 1.1 RED: add `test_el_encolado_espera_a_que_la_transaccion_se_confirme` — inside `captureOnCommitCallbacks(execute=False)`, `delay` must NOT have been called yet and exactly one callback must be registered. *Corrected at apply time:* the original wording ("wrap the two existing assertions, they must fail first") was not a RED — a direct `.delay()` still fires inside the capture block, so those tests passed both before and after. The existing enqueue assertions (**four**, not two: the two in the materialization tests and the two in `VistasDeDetalleMaterializanTests`) get `execute=True` so they keep asserting what they always did once the callback carries the enqueue
 - [x] 1.2 GREEN: wrap the enqueue in `transaction.on_commit()` in `_encolar_embedding`; docstring rewritten — it used to explain why the direct `.delay()` was correct
-- [ ] 1.3 RED: add `MaterializacionFrescuraTests` — `fecha_enriquecimiento is None` ⇒ needs enrichment; set to now ⇒ does not; set beyond `_DIAS_FRESCURA` ⇒ does
-- [ ] 1.4 GREEN: add `fecha_enriquecimiento` to `ProduccionAudiovisual`; `makemigrations catalogo`; confirm the migration is additive and nullable
-- [ ] 1.5 GREEN: rewrite `_necesita_enriquecimiento()` against `fecha_enriquecimiento`; set the timestamp inside `_enriquecer()`, in the same `save()`
+- [x] 1.3 RED: add `MaterializacionFrescuraTests` — `fecha_enriquecimiento is None` ⇒ needs enrichment; set to now ⇒ does not; set beyond `_DIAS_FRESCURA` ⇒ does
+- [x] 1.4 GREEN: add `fecha_enriquecimiento` to `ProduccionAudiovisual`; `makemigrations catalogo`; confirm the migration is additive and nullable
+- [x] 1.5 GREEN: rewrite `_necesita_enriquecimiento()` against `fecha_enriquecimiento`; set the timestamp inside `_enriquecer()`, in the same `save()`
 - [ ] 1.6 RED: add a case asserting `materializar(..., forzar=True)` re-enriches a row the criterion would have skipped, and that `forzar=False` still skips it
 - [ ] 1.7 GREEN: add the `forzar` parameter to `materializar()`
 - [ ] 1.8 Update `openspec/specs/catalog-materialization/spec.md`: the "Incompleteness criterion" requirement now describes `fecha_enriquecimiento` and the refresh window, and the known limitation about `titulo` is removed — it no longer applies
