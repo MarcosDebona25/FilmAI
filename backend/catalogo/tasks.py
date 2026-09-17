@@ -1,4 +1,4 @@
-"""Tareas asincrónicas del catálogo (C-04a).
+"""Tareas asincrónicas del catálogo (C-04a, C-04b).
 
 Celery garantiza entrega "al menos una vez": la misma tarea puede llegar dos
 veces (reinicio del worker) o a dos workers en paralelo. Toda la lógica de
@@ -10,13 +10,15 @@ import logging
 
 from celery import shared_task
 
-from catalogo.models import EstadoEmbedding, ProduccionEmbedding
+from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEmbedding
+from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.embeddings import (
     MODEL_VERSION,
     calcular_source_hash,
     construir_texto_canonico,
     generar_vector,
 )
+from catalogo.services.tmdb import get_catalog_service
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +99,81 @@ def generar_embedding(produccion_id):
     )
 
 
+# Qué recorre cada corrida nocturna y cómo se sabe el tipo de cada ítem:
+# (nombre, cómo pedirla, tipo fijo — o None si cada ítem trae `media_type`).
+# Son cuatro páginas de ~20 ítems: suficiente para captar novedades sin
+# convertir la sync en un rastreo de todo TMDB, que es trabajo del seed (C-04c).
+# Solo `trending/all` mezcla tipos (y puede traer `person`); en las otras tres
+# fuentes el tipo lo dicta el endpoint. Verificado contra la API el 17/09/2026.
+_FUENTES = (
+    ("trending", lambda s: s.get_trending("all", "week", 1), None),
+    ("now_playing", lambda s: s.get_now_playing(1), "movie"),
+    ("discover_movie", lambda s: s.discover("movie", page=1), "movie"),
+    ("discover_tv", lambda s: s.discover("tv", page=1), "tv"),
+)
+
+
 @shared_task(name="catalogo.sync_catalogo_diaria")
 def sync_catalogo_diaria():
-    """Sincronización nocturna del catálogo (C-04b). Ver CELERY_BEAT_SCHEDULE."""
-    # Cuerpo mínimo para verificar que beat dispara: la lógica llega en 2.7.
-    logger.info("sync_catalogo_diaria: corrida iniciada")
+    """Pasada de descubrimiento de la sync nocturna (C-04b).
+
+    Recorre los listados de TMDB y materializa cada ítem SIN que ningún usuario
+    lo haya abierto. Es lo que rompe el arranque en frío: la búsqueda semántica
+    busca entre las filas de nuestra base, y sin esto la base solo tendría lo
+    que alguien ya miró.
+
+    No escribe nada por su cuenta: cada ítem pasa por `materializar()`, el
+    único camino de escritura del catálogo. Un ítem de listado no alcanza para
+    llenar una fila (no trae géneros con nombre, créditos ni keywords), y así
+    tampoco hay que duplicar el mapeo ni traducir `genre_ids`.
+
+    Los fallos son por ítem: un título que TMDB no devuelve no puede abortar
+    la noche entera. Misma política que las vistas de detalle.
+
+    Devuelve y loguea las estadísticas de la corrida. `actualizadas` cuenta
+    las que ya existían antes de la corrida; si se refrescaron o no lo decide
+    `materializar()` según `fecha_enriquecimiento`.
+    """
+    # Import local a propósito: materialization.py importa `generar_embedding`
+    # de este módulo, así que importarlo arriba sería un ciclo.
+    from catalogo.services.materialization import materializar
+
+    servicio = get_catalog_service()
+    # Una sola consulta para distinguir nuevas de existentes, en vez de una
+    # por ítem. Se va agregando lo creado para que una producción que aparece
+    # en dos fuentes cuente como nueva una sola vez.
+    existentes = set(ProduccionAudiovisual.objects.values_list("id_tmdb", "tipo"))
+    estadisticas = {"nuevas": 0, "actualizadas": 0, "omitidas": 0, "errores": 0}
+
+    for nombre, pedir, tipo_fijo in _FUENTES:
+        for item in pedir(servicio).get("results") or []:
+            id_tmdb = item.get("id")
+            tipo_tmdb = tipo_fijo or item.get("media_type")
+            try:
+                tipo = tmdb_a_dominio(tipo_tmdb)
+            except ValueError:
+                # `person` u otro tipo que no es una producción.
+                estadisticas["omitidas"] += 1
+                continue
+
+            try:
+                materializar(id_tmdb, tipo_tmdb)
+            except Exception:
+                # Amplio a propósito: es el límite con TMDB y con la base.
+                logger.exception(
+                    "sync_catalogo_diaria: falló (%s, %s) desde %s",
+                    id_tmdb,
+                    tipo_tmdb,
+                    nombre,
+                )
+                estadisticas["errores"] += 1
+                continue
+
+            if (id_tmdb, tipo) in existentes:
+                estadisticas["actualizadas"] += 1
+            else:
+                estadisticas["nuevas"] += 1
+                existentes.add((id_tmdb, tipo))
+
+    logger.info("sync_catalogo_diaria: %s", estadisticas)
+    return estadisticas
