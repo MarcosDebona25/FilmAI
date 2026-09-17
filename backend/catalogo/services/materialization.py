@@ -12,8 +12,10 @@ masivo de C-04b sí va a querer enterarse de los errores.
 """
 
 import logging
+from datetime import timedelta
 
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from catalogo.models import ProduccionAudiovisual, ProduccionEmbedding
 from catalogo.services.adapter import tmdb_a_dominio
@@ -27,8 +29,14 @@ logger = logging.getLogger(__name__)
 # real al embedding. El resto es ruido que además engordaría el texto canónico.
 _MAX_REPARTO = 10
 
+# Red de seguridad, NO el mecanismo principal de refresco: lo que cambió de
+# verdad lo dice la lista de cambios de TMDB (C-04b, fase 2). Esta ventana solo
+# garantiza que nada quede sin refrescar para siempre si esa lista se pierde.
+# Es una estimación de bajo riesgo: equivocarse cuesta unos refrescos de más.
+_DIAS_RED_DE_SEGURIDAD = 90
 
-def materializar(id_tmdb, tipo_tmdb):
+
+def materializar(id_tmdb, tipo_tmdb, forzar=False):
     """Garantiza que la producción exista en la base con su embedding encolado.
 
     Recibe el vocabulario de TMDB (`"movie"` / `"tv"`) porque es lo que traen
@@ -36,11 +44,16 @@ def materializar(id_tmdb, tipo_tmdb):
 
     Es idempotente: llamarla mil veces sobre la misma producción deja una sola
     fila, un solo embedding y una sola tarea encolada.
+
+    `forzar=True` vuelve a pedir el detalle a TMDB aunque la fila cuente como
+    completa. Es la puerta por la que la sync diaria (C-04b) refresca lo que
+    TMDB reporta como cambiado, sin abrir un segundo camino de escritura ni
+    tener que borrar `fecha_enriquecimiento` para provocar el refresco.
     """
     tipo = tmdb_a_dominio(tipo_tmdb)
     produccion = _obtener_o_crear(id_tmdb, tipo)
 
-    if _necesita_enriquecimiento(produccion):
+    if forzar or _necesita_enriquecimiento(produccion):
         _enriquecer(produccion, id_tmdb, tipo_tmdb)
 
     _encolar_embedding(produccion)
@@ -84,16 +97,25 @@ def _obtener_o_crear(id_tmdb, tipo):
 
 
 def _necesita_enriquecimiento(produccion):
-    """Decide si hay que traer datos de TMDB para esta fila.
+    """Decide si hay que traer el detalle de TMDB para esta fila.
 
-    LIMITACIÓN CONOCIDA: solo mira el título. Una fila con título pero sin
-    géneros ni sinopsis se considera completa y no se repara. Hoy eso no puede
-    pasar, porque `materializar()` es el único camino de escritura de la tabla
-    y completa todos los campos de una sola vez. Cuando C-04b agregue el sync
-    masivo —que crea filas a partir de listados, sin créditos ni keywords—
-    habrá que endurecer el criterio: esta función es el único lugar a tocar.
+    Reemplaza el criterio de C-04a (`not titulo`), que dejó de servir cuando
+    C-04b empezó a crear filas desde listados: un ítem de listado trae título
+    pero no géneros, reparto, créditos ni keywords, y con el criterio viejo
+    contaba como completo para siempre. Ahora el hecho se registra en vez de
+    deducirse: `fecha_enriquecimiento` dice cuándo se trajo el detalle.
+
+    Acá NO se decide si la fila quedó desactualizada. Eso lo responde TMDB por
+    su lista de cambios (`/movie/changes`, `/tv/changes`) y la sync lo fuerza
+    con `forzar=True`. La ventana de abajo es solo una red de seguridad por si
+    esa lista se pierde —la sync no corrió una noche, la API falló—, no el
+    mecanismo principal.
     """
-    return not produccion.titulo
+    if produccion.fecha_enriquecimiento is None:
+        return True
+    return timezone.now() - produccion.fecha_enriquecimiento > timedelta(
+        days=_DIAS_RED_DE_SEGURIDAD
+    )
 
 
 def _enriquecer(produccion, id_tmdb, tipo_tmdb):
@@ -114,6 +136,9 @@ def _enriquecer(produccion, id_tmdb, tipo_tmdb):
 
     for campo, valor in _mapear(detalle, credits, keywords, tipo_tmdb).items():
         setattr(produccion, campo, valor)
+    # En el mismo save() que los datos: si la escritura falla, tampoco queda
+    # anotado que se enriqueció.
+    produccion.fecha_enriquecimiento = timezone.now()
     produccion.save()
 
 
@@ -228,11 +253,15 @@ def _encolar_embedding(produccion):
     llenaría la cola de trabajo repetido; refrescar embeddings viejos o en
     `failed` es responsabilidad del backfill de C-04b.
 
-    Nota: el `.delay()` va directo porque el proyecto no usa `ATOMIC_REQUESTS`,
-    así que la fila ya está commiteada cuando el worker la busca. Si eso
-    cambiara, hay que envolverlo en `transaction.on_commit()` o el worker
-    podría consumir la tarea antes de que la fila sea visible.
+    El encolado va dentro de `transaction.on_commit()`: `generar_embedding`
+    corre en otro proceso, con otra conexión, y si el mensaje saliera antes del
+    COMMIT el worker buscaría una fila que todavía no es visible, no la
+    encontraría y se iría sin generar nada. Sin transacción abierta el callback
+    se ejecuta al instante, así que hoy el comportamiento es idéntico; protege
+    el día que algo envuelva la materialización en un `atomic()` —la sync por
+    lotes de C-04b es candidata—. Además, si esa transacción termina en
+    rollback, no se encola nada: la fila nunca existió.
     """
     _, creado = ProduccionEmbedding.objects.get_or_create(produccion=produccion)
     if creado:
-        generar_embedding.delay(produccion.id)
+        transaction.on_commit(lambda: generar_embedding.delay(produccion.id))
