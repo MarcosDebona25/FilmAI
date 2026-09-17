@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
+from celery.schedules import crontab
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
 
@@ -280,6 +281,20 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # Explícito porque el default cambia en Celery 6: si el worker arranca antes
 # que Redis, reintenta en vez de morir.
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# --- Celery Beat (tareas programadas, C-04b) ---
+# La zona horaria va explícita y atada a la de Django: sin esto, un
+# `crontab(hour=3)` significa 3 AM UTC —medianoche en Argentina— y el error
+# no se nota hasta meses después, cuando alguien mira a qué hora corrió.
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    # Sync del catálogo a las 3 AM: el momento de menos tráfico, y antes de que
+    # el primer usuario del día abra la app con datos de ayer.
+    "sync-catalogo-diaria": {
+        "task": "catalogo.sync_catalogo_diaria",
+        "schedule": crontab(hour=3, minute=0),
+    },
+}
 
 # --- django-allauth ---
 ACCOUNT_ADAPTER = "usuarios.adapter.UsuarioAccountAdapter"

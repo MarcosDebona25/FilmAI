@@ -50,8 +50,8 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 
 ## Phase 2: Scheduler and daily sync
 
-- [ ] 2.1 Add the `celery-beat` service to `docker-compose.yml` (`RUN_MIGRATIONS: "false"`, single replica); add `CELERY_BEAT_SCHEDULE` and an explicit `CELERY_TIMEZONE` to settings
-- [ ] 2.2 Verify the scheduler actually fires: temporarily shorten the interval, `docker compose logs -f celery-beat`, confirm the worker receives the task, then restore 03:00
+- [x] 2.1 Add the `celery-beat` service to `docker-compose.yml` (`RUN_MIGRATIONS: "false"`, single replica); add `CELERY_BEAT_SCHEDULE` and an explicit `CELERY_TIMEZONE` to settings
+- [x] 2.2 Verify the scheduler actually fires: temporarily shorten the interval, `docker compose logs -f celery-beat`, confirm the worker receives the task, then restore 03:00
 - [ ] 2.3 RED: add `SyncCatalogoTests` with listing fixtures for trending (mixed `movie`/`tv`/`person`), now_playing and discover → asserts `materializar` is called once per supported item
 - [ ] 2.4 RED: add a case asserting `person` entries (and any unsupported `media_type`) are skipped without raising
 - [ ] 2.5 RED: add a case asserting one failing item does not abort the run — the rest are still processed and the failure is counted
