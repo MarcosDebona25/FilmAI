@@ -39,10 +39,13 @@ from catalogo.exceptions import (
     TMDBTransportError,
     tmdb_exception_handler,
 )
+from catalogo.factories import CalificacionFactory, ResenaFactory
 from catalogo.models import (
+    Calificacion,
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
+    Resena,
     TipoProduccion,
 )
 from catalogo.services.adapter import dominio_a_tmdb, tmdb_a_dominio
@@ -1939,3 +1942,30 @@ class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
         self.assertGreater(cambiada.fecha_enriquecimiento, ayer)
         self.assertEqual(intacta.fecha_enriquecimiento, ayer)
         self.assertEqual(estadisticas["refrescadas"], 1)
+
+    def test_calificacion_y_resena_sobreviven_al_refresco(self):
+        # Criterio de aceptación de C-04b, probado directo. `Calificacion`
+        # cuelga de la producción con on_delete=CASCADE: si el refresco fuera
+        # "borrar e insertar" en vez de un UPDATE, se llevaría en silencio
+        # todo lo que el usuario escribió sobre ese título.
+        produccion = ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="viejo",
+            fecha_enriquecimiento=timezone.now() - timedelta(days=1),
+        )
+        calificacion = CalificacionFactory(produccion=produccion, valor=9)
+        resena = ResenaFactory(calificacion=calificacion, texto="La primera regla...")
+        self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            1, 1, [550] if tipo == "movie" else []
+        )
+
+        with self.captureOnCommitCallbacks(execute=True):
+            sync_catalogo_diaria()
+
+        produccion.refresh_from_db()
+        self.assertEqual(produccion.titulo, "Fight Club")  # sí se refrescó
+        calificacion_despues = Calificacion.objects.get(pk=calificacion.pk)
+        self.assertEqual(calificacion_despues.valor, 9)
+        self.assertEqual(calificacion_despues.produccion_id, produccion.pk)
+        self.assertEqual(Resena.objects.get(pk=resena.pk).texto, "La primera regla...")
