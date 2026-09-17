@@ -248,6 +248,48 @@ class TMDBCreditsTest(SimpleTestCase):
             client.get_credits(550, "movie")
 
 
+class TMDBChangesTest(SimpleTestCase):
+    """Lista de cambios (C-04b, fase 2).
+
+    `/{tipo}/changes` devuelve los IDs que TMDB modificó en las últimas 24 h,
+    paginados de a 100. Es lo que permite refrescar solo lo que cambió en vez
+    de barrer el catálogo por fecha. Forma verificada en vivo el 17/09/2026:
+    `{"page", "total_pages", "total_results", "results": [{"id", "adult",
+    "softcore"}]}`.
+    """
+
+    def _client(self, sink):
+        def handler(request):
+            sink.append(request)
+            return httpx.Response(
+                200, json={"page": 1, "total_pages": 1, "results": [{"id": 550}]}
+            )
+
+        return TMDBClient(api_key="test-key", transport=httpx.MockTransport(handler))
+
+    def test_pega_al_endpoint_de_changes_de_cada_tipo_con_su_pagina(self):
+        casos = (("movie", "/3/movie/changes"), ("tv", "/3/tv/changes"))
+        for tipo, path in casos:
+            with self.subTest(tipo=tipo):
+                requests = []
+                client = self._client(requests)
+
+                resultado = client.get_changes(tipo, page=2)
+
+                self.assertEqual(resultado["results"], [{"id": 550}])
+                self.assertEqual(str(requests[0].url.path), path)
+                self.assertEqual(requests[0].url.params["page"], "2")
+
+    def test_reutiliza_el_mapeo_de_errores_del_cliente(self):
+        client = TMDBClient(
+            api_key="test-key",
+            transport=httpx.MockTransport(lambda request: httpx.Response(404)),
+        )
+
+        with self.assertRaises(TMDBNotFound):
+            client.get_changes("movie")
+
+
 class TMDBExceptionHandlerTest(SimpleTestCase):
     def test_maps_tmdb_exceptions_to_http_statuses(self):
         cases = (
@@ -457,6 +499,31 @@ class TMDBClientCacheTest(SimpleTestCase):
         key = _build_key("credits", {"id_tmdb": 550, "tipo": "movie"})
 
         self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["credits"])
+
+    def test_changes_se_cachea_por_tipo_y_pagina(self):
+        cache, calls = self.make_cache(body={"page": 1, "results": [{"id": 550}]})
+
+        primera = cache.get_changes("movie", page=1)
+        segunda = cache.get_changes("movie", page=1)
+
+        self.assertEqual(primera, segunda)
+        self.assertEqual(len(calls), 1)
+
+        # Otra página u otro tipo son otra lista, no un cache hit.
+        cache.get_changes("movie", page=2)
+        cache.get_changes("tv", page=1)
+        self.assertEqual(len(calls), 3)
+
+    def test_changes_tiene_ttl_propio(self):
+        # Corto porque la lista rueda a diario; largo para que una tarea
+        # reintentada no vuelva a bajar ~100 páginas.
+        self.assertIn("changes", ENDPOINT_TTLS)
+
+        cache, _ = self.make_cache()
+        cache.get_changes("movie", page=1)
+        key = _build_key("changes", {"tipo": "movie", "page": 1})
+
+        self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["changes"])
 
     def test_get_redis_passes_bounded_timeouts(self):
         with patch("catalogo.cache.redis.Redis.from_url") as from_url:
