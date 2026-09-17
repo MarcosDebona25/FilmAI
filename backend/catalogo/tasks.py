@@ -113,6 +113,25 @@ _FUENTES = (
 )
 
 
+# Tope defensivo del paginador de `/changes`. La lista real anda entre 74 y
+# 98 páginas por tipo según el día (medido 15/09 y 17/09/2026), así que 200
+# deja margen sin permitir que un día raro convierta la sync en un rastreo sin
+# fin. Lo que quede afuera lo cubre la red de seguridad de 90 días.
+_MAX_PAGINAS_CAMBIOS = 200
+
+
+def _ids_cambiados(servicio, tipo_tmdb):
+    """IDs que TMDB reporta como modificados en las últimas 24 h."""
+    ids, pagina = set(), 1
+    while pagina <= _MAX_PAGINAS_CAMBIOS:
+        payload = servicio.get_changes(tipo_tmdb, pagina)
+        ids.update(item["id"] for item in payload.get("results") or [] if "id" in item)
+        if pagina >= payload.get("total_pages", 1):
+            break
+        pagina += 1
+    return ids
+
+
 @shared_task(name="catalogo.sync_catalogo_diaria")
 def sync_catalogo_diaria():
     """Pasada de descubrimiento de la sync nocturna (C-04b).
