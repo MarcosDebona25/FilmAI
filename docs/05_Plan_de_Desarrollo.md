@@ -154,7 +154,7 @@ sección es C-04a (más abajo).
 - **Encolado (15/09/2026):** solo cuando el `ProduccionEmbedding` se acaba de crear. Reencolar en cada visita llenaría la cola de trabajo repetido; refrescar los `failed` o desactualizados es del backfill de C-04b.
 - **Keywords (15/09/2026):** TMDB devuelve la misma lista bajo `keywords` en películas y `results` en series; lo normaliza `_extraer_keywords()`.
 - **Directores (15/09/2026):** una serie no tiene `job == "Director"` en su crew (en TV los directores son por episodio), así que `_directores()` toma `created_by` del detalle para series y el crew para películas. Verificado contra la API real. Sin esto, `Directors` quedaba vacío en el texto embebido de toda serie. La `duracion` de series sí queda en NULL cuando TMDB devuelve `episode_run_time` vacío: limitación aceptada, no entra al texto embebido.
-- **Limitación conocida (15/09/2026):** el criterio de "fila incompleta" (`_necesita_enriquecimiento()`) solo mira el título, así que una fila con título pero sin géneros no se repararía. Hoy no puede ocurrir; es el único lugar a endurecer cuando C-04b cree filas parciales desde listados.
+- ~~**Limitación conocida (15/09/2026):** el criterio de "fila incompleta" solo miraba el título.~~ **Resuelta el 16/09/2026 (C-04b, fase 1):** `_necesita_enriquecimiento()` ya no deduce nada del título; lee `fecha_enriquecimiento`, que registra cuándo se trajo el detalle (`NULL` = nunca). Una ventana de 90 días actúa solo como red de seguridad; el refresco real lo dispara la sync con `forzar=True` a partir de la lista de cambios de TMDB.
 - La materialización es global: toda producción servida por el catálogo o abierta en detalle se materializa para todos los usuarios.
 
 **Seed inicial (con C-04b o comando de management)**:

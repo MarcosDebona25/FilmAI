@@ -1,4 +1,5 @@
 import threading
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -14,6 +15,7 @@ from django.test import (
     TransactionTestCase,
     override_settings,
 )
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APIRequestFactory
@@ -50,7 +52,10 @@ from catalogo.services.embeddings import (
     construir_texto_canonico,
     generar_vector,
 )
-from catalogo.services.materialization import materializar
+from catalogo.services.materialization import (
+    _necesita_enriquecimiento,
+    materializar,
+)
 from catalogo.services.tmdb import get_catalog_service
 from catalogo.tasks import generar_embedding
 from catalogo.views import (
@@ -1165,12 +1170,32 @@ class MaterializacionPeliculaTests(MaterializacionBase):
         self.assertEqual(produccion.keywords, ["insomnia", "dual identity"])
 
     def test_crea_el_embedding_pendiente_y_lo_encola_una_sola_vez(self):
-        produccion = materializar(550, "movie")
+        # `captureOnCommitCallbacks(execute=True)` ejecuta los callbacks de
+        # `on_commit` al salir del bloque. Hace falta porque `TestCase` envuelve
+        # cada test en una transacción que revierte a propósito: sin COMMIT,
+        # Django nunca correría el callback y el encolado no ocurriría.
+        with self.captureOnCommitCallbacks(execute=True):
+            produccion = materializar(550, "movie")
 
         embedding = ProduccionEmbedding.objects.get(produccion=produccion)
         self.assertEqual(embedding.estado, EstadoEmbedding.PENDING)
         self.assertIsNone(embedding.vector)
         self.tarea.delay.assert_called_once_with(produccion.id)
+
+    def test_el_encolado_espera_a_que_la_transaccion_se_confirme(self):
+        """El worker nunca debe recibir el id de una fila que aún no existe.
+
+        `generar_embedding` corre en otro proceso, con otra conexión: si el
+        mensaje sale antes del COMMIT, el worker busca la fila, no la encuentra
+        y se va sin generar nada. Encolar en `on_commit` lo vuelve imposible.
+        """
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            materializar(550, "movie")
+            # Todavía dentro de la transacción: no puede haberse encolado nada.
+            self.tarea.delay.assert_not_called()
+
+        # Y el encolado quedó registrado para ejecutarse al confirmar.
+        self.assertEqual(len(callbacks), 1)
 
     def test_fecha_de_lanzamiento_vacia_queda_en_null(self):
         # TMDB devuelve "" (no null) para estrenos sin fecha confirmada.
@@ -1266,8 +1291,13 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
     """Abrir dos veces el mismo detalle no duplica ni reencola nada (C-04a)."""
 
     def test_fila_existente_y_completa_no_vuelve_a_consultar_tmdb(self):
+        # "Completa" es un hecho registrado, no una deducción a partir del
+        # título: lo declara `fecha_enriquecimiento` (C-04b, fase 1).
         ProduccionAudiovisual.objects.create(
-            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Fight Club",
+            fecha_enriquecimiento=timezone.now(),
         )
 
         materializar(550, "movie")
@@ -1275,6 +1305,25 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
         self.servicio.get_movie_detail.assert_not_called()
         self.servicio.get_credits.assert_not_called()
         self.servicio.get_keywords.assert_not_called()
+
+    def test_forzar_reenriquece_una_fila_que_el_criterio_saltearia(self):
+        # La puerta por la que la sync refresca lo que TMDB reporta como
+        # cambiado, aunque `fecha_enriquecimiento` sea reciente. Sin esto, la
+        # sync tendría que borrar la fecha (acción a distancia) o escribir por
+        # su cuenta (el segundo camino de escritura que el spec prohíbe).
+        hace_una_hora = timezone.now() - timedelta(hours=1)
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Fight Club",
+            fecha_enriquecimiento=hace_una_hora,
+        )
+
+        produccion = materializar(550, "movie", forzar=True)
+
+        self.servicio.get_movie_detail.assert_called_once_with(550)
+        self.assertEqual(produccion.directores, ["David Fincher"])
+        self.assertGreater(produccion.fecha_enriquecimiento, hace_una_hora)
 
     def test_materializar_dos_veces_deja_una_fila_y_un_embedding(self):
         primera = materializar(550, "movie")
@@ -1285,22 +1334,31 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
 
     def test_no_reencola_si_el_embedding_ya_existia(self):
-        materializar(550, "movie")
+        with self.captureOnCommitCallbacks(execute=True):
+            materializar(550, "movie")
         self.tarea.delay.reset_mock()
 
-        materializar(550, "movie")
+        with self.captureOnCommitCallbacks(execute=True):
+            materializar(550, "movie")
 
         self.tarea.delay.assert_not_called()
 
     def test_fila_incompleta_se_repara_con_datos_de_tmdb(self):
-        # Sin título: la dejó a medias otro proceso (p. ej. el backfill C-04b).
+        # Con título pero sin `fecha_enriquecimiento`: la forma exacta de una
+        # fila nacida de un listado de TMDB, que trae título pero no géneros,
+        # reparto ni keywords. Con el criterio viejo (`not titulo`) esta fila
+        # habría contado como completa para siempre.
         ProduccionAudiovisual.objects.create(
-            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo=""
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
         )
 
         produccion = materializar(550, "movie")
 
-        self.assertEqual(produccion.titulo, "Fight Club")
+        # Se verifica sobre lo que un listado NO puede traer: si el reparto y
+        # los directores aparecen, el detalle se pidió de verdad.
+        self.assertEqual(produccion.directores, ["David Fincher"])
+        self.assertEqual(len(produccion.reparto), 10)
+        self.assertIsNotNone(produccion.fecha_enriquecimiento)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
 
     def test_tipo_no_soportado_no_materializa_nada(self):
@@ -1358,6 +1416,47 @@ class MaterializacionCarreraTests(MaterializacionBase):
             materializar(550, "movie")
 
 
+class MaterializacionFrescuraTests(SimpleTestCase):
+    """Cuándo una fila necesita (re)traer el detalle de TMDB (C-04b, fase 1).
+
+    `_necesita_enriquecimiento()` es una decisión pura sobre un atributo, así
+    que se prueba sin base de datos, con un objeto que finge ser la producción.
+
+    Reemplaza el criterio de C-04a (`not titulo`), que dejaba de servir en
+    cuanto la sync creara filas desde listados: esas traen título pero no
+    géneros, reparto ni keywords, y con el criterio viejo contaban como
+    completas para siempre.
+    """
+
+    def _produccion(self, fecha_enriquecimiento):
+        # Con título a propósito: así el criterio viejo (`not titulo`) dice
+        # "completa" y el RED falla por aserción, no por un AttributeError.
+        return SimpleNamespace(
+            titulo="Fight Club", fecha_enriquecimiento=fecha_enriquecimiento
+        )
+
+    def test_una_fila_que_nunca_se_enriquecio_lo_necesita(self):
+        self.assertTrue(_necesita_enriquecimiento(self._produccion(None)))
+
+    def test_una_fila_recien_enriquecida_no_lo_necesita(self):
+        self.assertFalse(_necesita_enriquecimiento(self._produccion(timezone.now())))
+
+    def test_una_fila_mas_vieja_que_la_red_de_seguridad_lo_necesita(self):
+        # La ventana es solo una red de seguridad: lo que cambió de verdad lo
+        # dice la lista de cambios de TMDB (fase 2). Pero si esa lista se
+        # perdiera, nada debería quedar sin refrescar para siempre.
+        hace_91_dias = timezone.now() - timedelta(days=91)
+
+        self.assertTrue(_necesita_enriquecimiento(self._produccion(hace_91_dias)))
+
+    def test_una_fila_dentro_de_la_ventana_no_lo_necesita(self):
+        # Fija el borde: 89 días adentro, 91 afuera. Si alguien mueve la
+        # constante sin querer, uno de los dos tests lo delata.
+        hace_89_dias = timezone.now() - timedelta(days=89)
+
+        self.assertFalse(_necesita_enriquecimiento(self._produccion(hace_89_dias)))
+
+
 class VistasDeDetalleMaterializanTests(TestCase):
     """El detalle sigue siendo passthrough de TMDB y además materializa (C-04a).
 
@@ -1382,7 +1481,8 @@ class VistasDeDetalleMaterializanTests(TestCase):
         self.api = APIClient()
 
     def test_detalle_de_pelicula_materializa_sin_tocar_la_respuesta(self):
-        response = self.api.get("/api/catalogo/movie/550/")
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.api.get("/api/catalogo/movie/550/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, _DETALLE_MOVIE)
@@ -1407,8 +1507,9 @@ class VistasDeDetalleMaterializanTests(TestCase):
         self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
 
     def test_abrir_el_detalle_dos_veces_no_duplica_nada(self):
-        self.api.get("/api/catalogo/movie/550/")
-        self.api.get("/api/catalogo/movie/550/")
+        with self.captureOnCommitCallbacks(execute=True):
+            self.api.get("/api/catalogo/movie/550/")
+            self.api.get("/api/catalogo/movie/550/")
 
         self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
