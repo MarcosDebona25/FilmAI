@@ -1192,6 +1192,15 @@ _LISTADO_DISCOVER_TV = {
 }
 
 
+def _pagina_de_cambios(pagina, total_pages, ids):
+    """Una página de `/{tipo}/changes` con la forma real (17/09/2026)."""
+    return {
+        "page": pagina,
+        "total_pages": total_pages,
+        "results": [{"id": id_tmdb, "adult": False} for id_tmdb in ids],
+    }
+
+
 def _servicio_tmdb_falso():
     """Doble del `TMDBClientCache`: enriquecimiento (C-04a) y listados (C-04b)."""
     return Mock(
@@ -1214,6 +1223,9 @@ def _servicio_tmdb_falso():
                 _LISTADO_DISCOVER_MOVIE if tipo == "movie" else _LISTADO_DISCOVER_TV
             )
         ),
+        # Sin cambios por defecto: la pasada de refresco no toca nada salvo
+        # que un test diga lo contrario.
+        get_changes=Mock(side_effect=lambda tipo, page: _pagina_de_cambios(1, 1, [])),
     )
 
 
@@ -1694,15 +1706,6 @@ class MaterializacionConcurrenciaTests(_ParchesDeMaterializacion, TransactionTes
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
 
 
-def _pagina_de_cambios(pagina, total_pages, ids):
-    """Una página de `/{tipo}/changes` con la forma real (17/09/2026)."""
-    return {
-        "page": pagina,
-        "total_pages": total_pages,
-        "results": [{"id": id_tmdb, "adult": False} for id_tmdb in ids],
-    }
-
-
 class IdsCambiadosTests(SimpleTestCase):
     """El paginador de la lista de cambios de TMDB (C-04b, fase 2).
 
@@ -1828,8 +1831,51 @@ class SyncCatalogoTests(TestCase):
 
         self.assertEqual(
             estadisticas,
-            {"nuevas": 4, "actualizadas": 1, "omitidas": 1, "errores": 0},
+            {
+                "nuevas": 4,
+                "actualizadas": 1,
+                "refrescadas": 0,
+                "omitidas": 1,
+                "errores": 0,
+            },
         )
+
+    def _cambios(self, movie=(), tv=()):
+        """Hace que TMDB reporte estos IDs como modificados hoy."""
+        self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            1, 1, movie if tipo == "movie" else tv
+        )
+
+    def test_refresca_con_forzar_solo_lo_que_tenemos_y_tmdb_dice_que_cambio(self):
+        for id_tmdb, tipo in (
+            (550, TipoProduccion.PELICULA),
+            (27205, TipoProduccion.PELICULA),
+            (1396, TipoProduccion.SERIE),
+        ):
+            ProduccionAudiovisual.objects.create(id_tmdb=id_tmdb, tipo=tipo, titulo="x")
+        # 550 lo tenemos y cambió → se refresca. 27205 lo tenemos pero no
+        # cambió → no. 999999 cambió pero no lo tenemos → ni se mira: si no,
+        # la sync estaría rastreando los ~10.000 cambios diarios de TMDB.
+        self._cambios(movie=[550, 999999])
+
+        estadisticas = sync_catalogo_diaria()
+
+        llamadas = self.materializar.call_args_list
+        self.assertIn(call(550, "movie", forzar=True), llamadas)
+        self.assertNotIn(call(27205, "movie", forzar=True), llamadas)
+        self.assertNotIn(999999, [c.args[0] for c in llamadas])
+        self.assertEqual(estadisticas["refrescadas"], 1)
+
+    def test_si_la_lista_de_cambios_falla_el_descubrimiento_sigue(self):
+        self.servicio.get_changes.side_effect = RuntimeError("TMDB returned HTTP 500")
+
+        estadisticas = sync_catalogo_diaria()
+
+        # Las cuatro fuentes se recorrieron igual; el fallo quedó contado una
+        # vez por tipo (movie y tv se piden por separado).
+        self.assertEqual(self.materializar.call_count, 5)
+        self.assertEqual(estadisticas["errores"], 2)
+        self.assertEqual(estadisticas["refrescadas"], 0)
 
 
 class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
@@ -1861,3 +1907,35 @@ class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
         self.assertFalse(
             ProduccionAudiovisual.objects.filter(fecha_enriquecimiento=None).exists()
         )
+
+    def test_el_refresco_reenriquece_solo_lo_que_tmdb_dice_que_cambio(self):
+        # Dos películas completas y frescas: el criterio de fecha las saltearía.
+        ayer = timezone.now() - timedelta(days=1)
+        cambiada = ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="viejo",
+            fecha_enriquecimiento=ayer,
+        )
+        intacta = ProduccionAudiovisual.objects.create(
+            id_tmdb=27205,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Inception",
+            fecha_enriquecimiento=ayer,
+        )
+        self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            1, 1, [550] if tipo == "movie" else []
+        )
+
+        with self.captureOnCommitCallbacks(execute=True):
+            estadisticas = sync_catalogo_diaria()
+
+        ids_pedidos = [c.args[0] for c in self.servicio.get_movie_detail.call_args_list]
+        self.assertIn(550, ids_pedidos)
+        self.assertNotIn(27205, ids_pedidos)
+        cambiada.refresh_from_db()
+        intacta.refresh_from_db()
+        self.assertEqual(cambiada.titulo, "Fight Club")  # vino del detalle
+        self.assertGreater(cambiada.fecha_enriquecimiento, ayer)
+        self.assertEqual(intacta.fecha_enriquecimiento, ayer)
+        self.assertEqual(estadisticas["refrescadas"], 1)

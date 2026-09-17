@@ -134,20 +134,34 @@ def _ids_cambiados(servicio, tipo_tmdb):
 
 @shared_task(name="catalogo.sync_catalogo_diaria")
 def sync_catalogo_diaria():
-    """Pasada de descubrimiento de la sync nocturna (C-04b).
+    """Sync nocturna del catálogo (C-04b): refresco + descubrimiento.
 
-    Recorre los listados de TMDB y materializa cada ítem SIN que ningún usuario
-    lo haya abierto. Es lo que rompe el arranque en frío: la búsqueda semántica
-    busca entre las filas de nuestra base, y sin esto la base solo tendría lo
-    que alguien ya miró.
+    Dos pasadas con trabajos distintos:
 
-    No escribe nada por su cuenta: cada ítem pasa por `materializar()`, el
+    1. Refresco: cruza los IDs que ya tenemos con los que TMDB reporta como
+       modificados en las últimas 24 h y re-enriquece esa intersección con
+       `forzar=True`. Es lo que mantiene la copia honesta cuando se estrena un
+       título, se agrega una temporada o cambia una calificación.
+    2. Descubrimiento: recorre los listados y materializa cada ítem SIN que
+       ningún usuario lo haya abierto. Es lo que rompe el arranque en frío: la
+       búsqueda semántica busca entre las filas de nuestra base, y sin esto la
+       base solo tendría lo que alguien ya miró.
+
+    El refresco va primero a propósito: una película en cartelera se edita
+    activamente en TMDB, así que suele estar en la lista de cambios. Si el
+    descubrimiento la enriqueciera primero, el refresco la volvería a
+    enriquecer segundos después. Al revés, el refresco solo toca filas que
+    existían antes de esta noche y el descubrimiento saltea las frescas.
+
+    Ninguna pasada escribe por su cuenta: todo pasa por `materializar()`, el
     único camino de escritura del catálogo. Un ítem de listado no alcanza para
     llenar una fila (no trae géneros con nombre, créditos ni keywords), y así
     tampoco hay que duplicar el mapeo ni traducir `genre_ids`.
 
     Los fallos son por ítem: un título que TMDB no devuelve no puede abortar
-    la noche entera. Misma política que las vistas de detalle.
+    la noche entera. Misma política que las vistas de detalle. Si la lista de
+    cambios entera falla, se saltea el refresco de ese tipo y sigue el resto;
+    la red de seguridad de 90 días cubre lo que quede sin refrescar.
 
     Devuelve y loguea las estadísticas de la corrida. `actualizadas` cuenta
     las que ya existían antes de la corrida; si se refrescaron o no lo decide
@@ -158,12 +172,46 @@ def sync_catalogo_diaria():
     from catalogo.services.materialization import materializar
 
     servicio = get_catalog_service()
-    # Una sola consulta para distinguir nuevas de existentes, en vez de una
-    # por ítem. Se va agregando lo creado para que una producción que aparece
-    # en dos fuentes cuente como nueva una sola vez.
+    # Una sola consulta para saber qué tenemos, en vez de una por ítem. Sirve a
+    # las dos pasadas: el refresco cruza contra este conjunto, y el
+    # descubrimiento lo usa para distinguir nuevas de existentes (agregando lo
+    # creado, así una producción que aparece en dos fuentes cuenta una vez).
     existentes = set(ProduccionAudiovisual.objects.values_list("id_tmdb", "tipo"))
-    estadisticas = {"nuevas": 0, "actualizadas": 0, "omitidas": 0, "errores": 0}
+    estadisticas = {
+        "nuevas": 0,
+        "actualizadas": 0,
+        "refrescadas": 0,
+        "omitidas": 0,
+        "errores": 0,
+    }
 
+    # --- Pasada 1: refresco ---------------------------------------------
+    for tipo_tmdb in ("movie", "tv"):
+        tipo = tmdb_a_dominio(tipo_tmdb)
+        try:
+            cambiados = _ids_cambiados(servicio, tipo_tmdb)
+        except Exception:
+            logger.exception("sync_catalogo_diaria: falló /%s/changes", tipo_tmdb)
+            estadisticas["errores"] += 1
+            continue
+        # La intersección se hace en Python, no en SQL: meter ~10.000 IDs en
+        # un `id_tmdb__in` armaría una consulta enorme sin ganar nada, y dos
+        # sets de ese tamaño se cruzan al instante.
+        nuestros = {id_tmdb for id_tmdb, t in existentes if t == tipo}
+        for id_tmdb in sorted(nuestros & cambiados):
+            try:
+                materializar(id_tmdb, tipo_tmdb, forzar=True)
+            except Exception:
+                logger.exception(
+                    "sync_catalogo_diaria: falló el refresco de (%s, %s)",
+                    id_tmdb,
+                    tipo_tmdb,
+                )
+                estadisticas["errores"] += 1
+                continue
+            estadisticas["refrescadas"] += 1
+
+    # --- Pasada 2: descubrimiento ----------------------------------------
     for nombre, pedir, tipo_fijo in _FUENTES:
         for item in pedir(servicio).get("results") or []:
             id_tmdb = item.get("id")
