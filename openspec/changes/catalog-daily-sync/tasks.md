@@ -57,13 +57,13 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 - [x] 2.5 RED: add a case asserting one failing item does not abort the run — the rest are still processed and the failure is counted
 - [x] 2.6 RED: add a case asserting the returned statistics (`nuevas`, `actualizadas`, `omitidas`, `errores`) reflect what happened
 - [x] 2.7 GREEN: implement the discovery pass of `sync_catalogo_diaria()` in `backend/catalogo/tasks.py`
-- [ ] 2.8 RED: add `TMDBChangesTest` (`httpx.MockTransport`) — `get_changes(tipo, page)` hits `/{tipo}/changes` and reuses the existing retry/error-mapping path; add the cache-layer case for the new `"changes"` TTL
-- [ ] 2.9 GREEN: add `get_changes` to `backend/catalogo/client.py` and `backend/catalogo/cache.py`
-- [ ] 2.10 RED: add `IdsCambiadosTests` — paginates until `total_pages`, stops at `_MAX_PAGINAS_CAMBIOS`, tolerates entries without `id`
-- [ ] 2.11 RED: add the refresh-pass case — a complete row whose id TMDB reports as changed is re-enriched; a complete row it does not report is left untouched
-- [ ] 2.12 GREEN: implement `_ids_cambiados()` and the refresh pass, intersecting in Python (not via a huge `id_tmdb__in`)
-- [ ] 2.13 RED: **acceptance criterion, tested directly** — rate and review a production, run the sync, assert the rating and review survive untouched
-- [ ] 2.14 `docker compose exec -T backend python manage.py test catalogo` — all green; `ruff format . && ruff check .`
+- [x] 2.8 RED: add `TMDBChangesTest` (`httpx.MockTransport`) — `get_changes(tipo, page)` hits `/{tipo}/changes` and reuses the existing retry/error-mapping path; add the cache-layer case for the new `"changes"` TTL
+- [x] 2.9 GREEN: add `get_changes` to `backend/catalogo/client.py` and `backend/catalogo/cache.py`
+- [x] 2.10 RED: add `IdsCambiadosTests` — paginates until `total_pages`, stops at `_MAX_PAGINAS_CAMBIOS`, tolerates entries without `id`. *Adjusted at apply time:* the cap is **200**, not 100 — `/movie/changes` had 98 pages on 17/09/2026 (74 on 15/09), so 100 was one busy day away from truncating
+- [x] 2.11 RED: add the refresh-pass case — a complete row whose id TMDB reports as changed is re-enriched; a complete row it does not report is left untouched. Also: a changed id we do **not** hold is never materialized (otherwise the sync would crawl the ~10k daily changes), and a failing `/changes` skips that type's refresh while discovery still runs
+- [x] 2.12 GREEN: implement `_ids_cambiados()` and the refresh pass, intersecting in Python (not via a huge `id_tmdb__in`). *Adjusted at apply time:* refresh runs **before** discovery (see design.md → Sync Task) and the statistics gain `refrescadas`
+- [x] 2.13 RED: **acceptance criterion, tested directly** — rate and review a production, run the sync, assert the rating and review survive untouched. Passes on first run by design (phase 1 already `save()`s the same instance); verified it fails under a delete-and-reinsert mutation before keeping it
+- [x] 2.14 `docker compose exec -T backend python manage.py test catalogo` — all green (197); `ruff format . && ruff check .`. Live: 60 rows → `refrescadas: 39` in 26 s; second run 0.47 s from cache, same 60 rows
 
 ## Phase 3: Backfill, documentation and verification
 
