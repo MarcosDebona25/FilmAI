@@ -95,3 +95,10 @@ def generar_embedding(produccion_id):
         source_hash=source_hash,
         model_version=MODEL_VERSION,
     )
+
+
+@shared_task(name="catalogo.sync_catalogo_diaria")
+def sync_catalogo_diaria():
+    """Sincronización nocturna del catálogo (C-04b). Ver CELERY_BEAT_SCHEDULE."""
+    # Cuerpo mínimo para verificar que beat dispara: la lógica llega en 2.7.
+    logger.info("sync_catalogo_diaria: corrida iniciada")
