@@ -57,7 +57,12 @@ from catalogo.services.materialization import (
     materializar,
 )
 from catalogo.services.tmdb import get_catalog_service
-from catalogo.tasks import generar_embedding, sync_catalogo_diaria
+from catalogo.tasks import (
+    _MAX_PAGINAS_CAMBIOS,
+    _ids_cambiados,
+    generar_embedding,
+    sync_catalogo_diaria,
+)
 from catalogo.views import (
     DiscoverView,
     MovieDetailView,
@@ -1687,6 +1692,67 @@ class MaterializacionConcurrenciaTests(_ParchesDeMaterializacion, TransactionTes
         self.assertEqual(len(set(ids_devueltos)), 1)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
+
+
+def _pagina_de_cambios(pagina, total_pages, ids):
+    """Una página de `/{tipo}/changes` con la forma real (17/09/2026)."""
+    return {
+        "page": pagina,
+        "total_pages": total_pages,
+        "results": [{"id": id_tmdb, "adult": False} for id_tmdb in ids],
+    }
+
+
+class IdsCambiadosTests(SimpleTestCase):
+    """El paginador de la lista de cambios de TMDB (C-04b, fase 2).
+
+    `_ids_cambiados` junta en un set los IDs de todas las páginas. Se prueba
+    con un servicio falso cuyo `get_changes` fabrica la página pedida, así el
+    test decide cuántas páginas "hay".
+    """
+
+    def _servicio(self, total_pages, ids_de):
+        servicio = Mock()
+        servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            page, total_pages, ids_de(page)
+        )
+        return servicio
+
+    def test_recorre_todas_las_paginas_y_junta_los_ids(self):
+        # Tres páginas: {1, 2}, {3, 4}, {5}.
+        servicio = self._servicio(
+            3, lambda p: range(2 * p - 1, 2 * p + 1) if p < 3 else [5]
+        )
+
+        ids = _ids_cambiados(servicio, "movie")
+
+        self.assertEqual(ids, {1, 2, 3, 4, 5})
+        servicio.get_changes.assert_has_calls(
+            [call("movie", 1), call("movie", 2), call("movie", 3)]
+        )
+        self.assertEqual(servicio.get_changes.call_count, 3)
+
+    def test_se_detiene_en_el_tope_de_paginas(self):
+        # TMDB dice que hay muchas más páginas que el tope: se piden solo las
+        # del tope. Lo que quede afuera lo cubre la red de seguridad de 90 días.
+        servicio = self._servicio(_MAX_PAGINAS_CAMBIOS + 50, lambda p: [p])
+
+        ids = _ids_cambiados(servicio, "tv")
+
+        self.assertEqual(servicio.get_changes.call_count, _MAX_PAGINAS_CAMBIOS)
+        self.assertEqual(len(ids), _MAX_PAGINAS_CAMBIOS)
+
+    def test_tolera_items_sin_id_y_respuestas_sin_results(self):
+        servicio = Mock()
+        servicio.get_changes.return_value = {
+            "page": 1,
+            "total_pages": 1,
+            "results": [{"id": 550, "adult": False}, {"adult": False}, {}],
+        }
+        self.assertEqual(_ids_cambiados(servicio, "movie"), {550})
+
+        servicio.get_changes.return_value = {"page": 1, "total_pages": 1}
+        self.assertEqual(_ids_cambiados(servicio, "movie"), set())
 
 
 class SyncCatalogoTests(TestCase):
