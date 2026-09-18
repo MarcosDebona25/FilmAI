@@ -63,6 +63,7 @@ from catalogo.services.tmdb import get_catalog_service
 from catalogo.tasks import (
     _MAX_PAGINAS_CAMBIOS,
     _ids_cambiados,
+    backfill_embeddings,
     generar_embedding,
     sync_catalogo_diaria,
 )
@@ -1030,6 +1031,197 @@ class GenerarEmbeddingTaskTests(TestCase):
 
         self.assertEqual(generar.call_count, 1)
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
+
+
+class BackfillEmbeddingsTests(TestCase):
+    """Recuperación del trabajo de embeddings que quedó sin completar (C-04b, fase 3).
+
+    `materializar()` encola el embedding UNA sola vez, cuando crea la fila. Si
+    en ese momento el broker estaba caído o el proveedor falló, esa fila no la
+    reintenta nadie: `get_or_create` devuelve `creado=False` para siempre. El
+    backfill es lo que la rescata.
+
+    `generar_embedding` va parcheada: acá se prueba a quién se reencola, no qué
+    hace el worker después (eso tiene su propia suite).
+    """
+
+    def setUp(self):
+        parche = patch("catalogo.tasks.generar_embedding")
+        self.tarea = parche.start()
+        self.addCleanup(parche.stop)
+
+    def _embedding(self, id_tmdb, estado=EstadoEmbedding.PENDING, **extra):
+        produccion = ProduccionAudiovisual.objects.create(
+            id_tmdb=id_tmdb,
+            tipo=TipoProduccion.PELICULA,
+            titulo=f"Peli {id_tmdb}",
+            generos=["Drama"],
+            sinopsis="Una sinopsis.",
+        )
+        if estado == EstadoEmbedding.READY:
+            extra.setdefault("vector", [0.5] * 1024)
+            extra.setdefault("model_version", MODEL_VERSION)
+            extra.setdefault(
+                "source_hash",
+                calcular_source_hash(construir_texto_canonico(produccion)),
+            )
+        return ProduccionEmbedding.objects.create(
+            produccion=produccion, estado=estado, **extra
+        )
+
+    def _ids_encolados(self):
+        return {c.args[0] for c in self.tarea.delay.call_args_list}
+
+    def test_reencola_los_pendientes_y_los_fallidos(self):
+        pendiente = self._embedding(1, EstadoEmbedding.PENDING)
+        fallido = self._embedding(2, EstadoEmbedding.FAILED)
+
+        estadisticas = backfill_embeddings()
+
+        self.assertEqual(
+            self._ids_encolados(),
+            {pendiente.produccion_id, fallido.produccion_id},
+        )
+        self.assertEqual(estadisticas["reencolados"], 2)
+
+    def test_no_toca_los_que_ya_estan_en_proceso(self):
+        # `processing` significa que otro worker la agarró hace un momento.
+        # Reencolarla no la duplicaría (el claim atómico lo impide), pero
+        # llenaría la cola de trabajo que alguien ya está haciendo.
+        self._embedding(1, EstadoEmbedding.PROCESSING)
+
+        backfill_embeddings()
+
+        self.tarea.delay.assert_not_called()
+
+    def test_un_ready_al_dia_no_se_toca(self):
+        # Mismo texto y mismo modelo: el vector guardado sigue siendo válido.
+        self._embedding(1, EstadoEmbedding.READY)
+
+        estadisticas = backfill_embeddings()
+
+        self.tarea.delay.assert_not_called()
+        self.assertEqual(estadisticas["reencolados"], 0)
+
+    def test_un_ready_cuyo_texto_cambio_se_reencola(self):
+        # El caso real: la sync refrescó la producción desde TMDB y ahora tiene
+        # otra sinopsis o más reparto. El vector quedó describiendo un texto
+        # que ya no existe.
+        embedding = self._embedding(1, EstadoEmbedding.READY)
+        ProduccionAudiovisual.objects.filter(pk=embedding.produccion_id).update(
+            sinopsis="Otra sinopsis completamente distinta."
+        )
+
+        estadisticas = backfill_embeddings()
+
+        self.assertEqual(self._ids_encolados(), {embedding.produccion_id})
+        self.assertEqual(estadisticas["desactualizados"], 1)
+
+    def test_un_ready_de_otra_version_de_modelo_se_reencola(self):
+        # El día que B-06 cambie MODEL_VERSION: los vectores viejos no son
+        # comparables con los nuevos, así que hay que regenerarlos todos.
+        embedding = self._embedding(
+            1, EstadoEmbedding.READY, model_version="modelo-viejo-v0"
+        )
+
+        backfill_embeddings()
+
+        self.assertEqual(self._ids_encolados(), {embedding.produccion_id})
+
+    def test_el_limite_topea_cuantas_se_procesan_por_corrida(self):
+        # Con 10.000 filas, una corrida sin tope encolaría 10.000 tareas de
+        # golpe y dejaría al worker sin hacer otra cosa por horas.
+        for id_tmdb in range(1, 6):
+            self._embedding(id_tmdb, EstadoEmbedding.FAILED)
+
+        estadisticas = backfill_embeddings(limite=2)
+
+        self.assertEqual(self.tarea.delay.call_count, 2)
+        self.assertEqual(estadisticas["reencolados"], 2)
+
+    def test_el_limite_cuenta_las_dos_poblaciones_juntas(self):
+        # El tope es del trabajo total de la corrida, no de cada grupo: si los
+        # pendientes ya lo llenaron, los `ready` desactualizados esperan a la
+        # próxima noche.
+        self._embedding(1, EstadoEmbedding.PENDING)
+        desactualizado = self._embedding(2, EstadoEmbedding.READY)
+        ProduccionAudiovisual.objects.filter(pk=desactualizado.produccion_id).update(
+            sinopsis="Otra sinopsis."
+        )
+
+        estadisticas = backfill_embeddings(limite=1)
+
+        self.assertEqual(self.tarea.delay.call_count, 1)
+        self.assertEqual(estadisticas["desactualizados"], 0)
+
+
+class BackfillIntegracionTests(TestCase):
+    """El backfill con `generar_embedding` REAL: que el reencolado sirva.
+
+    Los tests de arriba parchean la tarea y prueban A QUIÉN se reencola. Este
+    prueba que reencolarlo alcance: `generar_embedding` solo reclama filas en
+    `pending`/`failed`, así que un `ready` desactualizado que llegue al worker
+    tal cual sale sin hacer nada y el vector viejo se queda para siempre.
+    """
+
+    def _delay_ejecuta_de_verdad(self):
+        # `.delay()` normalmente escribe en el broker; acá ejecuta el cuerpo de
+        # la tarea en el acto, que es lo que haría el worker al levantarla.
+        return patch(
+            "catalogo.tasks.generar_embedding.delay", side_effect=generar_embedding
+        )
+
+    @patch("catalogo.tasks.generar_vector", return_value=[0.25] * 1024)
+    def test_un_ready_desactualizado_termina_con_el_vector_nuevo(self, _):
+        produccion = ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Fight Club",
+            generos=["Drama"],
+            sinopsis="Sinopsis vieja.",
+        )
+        ProduccionEmbedding.objects.create(
+            produccion=produccion,
+            estado=EstadoEmbedding.READY,
+            vector=[0.5] * 1024,
+            model_version=MODEL_VERSION,
+            source_hash=calcular_source_hash(construir_texto_canonico(produccion)),
+        )
+        # La sync refrescó la producción: el texto canónico ya es otro.
+        ProduccionAudiovisual.objects.filter(pk=produccion.pk).update(
+            sinopsis="Sinopsis nueva, traída de TMDB."
+        )
+        produccion.refresh_from_db()
+
+        with self._delay_ejecuta_de_verdad():
+            backfill_embeddings()
+
+        embedding = ProduccionEmbedding.objects.get(produccion=produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.READY)
+        self.assertEqual(
+            embedding.source_hash,
+            calcular_source_hash(construir_texto_canonico(produccion)),
+        )
+        self.assertEqual(embedding.vector[0], 0.25)
+
+    @patch("catalogo.tasks.generar_vector", return_value=[0.25] * 1024)
+    def test_un_fallido_termina_ready(self, _):
+        produccion = ProduccionAudiovisual.objects.create(
+            id_tmdb=551,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Se7en",
+            generos=["Thriller"],
+            sinopsis="Una sinopsis.",
+        )
+        ProduccionEmbedding.objects.create(
+            produccion=produccion, estado=EstadoEmbedding.FAILED
+        )
+
+        with self._delay_ejecuta_de_verdad():
+            backfill_embeddings()
+
+        embedding = ProduccionEmbedding.objects.get(produccion=produccion)
+        self.assertEqual(embedding.estado, EstadoEmbedding.READY)
 
 
 class ProduccionEmbeddingModelTests(TestCase):
