@@ -1984,7 +1984,8 @@ class SyncCatalogoTests(TestCase):
         self.assertEqual(estadisticas["refrescadas"], 0)
         # materializar NO se llamó con forzar=True (no hay nada que refrescar)
         llamadas_con_forzar = [
-            c for c in self.materializar.call_args_list
+            c
+            for c in self.materializar.call_args_list
             if c.kwargs.get("forzar") or (len(c.args) > 2 and c.args[2])
         ]
         self.assertEqual(len(llamadas_con_forzar), 0)

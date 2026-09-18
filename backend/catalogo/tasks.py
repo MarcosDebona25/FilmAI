@@ -181,9 +181,9 @@ def sync_catalogo_diaria():
     # creado, así una producción que aparece en dos fuentes cuenta una vez).
     existentes = set(ProduccionAudiovisual.objects.values_list("id_tmdb", "tipo"))
     estadisticas = {
-        "nuevas": 0,           # descubrimiento: ítems nuevos materializados
-        "actualizadas": 0,     # descubrimiento: ítems existentes re-materializados
-        "refrescadas": 0,      # refresco: ítems re-enriquecidos con forzar=True
+        "nuevas": 0,  # descubrimiento: ítems nuevos materializados
+        "actualizadas": 0,  # descubrimiento: ítems existentes re-materializados
+        "refrescadas": 0,  # refresco: ítems re-enriquecidos con forzar=True
         "omitidas": 0,
         "errores": 0,
     }
