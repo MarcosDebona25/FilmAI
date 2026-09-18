@@ -127,3 +127,8 @@ class TMDBClient:
     def get_changes(self, tipo, page=1):
         # IDs modificados en TMDB en las últimas 24 h, de a 100 por página.
         return self._get(f"/{tipo}/changes", {"page": page})
+
+    def get_genres(self, tipo):
+        # Catálogo de géneros con sus ids. Difiere por tipo: película tiene
+        # `Action` y `Adventure` separados, serie tiene `Action & Adventure`.
+        return self._get(f"/genre/{tipo}/list")

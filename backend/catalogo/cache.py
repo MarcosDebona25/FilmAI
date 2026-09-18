@@ -18,6 +18,9 @@ ENDPOINT_TTLS = {
     # La lista de cambios rueda a diario, así que 24 h sería demasiado; 6 h
     # alcanza para que una sync reintentada no vuelva a bajar ~100 páginas.
     "changes": 6 * 3600,
+    # Los géneros de TMDB son prácticamente estáticos: un mes evita pedirlos en
+    # cada corrida del seed sin volverlos eternos.
+    "genres": 30 * 24 * 3600,
 }
 
 # Bounded timeouts so a hung Redis fails fast and the cache degrades to TMDB
@@ -127,6 +130,10 @@ class TMDBClientCache:
         return self._cached_call(
             "changes", params, lambda: self.client.get_changes(tipo, page)
         )
+
+    def get_genres(self, tipo):
+        params = {"tipo": tipo}
+        return self._cached_call("genres", params, lambda: self.client.get_genres(tipo))
 
 
 def get_redis():
