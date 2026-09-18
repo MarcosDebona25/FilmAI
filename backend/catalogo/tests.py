@@ -1154,6 +1154,63 @@ class BackfillEmbeddingsTests(TestCase):
         self.assertEqual(self.tarea.delay.call_count, 1)
         self.assertEqual(estadisticas["desactualizados"], 0)
 
+    def test_procesa_las_mas_viejas_primero(self):
+        # El backfill promete procesar las más viejas primero (por
+        # fecha_actualizacion ascendente). Si hay 150 pendientes y el límite es
+        # 100, debe procesar las 100 más viejas, no las 100 más nuevas.
+        viejo = self._embedding(1, EstadoEmbedding.FAILED)
+        ProduccionEmbedding.objects.filter(pk=viejo.pk).update(
+            fecha_actualizacion=timezone.now() - timedelta(days=2)
+        )
+
+        medio = self._embedding(2, EstadoEmbedding.FAILED)
+        ProduccionEmbedding.objects.filter(pk=medio.pk).update(
+            fecha_actualizacion=timezone.now() - timedelta(days=1)
+        )
+
+        # El tercero tiene fecha_actualizacion = ahora (auto_now), así que es
+        # el más nuevo y no debe ser procesado con límite 2.
+        self._embedding(3, EstadoEmbedding.FAILED)
+
+        estadisticas = backfill_embeddings(limite=2)
+
+        # Solo se encolaron los 2 más viejos
+        self.assertEqual(
+            self._ids_encolados(),
+            {viejo.produccion_id, medio.produccion_id},
+        )
+        self.assertEqual(estadisticas["reencolados"], 2)
+
+    def test_si_no_hay_nada_no_hace_nada(self):
+        # Caso borde: si no hay pending, failed, ni ready desactualizados, el
+        # backfill debe retornar estadísticas en cero sin errores.
+        self._embedding(1, EstadoEmbedding.READY)
+
+        estadisticas = backfill_embeddings()
+
+        self.tarea.delay.assert_not_called()
+        self.assertEqual(estadisticas["reencolados"], 0)
+        self.assertEqual(estadisticas["desactualizados"], 0)
+
+    def test_el_restante_se_usa_para_ready_desactualizados(self):
+        # Si hay 3 pendientes y 5 ready desactualizados con límite 5, debe
+        # encolar 3 pendientes + 2 ready = 5 total. Verifica que el cálculo de
+        # `restante` funciona correctamente con números realistas.
+        for id_tmdb in range(1, 4):
+            self._embedding(id_tmdb, EstadoEmbedding.FAILED)
+
+        for id_tmdb in range(10, 15):
+            desactualizado = self._embedding(id_tmdb, EstadoEmbedding.READY)
+            ProduccionAudiovisual.objects.filter(
+                pk=desactualizado.produccion_id
+            ).update(sinopsis=f"Sinopsis {id_tmdb}")
+
+        estadisticas = backfill_embeddings(limite=5)
+
+        self.assertEqual(self.tarea.delay.call_count, 5)
+        self.assertEqual(estadisticas["reencolados"], 5)
+        self.assertEqual(estadisticas["desactualizados"], 2)
+
 
 class BackfillIntegracionTests(TestCase):
     """El backfill con `generar_embedding` REAL: que el reencolado sirva.
