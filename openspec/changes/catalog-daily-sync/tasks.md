@@ -67,12 +67,12 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 
 ## Phase 3: Backfill, documentation and verification
 
-- [ ] 3.1 RED: add `BackfillEmbeddingsTests` — `pending` and `failed` rows are re-enqueued
-- [ ] 3.2 RED: add a case where `ready` with a matching `source_hash` and `model_version` is left alone, and one where a changed hash causes re-enqueue
-- [ ] 3.3 RED: add a case asserting `limite` caps how many rows are processed in one run
-- [ ] 3.4 GREEN: implement `backfill_embeddings(limite=...)`
-- [ ] 3.5 Add the beat entry for the backfill; `.env.example` and `README.md` updated to the 6-service topology
-- [ ] 3.6 Create the canonical spec `openspec/specs/catalog-daily-sync/spec.md` (Given/When/Then, RFC 2119)
-- [ ] 3.7 Record the declared timezone in `docs/decisiones.md` (the four design decisions of 15/09/2026 are already recorded); update `docs/05_Plan_de_Desarrollo.md` (mark C-04b done)
-- [ ] 3.8 **Contrast the listing fixtures against the real API** — the shapes assumed in the tests must match what TMDB actually returns. In C-04a a fabricated `job: "Director"` kept 172 tests green while no series had a director in production
-- [ ] 3.9 End-to-end verification: force a beat run, confirm rows and statistics; run it twice and confirm no duplicates; `docker compose exec -T backend python manage.py test` full suite; `ruff format --check . && ruff check .`
+- [x] 3.1 RED: add `BackfillEmbeddingsTests` — `pending` and `failed` rows are re-enqueued. Also: `processing` rows are left alone
+- [x] 3.2 RED: add a case where `ready` with a matching `source_hash` and `model_version` is left alone, and one where a changed hash causes re-enqueue. Also a changed `model_version` (the B-06 case)
+- [x] 3.3 RED: add a case asserting `limite` caps how many rows are processed in one run, and one asserting the cap is shared by both populations
+- [x] 3.4 GREEN: implement `backfill_embeddings(limite=...)`. **Bug found at apply time:** re-enqueueing a stale `ready` row did nothing — `generar_embedding` claims with `estado__in=(pending, failed)`, so the task returned without work and the old vector would have survived forever. The backfill now returns the row to `pending` *before* enqueueing. The seven unit tests missed it (they patch `generar_embedding` wholesale); `BackfillIntegracionTests`, with the real task, caught it
+- [x] 3.5 Add the beat entry for the backfill (04:00, an hour after the sync, so it picks up what that night's sync just failed to embed); `README.md` updated. `.env.example` needed no change: the schedule lives in `settings.py`, not in env vars
+- [x] 3.6 Create the canonical spec `openspec/specs/catalog-daily-sync/spec.md` (Given/When/Then, RFC 2119) — 10 requirements, every one with at least one scenario, plus a Known limitations section
+- [x] 3.7 Record the declared timezone in `docs/decisiones.md`; update `docs/05_Plan_de_Desarrollo.md` (C-04b marked complete)
+- [x] 3.8 **Contrast the listing fixtures against the real API** — the shapes assumed in the tests must match what TMDB actually returns. In C-04a a fabricated `job: "Director"` kept 172 tests green while no series had a director in production
+- [x] 3.9 End-to-end verification: force a beat run, confirm rows and statistics; run it twice and confirm no duplicates; `docker compose exec -T backend python manage.py test` full suite; `ruff format --check . && ruff check .`
