@@ -167,9 +167,25 @@ def sync_catalogo_diaria():
       específico), se cuenta como error y sigue con el siguiente. Misma
       política que las vistas de detalle.
 
-    Devuelve y loguea las estadísticas de la corrida. `actualizadas` cuenta
-    las que ya existían antes de la corrida; si se refrescaron o no lo decide
-    `materializar()` según `fecha_enriquecimiento`.
+    Devuelve y loguea las estadísticas de la corrida. Qué mide cada contador:
+
+    - `nuevas`: no estaban en la base y ahora sí. Cada producción cuenta una
+      vez aunque aparezca en varias fuentes.
+    - `ya_existentes`: el descubrimiento las encontró y ya las teníamos. NO
+      implica que se haya escrito nada: si la fila estaba fresca,
+      `materializar()` ni le pidió el detalle a TMDB.
+    - `refrescadas`: las que TMDB reportó como cambiadas y se re-enriquecieron
+      con `forzar=True`. Es el único contador que garantiza escritura, y el que
+      corresponde a las "actualizadas" del paso 5 de CU-021. Se llama
+      `refrescadas` y no `actualizadas` porque describe la acción (se volvió a
+      traer la ficha) y no un resultado que no verificamos: si TMDB cambió un
+      campo que no guardamos, reescribimos los mismos valores.
+    - `omitidas`: no eran producciones (`person` en trending).
+    - `errores`: fallaron.
+
+    Una misma producción puede sumar en dos contadores, porque las dos pasadas
+    cuentan por separado: si está en la lista de cambios y además en trending,
+    suma en `refrescadas` y en `ya_existentes`.
     """
     # Import local a propósito: materialization.py importa `generar_embedding`
     # de este módulo, así que importarlo arriba sería un ciclo.
@@ -183,7 +199,7 @@ def sync_catalogo_diaria():
     existentes = set(ProduccionAudiovisual.objects.values_list("id_tmdb", "tipo"))
     estadisticas = {
         "nuevas": 0,  # descubrimiento: ítems nuevos materializados
-        "actualizadas": 0,  # descubrimiento: ítems existentes re-materializados
+        "ya_existentes": 0,  # descubrimiento: ya estaban (no implica escritura)
         "refrescadas": 0,  # refresco: ítems re-enriquecidos con forzar=True
         "omitidas": 0,
         "errores": 0,
@@ -241,7 +257,7 @@ def sync_catalogo_diaria():
                 continue
 
             if (id_tmdb, tipo) in existentes:
-                estadisticas["actualizadas"] += 1
+                estadisticas["ya_existentes"] += 1
             else:
                 estadisticas["nuevas"] += 1
                 existentes.add((id_tmdb, tipo))

@@ -105,9 +105,13 @@ Refreshing MUST update the existing row in place. Delete-and-reinsert MUST NOT b
 
 ### Requirement: Run statistics
 
-Each run MUST return and log a statistics dictionary reporting `nuevas`, `actualizadas`, `refrescadas`, `omitidas` and `errores`.
+Each run MUST return and log a statistics dictionary reporting `nuevas`, `ya_existentes`, `refrescadas`, `omitidas` and `errores`.
+
+Counter names MUST describe what they measure. `ya_existentes` counts presence — rows the discovery pass met that were already stored — and MUST NOT be read as "rows that were updated": a row already fresh is not re-enriched and still increments it. `refrescadas` counts re-enrichment and is the only counter that guarantees a write; it is named for the action (the record was fetched again) rather than for an outcome the system does not verify, since TMDB may report a change in a field this project does not store. It is `refrescadas` that corresponds to the "cantidad de producciones actualizadas" of CU-021, step 5.
 
 `nuevas` MUST count each production once even when it appears in several sources.
+
+A production MAY be counted in two counters, because each pass counts independently: one that is both in today's change list and in a listing source increments `refrescadas` and `ya_existentes`.
 
 #### Scenario: A production present in two sources counts once
 
@@ -115,6 +119,15 @@ Each run MUST return and log a statistics dictionary reporting `nuevas`, `actual
 - AND it is not in the database
 - WHEN the sync runs
 - THEN it is counted once in `nuevas`
+
+#### Scenario: An already fresh row is counted but not written
+
+- GIVEN a stored production whose `fecha_enriquecimiento` is recent
+- AND TMDB does not report it as changed
+- WHEN the discovery pass meets it
+- THEN it is counted in `ya_existentes`
+- AND no TMDB detail request is issued for it
+- AND it is not counted in `refrescadas`
 
 ### Requirement: Embedding backfill
 
