@@ -1,7 +1,7 @@
 import threading
 from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import fakeredis
 import httpx
@@ -57,7 +57,7 @@ from catalogo.services.materialization import (
     materializar,
 )
 from catalogo.services.tmdb import get_catalog_service
-from catalogo.tasks import generar_embedding
+from catalogo.tasks import generar_embedding, sync_catalogo_diaria
 from catalogo.views import (
     DiscoverView,
     MovieDetailView,
@@ -1086,9 +1086,42 @@ _CREDITS_TV = {
 # Mismo contenido que en películas, pero TMDB lo devuelve bajo otra clave.
 _KEYWORDS_TV = {"results": [{"name": "new mexico"}, {"name": "drug dealer"}]}
 
+# Lo que devuelven los LISTADOS de TMDB, contrastado contra la API real el
+# 17/09/2026. Son resúmenes: traen `id`, `title`/`name`, `overview`,
+# `genre_ids` (IDs numéricos), pero NO géneros con nombre, créditos ni keywords.
+# Por eso la sync no escribe desde acá: llama a `materializar()` por ítem.
+#
+# Solo `trending/all` trae `media_type`, y la documentación de TMDB dice que
+# puede incluir `person` (gente, no producciones). En las otras tres fuentes el
+# tipo está implícito en el endpoint.
+_LISTADO_TRENDING = {
+    "page": 1,
+    "results": [
+        {"id": 550, "media_type": "movie", "title": "Fight Club"},
+        {"id": 1396, "media_type": "tv", "name": "Breaking Bad"},
+        {"id": 287, "media_type": "person", "name": "Brad Pitt"},
+    ],
+    "total_pages": 1,
+}
+_LISTADO_NOW_PLAYING = {
+    "page": 1,
+    "results": [{"id": 27205, "title": "Inception"}],
+    "total_pages": 1,
+}
+_LISTADO_DISCOVER_MOVIE = {
+    "page": 1,
+    "results": [{"id": 155, "title": "The Dark Knight"}],
+    "total_pages": 1,
+}
+_LISTADO_DISCOVER_TV = {
+    "page": 1,
+    "results": [{"id": 1399, "name": "Game of Thrones"}],
+    "total_pages": 1,
+}
+
 
 def _servicio_tmdb_falso():
-    """Doble del `TMDBClientCache` con las tres respuestas del enriquecimiento."""
+    """Doble del `TMDBClientCache`: enriquecimiento (C-04a) y listados (C-04b)."""
     return Mock(
         get_movie_detail=Mock(return_value=_DETALLE_MOVIE),
         get_tv_detail=Mock(return_value=_DETALLE_TV),
@@ -1100,6 +1133,14 @@ def _servicio_tmdb_falso():
         get_keywords=Mock(
             side_effect=lambda id_tmdb, tipo: (
                 _KEYWORDS_MOVIE if tipo == "movie" else _KEYWORDS_TV
+            )
+        ),
+        get_trending=Mock(return_value=_LISTADO_TRENDING),
+        get_now_playing=Mock(return_value=_LISTADO_NOW_PLAYING),
+        # discover_listado: devuelve el listado correcto según el tipo (movie o tv)
+        discover=Mock(
+            side_effect=lambda tipo, **kwargs: (
+                _LISTADO_DISCOVER_MOVIE if tipo == "movie" else _LISTADO_DISCOVER_TV
             )
         ),
     )
@@ -1580,3 +1621,113 @@ class MaterializacionConcurrenciaTests(_ParchesDeMaterializacion, TransactionTes
         self.assertEqual(len(set(ids_devueltos)), 1)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
+
+
+class SyncCatalogoTests(TestCase):
+    """La pasada de descubrimiento de la sync nocturna (C-04b, fase 2).
+
+    `materializar` va mockeada entera: el enriquecimiento ya tiene su suite.
+    Lo que se prueba acá es que la sync recorra las cuatro fuentes, resuelva el
+    tipo de cada ítem según de dónde vino, no se caiga por un ítem malo, y
+    cuente bien lo que hizo.
+    """
+
+    def setUp(self):
+        self.servicio = _servicio_tmdb_falso()
+        parche_servicio = patch(
+            "catalogo.tasks.get_catalog_service", return_value=self.servicio
+        )
+        # La tarea importa `materializar` adentro de la función (evita el
+        # import circular con materialization.py), así que se parchea donde
+        # vive, no en catalogo.tasks.
+        parche_materializar = patch("catalogo.services.materialization.materializar")
+        parche_servicio.start()
+        self.materializar = parche_materializar.start()
+        self.addCleanup(parche_servicio.stop)
+        self.addCleanup(parche_materializar.stop)
+
+    def test_materializa_cada_item_soportado_con_el_tipo_de_su_fuente(self):
+        sync_catalogo_diaria()
+
+        # trending trae el tipo en cada ítem; en las otras tres fuentes el tipo
+        # lo dicta el endpoint. `person` no está: no es una producción.
+        self.materializar.assert_has_calls(
+            [
+                call(550, "movie"),  # trending, media_type=movie
+                call(1396, "tv"),  # trending, media_type=tv
+                call(27205, "movie"),  # now_playing → siempre película
+                call(155, "movie"),  # discover("movie")
+                call(1399, "tv"),  # discover("tv")
+            ],
+            any_order=True,
+        )
+        self.assertEqual(self.materializar.call_count, 5)
+
+    def test_person_se_saltea_sin_lanzar_y_cuenta_como_omitida(self):
+        estadisticas = sync_catalogo_diaria()
+
+        ids_materializados = [c.args[0] for c in self.materializar.call_args_list]
+        self.assertNotIn(287, ids_materializados)
+        self.assertEqual(estadisticas["omitidas"], 1)
+
+    def test_un_item_que_falla_no_aborta_la_corrida(self):
+        # Un título que TMDB no devuelve no puede tirar abajo la noche entera.
+        # Misma política que las vistas de detalle, y por la misma razón.
+        def explota_en_fight_club(id_tmdb, tipo_tmdb):
+            if id_tmdb == 550:
+                raise RuntimeError("TMDB returned HTTP 404")
+            return Mock()
+
+        self.materializar.side_effect = explota_en_fight_club
+
+        estadisticas = sync_catalogo_diaria()
+
+        # Los otros cuatro se procesaron igual, y el fallo quedó contado.
+        # sync_catalogo_diaria atrapa excepciones por ítem y continúa, así que
+        # call_count refleja todos los intentos (incluido el que falló).
+        self.assertEqual(self.materializar.call_count, 5)
+        self.assertEqual(estadisticas["errores"], 1)
+
+    def test_las_estadisticas_distinguen_nuevas_de_actualizadas(self):
+        # Fight Club ya estaba en la base; los otros cuatro son nuevos.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+
+        estadisticas = sync_catalogo_diaria()
+
+        self.assertEqual(
+            estadisticas,
+            {"nuevas": 4, "actualizadas": 1, "omitidas": 1, "errores": 0},
+        )
+
+
+class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
+    """La sync con `materializar` REAL y TMDB falso: lo que queda en la base.
+
+    El mixin ya parchea el servicio en materialization.py; acá se parchea
+    además en catalogo.tasks, que lo usa para los listados.
+    """
+
+    def setUp(self):
+        super().setUp()
+        parche = patch("catalogo.tasks.get_catalog_service", return_value=self.servicio)
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def test_dos_corridas_seguidas_dejan_las_mismas_filas(self):
+        # Idempotencia de punta a punta: la segunda noche no duplica nada y
+        # reporta cero nuevas, porque `materializar` ya las encuentra.
+        with self.captureOnCommitCallbacks(execute=True):
+            primera = sync_catalogo_diaria()
+            segunda = sync_catalogo_diaria()
+
+        self.assertEqual(primera["nuevas"], 5)
+        self.assertEqual(segunda["nuevas"], 0)
+        self.assertEqual(segunda["actualizadas"], 5)
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 5)
+        self.assertEqual(ProduccionEmbedding.objects.count(), 5)
+        # Todas pasaron por el detalle, no quedaron con la forma del listado.
+        self.assertFalse(
+            ProduccionAudiovisual.objects.filter(fecha_enriquecimiento=None).exists()
+        )

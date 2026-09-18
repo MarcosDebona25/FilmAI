@@ -50,13 +50,13 @@ the repo owner on 15/09/2026 (see `design.md` → Architecture Decisions).
 
 ## Phase 2: Scheduler and daily sync
 
-- [ ] 2.1 Add the `celery-beat` service to `docker-compose.yml` (`RUN_MIGRATIONS: "false"`, single replica); add `CELERY_BEAT_SCHEDULE` and an explicit `CELERY_TIMEZONE` to settings
-- [ ] 2.2 Verify the scheduler actually fires: temporarily shorten the interval, `docker compose logs -f celery-beat`, confirm the worker receives the task, then restore 03:00
-- [ ] 2.3 RED: add `SyncCatalogoTests` with listing fixtures for trending (mixed `movie`/`tv`/`person`), now_playing and discover → asserts `materializar` is called once per supported item
-- [ ] 2.4 RED: add a case asserting `person` entries (and any unsupported `media_type`) are skipped without raising
-- [ ] 2.5 RED: add a case asserting one failing item does not abort the run — the rest are still processed and the failure is counted
-- [ ] 2.6 RED: add a case asserting the returned statistics (`nuevas`, `actualizadas`, `omitidas`, `errores`) reflect what happened
-- [ ] 2.7 GREEN: implement the discovery pass of `sync_catalogo_diaria()` in `backend/catalogo/tasks.py`
+- [x] 2.1 Add the `celery-beat` service to `docker-compose.yml` (`RUN_MIGRATIONS: "false"`, single replica); add `CELERY_BEAT_SCHEDULE` and an explicit `CELERY_TIMEZONE` to settings
+- [x] 2.2 Verify the scheduler actually fires: temporarily shorten the interval, `docker compose logs -f celery-beat`, confirm the worker receives the task, then restore 03:00
+- [x] 2.3 RED: add `SyncCatalogoTests` with listing fixtures for trending (mixed `movie`/`tv`/`person`), now_playing and discover → asserts `materializar` is called once per supported item
+- [x] 2.4 RED: add a case asserting `person` entries (and any unsupported `media_type`) are skipped without raising
+- [x] 2.5 RED: add a case asserting one failing item does not abort the run — the rest are still processed and the failure is counted
+- [x] 2.6 RED: add a case asserting the returned statistics (`nuevas`, `actualizadas`, `omitidas`, `errores`) reflect what happened
+- [x] 2.7 GREEN: implement the discovery pass of `sync_catalogo_diaria()` in `backend/catalogo/tasks.py`
 - [ ] 2.8 RED: add `TMDBChangesTest` (`httpx.MockTransport`) — `get_changes(tipo, page)` hits `/{tipo}/changes` and reuses the existing retry/error-mapping path; add the cache-layer case for the new `"changes"` TTL
 - [ ] 2.9 GREEN: add `get_changes` to `backend/catalogo/client.py` and `backend/catalogo/cache.py`
 - [ ] 2.10 RED: add `IdsCambiadosTests` — paginates until `total_pages`, stops at `_MAX_PAGINAS_CAMBIOS`, tolerates entries without `id`
