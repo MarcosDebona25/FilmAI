@@ -158,10 +158,13 @@ def sync_catalogo_diaria():
     llenar una fila (no trae géneros con nombre, créditos ni keywords), y así
     tampoco hay que duplicar el mapeo ni traducir `genre_ids`.
 
-    Los fallos son por ítem: un título que TMDB no devuelve no puede abortar
-    la noche entera. Misma política que las vistas de detalle. Si la lista de
-    cambios entera falla, se saltea el refresco de ese tipo y sigue el resto;
-    la red de seguridad de 90 días cubre lo que quede sin refrescar.
+    Los fallos tienen dos niveles:
+    - Por tipo: si `/changes` falla entero (ej. TMDB caído), se saltea el
+      refresco de ese tipo y sigue el resto. La red de seguridad de 90 días
+      cubre lo que quede sin refrescar.
+    - Por ítem: si un `materializar()` falla (ej. timeout en un ítem
+      específico), se cuenta como error y sigue con el siguiente. Misma
+      política que las vistas de detalle.
 
     Devuelve y loguea las estadísticas de la corrida. `actualizadas` cuenta
     las que ya existían antes de la corrida; si se refrescaron o no lo decide
@@ -178,9 +181,9 @@ def sync_catalogo_diaria():
     # creado, así una producción que aparece en dos fuentes cuenta una vez).
     existentes = set(ProduccionAudiovisual.objects.values_list("id_tmdb", "tipo"))
     estadisticas = {
-        "nuevas": 0,
-        "actualizadas": 0,
-        "refrescadas": 0,
+        "nuevas": 0,           # descubrimiento: ítems nuevos materializados
+        "actualizadas": 0,     # descubrimiento: ítems existentes re-materializados
+        "refrescadas": 0,      # refresco: ítems re-enriquecidos con forzar=True
         "omitidas": 0,
         "errores": 0,
     }
