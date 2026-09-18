@@ -294,6 +294,15 @@ CELERY_BEAT_SCHEDULE = {
         "task": "catalogo.sync_catalogo_diaria",
         "schedule": crontab(hour=3, minute=0),
     },
+    # Una hora después de la sync, no a la misma hora: así recoge los
+    # embeddings que la sync acaba de encolar y fallaron esta misma noche.
+    # Toca como máximo `_LIMITE_BACKFILL` filas por corrida; si el corpus
+    # crece y la cola de pendientes no baja, subir el tope o correrlo más
+    # seguido (el margen hasta las 3 AM del día siguiente es amplio).
+    "backfill-embeddings": {
+        "task": "catalogo.backfill_embeddings",
+        "schedule": crontab(hour=4, minute=0),
+    },
 }
 
 # --- django-allauth ---
