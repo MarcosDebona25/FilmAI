@@ -1653,3 +1653,27 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Consecuencia**: `backend/filmai/settings.py`, `backend/catalogo/tasks.py`,
   spec canónica `openspec/specs/catalog-daily-sync/spec.md`. C-04b queda
   completa salvo el archivado del SDD.
+
+## 18/09/2026 — AI Review desactivado y simplificación de openspec
+
+- **Contexto**: El workflow de AI Review (`.github/workflows/ai-review.yml`) se
+  ejecutaba automáticamente en cada pull request. En el PR #23 generó 15
+  comentarios, de los cuales 14 eran falsos positivos (93%) que no detectaban
+  bugs reales ni sugerían mejoras válidas. Los comentarios no tenían contexto
+  del proyecto (convenciones de idioma, valores de configuración, arquitectura).
+- **Decisión**: Desactivar completamente AI Review y eliminar el workflow. La
+  revisión de código se hace manualmente por los maintainers, con apoyo de los
+  skills disponibles y la documentación de dominio en `docs/`.
+- **Motivo**: El costo de revisar los comentarios de AI Review (tiempo perdido
+  analizando falsos positivos, fatiga de review, falso sentido de seguridad)
+  supera el beneficio. Los bots de review genéricos no entienden el dominio del
+  proyecto ni las decisiones de diseño específicas.
+- **Simplificación de openspec**: Se eliminaron los cambios archivados en
+  `openspec/changes/archive/` (4 cambios completados: tmdb-client, tmdb-cache,
+  tmdb-endpoints, materialization). La información de decisiones ya está
+  registrada en `docs/decisiones.md`. Se mantiene `openspec/specs/` como
+  referencia canónica de cada módulo, y `openspec/changes/` solo para cambios
+  activos en progreso.
+- **Consecuencia**: `.github/workflows/ai-review.yml` eliminado.
+  `openspec/changes/archive/` eliminado. `AGENTS.md` actualizado con secciones
+  8 (AI Review desactivado) y 9 (estructura de documentación).

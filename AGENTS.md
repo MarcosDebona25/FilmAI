@@ -54,6 +54,19 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - `graphify update .` es incremental: solo re-extrae los archivos nuevos/modificados y no requiere LLM cuando los cambios son solo de código.
 - `graphify-out/` se versiona en git (salvo `cache/`, `.graphify_python`, `.graphify_root` y los backups automáticos, que están en `.gitignore`).
 
+## 8. AI Review desactivado
+
+- **No se usa AI Review en los pull requests**. El workflow de AI Review fue desactivado el 18/09/2026 debido a que generaba un 93% de falsos positivos (comentarios que no detectaban bugs reales ni sugerían mejoras válidas).
+- **Motivo**: Los comentarios de AI Review no tenían contexto del proyecto (convenciones de idioma, valores de configuración, arquitectura), lo que resultaba en sugerencias genéricas e incorrectas para el caso específico de FilmAI.
+- **Alternativa**: La revisión de código se hace manualmente por los maintainers del proyecto, con apoyo de los skills disponibles (ver sección 6) y la documentación de dominio en `docs/`.
+
+## 9. Estructura de documentación
+
+- **`docs/`**: Documentación de dominio (requerimientos, modelos de datos, UI, decisiones de diseño, plan de desarrollo). Es la fuente de verdad del proyecto.
+- **`openspec/specs/`**: Especificaciones canónicas de cada módulo (qué hace, requisitos, escenarios). Son útiles como referencia rápida.
+- **`openspec/changes/`**: Solo contiene cambios activos en progreso. Los cambios completados se archivan (se eliminan) porque la información de decisiones ya está registrada en `docs/decisiones.md`.
+- **`graphify-out/`**: Grafo de conocimiento del código (ver sección 7).
+
 ## Contexto técnico
 
 - **Backend**: Django 5.1 + Django REST Framework, PostgreSQL 16, Redis, Celery (todo en Docker, `docker compose`).
