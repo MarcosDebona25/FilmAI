@@ -217,8 +217,9 @@ that existed before tonight; discovery then sees a fresh
 changes list — a popular corpus moves a lot.
 
 Both passes go through `materializar()`, so neither can produce a partial row.
-A failing `/changes` skips that type's refresh (counted once in `errores`);
-discovery still runs, and the safety-net window catches whatever was missed.
+A failing `/changes` skips that type's refresh (the error is counted once per
+type in `errores`); discovery still runs, and the safety-net window catches
+whatever was missed.
 
 The run returns and logs a statistics dict: `nuevas`, `actualizadas`,
 `refrescadas`, `omitidas`, `errores`.
