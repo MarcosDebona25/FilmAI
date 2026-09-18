@@ -128,10 +128,10 @@ re-pull ~333 rows a night over a 10k corpus regardless of whether anything
 moved; the intersection refreshes only what actually did.
 
 ```python
-# Tope defensivo: la lista de cambios ronda las 74 páginas por tipo, pero es
-# una API externa y no queremos que un día raro convierta la sync en un
-# rastreo sin fin.
-_MAX_PAGINAS_CAMBIOS = 100
+# Tope defensivo: la lista de cambios anda entre 74 y 98 páginas por tipo
+# según el día (medido 15/09 y 17/09/2026), pero es una API externa y no
+# queremos que un día raro convierta la sync en un rastreo sin fin.
+_MAX_PAGINAS_CAMBIOS = 200
 
 
 def _ids_cambiados(servicio, tipo_tmdb):
@@ -200,18 +200,29 @@ and for the same reason.
 
 The run has **two passes**, and they do different jobs:
 
-1. **Discovery** — walk `_FUENTES` and materialize each item. This is what
+1. **Refresh** — intersect our own ids with TMDB's changes list and re-materialize
+   that set with `forzar=True`. This is what keeps the copy honest as titles are
+   released, seasons are added and ratings move.
+2. **Discovery** — walk `_FUENTES` and materialize each item. This is what
    grows the corpus without waiting for a user to click: it is the answer to
    the cold start, where semantic search can only surface what somebody already
    opened.
-2. **Refresh** — intersect our own ids with TMDB's changes list and re-materialize
-   that set with `forzar=True`. This is what keeps the copy honest as titles are
-   released, seasons are added and ratings move.
+
+Refresh goes first on purpose (decided at apply time, 17/09/2026). A title in
+`now_playing` is being actively edited on TMDB, so it is very likely in
+today's changes list too. Discovery-first would enrich it as new and then
+refresh would enrich it again seconds later. Refresh-first only touches rows
+that existed before tonight; discovery then sees a fresh
+`fecha_enriquecimiento` and skips them. Live on 60 rows: 39 were in the
+changes list — a popular corpus moves a lot.
 
 Both passes go through `materializar()`, so neither can produce a partial row.
+A failing `/changes` skips that type's refresh (the error is counted once per
+type in `errores`); discovery still runs, and the safety-net window catches
+whatever was missed.
 
 The run returns and logs a statistics dict: `nuevas`, `actualizadas`,
-`omitidas`, `errores`.
+`refrescadas`, `omitidas`, `errores`.
 
 ## Backfill Task
 

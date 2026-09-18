@@ -1595,3 +1595,29 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Origen**: pregunta del usuario — "¿no se podría usar algo más robusto?,
   ¿buscar otra estrategia más de raíz?". La tenía.
 - **Archivos**: `openspec/changes/catalog-daily-sync/{proposal,design,tasks}.md`.
+
+## 17/09/2026 — La sync refresca antes de descubrir
+
+- **Contexto**: la sync nocturna (C-04b, fase 2) tiene dos pasadas: el
+  **refresco** (cruzar nuestros IDs con `/changes` y re-enriquecer con
+  `forzar=True`) y el **descubrimiento** (recorrer trending, cartelera y
+  discover, materializando lo que no tenemos). El `design.md` las describía
+  en el orden descubrimiento → refresco.
+- **Decisión**: se ejecutan **refresco → descubrimiento**. El refresco solo
+  toca filas que existían antes de esa noche; el descubrimiento después ve
+  `fecha_enriquecimiento` fresca en las que acaba de refrescar y las saltea.
+- **Motivo**: una película en cartelera se está editando activamente en TMDB,
+  así que casi seguro está también en la lista de cambios del día. Con
+  descubrimiento primero, la sync la enriquecía como nueva y segundos después
+  el refresco la volvía a enriquecer. Al revés no hay trabajo doble.
+- **Medido en vivo**: sobre 60 filas (todas de trending/cartelera), 39
+  estaban en la lista de cambios — un corpus popular se mueve mucho. La
+  primera corrida tardó 26 s; la segunda 0,47 s, entera desde Redis.
+- **Ajustes al diseño anotados en la aplicación**: `_MAX_PAGINAS_CAMBIOS`
+  pasa de 100 a **200** (`/movie/changes` tuvo 98 páginas el 17/09 contra 74
+  el 15/09; 100 quedaba a un día ocupado de truncar); las estadísticas suman
+  `refrescadas`; si `/changes` falla se saltea el refresco de ese tipo, se
+  cuenta un error y el descubrimiento corre igual.
+- **Consecuencia**: `sync_catalogo_diaria()` en `backend/catalogo/tasks.py`;
+  `design.md` y `tasks.md` de `openspec/changes/catalog-daily-sync/`
+  actualizados para reflejar lo construido.

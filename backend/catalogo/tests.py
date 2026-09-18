@@ -39,10 +39,13 @@ from catalogo.exceptions import (
     TMDBTransportError,
     tmdb_exception_handler,
 )
+from catalogo.factories import CalificacionFactory, ResenaFactory
 from catalogo.models import (
+    Calificacion,
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
+    Resena,
     TipoProduccion,
 )
 from catalogo.services.adapter import dominio_a_tmdb, tmdb_a_dominio
@@ -57,7 +60,12 @@ from catalogo.services.materialization import (
     materializar,
 )
 from catalogo.services.tmdb import get_catalog_service
-from catalogo.tasks import generar_embedding, sync_catalogo_diaria
+from catalogo.tasks import (
+    _MAX_PAGINAS_CAMBIOS,
+    _ids_cambiados,
+    generar_embedding,
+    sync_catalogo_diaria,
+)
 from catalogo.views import (
     DiscoverView,
     MovieDetailView,
@@ -246,6 +254,48 @@ class TMDBCreditsTest(SimpleTestCase):
 
         with self.assertRaises(TMDBNotFound):
             client.get_credits(550, "movie")
+
+
+class TMDBChangesTest(SimpleTestCase):
+    """Lista de cambios (C-04b, fase 2).
+
+    `/{tipo}/changes` devuelve los IDs que TMDB modificó en las últimas 24 h,
+    paginados de a 100. Es lo que permite refrescar solo lo que cambió en vez
+    de barrer el catálogo por fecha. Forma verificada en vivo el 17/09/2026:
+    `{"page", "total_pages", "total_results", "results": [{"id", "adult",
+    "softcore"}]}`.
+    """
+
+    def _client(self, sink):
+        def handler(request):
+            sink.append(request)
+            return httpx.Response(
+                200, json={"page": 1, "total_pages": 1, "results": [{"id": 550}]}
+            )
+
+        return TMDBClient(api_key="test-key", transport=httpx.MockTransport(handler))
+
+    def test_pega_al_endpoint_de_changes_de_cada_tipo_con_su_pagina(self):
+        casos = (("movie", "/3/movie/changes"), ("tv", "/3/tv/changes"))
+        for tipo, path in casos:
+            with self.subTest(tipo=tipo):
+                requests = []
+                client = self._client(requests)
+
+                resultado = client.get_changes(tipo, page=2)
+
+                self.assertEqual(resultado["results"], [{"id": 550}])
+                self.assertEqual(str(requests[0].url.path), path)
+                self.assertEqual(requests[0].url.params["page"], "2")
+
+    def test_reutiliza_el_mapeo_de_errores_del_cliente(self):
+        client = TMDBClient(
+            api_key="test-key",
+            transport=httpx.MockTransport(lambda request: httpx.Response(404)),
+        )
+
+        with self.assertRaises(TMDBNotFound):
+            client.get_changes("movie")
 
 
 class TMDBExceptionHandlerTest(SimpleTestCase):
@@ -457,6 +507,31 @@ class TMDBClientCacheTest(SimpleTestCase):
         key = _build_key("credits", {"id_tmdb": 550, "tipo": "movie"})
 
         self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["credits"])
+
+    def test_changes_se_cachea_por_tipo_y_pagina(self):
+        cache, calls = self.make_cache(body={"page": 1, "results": [{"id": 550}]})
+
+        primera = cache.get_changes("movie", page=1)
+        segunda = cache.get_changes("movie", page=1)
+
+        self.assertEqual(primera, segunda)
+        self.assertEqual(len(calls), 1)
+
+        # Otra página u otro tipo son otra lista, no un cache hit.
+        cache.get_changes("movie", page=2)
+        cache.get_changes("tv", page=1)
+        self.assertEqual(len(calls), 3)
+
+    def test_changes_tiene_ttl_propio(self):
+        # Corto porque la lista rueda a diario; largo para que una tarea
+        # reintentada no vuelva a bajar ~100 páginas.
+        self.assertIn("changes", ENDPOINT_TTLS)
+
+        cache, _ = self.make_cache()
+        cache.get_changes("movie", page=1)
+        key = _build_key("changes", {"tipo": "movie", "page": 1})
+
+        self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["changes"])
 
     def test_get_redis_passes_bounded_timeouts(self):
         with patch("catalogo.cache.redis.Redis.from_url") as from_url:
@@ -1120,6 +1195,15 @@ _LISTADO_DISCOVER_TV = {
 }
 
 
+def _pagina_de_cambios(pagina, total_pages, ids):
+    """Una página de `/{tipo}/changes` con la forma real (17/09/2026)."""
+    return {
+        "page": pagina,
+        "total_pages": total_pages,
+        "results": [{"id": id_tmdb, "adult": False} for id_tmdb in ids],
+    }
+
+
 def _servicio_tmdb_falso():
     """Doble del `TMDBClientCache`: enriquecimiento (C-04a) y listados (C-04b)."""
     return Mock(
@@ -1143,6 +1227,9 @@ def _servicio_tmdb_falso():
                 _LISTADO_DISCOVER_MOVIE if tipo == "movie" else _LISTADO_DISCOVER_TV
             )
         ),
+        # Sin cambios por defecto: la pasada de refresco no toca nada salvo
+        # que un test diga lo contrario.
+        get_changes=Mock(side_effect=lambda tipo, page: _pagina_de_cambios(1, 1, [])),
     )
 
 
@@ -1623,6 +1710,58 @@ class MaterializacionConcurrenciaTests(_ParchesDeMaterializacion, TransactionTes
         self.assertEqual(ProduccionEmbedding.objects.count(), 1)
 
 
+class IdsCambiadosTests(SimpleTestCase):
+    """El paginador de la lista de cambios de TMDB (C-04b, fase 2).
+
+    `_ids_cambiados` junta en un set los IDs de todas las páginas. Se prueba
+    con un servicio falso cuyo `get_changes` fabrica la página pedida, así el
+    test decide cuántas páginas "hay".
+    """
+
+    def _servicio(self, total_pages, ids_de):
+        servicio = Mock()
+        servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            page, total_pages, ids_de(page)
+        )
+        return servicio
+
+    def test_recorre_todas_las_paginas_y_junta_los_ids(self):
+        # Tres páginas: {1, 2}, {3, 4}, {5}.
+        servicio = self._servicio(
+            3, lambda p: range(2 * p - 1, 2 * p + 1) if p < 3 else [5]
+        )
+
+        ids = _ids_cambiados(servicio, "movie")
+
+        self.assertEqual(ids, {1, 2, 3, 4, 5})
+        servicio.get_changes.assert_has_calls(
+            [call("movie", 1), call("movie", 2), call("movie", 3)]
+        )
+        self.assertEqual(servicio.get_changes.call_count, 3)
+
+    def test_se_detiene_en_el_tope_de_paginas(self):
+        # TMDB dice que hay muchas más páginas que el tope: se piden solo las
+        # del tope. Lo que quede afuera lo cubre la red de seguridad de 90 días.
+        servicio = self._servicio(_MAX_PAGINAS_CAMBIOS + 50, lambda p: [p])
+
+        ids = _ids_cambiados(servicio, "tv")
+
+        self.assertEqual(servicio.get_changes.call_count, _MAX_PAGINAS_CAMBIOS)
+        self.assertEqual(len(ids), _MAX_PAGINAS_CAMBIOS)
+
+    def test_tolera_items_sin_id_y_respuestas_sin_results(self):
+        servicio = Mock()
+        servicio.get_changes.return_value = {
+            "page": 1,
+            "total_pages": 1,
+            "results": [{"id": 550, "adult": False}, {"adult": False}, {}],
+        }
+        self.assertEqual(_ids_cambiados(servicio, "movie"), {550})
+
+        servicio.get_changes.return_value = {"page": 1, "total_pages": 1}
+        self.assertEqual(_ids_cambiados(servicio, "movie"), set())
+
+
 class SyncCatalogoTests(TestCase):
     """La pasada de descubrimiento de la sync nocturna (C-04b, fase 2).
 
@@ -1698,8 +1837,159 @@ class SyncCatalogoTests(TestCase):
 
         self.assertEqual(
             estadisticas,
-            {"nuevas": 4, "actualizadas": 1, "omitidas": 1, "errores": 0},
+            {
+                "nuevas": 4,
+                "actualizadas": 1,
+                "refrescadas": 0,
+                "omitidas": 1,
+                "errores": 0,
+            },
         )
+
+    def _cambios(self, movie=(), tv=()):
+        """Hace que TMDB reporte estos IDs como modificados hoy."""
+        self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            1, 1, movie if tipo == "movie" else tv
+        )
+
+    def test_refresca_con_forzar_solo_lo_que_tenemos_y_tmdb_dice_que_cambio(self):
+        for id_tmdb, tipo in (
+            (550, TipoProduccion.PELICULA),
+            (27205, TipoProduccion.PELICULA),
+            (1396, TipoProduccion.SERIE),
+        ):
+            ProduccionAudiovisual.objects.create(id_tmdb=id_tmdb, tipo=tipo, titulo="x")
+        # 550 lo tenemos y cambió → se refresca. 27205 lo tenemos pero no
+        # cambió → no. 999999 cambió pero no lo tenemos → ni se mira: si no,
+        # la sync estaría rastreando los ~10.000 cambios diarios de TMDB.
+        self._cambios(movie=[550, 999999])
+
+        estadisticas = sync_catalogo_diaria()
+
+        llamadas = self.materializar.call_args_list
+        self.assertIn(call(550, "movie", forzar=True), llamadas)
+        self.assertNotIn(call(27205, "movie", forzar=True), llamadas)
+        self.assertNotIn(999999, [c.args[0] for c in llamadas])
+        self.assertEqual(estadisticas["refrescadas"], 1)
+
+    def test_si_la_lista_de_cambios_falla_el_descubrimiento_sigue(self):
+        self.servicio.get_changes.side_effect = RuntimeError("TMDB returned HTTP 500")
+
+        estadisticas = sync_catalogo_diaria()
+
+        # Las cuatro fuentes se recorrieron igual; el fallo quedó contado una
+        # vez por tipo (movie y tv se piden por separado).
+        self.assertEqual(self.materializar.call_count, 5)
+        self.assertEqual(estadisticas["errores"], 2)
+        self.assertEqual(estadisticas["refrescadas"], 0)
+
+    def test_el_refresco_va_primero_y_el_descubrimiento_no_duplica(self):
+        # El refresco va primero a propósito: si un ítem está en /changes Y en
+        # trending, se refresca primero (forzar=True) y luego se salta en
+        # descubrimiento porque ya existe. Sin esto, se enriquecería dos veces.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+        # 550 está en /changes (se refresca) Y en trending (se materializaría)
+        self._cambios(movie=[550])
+
+        estadisticas = sync_catalogo_diaria()
+
+        # Se refresca primero (forzar=True)
+        self.assertIn(call(550, "movie", forzar=True), self.materializar.call_args_list)
+        # No se cuenta como "nueva" porque ya existía antes de la corrida
+        self.assertEqual(estadisticas["refrescadas"], 1)
+        self.assertEqual(estadisticas["nuevas"], 4)  # los otros 4 de trending
+
+    def test_un_item_en_changes_y_en_trending_se_materializa_dos_veces(self):
+        # Si un ítem está en /changes Y en trending, se materializa dos veces:
+        # una en refresco (forzar=True) y otra en descubrimiento (sin forzar).
+        # Esto es ineficiente pero es el comportamiento actual.
+        # 550 ya existe, está en /changes, también aparece en trending
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+        self._cambios(movie=[550])
+
+        estadisticas = sync_catalogo_diaria()
+
+        # 550 se refresca (forzar=True)
+        self.assertIn(call(550, "movie", forzar=True), self.materializar.call_args_list)
+        # 550 también se materializa en descubrimiento (sin forzar)
+        self.assertIn(call(550, "movie"), self.materializar.call_args_list)
+        # Se cuenta como "actualizada" en descubrimiento (porque ya existía)
+        self.assertEqual(estadisticas["refrescadas"], 1)
+        self.assertEqual(estadisticas["actualizadas"], 1)
+        self.assertEqual(estadisticas["nuevas"], 4)  # los otros 4 de trending
+
+    def test_multiples_items_en_changes_algunos_fallan(self):
+        # Si /changes devuelve 5 IDs y 3 fallan en materializar, el conteo
+        # debe ser correcto: 2 refrescadas, 3 errores.
+        for id_tmdb in (550, 27205, 155, 1396, 1399):
+            ProduccionAudiovisual.objects.create(
+                id_tmdb=id_tmdb, tipo=TipoProduccion.PELICULA, titulo="x"
+            )
+        self._cambios(movie=[550, 27205, 155, 1396, 1399])
+
+        # Hacer que 3 de ellos fallen SOLO en el refresco (forzar=True)
+        # En descubrimiento (sin forzar) deben funcionar normalmente
+        def falla_tres_en_refresco(id_tmdb, tipo_tmdb, forzar=False):
+            if forzar and id_tmdb in (27205, 155, 1396):
+                raise RuntimeError("TMDB timeout")
+            return Mock()
+
+        self.materializar.side_effect = falla_tres_en_refresco
+
+        estadisticas = sync_catalogo_diaria()
+
+        # 2 se refrescaron (550 y 1399), 3 fallaron en el refresco
+        self.assertEqual(estadisticas["refrescadas"], 2)
+        self.assertEqual(estadisticas["errores"], 3)
+
+    def test_movie_changes_funciona_tv_changes_falla(self):
+        # Si /movie/changes funciona pero /tv/changes falla, el refresco de
+        # movie se hace igual. El fallo de tv se cuenta como 1 error.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=1396, tipo=TipoProduccion.SERIE, titulo="Breaking Bad"
+        )
+
+        # /movie/changes devuelve 550, /tv/changes falla
+        def changes_por_tipo(tipo, page):
+            if tipo == "movie":
+                return _pagina_de_cambios(1, 1, [550])
+            else:  # tv
+                raise RuntimeError("TMDB returned HTTP 500")
+
+        self.servicio.get_changes.side_effect = changes_por_tipo
+
+        estadisticas = sync_catalogo_diaria()
+
+        # 550 se refrescó (movie funcionó)
+        self.assertIn(call(550, "movie", forzar=True), self.materializar.call_args_list)
+        self.assertEqual(estadisticas["refrescadas"], 1)
+        # 1 error (el fallo de /tv/changes)
+        self.assertEqual(estadisticas["errores"], 1)
+
+    def test_base_vacia_changes_no_hace_nada(self):
+        # Si la base está vacía y /changes devuelve 1000 IDs, el refresco
+        # no debe intentar materializarlos (no hay nada que refrescar).
+        self._cambios(movie=[550, 27205, 155, 1396, 1399])
+
+        estadisticas = sync_catalogo_diaria()
+
+        # No se refrescó nada (base vacía)
+        self.assertEqual(estadisticas["refrescadas"], 0)
+        # materializar NO se llamó con forzar=True (no hay nada que refrescar)
+        llamadas_con_forzar = [
+            c for c in self.materializar.call_args_list
+            if c.kwargs.get("forzar") or (len(c.args) > 2 and c.args[2])
+        ]
+        self.assertEqual(len(llamadas_con_forzar), 0)
+        # Pero el descubrimiento sí se hizo (5 ítems nuevos de trending)
+        self.assertEqual(estadisticas["nuevas"], 5)
 
 
 class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
@@ -1731,3 +2021,62 @@ class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
         self.assertFalse(
             ProduccionAudiovisual.objects.filter(fecha_enriquecimiento=None).exists()
         )
+
+    def test_el_refresco_reenriquece_solo_lo_que_tmdb_dice_que_cambio(self):
+        # Dos películas completas y frescas: el criterio de fecha las saltearía.
+        ayer = timezone.now() - timedelta(days=1)
+        cambiada = ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="viejo",
+            fecha_enriquecimiento=ayer,
+        )
+        intacta = ProduccionAudiovisual.objects.create(
+            id_tmdb=27205,
+            tipo=TipoProduccion.PELICULA,
+            titulo="Inception",
+            fecha_enriquecimiento=ayer,
+        )
+        self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            1, 1, [550] if tipo == "movie" else []
+        )
+
+        with self.captureOnCommitCallbacks(execute=True):
+            estadisticas = sync_catalogo_diaria()
+
+        ids_pedidos = [c.args[0] for c in self.servicio.get_movie_detail.call_args_list]
+        self.assertIn(550, ids_pedidos)
+        self.assertNotIn(27205, ids_pedidos)
+        cambiada.refresh_from_db()
+        intacta.refresh_from_db()
+        self.assertEqual(cambiada.titulo, "Fight Club")  # vino del detalle
+        self.assertGreater(cambiada.fecha_enriquecimiento, ayer)
+        self.assertEqual(intacta.fecha_enriquecimiento, ayer)
+        self.assertEqual(estadisticas["refrescadas"], 1)
+
+    def test_calificacion_y_resena_sobreviven_al_refresco(self):
+        # Criterio de aceptación de C-04b, probado directo. `Calificacion`
+        # cuelga de la producción con on_delete=CASCADE: si el refresco fuera
+        # "borrar e insertar" en vez de un UPDATE, se llevaría en silencio
+        # todo lo que el usuario escribió sobre ese título.
+        produccion = ProduccionAudiovisual.objects.create(
+            id_tmdb=550,
+            tipo=TipoProduccion.PELICULA,
+            titulo="viejo",
+            fecha_enriquecimiento=timezone.now() - timedelta(days=1),
+        )
+        calificacion = CalificacionFactory(produccion=produccion, valor=9)
+        resena = ResenaFactory(calificacion=calificacion, texto="La primera regla...")
+        self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
+            1, 1, [550] if tipo == "movie" else []
+        )
+
+        with self.captureOnCommitCallbacks(execute=True):
+            sync_catalogo_diaria()
+
+        produccion.refresh_from_db()
+        self.assertEqual(produccion.titulo, "Fight Club")  # sí se refrescó
+        calificacion_despues = Calificacion.objects.get(pk=calificacion.pk)
+        self.assertEqual(calificacion_despues.valor, 9)
+        self.assertEqual(calificacion_despues.produccion_id, produccion.pk)
+        self.assertEqual(Resena.objects.get(pk=resena.pk).texto, "La primera regla...")

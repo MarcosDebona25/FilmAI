@@ -15,6 +15,9 @@ ENDPOINT_TTLS = {
     # El reparto de una producción ya estrenada casi no cambia: mismo TTL
     # largo que el detalle y las keywords.
     "credits": 24 * 3600,
+    # La lista de cambios rueda a diario, así que 24 h sería demasiado; 6 h
+    # alcanza para que una sync reintentada no vuelva a bajar ~100 páginas.
+    "changes": 6 * 3600,
 }
 
 # Bounded timeouts so a hung Redis fails fast and the cache degrades to TMDB
@@ -117,6 +120,12 @@ class TMDBClientCache:
         params = {"id_tmdb": id_tmdb, "tipo": tipo}
         return self._cached_call(
             "credits", params, lambda: self.client.get_credits(id_tmdb, tipo)
+        )
+
+    def get_changes(self, tipo, page=1):
+        params = {"tipo": tipo, "page": page}
+        return self._cached_call(
+            "changes", params, lambda: self.client.get_changes(tipo, page)
         )
 
 
