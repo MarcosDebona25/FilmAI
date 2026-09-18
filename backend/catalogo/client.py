@@ -123,3 +123,7 @@ class TMDBClient:
     def get_credits(self, id_tmdb, tipo):
         # Los endpoints de detalle no incluyen cast ni crew: se piden aparte.
         return self._get(f"/{tipo}/{id_tmdb}/credits")
+
+    def get_changes(self, tipo, page=1):
+        # IDs modificados en TMDB en las últimas 24 h, de a 100 por página.
+        return self._get(f"/{tipo}/changes", {"page": page})
