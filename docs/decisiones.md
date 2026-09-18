@@ -1621,3 +1621,35 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Consecuencia**: `sync_catalogo_diaria()` en `backend/catalogo/tasks.py`;
   `design.md` y `tasks.md` de `openspec/changes/catalog-daily-sync/`
   actualizados para reflejar lo construido.
+
+## 18/09/2026 — Zona horaria de Celery declarada, y el backfill cierra C-04b
+
+- **Contexto**: `celery-beat` dispara la sync del catálogo y, desde esta fase,
+  también el backfill de embeddings. Celery interpreta los horarios de
+  `CELERY_BEAT_SCHEDULE` en **UTC** salvo que se le diga otra cosa.
+- **Decisión**: `CELERY_TIMEZONE = TIME_ZONE` en `settings.py`, reutilizando la
+  zona que ya declara Django (`America/Argentina/Buenos_Aires`). El
+  `crontab(hour=3)` significa entonces las 3 AM argentinas.
+- **Motivo**: sin la línea, la sync correría a medianoche local. Es la clase de
+  error que no rompe nada, no aparece en ningún test y se descubre meses
+  después mirando por qué los datos se actualizan a una hora rara. Reutilizar
+  `TIME_ZONE` en vez de repetir la cadena evita que las dos queden
+  desincronizadas.
+- **Backfill a las 4 AM, una hora después de la sync**: así recoge los
+  embeddings que la sync acaba de encolar y fallaron esa misma noche. Toca
+  como máximo 100 filas por corrida; sin tope, sobre un corpus de 10.000 una
+  corrida encolaría 10.000 tareas de golpe.
+- **Ambas poblaciones se recorren por `fecha_actualizacion` ascendente**. El
+  campo es `auto_now`, así que procesar una fila la manda al final: ninguna
+  queda indefinidamente detrás del tope.
+- **Hallazgo durante la implementación**: reencolar un `ready` desactualizado
+  no alcanzaba. `generar_embedding` reclama con `estado__in=(pending, failed)`,
+  así que la tarea llegaba al worker, no reclamaba nada y volvía sin hacer
+  nada — el vector viejo se habría quedado para siempre. El backfill ahora
+  devuelve la fila a `pending` **antes** de encolar. Los siete tests unitarios
+  no lo detectaron porque parchean `generar_embedding` entera; lo encontró un
+  test de integración con la tarea real. Queda como recordatorio de que un
+  test con todo mockeado prueba el llamado, no el efecto.
+- **Consecuencia**: `backend/filmai/settings.py`, `backend/catalogo/tasks.py`,
+  spec canónica `openspec/specs/catalog-daily-sync/spec.md`. C-04b queda
+  completa salvo el archivado del SDD.
