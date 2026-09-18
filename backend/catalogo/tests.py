@@ -1684,7 +1684,7 @@ class SyncCatalogoTests(TestCase):
         # Los otros cuatro se procesaron igual, y el fallo quedó contado.
 # sync_catalogo_diaria catches materializar exceptions per-item and continues,
 # so call_count still reflects all attempted calls.
-self.assertEqual(self.materializar.call_count, 5)
+      self.assertEqual(self.materializar.call_count, 5)
         self.assertEqual(estadisticas["errores"], 1)
 
     def test_las_estadisticas_distinguen_nuevas_de_actualizadas(self):
