@@ -9,6 +9,7 @@ inconsistentes.
 import logging
 
 from celery import shared_task
+from django.conf import settings
 
 from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEmbedding
 from catalogo.services.adapter import tmdb_a_dominio
@@ -246,15 +247,8 @@ def sync_catalogo_diaria():
     return estadisticas
 
 
-# Cuántas filas toca como máximo una corrida del backfill. Sin tope, sobre un
-# corpus de 10.000 una sola corrida encolaría 10.000 tareas de golpe y dejaría
-# al worker sin atender nada más por horas. Lo que no entra espera a la noche
-# siguiente.
-_LIMITE_BACKFILL = 100
-
-
 @shared_task(name="catalogo.backfill_embeddings")
-def backfill_embeddings(limite=_LIMITE_BACKFILL):
+def backfill_embeddings(limite=None):
     """Recupera el trabajo de embeddings que quedó sin completar (C-04b).
 
     `materializar()` encola el embedding UNA sola vez: cuando crea la fila.
@@ -293,6 +287,9 @@ def backfill_embeddings(limite=_LIMITE_BACKFILL):
     puede agregar cuando exista el proveedor real (B-06) y las tareas tarden
     de verdad.
     """
+    if limite is None:
+        limite = settings.CELERY_BACKFILL_LIMIT
+
     estadisticas = {"reencolados": 0, "desactualizados": 0}
 
     sin_completar = list(
