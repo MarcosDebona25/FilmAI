@@ -1137,6 +1137,7 @@ def _servicio_tmdb_falso():
         ),
         get_trending=Mock(return_value=_LISTADO_TRENDING),
         get_now_playing=Mock(return_value=_LISTADO_NOW_PLAYING),
+        # discover_listado: devuelve el listado correcto según el tipo (movie o tv)
         discover=Mock(
             side_effect=lambda tipo, **kwargs: (
                 _LISTADO_DISCOVER_MOVIE if tipo == "movie" else _LISTADO_DISCOVER_TV
@@ -1682,9 +1683,9 @@ class SyncCatalogoTests(TestCase):
         estadisticas = sync_catalogo_diaria()
 
         # Los otros cuatro se procesaron igual, y el fallo quedó contado.
-# sync_catalogo_diaria catches materializar exceptions per-item and continues,
-# so call_count still reflects all attempted calls.
-      self.assertEqual(self.materializar.call_count, 5)
+        # sync_catalogo_diaria atrapa excepciones por ítem y continúa, así que
+        # call_count refleja todos los intentos (incluido el que falló).
+        self.assertEqual(self.materializar.call_count, 5)
         self.assertEqual(estadisticas["errores"], 1)
 
     def test_las_estadisticas_distinguen_nuevas_de_actualizadas(self):
