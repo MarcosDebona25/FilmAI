@@ -1,10 +1,10 @@
 ---
 name: explicar-al-implementar
-description: "Trigger: implementar, agregar, modificar o depurar cualquier cosa en este repo. Explicar mientras se construye, para un equipo que está aprendiendo los frameworks del stack. No dar por sabido ningún concepto. Diagrama de componentes cuando se toque arquitectura o comunicación entre servicios. Cada test se explica al escribirlo. Breve, pero sin perder claridad."
+description: "Trigger: implementar, agregar, modificar, depurar, crear, escribir, generar, editar, refactorizar, optimizar, corregir, arreglar, construir, desarrollar, programar, testear, probar, configurar, integrar, conectar, migrar, actualizar, cambiar, ajustar, mejorar, extender, ampliar, simplificar, documentar, comentar, explicar, enseñar, aprender, entender, analizar, revisar, auditar, inspeccionar, explorar, investigar, diagnosticar, resolver, solucionar. Siempre activa cuando se genera o modifica código en este repo. Explicar mientras se construye, para un equipo que está aprendiendo los frameworks del stack. No dar por sabido ningún concepto. Diagrama de componentes cuando se toque arquitectura o comunicación entre servicios. Cada test se explica al escribirlo. Priorizar que el usuario aprenda sobre ahorrar tokens o ser breve."
 license: Apache-2.0
 metadata:
-  author: "gonzag8"
-  version: "1.0"
+  author: "gonzag8, marcosdebona"
+  version: "1.1"
 ---
 
 # Explicar al implementar
@@ -24,10 +24,6 @@ pueda explicar qué se hizo y por qué.
 Siempre que se implemente, modifique o depure algo en este repo. No hace falta
 que la pidan.
 
-Se distingue de [`transparent-dev`](../transparent-dev/SKILL.md), que se activa
-a pedido y explica **decisiones y trade-offs** de una entrega terminada. Esta
-explica **conceptos** a medida que se construye. Se pueden usar juntas.
-
 ## Reglas
 
 ### 1. No dar por sabido ningún concepto de framework
@@ -35,6 +31,10 @@ explica **conceptos** a medida que se construye. Se pueden usar juntas.
 Ni los básicos. Si aparece por primera vez en la conversación, se explica en
 una línea antes de usarlo: qué es una migración, un volumen de Docker, una
 señal, un serializer, un Server Component, un TTL, un decorador de tarea.
+
+Si el concepto ya se explicó antes en la conversación, mencionarlo ("ya lo
+vimos arriba") y repetirlo de forma compacta en una línea, no asumir que el
+usuario lo recuerda.
 
 Mal: "agrego el `@shared_task` y lo encolo con `.delay()`".
 Bien: "`@shared_task` convierte una función normal en algo que Celery puede
@@ -72,6 +72,10 @@ Menos prosa, misma cobertura. Preferir tablas, listas cortas y un ejemplo
 concreto antes que párrafos. No repetir en el texto lo que el código ya dice;
 explicar lo que el código **no** dice.
 
+**Nunca escatimar explicaciones clave para el usuario.** Es más importante que
+el usuario aprenda que ahorrar tokens o ser breve. Si una explicación es
+necesaria para entender el cambio, va — aunque haga la respuesta más larga.
+
 ### 5. Avanzar en unidades chicas
 
 No volcar todos los cambios de un plan de una vez. Un paso, su explicación, su
@@ -80,8 +84,8 @@ correr y qué se espera ver.
 
 ### 6. Explicar un archivo antes de tocarlo si está abierto
 
-Si el usuario tiene abierto el archivo que se va a modificar (el IDE lo
-informa), explicar qué hace y qué se le va a cambiar antes de editarlo.
+Si el usuario tiene abierto el archivo que se va a modificar (si el contexto
+lo permite), explicar qué hace y qué se le va a cambiar antes de editarlo.
 
 ### 7. Ofrecer opciones solo cuando son reales
 
@@ -100,7 +104,7 @@ el archivo real antes de aplicarlas.
 ## Qué NO hace esta skill
 
 - No convierte cada respuesta en un tutorial: si el concepto ya se explicó en
-  la conversación, se usa y listo.
+  la conversación, se menciona que ya se vio y se repite de forma compacta.
 - No narra línea por línea lo que el código ya expresa.
 - No reemplaza a `docs/decisiones.md`: las decisiones de arquitectura se
   registran ahí igual (regla de `AGENTS.md`).

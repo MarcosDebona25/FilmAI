@@ -39,14 +39,13 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
   una implementación, Codex, OpenCode y Antigravity CLI deben revisar la skill
   aplicable allí. No crear ni copiar skills en directorios específicos de un
   harness, como `.opencode/skills/`.
-- Skills disponibles:
-  - **conventional-commits**: redactar mensajes de commit convencionales.
-  - **explicar-al-implementar**: explicar conceptos, arquitectura y tests mientras se construye (siempre activa; el equipo está aprendiendo los frameworks del stack).
-  - **humanizer**: eliminar señales de escritura generada por IA en textos.
-  - **impeccable**: diseño, rediseño y auditoría de interfaces frontend.
-  - **transparent-dev**: explicar decisiones, alternativas y límites de una implementación.
-  - **vercel-quality**: checklist de calidad post-implementación para frontend.
-- Usar la skill correspondiente cuando la tarea lo requiera.
+ - Skills disponibles:
+   - **conventional-commits**: redactar mensajes de commit convencionales.
+   - **explicar-al-implementar**: explicar conceptos, arquitectura y tests mientras se construye (siempre activa; el equipo está aprendiendo los frameworks del stack).
+   - **humanizer**: eliminar señales de escritura generada por IA en textos.
+   - **impeccable**: diseño, rediseño y auditoría de interfaces frontend.
+   - **vercel-quality**: checklist de calidad post-implementación para frontend.
+ - Usar la skill correspondiente cuando la tarea lo requiera.
 
 ## 7. Uso y mantenimiento del grafo de conocimiento (graphify)
 
