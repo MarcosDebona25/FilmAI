@@ -1880,6 +1880,114 @@ class SyncCatalogoTests(TestCase):
         self.assertEqual(estadisticas["errores"], 2)
         self.assertEqual(estadisticas["refrescadas"], 0)
 
+    def test_el_refresco_va_primero_y_el_descubrimiento_no_duplica(self):
+        # El refresco va primero a propósito: si un ítem está en /changes Y en
+        # trending, se refresca primero (forzar=True) y luego se salta en
+        # descubrimiento porque ya existe. Sin esto, se enriquecería dos veces.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+        # 550 está en /changes (se refresca) Y en trending (se materializaría)
+        self._cambios(movie=[550])
+
+        estadisticas = sync_catalogo_diaria()
+
+        # Se refresca primero (forzar=True)
+        self.assertIn(call(550, "movie", forzar=True), self.materializar.call_args_list)
+        # No se cuenta como "nueva" porque ya existía antes de la corrida
+        self.assertEqual(estadisticas["refrescadas"], 1)
+        self.assertEqual(estadisticas["nuevas"], 4)  # los otros 4 de trending
+
+    def test_un_item_en_changes_y_en_trending_se_materializa_dos_veces(self):
+        # Si un ítem está en /changes Y en trending, se materializa dos veces:
+        # una en refresco (forzar=True) y otra en descubrimiento (sin forzar).
+        # Esto es ineficiente pero es el comportamiento actual.
+        # 550 ya existe, está en /changes, también aparece en trending
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+        self._cambios(movie=[550])
+
+        estadisticas = sync_catalogo_diaria()
+
+        # 550 se refresca (forzar=True)
+        self.assertIn(call(550, "movie", forzar=True), self.materializar.call_args_list)
+        # 550 también se materializa en descubrimiento (sin forzar)
+        self.assertIn(call(550, "movie"), self.materializar.call_args_list)
+        # Se cuenta como "actualizada" en descubrimiento (porque ya existía)
+        self.assertEqual(estadisticas["refrescadas"], 1)
+        self.assertEqual(estadisticas["actualizadas"], 1)
+        self.assertEqual(estadisticas["nuevas"], 4)  # los otros 4 de trending
+
+    def test_multiples_items_en_changes_algunos_fallan(self):
+        # Si /changes devuelve 5 IDs y 3 fallan en materializar, el conteo
+        # debe ser correcto: 2 refrescadas, 3 errores.
+        for id_tmdb in (550, 27205, 155, 1396, 1399):
+            ProduccionAudiovisual.objects.create(
+                id_tmdb=id_tmdb, tipo=TipoProduccion.PELICULA, titulo="x"
+            )
+        self._cambios(movie=[550, 27205, 155, 1396, 1399])
+
+        # Hacer que 3 de ellos fallen SOLO en el refresco (forzar=True)
+        # En descubrimiento (sin forzar) deben funcionar normalmente
+        def falla_tres_en_refresco(id_tmdb, tipo_tmdb, forzar=False):
+            if forzar and id_tmdb in (27205, 155, 1396):
+                raise RuntimeError("TMDB timeout")
+            return Mock()
+
+        self.materializar.side_effect = falla_tres_en_refresco
+
+        estadisticas = sync_catalogo_diaria()
+
+        # 2 se refrescaron (550 y 1399), 3 fallaron en el refresco
+        self.assertEqual(estadisticas["refrescadas"], 2)
+        self.assertEqual(estadisticas["errores"], 3)
+
+    def test_movie_changes_funciona_tv_changes_falla(self):
+        # Si /movie/changes funciona pero /tv/changes falla, el refresco de
+        # movie se hace igual. El fallo de tv se cuenta como 1 error.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=1396, tipo=TipoProduccion.SERIE, titulo="Breaking Bad"
+        )
+
+        # /movie/changes devuelve 550, /tv/changes falla
+        def changes_por_tipo(tipo, page):
+            if tipo == "movie":
+                return _pagina_de_cambios(1, 1, [550])
+            else:  # tv
+                raise RuntimeError("TMDB returned HTTP 500")
+
+        self.servicio.get_changes.side_effect = changes_por_tipo
+
+        estadisticas = sync_catalogo_diaria()
+
+        # 550 se refrescó (movie funcionó)
+        self.assertIn(call(550, "movie", forzar=True), self.materializar.call_args_list)
+        self.assertEqual(estadisticas["refrescadas"], 1)
+        # 1 error (el fallo de /tv/changes)
+        self.assertEqual(estadisticas["errores"], 1)
+
+    def test_base_vacia_changes_no_hace_nada(self):
+        # Si la base está vacía y /changes devuelve 1000 IDs, el refresco
+        # no debe intentar materializarlos (no hay nada que refrescar).
+        self._cambios(movie=[550, 27205, 155, 1396, 1399])
+
+        estadisticas = sync_catalogo_diaria()
+
+        # No se refrescó nada (base vacía)
+        self.assertEqual(estadisticas["refrescadas"], 0)
+        # materializar NO se llamó con forzar=True (no hay nada que refrescar)
+        llamadas_con_forzar = [
+            c for c in self.materializar.call_args_list
+            if c.kwargs.get("forzar") or (len(c.args) > 2 and c.args[2])
+        ]
+        self.assertEqual(len(llamadas_con_forzar), 0)
+        # Pero el descubrimiento sí se hizo (5 ítems nuevos de trending)
+        self.assertEqual(estadisticas["nuevas"], 5)
+
 
 class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
     """La sync con `materializar` REAL y TMDB falso: lo que queda en la base.
