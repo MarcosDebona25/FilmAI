@@ -76,9 +76,9 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 | **Frontend**          | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                        |
 | **Base de datos**     | PostgreSQL 16 con pgvector (imagen `pgvector/pgvector:pg16`)               |
 | **Caché y colas**     | Redis (DB 0: caché de TMDB · DB 1: broker de Celery · DB 2: resultados)    |
-| **Tareas asíncronas** | Celery (worker activo; Celery Beat para la sync programada, pendiente)     |
+| **Tareas asíncronas** | Celery (worker + Beat: la sync del catálogo corre cada noche a las 3 AM)   |
 | **Embeddings (en curso)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generación asíncrona vía Celery. El proveedor real de embeddings todavía es un stub (llega en B-06). |
-| **Infraestructura**   | Docker, docker-compose (5 servicios: backend, frontend, PostgreSQL, Redis, celery-worker) |
+| **Infraestructura**   | Docker, docker-compose (6 servicios: backend, frontend, PostgreSQL, Redis, celery-worker, celery-beat) |
 | **Autenticación**     | JWT (access + refresh tokens, sesión de 8 horas), Google OAuth 2.0, bcrypt |
 
 ### APIs externas
@@ -140,6 +140,7 @@ erDiagram
         int cantidad_temporadas
         int cantidad_episodios
         int duracion
+        datetime fecha_enriquecimiento "null = nunca enriquecida"
     }
 
     Calificacion {
@@ -231,9 +232,11 @@ docker compose down         # detener (conserva la base de datos y Redis)
 ### Comandos útiles
 
 ```bash
-docker compose ps                     # estado de los 5 servicios
+docker compose ps                     # estado de los 6 servicios
 docker compose logs -f celery-worker  # seguir los logs del worker de Celery
 docker compose restart celery-worker  # solo si el auto-reload falla (ver nota abajo)
+docker compose logs -f celery-beat    # ver cuándo dispara la sync programada
+docker compose restart celery-beat    # tras cambiar CELERY_BEAT_SCHEDULE en settings.py
 docker compose logs -f backend  # seguir los logs de Django
 docker compose logs -f frontend # seguir los logs de Next.js
 docker compose down -v          # detener y borrar BD + Redis (datos)

@@ -133,6 +133,43 @@ services:
     networks:
       - filmai_network
 
+  # 6. Celery Beat — el reloj que dispara las tareas programadas (C-04b)
+  # No ejecuta nada: a la hora que dice CELERY_BEAT_SCHEDULE (settings.py) pone
+  # la tarea en la cola de Redis, y el celery-worker la levanta como cualquier
+  # otra. Va en un contenedor aparte porque tiene que haber EXACTAMENTE UNO:
+  # dos relojes = cada tarea disparada dos veces. Las tareas son idempotentes,
+  # así que no corrompería nada, pero duplicaría el tráfico a TMDB sin motivo.
+  #
+  # Dos diferencias con el worker, ambas a propósito:
+  #   - `--schedule=/tmp/...`: beat anota en un archivo cuándo corrió cada
+  #     tarea. Sin esta opción lo escribiría en /app, que es el bind mount de
+  #     ./backend, y aparecería en el repo. En /tmp se pierde al recrear el
+  #     contenedor, y está bien: al arrancar recalcula desde el schedule.
+  #   - Sin watchmedo: beat solo lee el horario de settings.py, que cambia
+  #     rara vez. Si lo cambiás, `docker compose restart celery-beat` (el bind
+  #     mount hace que el restart vea el archivo nuevo sin reconstruir).
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: filmai_celery_beat
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    command: celery -A filmai beat -l info --schedule=/tmp/celerybeat-schedule
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - filmai_network
+
 # Volúmenes con nombre — persisten datos aunque hagas docker compose down
 volumes:
   pgdata:
