@@ -287,6 +287,11 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 # `crontab(hour=3)` significa 3 AM UTC —medianoche en Argentina— y el error
 # no se nota hasta meses después, cuando alguien mira a qué hora corrió.
 CELERY_TIMEZONE = TIME_ZONE
+# Máximo de embeddings a reencolar por corrida del backfill (C-04b). Sin tope,
+# sobre un corpus de 10.000 una sola corrida encolaría 10.000 tareas de golpe
+# y dejaría al worker sin atender nada más por horas. Si el corpus crece y la
+# cola de pendientes no baja, subir el tope o correr el backfill más seguido.
+CELERY_BACKFILL_LIMIT = 100
 CELERY_BEAT_SCHEDULE = {
     # Sync del catálogo a las 3 AM: el momento de menos tráfico, y antes de que
     # el primer usuario del día abra la app con datos de ayer.
@@ -296,7 +301,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     # Una hora después de la sync, no a la misma hora: así recoge los
     # embeddings que la sync acaba de encolar y fallaron esta misma noche.
-    # Toca como máximo `_LIMITE_BACKFILL` filas por corrida; si el corpus
+    # Toca como máximo `CELERY_BACKFILL_LIMIT` filas por corrida; si el corpus
     # crece y la cola de pendientes no baja, subir el tope o correrlo más
     # seguido (el margen hasta las 3 AM del día siguiente es amplio).
     "backfill-embeddings": {
