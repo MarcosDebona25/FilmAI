@@ -244,3 +244,97 @@ def sync_catalogo_diaria():
 
     logger.info("sync_catalogo_diaria: %s", estadisticas)
     return estadisticas
+
+
+# Cuántas filas toca como máximo una corrida del backfill. Sin tope, sobre un
+# corpus de 10.000 una sola corrida encolaría 10.000 tareas de golpe y dejaría
+# al worker sin atender nada más por horas. Lo que no entra espera a la noche
+# siguiente.
+_LIMITE_BACKFILL = 100
+
+
+@shared_task(name="catalogo.backfill_embeddings")
+def backfill_embeddings(limite=_LIMITE_BACKFILL):
+    """Recupera el trabajo de embeddings que quedó sin completar (C-04b).
+
+    `materializar()` encola el embedding UNA sola vez: cuando crea la fila.
+    En las visitas siguientes `get_or_create` devuelve `creado=False` y no
+    encola nada. Así que una fila que quedó en `pending` porque el broker
+    estaba caído, o en `failed` porque el proveedor falló, no la reintenta
+    NADIE. Esta tarea es lo que la rescata.
+
+    Recorre dos poblaciones, en orden y compartiendo el mismo tope:
+
+    1. `pending` y `failed` — trabajo que nunca se completó. Se resuelve en
+       SQL: hay un índice por `estado`.
+    2. `ready` desactualizados — el texto canónico cambió (la sync refrescó la
+       producción) o cambió `MODEL_VERSION`. El hash hay que recalcularlo fila
+       por fila en Python; la versión del modelo no, pero se comparan juntas
+       para recorrer la tabla una sola vez.
+
+    `processing` queda afuera a propósito: alguien la está procesando ahora.
+
+    No calcula el vector, lo REENCOLA. `generar_embedding` ya es dueña del
+    reclamo atómico `pending→processing`; repetir esa lógica acá sería una
+    segunda fuente de verdad para la idempotencia.
+
+    Ambos recorridos van por `fecha_actualizacion` ascendente: la más vieja
+    primero. Como el campo es `auto_now`, procesar una fila la manda al final
+    de la fila, y así ninguna queda sin revisarse nunca por quedar siempre
+    detrás del tope.
+
+    Si el proveedor falla al regenerar un `ready` desactualizado, la fila
+    queda en `failed` conservando el vector viejo: deja de usarse en la
+    búsqueda por una noche, y la corrida siguiente la reintenta porque
+    `failed` sí es reclamable.
+
+    Limitación conocida: una fila trabada en `processing` (el worker murió a
+    mitad) no la recupera nadie. Hace falta un lease con vencimiento, que se
+    puede agregar cuando exista el proveedor real (B-06) y las tareas tarden
+    de verdad.
+    """
+    estadisticas = {"reencolados": 0, "desactualizados": 0}
+
+    sin_completar = list(
+        ProduccionEmbedding.objects.filter(estado__in=_RECLAMABLES)
+        .order_by("fecha_actualizacion")
+        .values_list("produccion_id", flat=True)[:limite]
+    )
+    for produccion_id in sin_completar:
+        generar_embedding.delay(produccion_id)
+    estadisticas["reencolados"] = len(sin_completar)
+
+    restante = limite - len(sin_completar)
+    if restante <= 0:
+        logger.info("backfill_embeddings: %s", estadisticas)
+        return estadisticas
+
+    listos = (
+        ProduccionEmbedding.objects.filter(estado=EstadoEmbedding.READY)
+        .select_related("produccion")
+        .order_by("fecha_actualizacion")
+    )
+    for embedding in listos.iterator():
+        texto = construir_texto_canonico(embedding.produccion)
+        if (
+            embedding.model_version == MODEL_VERSION
+            and embedding.source_hash == calcular_source_hash(texto)
+        ):
+            continue
+        # Devolverla a `pending` ANTES de encolar, y no solo por prolijidad:
+        # `generar_embedding` reclama con `estado__in=_RECLAMABLES`, que no
+        # incluye `ready`. Sin esto la tarea llega al worker, no reclama nada y
+        # vuelve sin hacer nada — el vector viejo se quedaría para siempre.
+        # Antes de encolar, además, para que si el proceso muere en el medio la
+        # fila quede reclamable por la próxima corrida.
+        ProduccionEmbedding.objects.filter(pk=embedding.pk).update(
+            estado=EstadoEmbedding.PENDING
+        )
+        generar_embedding.delay(embedding.produccion_id)
+        estadisticas["desactualizados"] += 1
+        if estadisticas["desactualizados"] >= restante:
+            break
+
+    estadisticas["reencolados"] += estadisticas["desactualizados"]
+    logger.info("backfill_embeddings: %s", estadisticas)
+    return estadisticas
