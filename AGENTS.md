@@ -41,6 +41,7 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
   harness, como `.opencode/skills/`.
 - Skills disponibles:
   - **conventional-commits**: redactar mensajes de commit convencionales.
+  - **explicar-al-implementar**: explicar conceptos, arquitectura y tests mientras se construye (siempre activa; el equipo está aprendiendo los frameworks del stack).
   - **humanizer**: eliminar señales de escritura generada por IA en textos.
   - **impeccable**: diseño, rediseño y auditoría de interfaces frontend.
   - **transparent-dev**: explicar decisiones, alternativas y límites de una implementación.
