@@ -1,10 +1,10 @@
 ---
 name: explicar-al-implementar
-description: "Trigger: implementar, agregar, modificar, depurar, crear, escribir, generar, editar, refactorizar, optimizar, corregir, arreglar, construir, desarrollar, programar, testear, probar, configurar, integrar, conectar, migrar, actualizar, cambiar, ajustar, mejorar, extender, ampliar, simplificar, documentar, comentar, explicar, enseñar, aprender, entender, analizar, revisar, auditar, inspeccionar, explorar, investigar, diagnosticar, resolver, solucionar. Siempre activa cuando se genera o modifica código en este repo. Explicar mientras se construye, para un equipo que está aprendiendo los frameworks del stack. No dar por sabido ningún concepto. Diagrama de componentes cuando se toque arquitectura o comunicación entre servicios. Cada test se explica al escribirlo. Priorizar que el usuario aprenda sobre ahorrar tokens o ser breve."
+description: "Trigger: implementar, agregar, modificar, depurar, crear, escribir, generar, editar, refactorizar, optimizar, corregir, arreglar, construir, desarrollar, programar, testear, probar, configurar, integrar, conectar, migrar, actualizar, cambiar, ajustar, mejorar, extender, ampliar, simplificar, documentar, comentar, explicar, enseñar, aprender, entender, analizar, revisar, auditar, inspeccionar, explorar, investigar, diagnosticar, resolver, solucionar. Siempre activa cuando se genera o modifica código en este repo. Explicar mientras se construye, para un equipo que está aprendiendo los frameworks del stack. No dar por sabido ningún concepto. Diagrama de componentes cuando se toque arquitectura o comunicación entre servicios. Cada test se explica al escribirlo. Apuntar a la versión corta, y expandir donde el concepto lo pida: la brevedad nunca se paga con una explicación que falta."
 license: Apache-2.0
 metadata:
   author: "gonzag8, marcosdebona"
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Explicar al implementar
@@ -72,9 +72,13 @@ Menos prosa, misma cobertura. Preferir tablas, listas cortas y un ejemplo
 concreto antes que párrafos. No repetir en el texto lo que el código ya dice;
 explicar lo que el código **no** dice.
 
-**Nunca escatimar explicaciones clave para el usuario.** Es más importante que
-el usuario aprenda que ahorrar tokens o ser breve. Si una explicación es
-necesaria para entender el cambio, va — aunque haga la respuesta más larga.
+El orden es: **apuntar a la versión corta, y expandir donde el concepto lo
+pida**. Las dos mitades importan. Escribir de más cansa y hace que se salteen
+la respuesta; escribir de menos deja un cambio que nadie puede defender.
+
+**Ante la duda, explicar.** Si una explicación es necesaria para entender el
+cambio, va — aunque haga la respuesta más larga. La brevedad nunca se paga con
+una explicación que falta.
 
 ### 5. Avanzar en unidades chicas
 
