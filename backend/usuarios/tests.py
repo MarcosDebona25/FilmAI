@@ -11,15 +11,21 @@ from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount, SocialApp
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from django.core import mail
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.http import HttpRequest
 from django.test import Client, TestCase, TransactionTestCase
 from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 
+from catalogo.models import ProduccionAudiovisual, TipoProduccion
+
 from .adapter import UsuarioSocialAccountAdapter
 from .factories import UsuarioFactory
+from .management.commands.seed import (
+    CANTIDAD_PRODUCCIONES,
+    UMBRAL_CATALOGO_PROTEGIDO,
+)
 from .models import EstadoCuenta, Usuario
 from .provisioning import LISTAS_PREDETERMINADAS
 from .serializers import GoogleSocialLoginSerializer
@@ -1118,3 +1124,50 @@ class ValidadoresContrasenaTests(TestCase):
         self.assertIn("minúscula", help_text)
         self.assertIn("dígito", help_text)
         self.assertIn("especial", help_text)
+
+
+class SeedGuardCatalogoTests(TestCase):
+    """`manage.py seed` no borra por accidente un catálogo poblado (C-04c).
+
+    El comando hace `ProduccionAudiovisual.objects.all().delete()` para
+    resetear datos de desarrollo. Con `seed_catalogo` eso dejó de ser barato:
+    son horas de llamadas a TMDB, y por CASCADE se lleva calificaciones,
+    reseñas y entradas de listas. Por encima de un umbral se niega y dice qué
+    flag lo fuerza; documentarlo en el README depende de que alguien lo haya
+    leído justo cuando intenta resetear su base.
+    """
+
+    def _poblar_catalogo(self, cantidad):
+        ProduccionAudiovisual.objects.bulk_create(
+            ProduccionAudiovisual(
+                id_tmdb=numero, tipo=TipoProduccion.PELICULA, titulo=f"P{numero}"
+            )
+            for numero in range(1, cantidad + 1)
+        )
+
+    def test_se_niega_por_encima_del_umbral_y_nombra_el_flag(self):
+        self._poblar_catalogo(UMBRAL_CATALOGO_PROTEGIDO + 1)
+
+        with self.assertRaisesMessage(CommandError, "--borrar-catalogo"):
+            call_command("seed")
+
+        # No borró nada: ni el catálogo ni lo que cuelga de él.
+        self.assertEqual(
+            ProduccionAudiovisual.objects.count(), UMBRAL_CATALOGO_PROTEGIDO + 1
+        )
+
+    def test_con_el_flag_borra_y_recrea(self):
+        self._poblar_catalogo(UMBRAL_CATALOGO_PROTEGIDO + 1)
+
+        call_command("seed", "--borrar-catalogo", verbosity=0)
+
+        self.assertEqual(ProduccionAudiovisual.objects.count(), CANTIDAD_PRODUCCIONES)
+
+    def test_por_debajo_del_umbral_sigue_sin_flag(self):
+        # Un catálogo del tamaño que crea el propio seed se resetea como
+        # siempre: el guard no cambia el flujo de desarrollo habitual.
+        self._poblar_catalogo(CANTIDAD_PRODUCCIONES)
+
+        call_command("seed", verbosity=0)
+
+        self.assertEqual(ProduccionAudiovisual.objects.count(), CANTIDAD_PRODUCCIONES)
