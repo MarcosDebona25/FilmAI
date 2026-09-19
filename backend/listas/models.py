@@ -15,6 +15,7 @@ lo que impide que una misma producción se repita dentro de una lista.
 """
 
 from django.db import models
+from django.db.models.functions import Lower
 
 
 class TipoLista(models.TextChoices):
@@ -59,9 +60,11 @@ class Lista(models.Model):
         verbose_name_plural = "listas"
         ordering = ["id"]
         constraints = [
-            # El nombre de lista es único por usuario (CU-012).
+            # El nombre de lista es único por usuario sin distinguir
+            # mayúsculas/minúsculas (CU-012).
             models.UniqueConstraint(
-                fields=["usuario", "nombre"],
+                Lower("nombre"),
+                "usuario",
                 name="uq_lista_usuario_nombre",
             ),
         ]

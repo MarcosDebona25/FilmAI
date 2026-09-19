@@ -32,6 +32,7 @@ urlpatterns = [
         name="swagger-ui",
     ),
     path("api/catalogo/", include("catalogo.urls")),
+    path("api/lists/", include("listas.urls")),
     path(
         "api/auth/password/reset/",
         RecuperarContrasenaView.as_view(),
