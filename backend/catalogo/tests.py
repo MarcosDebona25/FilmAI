@@ -1,5 +1,6 @@
 import threading
 from datetime import timedelta
+from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
@@ -8,6 +9,7 @@ import httpx
 import redis
 from django.conf import settings
 from django.core.cache import cache as dj_cache
+from django.core.management import call_command
 from django.db import IntegrityError, connection, transaction
 from django.test import (
     SimpleTestCase,
@@ -40,6 +42,13 @@ from catalogo.exceptions import (
     tmdb_exception_handler,
 )
 from catalogo.factories import CalificacionFactory, ResenaFactory
+from catalogo.management.commands.seed_catalogo import (
+    _MAX_PAGINAS,
+    Combinacion,
+    _combinaciones,
+    _recorrer,
+)
+from catalogo.management.commands.seed_catalogo import Command as SeedCatalogo
 from catalogo.models import (
     Calificacion,
     EstadoEmbedding,
@@ -57,6 +66,7 @@ from catalogo.services.embeddings import (
 )
 from catalogo.services.materialization import (
     _necesita_enriquecimiento,
+    claves_frescas,
     materializar,
 )
 from catalogo.services.tmdb import get_catalog_service
@@ -2485,3 +2495,485 @@ class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
         self.assertEqual(calificacion_despues.valor, 9)
         self.assertEqual(calificacion_despues.produccion_id, produccion.pk)
         self.assertEqual(Resena.objects.get(pk=resena.pk).texto, "La primera regla...")
+
+
+# ---------------------------------------------------------------------------
+# Seed inicial del catálogo (C-04c, fase 2)
+# ---------------------------------------------------------------------------
+# Forma real de `/genre/{tipo}/list` (verificada el 18/09/2026):
+# `{"genres": [{"id": 28, "name": "Action"}, ...]}`. Dos géneros de película y
+# uno de serie alcanzan para cubrir el producto género x década x tipo sin que
+# las combinaciones se vuelvan ilegibles.
+_GENEROS_MOVIE = {"genres": [{"id": 28, "name": "Action"}, {"id": 18, "name": "Drama"}]}
+_GENEROS_TV = {"genres": [{"id": 18, "name": "Drama"}]}
+
+# TMDB pagina `discover` de a 20 ítems.
+_POR_PAGINA = 20
+
+_LOGGER_SEED = "catalogo.management.commands.seed_catalogo"
+
+
+def _discover_paginado(catalogo, total_pages=None):
+    """Un `discover` falso que pagina como TMDB.
+
+    `catalogo` mapea `(tipo_tmdb, id_genero) -> [ids]`. El fake calcula
+    `total_pages` del largo real, salvo que un test lo fuerce para simular el
+    `total_pages` mentiroso de TMDB (reporta 1001 y rechaza la página 501).
+    Los filtros de década y orden se aceptan y se ignoran: lo que se prueba
+    acá es el recorrido, no el filtrado (eso ya lo cubre `TMDBDiscoverRangoTest`).
+    """
+
+    def discover(tipo, genero=None, page=1, **_):
+        ids = catalogo.get((tipo, genero), [])
+        inicio = (page - 1) * _POR_PAGINA
+        return {
+            "page": page,
+            "results": [
+                {"id": id_tmdb} for id_tmdb in ids[inicio : inicio + _POR_PAGINA]
+            ],
+            "total_pages": total_pages or max(1, -(-len(ids) // _POR_PAGINA)),
+        }
+
+    return discover
+
+
+def _servicio_seed_falso(catalogo, total_pages=None):
+    """Doble del servicio para el seed: géneros fijos y `discover` paginado."""
+    servicio = _servicio_tmdb_falso()
+    servicio.get_genres = Mock(
+        side_effect=lambda tipo: _GENEROS_MOVIE if tipo == "movie" else _GENEROS_TV
+    )
+    servicio.discover = Mock(side_effect=_discover_paginado(catalogo, total_pages))
+    return servicio
+
+
+class ClavesFrescasTests(TestCase):
+    """`claves_frescas()`: lo que `materializar()` NO volvería a enriquecer.
+
+    El seed la consulta una vez al arrancar para saltear filas sin llamar a
+    `materializar()` por cada una. Tiene que usar la MISMA definición de
+    "fresca" que `_necesita_enriquecimiento`, o el seed saltearía filas que la
+    materialización sí refrescaría (o al revés).
+    """
+
+    def test_devuelve_solo_las_enriquecidas_dentro_de_la_ventana(self):
+        ahora = timezone.now()
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=1,
+            tipo=TipoProduccion.PELICULA,
+            titulo="fresca",
+            fecha_enriquecimiento=ahora - timedelta(days=1),
+        )
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=2,
+            tipo=TipoProduccion.SERIE,
+            titulo="nunca enriquecida",
+            fecha_enriquecimiento=None,
+        )
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=3,
+            tipo=TipoProduccion.PELICULA,
+            titulo="vencida",
+            fecha_enriquecimiento=ahora - timedelta(days=91),
+        )
+
+        self.assertEqual(claves_frescas(), {(1, TipoProduccion.PELICULA)})
+
+
+_GENEROS_POR_TIPO = {"movie": _GENEROS_MOVIE["genres"], "tv": _GENEROS_TV["genres"]}
+
+
+class SeedCombinacionesTests(SimpleTestCase):
+    """Cómo se arma el espacio de muestreo: género x década x tipo."""
+
+    def test_cruza_genero_decada_y_tipo(self):
+        combinaciones = _combinaciones(
+            _GENEROS_POR_TIPO, desde_anio=2000, hasta_anio=2026
+        )
+
+        # 3 géneros (2 movie + 1 tv) x 3 décadas (2000, 2010, 2020) = 9. La
+        # década en curso entra entera (hasta 2029): el filtro es por rango de
+        # fechas y a TMDB no le molesta que el tope esté en el futuro.
+        self.assertEqual(len(combinaciones), 9)
+        self.assertEqual(
+            {(c.tipo, c.genero, c.anio_desde, c.anio_hasta) for c in combinaciones},
+            {
+                (tipo, genero, decada, decada + 9)
+                for tipo, genero in (("movie", 28), ("movie", 18), ("tv", 18))
+                for decada in (2000, 2010, 2020)
+            },
+        )
+        # El nombre viaja para el progreso en pantalla.
+        self.assertEqual({c.nombre_genero for c in combinaciones}, {"Action", "Drama"})
+
+    def test_desde_anio_se_redondea_a_la_decada(self):
+        combinaciones = _combinaciones(
+            {"tv": _GENEROS_TV["genres"]}, desde_anio=1985, hasta_anio=1999
+        )
+
+        self.assertEqual(
+            [(c.anio_desde, c.anio_hasta) for c in sorted(combinaciones)],
+            [(1980, 1989), (1990, 1999)],
+        )
+
+    def test_el_orden_es_barajado_y_determinista(self):
+        # Barajado: cortar a mitad de ronda en orden de declaración sesgaría
+        # hacia el primer género de la lista. Determinista: dos corridas
+        # recorren el mismo camino, así que retomar no cambia el muestreo.
+        primera = _combinaciones(_GENEROS_POR_TIPO, desde_anio=2000, hasta_anio=2026)
+        segunda = _combinaciones(_GENEROS_POR_TIPO, desde_anio=2000, hasta_anio=2026)
+
+        self.assertEqual(primera, segunda)
+        self.assertNotEqual(primera, sorted(primera))
+
+
+class SeedRecorridoTests(SimpleTestCase):
+    """El recorrido round-robin de `discover` y la pared de las 500 páginas."""
+
+    def _combinacion(self, genero, nombre="Action"):
+        return Combinacion("movie", genero, nombre, 2020, 2029)
+
+    def test_pide_pagina_1_de_todas_antes_que_la_2_de_ninguna(self):
+        # Round-robin: una corrida interrumpida a mitad de camino tiene un poco
+        # de todo, no todo de Action y nada de Drama.
+        servicio = _servicio_seed_falso(
+            {("movie", 28): list(range(1, 26)), ("movie", 18): [100, 101]}
+        )
+        combinaciones = [self._combinacion(28), self._combinacion(18, "Drama")]
+
+        recorrido = [
+            (c.genero, pagina) for c, pagina, _ in _recorrer(servicio, combinaciones)
+        ]
+
+        # Action tiene 2 páginas, Drama 1: la 2 de Action va DESPUÉS de la 1 de
+        # Drama, y Drama no se vuelve a pedir.
+        self.assertEqual(recorrido, [(28, 1), (18, 1), (28, 2)])
+
+    def test_pasa_a_discover_el_rango_de_la_decada_y_el_orden_por_votos(self):
+        servicio = _servicio_seed_falso({("movie", 28): [1]})
+
+        list(_recorrer(servicio, [self._combinacion(28)]))
+
+        # El rango viaja como `anio_desde`/`anio_hasta`: es el CLIENTE quien
+        # lo traduce al parámetro de fecha de cada tipo (fase 1). El orden por
+        # votos trae los clásicos, no lo que trendea esta semana.
+        servicio.discover.assert_called_once_with(
+            "movie",
+            genero=28,
+            page=1,
+            anio_desde=2020,
+            anio_hasta=2029,
+            sort_by="vote_count.desc",
+        )
+
+    def test_se_corta_en_500_paginas_aunque_tmdb_reporte_mas(self):
+        # Verificado en vivo el 18/09/2026: `total_pages` dice 1001 y la
+        # página 501 devuelve HTTP 400. Sin este tope, una corrida de cuatro
+        # horas moriría cerca del final por un `TMDBBadRequest`.
+        servicio = _servicio_seed_falso(
+            {("movie", 28): list(range(1, 20_001))}, total_pages=1001
+        )
+
+        paginas = [
+            pagina for _, pagina, _ in _recorrer(servicio, [self._combinacion(28)])
+        ]
+
+        self.assertEqual(_MAX_PAGINAS, 500)
+        self.assertEqual(paginas, list(range(1, 501)))
+
+    def test_una_pagina_que_falla_avisa_y_saca_la_combinacion_de_la_ronda(self):
+        servicio = _servicio_seed_falso({("movie", 18): [100]})
+
+        def explota_en_action(tipo, genero=None, page=1, **kwargs):
+            if genero == 28:
+                raise RuntimeError("TMDB returned HTTP 500")
+            return _discover_paginado({("movie", 18): [100]})(tipo, genero, page)
+
+        servicio.discover.side_effect = explota_en_action
+
+        with self.assertLogs(_LOGGER_SEED, level="ERROR"):
+            recorrido = list(
+                _recorrer(
+                    servicio, [self._combinacion(28), self._combinacion(18, "Drama")]
+                )
+            )
+
+        # La página fallida se reporta con `None` (el comando la cuenta como
+        # error) y la de Drama se lee igual: un 500 en una combinación no
+        # tira la corrida.
+        self.assertEqual(
+            [(c.genero, items) for c, _, items in recorrido],
+            [(28, None), (18, [{"id": 100}])],
+        )
+
+
+class SeedCatalogoTests(TestCase):
+    """El comando `seed_catalogo` con `materializar` mockeada.
+
+    El enriquecimiento ya tiene su suite; lo que se prueba acá es que el
+    comando recorra las combinaciones, saltee lo que no hace falta pedir,
+    respete el tope, sobreviva a un ítem malo y cuente bien lo que hizo.
+
+    Todos los tests arrancan en la década de 2020 (`--desde-anio 2020`) para
+    que cada género tenga UNA combinación y el recorrido sea legible: con los
+    géneros del fake son tres — Action/movie, Drama/movie y Drama/tv.
+    """
+
+    def setUp(self):
+        self.catalogo = {
+            ("movie", 28): [1, 2, 3],
+            ("movie", 18): [4, 5],
+            ("tv", 18): [6],
+        }
+        self.servicio = _servicio_seed_falso(self.catalogo)
+        parche_servicio = patch(
+            "catalogo.management.commands.seed_catalogo.get_catalog_service",
+            return_value=self.servicio,
+        )
+        parche_materializar = patch(
+            "catalogo.management.commands.seed_catalogo.materializar"
+        )
+        parche_servicio.start()
+        self.materializar = parche_materializar.start()
+        self.addCleanup(parche_servicio.stop)
+        self.addCleanup(parche_materializar.stop)
+
+    def _correr(self, *argumentos):
+        """Corre el comando como desde la terminal y devuelve (estadísticas, salida).
+
+        `call_command` acepta una instancia: así el test puede leer las
+        estadísticas del objeto después, sin parsear la salida.
+        """
+        comando = SeedCatalogo()
+        salida = StringIO()
+        call_command(comando, "--desde-anio", "2020", *argumentos, stdout=salida)
+        return comando.estadisticas, salida.getvalue()
+
+    def _ids_materializados(self):
+        return [c.args[0] for c in self.materializar.call_args_list]
+
+    def test_materializa_cada_item_con_el_tipo_de_su_combinacion(self):
+        estadisticas, _ = self._correr()
+
+        self.materializar.assert_has_calls(
+            [
+                call(1, "movie"),
+                call(2, "movie"),
+                call(3, "movie"),
+                call(4, "movie"),
+                call(5, "movie"),
+                call(6, "tv"),
+            ],
+            any_order=True,
+        )
+        self.assertEqual(
+            estadisticas,
+            {"materializadas": 6, "ya_estaban": 0, "omitidas": 0, "errores": 0},
+        )
+
+    def test_limite_corta_la_corrida_a_mitad_de_ronda(self):
+        estadisticas, _ = self._correr("--limite", "4")
+
+        self.assertEqual(self.materializar.call_count, 4)
+        self.assertEqual(estadisticas["materializadas"], 4)
+
+    def test_las_frescas_se_saltean_sin_llamar_a_materializar(self):
+        # Retomar una corrida interrumpida tiene que ser gratis: lo que ya
+        # está fresco ni siquiera llega a `materializar()`. Lo que está pero
+        # nunca se enriqueció (la corrida anterior murió a mitad de la ficha)
+        # SÍ se manda, para que quede completo.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=1,
+            tipo=TipoProduccion.PELICULA,
+            titulo="fresca",
+            fecha_enriquecimiento=timezone.now(),
+        )
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=2,
+            tipo=TipoProduccion.PELICULA,
+            titulo="",
+            fecha_enriquecimiento=None,
+        )
+
+        estadisticas, _ = self._correr()
+
+        self.assertNotIn(1, self._ids_materializados())
+        self.assertIn(2, self._ids_materializados())
+        self.assertEqual(estadisticas["ya_estaban"], 1)
+        self.assertEqual(estadisticas["materializadas"], 5)
+
+    def test_las_frescas_no_consumen_el_limite(self):
+        # `--limite` cuenta lo que ESTA corrida materializa: al retomar con el
+        # mismo valor, lo que ya estaba no descuenta cupo. Una fresca entre
+        # seis y tope 5: si la fresca descontara, saldrían 4 materializadas.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=1,
+            tipo=TipoProduccion.PELICULA,
+            titulo="fresca",
+            fecha_enriquecimiento=timezone.now(),
+        )
+
+        estadisticas, _ = self._correr("--limite", "5")
+
+        self.assertEqual(estadisticas["materializadas"], 5)
+        self.assertEqual(estadisticas["ya_estaban"], 1)
+
+    def test_un_item_que_falla_se_cuenta_y_la_corrida_sigue(self):
+        def explota_en_el_2(id_tmdb, tipo_tmdb):
+            if id_tmdb == 2:
+                raise RuntimeError("TMDB returned HTTP 404")
+            return Mock()
+
+        self.materializar.side_effect = explota_en_el_2
+
+        with self.assertLogs(_LOGGER_SEED, level="ERROR"):
+            estadisticas, _ = self._correr()
+
+        self.assertEqual(self.materializar.call_count, 6)
+        self.assertEqual(estadisticas["errores"], 1)
+        self.assertEqual(estadisticas["materializadas"], 5)
+
+    def test_una_pagina_de_discover_que_falla_se_cuenta_como_error(self):
+        discover_sano = self.servicio.discover.side_effect
+
+        def explota_en_action(tipo, genero=None, page=1, **kwargs):
+            if genero == 28:
+                raise RuntimeError("TMDB returned HTTP 500")
+            return discover_sano(tipo, genero=genero, page=page, **kwargs)
+
+        self.servicio.discover.side_effect = explota_en_action
+
+        with self.assertLogs(_LOGGER_SEED, level="ERROR"):
+            estadisticas, _ = self._correr()
+
+        self.assertEqual(sorted(self._ids_materializados()), [4, 5, 6])
+        self.assertEqual(estadisticas["errores"], 1)
+
+    def test_un_titulo_en_dos_generos_se_materializa_una_vez(self):
+        # Una película es Action Y Drama a la vez: aparece en las dos
+        # combinaciones. La segunda vez se saltea y se cuenta como omitida.
+        self.catalogo[("movie", 18)] = [4, 1]
+
+        estadisticas, _ = self._correr()
+
+        self.assertEqual(self._ids_materializados().count(1), 1)
+        self.assertEqual(estadisticas["omitidas"], 1)
+        self.assertEqual(estadisticas["materializadas"], 5)
+
+    def test_el_mismo_id_en_movie_y_tv_son_dos_producciones(self):
+        # El id de TMDB solo es único DENTRO de un tipo: la película 18 y la
+        # serie 18 no tienen nada que ver. La clave es (id, tipo).
+        self.catalogo[("tv", 18)] = [1]
+
+        estadisticas, _ = self._correr()
+
+        self.assertIn(call(1, "movie"), self.materializar.call_args_list)
+        self.assertIn(call(1, "tv"), self.materializar.call_args_list)
+        self.assertEqual(estadisticas["omitidas"], 0)
+
+    def test_tipos_restringe_el_muestreo(self):
+        self._correr("--tipos", "movie")
+
+        self.servicio.get_genres.assert_called_once_with("movie")
+        tipos_pedidos = {c.args[0] for c in self.servicio.discover.call_args_list}
+        self.assertEqual(tipos_pedidos, {"movie"})
+
+    def test_dry_run_recorre_pero_no_escribe(self):
+        estadisticas, salida = self._correr("--dry-run")
+
+        self.assertGreater(self.servicio.discover.call_count, 0)
+        self.materializar.assert_not_called()
+        # Reporta lo que HABRÍA materializado, y avisa que no escribió.
+        self.assertEqual(estadisticas["materializadas"], 6)
+        self.assertIn("dry-run", salida)
+
+    def test_pausa_espera_entre_materializaciones(self):
+        with patch("catalogo.management.commands.seed_catalogo.time.sleep") as sleep:
+            self._correr("--pausa", "0.5")
+
+        self.assertEqual(sleep.call_args_list, [call(0.5)] * 6)
+
+    def test_ctrl_c_imprime_el_resumen_y_no_explota(self):
+        # Lo materializado hasta el corte queda guardado (cada `materializar`
+        # es su propia transacción), así que el comando cierra prolijo con el
+        # resumen en vez de un traceback.
+        def interrumpe_en_la_tercera(id_tmdb, tipo_tmdb):
+            if self.materializar.call_count == 3:
+                raise KeyboardInterrupt
+            return Mock()
+
+        self.materializar.side_effect = interrumpe_en_la_tercera
+
+        estadisticas, salida = self._correr()
+
+        self.assertEqual(estadisticas["materializadas"], 2)
+        self.assertIn("Interrumpido", salida)
+        self.assertIn("materializadas=2", salida)
+
+    def test_el_progreso_dice_donde_esta_y_el_resumen_cuenta_todo(self):
+        _, salida = self._correr("--limite", "100")
+
+        # Una línea por página leída: contador, objetivo y qué combinación es.
+        self.assertIn("Action · película · 2020-2029 · página 1", salida)
+        self.assertIn("Drama · serie · 2020-2029 · página 1", salida)
+        self.assertIn("/100]", salida)
+        self.assertIn("materializadas=6 ya_estaban=0 omitidas=0 errores=0", salida)
+
+
+class SeedCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
+    """El seed con `materializar` REAL y TMDB falso: lo que queda en la base.
+
+    El mixin parchea el servicio en materialization.py (detalle, créditos y
+    keywords); acá se le agregan géneros y `discover`, y se parchea el mismo
+    objeto en el comando.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.servicio.get_genres = Mock(
+            side_effect=lambda tipo: _GENEROS_MOVIE if tipo == "movie" else _GENEROS_TV
+        )
+        self.servicio.discover = Mock(
+            side_effect=_discover_paginado(
+                {("movie", 28): [550, 155], ("movie", 18): [550], ("tv", 18): [1396]}
+            )
+        )
+        parche = patch(
+            "catalogo.management.commands.seed_catalogo.get_catalog_service",
+            return_value=self.servicio,
+        )
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def _correr(self):
+        comando = SeedCatalogo()
+        with self.captureOnCommitCallbacks(execute=True):
+            call_command(comando, "--desde-anio", "2020", stdout=StringIO())
+        return comando.estadisticas
+
+    def test_las_filas_quedan_enriquecidas_y_la_segunda_corrida_no_agrega_nada(self):
+        primera = self._correr()
+        self.servicio.get_movie_detail.reset_mock()
+        self.servicio.get_tv_detail.reset_mock()
+        segunda = self._correr()
+
+        # 550 está en Action y en Drama: una sola fila. Tres en total.
+        self.assertEqual(primera["materializadas"], 3)
+        self.assertEqual(primera["omitidas"], 1)
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 3)
+        self.assertEqual(ProduccionEmbedding.objects.count(), 3)
+        # Todas pasaron por la ficha completa, no quedaron con la forma del listado.
+        self.assertFalse(
+            ProduccionAudiovisual.objects.filter(fecha_enriquecimiento=None).exists()
+        )
+        serie = ProduccionAudiovisual.objects.get(
+            id_tmdb=1396, tipo=TipoProduccion.SERIE
+        )
+        self.assertEqual(serie.titulo, "Breaking Bad")
+        self.assertEqual(serie.directores, ["Vince Gilligan"])
+        # La segunda corrida: nada nuevo, nada duplicado, y ni una ficha pedida.
+        self.assertEqual(segunda["materializadas"], 0)
+        self.assertEqual(segunda["ya_estaban"], 3)
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 3)
+        self.servicio.get_movie_detail.assert_not_called()
+        self.servicio.get_tv_detail.assert_not_called()

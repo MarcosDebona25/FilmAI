@@ -113,8 +113,30 @@ def _necesita_enriquecimiento(produccion):
     """
     if produccion.fecha_enriquecimiento is None:
         return True
-    return timezone.now() - produccion.fecha_enriquecimiento > timedelta(
-        days=_DIAS_RED_DE_SEGURIDAD
+    return produccion.fecha_enriquecimiento < _umbral_de_frescura()
+
+
+def _umbral_de_frescura():
+    """Instante antes del cual una fila enriquecida cuenta como vencida."""
+    return timezone.now() - timedelta(days=_DIAS_RED_DE_SEGURIDAD)
+
+
+def claves_frescas():
+    """`{(id_tmdb, tipo)}` de las filas que `materializar()` no volvería a enriquecer.
+
+    Para quien recorre miles de candidatos —el seed de C-04c— es la diferencia
+    entre una consulta al arrancar y una por ítem, y evita invocar
+    `materializar()` solo para descubrir que no había nada que hacer. Usa el
+    mismo umbral que `_necesita_enriquecimiento`, a propósito: si las dos
+    definiciones divergieran, el seed saltearía filas que la materialización
+    sí refrescaría, o al revés. Las filas con `fecha_enriquecimiento` NULL
+    quedan afuera solas (el `>=` no matchea NULL), que es lo correcto: nunca
+    se enriquecieron y hay que mandarlas.
+    """
+    return set(
+        ProduccionAudiovisual.objects.filter(
+            fecha_enriquecimiento__gte=_umbral_de_frescura()
+        ).values_list("id_tmdb", "tipo")
     )
 
 
