@@ -23,12 +23,12 @@
 
 ## Phase 1: Client support
 
-- [ ] 1.1 RED: add `TMDBGenresTest` — `get_genres(tipo)` hits `/genre/{tipo}/list` for both types and reuses the shared error mapping; add the cache-layer case for the new `"genres"` TTL (30 d: genre ids are effectively static)
-- [ ] 1.2 GREEN: add `get_genres` to `client.py` and `cache.py`
-- [ ] 1.3 RED: add cases asserting `discover()` accepts a year range and sends the parameters TMDB expects **per type** — `primary_release_date.gte/.lte` for movies, `first_air_date.gte/.lte` for series — and that the existing single-`anio` callers are unaffected
-- [ ] 1.4 RED: add a case asserting `discover()` forwards `sort_by` when given
-- [ ] 1.5 GREEN: extend `discover()` additively
-- [ ] 1.6 Full suite + `ruff format . && ruff check .`
+- [x] 1.1 RED: add `TMDBGenresTest` — `get_genres(tipo)` hits `/genre/{tipo}/list` for both types and reuses the shared error mapping; add the cache-layer case for the new `"genres"` TTL (30 d: genre ids are effectively static). *Confirmed at apply time:* the two types have **different** genre catalogues — movies have `Action` (28) and `Adventure` (12) separately, series have `Action & Adventure` (10759), so ids are not interchangeable and a single hard-coded list would have filtered nothing
+- [x] 1.2 GREEN: add `get_genres` to `client.py` and `cache.py`
+- [x] 1.3 RED: add cases asserting `discover()` accepts a year range and sends the parameters TMDB expects **per type** — `primary_release_date.gte/.lte` for movies, `first_air_date.gte/.lte` for series — and that the existing single-`anio` callers are unaffected. Also that the **other type's** parameter does not travel: TMDB ignores an unknown filter silently and returns the unfiltered catalogue, which is the worst way for this to fail
+- [x] 1.4 RED: add a case asserting `discover()` forwards `sort_by` when given
+- [x] 1.5 GREEN: extend `discover()` additively. *Note:* the cache key gains the three new filters, which broke `test_ttl_applied_per_endpoint` — the intended behaviour of that test, updated deliberately
+- [x] 1.6 Full suite (222) + `ruff format . && ruff check .`. Live smoke: sci-fi 80s by vote count returns Back to the Future / Empire Strikes Back / Blade Runner; 90s TV drama returns The Sopranos and *Yo soy Betty, la fea* — the sampling reaches beyond Hollywood, which is the point
 
 ## Phase 2: The seed command
 
