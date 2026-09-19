@@ -1715,3 +1715,69 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   apuntar a la versión corta y expandir donde el concepto lo pida.
 - **Origen**: pregunta del usuario — «¿diferencia entre actualizadas y
   refrescadas?». El nombre no resistía la explicación.
+
+## 19/09/2026 — C-04c: el seed del catálogo muestrea por género × década × tipo, en round-robin barajado
+
+- **Fecha**: 19/09/2026
+- **Contexto**: la sync (C-04b) mantiene el catálogo fresco pero no lo hace
+  crecer: lee la página 1 de cuatro listados, ~60 producciones por noche, casi
+  todas repetidas. El corpus es el espacio de búsqueda semántica (B-06), y un
+  corpus de éxitos del mes solo puede recomendar éxitos del mes.
+- **Decisión**: `python manage.py seed_catalogo`
+  (`backend/catalogo/management/commands/seed_catalogo.py`), un comando de
+  management —no una tarea Celery— que recorre `/discover` por **género ×
+  década × tipo** y materializa por `materializar()`, sin abrir un segundo
+  camino de escritura. Spec canónica en `openspec/specs/catalog-seed/spec.md`.
+  - **Muestreo, no popularidad**: 19 géneros de película × 6 décadas + 16 de
+    serie × 6 = **210 combinaciones**, desde 1970 hasta la década en curso.
+    Los géneros se piden a `/genre/{tipo}/list` (difieren por tipo; ids de
+    TMDB, no nuestros). Dentro de cada combinación, `sort_by=vote_count.desc`:
+    verificado en vivo, trae *The Shining*, *Blade Runner* y *Die Hard*, no lo
+    que trendea esta semana.
+  - **Round-robin sobre un orden barajado con semilla fija**: página 1 de
+    todas las combinaciones antes que la 2 de ninguna. La corrida se corta
+    (por `--limite`, Ctrl-C o una notebook cerrada) y en profundidad dejaría
+    todo Action y nada de Drama; en orden de declaración sesgaría al primer
+    género de la lista. La semilla fija hace que dos corridas recorran el mismo
+    camino, así retomar cubre el mismo terreno y un test puede afirmar el orden.
+  - **Pared de 500 páginas**: `min(total_pages, 500)`. `/discover` reporta
+    1001 y la página 501 devuelve HTTP 400 (verificado 18/09). Misma lección
+    que los 98 páginas de `/changes` en C-04b: los números de la API son
+    entrada, no verdad.
+  - **`--limite` cuenta lo materializado en ESA corrida** (default 2.000). Lo
+    fresco no descuenta cupo. Se eligió la lectura literal del SDD por ser la
+    más simple de explicar: «hacé N más».
+  - **Resumible sin estado propio**: al arrancar carga `claves_frescas()`
+    —nuevo helper de solo lectura en `materialization.py`, con el **mismo
+    umbral** de 90 días que `_necesita_enriquecimiento` (se extrajo
+    `_umbral_de_frescura()` para que no puedan divergir)— y saltea esas
+    claves sin llamar a `materializar()`. Las filas que existen pero nunca se
+    enriquecieron sí se mandan. Sin archivo de progreso ni tabla de estado.
+  - **Fallos por ítem y por página**: se loguean, se cuentan en `errores` y
+    se sigue; una página que falla saca su combinación de la ronda. Ctrl-C
+    imprime el resumen y sale sin traceback: cada `materializar()` es su
+    propia transacción.
+  - **`--dry-run` recorre `discover` de verdad** (cacheado 6 h) sin escribir:
+    muestra el muestreo real en pantalla y una corrida real después no paga
+    dos veces las llamadas.
+  - **Guard en `manage.py seed`** (`usuarios/management/commands/seed.py`):
+    por encima de `UMBRAL_CATALOGO_PROTEGIDO` (100, el doble de lo que crea el
+    propio comando) aborta con `CommandError` y nombra `--borrar-catalogo`.
+    Documentarlo en el README dependía de que alguien lo hubiera leído justo
+    cuando intenta resetear su base.
+- **Verificado en vivo (19/09/2026)**: `--limite 50` materializó 50 en 34 s
+  (~0,7 s por producción, más rápido que la estimación de 1,5 s), todas con
+  reparto, directores, keywords y `fecha_enriquecimiento`. Con 50 solo se
+  alcanzan 3 combinaciones, así que la dispersión se verificó con un
+  `--dry-run --limite 600`: 37 combinaciones, 26 película / 11 serie, las 6
+  décadas. Con 0,7 s medidos: 2.000 ≈ 25 min, 10.000 ≈ 2 h.
+- **Pendiente, a resolver con B-06 andando**: si 2.000 alcanza o vale dejar la
+  máquina para 10.000; y si los géneros de TV *Talk*, *Soap*, *News* y
+  *Reality* (que TMDB lista y el seed incluye) merecen un `--excluir-generos`.
+- **Archivos**: `backend/catalogo/management/commands/seed_catalogo.py`
+  (nuevo), `backend/catalogo/services/materialization.py`
+  (`claves_frescas`, `_umbral_de_frescura`), `backend/catalogo/tests.py`
+  (22 tests), `backend/usuarios/management/commands/seed.py` y `tests.py`
+  (3 tests), `openspec/specs/catalog-seed/spec.md` (nueva), `README.md`,
+  `docs/05_Plan_de_Desarrollo.md`. Se elimina `openspec/changes/catalog-seed/`
+  (sección 9 de `AGENTS.md`).
