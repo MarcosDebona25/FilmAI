@@ -81,18 +81,42 @@ class TMDBClientCache:
             "now_playing", params, lambda: self.client.get_now_playing(page)
         )
 
-    def discover(self, tipo, genero=None, anio=None, min_rating=None, page=1):
+    def discover(
+        self,
+        tipo,
+        genero=None,
+        anio=None,
+        min_rating=None,
+        page=1,
+        anio_desde=None,
+        anio_hasta=None,
+        sort_by=None,
+    ):
+        # Todos los filtros entran en la clave: dos consultas que difieren en
+        # la década son dos respuestas distintas, no un cache hit.
         params = {
             "tipo": tipo,
             "genero": genero,
             "anio": anio,
             "min_rating": min_rating,
             "page": page,
+            "anio_desde": anio_desde,
+            "anio_hasta": anio_hasta,
+            "sort_by": sort_by,
         }
         return self._cached_call(
             "discover",
             params,
-            lambda: self.client.discover(tipo, genero, anio, min_rating, page),
+            lambda: self.client.discover(
+                tipo,
+                genero,
+                anio,
+                min_rating,
+                page,
+                anio_desde,
+                anio_hasta,
+                sort_by,
+            ),
         )
 
     def search(self, query, tipo, page=1):
