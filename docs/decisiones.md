@@ -1683,6 +1683,39 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   `AGENTS.md` actualizado con sección 8 (herramientas de review desactivadas)
   y sección 9 (estructura de documentación).
 
+## 18/09/2026 — `actualizadas` pasa a `ya_existentes`; C-04b cerrada
+
+- **Contexto**: la sync devuelve cinco contadores. Al explicar la diferencia
+  entre `actualizadas` y `refrescadas` quedó claro que el primero describe mal
+  lo que mide.
+- **Decisión**: `actualizadas` → **`ya_existentes`**. `refrescadas` se queda
+  con ese nombre.
+- **Motivo**: el contador no cuenta producciones actualizadas; cuenta las que
+  la pasada de descubrimiento encontró y ya estaban guardadas. Si la fila
+  estaba fresca, `materializar()` ni le pidió el detalle a TMDB y el contador
+  sube igual.
+- **Por qué `refrescadas` NO pasó a llamarse `actualizadas`**, que era la
+  alternativa más intuitiva y la que alinea literal con el CU: `refrescadas`
+  nombra una **acción** que siempre ocurre cuando el contador sube (se volvió a
+  pedir la ficha y se reescribieron los campos). `actualizadas` afirmaría un
+  **resultado** que no verificamos: si TMDB reporta un cambio en un campo que
+  no guardamos (un backdrop, un video, una traducción), reescribimos los mismos
+  valores. Habría sido cambiar un nombre preciso por otro impreciso, y encima
+  reciclando la misma palabra que se acababa de retirar del otro contador.
+- **Trazabilidad con CU-021**: el paso 5 pide «cantidad de producciones nuevas,
+  actualizadas y errores». Ese requisito lo cumple **`refrescadas`**. El texto
+  del caso de uso **no se tocó** (es un entregable académico); la aclaración
+  está en su campo *Observaciones*.
+- **Cierre de C-04b**: con todo mergeado a `main` (PRs #19 a #23), se elimina
+  `openspec/changes/catalog-daily-sync/` siguiendo la política de la sección 9
+  de `AGENTS.md` (los cambios completados se eliminan, no se archivan). La spec
+  canónica `openspec/specs/catalog-daily-sync/spec.md` queda como referencia.
+- **Skill `explicar-al-implementar`**: se concilió la regla 4. El cuerpo pedía
+  brevedad y el `description` pedía lo contrario; ahora ambos dicen lo mismo —
+  apuntar a la versión corta y expandir donde el concepto lo pida.
+- **Origen**: pregunta del usuario — «¿diferencia entre actualizadas y
+  refrescadas?». El nombre no resistía la explicación.
+
 ## 19/09/2026 — L-01: contrato enriquecido de resúmenes de listas
 
 - **Decisión**: `GET /api/lists/` devuelve, por cada lista propia, los tres

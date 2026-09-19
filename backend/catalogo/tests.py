@@ -2076,7 +2076,7 @@ class SyncCatalogoTests(TestCase):
         self.assertEqual(self.materializar.call_count, 5)
         self.assertEqual(estadisticas["errores"], 1)
 
-    def test_las_estadisticas_distinguen_nuevas_de_actualizadas(self):
+    def test_las_estadisticas_distinguen_nuevas_de_ya_existentes(self):
         # Fight Club ya estaba en la base; los otros cuatro son nuevos.
         ProduccionAudiovisual.objects.create(
             id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
@@ -2088,7 +2088,7 @@ class SyncCatalogoTests(TestCase):
             estadisticas,
             {
                 "nuevas": 4,
-                "actualizadas": 1,
+                "ya_existentes": 1,
                 "refrescadas": 0,
                 "omitidas": 1,
                 "errores": 0,
@@ -2166,9 +2166,9 @@ class SyncCatalogoTests(TestCase):
         self.assertIn(call(550, "movie", forzar=True), self.materializar.call_args_list)
         # 550 también se materializa en descubrimiento (sin forzar)
         self.assertIn(call(550, "movie"), self.materializar.call_args_list)
-        # Se cuenta como "actualizada" en descubrimiento (porque ya existía)
+        # Se cuenta en ya_existentes por el descubrimiento (porque ya existía)
         self.assertEqual(estadisticas["refrescadas"], 1)
-        self.assertEqual(estadisticas["actualizadas"], 1)
+        self.assertEqual(estadisticas["ya_existentes"], 1)
         self.assertEqual(estadisticas["nuevas"], 4)  # los otros 4 de trending
 
     def test_multiples_items_en_changes_algunos_fallan(self):
@@ -2264,13 +2264,29 @@ class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
 
         self.assertEqual(primera["nuevas"], 5)
         self.assertEqual(segunda["nuevas"], 0)
-        self.assertEqual(segunda["actualizadas"], 5)
+        self.assertEqual(segunda["ya_existentes"], 5)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 5)
         self.assertEqual(ProduccionEmbedding.objects.count(), 5)
         # Todas pasaron por el detalle, no quedaron con la forma del listado.
         self.assertFalse(
             ProduccionAudiovisual.objects.filter(fecha_enriquecimiento=None).exists()
         )
+
+    def test_una_fila_fresca_se_cuenta_pero_no_se_le_pide_el_detalle(self):
+        # Fija el significado de `ya_existentes`: mide presencia, no escritura.
+        # El nombre viejo (`actualizadas`) sugería lo contrario.
+        with self.captureOnCommitCallbacks(execute=True):
+            sync_catalogo_diaria()
+        self.servicio.get_movie_detail.reset_mock()
+        self.servicio.get_tv_detail.reset_mock()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            estadisticas = sync_catalogo_diaria()
+
+        self.assertEqual(estadisticas["ya_existentes"], 5)
+        self.assertEqual(estadisticas["refrescadas"], 0)
+        self.servicio.get_movie_detail.assert_not_called()
+        self.servicio.get_tv_detail.assert_not_called()
 
     def test_el_refresco_reenriquece_solo_lo_que_tmdb_dice_que_cambio(self):
         # Dos películas completas y frescas: el criterio de fecha las saltearía.
