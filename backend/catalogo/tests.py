@@ -299,6 +299,117 @@ class TMDBChangesTest(SimpleTestCase):
             client.get_changes("movie")
 
 
+class TMDBDiscoverRangoTest(SimpleTestCase):
+    """Rango de años y orden en `discover` (C-04c).
+
+    El seed muestrea por década, y `discover` hasta ahora solo aceptaba UN
+    año (`anio`). TMDB expone el rango con parámetros de fecha, y —igual que
+    con el año suelto— **el nombre difiere por tipo**: las películas filtran
+    por `primary_release_date`, las series por `first_air_date`. Verificado
+    contra la API el 18/09/2026.
+
+    `sort_by` importa tanto como el filtro: sci-fi de los 80 ordenado por
+    votos devuelve *Back to the Future*; con el orden por defecto
+    (popularidad) devuelve lo que trendea esta semana.
+    """
+
+    def _client(self, sink):
+        def handler(request):
+            sink.append(request)
+            return httpx.Response(200, json={"results": []})
+
+        return TMDBClient(api_key="test-key", transport=httpx.MockTransport(handler))
+
+    def test_el_rango_de_anios_usa_el_parametro_de_fecha_de_cada_tipo(self):
+        casos = (
+            ("movie", "primary_release_date", "first_air_date"),
+            ("tv", "first_air_date", "primary_release_date"),
+        )
+        for tipo, esperado, ajeno in casos:
+            with self.subTest(tipo=tipo):
+                requests = []
+                client = self._client(requests)
+
+                client.discover(tipo, anio_desde=1980, anio_hasta=1989)
+
+                params = requests[0].url.params
+                self.assertEqual(params[f"{esperado}.gte"], "1980-01-01")
+                self.assertEqual(params[f"{esperado}.lte"], "1989-12-31")
+                # El parámetro del otro tipo no viaja: TMDB lo ignoraría en
+                # silencio y la década no se aplicaría.
+                self.assertNotIn(f"{ajeno}.gte", params)
+
+    def test_reenvia_sort_by_cuando_se_lo_pasan(self):
+        requests = []
+        client = self._client(requests)
+
+        client.discover("movie", sort_by="vote_count.desc")
+
+        self.assertEqual(requests[0].url.params["sort_by"], "vote_count.desc")
+
+    def test_sin_los_parametros_nuevos_la_consulta_no_cambia(self):
+        # Los llamadores de C-03 y C-04b siguen funcionando igual: los
+        # parámetros nuevos son opcionales y no viajan si no se los pasa.
+        requests = []
+        client = self._client(requests)
+
+        client.discover("movie", genero=28, anio=2024, min_rating=7.5, page=2)
+
+        params = requests[0].url.params
+        self.assertEqual(params["with_genres"], "28")
+        self.assertEqual(params["primary_release_year"], "2024")
+        self.assertEqual(params["vote_average.gte"], "7.5")
+        self.assertEqual(params["page"], "2")
+        for ausente in (
+            "sort_by",
+            "primary_release_date.gte",
+            "primary_release_date.lte",
+        ):
+            self.assertNotIn(ausente, params)
+
+
+class TMDBGenresTest(SimpleTestCase):
+    """Catálogo de géneros de TMDB (C-04c).
+
+    El seed muestrea por género, y los ids de género son de TMDB, no nuestros.
+    Se piden a la API en vez de copiarlos al código: una lista hardcodeada es
+    correcta hasta el día que deja de serlo, y nada nos avisaría.
+
+    Los dos tipos tienen catálogos DISTINTOS (verificado el 18/09/2026):
+    película tiene `Action` (28) y `Adventure` (12) por separado; serie tiene
+    `Action & Adventure` (10759). Los ids no son intercambiables, así que el
+    tipo es parte de la consulta y de la clave de caché.
+    """
+
+    def _client(self, sink):
+        def handler(request):
+            sink.append(request)
+            return httpx.Response(200, json={"genres": [{"id": 28, "name": "Action"}]})
+
+        return TMDBClient(api_key="test-key", transport=httpx.MockTransport(handler))
+
+    def test_pega_al_endpoint_de_generos_de_cada_tipo(self):
+        casos = (("movie", "/3/genre/movie/list"), ("tv", "/3/genre/tv/list"))
+        for tipo, path in casos:
+            with self.subTest(tipo=tipo):
+                requests = []
+                client = self._client(requests)
+
+                resultado = client.get_genres(tipo)
+
+                self.assertEqual(resultado["genres"], [{"id": 28, "name": "Action"}])
+                self.assertEqual(str(requests[0].url.path), path)
+
+    def test_reutiliza_el_mapeo_de_errores_del_cliente(self):
+        client = TMDBClient(
+            api_key="test-key",
+            transport=httpx.MockTransport(lambda request: httpx.Response(404)),
+        )
+
+        with self.assertRaises(TMDBNotFound):
+            client.get_genres("movie")
+
+
 class TMDBExceptionHandlerTest(SimpleTestCase):
     def test_maps_tmdb_exceptions_to_http_statuses(self):
         cases = (
@@ -445,6 +556,9 @@ class TMDBClientCacheTest(SimpleTestCase):
                         "anio": None,
                         "min_rating": None,
                         "page": 1,
+                        "anio_desde": None,
+                        "anio_hasta": None,
+                        "sort_by": None,
                     },
                     "search": {"query": "Fight Club", "tipo": "movie", "page": 1},
                     "movie_detail": {"id_tmdb": 550},
@@ -533,6 +647,31 @@ class TMDBClientCacheTest(SimpleTestCase):
         key = _build_key("changes", {"tipo": "movie", "page": 1})
 
         self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["changes"])
+
+    def test_genres_se_cachea_por_tipo(self):
+        cache, calls = self.make_cache(body={"genres": [{"id": 28, "name": "Action"}]})
+
+        primera = cache.get_genres("movie")
+        segunda = cache.get_genres("movie")
+
+        self.assertEqual(primera, segunda)
+        self.assertEqual(len(calls), 1)
+
+        # Serie tiene otro catálogo de géneros: no es un cache hit.
+        cache.get_genres("tv")
+        self.assertEqual(len(calls), 2)
+
+    def test_genres_tiene_el_ttl_mas_largo(self):
+        # Los géneros de TMDB son prácticamente estáticos: no hay motivo para
+        # volver a pedirlos todos los días.
+        self.assertIn("genres", ENDPOINT_TTLS)
+        self.assertGreater(ENDPOINT_TTLS["genres"], ENDPOINT_TTLS["movie_detail"])
+
+        cache, _ = self.make_cache()
+        cache.get_genres("movie")
+        key = _build_key("genres", {"tipo": "movie"})
+
+        self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["genres"])
 
     def test_get_redis_passes_bounded_timeouts(self):
         with patch("catalogo.cache.redis.Redis.from_url") as from_url:

@@ -20,6 +20,13 @@ _DISCOVER_YEAR_PARAM = {
     "movie": "primary_release_year",
     "tv": "first_air_date_year",
 }
+# Mismo problema que arriba, para rangos: TMDB filtra por fecha con un nombre
+# distinto según el tipo. Pasar el del otro tipo no da error — TMDB lo ignora
+# en silencio y devuelve el catálogo entero sin filtrar (C-04c).
+_DISCOVER_DATE_PARAM = {
+    "movie": "primary_release_date",
+    "tv": "first_air_date",
+}
 
 
 class TMDBClient:
@@ -98,14 +105,37 @@ class TMDBClient:
     def get_now_playing(self, page=1):
         return self._get("/movie/now_playing", {"page": page})
 
-    def discover(self, tipo, genero=None, anio=None, min_rating=None, page=1):
+    def discover(
+        self,
+        tipo,
+        genero=None,
+        anio=None,
+        min_rating=None,
+        page=1,
+        anio_desde=None,
+        anio_hasta=None,
+        sort_by=None,
+    ):
+        """Busca producciones por filtros. Todo es opcional menos el tipo.
+
+        `anio` filtra un año puntual; `anio_desde`/`anio_hasta` un rango, que
+        es lo que el seed usa para muestrear por década (C-04c). `sort_by`
+        decide qué entra primero: `vote_count.desc` trae los títulos que la
+        gente conoce, el orden por defecto trae lo que trendea hoy.
+        """
         params = {"page": page}
         if genero is not None:
             params["with_genres"] = genero
         if anio is not None:
             params[_DISCOVER_YEAR_PARAM[tipo]] = anio
+        if anio_desde is not None:
+            params[f"{_DISCOVER_DATE_PARAM[tipo]}.gte"] = f"{anio_desde}-01-01"
+        if anio_hasta is not None:
+            params[f"{_DISCOVER_DATE_PARAM[tipo]}.lte"] = f"{anio_hasta}-12-31"
         if min_rating is not None:
             params["vote_average.gte"] = min_rating
+        if sort_by is not None:
+            params["sort_by"] = sort_by
         return self._get(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1):
@@ -127,3 +157,8 @@ class TMDBClient:
     def get_changes(self, tipo, page=1):
         # IDs modificados en TMDB en las últimas 24 h, de a 100 por página.
         return self._get(f"/{tipo}/changes", {"page": page})
+
+    def get_genres(self, tipo):
+        # Catálogo de géneros con sus ids. Difiere por tipo: película tiene
+        # `Action` y `Adventure` separados, serie tiene `Action & Adventure`.
+        return self._get(f"/genre/{tipo}/list")
