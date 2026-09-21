@@ -289,6 +289,23 @@ docker compose exec backend python manage.py seed
 ```
 
 > **Advertencia:** `seed` es destructivo para los datos de las aplicaciones de negocio: elimina y recrea usuarios de prueba, catálogo, listas, reseñas, calificaciones y chats. No elimina el superusuario creado por el entrypoint.
+>
+> Si el catálogo tiene más de 100 producciones (lo pobló `seed_catalogo`, la sync o la navegación), `seed` **se niega** a borrarlo: son horas de llamadas a TMDB y el borrado se lleva calificaciones, reseñas y listas. Para forzarlo: `python manage.py seed --borrar-catalogo`.
+
+#### Poblar el catálogo desde TMDB (`seed_catalogo`)
+
+La sync nocturna mantiene el catálogo fresco pero no lo hace crecer (lee la página 1 de cuatro listados). Para darle volumen —el catálogo es el espacio de búsqueda del chatbot— está el seed, que recorre TMDB por **género × década × tipo** (210 combinaciones, barajadas) y materializa lo que encuentra, los más votados de cada combinación primero:
+
+```bash
+docker compose exec backend python manage.py seed_catalogo                 # 2.000 producciones, ~25–50 min
+docker compose exec backend python manage.py seed_catalogo --limite 10000  # ~2–4 h
+docker compose exec backend python manage.py seed_catalogo --dry-run       # recorre y cuenta, no escribe
+```
+
+- **Se puede cortar con Ctrl-C y volver a correr**: lo que ya está en la base y fresco se saltea sin pedirle nada a TMDB, y el orden es siempre el mismo, así que retoma donde quedó. `--limite` cuenta lo que materializa _esa_ corrida.
+- Cada producción son 3 llamadas a TMDB (detalle, créditos, keywords), ~0,7 s medidos. Si una corrida larga empieza a recibir `429`, `--pausa 0.5` espera medio segundo entre producciones.
+- Otras opciones: `--desde-anio 1950` (default 1970), `--tipos movie` (default ambos).
+- Los embeddings de lo sembrado quedan en `failed` hasta que exista el proveedor real (B-06); el backfill nocturno los recupera después.
 
 Para verificar el envío de emails usando el backend configurado:
 
