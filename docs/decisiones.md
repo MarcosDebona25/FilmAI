@@ -1716,6 +1716,55 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Origen**: pregunta del usuario — «¿diferencia entre actualizadas y
   refrescadas?». El nombre no resistía la explicación.
 
+## 19/09/2026 — L-01: contrato enriquecido de resúmenes de listas
+
+- **Decisión**: `GET /api/lists/` devuelve, por cada lista propia, los tres
+  contadores `cantidad_items`, `cantidad_peliculas` y `cantidad_series`, más
+  hasta tres rutas de póster recientes para la preview. La ListCard muestra el
+  total como dato principal y el desglose debajo. Los nombres personalizados
+  mantienen el límite de 80 caracteres y admiten letras Unicode, números,
+  espacios y guiones; la unicidad por usuario no distingue mayúsculas.
+- **Motivo**: el total permite comprender el tamaño de la lista sin cargar sus
+  ítems; el desglose hace visible su composición (películas y series) y evita
+  que la UI tenga que inferirla desde una preview incompleta. Permitir nombres
+  como `Sci-Fi` coincide con el wireframe y conserva una experiencia de
+  escritura natural.
+- **Archivos**: `backend/listas/`, `backend/filmai/urls.py`,
+  `docs/02_Especificación de Requerimientos.md`,
+  `docs/04_Lineamientos_UI.md`,
+  `docs/05_Plan_de_Desarrollo.md`,
+  `docs/wireframes/Opcion 1/app.html`.
+
+## 19/09/2026 — Preview de ListCard centralizada en cinco pósters
+
+- **Decisión**: la API devuelve hasta cinco pósters recientes no vacíos en
+  `preview_posters`. El límite vive en la constante privada
+  `_MAX_PREVIEW_POSTERS` de `listas.views`, inicialmente con valor `5`; no se
+  expone como parámetro HTTP. El wireframe ajusta las miniaturas a 32×48 px y
+  3 px de separación para mostrar cinco sin desbordar la card.
+- **Motivo**: centralizar la política evita valores mágicos dispersos y permite
+  cambiarla posteriormente en un único punto. Cinco previews hacen más
+  reconocible una lista con contenido variado sin cargar sus ítems completos.
+- **Archivos**: `backend/listas/views.py`, `backend/listas/tests.py`,
+  `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`,
+  `docs/wireframes/Opcion 1/app.html`,
+  `openspec/specs/list-endpoints/spec.md`.
+
+## 19/09/2026 — Nombres de listas sin guiones ni símbolos
+
+- **Decisión**: los nombres de listas personalizadas admiten exclusivamente
+  letras Unicode, números y espacios, con un máximo de 80 caracteres. Se
+  conserva la normalización de espacios y la unicidad insensible a
+  mayúsculas. Esta decisión reemplaza la parte de la entrada L-01 del mismo
+  día que admitía guiones.
+- **Motivo**: una regla de texto plano reduce casos de validación y ofrece una
+  convención uniforme para el MVP. Un nombre como `Sci-Fi` debe escribirse
+  como `Sci Fi`.
+- **Archivos**: `backend/listas/serializers.py`, `backend/listas/tests.py`,
+  `docs/02_Especificación de Requerimientos.md`,
+  `docs/05_Plan_de_Desarrollo.md`,
+  `openspec/specs/list-endpoints/spec.md`, `docs/decisiones.md`.
+
 ## 19/09/2026 — C-04c: el seed del catálogo muestrea por género × década × tipo, en round-robin barajado
 
 - **Fecha**: 19/09/2026
@@ -1781,3 +1830,18 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   (3 tests), `openspec/specs/catalog-seed/spec.md` (nueva), `README.md`,
   `docs/05_Plan_de_Desarrollo.md`. Se elimina `openspec/changes/catalog-seed/`
   (sección 9 de `AGENTS.md`).
+
+## 21/09/2026 — Integración de L-01 con el seed de catálogo C-04c
+
+- **Fecha**: 21/09/2026
+- **Descripción**: al integrar la API de listas del PR #27 sobre `main`, se
+  conservaron tanto el cierre de L-01 como el cierre de C-04c de los PR #28 y
+  #29. El plan marca L-01 como completado y mantiene C-04c implementada. Los
+  artefactos de graphify se regeneran desde el árbol combinado en lugar de
+  fusionar manualmente sus archivos derivados.
+- **Motivo**: las ramas modificaban las mismas secciones de seguimiento y el
+  mismo grafo, aunque sus cambios funcionales no se solapan. La resolución
+  preserva la intención de ambos módulos y evita reemplazar documentación o
+  metadatos vigentes de catálogo con versiones anteriores de la rama de listas.
+- **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md`,
+  `docs/decisiones.md` y `graphify-out/`.

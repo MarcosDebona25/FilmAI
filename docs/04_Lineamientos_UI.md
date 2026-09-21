@@ -420,17 +420,19 @@ de un componente "Modal" en Figma:
 │                                                                  │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐│
 │  │  Favoritos       │  │  Pendientes      │  │  Vistas          ││
-│  │  12 películas     │  │  5 películas     │  │  28 películas    ││
-│  │  ┌──┐┌──┐┌──┐   │  │  ┌──┐┌──┐┌──┐  │  │  ┌──┐┌──┐┌──┐  ││
-│  │  └──┘└──┘└──┘   │  │  └──┘└──┘└──┘  │  │  └──┘└──┘└──┘  ││
+│  │  12 ítems         │  │  5 ítems          │  │  28 ítems        ││
+│  │  9 pel. · 3 ser.  │  │  5 pel. · 0 ser.  │  │  20 pel. · 8 ser.││
+│  │ ┌─┐┌─┐┌─┐┌─┐┌─┐ │  │ ┌─┐┌─┐┌─┐┌─┐┌─┐ │  │ ┌─┐┌─┐┌─┐┌─┐┌─┐││
+│  │ └─┘└─┘└─┘└─┘└─┘ │  │ └─┘└─┘└─┘└─┘└─┘ │  │ └─┘└─┘└─┘└─┘└─┘││
 │  │  [Predeterminada]│  │  [Predeterminada]│  │  [Predeterminada]││
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘│
 │                                                                  │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐│
 │  │  Sci-Fi        ⋮  │  │  Maratón finde ⋮  │  │  ┌────────────┐ ││
-│  │  8 películas      │  │  3 películas     │  │  │     +      │ ││
-│  │  ┌──┐┌──┐┌──┐   │  │  ┌──┐┌──┐       │  │  │            │ ││
-│  │  └──┘└──┘└──┘   │  │  └──┘└──┘       │  │  │ Crear nueva│ ││
+│  │  8 ítems          │  │  3 ítems         │  │  │     +      │ ││
+│  │  6 pel. · 2 ser.  │  │  2 pel. · 1 ser. │  │  │            │ ││
+│  │ ┌─┐┌─┐┌─┐┌─┐┌─┐ │  │  ┌─┐┌─┐┌─┐       │  │  │            │ ││
+│  │ └─┘└─┘└─┘└─┘└─┘ │  │  └─┘└─┘└─┘       │  │  │ Crear nueva│ ││
 │  │                  │  │                  │  │  │   lista    │ ││
 │  └──────────────────┘  └──────────────────┘  │  └────────────┘ ││
 │                                               └──────────────────┘│
@@ -448,8 +450,8 @@ de un componente "Modal" en Figma:
 #### ListCard
 
 - **Nombre**: texto, máx 80 chars visibles con truncado en 2 líneas.
-- **Cantidad de items**: "N películas" / "N series" / "N items" (genérico si hay mezcla).
-- **Mini preview**: 3 posters solapados en thumbnail (32×48px). Si la lista tiene menos de 3 items, se muestran los que haya. Si está vacía, se muestra un placeholder gris.
+- **Conteo**: dato principal "N ítems"; debajo, desglose "X películas · Y series". La ListCard recibe ambos valores para informar la composición de la lista sin cargar sus ítems completos.
+- **Mini preview**: hasta 5 posters solapados en thumbnail (32×48px). Si la lista tiene menos de 5 items, se muestran los que haya. Si está vacía, se muestra un placeholder gris.
 - **Badge**: "Predeterminada" en listas del sistema. Color gris neutro, esquina superior izquierda.
 - **Menú contextual** (`⋮` vertical, esquina superior derecha): solo en listas personalizadas. Click → dropdown: Renombrar / Eliminar. Visible siempre, no solo en hover.
 - **Comportamiento**: click en la card → navega al detalle de la lista.
@@ -1014,7 +1016,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ### 6.4 Cards
 
 - **MediaCard**: poster (2:3), título, año, rating TMDB. Hover: escala 1.02 + sombra.
-- **ListCard**: nombre, cantidad de items, mini preview de 3-4 posters.
+- **ListCard**: nombre, cantidad de items, mini preview de hasta 5 posters.
 - **ReviewCard**: avatar, @usuario, rating (formato `X/10`, sin estrellas), fecha, texto, acciones (editar/eliminar).
 - **CastCard**: para reparto y equipo (director + actores). Sin fotos. Colapsable si hay más de N elementos.
 
