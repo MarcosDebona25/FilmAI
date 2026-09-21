@@ -598,20 +598,20 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | :---------------------- | :----------------------------------------------------------------------------------------------------------- |
 | **ID**                  | CU-017                                                                                                       |
 | **Nombre**              | Moderar reseñas.                                                                                             |
-| **Breve Descripción**   | Permite al Administrador revisar, editar o eliminar reseñas de películas/series publicadas por los usuarios. |
+| **Breve Descripción**   | Permite al Administrador buscar, filtrar, editar y desactivar reseñas de películas/series publicadas por los usuarios. |
 | **Prioridad**           | Baja.                                                                                                        |
 | **Complejidad**         | Media.                                                                                                       |
 | **Actor principal**     | Administrador.                                                                                               |
 | **Actores secundarios** | Ninguno.                                                                                                     |
 | **Precondiciones**      | El actor debe estar autenticado con el rol de Administrador. Deben existir reseñas publicadas por usuarios.  |
-| **Postcondiciones**     | **Éxito:** La reseña es modificada o eliminada de la base de datos.                                          |
+| **Postcondiciones**     | **Éxito:** El texto o estado de la reseña cambia; la fila y su calificación asociada permanecen en la base de datos. |
 |                         | **Fracaso:** La moderación no se realiza.                                                                    |
 
 | Flujo Principal                                                                               | Flujo Alternativo                                                                                                                                        |
 | :-------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1. El Administrador accede al Django Admin nativo (gestión de reseñas).                       | —                                                                                                                                                        |
 | 2. El Administrador selecciona una reseña para revisar.                                       | —                                                                                                                                                        |
-| 3. El Administrador aplica la acción de moderación deseada (ej: eliminar o editar contenido). | —                                                                                                                                                        |
+| 3. El Administrador edita el texto o el estado `activa`, o selecciona «Desactivar reseñas» para una o varias filas. | —                                                                                                                                                        |
 | 4. El sistema valida la solicitud y aplica el control de acceso por rol.                      | —                                                                                                                                                        |
 | 5. El sistema ejecuta la operación en la base de datos.                                       | 5.A. Ocurre un error al ejecutar la operación en la BD.<br>5.A.1. El sistema notifica al Administrador sobre el fallo.<br>5.A.2. El caso de uso termina. |
 | 6. El sistema notifica al Administrador el éxito de la moderación.                            | —                                                                                                                                                        |
@@ -620,7 +620,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | Campo                   | Detalle                                                                                                                                                                                                                              |
 | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Flujos de excepción** | —                                                                                                                                                                                                                                    |
-| **Observaciones**       | El Administrador realiza sus acciones a través del Django Admin nativo. El sistema debe aplicar control de acceso por rol. Esta moderación es independiente de la gestión que el usuario realiza sobre sus propias reseñas (CU-015). |
+| **Observaciones**       | El Administrador realiza sus acciones a través del Django Admin nativo y necesita permisos del modelo. Puede buscar por texto, usuario y producción, y filtrar por estado y tipo. El Admin no permite crear reseñas, cambiar su calificación asociada ni borrarlas físicamente; las desactivadas siguen visibles y pueden reactivarse. Esta moderación es independiente de la gestión que el usuario realiza sobre sus propias reseñas (CU-015). |
 
 ---
 
