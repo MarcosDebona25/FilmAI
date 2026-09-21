@@ -4,6 +4,27 @@ Registro de decisiones de diseño y cambios relevantes del proyecto.
 Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos afectados).
 
 ---
+
+## 21/09/2026 — AD-01': moderación de reseñas con borrado lógico en Django Admin
+
+- **Descripción**: se conserva `UsuarioAdmin` y se registra `ResenaAdmin` con
+  usuario, producción, tipo y valor visibles; búsqueda por texto, usuario y
+  producción; filtros por estado y tipo. El formulario permite cambiar `texto`
+  y `activa`, pero deja fija la calificación. La acción «Desactivar reseñas»
+  establece `activa=False` y no elimina la fila; las reseñas desactivadas
+  siguen visibles y pueden reactivarse. El alta y el borrado físico individual
+  o masivo desde el Admin quedan deshabilitados. Los permisos nativos de Django
+  controlan acceso y cambios. Las pruebas HTTP crean sus datos en la base
+  temporal de Django y comprueban también las operaciones de `UsuarioAdmin`.
+- **Motivo**: moderar contenido sin perder la relación 1:1 con la calificación
+  ni afectar el historial de valoraciones del usuario. El Admin resuelve
+  CU-016 y CU-017 sin API ni interfaz de moderación adicional.
+- **Archivos afectados**: `backend/catalogo/admin.py`,
+  `backend/catalogo/test_admin.py`, `docs/02_Especificación de Requerimientos.md`,
+  `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md` y
+  `explicacion-modulo-6-admin.md`.
+
+---
 ## 12/09/2026 — C-03: endpoints de catálogo públicos con AllowAny explícito
 
 - **Descripción**: los 7 endpoints de catálogo (`/api/catalogo/trending/`,

@@ -16,7 +16,7 @@
 | 3 — Listas        | 🟡 Parcial     | Modelos `Lista`/`Tiene`, creación de las 3 predeterminadas por señal y **L-01 (API de listas) completados**. Pendientes: UI L-02..L-04.                                             |
 | 4 — Perfil        | ⬜ Pendiente   | Campos y preferencias en el modelo `Usuario`. Sin API ni UI (P-01..P-07).                                                                                            |
 | 5 — Chatbot       | 🟡 Parcial     | Modelos `Chat`/`Mensaje` + chat por defecto al registrar (B-01). **Pendiente: B-06 (parcialmente adelantado por C-04a: resta el servicio `ollama`, el cliente real del proveedor y `buscar_semantico`), LLMService (B-02), endpoints (B-03), UI (B-04), contexto (B-05).** |
-| 6 — Admin         | ⬜ Pendiente   | `admin.py` de `catalogo` vacío; falta registrar modelos (AD-01').                                                                                                    |
+| 6 — Admin         | ✅ Completo    | AD-01': `UsuarioAdmin` existente y `ResenaAdmin` para moderación con borrado lógico; pruebas HTTP del Admin. |
 | 7 — Polish        | ⬜ Pendiente   | Q-01..Q-06 (accesibilidad, errores, estados, CI ya activo, docs).                                                                                                    |
 
 **Contratos ya decididos que condicionan lo pendiente** (ver `docs/decisiones.md`, entradas 08/09/2026 y 14/09/2026):
@@ -271,11 +271,11 @@ Criterios de implementación acordados (08/09/2026) para B-06, C-04b y B-02..B-0
 
 ## Módulo 6 — Admin (nativo de Django) · Responsable: **Marcos**
 
-> Se reemplazan los endpoints REST custom originales (AD-01/AD-02) por configuración de Django Admin: cubre lo mismo (listar/filtrar/buscar/editar/eliminar usuarios y reseñas, acceso restringido por rol) sin construir API ni UI propia.
+> Se reemplazan los endpoints REST custom originales (AD-01/AD-02) por configuración de Django Admin: permite listar, filtrar, buscar, editar y eliminar usuarios; para reseñas, permite listar, buscar, filtrar, editar texto/estado y desactivar sin borrado físico. El acceso depende de `is_staff` y de los permisos del modelo. No hay API ni UI propia para la moderación.
 
 | ID     | Tarea                   | Depende de | Detalle                                                                                                                                                    | Criterio de aceptación                                                                                                    | Esfuerzo |
 | ------ | ----------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
-| AD-01' | Configurar Django Admin | F-04       | Registrar `Usuario` y `Reseña` con `ModelAdmin` custom (`list_display`, `list_filter`, `search_fields`). Restringir acceso a `is_staff`/rol Administrador. | Django Admin permite listar, buscar, filtrar, editar y eliminar usuarios y reseñas. Solo accesible con rol Administrador. | 2h       |
+| AD-01' | Configurar Django Admin — ✅ completo | F-04 | Conservar `UsuarioAdmin` y registrar `ResenaAdmin` con relaciones visibles, búsqueda por texto/usuario/producción y filtros por estado/tipo. Editar solo texto y `activa`; desactivar en lote, sin alta ni borrado físico de reseñas. | Tests HTTP verifican permisos, búsqueda, filtros, edición, cambio de estado, borrado de usuarios y desactivación/reactivación de reseñas sin perder la calificación. | 2h |
 
 **Total Admin: ~2h** — **Marcos**
 
@@ -323,5 +323,5 @@ Diferencia: 1h sobre 158h totales (~1%). *(Corregido 08/09/2026: el resumen ante
 - ✅ **Fase 1 (paralelo):** Marcos → Autenticación. Gonza → C-01/C-02 (hechos).
 - 🟡 **Fase 2 (paralelo, en curso):** Gonza → C-03 (endpoints, ✅ mergeado) + C-04a (materialización + adaptador `movie/tv`, ✅ mergeado). Marcos → L-01..L-04 (Listas, consumiendo el helper de materialización; **desbloqueado el 15/09/2026**: el helper ya está en `main`).
 - 🔜 **Fase 3 (paralelo):** Marcos → B-06 (ya sin la infra que adelantó C-04a: resta Ollama + `buscar_semantico`). Gonza → C-04b (sync Celery + seed inicial) + C-05..C-07 (Home, Buscar, Detalle).
-- 🔜 **Fase 4 (paralelo):** Marcos → B-02..B-05 + B-03/B-04 (RAG, endpoints y UI del chatbot) + AD-01'. Gonza → C-08 (reseñas), P-01..P-07 (perfil/preferencias), integración de acciones en la ficha.
+- 🔜 **Fase 4 (paralelo):** Marcos → B-02..B-05 + B-03/B-04 (RAG, endpoints y UI del chatbot); AD-01' ya está completo. Gonza → C-08 (reseñas), P-01..P-07 (perfil/preferencias), integración de acciones en la ficha.
 - 🔜 **Cierre (juntos):** Q-01..Q-06 (accesibilidad, estados, errors, docs), pruebas de integración/E2E, evaluación de recall de la búsqueda semántica, gates de lint/format.
