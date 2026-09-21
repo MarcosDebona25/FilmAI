@@ -18,6 +18,9 @@ ENDPOINT_TTLS = {
     # La lista de cambios rueda a diario, así que 24 h sería demasiado; 6 h
     # alcanza para que una sync reintentada no vuelva a bajar ~100 páginas.
     "changes": 6 * 3600,
+    # Los géneros de TMDB son prácticamente estáticos: un mes evita pedirlos en
+    # cada corrida del seed sin volverlos eternos.
+    "genres": 30 * 24 * 3600,
 }
 
 # Bounded timeouts so a hung Redis fails fast and the cache degrades to TMDB
@@ -78,18 +81,42 @@ class TMDBClientCache:
             "now_playing", params, lambda: self.client.get_now_playing(page)
         )
 
-    def discover(self, tipo, genero=None, anio=None, min_rating=None, page=1):
+    def discover(
+        self,
+        tipo,
+        genero=None,
+        anio=None,
+        min_rating=None,
+        page=1,
+        anio_desde=None,
+        anio_hasta=None,
+        sort_by=None,
+    ):
+        # Todos los filtros entran en la clave: dos consultas que difieren en
+        # la década son dos respuestas distintas, no un cache hit.
         params = {
             "tipo": tipo,
             "genero": genero,
             "anio": anio,
             "min_rating": min_rating,
             "page": page,
+            "anio_desde": anio_desde,
+            "anio_hasta": anio_hasta,
+            "sort_by": sort_by,
         }
         return self._cached_call(
             "discover",
             params,
-            lambda: self.client.discover(tipo, genero, anio, min_rating, page),
+            lambda: self.client.discover(
+                tipo,
+                genero,
+                anio,
+                min_rating,
+                page,
+                anio_desde,
+                anio_hasta,
+                sort_by,
+            ),
         )
 
     def search(self, query, tipo, page=1):
@@ -127,6 +154,10 @@ class TMDBClientCache:
         return self._cached_call(
             "changes", params, lambda: self.client.get_changes(tipo, page)
         )
+
+    def get_genres(self, tipo):
+        params = {"tipo": tipo}
+        return self._cached_call("genres", params, lambda: self.client.get_genres(tipo))
 
 
 def get_redis():
