@@ -7,12 +7,17 @@ de las apps de negocio y los recrea desde cero en cada ejecución.
 
 Uso:
     python manage.py seed
+    python manage.py seed --borrar-catalogo   # si el catálogo supera el umbral
+
+Desde C-04c el catálogo puede venir de `seed_catalogo` (horas de llamadas a
+TMDB): por encima de `UMBRAL_CATALOGO_PROTEGIDO` este comando se niega a
+borrarlo salvo que se le pida explícitamente.
 """
 
 import random
 
 from allauth.account.models import EmailAddress
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from catalogo.factories import (
@@ -42,6 +47,12 @@ LISTAS_PREDETERMINADAS = ["Favoritos", "Pendientes", "Vistas"]
 CANTIDAD_USUARIOS = 3
 CANTIDAD_PRODUCCIONES = 50
 
+# Por encima de esto el catálogo no lo hizo este comando: lo poblaron
+# `seed_catalogo`, la sync nocturna o la navegación, a tres llamadas a TMDB
+# por fila. Borrarlo sin querer tira ese trabajo y, por CASCADE, las
+# calificaciones, reseñas y entradas de listas que cuelgan de él (C-04c).
+UMBRAL_CATALOGO_PROTEGIDO = 2 * CANTIDAD_PRODUCCIONES
+
 
 class Command(BaseCommand):
     help = (
@@ -49,8 +60,19 @@ class Command(BaseCommand):
         "calificaciones, reseñas y chats). Destructivo e idempotente."
     )
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--borrar-catalogo",
+            action="store_true",
+            help=(
+                "Borra el catálogo aunque supere las "
+                f"{UMBRAL_CATALOGO_PROTEGIDO} producciones."
+            ),
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
+        self._verificar_catalogo(options["borrar_catalogo"])
         self._limpiar()
         usuarios = self._crear_usuarios()
         producciones = self._crear_producciones()
@@ -58,6 +80,23 @@ class Command(BaseCommand):
         self._crear_listas(usuarios, producciones)
         self._crear_chats(usuarios)
         self._resumen(usuarios)
+
+    def _verificar_catalogo(self, borrar_catalogo):
+        """Se niega a pisar un catálogo que costó horas, salvo pedido explícito.
+
+        `CommandError` es la forma de abortar un comando: Django imprime el
+        mensaje en rojo y sale con código 1, sin traceback. Va ANTES de
+        `_limpiar()` y dentro del `atomic`, así que no queda nada a medias.
+        """
+        cantidad = ProduccionAudiovisual.objects.count()
+        if cantidad > UMBRAL_CATALOGO_PROTEGIDO and not borrar_catalogo:
+            raise CommandError(
+                f"El catálogo tiene {cantidad} producciones (más de "
+                f"{UMBRAL_CATALOGO_PROTEGIDO}): no lo creó este comando, y "
+                "borrarlo tira horas de llamadas a TMDB además de las "
+                "calificaciones, reseñas y listas que cuelgan de él. Si es lo "
+                "que querés, corré `seed --borrar-catalogo`."
+            )
 
     def _limpiar(self):
         """Borra los datos de las apps de negocio (orden de hijos a padres).
