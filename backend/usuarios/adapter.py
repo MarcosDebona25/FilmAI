@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.dateparse import parse_date
 
-from .models import EstadoCuenta, TipoGenero
+from .models import EstadoCuenta, TipoGenero, Usuario
 
 
 class UsuarioAccountAdapter(DefaultAccountAdapter):
@@ -40,7 +40,9 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
     def confirm_email(self, request, email_address):
         """Activa la cuenta al confirmar su correo de forma atómica."""
         with transaction.atomic():
-            usuario = email_address.user
+            usuario = Usuario.objects.select_for_update().get(pk=email_address.user_id)
+            if usuario.estado == EstadoCuenta.BAJA:
+                return False
             usuario.estado = EstadoCuenta.ACTIVA
             usuario.save(update_fields=["estado"])
             return super().confirm_email(request, email_address)

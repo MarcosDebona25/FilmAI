@@ -28,7 +28,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from .avatares import es_avatar_valido
+from .exceptions import NombreUsuarioOcupado
 from .models import EstadoCuenta, TipoGenero, Usuario
+from .passwords import guardar_contrasena
 from .validators import USERNAME_REGEX
 
 logger = logging.getLogger(__name__)
@@ -187,9 +189,15 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             ) from err
 
         # allauth todavía no resolvió `is_existing`; consultamos el vínculo directo.
-        es_existente = SocialAccount.objects.filter(
-            provider=login.account.provider, uid=login.account.uid
-        ).exists()
+        cuenta_existente = (
+            SocialAccount.objects.select_related("user")
+            .filter(provider=login.account.provider, uid=login.account.uid)
+            .first()
+        )
+        es_existente = cuenta_existente is not None
+
+        if es_existente and not cuenta_existente.user.is_active:
+            raise PermissionDenied("Tu cuenta no está activa.")
 
         if not es_existente:
             # Google no provee estos campos obligatorios del perfil FilmAI.
@@ -245,6 +253,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             self.post_signup(login, attrs)
 
         attrs["user"] = login.account.user
+        if not attrs["user"].is_active:
+            raise PermissionDenied("Tu cuenta no está activa.")
         return attrs
 
 
@@ -323,8 +333,8 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
 class RestablecerContrasenaSerializer(serializers.Serializer):
     """Valida el enlace y persiste la nueva contraseña."""
 
-    password1 = serializers.CharField()
-    password2 = serializers.CharField()
+    password1 = serializers.CharField(trim_whitespace=False, write_only=True)
+    password2 = serializers.CharField(trim_whitespace=False, write_only=True)
     uid = serializers.CharField()
     token = serializers.CharField()
 
@@ -340,7 +350,9 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
             raise EnlaceRestablecimientoInvalido from err
 
         # No distingue un token vencido de uno manipulado.
-        if not default_token_generator.check_token(self.usuario, attrs["token"]):
+        if not self.usuario.is_active or not default_token_generator.check_token(
+            self.usuario, attrs["token"]
+        ):
             raise EnlaceRestablecimientoInvalido
 
         try:
@@ -351,36 +363,72 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
         return attrs
 
     def save(self):
-        self.usuario.set_password(self.validated_data["password1"])
-        self.usuario.save(update_fields=["password"])
+        with transaction.atomic():
+            self.usuario = Usuario.objects.select_for_update().get(pk=self.usuario.pk)
+            # Revalidar bajo bloqueo evita consumir dos veces el mismo enlace.
+            if not self.usuario.is_active or not default_token_generator.check_token(
+                self.usuario, self.validated_data["token"]
+            ):
+                raise EnlaceRestablecimientoInvalido
+            guardar_contrasena(self.usuario, self.validated_data["password1"])
         return self.usuario
 
 
 class UsuarioPerfilSerializer(serializers.ModelSerializer):
-    """Serializer para actualizar el perfil del usuario.
+    """CU-006: solo nombre, apellido, nombre de usuario y avatar editables."""
 
-    Solo permite modificar campos seguros (nombre, apellido, fecha_nacimiento,
-    genero, avatar_id, tema, perfil_publico, notificaciones). NO permite
-    modificar campos de administrador (is_staff, is_superuser, etc.) ni
-    campos sensibles (correo, contraseña, estado).
-
-    avatar_id se valida contra el registro centralizado de avatares.
-    """
+    tiene_contrasena_local = serializers.SerializerMethodField()
+    nombre_usuario = serializers.RegexField(USERNAME_REGEX, max_length=25)
 
     class Meta:
         model = Usuario
         fields = (
+            "pk",
+            "correo",
+            "nombre_usuario",
             "nombre",
             "apellido",
             "fecha_nacimiento",
             "genero",
             "avatar_id",
-            "tema",
-            "perfil_publico",
-            "notif_recomendaciones",
-            "notif_resenas",
-            "notif_novedades",
+            "estado",
+            "fecha_registro",
+            "tiene_contrasena_local",
         )
+        read_only_fields = (
+            "pk",
+            "correo",
+            "fecha_nacimiento",
+            "genero",
+            "estado",
+            "fecha_registro",
+        )
+
+    def get_tiene_contrasena_local(self, usuario):
+        return usuario.has_usable_password()
+
+    def validate_nombre_usuario(self, value):
+        if (
+            Usuario.objects.filter(nombre_usuario__iexact=value)
+            .exclude(pk=self.instance.pk)
+            .exists()
+        ):
+            raise NombreUsuarioOcupado()
+        return value
+
+    def validate_nombre(self, value):
+        if not value.isalpha():
+            raise serializers.ValidationError("Solo se permiten letras.")
+        return value
+
+    def validate_apellido(self, value):
+        return self.validate_nombre(value)
+
+    def update(self, instance, validated_data):
+        for campo, valor in validated_data.items():
+            setattr(instance, campo, valor)
+        instance.save(update_fields=list(validated_data))
+        return instance
 
     def validate_avatar_id(self, value):
         """Valida que avatar_id sea uno de los avatares disponibles."""

@@ -713,7 +713,8 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - Si la cuenta de Google ya está asociada → inicia sesión directamente.
 - Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género) en una pantalla intermedia.
 - El usuario nuevo creado con Google queda en estado **activa** directamente (Google ya verificó el correo; no requiere confirmación por email).
-- La contraseña no aplica para cuentas Google (se omite del form).
+- El alta con Google omite la contraseña local. Luego puede establecerse mediante
+  recuperación por correo; la misma cuenta conservará ambos métodos de acceso.
 
 #### Estados
 
@@ -759,6 +760,15 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ## 5g. Perfil (CU-005, CU-006) — Edición inline
 
 > Una sola pantalla con dos modos: visualización y edición. Al clickear "Editar perfil" los campos pasan a inputs. El email es siempre solo lectura.
+
+**Contrato de contraseña (24/09/2026):** el formulario envía `old_password`,
+`password1` y `password2` a `POST /api/profile/change-password/`. Antes de
+confirmar debe advertir: «Se cerrarán tus sesiones en todos los dispositivos.
+Tendrás que iniciar sesión nuevamente». Tras el éxito, redirige al login.
+El restablecimiento mediante el enlace de correo tiene el mismo efecto y nunca
+inicia sesión automáticamente. Si `tiene_contrasena_local` es `false`, se muestra
+la opción de establecerla mediante recuperación por correo, en lugar de pedir
+una contraseña actual inexistente. Esto conserva el acceso con Google.
 
 ### Modo visualización
 
@@ -981,7 +991,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 | **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                      |
 | **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                    |
 | **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).              |
-| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es permanente. Perderás tus listas, reseñas y calificaciones." Botones Cancelar / Dar de baja. |
+| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Se cerrarán tus sesiones y no podrás iniciar sesión. Tus datos, listas, reseñas y calificaciones se conservarán." Botones Cancelar / Dar de baja. |
 
 ### Breadcrumb
 

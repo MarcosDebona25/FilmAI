@@ -14,7 +14,7 @@
 | 1 — Autenticación | ✅ Completado  | A-01..A-09: registro + confirmación (allauth), login email/username, Google OAuth en un toque, recuperación de contraseña, cookies httpOnly + CSRF, middleware.       |
 | 2 — Catálogo      | 🟡 Parcial     | C-01 (cliente TMDB), C-02 (caché Redis) y **C-03 (endpoints) mergeados a `main`**. **C-04a mergeada a `main`** (15/09/2026, ver detalle abajo). **C-04b (sync diaria) completa y mergeada a `main`** (18/09/2026, PRs #19 a #23). **C-04c (seed inicial) implementada** (19/09/2026, PRs #28 y #29). **Pendiente: UI (C-05..C-07).**      |
 | 3 — Listas        | 🟡 Parcial     | Modelos `Lista`/`Tiene`, creación de las 3 predeterminadas por señal y **L-01 (API de listas) completados**. Pendientes: UI L-02..L-04.                                             |
-| 4 — Perfil        | ⬜ Pendiente   | Campos y preferencias en el modelo `Usuario`. Sin API ni UI (P-01..P-07).                                                                                            |
+| 4 — Perfil        | 🟡 Parcial | API P-01, P-03 y P-05 implementada (24/09/2026): perfil, contraseña, preferencias y baja lógica. Pendientes: UI P-02, P-04, P-06 y P-07. |
 | 5 — Chatbot       | 🟡 Parcial     | Modelos `Chat`/`Mensaje` + chat por defecto al registrar (B-01). **Pendiente: B-06 (parcialmente adelantado por C-04a: resta el servicio `ollama`, el cliente real del proveedor y `buscar_semantico`), LLMService (B-02), endpoints (B-03), UI (B-04), contexto (B-05).** |
 | 6 — Admin         | ✅ Completo    | AD-01': `UsuarioAdmin` existente y `ResenaAdmin` para moderación con borrado lógico; pruebas HTTP del Admin. |
 | 7 — Polish        | ⬜ Pendiente   | Q-01..Q-06 (accesibilidad, errores, estados, CI ya activo, docs).                                                                                                    |
@@ -183,6 +183,17 @@ sección es C-04a (más abajo).
 ---
 
 ## Módulo 4 — Perfil y Preferencias · Responsable: **Gonza**
+
+**Backend completado (24/09/2026): P-01, P-03 y P-05.** El contrato usa
+`snake_case` (`nombre_usuario`, `avatar_id`, `perfil_publico`,
+`notif_recomendaciones`, `notif_resenas`, `notif_novedades`), conforme al modelo y
+al resto de la API. Perfil y preferencias admiten `PUT` parcial. Cambiar contraseña
+requiere `old_password`, `password1`, `password2`; cambiarla o establecerla por
+recuperación invalida los JWT anteriores de todos los dispositivos. Se conserva
+la política vigente de CU-001. Una cuenta Google puede establecer contraseña
+local sin perder el vínculo social. La baja es atómica, conserva todas las
+relaciones y rechaza login local, Google, access y refresh. Contrato, pruebas y
+notas de UI en [el reporte del módulo 4](reportes_dev/modulo-4-api.md).
 
 | ID   | Tarea                               | Depende de | Detalle                                                                                                                                                                                                                                                                                                                                                                                        | Criterio de aceptación                                                                                                                                                                       | Esfuerzo                                                        |
 | ---- | ----------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
