@@ -240,6 +240,16 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 
 #### CU-006: Modificar perfil
 
+**Contrato implementado (24/09/2026):** `GET/PUT /api/profile/` consulta y
+actualiza el perfil propio; solo nombre, apellido, nombre de usuario y avatar
+son editables. El cambio de contraseña se realiza por separado en
+`POST /api/profile/change-password/`, con contraseña actual, nueva y confirmación,
+validando las reglas de CU-001. Cambiar o restablecer la contraseña invalida las
+sesiones anteriores de todos los dispositivos y requiere volver a iniciar sesión;
+la UI debe advertirlo antes de confirmar. Las cuentas Google sin contraseña local
+pueden establecerla mediante el enlace temporal de recuperación por correo,
+conservando su vínculo social y el mismo usuario de FilmAI.
+
 | Campo                   | Detalle                                                                                                                 |
 | :---------------------- | :---------------------------------------------------------------------------------------------------------------------- |
 | **ID**                  | CU-006                                                                                                                  |

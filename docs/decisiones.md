@@ -5,6 +5,40 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 24/09/2026 — P-01: perfil propio y contraseñas con revocación de sesiones
+
+- **Descripción**: se agregan `GET/PUT /api/profile/` y
+  `POST /api/profile/change-password/`. El perfil permite actualizar parcialmente
+  nombre, apellido, nombre de usuario y avatar; el resto es de solo lectura.
+  Nombre y apellido siguen CU-001 (solo letras, hasta 50 caracteres). Los nombres
+  de usuario son únicos sin distinguir mayúsculas también en PostgreSQL, mediante
+  la migración `usuarios.0005`; los conflictos devuelven 409.
+- **Contraseñas**: el cambio requiere `old_password`, `password1` y `password2`;
+  reutiliza `validate_password`. Una cuenta sin contraseña local debe usar la
+  recuperación por correo. Se conserva su usuario y su vínculo Google.
+  `CHECK_REVOKE_TOKEN` vincula los JWT al hash de contraseña vigente. Se agrega
+  la misma comprobación al refresh, porque el serializer instalado solo comprueba
+  el estado activo. Los JWT anteriores sin ese claim requieren un nuevo login.
+- **Recuperación**: conserva token temporal de una hora, confirmación y límites
+  de intentos. El estado y token se revalidan bajo bloqueo de fila al guardar:
+  dos solicitudes no pueden consumir el mismo enlace. Cambiar o restablecer la
+  contraseña limpia cookies y sesión Django, invalida JWT de todos los dispositivos
+  y exige un nuevo login. La notificación se envía después del commit; un fallo de
+  correo se registra y no revierte una contraseña ya guardada.
+- **Compatibilidad**: `/api/auth/password/change/` pasa por el mismo contrato;
+  no queda un camino alternativo sin contraseña actual. Refresh por cookie exige
+  CSRF. Los endpoints públicos de login, Google, recuperación y obtención de CSRF
+  toleran cookies JWT antiguas, sin omitir la validación CSRF en mutaciones.
+- **UI**: debe avisar antes de confirmar que se cerrarán las sesiones en todos
+  los dispositivos y redirigir al login después del cambio. No se implementa UI
+  nueva en esta entrega.
+- **Archivos afectados**: `backend/usuarios/{perfil,authentication,passwords,
+  exceptions,serializers,views,models,test_perfil}.py`, migración `0005`,
+  `backend/filmai/{settings,urls}.py`, docs 02 y 04 y
+  `docs/reportes_dev/modulo-4-api.md`.
+
+---
+
 ## 21/09/2026 — AD-01': moderación de reseñas con borrado lógico en Django Admin
 
 - **Descripción**: se conserva `UsuarioAdmin` y se registra `ResenaAdmin` con
