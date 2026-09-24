@@ -240,6 +240,16 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 
 #### CU-006: Modificar perfil
 
+**Contrato implementado (24/09/2026):** `GET/PUT /api/profile/` consulta y
+actualiza el perfil propio; solo nombre, apellido, nombre de usuario y avatar
+son editables. El cambio de contraseña se realiza por separado en
+`POST /api/profile/change-password/`, con contraseña actual, nueva y confirmación,
+validando las reglas de CU-001. Cambiar o restablecer la contraseña invalida las
+sesiones anteriores de todos los dispositivos y requiere volver a iniciar sesión;
+la UI debe advertirlo antes de confirmar. Las cuentas Google sin contraseña local
+pueden establecerla mediante el enlace temporal de recuperación por correo,
+conservando su vínculo social y el mismo usuario de FilmAI.
+
 | Campo                   | Detalle                                                                                                                 |
 | :---------------------- | :---------------------------------------------------------------------------------------------------------------------- |
 | **ID**                  | CU-006                                                                                                                  |
@@ -277,13 +287,13 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | :---------------------- | :----------------------------------------------------------------------------------------------------------------------- |
 | **ID**                  | CU-007                                                                                                                   |
 | **Nombre**              | Dar de baja la cuenta.                                                                                                   |
-| **Breve Descripción**   | Permite al usuario eliminar permanentemente su cuenta.                                                                   |
+| **Breve Descripción**   | Permite al usuario dar de baja su cuenta sin eliminar sus datos ni relaciones. |
 | **Prioridad**           | Baja.                                                                                                                    |
 | **Complejidad**         | Baja.                                                                                                                    |
 | **Actor principal**     | Usuario.                                                                                                                 |
 | **Actores secundarios** | Ninguno.                                                                                                                 |
 | **Precondiciones**      | El usuario debe estar autenticado.                                                                                       |
-| **Postcondiciones**     | **Éxito:** La cuenta del usuario es eliminada permanentemente del sistema y la sesión se cierra automáticamente.         |
+| **Postcondiciones**     | **Éxito:** La cuenta cambia a estado `baja`, conserva sus datos y relaciones y sus sesiones dejan de permitir acceso. |
 |                         | **Fracaso:** El estado de la cuenta no se modifica porque el usuario cancela la operación o la baja no puede realizarse. |
 
 | Flujo Principal                                                                                                         | Flujo Alternativo                                                                                                             |
@@ -292,14 +302,14 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 | 2. El usuario accede a "Preferencias" desde el menú desplegable del avatar y selecciona la opción "Dar de baja cuenta". | —                                                                                                                             |
 | 3. El sistema solicita confirmación para la baja de la cuenta.                                                          | —                                                                                                                             |
 | 4. El usuario confirma la baja de la cuenta apretando el botón "Confirmar".                                             | 4.A. El usuario cancela la operación de baja.<br>4.A.1 Se retorna al paso 1, manteniendo al usuario en la sección del perfil. |
-| 5. El sistema elimina la cuenta del usuario y notifica la baja exitosa.                                                 | —                                                                                                                             |
+| 5. El sistema cambia el estado de la cuenta a `baja`, conserva sus datos y relaciones y notifica la baja exitosa. | — |
 | 6. El sistema finaliza la sesión y redirige al usuario a la página de inicio.                                           | —                                                                                                                             |
 | 7. El caso de uso termina.                                                                                              | —                                                                                                                             |
 
 | Campo                   | Detalle                                                                                                                                                         |
 | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Flujos de excepción** | Por un error de sistema la baja no puede ser procesada al llegar al paso 5, entonces el sistema debe informar al usuario del fallo y mantener la cuenta activa. |
-| **Observaciones**       | El borrado es lógico, por lo que hay que modificar el campo de estado de la cuenta de "activa" a "baja".                                                        |
+| **Observaciones**       | La baja es lógica: `activa` pasa a `baja`. Se conservan usuario, contraseña, vínculo Google, listas e ítems, calificaciones, reseñas, chat y mensajes. Se rechaza login local y Google, access y refresh JWT. Estado, revocación de refresh y cierre de sesión se realizan de forma atómica; si fallan se revierte la operación. No hay reactivación automática por login, recuperación ni confirmación de correo. |
 
 ---
 

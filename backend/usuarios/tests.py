@@ -5,7 +5,7 @@ import re
 from datetime import date
 from types import SimpleNamespace
 from typing import ClassVar
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount, SocialApp
@@ -440,7 +440,7 @@ class GoogleOAuthTests(TestCase):
         return serializer, django_request
 
     def _login_mock(self, provider="google", uid="google-sub-123", is_existing=False):
-        user = SimpleNamespace(correo="google@filmai.com")
+        user = SimpleNamespace(correo="google@filmai.com", is_active=True)
         return SimpleNamespace(
             # Tras `complete_social_login` (mockeado como no-op) la cuenta queda
             # persistida; el segundo `if not login.is_existing` no debe entrar.
@@ -459,10 +459,16 @@ class GoogleOAuthTests(TestCase):
         )
 
     def _patch_existencia(self, es_existente):
-        """Fija `SocialAccount.objects.filter(...).exists()` al valor deseado."""
+        """Simula la resolución del vínculo social y su usuario activo."""
+        manager = Mock()
+        manager.filter.return_value.first.return_value = (
+            SimpleNamespace(user=SimpleNamespace(is_active=True))
+            if es_existente
+            else None
+        )
         return patch(
-            "usuarios.serializers.SocialAccount.objects.filter",
-            return_value=SimpleNamespace(exists=lambda: es_existente),
+            "usuarios.serializers.SocialAccount.objects.select_related",
+            return_value=manager,
         )
 
     def test_validate_adjunta_campos_extra_al_request_sin_releer_el_body(self):

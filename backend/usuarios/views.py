@@ -122,6 +122,7 @@ class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
     serializer_class = GoogleSocialLoginSerializer
+    authentication_classes = (LenientJWTCookieAuthentication,)
 
 
 class CSRFTokenView(APIView):
@@ -135,6 +136,7 @@ class CSRFTokenView(APIView):
     """
 
     permission_classes: ClassVar[list] = [permissions.AllowAny]
+    authentication_classes = (LenientJWTCookieAuthentication,)
 
     @method_decorator(ensure_csrf_cookie)
     def dispatch(self, *args, **kwargs):
@@ -233,6 +235,7 @@ class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
     """
 
     permission_classes: ClassVar[list] = [permissions.AllowAny]
+    authentication_classes = (LenientJWTCookieAuthentication,)
     throttle_classes: ClassVar[list] = [EmailRateThrottle]
 
     def post(self, request):
@@ -260,6 +263,7 @@ class RestablecerContrasenaView(APIView):
     """
 
     permission_classes: ClassVar[list] = [permissions.AllowAny]
+    authentication_classes = (LenientJWTCookieAuthentication,)
     throttle_classes: ClassVar[list] = [ScopedRateThrottle]
     throttle_scope = "restablecer_contrasena"
 
@@ -267,7 +271,11 @@ class RestablecerContrasenaView(APIView):
         serializer = RestablecerContrasenaSerializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
+            serializer.save()
         except EnlaceRestablecimientoInvalido:
             return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response({"detail": "La contraseña fue restablecida."})
+        from .perfil import cerrar_sesion
+
+        return cerrar_sesion(
+            request, "La contraseña fue restablecida. Inicia sesión nuevamente."
+        )
