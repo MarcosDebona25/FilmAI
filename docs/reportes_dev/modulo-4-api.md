@@ -1,4 +1,4 @@
-# Módulo 4: contrato de perfil y sesiones
+# Módulo 4: perfil, preferencias y cuentas OAuth
 
 La API usa los nombres de campos del modelo en `snake_case`. Todas las rutas
 tienen slash final. Las operaciones privadas requieren una cuenta activa y JWT
@@ -32,6 +32,33 @@ a iniciar sesión en todos los dispositivos.
 La renovación mantiene rotación y blacklist. Si se envía por cookie, exige CSRF
 incluso cuando el access ya venció. Si se envía explícitamente en el cuerpo,
 se valida el token sin depender de las cookies.
+
+## Preferencias y baja lógica
+
+| Ruta | Entrada / respuesta |
+| --- | --- |
+| `GET /api/preferences/` | `tema`, `perfil_publico`, `notif_recomendaciones`, `notif_resenas`, `notif_novedades`. |
+| `PUT /api/preferences/` | Cualquiera de esos campos; los omitidos conservan su valor. Responde con las cinco preferencias. |
+| `POST /api/account/deactivate/` | Sin campos obligatorios. Da de baja al usuario de la sesión, no a un ID enviado en el cuerpo. Responde 200 con `detail` y limpia cookies. |
+
+El tema acepta `oscuro` o `claro`; las demás preferencias son booleanas. Los
+campos ajenos a preferencias se ignoran. Un dato inválido devuelve 400 y no se
+guarda ninguno de los cambios del request.
+
+La baja cambia `estado` a `baja`, bloquea los access por estado y agrega los
+refresh emitidos al usuario a la blacklist, todo dentro de una transacción junto
+con el cierre de sesión. Si falla, se revierte el estado y la blacklist. No se
+elimina el usuario ni sus relaciones. No se ofrece reactivación automática.
+
+| Estado | Login correo/usuario | Google | Access | Refresh |
+| --- | --- | --- | --- | --- |
+| Pendiente | 403 | 403 | 401 | 401 |
+| Activa | 200 con credenciales válidas | 200 con identidad verificada | 200 con JWT vigente | 200 con JWT vigente |
+| Baja | 403 | 403 | 401 | 401 |
+
+Google utiliza el vínculo por `sub`/`SocialAccount.uid`, incluso si el correo de
+Google cambió. Crear contraseña local por recuperación no crea otro usuario.
+La confirmación de un correo antiguo tampoco revierte una baja.
 
 ## Recuperación y concurrencia
 
@@ -70,6 +97,12 @@ contra PostgreSQL temporal, sin modificar los datos de desarrollo.
 La primera unidad se revierte retirando las rutas nuevas y sus serializers/vistas,
 la comprobación de revocación y la migración `usuarios.0005`, junto con sus tests
 y notas. No modifica datos del catálogo, listas ni preferencias.
+
+La segunda unidad agrega `usuarios/test_cuenta.py`: matriz de estados,
+preferencias parciales, permisos, CSRF, cuerpo manipulado, conservación exacta de
+relaciones y rollback ante fallos de blacklist o cierre de sesión. Su reversión
+retira `cuenta.py` y sus rutas/tests, los bloqueos de OAuth/confirmación asociados
+y las notas de P-03/P-05; los endpoints de perfil y contraseña siguen operativos.
 
 ## Fuentes
 

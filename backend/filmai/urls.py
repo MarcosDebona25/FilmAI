@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from usuarios.authentication import RefreshSesionView
+from usuarios.cuenta import DesactivarCuentaView, PreferenciasView
 from usuarios.perfil import CambiarContrasenaView, PerfilView
 from usuarios.views import (
     ConfirmarCorreoView,
@@ -36,18 +37,37 @@ urlpatterns = [
     path("api/catalogo/", include("catalogo.urls")),
     path("api/lists/", include("listas.urls")),
     path("api/profile/", PerfilView.as_view(), name="perfil"),
+    path("api/preferences/", PreferenciasView.as_view(), name="preferencias"),
+    path(
+        "api/account/deactivate/",
+        DesactivarCuentaView.as_view(),
+        name="desactivar_cuenta",
+    ),
     path(
         "api/profile/change-password/",
         CambiarContrasenaView.as_view(),
         name="cambiar_contrasena",
     ),
     # El alias previo también exige contraseña actual y cierra las sesiones.
+    # Se registra con y sin slash: dj-rest-auth expone ``password/change/?`` y
+    # ``token/refresh/?``, y sin este control las variantes sin slash eludirían
+    # la contraseña actual y la revocación por cambio de contraseña.
     path(
         "api/auth/password/change/",
         CambiarContrasenaView.as_view(),
         name="rest_password_change",
     ),
+    path(
+        "api/auth/password/change",
+        CambiarContrasenaView.as_view(),
+        name="rest_password_change_no_slash",
+    ),
     path("api/auth/token/refresh/", RefreshSesionView.as_view(), name="token_refresh"),
+    path(
+        "api/auth/token/refresh",
+        RefreshSesionView.as_view(),
+        name="token_refresh_no_slash",
+    ),
     path(
         "api/auth/password/reset/",
         RecuperarContrasenaView.as_view(),
