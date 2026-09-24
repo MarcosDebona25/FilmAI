@@ -325,6 +325,26 @@ class ContrasenaTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_alias_sin_slash_no_evade_contrasena_actual(self):
+        """dj-rest-auth también registra rutas sin slash: no deben eludir el contrato."""
+        response = self.cambiar(
+            {"new_password1": "NuevaClave456!", "new_password2": "NuevaClave456!"},
+            url="/api/auth/password/change",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password("Password123!"))
+
+    def test_refresh_sin_slash_rechaza_tokens_anteriores(self):
+        """La variante heredada tampoco renueva JWT sin claim de revocación."""
+        del self.refresh[api_settings.REVOKE_TOKEN_CLAIM]
+        response = Client().post(
+            "/api/auth/token/refresh",
+            {"refresh": str(self.refresh)},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_google_sin_password_indica_recuperacion(self):
         """Una contraseña inutilizable no se puede sustituir sin demostrar acceso al correo."""
         self.usuario.set_unusable_password()

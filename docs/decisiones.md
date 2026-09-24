@@ -5,6 +5,32 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 24/09/2026 — P-03/P-05: preferencias y baja lógica sin pérdida de datos
+
+- **Descripción**: `GET/PUT /api/preferences/` consulta y actualiza parcialmente
+  `tema`, `perfil_publico`, `notif_recomendaciones`, `notif_resenas` y
+  `notif_novedades`. Solo se modifica al usuario autenticado; campos ajenos a las
+  preferencias se ignoran. `POST /api/account/deactivate/` cambia `estado` a
+  `baja`, bloquea access JWT por estado y agrega los refresh del usuario a la
+  blacklist. El cambio de estado, blacklist y cierre de sesión son atómicos.
+- **Conservación**: no se elimina ni modifica contenido de listas, ítems,
+  calificaciones, reseñas, chats, mensajes, perfil ni vínculo Google. Se corrigen
+  las descripciones de eliminación permanente en CU-007 y su modal de UI.
+- **Autenticación**: pendiente y baja se rechazan en login local, Google, access
+  y refresh. Google resuelve el `sub` contra la cuenta social persistida antes
+  de iniciar sesión; no se decide por el correo ni por el usuario provisional de
+  allauth. Confirmar un correo antiguo no reactiva una cuenta en baja.
+  La documentación OAuth aclara contraseña inutilizable, no `NULL`, y alta de
+  contraseña local por recuperación sobre el mismo usuario.
+- **Reportes**: se trasladan `explicacion-modulo-6-admin.md` y
+  `explicacion-prs-27-28-29.md` desde la raíz a `docs/reportes_dev/`, conservando
+  su contenido. El contrato del módulo 4 se documenta allí también.
+- **Archivos afectados**: `backend/usuarios/{cuenta,adapter,serializers,
+  test_cuenta,tests}.py`, `backend/filmai/urls.py`, docs 02, 03, 04, 05,
+  `docs/decisiones.md` y `docs/reportes_dev/`.
+
+---
+
 ## 24/09/2026 — P-01: perfil propio y contraseñas con revocación de sesiones
 
 - **Descripción**: se agregan `GET/PUT /api/profile/` y
@@ -56,7 +82,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Archivos afectados**: `backend/catalogo/admin.py`,
   `backend/catalogo/test_admin.py`, `docs/02_Especificación de Requerimientos.md`,
   `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md` y
-  `explicacion-modulo-6-admin.md`.
+  `docs/reportes_dev/explicacion-modulo-6-admin.md`.
 
 ---
 ## 12/09/2026 — C-03: endpoints de catálogo públicos con AllowAny explícito

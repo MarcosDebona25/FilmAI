@@ -713,7 +713,8 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - Si la cuenta de Google ya está asociada → inicia sesión directamente.
 - Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género) en una pantalla intermedia.
 - El usuario nuevo creado con Google queda en estado **activa** directamente (Google ya verificó el correo; no requiere confirmación por email).
-- La contraseña no aplica para cuentas Google (se omite del form).
+- El alta con Google omite la contraseña local. Luego puede establecerse mediante
+  recuperación por correo; la misma cuenta conservará ambos métodos de acceso.
 
 #### Estados
 
@@ -990,7 +991,7 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 | **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                      |
 | **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                    |
 | **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).              |
-| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es permanente. Perderás tus listas, reseñas y calificaciones." Botones Cancelar / Dar de baja. |
+| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Se cerrarán tus sesiones y no podrás iniciar sesión. Tus datos, listas, reseñas y calificaciones se conservarán." Botones Cancelar / Dar de baja. |
 
 ### Breadcrumb
 

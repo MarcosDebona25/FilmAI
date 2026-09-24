@@ -113,7 +113,12 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 
 **Campo en Usuario para OAuth:**
 
-- `googleId` (VARCHAR(100), UNIQUE, NULLABLE): Identificador único de la cuenta de Google asociada. Solo se completa para cuentas creadas mediante autenticación con Google OAuth. En estos casos, el campo `password` (contraseña) puede ser NULL.
+- `googleId` (VARCHAR(100), UNIQUE, NULLABLE): Identificador estable `sub` de la cuenta Google, sincronizado con `SocialAccount.uid`; no se utiliza el correo como identificador social. Al crear la cuenta por Google, `password` contiene una contraseña **inutilizable** creada con `set_unusable_password()`, no `NULL`. La cuenta activa puede establecer una contraseña local mediante el enlace temporal de recuperación por correo. Se actualiza el mismo `Usuario`, sin eliminar ni reemplazar su vínculo Google; después admite login Google y local (correo o nombre de usuario y contraseña). El cambio invalida los JWT anteriores y requiere nuevo login.
+
+**Baja de Usuario (CU-007, 24/09/2026):** se modifica únicamente `estado` a `baja`
+y se revocan las sesiones. La fila del usuario y todas sus relaciones se conservan,
+incluidos sus datos de perfil, preferencias y vínculo social. No se ejecutan
+borrados en cascada al dar de baja una cuenta.
 
 **Cambio en Usuario:**
 

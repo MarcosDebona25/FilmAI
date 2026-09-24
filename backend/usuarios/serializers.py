@@ -189,9 +189,15 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             ) from err
 
         # allauth todavía no resolvió `is_existing`; consultamos el vínculo directo.
-        es_existente = SocialAccount.objects.filter(
-            provider=login.account.provider, uid=login.account.uid
-        ).exists()
+        cuenta_existente = (
+            SocialAccount.objects.select_related("user")
+            .filter(provider=login.account.provider, uid=login.account.uid)
+            .first()
+        )
+        es_existente = cuenta_existente is not None
+
+        if es_existente and not cuenta_existente.user.is_active:
+            raise PermissionDenied("Tu cuenta no está activa.")
 
         if not es_existente:
             # Google no provee estos campos obligatorios del perfil FilmAI.
@@ -247,6 +253,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
             self.post_signup(login, attrs)
 
         attrs["user"] = login.account.user
+        if not attrs["user"].is_active:
+            raise PermissionDenied("Tu cuenta no está activa.")
         return attrs
 
 
