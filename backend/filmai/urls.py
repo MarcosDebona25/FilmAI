@@ -4,6 +4,8 @@ from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from usuarios.authentication import RefreshSesionView
+from usuarios.perfil import CambiarContrasenaView, PerfilView
 from usuarios.views import (
     ConfirmarCorreoView,
     CSRFTokenView,
@@ -33,6 +35,19 @@ urlpatterns = [
     ),
     path("api/catalogo/", include("catalogo.urls")),
     path("api/lists/", include("listas.urls")),
+    path("api/profile/", PerfilView.as_view(), name="perfil"),
+    path(
+        "api/profile/change-password/",
+        CambiarContrasenaView.as_view(),
+        name="cambiar_contrasena",
+    ),
+    # El alias previo también exige contraseña actual y cierra las sesiones.
+    path(
+        "api/auth/password/change/",
+        CambiarContrasenaView.as_view(),
+        name="rest_password_change",
+    ),
+    path("api/auth/token/refresh/", RefreshSesionView.as_view(), name="token_refresh"),
     path(
         "api/auth/password/reset/",
         RecuperarContrasenaView.as_view(),

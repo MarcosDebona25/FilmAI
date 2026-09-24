@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models, transaction
+from django.db.models.functions import Lower
 
 
 class EstadoCuenta(models.TextChoices):
@@ -145,6 +146,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         verbose_name = "usuario"
         verbose_name_plural = "usuarios"
         ordering = ["id"]
+        constraints = [
+            models.UniqueConstraint(
+                Lower("nombre_usuario"), name="usuario_nombre_ci_unique"
+            ),
+        ]
 
     def __str__(self):
         return f"{self.nombre} {self.apellido} (@{self.nombre_usuario})"

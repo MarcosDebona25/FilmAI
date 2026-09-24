@@ -1,0 +1,31 @@
+"""Persistencia de contraseñas y notificación posterior al commit."""
+
+import logging
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.db import transaction
+
+logger = logging.getLogger(__name__)
+
+
+def notificar_cambio_contrasena(correo):
+    try:
+        send_mail(
+            "[FilmAI] Contraseña actualizada",
+            "La contraseña de tu cuenta fue actualizada. Se cerraron las sesiones "
+            "en todos los dispositivos. Si no realizaste este cambio, recupera "
+            "tu cuenta desde la pantalla de inicio de sesión.",
+            settings.DEFAULT_FROM_EMAIL,
+            [correo],
+        )
+    except Exception:
+        # La contraseña ya está confirmada: un fallo de correo no revierte el cambio.
+        logger.exception("No se pudo enviar la notificación de cambio de contraseña")
+
+
+def guardar_contrasena(usuario, password):
+    """El hash nuevo invalida los access y refresh emitidos con el anterior."""
+    usuario.set_password(password)
+    usuario.save(update_fields=["password"])
+    transaction.on_commit(lambda: notificar_cambio_contrasena(usuario.correo))

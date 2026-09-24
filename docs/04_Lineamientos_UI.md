@@ -760,6 +760,15 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 > Una sola pantalla con dos modos: visualización y edición. Al clickear "Editar perfil" los campos pasan a inputs. El email es siempre solo lectura.
 
+**Contrato de contraseña (24/09/2026):** el formulario envía `old_password`,
+`password1` y `password2` a `POST /api/profile/change-password/`. Antes de
+confirmar debe advertir: «Se cerrarán tus sesiones en todos los dispositivos.
+Tendrás que iniciar sesión nuevamente». Tras el éxito, redirige al login.
+El restablecimiento mediante el enlace de correo tiene el mismo efecto y nunca
+inicia sesión automáticamente. Si `tiene_contrasena_local` es `false`, se muestra
+la opción de establecerla mediante recuperación por correo, en lugar de pedir
+una contraseña actual inexistente. Esto conserva el acceso con Google.
+
 ### Modo visualización
 
 ```
