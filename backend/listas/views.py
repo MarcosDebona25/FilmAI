@@ -40,6 +40,7 @@ from .serializers import (
     ListaResumenSerializer,
     NombreListaSerializer,
     PertenenciaQuerySerializer,
+    QuitarItemQuerySerializer,
 )
 
 _ORDEN_PREDETERMINADAS = Case(
@@ -240,17 +241,46 @@ class ListaItemDetailView(APIView):
     """Quita un ítem de una lista propia."""
 
     def delete(self, request, lista_id, item_id):
+        """Quita el ítem, y con `?borrar_calificacion=true` también la calificación.
+
+        CU-011 pide que no se pueda desmarcar como «vista» una producción
+        calificada sin eliminar antes esa calificación: si la calificaste, la
+        viste, y quitarla de «Vistas» afirmaría lo contrario.
+
+        Hasta la fase 3 de C-08 eso era un callejón sin salida —el 409 mandaba
+        al usuario a otra pantalla—. Con el flag, la UI puede advertir qué se
+        pierde («Se eliminarán tu calificación de 9/10 y tu reseña») y hacerlo
+        en el momento. El 409 sin flag no cambia: es lo que le avisa al frontend
+        que tiene que preguntar primero.
+
+        Las dos escrituras van en **una** transacción. Dos llamadas HTTP desde
+        el frontend no serían atómicas: si la segunda fallara, el usuario
+        perdería la calificación y la producción seguiría en «Vistas» —el costo
+        pagado y nada obtenido—.
+        """
         lista = _lista_propia(request, lista_id)
         item = get_object_or_404(
             Tiene.objects.select_related("produccion"), pk=item_id, lista=lista
         )
-        if (
-            lista.tipo == TipoLista.PREDETERMINADA
-            and lista.nombre == "Vistas"
-            and Calificacion.objects.filter(
+        query = QuitarItemQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+
+        # La regla es solo de «Vistas»: quitar de Favoritos algo calificado
+        # nunca estuvo bloqueado, así que el flag tampoco borra nada ahí.
+        calificacion = None
+        if lista.tipo == TipoLista.PREDETERMINADA and lista.nombre == "Vistas":
+            calificacion = Calificacion.objects.filter(
                 usuario=request.user, produccion=item.produccion, activa=True
-            ).exists()
-        ):
-            raise CalificacionImpideQuitarDeVistas
-        item.delete()
+            ).first()
+            if (
+                calificacion is not None
+                and not query.validated_data["borrar_calificacion"]
+            ):
+                raise CalificacionImpideQuitarDeVistas
+
+        with transaction.atomic():
+            if calificacion is not None:
+                # La `Resena` cae por CASCADE; es lo que el modal advierte.
+                calificacion.delete()
+            item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

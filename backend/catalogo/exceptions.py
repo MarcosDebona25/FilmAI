@@ -1,3 +1,6 @@
+from typing import ClassVar
+
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
@@ -41,3 +44,21 @@ def tmdb_exception_handler(exc, context):
             {"detail": str(exc)}, status=TMDB_STATUS_CODES.get(type(exc), 502)
         )
     return drf_exception_handler(exc, context)
+
+
+class CalificacionDuplicada(APIException):
+    """Un usuario califica una misma producción una sola vez (CU-015).
+
+    Existe el `UniqueConstraint`, así que sin esto un segundo POST terminaría
+    en `IntegrityError` y el frontend recibiría un 500. Reusa el sobre
+    `{codigo, detail}` que L-01 estableció en `listas/exceptions.py`: el modal
+    necesita distinguir "ya la calificaste" de un error de validación, y que
+    las dos APIs hablen igual vale más que cualquiera de las dos formas.
+    """
+
+    status_code = 409
+    default_code = "calificacion_duplicada"
+    default_detail: ClassVar[dict[str, str]] = {
+        "codigo": default_code,
+        "detail": "Ya calificaste esta producción. Editá tu calificación.",
+    }
