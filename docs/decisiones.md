@@ -5,6 +5,38 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/09/2026 — Perfil, avatares ampliables y preferencias visibles
+
+- **Descripción**: el perfil muestra nombre y apellido en la cabecera y en
+  campos separados, además de los datos de cuenta de CU-005. La edición inline
+  explica las reglas antes de guardar. Nombre y apellido permiten espacios
+  entre palabras y normalizan espacios sobrantes antes de persistir; una
+  migración corrige los registros existentes. El cambio de contraseña conserva
+  un formulario y una confirmación independientes de la edición del perfil.
+- **Avatares**: se publican las 26 imágenes individuales de
+  `frontend/public/avatars/recortados/`. Un script genera el catálogo con IDs
+  estables para que nuevos archivos no cambien elecciones previas; los IDs de
+  archivos retirados permanecen inactivos y no se reutilizan. La API
+  valida el mismo catálogo que consulta el selector; la navbar muestra la
+  selección y usa iniciales como respaldo. No hay subida de fotos.
+- **Preferencias y reseñas**: el tema guardado en la cuenta se aplica a la
+  interfaz. Los controles de privacidad y correo persisten, con un aviso de
+  que aún no tienen efecto sobre publicaciones o envíos. El enlace «Mis reseñas»
+  abre una pantalla informativa vacía hasta que C-08 permita implementar P-06.
+  Se añaden pruebas de Django y recorridos Playwright para estos flujos.
+- **Verificación sin interrumpir desarrollo**: Playwright escribe sus archivos
+  de Next en `.next-e2e`; un build de comprobación usa
+  `NEXT_DIST_DIR=.next-build`. Se evita compartir `.next` con el servidor
+  de desarrollo después de comprobar que ejecutar un build en paralelo lo
+  dejaba sin sus manifests. `next.config.ts` permite elegir el directorio por
+  variable de entorno y ambos directorios se excluyen de Git.
+- **Archivos afectados**: `backend/usuarios/`, `backend/filmai/urls.py`,
+  `frontend/app/`, `frontend/components/`, `frontend/lib/`, `frontend/e2e/`,
+  `frontend/playwright.config.ts`, `scripts/sync_avatars.py`, `.github/workflows/ci.yml`,
+  docs 02, 03, 04, 05 y `docs/decisiones.md`.
+
+---
+
 ## 24/09/2026 — P-03/P-05: preferencias y baja lógica sin pérdida de datos
 
 - **Descripción**: `GET/PUT /api/preferences/` consulta y actualiza parcialmente
@@ -26,7 +58,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `explicacion-prs-27-28-29.md` desde la raíz a `docs/reportes_dev/`, conservando
   su contenido. El contrato del módulo 4 se documenta allí también.
 - **Archivos afectados**: `backend/usuarios/{cuenta,adapter,serializers,
-  test_cuenta,tests}.py`, `backend/filmai/urls.py`, docs 02, 03, 04, 05,
+test_cuenta,tests}.py`, `backend/filmai/urls.py`, docs 02, 03, 04, 05,
   `docs/decisiones.md` y `docs/reportes_dev/`.
 
 ---
@@ -59,7 +91,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   los dispositivos y redirigir al login después del cambio. No se implementa UI
   nueva en esta entrega.
 - **Archivos afectados**: `backend/usuarios/{perfil,authentication,passwords,
-  exceptions,serializers,views,models,test_perfil}.py`, migración `0005`,
+exceptions,serializers,views,models,test_perfil}.py`, migración `0005`,
   `backend/filmai/{settings,urls}.py`, docs 02 y 04 y
   `docs/reportes_dev/modulo-4-api.md`.
 
@@ -85,6 +117,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   `docs/reportes_dev/explicacion-modulo-6-admin.md`.
 
 ---
+
 ## 12/09/2026 — C-03: endpoints de catálogo públicos con AllowAny explícito
 
 - **Descripción**: los 7 endpoints de catálogo (`/api/catalogo/trending/`,
@@ -206,10 +239,10 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   6. Docs 04 marcaba Sprint 1 (Home, Buscar) como completado sin código.
   7. Docs/decisiones documentaba CI como pendiente pese a que
      `.github/workflows/ci.yml` ya existe.
-  Se actualizó el plan de desarrollo con el estado real por tarea, los
-  próximos trabajos (catálogo, materialización, embeddings, sync, listas,
-  chatbot/RAG) y el reparto vigente. No se crearon archivos nuevos: todo el
-  trabajo futuro queda especificado dentro de la documentación existente.
+     Se actualizó el plan de desarrollo con el estado real por tarea, los
+     próximos trabajos (catálogo, materialización, embeddings, sync, listas,
+     chatbot/RAG) y el reparto vigente. No se crearon archivos nuevos: todo el
+     trabajo futuro queda especificado dentro de la documentación existente.
 - **Motivo**: el usuario aprobó ejecutar solo la normalización documental (pasos
   1 y 2 del plan); la implementación de código queda para fases posteriores.
 - **Archivos**: `README.md`, `docs/02_Especificación de Requerimientos.md`,
@@ -242,7 +275,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   recomputación innecesaria; garantía imposible: un worker caído después de
   generar y antes de persistir puede haber invocado a Ollama dos veces.
 - **Texto canónico a embeber**: `Title + Genres + Directors + Cast + Keywords
-  + Synopsis` normalizado (espacios, vacíos y orden de arrays).
+  - Synopsis` normalizado (espacios, vacíos y orden de arrays).
 - **Archivos** (futuros): `backend/catalogo/models.py` (`ProduccionEmbedding`),
   `backend/catalogo/tasks.py`, `backend/catalogo/services/`,
   `docker-compose.yml` (worker + beat), `backend/requirements.txt`
@@ -263,11 +296,11 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
      antes de encolar su embedding.
   3. **Cola larga**: producciones no materializadas se resuelven on-demand vía
      TMDB y se incorporan progresivamente al corpus.
-  No se sincroniza todo TMDB de entrada. Además se fija el contrato canónico
-  de tipos: TMDB usa `movie`/`tv` y el dominio local `pelicula`/`serie`; la
-  conversión se hace en un único adaptador, nunca guardando valores TMDB
-  crudos en `TipoProduccion`. La sincronización periódica (Celery Beat 3 AM)
-  pasa a ser mantenimiento/seed, no prerrequisito del catálogo en vivo.
+     No se sincroniza todo TMDB de entrada. Además se fija el contrato canónico
+     de tipos: TMDB usa `movie`/`tv` y el dominio local `pelicula`/`serie`; la
+     conversión se hace en un único adaptador, nunca guardando valores TMDB
+     crudos en `TipoProduccion`. La sincronización periódica (Celery Beat 3 AM)
+     pasa a ser mantenimiento/seed, no prerrequisito del catálogo en vivo.
 - **Motivo**: un corpus limitado a interacciones personales haría inútil la
   búsqueda semántica para descubrimiento; sincronizar todo TMDB no escala
   (decisión 25/08/2026 de arquitectura híbrida).
@@ -1249,6 +1282,7 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   por qué Google "no funciona" cuando el problema es una cuenta preexistente
   con contraseña.
 - **Archivos**: `backend/usuarios/serializers.py`, `backend/usuarios/tests.py`.
+
 ## 11/09/2026 — Provisión atómica de recursos iniciales de usuario
 
 - **Fecha**: 11/09/2026
@@ -1300,7 +1334,7 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
      - Corte por huella: si el embedding ya está `ready` con el mismo
        `source_hash` y `model_version`, se sale sin llamar al proveedor.
      - Claim atómico: `UPDATE ... SET estado='processing' WHERE estado IN
-       ('pending','failed')` devuelve la cantidad de filas afectadas; de dos
+('pending','failed')` devuelve la cantidad de filas afectadas; de dos
        ejecuciones simultáneas exactamente una recibe 1 y la otra 0, sin locks
        explícitos. Los `ready` quedan fuera de los estados reclamables a
        propósito: un vector utilizable no se degrada a `failed` por un
@@ -1310,9 +1344,9 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
        segundos) y cualquier excepción se captura: la fila termina en `failed`
        y la tarea reporta éxito, porque propagar haría que Celery reintentara
        en loop sin aportar nada — la producción sigue visible igual.
-  Verificado de punta a punta contra el worker real: la tarea se recibe, el
-  stub falla con `NotImplementedError`, la fila queda en `failed` y la
-  producción permanece visible.
+       Verificado de punta a punta contra el worker real: la tarea se recibe, el
+       stub falla con `NotImplementedError`, la fila queda en `failed` y la
+       producción permanece visible.
   3. **Auto-reload del worker en desarrollo (`watchmedo`).** Celery NO recarga
      código como el `runserver` de Django, y eso tiene dos síntomas de muy
      distinta gravedad: agregar o renombrar una tarea produce un error
@@ -1377,17 +1411,17 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
     estado `ready` no puede tener `vector` nulo. Un `ready` sin vector sería
     invisible para la búsqueda pero contaría como procesado, dejando la
     producción fuera del corpus en silencio.
-  Índices: `idx_embedding_estado` (btree, para que el backfill busque
-  `pending`/`failed`) e `idx_embedding_vector_hnsw` (HNSW con
-  `vector_cosine_ops`, `m=16`, `ef_construction=64`) para la búsqueda por
-  similitud que usará `buscar_semantico` (B-06).
-  La migración `0004_produccionembedding` lleva `VectorExtension()` agregado a
-  mano como primera operación: `makemigrations` no infiere que el tipo
-  `vector` proviene de una extensión, y sin eso la migración falla con `type
-  "vector" does not exist`.
-  Se registra `ProduccionEmbedding` en el admin (excluyendo el vector, que son
-  1024 números ilegibles en un formulario) para poder auditar estados en
-  desarrollo; el registro de `Usuario` y `Reseña` sigue siendo AD-01'.
+    Índices: `idx_embedding_estado` (btree, para que el backfill busque
+    `pending`/`failed`) e `idx_embedding_vector_hnsw` (HNSW con
+    `vector_cosine_ops`, `m=16`, `ef_construction=64`) para la búsqueda por
+    similitud que usará `buscar_semantico` (B-06).
+    La migración `0004_produccionembedding` lleva `VectorExtension()` agregado a
+    mano como primera operación: `makemigrations` no infiere que el tipo
+    `vector` proviene de una extensión, y sin eso la migración falla con `type
+"vector" does not exist`.
+    Se registra `ProduccionEmbedding` en el admin (excluyendo el vector, que son
+    1024 números ilegibles en un formulario) para poder auditar estados en
+    desarrollo; el registro de `Usuario` y `Reseña` sigue siendo AD-01'.
 - **Motivo**: los embeddings los escribe un worker asincrónico que puede
   fallar a mitad de camino; las invariantes tienen que sobrevivir a eso.
 - **Archivos**: `backend/catalogo/models.py`,
@@ -1420,9 +1454,9 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
      las repone la señal). **Acción requerida para el equipo**: al traer estos
      cambios hay que correr `docker volume rm filmai_pgdata` (con los
      contenedores frenados) y `docker compose up --build -d`.
-  Se verificó en la imagen nueva que la extensión `vector` 0.8.6 está
-  disponible y que el rol de Postgres del `.env` tiene `rolsuper = true`, es
-  decir que podrá ejecutar `CREATE EXTENSION` en la migración de la Fase 2.
+     Se verificó en la imagen nueva que la extensión `vector` 0.8.6 está
+     disponible y que el rol de Postgres del `.env` tiene `rolsuper = true`, es
+     decir que podrá ejecutar `CREATE EXTENSION` en la migración de la Fase 2.
 - **Configuración de Celery**: broker en la DB 1 de Redis y backend de
   resultados en la DB 2, separadas de la DB 0 que usa el caché de TMDB, para
   que las claves de la cola no se mezclen con las `tmdb:*` ni las borre un
@@ -1467,24 +1501,24 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   a B-06 (Marcos, Fase 3), que en el plan corre en paralelo/después de C-04a.
   Se decide **adelantar dentro de C-04a** lo mínimo necesario para no dejar el
   helper de materialización sin poder encolar nada: modelo `ProduccionEmbedding`
-  + migración con la extensión `vector`, wiring de Celery (`filmai/celery.py`,
-  settings, servicio `celery-worker`), y la tarea `generar_embedding` con toda
-  la lógica real de idempotencia (claim `pending`/`failed`→`processing`, corte
-  por `source_hash`+`model_version`). La llamada al proveedor de embeddings en
-  sí (Ollama/bge-m3) queda como stub documentado (`generar_vector()`, lanza
-  `NotImplementedError`) — punto de extensión para que B-06 lo reemplace sin
-  tocar el resto. No se agrega el servicio `ollama` ni se hace pull de
-  `bge-m3`: eso sigue siendo 100% de B-06.
-  Decisiones asociadas:
-  - El paquete Django correcto para `VectorField`/`HnswIndex`/`VectorExtension`
+  - migración con la extensión `vector`, wiring de Celery (`filmai/celery.py`,
+    settings, servicio `celery-worker`), y la tarea `generar_embedding` con toda
+    la lógica real de idempotencia (claim `pending`/`failed`→`processing`, corte
+    por `source_hash`+`model_version`). La llamada al proveedor de embeddings en
+    sí (Ollama/bge-m3) queda como stub documentado (`generar_vector()`, lanza
+    `NotImplementedError`) — punto de extensión para que B-06 lo reemplace sin
+    tocar el resto. No se agrega el servicio `ollama` ni se hace pull de
+    `bge-m3`: eso sigue siendo 100% de B-06.
+    Decisiones asociadas:
+  * El paquete Django correcto para `VectorField`/`HnswIndex`/`VectorExtension`
     es `pgvector` (paquete `pgvector-python`, submódulo `pgvector.django`); se
     corrige la mención previa a `django-pgvector` en
     `docs/05_Plan_de_Desarrollo.md`, que no es el paquete mantenido para esto.
-  - `materializar()` se invoca como side-effect desde `MovieDetailView`/
+  * `materializar()` se invoca como side-effect desde `MovieDetailView`/
     `TVDetailView` (C-03) dentro de la misma tarea C-04a, sin cambiar su
     contrato de respuesta — de lo contrario el helper quedaría sin ningún
     llamador real hasta la UI de ficha de detalle (C-07).
-  - El test de concurrencia obligatorio para mergear es determinístico (mockea
+  * El test de concurrencia obligatorio para mergear es determinístico (mockea
     `IntegrityError` en `.create()` y verifica el fallback a `.get()`); un
     test adicional con `TransactionTestCase` + `threading.Barrier` (dos
     threads reales contra Postgres) se agrega como prueba de confianza extra,
@@ -1503,7 +1537,7 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Fecha**: 15/09/2026
 - **Descripción**: se cierra C-04a con la fase 5, que junta las piezas de las
   fases 1-4 en `catalogo/services/materialization.py::materializar(id_tmdb,
-  tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
+tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
   asociadas:
   - **`materializar()` propaga sus errores; quien la llama fija la política.**
     Las vistas de detalle la envuelven en `_materializar_sin_interrumpir()`,
@@ -1786,7 +1820,7 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
 - **Trazabilidad con CU-021**: el paso 5 pide «cantidad de producciones nuevas,
   actualizadas y errores». Ese requisito lo cumple **`refrescadas`**. El texto
   del caso de uso **no se tocó** (es un entregable académico); la aclaración
-  está en su campo *Observaciones*.
+  está en su campo _Observaciones_.
 - **Cierre de C-04b**: con todo mergeado a `main` (PRs #19 a #23), se elimina
   `openspec/changes/catalog-daily-sync/` siguiendo la política de la sección 9
   de `AGENTS.md` (los cambios completados se eliminan, no se archivan). La spec
@@ -1862,7 +1896,7 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
     serie × 6 = **210 combinaciones**, desde 1970 hasta la década en curso.
     Los géneros se piden a `/genre/{tipo}/list` (difieren por tipo; ids de
     TMDB, no nuestros). Dentro de cada combinación, `sort_by=vote_count.desc`:
-    verificado en vivo, trae *The Shining*, *Blade Runner* y *Die Hard*, no lo
+    verificado en vivo, trae _The Shining_, _Blade Runner_ y _Die Hard_, no lo
     que trendea esta semana.
   - **Round-robin sobre un orden barajado con semilla fija**: página 1 de
     todas las combinaciones antes que la 2 de ninguna. La corrida se corta
@@ -1902,8 +1936,8 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   `--dry-run --limite 600`: 37 combinaciones, 26 película / 11 serie, las 6
   décadas. Con 0,7 s medidos: 2.000 ≈ 25 min, 10.000 ≈ 2 h.
 - **Pendiente, a resolver con B-06 andando**: si 2.000 alcanza o vale dejar la
-  máquina para 10.000; y si los géneros de TV *Talk*, *Soap*, *News* y
-  *Reality* (que TMDB lista y el seed incluye) merecen un `--excluir-generos`.
+  máquina para 10.000; y si los géneros de TV _Talk_, _Soap_, _News_ y
+  _Reality_ (que TMDB lista y el seed incluye) merecen un `--excluir-generos`.
 - **Archivos**: `backend/catalogo/management/commands/seed_catalogo.py`
   (nuevo), `backend/catalogo/services/materialization.py`
   (`claves_frescas`, `_umbral_de_frescura`), `backend/catalogo/tests.py`
