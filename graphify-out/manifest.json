@@ -666,9 +666,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1790390867.8504188,
-    "seen": 1790391535.675151,
-    "ast_hash": "e29d541d2a6e239983dcb97c6305d584",
+    "mtime": 1790393192.8066092,
+    "seen": 1790393215.8104534,
+    "ast_hash": "1ae6c89e61cc3b828423c39215354a21",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1542,9 +1542,9 @@
     "semantic_hash": ""
   },
   "frontend/app/perfil/page.tsx": {
-    "mtime": 1790390867.8580081,
-    "seen": 1790391535.6650271,
-    "ast_hash": "5fe67fb7d4379d21613ea2123a52eb02",
+    "mtime": 1790393160.831506,
+    "seen": 1790393215.800394,
+    "ast_hash": "23b8135764f323158709d7d0977b573d",
     "semantic_hash": ""
   },
   "frontend/app/preferencias/layout.tsx": {
