@@ -21,42 +21,42 @@
 | 1 | POST / PUT / both DELETEs + exceptions | PR 1 | ~350 | `... test catalogo.tests_reviews.EscrituraTests` | Delete `reviews.py` and its routes; the models go back to being written by nobody |
 | 2 | The three GETs + pagination + spec + docs | PR 2 | ~300 | `... test catalogo.tests_reviews.LecturaTests` | Remove the read routes; writing still works |
 
-## Phase 1: The write path
+## Phase 1: The write path — DONE (26/09/2026)
 
-- [ ] 1.1 Create `catalogo/tests_reviews.py`. The suite of `catalogo/tests.py`
+- [x] 1.1 Create `catalogo/tests_reviews.py`. The suite of `catalogo/tests.py`
       is at 2 950 lines and this adds ~500; a separate module keeps both
       navigable. Django's runner discovers any `test*.py`, so no wiring is
       needed — confirm with `python manage.py test catalogo` that the count
-      grows
-- [ ] 1.2 RED: `EscrituraTests` — `POST /api/reviews/` creates the rating,
+      grows *Done:* `catalogo/tests_reviews.py`, 35 tests. The TMDB fixtures are imported from `tests.py` rather than copied — they are the ones verified against the real API
+- [x] 1.2 RED: `EscrituraTests` — `POST /api/reviews/` creates the rating,
       creates the `Resena` only when `texto` came, and answers 201 with the id
-- [ ] 1.3 RED: validation — `valor` 0 and 11 reject, missing `valor` rejects,
+- [x] 1.3 RED: validation — `valor` 0 and 11 reject, missing `valor` rejects,
       `texto` of 1001 chars rejects, unknown `tipo` rejects. Assert the status
       **and** which field the error names: the modal highlights fields
-- [ ] 1.4 RED: a second `POST` for the same production answers 409 carrying
+- [x] 1.4 RED: a second `POST` for the same production answers 409 carrying
       `codigo` (the `UniqueConstraint` exists; the point is that the user sees
-      a conflict, not a 500 from `IntegrityError`)
-- [ ] 1.5 RED: `PUT` changes `valor`, changes `texto`, changes both, and adds
+      a conflict, not a 500 from `IntegrityError`) *Confirmed:* the code is `calificacion_duplicada`, and the second POST does not overwrite the first rating
+- [x] 1.5 RED: `PUT` changes `valor`, changes `texto`, changes both, and adds
       `texto` to a rating that had none. `texto: ""` rejects — emptying text is
       the text `DELETE`, and accepting both would leave two ways to do it
-- [ ] 1.6 RED: `DELETE /api/reviews/{id}/texto/` removes the `Resena` and
+- [x] 1.6 RED: `DELETE /api/reviews/{id}/texto/` removes the `Resena` and
       leaves the `Calificacion`; `DELETE /api/reviews/{id}/` removes both
-- [ ] 1.7 RED: ownership — another user's rating answers **404** (not 403) on
+- [x] 1.7 RED: ownership — another user's rating answers **404** (not 403) on
       `PUT` and on both `DELETE`s, matching L-01
-- [ ] 1.8 RED: unauthenticated requests answer 401/403 on every verb
-- [ ] 1.9 GREEN: `catalogo/exceptions.py` gains the conflict (reuse the
+- [x] 1.8 RED: unauthenticated requests answer 401/403 on every verb
+- [x] 1.9 GREEN: `catalogo/exceptions.py` gains the conflict (reuse the
       `{codigo, detail}` envelope of `listas/exceptions.py`), `catalogo/reviews.py`
-      the views, `filmai/urls.py` the routes
-- [ ] 1.10 Integration: `POST` with `materializar()` real and TMDB faked — the
+      the views, `filmai/urls.py` the routes *Also added:* `catalogo/serializers_reviews.py` — `catalogo` had no serializers at all, since C-03 is a passthrough
+- [x] 1.10 Integration: `POST` with `materializar()` real and TMDB faked — the
       production lands with genres, cast and a non-null `fecha_enriquecimiento`
       even though no detail view was opened
-- [ ] 1.11 **Integration with L-01**, the reason this task is urgent: add to
+- [x] 1.11 **Integration with L-01**, the reason this task is urgent: add to
       `Vistas`, rate, try to remove → 409 `calificacion_impide_quitar_de_vistas`;
       delete the rating → removal succeeds. Also assert deleting only the
-      **text** still blocks removal: the rule keys on the rating
-- [ ] 1.12 Full suite + `ruff format . && ruff check .`
-- [ ] 1.13 Live smoke in Docker: rate a real TMDB id from `curl`/httpie, check
-      the row and its production in `manage.py shell`
+      **text** still blocks removal: the rule keys on the rating **This is where the phase paid for itself:** the test failed with a 500 from *L-01*, not from C-08. `materializar()` returns a row whose `fecha_lanzamiento` is still TMDB's string, so `ListaItemSerializer` died on `.year` — a 500 on adding to any list a production not already stored. Fixed at the root (`refresh_from_db()` in `_enriquecer`, C-04a) with three tests of its own in `tests.py`. Invisible until now because the list tests use the factory (a real `date`) or mock `materializar()` whole
+- [x] 1.12 Full suite + `ruff format . && ruff check .`
+- [x] 1.13 Live smoke in Docker: rate a real TMDB id from `curl`/httpie, check
+      the row and its production in `manage.py shell` *Done:* rated Ratatouille (2062, not in the database) over HTTP with real cookie auth against real TMDB — 201 in 1.5 s, the row landed with genres, Brad Bird, cast and keywords, and `fecha_lanzamiento` as a `date`. Also verified live: 409 on duplicate, 400 on `valor: 11`, `PUT` to 7, and the text-only `DELETE`
 
 ## Phase 2: The read path and the documents
 

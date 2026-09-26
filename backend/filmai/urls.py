@@ -4,6 +4,11 @@ from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from catalogo.reviews import (
+    CalificacionDetailView,
+    CalificacionesView,
+    ResenaTextoView,
+)
 from usuarios.authentication import RefreshSesionView
 from usuarios.cuenta import DesactivarCuentaView, PreferenciasView
 from usuarios.perfil import AvataresView, CambiarContrasenaView, PerfilView
@@ -36,6 +41,19 @@ urlpatterns = [
     ),
     path("api/catalogo/", include("catalogo.urls")),
     path("api/lists/", include("listas.urls")),
+    # C-08. El `{id}` es la pk de la Calificacion; `/texto/` borra solo el
+    # texto y conserva la nota, mientras que la ruta sin sufijo borra las dos.
+    path("api/reviews/", CalificacionesView.as_view(), name="calificaciones"),
+    path(
+        "api/reviews/<int:calificacion_id>/",
+        CalificacionDetailView.as_view(),
+        name="calificacion_detail",
+    ),
+    path(
+        "api/reviews/<int:calificacion_id>/texto/",
+        ResenaTextoView.as_view(),
+        name="resena_texto",
+    ),
     path("api/profile/", PerfilView.as_view(), name="perfil"),
     path("api/avatars/", AvataresView.as_view(), name="avatares"),
     path("api/preferences/", PreferenciasView.as_view(), name="preferencias"),
