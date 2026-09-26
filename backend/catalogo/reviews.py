@@ -27,12 +27,25 @@ from rest_framework.views import APIView
 
 from catalogo.exceptions import CalificacionDuplicada
 from catalogo.models import Calificacion, Resena
+from catalogo.pagination_reviews import ResenaCursorPagination
 from catalogo.serializers_reviews import (
     ActualizarCalificacionSerializer,
     CalificacionSerializer,
     CrearCalificacionSerializer,
+    MiResenaSerializer,
+    ProduccionQuerySerializer,
+    ResenaComunidadSerializer,
 )
+from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.materialization import materializar
+
+
+def _produccion_pedida(request):
+    """`(id_tmdb, tipo_dominio)` de los query params, validados."""
+    query = ProduccionQuerySerializer(data=request.query_params)
+    query.is_valid(raise_exception=True)
+    datos = query.validated_data
+    return datos["id_tmdb"], tmdb_a_dominio(datos["tipo"])
 
 
 def _calificacion_propia(request, calificacion_id):
@@ -49,7 +62,41 @@ def _calificacion_propia(request, calificacion_id):
 
 
 class CalificacionesView(APIView):
-    """Crea la calificación de una producción para el usuario autenticado."""
+    """Reseñas de la comunidad sobre una producción, y alta de la propia."""
+
+    pagination_class = ResenaCursorPagination
+
+    def get(self, request):
+        """Las reseñas de los **demás** sobre una producción (§5c).
+
+        Tres exclusiones, cada una con su motivo:
+
+        - **Sin texto**: una nota sin escribir no tiene nada que leer.
+        - **Moderadas** (`activa=False`): decisión del 26/09/2026, solo su autor
+          las ve.
+        - **La de quien pregunta**: la ficha la muestra aparte, arriba, en su
+          propia card. Mandarla dos veces obligaría a deduplicar a cada
+          consumidor, y una lista paginada no puede prometer que la propia caiga
+          en la primera página.
+        """
+        id_tmdb, tipo = _produccion_pedida(request)
+        resenas = (
+            Resena.objects.filter(
+                calificacion__produccion__id_tmdb=id_tmdb,
+                calificacion__produccion__tipo=tipo,
+                activa=True,
+                calificacion__activa=True,
+            )
+            .exclude(calificacion__usuario=request.user)
+            # Sin esto, serializar N reseñas dispara 2N consultas para traer la
+            # calificación y el usuario de cada una (el problema N+1).
+            .select_related("calificacion__usuario")
+        )
+        paginator = self.pagination_class()
+        pagina = paginator.paginate_queryset(resenas, request, view=self)
+        return paginator.get_paginated_response(
+            ResenaComunidadSerializer(pagina, many=True).data, total=resenas.count()
+        )
 
     def post(self, request):
         entrada = CrearCalificacionSerializer(data=request.data)
@@ -127,3 +174,44 @@ class ResenaTextoView(APIView):
         # o no existía el texto?).
         Resena.objects.filter(calificacion=calificacion).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MisCalificacionesView(APIView):
+    """Las calificaciones propias: la lista de P-06, o la de una ficha.
+
+    Una sola ruta con dos formas de respuesta según los query params:
+
+    - **Sin filtro** → la lista paginada de «Mis reseñas» (P-06).
+    - **Con `id_tmdb` y `tipo`** → un objeto solo, porque el UNIQUE
+      `(usuario, produccion)` garantiza que no puede haber más de una. Devolver
+      `{"results": [...]}` obligaría al frontend a desempacar algo que nunca
+      tiene dos elementos.
+
+    Medio filtro es un 400 y no «todas»: un bug del frontend que olvide `tipo`
+    devolvería la lista entera y la ficha mostraría la calificación de otra
+    película, que es peor que un error visible.
+
+    A diferencia de la comunidad, acá entran las calificaciones sin texto (desde
+    P-06 se pueden editar) y las moderadas (su autor las sigue viendo).
+    """
+
+    pagination_class = ResenaCursorPagination
+
+    def get(self, request):
+        propias = (
+            Calificacion.objects.filter(usuario=request.user, activa=True)
+            .select_related("produccion", "resena")
+            .order_by("-fecha", "-id")
+        )
+        if request.query_params:
+            id_tmdb, tipo = _produccion_pedida(request)
+            calificacion = get_object_or_404(
+                propias, produccion__id_tmdb=id_tmdb, produccion__tipo=tipo
+            )
+            return Response(MiResenaSerializer(calificacion).data)
+
+        paginator = self.pagination_class()
+        pagina = paginator.paginate_queryset(propias, request, view=self)
+        return paginator.get_paginated_response(
+            MiResenaSerializer(pagina, many=True).data, total=propias.count()
+        )

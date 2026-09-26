@@ -531,3 +531,353 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
             )
 
         self.assertFalse(self.vistas.items.exists())
+
+
+# ---------------------------------------------------------------------------
+# Lectura (fase 2): la comunidad, «Mis reseñas» y mi calificación en una ficha
+# ---------------------------------------------------------------------------
+
+
+class _BaseLectura(TestCase):
+    """Varios usuarios y varias producciones: leer es cruzar datos de otros."""
+
+    def setUp(self):
+        self.usuario = UsuarioFactory(nombre_usuario="gonza", avatar_id=3)
+        self.cliente = APIClient()
+        self.cliente.force_authenticate(self.usuario)
+        self.pelicula = ProduccionAudiovisualFactory(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Blade Runner"
+        )
+        self.serie = ProduccionAudiovisualFactory(
+            id_tmdb=1396, tipo=TipoProduccion.SERIE, titulo="Breaking Bad"
+        )
+
+    def _resena(
+        self,
+        *,
+        usuario=None,
+        produccion=None,
+        valor=8,
+        texto=_RESENA,
+        activa=True,
+        fecha=None,
+    ):
+        """Crea una calificación con su texto, con control de `activa` y `fecha`.
+
+        `fecha` es `auto_now_add`, así que para fabricar un orden hay que
+        pisarla con un UPDATE: asignarla antes del save no sirve.
+        """
+        calificacion = Calificacion.objects.create(
+            usuario=usuario or self.usuario,
+            produccion=produccion or self.pelicula,
+            valor=valor,
+        )
+        if texto is not None:
+            Resena.objects.create(calificacion=calificacion, texto=texto, activa=activa)
+        if fecha is not None:
+            Calificacion.objects.filter(pk=calificacion.pk).update(fecha=fecha)
+            Resena.objects.filter(calificacion=calificacion).update(fecha=fecha)
+        return calificacion
+
+
+class ResenasDeLaComunidadTests(_BaseLectura):
+    """`GET /api/reviews/?id_tmdb=&tipo=`: lo que la ficha muestra de los demás."""
+
+    def test_devuelve_los_campos_de_la_review_card(self):
+        # §5c del doc 04: avatar, @usuario, rating X/10, fecha y texto.
+        otro = UsuarioFactory(nombre_usuario="marcos", avatar_id=7)
+        self._resena(usuario=otro, valor=10, texto="Un clásico.")
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.status_code, 200)
+        fila = respuesta.data["results"][0]
+        self.assertEqual(fila["nombre_usuario"], "marcos")
+        self.assertEqual(fila["avatar_id"], 7)
+        self.assertEqual(fila["valor"], 10)
+        self.assertEqual(fila["texto"], "Un clásico.")
+        self.assertIn("fecha", fila)
+
+    def test_informa_el_total_para_el_encabezado(self):
+        # El encabezado dice «Reseñas de la comunidad (N)», y la paginación por
+        # cursor no trae `count` por diseño: se agrega explícito.
+        for indice in range(3):
+            self._resena(usuario=UsuarioFactory(nombre_usuario=f"u{indice}"))
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.data["total"], 3)
+
+    def test_no_incluye_la_resena_de_quien_pregunta(self):
+        # La ficha la muestra aparte, arriba, en su propia card. Mandarla dos
+        # veces obligaría a deduplicar a cada consumidor, y una lista paginada
+        # no puede prometer que la propia caiga en la página 1.
+        self._resena(texto="La mía.")
+        self._resena(usuario=UsuarioFactory(nombre_usuario="otro"), texto="La ajena.")
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        textos = [fila["texto"] for fila in respuesta.data["results"]]
+        self.assertEqual(textos, ["La ajena."])
+        self.assertEqual(respuesta.data["total"], 1)
+
+    def test_no_incluye_calificaciones_sin_texto(self):
+        # Una nota sin escribir no tiene nada que leer (§5c).
+        self._resena(usuario=UsuarioFactory(nombre_usuario="muda"), texto=None)
+        self._resena(usuario=UsuarioFactory(nombre_usuario="escriba"), texto="Hola.")
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.data["total"], 1)
+        self.assertEqual(respuesta.data["results"][0]["nombre_usuario"], "escriba")
+
+    def test_no_incluye_resenas_moderadas(self):
+        # Decisión del 26/09: una reseña desactivada por el Admin (AD-01') no la
+        # ve nadie salvo su autor.
+        self._resena(usuario=UsuarioFactory(nombre_usuario="moderada"), activa=False)
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.data["total"], 0)
+
+    def test_filtra_por_produccion(self):
+        self._resena(
+            usuario=UsuarioFactory(nombre_usuario="a"), texto="De la película."
+        )
+        self._resena(
+            usuario=UsuarioFactory(nombre_usuario="b"),
+            produccion=self.serie,
+            texto="De la serie.",
+        )
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=1396&tipo=tv")
+
+        self.assertEqual(respuesta.data["total"], 1)
+        self.assertEqual(respuesta.data["results"][0]["texto"], "De la serie.")
+
+    def test_la_produccion_sin_resenas_devuelve_lista_vacia_no_404(self):
+        # El estado «Sin reseñas» de §5c es una pantalla normal, no un error.
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=1396&tipo=tv")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data["total"], 0)
+        self.assertEqual(respuesta.data["results"], [])
+
+    def test_exige_id_tmdb_y_tipo_validos(self):
+        casos = (
+            "",
+            "?id_tmdb=550",
+            "?tipo=movie",
+            "?id_tmdb=abc&tipo=movie",
+            "?id_tmdb=550&tipo=person",
+        )
+        for query in casos:
+            with self.subTest(query=query):
+                respuesta = self.cliente.get(f"/api/reviews/{query}")
+
+                self.assertEqual(respuesta.status_code, 400)
+
+    def test_los_anonimos_no_leen_resenas(self):
+        # Decisión heredada de L-01 y del middleware de A-09: toda la API de
+        # datos propios exige sesión. La ficha pública de C-03 no muestra
+        # reseñas; el doc 04 pone «Inicia sesión para...» en ese lugar.
+        self.assertEqual(
+            APIClient().get("/api/reviews/?id_tmdb=550&tipo=movie").status_code, 401
+        )
+
+
+class MisResenasTests(_BaseLectura):
+    """`GET /api/reviews/mias/`: la pantalla «Mis reseñas» (P-06)."""
+
+    def test_devuelve_los_campos_de_la_review_card_de_p06(self):
+        # P-06: título clicable, badge de tipo, X/10, fecha y texto.
+        self._resena(valor=9, texto="Mi texto.")
+
+        respuesta = self.cliente.get("/api/reviews/mias/")
+
+        fila = respuesta.data["results"][0]
+        self.assertEqual(fila["titulo"], "Blade Runner")
+        self.assertEqual(fila["tipo"], "movie")
+        self.assertEqual(fila["id_tmdb"], 550)
+        self.assertEqual(fila["valor"], 9)
+        self.assertEqual(fila["texto"], "Mi texto.")
+        # El id de la calificación viaja: los botones de editar y eliminar lo
+        # necesitan sin tener que volver a buscarla.
+        self.assertIn("id", fila)
+
+    def test_ordena_de_la_mas_reciente_a_la_mas_vieja(self):
+        from datetime import date
+
+        vieja = self._resena(texto="Vieja.", fecha=date(2026, 1, 1))
+        nueva = self._resena(
+            produccion=self.serie, texto="Nueva.", fecha=date(2026, 9, 1)
+        )
+
+        respuesta = self.cliente.get("/api/reviews/mias/")
+
+        ids = [fila["id"] for fila in respuesta.data["results"]]
+        self.assertEqual(ids, [nueva.pk, vieja.pk])
+
+    def test_incluye_mi_resena_moderada(self):
+        # La otra mitad de la decisión del 26/09: desaparece para la comunidad,
+        # pero su autor la sigue viendo. Que su texto se esfume de sus propias
+        # pantallas sin explicación posible es lo que se quiso evitar.
+        self._resena(activa=False, texto="Moderada.")
+
+        respuesta = self.cliente.get("/api/reviews/mias/")
+
+        self.assertEqual(respuesta.data["total"], 1)
+        self.assertEqual(respuesta.data["results"][0]["texto"], "Moderada.")
+
+    def test_incluye_calificaciones_sin_texto(self):
+        # Al revés que la comunidad: en «Mis reseñas» conviene ver lo que
+        # calificaste sin escribir, porque desde ahí lo podés editar.
+        self._resena(valor=6, texto=None)
+
+        respuesta = self.cliente.get("/api/reviews/mias/")
+
+        self.assertEqual(respuesta.data["total"], 1)
+        self.assertIsNone(respuesta.data["results"][0]["texto"])
+
+    def test_nunca_devuelve_la_resena_de_otro(self):
+        self._resena(usuario=UsuarioFactory(nombre_usuario="ajeno"), texto="Ajena.")
+
+        respuesta = self.cliente.get("/api/reviews/mias/")
+
+        self.assertEqual(respuesta.data["total"], 0)
+
+    def test_los_anonimos_no_tienen_resenas_propias(self):
+        self.assertEqual(APIClient().get("/api/reviews/mias/").status_code, 401)
+
+
+class MiCalificacionEnUnaFichaTests(_BaseLectura):
+    """`GET /api/reviews/mias/?id_tmdb=&tipo=`: qué mostrar en la ficha."""
+
+    def test_devuelve_mi_calificacion_de_esa_produccion(self):
+        # Es lo que la ficha consulta al cargar: ¿el botón dice «Calificar» o
+        # muestra 9/10?, ¿va la card «Tu reseña»?, ¿con qué precargo el modal?
+        self._resena(valor=9, texto="Mi texto.")
+        self._resena(produccion=self.serie, valor=4, texto="De la serie.")
+
+        respuesta = self.cliente.get("/api/reviews/mias/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data["valor"], 9)
+        self.assertEqual(respuesta.data["texto"], "Mi texto.")
+        self.assertEqual(respuesta.data["id_tmdb"], 550)
+
+    def test_es_un_objeto_solo_no_una_lista_paginada(self):
+        # Con filtro hay a lo sumo una: el UNIQUE es (usuario, producción).
+        # Devolver `{results: [...]}` obligaría al frontend a desempacar algo
+        # que nunca tiene más de un elemento.
+        self._resena(valor=9)
+
+        respuesta = self.cliente.get("/api/reviews/mias/?id_tmdb=550&tipo=movie")
+
+        self.assertNotIn("results", respuesta.data)
+        self.assertIn("valor", respuesta.data)
+
+    def test_404_cuando_todavia_no_la_califique(self):
+        # El 404 es la respuesta: «no tenés calificación acá». La ficha lo lee
+        # como «mostrar el botón Calificar vacío».
+        respuesta = self.cliente.get("/api/reviews/mias/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.status_code, 404)
+
+    def test_no_devuelve_la_calificacion_de_otro_en_esa_produccion(self):
+        self._resena(usuario=UsuarioFactory(nombre_usuario="ajeno"), valor=10)
+
+        respuesta = self.cliente.get("/api/reviews/mias/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.status_code, 404)
+
+    def test_devuelve_mi_calificacion_moderada(self):
+        self._resena(valor=9, texto="Moderada.", activa=False)
+
+        respuesta = self.cliente.get("/api/reviews/mias/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data["texto"], "Moderada.")
+
+    def test_exige_los_dos_parametros_juntos(self):
+        # Medio filtro es un error, no «todas mis reseñas»: sin esto, un bug del
+        # frontend que olvide `tipo` devolvería la lista entera y la ficha
+        # mostraría la calificación de otra película.
+        self._resena(valor=9)
+
+        respuesta = self.cliente.get("/api/reviews/mias/?id_tmdb=550")
+
+        self.assertEqual(respuesta.status_code, 400)
+
+
+class PaginacionDeResenasTests(_BaseLectura):
+    """Cursor de 20, para los dos scrolls infinitos."""
+
+    def _muchas(self, cantidad, *, propias):
+        from datetime import date, timedelta
+
+        creadas = []
+        for indice in range(cantidad):
+            produccion = ProduccionAudiovisualFactory(
+                id_tmdb=9000 + indice, tipo=TipoProduccion.PELICULA
+            )
+            creadas.append(
+                self._resena(
+                    usuario=self.usuario
+                    if propias
+                    else UsuarioFactory(nombre_usuario=f"u{indice}"),
+                    produccion=produccion if propias else self.pelicula,
+                    texto=f"Reseña {indice}.",
+                    fecha=date(2026, 1, 1) + timedelta(days=indice),
+                )
+            )
+        return creadas
+
+    def test_la_comunidad_llega_de_a_20(self):
+        self._muchas(25, propias=False)
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(len(respuesta.data["results"]), 20)
+        self.assertIsNotNone(respuesta.data["next"])
+        self.assertEqual(respuesta.data["total"], 25)
+
+    def test_la_segunda_pagina_trae_el_resto_sin_repetir(self):
+        self._muchas(25, propias=False)
+
+        primera = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+        segunda = self.cliente.get(primera.data["next"])
+
+        textos_primera = {fila["texto"] for fila in primera.data["results"]}
+        textos_segunda = {fila["texto"] for fila in segunda.data["results"]}
+        self.assertEqual(len(textos_segunda), 5)
+        self.assertEqual(textos_primera & textos_segunda, set())
+
+    def test_una_resena_nueva_no_desordena_la_paginacion_en_curso(self):
+        # Es la razón de usar cursor y no `?page=2`: con offset, una reseña
+        # nueva empuja todo una posición y la página 2 repite el último ítem de
+        # la página 1. El cursor apunta a un valor, no a una posición.
+        self._muchas(25, propias=False)
+        primera = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+        vistos = {fila["texto"] for fila in primera.data["results"]}
+
+        from datetime import date
+
+        self._resena(
+            usuario=UsuarioFactory(nombre_usuario="recien"),
+            texto="Llegó mientras scrolleabas.",
+            fecha=date(2026, 12, 31),
+        )
+        segunda = self.cliente.get(primera.data["next"])
+
+        textos_segunda = [fila["texto"] for fila in segunda.data["results"]]
+        self.assertEqual(len(set(textos_segunda)), len(textos_segunda), "hay repetidos")
+        self.assertEqual(vistos & set(textos_segunda), set())
+
+    def test_mis_resenas_tambien_llegan_de_a_20(self):
+        self._muchas(22, propias=True)
+
+        respuesta = self.cliente.get("/api/reviews/mias/")
+
+        self.assertEqual(len(respuesta.data["results"]), 20)
+        self.assertEqual(respuesta.data["total"], 22)
