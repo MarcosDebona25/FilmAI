@@ -2021,3 +2021,85 @@ tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
   solicitud por minuto por IP queda reemplazada.
 - **Archivos afectados**: `README.md`, docs 02, 03, 04 y 05, y
   `docs/decisiones.md`.
+
+---
+
+## 26/09/2026 — C-08: eliminar la reseña conserva la calificación; moderación visible solo para el autor
+
+- **Fecha**: 26/09/2026
+- **Contexto**: `Calificacion` y `Resena` existen desde F-04 y **nada podía
+  escribirlas**. Dos entregas ya mergeadas dependen de que existan: L-01
+  bloquea con 409 el quitar de `Vistas` una producción calificada —y su
+  mensaje pide «eliminá la calificación», que no se podía hacer—, y el
+  `ResenaAdmin` de AD-01' modera reseñas que nadie podía publicar. C-08 es
+  además el último backend pendiente del Módulo 2.
+- **Decisión 1 — eliminar la reseña borra SOLO el texto**: la calificación
+  1-10 sobrevive. Respeta que el texto es opcional (se puede calificar sin
+  escribir), así que borrarlo no debería arrastrar un dato que el usuario no
+  pidió borrar.
+  - **Consecuencia en la UI, a corregir en `docs/04_Lineamientos_UI.md`**: el
+    documento dice que tras eliminar «el botón Calificar vuelve a mostrarse».
+    No puede: la calificación sigue ahí. La card «Tu reseña» desaparece (§5c
+    ya dice que solo se listan reseñas *con texto*), pero el botón muestra la
+    calificación vigente y abre el modal en modo editar.
+  - **Por eso hay DOS endpoints de borrado**: `DELETE /api/reviews/{id}/texto/`
+    (solo el texto, es el 🗑️ del modal) y `DELETE /api/reviews/{id}/` (la
+    calificación y su texto por CASCADE, que es lo que el error de L-01 le
+    pide al usuario). Dos rutas que hacen lo que dice su URL, en vez de una
+    con un flag.
+- **Decisión 2 — una reseña moderada (`Resena.activa=False`) no la ve nadie
+  salvo su autor**: desaparece de «Reseñas de la comunidad», pero el autor
+  sigue viéndola en su ficha y en «Mis reseñas». No se le avisa que fue
+  moderada: CU-017 no lo pide y anunciarlo es una decisión de producto. Lo que
+  se evita es que su texto desaparezca de sus propias pantallas sin que exista
+  ninguna explicación posible.
+- **Decisión 3 — el borrado del usuario es FÍSICO**; `activa` significa una
+  sola cosa: moderado por un administrador (AD-01'). CU-015 pide «eliminar
+  esta reseña permanentemente», y darle dos sentidos a la misma columna
+  volvería imposible responder «¿por qué no se ve esta reseña?».
+  `Calificacion.activa` lo escribe siempre en `True` esta API, pero todas las
+  lecturas lo filtran, para que el día que AD-01 modere calificaciones no haya
+  que tocar nada acá.
+- **Decisión 4 — los tres `GET` entran en el alcance**, aunque el plan solo
+  listaba `POST | PUT | DELETE`: la ficha (§5c) necesita «Reseñas de la
+  comunidad (N)» con «Cargar más» y «Mis reseñas» (§5i) un scroll infinito.
+  Sin lectura esas pantallas no tienen de dónde sacar datos. La fila del plan
+  se corrige en vez de seguirse literal.
+- **Decisión 5 — escribe por `materializar()`**, igual que L-01: es el quinto
+  llamador del único camino de escritura del catálogo (tras C-04a, C-04b,
+  C-04c y L-01). Se puede calificar desde un resultado de búsqueda que ninguna
+  ficha abrió, y la FK tiene que apuntar a una fila completa.
+- **Lo que C-08 NO toca**: `calificacion_promedio` (es el `vote_average` de
+  TMDB, no el promedio de nuestros usuarios — mezclarlos cambiaría el
+  significado de un campo que tres pantallas muestran); el embedding (el texto
+  canónico no incluye calificaciones, así que no hay nada que regenerar); y la
+  pertenencia a listas (calificar no agrega a `Vistas`: sería escribir en las
+  tablas de otro módulo en silencio).
+- **SDD**: `openspec/changes/reviews-api/{proposal,design,tasks}.md`.
+- **Origen**: preguntas del usuario al retomar el backend del Módulo 2, y el
+  hallazgo de que el mensaje de error de L-01 pedía una acción que la API no
+  ofrecía.
+
+---
+
+## 21/09/2026 — Se elimina la revisión de pull requests
+
+- **Fecha**: 21/09/2026 (registrado el 26/09/2026)
+- **Decisión**: no se revisan más los pull requests. Cada uno mergea su propio
+  trabajo a `main` en cuanto el CI está verde, y le deja al otro un resumen en
+  markdown de lo que entró.
+- **Motivo**: con los bots ya desactivados el 18/09 (93% de falsos positivos en
+  AI Review, prueba de CodeRabbit expirada), la revisión manual entre dos
+  personas que trabajan en módulos separados agregaba espera sin agregar
+  hallazgos: en la práctica ninguno de los dos leía el módulo del otro con
+  suficiente contexto para encontrar algo que el CI no viera.
+- **Qué queda como control**: el CI (`ruff check`, `ruff format --check` y
+  `python manage.py test`) sobre PRs contra `main` y contra `feat/**`. Al no
+  haber un segundo lector, el peso recae en los tests y en el registro de
+  decisiones: una entrega sin tests del comportamiento nuevo ya no la frena
+  nadie.
+- **Merge commit, no squash**: se deja de squashear. El squash rompía los PRs
+  apilados (los commits de la rama base quedan con otro identificador y el
+  apilado necesita rebase) y hacía perder commits pusheados mientras el merge
+  estaba en curso — pasó con el rename del PR #23.
+- **Archivos afectados**: `AGENTS.md` (sección 8), `docs/decisiones.md`.
