@@ -105,11 +105,23 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 
 - `fechaRegistro` (DATE, NOT NULL, DEFAULT NOW()): Fecha en que el usuario creó su cuenta. Se muestra en la sección de perfil como "Miembro desde [mes] [año]".
 - `avatar_id` (SMALLINT positivo, NOT NULL, DEFAULT 1): identificador de un avatar predefinido elegido por el usuario. La cantidad de opciones puede crecer; no existe un límite funcional de 20 avatares. El valor por defecto es 1. El usuario no sube fotos propias: las imágenes son recursos estáticos de la aplicación.
+
+El catálogo de `avatar_id` se genera desde las imágenes individuales de
+`frontend/public/avatars/recortados/` y conserva los IDs existentes al añadir
+nuevos archivos. Un archivo retirado deja su ID inactivo para que nunca se
+reutilice con otra imagen. Hoy hay 26 imágenes seleccionables. El mosaico PNG de la carpeta
+superior es una lámina de origen, no una opción del selector. El catálogo generado
+se usa para validar la API y exponer las opciones al frontend.
+
 - `tema` (VARCHAR(10), NOT NULL, DEFAULT 'oscuro'): Preferencia de tema de la interfaz. Valores posibles: 'oscuro', 'claro'.
 - `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
 - `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
 - `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
 - `notifNovedades` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre novedades de FilmAI.
+
+Los nombres y apellidos compuestos conservan un espacio entre palabras; antes de
+persistir se eliminan espacios iniciales, finales y repetidos. No se separan los
+nombres compuestos en columnas nuevas.
 
 **Campo en Usuario para OAuth:**
 

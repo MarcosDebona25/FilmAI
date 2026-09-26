@@ -22,6 +22,8 @@ App Autenticada
 
 - 3 links de navegación + avatar a la derecha.
 - El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil", "Mis reseñas", "Preferencias" y "Cerrar sesión".
+- Hasta implementar C-08/P-06, «Mis reseñas» lleva a una pantalla vacía que
+  informa que la sección todavía no está implementada.
 - "Buscar" abre un panel overlay que reemplaza la vista actual con el catálogo completo (grid + filtros + toggle Películas/Series).
 - El chatbot se accede desde un FAB flotante presente en todas las pantallas.
 
@@ -761,6 +763,12 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 > Una sola pantalla con dos modos: visualización y edición. Al clickear "Editar perfil" los campos pasan a inputs. El email es siempre solo lectura.
 
+**Nombre visible (26/09/2026):** mostrar nombre y apellido juntos en la cabecera
+y también como datos separados. Fecha de nacimiento y género se muestran en solo
+lectura, como indica CU-005. La edición explica las reglas junto a los campos:
+nombre/apellido, letras y espacios internos, máximo 50 caracteres; los espacios
+sobrantes se normalizan. Usuario: alfanumérico, único, entre 5 y 25 caracteres.
+
 **Contrato de contraseña (24/09/2026):** el formulario envía `old_password`,
 `password1` y `password2` a `POST /api/profile/change-password/`. Antes de
 confirmar debe advertir: «Se cerrarán tus sesiones en todos los dispositivos.
@@ -837,17 +845,22 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 └──────────────────────────────────────────┘
 ```
 
-| Elemento                | Comportamiento                                                                                                                      |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Nombre**              | Solo letras, máximo 50 caracteres. Obligatorio.                                                                                     |
-| **Apellido**            | Solo letras, máximo 50 caracteres. Obligatorio.                                                                                     |
-| **Email**               | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope).                                                                  |
-| **Cambiar contraseña**  | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía. |
-| **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo).                                                                     |
-| **Cancelar**            | Revierte a modo visualización sin guardar.                                                                                          |
-| **Guardar**             | Actualiza datos. Si se cambió contraseña, valida actual + coincidencia de nueva. Toast: "Perfil actualizado."                       |
+| Elemento                | Comportamiento                                                                                                                                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nombre**              | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                       |
+| **Apellido**            | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                       |
+| **Email**               | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope).                                                                                                                                                                                  |
+| **Cambiar contraseña**  | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía.                                                                                                                 |
+| **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo).                                                                                                                                                                                     |
+| **Cancelar**            | Revierte a modo visualización sin guardar.                                                                                                                                                                                                          |
+| **Guardar**             | Actualiza nombre, apellido, usuario y avatar. La contraseña se confirma y guarda por separado; tras cambiarla vuelve al login.                                                                                                                      |
 | **Avatar**              | Hover o foco → control "Cambiar avatar". Click o Enter → selector de avatares predefinidos; la vista previa cambia al elegir uno. La cantidad de opciones proviene del catálogo disponible, sin fijarla en 20. No se permite subir una foto propia. |
-| **Breadcrumb**          | Perfil                                                                                                                              |
+| **Breadcrumb**          | Perfil                                                                                                                                                                                                                                              |
+
+El selector muestra todas las imágenes individuales del catálogo actual (26) y
+crece al añadir archivos. El PNG mosaico de origen no es un avatar. El wireframe
+HTML conserva un selector de archivos antiguo como referencia visual; no forma
+parte del flujo implementado.
 
 ---
 
@@ -893,6 +906,11 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 ---
 
 ## 5i. Mis reseñas
+
+**Estado transitorio (26/09/2026):** el enlace del avatar permanece visible y
+abre `/mis-resenas` con un mensaje de «todavía no implementada» y una salida al
+perfil. El listado, la API de reseñas propias y sus acciones siguen pendientes
+de C-08. El diseño detallado siguiente describe esa etapa posterior.
 
 > Listado cronológico de todas las reseñas publicadas por el usuario. Se accede desde el dropdown del avatar.
 
@@ -949,6 +967,12 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 
 > Se accede desde el dropdown del avatar. Configuración de cuenta y apariencia.
 
+**Alcance actual (26/09/2026):** el tema se aplica de inmediato y se guarda en
+la cuenta. Privacidad y notificaciones se pueden configurar y persistir, pero
+la pantalla avisa claramente que todavía no afectan la visibilidad de
+reseñas/listas ni generan correos; esas integraciones pertenecen a módulos
+posteriores. Los controles muestran los valores reales devueltos por la API.
+
 ```
 ┌──────────────────────────────────────────┐
 │  [FilmAI]  Inicio  Buscar  Listas  [A]    │
@@ -986,11 +1010,11 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 
 ### Secciones
 
-| Sección            | Controles                           | Descripción                                                                                                                                                     |
-| ------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                      |
-| **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                    |
-| **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).              |
+| Sección            | Controles                           | Descripción                                                                                                                                                                                            |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                                                             |
+| **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                                                           |
+| **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                     |
 | **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Se cerrarán tus sesiones y no podrás iniciar sesión. Tus datos, listas, reseñas y calificaciones se conservarán." Botones Cancelar / Dar de baja. |
 
 ### Breadcrumb
