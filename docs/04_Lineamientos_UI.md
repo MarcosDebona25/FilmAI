@@ -428,7 +428,7 @@ de un componente "Modal" en Figma:
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘│
 │                                                                  │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐│
-│  │  Sci-Fi        ⋮  │  │  Maratón finde ⋮  │  │  ┌────────────┐ ││
+│  │  Sci Fi        ⋮  │  │  Maratón finde ⋮  │  │  ┌────────────┐ ││
 │  │  8 ítems          │  │  3 ítems         │  │  │     +      │ ││
 │  │  6 pel. · 2 ser.  │  │  2 pel. · 1 ser. │  │  │            │ ││
 │  │ ┌─┐┌─┐┌─┐┌─┐┌─┐ │  │  ┌─┐┌─┐┌─┐       │  │  │            │ ││
@@ -495,7 +495,7 @@ de un componente "Modal" en Figma:
 │  [FilmAI]  Inicio  Buscar  [Listas]                [Avatar]     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  Listas > Sci-Fi                                 ⋮              │
+│  Listas > Sci Fi                                  ⋮              │
 │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
 │  │ poster  │ │ poster  │ │ poster  │ │ poster  │ │ poster  │   │
 │  │         │ │         │ │         │ │         │ │         │   │
@@ -781,7 +781,7 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 │            │   96×96     │               │
 │            └────────────┘                │
 │          Marco López                     │
-│         @marco_lopez                     │
+│         @marcolopez                      │
 │       marco@email.com                    │
 │    Miembro desde marzo 2025              │
 │                                          │
@@ -813,7 +813,7 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 │                                          │
 │  Nombre de usuario                       │
 │  ┌──────────────────────────────────┐    │
-│  │ @ │ marco_lopez                  │    │
+│  │ @ │ marcolopez                   │    │
 │  └──────────────────────────────────┘    │
 │    Disponible                           │
 │                                          │
@@ -846,7 +846,7 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 | **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo).                                                                     |
 | **Cancelar**            | Revierte a modo visualización sin guardar.                                                                                          |
 | **Guardar**             | Actualiza datos. Si se cambió contraseña, valida actual + coincidencia de nueva. Toast: "Perfil actualizado."                       |
-| **Avatar**              | Hover → overlay "Cambiar foto". Click → file picker. Preview instantánea.                                                           |
+| **Avatar**              | Hover o foco → control "Cambiar avatar". Click o Enter → selector de avatares predefinidos; la vista previa cambia al elegir uno. La cantidad de opciones proviene del catálogo disponible, sin fijarla en 20. No se permite subir una foto propia. |
 | **Breadcrumb**          | Perfil                                                                                                                              |
 
 ---

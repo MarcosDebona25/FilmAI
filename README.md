@@ -60,7 +60,7 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 ### Perfil y preferencias
 
 - Edición inline del perfil: nombre, apellido, nombre de usuario, avatar y contraseña.
-- Selección de avatar desde una galería de 20 opciones predefinidas.
+- Selección de avatar desde una galería ampliable de opciones predefinidas, sin subida de fotos propias.
 - Configuración de tema (oscuro por defecto, con opción clara), privacidad del perfil y preferencias de notificaciones.
 - Baja de cuenta con eliminación lógica (soft delete).
 
@@ -79,7 +79,7 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 | **Tareas asíncronas** | Celery (worker + Beat: la sync del catálogo corre a las 3 AM y el backfill de embeddings a las 4 AM, hora de Argentina) |
 | **Embeddings (en curso)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generación asíncrona vía Celery. El proveedor real de embeddings todavía es un stub (llega en B-06). |
 | **Infraestructura**   | Docker, docker-compose (6 servicios: backend, frontend, PostgreSQL, Redis, celery-worker, celery-beat) |
-| **Autenticación**     | JWT (access + refresh tokens, sesión de 8 horas), Google OAuth 2.0, bcrypt |
+| **Autenticación**     | JWT en cookies (access: 8 h desde emisión; refresh: 7 días), Google OAuth 2.0, bcrypt |
 
 ### APIs externas
 
@@ -338,5 +338,5 @@ Referencia de verificación: [WebAIM WCAG 2 Checklist](https://webaim.org/standa
 | [`02_Especificación de Requerimientos`](docs/02_Especificaci%C3%B3n%20de%20Requerimientos.md) | Requerimientos funcionales, no funcionales y casos de uso |
 | [`03_Modelos de Datos y de Diseño`](docs/03_Modelos%20de%20Datos%20y%20de%20Dise%C3%B1o.md)   | Diagrama de clases y modelo relacional                    |
 | [`04_Lineamientos UI`](docs/04_Lineamientos_UI.md)                                            | Diseño de interfaces, componentes y accesibilidad         |
-| [`05_Plan de Desarrollo`](docs/05_Plan_de_Desarrollo.md)                                      | Plan de trabajo, módulos y estimaciones                   |
+| [`05_Plan de Desarrollo`](docs/05_Plan_de_Desarrollo.md)                                      | Tareas, criterios y estado de los módulos                 |
 | [`06_TMDB API Referencia`](docs/06_TMDB_API_Referencia.md)                                    | Referencia técnica de la API de TMDB                      |

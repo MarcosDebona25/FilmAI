@@ -1941,3 +1941,32 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   no modifica los contratos de dominio ni la implementación.
 - **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md` y
   `docs/decisiones.md`.
+
+## 26/09/2026 — Cuadros del plan restaurados y contratos de cuenta aclarados
+
+- **Fecha**: 26/09/2026
+- **Título**: Detalle y criterios por módulo en el plan.
+- **Descripción**: se restauran en `docs/05_Plan_de_Desarrollo.md` las
+  dependencias, descripciones y condiciones de aceptación de las 49 tareas.
+  Fuera de los cuadros queda solo una leyenda. Los módulos 2, 4 y 5 figuran
+  con Gonza y Marcos como actores. El estado se contrasta con los documentos
+  01–04, el código y la suite Django. C-03 documenta el passthrough real de
+  TMDB; C-04a queda parcial porque los listados aún no materializan cada
+  resultado expuesto, y C-04b porque falta la notificación de fallo total
+  prevista en CU-021.
+- **Avatar, aclarado por el usuario**: solo se eligen avatares predefinidos;
+  no se suben fotos propias ni se fija un máximo de 20 opciones. El registro
+  actual contiene 10 IDs y puede ampliarse. Esto reemplaza la referencia a
+  20 avatares y el selector de archivos en los docs 03, 04 y README, y
+  corrige la clasificación de F-05 de la entrada anterior.
+- **Sesión, aclarada por el usuario**: el contrato definitivo es el del
+  código: access JWT de ocho horas desde emisión y refresh JWT de siete días,
+  sin cierre por inactividad. Se corrigen RNF 3.5 y CU-003 en el doc 02,
+  además del README y A-03 en el plan.
+- **Recuperación de contraseña, aclarada por el usuario**: se adopta el límite
+  implementado por `EmailRateThrottle`: cinco solicitudes diarias por correo
+  electrónico, con IP como alternativa si no se recibe un correo. Se
+  corrigen CU-020 en el doc 02 y A-07 en el plan. La referencia previa a una
+  solicitud por minuto por IP queda reemplazada.
+- **Archivos afectados**: `README.md`, docs 02, 03, 04 y 05, y
+  `docs/decisiones.md`.
