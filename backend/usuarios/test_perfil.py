@@ -57,6 +57,43 @@ class PerfilTests(TestCase):
         self.assertEqual(self.usuario.nombre, "José")
         self.assertEqual(self.usuario.apellido, "López")
 
+    def test_nombres_compuestos_se_normalizan_sin_perder_espacios_intermedios(self):
+        """Un nombre real compuesto conserva separadores y elimina espacios sobrantes."""
+        response = self.client.put(
+            "/api/profile/",
+            {"nombre": "  Juan   Carlos  ", "apellido": " De   la Cruz "},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.usuario.refresh_from_db()
+        self.assertEqual(self.usuario.nombre, "Juan Carlos")
+        self.assertEqual(self.usuario.apellido, "De la Cruz")
+        self.assertEqual(response.json()["nombre"], "Juan Carlos")
+
+    def test_catalogo_expone_todos_los_avatares_y_rechaza_ids_ajenos(self):
+        """Selector y validación usan el mismo catálogo de 26 imágenes individuales."""
+        self.assertEqual(Client().get("/api/avatars/").status_code, 401)
+        response = self.client.get("/api/avatars/")
+        self.assertEqual(response.status_code, 200)
+        opciones = response.json()
+        self.assertEqual(len(opciones), 26)
+        self.assertEqual({item["id"] for item in opciones}, set(range(1, 27)))
+        self.assertTrue(
+            all(item["src"].startswith("/avatars/recortados/") for item in opciones)
+        )
+        self.assertEqual(
+            self.client.put(
+                "/api/profile/", {"avatar_id": 26}, content_type="application/json"
+            ).status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.put(
+                "/api/profile/", {"avatar_id": 27}, content_type="application/json"
+            ).status_code,
+            400,
+        )
+
     def test_campos_manipulados_no_modifican_identidad_permisos_ni_preferencias(self):
         """La lista de campos permitidos impide escalada y escritura entre módulos."""
         antes = Usuario.objects.values().get(pk=self.usuario.pk)
