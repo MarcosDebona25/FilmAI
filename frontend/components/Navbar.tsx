@@ -8,7 +8,10 @@ import { LogOut, Settings, Star, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/Avatar";
+import { useAccount } from "@/components/AccountProvider";
 import { apiFetch } from "@/lib/api";
+import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 
 const SIN_NAVBAR = ["/", "/login", "/register", "/completar-google"];
 
@@ -18,20 +21,6 @@ const NAV_LINKS = [
   { label: "Listas", href: "/listas" },
 ] as const;
 
-type Usuario = {
-  nombre_usuario: string;
-  nombre: string;
-  apellido: string;
-} | null;
-
-function iniciales(u: NonNullable<Usuario>): string {
-  const iniciales = `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
-  if (iniciales.trim()) {
-    return iniciales;
-  }
-  return u.nombre_usuario.charAt(0).toUpperCase() || "?";
-}
-
 function noImplementado() {
   toast.info("Todavía no está implementado");
 }
@@ -39,30 +28,49 @@ function noImplementado() {
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [usuario, setUsuario] = useState<Usuario>(null);
-  const [cargado, setCargado] = useState(false);
+  const { perfil, avatares, cargando, limpiar } = useAccount();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [confirmarLogout, setConfirmarLogout] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const firstItemRef = useRef<HTMLAnchorElement>(null);
   const cancelarRef = useRef<HTMLButtonElement>(null);
+  const logoutDialogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (SIN_NAVBAR.includes(pathname)) return;
-    apiFetch<Usuario>("/api/auth/user/")
-      .then((u) => setUsuario(u))
-      .catch(() => setUsuario(null))
-      .finally(() => setCargado(true));
-  }, [pathname]);
+  function cerrarLogout() {
+    setConfirmarLogout(false);
+    menuButtonRef.current?.focus();
+  }
 
   useEffect(() => {
     if (!menuAbierto) return;
+    firstItemRef.current?.focus();
     function onClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuAbierto(false);
       }
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setMenuAbierto(false);
+      if (e.key === "Escape") {
+        setMenuAbierto(false);
+        menuButtonRef.current?.focus();
+      } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+        const items = Array.from(
+          menuRef.current?.querySelectorAll<HTMLElement>("[role='menuitem']") ?? []
+        );
+        if (!items.length) return;
+        e.preventDefault();
+        const actual = items.indexOf(document.activeElement as HTMLElement);
+        const siguiente =
+          e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? items.length - 1
+              : e.key === "ArrowDown"
+                ? (actual + 1) % items.length
+                : (actual - 1 + items.length) % items.length;
+        items[siguiente].focus();
+      }
     }
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKeyDown);
@@ -76,7 +84,8 @@ export function Navbar() {
     if (!confirmarLogout) return;
     cancelarRef.current?.focus();
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setConfirmarLogout(false);
+      if (e.key === "Escape") cerrarLogout();
+      mantenerFocoEnDialogo(e, logoutDialogRef.current);
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -87,6 +96,8 @@ export function Navbar() {
   async function logout() {
     try {
       await apiFetch("/api/auth/logout/", { method: "POST" });
+      limpiar();
+      setConfirmarLogout(false);
       router.push("/");
     } catch {
       // Mantener la sesión visible y permitir reintentar el logout
@@ -95,13 +106,19 @@ export function Navbar() {
 
   return (
     <header className="border-b border-border bg-card">
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:p-3 focus:text-foreground focus:outline-2 focus:outline-ring"
+      >
+        Saltar al contenido
+      </a>
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
         <div className="flex items-center gap-6">
-          <Link href="/inicio" className="text-lg font-bold text-foreground">
+          <Link href="/" className="text-lg font-bold text-foreground">
             FilmAI
           </Link>
-          {cargado && usuario ? (
-            <nav aria-label="Principal" className="flex items-center gap-1">
+          {!cargando && perfil ? (
+            <nav aria-label="Principal" className="hidden items-center gap-1 sm:flex">
               {NAV_LINKS.map((item) => (
                 <button
                   key={item.href}
@@ -117,17 +134,18 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          {cargado && usuario ? (
+          {!cargando && perfil ? (
             <div className="relative" ref={menuRef}>
               <button
+                ref={menuButtonRef}
                 type="button"
                 onClick={() => setMenuAbierto((v) => !v)}
                 aria-haspopup="menu"
                 aria-expanded={menuAbierto}
                 aria-label="Menú de usuario"
-                className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
+                className="flex size-11 items-center justify-center rounded-full text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
-                {iniciales(usuario)}
+                <Avatar perfil={perfil} avatares={avatares} size={40} />
               </button>
               {menuAbierto && (
                 <div
@@ -135,42 +153,34 @@ export function Navbar() {
                   aria-label="Opciones de usuario"
                   className="absolute right-0 top-11 z-50 w-48 overflow-hidden rounded-xl border border-border bg-popover shadow-md"
                 >
-                  <button
-                    type="button"
+                  <Link
+                    ref={firstItemRef}
+                    href="/perfil"
                     role="menuitem"
-                    onClick={() => {
-                      setMenuAbierto(false);
-                      noImplementado();
-                    }}
+                    onClick={() => setMenuAbierto(false)}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
                   >
                     <User className="size-4" />
                     Mi perfil
-                  </button>
-                  <button
-                    type="button"
+                  </Link>
+                  <Link
+                    href="/mis-resenas"
                     role="menuitem"
-                    onClick={() => {
-                      setMenuAbierto(false);
-                      noImplementado();
-                    }}
+                    onClick={() => setMenuAbierto(false)}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
                   >
                     <Star className="size-4" />
                     Mis reseñas
-                  </button>
-                  <button
-                    type="button"
+                  </Link>
+                  <Link
+                    href="/preferencias"
                     role="menuitem"
-                    onClick={() => {
-                      setMenuAbierto(false);
-                      noImplementado();
-                    }}
+                    onClick={() => setMenuAbierto(false)}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
                   >
                     <Settings className="size-4" />
                     Preferencias
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     role="menuitem"
@@ -186,7 +196,7 @@ export function Navbar() {
                 </div>
               )}
             </div>
-          ) : cargado ? (
+          ) : !cargando ? (
             <>
               <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
                 Iniciar sesión
@@ -201,12 +211,13 @@ export function Navbar() {
 
       {confirmarLogout && (
         <div
+          ref={logoutDialogRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-labelledby="titulo-cerrar-sesion"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setConfirmarLogout(false);
+            if (e.target === e.currentTarget) cerrarLogout();
           }}
         >
           <div className="w-full max-w-[480px] rounded-xl border border-border bg-card p-6 shadow-lg">
@@ -217,12 +228,7 @@ export function Navbar() {
               Tendrás que iniciar sesión nuevamente para volver a acceder a tu cuenta.
             </p>
             <div className="flex justify-end gap-3">
-              <Button
-                ref={cancelarRef}
-                variant="secondary"
-                size="sm"
-                onClick={() => setConfirmarLogout(false)}
-              >
+              <Button ref={cancelarRef} variant="secondary" size="sm" onClick={cerrarLogout}>
                 Cancelar
               </Button>
               <Button variant="destructive" size="sm" onClick={logout}>

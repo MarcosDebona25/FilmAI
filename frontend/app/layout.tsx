@@ -3,6 +3,7 @@ import { Inter, Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { Navbar } from "@/components/Navbar";
+import { AccountProvider } from "@/components/AccountProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -29,10 +30,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
+    <html lang="es" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} ${roboto.variable} antialiased`}>
-        <Navbar />
-        {children}
+        <AccountProvider>
+          <Navbar />
+          {children}
+        </AccountProvider>
         <Toaster position="top-center" />
       </body>
     </html>
