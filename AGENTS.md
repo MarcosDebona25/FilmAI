@@ -54,12 +54,21 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - `graphify update .` es incremental: solo re-extrae los archivos nuevos/modificados y no requiere LLM cuando los cambios son solo de código.
 - `graphify-out/` se versiona en git (salvo `cache/`, `.graphify_python`, `.graphify_root` y los backups automáticos, que están en `.gitignore`).
 
-## 8. Herramientas de review automáticas desactivadas
+## 8. Revisión de pull requests: no hay
 
 - **No se usan herramientas de review automático en los pull requests**. Tanto AI Review como CodeRabbit fueron desactivados el 18/09/2026.
 - **AI Review**: Workflow eliminado (`.github/workflows/ai-review.yml`). Generaba un 93% de falsos positivos (comentarios que no detectaban bugs reales ni sugerían mejoras válidas). Los comentarios no tenían contexto del proyecto (convenciones de idioma, valores de configuración, arquitectura).
 - **CodeRabbit**: App de GitHub desinstalada. La prueba gratuita expiró y no se renovó.
-- **Alternativa**: La revisión de código se hace manualmente por los maintainers del proyecto, con apoyo de los skills disponibles (ver sección 6) y la documentación de dominio en `docs/`.
+- **Desde el 21/09/2026 tampoco hay revisión humana de PRs** (acordado entre
+  Gonza y Marcos). Cada uno mergea su propio trabajo a `main` en cuanto el CI
+  está verde, con `merge commit` (no squash, así un PR apilado no necesita
+  rebase). Al mergear, se le deja al otro un resumen en markdown de lo que
+  entró.
+- **Lo que reemplaza a la revisión**: el CI (ruff + la suite completa) es la
+  única puerta automática, así que la calidad depende de lo que el agente
+  verifique **antes** de mergear — tests que cubran el comportamiento nuevo, la
+  decisión registrada en `docs/decisiones.md` y la spec canónica actualizada.
+  No declarar terminada una tarea sin eso.
 
 ## 9. Estructura de documentación
 
