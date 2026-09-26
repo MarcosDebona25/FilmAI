@@ -95,7 +95,7 @@ class CalificacionesView(APIView):
         paginator = self.pagination_class()
         pagina = paginator.paginate_queryset(resenas, request, view=self)
         return paginator.get_paginated_response(
-            ResenaComunidadSerializer(pagina, many=True).data, total=resenas.count()
+            ResenaComunidadSerializer(pagina, many=True).data
         )
 
     def post(self, request):
@@ -213,5 +213,5 @@ class MisCalificacionesView(APIView):
         paginator = self.pagination_class()
         pagina = paginator.paginate_queryset(propias, request, view=self)
         return paginator.get_paginated_response(
-            MiResenaSerializer(pagina, many=True).data, total=propias.count()
+            MiResenaSerializer(pagina, many=True).data
         )
