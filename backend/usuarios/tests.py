@@ -126,6 +126,24 @@ class ConfirmarCorreoTests(TestCase):
         )
         self.assertIn("access", login.json())
 
+    def test_registro_normaliza_nombres_compuestos(self):
+        """Registro guarda un solo espacio interno y quita los sobrantes."""
+        payload = {
+            **self.PAYLOAD,
+            "nombre": "  Juan   Carlos  ",
+            "apellido": " De  la Cruz ",
+        }
+        response = self.client.post(
+            "/api/auth/registration/", payload, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        from .models import Usuario
+
+        usuario = Usuario.objects.get(correo=self.PAYLOAD["correo"])
+        self.assertEqual(
+            (usuario.nombre, usuario.apellido), ("Juan Carlos", "De la Cruz")
+        )
+
     def test_key_reusada_reporta_ya_confirmada(self):
         key = self._registrar()
         self.assertEqual(self._confirmar(key).status_code, 200)
