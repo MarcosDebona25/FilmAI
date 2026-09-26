@@ -1,16 +1,16 @@
-# Graph Report - FilmAI  (2026-09-24)
+# Graph Report - FilmAI  (2026-09-26)
 
 ## Corpus Check
-- 204 files · ~646,093 words
+- 221 files · ~648,552 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3041 nodes · 6707 edges · 189 communities (120 shown, 51 thin omitted)
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 647 edges (avg confidence: 0.9)
+- 3124 nodes · 6886 edges · 184 communities (117 shown, 49 thin omitted)
+- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 652 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `efd75ead`
+- Built from commit: `fc185d3e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -21,40 +21,40 @@
 - el
 - setLiveState
 - initPageChat
-- patch
-- AdapterTests
+- generar_embedding
+- BajaCuentaTests
 - 2. PR #27: endpoints de listas, fase L-01
 - ContrasenaTests
-- sync_catalogo_diaria
+- ProduccionAudiovisual
 - TMDBClient
-- Módulo 2 — Catálogo y Búsqueda (Gonza)
+- Wireframe completo FilmAI (Opción 1, HTML interactivo)
 - initGlobalBar
 - UsuarioFactory
-- django_conf
-- materializar
-- ProduccionEmbedding
 - Command
+- materializar
+- embedding-infrastructure capability
+- catalogo/tests.py
 - README de FilmAI
-- TipoProduccion
+- ListasEndpointsTests
 - django_db
 - New visual work (new-work flow)
 - catalogo/views.py
-- catalogo/tests.py
+- TMDBError
 - $impeccable harden
 - android.md
 - package.json
 - ValidadoresContrasenaTests
 - RecuperarContrasenaTests
-- usuarios/tests.py
+- GoogleOAuthTests
 - $impeccable doctor
 - resolveLiveInjectionAnchor
 - handleManualEditActivity
-- usuarios/serializers.py
+- usuarios/views.py
 - $impeccable live (interactive variant mode)
-- EndpointIntegrationTest
-- login/page.tsx
-- humanizer/SKILL.md
-- PerfilTests
+- patch
+- button.tsx
+- Catalog of 33 AI writing patterns (content, language, style, communication, filler)
+- sync_catalogo_diaria
 - components.json
 - craft-floor.md
 - TMDBClientCache
@@ -64,8 +64,8 @@
 - critique.md
 - Usuario
 - Navbar.tsx
-- register/page.tsx
-- ProduccionAudiovisual
+- [token]/page.tsx
+- seed.py
 - Módulo 0 — Fundación
 - SeedCatalogoTests
 - compilerOptions
@@ -79,54 +79,53 @@
 - completar-google/page.tsx
 - Audit Health Score: 5 dimensions × 0–4 = /20 (A11y, Performance, Theming, Responsive, Implementation Integrity) with rating bands
 - createLiveBrowserDomHelpers
-- celery.py
+- sync_avatars.py
 - settings.py
 - listas/views.py
-- F-06: ESLint + Prettier + Django linting
-- google-auth.ts
+- perfil/page.tsx
+- register/page.tsx
 - iOS platform reference
 - onAnnotDown
 - Dependencias Python del backend (requirements.txt)
 - Design detector hook (post-tool-use)
 - django_apps
 - Requirements
-- Módulo 4 — Perfil y Preferencias (Gonza)
+- F-04: Modelos Django (7 entidades + intermedia)
 - Job backend: Ruff + tests Django
 - AGENTS.md — Reglas para agentes en FilmAI
 - conventional-commits/SKILL.md
-- Catalog of 33 AI writing patterns (content, language, style, communication, filler)
+- RegisterSerializer
 - 13/09/2026 — Corrección de sintaxis en las rutas del catálogo
 - devDependencies
-- RegisterView
+- 08/09/2026 — Corpus semántico global y progresivo + contrato TMDB → dominio
 - mountSvelteComponentVariant
 - dependencies
 - explicar-al-implementar/SKILL.md
 - colorize.md
 - impeccable/SKILL.md
-- Wireframe completo FilmAI (Opción 1, HTML interactivo)
+- _ids_cambiados
 - UsuarioPerfilSerializer
-- A-03: Login con credenciales
+- A-06: Google OAuth
 - syncEditBadgeHitProxies
 - impeccable
-- CU-001: Crear cuenta de usuario
+- next
 - Live mode one-time setup
-- materialization.py
-- validar_configuracion_email
+- ProduccionEmbedding
+- cuenta.ts
 - SeedRecorridoTests
 - TMDBClientCacheTest
 - Módulo 6: administración y moderación en Django Admin
-- scripts
+- UsuarioAccountAdapter
 - live-browser-ignores.js
-- RecuperacionSesionTests
+- usuarios/serializers.py
 - ConfirmarCorreoTests
 - L-01: Endpoints de listas
-- Regla 6: .agents/skills/ es la única fuente de skills
+- UsuarioAdmin
 - C-04a: Materialización on-demand + encolado de embedding
 - Visualize: direction comps & asset production (impeccable reference)
 - middleware.ts
-- Command
+- .is_active
 - 22/08/2026 — Refresh token fuera de localStorage
-- ListaItemCursorPagination
 - impeccable critique-storage (latest / close)
 - Polish triage order (functional before cosmetic)
 - Tinted grays instead of pure gray
@@ -159,20 +158,16 @@
 - Honor prefers-reduced-motion
 - URL reflects state (deep-linkable filters/tabs/pagination)
 - 18/08/2026 — Arquitectura de retrieval del chatbot: tool calling + pgvector + BGE-M3
-- listas/serializers.py
+- perfil.py
 - Asunto email recuperar contrasena
 - 04/09/2026 — Corrección de arranque DRF y chequeo end-to-end
 - 10/09/2026 — Grafo de conocimiento con graphify y directiva de actualización periódica
 - 13/08/2026 — Nombres camelCase → snake_case
 - 12/09/2026 — Skills centralizadas para todos los harnesses
-- usuarios/views.py
+- login/page.tsx
 - filmai/tests.py
-- A-06: Google OAuth
-- .test_cambio_por_cookie_rechaza_csrf_ausente_o_invalido
 - Usuario (entidad unificada, AUTH_USER_MODEL)
-- nombres.py
-- AD-01': Configurar Django Admin
-- _combinaciones
+- Command
 - FilmAI (idea-proyecto)
 - Alcance del problema (aplicación web de películas/series con chatbot IA)
 - CU-016: Gestionar usuarios
@@ -190,8 +185,8 @@
 ## God Nodes (most connected - your core abstractions)
 1. `UsuarioFactory` - 70 edges
 2. `TMDBClient` - 56 edges
-3. `materializar()` - 52 edges
-4. `Usuario` - 52 edges
+3. `Usuario` - 53 edges
+4. `materializar()` - 52 edges
 5. `ProduccionAudiovisual` - 48 edges
 6. `New visual work (new-work flow)` - 48 edges
 7. `sync_catalogo_diaria()` - 40 edges
@@ -204,12 +199,12 @@
   openspec/specs/tmdb-endpoints/spec.md → backend/catalogo/cache.py
 - `TMDB API (catálogo, búsqueda, tendencias)` --references--> `TMDBClient`  [INFERRED]
   README.md → backend/catalogo/client.py
+- `ProduccionEmbedding` --implements--> `Database-level invariants`  [INFERRED]
+  backend/catalogo/models.py → openspec/specs/embedding-infrastructure/spec.md
 - `Ejemplo de diagrama: celery-beat → Redis DB 1 → celery-worker → TMDB (HTTP) / Postgres (SQL)` --conceptually_related_to--> `sync_catalogo_diaria()`  [INFERRED]
   .agents/skills/explicar-al-implementar/SKILL.md → backend/catalogo/tasks.py
-- `backfill_embeddings()` --implements--> `Rows are processed oldest first`  [INFERRED]
+- `sync_catalogo_diaria()` --implements--> `Failures are per item`  [INFERRED]
   backend/catalogo/tasks.py → openspec/specs/catalog-daily-sync/spec.md
-- `_build_key()` --implements--> `Stable cache key`  [INFERRED]
-  backend/catalogo/cache.py → openspec/specs/tmdb-cache/spec.md
 
 ## Import Cycles
 - None detected.
@@ -231,7 +226,7 @@
 - **Flujo materialización → embedding pending → worker → ready/failed** — backend_catalogo_services_materialization_materializar, backend_catalogo_services_materialization_encolar_embedding, backend_catalogo_tasks_generar_embedding, backend_catalogo_services_embeddings_generar_vector, backend_catalogo_models_produccionembedding, backend_catalogo_models_estadoembedding, docs_decisiones_embeddings_asincronos_con_celery_e_idempotencia, docs_decisiones_c_04a_adelanta_la_infraestructura_minima_de_embeddings, docs_decisiones_c_04a_completa_materializar_y_politica_de_fallo, docs_05_plan_de_desarrollo_c_04a [INFERRED 0.95]
 - **Sync diaria C-04b: refresco por /changes, descubrimiento y backfill** — backend_catalogo_tasks_sync_catalogo_diaria, backend_catalogo_tasks_ids_cambiados, backend_catalogo_client_tmdbclient_get_changes, backend_catalogo_tasks_backfill_embeddings, backend_catalogo_services_materialization_materializar, backend_catalogo_services_materialization_necesita_enriquecimiento, docs_decisiones_c_04b_la_sync_escribe_por_materializar_y_frescura_explicita, docs_decisiones_la_frescura_la_responde_tmdb_no_una_ventana_de_tiempo, docs_decisiones_la_sync_refresca_antes_de_descubrir, docs_decisiones_zona_horaria_de_celery_y_backfill_cierra_c_04b, docs_05_plan_de_desarrollo_c_04b, docs_02_especificaci_n_de_requerimientos_cu_021 [INFERRED 0.95]
 
-## Communities (189 total, 51 thin omitted)
+## Communities (184 total, 49 thin omitted)
 
 ### Community 0 - "live-browser.js"
 Cohesion: 0.03
@@ -257,33 +252,33 @@ Nodes (60): applyEditing(), beginNewLiveConfiguration(), cancelEditing(), cancel
 Cohesion: 0.07
 Nodes (52): agentHasWorkInFlight(), armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), buildSteerQueueHint(), clearSteerAwaitTimer(), clearSteerFocusRecoverTimer(), collapsePageChat() (+44 more)
 
-### Community 6 - "patch"
-Cohesion: 0.13
-Nodes (19): EstadoEmbedding, Ciclo de vida del embedding (decisión 08/09/2026). `pending` → `processing` →…, calcular_source_hash(), Huella del texto embebido (SHA-256 hexadecimal, 64 caracteres). Se guarda junto…, generar_embedding(), Genera el vector semántico de una producción ya materializada. Nunca lanza: si…, BackfillIntegracionTests, GenerarEmbeddingTaskTests (+11 more)
+### Community 6 - "generar_embedding"
+Cohesion: 0.18
+Nodes (8): EstadoEmbedding, Ciclo de vida del embedding (decisión 08/09/2026). `pending` → `processing` →…, generar_embedding(), Genera el vector semántico de una producción ya materializada. Nunca lanza: si…, GenerarEmbeddingTaskTests, Idempotencia de la tarea de Celery (C-04a). Celery entrega "al menos una vez":…, Generación asíncrona de embeddings (estados pending/processing/ready/failed), shared_task
 
-### Community 7 - "AdapterTests"
-Cohesion: 0.28
-Nodes (4): dominio_a_tmdb(), Inversa de `tmdb_a_dominio`, para construir llamadas a la API de TMDB., AdapterTests, Única traducción entre el vocabulario de TMDB y el del dominio (C-04a). Existe…
+### Community 7 - "BajaCuentaTests"
+Cohesion: 0.10
+Nodes (17): CalificacionFactory, Meta, ResenaFactory, La sync con `materializar` REAL y TMDB falso: lo que queda en la base. El mixin…, SyncCatalogoIntegracionTests, BajaCuentaTests, EstadoCuentaTests, TestCase (+9 more)
 
 ### Community 8 - "2. PR #27: endpoints de listas, fase L-01"
 Cohesion: 0.07
 Nodes (28): 1. Introducción, 2.1. Modelo relacional e invariantes en la base de datos, 2.2. Migración de una regla existente, 2.3. Validación y normalización en el límite HTTP, 2.4. Autorización por propiedad y ocultamiento de recursos ajenos, 2.5. Modelo de lectura para las tarjetas de listas, 2.6. Preview limitado y paginación estable, 2.7. Reglas de negocio expresadas como conflictos HTTP (+20 more)
 
 ### Community 9 - "ContrasenaTests"
-Cohesion: 0.13
-Nodes (10): ContrasenaTests, Conocer los campos del formulario no basta para cambiar contraseñas., Contraseña actual, confirmación y política son verificadas por separado., Todos los JWT viejos fallan y la respuesta limpia ambas cookies., La activación de revocación exige volver a autenticar sesiones antiguas., El endpoint heredado no ofrece una ruta de cambio menos segura., dj-rest-auth también registra rutas sin slash: no deben eludir el contrato., Una contraseña inutilizable no se puede sustituir sin demostrar acceso al… (+2 more)
+Cohesion: 0.10
+Nodes (13): ContrasenaTests, Conocer los campos del formulario no basta para cambiar contraseñas., Contraseña actual, confirmación y política son verificadas por separado., Todos los JWT viejos fallan y la respuesta limpia ambas cookies., La activación de revocación exige volver a autenticar sesiones antiguas., Renovar sigue funcionando; un sitio externo no puede renovar por cookie., El cambio de contraseña no se ejecuta sin protección CSRF., El endpoint heredado no ofrece una ruta de cambio menos segura. (+5 more)
 
-### Community 10 - "sync_catalogo_diaria"
-Cohesion: 0.07
-Nodes (32): _buscar_produccion(), _obtener_o_crear(), Único lugar donde vive la consulta por la clave natural (id_tmdb, tipo)., Devuelve la fila de la producción, creándola vacía si todavía no existe. Dos…, Sync nocturna del catálogo (C-04b): refresco + descubrimiento. Dos pasadas con…, sync_catalogo_diaria(), _pagina_de_cambios(), Una página de `/{tipo}/changes` con la forma real (17/09/2026). (+24 more)
+### Community 10 - "ProduccionAudiovisual"
+Cohesion: 0.09
+Nodes (32): ProduccionAudiovisual, Catálogo unificado de películas y series sincronizado desde TMDB (CU-021). Los…, _buscar_produccion(), _obtener_o_crear(), Único lugar donde vive la consulta por la clave natural (id_tmdb, tipo)., Devuelve la fila de la producción, creándola vacía si todavía no existe. Dos…, `manage.py seed` no borra por accidente un catálogo poblado (C-04c). El comando…, SeedGuardCatalogoTests (+24 more)
 
 ### Community 11 - "TMDBClient"
-Cohesion: 0.07
-Nodes (18): Busca producciones por filtros. Todo es opcional menos el tipo. `anio` filtra…, TMDBClient, CatalogoSettingsTest, GetCatalogServiceTest, SimpleTestCase, Reparto y directores (C-04a). Los endpoints de detalle de TMDB NO traen cast ni…, Lista de cambios (C-04b, fase 2). `/{tipo}/changes` devuelve los IDs que TMDB…, Rango de años y orden en `discover` (C-04c). El seed muestrea por década, y… (+10 more)
+Cohesion: 0.08
+Nodes (17): Busca producciones por filtros. Todo es opcional menos el tipo. `anio` filtra…, TMDBClient, CatalogoSettingsTest, SimpleTestCase, Reparto y directores (C-04a). Los endpoints de detalle de TMDB NO traen cast ni…, Lista de cambios (C-04b, fase 2). `/{tipo}/changes` devuelve los IDs que TMDB…, Rango de años y orden en `discover` (C-04c). El seed muestrea por década, y…, Catálogo de géneros de TMDB (C-04c). El seed muestrea por género, y los ids de… (+9 more)
 
-### Community 12 - "Módulo 2 — Catálogo y Búsqueda (Gonza)"
-Cohesion: 0.20
-Nodes (17): CU-008: Visualizar Catálogo, CU-010: Buscar Películas/Series por Nombre, CU-015: Gestionar Reseña y Calificación (ABM), CU-017: Moderar reseñas, Pantalla Home (Recomendado, Tendencias, Novedades), Home solo descubrimiento + Buscar como panel overlay, Panel Buscar (overlay con filtros y grid), Recomendado para ti: camino algorítmico vía TMDB /discover (+9 more)
+### Community 12 - "Wireframe completo FilmAI (Opción 1, HTML interactivo)"
+Cohesion: 0.12
+Nodes (24): CU-008: Visualizar Catálogo, CU-010: Buscar Películas/Series por Nombre, Pantallas de autenticación (Login, Registro, Confirmación), Componentes base (Design System), Ficha de detalle (hero, acciones directas, reseñas), Pantalla Home (Recomendado, Tendencias, Novedades), Home solo descubrimiento + Buscar como panel overlay, Layout base (Shell): navbar Inicio/Buscar/Listas + avatar (+16 more)
 
 ### Community 13 - "initGlobalBar"
 Cohesion: 0.09
@@ -291,35 +286,31 @@ Nodes (37): agentStatusText(), barPaletteForTheme(), brandMarkSvg(), buildDesign
 
 ### Community 14 - "UsuarioFactory"
 Cohesion: 0.04
-Nodes (29): TestCase, ResenaAdminTests, UsuarioAdminTests, Meta, Crea usuarios activos con contraseña hasheada., UsuarioFactory, BajaCuentaTests, EstadoCuentaTests (+21 more)
-
-### Community 15 - "django_conf"
-Cohesion: 0.09
-Nodes (16): Migration, Migration, Migration, Backend de email de Django sobre la API HTTP de Resend. Motivación y diseño…, Migration, Command, BaseCommand, Comando de desarrollo: verifica la integración con Resend. Uso: python… (+8 more)
+Nodes (25): TestCase, ResenaAdminTests, UsuarioAdminTests, Meta, Crea usuarios activos con contraseña hasheada., UsuarioFactory, PreferenciasTests, El navegador necesita CSRF para cambiar preferencias. (+17 more)
 
 ### Community 16 - "materializar"
 Cohesion: 0.09
 Nodes (13): materializar(), Garantiza que la producción exista en la base con su embedding encolado. Recibe…, MaterializacionBase, MaterializacionCarreraTests, MaterializacionIdempotenteTests, MaterializacionPeliculaTests, MaterializacionSerieTests, Base de los tests que verifican qué queda escrito en Postgres. Se usa… (+5 more)
 
-### Community 17 - "ProduccionEmbedding"
-Cohesion: 0.18
-Nodes (22): Servicio Postgres pgvector/pgvector:pg16 en CI, ProduccionEmbedding, Representación semántica de una producción para búsqueda por similitud. Se crea…, pgvector >=0.3,<0.5 (pgvector.django), backend, celery-beat, celery-worker, db (+14 more)
+### Community 17 - "embedding-infrastructure capability"
+Cohesion: 0.33
+Nodes (14): backend, celery-beat, celery-worker, db, filmai_network, frontend, Named volumes pgdata and redisdata, redis (+6 more)
 
-### Community 18 - "Command"
-Cohesion: 0.13
-Nodes (10): atomic, Command, BaseCommand, Borra los datos de las apps de negocio (orden de hijos a padres). El borrado en…, Crea los usuarios de prueba con credenciales deterministas., Crea el catálogo repartido entre películas y series., Cada usuario califica un subconjunto aleatorio del catálogo. Se pasan `usuario`…, Crea las 3 listas predeterminadas y algunas personalizadas por usuario. (+2 more)
+### Community 18 - "catalogo/tests.py"
+Cohesion: 0.08
+Nodes (20): get_redis(), EmbeddingProviderError, generar_vector(), Exception, Texto a embeber, su huella, y el punto de enchufe del proveedor (C-04a). El…, El proveedor de embeddings no pudo generar el vector., Convierte texto en un vector de 1024 dimensiones. PUNTO DE EXTENSIÓN PARA B-06…, GetCatalogServiceTest (+12 more)
 
 ### Community 19 - "README de FilmAI"
-Cohesion: 0.09
-Nodes (30): Regla 2: docs/ (01 a 06) como fuente de verdad, Prefer APCA over WCAG 2 for contrast, WAI-ARIA Authoring Practices Guide (APG) patterns, watchdog[watchmedo] (auto-reload del worker Celery), Presentación Idea-Proyecto, Especificación de Requerimientos, Modelos de Datos y de Diseño, Lineamientos de UI (+22 more)
+Cohesion: 0.08
+Nodes (36): Servicio Postgres pgvector/pgvector:pg16 en CI, Regla 2: docs/ (01 a 06) como fuente de verdad, Prefer APCA over WCAG 2 for contrast, WAI-ARIA Authoring Practices Guide (APG) patterns, pgvector >=0.3,<0.5 (pgvector.django), watchdog[watchmedo] (auto-reload del worker Celery), Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518), Presentación Idea-Proyecto (+28 more)
 
-### Community 20 - "TipoProduccion"
-Cohesion: 0.04
-Nodes (47): ProduccionAudiovisualFactory, Crea una producción audiovisual simulando un registro de TMDB. Los campos de…, Tipo de producción audiovisual (doc 03: 'Pelicula' | 'Serie')., TipoProduccion, ClavesFrescasTests, `claves_frescas()`: lo que `materializar()` NO volvería a enriquecer. El seed…, ListaFactory, Meta (+39 more)
+### Community 20 - "ListasEndpointsTests"
+Cohesion: 0.08
+Nodes (20): ListasEndpointsTests, patch, TestCase, Evita dos cards que para el usuario representan la misma lista., El límite se aplica tras normalizar y tampoco se admiten guiones., La API sostiene la regla incluso si un cliente evita el menú UI., Renombrar no altera los ítems ni entrega contadores engañosos., Cada prueba describe un caso observable por el frontend. (+12 more)
 
 ### Community 21 - "django_db"
 Cohesion: 0.05
-Nodes (28): Configuración del admin de Django para el catálogo y las reseñas., Migration, Migration, Migration, Modelos de la app `catalogo`. Implementa las entidades del dominio de…, Migration, Migration, Migration (+20 more)
+Nodes (25): Migration, Migration, Migration, Migration, Migration, Migration, Migration, Migration (+17 more)
 
 ### Community 22 - "New visual work (new-work flow)"
 Cohesion: 0.15
@@ -329,9 +320,9 @@ Nodes (32): Disposition vocabulary (recapture/rebuild/fix/ship), Check 0: Eviden
 Cohesion: 0.10
 Nodes (26): get_catalog_service(), ParamValidationTest, CatalogoBaseView, DiscoverView, _float_param(), _int_param(), KeywordsView, _materializar_sin_interrumpir() (+18 more)
 
-### Community 24 - "catalogo/tests.py"
-Cohesion: 0.16
-Nodes (24): Exception, TMDB rejected the request because its rate limit was exceeded., TMDB could not find the requested resource., TMDB rejected the request as invalid., TMDB returned a server-side error., The request could not reach TMDB or its response could not be read., Base exception for TMDB client failures., tmdb_exception_handler() (+16 more)
+### Community 24 - "TMDBError"
+Cohesion: 0.13
+Nodes (23): Exception, TMDB rejected the request because its rate limit was exceeded., TMDB could not find the requested resource., TMDB rejected the request as invalid., TMDB returned a server-side error., The request could not reach TMDB or its response could not be read., Base exception for TMDB client failures., tmdb_exception_handler() (+15 more)
 
 ### Community 25 - "$impeccable harden"
 Cohesion: 0.09
@@ -342,20 +333,20 @@ Cohesion: 0.11
 Nodes (23): Adaptation is rethinking the experience for the new context, not scaling pixels, Content-driven breakpoints (640/768/1024 usually suffice; clamp() and container queries for fluid values), Mobile-first: base styles for mobile, layer complexity with min-width queries, Orientation and foldables: landscape restructures, never clips; react to posture and hinge, Phone → tablet: restructure, don't stretch; drive structure from size classes / window size classes, Platform → platform: translate idioms, never transplant (iOS ↔ Android table), Web → native: reconform, don't reflow, Never hide core functionality on mobile; same information architecture across contexts (+15 more)
 
 ### Community 27 - "package.json"
-Cohesion: 0.07
-Nodes (27): compat, __dirname, eslintConfig, __filename, nextConfig, name, private, version (+19 more)
+Cohesion: 0.06
+Nodes (34): compat, __dirname, eslintConfig, __filename, name, private, scripts, build (+26 more)
 
 ### Community 28 - "ValidadoresContrasenaTests"
 Cohesion: 0.07
-Nodes (15): Una contraseña que cumple todas las reglas debe ser aceptada., Contraseñas con menos de 8 caracteres deben ser rechazadas., Contraseñas con más de 20 caracteres deben ser rechazadas., Contraseñas sin mayúsculas deben ser rechazadas., Contraseñas sin minúsculas deben ser rechazadas., Contraseñas sin dígitos deben ser rechazadas., Contraseñas sin caracteres especiales deben ser rechazadas., Cada carácter especial permitido debe ser aceptado individualmente. (+7 more)
+Nodes (15): Tests unitarios para las políticas de contraseña de FilmAI. Verifica…, Una contraseña que cumple todas las reglas debe ser aceptada., Contraseñas con menos de 8 caracteres deben ser rechazadas., Contraseñas con más de 20 caracteres deben ser rechazadas., Contraseñas sin mayúsculas deben ser rechazadas., Contraseñas sin minúsculas deben ser rechazadas., Contraseñas sin dígitos deben ser rechazadas., Contraseñas sin caracteres especiales deben ser rechazadas. (+7 more)
 
 ### Community 29 - "RecuperarContrasenaTests"
 Cohesion: 0.16
 Nodes (6): CsrfCookieTests, Recuperación de contraseña (CU-020 / A-07). Cubre: envío del email con enlace…, Sin nombre ni apellido, el saludo es "Hola usuario"., El throttle por email permite 5 solicitudes por día, luego bloquea., Protección CSRF del access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF).…, RecuperarContrasenaTests
 
-### Community 30 - "usuarios/tests.py"
-Cohesion: 0.06
-Nodes (36): allauth_account_adapter, allauth_socialaccount_adapter, allauth_socialaccount_models, django-allauth[socialaccount]==65.19.1 (pin exacto), Adaptadores de allauth para el modelo de usuario de FilmAI., Adaptador de cuenta para el registro tradicional (dj-rest-auth)., Mapea los campos de allauth a los de ``Usuario``., Activa la cuenta al confirmar su correo de forma atómica. (+28 more)
+### Community 30 - "GoogleOAuthTests"
+Cohesion: 0.10
+Nodes (18): django-allauth[socialaccount]==65.19.1 (pin exacto), Adaptador social (Google OAuth) para `usuarios.Usuario`., Persiste el alta social de forma atómica., Construye un perfil nuevo sin sobrescribir una cuenta vinculada., UsuarioSocialAccountAdapter, GoogleSocialLoginSerializer, Login y registro con Google mediante ``id_token``., GoogleOAuthTests (+10 more)
 
 ### Community 31 - "$impeccable doctor"
 Cohesion: 0.15
@@ -369,25 +360,29 @@ Nodes (19): buildSvelteExpressionTextMap(), buildSveltePropValuesFromLiveElement
 Cohesion: 0.17
 Nodes (26): clearStoredManualApplyState(), fetchPendingCount(), handleManualEditActivity(), hidePendingApplyDock(), manualApplyLoadingText(), manualApplyStateKey(), manualEditEventForCurrentPage(), numberOrNull() (+18 more)
 
-### Community 34 - "usuarios/serializers.py"
-Cohesion: 0.03
-Nodes (88): allauth_account, allauth_account_forms, allauth_account_internal_flows_email_verification, allauth_account_utils, allauth_socialaccount_helpers, allauth_socialaccount_providers_google_views, allauth_socialaccount_providers_oauth2_client, Validación de sesiones JWT, incluida su renovación por cookie. (+80 more)
+### Community 34 - "usuarios/views.py"
+Cohesion: 0.04
+Nodes (52): allauth_account, allauth_account_internal_flows_email_verification, allauth_socialaccount_providers_google_views, allauth_socialaccount_providers_oauth2_client, Validación de sesiones JWT, incluida su renovación por cookie., RefreshSesionSerializer, RefreshSesionView, AvataresView (+44 more)
 
 ### Community 35 - "$impeccable live (interactive variant mode)"
 Cohesion: 0.14
 Nodes (23): Canonical JSON result (done/partial/error), Entry Atomicity, Impeccable Manual Edit Applier (inline degraded role), Repair mode (post-validation source repair), Spatial thesis, Squint test (reading order), Agent-driven fallback (generated / runtime-injected sources), pbakaus/impeccable live-e2e agent template (agent.mjs) (+15 more)
 
-### Community 37 - "login/page.tsx"
-Cohesion: 0.19
-Nodes (10): POSTERS, Button(), buttonVariants, cn(), ref_base_ui_react_button, class-variance-authority, clsx, ref_next_image (+2 more)
+### Community 36 - "patch"
+Cohesion: 0.14
+Nodes (5): BackfillIntegracionTests, EndpointIntegrationTest, patch, El backfill con `generar_embedding` REAL: que el reencolado sirva. Los tests de…, Un `id_tmdb` no entero debe dar 400, no 404 (spec de C-03).…
 
-### Community 38 - "humanizer/SKILL.md"
-Cohesion: 0.22
-Nodes (9): blader/humanizer (upstream repo; Skills CLI + Claude Code plugin install), Humanizer version history 1.0.0 → 2.8.2, Voice Calibration (README usage: paste 2-3 paragraphs of own writing), Wikipedia: Signs of AI writing (WikiProject AI Cleanup), 14. Em dashes and en dashes: hard cut in the final rewrite, Process: draft rewrite → 'What makes the below so obviously AI generated?' → final rewrite, Personality and soul: sterile voiceless writing is as obvious as slop, Rewrite, don't delete: same coverage, same paragraph count, preserve meaning (+1 more)
+### Community 37 - "button.tsx"
+Cohesion: 0.31
+Nodes (7): Button(), buttonVariants, cn(), ref_base_ui_react_button, class-variance-authority, clsx, tailwind-merge
 
-### Community 39 - "PerfilTests"
-Cohesion: 0.11
-Nodes (9): PerfilTests, La unicidad ignora mayúsculas, pero permite conservar el username propio., La BD, no solo el serializer, rechaza variantes del mismo nombre., Una colisión posterior a la validación devuelve 409 y revierte cambios., La autenticación real aplica CSRF a cookies en PUT., 401 anónimo y representación propia sin credenciales ni permisos., Cada campo se puede cambiar sin reenviar ni perder los otros., La lista de campos permitidos impide escalada y escritura entre módulos. (+1 more)
+### Community 38 - "Catalog of 33 AI writing patterns (content, language, style, communication, filler)"
+Cohesion: 0.10
+Nodes (20): blader/humanizer (upstream repo; Skills CLI + Claude Code plugin install), Humanizer version history 1.0.0 → 2.8.2, Voice Calibration (README usage: paste 2-3 paragraphs of own writing), Wikipedia: Signs of AI writing (WikiProject AI Cleanup), 10. Rule of three overuse, 13. Passive voice and subjectless fragments, 14. Em dashes and en dashes: hard cut in the final rewrite, 1. Undue emphasis on significance, legacy and broader trends (+12 more)
+
+### Community 39 - "sync_catalogo_diaria"
+Cohesion: 0.16
+Nodes (7): Sync nocturna del catálogo (C-04b): refresco + descubrimiento. Dos pasadas con…, sync_catalogo_diaria(), _pagina_de_cambios(), Una página de `/{tipo}/changes` con la forma real (17/09/2026)., La pasada de descubrimiento de la sync nocturna (C-04b, fase 2). `materializar`…, Hace que TMDB reporte estos IDs como modificados hoy., SyncCatalogoTests
 
 ### Community 40 - "components.json"
 Cohesion: 0.09
@@ -402,8 +397,8 @@ Cohesion: 0.18
 Nodes (8): TMDBClientCache, Cache-aside lookup, Cache miss stores and returns, Graceful degradation on Redis failure, JSON serialization round-trip, Per-endpoint TTL, Stable cache key, tmdb-cache capability
 
 ### Community 43 - "construir_texto_canonico"
-Cohesion: 0.09
-Nodes (19): construir_texto_canonico(), EmbeddingProviderError, generar_vector(), _lista_normalizada(), Exception, Texto a embeber, su huella, y el punto de enchufe del proveedor (C-04a). El…, El proveedor de embeddings no pudo generar el vector., Ordena alfabéticamente y descarta vacíos. TMDB no garantiza un orden estable… (+11 more)
+Cohesion: 0.13
+Nodes (15): calcular_source_hash(), construir_texto_canonico(), _lista_normalizada(), Ordena alfabéticamente y descarta vacíos. TMDB no garantiza un orden estable…, Arma el texto que representa a la producción para la búsqueda semántica. Recibe…, Huella del texto embebido (SHA-256 hexadecimal, 64 caracteres). Se guarda junto…, _necesita_enriquecimiento(), Decide si hay que traer el detalle de TMDB para esta fila. Reemplaza el… (+7 more)
 
 ### Community 44 - "LoginDualTests"
 Cohesion: 0.10
@@ -418,24 +413,24 @@ Cohesion: 0.12
 Nodes (23): Implementation Integrity verdict (start here): coherent product-specific system vs. repeated shortcuts and design-system drift, Actionable error: what failed, why (when known and useful), how to recover, Empty states distinguish first use, no results, filters, permissions and failure; loading names the real operation and never invents progress, Message hierarchy per state: the one fact now, the next action, supporting context, tone, Forms: persistent labels (placeholders are examples), requirements before submission, validation without blame, Destructive actions: name object and consequence; prefer undo over confirmation when recovery is safe; no Yes/No/OK/Submit buttons, Heuristic 3: User Control and Freedom (undo, cancel, escape), Heuristic 9: Help users recognize, diagnose and recover from errors (+15 more)
 
 ### Community 47 - "Usuario"
-Cohesion: 0.05
-Nodes (23): AbstractBaseUser, Command, BaseCommand, Repara listas predeterminadas y chat faltantes de usuarios existentes., Meta, Logueable solo si la cuenta está en estado Activa., Permite que Django/allauth activen la cuenta (`is_active = True`), Cliente de la plataforma y, según sus flags, administrador del panel. (+15 more)
+Cohesion: 0.07
+Nodes (22): AbstractBaseUser, Contexto técnico (Django 5.1 + DRF, Postgres 16, Redis, Celery, Next.js + Tailwind + Shadcn), Command, BaseCommand, Repara listas predeterminadas y chat faltantes de usuarios existentes., Comando de desarrollo: verifica la integración con Resend. Uso: python…, Meta, Cliente de la plataforma y, según sus flags, administrador del panel. (+14 more)
 
 ### Community 48 - "Navbar.tsx"
-Cohesion: 0.12
-Nodes (15): frontend_app_globals, inter, metadata, roboto, iniciales(), NAV_LINKS, Navbar(), logout() (+7 more)
+Cohesion: 0.08
+Nodes (33): frontend_app_globals, inter, metadata, roboto, INTERRUPTORES, PreferenciasPage(), cambiar(), cerrarBaja() (+25 more)
 
-### Community 49 - "register/page.tsx"
-Cohesion: 0.18
-Nodes (15): Campo, Errores, GENEROS, VALIDADORES, decodificarParametro(), EnlaceInvalido, Estado, RestablecerContrasenaPage() (+7 more)
+### Community 49 - "[token]/page.tsx"
+Cohesion: 0.31
+Nodes (9): cambiarContrasena(), decodificarParametro(), EnlaceInvalido, Estado, RestablecerContrasenaPage(), onSubmit(), validarConfirmacion(), validarPassword() (+1 more)
 
-### Community 50 - "ProduccionAudiovisual"
-Cohesion: 0.07
-Nodes (41): allauth_account_models, CalificacionFactory, Meta, Factories de factory_boy para la app `catalogo`. Se usan únicamente para…, ResenaFactory, Calificacion, Meta, ProduccionAudiovisual (+33 more)
+### Community 50 - "seed.py"
+Cohesion: 0.05
+Nodes (53): atomic, ProduccionAudiovisualFactory, Factories de factory_boy para la app `catalogo`. Se usan únicamente para…, Crea una producción audiovisual simulando un registro de TMDB. Los campos de…, Calificacion, Meta, Modelos de la app `catalogo`. Implementa las entidades del dominio de…, Calificación numérica (1-10) que un usuario asigna a una producción (CU-015). (+45 more)
 
 ### Community 51 - "Módulo 0 — Fundación"
-Cohesion: 0.14
-Nodes (16): A-04: Pantalla de Login (UI), A-05: Pantalla de Registro (UI), F-01: Docker + docker-compose, F-02: Scaffold Django + DRF, F-03: Scaffold Next.js + Tailwind + Shadcn, F-05: Seeds de desarrollo, Módulo 0 — Fundación, Módulo 7 — Polish y Calidad (Gonza) (+8 more)
+Cohesion: 0.13
+Nodes (17): F-01: Docker + docker-compose, F-02: Scaffold Django + DRF, F-05: Seeds de desarrollo, F-06: ESLint + Prettier + Django linting, Módulo 0 — Fundación, Módulo 7 — Polish y Calidad (Gonza), Q-01: Accesibilidad WCAG 2.1 AA, Q-03: Estados de carga y empty (+9 more)
 
 ### Community 52 - "SeedCatalogoTests"
 Cohesion: 0.19
@@ -451,27 +446,27 @@ Nodes (15): createLiveBrowserSessionState(), clearHandled(), clearScrollY(), cle
 
 ### Community 55 - "ProduccionEmbeddingModelTests"
 Cohesion: 0.07
-Nodes (14): MaterializacionConcurrenciaTests, _ParchesDeMaterializacion, ProduccionEmbeddingModelTests, TestCase, TransactionTestCase, Garantías que aporta la base de datos, no el código Python (C-04a). Se prueban…, Doble del `TMDBClientCache`: enriquecimiento (C-04a) y listados (C-04b)., Aísla la materialización de TMDB y del broker de Celery. Es un mixin para poder… (+6 more)
+Nodes (13): ClavesFrescasTests, _ParchesDeMaterializacion, ProduccionEmbeddingModelTests, TestCase, Garantías que aporta la base de datos, no el código Python (C-04a). Se prueban…, Doble del `TMDBClientCache`: enriquecimiento (C-04a) y listados (C-04b)., Aísla la materialización de TMDB y del broker de Celery. Es un mixin para poder…, El detalle sigue siendo passthrough de TMDB y además materializa (C-04a). Se… (+5 more)
 
 ### Community 56 - "ResenaAdmin"
 Cohesion: 0.19
 Nodes (5): action, ProduccionEmbeddingAdmin, register, ResenaAdmin, display
 
 ### Community 58 - "ResendBackend"
-Cohesion: 0.24
-Nodes (7): Devuelve la parte HTML si el mensaje es multipart/alternative., Envía `EmailMessage` vía `resend.Emails.send` (API REST de Resend). - Requiere…, ResendBackend, override_settings, patch, ResendBackendTests, BaseEmailBackend
+Cohesion: 0.11
+Nodes (13): Devuelve la parte HTML si el mensaje es multipart/alternative., Envía `EmailMessage` vía `resend.Emails.send` (API REST de Resend). - Requiere…, ResendBackend, Levanta ``ImproperlyConfigured`` si la config de email es inválida. Solo aplica…, validar_configuracion_email(), CeleryAppTests, ConfiguracionEmailTests, override_settings (+5 more)
 
 ### Community 59 - "Flujo de confirmación de correo por email (allauth)"
-Cohesion: 0.21
-Nodes (18): resend (envío de email), activate_url (contexto de plantilla allauth), Flujo de confirmación de correo por email (allauth), Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518), Email confirmación de cuenta (HTML, allauth), Email confirmación de cuenta (texto plano, allauth), Email confirmación al registrarse (HTML, allauth signup), Email confirmación al registrarse (texto plano, allauth signup) (+10 more)
+Cohesion: 0.13
+Nodes (23): resend (envío de email), activate_url (contexto de plantilla allauth), Flujo de confirmación de correo por email (allauth), Email confirmación de cuenta (HTML, allauth), Email confirmación de cuenta (texto plano, allauth), Email confirmación al registrarse (HTML, allauth signup), Email confirmación al registrarse (texto plano, allauth signup), Asunto: [FilmAI] Confirmación de cuenta (signup) (+15 more)
 
 ### Community 60 - "backfill_embeddings"
-Cohesion: 0.29
+Cohesion: 0.32
 Nodes (4): backfill_embeddings(), Recupera el trabajo de embeddings que quedó sin completar (C-04b).…, BackfillEmbeddingsTests, Recuperación del trabajo de embeddings que quedó sin completar (C-04b, fase 3).…
 
 ### Community 61 - "completar-google/page.tsx"
-Cohesion: 0.18
-Nodes (14): Campo, CompletarGooglePage(), onBlurCampo(), onGoogle(), validarCampo(), Errores, GENEROS, maxFechaNacimiento() (+6 more)
+Cohesion: 0.14
+Nodes (17): Campo, CompletarGooglePage(), onBlurCampo(), onGoogle(), validarCampo(), Errores, GENEROS, maxFechaNacimiento() (+9 more)
 
 ### Community 62 - "Audit Health Score: 5 dimensions × 0–4 = /20 (A11y, Performance, Theming, Responsive, Implementation Integrity) with rating bands"
 Cohesion: 0.13
@@ -481,25 +476,25 @@ Nodes (15): Avoid animating width/height/top/left/margins; use FLIP, transforms 
 Cohesion: 0.16
 Nodes (11): createLiveBrowserDomHelpers(), cssId(), liveUiRoot(), makeFrozenAnchor(), own(), pickable(), rectIsUsableAnchor(), uiAppend() (+3 more)
 
-### Community 64 - "celery.py"
-Cohesion: 0.12
-Nodes (11): ASGI config for filmai project. It exposes the ASGI callable as a module-level…, App de Celery del proyecto (C-04a). Celery corre en un proceso aparte del…, Paquete del proyecto Django. Importar la app de Celery acá hace que quede…, WSGI config for filmai project. It exposes the WSGI callable as a module-level…, main(), Django's command-line utility for administrative tasks., Run administrative tasks., django_core_asgi (+3 more)
+### Community 64 - "sync_avatars.py"
+Cohesion: 0.08
+Nodes (17): ASGI config for filmai project. It exposes the ASGI callable as a module-level…, App de Celery del proyecto (C-04a). Celery corre en un proceso aparte del…, Paquete del proyecto Django. Importar la app de Celery acá hace que quede…, WSGI config for filmai project. It exposes the WSGI callable as a module-level…, main(), Django's command-line utility for administrative tasks., Run administrative tasks., django_core_asgi (+9 more)
 
 ### Community 65 - "settings.py"
-Cohesion: 0.20
-Nodes (8): python manage.py test --verbosity=2 en CI, Regla 5: tests unitarios y regresión (python manage.py test), Validación de la configuración de email al arranque. En producción la ausencia…, Django settings for filmai project. Generated by 'django-admin startproject'…, python-decouple (variables de entorno), celery_schedules, decouple, pathlib
+Cohesion: 0.22
+Nodes (7): python manage.py test --verbosity=2 en CI, Regla 5: tests unitarios y regresión (python manage.py test), Validación de la configuración de email al arranque. En producción la ausencia…, Django settings for filmai project. Generated by 'django-admin startproject'…, python-decouple (variables de entorno), celery_schedules, decouple
 
 ### Community 66 - "listas/views.py"
-Cohesion: 0.12
-Nodes (25): CalificacionImpideQuitarDeVistas, ItemDuplicado, ListaConflict, ListaPredeterminadaProtegida, NombreListaDuplicado, APIException, Errores de dominio que la API de listas comunica como conflictos., Conflicto de negocio con un código estable para el frontend. (+17 more)
+Cohesion: 0.07
+Nodes (41): CalificacionImpideQuitarDeVistas, ItemDuplicado, ListaConflict, ListaPredeterminadaProtegida, NombreListaDuplicado, APIException, Errores de dominio que la API de listas comunica como conflictos., Conflicto de negocio con un código estable para el frontend. (+33 more)
 
-### Community 67 - "F-06: ESLint + Prettier + Django linting"
-Cohesion: 0.33
-Nodes (7): F-06: ESLint + Prettier + Django linting, Q-06: CI (GitHub Actions) para lint/format, 15/09/2026 — El CI corre también en PRs apilados sobre ramas feat/**, 25/08/2026 — El lint solo corre en local; pendiente agregar CI, 18/08/2026 — Prettier + ESLint + Husky en frontend (F-06), 18/08/2026 — Ruff como linter + formatter único (F-06), 10/09/2026 — Tests en CI, AGENTS.md con reglas de testing y skills, limpieza de archivos raíz
+### Community 67 - "perfil/page.tsx"
+Cohesion: 0.17
+Nodes (12): Borrador, Campo, fechaVisible(), generoVisible(), PerfilPage(), enviarEnlace(), guardar(), normalizarNombre() (+4 more)
 
-### Community 68 - "google-auth.ts"
-Cohesion: 0.25
-Nodes (8): onGoogle(), GoogleLinkButton(), CAMPOS_FALTANTES, CompletarGoogleResult, esFaltaDeCamposGoogle(), GoogleLoginResult, handleGoogleLogin(), marcarGooglePendiente()
+### Community 68 - "register/page.tsx"
+Cohesion: 0.16
+Nodes (8): metadata, Campo, Errores, GENEROS, VALIDADORES, GoogleLinkButton(), marcarGooglePendiente(), ref_next_link
 
 ### Community 69 - "iOS platform reference"
 Cohesion: 0.18
@@ -525,33 +520,33 @@ Nodes (9): CatalogoConfig, AppConfig, ChatbotConfig, AppConfig, ListasConfig, Ap
 Cohesion: 0.06
 Nodes (30): catalog-seed Specification, Known limitations, Purpose, Requirement: Failures are per item and per page, Requirement: Interruption leaves a consistent, resumable catalog, Requirement: Management command, not a scheduled task, Requirement: One production, one materialization per run, Requirement: Pagination stops at the 500-page wall (+22 more)
 
-### Community 75 - "Módulo 4 — Perfil y Preferencias (Gonza)"
-Cohesion: 0.25
-Nodes (11): CU-005: Acceder a la sección de perfil de usuario, CU-006: Modificar perfil, CU-007: Dar de baja la cuenta, Módulo 4 — Perfil y Preferencias (Gonza), P-01: Endpoint de perfil, P-02: Perfil con edición inline (UI), P-03: Endpoint de preferencias, P-04: Pantalla de preferencias (UI) (+3 more)
+### Community 75 - "F-04: Modelos Django (7 entidades + intermedia)"
+Cohesion: 0.16
+Nodes (18): CU-005: Acceder a la sección de perfil de usuario, CU-006: Modificar perfil, CU-007: Dar de baja la cuenta, CU-015: Gestionar Reseña y Calificación (ABM), CU-017: Moderar reseñas, AD-01': Configurar Django Admin, C-08: Calificar / Reseña, F-04: Modelos Django (7 entidades + intermedia) (+10 more)
 
 ### Community 76 - "Job backend: Ruff + tests Django"
 Cohesion: 0.21
 Nodes (12): Job backend: Ruff + tests Django, CI workflow (GitHub Actions), ESLint (sin warnings permitidos), Job frontend: ESLint + Prettier, Pre-commit hook local (.husky/pre-commit), Prettier --check, Ruff check + format --check, Trigger en PRs hacia main y feat/** (PRs apilados) (+4 more)
 
 ### Community 77 - "AGENTS.md — Reglas para agentes en FilmAI"
-Cohesion: 0.28
-Nodes (9): Regla 3: ante ambigüedad, preguntar al usuario, Regla 1: registrar decisiones en docs/decisiones.md, AGENTS.md — Reglas para agentes en FilmAI, Regla 9: estructura docs/ · openspec/specs · openspec/changes · graphify-out, Regla 7: consultar y actualizar el grafo graphify, Structured question / user-input tool, Contexto técnico (Django 5.1 + DRF, Postgres 16, Redis, Celery, Next.js + Tailwind + Shadcn), Decisiones de diseño (ADR log) (+1 more)
+Cohesion: 0.19
+Nodes (14): Regla 3: ante ambigüedad, preguntar al usuario, Regla 1: registrar decisiones en docs/decisiones.md, AGENTS.md — Reglas para agentes en FilmAI, Regla 9: estructura docs/ · openspec/specs · openspec/changes · graphify-out, Regla 7: consultar y actualizar el grafo graphify, Regla 8: sin herramientas de review automático en PRs, Design brief (shape output), Structured question / user-input tool (+6 more)
 
 ### Community 78 - "conventional-commits/SKILL.md"
 Cohesion: 0.33
 Nodes (5): Commit Type Examples table (one example message per type), Commit subject format `type(scope): description`, Eleven allowed commit types (feat, fix, chore, docs, style, refactor, perf, test, build, ci, revert), Pick exactly one type; most specific wins, state the alternative, No AI attribution in commits (no Co-Authored-By)
 
-### Community 79 - "Catalog of 33 AI writing patterns (content, language, style, communication, filler)"
-Cohesion: 0.18
-Nodes (11): 10. Rule of three overuse, 13. Passive voice and subjectless fragments, 1. Undue emphasis on significance, legacy and broader trends, 20. Collaborative communication (chatbot) artifacts, 21. Knowledge-cutoff disclaimers and speculative gap-filling, 30. Diff-anchored writing (narrating the change instead of describing the thing), 7. Overused AI vocabulary (delve, tapestry, testament, pivotal, vibrant...), Catalog of 33 AI writing patterns (content, language, style, communication, filler) (+3 more)
+### Community 79 - "RegisterSerializer"
+Cohesion: 0.12
+Nodes (7): Registro tradicional (CU-001) con los campos del modelo `Usuario`., RegisterSerializer, normalizar_nombre(), Quita espacios sobrantes y conserva uno entre partes del nombre., Valida el nombre ya normalizado y devuelve el valor para persistir., validar_nombre_persona(), BaseRegisterSerializer
 
 ### Community 81 - "devDependencies"
-Cohesion: 0.15
-Nodes (13): devDependencies, eslint, eslint-config-next, eslint-config-prettier, @eslint/eslintrc, husky, prettier, tailwindcss (+5 more)
+Cohesion: 0.14
+Nodes (14): devDependencies, eslint, eslint-config-next, eslint-config-prettier, @eslint/eslintrc, husky, @playwright/test, prettier (+6 more)
 
-### Community 82 - "RegisterView"
-Cohesion: 0.50
-Nodes (3): Registro tradicional sin el `complete_signup` de dj-rest-auth.…, RegisterView, BaseRegisterView
+### Community 82 - "08/09/2026 — Corpus semántico global y progresivo + contrato TMDB → dominio"
+Cohesion: 0.18
+Nodes (15): Arquitectura MVC por capas (Controller, Service, Repository), Catálogo materializado global y progresivo, keywords (VARCHAR[]) de TMDB en ProduccionAudiovisual, Lista, ProduccionAudiovisual, ProduccionEmbedding, Repositorio Externo (API TMDB), Repositorio Local (base de datos propia) (+7 more)
 
 ### Community 83 - "mountSvelteComponentVariant"
 Cohesion: 0.09
@@ -573,17 +568,17 @@ Nodes (10): Material color roles + Dynamic Color (Material You) with static fall
 Cohesion: 0.11
 Nodes (23): openai.yaml (Codex agent interface: display_name, short_description, default_prompt), Timing bands 100–150 / 150–300 / 300–500 / 500–800 ms; exit faster than entrance; cubic-bezier(0.16, 1, 0.3, 1), Audit documents issues; it doesn't fix them (routes to other commands), Native audit from source (SwiftUI/UIKit/Compose/RN/Flutter); no browser tooling or `impeccable detect`, Responsive check: interactive elements < 44x44px, fixed widths, horizontal scroll, text scaling, Amplify what the system already owns; more effects is the opposite of bold, 'Bolder' during an open direction round means the Bolder hand-register steer (new-work), not this command, Scope is sovereign: touch only the named target; no new colors, fonts, radii, shadows or primitives (+15 more)
 
-### Community 88 - "Wireframe completo FilmAI (Opción 1, HTML interactivo)"
-Cohesion: 0.18
-Nodes (11): Pantallas de autenticación (Login, Registro, Confirmación), Componentes base (Design System), Ficha de detalle (hero, acciones directas, reseñas), Layout base (Shell): navbar Inicio/Buscar/Listas + avatar, Mis reseñas (ReviewCard), Modal Calificar / Reseña (star widget 10 estrellas), Pantallas de error (404, 500/timeout), Perfil con edición inline (+3 more)
+### Community 88 - "_ids_cambiados"
+Cohesion: 0.33
+Nodes (4): _ids_cambiados(), IDs que TMDB reporta como modificados en las últimas 24 h., IdsCambiadosTests, El paginador de la lista de cambios de TMDB (C-04b, fase 2). `_ids_cambiados`…
 
 ### Community 89 - "UsuarioPerfilSerializer"
-Cohesion: 0.06
-Nodes (25): es_avatar_valido(), obtener_avatar(), Registro centralizado de avatares disponibles., Indica si ``avatar_id`` pertenece al registro y es un entero., Obtiene el recurso asociado o ``None``., Lanza ``ValidationError`` si el avatar no es válido., validar_avatar_id(), Meta (+17 more)
+Cohesion: 0.07
+Nodes (20): Meta, Representación del usuario autenticado (endpoints `/api/auth/user/`). El…, CU-006: solo nombre, apellido, nombre de usuario y avatar editables., Valida que avatar_id sea uno de los avatares disponibles., Valida que la fecha de nacimiento no sea futura y el usuario tenga al menos 13…, UsuarioDetallesSerializer, UsuarioPerfilSerializer, AvatarValidacionTests (+12 more)
 
-### Community 90 - "A-03: Login con credenciales"
-Cohesion: 0.18
-Nodes (19): CU-002: Confirmar cuenta por correo electrónico, CU-004: Cerrar sesión, CU-020: Recuperar contraseña, A-01: Registro tradicional, A-02: Confirmación de cuenta, A-03: Login con credenciales, A-07: Recuperar contraseña, A-08: Cerrar sesión (+11 more)
+### Community 90 - "A-06: Google OAuth"
+Cohesion: 0.09
+Nodes (37): CU-001: Crear cuenta de usuario, CU-002: Confirmar cuenta por correo electrónico, CU-003: Iniciar sesión, CU-004: Cerrar sesión, CU-020: Recuperar contraseña, RNF #2: contraseñas bcrypt y datos sensibles cifrados en reposo, A-01: Registro tradicional, A-02: Confirmación de cuenta (+29 more)
 
 ### Community 91 - "syncEditBadgeHitProxies"
 Cohesion: 0.27
@@ -593,57 +588,57 @@ Nodes (10): bindEditBadgeProxy(), editBadgeProxyTargets(), initEditBadge(), init
 Cohesion: 0.19
 Nodes (14): When the design hook is active it enforces the mechanical checks as you edit; act on its findings instead of re-auditing, Decision comp: one decision card → one north-star comp file at the card's declared `comp` path, Output contract: one line per region `<id> <plate path> <WxH> <score%|unscored> <accepted|needs_parent_review|blocked> <note>` plus blockers and assumptions, Plate: a raster region regenerated at ≥1.5x the comp region size from the comp crop, with UI text and page chrome removed, Measured spec `.impeccable/build/spec.json` (from `impeccable comp-spec`) is the inventory, Background decision: isolated figure/object/line drawing → transparent PNG cutout with native alpha; photo/full-frame/texture → opaque, Two misses on one region: keep the better plate, mark `needs_parent_review`, name the drift, impeccable script (+6 more)
 
-### Community 93 - "CU-001: Crear cuenta de usuario"
-Cohesion: 0.50
-Nodes (5): CU-001: Crear cuenta de usuario, RNF #2: contraseñas bcrypt y datos sensibles cifrados en reposo, 22/08/2026 — Carácter ! permitido en la contraseña, 22/08/2026 — Datepicker de fecha de nacimiento: máximo hoy −13 años, 22/08/2026 — Fecha de nacimiento con datepicker nativo
+### Community 93 - "next"
+Cohesion: 0.22
+Nodes (4): metadata, metadata, nextConfig, next
 
 ### Community 94 - "Live mode one-time setup"
 Cohesion: 0.42
 Nodes (9): Live config drift (configDrift.orphans), CSP detection (impeccable detect-csp), CSP patch shapes (null / append-arrays / append-string / middleware / meta-tag), Live inject framework adapters (SvelteKit / Nuxt / TanStack Start), pbakaus/impeccable framework fixtures (expected-after-patch), __impeccableLiveDev dev-only CSP allowance, .impeccable/live/inject-journal.json, .impeccable/live/config.json (+1 more)
 
-### Community 95 - "materialization.py"
-Cohesion: 0.09
-Nodes (26): Seed inicial del catálogo (C-04c): `python manage.py seed_catalogo`. La sync…, Traducción entre el vocabulario de TMDB y el del dominio (C-04a). TMDB dice…, `"movie"` → `TipoProduccion.PELICULA`, `"tv"` → `TipoProduccion.SERIE`. Lanza…, tmdb_a_dominio(), claves_frescas(), _directores(), _duracion_de_episodio(), _extraer_keywords() (+18 more)
+### Community 95 - "ProduccionEmbedding"
+Cohesion: 0.07
+Nodes (29): Configuración del admin de Django para el catálogo y las reseñas., Seed inicial del catálogo (C-04c): `python manage.py seed_catalogo`. La sync…, ProduccionEmbedding, Representación semántica de una producción para búsqueda por similitud. Se crea…, dominio_a_tmdb(), Traducción entre el vocabulario de TMDB y el del dominio (C-04a). TMDB dice…, `"movie"` → `TipoProduccion.PELICULA`, `"tv"` → `TipoProduccion.SERIE`. Lanza…, Inversa de `tmdb_a_dominio`, para construir llamadas a la API de TMDB. (+21 more)
 
-### Community 96 - "validar_configuracion_email"
-Cohesion: 0.18
-Nodes (6): Levanta ``ImproperlyConfigured`` si la config de email es inválida. Solo aplica…, validar_configuracion_email(), CeleryAppTests, ConfiguracionEmailTests, SimpleTestCase, Wiring de Celery con Django (C-04a). Se verifica configuración, no ejecución:…
+### Community 96 - "cuenta.ts"
+Cohesion: 0.46
+Nodes (3): initialProfile, prepararCuenta(), @playwright/test
 
 ### Community 97 - "SeedRecorridoTests"
 Cohesion: 0.20
 Nodes (11): Combinacion, Recorre `discover` en round-robin: página 1 de todas, después la 2... Es un…, Una celda del muestreo: un género de un tipo en una década., _recorrer(), _discover_paginado(), Un `discover` falso que pagina como TMDB. `catalogo` mapea `(tipo_tmdb,…, Doble del servicio para el seed: géneros fijos y `discover` paginado., El recorrido round-robin de `discover` y la pared de las 500 páginas. (+3 more)
 
-### Community 98 - "TMDBClientCacheTest"
-Cohesion: 0.17
-Nodes (5): _build_key(), get_redis(), TMDBClientCacheTest, json, redis
-
 ### Community 99 - "Módulo 6: administración y moderación en Django Admin"
 Cohesion: 0.20
 Nodes (9): 1. Alcance, 2. Gestión de usuarios que ya existía, 3. Listado, búsqueda y filtros de reseñas, 4. Edición y borrado lógico, 5. Permisos, 6. Pruebas HTTP, 7. Verificaciones y referencia de integración, 8. Glosario breve (+1 more)
 
-### Community 100 - "scripts"
-Cohesion: 0.25
-Nodes (8): scripts, build, dev, format, format:check, lint, prepare, start
+### Community 100 - "UsuarioAccountAdapter"
+Cohesion: 0.29
+Nodes (5): Adaptador de cuenta para el registro tradicional (dj-rest-auth)., Mapea los campos de allauth a los de ``Usuario``., Activa la cuenta al confirmar su correo de forma atómica., UsuarioAccountAdapter, DefaultAccountAdapter
 
 ### Community 101 - "live-browser-ignores.js"
 Cohesion: 0.52
 Nodes (6): globToRegex(), matchesScope(), normalizeIgnoreRule(), normalizeIgnoreValue(), pageCandidates(), resolveDetectIgnores()
 
-### Community 102 - "RecuperacionSesionTests"
-Cohesion: 0.19
-Nodes (7): TestCase, Restablecer cierra todos los dispositivos y consume el enlace., Los rechazos conservan tanto el hash como la sesión original., La segunda escritura revalida el token bajo bloqueo, incluso si ya validó., Un enlace previo no permite cambiar la cuenta ni reactivarla., El alta local por recuperación conserva el PK y el sub de Google., RecuperacionSesionTests
+### Community 102 - "usuarios/serializers.py"
+Cohesion: 0.04
+Nodes (61): allauth_account_adapter, allauth_account_forms, allauth_account_models, allauth_account_utils, allauth_socialaccount_adapter, allauth_socialaccount_helpers, allauth_socialaccount_models, Pruebas HTTP del Admin de usuarios y moderación de reseñas (AD-01'). (+53 more)
+
+### Community 103 - "ConfirmarCorreoTests"
+Cohesion: 0.33
+Nodes (3): ConfirmarCorreoTests, Registro guarda un solo espacio interno y quita los sobrantes., Flujo CU-002 completo sobre el backend real (emails en outbox local). El…
 
 ### Community 104 - "L-01: Endpoints de listas"
-Cohesion: 0.36
-Nodes (8): CU-009: Consultar Listas, CU-011: Marcar película/serie como vista, CU-012: Gestionar listas, L-01: Endpoints de listas, L-02: Vista general de listas (UI), L-03: Detalle de lista (UI), L-04: Acciones directas en ficha de detalle, Módulo 3 — Listas (Marcos)
+Cohesion: 0.31
+Nodes (9): CU-009: Consultar Listas, CU-011: Marcar película/serie como vista, CU-012: Gestionar listas, C-07: Ficha de detalle (UI), L-01: Endpoints de listas, L-02: Vista general de listas (UI), L-03: Detalle de lista (UI), L-04: Acciones directas en ficha de detalle (+1 more)
 
-### Community 105 - "Regla 6: .agents/skills/ es la única fuente de skills"
-Cohesion: 0.38
-Nodes (7): Regla 8: sin herramientas de review automático en PRs, Design brief (shape output), Regla 6: .agents/skills/ es la única fuente de skills, vercel-quality README, Pipeline design-discovery -> Design Brief -> frontend-design -> emil-design-eng -> vercel-quality, Reporte Category | Rule | Severity | File:Line | Issue | Fix, vercel-quality SKILL
+### Community 105 - "UsuarioAdmin"
+Cohesion: 0.50
+Nodes (4): register, Admin para el modelo personalizado de usuario. Adapta `UserAdmin` de Django a…, UsuarioAdmin, BaseUserAdmin
 
 ### Community 106 - "C-04a: Materialización on-demand + encolado de embedding"
-Cohesion: 0.08
-Nodes (40): _encolar_embedding(), _enriquecer(), Trae detalle, créditos y keywords de TMDB y los vuelca en la fila. Las tres…, Crea el embedding en `pending` y encola la tarea, una sola vez. `get_or_create`…, _ids_cambiados(), IDs que TMDB reporta como modificados en las últimas 24 h., IdsCambiadosTests, El paginador de la lista de cambios de TMDB (C-04b, fase 2). `_ids_cambiados`… (+32 more)
+Cohesion: 0.12
+Nodes (28): _encolar_embedding(), _enriquecer(), Trae detalle, créditos y keywords de TMDB y los vuelca en la fila. Las tres…, Crea el embedding en `pending` y encola la tarea, una sola vez. `get_or_create`…, CU-019: Exponer Catálogo, CU-021: Sincronizar catálogo con TMDB, RNF #7: la sincronización con la API externa no afecta la experiencia, RNF #8: respetar límites de TMDB y reutilizar caché (+20 more)
 
 ### Community 107 - "Visualize: direction comps & asset production (impeccable reference)"
 Cohesion: 0.67
@@ -653,49 +648,37 @@ Nodes (4): DESIGN.md (project design system source), impeccable context (setup /
 Cohesion: 0.40
 Nodes (3): config, PROTECTED_PREFIXES, ref_next_server
 
+### Community 109 - ".is_active"
+Cohesion: 0.50
+Nodes (3): Logueable solo si la cuenta está en estado Activa., Permite que Django/allauth activen la cuenta (`is_active = True`), setter
+
 ### Community 110 - "22/08/2026 — Refresh token fuera de localStorage"
 Cohesion: 0.40
 Nodes (5): 26/08/2026 — CSRF para el access token en cookie httpOnly (JWT_AUTH_COOKIE_USE_CSRF), 26/08/2026 — Fix login Google vs registro + access token solo en cookie httpOnly, 25/08/2026 — Limpieza de storeTokens (quitar parámetro refresh), 22/08/2026 — Refresh token fuera de localStorage, 26/08/2026 — Revisión de PR: email duplicado en Google OAuth, CSRF del login, decodes de URL y sincronización de documentación
 
-### Community 111 - "ListaItemCursorPagination"
-Cohesion: 0.40
-Nodes (4): ListaItemCursorPagination, Paginación de los ítems de una lista., Cursor estable para el scroll infinito del detalle de lista., CursorPagination
-
 ### Community 153 - "18/08/2026 — Arquitectura de retrieval del chatbot: tool calling + pgvector + BGE-M3"
-Cohesion: 0.10
-Nodes (34): CU-013: Interactuar con el chatbot, CU-014: Cancelar recomendación en curso, RNF #3: anonimizar datos sensibles antes de enviarlos al LLM, RNF #6: chatbot responde <5 s simples / <15 s con agregación, keywords (VARCHAR[]) de TMDB en ProduccionAudiovisual, ProduccionEmbedding, Texto canónico a embeber (Title+Genres+Directors+Cast+Keywords+Synopsis), Chatbot como FAB flotante con panel drawer (+26 more)
+Cohesion: 0.12
+Nodes (30): CU-013: Interactuar con el chatbot, CU-014: Cancelar recomendación en curso, RNF #3: anonimizar datos sensibles antes de enviarlos al LLM, RNF #6: chatbot responde <5 s simples / <15 s con agregación, Chatbot como FAB flotante con panel drawer, B-01: Modelo de Chat y Mensaje, B-02: LLM Service (tool calling), B-03: Endpoints del chatbot (+22 more)
 
-### Community 154 - "listas/serializers.py"
+### Community 154 - "perfil.py"
+Cohesion: 0.08
+Nodes (23): DesactivarCuentaView, Meta, PreferenciasSerializer, PreferenciasView, GenericAPIView, Preferencias propias y baja lógica de la cuenta (CU-007)., NombreUsuarioOcupado, APIException (+15 more)
+
+### Community 165 - "login/page.tsx"
 Cohesion: 0.17
-Nodes (10): AgregarItemSerializer, ListaItemSerializer, PertenenciaQuerySerializer, Serializers de entrada y salida para la API de listas., Valida la producción cuya pertenencia a listas se quiere consultar., Payload de alta de un ítem, en el vocabulario público de TMDB., _lista_propia(), ListaItemsView (+2 more)
-
-### Community 165 - "usuarios/views.py"
-Cohesion: 0.20
-Nodes (9): LoginForm(), cerrarModalRecuperar(), onSubmitRecuperar(), GoogleButton(), GoogleButtonProps, GoogleCredentialResponse, Window, validarCorreo() (+1 more)
+Nodes (11): LoginForm(), cerrarModalRecuperar(), onGoogle(), onSubmitRecuperar(), GoogleButton(), GoogleButtonProps, GoogleCredentialResponse, Window (+3 more)
 
 ### Community 166 - "filmai/tests.py"
-Cohesion: 0.14
-Nodes (13): filmai_exception_handler(), Manejador global de excepciones de FilmAI., Unifica errores DRF y conserva el mapeo especializado de TMDB., ExceptionHandlerTests, Tests del backend de email sobre Resend (filmai.email_backends). Se instancia…, custom_404(), custom_500(), Respuestas JSON para errores de Django fuera de DRF. (+5 more)
-
-### Community 167 - "A-06: Google OAuth"
-Cohesion: 0.29
-Nodes (8): CU-003: Iniciar sesión, A-06: Google OAuth, 12/09/2026 — Contrato API centralizado y perfiles sociales inmutables al login, 11/09/2026 — El perfil de FilmAI prevalece sobre el perfil de Google, 26/08/2026 — Fix del 500 en Google OAuth: no releer request.body en populate_user, 26/08/2026 — Fix del id_token de un solo uso en el flujo Google de 2 pasos, 26/08/2026 — Google OAuth: login abre el selector y registro completa datos (flujos distintos), 22/08/2026 — Validación de campos Google antes de complete_social_login
-
-### Community 168 - ".test_cambio_por_cookie_rechaza_csrf_ausente_o_invalido"
-Cohesion: 0.20
-Nodes (3): Renovar sigue funcionando; un sitio externo no puede renovar por cookie., El cambio de contraseña no se ejecuta sin protección CSRF., La variante heredada tampoco renueva JWT sin claim de revocación.
+Cohesion: 0.17
+Nodes (12): Backend de email de Django sobre la API HTTP de Resend. Motivación y diseño…, Tests del backend de email sobre Resend (filmai.email_backends). Se instancia…, custom_404(), custom_500(), Respuestas JSON para errores de Django fuera de DRF., Devuelve un 500 JSON sin detalles internos., Devuelve un 404 JSON., django_conf (+4 more)
 
 ### Community 169 - "Usuario (entidad unificada, AUTH_USER_MODEL)"
 Cohesion: 0.17
 Nodes (12): Chat, Chats múltiples por usuario (mejora futura), Chat.contexto como JSONB, Mensaje, Usuario (entidad unificada, AUTH_USER_MODEL), 08/09/2026 — Auditoría de consistencia y normalización documental end-to-end, 13/08/2026 — contraseña VARCHAR(50) → VARCHAR(128), 13/08/2026 — estado como fuente única de verdad del ciclo de vida (+4 more)
 
-### Community 171 - "AD-01': Configurar Django Admin"
-Cohesion: 1.00
-Nodes (3): AD-01': Configurar Django Admin, Módulo 6 — Admin nativo de Django (Marcos), 22/08/2026 — Registro de Usuario en Django Admin
-
-### Community 172 - "_combinaciones"
-Cohesion: 0.28
-Nodes (6): _combinaciones(), _decadas(), `[(1970, 1979), (1980, 1989), ...]` hasta la década que contiene `hasta_anio`., Arma género x década x tipo y lo baraja con semilla fija. Barajado porque la…, Cómo se arma el espacio de muestreo: género x década x tipo., SeedCombinacionesTests
+### Community 172 - "Command"
+Cohesion: 0.12
+Nodes (12): _combinaciones(), Command, _decadas(), BaseCommand, `[(1970, 1979), (1980, 1989), ...]` hasta la década que contiene `hasta_anio`., Arma género x década x tipo y lo baraja con semilla fija. Barajado porque la…, claves_frescas(), Instante antes del cual una fila enriquecida cuenta como vencida. (+4 more)
 
 ### Community 173 - "FilmAI (idea-proyecto)"
 Cohesion: 0.50
@@ -706,36 +689,36 @@ Cohesion: 0.25
 Nodes (7): Errors and ownership, Items, List endpoints, List management, Purpose, Requirements, Summary and membership
 
 ### Community 188 - "Módulo 4: perfil, preferencias y cuentas OAuth"
-Cohesion: 0.20
-Nodes (9): Plan de Desarrollo, Fuentes, Integración de UI, Módulo 4: perfil, preferencias y cuentas OAuth, Perfil y contraseña, Por qué se verifican access y refresh, Preferencias y baja lógica, Recuperación y concurrencia (+1 more)
+Cohesion: 0.22
+Nodes (8): Fuentes, Integración de UI, Módulo 4: perfil, preferencias y cuentas OAuth, Perfil y contraseña, Por qué se verifican access y refresh, Preferencias y baja lógica, Recuperación y concurrencia, Verificación y reversión
 
 ### Community 191 - "UsuarioManager"
 Cohesion: 0.47
 Nodes (3): Manager que usa `correo` como identificador de autenticación.…, UsuarioManager, BaseUserManager
 
 ## Ambiguous Edges - Review These
-- `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)` → `Lineamientos de UI`  [AMBIGUOUS]
+- `Lineamientos de UI` → `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)`  [AMBIGUOUS]
   backend/templates/account/email/email_confirmation_message.html · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **317 isolated node(s):** `Migration`, `Migration`, `Migration`, `Migration`, `Migration` (+312 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 930 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **51 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **328 isolated node(s):** `Migration`, `Migration`, `Migration`, `Migration`, `Migration` (+323 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 961 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **49 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **What is the exact relationship between `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)` and `Lineamientos de UI`?**
+- **What is the exact relationship between `Lineamientos de UI` and `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `Regla 6: .agents/skills/ es la única fuente de skills` connect `Regla 6: .agents/skills/ es la única fuente de skills` to `humanizer/SKILL.md`, `AGENTS.md — Reglas para agentes en FilmAI`, `conventional-commits/SKILL.md`, `explicar-al-implementar/SKILL.md`, `impeccable/SKILL.md`?**
-  _High betweenness centrality (0.121) - this node is a cross-community bridge._
-- **Why does `Usuario` connect `Usuario` to `usuarios/serializers.py`, `RecuperacionSesionTests`, `PerfilTests`, `ConfirmarCorreoTests`, `ContrasenaTests`, `AGENTS.md — Reglas para agentes en FilmAI`, `UsuarioFactory`, `ProduccionAudiovisual`, `Command`, `TipoProduccion`, `django_db`, `UsuarioPerfilSerializer`, `usuarios/tests.py`?**
-  _High betweenness centrality (0.104) - this node is a cross-community bridge._
-- **Why does `AGENTS.md — Reglas para agentes en FilmAI` connect `AGENTS.md — Reglas para agentes en FilmAI` to `settings.py`, `Regla 6: .agents/skills/ es la única fuente de skills`, `README de FilmAI`, `Job backend: Ruff + tests Django`?**
-  _High betweenness centrality (0.086) - this node is a cross-community bridge._
+- **Why does `Regla 6: .agents/skills/ es la única fuente de skills` connect `AGENTS.md — Reglas para agentes en FilmAI` to `Catalog of 33 AI writing patterns (content, language, style, communication, filler)`, `explicar-al-implementar/SKILL.md`, `conventional-commits/SKILL.md`, `impeccable/SKILL.md`?**
+  _High betweenness centrality (0.109) - this node is a cross-community bridge._
+- **Why does `Usuario` connect `Usuario` to `usuarios/views.py`, `UsuarioAccountAdapter`, `usuarios/serializers.py`, `BajaCuentaTests`, `ConfirmarCorreoTests`, `ContrasenaTests`, `.is_active`, `UsuarioFactory`, `RegisterSerializer`, `seed.py`, `UsuarioPerfilSerializer`, `perfil.py`, `GoogleOAuthTests`?**
+  _High betweenness centrality (0.085) - this node is a cross-community bridge._
+- **Why does `AGENTS.md — Reglas para agentes en FilmAI` connect `AGENTS.md — Reglas para agentes en FilmAI` to `settings.py`, `README de FilmAI`, `Job backend: Ruff + tests Django`, `Usuario`?**
+  _High betweenness centrality (0.075) - this node is a cross-community bridge._
 - **Are the 24 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 24 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 22 inferred relationships involving `TMDBClient` (e.g. with `TMDBBadRequest` and `TMDBError`) actually correct?**
   _`TMDBClient` has 22 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 10 inferred relationships involving `materializar()` (e.g. with `TMDBClientCache` and `tmdb_a_dominio()`) actually correct?**
-  _`materializar()` has 10 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 27 inferred relationships involving `Usuario` (e.g. with `UsuarioAdminTests` and `UsuarioAccountAdapter`) actually correct?**
+  _`Usuario` has 27 INFERRED edges - model-reasoned connections that need verification._
