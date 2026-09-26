@@ -81,3 +81,47 @@ class CalificacionSerializer(serializers.Serializer):
 
     def get_tipo(self, calificacion):
         return dominio_a_tmdb(calificacion.produccion.tipo)
+
+
+class ProduccionQuerySerializer(serializers.Serializer):
+    """Valida `?id_tmdb=&tipo=` de las lecturas.
+
+    Se validan como cualquier payload en vez de leerlos a mano de
+    `request.query_params`: así un `tipo=person` responde 400 nombrando el campo
+    y no un 500 más adentro, y el contrato queda declarado en un solo lugar.
+    Mismo enfoque que `PertenenciaQuerySerializer` en L-01.
+    """
+
+    id_tmdb = serializers.IntegerField(min_value=1)
+    tipo = serializers.ChoiceField(choices=("movie", "tv"))
+
+
+class ResenaComunidadSerializer(serializers.Serializer):
+    """Una ReviewCard de «Reseñas de la comunidad» (§5c).
+
+    Se arma desde la `Resena` —no desde la `Calificacion`— porque esta lista
+    solo contiene reseñas con texto: el texto es la fila, y la nota y el autor
+    cuelgan de ella.
+
+    No lleva el id: son de solo lectura. Exponer el id de la reseña de otra
+    persona invitaría a que el frontend intente operar sobre ella, y la API
+    contestaría 404 — mejor no ofrecer la llave de una puerta que no abre.
+    """
+
+    valor = serializers.IntegerField(source="calificacion.valor")
+    texto = serializers.CharField()
+    fecha = serializers.DateField()
+    nombre_usuario = serializers.CharField(source="calificacion.usuario.nombre_usuario")
+    avatar_id = serializers.IntegerField(source="calificacion.usuario.avatar_id")
+
+
+class MiResenaSerializer(CalificacionSerializer):
+    """Una ReviewCard de «Mis reseñas» (P-06), que además navega a la ficha.
+
+    Extiende la de la ficha con el título y el póster: P-06 muestra una lista de
+    producciones que el usuario calificó, y sin el título no habría a dónde
+    clickear. Hereda el `id`, que es lo que necesitan editar y eliminar.
+    """
+
+    titulo = serializers.CharField(source="produccion.titulo")
+    poster = serializers.CharField(source="produccion.poster")

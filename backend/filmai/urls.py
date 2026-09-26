@@ -7,6 +7,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from catalogo.reviews import (
     CalificacionDetailView,
     CalificacionesView,
+    MisCalificacionesView,
     ResenaTextoView,
 )
 from usuarios.authentication import RefreshSesionView
@@ -44,6 +45,11 @@ urlpatterns = [
     # C-08. El `{id}` es la pk de la Calificacion; `/texto/` borra solo el
     # texto y conserva la nota, mientras que la ruta sin sufijo borra las dos.
     path("api/reviews/", CalificacionesView.as_view(), name="calificaciones"),
+    # Antes de `<int:calificacion_id>/` no hace falta desambiguar (`mias` no
+    # es un entero), pero se declara primero por claridad de lectura.
+    path(
+        "api/reviews/mias/", MisCalificacionesView.as_view(), name="mis_calificaciones"
+    ),
     path(
         "api/reviews/<int:calificacion_id>/",
         CalificacionDetailView.as_view(),
