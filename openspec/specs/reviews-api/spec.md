@@ -157,5 +157,5 @@ Two frontend calls MUST NOT be the mechanism: they are not atomic, and a failure
 
 ## Known limitations
 
-- The community list counts its total with a separate `COUNT(*)` on every page request. Fine at the current scale; if it ever hurts, the count belongs on the first page only.
+- Both paginated lists count their total with a `COUNT(*)` on every page request, inside `paginate_queryset()`. Fine at the current scale; if it ever hurts, the count belongs on the first page only.
 - `Calificacion.fecha` is a `DateField`, so every rating from the same day ties; the cursor breaks the tie by descending id. An ordering closer to real time would need a `DateTimeField` and a migration.

@@ -881,3 +881,60 @@ class PaginacionDeResenasTests(_BaseLectura):
 
         self.assertEqual(len(respuesta.data["results"]), 20)
         self.assertEqual(respuesta.data["total"], 22)
+
+
+class PaginadorCuentaSinAyudaDeLaVistaTests(TestCase):
+    """El `total` no depende de que la vista se acuerde de pasarlo.
+
+    Antes, `get_paginated_response()` recibía `total=` como argumento de la
+    vista. Funcionaba, pero DRF llama a ese mismo método por su cuenta en las
+    vistas genéricas (`ListAPIView.list()`), sin ese argumento: el día que
+    alguien migrara estas vistas de `APIView` a una genérica, la respuesta
+    empezaría a traer `"total": null` **sin fallar**, y un encabezado que dice
+    «Reseñas ()» no se parece a un error lo suficiente como para investigarlo.
+
+    Ahora el paginador cuenta en `paginate_queryset()`, donde ve el queryset
+    completo. Esta prueba lo ejercita directamente, con la firma exacta que usa
+    DRF, para que la garantía no dependa de cómo esté escrita la vista de hoy.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory()
+        self.produccion = ProduccionAudiovisualFactory(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA
+        )
+        for indice in range(3):
+            Calificacion.objects.create(
+                usuario=UsuarioFactory(nombre_usuario=f"p{indice}"),
+                produccion=ProduccionAudiovisualFactory(
+                    id_tmdb=700 + indice, tipo=TipoProduccion.PELICULA
+                ),
+                valor=5,
+            )
+
+    @staticmethod
+    def _pedido():
+        """Un `Request` de DRF, que es lo que el paginador espera.
+
+        `APIRequestFactory` devuelve el `WSGIRequest` de Django, sin
+        `query_params`; envolverlo es lo que hace DRF en cada request real.
+        """
+        from rest_framework.request import Request
+        from rest_framework.test import APIRequestFactory
+
+        return Request(APIRequestFactory().get("/api/reviews/mias/"))
+
+    def test_el_total_sale_sin_pasarselo(self):
+        from catalogo.pagination_reviews import ResenaCursorPagination
+
+        paginador = ResenaCursorPagination()
+        queryset = Calificacion.objects.all()
+        pedido = self._pedido()
+
+        pagina = paginador.paginate_queryset(queryset, pedido, view=None)
+        # Exactamente como la llama DRF en una vista genérica: sin argumentos
+        # extra.
+        respuesta = paginador.get_paginated_response([])
+
+        self.assertEqual(len(pagina), 3)
+        self.assertEqual(respuesta.data["total"], 3)

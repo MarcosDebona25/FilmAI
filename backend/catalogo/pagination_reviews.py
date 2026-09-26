@@ -16,22 +16,39 @@ class ResenaCursorPagination(CursorPagination):
     día sin hora, así que todas las reseñas de hoy empatan. Sin un segundo
     criterio estable el orden entre ellas podría cambiar de una consulta a otra
     y el cursor perdería el hilo.
+
+    Agrega `total` a la respuesta, que `CursorPagination` no trae. No traerlo es
+    deliberado en DRF: un cursor no sabe cuántas filas hay detrás y así evita el
+    `COUNT(*)`. Pero el encabezado de §5c dice «Reseñas de la comunidad (N)», así
+    que el número hace falta.
     """
 
     page_size = 20
     ordering = ("-fecha", "-id")
 
-    def get_paginated_response(self, data, *, total=None):
-        """Agrega `total`, que la paginación por cursor no trae.
+    def paginate_queryset(self, queryset, request, view=None):
+        """Cuenta el total acá, que es donde se ve el queryset completo.
 
-        No traerlo es a propósito en DRF: un cursor no sabe cuántas filas hay
-        detrás y evita el `COUNT(*)`. Pero el encabezado de §5c dice «Reseñas de
-        la comunidad (N)», así que el número hace falta y se cuenta aparte, una
-        vez, con el índice de la producción.
+        La alternativa era que la vista pasara el total como argumento a
+        `get_paginated_response()`. Funciona, pero deja una trampa: ese método lo
+        llama también DRF por su cuenta en las vistas genéricas
+        (`ListAPIView.list()`), sin ese argumento. El día que alguien migre estas
+        vistas de `APIView` a una genérica, la respuesta empezaría a traer
+        `"total": null` **sin fallar** — y un encabezado que dice «Reseñas ()» no
+        se parece lo suficiente a un error como para que alguien lo investigue.
+
+        Contándolo acá no hay argumento que olvidar ni firma que no coincida con
+        la de DRF, y el paginador sirve igual en una vista genérica.
         """
+        # Siempre es un QuerySet: `CursorPagination` le pide `.order_by()` dos
+        # líneas más abajo, así que una lista nunca llega hasta acá.
+        self.total = queryset.count()
+        return super().paginate_queryset(queryset, request, view)
+
+    def get_paginated_response(self, data):
         return Response(
             {
-                "total": total,
+                "total": self.total,
                 "next": self.get_next_link(),
                 "previous": self.get_previous_link(),
                 "results": data,
