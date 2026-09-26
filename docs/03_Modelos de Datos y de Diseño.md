@@ -104,7 +104,7 @@ El campo "contexto" del Chat se guarda como JSONB (JSON Binary) porque la inform
 **Campos adicionales requeridos en Usuario:** Los siguientes campos deben agregarse a la tabla Usuario para dar soporte a las funcionalidades definidas en los lineamientos de UI y casos de uso:
 
 - `fechaRegistro` (DATE, NOT NULL, DEFAULT NOW()): Fecha en que el usuario creó su cuenta. Se muestra en la sección de perfil como "Miembro desde [mes] [año]".
-- `avatarId` (TINYINT, NOT NULL, DEFAULT 1): Identificador del avatar seleccionado por el usuario dentro de un conjunto de 20 avatares genéricos predefinidos. El valor por defecto es 1. No se almacenan archivos de imagen; los avatares son recursos estáticos del frontend.
+- `avatar_id` (SMALLINT positivo, NOT NULL, DEFAULT 1): identificador de un avatar predefinido elegido por el usuario. La cantidad de opciones puede crecer; no existe un límite funcional de 20 avatares. El valor por defecto es 1. El usuario no sube fotos propias: las imágenes son recursos estáticos de la aplicación.
 - `tema` (VARCHAR(10), NOT NULL, DEFAULT 'oscuro'): Preferencia de tema de la interfaz. Valores posibles: 'oscuro', 'claro'.
 - `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
 - `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
