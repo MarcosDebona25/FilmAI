@@ -323,7 +323,7 @@ export default function PerfilPage() {
                         {avatares.map((avatar) => (
                           <label
                             key={avatar.id}
-                            className="relative cursor-pointer rounded-lg p-1 focus-within:outline-2 focus-within:outline-ring has-[:checked]:bg-primary/20"
+                            className="relative aspect-square cursor-pointer rounded-full p-1 focus-within:outline-2 focus-within:outline-ring has-[:checked]:bg-primary/20"
                           >
                             <input
                               type="radio"
@@ -334,13 +334,15 @@ export default function PerfilPage() {
                               className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                               aria-label={`Avatar ${avatar.id}`}
                             />
-                            <Image
-                              src={avatar.src}
-                              alt=""
-                              width={72}
-                              height={72}
-                              className="aspect-square rounded-full object-cover"
-                            />
+                            <div className="relative h-full w-full overflow-hidden rounded-full">
+                              <Image
+                                src={avatar.src}
+                                alt=""
+                                fill
+                                sizes="(max-width: 640px) 25vw, 16vw"
+                                className="object-cover"
+                              />
+                            </div>
                           </label>
                         ))}
                       </div>

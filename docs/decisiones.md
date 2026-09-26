@@ -5,6 +5,23 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/09/2026 — Selector de avatar: foco y selección circulares
+
+- **Descripción**: en el selector de avatar del perfil, cada opción es un
+  `label` en una grilla (`grid-cols-4 sm:grid-cols-6`) que se estira al ancho
+  de la celda, quedando más ancho que alto. El contorno de foco
+  (`focus-within:outline-2 focus-within:outline-ring`, color `--ring` #f5c518)
+  y el resaltado de la opción marcada (`has-[:checked]:bg-primary/20`) seguían
+  esa silueta no circular, por lo que se veía un rectángulo (o píldora con
+  `rounded-full` en un elemento no cuadrado) alrededor del avatar. Se hace el
+  label cuadrado con `aspect-square` y la imagen pasa de tamaño fijo 72×72 a
+  `fill` dentro de un contenedor circular, así ambos efectos siguen la
+  silueta circular del avatar y el tinte de selección queda visible en el
+  anillo de padding.
+- **Archivos afectados**: `frontend/app/perfil/page.tsx`.
+
+---
+
 ## 26/09/2026 — Perfil, avatares ampliables y preferencias visibles
 
 - **Descripción**: el perfil muestra nombre y apellido en la cabecera y en

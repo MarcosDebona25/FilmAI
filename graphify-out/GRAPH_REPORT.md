@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-09-26)
 
 ## Corpus Check
-- 222 files · ~653,064 words
+- 222 files · ~653,204 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `331f7407`
+- Built from commit: `7bda1f1b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -762,9 +762,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `Regla 6: .agents/skills/ es la única fuente de skills` connect `AGENTS.md — Reglas para agentes en FilmAI` to `Catalog of 33 AI writing patterns (content, language, style, communication, filler)`, `explicar-al-implementar/SKILL.md`, `conventional-commits/SKILL.md`, `impeccable/SKILL.md`?**
   _High betweenness centrality (0.104) - this node is a cross-community bridge._
 - **Why does `Usuario` connect `Usuario` to `LoginSerializer`, `usuarios/views.py`, `UsuarioPerfilSerializer`, `PerfilTests`, `usuarios/tests.py`, `usuarios/serializers.py`, `ConfirmarCorreoTests`, `ContrasenaTests`, `ConfirmarCorreoView`, `UsuarioFactory`, `Chat`, `RegisterSerializer`, `ProduccionAudiovisual`, `RecuperacionSesionTests`, `TestCase`, `perfil.py`, `GoogleOAuthTests`?**
-  _High betweenness centrality (0.082) - this node is a cross-community bridge._
+  _High betweenness centrality (0.081) - this node is a cross-community bridge._
 - **Why does `AGENTS.md — Reglas para agentes en FilmAI` connect `AGENTS.md — Reglas para agentes en FilmAI` to `Usuario`, `README de FilmAI`, `Job backend: Ruff + tests Django`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+  _High betweenness centrality (0.073) - this node is a cross-community bridge._
 - **Are the 24 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 24 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 22 inferred relationships involving `TMDBClient` (e.g. with `TMDBBadRequest` and `TMDBError`) actually correct?**
