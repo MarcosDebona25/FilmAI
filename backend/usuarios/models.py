@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models, transaction
 from django.db.models.functions import Lower
 
+from .validators import normalizar_nombre
+
 
 class EstadoCuenta(models.TextChoices):
     """Estados del ciclo de vida de una cuenta de usuario (CU-001, CU-002, CU-007)."""
@@ -151,6 +153,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
                 Lower("nombre_usuario"), name="usuario_nombre_ci_unique"
             ),
         ]
+
+    def save(self, *args, **kwargs):
+        self.nombre = normalizar_nombre(self.nombre)
+        self.apellido = normalizar_nombre(self.apellido)
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nombre} {self.apellido} (@{self.nombre_usuario})"

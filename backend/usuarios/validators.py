@@ -14,6 +14,25 @@ from django.utils.translation import gettext as _
 USERNAME_REGEX = re.compile(r"^[A-Za-z0-9]{5,25}$")
 
 
+def normalizar_nombre(valor):
+    """Quita espacios sobrantes y conserva uno entre partes del nombre."""
+    return " ".join(valor.split())
+
+
+def validar_nombre_persona(valor):
+    """Valida el nombre ya normalizado y devuelve el valor para persistir."""
+    valor = normalizar_nombre(valor)
+    if (
+        not valor
+        or len(valor) > 50
+        or not all(parte.isalpha() for parte in valor.split(" "))
+    ):
+        raise ValidationError(
+            "Solo letras y espacios entre palabras, máximo 50 caracteres."
+        )
+    return valor
+
+
 class ComplejidadContrasenaValidator:
     """Validador de contraseña según las reglas del CU-001"""
 

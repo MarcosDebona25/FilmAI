@@ -6,7 +6,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from usuarios.authentication import RefreshSesionView
 from usuarios.cuenta import DesactivarCuentaView, PreferenciasView
-from usuarios.perfil import CambiarContrasenaView, PerfilView
+from usuarios.perfil import AvataresView, CambiarContrasenaView, PerfilView
 from usuarios.views import (
     ConfirmarCorreoView,
     CSRFTokenView,
@@ -37,6 +37,7 @@ urlpatterns = [
     path("api/catalogo/", include("catalogo.urls")),
     path("api/lists/", include("listas.urls")),
     path("api/profile/", PerfilView.as_view(), name="perfil"),
+    path("api/avatars/", AvataresView.as_view(), name="avatares"),
     path("api/preferences/", PreferenciasView.as_view(), name="preferencias"),
     path(
         "api/account/deactivate/",

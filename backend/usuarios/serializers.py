@@ -31,7 +31,7 @@ from .avatares import es_avatar_valido
 from .exceptions import NombreUsuarioOcupado
 from .models import EstadoCuenta, TipoGenero, Usuario
 from .passwords import guardar_contrasena
-from .validators import USERNAME_REGEX
+from .validators import USERNAME_REGEX, validar_nombre_persona
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +97,15 @@ class RegisterSerializer(BaseRegisterSerializer):
                 "El nombre de usuario ya está registrado."
             )
         return value
+
+    def validate_nombre(self, value):
+        try:
+            return validar_nombre_persona(value)
+        except DjangoValidationError as err:
+            raise serializers.ValidationError(err.messages) from err
+
+    def validate_apellido(self, value):
+        return self.validate_nombre(value)
 
     def validate_fecha_nacimiento(self, value):
         hoy = date.today()
@@ -417,9 +426,10 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
         return value
 
     def validate_nombre(self, value):
-        if not value.isalpha():
-            raise serializers.ValidationError("Solo se permiten letras.")
-        return value
+        try:
+            return validar_nombre_persona(value)
+        except DjangoValidationError as err:
+            raise serializers.ValidationError(err.messages) from err
 
     def validate_apellido(self, value):
         return self.validate_nombre(value)

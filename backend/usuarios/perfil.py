@@ -11,8 +11,10 @@ from rest_framework import permissions, serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from .avatares import AVATARES
 from .exceptions import NombreUsuarioOcupado
 from .models import Usuario
 from .passwords import guardar_contrasena
@@ -53,6 +55,15 @@ class PerfilView(GenericAPIView):
             # La restricción de BD resuelve una carrera entre usernames iguales.
             raise NombreUsuarioOcupado() from None
         return Response(serializer.data)
+
+
+class AvataresView(APIView):
+    """Opciones disponibles para el selector, con IDs estables."""
+
+    permission_classes: ClassVar[list] = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        return Response(list(AVATARES.values()))
 
 
 class CambiarContrasenaSerializer(serializers.Serializer):

@@ -1,19 +1,21 @@
-"""Registro centralizado de avatares disponibles."""
+"""Registro de avatares generado desde las imágenes individuales del frontend."""
 
+import json
+from pathlib import Path
+from urllib.parse import quote
+
+_catalogo = json.loads(
+    Path(__file__).with_name("avatar_catalog.json").read_text(encoding="utf-8")
+)
 AVATARES = {
-    1: "avatar_default",
-    2: "avatar_02",
-    3: "avatar_03",
-    4: "avatar_04",
-    5: "avatar_05",
-    6: "avatar_06",
-    7: "avatar_07",
-    8: "avatar_08",
-    9: "avatar_09",
-    10: "avatar_10",
+    item["id"]: {
+        "id": item["id"],
+        "src": f"/avatars/recortados/{quote(item['filename'])}",
+    }
+    for item in _catalogo
+    if item.get("active", True)
 }
-
-AVATAR_IDS_VALIDOS = set(AVATARES.keys())
+AVATAR_IDS_VALIDOS = set(AVATARES)
 
 AVATAR_ID_DEFAULT = 1
 
@@ -24,7 +26,7 @@ def es_avatar_valido(avatar_id):
 
 
 def obtener_avatar(avatar_id):
-    """Obtiene el recurso asociado o ``None``."""
+    """Obtiene la opción asociada o ``None``."""
     return AVATARES.get(avatar_id)
 
 
@@ -33,6 +35,4 @@ def validar_avatar_id(avatar_id):
     from django.core.exceptions import ValidationError
 
     if not es_avatar_valido(avatar_id):
-        raise ValidationError(
-            f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}"
-        )
+        raise ValidationError("Elegí un avatar disponible.")
