@@ -1,338 +1,119 @@
-# FilmAI — Plan de Desarrollo (SDD)
-
-> División de tareas asignada: **Marcos** y **Gonza**. Cada uno lleva sus módulos de punta a punta (back + front) para minimizar handoffs. Los módulos posteriores a Fundación se pueden paralelizar según las fases indicadas al final.
-
----
-
-## Estado del repositorio (14/09/2026)
-
-> Auditoría end-to-end de código vs. documentación. Detalle de las decisiones en `docs/decisiones.md` (entradas 08/09/2026 y 14/09/2026). Los criterios técnicos de las tareas pendientes están especificados dentro de cada módulo, en las subsecciones "Especificación técnica del trabajo pendiente".
-
-| Módulo            | Estado         | Detalle                                                                                                                                                              |
-| ----------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0 — Fundación     | ✅ Completado  | Docker (4 servicios originales + `celery-worker` agregado en C-04a = 5), scaffold Django/DRF, modelos base, seed, lint/ruff + husky, CI (`.github/workflows/ci.yml`).                                                   |
-| 1 — Autenticación | ✅ Completado  | A-01..A-09: registro + confirmación (allauth), login email/username, Google OAuth en un toque, recuperación de contraseña, cookies httpOnly + CSRF, middleware.       |
-| 2 — Catálogo      | 🟡 Parcial     | C-01 (cliente TMDB), C-02 (caché Redis) y **C-03 (endpoints) mergeados a `main`**. **C-04a mergeada a `main`** (15/09/2026, ver detalle abajo). **C-04b (sync diaria) completa y mergeada a `main`** (18/09/2026, PRs #19 a #23). **C-04c (seed inicial) implementada** (19/09/2026, PRs #28 y #29). **Pendiente: UI (C-05..C-07).**      |
-| 3 — Listas        | 🟡 Parcial     | Modelos `Lista`/`Tiene`, creación de las 3 predeterminadas por señal y **L-01 (API de listas) completados**. Pendientes: UI L-02..L-04.                                             |
-| 4 — Perfil        | 🟡 Parcial | API P-01, P-03 y P-05 implementada (24/09/2026): perfil, contraseña, preferencias y baja lógica. Pendientes: UI P-02, P-04, P-06 y P-07. |
-| 5 — Chatbot       | 🟡 Parcial     | Modelos `Chat`/`Mensaje` + chat por defecto al registrar (B-01). **Pendiente: B-06 (parcialmente adelantado por C-04a: resta el servicio `ollama`, el cliente real del proveedor y `buscar_semantico`), LLMService (B-02), endpoints (B-03), UI (B-04), contexto (B-05).** |
-| 6 — Admin         | ✅ Completo    | AD-01': `UsuarioAdmin` existente y `ResenaAdmin` para moderación con borrado lógico; pruebas HTTP del Admin. |
-| 7 — Polish        | ⬜ Pendiente   | Q-01..Q-06 (accesibilidad, errores, estados, CI ya activo, docs).                                                                                                    |
-
-**Contratos ya decididos que condicionan lo pendiente** (ver `docs/decisiones.md`, entradas 08/09/2026 y 14/09/2026):
-
-- Catálogo híbrido: discovery en vivo (TMDB + Redis); PostgreSQL = catálogo materializado global + corpus semántico.
-- Corpus semántico global y progresivo (seed inicial + materialización de lo expuesto + cola larga on-demand). Nunca un corpus por usuario.
-- Embeddings asíncronos con Celery: materializar → encolar (`pending`) → worker genera (`ready`/`failed`). Búsqueda usa solo `ready`.
-- `ProduccionEmbedding` 1:1 con `ProduccionAudiovisual` (`produccion_id` UNIQUE) + `source_hash` + `model_version` + `estado`. Sin unicidad sobre el vector.
-- Contrato de tipos: TMDB `movie`/`tv` → dominio `pelicula`/`serie` vía un único adaptador.
-- (14/09/2026) C-04a adelanta la infraestructura **mínima** de embeddings —
-  modelo `ProduccionEmbedding`, wiring de Celery y la imagen
-  `pgvector/pgvector:pg16` para `db` — dejando el proveedor real
-  (Ollama/bge-m3) como stub documentado para que B-06 (Marcos) lo conecte sin
-  refactor. El paquete Django correcto para `VectorField`/`HnswIndex` es
-  `pgvector` (submódulo `pgvector.django`); se corrige la mención previa a
-  `django-pgvector`. Ver `docs/decisiones.md` y
-  `openspec/changes/catalog-materialization/`.
-
----
-
-## Módulo 0 — Fundación (hacer juntos)
-
-El entorno y la estructura base deben estar antes que todo lo demás. Ambos trabajan en esto.
-
-| ID   | Tarea                                     | Detalle                                                                                                                                                                                                                                                                                        | Criterio de aceptación                                                                                 | Esfuerzo | Responsable |
-| ---- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------- | ----------- |
-| F-01 | Docker + docker-compose                   | Configurar `docker-compose.yml` con 4 servicios: Django backend, Next.js frontend, PostgreSQL 16, Redis. Volúmenes para desarrollo con hot-reload.                                                                                                                                             | `docker compose up` levanta los 4 servicios. Cambios en código se reflejan sin rebuild.                | 3h       | Ambos       |
-| F-02 | Scaffold Django + DRF                     | `django-admin startproject filmai .`, instalar DRF, configurar settings (DB apunta a PostgreSQL de Docker, CORS para el frontend, variables de entorno desde `.env`). Estructura de apps: `usuarios`, `catalogo`, `listas`, `chatbot`.                                                         | `python manage.py runserver` responde en `:8000`. Admin de Django accesible.                           | 2h       | Ambos       |
-| F-03 | Scaffold Next.js + Tailwind + Shadcn      | `create-next-app` con App Router, Tailwind CSS v4, Shadcn/ui. Configurar variables de entorno para apuntar al backend. Estructura de carpetas: `app/(public)`, `app/(auth)`, `components/ui`, `components/features`, `lib/`.                                                                   | `npm run dev` en `:3000`. Componentes de Shadcn funcionando.                                           | 2h       | Ambos       |
-| F-04 | Modelos Django (7 entidades + intermedia) | Implementar `models.py` para: Usuario (como `AUTH_USER_MODEL`, unificando Persona/Usuario/Administrador), ProduccionAudiovisual, Calificacion, Reseña, Lista, Chat, Mensaje, y la tabla intermedia `Tiene`. Usar el diagrama de clases como referencia. Ejecutar `makemigrations` + `migrate`. | Las 8 tablas existen en PostgreSQL. `python manage.py shell` permite crear instancias y relacionarlas. | 4h       | Ambos       |
-| F-05 | Seeds de desarrollo                       | Datos fake con `factory_boy` o fixtures: 20 avatares, 2-3 usuarios de prueba, ~50 producciones audiovisuales simulando datos de TMDB, calificaciones y reseñas de prueba.                                                                                                                      | `python manage.py seed` puebla la BD con datos consistentes para desarrollar la UI.                    | 2h       | Ambos       |
-| F-06 | ESLint + Prettier + Django linting        | Configurar linting en ambos proyectos. `.eslintrc.json` y `.prettierrc` en frontend. `ruff` o `flake8` + `black` en backend. Husky para pre-commit hooks.                                                                                                                                      | `npm run lint` y `ruff check .` pasan limpios.                                                         | 1h       | Ambos       |
-
-**Total Fundación: ~14h** (1.5-2 días, trabajando juntos)
-
----
-
-## Módulo 1 — Autenticación · Responsable: **Marcos**
-
-| ID   | Tarea                           | Depende de | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Criterio de aceptación                                                                                                                              | Esfuerzo |
-| ---- | ------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| A-01 | Registro tradicional (CU-001)   | F-04       | Registro vía `dj-rest-auth` (`RegisterView`); valida los 8 campos según CU-001, hashea con bcrypt (hasher configurado en `PASSWORD_HASHERS`), crea `Usuario`, crea las 3 listas predeterminadas (señal de Django) y envía email de confirmación mediante allauth (CU-002).                                                                                                                                                                                                                                             | `curl` de registro exitoso → cuenta en BD con estado `pendiente`. Email llega (en modo desarrollo: console backend). Las 3 listas aparecen creadas. | 4h       |
-| A-02 | Confirmación de cuenta (CU-002) | A-01       | Confirmación vía allauth: el link del email contiene el token de confirmación de email propio de allauth (no un JWT de un solo uso). Activa la cuenta (`estado → activa`). Página de éxito/error en Next.js.                                                                                                                                                                                                                                                                                                           | Click en link de confirmación → cuenta pasa a `activa`. Link inválido o expirado muestra error.                                                     | 2h       |
-| A-03 | Login con credenciales (CU-003) | A-01       | Login vía `dj-rest-auth` (`LoginView`), emite JWT de simplejwt (access + refresh, expira en 8h). Acepta email o `nombre_usuario` (`ACCOUNT_AUTHENTICATION_METHOD = "username_email"`). Credenciales incorrectas → 401. Cuenta no activada (`estado != activa`) → 403.                                                                                                                                                                                                                                                  | Login exitoso devuelve tokens. Credenciales incorrectas devuelven 401 con mensaje genérico. Cuenta no activada devuelve 403.                        | 3h       |
-| A-04 | Pantalla de Login (UI)          | F-03       | Página `/(public)/login`. Caja centrada con campos: email/username + contraseña + toggle visibilidad + "¿Olvidaste tu contraseña?" + botón Google + link a registro. Estados: default, error inline, loading.                                                                                                                                                                                                                                                                                                          | Flujo visual completo. Error muestra mensaje genérico. Loading deshabilita el botón.                                                                | 3h       |
-| A-05 | Pantalla de Registro (UI)       | F-03       | Página `/(public)/register`. 8 campos con validaciones inline según CU-001. Validación de disponibilidad de username en tiempo real (debounced). Botón Google. Transición sin recargar entre login y registro.                                                                                                                                                                                                                                                                                                         | Cada campo muestra error inline al perder foco. Username muestra "Disponible" / "No disponible". Submit redirige a confirmación.                    | 4h       |
-| A-06 | Google OAuth (CU-003)           | A-03, A-04 | Back: `django-allauth` (`socialaccount`, proveedor Google) expuesto por `dj-rest-auth` (`SocialLoginView`, flujo `id_token`). Crea/identifica usuario por `google_id` (sincronizado desde `SocialAccount.uid`). Usuario nuevo → `estado = ACTIVA` directo (Google verifica el email) + `SocialLoginSerializer` custom que pide `nombre_usuario`, `fecha_nacimiento` y `genero` faltantes. Front: botón "Continuar con Google" (Google Identity Services). Página intermedia para completar esos campos la primera vez. | Login con Google exitoso → usuario autenticado. Cuenta nueva → formulario de completado. Cuenta existente → Home directamente.                      | 5h       |
-| A-07 | Recuperar contraseña (CU-020)   | A-01       | Back: endpoints de `dj-rest-auth` (`password-reset` / `password-reset-confirm`, rate limited 1/min). Envía email con link. Front: modal desde login. Pantalla de nueva contraseña desde el link del email.                                                                                                                                                                                                                                                                                                             | Solicitud siempre muestra mensaje de éxito. Email llega con link. Link permite cambiar contraseña.                                                  | 3h       |
-| A-08 | Cerrar sesión (CU-004)          | A-03       | Botón en menú del avatar. Modal de confirmación. Logout basado en cookies: `POST /api/auth/logout/` invalida el refresh token (blacklist) y limpia las cookies httpOnly `access`/`refresh`; el frontend no maneja tokens en storage.                                                                                                                                                                                                                                                                     | Click en "Cerrar sesión" → modal → confirmar → redirigido a Home. Navbar muestra estado no autenticado.                                             | 1.5h     |
-| A-09 | Middleware de rutas protegidas  | A-03       | Next.js middleware que comprueba **presencia** de la cookie httpOnly `access` y redirige a `/login` si no está autenticado para rutas `/(auth)/*`. La verificación de firma, expiración y blacklist del JWT la hace el backend (`JWTCookieAuthentication` + `IsAuthenticated`).                                                                                                                                                                                                                                        | Usuario no autenticado no puede acceder a `/perfil`, `/listas`, `/mis-resenas`, `/preferencias`.                                                    | 2h       |
-
-**Total Autenticación: ~27.5h** (3-4 días) — **Marcos**
-
----
-
-## Módulo 2 — Catálogo y Búsqueda · Responsable: **Gonza**
-
-> **Arquitectura (25/08/2026):** híbrida. El discovery (trending, discover,
-> search) se sirve en vivo desde TMDB con caché Redis; PostgreSQL es la fuente
-> de verdad para datos del usuario y búsqueda semántica. C-04 se divide: C-04a
-> (materialización + encolado de embedding, Fase 1) y C-04b (sync Celery, Fase
-> 3). Ver `docs/decisiones.md`.
->
-> **Estado (08/09/2026):** C-01 y C-02 implementados y probados
-> (`backend/catalogo/client.py`, `backend/catalogo/cache.py`,
-> `backend/catalogo/service.py`, `backend/catalogo/tests.py`). `views.py`
-> vacío y sin rutas: C-03 y C-04a pendientes.
->
-> **Estado (14/09/2026):** C-03 mergeado a `main`. C-04a en progreso en
-> `feat/c-04a-materializacion` (aún sin PR abierto): propuesta OpenSpec
-> creada (`openspec/changes/catalog-materialization/`) y primer paso aplicado
-> (`docker-compose.yml`: imagen `db` → `pgvector/pgvector:pg16` +
-> servicio `celery-worker`, todavía sin arrancar — falta el wiring de
-> `filmai/celery.py`). Ver nota de "Contratos ya decididos" arriba sobre el
-> adelanto de infraestructura de embeddings.
->
-> **Estado (15/09/2026): C-04a completa.** Las cinco fases están
-> implementadas: Celery operativo, modelo `ProduccionEmbedding` con pgvector,
-> adaptador de tipos y texto canónico, `get_credits` + tarea
-> `generar_embedding` idempotente, y `materializar()` enchufado a
-> `MovieDetailView`/`TVDetailView` sin alterar el contrato de respuesta de
-> C-03. Entregada en dos PR apilados, #12 (fases 1-4) y #13 (fase 5), ambos
-> mergeados; el #14 archivó la propuesta y publicó los specs canónicos.
-> Sigue pendiente el proveedor real de embeddings (B-06, Marcos):
-> `generar_vector()` es un stub que lanza `NotImplementedError`, así que hoy
-> todo embedding termina en `failed` — sin afectar la visibilidad de las
-> producciones, que es justamente el diseño. **El Módulo 3 (Listas) queda
-> desbloqueado.**
-
-| ID    | Tarea                                              | Depende de  | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                             | Criterio de aceptación                                                                                                                                                                         | Esfuerzo                                                                                                                                                                                                                                                                                        |
-| ----- | -------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C-01  | Cliente de TMDB API — ✅ mergeado                  | F-02        | Service `TMDBClient` con métodos: `get_trending()`, `get_now_playing()`, `discover(filters)`, `search(query)`, `get_movie_detail(id)` / `get_tv_detail(id)`, `get_keywords(id)`. Manejo de rate limiting, reintentos con backoff, timeout 5s. Referencia de endpoints: `docs/06_TMDB_API_Referencia.md`.                                                                                                                            | Cada método devuelve datos parseados. Rate limit se respeta. Errores de red se loguean y devuelven excepción controlada.                                                                       | 4h                                                                                                                                                                                                                                                                                              |
-| C-02  | Caché de TMDB — ✅ mergeado                        | C-01        | Cache con Redis. TTL por endpoint: trending 6h, discover 6h, detalle 24h, search 1h. Key pattern: `tmdb:{endpoint}:{params_hash}`. Invalidación manual si es necesario.                                                                                                                                                                                                                                                             | Segunda llamada con mismos parámetros pega a Redis, no a TMDB. Respuesta < 50ms desde caché.                                                                                                   | 2h                                                                                                                                                                                                                                                                                              |
-| C-03  | Endpoints de catálogo (CU-008) — ✅ mergeado       | C-01, F-04  | **Implementado (14/09/2026) bajo el prefijo `/api/catalogo/`** (no `/api/catalog/`), con 7 endpoints: `trending/`, `now-playing/`, `discover/`, `search/`, `movie/<id_tmdb>/`, `tv/<id_tmdb>/`, `keywords/`. Parámetros reales en español: `tipo` (`movie`/`tv`), `genero`, `anio`, `min_rating`, `query`, `page`. Passthrough del JSON de TMDB (sin serializers propios) + `tmdb_exception_handler` + throttle `catalogo` 60/min. Ver `openspec/specs/tmdb-endpoints/spec.md`.                                                                                                                                                                 | Respuesta paginada con estructura: `{ results: [...], count, next, previous }`. Filtros combinables.                                                                                           | 4h                                                                                                                                                                                                                                                                                              |
-| C-04a | Materialización on-demand + encolado de embedding (CU-021) — ✅ **mergeada a `main`** (15/09/2026) | C-01, F-04  | Helper centralizado (`catalogo/services/materialization.py`) que crea/obtiene `ProduccionAudiovisual` por `(id_tmdb, tipo)` con resolución de carrera (`IntegrityError` → `get`). Tras persistir, crea `ProduccionEmbedding` en estado `pending` y encola la tarea Celery de generación (decisión 08/09/2026: embeddings asíncronos; reemplaza el enfoque síncrono del 25/08/2026). La producción queda visible aunque el embedding tarde o falle. **Adelanta además (14/09/2026) la infraestructura mínima de embeddings** (modelo `ProduccionEmbedding`, wiring de Celery, imagen `pgvector`) que originalmente estaba prevista dentro de B-06, dejando solo el proveedor real (Ollama) como stub para Marcos — ver nota en "Contratos ya decididos". | Materialización atómica sin duplicados. Producción persiste aunque falle el embedding. Requests concurrentes devuelven la misma fila.                                                          | 4h (+ infra adelantada de B-06, ver detalle de la tarea)                                                                                                                                                                                                                                       |
-| C-04b | Sincronización diaria con Celery (CU-021) — ✅ **completa y mergeada a `main`** (18/09/2026, PRs #19 a #23) | C-04a (B-06 solo para que el backfill *sirva*, no para construirlo) | SDD en `openspec/changes/catalog-daily-sync/`. **Hecho:** `fecha_enriquecimiento` reemplaza el criterio `not titulo`; `materializar(..., forzar=)`; encolado del embedding en `transaction.on_commit()`; servicio `celery-beat` (6º del compose, una sola réplica) con `CELERY_BEAT_SCHEDULE` a las 3 AM y `CELERY_TIMEZONE` explícita; `sync_catalogo_diaria()` con dos pasadas — **refresco** (cruza nuestros IDs con `/movie/changes` y `/tv/changes`, intersección en Python, `forzar=True`) y después **descubrimiento** (trending, now_playing, discover, página 1) — ambas por `materializar()`, fallos por ítem, estadísticas `{nuevas, ya_existentes, refrescadas, omitidas, errores}`; `get_changes` en cliente y caché (TTL 6 h, tope 200 páginas). **Fase 3 (18/09/2026):** `backfill_embeddings(limite=100)` rescata `pending`/`failed` y `ready` con `source_hash` o `model_version` viejos (dos poblaciones, un tope compartido, más viejas primero); entrada de beat a las 4 AM; spec canónica `openspec/specs/catalog-daily-sync/spec.md`. **Cerrada el 18/09/2026**: mergeada a `main` y el change de `openspec/changes/` eliminado según la política de la sección 9 de `AGENTS.md`. Actualiza solo campos provenientes de TMDB: **verificado con test de aceptación** (calificación y reseña sobreviven al refresco). | `celery -A filmai beat` corre diariamente (verificado). No pisa datos locales (verificado). Embeddings quedan consistentes (fase 3). | 4h (seed movido a C-04c) |
-| C-04c | Seed inicial del corpus (CU-021) — ✅ **implementada** (19/09/2026; fase 1 en PR #28, fase 2 apilada encima) | C-04b | `python manage.py seed_catalogo` (`catalogo/management/commands/seed_catalogo.py`): recorre `/discover` por **género × década × tipo** (210 combinaciones, desde 1970, géneros pedidos a `/genre/{tipo}/list`) en **round-robin sobre un orden barajado con semilla fija**, `sort_by=vote_count.desc`, pared de 500 páginas aunque `total_pages` diga más. Escribe solo por `materializar()`. `--limite` (default 2.000, cuenta lo materializado en esa corrida), `--desde-anio`, `--tipos`, `--pausa`, `--dry-run`. **Resumible sin estado propio**: carga `claves_frescas()` al arrancar y saltea lo fresco sin pedirle nada a TMDB. Fallos por ítem y por página, Ctrl-C prolijo, resumen `{materializadas, ya_estaban, omitidas, errores}`. Fase 1: `get_genres` (cliente + caché, TTL 30 d) y rango de años + `sort_by` en `discover`. Guard en `manage.py seed`: se niega a borrar un catálogo de más de 100 producciones salvo `--borrar-catalogo`. Spec canónica `openspec/specs/catalog-seed/spec.md`. **Medido**: ~0,7 s por producción (2.000 ≈ 25 min, 10.000 ≈ 2 h); dispersión verificada con `--dry-run --limite 600` (26 película / 11 serie, 6 décadas). | ✅ Materializa sin duplicar (test de integración). ✅ Se interrumpe y retoma sin volver a pedir lo fresco. ✅ Corpus diverso, verificado consultando la base. **Pendiente decidir** si 2.000 alcanza o correr los 10.000 cuando B-06 exista. | 3h |
-| C-05  | Home page (UI)                                     | F-03, C-03  | Página `/(auth)/home`. Hero section con película destacada. Filas horizontales con scroll: "Recomendado para ti" (solo si autenticado + tiene calificaciones), "Tendencias de la semana", "Novedades". Cada fila: MediaCards con poster, título, año, badge de tipo, rating TMDB. Skeleton loading mientras carga. Filas se ocultan si no tienen datos.                                                                             | Home carga con skeletons. Filas aparecen progresivamente. Scroll horizontal fluido con flechas en hover. Filas vacías no se renderizan.                                                        | 5h                                                                                                                                                                                                                                                                                              |
-| C-06  | Panel de búsqueda (UI)                             | C-03, C-05  | Panel overlay que se abre desde "Buscar" en navbar. Toolbar: input de búsqueda con autofocus, toggle Todo/Películas/Series, dropdowns Género, Año, ⭐ Calificación mínima. Grid responsive de 5→3→2 columnas. Paginación clásica. Empty state con ilustración. Estados: default (populares), búsqueda con resultados, sin resultados, error API.                                                                                    | Panel se abre/cierra con click en Buscar y tecla Escape. Filtros actualizan resultados. Búsqueda muestra contador. Sin resultados muestra empty state.                                         | 5h                                                                                                                                                                                                                                                                                              |
-| C-07  | Ficha de detalle (UI)                              | C-03        | Página `/(auth)/detalle/[id]`. Breadcrumb navegable según origen (Home, Buscar, Listas). Hero con poster 2:3, título, badge de tipo, año, duración/temporadas, rating TMDB, géneros como chips. Acciones directas (solo autenticado): ⭐ Calificar, ♥ Favoritos, 👁 Vista, 🕐 Pendiente, + Agregar a lista (dropdown con checklist). Sinopsis colapsable. CastCard sin fotos colapsable. Sección de reseñas (tu reseña + comunidad). | Ficha muestra todos los bloques. Acciones toggle correctamente (borde ↔ relleno). Sinopsis y cast se expanden/colapsan. Breadcrumb restaura origen. No autenticado ve "Inicia sesión para...". | 6h                                                                                                                                                                                                                                                                                              |
-| C-08  | Calificar / Reseña (CU-015)                        | C-07, F-04  | Back: `POST \| PUT \| DELETE /api/reviews/`. Relación reseña → calificación. Validar rango 1-10. Texto opcional máx 1000 chars. Front: Modal con star widget de 10 estrellas (con teclado), textarea con contador. Variantes: publicar, editar, eliminar. Post-acción: toast + actualización instantánea de la ficha. | Publicar sin calificación → error. Estrellas navegables con teclado. Editar precarga datos. Eliminar pide confirmación. Reseña aparece en ficha al instante. | 5h                                                                                             |
-
-**Total Catálogo: ~35h** (4-5 días) — **Gonza**
-
-> Nota (25/08/2026): se adelanta la infraestructura de embeddings desde B-06
-> (Fase 3); el total puede crecer a ~40h. Ver `docs/decisiones.md`.
-
-### Especificación técnica del trabajo pendiente (catálogo)
-
-Criterios de implementación acordados (08/09/2026) para C-03 y C-04a. **La
-parte de C-03 ya se implementó tal cual (mergeada a `main`, ver
-`openspec/specs/tmdb-endpoints/spec.md`); se deja como referencia histórica
-del acuerdo, no como trabajo pendiente.** Lo único pendiente hoy en esta
-sección es C-04a (más abajo).
-
-**Endpoints (C-03) — ✅ ya implementado** — `backend/catalogo/views.py`, `urls.py`:
-
-- `GET /api/catalogo/trending/`, `GET /api/catalogo/discover/`, `GET /api/catalogo/search/` conectados a `get_catalog_service()` (`TMDBClientCache`) desde `MovieDetailView`/`TVDetailView`/etc.
-- Paginación `{ results, count, next, previous }`; filtros combinables: tipo (`movie`/`tv`/`all` en TMDB), género, año, calificación mínima.
-- Permisos: lectura anónima permitida para discovery; acciones de usuario requieren auth (ya es default global `IsAuthenticated`, así que las vistas de catálogo abren con `AllowAny` explícito).
-- Errores TMDB → HTTP vía `tmdb_exception_handler` (implementado y probado).
-- Throttle `catalogo` (60/min) registrado en settings.
-
-**Adaptador de tipos (contrato canónico)**:
-
-- Única función de conversión `movie ↔ pelicula`, `tv ↔ serie` (p. ej. `catalogo/services/adapter.py`). Prohibido persistir valores TMDB crudos en `TipoProduccion`. Las vistas/serializers aceptan `movie|tv|all` en query params y traducen antes de llegar al dominio.
-
-**Materialización (C-04a) — ✅ implementada (15/09/2026)** — `catalogo/services/materialization.py`:
-
-- `materializar(id_tmdb, tipo)` → crea/obtiene `ProduccionAudiovisual` por `(id_tmdb, tipo)`; ante `IntegrityError` por concurrencia resuelve con `get()` (sin llamadas externas dentro de transacción, decisión 25/08/2026).
-- Enriquecimiento: detalle completo (`get_movie_detail`/`get_tv_detail`) + keywords (`get_keywords`) antes de considerar la producción "buscable semánticamente"; los resúmenes de listado pueden materializarse incompletos y completarse asíncronamente. **Corrección (14/09/2026):** los endpoints de detalle de TMDB no traen reparto/directores; se agrega además `get_credits(id_tmdb, tipo)` (aditivo a C-01/C-02, con la misma firma que `get_keywords`, sin tocar sus métodos existentes) para poder completar esos campos.
-- Tras persistir: crear `ProduccionEmbedding` con estado `pending` y encolar la tarea Celery (`generar_embedding.delay(produccion_id)`). Nunca esperar a Ollama en el request.
-- **Firma final (15/09/2026):** `materializar(id_tmdb, tipo_tmdb)` recibe el vocabulario de TMDB (`"movie"`/`"tv"`), porque es lo que traen las vistas, y traduce al dominio en su primera línea vía `services/adapter.py`. Devuelve la `ProduccionAudiovisual`.
-- **Política de fallo (15/09/2026):** `materializar()` propaga sus errores y quien la llama decide. Las vistas de detalle la envuelven en `_materializar_sin_interrumpir()` (registra y sigue) para no romper el passthrough de C-03; el backfill de C-04b va a querer el comportamiento contrario.
-- **Encolado (15/09/2026):** solo cuando el `ProduccionEmbedding` se acaba de crear. Reencolar en cada visita llenaría la cola de trabajo repetido; refrescar los `failed` o desactualizados es del backfill de C-04b.
-- **Keywords (15/09/2026):** TMDB devuelve la misma lista bajo `keywords` en películas y `results` en series; lo normaliza `_extraer_keywords()`.
-- **Directores (15/09/2026):** una serie no tiene `job == "Director"` en su crew (en TV los directores son por episodio), así que `_directores()` toma `created_by` del detalle para series y el crew para películas. Verificado contra la API real. Sin esto, `Directors` quedaba vacío en el texto embebido de toda serie. La `duracion` de series sí queda en NULL cuando TMDB devuelve `episode_run_time` vacío: limitación aceptada, no entra al texto embebido.
-- ~~**Limitación conocida (15/09/2026):** el criterio de "fila incompleta" solo miraba el título.~~ **Resuelta el 16/09/2026 (C-04b, fase 1):** `_necesita_enriquecimiento()` ya no deduce nada del título; lee `fecha_enriquecimiento`, que registra cuándo se trajo el detalle (`NULL` = nunca). Una ventana de 90 días actúa solo como red de seguridad; el refresco real lo dispara la sync con `forzar=True` a partir de la lista de cambios de TMDB.
-- La materialización es global: toda producción servida por el catálogo o abierta en detalle se materializa para todos los usuarios.
-
-**Seed inicial (C-04c, comando de management — separado de C-04b el 15/09/2026) — ✅ implementado (19/09/2026)**:
-
-- ~~Poblado inicial de populares/tendencias/novedades + muestra diversa por género, año y tipo~~ → `seed_catalogo` muestrea **solo** por género × década × tipo: populares, tendencias y novedades ya las cubre la pasada de descubrimiento de la sync cada noche, y repetirlas acá no aporta diversidad. Orden de magnitud MVP: 2.000 por defecto (~25 min), 10.000 con `--limite` (~2 h). Ver `docs/decisiones.md` (19/09/2026) y `openspec/specs/catalog-seed/spec.md`.
-
----
-
-## Módulo 3 — Listas · Responsable: **Marcos**
-
-> **Dependencia (08/09/2026):** agregar/quitar ítems recibe `(id_tmdb, tipo)` y
-> DEBE pasar por el helper de materialización (C-04a) antes de crear la fila en
-> `Tiene`: nunca se inserta un `id_tmdb` huérfano ni se llama a TMDB desde los
-> endpoints de listas. **Disponible desde el 15/09/2026**: `from catalogo.services.materialization import materializar`. Las APIs y UI de este módulo (L-01..L-04) están
-> pendientes; los modelos y la señal de listas predeterminadas ya existen.
-
-| ID   | Tarea                                 | Depende de | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Criterio de aceptación                                                                                                                      | Esfuerzo |
-| ---- | ------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| L-01 | Endpoints de listas (CU-009, CU-012) — ✅ completado (19/09/2026)  | F-04, A-09 | `GET /api/lists/` (todas las del usuario; cada resumen incluye total de ítems, películas, series y hasta 5 pósters de preview), `GET /api/lists/{id}/items/` (items con paginación por scroll), `POST /api/lists/` (crear personalizada), `PUT /api/lists/{id}/` (renombrar), `DELETE /api/lists/{id}/` (solo personalizadas, borra items). `POST /api/lists/{id}/items/` (agregar item), `DELETE /api/lists/{id}/items/{item_id}/` (quitar item). Validar: nombre único por usuario, máx 80 chars, letras Unicode, números y espacios; predeterminadas no se pueden renombrar ni eliminar. | CRUD completo. Listas predeterminadas inmune a rename/delete. Items se agregan/quitan correctamente. `fechaAgregado` se registra.           | 5h       |
-| L-02 | Vista general de listas (UI)          | L-01       | Pantalla `/(auth)/listas`. Grid de ListCards: 3 predeterminadas fijas al inicio (Favoritos, Pendientes, Vistas) con badge "Predeterminada" + mini preview de hasta 5 posters + cantidad de items. Personalizadas reordenables con drag & drop (y botones Mover arriba/abajo como fallback). Card esqueleto "+" al final para crear nueva lista. Menú ⋮ en personalizadas: Renombrar, Eliminar. Layout 3→2→1 columnas.                                                    | Predeterminadas siempre presentes, sin menú. Drag & drop reordena y persiste. Card "+" crea lista vía modal. Eliminar muestra confirmación. | 5h       |
-| L-03 | Detalle de lista (UI)                 | L-01       | Pantalla `/(auth)/listas/[id]`. Breadcrumb: `Listas > {nombre}`. Header con nombre + menú ⋮ (solo personalizadas). Grid de MediaCards con botón ✕ en hover para quitar ítem (modal de confirmación). Scroll vertical infinito. Estados: loading, normal, empty ("Esta lista no contiene elementos" + botón Explorar).                                                                                                                                              | Cards muestran ✕ en hover. Quitar ítem actualiza la vista. Scroll carga más items. Empty state redirige a Buscar.                           | 4h       |
-| L-04 | Acciones directas en ficha de detalle | C-07, L-01 | Integrar los botones de acción de la ficha con los endpoints de listas. ♥ Favoritos, 👁 Vista, 🕐 Pendiente: toggle visual + llamada API. "+ Agregar a lista ▾": dropdown con checklist de listas personalizadas (check/uncheck toggle). Al quitar de "Vista": si tiene calificación, mostrar mensaje pidiendo eliminar calificación primero (CU-011).                                                                                                              | Toggle instantáneo con feedback visual. Checkbox de listas refleja estado real. Restricción de calificación al desmarcar "Vista" funciona.  | 3h       |
-
-**Total Listas: ~17h** (2-3 días) — **Marcos**
-
----
-
-## Módulo 4 — Perfil y Preferencias · Responsable: **Gonza**
-
-**Backend completado (24/09/2026): P-01, P-03 y P-05.** El contrato usa
-`snake_case` (`nombre_usuario`, `avatar_id`, `perfil_publico`,
-`notif_recomendaciones`, `notif_resenas`, `notif_novedades`), conforme al modelo y
-al resto de la API. Perfil y preferencias admiten `PUT` parcial. Cambiar contraseña
-requiere `old_password`, `password1`, `password2`; cambiarla o establecerla por
-recuperación invalida los JWT anteriores de todos los dispositivos. Se conserva
-la política vigente de CU-001. Una cuenta Google puede establecer contraseña
-local sin perder el vínculo social. La baja es atómica, conserva todas las
-relaciones y rechaza login local, Google, access y refresh. Contrato, pruebas y
-notas de UI en [el reporte del módulo 4](reportes_dev/modulo-4-api.md).
-
-| ID   | Tarea                               | Depende de | Detalle                                                                                                                                                                                                                                                                                                                                                                                        | Criterio de aceptación                                                                                                                                                                       | Esfuerzo                                                        |
-| ---- | ----------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| P-01 | Endpoint de perfil (CU-005, CU-006) | F-04, A-09 | `GET /api/profile/` (datos completos del usuario autenticado), `PUT /api/profile/` (actualizar nombre, apellido, username, avatarId). Validar disponibilidad de username en tiempo real. Cambio de contraseña: endpoint separado `POST /api/profile/change-password/` que requiere contraseña actual. Email es solo lectura.                                                                   | GET devuelve todos los campos. PUT actualiza y valida. Username duplicado devuelve 409. Cambio de contraseña requiere la actual correcta.                                                    | 3h                                                              |
-| P-02 | Perfil con edición inline (UI)      | P-01       | Pantalla `/(auth)/perfil`. Dos modos: visualización (avatar, nombre, @username, email, "Miembro desde...", botón "Editar perfil") y edición (avatar con overlay "Cambiar foto" que abre selector de 20 avatares, campos nombre/apellido/username, email readonly, sección colapsable para cambiar contraseña). Estados: visualización normal, editing, saving, error de validación.            | Transición visualización → edición sin recargar. Avatar se selecciona de grilla de 20. Username muestra disponibilidad inline. Cancelar revierte cambios. Guardar actualiza y muestra toast. | 4h                                                              |
-| P-03 | Endpoint de preferencias            | F-04       | `GET \| PUT /api/preferences/`. Campos: `tema`, `perfilPublico`, `notifRecomendaciones`, `notifReseñas`, `notifNovedades`. Todos con defaults definidos en el modelo.                                | GET devuelve preferencias actuales. PUT actualiza parcialmente.                                                               | 1.5h                                                            |
-| P-04 | Pantalla de preferencias (UI)       | P-03       | Pantalla `/(auth)/preferencias`. Secciones: Apariencia (toggle Oscuro/Claro con cambio inmediato), Privacidad (switch "Perfil público"), Notificaciones (3 switches independientes), Cuenta (botón danger "Dar de baja cuenta" con modal de confirmación).                                                                                                                                     | Toggle de tema cambia el tema al instante. Switches persisten en BD. "Dar de baja" tiene doble confirmación y redirige a Home.                                                               | 3h                                                              |
-| P-05 | Dar de baja cuenta (CU-007)         | P-03       | `POST /api/account/deactivate/`. Cambia estado de cuenta a `baja`. Cierra sesión activa. No elimina datos.                                                                                                                                                                                                                                                                                     | Cuenta pasa a estado `baja`. Login con esa cuenta devuelve error. Datos permanecen en BD.                                                                                                    | 1.5h                                                            |
-| P-06 | Mis reseñas (UI)                    | C-08       | Pantalla `/(auth)/mis-resenas`. Listado cronológico inverso (más reciente primero) de todas las reseñas del usuario. Cada ReviewCard: título clicable → ficha, badge de tipo, rating X/10, fecha, texto truncado a 3 líneas expandible, botones ✏️ editar y 🗑️ eliminar. Scroll vertical infinito. Estados: loading, normal, empty ("Todavía no escribiste ninguna reseña." + botón Explorar). | Cards muestran datos reales. Click en título navega a ficha. Editar abre modal precargado. Eliminar muestra confirmación. Empty state funcional.                                             | 3h                                                              |
-| P-07 | Avatar del navbar                   | P-02       | Avatar en navbar con iniciales (o ícono del avatar seleccionado). Click → dropdown: Mi perfil, Mis reseñas, Preferencias, Cerrar sesión. Cerrar sesión con divider y color danger. Dropdown se cierra al clickear fuera o presionar Escape.                                                                                                                                                    | Dropdown navega a cada sección. Cerrar sesión muestra confirmación. Click fuera cierra el menú.                                                                                              | 1.5h                                                            |
-
-**Total Perfil: ~17.5h** (2-3 días) — **Gonza**
-
-> Nota: P-06 depende de C-08 (propio de Gonza en Catálogo), así que no hay dependencia cruzada con Marcos.
-
----
-
-## Módulo 5 — Chatbot · Responsable: **Marcos**
-
-> **Nota (18/08/2026):** la arquitectura de retrieval quedó definida en
-> `docs/decisiones.md`: **tool calling obligatorio** (el LLM invoca herramientas
-> contra TMDB y pgvector; el contexto del usuario viaja por SQL anonimizado, sin
-> vectores) + **embeddings locales BGE-M3 vía Ollama** (corpus EN, consultas ES).
-> La referencia de endpoints de TMDB está en `docs/06_TMDB_API_Referencia.md`.
-
-| ID   | Tarea                                       | Depende de | Detalle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Criterio de aceptación                                                                                                                                                                                                                                                           | Esfuerzo |
-| ---- | ------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| B-01 | Modelo de Chat y Mensaje                    | F-04       | Implementar lógica de Chat con soporte futuro para múltiples chats. En el MVP, una restricción de unicidad garantiza un único chat por usuario. Al crear usuario, crear automáticamente ese chat por defecto. Campo `contexto` JSONB con estructura base: `{ resumenHistorial, generosPreferidos, ultimaRecomendacion, parametrosActivos }`. Mensajes con autor (`usuario`/`chatbot`).                                                                                                                                             | El único chat del MVP se crea al registrar usuario. Mensajes se persisten con autor y timestamp. Contexto JSONB se puede leer/escribir por clave.                                                                                                                                    | 3h       |
-| B-02 | LLM Service                                 | F-02       | Service `LLMService` que: recibe lista de mensajes + contexto anonimizado del usuario, construye system prompt (recomendador de películas/series, no responde fuera de dominio), llama a la API del LLM (OpenAI/Anthropic/Groq) con **tool calling**, anonimiza email/nombre/apellido antes de enviar, parsea respuesta y ejecuta las herramientas solicitadas. Timeout: 15s. Providers de retrieval intercambiables: `buscar_por_titulo`, `top_por_genero`, `similares_a` (TMDB, C-01) y `buscar_semantico` (pgvector, B-06).                   | Prompt incluye historial y preferencias anonimizados. El LLM puede invocar herramientas y las recomendaciones se anclan en datos reales (sin títulos inventados). Respuesta del LLM se recibe y se guarda como Mensaje del chatbot. Error de API se maneja con mensaje amigable. | 6h       |
-| B-03 | Endpoints del chatbot (CU-013, CU-014)      | B-01, B-02 | `POST /api/chat/messages/` envía mensaje del usuario, procesa con LLM, devuelve respuesta. `GET /api/chat/messages/` (historial). `POST /api/chat/cancel/` cancela solicitud en curso (si es posible con el proveedor LLM). Endpoint requiere autenticación.                                                                                                                                                                                                                                                                                     | Mensaje se envía, respuesta del LLM se recibe y se persiste. Historial devuelve mensajes ordenados cronológicamente. Cancelar detiene el procesamiento si está en curso.                                                                                                         | 3h       |
-| B-04 | FAB + Panel del chatbot (UI)                | B-03       | FAB flotante (bottom-right, fixed) con ícono de chat, visible en todas las pantallas. Inactivo visualmente si no está autenticado. Click → panel drawer de ~400px (desktop) o bottom sheet (mobile) con: historial de mensajes (ChatBubble: usuario derecha, chatbot izquierda), typing indicator animado mientras procesa, campo de texto + botón enviar, botón cancelar durante procesamiento. Animación slide-in. Badge sutil si hay respuesta nueva.                                                                                         | FAB visible en todas las pantallas. Panel se abre/cierra con animación. Mensajes se muestran con scroll automático al último. Typing indicator aparece/desaparece correctamente. Cancelar vuelve al estado inicial.                                                              | 5h       |
-| B-05 | Contexto del chatbot                        | B-01, B-02 | Lógica que construye el contexto antes de cada consulta: géneros más valorados (calificaciones 7+ del usuario), últimas 5 películas/series vistas, calificaciones recientes, lista de favoritos. Guardar resumen en `contexto` JSONB del Chat para no recalcular siempre. Nota: los campos cuantitativos (rating mínimo, tipo, año, duración) no se embedbean; se aplican como filtros SQL post-recuperación sobre los resultados de `buscar_semantico`.                                                                                         | Contexto se actualiza después de cada interacción significativa. Géneros y preferencias reflejan datos reales del usuario.                                                                                                                                                       | 2h       |
-| B-06 | Retrieval semántico (pgvector + embeddings) | B-02, C-04a | **Alcance reducido (14/09/2026):** C-04a ya adelanta la imagen `pgvector/pgvector:pg16`, la dependencia `pgvector` (no `django-pgvector`), el modelo `ProduccionEmbedding` (`OneToOneField` + `VectorField(1024)` + índice HNSW `vector_cosine_ops`), el texto canónico `Title + Genres + Directors + Cast + Keywords + Synopsis` y la tarea `generar_embedding` con su idempotencia. **Resta para B-06:** servicio `ollama` en docker-compose (volumen `ollamadata`, pull de `bge-m3` en Q-05), dependencia `httpx` (ya está), reemplazar el stub `generar_vector()` por el cliente real de Ollama + reintentos con backoff, y la herramienta `buscar_semantico(query)` con post-filtros SQL. Backfill inicial + incremental en la sync (C-04b). | `buscar_semantico` devuelve producciones relevantes para consultas conceptuales en español contra sinopsis en inglés. Backfill poblado y consistente con la sync. Consulta < 100ms.                                                                                              | 6h (menor tras el adelanto de C-04a)      |
-
-**Total Chatbot: ~25h** (3 días) — **Marcos**
-
-### Especificación técnica del trabajo pendiente (embeddings, sync y RAG)
-
-Criterios de implementación acordados (08/09/2026) para B-06, C-04b y B-02..B-05:
-
-**Infraestructura pgvector/Ollama (B-06)**:
-
-> **Actualización (14/09/2026):** C-04a adelantó parte de esta infraestructura
-> (ver fila C-04a del Módulo 2 y "Contratos ya decididos"), para no bloquear
-> la materialización esperando la Fase 3. Lo tachado ya está hecho o en
-> progreso en `feat/c-04a-materializacion`; B-06 solo necesita agregar lo que
-> sigue sin tachar.
-
-- ~~`docker-compose.yml`: reemplazar `postgres:16-alpine` por `pgvector/pgvector:pg16`~~ (hecho en C-04a). B-06 agrega el servicio `ollama` (volumen `ollamadata`) y `celery-beat` (el `celery-worker` ya lo agrega C-04a). `.env.example`: `OLLAMA_BASE_URL`, `EMBEDDING_MODEL=bge-m3`, `EMBEDDING_DIM=1024`.
-- ~~`backend/requirements.txt`: `pgvector`, `django-pgvector`~~ — corregido: el paquete es `pgvector` únicamente (submódulo `pgvector.django`), agregado en C-04a; `django-pgvector` no existe/no es el paquete mantenido para esto. Celery ya está.
-- ~~Modelo `ProduccionEmbedding`~~: `OneToOneField(ProduccionAudiovisual, related_name="embedding")` + `VectorField(1024)` + índice HNSW `vector_cosine_ops` + `source_hash` (SHA-256) + `model_version` + `estado` (`pending|processing|ready|failed`) + `fecha_actualizacion`. Migración con `CREATE EXTENSION vector`. (Creado en C-04a; B-06 solo reemplaza el proveedor stub `generar_vector()` por el cliente real de Ollama, sin tocar el modelo.)
-- Texto canónico (plantilla EN, labels estables): `Title + Genres + Directors + Cast + Keywords + Synopsis`, normalizado (espacios, vacíos, orden de arrays). Cambios de contenido o de modelo cambian hash/versión → regeneración legítima. (Construcción del texto y del hash ya implementadas en C-04a, `catalogo/services/embeddings.py`; B-06 los reutiliza tal cual.)
-
-**Tareas Celery (generación, backfill, sync)**:
-
-- ~~`generar_embedding(produccion_id)`~~: claim idempotente (`pending→processing` con actualización condicional/lease; en fallo `failed`). No mantener transacciones abiertas durante la llamada al proveedor. Si `source_hash`/`model_version` no cambiaron y estado `ready`, no-op (idempotencia). **Implementada en C-04a** (`catalogo/tasks.py`) con el proveedor (`generar_vector()`) como stub que hoy siempre falla; B-06 solo reemplaza ese stub por el cliente real de Ollama y agrega el reintento con backoff exponencial (no incluido en el stub de C-04a).
-- `backfill_embeddings()`: procesa `pending`/`failed` viejos; corre en beat o manualmente.
-- ~~`sync_catalogo_diaria()` (C-04b): trending + now_playing + discover popular con `update_or_create`~~ — **corregido e implementado (17/09/2026):** la sync no escribe por su cuenta, llama a `materializar()` por ítem (único camino de escritura; un ítem de listado no trae géneros, créditos ni keywords). Dos pasadas: refresco por la lista de cambios de TMDB (`/changes`, `forzar=True`) y descubrimiento (trending + now_playing + discover). Solo campos TMDB, nunca datos de usuario (test de aceptación). Cada `materializar()` encola el embedding de las producciones nuevas vía `on_commit`; el backfill de `pending`/`failed` es la fase 3. Estadísticas `{nuevas, ya_existentes, refrescadas, omitidas, errores}` (el contador se llamó `actualizadas` hasta el 18/09/2026: medía presencia, no escritura; el que responde al paso 5 de CU-021 es `refrescadas`).
-- La sync es mantenimiento/seed, no prerrequisito del discovery (arquitectura híbrida).
-
-**Garantías de idempotencia (08/09/2026)**:
-
-- Fuerte: nunca dos filas de embedding por producción (UNIQUE en `produccion_id`), y no se recomputa si hash+versión coinciden con estado `ready`.
-- Imposible de garantizar: que un worker caído entre "generó el vector" y "persistió" no haya llamado dos veces a Ollama; se acepta como costo máximo, sin estado inconsistente persistido.
-- Sin unicidad sobre el `vector`: producciones distintas pueden tener vectores iguales.
-
-**Retrieval semántico (`buscar_semantico`, B-06)**:
-
-- Solo embeddings `estado = ready`. Recuperación con overfetch (top 50-100), filtros SQL posteriores (tipo, año, rating, duración) y corte a 5-10 resultados para el LLM. Objetivo de latencia < 100ms en consulta.
-- Fallback: producciones sin embedding siguen alcanzables por TMDB en vivo (`buscar_por_titulo`, `top_por_genero`, `similares_a`); si un resultado de TMDB es relevante se materializa y encola (corpus crece con el uso).
-- Evaluación (para justificar el feature): set de 30-50 consultas conceptuales en ES con resultados esperados; métricas Recall@10/MRR vs. baseline léxico TMDB; registrar resultados en `docs/decisiones.md`.
-
-**RAG/LLM (B-02..B-05)**:
-
-- Pipeline: consulta del usuario → (paralelo) búsqueda textual TMDB + `buscar_semantico` → fusión/rerank → post-filtros SQL con contexto anonimizado (géneros 7+, últimas 5 vistas, favoritos) → grounding de la respuesta en producciones reales (sin títulos inventados).
-- Personalización vía SQL sobre datos del usuario; el corpus semántico nunca se acota por usuario.
-
-**Pruebas mínimas de aceptación**:
-
-- Unicidad `(id_tmdb, tipo)` y `produccion_id` único en embeddings; concurrencia de materialización (dos requests → misma fila).
-- Idempotencia de la tarea: ejecutar dos veces con mismo hash/modelo → una sola fila, un solo vector, cero llamadas extra al proveedor.
-- Fallo de Ollama → estado `failed`, producción visible, backfill la recupera.
-- Endpoints de catálogo (contratos de respuesta, filtros, throttling) y degradación sin Redis (fallback directo a TMDB).
-
----
-
-## Módulo 6 — Admin (nativo de Django) · Responsable: **Marcos**
-
-> Se reemplazan los endpoints REST custom originales (AD-01/AD-02) por configuración de Django Admin: permite listar, filtrar, buscar, editar y eliminar usuarios; para reseñas, permite listar, buscar, filtrar, editar texto/estado y desactivar sin borrado físico. El acceso depende de `is_staff` y de los permisos del modelo. No hay API ni UI propia para la moderación.
-
-| ID     | Tarea                   | Depende de | Detalle                                                                                                                                                    | Criterio de aceptación                                                                                                    | Esfuerzo |
-| ------ | ----------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
-| AD-01' | Configurar Django Admin — ✅ completo | F-04 | Conservar `UsuarioAdmin` y registrar `ResenaAdmin` con relaciones visibles, búsqueda por texto/usuario/producción y filtros por estado/tipo. Editar solo texto y `activa`; desactivar en lote, sin alta ni borrado físico de reseñas. | Tests HTTP verifican permisos, búsqueda, filtros, edición, cambio de estado, borrado de usuarios y desactivación/reactivación de reseñas sin perder la calificación. | 2h |
-
-**Total Admin: ~2h** — **Marcos**
-
----
-
-## Módulo 7 — Polish y Calidad · Responsable: **Gonza** (Q-05 conjunta)
-
-| ID   | Tarea                                | Depende de   | Detalle                                                                                                                                                                                                                                                                                                                                     | Criterio de aceptación                                                                                                                           | Esfuerzo |
-| ---- | ------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| Q-01 | Accesibilidad WCAG 2.1 AA            | C-05 al B-04 | Implementar todos los requisitos de la sección 11 del doc 04: contraste mínimo 4.5:1, navegación por teclado en todos los componentes interactivos, focus visible, aria-labels en star widget y FAB, focus trap en modales, role="alert" en toasts, botones Mover arriba/abajo en drag & drop, formularios con aria-describedby en errores. | Tab naviga todos los elementos en orden lógico. Escape cierra modales y panels. Focus ring visible. Lector de pantalla anuncia toasts y errores. | 6h       |
-| Q-02 | Pantallas de error                   | F-03         | 404 personalizada con ilustración + link a Home. 500 genérica con botón Reintentar. Error de API con mensaje contextual + Reintentar.                                                                                                                                                                                                       | Rutas inexistentes muestran 404. Error de API muestra mensaje y permite reintentar.                                                              | 2h       |
-| Q-03 | Estados de carga y empty             | Todos los UI | Revisar todas las pantallas: skeletons durante carga, empty states con ilustraciones y CTAs, errores con reintento. Toast notifications para acciones exitosas y errores.                                                                                                                                                                   | No hay flashes de contenido vacío. Cada pantalla tiene skeleton, empty y error state según corresponda.                                          | 3h       |
-| Q-04 | Responsive testing                   | Todos los UI | Verificar todos los breakpoints (1440px, 768px, 375px). Grid de catálogo: 5→3→2 cols. Grid de listas: 3→2→1 col. Ficha de detalle: two-column→stacked. Navbar: no se rompe en mobile. Modal: 480px→95vw.                                                                                                                                    | En cada breakpoint, la UI es funcional y no hay overflow horizontal. Touch targets ≥ 44px en mobile.                                             | 3h       |
-| Q-05 | Variables de entorno y documentación | F-01         | `.env.example` con todas las variables necesarias documentadas. `README.md` actualizado con instrucciones de setup. Documentar: cómo levantar el proyecto, seed de datos, correr tests, convenciones de código.                                                                                                                             | Otra persona puede clonar el repo, copiar `.env.example`, `docker compose up`, y ver la app funcionando.                                         | 2h       |
-| Q-06 | CI (GitHub Actions) para lint/format | F-06         | Workflow que corre `eslint` + `prettier` (frontend) y `ruff` (backend) en cada PR a `main`, para enforzar el lint independientemente de la máquina de cada dev.                                                                                                                                                                             | PR abierto muestra el check de lint/format; falla ante warnings o errores.                                                                       | 2h       |
-
-**Total Polish: ~18h** (16h Gonza + 2h conjunta) — **Gonza** (+ Ambos en Q-05)
-
----
-
-## Resumen final
-
-|            | Módulos                               | Horas propias | + mitad de tareas conjuntas (16h: Fundación + Q-05) | Total     |
-| ---------- | ------------------------------------- | ------------- | --------------------------------------------------- | --------- |
-| **Marcos** | Autenticación, Listas, Chatbot, Admin | 71.5h         | 8h                                                  | **79.5h** |
-| **Gonza**  | Catálogo, Perfil, Polish              | 70.5h         | 8h                                                  | **78.5h** |
-
-Diferencia: 1h sobre 158h totales (~1%). *(Corregido 08/09/2026: el resumen anterior sumaba 66.5h para Gonza, pero Catálogo 35 + Perfil 17.5 + Polish 18 = 70.5h.)*
-
-> **Nota (14/09/2026):** parte de la infraestructura presupuestada en B-06
-> (Marcos) pasó a ejecutarse dentro de C-04a (Gonza) — ver fila B-06 del
-> Módulo 5. El traspaso es de ~2h estimadas (modelo + migración + wiring de
-> Celery + imagen pgvector), así que la diferencia real queda en ~3h a favor
-> de Marcos sobre 158h (~2%). No se recalculan las tablas; se deja asentado
-> para no perder el rastro del traspaso.
-
-## Orden sugerido de fases (actualizado 14/09/2026)
-
-> Estado real: Fases 0 y 1 completas; Fase 2 en curso. La numeración sigue
-> al plan original; los criterios técnicos de cada fase están en las
-> subsecciones "Especificación técnica del trabajo pendiente" de los Módulos 2
-> y 5.
-
-- ✅ **Fase 0 (juntos):** Módulo 0 — Fundación.
-- ✅ **Fase 1 (paralelo):** Marcos → Autenticación. Gonza → C-01/C-02 (hechos).
-- 🟡 **Fase 2 (paralelo, en curso):** Gonza → C-03 (endpoints, ✅ mergeado) + C-04a (materialización + adaptador `movie/tv`, ✅ mergeado). Marcos → L-01..L-04 (Listas, consumiendo el helper de materialización; **desbloqueado el 15/09/2026**: el helper ya está en `main`).
-- 🔜 **Fase 3 (paralelo):** Marcos → B-06 (ya sin la infra que adelantó C-04a: resta Ollama + `buscar_semantico`). Gonza → C-04b (sync Celery + seed inicial) + C-05..C-07 (Home, Buscar, Detalle).
-- 🔜 **Fase 4 (paralelo):** Marcos → B-02..B-05 + B-03/B-04 (RAG, endpoints y UI del chatbot); AD-01' ya está completo. Gonza → C-08 (reseñas), P-01..P-07 (perfil/preferencias), integración de acciones en la ficha.
-- 🔜 **Cierre (juntos):** Q-01..Q-06 (accesibilidad, estados, errors, docs), pruebas de integración/E2E, evaluación de recall de la búsqueda semántica, gates de lint/format.
+# FilmAI — Plan de desarrollo
+
+Estado verificado contra el código de `main` el **26/09/2026**. Responsables: **Marcos** (autenticación, listas, chatbot y administración), **Gonza** (catálogo, perfil y calidad); Fundación y Q-05 son tareas conjuntas.
+
+**Leyenda:** ✅ implementada; 🟡 implementada en parte; ⬜ pendiente. El check verde indica que existe la funcionalidad prevista en el repositorio, no que se haya probado una instalación nueva ni una integración con servicios externos en esta revisión. Cuando una tarea incluye API y pantalla, ambas deben existir para marcarla ✅.
+
+| Módulo                   | Estado | Qué falta                                                                                              |
+| ------------------------ | ------ | ------------------------------------------------------------------------------------------------------ |
+| 0. Fundación             | 🟡     | Completar el conjunto de 20 avatares previsto en F-05.                                                 |
+| 1. Autenticación         | ✅     | —                                                                                                      |
+| 2. Catálogo y búsqueda   | 🟡     | Home, búsqueda, ficha de detalle y calificaciones/reseñas de usuarios.                                 |
+| 3. Listas                | 🟡     | Pantallas y acciones desde la ficha.                                                                   |
+| 4. Perfil y preferencias | 🟡     | Pantallas y navegación del menú de usuario.                                                            |
+| 5. Chatbot               | 🟡     | Proveedor de embeddings, búsqueda semántica, LLM, API y panel.                                         |
+| 6. Administración        | ✅     | —                                                                                                      |
+| 7. Calidad               | 🟡     | Accesibilidad y estados de todas las pantallas, errores, pruebas responsive y cierre de documentación. |
+
+## 0. Fundación — ambos
+
+| ID   | Tarea                                                                                                 | Estado y evidencia                                                                                                                                                                    |
+| ---- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F-01 | Docker Compose: Django, Next.js, PostgreSQL y Redis.                                                  | ✅ `docker-compose.yml` define esos servicios, Celery worker y Beat.                                                                                                                  |
+| F-02 | Proyecto Django, DRF y apps de dominio.                                                               | ✅ `backend/filmai/`, `backend/usuarios/`, `backend/catalogo/`, `backend/listas/` y `backend/chatbot/`.                                                                               |
+| F-03 | Proyecto Next.js con Tailwind y componentes Shadcn.                                                   | ✅ `frontend/app/`, `frontend/components/ui/`, `frontend/components.json` y `frontend/app/globals.css`.                                                                               |
+| F-04 | Modelos y migraciones: usuario, producción, calificación, reseña, lista, pertenencia, chat y mensaje. | ✅ Modelos y migraciones de las cuatro apps; `Usuario` es `AUTH_USER_MODEL`.                                                                                                          |
+| F-05 | Datos de desarrollo: usuarios, producciones, calificaciones, reseñas y avatares.                      | 🟡 `python manage.py seed` crea 3 usuarios y 50 producciones con datos relacionados; `backend/usuarios/avatares.py` solo habilita **10** IDs de avatar frente a los **20** previstos. |
+| F-06 | Lint y formato en ambos proyectos; hook local.                                                        | ✅ Ruff, ESLint, Prettier y `.husky/pre-commit` configurados.                                                                                                                         |
+
+## 1. Autenticación — Marcos
+
+| ID   | Tarea                                                                                         | Estado y evidencia                                                                                                          |
+| ---- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| A-01 | Registro con validaciones, cuenta pendiente, correo de confirmación y listas predeterminadas. | ✅ `backend/usuarios/serializers.py`, `views.py` y `signals.py`.                                                            |
+| A-02 | Confirmación de correo y pantallas de resultado.                                              | ✅ Vista de confirmación y `frontend/app/confirmar-correo/[key]/page.tsx`.                                                  |
+| A-03 | Login por correo o usuario, JWT en cookies y rechazo de cuentas inactivas.                    | ✅ `backend/usuarios/serializers.py`, `views.py`, `authentication.py` y ajustes de sesión.                                  |
+| A-04 | Pantalla de login con Google, recuperación de contraseña y estados de formulario.             | ✅ `frontend/app/(public)/login/page.tsx`.                                                                                  |
+| A-05 | Pantalla de registro, validaciones y disponibilidad de usuario con debounce.                  | ✅ `frontend/app/(public)/register/page.tsx` y endpoint de disponibilidad.                                                  |
+| A-06 | Google OAuth y completado de datos del primer ingreso.                                        | ✅ Backend social y `frontend/app/completar-google/page.tsx`; el ingreso real requiere credenciales Google configuradas.    |
+| A-07 | Recuperación de contraseña por correo, límite de solicitudes y pantalla para crear una nueva. | ✅ Endpoints de `usuarios` y `frontend/app/restablecer-contrasena/[uid]/[token]/page.tsx`.                                  |
+| A-08 | Cierre de sesión desde el avatar con confirmación.                                            | ✅ `frontend/components/Navbar.tsx` y `/api/auth/logout/`.                                                                  |
+| A-09 | Redirección de rutas protegidas y validación de JWT en el backend.                            | ✅ `frontend/middleware.ts` y autenticación del backend; varias pantallas protegidas aún están pendientes en otros módulos. |
+
+## 2. Catálogo y búsqueda — Gonza
+
+El descubrimiento usa TMDB con caché Redis; PostgreSQL guarda el catálogo materializado y los datos locales. C-04a crea la infraestructura de embeddings, pero el proveedor real y la consulta vectorial pertenecen a B-06. Ver [decisiones](decisiones.md) y los specs canónicos de `openspec/specs/`.
+
+| ID    | Tarea                                                                              | Estado y evidencia                                                                                                                                                                               |
+| ----- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C-01  | Cliente TMDB: tendencias, estrenos, descubrimiento, búsqueda, detalle y metadatos. | ✅ `backend/catalogo/client.py` incluye reintentos, timeout, géneros, créditos y cambios.                                                                                                        |
+| C-02  | Caché Redis para las consultas TMDB.                                               | ✅ `backend/catalogo/cache.py` define claves, TTL por endpoint y degradación si Redis falla.                                                                                                     |
+| C-03  | API pública de catálogo y búsqueda con filtros, paginación y errores controlados.  | ✅ Siete rutas bajo `/api/catalogo/` en `backend/catalogo/urls.py` y vistas correspondientes.                                                                                                    |
+| C-04a | Materialización por `(id_tmdb, tipo)` y encolado asíncrono del embedding.          | ✅ `backend/catalogo/services/materialization.py`, modelo `ProduccionEmbedding` y `generar_embedding` en Celery. El proveedor sigue pendiente en B-06.                                           |
+| C-04b | Sincronización diaria, refresco de cambios TMDB y backfill de embeddings.          | ✅ `backend/catalogo/tasks.py` y `backend/filmai/settings.py` programan la sync y el backfill. El backfill solo podrá producir vectores útiles tras B-06.                                        |
+| C-04c | Seed inicial y retomable del catálogo por género, década y tipo.                   | ✅ `python manage.py seed_catalogo` en `backend/catalogo/management/commands/seed_catalogo.py`. El comando existe y fue probado; el tamaño final del corpus sigue siendo una decisión operativa. |
+| C-05  | Home de descubrimiento: destacada, recomendaciones, tendencias y novedades.        | ⬜ Solo existe la landing pública; falta la Home de catálogo.                                                                                                                                    |
+| C-06  | Panel de búsqueda con texto, filtros, paginación y estados.                        | ⬜ Existe la API de búsqueda; falta el panel frontend.                                                                                                                                           |
+| C-07  | Ficha de película/serie con metadatos, reseñas y acciones.                         | ⬜ Existen los endpoints de detalle; falta la pantalla.                                                                                                                                          |
+| C-08  | API y modal para calificar de 1 a 10 y crear, editar o eliminar reseñas propias.   | ⬜ Existen los modelos y la moderación en Admin; faltan la API y la interfaz de usuario.                                                                                                         |
+
+## 3. Listas — Marcos
+
+Las altas de ítems reciben `(id_tmdb, tipo)` y pasan por `materializar()` antes de crear `Tiene`. Las listas predeterminadas se crean con el usuario.
+
+| ID   | Tarea                                                                             | Estado y evidencia                                                                                                                           |
+| ---- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| L-01 | API para consultar, crear, renombrar y eliminar listas; agregar y quitar ítems.   | ✅ `backend/listas/urls.py`, `views.py` y pruebas. Incluye resúmenes, preview de pósters, paginación y protección de listas predeterminadas. |
+| L-02 | Vista general, creación/edición, orden persistido de listas personales y estados. | ⬜ Falta la pantalla y el mecanismo de reordenamiento.                                                                                       |
+| L-03 | Detalle de lista con ítems, paginación visual y eliminación.                      | ⬜ Falta la pantalla.                                                                                                                        |
+| L-04 | Acciones de listas desde la ficha de detalle.                                     | ⬜ Falta la ficha; la API ya impide quitar de Vistas una producción calificada.                                                              |
+
+## 4. Perfil y preferencias — Gonza
+
+La API usa nombres `snake_case`. La baja conserva los datos y revoca las sesiones; una cuenta Google puede establecer contraseña local sin perder su vínculo social. Ver [reporte del módulo](reportes_dev/modulo-4-api.md).
+
+| ID   | Tarea                                                                    | Estado y evidencia                                                                                                                                    |
+| ---- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P-01 | Consulta y edición de perfil; cambio de contraseña en endpoint separado. | ✅ `/api/profile/` y `/api/profile/change-password/`, serializers y pruebas en `backend/usuarios/`.                                                   |
+| P-02 | Pantalla de perfil con edición inline, avatar y cambio de contraseña.    | ⬜ Falta la pantalla.                                                                                                                                 |
+| P-03 | Consulta y edición parcial de tema, privacidad y notificaciones.         | ✅ `/api/preferences/` en `backend/usuarios/cuenta.py`.                                                                                               |
+| P-04 | Pantalla de preferencias y acceso a la baja de cuenta.                   | ⬜ Falta la pantalla.                                                                                                                                 |
+| P-05 | Baja lógica de cuenta y cierre de sesiones.                              | ✅ `/api/account/deactivate/` en `backend/usuarios/cuenta.py`, con pruebas.                                                                           |
+| P-06 | Pantalla «Mis reseñas», edición y eliminación de las propias.            | ⬜ Depende también de C-08.                                                                                                                           |
+| P-07 | Avatar y menú de navegación de usuario.                                  | 🟡 `frontend/components/Navbar.tsx` muestra iniciales, menú y logout; Perfil, Mis reseñas y Preferencias aún muestran «Todavía no está implementado». |
+
+## 5. Chatbot — Marcos
+
+El retrieval acordado combina herramientas TMDB y búsqueda vectorial global; el contexto privado se consulta por SQL y se anonimiza antes de enviarlo al LLM. Ver [decisiones](decisiones.md).
+
+| ID   | Tarea                                                                                           | Estado y evidencia                                                                                                                                       |
+| ---- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B-01 | Chat único del MVP, mensaje con autor y contexto JSON.                                          | ✅ `backend/chatbot/models.py`, migración de unicidad y creación del chat por señal.                                                                     |
+| B-02 | Servicio LLM con tool calling, datos anonimizados y respuestas ancladas en producciones reales. | ⬜ No hay servicio LLM.                                                                                                                                  |
+| B-03 | API autenticada para enviar mensajes, consultar historial y cancelar.                           | ⬜ `backend/chatbot/views.py` aún no implementa endpoints.                                                                                               |
+| B-04 | Botón flotante y panel responsive de conversación.                                              | ⬜ Falta la interfaz.                                                                                                                                    |
+| B-05 | Contexto con historial, calificaciones, géneros y favoritos del usuario.                        | ⬜ El campo JSON existe; falta construir y actualizar ese contexto.                                                                                      |
+| B-06 | Ollama/BGE-M3 y `buscar_semantico` sobre embeddings listos, con filtros SQL.                    | 🟡 pgvector, modelo, texto canónico y tarea Celery existen; `generar_vector()` sigue siendo un stub y faltan el servicio Ollama y la consulta semántica. |
+
+## 6. Administración — Marcos
+
+| ID     | Tarea                                                              | Estado y evidencia                                                                    |
+| ------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| AD-01' | Gestión de usuarios y moderación de reseñas mediante Django Admin. | ✅ `backend/usuarios/admin.py`, `backend/catalogo/admin.py` y pruebas HTTP del Admin. |
+
+## 7. Calidad y cierre — Gonza (Q-05 conjunta)
+
+| ID   | Tarea                                                                          | Estado y evidencia                                                                                                                                                                 |
+| ---- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q-01 | Accesibilidad WCAG 2.1 AA en todos los flujos.                                 | 🟡 Hay foco, etiquetas y manejo de Escape en pantallas existentes; falta evaluar y completar los módulos de UI pendientes.                                                         |
+| Q-02 | Pantallas 404, error general y errores de API con reintento.                   | ⬜ No hay pantallas de error dedicadas.                                                                                                                                            |
+| Q-03 | Carga, vacío, error y feedback coherentes en todas las pantallas.              | 🟡 Hay estados y toasts en autenticación; faltan las demás pantallas.                                                                                                              |
+| Q-04 | Verificación responsive de Home, catálogo, listas, detalle, navbar y modales.  | 🟡 La UI actual usa breakpoints; faltan las pantallas principales y su verificación en móvil, tablet y escritorio.                                                                 |
+| Q-05 | Variables de entorno e instrucciones completas de instalación, seed y pruebas. | 🟡 `.env.example` y `README.md` documentan el arranque y el seed; `frontend/README.md` conserva el texto inicial de Next.js y falta validar el recorrido de una instalación nueva. |
+| Q-06 | CI para lint y formato de frontend y backend.                                  | ✅ `.github/workflows/ci.yml` ejecuta ESLint, Prettier, Ruff y tests Django en PRs y pushes a `main`.                                                                              |
+
+## Próximo trabajo
+
+1. Completar la UI de catálogo (C-05 a C-08) y listas (L-02 a L-04), junto con las pantallas de perfil (P-02, P-04, P-06 y P-07).
+2. Conectar Ollama y la búsqueda semántica (B-06), luego construir el servicio, la API, el contexto y el panel del chatbot (B-02 a B-05).
+3. Cerrar F-05 y Q-01 a Q-05 sobre los flujos ya implementados. Q-06 ya está implementada.

@@ -1926,3 +1926,18 @@ DELETE`, `GET | PUT`) van escapados para que cada fila tenga las 6
   metadatos vigentes de catálogo con versiones anteriores de la rama de listas.
 - **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md`,
   `docs/decisiones.md` y `graphify-out/`.
+
+## 26/09/2026 — Estado del plan verificado por tarea
+
+- **Fecha**: 26/09/2026
+- **Título**: Seguimiento por tarea en el plan de desarrollo.
+- **Descripción**: se quitó de `docs/05_Plan_de_Desarrollo.md` el historial de PRs,
+  especificaciones técnicas duplicadas, estimaciones de horas desactualizadas
+  y fases con estados viejos. Cada tarea conserva su ID y tiene un estado
+  respaldado por el código actual: ✅ implementada, 🟡 parcial o ⬜ pendiente.
+  F-05 queda parcial porque el registro de avatares habilita 10 IDs frente a
+  los 20 previstos; P-07 y B-06 también son parciales. Q-06 queda implementada
+  porque el workflow de CI ya existe. Este cambio registra el estado observado;
+  no modifica los contratos de dominio ni la implementación.
+- **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md` y
+  `docs/decisiones.md`.
