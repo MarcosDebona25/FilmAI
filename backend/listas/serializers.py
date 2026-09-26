@@ -84,3 +84,18 @@ class ListaItemSerializer(serializers.Serializer):
     def get_anio(self, item):
         fecha = item.produccion.fecha_lanzamiento
         return fecha.year if fecha else None
+
+
+class QuitarItemQuerySerializer(serializers.Serializer):
+    """`?borrar_calificacion=` al quitar un ítem de «Vistas» (C-08, fase 3).
+
+    `BooleanField` acepta las formas usuales (`true`, `1`, `false`, `0`) y
+    rechaza cualquier otra con un 400. Eso es deliberado: si un typo como
+    `borrar_calificacion=tru` se interpretara como `false`, el usuario habría
+    confirmado el borrado en el modal y recibiría un 409 sin entender por qué.
+
+    El default es `False`, así que no mandarlo conserva exactamente el
+    comportamiento anterior: el flag es permiso explícito, no una orden.
+    """
+
+    borrar_calificacion = serializers.BooleanField(default=False)

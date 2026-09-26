@@ -5,8 +5,12 @@ from unittest.mock import patch
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from catalogo.factories import CalificacionFactory, ProduccionAudiovisualFactory
-from catalogo.models import TipoProduccion
+from catalogo.factories import (
+    CalificacionFactory,
+    ProduccionAudiovisualFactory,
+    ResenaFactory,
+)
+from catalogo.models import Calificacion, Resena, TipoProduccion
 from listas.factories import ListaFactory
 from listas.models import Lista, Tiene, TipoLista
 from usuarios.factories import UsuarioFactory
@@ -266,3 +270,129 @@ class ListasEndpointsTests(TestCase):
 
         self.assertEqual(detalle.status_code, 404)
         self.assertEqual(item.status_code, 404)
+
+
+class QuitarDeVistasBorrandoCalificacionTests(TestCase):
+    """El flag que convierte el 409 de CU-011 en una confirmación (fase 3 de C-08).
+
+    Hasta acá, quitar de «Vistas» algo calificado respondía 409 y mandaba al
+    usuario a borrar su calificación en otra pantalla. Con
+    `?borrar_calificacion=true` la UI puede preguntar —«Se eliminarán tu
+    calificación de 9/10 y tu reseña»— y hacerlo en el momento.
+
+    El 409 sin el flag no cambia: el flag es aditivo, y es el 409 lo que le
+    avisa al frontend que tiene que preguntar antes.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory()
+        self.cliente = APIClient()
+        self.cliente.force_authenticate(self.usuario)
+        self.vistas = self.usuario.listas.get(nombre="Vistas")
+        self.produccion = ProduccionAudiovisualFactory(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA
+        )
+        self.item = Tiene.objects.create(lista=self.vistas, produccion=self.produccion)
+
+    def _calificar(self, *, con_texto=True):
+        calificacion = CalificacionFactory(
+            usuario=self.usuario, produccion=self.produccion, valor=9
+        )
+        if con_texto:
+            ResenaFactory(calificacion=calificacion, texto="La primera regla...")
+        return calificacion
+
+    def _quitar(self, *, flag=None):
+        url = f"/api/lists/{self.vistas.pk}/items/{self.item.pk}/"
+        if flag is not None:
+            url = f"{url}?borrar_calificacion={flag}"
+        return self.cliente.delete(url)
+
+    def test_con_el_flag_borra_la_calificacion_y_quita_el_item(self):
+        self._calificar()
+
+        respuesta = self._quitar(flag="true")
+
+        self.assertEqual(respuesta.status_code, 204)
+        self.assertFalse(Tiene.objects.filter(pk=self.item.pk).exists())
+        self.assertFalse(Calificacion.objects.exists())
+
+    def test_el_flag_se_lleva_tambien_la_resena(self):
+        # Por CASCADE. Es lo que el modal tiene que advertir: quien escribió 800
+        # caracteres los pierde, y enterarse después sería una pérdida por
+        # sorpresa.
+        self._calificar()
+
+        self._quitar(flag="true")
+
+        self.assertFalse(Resena.objects.exists())
+
+    def test_sin_el_flag_el_409_sigue_igual(self):
+        # El cambio es aditivo: el comportamiento por defecto no se toca, y es
+        # el 409 el que le dice al frontend que tiene que preguntar.
+        self._calificar()
+
+        respuesta = self._quitar()
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(
+            respuesta.data["codigo"], "calificacion_impide_quitar_de_vistas"
+        )
+        self.assertTrue(Calificacion.objects.exists())
+        self.assertTrue(Tiene.objects.filter(pk=self.item.pk).exists())
+
+    def test_con_el_flag_en_false_tambien_da_409(self):
+        # `?borrar_calificacion=false` es una respuesta explícita de "no": tiene
+        # que comportarse como no mandar nada, no como mandar "true". Sin este
+        # caso, cualquier valor presente activaría el borrado.
+        self._calificar()
+
+        respuesta = self._quitar(flag="false")
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertTrue(Calificacion.objects.exists())
+
+    def test_el_flag_sin_calificacion_es_un_borrado_normal(self):
+        # No hay nada que borrar de más: el flag es permiso, no orden.
+        respuesta = self._quitar(flag="true")
+
+        self.assertEqual(respuesta.status_code, 204)
+        self.assertFalse(Tiene.objects.filter(pk=self.item.pk).exists())
+
+    def test_en_una_lista_que_no_es_vistas_el_flag_no_borra_nada(self):
+        # La regla de CU-011 es solo de «Vistas»: quitar de Favoritos algo
+        # calificado nunca estuvo bloqueado, así que el flag no tiene por qué
+        # destruir una calificación ahí.
+        calificacion = self._calificar()
+        favoritos = self.usuario.listas.get(nombre="Favoritos")
+        item = Tiene.objects.create(lista=favoritos, produccion=self.produccion)
+
+        respuesta = self.cliente.delete(
+            f"/api/lists/{favoritos.pk}/items/{item.pk}/?borrar_calificacion=true"
+        )
+
+        self.assertEqual(respuesta.status_code, 204)
+        self.assertTrue(Calificacion.objects.filter(pk=calificacion.pk).exists())
+
+    def test_la_calificacion_de_otro_usuario_no_se_toca(self):
+        # El borrado se acota al dueño de la lista. La calificación de otra
+        # persona sobre la misma película no es asunto de este request.
+        ajena = CalificacionFactory(
+            usuario=UsuarioFactory(), produccion=self.produccion, valor=7
+        )
+        self._calificar()
+
+        self._quitar(flag="true")
+
+        self.assertTrue(Calificacion.objects.filter(pk=ajena.pk).exists())
+
+    def test_un_valor_invalido_en_el_flag_se_rechaza(self):
+        # Ni "true" ni "false": mejor un 400 que adivinar. Si un typo como
+        # `borrar_calificacion=tru` se interpretara como false, el usuario
+        # confirmaría el borrado y recibiría un 409 sin entender por qué.
+        self._calificar()
+
+        respuesta = self._quitar(flag="quizas")
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertTrue(Calificacion.objects.exists())

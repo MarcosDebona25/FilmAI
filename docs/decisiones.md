@@ -2103,3 +2103,48 @@ tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
   apilado necesita rebase) y hacía perder commits pusheados mientras el merge
   estaba en curso — pasó con el rename del PR #23.
 - **Archivos afectados**: `AGENTS.md` (sección 8), `docs/decisiones.md`.
+
+---
+
+## 26/09/2026 — C-08 implementado: la API de reseñas, el flag de `Vistas` y un bug de C-04a
+
+- **Fecha**: 26/09/2026
+- **Contexto**: continuación de la entrada anterior, ya con código. Ver
+  `openspec/specs/reviews-api/spec.md` para el contrato completo.
+- **Qué quedó**: `POST /api/reviews/`, `PUT /api/reviews/{id}/`,
+  `DELETE /api/reviews/{id}/texto/` (solo el texto),
+  `DELETE /api/reviews/{id}/` (ambas) y los tres `GET`
+  (`?id_tmdb=&tipo=` para la comunidad, `mias/` para P-06 y
+  `mias/?id_tmdb=&tipo=` para la ficha). 65 pruebas nuevas.
+- **`?borrar_calificacion=true` en el endpoint de listas** (aprobado por Marcos
+  el 26/09): quitar de «Vistas» una producción calificada seguía respondiendo
+  409 —lo pide CU-011—, pero ahora la UI puede advertir qué se pierde y
+  confirmarlo en un paso. Las dos escrituras van en **una transacción**: dos
+  llamadas desde el frontend no serían atómicas y un fallo entre ellas dejaría
+  al usuario sin la calificación y con la producción todavía en «Vistas». El
+  flag es permiso y no orden: sin calificación es un borrado normal, y en otra
+  lista no borra nada. Un valor que no sea `true` ni `false` da 400 en vez de
+  adivinarse, porque un typo leído como `false` respondería 409 a alguien que
+  ya confirmó.
+- **Bug encontrado y corregido en C-04a**: `materializar()` devolvía la fila con
+  `fecha_lanzamiento` como el **string** de TMDB (`"1999-10-15"`), porque
+  `_enriquecer()` asignaba el valor del JSON a un `DateField` y no volvía a
+  leerla. Quien serializara ese retorno se llevaba el string: el
+  `POST /api/lists/{id}/items/` de L-01 moría con
+  `AttributeError: 'str' object has no attribute 'year'`, o sea **un 500 al
+  agregar a cualquier lista una producción que no estuviera ya en la base**.
+  Se arregla en la raíz con `refresh_from_db()` al final de `_enriquecer()`, con
+  tres pruebas propias. Lo destapó la prueba de integración de C-08; no se veía
+  antes porque las pruebas de listas usan la factory (que escribe un `date`
+  real) o mockean `materializar()` entera. **Es otra vez la lección de C-04b: un
+  test con todo mockeado prueba el llamado, no el efecto.**
+- **Doc 04 corregido**: decía que al eliminar «el botón Calificar vuelve a
+  mostrarse», imposible ahora que la calificación sobrevive. La card «Tu
+  reseña» desaparece, el botón muestra la nota vigente y abre el modal en modo
+  editar, y se documenta la acción aparte «Quitar calificación» y la
+  confirmación al quitar de «Vistas».
+- **Archivos afectados**: `backend/catalogo/{reviews,serializers_reviews,
+  pagination_reviews,exceptions,tests_reviews}.py`,
+  `backend/catalogo/services/materialization.py`, `backend/catalogo/tests.py`,
+  `backend/listas/{views,serializers,tests}.py`, `backend/filmai/urls.py`,
+  `openspec/specs/reviews-api/spec.md`, docs 04 y 05.

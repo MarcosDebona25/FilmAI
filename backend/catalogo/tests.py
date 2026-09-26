@@ -1,5 +1,5 @@
 import threading
-from datetime import timedelta
+from datetime import date, timedelta
 from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
@@ -1742,6 +1742,47 @@ class MaterializacionPeliculaTests(MaterializacionBase):
                 id_tmdb=550, tipo=TipoProduccion.PELICULA
             ).exists()
         )
+
+
+class MaterializacionTiposDeCampoTests(MaterializacionBase):
+    """La fila que `materializar()` DEVUELVE tiene los tipos de la base.
+
+    TMDB manda las fechas como texto (`"1999-10-15"`), y asignar ese string a
+    un `DateField` deja el objeto en memoria con un `str` hasta que alguien lo
+    relee. Quien serialice el valor de retorno se lleva el string: le pasaba al
+    `POST /api/lists/{id}/items/` de L-01, que hacía
+    `ListaItemSerializer(item).data` sobre la producción recién materializada y
+    moría con `AttributeError: 'str' object has no attribute 'year'` — un 500
+    al agregar a una lista cualquier producción que no estuviera ya en la base.
+
+    Lo destapó el test de integración de C-08 (26/09/2026). No se veía antes
+    porque los tests de listas usan `ProduccionAudiovisualFactory`, que escribe
+    un `date` de verdad, o mockean `materializar()` entera.
+    """
+
+    def test_la_fila_devuelta_trae_fecha_lanzamiento_como_date(self):
+        produccion = materializar(550, "movie")
+
+        self.assertIsInstance(produccion.fecha_lanzamiento, date)
+        self.assertEqual(produccion.fecha_lanzamiento, date(1999, 10, 15))
+
+    def test_la_fila_devuelta_se_puede_serializar_sin_releerla(self):
+        # El caso de L-01 en una línea: `.year` sobre lo que devuelve la
+        # materialización, sin pasar por la base.
+        produccion = materializar(550, "movie")
+
+        self.assertEqual(produccion.fecha_lanzamiento.year, 1999)
+
+    def test_una_produccion_sin_fecha_sigue_quedando_en_none(self):
+        # TMDB omite `release_date` en títulos sin estrenar y a veces manda "".
+        self.servicio.get_movie_detail.return_value = {
+            **_DETALLE_MOVIE,
+            "release_date": "",
+        }
+
+        produccion = materializar(550, "movie")
+
+        self.assertIsNone(produccion.fecha_lanzamiento)
 
 
 class MaterializacionSerieTests(MaterializacionBase):
