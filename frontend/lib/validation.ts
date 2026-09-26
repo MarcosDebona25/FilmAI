@@ -1,17 +1,21 @@
 // Reglas de validación del CU-001 (docs/02) para el formulario de registro.
 // Cada validador devuelve null si el valor es válido, o el mensaje de error.
 
-const NOMBRE_REGEX = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?: [A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/;
+const NOMBRE_REGEX = /^\p{L}+(?: \p{L}+)*$/u;
 export const USERNAME_REGEX = /^[A-Za-z0-9]{5,25}$/;
 const CORREO_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const ESPECIAL_REGEX = /[@#$%&*!]/;
 
 export function validarNombre(valor: string): string | null {
-  const v = valor.trim();
+  const v = normalizarNombre(valor);
   if (!v) return "Campo obligatorio.";
   if (v.length > 50) return "Máximo 50 caracteres.";
-  if (!NOMBRE_REGEX.test(v)) return "Solo letras.";
+  if (!NOMBRE_REGEX.test(v)) return "Solo letras y espacios entre palabras.";
   return null;
+}
+
+export function normalizarNombre(valor: string): string {
+  return valor.trim().replace(/\s+/g, " ");
 }
 
 export function validarApellido(valor: string): string | null {
