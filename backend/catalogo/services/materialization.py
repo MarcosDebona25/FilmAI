@@ -162,6 +162,14 @@ def _enriquecer(produccion, id_tmdb, tipo_tmdb):
     # anotado que se enriqueció.
     produccion.fecha_enriquecimiento = timezone.now()
     produccion.save()
+    # Los valores que vinieron de TMDB son los del JSON, no los de la columna:
+    # `fecha_lanzamiento` queda como el string "1999-10-15" hasta que alguien
+    # relee la fila. Quien serialice lo que devolvemos se lleva ese string —le
+    # pasaba al POST de ítems de L-01, que moría con `'str' object has no
+    # attribute 'year'` al agregar a una lista una producción que no estuviera
+    # ya en la base. Una consulta más, al lado de las tres llamadas HTTP que
+    # esta función acaba de hacer, y quien nos llama recibe tipos de verdad.
+    produccion.refresh_from_db()
 
 
 def _mapear(detalle, credits, keywords, tipo_tmdb):
