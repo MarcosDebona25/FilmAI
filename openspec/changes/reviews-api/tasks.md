@@ -86,6 +86,56 @@
 - [ ] 2.11 Full suite + ruff; `graphify update .`; delete
       `openspec/changes/reviews-api/` per `AGENTS.md` §9
 
+## Phase 3: conditional — removing from `Vistas` offers to delete the rating
+
+**Blocked**: Gonza proposed this on 26/09/2026 and it waits for Marcos to
+agree, because it changes an endpoint of his module. Do not start without the
+explicit go-ahead.
+
+Today CU-011's rule is a dead end: the 409 tells the user to delete their
+rating, on another screen, and come back. Instead the UI asks — *"Se eliminarán
+tu calificación de 9/10 y tu reseña. Esto no se puede deshacer."* — and does it
+on confirmation. The CU asks to "informar al usuario que es necesario eliminar
+dicha calificación"; a modal saying exactly that informs just as well.
+
+- [ ] 3.1 RED: `DELETE /api/lists/{id}/items/{item_id}/?borrar_calificacion=true`
+      removes the rating and the item **in one transaction**. Without the flag,
+      the current 409 stands — the change is additive
+- [ ] 3.2 RED: the flag deletes the `Resena` too (CASCADE), and the response
+      says what was removed, so the UI can word its toast honestly
+- [ ] 3.3 RED: the flag on a list that is not `Vistas`, or with no rating, is
+      simply a normal removal — no error, nothing extra deleted
+- [ ] 3.4 RED: the transaction rolls back as a unit — if the item removal
+      fails, the rating survives. This is the whole reason the flag exists
+      instead of two frontend calls
+- [ ] 3.5 GREEN: `listas/views.py`, ~10 lines. Register the decision and tell
+      Marcos in the merge summary
+
+### Why a flag and not two calls from the frontend
+
+Two calls are not atomic. If the second one fails — network, expired token —
+the user loses the rating **and** the production stays in `Vistas`: the cost
+paid, nothing gained. C-04b already has a dedicated acceptance test for
+ratings and reviews surviving a nightly refresh; losing them to a half-finished
+HTTP exchange would be incoherent with that care.
+
+## Note for C-07, when the modal gets built
+
+The confirmation needs three facts: the rating's value, whether a review
+exists, and its text for the preview. Where they come from depends on the
+screen:
+
+| Triggered from | Source |
+|---|---|
+| Detail page (👁 button) | Already in memory — the page loaded "Tu reseña" |
+| `Vistas` detail (✕ on a MediaCard, §5e) | Not loaded: the card carries title, poster and year. Fetch `GET /api/reviews/mias/?id_tmdb=&tipo=` **on receiving the 409** — 20 cards cannot each preload a review that is almost never needed |
+
+The word "reseña" goes in bold. The preview itself should be **visible**, not
+hidden behind a hover: it is the one fact the decision rests on, and a hover
+does not exist on touch, never fires for keyboard navigation, and cannot hold
+1 000 characters. Truncate to two lines with a "ver completa" affordance; a
+hover tooltip on top of that is fine as a desktop flourish.
+
 ## Open question, for when the UI exists
 
 Rating something does not add it to `Vistas` (out of scope, and the API should
