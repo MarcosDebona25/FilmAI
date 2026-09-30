@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAdminUser
 
 from catalogo.reviews import (
     CalificacionDetailView,
@@ -32,12 +34,8 @@ urlpatterns = [
     path(
         "api/schema/",
         SpectacularAPIView.as_view(
-            permission_classes=[],
-            # Sin clases de autenticación, igual que `CatalogoBaseView`: una
-            # cookie JWT vieja en el navegador no debe convertir en 401 la
-            # documentación pública (JWTCookieAuthentication rechaza el token
-            # antes de evaluar permisos, aunque la vista sea abierta).
-            authentication_classes=[],
+            permission_classes=[IsAdminUser],
+            authentication_classes=[SessionAuthentication],
         ),
         name="schema",
     ),
@@ -45,10 +43,9 @@ urlpatterns = [
         "api/docs/",
         SpectacularSwaggerView.as_view(
             url_name="schema",
-            permission_classes=[],
-            authentication_classes=[],
+            permission_classes=[IsAdminUser],
+            authentication_classes=[SessionAuthentication],
         ),
-        # Swagger UI view with no permission restrictions; consider authentication in production
         name="swagger-ui",
     ),
     path("api/catalogo/", include("catalogo.urls")),

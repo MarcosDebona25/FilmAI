@@ -5,6 +5,30 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 30/09/2026 — Documentación API restringida a staff y semilla de reseñas repetible
+
+- **Descripción**: `/api/docs/` y `/api/schema/` requieren ahora una sesión de
+  Django Admin y el permiso `is_staff` mediante `SessionAuthentication` e
+  `IsAdminUser`. La sesión del Admin permite consultarlas incluso si el
+  navegador conserva una cookie JWT inválida. Esta decisión reemplaza la
+  publicación abierta registrada más abajo el mismo día.
+- **Semilla de desarrollo**: `seed --solo-resenas` completa hasta 15
+  calificaciones por usuario de prueba (o todas las producciones disponibles).
+  Cuenta las calificaciones existentes antes de crear otras y garantiza al
+  menos nueve reseñas con texto cuando hay 15 notas, incluso si ya existían.
+  Conserva las reseñas previas y deja de agregar filas al repetir el comando sobre los
+  mismos usuarios y catálogo. El seed completo mantiene su muestra aleatoria.
+- **Motivo**: limitar la exposición de la descripción de la API y permitir
+  poblar datos relacionados para desarrollo sin actividad real de producción
+  ni crecimiento accidental en cada ejecución.
+- **Archivos afectados**: `backend/filmai/urls.py`, `backend/filmai/tests.py`,
+  `backend/usuarios/management/commands/seed.py`, `backend/usuarios/tests.py`,
+  `README.md`, `docs/05_Plan_de_Desarrollo.md`,
+  `openspec/specs/admin-api-docs/spec.md` y
+  `openspec/specs/development-seed/spec.md`.
+
+---
+
 ## 30/09/2026 — Swagger y esquema OpenAPI públicos, sin autenticación
 
 - **Descripción**: `/api/docs/` y `/api/schema/` se declaran ahora con
@@ -26,7 +50,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   tests, pero la base de desarrollo no tenía reseñas: el guard de C-04c impide
   que `seed` resetee un catálogo poblado y forzarlo tira horas de llamadas a
   TMDB. Se agrega el modo no destructivo `python manage.py seed
-  --solo-resenas`: siembra calificaciones (1–10) y reseñas (texto ≤1000,
+--solo-resenas`: siembra calificaciones (1–10) y reseñas (texto ≤1000,
   ~60% de las notas) sobre el catálogo y las cuentas de desarrollo existentes
   (`@filmai.com`, activas, sin staff). Es idempotente —saltea pares
   usuario–producción ya calificados, respetando
@@ -2085,7 +2109,7 @@ tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
   - **Consecuencia en la UI, a corregir en `docs/04_Lineamientos_UI.md`**: el
     documento dice que tras eliminar «el botón Calificar vuelve a mostrarse».
     No puede: la calificación sigue ahí. La card «Tu reseña» desaparece (§5c
-    ya dice que solo se listan reseñas *con texto*), pero el botón muestra la
+    ya dice que solo se listan reseñas _con texto_), pero el botón muestra la
     calificación vigente y abre el modal en modo editar.
   - **Por eso hay DOS endpoints de borrado**: `DELETE /api/reviews/{id}/texto/`
     (solo el texto, es el 🗑️ del modal) y `DELETE /api/reviews/{id}/` (la
@@ -2189,7 +2213,7 @@ tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
   editar, y se documenta la acción aparte «Quitar calificación» y la
   confirmación al quitar de «Vistas».
 - **Archivos afectados**: `backend/catalogo/{reviews,serializers_reviews,
-  pagination_reviews,exceptions,tests_reviews}.py`,
+pagination_reviews,exceptions,tests_reviews}.py`,
   `backend/catalogo/services/materialization.py`, `backend/catalogo/tests.py`,
   `backend/listas/{views,serializers,tests}.py`, `backend/filmai/urls.py`,
   `openspec/specs/reviews-api/spec.md`, docs 04 y 05.

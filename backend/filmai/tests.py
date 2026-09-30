@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.http import Http404
-from django.test import SimpleTestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import MethodNotAllowed, Throttled
@@ -21,6 +21,7 @@ from filmai.email_backends import ResendBackend
 from filmai.email_validation import validar_configuracion_email
 from filmai.exceptions import filmai_exception_handler
 from filmai.views import custom_404, custom_500
+from usuarios.factories import UsuarioFactory
 
 
 @override_settings(RESEND_API_KEY="re_test", RESEND_TEST_RECIPIENT="")
@@ -214,16 +215,37 @@ class ExceptionHandlerTests(SimpleTestCase):
         self.assertEqual(reverse("schema"), "/api/schema/")
         self.assertEqual(reverse("swagger-ui"), "/api/docs/")
 
-    def test_schema_y_swagger_no_devuelven_401_con_cookie_jwt_invalida(self):
-        # Las vistas de la documentación son públicas: una cookie `access`
-        # vieja o corrupta en el navegador no debe convertirlas en 401.
-        # Sin `authentication_classes=[]`, JWTCookieAuthentication rechaza el
-        # token ANTES de evaluar permisos, aunque la vista no exija sesión.
-        cookie = "access=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalid"
-        for url in (reverse("schema"), reverse("swagger-ui")):
-            with self.subTest(url=url):
-                respuesta = self.client.get(url, HTTP_COOKIE=cookie)
-                self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+
+class DocumentacionApiTests(TestCase):
+    """Swagger y el esquema usan la sesión y el rol del Django Admin."""
+
+    def test_anonimo_y_usuario_comun_no_pueden_leer_documentacion(self):
+        for nombre in ("schema", "swagger-ui"):
+            with self.subTest(ruta=nombre, usuario="anónimo"):
+                self.assertEqual(
+                    self.client.get(reverse(nombre)).status_code,
+                    status.HTTP_403_FORBIDDEN,
+                )
+
+        self.client.force_login(UsuarioFactory())
+        for nombre in ("schema", "swagger-ui"):
+            with self.subTest(ruta=nombre, usuario="común"):
+                self.assertEqual(
+                    self.client.get(reverse(nombre)).status_code,
+                    status.HTTP_403_FORBIDDEN,
+                )
+
+    def test_staff_puede_leer_documentacion_con_cookie_jwt_invalida(self):
+        # El navegador conserva la sesión del Admin aunque el JWT de la API
+        # haya vencido. Estas vistas autentican solo con SessionAuthentication.
+        self.client.force_login(UsuarioFactory(is_staff=True))
+        self.client.cookies["access"] = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalid"
+        for nombre in ("schema", "swagger-ui"):
+            with self.subTest(ruta=nombre):
+                self.assertEqual(
+                    self.client.get(reverse(nombre)).status_code,
+                    status.HTTP_200_OK,
+                )
 
 
 class CeleryAppTests(SimpleTestCase):
