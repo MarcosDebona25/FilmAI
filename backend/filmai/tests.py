@@ -214,6 +214,17 @@ class ExceptionHandlerTests(SimpleTestCase):
         self.assertEqual(reverse("schema"), "/api/schema/")
         self.assertEqual(reverse("swagger-ui"), "/api/docs/")
 
+    def test_schema_y_swagger_no_devuelven_401_con_cookie_jwt_invalida(self):
+        # Las vistas de la documentación son públicas: una cookie `access`
+        # vieja o corrupta en el navegador no debe convertirlas en 401.
+        # Sin `authentication_classes=[]`, JWTCookieAuthentication rechaza el
+        # token ANTES de evaluar permisos, aunque la vista no exija sesión.
+        cookie = "access=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalid"
+        for url in (reverse("schema"), reverse("swagger-ui")):
+            with self.subTest(url=url):
+                respuesta = self.client.get(url, HTTP_COOKIE=cookie)
+                self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+
 
 class CeleryAppTests(SimpleTestCase):
     """Wiring de Celery con Django (C-04a).

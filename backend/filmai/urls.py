@@ -31,12 +31,23 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path(
         "api/schema/",
-        SpectacularAPIView.as_view(permission_classes=[]),
+        SpectacularAPIView.as_view(
+            permission_classes=[],
+            # Sin clases de autenticación, igual que `CatalogoBaseView`: una
+            # cookie JWT vieja en el navegador no debe convertir en 401 la
+            # documentación pública (JWTCookieAuthentication rechaza el token
+            # antes de evaluar permisos, aunque la vista sea abierta).
+            authentication_classes=[],
+        ),
         name="schema",
     ),
     path(
         "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[]),
+        SpectacularSwaggerView.as_view(
+            url_name="schema",
+            permission_classes=[],
+            authentication_classes=[],
+        ),
         # Swagger UI view with no permission restrictions; consider authentication in production
         name="swagger-ui",
     ),
