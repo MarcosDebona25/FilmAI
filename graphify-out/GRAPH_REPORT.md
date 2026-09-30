@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-09-30)
 
 ## Corpus Check
-- 231 files · ~666,301 words
+- 231 files · ~666,422 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1826671d`
+- Built from commit: `e4144408`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -785,9 +785,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `Regla 6: .agents/skills/ es la única fuente de skills` connect `Regla 6: .agents/skills/ es la única fuente de skills` to `explicar-al-implementar/SKILL.md`, `AGENTS.md — Reglas para agentes en FilmAI`, `Catalog of 33 AI writing patterns (content, language, style, communication, filler)`, `impeccable/SKILL.md`?**
   _High betweenness centrality (0.084) - this node is a cross-community bridge._
 - **Why does `Usuario` connect `Usuario` to `ContrasenaTests`, `Command`, `PreferenciasTests`, `usuarios/tests.py`, `perfil.py`, `PerfilTests`, `GoogleOAuthTests`, `ResenaAdminTests`, `ProduccionAudiovisual`, `GoogleSocialLoginSerializer`, `UsuarioFactory`, `ConfirmarCorreoTests`, `AGENTS.md — Reglas para agentes en FilmAI`, `usuarios/models.py`, `RecuperacionSesionTests`, `UsuarioPerfilSerializer`, `TestCase`, `usuarios/views.py`, `CalificacionFactory`, `usuarios/serializers.py`, `TipoProduccion`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+  _High betweenness centrality (0.073) - this node is a cross-community bridge._
 - **Why does `AGENTS.md — Reglas para agentes en FilmAI` connect `AGENTS.md — Reglas para agentes en FilmAI` to `README de FilmAI`, `Job backend: Ruff + tests Django`, `Regla 6: .agents/skills/ es la única fuente de skills`?**
-  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Are the 39 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 39 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 10 inferred relationships involving `materializar()` (e.g. with `TMDBClientCache` and `tmdb_a_dominio()`) actually correct?**

@@ -31,7 +31,7 @@
         letter-spacing: -0.02em;
       }
       main {
-        margin-top: clamp(72px, 11vw, 140px);
+        margin-top: clamp(3.6px, 0.55vw, 7px);
         border-top: 1px solid #363649;
         padding-top: 36px;
       }
@@ -85,8 +85,7 @@
         <h1>La documentación requiere una cuenta staff</h1>
         {% if sesion_iniciada %}
         <p>
-          Tu sesión actual no tiene permisos de administración para ver {{
-          recurso }}.
+          Tu sesión actual no tiene permisos de administración para ver {{ recurso }}.
         </p>
         <p>Ingresá al Admin con una cuenta staff para continuar.</p>
         {% else %}

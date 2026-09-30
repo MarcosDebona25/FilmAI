@@ -254,12 +254,19 @@ class DocumentacionApiTests(TestCase):
 
     def test_navegador_con_sesion_comun_recibe_mensaje_especifico(self):
         self.client.force_login(UsuarioFactory())
-        respuesta = self.client.get(reverse("swagger-ui"), HTTP_ACCEPT="text/html")
-        self.assertContains(
-            respuesta,
-            "Tu sesión actual no tiene permisos de administración",
-            status_code=403,
-        )
+        for nombre, recurso in (
+            ("schema", "el esquema OpenAPI"),
+            ("swagger-ui", "Swagger UI"),
+        ):
+            with self.subTest(ruta=nombre):
+                respuesta = self.client.get(reverse(nombre), HTTP_ACCEPT="text/html")
+                self.assertContains(
+                    respuesta,
+                    f"Tu sesión actual no tiene permisos de administración para ver {recurso}.",
+                    status_code=403,
+                    html=False,
+                )
+                self.assertNotContains(respuesta, "{{ recurso }}", status_code=403)
 
     def test_cliente_json_recibe_403_explicativo(self):
         respuesta = self.client.get(reverse("schema"), HTTP_ACCEPT="application/json")
