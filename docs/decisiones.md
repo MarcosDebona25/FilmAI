@@ -2249,3 +2249,58 @@ pagination_reviews,exceptions,tests_reviews}.py`,
   `backend/catalogo/services/materialization.py`, `backend/catalogo/tests.py`,
   `backend/listas/{views,serializers,tests}.py`, `backend/filmai/urls.py`,
   `openspec/specs/reviews-api/spec.md`, docs 04 y 05.
+
+---
+
+## 30/09/2026 — Calificada implica vista: calificar agrega a «Vistas» y borrar la calificación la saca
+
+- **Fecha**: 30/09/2026
+- **Contexto**: CU-011 ya pedía una mitad de la regla: no se puede sacar de
+  «Vistas» una producción calificada sin eliminar antes la calificación (el
+  409 de L-01, con la confirmación en un paso de C-08). La otra mitad no
+  existía: se podía calificar algo que no estaba en «Vistas», y la ficha
+  mostraría `⭐ 9/10` con el ojo 👁 apagado, justo el estado que CU-011 intenta
+  evitar. El doc 04 (§5c) y el código de L-01 ya lo decían con esas palabras:
+  «si la calificaste, la viste».
+- **Decisión** (del usuario, acordada con Marcos): toda producción calificada
+  está en «Vistas». Los cuatro casos:
+  - **Entra 1**: calificar la agrega a «Vistas». El modal de calificación lo
+    avisa antes de publicar, si todavía no estaba.
+  - **Entra 2**: se puede marcar como vista sin calificar, en cualquier
+    momento. La inversa de la regla no rige.
+  - **Sale 1**: eliminar la calificación la saca de «Vistas». El modal de
+    confirmación lo avisa, y el usuario puede volver a marcarla.
+  - **Sale 2**: sacarla de «Vistas» elimina la calificación, con la
+    confirmación previa que ya existía (`?borrar_calificacion=true`).
+  - Editar la calificación o eliminar solo el texto de la reseña no cambian
+    «Vistas». La reseña cae con la calificación por CASCADE, como antes.
+- **Reemplaza** a la decisión de C-08 del 26/09/2026 «calificar no agrega a
+  `Vistas`: sería escribir en las tablas de otro módulo en silencio». La
+  escritura deja de ser silenciosa (la regla está en los docs 02 y 04 y en las
+  specs) y pasa por el módulo dueño: `listas/services.py` expone
+  `agregar_a_vistas()` y `quitar_de_vistas()`, que C-08 llama dentro de su
+  propia transacción. Sin la lista «Vistas», calificar falla entero (500) en
+  vez de dejar una nota que viole la regla; ese estado lo repara
+  `reparar_recursos_usuarios`.
+- **Caso aceptado**: si alguien marca una producción como vista, después la
+  califica y después borra la calificación, sale de «Vistas» aunque la había
+  marcado antes. `Tiene` no guarda el motivo de la pertenencia y agregarlo
+  sumaba una migración de esquema en el módulo de listas. Se prefirió la regla
+  simple con el aviso en el modal.
+- **Datos existentes**: la migración de datos `listas.0004_calificadas_en_vistas`
+  agrega a «Vistas» las calificaciones previas (las 34 de
+  `seed --solo-resenas` en la base de Marcos). Su reverse no hace nada: no se
+  puede distinguir lo que agregó de lo que el usuario marcó a mano. El `seed`
+  crea las notas con la factory, sin pasar por la API, así que aplica la regla
+  él mismo.
+- **UI** (se implementa en C-07 y P-06): los textos del aviso de calificar,
+  del modal «Quitar calificación» con y sin reseña, y los toasts según haya o
+  no texto («Calificación publicada.» / «Calificación y reseña publicadas.»)
+  quedan en el doc 04 §5c y §5d.
+- **Archivos afectados**: `backend/listas/services.py` (nuevo),
+  `backend/listas/migrations/0004_calificadas_en_vistas.py` (nueva),
+  `backend/catalogo/reviews.py`, `backend/usuarios/management/commands/seed.py`,
+  `backend/catalogo/tests_reviews.py`, `backend/listas/tests.py`,
+  `backend/usuarios/tests.py`, docs 02, 04 y 05, y las specs `reviews-api`,
+  `list-endpoints` y `development-seed`.
+

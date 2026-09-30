@@ -313,7 +313,7 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | Vista (👁)         | Relleno (ya está en Vistas)    | Quita de Vistas                              | Borde (verifica: si tiene calificación, pide eliminarla primero, CU-011) |
 | Pendiente (🕐)    | Borde                          | Agrega a Pendientes                          | Relleno sólido                                                           |
 | Pendiente (🕐)    | Relleno                        | Quita de Pendientes                          | Borde                                                                    |
-| Calificar         | —                              | Abre modal de reseña (CU-015)                | —                                                                        |
+| Calificar         | —                              | Abre modal de reseña (CU-015)                | Al publicar, la producción entra a Vistas: el 👁 queda relleno (regla "calificada ⇒ vista", 30/09/2026) |
 | Vista (👁, quitar) | Producción calificada          | **Pide confirmación antes de quitar**: la API responde 409 `calificacion_impide_quitar_de_vistas` (CU-011: si la calificaste, la viste). El modal dice "Se eliminarán tu calificación de X/10 y tu **reseña**. Esto no se puede deshacer.", con el texto de la reseña visible en un preview truncado a 2 líneas y "ver completa". Al confirmar, se reintenta con `?borrar_calificacion=true`, que borra las dos cosas y quita el ítem en una sola transacción. | Si cancela, la producción sigue en Vistas y la calificación intacta. |
 | Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas | Check/uncheck toggle                                                     |
 
@@ -356,10 +356,10 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 | Variante     | Disparador                               | Contenido                                                                                                                                                                           | Botones               |
 | ------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| **Publicar** | Click en "Calificar" (sin reseña previa) | Widget de estrellas interactivo (1-10, ver abajo), campo de texto opcional (máx 1000 chars, ~6 líneas), contador de caracteres                                                      | Cancelar / Publicar   |
+| **Publicar** | Click en "Calificar" (sin reseña previa) | Widget de estrellas interactivo (1-10, ver abajo), campo de texto opcional (máx 1000 chars, ~6 líneas), contador de caracteres. Si la producción todavía no está en "Vistas", debajo de las estrellas: "Al calificarla, {título} también se agrega a Vistas." | Cancelar / Publicar   |
 | **Editar**   | Click en icono ✏️ (desde tu reseña)      | Mismo widget con calificación y texto precargados. Las estrellas del rating anterior que quedarían fuera de la nueva selección se muestran en un amarillo apagado durante el hover. | Cancelar / Actualizar |
 | **Eliminar** | Click en icono 🗑️ (desde tu reseña)      | Sin formulario. Título: "¿Eliminar reseña?" — Cuerpo: "Se eliminará el texto de tu reseña. Tu calificación de X/10 se conserva." Borra **solo el texto** (`DELETE /api/reviews/{id}/texto/`).                                    | Cancelar / Confirmar  |
-| **Quitar calificación** | Click en la nota del botón de acción, opción "Quitar calificación" | Sin formulario. Título: "¿Quitar tu calificación?" — Cuerpo: "Se eliminarán tu calificación de X/10 y tu **reseña**. Esto no se puede deshacer." Borra las dos (`DELETE /api/reviews/{id}/`). Si la producción está en "Vistas", queda liberada para poder quitarla. | Cancelar / Quitar |
+| **Quitar calificación** | Click en la nota del botón de acción, opción "Quitar calificación" | Sin formulario. Título: "¿Quitar tu calificación?" — Cuerpo con reseña: "Se eliminarán tu calificación de X/10 y tu **reseña**, y {título} dejará de estar en Vistas. La calificación y la reseña no se pueden recuperar; a Vistas podés volver a agregarla cuando quieras." (con el preview del texto truncado a 2 líneas y "ver completa"). Sin reseña: "Se eliminará tu calificación de X/10 y {título} dejará de estar en Vistas. La calificación no se puede recuperar; a Vistas podés volver a agregarla cuando quieras." Borra la nota, el texto y el ítem de "Vistas" en una sola transacción (`DELETE /api/reviews/{id}/`). | Cancelar / Quitar |
 
 ### Widget de estrellas
 
@@ -386,8 +386,10 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 | Acción                | Efecto                                                                                                                       |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Publicar / Actualizar | Cierra modal, toast "Reseña publicada." / "Reseña actualizada.". La sección de reseñas en la ficha se actualiza al instante. |
+| Publicar              | Cierra modal, toast "Calificación publicada." (sin texto) o "Calificación y reseña publicadas." (con texto). La producción entra a "Vistas" (el 👁 queda relleno) y la sección de reseñas en la ficha se actualiza al instante. |
+| Actualizar            | Cierra modal, toast según lo que cambió: "Calificación actualizada.", "Reseña actualizada." o "Calificación y reseña actualizadas.". "Vistas" no cambia. |
 | Eliminar              | Cierra modal, toast "Reseña eliminada.". La card "Tu reseña" desaparece de la ficha (solo se listan reseñas **con texto**), pero **la calificación sobrevive**: el botón de acción pasa a mostrar la nota vigente (ej. `⭐ 9/10`) y abre el modal en modo **Editar**. Para quitar también la nota hace falta la acción "Quitar calificación" (ver abajo). |
+| Quitar calificación   | Cierra modal, toast "Calificación eliminada." o "Calificación y reseña eliminadas.". El botón vuelve a "Calificar", la card "Tu reseña" desaparece y el 👁 queda con borde: la producción salió de "Vistas". |
 | Cancelar              | Cierra modal sin cambios.                                                                                                    |
 
 ### Estados del modal

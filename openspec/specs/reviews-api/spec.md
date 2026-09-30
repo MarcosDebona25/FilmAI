@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The user's own ratings and reviews (CU-015): publishing, editing and deleting a 1-10 rating with optional text, plus the reads the detail screen and "Mis reseñas" need. Covers C-08. Builds on `catalog-materialization`, whose `materializar()` it calls before writing, and completes two capabilities that shipped depending on ratings existing: the `Vistas` rule of `list-endpoints` (CU-011) and the review moderation of the Django Admin (CU-017).
+The user's own ratings and reviews (CU-015): publishing, editing and deleting a 1-10 rating with optional text, plus the reads the detail screen and "Mis reseñas" need. Covers C-08. Builds on `catalog-materialization`, whose `materializar()` it calls before writing, and completes two capabilities that shipped depending on ratings existing: the `Vistas` rule of `list-endpoints` (CU-011, completed on 30/09/2026 by "a rated production is in `Vistas`") and the review moderation of the Django Admin (CU-017).
 
 ## Requirements
 
@@ -126,6 +126,42 @@ Supplying only one of the two parameters MUST answer 400, never fall back to the
 - WHEN they request their rating for it
 - THEN the response is 404
 
+### Requirement: A rated production is in `Vistas`
+
+Every rating's production MUST be in its author's predetermined `Vistas` list (decided 30/09/2026: "if you rated it, you watched it"). CU-011 already enforced one half — a rated production cannot leave `Vistas` without confirming the rating's deletion. This requirement adds the other:
+
+- `POST /api/reviews/` MUST add the production to `Vistas` when it is not there, **in the same transaction** as the rating. If it cannot be added, the rating MUST NOT be stored.
+- `DELETE /api/reviews/{id}/` MUST remove the production from the author's `Vistas`, in the same transaction as the deletion. It ends in the same state as removing from `Vistas` with `borrar_calificacion=true`.
+- Editing the rating or the text, and deleting only the text, MUST NOT change `Vistas`.
+
+The converse does not hold: a production can be in `Vistas` without a rating (CU-011). The writes into `Tiene` go through `listas/services.py`, owned by the lists module. Ratings stored before this rule are repaired once by the data migration `listas.0004_calificadas_en_vistas`.
+
+#### Scenario: Rating adds to `Vistas`
+
+- GIVEN a production that is not in the user's `Vistas`
+- WHEN they rate it
+- THEN it is in their `Vistas`
+
+#### Scenario: Rating something already watched
+
+- GIVEN a production the user marked as watched, without rating it
+- WHEN they rate it
+- THEN `Vistas` still holds it once
+
+#### Scenario: Deleting the rating removes it from `Vistas`
+
+- GIVEN a rated production in the user's `Vistas` and in their `Favoritos`
+- WHEN the rating is deleted
+- THEN it is no longer in their `Vistas`
+- AND it is still in their `Favoritos`
+- AND other users' `Vistas` are untouched
+
+#### Scenario: Deleting only the text keeps it in `Vistas`
+
+- GIVEN a rated production with text, in the user's `Vistas`
+- WHEN only the text is deleted
+- THEN it is still in their `Vistas`
+
 ### Requirement: Removing from `Vistas` may delete the rating on request
 
 `DELETE /api/lists/{id}/items/{item_id}/` accepts `?borrar_calificacion=`. Without it, or with a false value, the 409 required by CU-011 stands unchanged. With a true value, and only for the predetermined `Vistas` list, the rating and the item MUST be deleted **in a single transaction**.
@@ -152,7 +188,7 @@ Two frontend calls MUST NOT be the mechanism: they are not atomic, and a failure
 
 - **`calificacion_promedio`** holds TMDB's `vote_average`, not the average of our users' ratings. It is never recomputed here; three screens display it as "rating TMDB".
 - **Embeddings.** The canonical text is `Title + Genres + Directors + Cast + Keywords + Synopsis`; a rating changes none of it, so nothing is re-enqueued.
-- **List membership.** Rating a production does not add it to `Vistas`. Offering that is a decision for the detail screen, not a silent write into another module's tables.
+- **Other lists.** Only `Vistas` follows the rating. `Favoritos`, `Pendientes` and custom lists never change when a rating is created or deleted.
 - **`Calificacion.activa`.** This API always writes `True` and every read filters on it, so that moderating ratings later needs no change here.
 
 ## Known limitations
