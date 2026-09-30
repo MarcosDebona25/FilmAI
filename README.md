@@ -226,6 +226,8 @@ docker compose down         # detener (conserva la base de datos y Redis)
 | Frontend (Next.js) | http://localhost:3000              |
 | Backend (Django)   | http://localhost:8000              |
 | Admin de Django    | http://localhost:8000/admin/       |
+| Swagger UI         | http://localhost:8000/api/docs/    |
+| Esquema OpenAPI    | http://localhost:8000/api/schema/  |
 | PostgreSQL         | `localhost:5432` (db `filmai_dev`) |
 | Redis              | `localhost:6379`                   |
 
