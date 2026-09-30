@@ -70,23 +70,23 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 
 ### Stack tecnológico
 
-| Capa                  | Tecnología                                                                 |
-| --------------------- | -------------------------------------------------------------------------- |
-| **Backend**           | Python 3.12, Django 5.x, Django REST Framework                             |
-| **Frontend**          | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                        |
-| **Base de datos**     | PostgreSQL 16 con pgvector (imagen `pgvector/pgvector:pg16`)               |
-| **Caché y colas**     | Redis (DB 0: caché de TMDB · DB 1: broker de Celery · DB 2: resultados)    |
-| **Tareas asíncronas** | Celery (worker + Beat: la sync del catálogo corre a las 3 AM y el backfill de embeddings a las 4 AM, hora de Argentina) |
+| Capa                      | Tecnología                                                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend**               | Python 3.12, Django 5.x, Django REST Framework                                                                                                    |
+| **Frontend**              | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                                                                                               |
+| **Base de datos**         | PostgreSQL 16 con pgvector (imagen `pgvector/pgvector:pg16`)                                                                                      |
+| **Caché y colas**         | Redis (DB 0: caché de TMDB · DB 1: broker de Celery · DB 2: resultados)                                                                           |
+| **Tareas asíncronas**     | Celery (worker + Beat: la sync del catálogo corre a las 3 AM y el backfill de embeddings a las 4 AM, hora de Argentina)                           |
 | **Embeddings (en curso)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generación asíncrona vía Celery. El proveedor real de embeddings todavía es un stub (llega en B-06). |
-| **Infraestructura**   | Docker, docker-compose (6 servicios: backend, frontend, PostgreSQL, Redis, celery-worker, celery-beat) |
-| **Autenticación**     | JWT en cookies (access: 8 h desde emisión; refresh: 7 días), Google OAuth 2.0, bcrypt |
+| **Infraestructura**       | Docker, docker-compose (6 servicios: backend, frontend, PostgreSQL, Redis, celery-worker, celery-beat)                                            |
+| **Autenticación**         | JWT en cookies (access: 8 h desde emisión; refresh: 7 días), Google OAuth 2.0, bcrypt                                                             |
 
 ### APIs externas
 
-| Proveedor                               | Propósito                                                            |
-| --------------------------------------- | -------------------------------------------------------------------- |
-| **TMDB API**                            | Catálogo de películas y series, búsqueda, tendencias, metadatos      |
-| **LLM API** | Procesamiento de lenguaje natural para el chatbot de recomendaciones |
+| Proveedor    | Propósito                                                            |
+| ------------ | -------------------------------------------------------------------- |
+| **TMDB API** | Catálogo de películas y series, búsqueda, tendencias, metadatos      |
+| **LLM API**  | Procesamiento de lenguaje natural para el chatbot de recomendaciones |
 
 ### Modelo de datos
 
@@ -221,15 +221,15 @@ docker compose down         # detener (conserva la base de datos y Redis)
 
 ### URLs
 
-| Servicio           | URL                                |
-| ------------------ | ---------------------------------- |
-| Frontend (Next.js) | http://localhost:3000              |
-| Backend (Django)   | http://localhost:8000              |
-| Admin de Django    | http://localhost:8000/admin/       |
-| Swagger UI         | http://localhost:8000/api/docs/    |
-| Esquema OpenAPI    | http://localhost:8000/api/schema/  |
-| PostgreSQL         | `localhost:5432` (db `filmai_dev`) |
-| Redis              | `localhost:6379`                   |
+| Servicio                | URL                                |
+| ----------------------- | ---------------------------------- |
+| Frontend (Next.js)      | http://localhost:3000              |
+| Backend (Django)        | http://localhost:8000              |
+| Admin de Django         | http://localhost:8000/admin/       |
+| Swagger UI (staff)      | http://localhost:8000/api/docs/    |
+| Esquema OpenAPI (staff) | http://localhost:8000/api/schema/  |
+| PostgreSQL              | `localhost:5432` (db `filmai_dev`) |
+| Redis                   | `localhost:6379`                   |
 
 ### Comandos útiles
 
@@ -278,8 +278,8 @@ El backend crea automáticamente un superusuario al arrancar, usando las variabl
 
 El comando `seed` crea tres cuentas de desarrollo con el email verificado y la misma contraseña:
 
-| Email | Contraseña |
-| --- | --- |
+| Email                   | Contraseña     |
+| ----------------------- | -------------- |
 | `usuario001@filmai.com` | `Password123!` |
 | `usuario002@filmai.com` | `Password123!` |
 | `usuario003@filmai.com` | `Password123!` |
@@ -302,7 +302,9 @@ Cuando el catálogo ya está poblado, el reset completo se niega a correr y forz
 docker compose exec backend python manage.py seed --solo-resenas
 ```
 
-Es idempotente —saltea las producciones que cada cuenta ya calificó— y una de cada siete reseñas nace inactiva (`activa=False`), para probar en `/admin/` el filtro por estado y la acción «Desactivar reseñas» (CU-017).
+El comando lleva cada cuenta de desarrollo activa y sin permisos de staff (`@filmai.com`) hasta **15 calificaciones**, o hasta cubrir el catálogo si tiene menos producciones. Conserva las calificaciones y reseñas existentes; completa las reseñas con texto hasta cubrir al menos el 60 % de esas notas, incluso si las calificaciones ya existían. Cada reseña depende de una calificación. Una de cada siete reseñas nuevas nace inactiva (`activa=False`) para probar la moderación (CU-017). Repetirlo con el mismo catálogo y cuentas no agrega filas.
+
+Para abrir Swagger UI o descargar el esquema OpenAPI, iniciá sesión primero en `/admin/` con una cuenta `is_staff`. Ambas rutas usan esa sesión de administración.
 
 #### Poblar el catálogo desde TMDB (`seed_catalogo`)
 

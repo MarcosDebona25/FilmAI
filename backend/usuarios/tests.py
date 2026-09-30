@@ -18,11 +18,13 @@ from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 
+from catalogo.factories import CalificacionFactory, ResenaFactory
 from catalogo.models import Calificacion, ProduccionAudiovisual, Resena, TipoProduccion
 
 from .adapter import UsuarioSocialAccountAdapter
 from .factories import UsuarioFactory
 from .management.commands.seed import (
+    CALIFICACIONES_POR_USUARIO_SOLO_RESENAS,
     CANTIDAD_PRODUCCIONES,
     UMBRAL_CATALOGO_PROTEGIDO,
 )
@@ -1261,19 +1263,63 @@ class SeedSoloResenasTests(TestCase):
         )
 
     def test_es_idempotente(self):
-        self._poblar_catalogo(15)
+        self._poblar_catalogo(120)
         UsuarioFactory(nombre_usuario="dev001")
 
         call_command("seed", "--solo-resenas", verbosity=0)
+        calificaciones = Calificacion.objects.count()
+        resenas = Resena.objects.count()
         call_command("seed", "--solo-resenas", verbosity=0)
 
-        # La segunda corrida no duplica: con 15 producciones el tope para un
-        # usuario es 15 calificaciones, y uq_calificacion_usuario_produccion
-        # prohíbe los pares repetidos.
-        self.assertLessEqual(Calificacion.objects.count(), 15)
+        # Hay catálogo sobrante: la segunda corrida debe dejar los mismos
+        # conteos, no solo evitar pares duplicados.
+        self.assertEqual(calificaciones, CALIFICACIONES_POR_USUARIO_SOLO_RESENAS)
+        self.assertEqual(Calificacion.objects.count(), calificaciones)
+        self.assertEqual(Resena.objects.count(), resenas)
         self.assertEqual(
             Calificacion.objects.values("usuario", "produccion").distinct().count(),
             Calificacion.objects.count(),
+        )
+
+    def test_completa_hasta_el_objetivo_sin_modificar_datos_existentes(self):
+        self._poblar_catalogo(120)
+        usuario = UsuarioFactory(nombre_usuario="dev001")
+        produccion = ProduccionAudiovisual.objects.first()
+        existente = CalificacionFactory(
+            usuario=usuario, produccion=produccion, valor=10
+        )
+        resena = ResenaFactory(calificacion=existente, texto="Texto existente")
+
+        call_command("seed", "--solo-resenas", verbosity=0)
+
+        existente.refresh_from_db()
+        resena.refresh_from_db()
+        self.assertEqual(existente.valor, 10)
+        self.assertEqual(resena.texto, "Texto existente")
+        self.assertEqual(
+            Calificacion.objects.filter(usuario=usuario).count(),
+            CALIFICACIONES_POR_USUARIO_SOLO_RESENAS,
+        )
+        self.assertEqual(Resena.objects.filter(calificacion=existente).count(), 1)
+
+    def test_agrega_texto_a_calificaciones_previas_sin_resena(self):
+        self._poblar_catalogo(15)
+        usuario = UsuarioFactory(nombre_usuario="dev001")
+        producciones = list(ProduccionAudiovisual.objects.all())
+        for produccion in producciones:
+            CalificacionFactory(usuario=usuario, produccion=produccion)
+
+        call_command("seed", "--solo-resenas", verbosity=0)
+        self.assertEqual(Calificacion.objects.filter(usuario=usuario).count(), 15)
+        self.assertEqual(
+            Resena.objects.filter(calificacion__usuario=usuario).count(), 9
+        )
+
+        # La segunda corrida conserva los textos creados y sus relaciones.
+        resenas = list(Resena.objects.values_list("pk", "calificacion_id"))
+        call_command("seed", "--solo-resenas", verbosity=0)
+        self.assertEqual(
+            list(Resena.objects.values_list("pk", "calificacion_id")), resenas
         )
 
     def test_crea_resenas_inactivas_para_moderar(self):
@@ -1285,7 +1331,6 @@ class SeedSoloResenasTests(TestCase):
         # nacen con activa=False (1 de cada 7, AD-01'/CU-017).
         with patch("usuarios.management.commands.seed.random") as random_mock:
             random_mock.random.return_value = 0.1
-            random_mock.randint.return_value = 15
             random_mock.sample.side_effect = lambda seq, k: seq
             call_command("seed", "--solo-resenas", verbosity=0)
 

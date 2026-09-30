@@ -18,6 +18,7 @@ catálogo y los usuarios de desarrollo existentes, sin borrar nada.
 """
 
 import random
+from math import ceil
 
 from allauth.account.models import EmailAddress
 from django.core.management.base import BaseCommand, CommandError
@@ -49,6 +50,7 @@ LISTAS_PREDETERMINADAS = ["Favoritos", "Pendientes", "Vistas"]
 
 CANTIDAD_USUARIOS = 3
 CANTIDAD_PRODUCCIONES = 50
+CALIFICACIONES_POR_USUARIO_SOLO_RESENAS = 15
 
 # Por encima de esto el catálogo no lo hizo este comando: lo poblaron
 # `seed_catalogo`, la sync nocturna o la navegación, a tres llamadas a TMDB
@@ -124,7 +126,12 @@ class Command(BaseCommand):
                 "No hay usuarios de desarrollo (@filmai.com, activos, no "
                 "staff): corré `python manage.py seed` para crearlos."
             )
-        self._crear_calificaciones_y_resenas(usuarios, producciones)
+        resenas_creadas = self._crear_calificaciones_y_resenas(
+            usuarios,
+            producciones,
+            objetivo=CALIFICACIONES_POR_USUARIO_SOLO_RESENAS,
+        )
+        self._completar_resenas(usuarios, resenas_creadas)
         self.stdout.write(self.style.SUCCESS("Reseñas de desarrollo creadas."))
         self.stdout.write(f"  Calificaciones: {Calificacion.objects.count()}")
         self.stdout.write(f"  Reseñas:        {Resena.objects.count()}")
@@ -207,17 +214,16 @@ class Command(BaseCommand):
             )
         return producciones
 
-    def _crear_calificaciones_y_resenas(self, usuarios, producciones):
+    def _crear_calificaciones_y_resenas(self, usuarios, producciones, objetivo=None):
         """Cada usuario califica un subconjunto aleatorio del catálogo.
 
         Se pasan `usuario` y `produccion` explícitos para no crear instancias
         nuevas desde los SubFactory y respetar la unicidad
         (usuario, produccion).
 
-        Es idempotente: por usuario calcula las producciones que todavía no
-        calificó y solo trabaja sobre esas. El modo `--solo-resenas` se puede
-        correr N veces sin violar `uq_calificacion_usuario_produccion` ni
-        duplicar reseñas.
+        En `--solo-resenas`, `objetivo` fija el total por usuario. Se cuentan
+        primero las calificaciones existentes y solo se crean las que faltan;
+        al repetir el comando no cambian ni las notas ni las reseñas.
 
         Regla de moderación (AD-01'/CU-017): 1 de cada 7 reseñas nace con
         `activa=False` para que el Admin tenga ejemplos reales de filtro,
@@ -233,7 +239,14 @@ class Command(BaseCommand):
             candidatas = [p for p in producciones if p.pk not in ya_calificadas]
             if not candidatas:
                 continue
-            cantidad = min(random.randint(8, 15), len(candidatas))
+            cantidad = min(
+                max(objetivo - len(ya_calificadas), 0)
+                if objetivo is not None
+                else random.randint(8, 15),
+                len(candidatas),
+            )
+            if not cantidad:
+                continue
             for produccion in random.sample(candidatas, cantidad):
                 calificacion = CalificacionFactory.create(
                     usuario=usuario, produccion=produccion
@@ -246,6 +259,32 @@ class Command(BaseCommand):
                         # `update_fields` limita el UPDATE SQL a esa columna.
                         resena.activa = False
                         resena.save(update_fields=["activa"])
+        return resenas_creadas
+
+    def _completar_resenas(self, usuarios, resenas_creadas):
+        """Asegura texto para 9 de hasta 15 notas por cuenta de desarrollo.
+
+        También cubre las calificaciones que ya existían antes de ejecutar
+        `--solo-resenas`; no reemplaza textos ni estados de moderación previos.
+        """
+        for usuario in usuarios:
+            calificaciones = list(Calificacion.objects.filter(usuario=usuario))
+            con_texto = set(
+                Resena.objects.filter(calificacion__usuario=usuario).values_list(
+                    "calificacion_id", flat=True
+                )
+            )
+            objetivo = ceil(
+                min(len(calificaciones), CALIFICACIONES_POR_USUARIO_SOLO_RESENAS) * 0.6
+            )
+            faltantes = max(objetivo - len(con_texto), 0)
+            sin_texto = [c for c in calificaciones if c.pk not in con_texto]
+            for calificacion in random.sample(sin_texto, faltantes):
+                resena = ResenaFactory.create(calificacion=calificacion)
+                resenas_creadas += 1
+                if resenas_creadas % 7 == 0:
+                    resena.activa = False
+                    resena.save(update_fields=["activa"])
 
     def _crear_listas(self, usuarios, producciones):
         """Crea las 3 listas predeterminadas y algunas personalizadas por usuario."""
