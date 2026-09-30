@@ -2739,7 +2739,7 @@
       "file_type": "code",
       "norm_label": "celeryapptests",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L290"
+      "source_location": "L297"
     },
     {
       "id": "backend_filmai_tests_configuracionemailtests",
@@ -17455,7 +17455,7 @@
       "file_type": "code",
       "norm_label": ".test_cliente_json_recibe_403_explicativo()",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L264"
+      "source_location": "L271"
     },
     {
       "id": "backend_filmai_tests_documentacionapitests_test_navegador_anonimo_recibe_ayuda_y_enlace_de_ingreso",
@@ -17491,7 +17491,7 @@
       "file_type": "code",
       "norm_label": ".test_staff_puede_leer_documentacion_con_cookie_jwt_invalida()",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L274"
+      "source_location": "L281"
     },
     {
       "id": "backend_listas_tests_quitardevistasborrandocalificaciontests_setup",
@@ -18271,7 +18271,7 @@
       "file_type": "code",
       "norm_label": ".test_app_es_una_instancia_celery_llamada_filmai()",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L297"
+      "source_location": "L304"
     },
     {
       "id": "backend_filmai_tests_celeryapptests_test_broker_y_backend_usan_db_de_redis_distinta_del_cache",
@@ -18283,7 +18283,7 @@
       "file_type": "code",
       "norm_label": ".test_broker_y_backend_usan_db_de_redis_distinta_del_cache()",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L313"
+      "source_location": "L320"
     },
     {
       "id": "backend_filmai_tests_celeryapptests_test_celery_app_se_expone_en_el_paquete",
@@ -18295,7 +18295,7 @@
       "file_type": "code",
       "norm_label": ".test_celery_app_se_expone_en_el_paquete()",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L305"
+      "source_location": "L312"
     },
     {
       "id": "backend_filmai_tests_celeryapptests_test_solo_acepta_serializacion_json",
@@ -18307,7 +18307,7 @@
       "file_type": "code",
       "norm_label": ".test_solo_acepta_serializacion_json()",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L322"
+      "source_location": "L329"
     },
     {
       "id": "backend_filmai_tests_configuracionemailtests_test_no_aplica_a_backend_no_resend",
@@ -30838,7 +30838,7 @@
       "source_location": "L1"
     },
     {
-      "id": "backend_filmai_tests_rationale_291",
+      "id": "backend_filmai_tests_rationale_298",
       "label": "Wiring de Celery con Django (C-04a). Se verifica configuraci\u00f3n, no ejecuci\u00f3n:\u2026",
       "_origin": "ast",
       "community": 65,
@@ -30846,7 +30846,7 @@
       "file_type": "rationale",
       "norm_label": "wiring de celery con django (c-04a). se verifica configuracion, no ejecucion:...",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L291"
+      "source_location": "L298"
     },
     {
       "id": "backend_filmai_views_rationale_1",
@@ -66598,7 +66598,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L277",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -91803,7 +91803,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L290",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -98502,7 +98502,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L290",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -103221,7 +103221,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L297",
+      "source_location": "L304",
       "weight": 1.0
     },
     {
@@ -103232,7 +103232,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L305",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -103243,7 +103243,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L313",
+      "source_location": "L320",
       "weight": 1.0
     },
     {
@@ -103254,7 +103254,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L322",
+      "source_location": "L329",
       "weight": 1.0
     },
     {
@@ -103342,7 +103342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L264",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -103353,7 +103353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L274",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -108043,14 +108043,14 @@
       "weight": 1.0
     },
     {
-      "source": "backend_filmai_tests_rationale_291",
+      "source": "backend_filmai_tests_rationale_298",
       "target": "backend_filmai_tests_celeryapptests",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/filmai/tests.py",
-      "source_location": "L291",
+      "source_location": "L298",
       "weight": 1.0
     },
     {
@@ -130411,5 +130411,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "1826671dd0ce2c08566147a2c707a9b8bbe2be53"
+  "built_at_commit": "e41444088ffda61452d2f6a03f3139f4808565b1"
 }

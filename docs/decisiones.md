@@ -5,6 +5,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 30/09/2026 — Corrección del aviso de acceso a la documentación
+
+- **Descripción**: se corrige la variable `recurso` en la plantilla de acceso
+  restringido para que el mensaje de una sesión sin permisos nombre Swagger UI
+  o el esquema OpenAPI. Se reduce un 95 % el margen superior del contenido
+  principal de esa página y se agrega una prueba para ambas rutas.
+- **Motivo**: el salto de línea dentro de `{{ recurso }}` impedía que Django
+  interpolara el nombre y el espacio entre la marca y el aviso era excesivo.
+- **Archivos afectados**: `backend/templates/filmai/documentacion_restringida.html`
+  y `backend/filmai/tests.py`.
+
+---
+
 ## 30/09/2026 — Acceso denegado a Swagger y OpenAPI con instrucciones para el Admin
 
 - **Descripción**: cuando alguien abre `/api/docs/` o `/api/schema/` en un
