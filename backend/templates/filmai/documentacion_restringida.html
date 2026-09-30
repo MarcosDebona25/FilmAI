@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Acceso a la documentación · FilmAI</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #0d0d14;
+        color: #f2f2f5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      .page {
+        width: min(100% - 40px, 720px);
+        margin: 0 auto;
+        padding: clamp(36px, 7vw, 88px) 0;
+      }
+      .brand {
+        color: #f5c518;
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      main {
+        margin-top: clamp(72px, 11vw, 140px);
+        border-top: 1px solid #363649;
+        padding-top: 36px;
+      }
+      h1 {
+        max-width: 18ch;
+        margin: 0 0 22px;
+        font-size: clamp(2.15rem, 6vw, 3.4rem);
+        line-height: 1.12;
+        letter-spacing: -0.03em;
+      }
+      p {
+        max-width: 58ch;
+        margin: 0 0 16px;
+        color: #d0d0db;
+        font-size: 1.08rem;
+        line-height: 1.65;
+      }
+      .actions {
+        margin-top: 36px;
+      }
+      .button {
+        display: inline-block;
+        border-radius: 10px;
+        background: #f5c518;
+        color: #17120a;
+        padding: 14px 22px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .button:hover {
+        background: #ffe263;
+      }
+      .button:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 4px;
+      }
+      .hint {
+        margin-top: 18px;
+        font-size: 0.96rem;
+      }
+      ::selection {
+        background: #f5c518;
+        color: #17120a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="brand">FilmAI</div>
+      <main>
+        <h1>La documentación requiere una cuenta staff</h1>
+        {% if sesion_iniciada %}
+        <p>
+          Tu sesión actual no tiene permisos de administración para ver {{
+          recurso }}.
+        </p>
+        <p>Ingresá al Admin con una cuenta staff para continuar.</p>
+        {% else %}
+        <p>
+          Para consultar {{ recurso }}, ingresá al Admin de FilmAI con una
+          cuenta staff.
+        </p>
+        {% endif %}
+        <div class="actions">
+          <a class="button" href="{{ url_login }}"
+            >Iniciar sesión en el Admin</a
+          >
+        </div>
+        <p class="hint">Después de iniciar sesión, volverás a esta página.</p>
+      </main>
+    </div>
+  </body>
+</html>

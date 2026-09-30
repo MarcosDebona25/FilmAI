@@ -5,6 +5,25 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 30/09/2026 — Acceso denegado a Swagger y OpenAPI con instrucciones para el Admin
+
+- **Descripción**: cuando alguien abre `/api/docs/` o `/api/schema/` en un
+  navegador sin sesión staff, recibe una página HTML con estado 403 que explica
+  el permiso necesario y enlaza al login del Django Admin. El enlace conserva
+  la ruta solicitada para volver tras ingresar. Una sesión común recibe un
+  mensaje específico; los clientes que piden JSON reciben un 403 JSON claro.
+  La verificación de `is_staff` y los permisos de DRF siguen protegiendo ambas
+  vistas. El control externo evita que la negociación YAML/JSON del esquema
+  devuelva otro error antes de mostrar el aviso.
+- **Motivo**: hacer entendible el rechazo y ofrecer un paso de recuperación
+  sin exponer el esquema a visitantes.
+- **Archivos afectados**: `backend/filmai/documentation.py`,
+  `backend/filmai/urls.py`, `backend/filmai/tests.py`,
+  `backend/templates/filmai/documentacion_restringida.html` y
+  `openspec/specs/admin-api-docs/spec.md`.
+
+---
+
 ## 30/09/2026 — Documentación API restringida a staff y semilla de reseñas repetible
 
 - **Descripción**: `/api/docs/` y `/api/schema/` requieren ahora una sesión de

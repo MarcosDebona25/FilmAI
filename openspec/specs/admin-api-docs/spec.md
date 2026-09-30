@@ -25,6 +25,33 @@ a regular user MUST NOT expose either resource.
 - WHEN either documentation route is requested
 - THEN access is denied
 
+### Requirement: Access denial explains the next step
+
+For browser requests, both documentation routes MUST respond with an HTML page
+and HTTP 403. The page MUST say that a staff account is required, explain when
+the current session lacks permission, and link to the Django Admin login with
+`next` returning to the requested route. Clients requesting JSON MUST receive
+a 403 JSON response with a useful `detail` message.
+
+#### Scenario: A visitor opens the schema in a browser
+
+- GIVEN no Admin session and an `Accept: text/html` request
+- WHEN `/api/schema/` is opened
+- THEN the response is an HTML page with status 403
+- AND the login link returns to `/api/schema/` after successful sign-in
+
+#### Scenario: A signed-in user lacks staff permission
+
+- GIVEN a valid session for a regular user
+- WHEN `/api/docs/` is opened in a browser
+- THEN the response explains that the current account lacks administration access
+
+#### Scenario: A programmatic client requests JSON
+
+- GIVEN no Admin session and an `Accept: application/json` request
+- WHEN `/api/schema/` is requested
+- THEN the response is a 403 JSON object explaining how to get access
+
 ### Requirement: An expired API cookie does not break the Admin session
 
 These documentation views MUST authenticate through the Django session. Their

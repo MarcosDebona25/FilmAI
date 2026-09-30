@@ -12,6 +12,7 @@ from catalogo.reviews import (
     MisCalificacionesView,
     ResenaTextoView,
 )
+from filmai.documentation import documentacion_para_staff
 from usuarios.authentication import RefreshSesionView
 from usuarios.cuenta import DesactivarCuentaView, PreferenciasView
 from usuarios.perfil import AvataresView, CambiarContrasenaView, PerfilView
@@ -33,18 +34,24 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path(
         "api/schema/",
-        SpectacularAPIView.as_view(
-            permission_classes=[IsAdminUser],
-            authentication_classes=[SessionAuthentication],
+        documentacion_para_staff(
+            SpectacularAPIView.as_view(
+                permission_classes=[IsAdminUser],
+                authentication_classes=[SessionAuthentication],
+            ),
+            recurso="el esquema OpenAPI",
         ),
         name="schema",
     ),
     path(
         "api/docs/",
-        SpectacularSwaggerView.as_view(
-            url_name="schema",
-            permission_classes=[IsAdminUser],
-            authentication_classes=[SessionAuthentication],
+        documentacion_para_staff(
+            SpectacularSwaggerView.as_view(
+                url_name="schema",
+                permission_classes=[IsAdminUser],
+                authentication_classes=[SessionAuthentication],
+            ),
+            recurso="Swagger UI",
         ),
         name="swagger-ui",
     ),
