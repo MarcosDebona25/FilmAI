@@ -2304,3 +2304,48 @@ pagination_reviews,exceptions,tests_reviews}.py`,
   `backend/usuarios/tests.py`, docs 02, 04 y 05, y las specs `reviews-api`,
   `list-endpoints` y `development-seed`.
 
+---
+
+## 30/09/2026 — El contenido de TMDB sigue en inglés, por ahora
+
+- **Fecha**: 30/09/2026
+- **Hallazgo**: el cliente de TMDB (`catalogo/client.py`) nunca manda el
+  parámetro `language`, así que TMDB responde en su idioma por defecto
+  (en-US): títulos, sinopsis y géneros llegan en inglés, y así quedaron también
+  las producciones materializadas (`generos` guarda nombres como `Action`). No
+  era una decisión registrada; no se notaba porque ninguna pantalla lo mostraba
+  hasta el Home (C-05).
+- **Verificado en vivo**: con `es-MX` los títulos y géneros llegan traducidos
+  («Resident Evil: Noche cero», «Acción») y 7 de 80 sinopsis de tendencias y
+  cartelera llegan vacías; con `es-ES`, 5 de 80.
+- **Decisión** (del usuario): seguir en inglés por ahora, para no frenar C-05.
+- **Costo de cambiarlo después**: agregar `language` en el cliente, vaciar la
+  caché de Redis (si no, sirve respuestas viejas hasta que venzan), volver a
+  enriquecer el catálogo materializado y decidir qué mostrar cuando la sinopsis
+  llega vacía. Todo lo que compare géneros por nombre depende del idioma de lo
+  guardado.
+- **Archivos afectados**: ninguno; solo `docs/decisiones.md`.
+
+---
+
+## 30/09/2026 — El Home separa películas y series con un selector global (C-05)
+
+- **Fecha**: 30/09/2026
+- **Decisión** (del usuario): el Home tiene un selector `Todo · Películas ·
+  Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
+  tipos, como pide hoy el doc 04 §5; las otras dos opciones cambian la fuente
+  de cada fila.
+- **Alternativas descartadas**: filas mezcladas sin selector (no deja mirar
+  solo series), filas separadas por tipo (seis filas más el Hero, muy largo en
+  mobile y siete pedidos al cargar) y un selector por fila (tres controles que
+  hacen lo mismo).
+- **Motivo**: Buscar (C-06) ya pide el mismo selector, así que se construye una
+  vez y la app queda consistente. En «Recomendado para ti» cada tipo usa los
+  géneros de lo que el usuario calificó de ese tipo, y «Todo» es la unión: no
+  hace falta traducir géneros entre películas y series (TMDB los nombra
+  distinto; `Action` en películas es `Action & Adventure` en series). La fila
+  excluye solo lo que está en «Vistas», que con la regla anterior incluye todo
+  lo calificado.
+- **Pendiente**: el doc 04 §5 y el diseño completo se actualizan en el SDD de
+  C-05.
+- **Archivos afectados**: ninguno todavía; solo `docs/decisiones.md`.
