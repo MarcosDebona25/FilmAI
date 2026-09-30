@@ -20,6 +20,7 @@ from rest_framework.test import APIRequestFactory
 
 from catalogo.factories import CalificacionFactory, ResenaFactory
 from catalogo.models import Calificacion, ProduccionAudiovisual, Resena, TipoProduccion
+from listas.models import Tiene
 
 from .adapter import UsuarioSocialAccountAdapter
 from .factories import UsuarioFactory
@@ -1217,6 +1218,24 @@ def _crear_superusuario(correo="admin@filmai.com", nombre_usuario="admin"):
     )
 
 
+def _calificadas_fuera_de_vistas():
+    """Calificaciones cuya producción no está en las «Vistas» de su autor.
+
+    La regla «calificada ⇒ en Vistas» (30/09/2026) pide que sea vacía. El seed
+    crea las notas con la factory, sin pasar por la API, así que la aplica a
+    mano; si se olvidara, cada `seed` volvería a sembrar datos que la violan.
+    """
+    return [
+        calificacion
+        for calificacion in Calificacion.objects.all()
+        if not Tiene.objects.filter(
+            lista__usuario_id=calificacion.usuario_id,
+            lista__nombre="Vistas",
+            produccion_id=calificacion.produccion_id,
+        ).exists()
+    ]
+
+
 class SeedSoloResenasTests(TestCase):
     """`manage.py seed --solo-resenas` suma actividad sin borrar nada.
 
@@ -1280,6 +1299,15 @@ class SeedSoloResenasTests(TestCase):
             Calificacion.objects.values("usuario", "produccion").distinct().count(),
             Calificacion.objects.count(),
         )
+
+    def test_todo_lo_calificado_queda_en_vistas(self):
+        self._poblar_catalogo(120)
+        UsuarioFactory(nombre_usuario="dev001")
+
+        call_command("seed", "--solo-resenas", verbosity=0)
+
+        self.assertGreater(Calificacion.objects.count(), 0)
+        self.assertEqual(_calificadas_fuera_de_vistas(), [])
 
     def test_completa_hasta_el_objetivo_sin_modificar_datos_existentes(self):
         self._poblar_catalogo(120)
@@ -1412,3 +1440,5 @@ class SeedConservaStaffTests(TestCase):
             Calificacion.objects.count(),
         )
         self.assertEqual(Resena.objects.filter(calificacion__isnull=True).count(), 0)
+        # Y todo lo calificado quedó en «Vistas» (regla del 30/09/2026).
+        self.assertEqual(_calificadas_fuera_de_vistas(), [])

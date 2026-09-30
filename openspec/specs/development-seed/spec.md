@@ -14,6 +14,9 @@ users (`@filmai.com`) and existing catalog productions. It MUST preserve
 existing users, productions, ratings, and reviews. Each rating MUST belong to
 one user and one production, have a value from 1 to 10, and be unique for that
 user-production pair. A review MUST belong to a rating and remain optional.
+Each seeded rating's production MUST also be in its user's `Vistas` list, as
+the reviews API does since 30/09/2026 (`reviews-api`); the seed writes through
+the factories, so it applies that rule itself. The full `seed` follows it too.
 
 #### Scenario: A user already rated one production
 
