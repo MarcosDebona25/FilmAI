@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 30/09/2026 — Swagger y esquema OpenAPI públicos, sin autenticación
+
+- **Descripción**: `/api/docs/` y `/api/schema/` se declaran ahora con
+  `authentication_classes=[]`, el mismo criterio de `CatalogoBaseView`. Antes
+  una cookie `access` vieja o corrupta en el navegador los convertía en 401:
+  `JWTCookieAuthentication` rechaza el token antes de evaluar permisos, aunque
+  la vista no exija sesión.
+- **Motivo**: la documentación es pública por diseño; un recurso abierto no
+  debe fallar por credenciales vencidas que el navegador conserva. Se agrega
+  un test de regresión en `filmai/tests.py`.
+- **Archivos afectados**: `backend/filmai/urls.py`, `backend/filmai/tests.py`,
+  `README.md` (URLs).
+
+---
+
 ## 30/09/2026 — Módulo 6: reseñas de desarrollo con `seed --solo-resenas`; el seed conserva al superusuario
 
 - **Descripción**: el Admin de reseñas (AD-01') estaba implementado y con
