@@ -2,7 +2,7 @@
 
 ## 1. Alcance
 
-AD-01' usa el panel nativo de Django en `/admin/`. `UsuarioAdmin` ya existía y se conserva. Este módulo agrega `ResenaAdmin` para revisar reseñas, corregir su texto y desactivarlas. No introduce endpoints REST ni una pantalla propia. Los datos creados por los tests viven en la base temporal que Django prepara para cada ejecución; no se sembró la base de desarrollo.
+AD-01' usa el panel nativo de Django en `/admin/`. `UsuarioAdmin` ya existía y se conserva. Este módulo agrega `ResenaAdmin` para revisar reseñas, corregir su texto y desactivarlas. No introduce endpoints REST ni una pantalla propia. Los datos creados por los tests viven en la base temporal que Django prepara para cada ejecución; para ver el panel con datos reales existe `python manage.py seed --solo-resenas`, que siembra calificaciones y reseñas de desarrollo sobre el catálogo existente sin borrarlo (§7).
 
 Una reseña depende de una calificación, y esa calificación vincula al usuario con la producción. La moderación conserva esas relaciones: desactivar establece `activa=False` en la reseña, sin borrar su fila ni modificar la calificación.
 
@@ -167,19 +167,36 @@ La prueba de la acción envía el mismo POST que el formulario del listado. Desp
 | Edición y borrado de usuario | Comprueba el cambio a `baja` y el borrado físico de una cuenta de prueba.                         |
 | Permisos de usuario          | Impide operar a visitantes, usuarios comunes y staff sin permiso de lectura o cambio.             |
 
-## 7. Verificaciones y referencia de integración
+## 7. Datos de desarrollo (`seed --solo-resenas`)
+
+Cuando el catálogo lo pobló `seed_catalogo` (más de 100 producciones), el `seed` completo se niega a resetearlo. El modo `--solo-resenas` siembra actividad **sin borrar nada**: toma el catálogo existente y las cuentas deterministas del seed (`@filmai.com`, activas, no staff), y para cada una crea calificaciones 1–10 sobre producciones todavía no calificadas, con reseña escrita en ~60% de los casos. Es idempotente —respeta `uq_calificacion_usuario_produccion` salteando los pares existentes— y 1 de cada 7 reseñas nace `activa=False`, el estado que usa la moderación de CU-017.
+
+El mismo método lo usa el flujo completo, así que un `seed` de cero también deja ejemplos inactivos. Además, desde el 30/09 `_limpiar()` conserva las cuentas `is_staff` (el superusuario que crea el entrypoint) y sus `EmailAddress`, como promete el README.
+
+Chequeo end-to-end del 30/09 sobre la base de desarrollo (34 calificaciones, 20 reseñas, 2 inactivas):
+
+| Verificación | Resultado |
+| --- | --- |
+| Notas dentro de 1..10 y pares (usuario, producción) únicos | OK |
+| Textos ≤1000 caracteres y composición 1:1 reseña–calificación | OK |
+| API C-08: la reseña inactiva no aparece en la comunidad, pero su autor la ve en «mías» | OK |
+| API C-08: una reseña activa sí aparece en la comunidad | OK |
+| `GET /admin/catalogo/resena/` como superusuario: 200 y «20 reseñas» | OK |
+| Filtro `activa=No` del Admin | OK |
+
+## 8. Verificaciones y referencia de integración
 
 | Control                                               | Resultado                      |
 | ----------------------------------------------------- | ------------------------------ |
 | `python manage.py test catalogo.test_admin --noinput` | 10 tests, OK.                  |
-| `python manage.py test --noinput`                     | 273 tests, OK.                 |
+| `python manage.py test --noinput`                     | 388 tests, OK.                 |
 | `ruff format .` y `ruff check .`                      | Formato aplicado; lint limpio. |
 | `npx prettier --check .` en frontend                  | Limpio.                        |
 | Merge de prueba con `git merge-tree`                  | Sin conflictos.                |
 
 Se obtuvo `origin/main` antes de la comprobación: `a0268ea1ffa79ec25eb860a7bc3450ccff008ce6`. El merge se calculó con una instantánea temporal de los cambios y no modificó la rama. Se repitió sobre el árbol final, incluido este documento, antes del cierre. No se realizó el merge.
 
-## 8. Glosario breve
+## 9. Glosario breve
 
 | Concepto          | Significado en este módulo                                                                 |
 | ----------------- | ------------------------------------------------------------------------------------------ |

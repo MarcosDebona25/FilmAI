@@ -8,10 +8,13 @@ de las apps de negocio y los recrea desde cero en cada ejecución.
 Uso:
     python manage.py seed
     python manage.py seed --borrar-catalogo   # si el catálogo supera el umbral
+    python manage.py seed --solo-resenas      # solo calificaciones y reseñas
 
 Desde C-04c el catálogo puede venir de `seed_catalogo` (horas de llamadas a
 TMDB): por encima de `UMBRAL_CATALOGO_PROTEGIDO` este comando se niega a
-borrarlo salvo que se le pida explícitamente.
+borrarlo salvo que se le pida explícitamente. `--solo-resenas` es la
+alternativa no destructiva: siembra calificaciones y reseñas sobre el
+catálogo y los usuarios de desarrollo existentes, sin borrar nada.
 """
 
 import random
@@ -36,7 +39,7 @@ from chatbot.models import Chat, Mensaje, TipoAutor
 from listas.factories import ListaFactory
 from listas.models import Lista, Tiene, TipoLista
 from usuarios.factories import UsuarioFactory
-from usuarios.models import Usuario
+from usuarios.models import EstadoCuenta, Usuario
 
 # Contraseña común para todos los usuarios de prueba (útil para login manual).
 SEED_PASSWORD = "Password123!"
@@ -69,9 +72,21 @@ class Command(BaseCommand):
                 f"{UMBRAL_CATALOGO_PROTEGIDO} producciones."
             ),
         )
+        parser.add_argument(
+            "--solo-resenas",
+            action="store_true",
+            help=(
+                "Crea calificaciones y reseñas sobre el catálogo y los "
+                "usuarios de desarrollo existentes, sin borrar nada (útil "
+                "cuando el catálogo está protegido por seed_catalogo)."
+            ),
+        )
 
     @transaction.atomic
     def handle(self, *args, **options):
+        if options["solo_resenas"]:
+            self._solo_resenas()
+            return
         self._verificar_catalogo(options["borrar_catalogo"])
         self._limpiar()
         usuarios = self._crear_usuarios()
@@ -80,6 +95,43 @@ class Command(BaseCommand):
         self._crear_listas(usuarios, producciones)
         self._crear_chats(usuarios)
         self._resumen(usuarios)
+
+    def _solo_resenas(self):
+        """Siembra solo calificaciones y reseñas sobre lo que ya existe.
+
+        Modo no destructivo pensado para catálogos poblados por
+        `seed_catalogo`: por encima del umbral de C-04c el seed completo se
+        niega a resetear (y forzarlo tira horas de llamadas a TMDB). Acá se
+        reutilizan el catálogo y las cuentas deterministas del seed
+        (`@filmai.com`) para sumar actividad sin borrar una fila.
+        """
+        producciones = list(ProduccionAudiovisual.objects.all())
+        if not producciones:
+            raise CommandError(
+                "No hay producciones en el catálogo: corré "
+                "`python manage.py seed` para crear el set completo de datos "
+                "de desarrollo."
+            )
+        usuarios = list(
+            Usuario.objects.filter(
+                estado=EstadoCuenta.ACTIVA,
+                is_staff=False,
+                correo__endswith="@filmai.com",
+            )
+        )
+        if not usuarios:
+            raise CommandError(
+                "No hay usuarios de desarrollo (@filmai.com, activos, no "
+                "staff): corré `python manage.py seed` para crearlos."
+            )
+        self._crear_calificaciones_y_resenas(usuarios, producciones)
+        self.stdout.write(self.style.SUCCESS("Reseñas de desarrollo creadas."))
+        self.stdout.write(f"  Calificaciones: {Calificacion.objects.count()}")
+        self.stdout.write(f"  Reseñas:        {Resena.objects.count()}")
+        self.stdout.write(
+            f"  Reseñas inactivas (moderación): "
+            f"{Resena.objects.filter(activa=False).count()}"
+        )
 
     def _verificar_catalogo(self, borrar_catalogo):
         """Se niega a pisar un catálogo que costó horas, salvo pedido explícito.
@@ -99,11 +151,14 @@ class Command(BaseCommand):
             )
 
     def _limpiar(self):
-        """Borra los datos de las apps de negocio (orden de hijos a padres).
+        """Borra los datos de las apps de negocio, conservando al superusuario.
 
         El borrado en cascada limpiaría el resto, pero se listan todos los
         modelos explícitamente para que el comando sea legible y no dependa
-        del orden de las FK.
+        del orden de las FK. Los usuarios `is_staff` se conservan (junto con
+        sus EmailAddress): el README promete que el seed no elimina el
+        superusuario que crea el entrypoint, y perder el acceso a /admin/ con
+        un seed sería un autogol.
         """
         for modelo in (
             Mensaje,
@@ -113,10 +168,10 @@ class Command(BaseCommand):
             Chat,
             Lista,
             ProduccionAudiovisual,
-            EmailAddress,
-            Usuario,
         ):
             modelo.objects.all().delete()
+        EmailAddress.objects.exclude(user__is_staff=True).delete()
+        Usuario.objects.exclude(is_staff=True).delete()
 
     def _crear_usuarios(self):
         """Crea los usuarios de prueba con credenciales deterministas."""
@@ -158,16 +213,39 @@ class Command(BaseCommand):
         Se pasan `usuario` y `produccion` explícitos para no crear instancias
         nuevas desde los SubFactory y respetar la unicidad
         (usuario, produccion).
+
+        Es idempotente: por usuario calcula las producciones que todavía no
+        calificó y solo trabaja sobre esas. El modo `--solo-resenas` se puede
+        correr N veces sin violar `uq_calificacion_usuario_produccion` ni
+        duplicar reseñas.
+
+        Regla de moderación (AD-01'/CU-017): 1 de cada 7 reseñas nace con
+        `activa=False` para que el Admin tenga ejemplos reales de filtro,
+        desactivación y reactivación.
         """
+        resenas_creadas = 0
         for usuario in usuarios:
-            producciones_usuario = random.sample(producciones, random.randint(8, 15))
-            for produccion in producciones_usuario:
+            ya_calificadas = set(
+                Calificacion.objects.filter(usuario=usuario).values_list(
+                    "produccion_id", flat=True
+                )
+            )
+            candidatas = [p for p in producciones if p.pk not in ya_calificadas]
+            if not candidatas:
+                continue
+            cantidad = min(random.randint(8, 15), len(candidatas))
+            for produccion in random.sample(candidatas, cantidad):
                 calificacion = CalificacionFactory.create(
                     usuario=usuario, produccion=produccion
                 )
                 # ~60% de las calificaciones llevan reseña escrita.
                 if random.random() < 0.6:
-                    ResenaFactory.create(calificacion=calificacion)
+                    resena = ResenaFactory.create(calificacion=calificacion)
+                    resenas_creadas += 1
+                    if resenas_creadas % 7 == 0:
+                        # `update_fields` limita el UPDATE SQL a esa columna.
+                        resena.activa = False
+                        resena.save(update_fields=["activa"])
 
     def _crear_listas(self, usuarios, producciones):
         """Crea las 3 listas predeterminadas y algunas personalizadas por usuario."""

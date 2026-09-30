@@ -5,6 +5,36 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 30/09/2026 — Módulo 6: reseñas de desarrollo con `seed --solo-resenas`; el seed conserva al superusuario
+
+- **Descripción**: el Admin de reseñas (AD-01') estaba implementado y con
+  tests, pero la base de desarrollo no tenía reseñas: el guard de C-04c impide
+  que `seed` resetee un catálogo poblado y forzarlo tira horas de llamadas a
+  TMDB. Se agrega el modo no destructivo `python manage.py seed
+  --solo-resenas`: siembra calificaciones (1–10) y reseñas (texto ≤1000,
+  ~60% de las notas) sobre el catálogo y las cuentas de desarrollo existentes
+  (`@filmai.com`, activas, sin staff). Es idempotente —saltea pares
+  usuario–producción ya calificados, respetando
+  `uq_calificacion_usuario_produccion`— y 1 de cada 7 reseñas nace
+  `activa=False` para que el Admin tenga ejemplos reales de filtro,
+  desactivación y reactivación (CU-017).
+- **Superusuario preservado**: `seed._limpiar()` ya no borra cuentas
+  `is_staff` ni sus `EmailAddress`, cumpliendo lo que el README prometía; un
+  reset de desarrollo ya no deja al equipo sin acceso a `/admin/`.
+- **Chequeo end-to-end** (BD de desarrollo, 30/09): las 34 calificaciones y
+  20 reseñas sembradas cumplen rango de nota, unicidad de pares, largo de
+  texto y composición 1:1 reseña–calificación. Contra la API de C-08, la
+  moderada no aparece en la comunidad y sí en «mías» de su autor; el
+  changelist del Admin lista las 20 y el filtro `activa=No` responde.
+- **Motivo**: cerrar operativamente el Módulo 6; decisión del usuario de que
+  el mecanismo viva dentro del propio `seed` para que el otro integrante lo
+  replique con el mismo comando.
+- **Archivos afectados**: `backend/usuarios/management/commands/seed.py`,
+  `backend/usuarios/tests.py`, `README.md`, `docs/05_Plan_de_Desarrollo.md`,
+  `docs/reportes_dev/explicacion-modulo-6-admin.md`.
+
+---
+
 ## 26/09/2026 — Selector de avatar: foco y selección circulares
 
 - **Descripción**: en el selector de avatar del perfil, cada opción es un

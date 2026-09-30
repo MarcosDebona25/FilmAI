@@ -18,7 +18,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 
-from catalogo.models import ProduccionAudiovisual, TipoProduccion
+from catalogo.models import Calificacion, ProduccionAudiovisual, Resena, TipoProduccion
 
 from .adapter import UsuarioSocialAccountAdapter
 from .factories import UsuarioFactory
@@ -26,7 +26,7 @@ from .management.commands.seed import (
     CANTIDAD_PRODUCCIONES,
     UMBRAL_CATALOGO_PROTEGIDO,
 )
-from .models import EstadoCuenta, Usuario
+from .models import EstadoCuenta, TipoGenero, Usuario
 from .provisioning import LISTAS_PREDETERMINADAS
 from .serializers import GoogleSocialLoginSerializer
 
@@ -1195,3 +1195,175 @@ class SeedGuardCatalogoTests(TestCase):
         call_command("seed", verbosity=0)
 
         self.assertEqual(ProduccionAudiovisual.objects.count(), CANTIDAD_PRODUCCIONES)
+
+
+def _crear_superusuario(correo="admin@filmai.com", nombre_usuario="admin"):
+    """Crea un superusuario con todos los campos que exige el modelo Usuario.
+
+    `create_superuser` solo garantiza is_staff/is_superuser/estado; los demás
+    campos (nombre, apellido, fecha_nacimiento, genero) son obligatorios y
+    hay que pasarlos sí o sí, igual que hace el entrypoint del contenedor.
+    """
+    return Usuario.objects.create_superuser(
+        correo=correo,
+        nombre_usuario=nombre_usuario,
+        password="Password123!",
+        nombre="Admin",
+        apellido="FilmAI",
+        fecha_nacimiento=date(2000, 1, 1),
+        genero=TipoGenero.NO_ESPECIFICA,
+    )
+
+
+class SeedSoloResenasTests(TestCase):
+    """`manage.py seed --solo-resenas` suma actividad sin borrar nada.
+
+    Complementa a SeedGuardCatalogoTests: cuando el catálogo supera el umbral
+    (C-04c), forzar un reset cuesta horas de TMDB. Este modo siembra
+    calificaciones y reseñas sobre el catálogo y los usuarios de desarrollo
+    existentes, y se puede repetir sin duplicar (es idempotente).
+    """
+
+    def _poblar_catalogo(self, cantidad):
+        ProduccionAudiovisual.objects.bulk_create(
+            ProduccionAudiovisual(
+                id_tmdb=numero, tipo=TipoProduccion.PELICULA, titulo=f"P{numero}"
+            )
+            for numero in range(1, cantidad + 1)
+        )
+
+    def test_crea_calificaciones_y_resenas_sin_borrar_nada(self):
+        self._poblar_catalogo(120)
+        UsuarioFactory(nombre_usuario="dev001")
+        UsuarioFactory(nombre_usuario="dev002")
+        staff = _crear_superusuario()
+        externo = UsuarioFactory(nombre_usuario="externo", correo="externo@gmail.com")
+
+        call_command("seed", "--solo-resenas", verbosity=0)
+
+        # No borra ni el catálogo protegido ni los usuarios existentes.
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 120)
+        self.assertEqual(Usuario.objects.count(), 4)
+        # Solo las cuentas deterministas del seed (@filmai.com, no staff)
+        # califican: el staff y el correo gmail quedan afuera.
+        self.assertEqual(staff.calificaciones.count(), 0)
+        self.assertEqual(externo.calificaciones.count(), 0)
+        self.assertGreater(Calificacion.objects.count(), 0)
+        self.assertGreater(Resena.objects.count(), 0)
+        # Valores dentro del rango 1..10 (ck_calificacion_valor_rango)...
+        self.assertEqual(
+            Calificacion.objects.exclude(valor__gte=1, valor__lte=10).count(), 0
+        )
+        # ...y sin pares (usuario, produccion) repetidos.
+        self.assertEqual(
+            Calificacion.objects.values("usuario", "produccion").distinct().count(),
+            Calificacion.objects.count(),
+        )
+
+    def test_es_idempotente(self):
+        self._poblar_catalogo(15)
+        UsuarioFactory(nombre_usuario="dev001")
+
+        call_command("seed", "--solo-resenas", verbosity=0)
+        call_command("seed", "--solo-resenas", verbosity=0)
+
+        # La segunda corrida no duplica: con 15 producciones el tope para un
+        # usuario es 15 calificaciones, y uq_calificacion_usuario_produccion
+        # prohíbe los pares repetidos.
+        self.assertLessEqual(Calificacion.objects.count(), 15)
+        self.assertEqual(
+            Calificacion.objects.values("usuario", "produccion").distinct().count(),
+            Calificacion.objects.count(),
+        )
+
+    def test_crea_resenas_inactivas_para_moderar(self):
+        self._poblar_catalogo(15)
+        UsuarioFactory(nombre_usuario="dev001")
+
+        # Mock de todo el módulo `random` del comando: con random() < 0.6
+        # TODAS las calificaciones llevan reseña, así que la 7ª y la 14ª
+        # nacen con activa=False (1 de cada 7, AD-01'/CU-017).
+        with patch("usuarios.management.commands.seed.random") as random_mock:
+            random_mock.random.return_value = 0.1
+            random_mock.randint.return_value = 15
+            random_mock.sample.side_effect = lambda seq, k: seq
+            call_command("seed", "--solo-resenas", verbosity=0)
+
+        self.assertTrue(Resena.objects.filter(activa=False).exists())
+        # OneToOne (CU-015): cada reseña cuelga de su calificación.
+        self.assertEqual(Resena.objects.filter(calificacion__isnull=True).count(), 0)
+
+    def test_sin_catalogo_aborta(self):
+        UsuarioFactory(nombre_usuario="dev001")
+
+        # Sin producciones no hay nada que calificar: aborta y nombra el
+        # comando que crea el set completo.
+        with self.assertRaisesMessage(CommandError, "seed"):
+            call_command("seed", "--solo-resenas", verbosity=0)
+
+        self.assertEqual(Calificacion.objects.count(), 0)
+
+    def test_sin_usuarios_dev_aborta(self):
+        self._poblar_catalogo(15)
+        _crear_superusuario()
+
+        # Con catálogo pero sin cuentas de desarrollo (@filmai.com, no staff)
+        # tampoco tiene sentido: aborta y nombra el comando completo.
+        with self.assertRaisesMessage(CommandError, "seed"):
+            call_command("seed", "--solo-resenas", verbosity=0)
+
+        self.assertEqual(Calificacion.objects.count(), 0)
+
+
+class SeedConservaStaffTests(TestCase):
+    """El seed completo borra los datos de negocio pero no al superusuario.
+
+    El README promete que `seed` no elimina el superusuario que crea el
+    entrypoint; si lo borrara, un reset de desarrollo dejaría a todo el
+    equipo sin acceso a /admin/.
+    """
+
+    def _poblar_catalogo(self, cantidad):
+        ProduccionAudiovisual.objects.bulk_create(
+            ProduccionAudiovisual(
+                id_tmdb=numero, tipo=TipoProduccion.PELICULA, titulo=f"P{numero}"
+            )
+            for numero in range(1, cantidad + 1)
+        )
+
+    def test_con_el_flag_conserva_el_superusuario(self):
+        admin = _crear_superusuario()
+        EmailAddress.objects.create(
+            user=admin, email=admin.correo, verified=True, primary=True
+        )
+        normal = UsuarioFactory()
+        self._poblar_catalogo(UMBRAL_CATALOGO_PROTEGIDO + 1)
+
+        call_command("seed", "--borrar-catalogo", verbosity=0)
+
+        # El superusuario y su EmailAddress sobreviven al reset...
+        self.assertTrue(
+            Usuario.objects.filter(correo=admin.correo, is_staff=True).exists()
+        )
+        self.assertTrue(EmailAddress.objects.filter(user=admin).exists())
+        # ...pero los usuarios de negocio se borran como siempre.
+        self.assertFalse(Usuario.objects.filter(pk=normal.pk).exists())
+
+    def test_seed_completo_crea_resenas_validas(self):
+        # Por debajo del umbral el flujo completo corre sin flag.
+        self._poblar_catalogo(CANTIDAD_PRODUCCIONES)
+
+        call_command("seed", verbosity=0)
+
+        self.assertGreater(Calificacion.objects.count(), 0)
+        self.assertGreater(Resena.objects.count(), 0)
+        # Rango 1..10, pares (usuario, produccion) únicos y composición 1:1
+        # entre reseña y calificación (CU-015).
+        self.assertEqual(
+            Calificacion.objects.exclude(valor__gte=1, valor__lte=10).count(), 0
+        )
+        self.assertEqual(
+            Calificacion.objects.values("usuario", "produccion").distinct().count(),
+            Calificacion.objects.count(),
+        )
+        self.assertEqual(Resena.objects.filter(calificacion__isnull=True).count(), 0)

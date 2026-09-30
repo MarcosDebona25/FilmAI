@@ -292,6 +292,16 @@ docker compose exec backend python manage.py seed
 >
 > Si el catálogo tiene más de 100 producciones (lo pobló `seed_catalogo`, la sync o la navegación), `seed` **se niega** a borrarlo: son horas de llamadas a TMDB y el borrado se lleva calificaciones, reseñas y listas. Para forzarlo: `python manage.py seed --borrar-catalogo`.
 
+#### Agregar reseñas sin tocar el catálogo (`seed --solo-resenas`)
+
+Cuando el catálogo ya está poblado, el reset completo se niega a correr y forzarlo tira horas de TMDB. Para sumar calificaciones y reseñas de desarrollo **sin borrar nada**, sobre el catálogo y las cuentas de prueba existentes:
+
+```bash
+docker compose exec backend python manage.py seed --solo-resenas
+```
+
+Es idempotente —saltea las producciones que cada cuenta ya calificó— y una de cada siete reseñas nace inactiva (`activa=False`), para probar en `/admin/` el filtro por estado y la acción «Desactivar reseñas» (CU-017).
+
 #### Poblar el catálogo desde TMDB (`seed_catalogo`)
 
 La sync nocturna mantiene el catálogo fresco pero no lo hace crecer (lee la página 1 de cuatro listados). Para darle volumen —el catálogo es el espacio de búsqueda del chatbot— está el seed, que recorre TMDB por **género × década × tipo** (210 combinaciones, barajadas) y materializa lo que encuentra, los más votados de cada combinación primero:
