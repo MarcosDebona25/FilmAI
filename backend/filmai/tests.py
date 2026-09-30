@@ -235,6 +235,42 @@ class DocumentacionApiTests(TestCase):
                     status.HTTP_403_FORBIDDEN,
                 )
 
+    def test_navegador_anonimo_recibe_ayuda_y_enlace_de_ingreso(self):
+        for nombre, recurso in (
+            ("schema", "el esquema OpenAPI"),
+            ("swagger-ui", "Swagger UI"),
+        ):
+            with self.subTest(ruta=nombre):
+                respuesta = self.client.get(reverse(nombre), HTTP_ACCEPT="text/html")
+                self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+                self.assertTrue(respuesta["Content-Type"].startswith("text/html"))
+                self.assertContains(respuesta, recurso, status_code=403)
+                self.assertContains(respuesta, "cuenta staff", status_code=403)
+                self.assertContains(
+                    respuesta,
+                    f"/admin/login/?next=%2Fapi%2F{'schema' if nombre == 'schema' else 'docs'}%2F",
+                    status_code=403,
+                )
+
+    def test_navegador_con_sesion_comun_recibe_mensaje_especifico(self):
+        self.client.force_login(UsuarioFactory())
+        respuesta = self.client.get(reverse("swagger-ui"), HTTP_ACCEPT="text/html")
+        self.assertContains(
+            respuesta,
+            "Tu sesión actual no tiene permisos de administración",
+            status_code=403,
+        )
+
+    def test_cliente_json_recibe_403_explicativo(self):
+        respuesta = self.client.get(reverse("schema"), HTTP_ACCEPT="application/json")
+        self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            respuesta.json(),
+            {
+                "detail": "Para consultar esta documentación, ingresá al Admin con una cuenta staff."
+            },
+        )
+
     def test_staff_puede_leer_documentacion_con_cookie_jwt_invalida(self):
         # El navegador conserva la sesión del Admin aunque el JWT de la API
         # haya vencido. Estas vistas autentican solo con SessionAuthentication.
@@ -243,7 +279,10 @@ class DocumentacionApiTests(TestCase):
         for nombre in ("schema", "swagger-ui"):
             with self.subTest(ruta=nombre):
                 self.assertEqual(
-                    self.client.get(reverse(nombre)).status_code,
+                    self.client.get(
+                        reverse(nombre),
+                        HTTP_ACCEPT="text/html,application/xhtml+xml,*/*",
+                    ).status_code,
                     status.HTTP_200_OK,
                 )
 

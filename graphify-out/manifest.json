@@ -186,15 +186,15 @@
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
-    "mtime": 1790739341.5620148,
-    "seen": 1790739796.6335456,
-    "ast_hash": "8b085accd8306b2dc04555cce65d163c",
+    "mtime": 1790740518.5939293,
+    "seen": 1790740678.635568,
+    "ast_hash": "218afe871234dc60801f945e7dc668e9",
     "semantic_hash": ""
   },
   "backend/filmai/urls.py": {
-    "mtime": 1790739307.7641644,
-    "seen": 1790739796.6335502,
-    "ast_hash": "bb33ad529c2f582f819ac6eadc0759a5",
+    "mtime": 1790740411.7686102,
+    "seen": 1790740678.6355696,
+    "ast_hash": "c1966a6c326df6c4c3e46dd1526d0062",
     "semantic_hash": ""
   },
   "backend/filmai/wsgi.py": {
@@ -666,9 +666,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1790739826.6809602,
-    "seen": 1790739864.1298187,
-    "ast_hash": "b4f162570060eaf03591b25e81680f9e",
+    "mtime": 1790740446.2506316,
+    "seen": 1790740678.6429954,
+    "ast_hash": "407e259bf28fa5d013c4d9caf0b8dc1d",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1662,15 +1662,27 @@
     "semantic_hash": ""
   },
   "openspec/specs/admin-api-docs/spec.md": {
-    "mtime": 1790739399.645318,
-    "seen": 1790739796.644806,
-    "ast_hash": "68ea61855ac970ee122d88cc5b65d059",
+    "mtime": 1790740446.1788921,
+    "seen": 1790740678.643313,
+    "ast_hash": "5e8690b1688d4d5d90456f1cad4f1324",
     "semantic_hash": ""
   },
   "openspec/specs/development-seed/spec.md": {
     "mtime": 1790739881.796641,
     "seen": 1790739891.5835793,
     "ast_hash": "6c1ebac6d7a5ba4d7f0a852cd01ecc13",
+    "semantic_hash": ""
+  },
+  "backend/filmai/documentation.py": {
+    "mtime": 1790740411.6936991,
+    "seen": 1790740678.6353967,
+    "ast_hash": "82e2c889ed0d5040d9105a686e05e634",
+    "semantic_hash": ""
+  },
+  "backend/templates/filmai/documentacion_restringida.html": {
+    "mtime": 1790740470.7808537,
+    "seen": 1790740678.6425214,
+    "ast_hash": "08f44300b21ced34382bda1387e364d5",
     "semantic_hash": ""
   }
 }
