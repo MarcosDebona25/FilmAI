@@ -15,7 +15,19 @@ const eslintConfig = [
   // Desactiva las reglas de ESLint que chocan con Prettier (debe ir al final).
   eslintConfigPrettier,
   {
-    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts"],
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      // Directorios de salida de builds de comprobación y de Playwright
+      // (ver decisión del 26/09/2026): son artefactos generados, no código
+      // fuente, y al no ignorarlos un `eslint .` local reporta miles de
+      // problemas ajenos. En CI no existen porque el checkout es limpio.
+      ".next-build/**",
+      ".next-e2e/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+    ],
   },
 ];
 
