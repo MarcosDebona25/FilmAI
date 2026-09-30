@@ -464,7 +464,8 @@ export default function PerfilPage() {
                     </div>
                   ))}
                   <p className="text-xs text-muted-foreground">
-                    8 a 20 caracteres, mayúscula, minúscula, número y uno de @#$%&*!.
+                    8-20 caracteres, con al menos una mayúscula, una minúscula, un dígito y un
+                    carácter especial @#$%&*!
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Al confirmar se cerrarán tus sesiones en todos los dispositivos.
