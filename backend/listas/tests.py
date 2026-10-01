@@ -1,7 +1,9 @@
 """Pruebas HTTP de L-01: contratos y reglas de negocio de listas."""
 
+from importlib import import_module
 from unittest.mock import patch
 
+from django.apps import apps
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -14,6 +16,9 @@ from catalogo.models import Calificacion, Resena, TipoProduccion
 from listas.factories import ListaFactory
 from listas.models import Lista, Tiene, TipoLista
 from usuarios.factories import UsuarioFactory
+
+# El nombre empieza con un dígito: no se puede importar con `import` normal.
+_MIGRACION_0004 = import_module("listas.migrations.0004_calificadas_en_vistas")
 
 
 class ListasEndpointsTests(TestCase):
@@ -396,3 +401,64 @@ class QuitarDeVistasBorrandoCalificacionTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 400)
         self.assertTrue(Calificacion.objects.exists())
+
+
+class MigracionCalificadasEnVistasTests(TestCase):
+    """`listas.0004`: repara las calificaciones anteriores a la regla del 30/09.
+
+    La función se prueba con los modelos actuales (`django.apps.apps`) en vez
+    de migrar la base hacia atrás y hacia adelante: es la misma consulta y
+    mucho más rápida. Lo que importa es el efecto sobre los datos.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory()
+        self.vistas = self.usuario.listas.get(nombre="Vistas")
+
+    def _migrar(self):
+        _MIGRACION_0004.poner_calificadas_en_vistas(apps, None)
+
+    def test_pone_en_vistas_lo_calificado_y_nada_mas(self):
+        calificada, no_calificada = ProduccionAudiovisualFactory.create_batch(2)
+        Calificacion.objects.create(
+            usuario=self.usuario, produccion=calificada, valor=8
+        )
+
+        self._migrar()
+
+        self.assertEqual(list(self.vistas.producciones.all()), [calificada])
+        self.assertNotIn(no_calificada, self.vistas.producciones.all())
+
+    def test_lo_que_ya_estaba_en_vistas_no_se_duplica(self):
+        # Marcada a mano y calificada: el ítem ya existe y el UNIQUE de
+        # `Tiene` haría fallar la migración entera sin `ignore_conflicts`.
+        produccion = ProduccionAudiovisualFactory()
+        Tiene.objects.create(lista=self.vistas, produccion=produccion)
+        Calificacion.objects.create(
+            usuario=self.usuario, produccion=produccion, valor=6
+        )
+
+        self._migrar()
+
+        self.assertEqual(self.vistas.items.count(), 1)
+
+    def test_cada_calificacion_va_a_las_vistas_de_su_autor(self):
+        otro = UsuarioFactory()
+        produccion = ProduccionAudiovisualFactory()
+        Calificacion.objects.create(usuario=otro, produccion=produccion, valor=9)
+
+        self._migrar()
+
+        self.assertFalse(self.vistas.items.exists())
+        self.assertTrue(otro.listas.get(nombre="Vistas").items.exists())
+
+    def test_correrla_dos_veces_da_lo_mismo(self):
+        # Idempotente: si alguien la re-aplica a mano, no agrega nada nuevo.
+        Calificacion.objects.create(
+            usuario=self.usuario, produccion=ProduccionAudiovisualFactory(), valor=7
+        )
+
+        self._migrar()
+        self._migrar()
+
+        self.assertEqual(self.vistas.items.count(), 1)

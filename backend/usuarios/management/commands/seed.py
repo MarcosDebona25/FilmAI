@@ -39,6 +39,7 @@ from chatbot.factories import MensajeFactory
 from chatbot.models import Chat, Mensaje, TipoAutor
 from listas.factories import ListaFactory
 from listas.models import Lista, Tiene, TipoLista
+from listas.services import agregar_a_vistas
 from usuarios.factories import UsuarioFactory
 from usuarios.models import EstadoCuenta, Usuario
 
@@ -251,6 +252,9 @@ class Command(BaseCommand):
                 calificacion = CalificacionFactory.create(
                     usuario=usuario, produccion=produccion
                 )
+                # La factory no pasa por la API: la regla «calificada ⇒ en
+                # Vistas» (30/09/2026) se aplica a mano, como en C-08.
+                agregar_a_vistas(usuario, produccion)
                 # ~60% de las calificaciones llevan reseña escrita.
                 if random.random() < 0.6:
                     resena = ResenaFactory.create(calificacion=calificacion)

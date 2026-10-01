@@ -24,6 +24,7 @@ from catalogo.models import (
     TipoProduccion,
 )
 from catalogo.tests import _ParchesDeMaterializacion
+from listas.models import Tiene
 from usuarios.factories import UsuarioFactory
 
 _RESENA = "Ridley Scott construye un futuro húmedo y usado."
@@ -65,6 +66,13 @@ class _BaseResenas(TestCase):
         if texto is not None:
             Resena.objects.create(calificacion=calificacion, texto=texto)
         return calificacion
+
+    def _vistas(self):
+        # La crea la señal de alta del usuario (A-01), junto a las otras dos.
+        return self.usuario.listas.get(nombre="Vistas")
+
+    def _en_vistas(self):
+        return self._vistas().items.filter(produccion=self.produccion).exists()
 
 
 class CrearCalificacionTests(_BaseResenas):
@@ -113,6 +121,39 @@ class CrearCalificacionTests(_BaseResenas):
         self.assertEqual(respuesta.data["codigo"], "calificacion_duplicada")
         self.assertEqual(Calificacion.objects.count(), 1)
         self.assertEqual(Calificacion.objects.get().valor, 9)  # no la pisó
+
+    def test_calificar_agrega_la_produccion_a_vistas(self):
+        # Regla del 30/09/2026: si la calificaste, la viste. Es la mitad que
+        # le faltaba a CU-011, que ya impedía sacar de «Vistas» algo calificado.
+        respuesta = self._calificar()
+
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertTrue(self._en_vistas())
+
+    def test_calificar_algo_que_ya_estaba_en_vistas_no_lo_duplica(self):
+        # Primero la marcó como vista a mano y después la califica: el ítem que
+        # ya existía alcanza, y un segundo chocaría con el UNIQUE de `Tiene`.
+        Tiene.objects.create(lista=self._vistas(), produccion=self.produccion)
+
+        respuesta = self._calificar()
+
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(self._vistas().items.count(), 1)
+
+    def test_si_no_puede_entrar_a_vistas_tampoco_se_califica(self):
+        # Las dos escrituras van en una transacción: o quedan las dos o
+        # ninguna. Sin la lista «Vistas» (estado roto, lo repara
+        # `reparar_recursos_usuarios`) calificar falla entero, en vez de dejar
+        # una nota que viola la regla.
+        self._vistas().delete()
+
+        # `filmai_exception_handler` convierte lo no manejado en un 500 y lo
+        # loguea; `assertLogs` además evita que ensucie la salida de la suite.
+        with self.assertLogs("filmai.exceptions", level="ERROR"):
+            respuesta = self._calificar()
+
+        self.assertEqual(respuesta.status_code, 500)
+        self.assertFalse(Calificacion.objects.exists())
 
     def test_la_misma_produccion_la_califican_dos_usuarios(self):
         # La unicidad es por (usuario, producción): el 409 de arriba no debe
@@ -263,6 +304,18 @@ class ActualizarCalificacionTests(_BaseResenas):
         calificacion.refresh_from_db()
         self.assertEqual(calificacion.valor, 9)
 
+    def test_editar_no_saca_de_vistas(self):
+        # Cambiar la nota o el texto no cambia que la hayas visto.
+        calificacion = self._calificacion_existente(valor=9)
+        Tiene.objects.create(lista=self._vistas(), produccion=self.produccion)
+
+        respuesta = self.cliente.put(
+            f"/api/reviews/{calificacion.pk}/", {"valor": 3}, format="json"
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(self._en_vistas())
+
     def test_un_put_sin_nada_que_cambiar_se_rechaza(self):
         calificacion = self._calificacion_existente(valor=9)
 
@@ -308,6 +361,63 @@ class EliminarCalificacionTests(_BaseResenas):
         self.assertEqual(respuesta.status_code, 204)
         self.assertFalse(Calificacion.objects.exists())
         self.assertFalse(Resena.objects.exists())
+
+    def test_borrar_la_calificacion_saca_de_vistas(self):
+        # Si la descalificás, sale de «Vistas» (regla del 30/09/2026). La UI
+        # lo avisa en el modal antes de confirmar, y se puede volver a marcar.
+        calificacion = self._calificacion_existente(valor=9, texto=_RESENA)
+        Tiene.objects.create(lista=self._vistas(), produccion=self.produccion)
+
+        respuesta = self.cliente.delete(f"/api/reviews/{calificacion.pk}/")
+
+        self.assertEqual(respuesta.status_code, 204)
+        self.assertFalse(self._en_vistas())
+
+    def test_borrar_la_calificacion_no_toca_las_otras_listas(self):
+        # La regla es solo de «Vistas»: sigue siendo favorita aunque ya no
+        # tenga nota.
+        calificacion = self._calificacion_existente(valor=9)
+        favoritos = self.usuario.listas.get(nombre="Favoritos")
+        Tiene.objects.create(lista=self._vistas(), produccion=self.produccion)
+        Tiene.objects.create(lista=favoritos, produccion=self.produccion)
+
+        self.cliente.delete(f"/api/reviews/{calificacion.pk}/")
+
+        self.assertTrue(favoritos.items.filter(produccion=self.produccion).exists())
+
+    def test_borrar_la_calificacion_no_saca_de_las_vistas_de_otro(self):
+        # El DELETE filtra por la lista del dueño de la calificación, no por
+        # la producción: la de otro usuario no se toca.
+        otro = UsuarioFactory()
+        vistas_del_otro = otro.listas.get(nombre="Vistas")
+        Tiene.objects.create(lista=vistas_del_otro, produccion=self.produccion)
+        calificacion = self._calificacion_existente(valor=9)
+        Tiene.objects.create(lista=self._vistas(), produccion=self.produccion)
+
+        self.cliente.delete(f"/api/reviews/{calificacion.pk}/")
+
+        self.assertTrue(vistas_del_otro.items.exists())
+
+    def test_borrar_una_calificacion_que_no_estaba_en_vistas_no_falla(self):
+        # Una calificación anterior a la regla puede no tener su ítem en
+        # «Vistas»: la migración `listas.0004` las repara, pero borrar no puede
+        # depender de que eso haya corrido.
+        calificacion = self._calificacion_existente(valor=9)
+
+        respuesta = self.cliente.delete(f"/api/reviews/{calificacion.pk}/")
+
+        self.assertEqual(respuesta.status_code, 204)
+        self.assertFalse(Calificacion.objects.exists())
+
+    def test_borrar_solo_el_texto_no_saca_de_vistas(self):
+        # La reseña es opcional: borrarla conserva la nota, y con la nota
+        # sigue en «Vistas».
+        calificacion = self._calificacion_existente(valor=9, texto=_RESENA)
+        Tiene.objects.create(lista=self._vistas(), produccion=self.produccion)
+
+        self.cliente.delete(f"/api/reviews/{calificacion.pk}/texto/")
+
+        self.assertTrue(self._en_vistas())
 
     def test_el_borrado_es_fisico_no_logico(self):
         # `activa` significa una sola cosa: moderado por un admin (AD-01'). Si
@@ -450,13 +560,20 @@ class CalificarMaterializaTests(_ParchesDeMaterializacion, TestCase):
 
 
 class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
-    """El círculo que C-08 cierra: la regla de CU-011 que L-01 implementó.
+    """La regla «calificada ⇒ en Vistas», de punta a punta por HTTP.
 
-    L-01 responde 409 al quitar de «Vistas» algo calificado, diciendo
-    «Eliminá la calificación antes de quitar esta producción de Vistas». Hasta
-    C-08 esa instrucción era **imposible de cumplir**: no existía endpoint que
-    borrara una calificación, así que la regla no podía dispararse ni obedecerse.
-    Esta prueba recorre el flujo entero por HTTP, de punta a punta.
+    CU-011 ya pedía una mitad: no se puede sacar de «Vistas» algo calificado
+    (el 409 de L-01). La otra mitad es del 30/09/2026: calificar la agrega y
+    borrar la calificación la saca. Lo que la regla NO exige es la vuelta:
+    marcar como vista sin calificar sigue siendo válido.
+
+    Los cuatro casos acordados con el usuario:
+
+    - **Entra 1**: califica → entra a «Vistas».
+    - **Entra 2**: la marca como vista, sin calificar.
+    - **Sale 1**: borra la calificación → sale de «Vistas».
+    - **Sale 2**: la saca de «Vistas» → 409; confirmado con
+      `?borrar_calificacion=true`, se va también la calificación.
     """
 
     def setUp(self):
@@ -475,25 +592,33 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
         self.assertEqual(respuesta.status_code, 201)
         return respuesta.data["item_id"]
 
-    def _quitar_de_vistas(self, item_id):
-        return self.cliente.delete(f"/api/lists/{self.vistas.pk}/items/{item_id}/")
+    def _quitar_de_vistas(self, item_id, *, confirmado=False):
+        url = f"/api/lists/{self.vistas.pk}/items/{item_id}/"
+        if confirmado:
+            url = f"{url}?borrar_calificacion=true"
+        return self.cliente.delete(url)
 
-    def test_el_flujo_completo_de_cu_011(self):
+    def _calificar(self):
+        respuesta = self.cliente.post(
+            "/api/reviews/",
+            {"id_tmdb": 550, "tipo": "movie", "valor": 9, "texto": _RESENA},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 201)
+        return respuesta.data["id"]
+
+    def _item_en_vistas(self):
+        return self.vistas.items.values_list("pk", flat=True).first()
+
+    def test_entra_1_y_sale_1_calificar_y_descalificar(self):
         with self.captureOnCommitCallbacks(execute=True):
-            item_id = self._agregar_a_vistas()
+            calificacion_id = self._calificar()
 
-            # Sin calificar todavía: se puede quitar sin problema.
-            self.assertEqual(self._quitar_de_vistas(item_id).status_code, 204)
-            item_id = self._agregar_a_vistas()
+            # Entra 1: calificar la agregó a «Vistas», sin otra llamada.
+            item_id = self._item_en_vistas()
+            self.assertIsNotNone(item_id)
 
-            calificar = self.cliente.post(
-                "/api/reviews/",
-                {"id_tmdb": 550, "tipo": "movie", "valor": 9, "texto": _RESENA},
-                format="json",
-            )
-            calificacion_id = calificar.data["id"]
-
-            # Ahora la regla se dispara — por primera vez en la vida del proyecto.
+            # La regla de CU-011 se dispara sobre ese ítem.
             bloqueado = self._quitar_de_vistas(item_id)
             self.assertEqual(bloqueado.status_code, 409)
             self.assertEqual(
@@ -510,26 +635,30 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
             )
             self.assertEqual(self._quitar_de_vistas(item_id).status_code, 409)
 
-            # Borrar la calificación sí: es lo que el mensaje de error pedía.
+            # Sale 1: borrar la calificación la saca de «Vistas».
             self.assertEqual(
                 self.cliente.delete(f"/api/reviews/{calificacion_id}/").status_code, 204
             )
-            self.assertEqual(self._quitar_de_vistas(item_id).status_code, 204)
 
         self.assertFalse(Calificacion.objects.exists())
         self.assertFalse(self.vistas.items.exists())
 
-    def test_calificar_no_agrega_a_vistas_por_su_cuenta(self):
-        # Fuera de alcance a propósito: escribir en las tablas de otro módulo en
-        # silencio sorprendería a quien lea el código de listas. Si la ficha
-        # quiere ofrecerlo, es una decisión de C-07.
+    def test_entra_2_y_sale_2_marcar_como_vista_y_sacarla(self):
         with self.captureOnCommitCallbacks(execute=True):
-            self.cliente.post(
-                "/api/reviews/",
-                {"id_tmdb": 550, "tipo": "movie", "valor": 9},
-                format="json",
-            )
+            # Entra 2: marcar como vista no exige calificar, ni califica.
+            item_id = self._agregar_a_vistas()
+            self.assertFalse(Calificacion.objects.exists())
 
+            # Calificarla después no duplica el ítem.
+            self._calificar()
+            self.assertEqual(self.vistas.items.count(), 1)
+
+            # Sale 2: sacarla pide confirmar, y confirmado se lleva la nota.
+            self.assertEqual(self._quitar_de_vistas(item_id).status_code, 409)
+            confirmado = self._quitar_de_vistas(item_id, confirmado=True)
+            self.assertEqual(confirmado.status_code, 204)
+
+        self.assertFalse(Calificacion.objects.exists())
         self.assertFalse(self.vistas.items.exists())
 
 
