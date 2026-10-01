@@ -17,6 +17,12 @@ Los dos borrados hacen cosas distintas a propósito (decisión del 26/09/2026):
   el 🗑️ del modal de §5d.
 - `DELETE /api/reviews/{id}/` borra la nota, y el texto cae por CASCADE. Es lo
   que el 409 de L-01 le pide al usuario para poder quitar algo de «Vistas».
+
+**Calificada ⇒ en «Vistas»** (regla del 30/09/2026): calificar agrega la
+producción a «Vistas» y borrar la calificación la saca, cada una en la misma
+transacción que la nota. Editar y borrar solo el texto no la tocan. La vuelta
+no rige: se puede marcar como vista sin calificar. Las escrituras en `Tiene`
+pasan por `listas/services.py`, porque la tabla es de ese módulo.
 """
 
 from django.db import IntegrityError, transaction
@@ -38,6 +44,7 @@ from catalogo.serializers_reviews import (
 )
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.materialization import materializar
+from listas.services import agregar_a_vistas, quitar_de_vistas
 
 
 def _produccion_pedida(request):
@@ -116,6 +123,9 @@ class CalificacionesView(APIView):
                 )
                 if texto:
                     Resena.objects.create(calificacion=calificacion, texto=texto)
+                # Si la calificaste, la viste (regla del 30/09/2026). Dentro
+                # del mismo atomic: sin «Vistas» no queda una nota a medias.
+                agregar_a_vistas(request.user, produccion)
         except IntegrityError:
             # `uq_calificacion_usuario_produccion`. El atomic() es el savepoint
             # que deja la transacción usable después del error (en PostgreSQL,
@@ -152,14 +162,21 @@ class CalificacionDetailView(APIView):
         return Response(CalificacionSerializer(calificacion).data)
 
     def delete(self, request, calificacion_id):
-        """Borra la calificación y, por CASCADE, su texto.
+        """Borra la calificación, su texto (por CASCADE) y el ítem de «Vistas».
 
         Es físico, no lógico: CU-015 pide eliminar «permanentemente», y
         `activa` ya significa una sola cosa —moderada por un administrador
         (AD-01')—. Con dos sentidos, «¿por qué no se ve esta reseña?» no
         tendría respuesta.
+
+        Sacarla de «Vistas» es la regla del 30/09/2026: el modal lo avisa antes
+        de confirmar, y el usuario puede volver a marcarla. Termina en el mismo
+        estado que quitar de «Vistas» con `?borrar_calificacion=true` (L-01).
         """
-        _calificacion_propia(request, calificacion_id).delete()
+        calificacion = _calificacion_propia(request, calificacion_id)
+        with transaction.atomic():
+            quitar_de_vistas(request.user, calificacion.produccion)
+            calificacion.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

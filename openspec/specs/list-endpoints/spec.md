@@ -41,6 +41,12 @@ addition date, and the production fields needed by a MediaCard.
 by that list. Removing from the predetermined `Vistas` list while an active
 rating exists for that production MUST return 409.
 
+`Vistas` also changes from outside this API: since 30/09/2026, rating a
+production adds it to its author's `Vistas` and deleting the rating removes it
+(`reviews-api`, "A rated production is in `Vistas`"). Those writes go through
+`listas/services.py` (`agregar_a_vistas`, `quitar_de_vistas`) so that the lists
+module keeps owning `Tiene`.
+
 ### Errors and ownership
 
 All endpoints MUST require authentication. A list or item belonging to another
