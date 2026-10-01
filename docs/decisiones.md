@@ -2176,6 +2176,10 @@ tipo_tmdb)` y la enchufa a `MovieDetailView`/`TVDetailView`. Decisiones
   canónico no incluye calificaciones, así que no hay nada que regenerar); y la
   pertenencia a listas (calificar no agrega a `Vistas`: sería escribir en las
   tablas de otro módulo en silencio).
+  - **Reemplazada el 30/09/2026** por la regla «calificada ⇒ en Vistas» (ver la
+    entrada del 30/09/2026 al final de este archivo): calificar agrega la
+    producción a `Vistas` y borrar la calificación la saca, con la escritura en
+    `Tiene` expuesta por `listas/services.py` en vez de armada desde `catalogo`.
 - **SDD**: `openspec/changes/reviews-api/{proposal,design,tasks}.md`.
 - **Origen**: preguntas del usuario al retomar el backend del Módulo 2, y el
   hallazgo de que el mensaje de error de L-01 pedía una acción que la API no
