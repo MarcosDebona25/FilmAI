@@ -108,7 +108,7 @@ este modelo (Inicio, Buscar, Listas + avatar).
 
 1. Géneros de producciones calificadas con 7+ por el usuario.
 2. Llamada a `/discover/movie` o `/discover/tv` con filtro de géneros, ordenado por `popularity.desc`.
-3. Excluir IDs que el usuario ya tiene en sus listas (vistas, pendientes, calificadas).
+3. Excluir IDs que el usuario ya tiene en «Vistas». Con la regla «calificada ⇒ vista» (30/09/2026) esto ya cubre lo calificado, sin excluir «Pendientes».
 4. Devolver 10-15 resultados.
 
 ---
@@ -163,6 +163,8 @@ Todas las pantallas autenticadas comparten:
 El Home es **solo descubrimiento**. No tiene catálogo completo, ni tabs, ni grid con filtros.
 Para buscar, el usuario clickea "Buscar" en la navbar.
 
+**Selector global (30/09/2026):** arriba de las filas, `Todo · Películas · Series`. «Todo» es el valor por defecto y mezcla los dos tipos; «Películas» y «Series» cambian la fuente de cada fila. En «Recomendado para ti», cada tipo usa los géneros de lo que el usuario calificó con 7+ de ese tipo, y «Todo» es la unión de ambos, sin traducir géneros entre películas y series.
+
 ### Secciones
 
 | Fila                | Visible para                          | Fuente de datos                                   |
@@ -173,7 +175,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 | Novedades           | Todos                                 | TMDB `/movie/now_playing`, `/discover` año actual |
 
 - Cada fila: título + opcional "Ver más →" + scroll horizontal de MediaCards.
-- Las filas mezclan películas y series, con badge de tipo en cada card.
+- Con «Todo» (por defecto), las filas mezclan películas y series, con badge de tipo en cada card; con «Películas» o «Series», cada fila muestra solo ese tipo.
 - Flechas de navegación en hover (desktop), swipe nativo (mobile).
 - Si una fila no tiene datos (ej. usuario nuevo sin recomendaciones), se oculta completamente.
 

@@ -48,6 +48,8 @@
 
 - **Lista - Producción Audiovisual:** La relación muchos a muchos se debe a que una película o serie puede estar en múltiples listas distintas simultáneamente. Del mismo modo, múltiples listas pueden contener una misma producción audiovisual.
 
+- **Invariante «calificada ⇒ en Vistas» (30/09/2026):** toda calificación de un usuario tiene su producción en la lista predeterminada «Vistas» de ese mismo usuario (a través de la tabla `Tiene`). Calificar agrega el ítem en la misma transacción que la nota, y borrar la calificación lo quita; modificar la nota o borrar solo el texto no cambian «Vistas». La inversa no rige: una producción puede estar en «Vistas» sin estar calificada (CU-011). Las calificaciones creadas antes de la regla se reparan con la migración de datos `listas.0004_calificadas_en_vistas`.
+
 **Observaciones:**
 
 Se considera que hubiera sido conveniente para la especificación de los métodos haber realizado mockups (maquetas) con el objetivo de prever y evaluar de forma anticipada el ciclo de las relaciones y cómo estas pueden modificar los atributos internos de las entidades. Por cuestiones de tiempo no fue posible realizarlo, aunque está previsto para la entrega final. Además, esto hubiera permitido analizar al detalle los atributos de las entidades en sí y agregar o eliminar según cada caso (por ejemplo, en la clase Producción Audiovisual).
