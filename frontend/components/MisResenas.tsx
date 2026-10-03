@@ -161,7 +161,9 @@ export function MisResenas() {
               selected.action === "text"
                 ? "Reseña eliminada."
                 : selected.action === "rating"
-                  ? "Calificación eliminada."
+                  ? selected.item.texto
+                    ? "Calificación y reseña eliminadas."
+                    : "Calificación eliminada."
                   : updated?.valor !== selected.item.valor && updated?.texto !== selected.item.texto
                     ? "Calificación y reseña actualizadas."
                     : updated?.valor !== selected.item.valor
