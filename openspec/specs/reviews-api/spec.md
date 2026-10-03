@@ -195,3 +195,30 @@ Two frontend calls MUST NOT be the mechanism: they are not atomic, and a failure
 
 - Both paginated lists count their total with a `COUNT(*)` on every page request, inside `paginate_queryset()`. Fine at the current scale; if it ever hurts, the count belongs on the first page only.
 - `Calificacion.fecha` is a `DateField`, so every rating from the same day ties; the cursor breaks the tie by descending id. An ordering closer to real time would need a `DateTimeField` and a migration.
+
+### Requirement: Own reviews UI with posters
+
+`/mis-resenas` MUST display each own rating with a poster, title, type, a yellow (#f5c518) decorative star beside its X/10 value, date and optional text. The star MUST precede the numeric rating on the same line. The date MUST appear separately in the top-right corner of the card, with no overlap at mobile widths. The rating MUST have an accessible label identifying it as a rating. Read-more/read-less controls MUST only appear when the text exceeds three visible lines at the current card width, recalculating after resizing or editing. Text that fits, including exactly three lines, and absent text MUST have no expansion control. An absent review MUST display “Todavía no escribiste una reseña.” as an informative empty state with icon, subtle background, dashed border and italic text, visually distinct from authored content. Poster dimensions MUST be reserved (80 × 120 desktop, 56 × 84 mobile); absent or failed images MUST have an accessible replacement. Titles MUST remain plain text until the detail route exists.
+
+The UI MUST progressively load cursor pages and expose a keyboard-accessible load-more button. Duplicate IDs MUST not create duplicate cards. A page failure MUST preserve previously loaded cards and offer retry.
+
+The edit dialog MUST be titled `Editar calificación y reseña de "{title}"`. Editing MUST initially focus the review text field without focusing any star, preserve the saved rating, and keep the rating group keyboard-accessible. Editing MUST preload the rating and text, enforce integer 1–10 and at most 1000 text characters, and MUST NOT send empty text to PUT. Text deletion MUST confirm preservation of rating and Vistas, leaving the card without text. Rating deletion MUST confirm the loss of rating, optional text and Vistas membership, removing the card on success only. Dialogs MUST contain keyboard focus, support Escape when idle and restore focus.
+
+#### Scenario: A poster cannot load
+
+- GIVEN an own rating with an unavailable poster
+- WHEN its card renders
+- THEN a same-size replacement appears without breaking the layout
+
+#### Scenario: Deleting text from an own card
+
+- WHEN the user confirms text deletion
+- THEN the card keeps its rating and explains that no review text exists
+- AND Vistas membership is unchanged
+
+#### Scenario: Loading the next own-review page
+
+- GIVEN more than 20 own ratings
+- WHEN the UI follows the returned cursor without production filters
+- THEN the API returns the remaining ratings as a paginated list, without duplicates
+- AND only id_tmdb/tipo filters select the single-production response

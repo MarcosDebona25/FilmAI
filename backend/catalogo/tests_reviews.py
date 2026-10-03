@@ -1003,6 +1003,21 @@ class PaginacionDeResenasTests(_BaseLectura):
         self.assertEqual(len(set(textos_segunda)), len(textos_segunda), "hay repetidos")
         self.assertEqual(vistos & set(textos_segunda), set())
 
+    def test_segunda_pagina_propia_acepta_cursor_sin_filtro_de_produccion(self):
+        # El cursor no es un filtro de ficha: la página 2 debe seguir siendo
+        # un listado propio, sin IDs repetidos ni datos de otros usuarios.
+        self._muchas(22, propias=True)
+        primera = self.cliente.get("/api/reviews/mias/")
+        segunda = self.cliente.get(primera.data["next"])
+
+        self.assertEqual(segunda.status_code, 200)
+        self.assertEqual(len(segunda.data["results"]), 2)
+        ids_primera = {fila["id"] for fila in primera.data["results"]}
+        ids_segunda = {fila["id"] for fila in segunda.data["results"]}
+        self.assertFalse(ids_primera & ids_segunda)
+        self.assertIsNone(segunda.data["next"])
+        self.assertEqual(segunda.data["total"], 22)
+
     def test_mis_resenas_tambien_llegan_de_a_20(self):
         self._muchas(22, propias=True)
 

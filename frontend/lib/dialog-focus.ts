@@ -5,7 +5,13 @@ export function mantenerFocoEnDialogo(event: KeyboardEvent, dialogo: HTMLElement
     dialogo.querySelectorAll<HTMLElement>(
       "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])"
     )
-  );
+  ).filter((control) => {
+    if (!(control instanceof HTMLInputElement) || control.type !== "radio") return true;
+    const group = Array.from(
+      dialogo.querySelectorAll<HTMLInputElement>('input[type="radio"]')
+    ).filter((radio) => radio.name === control.name);
+    return control === (group.find((radio) => radio.checked) ?? group[0]);
+  });
   if (!controles.length) return;
   const primero = controles[0];
   const ultimo = controles[controles.length - 1];

@@ -65,6 +65,9 @@ jobs:
       - name: Prettier (verificar formato)
         run: npx prettier --check .
 
+      - name: Tests unitarios de frontend
+        run: npm run test:unit
+
       - name: TypeScript
         run: npx tsc --noEmit
 
@@ -76,7 +79,7 @@ jobs:
         working-directory: .
 
   e2e:
-    name: Perfil (Playwright)
+    name: Perfil y reseñas (Playwright)
     runs-on: ubuntu-latest
     defaults:
       run:

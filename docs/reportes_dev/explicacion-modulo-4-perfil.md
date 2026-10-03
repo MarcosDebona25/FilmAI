@@ -7,14 +7,14 @@ cuenta.
 
 Archivos que participan:
 
-| Capa | Archivos |
-|------|----------|
+| Capa                 | Archivos                                                                                                                                                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend (Django/DRF) | `usuarios/perfil.py`, `usuarios/cuenta.py`, `usuarios/avatares.py`, `usuarios/passwords.py`, `usuarios/authentication.py`, `usuarios/serializers.py`, `usuarios/validators.py`, `usuarios/exceptions.py`, `usuarios/test_perfil.py` |
-| Migracion | `usuarios/migrations/0006_normalizar_nombres.py` |
-| Script | `scripts/sync_avatars.py` |
-| Frontend (Next.js) | `app/perfil/page.tsx`, `app/preferencias/page.tsx`, `app/mis-resenas/page.tsx`, `components/AccountProvider.tsx`, `components/Avatar.tsx`, `components/Navbar.tsx`, `lib/validation.ts`, `lib/dialog-focus.ts`, `lib/api.ts` |
-| Tests E2E | `e2e/cuenta.ts`, `e2e/cuenta.spec.ts`, `e2e/perfil.spec.ts`, `e2e/preferencias.spec.ts` |
-| Infra | `playwright.config.ts`, `next.config.ts`, `.github/workflows/ci.yml` |
+| Migracion            | `usuarios/migrations/0006_normalizar_nombres.py`                                                                                                                                                                                    |
+| Script               | `scripts/sync_avatars.py`                                                                                                                                                                                                           |
+| Frontend (Next.js)   | `app/perfil/page.tsx`, `app/preferencias/page.tsx`, `app/mis-resenas/page.tsx`, `components/AccountProvider.tsx`, `components/Avatar.tsx`, `components/Navbar.tsx`, `lib/validation.ts`, `lib/dialog-focus.ts`, `lib/api.ts`        |
+| Tests E2E            | `e2e/cuenta.ts`, `e2e/cuenta.spec.ts`, `e2e/perfil.spec.ts`, `e2e/preferencias.spec.ts`                                                                                                                                             |
+| Infra                | `playwright.config.ts`, `next.config.ts`, `.github/workflows/ci.yml`                                                                                                                                                                |
 
 ---
 
@@ -503,7 +503,8 @@ ruta actual requiere sesion (`/perfil`, `/preferencias`, `/mis-resenas`).
 
 ```tsx
 async function actualizarPreferencia<K extends keyof Preferencias>(
-  campo: K, valor: Preferencias[K]
+  campo: K,
+  valor: Preferencias[K],
 ) {
   const anterior = preferencias;
   const optimista = { ...anterior, [campo]: valor };
@@ -511,7 +512,8 @@ async function actualizarPreferencia<K extends keyof Preferencias>(
   if (campo === "tema") aplicarTema(valor as Preferencias["tema"]);
   try {
     const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
-      method: "PUT", body: { [campo]: valor },
+      method: "PUT",
+      body: { [campo]: valor },
     });
     setPreferencias(confirmada);
     aplicarTema(confirmada.tema);
@@ -532,7 +534,8 @@ el cambio. Si el servidor falla, se revierte al estado anterior.
 ```tsx
 function aplicarTema(tema: Preferencias["tema"]) {
   document.documentElement.classList.toggle("dark", tema === "oscuro");
-  document.documentElement.style.colorScheme = tema === "oscuro" ? "dark" : "light";
+  document.documentElement.style.colorScheme =
+    tema === "oscuro" ? "dark" : "light";
 }
 ```
 
@@ -550,7 +553,10 @@ controla cual se muestra.
 ### 8.1 Formulario con borrador
 
 ```tsx
-type Borrador = Pick<Perfil, "nombre" | "apellido" | "nombre_usuario" | "avatar_id">;
+type Borrador = Pick<
+  Perfil,
+  "nombre" | "apellido" | "nombre_usuario" | "avatar_id"
+>;
 
 function iniciarEdicion() {
   setBorrador({
@@ -602,7 +608,10 @@ campo.
 ```tsx
 useEffect(() => {
   // Solo verificar si el username cambio respecto al original
-  if (borrador.nombre_usuario === perfil.nombre_usuario || validarNombreUsuario(borrador.nombre_usuario)) {
+  if (
+    borrador.nombre_usuario === perfil.nombre_usuario ||
+    validarNombreUsuario(borrador.nombre_usuario)
+  ) {
     setDisponibilidad("idle");
     return;
   }
@@ -610,13 +619,18 @@ useEffect(() => {
   const controller = new AbortController();
   const timer = setTimeout(async () => {
     const res = await fetch(
-      apiUrl(`/api/auth/username-available/?username=${encodeURIComponent(borrador.nombre_usuario)}`),
-      { signal: controller.signal }
+      apiUrl(
+        `/api/auth/username-available/?username=${encodeURIComponent(borrador.nombre_usuario)}`,
+      ),
+      { signal: controller.signal },
     );
     const data = await res.json();
     setDisponibilidad(data.disponible ? "available" : "taken");
   }, 400);
-  return () => { clearTimeout(timer); controller.abort(); };
+  return () => {
+    clearTimeout(timer);
+    controller.abort();
+  };
 }, [borrador?.nombre_usuario, editando, perfil, borrador]);
 ```
 
@@ -644,12 +658,15 @@ useEffect(() => {
     event.stopImmediatePropagation();
   }
   function avisarHistorial() {
-    if (!window.confirm("¿Descartar los cambios del perfil?")) window.history.forward();
+    if (!window.confirm("¿Descartar los cambios del perfil?"))
+      window.history.forward();
   }
   window.addEventListener("beforeunload", avisarSalida);
   document.addEventListener("click", avisarEnlace, true);
   window.addEventListener("popstate", avisarHistorial);
-  return () => { /* remover listeners */ };
+  return () => {
+    /* remover listeners */
+  };
 }, [editando, borrador, perfil]);
 ```
 
@@ -728,12 +745,15 @@ guardados.
 
 ```tsx
 // dialog-focus.ts
-export function mantenerFocoEnDialogo(event: KeyboardEvent, dialogo: HTMLElement | null) {
+export function mantenerFocoEnDialogo(
+  event: KeyboardEvent,
+  dialogo: HTMLElement | null,
+) {
   if (event.key !== "Tab" || !dialogo) return;
   const controles = Array.from(
     dialogo.querySelectorAll<HTMLElement>(
-      "a[href], button:not([disabled]), input:not([disabled]), ..."
-    )
+      "a[href], button:not([disabled]), input:not([disabled]), ...",
+    ),
   );
   if (!controles.length) return;
   const primero = controles[0];
@@ -765,7 +785,8 @@ interactuar inmediatamente.
 export function Avatar({ perfil, avatares, size = 40 }) {
   const [srcFallida, setSrcFallida] = useState<string | null>(null);
   const avatar = avatares.find((item) => item.id === perfil.avatar_id);
-  const iniciales = `${perfil.nombre.charAt(0)}${perfil.apellido.charAt(0)}`.toUpperCase();
+  const iniciales =
+    `${perfil.nombre.charAt(0)}${perfil.apellido.charAt(0)}`.toUpperCase();
 
   if (!avatar || srcFallida === avatar.src) {
     return (
@@ -804,41 +825,41 @@ test:
 
 ### PerfilTests
 
-| Test | Que verifica |
-|------|-------------|
-| `test_get_requiere_sesion_y_devuelve_solo_perfil_propio` | Un request anonimo recibe 401. Pasar el PK de otro usuario no devuelve sus datos. No se filtran campos sensibles (password, is_staff). |
-| `test_put_parcial_actualiza_los_cuatro_campos_editables` | Cada campo editable se puede cambiar individualmente sin afectar los demas. |
-| `test_nombres_compuestos_se_normalizan_sin_perder_espacios_intermedios` | `"  Juan   Carlos  "` se normaliza a `"Juan Carlos"` tanto en la BD como en la respuesta. |
-| `test_catalogo_expone_todos_los_avatares_y_rechaza_ids_ajenos` | El endpoint de avatares expone 26 opciones con IDs del 1 al 26 y rutas que empiezan con `/avatars/recortados/`. El avatar 27 se rechaza con 400. |
-| `test_campos_manipulados_no_modifican_identidad_permisos_ni_preferencias` | Enviar campos como `pk`, `correo`, `password`, `estado`, `is_staff`, `is_superuser`, `groups`, `tema` no cambia nada en la BD. |
-| `test_validaciones_no_dejan_guardado_parcial` | Si un campo falla la validacion, ningun campo se guarda (atomicidad). |
-| `test_username_duplicado_409_y_mismo_usuario_permitido` | Un username ocupado (sin importar mayusculas) devuelve 409. Reenviar el propio username funciona. |
-| `test_unicidad_en_bd_cubre_escrituras_concurrentes` | La restriccion de PostgreSQL rechaza inserciones que pasarian la validacion del serializer. |
-| `test_error_integridad_devuelve_conflicto_sin_guardar` | Si `IntegrityError` ocurre despues de la validacion, se devuelve 409 y se revierten los cambios. |
-| `test_cookie_exige_csrf_y_header_bearer_no` | Un PUT con cookie sin CSRF recibe 403. Con header Bearer no hace falta CSRF. |
+| Test                                                                      | Que verifica                                                                                                                                     |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `test_get_requiere_sesion_y_devuelve_solo_perfil_propio`                  | Un request anonimo recibe 401. Pasar el PK de otro usuario no devuelve sus datos. No se filtran campos sensibles (password, is_staff).           |
+| `test_put_parcial_actualiza_los_cuatro_campos_editables`                  | Cada campo editable se puede cambiar individualmente sin afectar los demas.                                                                      |
+| `test_nombres_compuestos_se_normalizan_sin_perder_espacios_intermedios`   | `"  Juan   Carlos  "` se normaliza a `"Juan Carlos"` tanto en la BD como en la respuesta.                                                        |
+| `test_catalogo_expone_todos_los_avatares_y_rechaza_ids_ajenos`            | El endpoint de avatares expone 26 opciones con IDs del 1 al 26 y rutas que empiezan con `/avatars/recortados/`. El avatar 27 se rechaza con 400. |
+| `test_campos_manipulados_no_modifican_identidad_permisos_ni_preferencias` | Enviar campos como `pk`, `correo`, `password`, `estado`, `is_staff`, `is_superuser`, `groups`, `tema` no cambia nada en la BD.                   |
+| `test_validaciones_no_dejan_guardado_parcial`                             | Si un campo falla la validacion, ningun campo se guarda (atomicidad).                                                                            |
+| `test_username_duplicado_409_y_mismo_usuario_permitido`                   | Un username ocupado (sin importar mayusculas) devuelve 409. Reenviar el propio username funciona.                                                |
+| `test_unicidad_en_bd_cubre_escrituras_concurrentes`                       | La restriccion de PostgreSQL rechaza inserciones que pasarian la validacion del serializer.                                                      |
+| `test_error_integridad_devuelve_conflicto_sin_guardar`                    | Si `IntegrityError` ocurre despues de la validacion, se devuelve 409 y se revierten los cambios.                                                 |
+| `test_cookie_exige_csrf_y_header_bearer_no`                               | Un PUT con cookie sin CSRF recibe 403. Con header Bearer no hace falta CSRF.                                                                     |
 
 ### ContrasenaTests
 
-| Test | Que verifica |
-|------|-------------|
-| `test_cambio_requiere_sesion` | Un request anonimo recibe 401. |
-| `test_errores_no_cambian_contrasena_ni_revocan_sesion` | Contraseña actual incorrecta, confirmacion distinta, y cada regla de politica (largo, mayuscula, minuscula, digito, especial) devuelven 400 sin cambiar el hash ni invalidar la sesion. |
-| `test_cambio_revoca_todos_los_dispositivos_y_notifica_sin_login` | Despues del cambio, los JWT de todos los dispositivos fallan (access y refresh). Las cookies se limpian. Se envia email. Se puede hacer login con la nueva contraseña. |
-| `test_tokens_sin_claim_previo_al_despliegue_se_rechazan` | Tokens JWT emitidos antes de activar `CHECK_REVOKE_TOKEN` reciben 401. |
-| `test_refresh_valido_rota_y_cookie_exige_csrf` | Renovar un token por cookie exige CSRF. El refresh viejo se invalida (rotacion). |
-| `test_google_sin_password_indica_recuperacion` | Una cuenta sin contraseña local recibe 400 con mensaje de recuperacion por correo. |
-| `test_fallo_persistencia_no_cambia_password_ni_notifica` | Si `save()` falla, el hash original se mantiene, no se envia email y la sesion sigue activa. |
-| `test_fallo_notificacion_no_revierte_password` | Si el email falla despues del commit, la contraseña ya esta cambiada (no se revierte). |
+| Test                                                             | Que verifica                                                                                                                                                                            |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test_cambio_requiere_sesion`                                    | Un request anonimo recibe 401.                                                                                                                                                          |
+| `test_errores_no_cambian_contrasena_ni_revocan_sesion`           | Contraseña actual incorrecta, confirmacion distinta, y cada regla de politica (largo, mayuscula, minuscula, digito, especial) devuelven 400 sin cambiar el hash ni invalidar la sesion. |
+| `test_cambio_revoca_todos_los_dispositivos_y_notifica_sin_login` | Despues del cambio, los JWT de todos los dispositivos fallan (access y refresh). Las cookies se limpian. Se envia email. Se puede hacer login con la nueva contraseña.                  |
+| `test_tokens_sin_claim_previo_al_despliegue_se_rechazan`         | Tokens JWT emitidos antes de activar `CHECK_REVOKE_TOKEN` reciben 401.                                                                                                                  |
+| `test_refresh_valido_rota_y_cookie_exige_csrf`                   | Renovar un token por cookie exige CSRF. El refresh viejo se invalida (rotacion).                                                                                                        |
+| `test_google_sin_password_indica_recuperacion`                   | Una cuenta sin contraseña local recibe 400 con mensaje de recuperacion por correo.                                                                                                      |
+| `test_fallo_persistencia_no_cambia_password_ni_notifica`         | Si `save()` falla, el hash original se mantiene, no se envia email y la sesion sigue activa.                                                                                            |
+| `test_fallo_notificacion_no_revierte_password`                   | Si el email falla despues del commit, la contraseña ya esta cambiada (no se revierte).                                                                                                  |
 
 ### RecuperacionSesionTests
 
-| Test | Que verifica |
-|------|-------------|
-| `test_recuperacion_revoca_access_refresh_y_token_reutilizado` | Restablecer consume el enlace (segundo uso da 400), revoca todos los JWT y envia notificacion. |
-| `test_enlace_vencido_y_confirmaciones_distintas_no_cambian_password` | Un enlace de mas de 1 hora y contraseñas distintas no cambian el hash. |
-| `test_dos_validaciones_previas_no_permiten_dos_consumos` | Dos serializers que validan el mismo token: el segundo falla al guardar por el bloqueo de fila. |
-| `test_enlace_emitido_antes_de_baja_o_pendiente_se_rechaza` | Un enlace previo a la baja no reactiva la cuenta. |
-| `test_google_agrega_password_por_email_sin_perder_vinculo` | Restablecer contraseña en cuenta Google conserva el PK, el vinculo social y permite login con ambos metodos. |
+| Test                                                                 | Que verifica                                                                                                 |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `test_recuperacion_revoca_access_refresh_y_token_reutilizado`        | Restablecer consume el enlace (segundo uso da 400), revoca todos los JWT y envia notificacion.               |
+| `test_enlace_vencido_y_confirmaciones_distintas_no_cambian_password` | Un enlace de mas de 1 hora y contraseñas distintas no cambian el hash.                                       |
+| `test_dos_validaciones_previas_no_permiten_dos_consumos`             | Dos serializers que validan el mismo token: el segundo falla al guardar por el bloqueo de fila.              |
+| `test_enlace_emitido_antes_de_baja_o_pendiente_se_rechaza`           | Un enlace previo a la baja no reactiva la cuenta.                                                            |
+| `test_google_agrega_password_por_email_sin_perder_vinculo`           | Restablecer contraseña en cuenta Google conserva el PK, el vinculo social y permite login con ambos metodos. |
 
 ---
 
@@ -906,24 +927,35 @@ cambio.
 
 ### 12.3 Lo que prueban los tests
 
-| Test | Que verifica |
-|------|-------------|
-| `perfil.spec.ts` test 1 | Editar nombre compuesto con espacios extras (`"  Juan   Carlos  "` a `"Juan Carlos"`), seleccionar avatar 26 de 26, guardar y verificar que la navbar refleja el nuevo avatar y nombre. |
-| `perfil.spec.ts` test 2 | Escribir un apellido invalido (`"123"`), verificar que el foco va al campo con error y que se muestra el mensaje de error. Intentar navegar con cambios sin guardar muestra un dialogo de confirmacion. |
-| `preferencias.spec.ts` | Cambiar el tema a "Claro", verificar que `<html>` ya no tiene la clase `dark`, verificar que la preferencia se guardo en el backend simulado, y tras recargar la pagina, verificar que el radio "Claro" sigue seleccionado. |
-| `cuenta.spec.ts` | Navegar por el menu de usuario con teclado y verificar que `/mis-resenas` muestra el aviso de seccion pendiente. |
+| Test                    | Que verifica                                                                                                                                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `perfil.spec.ts` test 1 | Editar nombre compuesto con espacios extras (`"  Juan   Carlos  "` a `"Juan Carlos"`), seleccionar avatar 26 de 26, guardar y verificar que la navbar refleja el nuevo avatar y nombre.                                     |
+| `perfil.spec.ts` test 2 | Escribir un apellido invalido (`"123"`), verificar que el foco va al campo con error y que se muestra el mensaje de error. Intentar navegar con cambios sin guardar muestra un dialogo de confirmacion.                     |
+| `preferencias.spec.ts`  | Cambiar el tema a "Claro", verificar que `<html>` ya no tiene la clase `dark`, verificar que la preferencia se guardo en el backend simulado, y tras recargar la pagina, verificar que el radio "Claro" sigue seleccionado. |
+| `cuenta.spec.ts`        | Navegar por el menú con teclado y verificar que `/mis-resenas` muestra el listado propio o su estado vacío.                                                                                                                 |
 
 ---
 
 ## 13. Tareas pendientes del modulo
 
-El Modulo 4 esta completo salvo por una pieza:
+P-06 (`/mis-resenas`) está implementado desde el 03/10/2026. Consume la API de C-08 ya disponible y muestra calificaciones con o sin reseña, pósters responsive y carga progresiva por cursor. Permite editar nota/texto, borrar solo texto conservando nota/Vistas, y quitar la calificación junto con texto/Vistas tras confirmar. Buscar y la ficha siguen pendientes; no se ofrecen enlaces a esas rutas.
 
-- P-06 (`/mis-resenas`): es un placeholder que muestra "Esta seccion todavia
-  no esta implementada". Depende del Modulo 2 tarea C-08 (calificar y
-  reseñar), que todavia no se implemento. Cuando C-08 exista, P-06 podra
-  listar las reseñas del usuario.
+El perfil usa modales para avatares y para confirmar el descarte del borrador. Se prueban componentes y lógica con `npm run test:unit` (Vitest) y recorridos en Chromium con `npm run test:e2e` (Playwright). El CI ejecuta ambas suites. La advertencia de baja expresa pérdida irreversible del acceso sin cambiar la conservación interna.
 
 Los switches de privacidad y notificaciones se guardan pero no tienen efecto
 todavia. La logica de fondo (ocultar perfil publico, enviar emails) se
 implementara cuando se desarrollen los modulos correspondientes.
+
+## Actualización del 03/10/2026: perfil y Mis reseñas
+
+El borrador del perfil vive en React y no cambia la cuenta hasta guardar. Un modal nativo aísla el fondo; la utilidad de foco trata cada grupo de radios como un único destino de Tab. La protección de navegación indexa entradas de historial sin eliminar el estado de Next.js y revierte el recorrido cuando el usuario quiere seguir editando. Recargar/cerrar conserva el aviso del navegador.
+
+Mis reseñas usa HTTP autenticado hacia Django. Django consulta PostgreSQL; la API mantiene juntas la eliminación de nota/texto y la salida de Vistas. Los pósters vienen de TMDB y reservan espacio incluso si fallan. El listado incluye notas sin texto y textos moderados propios; solo borrar la nota elimina la tarjeta. Las páginas de cursor no reemplazan datos ya cargados/editados.
+
+| Suite                             | Casos y resultado                                                                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run test:unit`               | 35 tests: borradores, avatares, disponibilidad y respuestas obsoletas, advertencia de baja, modal/foco/envíos, tarjetas, validación y solicitudes, paginación/error/reintento.  |
+| `npm run test:e2e -- --workers=2` | 19 recorridos Playwright con API controlada: perfil, baja y gestión de reseñas; enlaces, atrás/adelante, recarga cancelada, Escape, póster/fallback y tamaños 390/1440/1920 px. |
+| `python manage.py test --noinput` | 410 tests Django. El nuevo test reproduce el 400 de la segunda página antes del arreglo y verifica 20 + 2 registros sin duplicados después.                                     |
+
+Los tests de navegador simulan las respuestas HTTP para controlar errores y reintentos. Los tests de Django verifican por separado las escrituras reales en la base y las reglas de Vistas. La representación visual del wireframe acompaña la implementación; las opciones e imágenes de ejemplo no sustituyen el catálogo real.

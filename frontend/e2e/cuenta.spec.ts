@@ -2,8 +2,11 @@ import { expect, test } from "@playwright/test";
 
 import { prepararCuenta } from "./cuenta";
 
-test("el menú admite teclado y Mis reseñas explica su estado pendiente", async ({ page }) => {
+test("el menú admite teclado y Mis reseñas muestra el estado vacío", async ({ page }) => {
   await prepararCuenta(page);
+  await page.route("**/api/reviews/mias/**", (route) =>
+    route.fulfill({ json: { total: 0, next: null, results: [] } })
+  );
   await page.goto("/mis-resenas");
   await page.getByRole("button", { name: "Menú de usuario" }).click();
   await expect(page.getByRole("menuitem", { name: "Mi perfil" })).toBeFocused();
@@ -11,5 +14,7 @@ test("el menú admite teclado y Mis reseñas explica su estado pendiente", async
   await expect(page.getByRole("menuitem", { name: "Mis reseñas" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/mis-resenas$/);
-  await expect(page.getByText("Esta sección todavía no está implementada.")).toBeVisible();
+  await expect(
+    page.getByText("Todavía no calificaste ninguna producción ni escribiste reseñas.")
+  ).toBeVisible();
 });
