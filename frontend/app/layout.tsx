@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
+import { NavigationGuard } from "@/components/NavigationGuard";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,8 +34,10 @@ export default function RootLayout({
     <html lang="es" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} ${roboto.variable} antialiased`}>
         <AccountProvider>
-          <Navbar />
-          {children}
+          <NavigationGuard>
+            <Navbar />
+            {children}
+          </NavigationGuard>
         </AccountProvider>
         <Toaster position="top-center" />
       </body>

@@ -28,6 +28,9 @@
         padding: 0;
         box-sizing: border-box;
       }
+      html {
+        scrollbar-gutter: stable;
+      }
       body {
         font-family: "Inter", "Segoe UI", system-ui, sans-serif;
         background: var(--bg);
@@ -850,6 +853,17 @@
         color: #aaa;
       }
 
+      #viewMisResenas .review-card {
+        position: relative;
+      }
+      #viewMisResenas .review-date {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+      }
+      #viewMisResenas .own-review-meta {
+        padding-top: 24px;
+      }
       /* ═══════════ BUTTONS ═══════════ */
       .btn-primary {
         padding: 11px 26px;
@@ -1725,6 +1739,43 @@
         font-size: 14px;
         color: var(--text-dim);
         margin-bottom: 24px;
+      }
+      .own-review-body {
+        display: flex;
+        gap: 16px;
+      }
+      .own-review-poster {
+        width: 80px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+      .own-review-copy {
+        min-width: 0;
+        flex: 1;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.7);
+      }
+      @media (max-width: 640px) {
+        .own-review-poster {
+          width: 56px;
+          height: 84px;
+        }
+        .own-review-body {
+          display: grid;
+          grid-template-columns: 56px minmax(0, 1fr);
+        }
+        .own-review-copy {
+          display: contents;
+        }
+        .own-review-meta {
+          grid-column: 2;
+        }
+        .own-review-body .review-text {
+          grid-column: 1/-1;
+        }
       }
     </style>
   </head>
@@ -2992,13 +3043,20 @@
         </div>
         <!-- Modo edición -->
         <div id="perfilEdit" style="display: none">
-          <div class="profile-avatar" style="cursor: default">
+          <div class="profile-avatar" style="cursor: pointer">
             M
             <div
               class="avatar-overlay"
-              onclick="alert('File picker: cambiar foto')"
+              role="button"
+              tabindex="0"
+              onclick="document.getElementById('avatarModal').showModal()"
+              onkeydown="
+                if (event.key === 'Enter')
+                  document.getElementById('avatarModal').showModal();
+              "
+              style="opacity: 1"
             >
-              Cambiar foto
+              Cambiar avatar
             </div>
           </div>
           <div class="profile-form" style="margin-top: 20px">
@@ -3062,124 +3120,217 @@
     <main class="content" id="viewMisResenas" style="display: none">
       <div class="breadcrumb"><span class="current">Mis reseñas</span></div>
       <div style="max-width: 720px; margin: 0 auto">
-        <div
-          class="review-card my-review"
-          style="margin-bottom: 12px; cursor: pointer"
-          onclick="navigate('detail', 'Breaking Bad')"
-        >
-          <div class="review-meta">
-            <span style="font-size: 14px; font-weight: 600; color: #fff"
-              >🎬 Breaking Bad</span
-            >
-            <div style="display: flex; align-items: center; gap: 16px">
-              <span class="review-rating">9/10</span>
-              <button
-                class="icon-btn"
-                title="Editar"
-                onclick="
-                  event.stopPropagation();
-                  openRatingModal('editar');
-                "
-              >
-                ✏️
-              </button>
-              <button
-                class="icon-btn danger"
-                title="Eliminar"
-                onclick="
-                  event.stopPropagation();
-                  openDeleteModal();
-                "
-              >
-                🗑️
-              </button>
+        <div class="review-card my-review" style="margin-bottom: 12px">
+          <div class="own-review-body">
+            <img
+              class="own-review-poster"
+              src="https://placehold.co/80x120/1e1e32/e0e0e0?text=bb"
+              alt="Póster de Breaking Bad"
+              width="80"
+              height="120"
+            />
+            <div class="own-review-copy">
+              <div class="review-meta own-review-meta">
+                <span style="font-size: 14px; font-weight: 600; color: #fff"
+                  >🎬 Breaking Bad</span
+                >
+                <div style="display: flex; align-items: center; gap: 16px">
+                  <span class="review-rating" aria-label="Calificación: 9 de 10"
+                    ><svg
+                      aria-hidden="true"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      style="vertical-align: -2px"
+                    >
+                      <path
+                        d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9Z"
+                      />
+                    </svg>
+                    9/10</span
+                  >
+                  <button
+                    class="icon-btn"
+                    title="Editar"
+                    onclick="
+                      event.stopPropagation();
+                      openRatingModal(
+                        'editar',
+                        this.closest('.review-card')
+                          .querySelector('.own-review-meta > span')
+                          .textContent.trim()
+                          .replace(/^🎬\s*/, ''),
+                      );
+                    "
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    class="icon-btn danger"
+                    title="Eliminar"
+                    onclick="
+                      event.stopPropagation();
+                      openDeleteModal();
+                    "
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <div class="review-date">12/03/2025</div>
+              <div class="review-text">
+                Una obra maestra de principio a fin. El desarrollo de Walter
+                White es simplemente perfecto. Cada temporada supera a la
+                anterior.
+              </div>
             </div>
           </div>
-          <div class="review-date">12/03/2025</div>
-          <div class="review-text">
-            Una obra maestra de principio a fin. El desarrollo de Walter White
-            es simplemente perfecto. Cada temporada supera a la anterior.
-          </div>
+          <button class="btn-danger" onclick="openRemoveRatingModal()">
+            Quitar calificación
+          </button>
         </div>
 
-        <div
-          class="review-card"
-          style="margin-bottom: 12px; cursor: pointer"
-          onclick="navigate('detail', 'Interstellar')"
-        >
-          <div class="review-meta">
-            <span style="font-size: 14px; font-weight: 600; color: #fff"
-              >🎬 Interstellar</span
-            >
-            <div style="display: flex; align-items: center; gap: 16px">
-              <span class="review-rating">8/10</span>
-              <button
-                class="icon-btn"
-                title="Editar"
-                onclick="
-                  event.stopPropagation();
-                  openRatingModal('editar');
-                "
-              >
-                ✏️
-              </button>
-              <button
-                class="icon-btn danger"
-                title="Eliminar"
-                onclick="
-                  event.stopPropagation();
-                  openDeleteModal();
-                "
-              >
-                🗑️
-              </button>
+        <div class="review-card" style="margin-bottom: 12px">
+          <div class="own-review-body">
+            <img
+              class="own-review-poster"
+              src="https://placehold.co/80x120/1e1e32/e0e0e0?text=interstellar"
+              alt="Póster de Interstellar"
+              width="80"
+              height="120"
+            />
+            <div class="own-review-copy">
+              <div class="review-meta own-review-meta">
+                <span style="font-size: 14px; font-weight: 600; color: #fff"
+                  >🎬 Interstellar</span
+                >
+                <div style="display: flex; align-items: center; gap: 16px">
+                  <span class="review-rating" aria-label="Calificación: 8 de 10"
+                    ><svg
+                      aria-hidden="true"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      style="vertical-align: -2px"
+                    >
+                      <path
+                        d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9Z"
+                      />
+                    </svg>
+                    8/10</span
+                  >
+                  <button
+                    class="icon-btn"
+                    title="Editar"
+                    onclick="
+                      event.stopPropagation();
+                      openRatingModal(
+                        'editar',
+                        this.closest('.review-card')
+                          .querySelector('.own-review-meta > span')
+                          .textContent.trim()
+                          .replace(/^🎬\s*/, ''),
+                      );
+                    "
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    class="icon-btn danger"
+                    title="Eliminar"
+                    onclick="
+                      event.stopPropagation();
+                      openDeleteModal();
+                    "
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <div class="review-date">28/02/2025</div>
+              <div class="review-text">
+                Visualmente impresionante, aunque el tercer acto se vuelve un
+                poco confuso. La banda sonora de Zimmer es extraordinaria.
+              </div>
             </div>
           </div>
-          <div class="review-date">28/02/2025</div>
-          <div class="review-text">
-            Visualmente impresionante, aunque el tercer acto se vuelve un poco
-            confuso. La banda sonora de Zimmer es extraordinaria.
-          </div>
+          <button class="btn-danger" onclick="openRemoveRatingModal()">
+            Quitar calificación
+          </button>
         </div>
 
-        <div
-          class="review-card"
-          style="margin-bottom: 12px; cursor: pointer"
-          onclick="navigate('detail', 'Dark')"
-        >
-          <div class="review-meta">
-            <span style="font-size: 14px; font-weight: 600; color: #fff"
-              >📺 Dark</span
-            >
-            <div style="display: flex; align-items: center; gap: 16px">
-              <span class="review-rating">10/10</span>
-              <button
-                class="icon-btn"
-                title="Editar"
-                onclick="
-                  event.stopPropagation();
-                  openRatingModal('editar');
-                "
-              >
-                ✏️
-              </button>
-              <button
-                class="icon-btn danger"
-                title="Eliminar"
-                onclick="
-                  event.stopPropagation();
-                  openDeleteModal();
-                "
-              >
-                🗑️
-              </button>
+        <div class="review-card" style="margin-bottom: 12px">
+          <div class="own-review-body">
+            <img
+              class="own-review-poster"
+              src="https://placehold.co/80x120/1e1e32/e0e0e0?text=dark"
+              alt="Póster de Dark"
+              width="80"
+              height="120"
+            />
+            <div class="own-review-copy">
+              <div class="review-meta own-review-meta">
+                <span style="font-size: 14px; font-weight: 600; color: #fff"
+                  >📺 Dark</span
+                >
+                <div style="display: flex; align-items: center; gap: 16px">
+                  <span
+                    class="review-rating"
+                    aria-label="Calificación: 10 de 10"
+                    ><svg
+                      aria-hidden="true"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      style="vertical-align: -2px"
+                    >
+                      <path
+                        d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9Z"
+                      />
+                    </svg>
+                    10/10</span
+                  >
+                  <button
+                    class="icon-btn"
+                    title="Editar"
+                    onclick="
+                      event.stopPropagation();
+                      openRatingModal(
+                        'editar',
+                        this.closest('.review-card')
+                          .querySelector('.own-review-meta > span')
+                          .textContent.trim()
+                          .replace(/^🎬\s*/, ''),
+                      );
+                    "
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    class="icon-btn danger"
+                    title="Eliminar"
+                    onclick="
+                      event.stopPropagation();
+                      openDeleteModal();
+                    "
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <div class="review-date">15/01/2025</div>
+              <div class="review-text">
+                La serie más compleja y satisfactoria que vi. Cada detalle
+                importa. El casting es impecable.
+              </div>
             </div>
           </div>
-          <div class="review-date">15/01/2025</div>
-          <div class="review-text">
-            La serie más compleja y satisfactoria que vi. Cada detalle importa.
-            El casting es impecable.
-          </div>
+          <button class="btn-danger" onclick="openRemoveRatingModal()">
+            Quitar calificación
+          </button>
         </div>
 
         <div
@@ -3398,7 +3549,7 @@
           <button
             class="btn-secondary"
             style="color: var(--danger); border-color: var(--danger)"
-            onclick="alert('Modal: ¿Dar de baja tu cuenta?')"
+            onclick="document.getElementById('bajaModal').showModal()"
           >
             Dar de baja cuenta
           </button>
@@ -3441,11 +3592,107 @@
       </div>
     </div>
 
+    <dialog id="avatarModal" class="modal-box w560">
+      <h2>Elegí un avatar</h2>
+      <p>
+        Ejemplo del catálogo; la aplicación muestra todos los avatares activos.
+      </p>
+      <fieldset style="display: flex; gap: 12px; flex-wrap: wrap">
+        <legend>Avatares disponibles</legend>
+        <label
+          ><input type="radio" name="avatar" value="1" checked /> Avatar
+          1</label
+        >
+        <label><input type="radio" name="avatar" value="2" /> Avatar 2</label>
+        <label><input type="radio" name="avatar" value="3" /> Avatar 3</label>
+      </fieldset>
+      <p>
+        Guardar aplica la selección al formulario; Guardar cambios actualiza el
+        perfil.
+      </p>
+      <button
+        class="btn-secondary"
+        onclick="
+          document.querySelector('input[name=avatar][value=1]').checked = true;
+          document.getElementById('avatarModal').close();
+        "
+      >
+        Cancelar
+      </button>
+      <button
+        class="btn-primary"
+        onclick="document.getElementById('avatarModal').close()"
+      >
+        Guardar
+      </button>
+    </dialog>
+    <dialog id="discardModal" class="modal-box w560">
+      <h2>¿Salir sin guardar?</h2>
+      <p>Los cambios que hiciste en tu perfil no se guardarán.</p>
+      <button
+        class="btn-secondary"
+        onclick="document.getElementById('discardModal').close()"
+      >
+        Seguir editando
+      </button>
+      <button
+        class="btn-danger"
+        onclick="
+          document.getElementById('discardModal').close();
+          finishCancelEdit();
+        "
+      >
+        Salir sin guardar
+      </button>
+    </dialog>
+    <dialog id="removeRatingModal" class="modal-box w560">
+      <h2>¿Quitar tu calificación?</h2>
+      <p>
+        Se eliminarán tu calificación y tu reseña, y la producción dejará de
+        estar en Vistas. La calificación y la reseña no se pueden recuperar; a
+        Vistas podés volver a agregarla cuando quieras.
+      </p>
+      <button
+        class="btn-secondary"
+        onclick="document.getElementById('removeRatingModal').close()"
+      >
+        Cancelar
+      </button>
+      <button
+        class="btn-danger"
+        onclick="document.getElementById('removeRatingModal').close()"
+      >
+        Quitar calificación
+      </button>
+    </dialog>
+    <dialog id="bajaModal" class="modal-box w560">
+      <h2>¿Dar de baja tu cuenta?</h2>
+      <p>
+        Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás
+        volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar
+        de baja la cuenta antes de continuar.
+      </p>
+      <button
+        class="btn-secondary"
+        onclick="document.getElementById('bajaModal').close()"
+      >
+        Cancelar
+      </button>
+      <button
+        class="btn-danger"
+        onclick="document.getElementById('bajaModal').close()"
+      >
+        Dar de baja
+      </button>
+    </dialog>
     <!-- ═══════════ MODAL: ELIMINAR RESEÑA ═══════════ -->
     <div class="modal-overlay" id="deleteModal">
       <div class="modal-box w560">
         <h2>¿Eliminar reseña?</h2>
-        <p>Esta acción no se puede deshacer.</p>
+        <p>
+          Se eliminará el texto de tu reseña. Tu calificación y la producción en
+          Vistas se conservan. El texto no se puede recuperar.
+        </p>
         <div class="modal-actions">
           <button class="btn-secondary" onclick="closeDeleteModal()">
             Cancelar
@@ -3799,7 +4046,7 @@
       }
 
       /* ═══════════ RATING MODAL ═══════════ */
-      function openRatingModal(mode) {
+      function openRatingModal(mode, productionTitle = "Breaking Bad") {
         currentMode = mode;
         document.getElementById("modalError").classList.remove("show");
         const title = document.getElementById("modalTitle");
@@ -3813,7 +4060,7 @@
           oldRating = 0;
           textarea.value = "";
         } else {
-          title.textContent = "Editar reseña";
+          title.textContent = `Editar calificación y reseña de "${productionTitle}"`;
           submitBtn.textContent = "Actualizar";
           selectedRating = 9;
           oldRating = 9;
@@ -3823,6 +4070,7 @@
         setStars(selectedRating);
         updateCharCount();
         document.getElementById("ratingModal").classList.add("open");
+        if (mode === "editar") textarea.focus({ preventScroll: true });
       }
 
       function closeRatingModal() {
@@ -4087,6 +4335,12 @@
       }
 
       function cancelEdit() {
+        document.getElementById("discardModal").showModal();
+      }
+      function openRemoveRatingModal() {
+        document.getElementById("removeRatingModal").showModal();
+      }
+      function finishCancelEdit() {
         document.getElementById("perfilEdit").style.display = "none";
         document.getElementById("perfilView").style.display = "block";
       }
@@ -4099,7 +4353,7 @@
         document.getElementById("displayUsername").textContent =
           "@" + document.getElementById("editUsername").value;
         alert("Perfil actualizado.");
-        cancelEdit();
+        finishCancelEdit();
       }
 
       function toggleCollapsible(el) {

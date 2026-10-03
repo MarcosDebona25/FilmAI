@@ -1,11 +1,14 @@
 "use client";
 
-import Image from "next/image";
+import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { useAccount, type Perfil } from "@/components/AccountProvider";
+import { AvatarSelector } from "@/components/AvatarSelector";
+import { useNavigationGuard } from "@/components/NavigationGuard";
+import { tieneCambios, colorDisponibilidad, type Borrador } from "@/lib/profile-draft";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/ui/button";
 import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
@@ -18,7 +21,6 @@ import {
   validarConfirmacion,
 } from "@/lib/validation";
 
-type Borrador = Pick<Perfil, "nombre" | "apellido" | "nombre_usuario" | "avatar_id">;
 type Campo = "nombre" | "apellido" | "nombre_usuario";
 const INPUT =
   "mt-1 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring";
@@ -45,6 +47,7 @@ function generoVisible(genero: string) {
 
 export default function PerfilPage() {
   const router = useRouter();
+  const { setDirty, requestExit } = useNavigationGuard();
   const { perfil, avatares, cargando, error, recargar, actualizarPerfil } = useAccount();
   const [editando, setEditando] = useState(false);
   const [borrador, setBorrador] = useState<Borrador | null>(null);
@@ -66,33 +69,9 @@ export default function PerfilPage() {
   });
 
   useEffect(() => {
-    if (!editando || !borrador || !perfil) return;
-    const cambios = Object.keys(borrador).some(
-      (campo) => borrador[campo as keyof Borrador] !== perfil[campo as keyof Borrador]
-    );
-    if (!cambios) return;
-
-    function avisarSalida(event: BeforeUnloadEvent) {
-      event.preventDefault();
-    }
-    function avisarEnlace(event: MouseEvent) {
-      const enlace = (event.target as Element).closest("a[href]");
-      if (!enlace || window.confirm("¿Descartar los cambios del perfil?")) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    }
-    function avisarHistorial() {
-      if (!window.confirm("¿Descartar los cambios del perfil?")) window.history.forward();
-    }
-    window.addEventListener("beforeunload", avisarSalida);
-    document.addEventListener("click", avisarEnlace, true);
-    window.addEventListener("popstate", avisarHistorial);
-    return () => {
-      window.removeEventListener("beforeunload", avisarSalida);
-      document.removeEventListener("click", avisarEnlace, true);
-      window.removeEventListener("popstate", avisarHistorial);
-    };
-  }, [editando, borrador, perfil]);
+    setDirty(editando && tieneCambios(borrador, perfil));
+    return () => setDirty(false);
+  }, [editando, borrador, perfil, setDirty]);
 
   useEffect(() => {
     if (
@@ -117,7 +96,7 @@ export default function PerfilPage() {
         );
         if (!res.ok) throw new Error("availability");
         const data: { disponible: boolean } = await res.json();
-        setDisponibilidad(data.disponible ? "available" : "taken");
+        if (!controller.signal.aborted) setDisponibilidad(data.disponible ? "available" : "taken");
       } catch {
         if (!controller.signal.aborted) setDisponibilidad("idle");
       }
@@ -142,14 +121,12 @@ export default function PerfilPage() {
   }
 
   function cancelar() {
-    if (!perfil || !borrador) return;
-    const cambios = Object.keys(borrador).some(
-      (campo) => borrador[campo as keyof Borrador] !== perfil[campo as keyof Borrador]
-    );
-    if (cambios && !window.confirm("¿Descartar los cambios del perfil?")) return;
-    setEditando(false);
-    setBorrador(null);
-    setErrores({});
+    requestExit(() => {
+      setEditando(false);
+      setBorrador(null);
+      setErrores({});
+      setSelectorAbierto(false);
+    });
   }
 
   function cambiarCampo(campo: Campo, valor: string) {
@@ -267,7 +244,22 @@ export default function PerfilPage() {
         <div className="space-y-10">
           <section className="rounded-xl bg-card p-6 sm:p-8">
             <div className="flex flex-col items-center text-center">
-              <Avatar perfil={vista} avatares={avatares} size={96} />
+              {editando ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectorAbierto(true)}
+                  className="relative cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
+                  aria-label="Cambiar avatar"
+                  aria-haspopup="dialog"
+                >
+                  <Avatar perfil={vista} avatares={avatares} size={96} />
+                  <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/65 px-2 text-sm font-semibold text-white">
+                    Cambiar avatar
+                  </span>
+                </button>
+              ) : (
+                <Avatar perfil={vista} avatares={avatares} size={96} />
+              )}
               <h2 className="mt-4 text-2xl font-semibold">
                 {vista.nombre} {vista.apellido}
               </h2>
@@ -277,7 +269,7 @@ export default function PerfilPage() {
                 Miembro desde {fechaVisible(vista.fecha_registro)}
               </p>
               {!editando && (
-                <Button className="mt-5" onClick={iniciarEdicion}>
+                <Button className="mt-5 min-h-11" onClick={iniciarEdicion}>
                   Editar perfil
                 </Button>
               )}
@@ -307,48 +299,6 @@ export default function PerfilPage() {
                 className="mt-8 space-y-5 border-t border-border pt-6"
                 noValidate
               >
-                <div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setSelectorAbierto((abierto) => !abierto)}
-                    aria-expanded={selectorAbierto}
-                  >
-                    Cambiar avatar
-                  </Button>
-                  {selectorAbierto && (
-                    <fieldset className="mt-4">
-                      <legend className="mb-2 text-sm font-medium">Elegí un avatar</legend>
-                      <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
-                        {avatares.map((avatar) => (
-                          <label
-                            key={avatar.id}
-                            className="relative aspect-square cursor-pointer rounded-full p-1 focus-within:outline-2 focus-within:outline-ring has-[:checked]:bg-primary/20"
-                          >
-                            <input
-                              type="radio"
-                              name="avatar_id"
-                              value={avatar.id}
-                              checked={borrador.avatar_id === avatar.id}
-                              onChange={() => setBorrador({ ...borrador, avatar_id: avatar.id })}
-                              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                              aria-label={`Avatar ${avatar.id}`}
-                            />
-                            <div className="relative h-full w-full overflow-hidden rounded-full">
-                              <Image
-                                src={avatar.src}
-                                alt=""
-                                fill
-                                sizes="(max-width: 640px) 25vw, 16vw"
-                                className="object-cover"
-                              />
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    </fieldset>
-                  )}
-                </div>
                 {(["nombre", "apellido", "nombre_usuario"] as const).map((campo) => (
                   <div key={campo}>
                     <label htmlFor={campo} className="block text-sm font-medium">
@@ -384,12 +334,15 @@ export default function PerfilPage() {
                     <p id={`${campo}-ayuda`} className="mt-1 text-xs text-muted-foreground">
                       {campo === "nombre_usuario"
                         ? "5 a 25 caracteres, solo letras y números; debe ser único."
-                        : "Solo letras y espacios entre palabras; máximo 50 caracteres. Quitamos espacios sobrantes al guardar."}
+                        : "Solo letras y espacios entre palabras; máximo 50 caracteres."}
                     </p>
                     {campo === "nombre_usuario" &&
                       borrador.nombre_usuario !== perfil?.nombre_usuario &&
                       !errores[campo] && (
-                        <p className="mt-1 text-xs" aria-live="polite">
+                        <p
+                          className={`mt-1 text-xs ${colorDisponibilidad(disponibilidad)}`}
+                          aria-live="polite"
+                        >
                           {disponibilidad === "checking"
                             ? "Comprobando disponibilidad…"
                             : disponibilidad === "available"
@@ -410,15 +363,21 @@ export default function PerfilPage() {
                     )}
                   </div>
                 ))}
-                <p className="text-sm text-muted-foreground">
-                  Correo: {perfil?.correo}. La fecha de nacimiento y el género no se editan aquí.
-                </p>
                 <div className="flex flex-wrap justify-end gap-3">
-                  <Button type="button" variant="secondary" onClick={cancelar}>
+                  <Button
+                    type="button"
+                    className="min-h-11"
+                    variant="secondary"
+                    disabled={guardando}
+                    onClick={cancelar}
+                  >
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={guardando}>
-                    {guardando ? "Guardando…" : "Guardar cambios"}
+                  <Button type="submit" disabled={guardando} className="min-h-11">
+                    {guardando && (
+                      <LoaderCircle aria-hidden="true" className="motion-safe:animate-spin" />
+                    )}
+                    Guardar cambios
                   </Button>
                 </div>
               </form>
@@ -493,6 +452,17 @@ export default function PerfilPage() {
             )}
           </section>
         </div>
+      )}
+      {selectorAbierto && borrador && (
+        <AvatarSelector
+          avatares={avatares}
+          avatarId={borrador.avatar_id}
+          onClose={() => setSelectorAbierto(false)}
+          onSave={(avatar_id) => {
+            setBorrador({ ...borrador, avatar_id });
+            setSelectorAbierto(false);
+          }}
+        />
       )}
     </main>
   );

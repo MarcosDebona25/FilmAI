@@ -5,6 +5,34 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 03/10/2026 — Nota identificable y lectura condicional de reseñas
+
+- **Fecha**: 03/10/2026
+- **Descripción**: Mis reseñas acompaña la nota `X/10` con una estrella amarilla (`#f5c518`) de Lucide y una etiqueta accesible para distinguirla de la fecha, que pasa a la esquina superior derecha. La disposición final aprobada es estrella y nota juntas, en ese orden. «Leer más/Leer menos» aparece solo si el contenido excede las tres líneas visibles: `ResizeObserver` mide nuevamente cuando cambia el tamaño del párrafo; también se mide al editar el texto. Se conserva el control al expandir un texto largo.
+- **Sin texto**: «Todavía no escribiste una reseña.» usa semántica de nota informativa, icono, fondo tenue, borde discontinuo y cursiva para evitar que parezca texto escrito por el usuario.
+- **Foco al editar**: el modal se titula «Editar calificación y reseña de "{título}"», enfoca el campo de reseña al abrir y mantiene la nota guardada. Se evita el outline inicial en la primera estrella sin quitar la navegación ni los indicadores de foco para teclado.
+- **Archivos afectados**: `ReviewCard`, `ReviewModal`, `Modal`, tests unitarios y Playwright, docs 02/04/05, wireframe y spec `reviews-api`.
+- **Tests**: estrella junto a nota y etiqueta accesible; fecha arriba a la derecha; texto corto y exactamente tres líneas sin control; expansión/contracción; ajuste del control entre escritorio y móvil y después de editar; título con producción y foco inicial en texto con calificación conservada. Verificación: 41 tests unitarios, 24 Playwright y 410 Django, además de Ruff, ESLint, TypeScript y Prettier.
+
+## 03/10/2026 — Confirmación del avatar y consistencia visual de botones
+
+- **Fecha**: 03/10/2026
+- **Descripción**: el selector mantiene una selección temporal independiente del borrador. Solo «Guardar» del modal aplica el avatar al formulario; «Cancelar» o Escape descartan la selección. El guardado del perfil conserva la persistencia por API. Se elimina el título duplicado y se indica click con cursor pointer.
+- **Disposición**: se reserva el espacio de la barra de desplazamiento mediante `scrollbar-gutter: stable`; al devolver el foco se evita desplazar la página. Así bloquear el fondo del modal no altera la posición del contenido.
+- **Colores**: las variantes de `Button` comparten tokens; el primario usa texto oscuro sobre naranja y el destructivo un rojo legible para cada tema. Se eliminan ajustes locales para que las mismas acciones conserven colores y contraste.
+- **Archivos afectados**: `AvatarSelector`, perfil, `Modal`, CSS global, `Button` y botones de reseñas/navegación; tests unitarios y Playwright; docs 02/04, wireframe HTML y spec `profile-ui`.
+- **Tests**: selección temporal y confirmación; cancelación/reapertura y Escape; título único; cursor; posición y scroll en móvil/escritorio; igualdad de colores y contraste de texto en ambos temas. Suite completa: 38 tests unitarios, 23 recorridos Playwright y 410 tests Django. Ruff, TypeScript, ESLint y Prettier sin errores.
+
+## 03/10/2026 — Perfil con modales y Mis reseñas con pósters
+
+- **Fecha**: 03/10/2026
+- **Descripción**: se aprobó mostrar pósters en Mis reseñas, aunque el wireframe anterior no los incluía. Las tarjetas reservan 80 × 120 px en escritorio y 56 × 84 px en móvil y reemplazan imágenes ausentes/fallidas. Se implementa la gestión con la API existente: editar; borrar solo texto conservando nota y Vistas; quitar nota borrando texto y Vistas. Se mantienen las decisiones del 26 y 30/09. Las calificaciones sin texto y reseñas moderadas propias siguen presentes. Buscar y ficha quedan fuera del alcance; no se ofrecen enlaces a esas rutas pendientes.
+- **Perfil**: capa visible para cambiar avatar durante edición, catálogo en modal, confirmación personalizada al cancelar/navegar con borrador modificado, y disponibilidad en verde/rojo. El historial conserva índices propios sin reemplazar el estado de Next.js para revertir y repetir el recorrido solicitado. Recarga/cierre mantiene aviso nativo.
+- **Baja**: texto aprobado «Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar.». Describe la pérdida irreversible del acceso; no cambia la conservación interna definida por CU-007.
+- **Corrección necesaria de API**: `MisCalificacionesView` interpretaba el parámetro `cursor` como filtro de ficha y respondía 400 en la segunda página. Un test de regresión con 22 calificaciones reprodujo el fallo; solo `id_tmdb`/`tipo` seleccionan ahora el modo ficha. Afecta `backend/catalogo/reviews.py` y `tests_reviews.py`, sin cambiar el contrato público.
+- **Archivos afectados**: páginas de perfil, preferencias y Mis reseñas; componentes compartidos de modal, navegación y reseñas; utilidades; configuración y suites de Vitest/Playwright; docs 02/04/05, wireframe HTML y specs de reseñas/perfil. Se incorpora Vitest 4 con Testing Library y jsdom para probar componentes y lógica; Playwright recorre los flujos en navegador.
+- **Verificación**: suite Django completa, 410 tests; Vitest, 35 tests unitarios; Playwright, 19 recorridos con API controlada en Chromium. TypeScript, ESLint y Prettier se verifican en frontend; Ruff en backend. Las capturas y recorridos cubren 390, 1440 y 1920 px, foco y teclado, cursor/reintento, edición y ambos borrados. El CI incorpora `npm run test:unit` además de Playwright.
+
 ## 30/09/2026 — Corrección del aviso de acceso a la documentación
 
 - **Descripción**: se corrige la variable `recurso` en la plantilla de acceso
@@ -2336,7 +2364,7 @@ pagination_reviews,exceptions,tests_reviews}.py`,
 
 - **Fecha**: 30/09/2026
 - **Decisión** (del usuario): el Home tiene un selector `Todo · Películas ·
-  Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
+Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
   tipos, como pide hoy el doc 04 §5; las otras dos opciones cambian la fuente
   de cada fila.
 - **Alternativas descartadas**: filas mezcladas sin selector (no deja mirar

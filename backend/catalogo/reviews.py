@@ -220,7 +220,9 @@ class MisCalificacionesView(APIView):
             .select_related("produccion", "resena")
             .order_by("-fecha", "-id")
         )
-        if request.query_params:
+        # El cursor de paginación no solicita una ficha individual. Solo los
+        # filtros de producción cambian la respuesta de listado a objeto.
+        if "id_tmdb" in request.query_params or "tipo" in request.query_params:
             id_tmdb, tipo = _produccion_pedida(request)
             calificacion = get_object_or_404(
                 propias, produccion__id_tmdb=id_tmdb, produccion__tipo=tipo

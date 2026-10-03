@@ -22,8 +22,7 @@ App Autenticada
 
 - 3 links de navegación + avatar a la derecha.
 - El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil", "Mis reseñas", "Preferencias" y "Cerrar sesión".
-- Hasta implementar C-08/P-06, «Mis reseñas» lleva a una pantalla vacía que
-  informa que la sección todavía no está implementada.
+- «Mis reseñas» permite gestionar calificaciones y textos propios, con pósters y acciones de edición y eliminación.
 - "Buscar" abre un panel overlay que reemplaza la vista actual con el catálogo completo (grid + filtros + toggle Películas/Series).
 - El chatbot se accede desde un FAB flotante presente en todas las pantallas.
 
@@ -300,24 +299,24 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | Bloque                | Datos                                                                                                                                                                                                                                                                                                                                                                                                                               | Fuente                                          |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | **Hero**              | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`Xh Ymin` para pelis o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips                                                                                                                                                                                                           | `ProduccionAudiovisual` + TMDB                  |
-| **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015; si ya calificaste muestra la nota —`⭐ 9/10`— y abre el modal en modo Editar, con la opción "Quitar calificación"), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario)                                                                                                                                                               | `Lista`                                         |
+| **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015; si ya calificaste muestra la nota —`⭐ 9/10`— y abre el modal en modo Editar, con la opción "Quitar calificación"), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario)                                            | `Lista`                                         |
 | **Sinopsis**          | Card dentro del info-col (columna derecha), debajo de los botones de acción. Texto completo colapsable con "[leer más ▾]" si excede 300 caracteres.                                                                                                                                                                                                                                                                                 | `ProduccionAudiovisual.sinopsis`                |
 | **CastCard**          | Card full-width debajo del Hero: Director (nombre) + Cast (lista de actores). Colapsable con "[mostrar más ▾]" si hay más de 10 actores. **Sin fotos**.                                                                                                                                                                                                                                                                             | `ProduccionAudiovisual.reparto` + `.directores` |
 | **Reseñas**           | Dos secciones con headers separados: "Tu reseña" (card destacada con borde acento, solo si el usuario ya publicó) y "Reseñas de la comunidad (N)". En tu reseña: acciones con iconos (✏️ editar, 🗑️ eliminar). En las de la comunidad: solo lectura. Cada ReviewCard: avatar, @usuario, rating en formato `X/10` (sin estrellas), fecha, texto. Se muestran únicamente reseñas que tengan texto. Botón "Cargar más reseñas" al pie. | `Calificacion` + `Reseña` + `Usuario`           |
 
 ### Acciones directas — comportamiento
 
-| Acción            | Estado inicial                 | Click                                        | Estado final                                                             |
-| ----------------- | ------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------ |
-| Favoritos (♥)     | Borde (no está en favoritos)   | Agrega a favoritos                           | Relleno sólido                                                           |
-| Favoritos (♥)     | Relleno (ya está en favoritos) | Quita de favoritos                           | Borde                                                                    |
-| Vista (👁)         | Borde                          | Agrega a Vistas                              | Relleno sólido                                                           |
-| Vista (👁)         | Relleno (ya está en Vistas)    | Quita de Vistas                              | Borde (verifica: si tiene calificación, pide eliminarla primero, CU-011) |
-| Pendiente (🕐)    | Borde                          | Agrega a Pendientes                          | Relleno sólido                                                           |
-| Pendiente (🕐)    | Relleno                        | Quita de Pendientes                          | Borde                                                                    |
-| Calificar         | —                              | Abre modal de reseña (CU-015)                | Al publicar, la producción entra a Vistas: el 👁 queda relleno (regla "calificada ⇒ vista", 30/09/2026) |
-| Vista (👁, quitar) | Producción calificada          | **Pide confirmación antes de quitar**: la API responde 409 `calificacion_impide_quitar_de_vistas` (CU-011: si la calificaste, la viste). El modal dice "Se eliminarán tu calificación de X/10 y tu **reseña**. Esto no se puede deshacer.", con el texto de la reseña visible en un preview truncado a 2 líneas y "ver completa". Al confirmar, se reintenta con `?borrar_calificacion=true`, que borra las dos cosas y quita el ítem en una sola transacción. | Si cancela, la producción sigue en Vistas y la calificación intacta. |
-| Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas | Check/uncheck toggle                                                     |
+| Acción            | Estado inicial                 | Click                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Estado final                                                                                           |
+| ----------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Favoritos (♥)     | Borde (no está en favoritos)   | Agrega a favoritos                                                                                                                                                                                                                                                                                                                                                                                                                                             | Relleno sólido                                                                                         |
+| Favoritos (♥)     | Relleno (ya está en favoritos) | Quita de favoritos                                                                                                                                                                                                                                                                                                                                                                                                                                             | Borde                                                                                                  |
+| Vista (👁)         | Borde                          | Agrega a Vistas                                                                                                                                                                                                                                                                                                                                                                                                                                                | Relleno sólido                                                                                         |
+| Vista (👁)         | Relleno (ya está en Vistas)    | Quita de Vistas                                                                                                                                                                                                                                                                                                                                                                                                                                                | Borde (verifica: si tiene calificación, pide eliminarla primero, CU-011)                               |
+| Pendiente (🕐)    | Borde                          | Agrega a Pendientes                                                                                                                                                                                                                                                                                                                                                                                                                                            | Relleno sólido                                                                                         |
+| Pendiente (🕐)    | Relleno                        | Quita de Pendientes                                                                                                                                                                                                                                                                                                                                                                                                                                            | Borde                                                                                                  |
+| Calificar         | —                              | Abre modal de reseña (CU-015)                                                                                                                                                                                                                                                                                                                                                                                                                                  | Al publicar, la producción entra a Vistas: el 👁 queda relleno (regla "calificada ⇒ vista", 30/09/2026) |
+| Vista (👁, quitar) | Producción calificada          | **Pide confirmación antes de quitar**: la API responde 409 `calificacion_impide_quitar_de_vistas` (CU-011: si la calificaste, la viste). El modal dice "Se eliminarán tu calificación de X/10 y tu **reseña**. Esto no se puede deshacer.", con el texto de la reseña visible en un preview truncado a 2 líneas y "ver completa". Al confirmar, se reintenta con `?borrar_calificacion=true`, que borra las dos cosas y quita el ítem en una sola transacción. | Si cancela, la producción sigue en Vistas y la calificación intacta.                                   |
+| Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas                                                                                                                                                                                                                                                                                                                                                                                                                   | Check/uncheck toggle                                                                                   |
 
 Los botones de acción directa son visibles solo para usuarios autenticados. Para no autenticados, se muestra "Inicia sesión para calificar o guardar" con link a Login.
 
@@ -356,17 +355,17 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 ### Variantes
 
-| Variante     | Disparador                               | Contenido                                                                                                                                                                           | Botones               |
-| ------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| **Publicar** | Click en "Calificar" (sin reseña previa) | Widget de estrellas interactivo (1-10, ver abajo), campo de texto opcional (máx 1000 chars, ~6 líneas), contador de caracteres. Si la producción todavía no está en "Vistas", debajo de las estrellas: "Al calificarla, {título} también se agrega a Vistas." | Cancelar / Publicar   |
-| **Editar**   | Click en icono ✏️ (desde tu reseña)      | Mismo widget con calificación y texto precargados. Las estrellas del rating anterior que quedarían fuera de la nueva selección se muestran en un amarillo apagado durante el hover. | Cancelar / Actualizar |
-| **Eliminar** | Click en icono 🗑️ (desde tu reseña)      | Sin formulario. Título: "¿Eliminar reseña?" — Cuerpo: "Se eliminará el texto de tu reseña. Tu calificación de X/10 se conserva." Borra **solo el texto** (`DELETE /api/reviews/{id}/texto/`).                                    | Cancelar / Confirmar  |
-| **Quitar calificación** | Click en la nota del botón de acción, opción "Quitar calificación" | Sin formulario. Título: "¿Quitar tu calificación?" — Cuerpo con reseña: "Se eliminarán tu calificación de X/10 y tu **reseña**, y {título} dejará de estar en Vistas. La calificación y la reseña no se pueden recuperar; a Vistas podés volver a agregarla cuando quieras." (con el preview del texto truncado a 2 líneas y "ver completa"). Sin reseña: "Se eliminará tu calificación de X/10 y {título} dejará de estar en Vistas. La calificación no se puede recuperar; a Vistas podés volver a agregarla cuando quieras." Borra la nota, el texto y el ítem de "Vistas" en una sola transacción (`DELETE /api/reviews/{id}/`). | Cancelar / Quitar |
+| Variante                | Disparador                                                         | Contenido                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Botones               |
+| ----------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
+| **Publicar**            | Click en "Calificar" (sin reseña previa)                           | Widget de estrellas interactivo (1-10, ver abajo), campo de texto opcional (máx 1000 chars, ~6 líneas), contador de caracteres. Si la producción todavía no está en "Vistas", debajo de las estrellas: "Al calificarla, {título} también se agrega a Vistas."                                                                                                                                                                                                                                                                                                                                                                        | Cancelar / Publicar   |
+| **Editar**              | Click en icono ✏️ (desde tu reseña)                                | Mismo widget con calificación y texto precargados. Las estrellas del rating anterior que quedarían fuera de la nueva selección se muestran en un amarillo apagado durante el hover.                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Cancelar / Actualizar |
+| **Eliminar**            | Click en icono 🗑️ (desde tu reseña)                                | Sin formulario. Título: "¿Eliminar reseña?" — Cuerpo: "Se eliminará el texto de tu reseña. Tu calificación de X/10 se conserva." Borra **solo el texto** (`DELETE /api/reviews/{id}/texto/`).                                                                                                                                                                                                                                                                                                                                                                                                                                        | Cancelar / Confirmar  |
+| **Quitar calificación** | Click en la nota del botón de acción, opción "Quitar calificación" | Sin formulario. Título: "¿Quitar tu calificación?" — Cuerpo con reseña: "Se eliminarán tu calificación de X/10 y tu **reseña**, y {título} dejará de estar en Vistas. La calificación y la reseña no se pueden recuperar; a Vistas podés volver a agregarla cuando quieras." (con el preview del texto truncado a 2 líneas y "ver completa"). Sin reseña: "Se eliminará tu calificación de X/10 y {título} dejará de estar en Vistas. La calificación no se puede recuperar; a Vistas podés volver a agregarla cuando quieras." Borra la nota, el texto y el ítem de "Vistas" en una sola transacción (`DELETE /api/reviews/{id}/`). | Cancelar / Quitar     |
 
 ### Widget de estrellas
 
-- Único lugar del sistema donde se usan estrellas visuales (en la ficha y reseñas se usa formato `X/10`).
-- 10 estrellas en fila horizontal.
+- Las diez estrellas interactivas se usan solo al calificar. En Mis reseñas se muestra una única estrella decorativa junto a `X/10` para distinguir la nota de la fecha; la ficha y las reseñas de comunidad mantienen `X/10`.
+- 10 estrellas en fila horizontal en escritorio; en móvil, dos filas de cinco para mantener controles de al menos 44 px.
 - **Hover**: las estrellas se iluminan progresivamente según la posición del puntero, mostrando la
   calificación que se asignaría (1-10). En modo edición, las estrellas que estaban en el rating previo
   pero quedarían fuera de la nueva selección se muestran en un amarillo apagado (`rgba(245,197,24, 0.22)`).
@@ -386,13 +385,13 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 ### Post-acción
 
-| Acción                | Efecto                                                                                                                       |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Publicar              | Cierra modal, toast "Calificación publicada." (sin texto) o "Calificación y reseña publicadas." (con texto). La producción entra a "Vistas" (el 👁 queda relleno) y la sección de reseñas en la ficha se actualiza al instante. |
-| Actualizar            | Cierra modal, toast según lo que cambió: "Calificación actualizada.", "Reseña actualizada." o "Calificación y reseña actualizadas.". "Vistas" no cambia. |
-| Eliminar              | Cierra modal, toast "Reseña eliminada.". La card "Tu reseña" desaparece de la ficha (solo se listan reseñas **con texto**), pero **la calificación sobrevive**: el botón de acción pasa a mostrar la nota vigente (ej. `⭐ 9/10`) y abre el modal en modo **Editar**. Para quitar también la nota hace falta la acción "Quitar calificación" (ver abajo). |
-| Quitar calificación   | Cierra modal, toast "Calificación eliminada." o "Calificación y reseña eliminadas.". El botón vuelve a "Calificar", la card "Tu reseña" desaparece y el 👁 queda con borde: la producción salió de "Vistas". |
-| Cancelar              | Cierra modal sin cambios.                                                                                                    |
+| Acción              | Efecto                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Publicar            | Cierra modal, toast "Calificación publicada." (sin texto) o "Calificación y reseña publicadas." (con texto). La producción entra a "Vistas" (el 👁 queda relleno) y la sección de reseñas en la ficha se actualiza al instante.                                                                                                                            |
+| Actualizar          | Cierra modal, toast según lo que cambió: "Calificación actualizada.", "Reseña actualizada." o "Calificación y reseña actualizadas.". "Vistas" no cambia.                                                                                                                                                                                                  |
+| Eliminar            | Cierra modal, toast "Reseña eliminada.". La card "Tu reseña" desaparece de la ficha (solo se listan reseñas **con texto**), pero **la calificación sobrevive**: el botón de acción pasa a mostrar la nota vigente (ej. `⭐ 9/10`) y abre el modal en modo **Editar**. Para quitar también la nota hace falta la acción "Quitar calificación" (ver abajo). |
+| Quitar calificación | Cierra modal, toast "Calificación eliminada." o "Calificación y reseña eliminadas.". El botón vuelve a "Calificar", la card "Tu reseña" desaparece y el 👁 queda con borde: la producción salió de "Vistas".                                                                                                                                               |
+| Cancelar            | Cierra modal sin cambios.                                                                                                                                                                                                                                                                                                                                 |
 
 ### Estados del modal
 
@@ -851,21 +850,21 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 └──────────────────────────────────────────┘
 ```
 
-| Elemento                | Comportamiento                                                                                                                                                                                                                                      |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Nombre**              | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                       |
-| **Apellido**            | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                       |
-| **Email**               | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope).                                                                                                                                                                                  |
-| **Cambiar contraseña**  | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía.                                                                                                                 |
-| **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo).                                                                                                                                                                                     |
-| **Cancelar**            | Revierte a modo visualización sin guardar.                                                                                                                                                                                                          |
-| **Guardar**             | Actualiza nombre, apellido, usuario y avatar. La contraseña se confirma y guarda por separado; tras cambiarla vuelve al login.                                                                                                                      |
-| **Avatar**              | Hover o foco → control "Cambiar avatar". Click o Enter → selector de avatares predefinidos; la vista previa cambia al elegir uno. La cantidad de opciones proviene del catálogo disponible, sin fijarla en 20. No se permite subir una foto propia. |
-| **Breadcrumb**          | Perfil                                                                                                                                                                                                                                              |
+| Elemento                | Comportamiento                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nombre**              | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Apellido**            | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Email**               | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Cambiar contraseña**  | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Cancelar**            | Revierte a modo visualización sin guardar.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **Guardar**             | Actualiza nombre, apellido, usuario y avatar. La contraseña se confirma y guarda por separado; tras cambiarla vuelve al login.                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Avatar**              | Al editar, capa visible «Cambiar avatar» sobre la imagen. Click o Enter → modal con todos los avatares predefinidos; la selección es temporal hasta pulsar «Guardar» dentro del modal. «Cancelar» o Escape la descartan; al reabrir se marca el avatar del borrador. «Guardar cambios» del perfil persiste el avatar. El título «Elegí un avatar» aparece una vez, el cursor indica click y abrir/cerrar no desplaza la página. La cantidad de opciones proviene del catálogo disponible, sin fijarla en 20. No se permite subir una foto propia. |
+| **Breadcrumb**          | Perfil                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 El selector muestra todas las imágenes individuales del catálogo actual (26) y
 crece al añadir archivos. El PNG mosaico de origen no es un avatar. El wireframe
-HTML conserva un selector de archivos antiguo como referencia visual; no forma
+HTML representa el selector mediante un modal con opciones de ejemplo; no forma
 parte del flujo implementado.
 
 ---
@@ -911,61 +910,52 @@ parte del flujo implementado.
 
 ---
 
+### Cambios pendientes en el perfil
+
+Cancelar o navegar mediante enlaces o historial con cambios pendientes abre «¿Salir sin guardar?»: «Los cambios que hiciste en tu perfil no se guardarán.». «Seguir editando» conserva el borrador; «Salir sin guardar» descarta y continúa la acción solicitada. Sin cambios no se pide confirmación. Recargar o cerrar la pestaña usa la advertencia nativa del navegador.
+
 ## 5i. Mis reseñas
 
-**Estado transitorio (26/09/2026):** el enlace del avatar permanece visible y
-abre `/mis-resenas` con un mensaje de «todavía no implementada» y una salida al
-perfil. El listado, la API de reseñas propias y sus acciones siguen pendientes
-de C-08. El diseño detallado siguiente describe esa etapa posterior.
+**Implementación (03/10/2026):** listado autenticado de calificaciones y reseñas propias, incluidas las calificaciones sin texto y las reseñas moderadas que su autor puede gestionar. Consume `GET /api/reviews/mias/`.
 
-> Listado cronológico de todas las reseñas publicadas por el usuario. Se accede desde el dropdown del avatar.
-
-```
-┌──────────────────────────────────────────┐
-│  [FilmAI]  Inicio  Buscar  Listas  [A]    │
-├──────────────────────────────────────────┤
-│  Mis reseñas                             │
-│                                          │
-│  ┌────────────────────────────────────┐  │
-│  │ 🎬 Breaking Bad      9/10          │  │
-│  │ 12/03/2025              [✏️] [🗑️]  │  │
-│  │ "Una obra maestra de principio     │  │
-│  │  a fin. El desarrollo de Walter    │  │
-│  │  White es simplemente perfecto..." │  │
-│  └────────────────────────────────────┘  │
-│                                          │
-│  ┌────────────────────────────────────┐  │
-│  │ 🎬 Interstellar       8/10         │  │
-│  │ 28/02/2025              [✏️] [🗑️]  │  │
-│  │ "Visualmente impresionante..."     │  │
-│  └────────────────────────────────────┘  │
-│                                          │
-│  ...scroll vertical...                   │
-└──────────────────────────────────────────┘
+```text
+┌────────────────────────────────────────────────────────┐
+│ Mis reseñas                                            │
+│ ┌────────┐ Interstellar                   28/02/2025   │
+│ │ Póster │ Película · estrella + 8/10                  │
+│ │        │ Visualmente impresionante… Leer más          │
+│ └────────┘                                             │
+│ Editar · Eliminar reseña · Quitar calificación           │
+└────────────────────────────────────────────────────────┘
 ```
 
 ### ReviewCard
 
-| Elemento           | Comportamiento                                                |
-| ------------------ | ------------------------------------------------------------- |
-| **Título + badge** | Clickeable → ficha de detalle. Muestra tipo (Película/Serie). |
-| **Rating**         | Formato `X/10`.                                               |
-| **Fecha**          | Fecha de publicación.                                         |
-| **Texto**          | Truncado a 3 líneas, expandible con "[leer más ▾]".           |
-| **✏️ Editar**      | Abre modal de editar reseña (mismo de sección 5d).            |
-| **🗑️ Eliminar**    | Abre modal de eliminar reseña ("¿Eliminar reseña?").          |
+| Elemento                | Comportamiento                                                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Póster**              | Miniatura de 80 × 120 px en escritorio y 56 × 84 px en móvil. Si falta o falla, reemplazo del mismo tamaño con ícono. |
+| **Título + badge**      | Título y tipo (Película/Serie). Sin enlace hasta implementar la ficha C-07.                                           |
+| **Rating**              | Una estrella amarilla (`#f5c518`) decorativa seguida de `X/10`, con etiqueta accesible «Calificación: X de 10».       |
+| **Fecha**               | Fecha de publicación en la esquina superior derecha, separada de estrella y nota.                                     |
+| **Texto**               | Truncado a 3 líneas. «Leer más/Leer menos» solo aparece si excede ese límite al ancho actual.                         |
+| **✏️ Editar**           | Abre «Editar calificación y reseña de "{título}"», con el foco inicial en el campo de reseña.                         |
+| **Eliminar reseña**     | Solo si hay texto. Confirma y elimina únicamente el texto; conserva la nota, la tarjeta y Vistas.                     |
+| **Quitar calificación** | Confirma que se eliminan nota y texto y que la producción sale de Vistas. Elimina la tarjeta.                         |
 
 - **Orden**: más reciente primero.
-- **Scroll vertical** sin paginación.
+- **Carga progresiva** por cursor de 20 elementos, sin números de página; botón accesible «Cargar más». Errores de páginas posteriores conservan las tarjetas cargadas.
+- En escritorio, el texto queda a la derecha del póster; en móvil ocupa todo el ancho debajo de los metadatos. Acciones al pie.
+- Sin texto: «Todavía no escribiste una reseña.»; se puede agregar desde Editar. Vaciar texto existente no lo borra mediante PUT: usar Eliminar reseña.
+- Buscar y la ficha siguen pendientes; esta entrega no ofrece enlaces a destinos inexistentes.
 
 ### Estados
 
-| Estado  | Qué se muestra                                                                     |
-| ------- | ---------------------------------------------------------------------------------- |
-| Loading | Skeleton de ReviewCards.                                                           |
-| Normal  | Listado cronológico.                                                               |
-| Empty   | Ilustración + "Todavía no escribiste ninguna reseña." + botón "Explorar" → Buscar. |
-| Error   | Mensaje + botón Reintentar.                                                        |
+| Estado  | Qué se muestra                                                                                    |
+| ------- | ------------------------------------------------------------------------------------------------- |
+| Loading | Skeleton de ReviewCards.                                                                          |
+| Normal  | Listado cronológico.                                                                              |
+| Empty   | «Todavía no calificaste ninguna producción ni escribiste reseñas.» + enlace «Volver a mi perfil». |
+| Error   | Mensaje + botón Reintentar.                                                                       |
 
 ---
 
@@ -1016,12 +1006,12 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 ### Secciones
 
-| Sección            | Controles                           | Descripción                                                                                                                                                                                            |
-| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                                                             |
-| **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                                                           |
-| **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                     |
-| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Se cerrarán tus sesiones y no podrás iniciar sesión. Tus datos, listas, reseñas y calificaciones se conservarán." Botones Cancelar / Dar de baja. |
+| Sección            | Controles                           | Descripción                                                                                                                                                                                                                                                                 |
+| ------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                                                                                                                                  |
+| **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                                                                                                                                |
+| **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                                                                                          |
+| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar." Botones Cancelar / Dar de baja. |
 
 ### Breadcrumb
 
@@ -1062,7 +1052,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 ### 6.5 Feedback
 
-- **Rating stars**: widget interactivo 1-10 estrellas (solo en modal de calificar). Valores enteros. Fuera del modal se muestra formato `X/10`.
+- **Rating stars**: widget interactivo 1-10 estrellas (solo en modal de calificar). Valores enteros. Fuera del modal se muestra formato `X/10`; Mis reseñas lo acompaña con una estrella decorativa.
 - **Spinner/Loader**: indicador de carga genérico.
 - **Skeleton**: placeholder rectangular animado para carga de contenido.
 - **Toast/Notificación**: mensaje de éxito/error, posicionado top-right o bottom-center.
@@ -1195,3 +1185,15 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 - Los formularios deben mostrar mensajes de error asociados mediante `aria-describedby`.
 - Los campos con error deben tener el atributo `aria-invalid="true"`.
 - Los mensajes de error deben ser visibles y comunicados por lectores de pantalla.
+
+### Consistencia de botones del perfil y sus modales
+
+Las variantes comparten colores desde `Button`: texto oscuro sobre el primario naranja, secundario con sus tokens de tema y destructivo con rojo adaptado al fondo claro/oscuro. El contraste del texto es como mínimo 4,5:1 en reposo y hover. No se aplican colores locales por pantalla. El documento reserva espacio para la barra de desplazamiento al bloquear el fondo de un modal.
+
+### Lectura y foco en Mis reseñas
+
+«Leer más» aparece únicamente cuando el texto supera las tres líneas visibles según el ancho real de la tarjeta. Al expandir se ofrece «Leer menos» mientras el texto exceda ese límite; si cabe completo al redimensionar o editar, el control desaparece. Las calificaciones sin texto tampoco muestran el control. Abrir «Editar» enfoca el campo de reseña, conserva la nota guardada y no enfoca inicialmente ninguna estrella. El grupo sigue siendo operable con teclado.
+
+En Mis reseñas el encabezado ubica la fecha en la esquina superior derecha de la tarjeta. La estrella precede a la nota en una misma línea, separadas ambas de la fecha. El título de edición incluye el nombre de la producción entre comillas.
+
+Cuando falta el texto, «Todavía no escribiste una reseña.» se presenta como nota informativa con icono, fondo tenue, borde discontinuo y cursiva, para distinguirlo de una reseña real.

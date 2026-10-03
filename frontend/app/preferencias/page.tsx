@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAccount, type Preferencias } from "@/components/AccountProvider";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { ADVERTENCIA_BAJA } from "@/lib/profile-draft";
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 
 const INTERRUPTORES: { campo: keyof Preferencias; titulo: string; descripcion: string }[] = [
@@ -193,7 +194,8 @@ export default function PreferenciasPage() {
               Cuenta
             </h2>
             <p className="mb-5 text-sm text-muted-foreground">
-              La baja impide volver a iniciar sesión y conserva tus datos.
+              La baja de la cuenta es irreversible. No podrás volver a iniciar sesión ni
+              reactivarla.
             </p>
             <Button
               ref={bajaButtonRef}
@@ -218,10 +220,7 @@ export default function PreferenciasPage() {
             <h2 id="baja-titulo" className="text-xl font-semibold">
               ¿Dar de baja tu cuenta?
             </h2>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Se cerrarán tus sesiones y no podrás iniciar sesión. Tus datos, listas, reseñas y
-              calificaciones se conservarán.
-            </p>
+            <p className="mt-3 text-sm text-muted-foreground">{ADVERTENCIA_BAJA}</p>
             {errorBaja && (
               <p role="alert" className="mt-4 text-sm text-destructive">
                 {errorBaja}
