@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Editing the authenticated user's own profile, selecting predefined avatars and confirming account deactivation.
+Editing the authenticated user's own profile, selecting predefined avatars, confirming account deactivation, and managing their own ratings and reviews in "Mis reseñas" (P-06). The reviews screen consumes `reviews-api`.
 
 ## Requirements
 
@@ -25,3 +25,23 @@ The confirmation MUST say: “Esta acción es irreversible. Se cerrarán todas t
 ### Button consistency
 
 Buttons with the same variant MUST share foreground/background tokens across profile, selectors, review dialogs and preferences. Primary, secondary and destructive buttons MUST provide at least 4.5:1 text contrast in light/dark themes, including hover.
+
+### Own reviews (Mis reseñas)
+
+`/mis-resenas` MUST display each own rating with a poster, title, type, a yellow (#f5c518) decorative star beside its X/10 value, date and optional text. The star MUST precede the numeric rating on the same line. The date MUST appear separately in the top-right corner of the card, with no overlap at mobile widths. The rating MUST have an accessible label identifying it as a rating. Read-more/read-less controls MUST only appear when the text exceeds three visible lines at the current card width, recalculating after resizing or editing. Text that fits, including exactly three lines, and absent text MUST have no expansion control. An absent review MUST display “Todavía no escribiste una reseña.” as an informative empty state with icon, subtle background, dashed border and italic text, visually distinct from authored content. Poster dimensions MUST be reserved (80 × 120 desktop, 56 × 84 mobile); absent or failed images MUST have an accessible replacement. Titles MUST remain plain text until the detail route exists.
+
+The UI MUST progressively load cursor pages and expose a keyboard-accessible load-more button. Duplicate IDs MUST not create duplicate cards. A page failure MUST preserve previously loaded cards and offer retry.
+
+The edit dialog MUST be titled `Editar calificación y reseña de "{title}"`. Editing MUST initially focus the review text field without focusing any star, preserve the saved rating, and keep the rating group keyboard-accessible. Editing MUST preload the rating and text, enforce integer 1–10 and at most 1000 text characters, and MUST NOT send empty text to PUT. Text deletion MUST confirm preservation of rating and Vistas, leaving the card without text. Rating deletion MUST confirm the loss of rating, optional text and Vistas membership, removing the card on success only. Its success toast MUST name what was lost: "Calificación y reseña eliminadas." when the rating had text, "Calificación eliminada." otherwise (doc 04 §5d). Dialogs MUST contain keyboard focus, support Escape when idle and restore focus.
+
+#### Scenario: A poster cannot load
+
+- GIVEN an own rating with an unavailable poster
+- WHEN its card renders
+- THEN a same-size replacement appears without breaking the layout
+
+#### Scenario: Deleting text from an own card
+
+- WHEN the user confirms text deletion
+- THEN the card keeps its rating and explains that no review text exists
+- AND Vistas membership is unchanged

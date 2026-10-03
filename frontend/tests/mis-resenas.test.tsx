@@ -1,9 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { toast } from "sonner";
 import { beforeEach, expect, it, vi } from "vitest";
 import { MisResenas } from "@/components/MisResenas";
 import { apiFetch } from "@/lib/api";
 vi.mock("@/lib/api", () => ({ apiFetch: vi.fn() }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/components/AccountProvider", () => ({
   useAccount: () => ({ perfil: { pk: 1 }, cargando: false, error: null }),
 }));
@@ -17,7 +19,10 @@ const item = {
   fecha: "2026-10-03",
   texto: "Muy buena",
 };
-beforeEach(() => vi.mocked(apiFetch).mockReset());
+beforeEach(() => {
+  vi.mocked(apiFetch).mockReset();
+  vi.mocked(toast.success).mockClear();
+});
 it("muestra carga y luego calificaciones sin texto", async () => {
   vi.mocked(apiFetch).mockResolvedValue({ results: [{ ...item, texto: null }], next: null });
   render(<MisResenas />);
@@ -62,4 +67,19 @@ it("eliminar texto mantiene la tarjeta y borrar nota muestra vacío", async () =
   expect(
     await screen.findByText("Todavía no calificaste ninguna producción ni escribiste reseñas.")
   ).toBeVisible();
+});
+it.each([
+  // Doc 04 §5d: el toast nombra lo que se perdió. La reseña cae con la nota.
+  { texto: "Muy buena", mensaje: "Calificación y reseña eliminadas." },
+  { texto: null, mensaje: "Calificación eliminada." },
+])("quitar la calificación avisa: $mensaje", async ({ texto, mensaje }) => {
+  vi.mocked(apiFetch)
+    .mockResolvedValueOnce({ results: [{ ...item, texto }], next: null })
+    .mockResolvedValue(undefined);
+  render(<MisResenas />);
+  await screen.findByRole("article");
+  await userEvent.click(screen.getByRole("button", { name: "Quitar calificación" }));
+  fireEvent.click(screen.getByRole("dialog").querySelector("button:last-child")!);
+  await screen.findByText("Todavía no calificaste ninguna producción ni escribiste reseñas.");
+  expect(toast.success).toHaveBeenCalledWith(mensaje);
 });

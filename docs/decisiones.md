@@ -2381,3 +2381,19 @@ Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
 - **Pendiente**: el doc 04 §5 y el diseño completo se actualizan en el SDD de
   C-05.
 - **Archivos afectados**: ninguno todavía; solo `docs/decisiones.md`.
+
+---
+
+## 03/10/2026 — P-06: el toast de quitar calificación nombra la reseña, y su UI pasa a `profile-ui`
+
+- **Fecha**: 03/10/2026
+- **Descripción**: al quitar una calificación desde «Mis reseñas», el toast decía
+  siempre «Calificación eliminada.», aunque la reseña se borrara con ella. Ahora
+  dice «Calificación y reseña eliminadas.» cuando había texto, como pide el doc
+  04 §5d desde el 30/09. El requisito de UI de «Mis reseñas», que había quedado
+  en la spec `reviews-api` después de «Known limitations», pasa a
+  `profile-ui`; en `reviews-api` queda solo lo que es de la API, como requisito
+  propio: el `cursor` no selecciona la respuesta de una sola ficha.
+- **Archivos afectados**: `frontend/components/MisResenas.tsx`,
+  `frontend/tests/mis-resenas.test.tsx`, `openspec/specs/reviews-api/spec.md`,
+  `openspec/specs/profile-ui/spec.md`.
