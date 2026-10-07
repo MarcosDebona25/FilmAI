@@ -1,0 +1,1448 @@
+openapi: 3.0.3
+info:
+  title: FilmAI API
+  version: 1.0.0
+  description: API del backend de FilmAI.
+paths:
+  /api/account/deactivate/:
+    post:
+      operationId: account_deactivate_create
+      tags:
+      - account
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/csrf/:
+    get:
+      operationId: auth_csrf_retrieve
+      description: |-
+        Entrega la cookie `csrftoken` para el frontend (SPA).
+
+        Con `JWT_AUTH_COOKIE_USE_CSRF=True`, las mutaciones autenticadas por la
+        cookie httpOnly `access` exigen el header `X-CSRFToken`. Esta vista (GET)
+        fuerza a Django a setear la cookie `csrftoken` (`ensure_csrf_cookie` →
+        `get_token` → `CsrfViewMiddleware.process_response`), que el frontend lee y
+        devuelve en cada request que modifica datos.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/google/:
+    post:
+      operationId: auth_google_create
+      description: Login/registro con Google OAuth 2.0 (Google Identity Services).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleSocialLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoogleSocialLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoogleSocialLogin'
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleSocialLogin'
+          description: ''
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Login que usa ``LenientJWTCookieAuthentication``.
+
+        Evita 401 cuando el browser manda una cookie JWT vieja (p.ej. después de
+        re-seed o de que la cuenta fue eliminada).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: |-
+        Calls Django logout method and delete the Token object
+        assigned to the current User object.
+
+        Accepts/Returns nothing.
+      tags:
+      - auth
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
+  /api/auth/password/change:
+    post:
+      operationId: auth_password_change_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+        required: true
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CambiarContrasena'
+          description: ''
+  /api/auth/password/change/:
+    post:
+      operationId: auth_password_change_create_2
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+        required: true
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CambiarContrasena'
+          description: ''
+  /api/auth/password/reset/:
+    post:
+      operationId: auth_password_reset_create
+      description: |-
+        POST `/api/auth/password/reset/` — solicitud de restablecimiento.
+
+        CU-020: responde siempre con el mismo mensaje genérico, exista o no el
+        correo. Aplica rate limit de 5 solicitudes por día por email (no por IP),
+        e informa cuántos intentos restantes le quedan al usuario.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/password/reset/confirm/:
+    post:
+      operationId: auth_password_reset_confirm_create
+      description: |-
+        POST `/api/auth/password/reset/confirm/` — nueva contraseña.
+
+        Valida el enlace firmado (`uid`/`token`, válido 1 hora) y la política de
+        contraseñas del CU-001. Enlace inválido o vencido →
+        `400 {"codigo": "invalido"}`; contraseña inválida → errores de campo.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/registration/:
+    post:
+      operationId: auth_registration_create
+      description: |-
+        Registro tradicional sin el `complete_signup` de dj-rest-auth.
+
+        `serializer.save()` ya crea el `EmailAddress` y envía el correo de
+        confirmación (`setup_user_email`). No se llama a `complete_signup` porque,
+        con `ACCOUNT_EMAIL_VERIFICATION="mandatory"` y nuestro modelo (`is_active`
+        es `False` mientras `estado=PENDIENTE`, Opción A1), allauth intentaría
+        `perform_login` → `respond_user_inactive` → `reverse("account_inactive")`
+        (URL que no montamos), rompiendo el registro.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/auth/registration/resend-email/:
+    post:
+      operationId: auth_registration_resend_email_create
+      description: |-
+        Resends another email to an unverified email.
+
+        Accepts the following POST parameter: email.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResendEmailVerification'
+        required: true
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
+  /api/auth/registration/verify-email/:
+    post:
+      operationId: auth_registration_verify_email_create
+      description: |-
+        Confirma la cuenta a partir del enlace del email (CU-002).
+
+        Reemplaza al `VerifyEmailView` de dj-rest-auth, que responde el mismo
+        error genérico para todos los casos. Esta vista decodifica la misma key
+        firmada (HMAC + timestamp) que allauth generó en el enlace y distingue:
+
+        - `ok`: email confirmado → `mark_email_address_as_verified` llama al
+          adapter (`confirm_email`), que pone la cuenta en estado `ACTIVA`.
+        - `expirado`: la key tiene más de `ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS`.
+        - `invalido`: firma inválida o el email ya no existe.
+        - `ya_confirmada`: el EmailAddress ya estaba verificado (enlace reusado).
+      tags:
+      - auth
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/token/refresh:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshSesion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshSesion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshSesion'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshSesion'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create_2
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshSesion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshSesion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshSesion'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshSesion'
+          description: ''
+  /api/auth/token/verify/:
+    post:
+      operationId: auth_token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenVerify'
+          description: ''
+  /api/auth/user/:
+    get:
+      operationId: auth_user_retrieve
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioDetalles'
+          description: ''
+    put:
+      operationId: auth_user_update
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioDetalles'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UsuarioDetalles'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UsuarioDetalles'
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioDetalles'
+          description: ''
+    patch:
+      operationId: auth_user_partial_update
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUsuarioDetalles'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUsuarioDetalles'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUsuarioDetalles'
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioDetalles'
+          description: ''
+  /api/auth/username-available/:
+    get:
+      operationId: auth_username_available_retrieve
+      description: |-
+        Chequeo de disponibilidad de nombre de usuario en tiempo real (A-05).
+
+        Devuelve `{"disponible": false}` si el formato no es válido (CU-001:
+        alfanumérico, 5-25 caracteres) o si ya existe un usuario con ese nombre
+        (comparación insensible a mayúsculas, igual que `validate_nombre_usuario`).
+      tags:
+      - auth
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/avatars/:
+    get:
+      operationId: avatars_retrieve
+      description: Opciones disponibles para el selector, con IDs estables.
+      tags:
+      - avatars
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/catalogo/discover/:
+    get:
+      operationId: catalogo_discover_retrieve
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/catalogo/keywords/:
+    get:
+      operationId: catalogo_keywords_retrieve
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/catalogo/movie/{id_tmdb}/:
+    get:
+      operationId: catalogo_movie_retrieve
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/catalogo/now-playing/:
+    get:
+      operationId: catalogo_now_playing_retrieve
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/catalogo/search/:
+    get:
+      operationId: catalogo_search_retrieve
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/catalogo/trending/:
+    get:
+      operationId: catalogo_trending_retrieve
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/catalogo/tv/{id_tmdb}/:
+    get:
+      operationId: catalogo_tv_retrieve
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/lists/:
+    get:
+      operationId: lists_retrieve
+      description: Lista y crea listas del usuario autenticado.
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: lists_create
+      description: Lista y crea listas del usuario autenticado.
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/lists/{lista_id}/:
+    put:
+      operationId: lists_update
+      description: Renombra o elimina una lista personalizada.
+      parameters:
+      - in: path
+        name: lista_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: lists_destroy
+      description: Renombra o elimina una lista personalizada.
+      parameters:
+      - in: path
+        name: lista_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/lists/{lista_id}/items/:
+    get:
+      operationId: lists_items_retrieve
+      description: Pagina o agrega producciones a una lista propia.
+      parameters:
+      - in: path
+        name: lista_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: lists_items_create
+      description: Pagina o agrega producciones a una lista propia.
+      parameters:
+      - in: path
+        name: lista_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/lists/{lista_id}/items/{item_id}/:
+    delete:
+      operationId: lists_items_destroy
+      description: |-
+        Quita el ítem, y con `?borrar_calificacion=true` también la calificación.
+
+        CU-011 pide que no se pueda desmarcar como «vista» una producción
+        calificada sin eliminar antes esa calificación: si la calificaste, la
+        viste, y quitarla de «Vistas» afirmaría lo contrario.
+
+        Hasta la fase 3 de C-08 eso era un callejón sin salida —el 409 mandaba
+        al usuario a otra pantalla—. Con el flag, la UI puede advertir qué se
+        pierde («Se eliminarán tu calificación de 9/10 y tu reseña») y hacerlo
+        en el momento. El 409 sin flag no cambia: es lo que le avisa al frontend
+        que tiene que preguntar primero.
+
+        Las dos escrituras van en **una** transacción. Dos llamadas HTTP desde
+        el frontend no serían atómicas: si la segunda fallara, el usuario
+        perdería la calificación y la producción seguiría en «Vistas» —el costo
+        pagado y nada obtenido—.
+      parameters:
+      - in: path
+        name: item_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: lista_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/preferences/:
+    get:
+      operationId: preferences_retrieve
+      tags:
+      - preferences
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preferencias'
+          description: ''
+    put:
+      operationId: preferences_update
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preferencias'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Preferencias'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Preferencias'
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preferencias'
+          description: ''
+  /api/profile/:
+    get:
+      operationId: profile_retrieve
+      tags:
+      - profile
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioPerfil'
+          description: ''
+    put:
+      operationId: profile_update
+      tags:
+      - profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioPerfil'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UsuarioPerfil'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UsuarioPerfil'
+        required: true
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioPerfil'
+          description: ''
+  /api/profile/change-password/:
+    post:
+      operationId: profile_change_password_create
+      tags:
+      - profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasena'
+        required: true
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CambiarContrasena'
+          description: ''
+  /api/reviews/:
+    get:
+      operationId: reviews_retrieve
+      description: |-
+        Las reseñas de los **demás** sobre una producción (§5c).
+
+        Tres exclusiones, cada una con su motivo:
+
+        - **Sin texto**: una nota sin escribir no tiene nada que leer.
+        - **Moderadas** (`activa=False`): decisión del 26/09/2026, solo su autor
+          las ve.
+        - **La de quien pregunta**: la ficha la muestra aparte, arriba, en su
+          propia card. Mandarla dos veces obligaría a deduplicar a cada
+          consumidor, y una lista paginada no puede prometer que la propia caiga
+          en la primera página.
+      tags:
+      - reviews
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: reviews_create
+      description: Reseñas de la comunidad sobre una producción, y alta de la propia.
+      tags:
+      - reviews
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/reviews/{calificacion_id}/:
+    put:
+      operationId: reviews_update
+      description: Actualiza o elimina una calificación propia.
+      parameters:
+      - in: path
+        name: calificacion_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: reviews_destroy
+      description: |-
+        Borra la calificación, su texto (por CASCADE) y el ítem de «Vistas».
+
+        Es físico, no lógico: CU-015 pide eliminar «permanentemente», y
+        `activa` ya significa una sola cosa —moderada por un administrador
+        (AD-01')—. Con dos sentidos, «¿por qué no se ve esta reseña?» no
+        tendría respuesta.
+
+        Sacarla de «Vistas» es la regla del 30/09/2026: el modal lo avisa antes
+        de confirmar, y el usuario puede volver a marcarla. Termina en el mismo
+        estado que quitar de «Vistas» con `?borrar_calificacion=true` (L-01).
+      parameters:
+      - in: path
+        name: calificacion_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/reviews/{calificacion_id}/texto/:
+    delete:
+      operationId: reviews_texto_destroy
+      description: Borra el texto de una calificación propia, conservando la nota.
+      parameters:
+      - in: path
+        name: calificacion_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/reviews/mias/:
+    get:
+      operationId: reviews_mias_retrieve
+      description: |-
+        Las calificaciones propias: la lista de P-06, o la de una ficha.
+
+        Una sola ruta con dos formas de respuesta según los query params:
+
+        - **Sin filtro** → la lista paginada de «Mis reseñas» (P-06).
+        - **Con `id_tmdb` y `tipo`** → un objeto solo, porque el UNIQUE
+          `(usuario, produccion)` garantiza que no puede haber más de una. Devolver
+          `{"results": [...]}` obligaría al frontend a desempacar algo que nunca
+          tiene dos elementos.
+
+        Medio filtro es un 400 y no «todas»: un bug del frontend que olvide `tipo`
+        devolvería la lista entera y la ficha mostraría la calificación de otra
+        película, que es peor que un error visible.
+
+        A diferencia de la comunidad, acá entran las calificaciones sin texto (desde
+        P-06 se pueden editar) y las moderadas (su autor las sigue viendo).
+      tags:
+      - reviews
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+components:
+  schemas:
+    CambiarContrasena:
+      type: object
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+        password1:
+          type: string
+          writeOnly: true
+        password2:
+          type: string
+          writeOnly: true
+      required:
+      - old_password
+      - password1
+      - password2
+    EstadoEnum:
+      enum:
+      - pendiente
+      - activa
+      - baja
+      type: string
+      description: |-
+        * `pendiente` - Pendiente de confirmación
+        * `activa` - Activa
+        * `baja` - Baja
+    GeneroEnum:
+      enum:
+      - masculino
+      - femenino
+      - no_especifica
+      type: string
+      description: |-
+        * `masculino` - Masculino
+        * `femenino` - Femenino
+        * `no_especifica` - No especifica
+    GoogleSocialLogin:
+      type: object
+      description: Login y registro con Google mediante ``id_token``.
+      properties:
+        access_token:
+          type: string
+        code:
+          type: string
+        id_token:
+          type: string
+        nombre_usuario:
+          type: string
+          maxLength: 25
+        fecha_nacimiento:
+          type: string
+          format: date
+        genero:
+          $ref: '#/components/schemas/GeneroEnum'
+    Login:
+      type: object
+      description: Login por credenciales con errores específicos para cuentas inactivas.
+      properties:
+        username:
+          type: string
+        email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        password:
+          type: string
+      required:
+      - password
+    PatchedUsuarioDetalles:
+      type: object
+      description: |-
+        Representación del usuario autenticado (endpoints `/api/auth/user/`).
+
+        El serializer por defecto de dj-rest-auth usa `username`/`email`/
+        `first_name`/`last_name`, que no existen en `usuarios.Usuario`.
+      properties:
+        pk:
+          type: integer
+          readOnly: true
+          title: ID
+        correo:
+          type: string
+          format: email
+          readOnly: true
+          title: Correo electrónico
+          description: Formato correo@dominio.com (CU-001).
+        nombre_usuario:
+          type: string
+          readOnly: true
+          title: Nombre de usuario
+          description: Alfanumérico, 5-25 caracteres, único (CU-001).
+        nombre:
+          type: string
+          readOnly: true
+        apellido:
+          type: string
+          readOnly: true
+        fecha_nacimiento:
+          type: string
+          format: date
+          readOnly: true
+          title: Fecha de nacimiento
+        genero:
+          allOf:
+          - $ref: '#/components/schemas/GeneroEnum'
+          readOnly: true
+          title: Género
+        estado:
+          allOf:
+          - $ref: '#/components/schemas/EstadoEnum'
+          readOnly: true
+          title: Estado de cuenta
+        avatar_id:
+          type: integer
+          readOnly: true
+          title: Id de avatar
+          description: Identificador dentro del conjunto de  avatares
+        fecha_registro:
+          type: string
+          format: date
+          readOnly: true
+          title: Fecha de registro
+    Preferencias:
+      type: object
+      properties:
+        tema:
+          $ref: '#/components/schemas/TemaEnum'
+        perfil_publico:
+          type: boolean
+          title: Perfil público
+        notif_recomendaciones:
+          type: boolean
+          title: Notif. recomendaciones
+        notif_resenas:
+          type: boolean
+          title: Notif. reseñas
+        notif_novedades:
+          type: boolean
+          title: Notif. novedades
+    RefreshSesion:
+      type: object
+      properties:
+        refresh:
+          type: string
+          description: WIll override cookie.
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    Register:
+      type: object
+      description: Registro tradicional (CU-001) con los campos del modelo `Usuario`.
+      properties:
+        password1:
+          type: string
+          writeOnly: true
+        password2:
+          type: string
+          writeOnly: true
+        correo:
+          type: string
+          format: email
+        nombre_usuario:
+          type: string
+          maxLength: 25
+        nombre:
+          type: string
+          maxLength: 50
+        apellido:
+          type: string
+          maxLength: 50
+        fecha_nacimiento:
+          type: string
+          format: date
+        genero:
+          $ref: '#/components/schemas/GeneroEnum'
+      required:
+      - apellido
+      - correo
+      - fecha_nacimiento
+      - genero
+      - nombre
+      - nombre_usuario
+      - password1
+      - password2
+    ResendEmailVerification:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    RestAuthDetail:
+      type: object
+      properties:
+        detail:
+          type: string
+          readOnly: true
+      required:
+      - detail
+    TemaEnum:
+      enum:
+      - oscuro
+      - claro
+      type: string
+      description: |-
+        * `oscuro` - Oscuro
+        * `claro` - Claro
+    TokenVerify:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+      required:
+      - token
+    UsuarioDetalles:
+      type: object
+      description: |-
+        Representación del usuario autenticado (endpoints `/api/auth/user/`).
+
+        El serializer por defecto de dj-rest-auth usa `username`/`email`/
+        `first_name`/`last_name`, que no existen en `usuarios.Usuario`.
+      properties:
+        pk:
+          type: integer
+          readOnly: true
+          title: ID
+        correo:
+          type: string
+          format: email
+          readOnly: true
+          title: Correo electrónico
+          description: Formato correo@dominio.com (CU-001).
+        nombre_usuario:
+          type: string
+          readOnly: true
+          title: Nombre de usuario
+          description: Alfanumérico, 5-25 caracteres, único (CU-001).
+        nombre:
+          type: string
+          readOnly: true
+        apellido:
+          type: string
+          readOnly: true
+        fecha_nacimiento:
+          type: string
+          format: date
+          readOnly: true
+          title: Fecha de nacimiento
+        genero:
+          allOf:
+          - $ref: '#/components/schemas/GeneroEnum'
+          readOnly: true
+          title: Género
+        estado:
+          allOf:
+          - $ref: '#/components/schemas/EstadoEnum'
+          readOnly: true
+          title: Estado de cuenta
+        avatar_id:
+          type: integer
+          readOnly: true
+          title: Id de avatar
+          description: Identificador dentro del conjunto de  avatares
+        fecha_registro:
+          type: string
+          format: date
+          readOnly: true
+          title: Fecha de registro
+      required:
+      - apellido
+      - avatar_id
+      - correo
+      - estado
+      - fecha_nacimiento
+      - fecha_registro
+      - genero
+      - nombre
+      - nombre_usuario
+      - pk
+    UsuarioPerfil:
+      type: object
+      description: 'CU-006: solo nombre, apellido, nombre de usuario y avatar editables.'
+      properties:
+        pk:
+          type: integer
+          readOnly: true
+          title: ID
+        correo:
+          type: string
+          format: email
+          readOnly: true
+          title: Correo electrónico
+          description: Formato correo@dominio.com (CU-001).
+        nombre_usuario:
+          type: string
+          maxLength: 25
+          pattern: ^[A-Za-z0-9]{5,25}$
+        nombre:
+          type: string
+          maxLength: 50
+        apellido:
+          type: string
+          maxLength: 50
+        fecha_nacimiento:
+          type: string
+          format: date
+          readOnly: true
+          title: Fecha de nacimiento
+        genero:
+          allOf:
+          - $ref: '#/components/schemas/GeneroEnum'
+          readOnly: true
+          title: Género
+        avatar_id:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Id de avatar
+          description: Identificador dentro del conjunto de  avatares
+        estado:
+          allOf:
+          - $ref: '#/components/schemas/EstadoEnum'
+          readOnly: true
+          title: Estado de cuenta
+        fecha_registro:
+          type: string
+          format: date
+          readOnly: true
+          title: Fecha de registro
+        tiene_contrasena_local:
+          type: string
+          readOnly: true
+      required:
+      - apellido
+      - correo
+      - estado
+      - fecha_nacimiento
+      - fecha_registro
+      - genero
+      - nombre
+      - nombre_usuario
+      - pk
+      - tiene_contrasena_local
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtCookieAuth:
+      type: apiKey
+      in: cookie
+      name: access
+    jwtHeaderAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

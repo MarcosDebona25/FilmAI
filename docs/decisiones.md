@@ -2411,3 +2411,31 @@ Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
   exige F0 del plan de multiidioma. No se modifica ningún test existente.
 - **Archivos afectados**: `.github/workflows/ci.yml`,
   `frontend/playwright.config.ts` y `docs/plan-multiidioma.md`.
+
+---
+
+## 07/10/2026 — OT-02: referencias de correos y del esquema antes del multiidioma
+
+- **Fecha**: 07/10/2026
+- **Descripción**: se caracteriza la salida real de los cuatro flujos de correo
+  (asunto, texto y HTML), normalizando únicamente las claves y tokens de los
+  enlaces. La notificación de contraseña actualizada conserva su ausencia
+  actual de HTML. Las referencias solo se regeneran con
+  `FILMAI_ACTUALIZAR_REFERENCIAS=1`; la ejecución normal falla ante divergencias.
+  El contrato OpenAPI se captura con el comando `spectacular` y se compara
+  semánticamente para que el formato del YAML no genere diferencias falsas.
+  Se conserva la salida actual del generador, que informa 14 advertencias
+  (11 únicas) y 100 errores de introspección (21 únicos), principalmente por
+  vistas sin serializer declarado: este archivo no garantiza una descripción
+  completa de todos los endpoints.
+- **Comprobación de comportamiento**: los mensajes específicos de cuenta
+  inactiva se lanzan antes de validar la contraseña, por correo o nombre de
+  usuario, y HTTP los reemplaza por el 403 genérico de permisos. La baja real
+  conserva la reseña, la nota y el nombre del autor en la comunidad. Esta orden
+  no cambia ninguno de esos comportamientos; la validación previa de credenciales
+  corresponde a F3.
+- **Archivos afectados**: `backend/filmai/tests_correos_contrato.py`,
+  `backend/filmai/tests_esquema.py`, `backend/filmai/tests_estado_cuenta.py`,
+  `backend/filmai/tests_golden/correos/`, `contracts/openapi.yaml`,
+  `openspec/specs/admin-api-docs/spec.md`, `openspec/specs/reviews-api/spec.md`
+  y `docs/plan-multiidioma.md`.
