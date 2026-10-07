@@ -206,3 +206,17 @@ Two frontend calls MUST NOT be the mechanism: they are not atomic, and a failure
 
 - Both paginated lists count their total with a `COUNT(*)` on every page request, inside `paginate_queryset()`. Fine at the current scale; if it ever hurts, the count belongs on the first page only.
 - `Calificacion.fecha` is a `DateField`, so every rating from the same day ties; the cursor breaks the tie by descending id. An ordering closer to real time would need a `DateTimeField` and a migration.
+
+### Requirement: Account deactivation preserves community reviews
+
+Logical account deactivation MUST preserve existing active ratings and reviews.
+The community endpoint continues to expose their text, rating and author's
+username to other users, as established by the current account lifecycle.
+
+#### Scenario: An author deactivates their account
+
+- GIVEN an active rating with an active review
+- WHEN its author successfully calls `POST /api/account/deactivate/`
+- THEN the account is in state `baja`
+- AND another authenticated user still sees the review text, rating and username
+  through `GET /api/reviews/?id_tmdb=...&tipo=...`
