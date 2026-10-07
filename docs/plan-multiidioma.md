@@ -837,7 +837,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 |---|---|---|---|---|---|
 | OT-00 | F0, pasos 1 y 2 | Suites corridas en el entorno de ejecución y comparadas con la línea base de 10.5 (410, 43 y 24) | Ninguna | S | Completada: 07/10/2026; 410, 43 y 24 en verde (ver 10.5) |
 | OT-01 | F0, paso 3 | Caracterización de las respuestas de error de la API | OT-00 | M | Pendiente |
-| OT-02 | F0, pasos 4, 5 y 6 | Caracterización de correos, esquema OpenAPI capturado y supuestos de 2.6 comprobados | OT-00 | S | Pendiente |
+| OT-02 | F0, pasos 4, 5 y 6 | Caracterización de correos, esquema OpenAPI capturado y supuestos de 2.6 comprobados | OT-00 | S | Implementada: 07/10/2026; 7 tests nuevos en verde; cierre de suites integrado pendiente |
 | OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Implementada: 07/10/2026; build, 43 unitarios y 24 e2e en verde; backend integrado pendiente (ver 10.5) |
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Pendiente |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Pendiente |
@@ -893,6 +893,12 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   - Incidencias de entorno resueltas: Turbopack rechaza `node_modules` enlazado fuera del worktree; se copiaron las dependencias localmente, sin cambios versionados. Se arrancó manualmente el servidor e2e con las variables de su configuración debido a la demora inicial en detectar el puerto 3100; se detuvo al terminar.
   - Backend sin modificaciones: la última referencia es OT-00, **410 tests** en verde; su suite y lint completos se reejecutan al integrar F0. Esta nota no afirma una nueva ejecución del backend.
   - Decisión registrada en `docs/decisiones.md`; no se afecta una spec de dominio. `graphify update .` ejecutado: sin cambios de topología, manifiesto actualizado. Sin dudas pendientes ni desvíos de alcance. Los cambios permanecen fuera de `main`, conforme a la instrucción del usuario.
+
+- 07/10/2026, OT-02: rama `feat/i18n-ot02-correos-openapi`. Nuevos tests autónomos en `filmai/tests_correos_contrato.py`, `filmai/tests_esquema.py` y `filmai/tests_estado_cuenta.py`, sin modificar tests existentes. Cuatro referencias de correo guardan asunto, texto y HTML; la contraseña actualizada caracteriza la ausencia de HTML. Solo se normalizan los segmentos variables de los enlaces.
+  - Siete tests enfocados en verde en una base aislada `test_filmai_ot02`, con backend de correo en memoria: ningún correo externo. Las referencias se regeneran únicamente con `FILMAI_ACTUALIZAR_REFERENCIAS=1`. Grafo actualizado con `graphify update .`; falta el cierre integrado de las suites completas, coordinado por la rama de integración.
+  - Capturado `contracts/openapi.yaml` mediante `spectacular`; comparación semántica del YAML para detectar divergencias. El generador existente informa 14 advertencias (11 únicas) y 100 errores de introspección (21 únicos), por vistas sin serializer declarado, autenticadores sin extensión y otros límites actuales. No se corrigen dentro de esta orden.
+  - Comprobado: el serializer lanza mensajes de baja o pendiente antes de validar contraseña, para correo y username, con contraseña correcta e incorrecta; HTTP oculta ambos con el 403 genérico. La reseña, nota y nombre del autor siguen visibles después de ejecutar la baja real. No cambia ese comportamiento; F3 validará las credenciales antes de revelar el estado.
+  - Citas comprobadas: `usuarios/serializers.py:55-60,304-333`, `usuarios/passwords.py:12-31`, `usuarios/cuenta.py:52-67`, `catalogo/reviews.py:90-101` y `filmai/exceptions.py:50-51`, sin desvíos. El plan nombraba un único `tests_contrato.py`; los tres módulos nuevos separan esta orden de OT-01 para permitir trabajo paralelo. Sin dudas de alcance pendientes.
 
 ### 10.6 Instrucción para iniciar una sesión
 
