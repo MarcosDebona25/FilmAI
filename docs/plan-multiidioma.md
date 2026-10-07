@@ -835,7 +835,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 
 | OT | Fase y pasos | Entrega | Depende de | Tamaño | Estado |
 |---|---|---|---|---|---|
-| OT-00 | F0, pasos 1 y 2 | Suites corridas en el entorno de ejecución y comparadas con la línea base de 10.5 (410, 43 y 24) | Ninguna | S | Pendiente |
+| OT-00 | F0, pasos 1 y 2 | Suites corridas en el entorno de ejecución y comparadas con la línea base de 10.5 (410, 43 y 24) | Ninguna | S | Completada: 07/10/2026; 410, 43 y 24 en verde (ver 10.5) |
 | OT-01 | F0, paso 3 | Caracterización de las respuestas de error de la API | OT-00 | M | Pendiente |
 | OT-02 | F0, pasos 4, 5 y 6 | Caracterización de correos, esquema OpenAPI capturado y supuestos de 2.6 comprobados | OT-00 | S | Pendiente |
 | OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Pendiente |
@@ -881,6 +881,12 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 - 07/10/2026, planificación: línea base medida con todo en verde. Backend 410 tests (141 segundos), Vitest 43, Playwright 24.
 - 07/10/2026, planificación: la tabla de equivalencias se guardó en `docs/i18n/equivalencias.json` (634 entradas, 41 pantallas, JSON validado).
 - 07/10/2026, planificación: el usuario respondió las 14 preguntas de la sección 9. Las decisiones quedaron incorporadas en las secciones 2.11, 3.2, 3.3, 3.5, 3.7, 3.8 y 3.9, y en las fases 1, 2 y 7.
+- 07/10/2026, OT-00: rama `docs/i18n-ot00-linea-base`, creada desde `main` actualizado (`7985200`). Verificadas las citas de ejecución: `backend/requirements.txt:6-37`, `frontend/package.json:5-44` y `.github/workflows/ci.yml:110-167`; backend, frontend y CI siguen idénticos a `a7dabaf`.
+  - Backend: `docker compose exec -T backend python manage.py test`, **410 tests en verde**, 145,261 segundos (referencia: 410, 141 segundos).
+  - Frontend con Node 22.23.3: `npm run test:unit`, **43 tests en verde en 5 archivos**, 6,58 segundos; `npm run test:e2e`, **24 tests en verde**, 2,8 minutos. Los tres conteos coinciden con la línea base.
+  - Calidad: `ruff format . && ruff check .` en el contenedor backend (85 archivos sin cambios); `npx eslint . --max-warnings=0`, `npx prettier --check .` y `npx tsc --noEmit` en frontend, todos en verde.
+  - Incidencia de entorno: la comprobación inicial del puerto 3100 demoró el arranque de Playwright. Se levantó manualmente `npm run dev -- -p 3100` con `NEXT_PUBLIC_API_URL=http://127.0.0.1:3100` y `NEXT_DIST_DIR=.next-e2e`, como indica su configuración; el intento automático concurrente informó puerto ocupado, pero los 24 casos pasaron. Sin cambios de configuración ni de tests.
+  - Alcance: solo F0, pasos 1 y 2, más este registro y la actualización de graphify. Sin decisiones de diseño ni cambios de comportamiento; no corresponde modificar `docs/decisiones.md` ni specs canónicas. F0 sigue pendiente de OT-01, OT-02 y OT-03. Sin dudas pendientes ni desvíos de alcance.
 
 ### 10.6 Instrucción para iniciar una sesión
 
