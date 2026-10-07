@@ -838,7 +838,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-00 | F0, pasos 1 y 2 | Suites corridas en el entorno de ejecución y comparadas con la línea base de 10.5 (410, 43 y 24) | Ninguna | S | Completada: 07/10/2026; 410, 43 y 24 en verde (ver 10.5) |
 | OT-01 | F0, paso 3 | Caracterización de las respuestas de error de la API | OT-00 | M | Pendiente |
 | OT-02 | F0, pasos 4, 5 y 6 | Caracterización de correos, esquema OpenAPI capturado y supuestos de 2.6 comprobados | OT-00 | S | Pendiente |
-| OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Pendiente |
+| OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Implementada: 07/10/2026; build, 43 unitarios y 24 e2e en verde; backend integrado pendiente (ver 10.5) |
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Pendiente |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Pendiente |
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Pendiente |
@@ -887,6 +887,12 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   - Calidad: `ruff format . && ruff check .` en el contenedor backend (85 archivos sin cambios); `npx eslint . --max-warnings=0`, `npx prettier --check .` y `npx tsc --noEmit` en frontend, todos en verde.
   - Incidencia de entorno: la comprobación inicial del puerto 3100 demoró el arranque de Playwright. Se levantó manualmente `npm run dev -- -p 3100` con `NEXT_PUBLIC_API_URL=http://127.0.0.1:3100` y `NEXT_DIST_DIR=.next-e2e`, como indica su configuración; el intento automático concurrente informó puerto ocupado, pero los 24 casos pasaron. Sin cambios de configuración ni de tests.
   - Alcance: solo F0, pasos 1 y 2, más este registro y la actualización de graphify. Sin decisiones de diseño ni cambios de comportamiento; no corresponde modificar `docs/decisiones.md` ni specs canónicas. F0 sigue pendiente de OT-01, OT-02 y OT-03. Sin dudas pendientes ni desvíos de alcance.
+
+- 07/10/2026, OT-03: rama `chore/i18n-ot03-build-locale`; se agrega `npm run build` al job de frontend y `locale: "es-AR"` a Playwright. Las referencias de CI, `frontend/package.json` y `frontend/playwright.config.ts` se verificaron antes de editar.
+  - Frontend con Node 22.23.3: build real de producción en verde; ESLint sin warnings, Prettier y TypeScript en verde; Vitest **43 tests en 5 archivos** (4,99 segundos), Playwright **24 tests** (1,2 minutos). Catálogo de avatares sincronizado y su test unitario en verde. Ningún test existente cambió.
+  - Incidencias de entorno resueltas: Turbopack rechaza `node_modules` enlazado fuera del worktree; se copiaron las dependencias localmente, sin cambios versionados. Se arrancó manualmente el servidor e2e con las variables de su configuración debido a la demora inicial en detectar el puerto 3100; se detuvo al terminar.
+  - Backend sin modificaciones: la última referencia es OT-00, **410 tests** en verde; su suite y lint completos se reejecutan al integrar F0. Esta nota no afirma una nueva ejecución del backend.
+  - Decisión registrada en `docs/decisiones.md`; no se afecta una spec de dominio. `graphify update .` ejecutado: sin cambios de topología, manifiesto actualizado. Sin dudas pendientes ni desvíos de alcance. Los cambios permanecen fuera de `main`, conforme a la instrucción del usuario.
 
 ### 10.6 Instrucción para iniciar una sesión
 
