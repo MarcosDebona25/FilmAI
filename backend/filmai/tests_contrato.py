@@ -36,6 +36,7 @@ from rest_framework.test import APIClient, APIRequestFactory
 from catalogo.client import TMDBClient
 from catalogo.exceptions import CalificacionDuplicada
 from catalogo.serializers_reviews import ActualizarCalificacionSerializer
+from catalogo.services.tmdb import get_catalog_service
 from filmai.exceptions import filmai_exception_handler
 from filmai.views import custom_500
 from listas.exceptions import (
@@ -71,6 +72,10 @@ class ContratoErroresAPITests(TestCase):
         )
 
     def setUp(self):
+        # Las vistas pueden resolver el singleton antes de validar parámetros.
+        # addCleanup también se ejecuta si un escenario falla.
+        get_catalog_service.cache_clear()
+        self.addCleanup(get_catalog_service.cache_clear)
         self.client = APIClient()
         self.registro = {
             "correo": "nuevo@filmai.com",
