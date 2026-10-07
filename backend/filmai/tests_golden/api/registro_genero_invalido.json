@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "genero": ["\"otro\" no es una elección válida."]
+  }
+}

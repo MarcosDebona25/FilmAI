@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "correo": ["Introduzca una dirección de correo electrónico válida."]
+  }
+}

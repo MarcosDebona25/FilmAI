@@ -1,0 +1,6 @@
+{
+  "status": 405,
+  "body": {
+    "detail": "Método HTTP Método \"GET\" no permitido. no permitido para este endpoint."
+  }
+}

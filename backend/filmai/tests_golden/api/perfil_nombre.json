@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": ["Solo letras y espacios entre palabras, máximo 50 caracteres."]
+}

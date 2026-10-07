@@ -1,0 +1,7 @@
+{
+  "status": 409,
+  "body": {
+    "codigo": "item_duplicado",
+    "detail": "La producción ya pertenece a esta lista."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "apellido": ["Solo letras y espacios entre palabras, máximo 50 caracteres."]
+  }
+}

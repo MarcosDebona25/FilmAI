@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "old_password": ["La contraseña actual es incorrecta."]
+  }
+}
