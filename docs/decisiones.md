@@ -2397,3 +2397,17 @@ Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
 - **Archivos afectados**: `frontend/components/MisResenas.tsx`,
   `frontend/tests/mis-resenas.test.tsx`, `openspec/specs/reviews-api/spec.md`,
   `openspec/specs/profile-ui/spec.md`.
+
+
+---
+
+## 07/10/2026 — OT-03: build de producción en CI y locale de Playwright
+
+- **Fecha**: 07/10/2026
+- **Descripción**: el job de frontend ejecuta `npm run build`, que usa
+  `next build --turbopack`, para detectar errores de compilación y renderizado
+  de producción antes de integrar cambios. Playwright fija `locale: "es-AR"`
+  para que los formatos y el idioma del navegador sean reproducibles, como
+  exige F0 del plan de multiidioma. No se modifica ningún test existente.
+- **Archivos afectados**: `.github/workflows/ci.yml`,
+  `frontend/playwright.config.ts` y `docs/plan-multiidioma.md`.
