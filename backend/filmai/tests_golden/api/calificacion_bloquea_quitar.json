@@ -1,0 +1,7 @@
+{
+  "status": 409,
+  "body": {
+    "codigo": "calificacion_impide_quitar_de_vistas",
+    "detail": "Eliminá la calificación antes de quitar esta producción de Vistas."
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "status": 409,
+  "body": {
+    "codigo": "lista_predeterminada_protegida",
+    "detail": "Las listas predeterminadas no se pueden modificar ni eliminar."
+  }
+}

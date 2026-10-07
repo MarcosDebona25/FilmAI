@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "nombre_usuario": ["Alfanumérico, 5-25 caracteres."]
+  }
+}

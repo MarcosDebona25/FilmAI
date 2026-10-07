@@ -1,0 +1,7 @@
+{
+  "status": 409,
+  "body": {
+    "codigo": "calificacion_duplicada",
+    "detail": "Ya calificaste esta producción. Editá tu calificación."
+  }
+}

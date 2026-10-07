@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "tipo": "Must be either 'movie' or 'tv'."
+  }
+}

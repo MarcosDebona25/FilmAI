@@ -1,0 +1,6 @@
+{
+  "status": 401,
+  "body": {
+    "detail": "Autenticación requerida. Por favor, iniciá sesión."
+  }
+}

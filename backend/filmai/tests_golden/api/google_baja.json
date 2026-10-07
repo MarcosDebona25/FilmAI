@@ -1,0 +1,6 @@
+{
+  "status": 403,
+  "body": {
+    "detail": "No tenés permisos para realizar esta acción."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "status": 409,
+  "body": {
+    "nombre_usuario": "El nombre de usuario ya está registrado."
+  }
+}
