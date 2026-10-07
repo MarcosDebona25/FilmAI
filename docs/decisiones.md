@@ -2456,3 +2456,9 @@ el código de producción. Las ramas defensivas se distinguen de los flujos HTTP
 en `backend/filmai/tests_golden/README.md`. La spec
 `openspec/specs/api-characterization/spec.md` describe esta red de seguridad.
 No se modificaron comportamiento ni tests existentes.
+
+La verificación combinada de F0 detectó que algunos escenarios de catálogo
+inicializaban el servicio singleton antes de rechazar parámetros inválidos.
+Las nuevas pruebas limpian esa caché en `setUp` y mediante `addCleanup`, que
+Django ejecuta también ante un fallo. Así no alteran el estado que reciben
+otros tests; los cuerpos de referencia y los tests existentes se conservan.
