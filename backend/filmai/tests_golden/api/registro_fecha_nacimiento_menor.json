@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "fecha_nacimiento": ["Debés tener al menos 13 años."]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "status": 429,
+  "body": {
+    "detail": "TMDB returned HTTP 429"
+  }
+}

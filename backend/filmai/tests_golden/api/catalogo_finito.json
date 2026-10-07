@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "min_rating": "Must be a finite number."
+  }
+}

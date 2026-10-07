@@ -1,0 +1,13 @@
+{
+  "status": 400,
+  "body": {
+    "password1": ["Este campo es requerido."],
+    "password2": ["Este campo es requerido."],
+    "correo": ["Este campo es requerido."],
+    "nombre_usuario": ["Este campo es requerido."],
+    "nombre": ["Este campo es requerido."],
+    "apellido": ["Este campo es requerido."],
+    "fecha_nacimiento": ["Este campo es requerido."],
+    "genero": ["Este campo es requerido."]
+  }
+}

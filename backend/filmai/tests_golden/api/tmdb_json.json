@@ -1,0 +1,6 @@
+{
+  "status": 503,
+  "body": {
+    "detail": "Invalid JSON response from TMDB"
+  }
+}

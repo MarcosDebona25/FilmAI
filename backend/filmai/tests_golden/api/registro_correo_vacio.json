@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "correo": ["Este campo no puede estar en blanco."]
+  }
+}

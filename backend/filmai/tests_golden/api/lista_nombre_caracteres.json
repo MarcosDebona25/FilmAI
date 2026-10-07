@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": ["Solo se permiten letras, números y espacios."]
+}
