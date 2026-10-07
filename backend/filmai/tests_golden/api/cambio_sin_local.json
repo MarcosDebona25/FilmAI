@@ -1,0 +1,8 @@
+{
+  "status": 400,
+  "body": {
+    "old_password": [
+      "Tu cuenta no tiene contraseña local. Puedes establecerla mediante recuperación por correo."
+    ]
+  }
+}

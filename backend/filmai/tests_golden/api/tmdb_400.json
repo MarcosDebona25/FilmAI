@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "detail": "TMDB returned HTTP 400"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": ["El nombre de usuario ya está registrado."]
+}

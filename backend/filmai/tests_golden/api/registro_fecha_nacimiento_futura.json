@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "fecha_nacimiento": ["La fecha de nacimiento no puede ser futura."]
+  }
+}

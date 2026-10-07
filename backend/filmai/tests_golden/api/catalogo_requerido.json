@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "id_tmdb": "This parameter is required."
+  }
+}

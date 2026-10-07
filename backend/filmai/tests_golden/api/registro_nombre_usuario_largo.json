@@ -1,0 +1,8 @@
+{
+  "status": 400,
+  "body": {
+    "nombre_usuario": [
+      "Asegúrese de que este campo no tenga más de 25 caracteres."
+    ]
+  }
+}

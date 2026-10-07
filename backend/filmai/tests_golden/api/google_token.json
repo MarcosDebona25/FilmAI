@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "non_field_errors": ["Se requiere el id_token de Google."]
+  }
+}

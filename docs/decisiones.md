@@ -2439,3 +2439,26 @@ Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
   `backend/filmai/tests_golden/correos/`, `contracts/openapi.yaml`,
   `openspec/specs/admin-api-docs/spec.md`, `openspec/specs/reviews-api/spec.md`
   y `docs/plan-multiidioma.md`.
+
+## 07/10/2026 — Caracterización del contrato de respuestas previo a multiidioma
+
+- **Fecha**: 07/10/2026
+- **Descripción**: se agregaron pruebas de caracterización en `backend/filmai/tests_contrato.py` y
+referencias JSON en `backend/filmai/tests_golden/api/`. Comparan el estado HTTP y
+el cuerpo completo que produce el código actual, con `DEBUG=False` y `es-ar`.
+La regeneración solo se permite con `REGENERAR_REFERENCIAS_API=1`; una ejecución
+normal nunca reescribe referencias. Esto permite detectar cambios involuntarios
+al introducir el contrato de códigos en las siguientes órdenes.
+
+Se ejercitan endpoints y serializers reales. Google se aísla en la frontera
+OAuth y TMDB en el transporte HTTP; los mensajes siguen siendo los que genera
+el código de producción. Las ramas defensivas se distinguen de los flujos HTTP
+en `backend/filmai/tests_golden/README.md`. La spec
+`openspec/specs/api-characterization/spec.md` describe esta red de seguridad.
+No se modificaron comportamiento ni tests existentes.
+
+La verificación combinada de F0 detectó que algunos escenarios de catálogo
+inicializaban el servicio singleton antes de rechazar parámetros inválidos.
+Las nuevas pruebas limpian esa caché en `setUp` y mediante `addCleanup`, que
+Django ejecuta también ante un fallo. Así no alteran el estado que reciben
+otros tests; los cuerpos de referencia y los tests existentes se conservan.

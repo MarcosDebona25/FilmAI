@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "password2": ["Las contraseñas no coinciden."]
+  }
+}

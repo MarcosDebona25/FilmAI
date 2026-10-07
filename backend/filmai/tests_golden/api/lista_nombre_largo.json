@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": ["El nombre no puede superar los 80 caracteres."]
+}

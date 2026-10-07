@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "body": {
+    "detail": "Si el correo está registrado, se envió un email con instrucciones para restablecer la contraseña.",
+    "intentos_restantes": 4
+  }
+}

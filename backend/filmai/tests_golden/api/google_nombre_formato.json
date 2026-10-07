@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": ["Alfanumérico, 5-25 caracteres."]
+}

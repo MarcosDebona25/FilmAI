@@ -1,0 +1,8 @@
+{
+  "status": 400,
+  "body": {
+    "nombre_usuario": ["Este campo es obligatorio para completar tu cuenta."],
+    "fecha_nacimiento": ["Este campo es obligatorio para completar tu cuenta."],
+    "genero": ["Este campo es obligatorio para completar tu cuenta."]
+  }
+}
