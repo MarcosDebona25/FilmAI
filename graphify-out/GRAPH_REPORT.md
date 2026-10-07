@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-10-07)
 
 ## Corpus Check
-- 253 files · ~710,303 words
+- 253 files · ~710,524 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a7dabaf0`
+- Built from commit: `79852001`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -835,7 +835,7 @@ Cohesion: 0.50
 Nodes (3): LenientJWTCookieAuthentication, Variante que no revienta si la cookie JWT es inválida o está vencida.…, JWTCookieAuthentication
 
 ## Ambiguous Edges - Review These
-- `Lineamientos de UI` → `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)`  [AMBIGUOUS]
+- `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)` → `Lineamientos de UI`  [AMBIGUOUS]
   backend/templates/account/email/email_confirmation_message.html · relation: conceptually_related_to
 
 ## Knowledge Gaps
@@ -846,14 +846,14 @@ Nodes (3): LenientJWTCookieAuthentication, Variante que no revienta si la cookie
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **What is the exact relationship between `Lineamientos de UI` and `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)`?**
+- **What is the exact relationship between `Diseño de email FilmAI (tabla role=presentation, dark #0d0d14/#161625, acento #e67e22, enlace #f5c518)` and `Lineamientos de UI`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `Regla 6: .agents/skills/ es la única fuente de skills` connect `AGENTS.md — Reglas para agentes en FilmAI` to `Catalog of 33 AI writing patterns (content, language, style, communication, filler)`, `explicar-al-implementar/SKILL.md`, `conventional-commits/SKILL.md`, `impeccable/SKILL.md`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **Why does `Usuario` connect `usuarios/tests.py` to `perfil.py`, `ConfirmarCorreoTests`, `UsuarioFactory`, `PerfilTests`, `LoginSerializer`, `usuarios/views.py`, `BajaCuentaTests`, `ContrasenaTests`, `UsuarioFactory`, `GoogleOAuthTests`, `AGENTS.md — Reglas para agentes en FilmAI`, `provisioning.py`, `RecuperacionSesionTests`, `RegisterSerializer`, `SeedSoloResenasTests`, `reparar_recursos_usuarios.py`, `PreferenciasTests`, `ProduccionAudiovisual`?**
-  _High betweenness centrality (0.062) - this node is a cross-community bridge._
+  _High betweenness centrality (0.061) - this node is a cross-community bridge._
 - **Why does `AGENTS.md — Reglas para agentes en FilmAI` connect `AGENTS.md — Reglas para agentes en FilmAI` to `README de FilmAI`, `Job backend: Ruff + tests Django`?**
-  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
 - **Are the 41 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 41 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 10 inferred relationships involving `materializar()` (e.g. with `TMDBClientCache` and `tmdb_a_dominio()`) actually correct?**
