@@ -151,5 +151,7 @@ closure gates. OT-13 adds no production implementation or tests.
 
 OT-20 first delivery implements the nullable user field and explicit backend
 resolution, including weighted/regional headers and a real reversible migration
-test without backfill. Preferences, registration and seed integration remain
-pending within OT-20. This does not claim the frontend or emails are complete.
+test without backfill. Preferences now reads null for previous accounts but only writes supported
+locales. User details/profile expose the field read-only; traditional and Google
+registration persist the new account locale while existing Google accounts keep
+their saved locale. Seed integration remains pending within OT-20. This does not claim the frontend or emails are complete.

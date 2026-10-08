@@ -718,7 +718,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Preferencias'
+                $ref: '#/components/schemas/PreferenciasLectura'
           description: ''
     put:
       operationId: preferences_update
@@ -743,7 +743,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Preferencias'
+                $ref: '#/components/schemas/PreferenciasLectura'
           description: ''
   /api/profile/:
     get:
@@ -1138,6 +1138,22 @@ components:
           format: date
         genero:
           $ref: '#/components/schemas/GeneroEnum'
+    Idioma704Enum:
+      enum:
+      - en
+      - es
+      type: string
+      description: |-
+        * `en` - en
+        * `es` - es
+    Idioma90bEnum:
+      enum:
+      - en
+      - es
+      type: string
+      description: |-
+        * `en` - English
+        * `es` - Español
     Login:
       type: object
       description: Login por credenciales con errores específicos para cuentas inactivas.
@@ -1154,6 +1170,9 @@ components:
           type: string
       required:
       - password
+    NullEnum:
+      enum:
+      - null
     PatchedUsuarioDetalles:
       type: object
       description: |-
@@ -1208,11 +1227,19 @@ components:
           format: date
           readOnly: true
           title: Fecha de registro
+        idioma:
+          readOnly: true
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/Idioma90bEnum'
+          - $ref: '#/components/schemas/NullEnum'
     Preferencias:
       type: object
       properties:
         tema:
           $ref: '#/components/schemas/TemaEnum'
+        idioma:
+          $ref: '#/components/schemas/Idioma704Enum'
         perfil_publico:
           type: boolean
           title: Perfil público
@@ -1225,6 +1252,33 @@ components:
         notif_novedades:
           type: boolean
           title: Notif. novedades
+    PreferenciasLectura:
+      type: object
+      description: Las cuentas anteriores pueden leerse con idioma nulo, sin permitir
+        borrarlo.
+      properties:
+        tema:
+          $ref: '#/components/schemas/TemaEnum'
+        idioma:
+          readOnly: true
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/Idioma704Enum'
+          - $ref: '#/components/schemas/NullEnum'
+        perfil_publico:
+          type: boolean
+          title: Perfil público
+        notif_recomendaciones:
+          type: boolean
+          title: Notif. recomendaciones
+        notif_resenas:
+          type: boolean
+          title: Notif. reseñas
+        notif_novedades:
+          type: boolean
+          title: Notif. novedades
+      required:
+      - idioma
     RefreshSesion:
       type: object
       properties:
@@ -1358,6 +1412,12 @@ components:
           format: date
           readOnly: true
           title: Fecha de registro
+        idioma:
+          readOnly: true
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/Idioma90bEnum'
+          - $ref: '#/components/schemas/NullEnum'
       required:
       - apellido
       - avatar_id
@@ -1366,6 +1426,7 @@ components:
       - fecha_nacimiento
       - fecha_registro
       - genero
+      - idioma
       - nombre
       - nombre_usuario
       - pk
@@ -1419,6 +1480,12 @@ components:
           format: date
           readOnly: true
           title: Fecha de registro
+        idioma:
+          readOnly: true
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/Idioma90bEnum'
+          - $ref: '#/components/schemas/NullEnum'
         tiene_contrasena_local:
           type: string
           readOnly: true
@@ -1429,6 +1496,7 @@ components:
       - fecha_nacimiento
       - fecha_registro
       - genero
+      - idioma
       - nombre
       - nombre_usuario
       - pk
