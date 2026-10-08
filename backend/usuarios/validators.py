@@ -14,6 +14,7 @@ from django.utils.translation import gettext as _
 USERNAME_MIN_LENGTH = 5
 USERNAME_MAX_LENGTH = 25
 PERSON_NAME_MAX_LENGTH = 50
+MINIMUM_AGE = 13
 USERNAME_REGEX = re.compile(
     rf"^[A-Za-z0-9]{{{USERNAME_MIN_LENGTH},{USERNAME_MAX_LENGTH}}}$"
 )

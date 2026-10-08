@@ -23,6 +23,7 @@ from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
 from django.http import HttpResponseBadRequest
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -35,7 +36,7 @@ from .errores import CampoNombreUsuario, FronteraUsuarioMixin
 from .exceptions import NombreUsuarioOcupado
 from .models import EstadoCuenta, TipoGenero, Usuario
 from .passwords import guardar_contrasena
-from .validators import USERNAME_REGEX, validar_nombre_persona
+from .validators import MINIMUM_AGE, USERNAME_REGEX, validar_nombre_persona
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class LoginSerializer(BaseLoginSerializer):
         return None
 
 
-class RegisterSerializer(BaseRegisterSerializer):
+class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     """Registro tradicional (CU-001) con los campos del modelo `Usuario`."""
 
     correo = serializers.EmailField(required=True)
@@ -90,15 +91,19 @@ class RegisterSerializer(BaseRegisterSerializer):
     def validate_correo(self, value):
         value = get_adapter().clean_email(value)
         if Usuario.objects.filter(correo__iexact=value).exists():
-            raise serializers.ValidationError("El correo ya está registrado.")
+            raise serializers.ValidationError(
+                "El correo ya está registrado.", code="email_already_used"
+            )
         return value
 
     def validate_nombre_usuario(self, value):
         if not USERNAME_REGEX.fullmatch(value):
-            raise serializers.ValidationError("Alfanumérico, 5-25 caracteres.")
+            raise serializers.ValidationError(
+                "Alfanumérico, 5-25 caracteres.", code="username_invalid"
+            )
         if Usuario.objects.filter(nombre_usuario__iexact=value).exists():
             raise serializers.ValidationError(
-                "El nombre de usuario ya está registrado."
+                "El nombre de usuario ya está registrado.", code="username_already_used"
             )
         return value
 
@@ -106,7 +111,7 @@ class RegisterSerializer(BaseRegisterSerializer):
         try:
             return validar_nombre_persona(value)
         except DjangoValidationError as err:
-            raise serializers.ValidationError(err.messages) from err
+            raise ErrorValidacion.desde_django(err) from err
 
     def validate_apellido(self, value):
         return self.validate_nombre(value)
@@ -115,12 +120,30 @@ class RegisterSerializer(BaseRegisterSerializer):
         hoy = date.today()
         if value > hoy:
             raise serializers.ValidationError(
-                "La fecha de nacimiento no puede ser futura."
+                "La fecha de nacimiento no puede ser futura.",
+                code="birth_date_in_future",
             )
         edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
-        if edad < 13:
-            raise serializers.ValidationError("Debés tener al menos 13 años.")
+        if edad < MINIMUM_AGE:
+            raise serializers.ValidationError(
+                "Debés tener al menos 13 años.", code="minimum_age"
+            )
         return value
+
+    def validate(self, data):
+        if data["password1"] != data["password2"]:
+            raise serializers.ValidationError(
+                _("The two password fields didn't match."),
+                code="passwords_do_not_match",
+            )
+        return super().validate(data)
+
+    def save(self, request):
+        try:
+            return super().save(request)
+        except serializers.ValidationError as error:
+            # BaseRegister vuelve a validar con el usuario construido en memoria.
+            raise self.error_con_metadatos(error.detail) from error
 
     def get_cleaned_data(self):
         return {

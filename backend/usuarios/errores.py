@@ -6,7 +6,12 @@ from rest_framework import serializers
 from filmai.errores.serializadores import FronteraErroresMixin
 
 from .avatares import AVATAR_IDS_VALIDOS
-from .validators import PERSON_NAME_MAX_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH
+from .validators import (
+    MINIMUM_AGE,
+    PERSON_NAME_MAX_LENGTH,
+    USERNAME_MAX_LENGTH,
+    USERNAME_MIN_LENGTH,
+)
 
 
 class CampoNombreUsuario(serializers.RegexField):
@@ -25,6 +30,8 @@ class FronteraUsuarioMixin(FronteraErroresMixin):
             return {"minLength": USERNAME_MIN_LENGTH, "maxLength": USERNAME_MAX_LENGTH}
         if codigo == "person_name_invalid":
             return {"maxLength": PERSON_NAME_MAX_LENGTH}
+        if codigo == "minimum_age":
+            return {"minAge": MINIMUM_AGE}
         if codigo == "avatar_invalid":
             return {"allowedIds": sorted(AVATAR_IDS_VALIDOS)}
         return super().parametros_error(codigo, campo)

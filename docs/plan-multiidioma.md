@@ -1102,6 +1102,9 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   adoptan la frontera; seis pruebas HTTP nuevas y **53 tests** enfocados
   pasan. No se modifica envío ni persistencia. Se conserva también el primer
   fallo 401 de subcasos pre-plan; la repetición pasó sin cambiar esos tests.
+  Cuarta unidad: códigos de registro y frontera en su segunda validación
+  durante save; cinco pruebas nuevas y **15 tests** enfocados pasan.
+  Proveedores y estados de cuenta quedan en OT-32/OT-33 respectivamente.
   OT-32 depende técnicamente de este bloque y lo reutiliza; se entrega después
   de OT-31. Publicación coordinada tras OT-40 → OT-70 → OT-60; sin merges a main.
 
