@@ -14,10 +14,16 @@ masivo de C-04b sí va a querer enterarse de los errores.
 import logging
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from catalogo.models import ProduccionAudiovisual, ProduccionEmbedding
+from catalogo.exceptions import TMDBError
+from catalogo.models import (
+    ProduccionAudiovisual,
+    ProduccionEmbedding,
+    ProduccionTraduccion,
+)
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.tmdb import get_catalog_service
 from catalogo.tasks import generar_embedding
@@ -162,6 +168,7 @@ def _enriquecer(produccion, id_tmdb, tipo_tmdb):
     # anotado que se enriqueció.
     produccion.fecha_enriquecimiento = timezone.now()
     produccion.save()
+    guardar_traducciones(produccion, id_tmdb, tipo_tmdb)
     # Los valores que vinieron de TMDB son los del JSON, no los de la columna:
     # `fecha_lanzamiento` queda como el string "1999-10-15" hasta que alguien
     # relee la fila. Quien serialice lo que devolvemos se lleva ese string —le
@@ -170,6 +177,51 @@ def _enriquecer(produccion, id_tmdb, tipo_tmdb):
     # ya en la base. Una consulta más, al lado de las tres llamadas HTTP que
     # esta función acaba de hacer, y quien nos llama recibe tipos de verdad.
     produccion.refresh_from_db()
+
+
+def idiomas_traducidos():
+    """Idiomas de aplicación que se guardan aparte del canónico (inglés)."""
+    return [
+        idioma
+        for idioma in settings.IDIOMAS_SOPORTADOS
+        if idioma != settings.IDIOMA_POR_DEFECTO
+    ]
+
+
+def guardar_traducciones(produccion, id_tmdb, tipo_tmdb):
+    """Guarda título, sinopsis y póster en cada idioma no canónico.
+
+    Un fallo acá no invalida el enriquecimiento canónico, que ya quedó
+    guardado: se registra y sigue. `rellenar_traducciones` y la sincronización
+    nocturna completan lo que haya quedado pendiente.
+    """
+    es_pelicula = tipo_tmdb == "movie"
+    for idioma in idiomas_traducidos():
+        try:
+            servicio = get_catalog_service(settings.IDIOMAS_TMDB[idioma])
+            detalle = (
+                servicio.get_movie_detail(id_tmdb)
+                if es_pelicula
+                else servicio.get_tv_detail(id_tmdb)
+            )
+        except TMDBError:
+            logger.exception(
+                "No se pudo traer la traducción %s de (%s, %s)",
+                idioma,
+                id_tmdb,
+                tipo_tmdb,
+            )
+            continue
+        titulo = (detalle.get("title") if es_pelicula else detalle.get("name")) or ""
+        ProduccionTraduccion.objects.update_or_create(
+            produccion=produccion,
+            idioma=idioma,
+            defaults={
+                "titulo": titulo[:100],
+                "sinopsis": (detalle.get("overview") or "")[:2000],
+                "poster": detalle.get("poster_path") or "",
+            },
+        )
 
 
 def _mapear(detalle, credits, keywords, tipo_tmdb):
@@ -206,6 +258,11 @@ def _mapear(detalle, credits, keywords, tipo_tmdb):
             genero["name"]
             for genero in (detalle.get("genres") or [])
             if genero.get("name")
+        ],
+        "generos_ids": [
+            genero["id"]
+            for genero in (detalle.get("genres") or [])
+            if isinstance(genero.get("id"), int)
         ],
         "keywords": _extraer_keywords(keywords, tipo_tmdb),
         "calificacion_promedio": detalle.get("vote_average"),

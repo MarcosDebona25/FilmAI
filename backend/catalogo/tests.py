@@ -1861,7 +1861,8 @@ class MaterializacionSerieTests(MaterializacionBase):
     def test_consulta_los_endpoints_de_series(self):
         materializar(1396, "tv")
 
-        self.servicio.get_tv_detail.assert_called_once_with(1396)
+        # Canónico (inglés) + traducción al español: una llamada por idioma (OT-62).
+        self.assertEqual(self.servicio.get_tv_detail.call_args_list, [call(1396)] * 2)
         self.servicio.get_movie_detail.assert_not_called()
         self.servicio.get_credits.assert_called_once_with(1396, "tv")
         self.servicio.get_keywords.assert_called_once_with(1396, "tv")
@@ -1901,7 +1902,7 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
 
         produccion = materializar(550, "movie", forzar=True)
 
-        self.servicio.get_movie_detail.assert_called_once_with(550)
+        self.assertEqual(self.servicio.get_movie_detail.call_args_list, [call(550)] * 2)
         self.assertEqual(produccion.directores, ["David Fincher"])
         self.assertGreater(produccion.fecha_enriquecimiento, hace_una_hora)
 
