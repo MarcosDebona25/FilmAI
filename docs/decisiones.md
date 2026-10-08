@@ -2908,3 +2908,99 @@ Ruff (108 archivos) y Prettier limpios. El árbol frontend coincide con
 73 unitarios, 30 e2e y build. La evidencia anterior 528/43/24 corresponde
 a la base previa y queda conservada como historial. OT-60 requiere CI de
 sus dos cabezas publicadas antes de integrarse.
+
+---
+
+## 08/10/2026 — Frontera compartida de errores de serializers
+
+- **Fecha**: 08/10/2026
+- **Descripción**: OT-31 construye `ErrorValidacion` al terminar `is_valid`,
+  después de las reconstrucciones de DRF. Los parámetros provienen de los
+  campos y validadores configurados; las rutas distinguen listas de elementos
+  y listas de mensajes. Una identidad de campo explícita conserva el cuerpo
+  heredado cuando su forma no identifica el campo; los errores generales
+  usan contextos declarados. Siete tests nuevos ejercitan serializers reales,
+  validación anidada y configuración distinta, además de doce regresiones.
+  La adopción productiva queda pendiente. OT-32 reutilizará esta utilidad,
+  por lo que se registra su dependencia técnica del primer bloque de OT-31
+  y se ordenan ambas entregas sin cambiar el contrato funcional aprobado.
+- **Archivos afectados**: `backend/filmai/errores/{serializadores,validacion,sobre}.py`,
+  `backend/filmai/test_frontera_serializadores.py`,
+  `openspec/specs/error-contract/spec.md` y `docs/plan-multiidioma.md`.
+
+
+---
+
+## 08/10/2026 — Códigos de perfil y preferencias
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el perfil y las preferencias adoptan la frontera final
+  compartida. Nombre de persona, formato del username y avatar asignan el
+  código en su validador original, preservando mensajes y HTTP anteriores.
+  Límites, choices e IDs se obtienen de constantes de reglas, campos reales
+  y registro activo. El conflicto de username mantiene 409 sin hojas.
+  Cinco tests HTTP nuevos comprueban el sobre por separado; usan un access
+  token vinculado al usuario para respetar la revalidación bajo bloqueo.
+  Los tests previos continúan cubriendo autenticación JWT sin cambios.
+- **Archivos afectados**: `backend/usuarios/{errores,validators,serializers,cuenta}.py`,
+  `backend/usuarios/test_errores_perfil.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos de solicitudes y cambios de contraseña
+
+- **Fecha**: 08/10/2026
+- **Descripción**: recuperación, restablecimiento y cambio autenticado adoptan
+  la frontera final. Los errores propios asignan códigos explícitos; las listas
+  de Django conservan sus códigos antes de la conversión DRF. Complejidad
+  publica los mismos límites y caracteres que aplica, sin adjuntar parámetros
+  a mensajes con `%` ni interpretar textos. Se conservan mensajes, campos y
+  HTTP anteriores; enlaces inválidos y respuestas exitosas quedan para sus
+  unidades respectivas. No se modifica persistencia ni envío de correos.
+  Seis pruebas nuevas verifican el sobre mediante endpoints reales, incluida
+  una configuración Django de mínimo 11; **53 tests** enfocados pasan.
+  Se conserva el primer resultado con fallos 401 en subcasos pre-plan, cuya
+  repetición pasó sin modificar esos tests ni atribuir una causa.
+- **Archivos afectados**: `backend/usuarios/{perfil,serializers,validators}.py`,
+  `backend/usuarios/test_errores_contrasena.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos del registro y frontera posterior en save
+
+- **Fecha**: 08/10/2026
+- **Descripción**: registro tradicional asigna códigos en sus condiciones de
+  duplicado, formato, nombre, edad y mismatch, preservando listas y traducción
+  heredada de dj-rest-auth. La edad mínima es la misma constante que aplica la
+  validación. La frontera compartida también devuelve una excepción normalizada
+  para `save`: BaseRegister vuelve a validar contraseña cuando construye el
+  usuario, después de `is_valid`. Un test provoca un fallo tipado en esa etapa
+  real y verifica metadata, non_field_errors y ausencia de usuario persistido.
+  No se interpreta texto ni se reemplaza el algoritmo de persistencia heredado.
+  Cinco pruebas nuevas y **15 tests** enfocados pasan; normalización de
+  proveedores y estados de cuenta se mantiene en OT-32/OT-33 respectivamente.
+- **Archivos afectados**: `backend/filmai/errores/serializadores.py`,
+  `backend/usuarios/{errores,serializers,validators}.py`,
+  `backend/usuarios/test_errores_registro.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos propios de Google y validadores restantes
+
+- **Fecha**: 08/10/2026
+- **Descripción**: Google adopta la frontera compartida y asigna códigos a
+  campos requeridos, reglas de perfil, duplicados y fallos operativos. El
+  token faltante conserva non_field_errors, pero el sobre identifica id_token.
+  Se preservan mensajes, HTTP y estados de cuenta anteriores; la clasificación
+  específica de credenciales de proveedor queda para OT-32 y los estados para
+  OT-33. El avatar de modelo/Admin y el conflicto de username también asignan
+  sus códigos registrados en el origen. Los nuevos tests comparten preparación
+  F0, sin heredar tests ni modificar referencias; cada caso de Google revierte
+  su preparación para no reutilizar el mismo correo dentro de un test.
+  **108 tests** enfocados pasan, incluidos F0 completo y regresiones Google;
+  la fecha del test de edad se deriva del día actual y se verificó aparte.
+- **Archivos afectados**: `backend/usuarios/{serializers,avatares,exceptions}.py`,
+  `backend/usuarios/test_errores_google.py` y `openspec/specs/error-contract/spec.md`.

@@ -8,4 +8,4 @@ class NombreUsuarioOcupado(APIException):
     default_detail: ClassVar[dict] = {
         "nombre_usuario": "El nombre de usuario ya está registrado."
     }
-    default_code = "nombre_usuario_ocupado"
+    default_code = "username_already_used"

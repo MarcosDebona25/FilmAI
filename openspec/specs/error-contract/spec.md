@@ -21,9 +21,24 @@ Validation leaf definitions and metadata preservation are also implemented,
 including an explicit bridge for Django error lists and configured parameters.
 The pure envelope builder and legacy-body merger are implemented and tested.
 The metadata carrier must be constructed after the final DRF conversion; it
-is not guaranteed to survive validate/validate_<field> rewrapping. Domain
-serializer boundary adoption belongs to OT-31/OT-32. The global handler now
-adds the envelope for recognized DRF/core exceptions, preserving legacy fields,
+is not guaranteed to survive validate/validate_<field> rewrapping.
+OT-31 now provides a shared final `Serializer.is_valid` boundary. It derives
+limits and choices from real fields and password-validator configuration,
+preserves nested/list paths and supports explicit field identity overrides
+without changing legacy bodies. Profile and preference serializers adopt this
+boundary; person-name, username-format and avatar validators provide typed
+codes and configuration-derived parameters. Password request/reset/change
+serializers also adopt it, preserving Django codes and configured limits;
+password complexity exposes the same limits and special characters it applies.
+Traditional registration also provides typed local validation codes and
+normalizes its second password validation at `save`, preserving its legacy
+non-field-error shape. Direct link errors, successful responses and other user
+origins remain pending. Google serializers provide codes for required fields,
+profile rules, duplicates and operational failures; a missing token identifies
+`id_token` while preserving legacy non-field errors. Specific provider credential
+classification remains OT-32; account-state behavior remains OT-33.
+OT-32 depends technically on this first OT-31 unit and reuses it.
+The global handler now adds the envelope for recognized DRF/core exceptions, preserving legacy fields,
 HTTP statuses and headers. TMDB retains its early return; direct endpoint
 responses and unregistered vendor origins await OT-31/OT-32, with mandatory
 full coverage in OT-34.

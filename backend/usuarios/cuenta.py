@@ -13,11 +13,13 @@ from rest_framework_simplejwt.token_blacklist.models import (
     OutstandingToken,
 )
 
+from filmai.errores.serializadores import FronteraErroresMixin
+
 from .models import EstadoCuenta, Usuario
 from .perfil import bloquear_usuario, cerrar_sesion
 
 
-class PreferenciasSerializer(serializers.ModelSerializer):
+class PreferenciasSerializer(FronteraErroresMixin, serializers.ModelSerializer):
     idioma = serializers.ChoiceField(
         choices=settings.IDIOMAS_SOPORTADOS, required=False, allow_null=False
     )

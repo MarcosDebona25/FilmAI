@@ -36,9 +36,11 @@ def entradas_validacion(error, *, estricto=True):
             campo.pop()
         if campo and campo[-1] == "non_field_errors":
             campo.pop()
+        nombre_campo = ".".join(str(segmento) for segmento in campo) or None
+        nombre_campo = getattr(error, "campos_por_ruta", {}).get(ruta, nombre_campo)
         entradas.append(
             {
-                "field": ".".join(str(segmento) for segmento in campo) or None,
+                "field": nombre_campo,
                 "code": codigo,
                 "params": deepcopy(parametros),
             }
