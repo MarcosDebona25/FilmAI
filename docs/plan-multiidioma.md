@@ -842,7 +842,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Completada: 08/10/2026; PR #47 integrado fuera de main; CI en verde |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Completada: 08/10/2026; correspondencia completa de F0 y HTTP/429 definidos; integrada fuera de main con CI en verde |
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
-| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | En cierre: 08/10/2026; aprobación aplicada, specs en PR #53; copia y curaduría en segunda entrega; verificaciones finales en curso (ver 10.5) |
+| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integración condicionada al CI de cada cabeza (ver 10.5) |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Pendiente |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
@@ -1004,6 +1004,16 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   ESLint, Prettier, TypeScript, 43 unitarios y build pasan. Se repite backend
   tras copiar el contrato OpenAPI al contenedor (ausente del montaje local);
   Playwright corre con `CI=1`. Se mantiene la prohibición de merge a main.
+
+- 08/10/2026, verificación final OT-13: backend 508 tests en 162,455 s;
+  Vitest 43 en 5,35 s; Playwright 24 en 41,9 s; Ruff, ESLint, Prettier,
+  TypeScript y build aprobados. ICU válido en 91 mensajes y 451 filas;
+  634 originales y baja intactos, 425 claves sin colisiones. La primera
+  corrida backend falló por el contrato OpenAPI ausente del montaje; se copió
+  `/contracts` al contenedor y pasó la repetición completa, sin modificar tests.
+  PR #53 integrado con merge commit en `feat/i18n-multiidioma`, con CI verde.
+  PR #54 reapuntado a integración; solo se integra cuando pase el CI de su
+  cabeza final. PR #52 cerrado y sustituido por #53/#54. Ningún merge a main.
 
 ### 10.6 Instrucción para iniciar una sesión
 

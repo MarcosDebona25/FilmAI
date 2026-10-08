@@ -27841,7 +27841,7 @@
       "node_kind": "heading",
       "norm_label": "verificacion del propio plan",
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1030"
+      "source_location": "L1040"
     },
     {
       "id": "frontend_app_layout",
@@ -28893,7 +28893,7 @@
       "node_kind": "heading",
       "norm_label": "10.6 instruccion para iniciar una sesion",
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1008"
+      "source_location": "L1018"
     },
     {
       "id": "docs_plan_multiidioma_10_ejecuci\u00f3n_con_codex",
@@ -101014,7 +101014,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1008",
+      "source_location": "L1018",
       "weight": 1.0
     },
     {
@@ -101465,7 +101465,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1030",
+      "source_location": "L1040",
       "weight": 1.0
     },
     {
@@ -141152,5 +141152,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "ff66b3015d0ea3815d885b0631404bcb0faaec41"
+  "built_at_commit": "f85487413defe124e2bb7ae0723db14da5c70148"
 }

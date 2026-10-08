@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-10-08)
 
 ## Corpus Check
-- 359 files · ~730,238 words
+- 359 files · ~730,374 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ff66b301`
+- Built from commit: `f8548741`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -916,9 +916,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `Regla 6: .agents/skills/ es la única fuente de skills` connect `AGENTS.md — Reglas para agentes en FilmAI` to `Catalog of 33 AI writing patterns (content, language, style, communication, filler)`, `explicar-al-implementar/SKILL.md`, `conventional-commits/SKILL.md`, `impeccable/SKILL.md`?**
   _High betweenness centrality (0.070) - this node is a cross-community bridge._
 - **Why does `Usuario` connect `Usuario` to `usuarios/views.py`, `ContrasenaTests`, `RegisterSerializer`, `UsuarioFactory`, `Command`, `perfil.py`, `RecuperacionSesionTests`, `CalificacionFactory`, `PerfilTests`, `GoogleOAuthTests`, `seed.py`, `ContratoErroresAPITests`, `ResenaAdminTests`, `ConfirmarCorreoTests`, `AGENTS.md — Reglas para agentes en FilmAI`, `PreferenciasTests`, `tests_contrato.py`, `TestCase`, `provisioning.py`, `usuarios/tests.py`, `Tiene`, `UsuarioAccountAdapter`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
 - **Why does `AGENTS.md — Reglas para agentes en FilmAI` connect `AGENTS.md — Reglas para agentes en FilmAI` to `README de FilmAI`, `Job backend: Ruff + tests Django`?**
-  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **Are the 44 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 44 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 23 inferred relationships involving `TMDBClient` (e.g. with `TMDBBadRequest` and `TMDBError`) actually correct?**
