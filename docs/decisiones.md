@@ -2340,6 +2340,10 @@ pagination_reviews,exceptions,tests_reviews}.py`,
 
 ## 30/09/2026 — El contenido de TMDB sigue en inglés, por ahora
 
+> Decisión de alcance reemplazada el 08/10/2026 por el plan de multiidioma y
+> la elección de `es-MX` registrada abajo. El comportamiento actual se conserva
+> hasta implementar F6; esta entrada permanece como antecedente histórico.
+
 - **Fecha**: 30/09/2026
 - **Hallazgo**: el cliente de TMDB (`catalogo/client.py`) nunca manda el
   parámetro `language`, así que TMDB responde en su idioma por defecto
@@ -2462,3 +2466,102 @@ inicializaban el servicio singleton antes de rechazar parámetros inválidos.
 Las nuevas pruebas limpian esa caché en `setUp` y mediante `addCleanup`, que
 Django ejecuta también ante un fallo. Así no alteran el estado que reciben
 otros tests; los cuerpos de referencia y los tests existentes se conservan.
+
+
+---
+
+## 08/10/2026 — Multiidioma: decisiones del plan y alcance de implementación
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se registra el diseño aprobado de `docs/plan-multiidioma.md`,
+  secciones 1 a 4 y respuestas de la sección 9. Este registro define el trabajo
+  pendiente; no afirma que F2 a F9 estén implementadas.
+
+| Decisión | Regla acordada |
+| --- | --- |
+| D1: idiomas e infraestructura | Inglés y español; inglés nativo de los diseños y por defecto. Frontend con next-intl 4.x, mensajes ICU y sin prefijos de idioma en las rutas. |
+| D2: resolución y persistencia | La cuenta es la fuente de verdad con sesión; la cookie `filmai_locale` es su espejo para renderizar. Selector autenticado guarda preferencias y cookie; sin sesión solo cookie. Login sincroniza el idioma guardado. Backend resuelve cuenta, `Accept-Language`, `en`, en ese orden. Registro local y Google guardan el idioma del encabezado. |
+| D3: responsabilidad del backend | El backend emite códigos, no traducciones de respuestas. `LANGUAGE_CODE` sigue en `es-ar`, sin LocaleMiddleware. Solo correos y TMDB consumen el idioma efectivo. El chatbot queda fuera de la implementación. |
+| D4 y D5: contrato de errores | Sobre `code`, `params`, `errors`; cada error tiene `field` o nulo, `code` y `params`. Códigos ingleses snake_case; campos y enumeraciones actuales siguen en español. `debug` solo con DEBUG=True y nunca se muestra en frontend. Catálogo único y exportación versionada. |
+| D6: enumeraciones | `Lista.clave` identifica `favoritos`, `pendientes`, `vistas`; nulo para personalizadas. Nombres almacenados en español; etiquetas traducidas en frontend. Se reservan nombres predeterminados en ambos idiomas y se unifica género por valor estable. |
+| D7: texto de interfaz y baja | Se preservan los textos y comportamiento de baja de cuenta. La migración actual es intermedia: capas compartidas y tres pilotos; las pantallas restantes conservan español fijo hasta su rediseño. |
+| D8: contenido de TMDB | Idioma por request, caché por idioma y fallback campo por campo a inglés. Persistencia canónica y embeddings en inglés; traducciones en `ProduccionTraduccion`, géneros identificados por ID. Pósters por idioma, con respaldo al original. |
+| D9: formatos | Intl con `en-US` y `es-AR`; fecha medium/long en ambos idiomas. Se acepta «28 sept 2026» y se corrigen los diseños. Duración con NumberFormat: narrow en inglés y short en español («2 h 49 min»). Toda lógica de formato se centraliza. |
+| D10: rutas | Rutas visibles en inglés, incluida `/complete-signup`; constantes compartidas. Backend, frontend y tests cambian juntos. No se necesitan redirecciones: no hay producción ni enlaces permanentes emitidos. |
+| D11: vocabulario y alcance | Glosario en `docs/i18n/glosario.md`; copia española con voseo. No se incorporan instrucciones del sistema de diseño, nombres de mesas de trabajo ni datos de muestra como textos de interfaz. |
+| D12: correos | Cuatro casos en texto y HTML, plantillas por idioma con base y servicio compartidos. Idioma del destinatario; vigencias por contexto (24 horas de confirmación, 1 hora de restablecimiento). |
+| D13: catálogos | `equivalencias.json` queda inmutable (634 entradas, 41 pantallas). CSV por fila con clave, namespace y estado. Fragmentos se recomponen con ICU; se excluyen muestras/diseño/chatbot. Errores y selector nuevos requieren aprobación de copia antes de sembrar. |
+
+La ventana de compatibilidad F3–F7 conserva las claves anteriores junto al sobre
+nuevo. F8 primero migra las aserciones y después elimina las claves anteriores.
+Los estados `account_deactivated` y `account_pending_confirmation` se revelan
+únicamente después de validar contraseña o token de Google; credenciales
+incorrectas siempre producen `invalid_credentials`.
+
+Se migran Preferencias y las pantallas de confirmación y restablecimiento como
+pilotos. Login, registro, completar Google, perfil, reseñas, navbar y modales
+conservan textos heredados y una lista de excepciones de lint que solo disminuye.
+Las capas compartidas, errores, validación, etiquetas, formatos, metadatos y rutas
+sí se adaptan. La interfaz mixta es una consecuencia aceptada, sin usuarios reales.
+
+Las cuentas existentes no reciben relleno de idioma: la semilla crea cuentas
+conocidas en `es` y `en`. Idioma nulo queda para altas externas al registro
+(superusuario y Admin); se usa el encabezado hasta que el usuario elija.
+Las correcciones menores de la tabla se aplican a la curaduría; el original no
+se reescribe. La duración y los formatos de miles se obtienen de Intl, no de
+literales de los diseños. Estas reglas incorporan las 14 respuestas de la sección 9.
+
+- **Archivos afectados**: `docs/decisiones.md`, `docs/i18n/glosario.md` y
+  `docs/plan-multiidioma.md`. Los archivos de producción se modifican en sus OT.
+
+---
+
+## 08/10/2026 — TMDB en español mexicano con respaldo a inglés
+
+- **Fecha**: 08/10/2026
+- **Descripción**: por decisión del usuario, español usa `es-MX` e inglés
+  `en-US` al consultar TMDB. Una variante fija evita selección regional por
+  usuario o país y prioriza títulos de distribución latinoamericana. La medición
+  histórica tuvo 7 sinopsis vacías de 80 con es-MX frente a 5 con es-ES; F6 cubre
+  los campos vacíos con la versión inglesa e identifica el respaldo en la API.
+  Los pósters cambian por idioma con respaldo al original. Esto reemplaza la
+  decisión de alcance de mantener TMDB únicamente en inglés del 30/09/2026;
+  el corpus de embeddings y la producción canónica continúan en inglés.
+- **Archivos afectados**: `docs/decisiones.md`; implementación posterior en
+  `backend/filmai/idioma.py`, cliente, servicios y modelos de catálogo.
+
+---
+
+## 08/10/2026 — Baja de cuenta: cuestión de copia conservada para revisión futura
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario decidió no cambiar copia ni comportamiento de baja
+  en este trabajo. La baja es lógica y conserva todos los datos. Un administrador
+  puede reactivar desde Django Admin, pero el usuario no puede hacerlo solo.
+  Reseñas y calificaciones continúan públicas con nombre de usuario; correo y
+  username siguen ocupados. La copia dice «irreversible» y no permite reactivar:
+  describe la capacidad del usuario, no la del administrador. Los términos hablan
+  de baja definitiva y supresión de datos a pedido, cuyo circuito no existe hoy;
+  la interfaz no avisa que las reseñas permanecen públicas. Queda como cuestión
+  pendiente para otro alcance, sin cambiar estos textos al sembrar catálogos.
+- **Archivos afectados**: `docs/decisiones.md`; no se modifica la lógica de baja.
+
+---
+
+## 08/10/2026 — Ejecución de multiidioma fuera de main y excepciones de pruebas
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario amplió la sesión al resto del plan, autorizó agentes
+  paralelos y eligió una rama de integración con PRs por orden. Los cambios se
+  mantienen en `feat/i18n-multiidioma`; el PR de seguimiento #43 permanece en draft.
+  No se permite merge a main, incluso con CI verde. Las entregas se integran
+  únicamente en esa rama después de verificar sus checks.
+  Se autorizó `size:exception` solo para OT-01. Se autoriza adaptar exclusivamente
+  las nuevas pruebas y referencias de F0 cuando las fases cambien deliberadamente
+  el comportamiento: en OT-30 se afirma la proyección heredada durante emisión
+  doble y se prueba el sobre nuevo por separado. Los tests anteriores al plan
+  mantienen las restricciones y excepciones originales.
+  Ante la contradicción del doc 02 sobre enlaces permanentes, el usuario confirmó
+  conservar la vigencia actual de 24 horas y corregir ese documento al alinearlo.
+- **Archivos afectados**: `docs/decisiones.md`, `docs/plan-multiidioma.md`;
+  pruebas nuevas de F0 al implementar cambios deliberados y doc 02 al cerrar.
