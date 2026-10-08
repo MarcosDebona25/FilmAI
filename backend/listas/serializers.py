@@ -4,31 +4,43 @@ from rest_framework import serializers
 
 from catalogo.services.adapter import dominio_a_tmdb
 from filmai.errores.base import ExcepcionAPI
+from filmai.errores.serializadores import FronteraErroresMixin
 
 from .identidades import es_nombre_reservado
 from .models import Lista
 
+_MAX_NOMBRE = 80
 
-class NombreListaSerializer(serializers.Serializer):
+
+class NombreListaSerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida el nombre de una lista personalizada."""
 
     nombre = serializers.CharField()
 
+    def parametros_error(self, codigo, campo):
+        if codigo == "max_length":
+            return {"maxLength": _MAX_NOMBRE}
+        return super().parametros_error(codigo, campo)
+
     def validate_nombre(self, value):
         nombre = " ".join(value.split())
         if not nombre:
-            raise serializers.ValidationError("El nombre no puede estar vacío.")
-        if len(nombre) > 80:
             raise serializers.ValidationError(
-                "El nombre no puede superar los 80 caracteres."
+                "El nombre no puede estar vacío.", code="blank"
+            )
+        if len(nombre) > _MAX_NOMBRE:
+            raise serializers.ValidationError(
+                "El nombre no puede superar los 80 caracteres.", code="max_length"
             )
         if not any(caracter.isalnum() for caracter in nombre):
             raise serializers.ValidationError(
-                "El nombre debe incluir al menos una letra o número."
+                "El nombre debe incluir al menos una letra o número.",
+                code="list_name_missing_alphanumeric",
             )
         if any(not (caracter.isalnum() or caracter == " ") for caracter in nombre):
             raise serializers.ValidationError(
-                "Solo se permiten letras, números y espacios."
+                "Solo se permiten letras, números y espacios.",
+                code="list_name_invalid_characters",
             )
 
         if es_nombre_reservado(nombre):
@@ -46,7 +58,7 @@ class NombreListaSerializer(serializers.Serializer):
         return nombre
 
 
-class PertenenciaQuerySerializer(serializers.Serializer):
+class PertenenciaQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida la producción cuya pertenencia a listas se quiere consultar."""
 
     id_tmdb = serializers.IntegerField(min_value=1)
@@ -92,7 +104,7 @@ class ListaItemSerializer(serializers.Serializer):
         return fecha.year if fecha else None
 
 
-class QuitarItemQuerySerializer(serializers.Serializer):
+class QuitarItemQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     """`?borrar_calificacion=` al quitar un ítem de «Vistas» (C-08, fase 3).
 
     `BooleanField` acepta las formas usuales (`true`, `1`, `false`, `0`) y

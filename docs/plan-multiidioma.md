@@ -846,7 +846,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Completada: 08/10/2026; PRs #55/#56/#57 integrados con CI verde; 520 backend, merge final 51bcb2b (ver 10.5) |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Completada: 08/10/2026; PRs #58/#59/#60/#61 integrados fuera de main con CI 3/3 verde; 543 backend; merge final 10fe49f (ver 10.5) |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Parcial: 08/10/2026; cinco unidades integradas en `develop` y verificadas con la suite local completa; faltan las respuestas directas de F3 (OT-33) y la publicación/CI (ver 10.5) |
-| OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30, primer bloque de OT-31 | M | Pendiente |
+| OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30, primer bloque de OT-31 | M | Completada: 08/10/2026 en `develop`; 611 backend OK; falta publicar/CI (ver 10.5) |
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 con CI 3/3 verde sobre 6dee3b5; 546 backend; merge 65b7e7b solo a integración (ver 10.5) |
@@ -1281,6 +1281,8 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   con explicación. Contexto y SHAs de recuperación: `docs/cierre-parcial-2026-10-08.md`.
   Corrida previa de 598 con un `401 != 200` intermitente (misma incidencia ya
   documentada en OT-41A/OT-41B); su repetición salió en verde sin tocar tests.
+
+- 08/10/2026, OT-32 en `develop` (sin merge a main): códigos en `listas` y `catalogo`, parámetros de catálogo normalizados con cuerpo irregular intacto, TMDB con sobre en el manejador global (429 de TMDB como `throttled` sin espera). Dos tests del manejador global ajustados (autorizado). 611 backend OK, Ruff limpio. Siguiente: OT-33.
 
 ### 10.6 Instrucción para iniciar una sesión
 

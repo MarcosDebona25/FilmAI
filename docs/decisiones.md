@@ -3176,3 +3176,38 @@ sus dos cabezas publicadas antes de integrarse.
   `docs/plan-multiidioma.md` (estados y traspaso), `docs/decisiones.md`
   (este registro), `docs/cierre-parcial-2026-10-08.md` (nuevo) y
   `graphify-out/` (regenerado).
+
+## 08/10/2026 — OT-32: códigos en `listas` y `catalogo`, TMDB normalizado
+
+- **Descripción**: F3 paso 2 (resto) y paso 4 (TMDB). Sin cambiar textos, HTTP
+  ni claves heredadas, cada error de `listas` y `catalogo` lleva un código del
+  catálogo y sus parámetros:
+  - `listas`: `NombreListaSerializer` usa `FronteraErroresMixin`; emite
+    `blank`, `max_length` (`maxLength: 80`), `list_name_missing_alphanumeric`
+    y `list_name_invalid_characters`. Los serializers de consulta adoptan la
+    misma frontera (`min_value`, `invalid_choice`, `invalid`).
+  - `catalogo`: los parámetros de las vistas (`_int_param`, `_float_param`,
+    `_validate_tipo`, `query`) lanzan `ErrorValidacion` con el texto en inglés
+    heredado (cuerpo irregular `{campo: "texto"}` intacto) y código
+    `required`/`invalid`/`min_value`/`number_not_finite`/`invalid_choice`.
+    La actualización de reseñas vacía emite `review_update_empty`
+    (`fieldNames: ["valor", "texto"]`).
+  - TMDB: el manejador **global** agrega el sobre (`upstream_bad_request`,
+    `upstream_not_found`, `upstream_error`, `upstream_unavailable`); el
+    manejador especializado `tmdb_exception_handler` y su test directo no se
+    tocan. **Decisión**: `TMDBRateLimited` (429) usa `throttled` sin
+    `retry_after_seconds`, porque TMDB no informa la espera; OT-33 agrega el
+    parámetro y `Retry-After` al 429 propio.
+  - Los conflictos de `listas` y `CalificacionDuplicada` ya se mapeaban por
+    `_CODIGOS_HEREDADOS`; no requirieron cambio.
+- **Tests existentes tocados** (autorizado por el plan: "normalizando solo el
+  global"): `filmai/tests.py::test_handler_global_conserva_el_mapeo_de_tmdb` y
+  `filmai/test_manejador_sobre.py::test_tmdb_agrega_sobre_...` verifican
+  `detail`, HTTP y `code` en vez de igualdad exacta del cuerpo.
+- **Pruebas**: nuevos `listas/test_codigos_errores.py` y
+  `catalogo/test_codigos_errores.py`; suite backend completa **611 OK**,
+  `ruff format`/`ruff check` limpios.
+- **Archivos afectados**: `backend/listas/serializers.py`,
+  `backend/catalogo/{views,serializers_reviews}.py`,
+  `backend/filmai/exceptions.py`, los tests citados, `docs/plan-multiidioma.md`
+  y `graphify-out/`.

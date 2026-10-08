@@ -1,7 +1,6 @@
 import logging
 from typing import ClassVar
 
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -10,23 +9,37 @@ from rest_framework.views import APIView
 from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import materializar
 from catalogo.services.tmdb import get_catalog_service
+from filmai.errores.validacion import ErrorValidacion
 
 logger = logging.getLogger(__name__)
 
 _MISSING = object()
 
 
+def _error_param(name, mensaje, codigo, parametros=None):
+    """400 con el texto heredado y el código estable del parámetro."""
+    return ErrorValidacion(
+        {name: mensaje},
+        codigo,
+        parametros_por_ruta={(name,): parametros or {}},
+    )
+
+
 def _int_param(value, name, *, default=_MISSING):
     if value in (None, ""):
         if default is not _MISSING:
             return default
-        raise ValidationError({name: "This parameter is required."})
+        raise _error_param(name, "This parameter is required.", "required")
     try:
         result = int(value)
     except (TypeError, ValueError):
-        raise ValidationError({name: "Must be an integer."}) from None
+        raise _error_param(
+            name, "Must be an integer.", "invalid", {"expectedType": "integer"}
+        ) from None
     if result <= 0:
-        raise ValidationError({name: "Must be a positive integer."})
+        raise _error_param(
+            name, "Must be a positive integer.", "min_value", {"minValue": 1}
+        )
     return result
 
 
@@ -36,15 +49,22 @@ def _float_param(value, name, *, default=None):
     try:
         result = float(value)
     except (TypeError, ValueError):
-        raise ValidationError({name: "Must be a number."}) from None
+        raise _error_param(
+            name, "Must be a number.", "invalid", {"expectedType": "number"}
+        ) from None
     if result != result or result in (float("inf"), float("-inf")):
-        raise ValidationError({name: "Must be a finite number."}) from None
+        raise _error_param(name, "Must be a finite number.", "number_not_finite")
     return result
 
 
 def _validate_tipo(value):
     if value not in {"movie", "tv"}:
-        raise ValidationError({"tipo": "Must be either 'movie' or 'tv'."})
+        raise _error_param(
+            "tipo",
+            "Must be either 'movie' or 'tv'.",
+            "invalid_choice",
+            {"allowedValues": ["movie", "tv"]},
+        )
     return value
 
 
@@ -114,7 +134,7 @@ class SearchView(CatalogoBaseView):
     def get(self, request):
         query = request.query_params.get("query")
         if not query:
-            raise ValidationError({"query": "This parameter is required."})
+            raise _error_param("query", "This parameter is required.", "required")
         tipo = _validate_tipo(request.query_params.get("tipo"))
         data = self._service(request).search(query, tipo, self._page(request))
         return Response(data)
