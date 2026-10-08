@@ -3410,3 +3410,58 @@ sus dos cabezas publicadas antes de integrarse.
   `equivalencias.json`, `errores.csv`, `glosario.md`,
   `tmdb-verificacion-ot60.md`). `docs/reportes_dev/` y `docs/wireframes/` no se
   tocaron: son material del equipo y de diseño, no del plan multiidioma.
+
+## 08/10/2026 — Arquitectura del chatbot (Módulo 5): DeepSeek, SSE sobre ASGI y contexto por SQL
+
+- **Descripción**: Gonza y Marcos acordaron la arquitectura general antes de
+  implementar B-02 a B-06. Complementa la decisión del 18/08/2026 (tool
+  calling + pgvector + BGE-M3), que sigue vigente.
+  1. **Proveedor**: DeepSeek, por su API compatible con OpenAI (SDK `openai`
+     con `base_url` propia). Un único adaptador "compatible con OpenAI"
+     permite pasar a Groq, OpenAI o Gemini cambiando el `.env`. Todavía no
+     hay API key: mientras tanto se trabaja con un proveedor falso. Como los
+     datos se procesan en servidores de terceros fuera del país, la
+     anonimización (RNF #3) es estricta: el LLM no recibe nombre, apellido,
+     correo ni nombre de usuario.
+  2. **Transporte**: streaming SSE sobre ASGI desde el inicio, sin pasar por
+     una versión síncrona. El orquestador es un async generator que emite
+     eventos (`estado`, `texto`, `tarjetas`, `fin`, `error`). Para probarlo
+     sin HTTP ni front se usa el comando `manage.py chatear`. El código async
+     queda acotado al loop del orquestador y a un único ejecutor de tools,
+     que envuelve con `sync_to_async` el código sync existente (ORM, cliente
+     TMDB, Ollama). `POST /api/chat/mensajes/` es una vista async de Django
+     (DRF no es async); el `GET` del historial sigue en DRF.
+  3. **Cancelación (CU-014)**: el front aborta el `fetch` y Django cancela la
+     vista al detectar la desconexión. La pregunta y la respuesta se guardan
+     juntas, recién al terminar: una solicitud cancelada o fallida no deja
+     nada persistido. Se verifica con un test en la implementación.
+  4. **Respuesta**: texto en markdown + tarjetas de títulos. La tool de
+     presentación `mostrar_tarjetas` solo acepta ids devueltos por otra tool
+     en el mismo turno y descarta los que están en «Vistas». Nuevo campo
+     `Mensaje.tarjetas` (JSON).
+  5. **Contexto personal (cambia B-05)**: se arma por SQL en cada mensaje, en
+     lugar de precomputarse en `Chat.contexto`: lo que le gustó (nota 7 o
+     más, con un extracto de su reseña), lo que no le gustó (4 o menos),
+     últimas vistas y favoritos. `Chat.contexto` queda para el estado de la
+     conversación (títulos ya recomendados).
+  6. **Idioma y alcance**: responde en el idioma de `idioma_efectivo()` y las
+     tools consultan TMDB con `TMDBClient(idioma=...)`. Solo habla de cine,
+     series y del historial del usuario; en español, con voseo.
+  7. **Límites**: mensaje de hasta 500 caracteres, unos 20 mensajes por hora
+     por usuario, últimos 10 mensajes como historial, como máximo 4 vueltas
+     de tools y una sola solicitud en curso por chat.
+  8. **Tools**: `buscar_por_titulo`, `descubrir` (generaliza
+     `top_por_genero`), `similares_a`, `buscar_por_persona`, `detalle`,
+     `buscar_semantico`, `mis_listas` y `mostrar_tarjetas`. Al cliente TMDB
+     le faltan `get_similar` y `search_person`.
+- **Motivo**: SSE es la práctica habitual en chats con LLM y, bajo ASGI,
+  esperar la respuesta del modelo no ocupa un worker. Pasar antes por una
+  versión síncrona obligaba a reescribir el orquestador como async. Precomputar
+  el contexto exigía señales en calificaciones, listas y reseñas que las
+  operaciones masivas (seed, migraciones, acciones del Admin) no disparan, y no
+  ahorra tiempo frente a la latencia del LLM. Lo que no le gustó al usuario
+  informa tanto como lo que sí.
+- **Pendiente**: actualizar los docs 03 (`Mensaje.tarjetas`), 05 (B-02 a B-05)
+  y 06 (tools nuevas); abrir el SDD en `openspec/changes/chatbot/`; medir la
+  latencia contra DeepSeek cuando haya key (RNF #6).
+- **Archivos afectados**: `docs/decisiones.md` (este registro).
