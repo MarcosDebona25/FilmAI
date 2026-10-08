@@ -167,5 +167,7 @@ borrados en cascada al dar de baja una cuenta.
 migración no rellena las cuentas anteriores. Una operación usa el idioma
 guardado, luego `Accept-Language` con pesos y regiones, y por último `en`.
 Esta resolución es explícita y no modifica el idioma global de Django.
-La exposición en preferencias y el guardado en registros se completan en
-las entregas siguientes de OT-20.
+Preferencias permite leer el valor nulo de cuentas anteriores y guardar solo
+`en`/`es`; el perfil y los detalles de usuario exponen el idioma en lectura.
+El registro tradicional y Google guardan el idioma activo al crear la cuenta;
+el login Google de una cuenta existente conserva su idioma.

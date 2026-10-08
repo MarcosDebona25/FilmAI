@@ -7,6 +7,8 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.dateparse import parse_date
 
+from filmai.idioma import idioma_efectivo
+
 from .models import EstadoCuenta, TipoGenero, Usuario
 
 
@@ -25,6 +27,7 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
 
         user.fecha_nacimiento = data.get("fecha_nacimiento")
         user.genero = data.get("genero", TipoGenero.NO_ESPECIFICA)
+        user.idioma = idioma_efectivo(request, user)
 
         if "password1" in data:
             user.set_password(data["password1"])
@@ -86,6 +89,7 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
         user.nombre = nombre
         user.apellido = apellido
         user.estado = EstadoCuenta.ACTIVA
+        user.idioma = idioma_efectivo(request, user)
 
         extra = getattr(request, "google_extra", {})
         user.nombre_usuario = extra.get("nombre_usuario") or ""

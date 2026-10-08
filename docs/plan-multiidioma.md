@@ -843,7 +843,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Completada: 08/10/2026; correspondencia completa de F0 y HTTP/429 definidos; integrada fuera de main con CI en verde |
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integrada fuera de main con CI verde de ambas cabezas (ver 10.5) |
-| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | En curso: núcleo nullable y resolución implementados; preferencias, registro y semilla pendientes |
+| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | En curso: núcleo, preferencias y registros implementados; semilla y cierre pendientes |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30 | M | Pendiente |
@@ -1029,6 +1029,15 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   - OT-42: reparar recursos faltantes SOLO en la copia temporal del volcado,
     antes del baseline; nunca en la base de desarrollo original.
   - OT-70: título transitorio «Mis reseñas» / “My reviews” aprobado.
+
+- 08/10/2026, OT-20 segunda unidad: lectura de idioma en preferencias/usuario/
+  perfil y escritura soportada en preferencias; registro tradicional y Google
+  guardan el idioma activo y cuentas Google existentes lo conservan. Once tests
+  enfocados pasan en 4,071 s; se regenera OpenAPI con la autorización de F0.
+  Se distingue lectura nullable de escritura restringida en el esquema.
+  El usuario también aprobó las 53 traducciones EN transitorias propuestas
+  para OT-70 en `/tmp/filmai-ot70-copia-faltante.csv`; el agente de esa orden
+  las versionará con trazabilidad propia, conservando ES hasta OT-76.
 
 ### 10.6 Instrucción para iniciar una sesión
 
