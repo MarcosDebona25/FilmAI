@@ -22,8 +22,11 @@ including an explicit bridge for Django error lists and configured parameters.
 The pure envelope builder and legacy-body merger are implemented and tested.
 The metadata carrier must be constructed after the final DRF conversion; it
 is not guaranteed to survive validate/validate_<field> rewrapping. Domain
-serializer boundary adoption belongs to OT-31/OT-32. Handler integration
-remains pending; existing endpoint responses are unchanged at this boundary.
+serializer boundary adoption belongs to OT-31/OT-32. The global handler now
+adds the envelope for recognized DRF/core exceptions, preserving legacy fields,
+HTTP statuses and headers. TMDB retains its early return; direct endpoint
+responses and unregistered vendor origins await OT-31/OT-32, with mandatory
+full coverage in OT-34.
 The requirements below describe the completed contract, not this partial delivery.
 
 ## Requirements
@@ -286,8 +289,10 @@ F3–F7 MUST add the envelope alongside every existing detail/codigo/field key.
 Non-object root validation lists are normalized; their contents survive as
 `non_field_errors` during the compatibility window. Codes MUST be obtained
 from typed exceptions/validators, never inferred from message text.
-OT-30 may adapt only the new OT-01 tests to compare legacy fields and test the
-new envelope separately, as explicitly authorized by the user. Deliberate F0
+The user authorized adaptations to new F0 tests when a phase deliberately
+changes their observed behavior. OT-30 projects legacy fields in OT-01 and
+OT-02 account-state characterizations while testing the new envelope separately;
+it preserves the full account-state/credential matrix and the original goldens. Deliberate F0
 reference changes need a reviewed diff and explicit regeneration environment
 variable. Pre-plan tests retain the phase's original exceptions.
 OT-82 migrates old assertions to codes; OT-83 removes legacy text keys.
