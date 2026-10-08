@@ -2796,3 +2796,22 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   repetición completa de 511 pasó en 168,260 s sin modificar tests existentes.
   Ruff, Prettier y consistencia de migraciones aprobados. El frontend conserva
   el árbol validado en OT-13; se requiere CI sobre la cabeza final.
+
+## 08/10/2026 — Núcleo de idioma del frontend sin prefijos (OT-70 A)
+
+El frontend usa next-intl 4.14.9 con un proveedor en el layout raíz. La cookie
+`filmai_locale` soportada gana al encabezado `Accept-Language`, que se interpreta
+por pesos y regiones; el respaldo es inglés. Leer cookies y encabezados en el
+servidor vuelve dinámico el render, como prevé el plan. El middleware conserva
+su responsabilidad de autenticación y las rutas mantienen sus nombres actuales.
+La declaración de mensajes generada se versiona para que TypeScript funcione
+antes del build en CI. Se modifican `frontend/i18n/`, `messages/`, el layout,
+`next.config.ts`, las dependencias y `tsconfig.json`; se agregan pruebas de
+resolución y del idioma del documento. Las pantallas conservan su copia actual.
+
+Verificación del núcleo: 65 tests unitarios, TypeScript, ESLint y Prettier
+aprobados; cuatro recorridos de idioma pasan en el servidor propio del puerto
+3117. El puerto habitual 3100 respondía desde otro servidor; la configuración
+de verificación fue temporal y no se versiona. Reversión: retirar el plugin,
+`i18n/`, los catálogos iniciales y el proveedor para volver al layout anterior.
+El build de producción y Ruff también pasan; backend sin cambios funcionales.
