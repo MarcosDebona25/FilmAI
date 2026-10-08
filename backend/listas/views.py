@@ -25,6 +25,8 @@ from rest_framework.views import APIView
 from catalogo.models import Calificacion, TipoProduccion
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.materialization import materializar
+from catalogo.services.traducciones import texto_localizado
+from filmai.idioma import idioma_efectivo
 
 from .exceptions import (
     CalificacionImpideQuitarDeVistas,
@@ -87,7 +89,7 @@ def _listas_del_usuario(request, *, pertenencia=None):
     return list(listas)
 
 
-def _agregar_previews(listas):
+def _agregar_previews(listas, idioma=None):
     """Adjunta hasta el máximo configurado de pósters recientes por lista."""
     if not listas:
         return
@@ -97,6 +99,7 @@ def _agregar_previews(listas):
             lista_id__in=[lista.pk for lista in listas], produccion__poster__gt=""
         )
         .select_related("produccion")
+        .prefetch_related("produccion__traducciones")
         .annotate(
             posicion=Window(
                 expression=RowNumber(),
@@ -109,13 +112,15 @@ def _agregar_previews(listas):
     )
     posters = defaultdict(list)
     for item in previews:
-        posters[item.lista_id].append(item.produccion.poster)
+        posters[item.lista_id].append(
+            texto_localizado(item.produccion, "poster", idioma)
+        )
     for lista in listas:
         lista.preview_posters = posters[lista.pk]
 
 
-def _resumen_response(listas, *, incluir_pertenencia=False):
-    _agregar_previews(listas)
+def _resumen_response(listas, *, incluir_pertenencia=False, idioma=None):
+    _agregar_previews(listas, idioma)
     return ListaResumenSerializer(
         listas,
         many=True,
@@ -151,7 +156,11 @@ class ListasView(APIView):
 
         listas = _listas_del_usuario(request, pertenencia=pertenencia)
         return Response(
-            _resumen_response(listas, incluir_pertenencia=consultar_pertenencia)
+            _resumen_response(
+                listas,
+                incluir_pertenencia=consultar_pertenencia,
+                idioma=idioma_efectivo(request),
+            )
         )
 
     def post(self, request):
@@ -199,7 +208,9 @@ class ListaDetailView(APIView):
             for resumen in _listas_del_usuario(request)
             if resumen.pk == lista.pk
         )
-        return Response(_resumen_response([lista_actualizada])[0])
+        return Response(
+            _resumen_response([lista_actualizada], idioma=idioma_efectivo(request))[0]
+        )
 
     def delete(self, request, lista_id):
         lista = _lista_propia(request, lista_id)
@@ -215,11 +226,17 @@ class ListaItemsView(APIView):
 
     def get(self, request, lista_id):
         lista = _lista_propia(request, lista_id)
-        items = Tiene.objects.filter(lista=lista).select_related("produccion")
+        items = (
+            Tiene.objects.filter(lista=lista)
+            .select_related("produccion")
+            .prefetch_related("produccion__traducciones")
+        )
         paginator = self.pagination_class()
         pagina = paginator.paginate_queryset(items, request, view=self)
         return paginator.get_paginated_response(
-            ListaItemSerializer(pagina, many=True).data
+            ListaItemSerializer(
+                pagina, many=True, context={"idioma": idioma_efectivo(request)}
+            ).data
         )
 
     def post(self, request, lista_id):
@@ -234,7 +251,12 @@ class ListaItemsView(APIView):
                 item = Tiene.objects.create(lista=lista, produccion=produccion)
         except IntegrityError:
             raise ItemDuplicado from None
-        return Response(ListaItemSerializer(item).data, status=status.HTTP_201_CREATED)
+        return Response(
+            ListaItemSerializer(
+                item, context={"idioma": idioma_efectivo(request)}
+            ).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ListaItemDetailView(APIView):

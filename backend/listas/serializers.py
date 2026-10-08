@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from catalogo.services.adapter import dominio_a_tmdb
+from catalogo.services.traducciones import texto_localizado
 from filmai.errores.base import ExcepcionAPI
 from filmai.errores.serializadores import FronteraErroresMixin
 
@@ -92,9 +93,15 @@ class ListaItemSerializer(serializers.Serializer):
     fecha_agregado = serializers.DateTimeField()
     id_tmdb = serializers.IntegerField(source="produccion.id_tmdb")
     tipo = serializers.SerializerMethodField()
-    titulo = serializers.CharField(source="produccion.titulo")
-    poster = serializers.CharField(source="produccion.poster")
+    titulo = serializers.SerializerMethodField()
+    poster = serializers.SerializerMethodField()
     anio = serializers.SerializerMethodField()
+
+    def get_titulo(self, item):
+        return texto_localizado(item.produccion, "titulo", self.context.get("idioma"))
+
+    def get_poster(self, item):
+        return texto_localizado(item.produccion, "poster", self.context.get("idioma"))
 
     def get_tipo(self, item):
         return dominio_a_tmdb(item.produccion.tipo)

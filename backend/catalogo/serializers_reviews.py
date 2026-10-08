@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from catalogo.models import Resena
 from catalogo.services.adapter import dominio_a_tmdb
+from catalogo.services.traducciones import texto_localizado
 from filmai.errores.serializadores import FronteraErroresMixin
 
 # El modelo define `max_length=1000` y el rango 1-10 por validadores y
@@ -130,5 +131,15 @@ class MiResenaSerializer(CalificacionSerializer):
     clickear. Hereda el `id`, que es lo que necesitan editar y eliminar.
     """
 
-    titulo = serializers.CharField(source="produccion.titulo")
-    poster = serializers.CharField(source="produccion.poster")
+    titulo = serializers.SerializerMethodField()
+    poster = serializers.SerializerMethodField()
+
+    def get_titulo(self, calificacion):
+        return texto_localizado(
+            calificacion.produccion, "titulo", self.context.get("idioma")
+        )
+
+    def get_poster(self, calificacion):
+        return texto_localizado(
+            calificacion.produccion, "poster", self.context.get("idioma")
+        )

@@ -70,8 +70,9 @@ Las seis dudas fueron resueltas por el usuario en OT-13 el 08/10/2026:
 214/215 reutilizan las confirmaciones completas de eliminación; 320 expresa
 una nota exacta X/10; 355 reutiliza la etiqueta de contraseña; 448 es metadato
 de locale excluido y 535 es el encabezado autónomo de recursos.
-`revision-ot13.md` registra los destinos y `copia-propuesta.csv` contiene los
-91 textos nuevos aprobados. No quedan filas incoherentes pendientes.
+`copia-propuesta.csv` contiene los 91 textos nuevos aprobados (la lista de
+verificación `revision-ot13.md` se retiró al cerrar la orden; está en el
+historial de git). No quedan filas incoherentes pendientes.
 Las filas 584/585 incorporan `contacto@filmai.com`, confirmado por el usuario;
 las columnas originales conservan el marcador de contacto.
 
