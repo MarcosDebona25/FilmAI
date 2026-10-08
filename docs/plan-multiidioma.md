@@ -851,7 +851,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Completada: 08/10/2026 en `develop`; 634 backend OK; cierra F3; falta publicar/CI (ver 10.5) |
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 con CI 3/3 verde sobre 6dee3b5; 546 backend; merge 65b7e7b solo a integración (ver 10.5) |
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En validación: 08/10/2026; OT-41A y OT-41B integradas en `develop` (identidad por clave, `list_name_reserved`, `contracts/enums.json`); falta publicación/CI (ver 10.5) |
-| OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
+| OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Completada: 08/10/2026 en `develop`; 644 backend OK; cierra F4; falta publicar/CI (ver 10.5) |
 | OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En validación: 08/10/2026; servicio y layout integrados en `develop` y verificados con la suite local completa; falta publicación/CI y OT-51…53 (ver 10.5) |
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
 | OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
@@ -1287,6 +1287,8 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 - 08/10/2026, OT-33 en `develop` (sin merge a main): `retry_after_seconds` en el 429, `code` en respuestas exitosas (decorador `con_codigo_exito` para vistas de dj-rest-auth, OpenAPI intacto) y estados de cuenta en el login solo tras validar contraseña/token. Desvío deliberado: baja/pendiente con contraseña incorrecta pasa de 403 a 400 `invalid_credentials`; test de OT-02 ajustado. 622 backend OK. Siguiente: OT-34.
 
 - 08/10/2026, OT-34 en `develop` (sin merge a main): `exportar_contrato` + `contracts/error-codes.json`, ejecutor de pruebas que valida el sobre en toda respuesta 4xx/5xx de la suite (corrigió enlaces, simplejwt, documentación y handlers 404/500), modo estricto para códigos no registrados, `ErrorEnvelope` en OpenAPI y campo `code` de Google eliminado por colisión. `filmai` pasa a `INSTALLED_APPS` solo por el comando. 634 backend OK. F3 cerrada. Siguiente: OT-42.
+
+- 08/10/2026, OT-42 en `develop` (sin merge a main): migración `listas.0006` (verificación previa + unicidad por usuario/clave + coherencia tipo/clave), probada con un volcado de desarrollo en base temporal (reparación de `admin` solo en la copia; conteos idénticos en avance, retroceso y reavance). El entrypoint del backend migra la base de desarrollo en cada arranque: `0006` ya está aplicada allí. Un test de OT-41A ajustado. 644 backend OK. F4 cerrada. Siguiente: OT-51 (F5).
 
 ### 10.6 Instrucción para iniciar una sesión
 

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
+from django.db import connection
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -86,6 +87,15 @@ class IdentidadListaTests(TestCase):
 
     def test_provision_completa_nulas_heredadas_sin_recrear_filas(self):
         vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+        # OT-42 prohíbe predeterminadas sin clave; se quita la restricción solo
+        # aquí (el DDL es transaccional y se revierte) para simular datos previos.
+        restriccion = next(
+            c for c in Lista._meta.constraints if c.name == "ck_lista_tipo_clave"
+        )
+        with connection.cursor() as cursor:
+            cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        with connection.schema_editor() as editor:
+            editor.remove_constraint(Lista, restriccion)
         Lista.objects.filter(pk=vistas.pk).update(clave=None, nombre="VISTAS")
 
         self.assertEqual(provisionar_recursos_por_defecto(self.usuario), (0, False))
