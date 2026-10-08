@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.dateparse import parse_date
 
+from filmai.correos.servicio import enviar_correo
 from filmai.idioma import idioma_efectivo
 
 from .models import EstadoCuenta, TipoGenero, Usuario
@@ -49,6 +50,16 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
             usuario.estado = EstadoCuenta.ACTIVA
             usuario.save(update_fields=["estado"])
             return super().confirm_email(request, email_address)
+
+    def send_mail(self, template_prefix, email, context):
+        casos = {
+            "account/email/email_confirmation_signup": "confirmacion_registro",
+            "account/email/email_confirmation": "confirmacion_correo",
+        }
+        caso = casos.get(template_prefix)
+        if caso is None:
+            return super().send_mail(template_prefix, email, context)
+        return enviar_correo(caso, email, context, "es")
 
     def get_email_confirmation_url(self, request, emailconfirmation):
         """Envía la confirmación a la pantalla correspondiente de la SPA."""

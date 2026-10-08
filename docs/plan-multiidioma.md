@@ -852,7 +852,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 con CI 3/3 verde sobre 6dee3b5; 546 backend; merge 65b7e7b solo a integración (ver 10.5) |
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | Pendiente |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
-| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | Pendiente |
+| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En curso: servicio y layout compartido verificados; 523 backend verdes; publicación pendiente |
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
 | OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
 | OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Pendiente |
@@ -1205,6 +1205,32 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   primer resultado contraseña conservado en
   `/tmp/filmai-ot31-contrasena-primer-intento.log`; Prettier aprobado en
   `/tmp/filmai-ot31-prettier.log`. Los grafos tienen logs por unidad en `/tmp`.
+- 08/10/2026, OT-50 unidad 1: servicio único y plantillas ES trasladadas sin
+  cambiar textos; las cuatro referencias F0 coinciden sin regeneración. Tres
+  tests nuevos y 34 enfocados verdes (25,339 s). El usuario autorizó solo
+  cambiar el destino del mock de fallo de notificación a
+  `filmai.correos.servicio.send_mail`, preservando HTTP y contraseña. Contenedor
+  de pruebas con entrypoint explícito y DB `test_filmai_ot50`, sin aplicar
+  migraciones a desarrollo. Layout y publicación pendientes.
+
+- 08/10/2026, OT-50 unidad 2: registro hereda el layout compartible sin
+  cambios en sus referencias F0. Siete tests verdes (1,964 s). Recuperación
+  y reenvío se incorporan al layout en las siguientes unidades; sin cambiar
+  copia ni idioma. La división previa de ambas confirmaciones medía 411 líneas
+  escritas: se conserva en backup y se separa por flujo, sin recortar código.
+
+- 08/10/2026, OT-50 unidad 3: reenvío usa el layout común con su introducción
+  anterior. Siete tests de correos verificaron este resultado junto al registro
+  (1,964 s); unidad intermedia de registro verificada de nuevo (1,972 s).
+  Se mantienen las cuatro referencias originales sin regenerarlas.
+
+- 08/10/2026, OT-50 unidad 4: recuperación hereda la base compartida y
+  conserva sus bloques y color previos. 34 tests verdes (25,469 s), incluidas
+  las cuatro referencias F0 intactas y la caída de correo posterior al commit.
+  Tres correos comparten HTML; notificación conserva solo texto hasta OT-51.
+  Suite completa de las cuatro unidades: 523 tests verdes (189,454 s); Ruff y
+  Prettier limpios. Frontend exacto `88f94c0` conserva 43/24/build de OT-13,
+  sin presentarlos como nueva ejecución. Publicación pendiente después OT-60.
 
 ### 10.6 Instrucción para iniciar una sesión
 

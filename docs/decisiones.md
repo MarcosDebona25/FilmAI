@@ -3004,3 +3004,69 @@ sus dos cabezas publicadas antes de integrarse.
   la fecha del test de edad se deriva del día actual y se verificó aparte.
 - **Archivos afectados**: `backend/usuarios/{serializers,avatares,exceptions}.py`,
   `backend/usuarios/test_errores_google.py` y `openspec/specs/error-contract/spec.md`.
+## 08/10/2026 — Servicio único sin cambiar copia de correos (OT-50, unidad 1)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: los cuatro flujos delegan el render y transporte en
+  `filmai.correos.servicio.enviar_correo`. Las plantillas actuales se trasladan
+  intactas a `correos/<caso>/es/`; la notificación de contraseña conserva su
+  texto anterior como plantilla. El servicio mantiene los espacios extremos
+  que cada flujo enviaba. Confirmación/recuperación conservan sus enlaces;
+  cambio de contraseña conserva el envío posterior al commit y su política
+  de fallo. Esta unidad no selecciona EN ni añade HTML a la notificación.
+- **Tests**: las cuatro referencias F0 coinciden sin regeneración. Tres tests
+  nuevos verifican formatos, rechazo de entradas internas y propagación del
+  fallo al flujo responsable. Los 34 tests enfocados pasan en 25,339 s. El
+  usuario autorizó cambiar únicamente el destino del mock de transporte del
+  test de fallo de notificación, manteniendo HTTP y comprobación de contraseña.
+  El layout compartido se entrega en las unidades siguientes de OT-50.
+- **Archivos afectados**: servicio, plantillas trasladadas, adaptador, reset
+  serializer, passwords, tests, `.env.example`, plan y spec `emails`.
+
+---
+
+## 08/10/2026 — Layout de registro compartible (OT-50, unidad 2)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: registro hereda `correos/base.html` y conserva su introducción. La estructura, estilos, enlaces, texto y espacios
+  renderizados coinciden con el HTML anterior. Reenvío y recuperación se incorporan en
+  las unidades siguientes, preservando sus diferencias de contenido y color.
+- **Verificación**: siete tests de correo pasan en 1,964 s; las cuatro
+  referencias completas F0 permanecen iguales sin regenerarse. No se añade
+  una prueba que replique la herencia: la comparación del envío real verifica
+  el resultado del layout.
+- **Archivos afectados**: base HTML, variante de registro, decisiones,
+  plan y spec `emails`.
+
+---
+
+## 08/10/2026 — Reenvío sobre el layout común (OT-50, unidad 3)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: reenvío hereda la base del registro y sustituye únicamente
+  su introducción, conservando estilos, enlaces, vigencia y texto anterior.
+- **Verificación**: la prueba completa de cuatro correos y los tres tests
+  nuevos pasaron sobre ambas confirmaciones compartidas (1,964 s); la unidad
+  intermedia de registro también pasó siete tests (1,972 s). Referencias F0
+  intactas, sin modificar ni regenerar sus oráculos.
+- **Archivos afectados**: variante HTML de reenvío, decisiones, plan y spec.
+
+---
+
+## 08/10/2026 — Recuperación sobre el layout común (OT-50, unidad 4)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: recuperación hereda la misma base y conserva título,
+  introducción, botón y advertencia propios. El servicio suministra enlace
+  común y color secundario para preservar exactamente cada variante actual;
+  el contexto del caller no se modifica. Los cuatro flujos pasan por el
+  servicio, tres comparten HTML y contraseña actualizada conserva solo texto
+  hasta OT-51. `FRONTEND_URL` queda documentada en `.env.example`.
+- **Verificación**: 34 tests pasan en 25,469 s; las cuatro referencias F0
+  completas siguen idénticas sin regeneración. Incluye el fallo de correo
+  posterior al commit con su mock trasladado por autorización expresa.
+  Suite completa de las cuatro unidades: 523 tests, OK en 189,454 s. Ruff y
+  Prettier limpios. Frontend exacto `88f94c0` conserva la evidencia 43/24/build
+  de OT-13. Publicación pendiente después de rebase hacia integración.
+- **Archivos afectados**: base HTML, variante de recuperación, contexto del
+  servicio, decisiones, plan y spec `emails`.
