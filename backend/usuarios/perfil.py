@@ -14,6 +14,9 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from filmai.errores.serializadores import FronteraErroresMixin
+from filmai.errores.validacion import ErrorValidacion
+
 from .avatares import AVATARES
 from .exceptions import NombreUsuarioOcupado
 from .models import Usuario
@@ -66,7 +69,7 @@ class AvataresView(APIView):
         return Response(list(AVATARES.values()))
 
 
-class CambiarContrasenaSerializer(serializers.Serializer):
+class CambiarContrasenaSerializer(FronteraErroresMixin, serializers.Serializer):
     old_password = serializers.CharField(trim_whitespace=False, write_only=True)
     password1 = serializers.CharField(trim_whitespace=False, write_only=True)
     password2 = serializers.CharField(trim_whitespace=False, write_only=True)
@@ -78,20 +81,25 @@ class CambiarContrasenaSerializer(serializers.Serializer):
                 {
                     "old_password": "Tu cuenta no tiene contraseña local. Puedes establecerla "
                     "mediante recuperación por correo.",
-                }
+                },
+                code="local_password_unavailable",
             )
         if not usuario.check_password(attrs["old_password"]):
             raise serializers.ValidationError(
-                {"old_password": "La contraseña actual es incorrecta."}
+                {"old_password": "La contraseña actual es incorrecta."},
+                code="current_password_incorrect",
             )
         if attrs["password1"] != attrs["password2"]:
             raise serializers.ValidationError(
-                {"password2": "Las contraseñas no coinciden."}
+                {"password2": "Las contraseñas no coinciden."},
+                code="passwords_do_not_match",
             )
         try:
             validate_password(attrs["password1"], user=usuario)
         except DjangoValidationError as err:
-            raise serializers.ValidationError({"password1": err.messages}) from err
+            raise serializers.ValidationError(
+                {"password1": ErrorValidacion.desde_django(err).detail}
+            ) from err
         return attrs
 
 
