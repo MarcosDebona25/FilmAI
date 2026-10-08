@@ -90,3 +90,4 @@ errors.fields.nombre.invalid,,field,,Ingresá un nombre válido.,Enter a valid f
 errors.fields.apellido.invalid,,field,,Ingresá un apellido válido.,Enter a valid last name.,aprobado
 errors.fields.password.required,,field,,Ingresá tu contraseña.,Enter your password.,aprobado
 emails.confirmation.subject,,email,,[FilmAI] Confirmación de cuenta,[FilmAI] Confirm your account,aprobado
+errors.codes.list_name_reserved,list_name_reserved,error,,Ese nombre está reservado para una lista predeterminada.,This name is reserved for a default list.,aprobado

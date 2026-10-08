@@ -46,6 +46,7 @@ from listas.exceptions import (
     ListaPredeterminadaProtegida,
     NombreListaDuplicado,
 )
+from listas.models import Lista
 from listas.serializers import NombreListaSerializer
 from usuarios.exceptions import NombreUsuarioOcupado
 from usuarios.factories import UsuarioFactory
@@ -88,6 +89,16 @@ class ContratoErroresAPITests(TestCase):
             "password1": "Password123!",
             "password2": "Password123!",
         }
+
+    def nombre_lista_duplicado(self):
+        """OT-41 conserva el duplicado personalizado, separado del reservado."""
+        Lista.objects.create(usuario=self.usuario, nombre="Cine de autor")
+        return self.serializar(
+            NombreListaSerializer(
+                data={"nombre": "Cine de autor"},
+                context={"request": SimpleNamespace(user=self.usuario)},
+            )
+        )
 
     def referencia(self, nombre, ejecutar):
         with override("es-ar"):
@@ -385,13 +396,8 @@ for nombre, valor in [
     )
 caso(
     "lista_nombre_duplicado",
-    "Serializer consulta las listas predeterminadas reales del usuario.",
-    lambda self: self.serializar(
-        NombreListaSerializer(
-            data={"nombre": "Favoritos"},
-            context={"request": SimpleNamespace(user=self.usuario)},
-        )
-    ),
+    "Serializer conserva la regresión de nombres personalizados duplicados.",
+    lambda self: self.nombre_lista_duplicado(),
 )
 caso(
     "resena_actualizacion_vacia",

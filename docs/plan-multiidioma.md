@@ -850,7 +850,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 con CI 3/3 verde sobre 6dee3b5; 546 backend; merge 65b7e7b solo a integración (ver 10.5) |
-| OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En progreso: 08/10/2026; dos entregas, consumidores/API por clave y nombres reservados/contrato (ver 10.5) |
+| OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En validación: 08/10/2026; dos entregas locales, consumidores/API por clave y reserva bilingüe/contrato; base final y CI pendientes (ver 10.5) |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
 | OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En curso: servicio y layout compartido verificados; 523 backend verdes; publicación pendiente |
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
@@ -1246,6 +1246,16 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   repetición normal completa: 553 aprobados en 201,893 s. Ruff, Prettier y
   consistencia de migraciones aprobados. Publicación espera la cola OT-70/60
   y una verificación de la base final, sin declarar integrada esta entrega.
+
+- 08/10/2026, OT-41B local: reserva ES/EN al crear y renombrar, código
+  `list_name_reserved` 409 sin parámetros y fila editorial nueva aprobada;
+  las 91 de OT-13 y los originales de errores permanecen intactos.
+  `contracts/enums.json` y su exportador publican identidades y reservas;
+  seis nuevos más la regresión nueva F0 duplicada pasan (7 en 2,019 s).
+  El F0 usa ahora una personalizada duplicada, preservando su golden; el
+  caso reservado se comprueba separado. Primera suite normal: 559 en
+  200,128 s, un 401 en la regresión anterior de baja; su clase pasó aislada
+  (6 en 3,087 s). Repetición y CI pendientes, sin alterar sus oráculos.
 
 ### 10.6 Instrucción para iniciar una sesión
 

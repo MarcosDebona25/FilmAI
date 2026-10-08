@@ -186,3 +186,12 @@ Preferencias permite leer el valor nulo de cuentas anteriores y guardar solo
 `en`/`es`; el perfil y los detalles de usuario exponen el idioma en lectura.
 El registro tradicional y Google guardan el idioma activo al crear la cuenta;
 el login Google de una cuenta existente conserva su idioma.
+
+### Identidades exportadas y nombres reservados (OT-41B)
+
+`contracts/enums.json` contiene las claves de listas predeterminadas, los
+valores de género y los nombres reservados por idioma. La API rechaza crear
+o renombrar una personalizada con cualquiera de esas etiquetas, sin
+distinguir mayúsculas, con `list_name_reserved` y HTTP 409. Los nombres
+personalizados ya almacenados se devuelven sin traducción ni cambios
+automáticos. Género conserva `masculino`, `femenino` y `no_especifica`.

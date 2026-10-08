@@ -138,6 +138,7 @@ exact existing messages and aliases; these tables define public semantics.
 | `link_invalid`                       | 400                                   | Bad/missing confirmation or reset token; legacy `codigo: invalido`. Reset expiry stays indistinguishable. |
 | `already_confirmed`                  | 400                                   | Already consumed/cannot reactivate; legacy `codigo: ya_confirmada`.                                       |
 | `list_name_duplicated`               | 409                                   | Existing name; legacy `codigo: nombre_lista_duplicado`.                                                   |
+| `list_name_reserved`                 | 409                                   | Reserved default-list label in ES or EN; no params. OT-41 approval.                                      |
 | `list_item_duplicated`               | 409                                   | Existing membership; legacy `codigo: item_duplicado`.                                                     |
 | `default_list_protected`             | 409                                   | Cannot rename/delete default list; legacy `codigo: lista_predeterminada_protegida`.                       |
 | `rating_blocks_removal_from_watched` | 409                                   | Remove rating first; legacy `codigo: calificacion_impide_quitar_de_vistas`.                               |

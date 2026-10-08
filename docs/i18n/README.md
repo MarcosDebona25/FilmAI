@@ -103,3 +103,12 @@ Los cortes no separan un grupo de fragmentos. El grupo reutilizado de ítems
 (241–242 y 414–415) se completa en el segundo bloque con los mismos valores.
 Durante la integración parcial, una referencia de grupo a un ID futuro indica
 trazabilidad prevista; el CSV completo resuelve todas las referencias.
+
+## Reserva de nombres (OT-41)
+
+OT-41 agrega una fila nueva aprobada a `copia-propuesta.csv` para
+`list_name_reserved` (HTTP 409, sin parámetros). Las 91 filas originales
+aprobadas en OT-13 permanecen intactas. El mensaje distingue un nombre del
+sistema de un nombre personalizado duplicado. `contracts/enums.json` publica
+las identidades, valores de género y nombres reservados ES/EN; se reproduce
+con `python manage.py exportar_enums`.

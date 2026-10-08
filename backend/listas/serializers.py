@@ -3,7 +3,9 @@
 from rest_framework import serializers
 
 from catalogo.services.adapter import dominio_a_tmdb
+from filmai.errores.base import ExcepcionAPI
 
+from .identidades import es_nombre_reservado
 from .models import Lista
 
 
@@ -28,6 +30,9 @@ class NombreListaSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Solo se permiten letras, números y espacios."
             )
+
+        if es_nombre_reservado(nombre):
+            raise ExcepcionAPI("list_name_reserved")
 
         usuario = self.context["request"].user
         lista_id = self.context.get("lista_id")
