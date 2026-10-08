@@ -2830,3 +2830,32 @@ ICU y conservación de los textos actuales sensibles. Revertir esta unidad
 retira solo el catálogo transitorio y su registro, preservando el núcleo.
 Verificación: 69 tests unitarios, TypeScript, ESLint y Prettier pasan;
 los cuatro recorridos de idioma pasan con el catálogo completo transitorio.
+## 08/10/2026 — Metadatos localizados y proveedor de pruebas (OT-70 C)
+
+`generateMetadata` localiza los cuatro puntos existentes: layout raíz,
+perfil, preferencias y mis reseñas. Los títulos conservan el sufijo FilmAI;
+«Mis reseñas» / «My reviews» usa la aprobación temporal del usuario.
+`frontend/tests/render.tsx` envuelve el render con next-intl en español y
+conserva cualquier proveedor particular; permite inglés mediante una opción.
+Los cuatro archivos de tests existentes solo cambian ese import, sin tocar
+selectores ni aserciones. Se agregan pruebas de los cuatro metadatos en ambos
+idiomas, del envoltorio y del resultado en navegador. Esta unidad se revierte
+independientemente de los catálogos y del núcleo de resolución de idioma.
+El tipado experimental genera declaraciones para ambos idiomas; `AppConfig`
+acepta la unión de sus catálogos literales para pasar español o inglés al
+proveedor sin forzar tipos. Verificación final: 73 unitarios, TypeScript,
+ESLint, Prettier, build y Ruff aprobados. Los 30 e2e (24 heredados y 6 nuevos)
+pasan en 41,0 segundos con la configuración habitual y servidor propio 3100.
+La primera ejecución dejó un servidor propio huérfano: se identificó por su
+PID y directorio, se detuvo junto al servidor temporal 3117 y se repitió la
+suite íntegra en 3100. Los intentos temporales fallaron por comparar URLs
+absolutas del puerto habitual y por un reinicio de desarrollo durante la
+corrección de tipos. No se modificaron esas aserciones ni la configuración.
+
+Validación tras el único rebase sobre OT-40: backend 546 tests en 199,264 s
+con base aislada `test_filmai_ot70`; 73 unitarios en 10,93 s, build,
+TypeScript, ESLint, Prettier y Ruff (105 archivos) aprobados. El frontend
+conserva el árbol `267f94944eecbb1347b5ff60bce1b2da3241073b`, validado con
+30 e2e antes del rebase; esa evidencia se reutiliza y el CI la repetirá.
+El puerto 3100 pertenece ahora a otra aplicación. No se detuvo ni se
+cambiaron las URLs o los oráculos de pruebas para adaptar el entorno.

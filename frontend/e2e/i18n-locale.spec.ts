@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import en from "../messages/en/common.json";
+import es from "../messages/es/common.json";
+import { prepararCuenta } from "./cuenta";
 
 test.describe("idioma del documento sin prefijos", () => {
   test("una cookie soportada gana al encabezado", async ({ page, baseURL }) => {
@@ -26,3 +29,30 @@ test.describe("idioma del documento sin prefijos", () => {
     expect(await response.text()).toMatch(/<html[^>]*lang="en"/);
   });
 });
+
+for (const locale of ["es", "en"] as const) {
+  test(`los metadatos actuales usan ${locale} sin traducir las pantallas`, async ({
+    page,
+    baseURL,
+  }) => {
+    await prepararCuenta(page);
+    await page.context().addCookies([{ name: "filmai_locale", value: locale, url: baseURL! }]);
+    await page.route("**/api/reviews/mias/**", (route) =>
+      route.fulfill({ json: { total: 0, next: null, results: [] } })
+    );
+    const messages = (locale === "es" ? es : en).legacy.metadata;
+    for (const [path, title] of [
+      ["/perfil", messages.profile],
+      ["/preferencias", messages.settings],
+      ["/mis-resenas", messages.myReviews],
+    ]) {
+      await page.goto(path);
+      await expect(page).toHaveTitle(`${title} | FilmAI`);
+      await expect(page.locator("html")).toHaveAttribute("lang", locale);
+      await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+        "content",
+        messages.description
+      );
+    }
+  });
+}
