@@ -25,7 +25,9 @@ is not guaranteed to survive validate/validate_<field> rewrapping. Domain
 OT-31 now provides a shared final `Serializer.is_valid` boundary. It derives
 limits and choices from real fields and password-validator configuration,
 preserves nested/list paths and supports explicit field identity overrides
-without changing legacy bodies. Product serializer adoption is still pending.
+without changing legacy bodies. Profile and preference serializers adopt this
+boundary; person-name, username-format and avatar validators provide typed
+codes and configuration-derived parameters. Other user origins remain pending.
 OT-32 depends technically on this first OT-31 unit and reuses it. The global handler now
 adds the envelope for recognized DRF/core exceptions, preserving legacy fields,
 HTTP statuses and headers. TMDB retains its early return; direct endpoint

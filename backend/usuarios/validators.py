@@ -11,7 +11,12 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
 # Nombre de usuario alfanumérico, 5-25 caracteres (CU-001)
-USERNAME_REGEX = re.compile(r"^[A-Za-z0-9]{5,25}$")
+USERNAME_MIN_LENGTH = 5
+USERNAME_MAX_LENGTH = 25
+PERSON_NAME_MAX_LENGTH = 50
+USERNAME_REGEX = re.compile(
+    rf"^[A-Za-z0-9]{{{USERNAME_MIN_LENGTH},{USERNAME_MAX_LENGTH}}}$"
+)
 
 
 def normalizar_nombre(valor):
@@ -24,11 +29,12 @@ def validar_nombre_persona(valor):
     valor = normalizar_nombre(valor)
     if (
         not valor
-        or len(valor) > 50
+        or len(valor) > PERSON_NAME_MAX_LENGTH
         or not all(parte.isalpha() for parte in valor.split(" "))
     ):
         raise ValidationError(
-            "Solo letras y espacios entre palabras, máximo 50 caracteres."
+            "Solo letras y espacios entre palabras, máximo 50 caracteres.",
+            code="person_name_invalid",
         )
     return valor
 

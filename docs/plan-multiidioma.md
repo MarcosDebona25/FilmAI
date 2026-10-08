@@ -1095,6 +1095,9 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 - 08/10/2026, primer bloque OT-31: frontera compartida final de DRF, con
   límites/choices/configuración de contraseña y rutas anidadas; **19 tests**
   enfocados en verde. Ningún serializer productivo la adopta todavía.
+  Segunda unidad: perfil y preferencias adoptan la frontera; cinco tests HTTP
+  del sobre y 29 regresiones enfocadas pasan (34 en total). Mensajes y HTTP
+  heredados se conservan, incluidos errores múltiples del RegexField.
   OT-32 depende técnicamente de este bloque y lo reutiliza; se entrega después
   de OT-31. Publicación coordinada tras OT-40 → OT-70 → OT-60; sin merges a main.
 
