@@ -2565,3 +2565,18 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   conservar la vigencia actual de 24 horas y corregir ese documento al alinearlo.
 - **Archivos afectados**: `docs/decisiones.md`, `docs/plan-multiidioma.md`;
   pruebas nuevas de F0 al implementar cambios deliberados y doc 02 al cerrar.
+
+---
+
+## 08/10/2026 — Curaduría trazable por grupos de pantallas
+
+- **Fecha**: 08/10/2026
+- **Descripción**: OT-12 conserva la tabla original y registra en CSV cada ID,
+  texto y pantalla de origen junto a la clave semántica, estado y texto curado.
+  Los fragmentos se proponen como mensajes completos ICU; las claves de pantallas
+  futuras quedan provisionales hasta implementar sus diseños. Se entrega en tres
+  bloques por grupos para facilitar revisión, sin sembrar catálogos todavía.
+  El primer bloque cubre las entradas 1–270; los dos siguientes completan 634.
+  La aprobación editorial pertenece a OT-13.
+- **Archivos afectados**: `docs/i18n/claves.csv`, `docs/i18n/README.md`,
+  `docs/plan-multiidioma.md`.
