@@ -63,6 +63,15 @@ class ProduccionAudiovisual(models.Model):
         default=list,
         verbose_name="géneros",
     )
+    generos_ids = ArrayField(
+        models.IntegerField(),
+        blank=True,
+        default=list,
+        verbose_name="ids de géneros (TMDB)",
+        help_text="Ids de TMDB de los géneros. La etiqueta se resuelve por "
+        "idioma con la lista de géneros; `generos` conserva los nombres en "
+        "inglés que usa el texto canónico de los embeddings.",
+    )
     keywords = ArrayField(
         models.CharField(max_length=50),
         blank=True,
@@ -110,6 +119,40 @@ class ProduccionAudiovisual(models.Model):
 
     def __str__(self):
         return f"{self.titulo} ({self.get_tipo_display()})"
+
+
+class ProduccionTraduccion(models.Model):
+    """Textos de una producción en un idioma distinto del canónico (inglés).
+
+    `ProduccionAudiovisual` sigue en inglés porque de ahí sale el corpus de
+    embeddings. Acá va lo que la interfaz muestra en otro idioma. Un campo
+    vacío significa "TMDB no tiene esa traducción": quien lee cae al canónico.
+    """
+
+    produccion = models.ForeignKey(
+        ProduccionAudiovisual,
+        on_delete=models.CASCADE,
+        related_name="traducciones",
+        verbose_name="producción audiovisual",
+    )
+    idioma = models.CharField("idioma", max_length=5)
+    titulo = models.CharField("título", max_length=100, blank=True, default="")
+    sinopsis = models.CharField("sinopsis", max_length=2000, blank=True, default="")
+    poster = models.CharField("póster", max_length=250, blank=True, default="")
+
+    class Meta:
+        db_table = "produccion_traduccion"
+        verbose_name = "traducción de producción"
+        verbose_name_plural = "traducciones de producciones"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["produccion", "idioma"],
+                name="uq_traduccion_produccion_idioma",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.produccion_id} [{self.idioma}] {self.titulo}"
 
 
 class EstadoEmbedding(models.TextChoices):
