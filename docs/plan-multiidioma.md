@@ -1077,6 +1077,11 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   copia ni idioma. La división previa de ambas confirmaciones medía 411 líneas
   escritas: se conserva en backup y se separa por flujo, sin recortar código.
 
+- 08/10/2026, OT-50 unidad 3: reenvío usa el layout común con su introducción
+  anterior. Siete tests de correos verificaron este resultado junto al registro
+  (1,964 s); unidad intermedia de registro verificada de nuevo (1,972 s).
+  Se mantienen las cuatro referencias originales sin regenerarlas.
+
 ### 10.6 Instrucción para iniciar una sesión
 
 ```text

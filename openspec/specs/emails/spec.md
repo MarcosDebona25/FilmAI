@@ -136,3 +136,6 @@ unchanged. Shared HTML layout and later localization remain pending.
 OT-50 second unit supplies the common HTML base for registration, preserving
 its complete rendered F0 reference. Resend and reset join that base in the
 following units; their original copy stays unchanged.
+
+OT-50 third unit adds resend to the shared HTML base. Its introduction remains
+separate and its complete rendered reference remains identical.

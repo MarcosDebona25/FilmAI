@@ -1,7 +1,7 @@
 # Graph Report - filmai-i18n-ot50-retoma  (2026-10-08)
 
 ## Corpus Check
-- 368 files · ~733,816 words
+- 368 files · ~733,702 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `aa7c36b8`
+- Built from commit: `b204afec`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
