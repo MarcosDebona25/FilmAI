@@ -17,8 +17,10 @@ Django validators → typed error + catalog → handler / explicit Response norm
 
 OT-30 starts with the general/domain/success registry and its typed exception.
 HTTP contexts, parameter types and nonnegative known waits are validated there.
-Validation leaf definitions, metadata preservation and handler integration remain
-pending; existing endpoint responses are unchanged at this boundary.
+Validation leaf definitions and metadata preservation are also implemented,
+including an explicit bridge for Django error lists and configured parameters.
+Handler integration and domain validator adoption remain pending; existing
+endpoint responses are unchanged at this boundary.
 The requirements below describe the completed contract, not this partial delivery.
 
 ## Requirements
