@@ -2763,3 +2763,23 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
 - **Archivos afectados**: `backend/filmai/exceptions.py`,
   `backend/filmai/{tests_contrato,tests_estado_cuenta,test_manejador_sobre}.py` y
   `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Frontera compartida de errores de serializers
+
+- **Fecha**: 08/10/2026
+- **Descripción**: OT-31 construye `ErrorValidacion` al terminar `is_valid`,
+  después de las reconstrucciones de DRF. Los parámetros provienen de los
+  campos y validadores configurados; las rutas distinguen listas de elementos
+  y listas de mensajes. Una identidad de campo explícita conserva el cuerpo
+  heredado cuando su forma no identifica el campo; los errores generales
+  usan contextos declarados. Siete tests nuevos ejercitan serializers reales,
+  validación anidada y configuración distinta, además de doce regresiones.
+  La adopción productiva queda pendiente. OT-32 reutilizará esta utilidad,
+  por lo que se registra su dependencia técnica del primer bloque de OT-31
+  y se ordenan ambas entregas sin cambiar el contrato funcional aprobado.
+- **Archivos afectados**: `backend/filmai/errores/{serializadores,validacion,sobre}.py`,
+  `backend/filmai/test_frontera_serializadores.py`,
+  `openspec/specs/error-contract/spec.md` y `docs/plan-multiidioma.md`.

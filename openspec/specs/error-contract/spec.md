@@ -22,7 +22,11 @@ including an explicit bridge for Django error lists and configured parameters.
 The pure envelope builder and legacy-body merger are implemented and tested.
 The metadata carrier must be constructed after the final DRF conversion; it
 is not guaranteed to survive validate/validate_<field> rewrapping. Domain
-serializer boundary adoption belongs to OT-31/OT-32. The global handler now
+OT-31 now provides a shared final `Serializer.is_valid` boundary. It derives
+limits and choices from real fields and password-validator configuration,
+preserves nested/list paths and supports explicit field identity overrides
+without changing legacy bodies. Product serializer adoption is still pending.
+OT-32 depends technically on this first OT-31 unit and reuses it. The global handler now
 adds the envelope for recognized DRF/core exceptions, preserving legacy fields,
 HTTP statuses and headers. TMDB retains its early return; direct endpoint
 responses and unregistered vendor origins await OT-31/OT-32, with mandatory
