@@ -4,6 +4,95 @@
 declare const messages: {
   "common": {
     "brand": "FilmAI"
+  },
+  "legacy": {
+    "metadata": {
+      "myReviews": "My reviews",
+      "description": "A movie review platform with smart recommendations.",
+      "profile": "My profile",
+      "settings": "Settings"
+    },
+    "settings": {
+      "heading": "Settings",
+      "appearance": "Appearance",
+      "theme": "Theme",
+      "dark": "Dark",
+      "light": "Light",
+      "notifications": "Notifications",
+      "weeklyLabel": "Weekly recommendations",
+      "reviewsLabel": "Reviews on your lists",
+      "newsLabel": "FilmAI news",
+      "account": "Account",
+      "deactivateWarning": "Deactivating your account is irreversible. You won’t be able to log in again or reactivate it.",
+      "deactivateTitle": "Deactivate your account?",
+      "cancel": "Cancel",
+      "deactivate": "Deactivate",
+      "retry": "Try again",
+      "breadcrumb": "Breadcrumb",
+      "publicProfile": "Public profile",
+      "publicProfileHelp": "Visibility preference for future public views.",
+      "weeklyHelp": "Preference for future recommendation emails.",
+      "reviewsHelp": "Preference for future review notifications.",
+      "newsHelp": "Preference for future news emails.",
+      "saveError": "We couldn’t save your preference. Try again.",
+      "deactivated": "Your account has been deactivated.",
+      "deactivateError": "We couldn’t deactivate your account. It is still active; try again.",
+      "loading": "Loading settings…",
+      "themeLegend": "Interface theme",
+      "privacy": "Privacy",
+      "futureFeatures": "These preferences are saved, but they do not yet change the visibility of reviews or lists or enable emails.",
+      "deactivateAccount": "Deactivate account",
+      "deactivating": "Deactivating…",
+      "deactivateConfirm": "This action is irreversible. All your sessions will be closed and you won’t be able to log in again or reactivate your account. Make sure you want to deactivate your account before continuing."
+    },
+    "confirmation": {
+      "successTitle": "Account confirmed",
+      "backToLogin": "Back to log in",
+      "loading": "Confirming your account…",
+      "successDescription": "Your account is now active. You can log in.",
+      "goToLogin": "Go to log in",
+      "alreadyTitle": "Account already confirmed",
+      "alreadyDescription": "This address was already confirmed. You can log in directly.",
+      "expiredTitle": "The link has expired",
+      "expiredDescription": "Confirmation links are valid for 24 hours. You can request a new one from the registration screen using the \"Resend email\" button.",
+      "backToRegister": "Back to registration",
+      "errorTitle": "Couldn’t confirm your account",
+      "errorDescription": "The link is invalid."
+    },
+    "reset": {
+      "backToLogin": "Back to log in",
+      "confirmLabel": "Confirm password",
+      "saveError": "Couldn’t update your password. Try again.",
+      "successTitle": "Password updated",
+      "successDescription": "Your password has been reset. You can now log in with your new password.",
+      "goToLogin": "Go to log in",
+      "invalidTitle": "The link is invalid",
+      "invalidDescription": "Reset links are valid for 1 hour or until they are used. You can request a new one from \"Forgot your password?\" on the login screen.",
+      "title": "Create a new password",
+      "description": "Choose a new password for your account.",
+      "passwordLabel": "New password",
+      "togglePassword": "Show or hide password",
+      "passwordHelp": "8 to 20 characters, with an uppercase letter, a lowercase letter, a number and a special character (@#$%&!).",
+      "toggleConfirmation": "Show or hide confirmation",
+      "saving": "Saving…",
+      "save": "Update password"
+    },
+    "validation": {
+      "required": "Required field.",
+      "maxNameLength": "Maximum 50 characters.",
+      "personName": "Letters and spaces between words only.",
+      "username": "Alphanumeric, 5 to 25 characters.",
+      "email": "Invalid email format.",
+      "date": "Invalid date.",
+      "futureDate": "The date cannot be in the future.",
+      "minimumAge": "You must be at least 13 years old.",
+      "passwordLength": "Must contain between 8 and 20 characters.",
+      "passwordUpper": "Must include at least one uppercase letter.",
+      "passwordLower": "Must include at least one lowercase letter.",
+      "passwordDigit": "Must include at least one number.",
+      "passwordSpecial": "Must include a special character (@#$%&*!).",
+      "passwordMismatch": "Passwords don’t match."
+    }
   }
 };
 export default messages;
