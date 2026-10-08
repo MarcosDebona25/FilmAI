@@ -84,12 +84,16 @@ class FronteraErroresMixin:
         valido = super().is_valid(raise_exception=False)
         if valido or not raise_exception:
             return valido
-        detalle = _normalizar_codigos(self.errors)
+        raise self.error_con_metadatos(self.errors)
+
+    def error_con_metadatos(self, errores):
+        """La misma frontera sirve al validar y al fallar una validación en save."""
+        detalle = _normalizar_codigos(errores)
         codigos = {hoja.code for _, hoja in hojas(detalle)}
         if len(codigos) == 1:
             codigo = next(iter(codigos))
             if codigo in self.codigos_generales:
-                raise ExcepcionAPI(
+                return ExcepcionAPI(
                     codigo, contexto=self.codigos_generales[codigo], detalle=detalle
                 )
         campos = {}
@@ -103,6 +107,6 @@ class FronteraErroresMixin:
             ruta: self.parametros_error(hoja.code, _campo_en_ruta(self, detalle, ruta))
             for ruta, hoja in hojas(detalle)
         }
-        raise ErrorValidacion(
+        return ErrorValidacion(
             detalle, parametros_por_ruta=parametros, campos_por_ruta=campos
         )

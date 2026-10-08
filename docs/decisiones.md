@@ -2820,3 +2820,23 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   repetición pasó sin modificar esos tests ni atribuir una causa.
 - **Archivos afectados**: `backend/usuarios/{perfil,serializers,validators}.py`,
   `backend/usuarios/test_errores_contrasena.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos del registro y frontera posterior en save
+
+- **Fecha**: 08/10/2026
+- **Descripción**: registro tradicional asigna códigos en sus condiciones de
+  duplicado, formato, nombre, edad y mismatch, preservando listas y traducción
+  heredada de dj-rest-auth. La edad mínima es la misma constante que aplica la
+  validación. La frontera compartida también devuelve una excepción normalizada
+  para `save`: BaseRegister vuelve a validar contraseña cuando construye el
+  usuario, después de `is_valid`. Un test provoca un fallo tipado en esa etapa
+  real y verifica metadata, non_field_errors y ausencia de usuario persistido.
+  No se interpreta texto ni se reemplaza el algoritmo de persistencia heredado.
+  Cinco pruebas nuevas y **15 tests** enfocados pasan; normalización de
+  proveedores y estados de cuenta se mantiene en OT-32/OT-33 respectivamente.
+- **Archivos afectados**: `backend/filmai/errores/serializadores.py`,
+  `backend/usuarios/{errores,serializers,validators}.py`,
+  `backend/usuarios/test_errores_registro.py` y `openspec/specs/error-contract/spec.md`.
