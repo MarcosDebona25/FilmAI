@@ -3319,3 +3319,37 @@ sus dos cabezas publicadas antes de integrarse.
 - **Archivos afectados**: `backend/listas/{models.py,migrations/0006_*.py,
   test_restricciones_clave.py,test_identidad.py}`, `docs/plan-multiidioma.md`,
   `graphify-out/`.
+
+## 08/10/2026 — OT-51/52/53: correos localizados (cierra F5)
+
+- **OT-51**: la vigencia de los enlaces sale de la configuración
+  (`ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS`, `PASSWORD_RESET_TIMEOUT`) vía
+  `vigencia_en_horas`, con singular/plural en plantilla. "Contraseña
+  actualizada" gana HTML; su acción enlaza a `FRONTEND_URL/login/` (el inicio
+  de sesión real; no se inventa un token ni un endpoint de recuperación).
+- **OT-52**: plantillas `en` para los cuatro casos y `base_<idioma>.html` con la
+  copia compartida. Idioma del correo = `idioma_efectivo(request, usuario)`:
+  idioma guardado del destinatario, luego el del request, luego inglés. Lo
+  resuelve el llamador (adaptador de allauth, recuperación, cambio y
+  restablecimiento de contraseña) y el servicio renderiza una variante explícita.
+  **Decisión provisional**: el saludo sin nombre es «Hola usuario,» / “Hi
+  there,”; la tabla no trae copia aprobada para ese caso (pendiente de
+  validación del usuario).
+- **OT-53**: la copia en español pasa a la de `docs/i18n/claves.csv` (filas
+  603–634, voseo) y ambos idiomas suman encabezado, motivo y pie con año. El
+  layout `base.html` queda neutro (sin texto). La notificación de contraseña no
+  muestra la fila "copiá y pegá este enlace" (la tabla no la incluye).
+- **Tests existentes tocados** (cambio deliberado de F5): `usuarios/tests.py`
+  (`ConfirmarCorreoTests`, `RecuperarContrasenaTests`) y las referencias de F0
+  envían `Accept-Language: es`, porque sin preferencia el correo ahora sale en
+  inglés. Las 4 referencias `es` se regeneraron en OT-53 (y la de contraseña
+  en OT-51, por el HTML); se agregaron 4 referencias `.en`. El año del pie se
+  normaliza en las referencias.
+- **Pruebas**: `filmai/test_correos_idioma.py` (matriz 4 casos × 2 idiomas ×
+  3 partes, idioma del destinatario, saludo de reserva, voseo) y
+  `test_servicio_correos.py` (vigencias). **Pendiente manual**: revisar los
+  correos en un cliente real con `RESEND_TEST_RECIPIENT` (plan 10.1).
+- **Archivos afectados**: `backend/filmai/correos/servicio.py`,
+  `backend/templates/correos/**`, `backend/usuarios/{adapter,passwords,
+  serializers,views,perfil}.py`, `backend/usuarios/templatetags/nombres.py`,
+  tests y referencias citadas, `openspec/specs/emails/spec.md`.

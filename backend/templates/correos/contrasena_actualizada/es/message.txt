@@ -1,1 +1,12 @@
-La contraseña de tu cuenta fue actualizada. Se cerraron las sesiones en todos los dispositivos. Si no realizaste este cambio, recupera tu cuenta desde la pantalla de inicio de sesión.
+{% load nombres %}Hola {{ user|nombre_completo:"es" }},
+
+La contraseña de tu cuenta de FilmAI fue actualizada. Por seguridad, cerramos las sesiones abiertas en todos tus dispositivos: vas a tener que iniciar sesión de nuevo.
+
+{{ enlace_correo }}
+
+Si no hiciste este cambio, recuperá tu cuenta desde la pantalla de inicio de sesión con «¿Olvidaste tu contraseña?» y elegí una contraseña nueva.
+
+El equipo de FilmAI
+
+Te avisamos porque cambió la contraseña de tu cuenta de FilmAI.
+© {{ anio }} FilmAI. Datos e imágenes de películas y series provistos por TMDB.

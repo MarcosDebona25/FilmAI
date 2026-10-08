@@ -853,9 +853,9 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En validación: 08/10/2026; OT-41A y OT-41B integradas en `develop` (identidad por clave, `list_name_reserved`, `contracts/enums.json`); falta publicación/CI (ver 10.5) |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Completada: 08/10/2026 en `develop`; 644 backend OK; cierra F4; falta publicar/CI (ver 10.5) |
 | OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En validación: 08/10/2026; servicio y layout integrados en `develop` y verificados con la suite local completa; falta publicación/CI y OT-51…53 (ver 10.5) |
-| OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
-| OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
-| OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Pendiente |
+| OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Completada: 08/10/2026 en `develop` (206725e); falta revisión manual en cliente real y CI |
+| OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Completada: 08/10/2026 en `develop` (81fa8ee); falta revisión manual en cliente real y CI |
+| OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Completada: 08/10/2026 en `develop` (commit siguiente); falta revisión manual en cliente real y CI |
 | OT-60 | F6, pasos 1, 2 y 3 | Idioma como parámetro del cliente, idioma en vistas públicas, comprobaciones contra la API real | OT-20 | M | En curso: cliente, caché, vistas y evidencia real verificados; publicación y suites finales pendientes |
 | OT-61 | F6, paso 4 | Fallback a inglés en detalle y listados | OT-60 | M | Pendiente |
 | OT-62 | F6, pasos 5 y 6 | `ProduccionTraduccion`, `generos_ids`, materialización y relleno | OT-60 | M | Pendiente |
@@ -1289,6 +1289,8 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 - 08/10/2026, OT-34 en `develop` (sin merge a main): `exportar_contrato` + `contracts/error-codes.json`, ejecutor de pruebas que valida el sobre en toda respuesta 4xx/5xx de la suite (corrigió enlaces, simplejwt, documentación y handlers 404/500), modo estricto para códigos no registrados, `ErrorEnvelope` en OpenAPI y campo `code` de Google eliminado por colisión. `filmai` pasa a `INSTALLED_APPS` solo por el comando. 634 backend OK. F3 cerrada. Siguiente: OT-42.
 
 - 08/10/2026, OT-42 en `develop` (sin merge a main): migración `listas.0006` (verificación previa + unicidad por usuario/clave + coherencia tipo/clave), probada con un volcado de desarrollo en base temporal (reparación de `admin` solo en la copia; conteos idénticos en avance, retroceso y reavance). El entrypoint del backend migra la base de desarrollo en cada arranque: `0006` ya está aplicada allí. Un test de OT-41A ajustado. 644 backend OK. F4 cerrada. Siguiente: OT-51 (F5).
+
+- 08/10/2026, OT-51/52/53 en `develop` (sin merge a main): vigencias desde configuración, HTML de contraseña actualizada, plantillas `en`, idioma del destinatario y copia final en español (voseo) con encabezado, motivo y pie. Saludo sin nombre provisional («Hola usuario,» / “Hi there,”), pendiente de validar. Referencias de correo regeneradas (4 `es`, 4 `.en`). F5 cerrada salvo la revisión manual en un cliente real. Siguiente: F6 (OT-60 a OT-63).
 
 ### 10.6 Instrucción para iniciar una sesión
 

@@ -1,15 +1,16 @@
-{% load nombres %}Hola {{ user|nombre_completo }},
+{% load nombres %}Hola {{ user|nombre_completo:"es" }},
 
-Necesitamos confirmar su dirección de correo electrónico para activar
-su cuenta en FilmAI.
+Pediste confirmar esta dirección de correo electrónico en tu cuenta de FilmAI. Confirmala para seguir usando tu cuenta.
 
-Confirme su cuenta tocando el siguiente enlace:
+Confirmá tu correo abriendo este enlace:
 
-{{ activate_url }}
+{{ enlace_correo }}
 
-Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}. Si se venció, puede pedir otro
-desde la pantalla de registro con "Reenviar correo".
+Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}.
 
-Si usted no creó esta cuenta, ignore este mensaje.
+Si no pediste esta confirmación, ignorá este mensaje: no se hará ningún cambio.
 
 El equipo de FilmAI
+
+Recibís este correo porque se usó esta dirección en una cuenta de FilmAI.
+© {{ anio }} FilmAI. Datos e imágenes de películas y series provistos por TMDB.

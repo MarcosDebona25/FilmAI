@@ -139,3 +139,14 @@ new tests verify formats, invalid internal inputs and transport failure. The
 full local suite passes 523 tests; integration awaits rebase and exact-head CI.
 Expiry context/notification HTML (OT-51), recipient language/English (OT-52)
 and reviewed Spanish copy (OT-53) remain future requirements.
+
+### Status after OT-51/52/53 (08/10/2026)
+
+All eight variants (4 cases × `en`/`es`) render subject, text and HTML from
+`correos/<case>/<locale>/`, sharing the neutral `correos/base.html` layout and
+`correos/base_<locale>.html` copy. Callers pass `idioma_efectivo(request,
+user)`. Expiry hours come from settings through `vigencia_en_horas`. The
+password-updated action links to `FRONTEND_URL/login/`. The nameless greeting
+fallback (`usuario` / `there`) is provisional copy awaiting approval. Routes in
+links remain the Spanish ones until OT-75. Manual review in a real client is
+still pending.

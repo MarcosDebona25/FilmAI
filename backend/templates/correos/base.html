@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block titulo %}Confirmación de cuenta{% endblock %}</title>
+    <title>{% block titulo %}{% endblock %}</title>
   </head>
   <body
     style="
@@ -50,10 +50,12 @@
                   color: #e0e0e0;
                 "
               >
-                {% load nombres %}{% block saludo %}Hola {{ user|nombre_completo }},{% endblock %}
+                <span style="display: block; font-size: 20px; font-weight: bold; padding-bottom: 16px"
+                  >{% block encabezado %}{% endblock %}</span
+                >
+                {% block saludo %}{% endblock %}
                 <br /><br />
-                {% block introduccion %}¡Bienvenido/a a FilmAI! Para activar su cuenta necesitamos
-                confirmar su dirección de correo electrónico.{% endblock %}
+                {% block introduccion %}{% endblock %}
               </td>
             </tr>
             <tr>
@@ -70,10 +72,11 @@
                     padding: 12px 32px;
                     border-radius: 10px;
                   "
-                  >{% block boton %}Confirmar mi cuenta{% endblock %}</a
+                  >{% block boton %}{% endblock %}</a
                 >
               </td>
             </tr>
+            {% block fila_enlace %}
             <tr>
               <td
                 align="center"
@@ -84,8 +87,7 @@
                   color: {{ color_secundario }};
                 "
               >
-                {% block enlace_alternativo %}Si el botón no funciona, copie y pegue este enlace en su
-                navegador:{% endblock %}<br />
+                {% block enlace_alternativo %}{% endblock %}<br />
                 <a
                   href="{{ enlace_correo }}"
                   style="color: #f5c518; word-break: break-all"
@@ -93,6 +95,7 @@
                 >
               </td>
             </tr>
+            {% endblock %}
             <tr>
               <td
                 style="
@@ -103,21 +106,32 @@
                   color: {{ color_secundario }};
                 "
               >
-                {% block advertencia %}Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}. Si se venció, puede
-                pedir otro desde la pantalla de registro con "Reenviar correo".
-                <br /><br />
-                Si usted no creó esta cuenta, ignore este mensaje.{% endblock %}
+                {% block advertencia %}{% endblock %}
               </td>
             </tr>
             <tr>
               <td
                 style="
-                  padding: 16px 40px 40px 40px;
+                  padding: 16px 40px 16px 40px;
                   font-size: 13px;
                   color: {{ color_secundario }};
                 "
               >
-                {% block firma %}El equipo de FilmAI{% endblock %}
+                {% block firma %}{% endblock %}
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 0 40px 32px 40px;
+                  font-size: 12px;
+                  line-height: 1.6;
+                  color: {{ color_secundario }};
+                "
+              >
+                {% block motivo %}{% endblock %}
+                <br />
+                {% block derechos %}{% endblock %}
               </td>
             </tr>
           </table>

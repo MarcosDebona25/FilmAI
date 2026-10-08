@@ -7,3 +7,6 @@ The password for your FilmAI account was updated. For security, we closed the op
 If you didn’t make this change, recover your account from the log in screen with “Forgot your password?” and choose a new password.
 
 The FilmAI team
+
+We’re letting you know because the password for your FilmAI account changed.
+© {{ anio }} FilmAI. Movie and TV show data and images provided by TMDB.

@@ -1,8 +1,9 @@
-"""Envío único, manteniendo la copia y el formato anteriores a la traducción."""
+"""Envío único de los cuatro correos de cuenta, en el idioma del destinatario."""
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 CASOS = frozenset(
     {
@@ -30,6 +31,7 @@ def enviar_correo(caso, destinatario, contexto, idioma):
     contexto = {
         **contexto,
         "idioma": idioma,
+        "anio": timezone.now().year,
         # La notificación no lleva token: enlaza al inicio de sesión real.
         "enlace_correo": f"{settings.FRONTEND_URL}/login/"
         if caso == "contrasena_actualizada"
@@ -45,10 +47,8 @@ def enviar_correo(caso, destinatario, contexto, idioma):
     ).strip()
     texto = render_to_string(f"{prefijo}/message.txt", contexto)
     html = render_to_string(f"{prefijo}/message.html", contexto)
-    # Allauth quitaba espacios extremos; los otros dos envíos no lo hacían.
-    if caso in {"confirmacion_registro", "confirmacion_correo"}:
-        texto = texto.strip()
-        html = html.strip()
+    texto = texto.strip()
+    html = html.strip()
     return send_mail(
         asunto, texto, settings.DEFAULT_FROM_EMAIL, [destinatario], html_message=html
     )
