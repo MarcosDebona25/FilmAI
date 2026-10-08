@@ -16,6 +16,17 @@ Browser cookie + Accept-Language → Next.js request locale → en/es catalogs
                                       recipient email / TMDB language
 ```
 
+## OT-70: request infrastructure
+
+The frontend request configuration resolves supported cookies and weighted,
+regional `Accept-Language` values, with an English fallback. Invalid headers
+fall back to English; unsupported cookies leave header resolution available.
+The server layout supplies this locale to `html.lang` and the client provider
+without URL prefixes. Legacy visible page text remains unchanged at this stage.
+next-intl 4.14.9 provides the message-key and ICU-argument types through its
+experimental declaration generator; the generated declaration is versioned
+so a clean checkout can run TypeScript before the build.
+
 ## Requirements
 
 ### Requirement: Supported locales and backend resolution
