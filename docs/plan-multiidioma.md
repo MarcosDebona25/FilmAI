@@ -1098,6 +1098,10 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   Segunda unidad: perfil y preferencias adoptan la frontera; cinco tests HTTP
   del sobre y 29 regresiones enfocadas pasan (34 en total). Mensajes y HTTP
   heredados se conservan, incluidos errores múltiples del RegexField.
+  Tercera unidad: solicitudes, cambios y restablecimientos de contraseña
+  adoptan la frontera; seis pruebas HTTP nuevas y **53 tests** enfocados
+  pasan. No se modifica envío ni persistencia. Se conserva también el primer
+  fallo 401 de subcasos pre-plan; la repetición pasó sin cambiar esos tests.
   OT-32 depende técnicamente de este bloque y lo reutiliza; se entrega después
   de OT-31. Publicación coordinada tras OT-40 → OT-70 → OT-60; sin merges a main.
 

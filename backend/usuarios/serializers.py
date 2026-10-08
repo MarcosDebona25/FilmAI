@@ -27,6 +27,7 @@ from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from filmai.errores.serializadores import FronteraErroresMixin
 from filmai.errores.validacion import ErrorValidacion
 
 from .avatares import es_avatar_valido
@@ -299,7 +300,7 @@ class EnlaceRestablecimientoInvalido(Exception):
     """Señala un ``uid`` o token de restablecimiento inválido o vencido."""
 
 
-class RecuperarContrasenaSerializer(serializers.Serializer):
+class RecuperarContrasenaSerializer(FronteraErroresMixin, serializers.Serializer):
     """Solicitud de restablecimiento sin revelar si un correo está registrado."""
 
     email = serializers.EmailField()
@@ -343,7 +344,7 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
         return usuario
 
 
-class RestablecerContrasenaSerializer(serializers.Serializer):
+class RestablecerContrasenaSerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida el enlace y persiste la nueva contraseña."""
 
     password1 = serializers.CharField(trim_whitespace=False, write_only=True)
@@ -354,7 +355,8 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs["password1"] != attrs["password2"]:
             raise serializers.ValidationError(
-                {"password2": ["Las contraseñas no coinciden."]}
+                {"password2": ["Las contraseñas no coinciden."]},
+                code="passwords_do_not_match",
             )
 
         try:
@@ -371,7 +373,9 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
         try:
             validate_password(attrs["password1"], user=self.usuario)
         except DjangoValidationError as err:
-            raise serializers.ValidationError({"password1": err.messages}) from err
+            raise serializers.ValidationError(
+                {"password1": ErrorValidacion.desde_django(err).detail}
+            ) from err
 
         return attrs
 

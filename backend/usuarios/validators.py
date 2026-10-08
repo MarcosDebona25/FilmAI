@@ -42,8 +42,22 @@ def validar_nombre_persona(valor):
 class ComplejidadContrasenaValidator:
     """Validador de contraseña según las reglas del CU-001"""
 
+    min_length = 8
+    max_length = 20
+    special_characters = "@#$%&*!"
+
+    @property
+    def parametros_por_codigo(self):
+        return {
+            "password_too_short_or_long": {
+                "minLength": self.min_length,
+                "maxLength": self.max_length,
+            },
+            "password_no_special": {"specialCharacters": self.special_characters},
+        }
+
     def validate(self, password, user=None):
-        if len(password) < 8 or len(password) > 20:
+        if len(password) < self.min_length or len(password) > self.max_length:
             raise ValidationError(
                 _("La contraseña debe tener entre 8 y 20 caracteres."),
                 code="password_too_short_or_long",
@@ -63,7 +77,7 @@ class ComplejidadContrasenaValidator:
                 _("La contraseña debe contener al menos un dígito."),
                 code="password_no_digit",
             )
-        if not re.search(r"[@#$%&*!]", password):
+        if not re.search(f"[{re.escape(self.special_characters)}]", password):
             raise ValidationError(
                 _("La contraseña debe contener un carácter especial (@#$%&*!)."),
                 code="password_no_special",
