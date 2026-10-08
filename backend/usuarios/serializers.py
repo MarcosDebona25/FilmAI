@@ -27,7 +27,10 @@ from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from filmai.errores.validacion import ErrorValidacion
+
 from .avatares import es_avatar_valido
+from .errores import CampoNombreUsuario, FronteraUsuarioMixin
 from .exceptions import NombreUsuarioOcupado
 from .models import EstadoCuenta, TipoGenero, Usuario
 from .passwords import guardar_contrasena
@@ -384,11 +387,11 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
         return self.usuario
 
 
-class UsuarioPerfilSerializer(serializers.ModelSerializer):
+class UsuarioPerfilSerializer(FronteraUsuarioMixin, serializers.ModelSerializer):
     """CU-006: solo nombre, apellido, nombre de usuario y avatar editables."""
 
     tiene_contrasena_local = serializers.SerializerMethodField()
-    nombre_usuario = serializers.RegexField(USERNAME_REGEX, max_length=25)
+    nombre_usuario = CampoNombreUsuario(USERNAME_REGEX, max_length=25)
 
     class Meta:
         model = Usuario
@@ -432,7 +435,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
         try:
             return validar_nombre_persona(value)
         except DjangoValidationError as err:
-            raise serializers.ValidationError(err.messages) from err
+            raise ErrorValidacion.desde_django(err) from err
 
     def validate_apellido(self, value):
         return self.validate_nombre(value)
@@ -449,7 +452,8 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
             from .avatares import AVATAR_IDS_VALIDOS
 
             raise serializers.ValidationError(
-                f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}"
+                f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}",
+                code="avatar_invalid",
             )
         return value
 

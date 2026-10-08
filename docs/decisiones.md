@@ -2783,3 +2783,20 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
 - **Archivos afectados**: `backend/filmai/errores/{serializadores,validacion,sobre}.py`,
   `backend/filmai/test_frontera_serializadores.py`,
   `openspec/specs/error-contract/spec.md` y `docs/plan-multiidioma.md`.
+
+
+---
+
+## 08/10/2026 — Códigos de perfil y preferencias
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el perfil y las preferencias adoptan la frontera final
+  compartida. Nombre de persona, formato del username y avatar asignan el
+  código en su validador original, preservando mensajes y HTTP anteriores.
+  Límites, choices e IDs se obtienen de constantes de reglas, campos reales
+  y registro activo. El conflicto de username mantiene 409 sin hojas.
+  Cinco tests HTTP nuevos comprueban el sobre por separado; usan un access
+  token vinculado al usuario para respetar la revalidación bajo bloqueo.
+  Los tests previos continúan cubriendo autenticación JWT sin cambios.
+- **Archivos afectados**: `backend/usuarios/{errores,validators,serializers,cuenta}.py`,
+  `backend/usuarios/test_errores_perfil.py` y `openspec/specs/error-contract/spec.md`.
