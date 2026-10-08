@@ -844,12 +844,12 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integrada fuera de main con CI verde de ambas cabezas (ver 10.5) |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Completada: 08/10/2026; PRs #55/#56/#57 integrados con CI verde; 520 backend, merge final 51bcb2b (ver 10.5) |
-| OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | En validación: 08/10/2026; cuatro entregas, PRs #58/#59/#60 y última entrega; base OT-20 final 51bcb2b; repetición local y CI finales en curso (ver 10.5) |
+| OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Completada: 08/10/2026; PRs #58/#59/#60/#61 integrados fuera de main con CI 3/3 verde; 543 backend; merge final 10fe49f (ver 10.5) |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30 | M | Pendiente |
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
-| OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Pendiente |
+| OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | En validación: 08/10/2026; base OT-30 final 10fe49f; 546 backend aprobados; PR hacia integración y CI de cabeza final pendientes (ver 10.5) |
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | Pendiente |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
 | OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | Pendiente |
@@ -1086,6 +1086,26 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   propias (4, 9 y 16 acumuladas; 7 del manejador) y el formato/lint. Los PRs
   #58 y #59 tienen los tres jobs CI verdes para sus cabezas exactas; #60 y la
   última entrega requieren completar su verificación antes de integrar.
+
+- 08/10/2026, cierre de OT-30: las cuatro unidades de los PRs #58–#61
+  quedaron integradas con merge commit únicamente en `feat/i18n-multiidioma`.
+  Cada cabeza exacta pasó los tres jobs CI; el merge final es `10fe49f`.
+  La suite backend base contiene 543 tests. Se conserva la primera corrida
+  fallida y su repetición en el registro anterior; main permanece intacta.
+
+- 08/10/2026, preparación de OT-40 sobre OT-30 cerrada: campo `Lista.clave`
+  nullable y migración reversible `0005`; tres pruebas recorren el esquema
+  real, conservan filas y el idioma de las cuentas y prueban rollback completo
+  ante una predeterminada desconocida. Se conserva un respaldo de la cabeza
+  anterior antes del rebase. No se aplica la migración a la base de desarrollo.
+  El cierre requiere las suites de esta base y el CI de la cabeza publicada;
+  todavía no se implementan consumidores de OT-41 ni restricciones de OT-42.
+
+  Verificación final local: 546 backend en 196,439 s; tres tests de migración
+  en 3,769 s; Ruff, Prettier y consistencia de migraciones aprobados. Frontend
+  coincide con el árbol validado en OT-13 (43 unitarios, 24 e2e y build),
+  evidencia reutilizada y no una ejecución nueva. Se requiere CI sobre la
+  cabeza publicada antes de integrar OT-40; main permanece sin merges.
 
 ### 10.6 Instrucción para iniciar una sesión
 
