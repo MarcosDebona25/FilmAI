@@ -13,7 +13,7 @@ def nombre_completo(usuario) -> str:
     siempre muestra nombre + apellido del usuario de FilmAI, con fallback
     genérico para cuentas sin esos datos (p. ej. usuarios del seed).
     """
-    texto = (
-        f"{(usuario.nombre or '').strip()} {(usuario.apellido or '').strip()}".strip()
-    )
+    nombre = (getattr(usuario, "nombre", "") or "").strip()
+    apellido = (getattr(usuario, "apellido", "") or "").strip()
+    texto = f"{nombre} {apellido}".strip()
     return texto or "usuario"

@@ -14,13 +14,26 @@ CASOS = frozenset(
 )
 
 
+def vigencia_en_horas(caso):
+    """La vigencia del enlace sale de la configuración, no de la plantilla."""
+    if caso in {"confirmacion_registro", "confirmacion_correo"}:
+        return settings.ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS * 24
+    if caso == "restablecer_contrasena":
+        return settings.PASSWORD_RESET_TIMEOUT // 3600
+    return None
+
+
 def enviar_correo(caso, destinatario, contexto, idioma):
     """Renderiza una variante completa y delega en el backend de correo Django."""
     if caso not in CASOS or idioma not in settings.IDIOMAS_SOPORTADOS:
         raise ValueError("Caso o idioma de correo no soportado.")
     contexto = {
         **contexto,
-        "enlace_correo": contexto.get("activate_url") or contexto.get("reset_url"),
+        # La notificación no lleva token: enlaza al inicio de sesión real.
+        "enlace_correo": f"{settings.FRONTEND_URL}/login/"
+        if caso == "contrasena_actualizada"
+        else contexto.get("activate_url") or contexto.get("reset_url"),
+        "expiry_hours": vigencia_en_horas(caso),
         "color_secundario": "#a0a0a8"
         if caso == "restablecer_contrasena"
         else "#777777",
@@ -30,9 +43,7 @@ def enviar_correo(caso, destinatario, contexto, idioma):
         render_to_string(f"{prefijo}/subject.txt", contexto).splitlines()
     ).strip()
     texto = render_to_string(f"{prefijo}/message.txt", contexto)
-    html = None
-    if caso != "contrasena_actualizada":
-        html = render_to_string(f"{prefijo}/message.html", contexto)
+    html = render_to_string(f"{prefijo}/message.html", contexto)
     # Allauth quitaba espacios extremos; los otros dos envíos no lo hacían.
     if caso in {"confirmacion_registro", "confirmacion_correo"}:
         texto = texto.strip()
