@@ -9,10 +9,10 @@ from django.utils import timezone
 
 from catalogo.exceptions import TMDBServerError
 from catalogo.factories import ProduccionAudiovisualFactory
-from catalogo.management.commands.rellenar_traducciones import pendientes, rellenar
 from catalogo.models import ProduccionAudiovisual, ProduccionTraduccion
 from catalogo.services.embeddings import calcular_source_hash, construir_texto_canonico
 from catalogo.services.materialization import materializar
+from catalogo.services.traducciones import pendientes, rellenar, texto_localizado
 
 DETALLES = {
     "en-US": {
@@ -62,13 +62,12 @@ class ServiciosPorIdioma:
 class ConServiciosPorIdioma(TestCase):
     def setUp(self):
         self.fabrica = ServiciosPorIdioma()
-        for destino in (
+        parche = patch(
             "catalogo.services.materialization.get_catalog_service",
-            "catalogo.management.commands.rellenar_traducciones.get_catalog_service",
-        ):
-            parche = patch(destino, side_effect=self.fabrica)
-            parche.start()
-            self.addCleanup(parche.stop)
+            side_effect=self.fabrica,
+        )
+        parche.start()
+        self.addCleanup(parche.stop)
         parche = patch("catalogo.services.materialization.generar_embedding")
         parche.start()
         self.addCleanup(parche.stop)
@@ -172,3 +171,30 @@ class RellenoDeTraduccionesTests(ConServiciosPorIdioma):
         salida = StringIO()
         call_command("rellenar_traducciones", stdout=salida)
         self.assertIn("1 procesadas, 0 con error, 0 pendientes", salida.getvalue())
+
+
+class LecturaPorIdiomaTests(TestCase):
+    def setUp(self):
+        self.produccion = ProduccionAudiovisualFactory(
+            titulo="Fight Club", poster="/en.jpg", sinopsis="EN"
+        )
+
+    def test_devuelve_la_traduccion_y_cae_al_canonico_campo_por_campo(self):
+        ProduccionTraduccion.objects.create(
+            produccion=self.produccion, idioma="es", titulo="El club de la pelea"
+        )
+        self.assertEqual(
+            texto_localizado(self.produccion, "titulo", "es"), "El club de la pelea"
+        )
+        self.assertEqual(texto_localizado(self.produccion, "poster", "es"), "/en.jpg")
+        self.assertEqual(
+            texto_localizado(self.produccion, "titulo", "en"), "Fight Club"
+        )
+        self.assertEqual(
+            texto_localizado(self.produccion, "titulo", None), "Fight Club"
+        )
+
+    def test_sin_traduccion_guardada_usa_el_canonico(self):
+        self.assertEqual(
+            texto_localizado(self.produccion, "titulo", "es"), "Fight Club"
+        )

@@ -2,6 +2,7 @@ from django.urls import path
 
 from catalogo.views import (
     DiscoverView,
+    GenresView,
     KeywordsView,
     MovieDetailView,
     NowPlayingView,
@@ -23,5 +24,6 @@ urlpatterns = [
     # incumpliendo la spec de C-03 (openspec/specs/tmdb-endpoints/spec.md).
     path("movie/<id_tmdb>/", MovieDetailView.as_view(), name="movie_detail"),
     path("tv/<id_tmdb>/", TVDetailView.as_view(), name="tv_detail"),
+    path("genres/", GenresView.as_view(), name="genres"),
     path("keywords/", KeywordsView.as_view(), name="keywords"),
 ]

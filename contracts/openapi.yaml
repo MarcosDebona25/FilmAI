@@ -753,6 +753,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/genres/:
+    get:
+      operationId: catalogo_genres_retrieve
+      description: |-
+        Lista de géneros de TMDB en el idioma efectivo, cacheada por idioma.
+
+        Con ella el frontend resuelve la etiqueta de un `generos_ids`/`genre_ids`.
+        Un nombre vacío en el idioma pedido se completa con el inglés del mismo id.
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/keywords/:
     get:
       operationId: catalogo_keywords_retrieve

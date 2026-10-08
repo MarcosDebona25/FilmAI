@@ -3353,3 +3353,61 @@ sus dos cabezas publicadas antes de integrarse.
   `backend/templates/correos/**`, `backend/usuarios/{adapter,passwords,
   serializers,views,perfil}.py`, `backend/usuarios/templatetags/nombres.py`,
   tests y referencias citadas, `openspec/specs/emails/spec.md`.
+
+## 08/10/2026 — OT-60 a OT-63: TMDB según idioma (cierra F6)
+
+- **OT-60**: ya integrada (cliente con `language`, clave de caché por idioma,
+  vistas públicas por `Accept-Language`); se da por cerrada con la suite
+  completa de esta etapa.
+- **OT-61**: `catalogo/services/fallback.py`. Fuera del inglés, detalles y
+  listados se envuelven en `CatalogoConRespaldo`: si `title`/`name`/`overview`
+  llegan vacíos se pide la versión inglesa (cacheada) y se completa campo por
+  campo. **Decisión**: la marca se llama `campos_en_ingles` (lista por detalle
+  y por ítem de listado) y solo se agrega fuera del inglés, para que el
+  passthrough en inglés no cambie. En listados se combina la misma página por
+  (`media_type`, `id`); un ítem sin par en la página inglesa queda como llegó.
+- **OT-62**: `ProduccionTraduccion` (producción, idioma, título, sinopsis,
+  póster; único por producción+idioma) y `ProduccionAudiovisual.generos_ids`,
+  migración `catalogo.0006`. `materializar` guarda la traducción de cada idioma
+  no canónico después del canónico; un `TMDBError` ahí se registra y no
+  invalida el enriquecimiento. Comando idempotente `rellenar_traducciones`
+  (`--limite`, `--lote`). El texto canónico de embeddings y su hash no cambian
+  (test de invariancia).
+- **OT-63**: `texto_localizado` elige título/póster por idioma con respaldo
+  canónico; lo usan ítems de lista, previews de listas y «mis reseñas» con
+  `prefetch_related("produccion__traducciones")`. Nuevo
+  `GET /api/catalogo/genres/` por idioma. La sincronización nocturna suma una
+  tercera pasada acotada (`CELERY_BACKFILL_LIMIT`) que rellena traducciones
+  pendientes y la informa en `traducciones`.
+- **Tests existentes tocados** (adiciones previstas por la fase): dos
+  aserciones de "una sola llamada" al detalle pasan a dos (una por idioma);
+  las estadísticas de la sync incluyen `traducciones`; la fila "intacta" del
+  test de refresco se crea ya traducida. `contracts/openapi.yaml` suma la ruta
+  de géneros.
+- **Verificación con la API real** (08/10/2026): `movie/1559362` con
+  `Accept-Language: es` devuelve la sinopsis inglesa y
+  `campos_en_ingles: ["overview"]`; `genres?tipo=tv` devuelve «Animación»,
+  «Comedia»; `rellenar_traducciones --limite 5` guardó 5 traducciones
+  (p. ej. «Buscando a Nemo») y `generos_ids` en la base de desarrollo.
+- **Limitación conocida**: el orden por título usa el título canónico; la
+  sinopsis traducida se guarda pero ningún serializer la expone todavía.
+- **Archivos afectados**: `backend/catalogo/{models,views,urls,tasks,reviews,
+  serializers_reviews}.py`, `backend/catalogo/services/{fallback,traducciones,
+  materialization}.py`, `backend/catalogo/management/commands/
+  rellenar_traducciones.py`, migración `0006`, `backend/listas/{views,
+  serializers}.py`, tests nuevos (`test_fallback_idioma`, `test_traducciones`,
+  `test_idioma_serializadores`), specs `tmdb-endpoints` y
+  `catalog-materialization`.
+
+## 08/10/2026 — Limpieza de `docs/` y documento de siguientes pasos
+
+- Nuevo `docs/siguientes-pasos-multiidioma.md`: estado por fase, pendientes y
+  órdenes que faltan (F7 a F9), con los comandos del entorno.
+- Eliminados `docs/cierre-parcial-2026-10-08.md` (reemplazado por el anterior;
+  sus SHAs de recuperación quedan en el historial, commit `05a53a2`) y
+  `docs/i18n/revision-ot13.md` (lista de verificación de una orden cerrada).
+- Se conservan los demás archivos de `docs/i18n/` porque los leen tests o el
+  plan (`claves.csv`, `copia-propuesta.csv`, `ot70-catalogo-transitorio.csv`,
+  `equivalencias.json`, `errores.csv`, `glosario.md`,
+  `tmdb-verificacion-ot60.md`). `docs/reportes_dev/` y `docs/wireframes/` no se
+  tocaron: son material del equipo y de diseño, no del plan multiidioma.

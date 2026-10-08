@@ -44,6 +44,7 @@ from catalogo.serializers_reviews import (
 )
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.materialization import materializar
+from filmai.idioma import idioma_efectivo
 from listas.services import agregar_a_vistas, quitar_de_vistas
 
 
@@ -218,6 +219,7 @@ class MisCalificacionesView(APIView):
         propias = (
             Calificacion.objects.filter(usuario=request.user, activa=True)
             .select_related("produccion", "resena")
+            .prefetch_related("produccion__traducciones")
             .order_by("-fecha", "-id")
         )
         # El cursor de paginación no solicita una ficha individual. Solo los
@@ -227,10 +229,16 @@ class MisCalificacionesView(APIView):
             calificacion = get_object_or_404(
                 propias, produccion__id_tmdb=id_tmdb, produccion__tipo=tipo
             )
-            return Response(MiResenaSerializer(calificacion).data)
+            return Response(
+                MiResenaSerializer(
+                    calificacion, context={"idioma": idioma_efectivo(request)}
+                ).data
+            )
 
         paginator = self.pagination_class()
         pagina = paginator.paginate_queryset(propias, request, view=self)
         return paginator.get_paginated_response(
-            MiResenaSerializer(pagina, many=True).data
+            MiResenaSerializer(
+                pagina, many=True, context={"idioma": idioma_efectivo(request)}
+            ).data
         )

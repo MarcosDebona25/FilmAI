@@ -157,6 +157,29 @@ class TVDetailView(CatalogoBaseView):
         return Response(data)
 
 
+class GenresView(CatalogoBaseView):
+    """Lista de géneros de TMDB en el idioma efectivo, cacheada por idioma.
+
+    Con ella el frontend resuelve la etiqueta de un `generos_ids`/`genre_ids`.
+    Un nombre vacío en el idioma pedido se completa con el inglés del mismo id.
+    """
+
+    def get(self, request):
+        tipo = _validate_tipo(request.query_params.get("tipo", "movie"))
+        idioma = idioma_tmdb(request)
+        datos = get_catalog_service(idioma).get_genres(tipo)
+        generos = datos.get("genres") or []
+        if any(not (genero.get("name") or "").strip() for genero in generos):
+            en_ingles = {
+                genero.get("id"): genero.get("name")
+                for genero in get_catalog_service().get_genres(tipo).get("genres") or []
+            }
+            for genero in generos:
+                if not (genero.get("name") or "").strip():
+                    genero["name"] = en_ingles.get(genero.get("id")) or ""
+        return Response({"genres": generos})
+
+
 class KeywordsView(CatalogoBaseView):
     def get(self, request):
         id_tmdb = _int_param(request.query_params.get("id_tmdb"), "id_tmdb")

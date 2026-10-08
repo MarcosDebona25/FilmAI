@@ -54,6 +54,7 @@ from catalogo.models import (
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
+    ProduccionTraduccion,
     Resena,
     TipoProduccion,
 )
@@ -2295,6 +2296,7 @@ class SyncCatalogoTests(TestCase):
                 "ya_existentes": 1,
                 "refrescadas": 0,
                 "omitidas": 1,
+                "traducciones": 0,
                 "errores": 0,
             },
         )
@@ -2506,6 +2508,11 @@ class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
             tipo=TipoProduccion.PELICULA,
             titulo="Inception",
             fecha_enriquecimiento=ayer,
+        )
+        # Ya traducida: tampoco le queda nada pendiente a la pasada de
+        # traducciones (OT-63), así que de verdad no se la vuelve a pedir.
+        ProduccionTraduccion.objects.create(
+            produccion=intacta, idioma="es", titulo="El origen"
         )
         self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
             1, 1, [550] if tipo == "movie" else []
