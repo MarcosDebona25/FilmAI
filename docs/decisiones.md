@@ -2800,3 +2800,23 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   Los tests previos continúan cubriendo autenticación JWT sin cambios.
 - **Archivos afectados**: `backend/usuarios/{errores,validators,serializers,cuenta}.py`,
   `backend/usuarios/test_errores_perfil.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos de solicitudes y cambios de contraseña
+
+- **Fecha**: 08/10/2026
+- **Descripción**: recuperación, restablecimiento y cambio autenticado adoptan
+  la frontera final. Los errores propios asignan códigos explícitos; las listas
+  de Django conservan sus códigos antes de la conversión DRF. Complejidad
+  publica los mismos límites y caracteres que aplica, sin adjuntar parámetros
+  a mensajes con `%` ni interpretar textos. Se conservan mensajes, campos y
+  HTTP anteriores; enlaces inválidos y respuestas exitosas quedan para sus
+  unidades respectivas. No se modifica persistencia ni envío de correos.
+  Seis pruebas nuevas verifican el sobre mediante endpoints reales, incluida
+  una configuración Django de mínimo 11; **53 tests** enfocados pasan.
+  Se conserva el primer resultado con fallos 401 en subcasos pre-plan, cuya
+  repetición pasó sin modificar esos tests ni atribuir una causa.
+- **Archivos afectados**: `backend/usuarios/{perfil,serializers,validators}.py`,
+  `backend/usuarios/test_errores_contrasena.py` y `openspec/specs/error-contract/spec.md`.

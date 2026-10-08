@@ -27,7 +27,10 @@ limits and choices from real fields and password-validator configuration,
 preserves nested/list paths and supports explicit field identity overrides
 without changing legacy bodies. Profile and preference serializers adopt this
 boundary; person-name, username-format and avatar validators provide typed
-codes and configuration-derived parameters. Other user origins remain pending.
+codes and configuration-derived parameters. Password request/reset/change
+serializers also adopt it, preserving Django codes and configured limits;
+password complexity exposes the same limits and special characters it applies.
+Direct link errors, successful responses and other user origins remain pending.
 OT-32 depends technically on this first OT-31 unit and reuses it. The global handler now
 adds the envelope for recognized DRF/core exceptions, preserving legacy fields,
 HTTP statuses and headers. TMDB retains its early return; direct endpoint
