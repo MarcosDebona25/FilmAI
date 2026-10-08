@@ -7,7 +7,7 @@ Confirme su cuenta tocando el siguiente enlace:
 
 {{ activate_url }}
 
-Este enlace es válido durante 24 horas. Si se venció, puede pedir otro
+Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}. Si se venció, puede pedir otro
 desde la pantalla de registro con "Reenviar correo".
 
 Si usted no creó esta cuenta, ignore este mensaje.

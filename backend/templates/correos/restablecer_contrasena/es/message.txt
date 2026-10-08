@@ -5,7 +5,7 @@ FilmAI. Para continuar, toque el siguiente enlace:
 
 {{ reset_url }}
 
-Este enlace es válido durante 1 hora. Si se venció, puede pedir otro desde
+Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}. Si se venció, puede pedir otro desde
 la pantalla de inicio de sesión con "¿Olvidaste tu contraseña?".
 
 Si usted no solicitó este cambio, ignore este mensaje: su contraseña no se

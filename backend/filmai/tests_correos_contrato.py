@@ -131,4 +131,4 @@ class CorreosContratoTests(TestCase):
                 format="json",
             )
         self.assertEqual(respuesta.status_code, 200)
-        self.assertEqual(self.assert_correo("contrasena_actualizada")["html"], [])
+        self.assertEqual(len(self.assert_correo("contrasena_actualizada")["html"]), 1)
