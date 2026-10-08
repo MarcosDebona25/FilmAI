@@ -27,6 +27,15 @@ next-intl 4.14.9 provides the message-key and ICU-argument types through its
 experimental declaration generator; the generated declaration is versioned
 so a clean checkout can run TypeScript before the build.
 
+OT-70's transitional `legacy` catalog contains the current Spanish copy for
+settings, email confirmation, password reset and pure validation. Its 77
+messages have matching English keys. The user approved 53 missing English
+translations and the temporary `Mis reseñas` / `My reviews` title on 08/10/2026;
+the other English messages reuse approved curated copy. The versioned OT-70
+CSV records the source and approval of each message. It is separate from
+OT-13's immutable approval record. OT-76 changes Spanish treatment/copy;
+OT-77 seeds the complete design catalogs. Neither change is performed here.
+
 ## Requirements
 
 ### Requirement: Supported locales and backend resolution

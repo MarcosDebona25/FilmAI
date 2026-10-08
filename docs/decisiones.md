@@ -2815,3 +2815,18 @@ aprobados; cuatro recorridos de idioma pasan en el servidor propio del puerto
 de verificación fue temporal y no se versiona. Reversión: retirar el plugin,
 `i18n/`, los catálogos iniciales y el proveedor para volver al layout anterior.
 El build de producción y Ruff también pasan; backend sin cambios funcionales.
+## 08/10/2026 — Catálogo transitorio aprobado para las piezas actuales (OT-70 B)
+
+El usuario aprobó 53 traducciones inglesas faltantes y el título temporal
+«Mis reseñas» / «My reviews». Las 77 claves de `legacy` conservan la copia
+española actual de preferencias, confirmación, restablecimiento, validaciones
+y metadatos; las restantes traducciones inglesas reutilizan copia aprobada
+de OT-13. `docs/i18n/ot70-catalogo-transitorio.csv` registra textos, archivos
+de origen y aprobación, sin alterar el CSV de 91 mensajes de OT-13.
+Los mensajes viven en `frontend/messages/{en,es}/common.json` y no traducen
+todavía las páginas. OT-76 aplicará el voseo; OT-77 sembrará los catálogos
+completos de los diseños. Los tests comprueban claves, aprobación, sintaxis
+ICU y conservación de los textos actuales sensibles. Revertir esta unidad
+retira solo el catálogo transitorio y su registro, preservando el núcleo.
+Verificación: 69 tests unitarios, TypeScript, ESLint y Prettier pasan;
+los cuatro recorridos de idioma pasan con el catálogo completo transitorio.
