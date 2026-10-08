@@ -841,7 +841,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Completada: 07/10/2026; F0 integrada, 508/43/24 y CI en verde (ver 10.5) |
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Completada: 08/10/2026; PR #47 integrado fuera de main; CI en verde |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Pendiente |
-| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | En curso: bloques A/B, filas 1–499; falta C y aprobación OT-13 |
+| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Implementada: 08/10/2026; 634 filas, revisión editorial OT-13 pendiente |
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Pendiente |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Pendiente |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
@@ -927,6 +927,17 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   La guía amplía el uso de ICU y las reglas de curaduría. Pendientes bloque C y
   revisión editorial OT-13. Verificación y suites completas mediante CI por PR;
   referencia de aplicación sin cambios: 508 backend, 43 unitarios y 24 e2e.
+
+- 08/10/2026, OT-12, bloque C: rama `docs/i18n-ot12-claves-legal-correos`.
+  Se agregan 135 filas de exclusiones del chatbot, errores, administración,
+  términos, footer y correos. CSV completo: 634 IDs y 41 pantallas exactos;
+  406 ok, 40 fragmentos recompuestos, 61 muestras, 100 diseño, 21 chatbot y
+  6 incoherentes pendientes de OT-13. Las 446 filas utilizables apuntan a
+  423 claves sin colisiones. Parser ICU: sintaxis y paridad de argumentos/tags
+  verificadas; 28 filas con plurales y 3 con tags. Contacto confirmado por el
+  usuario: contacto@filmai.com en textos curados, originales conservados.
+  Sin código, tests ni dependencias modificados; referencia de suites completas
+  508/43/24 y build verde. CI por PR y graphify antes del commit; no merge a main.
 
 ### 10.6 Instrucción para iniciar una sesión
 
