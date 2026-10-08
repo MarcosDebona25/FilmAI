@@ -2742,3 +2742,23 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   intermedia de registro también pasó siete tests (1,972 s). Referencias F0
   intactas, sin modificar ni regenerar sus oráculos.
 - **Archivos afectados**: variante HTML de reenvío, decisiones, plan y spec.
+
+---
+
+## 08/10/2026 — Recuperación sobre el layout común (OT-50, unidad 4)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: recuperación hereda la misma base y conserva título,
+  introducción, botón y advertencia propios. El servicio suministra enlace
+  común y color secundario para preservar exactamente cada variante actual;
+  el contexto del caller no se modifica. Los cuatro flujos pasan por el
+  servicio, tres comparten HTML y contraseña actualizada conserva solo texto
+  hasta OT-51. `FRONTEND_URL` queda documentada en `.env.example`.
+- **Verificación**: 34 tests pasan en 25,469 s; las cuatro referencias F0
+  completas siguen idénticas sin regeneración. Incluye el fallo de correo
+  posterior al commit con su mock trasladado por autorización expresa.
+  Suite completa de las cuatro unidades: 523 tests, OK en 189,454 s. Ruff y
+  Prettier limpios. Frontend exacto `88f94c0` conserva la evidencia 43/24/build
+  de OT-13. Publicación pendiente después de rebase hacia integración.
+- **Archivos afectados**: base HTML, variante de recuperación, contexto del
+  servicio, decisiones, plan y spec `emails`.

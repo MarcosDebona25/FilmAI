@@ -126,16 +126,16 @@ and OT-90 as required by the plan. OT-13 adds no sending code or tests.
 
 ## Implementation progress
 
-OT-50 first unit centralizes the four sends and moves existing Spanish
-templates unchanged. Original F0 references remain identical, including the
-text-only password notification and different whitespace handling of allauth
-and reset. The previous notification transport-failure test targets the new
-transport location under explicit user authorization; its assertions remain
-unchanged. Shared HTML layout and later localization remain pending.
+OT-50 centralizes the four sends in `filmai.correos.servicio.enviar_correo`.
+Spanish templates retain their previous copy and rendered whitespace. Three
+HTML variants share `correos/base.html`; reset retains its separate title,
+action, warning and secondary color. Password notification remains text-only
+until OT-51. Registration/reset routes and transaction/failure policies stay
+unchanged. The user authorized only retargeting the notification failure mock
+to the service transport, preserving its assertions.
 
-OT-50 second unit supplies the common HTML base for registration, preserving
-its complete rendered F0 reference. Resend and reset join that base in the
-following units; their original copy stays unchanged.
-
-OT-50 third unit adds resend to the shared HTML base. Its introduction remains
-separate and its complete rendered reference remains identical.
+All four original F0 references remain identical without regeneration. Three
+new tests verify formats, invalid internal inputs and transport failure. The
+full local suite passes 523 tests; integration awaits rebase and exact-head CI.
+Expiry context/notification HTML (OT-51), recipient language/English (OT-52)
+and reviewed Spanish copy (OT-53) remain future requirements.
