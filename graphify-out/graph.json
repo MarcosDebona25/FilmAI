@@ -28752,7 +28752,7 @@
       "node_kind": "heading",
       "norm_label": "verificacion del propio plan",
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1107"
+      "source_location": "L1115"
     },
     {
       "id": "frontend_app_layout",
@@ -29727,7 +29727,7 @@
       "node_kind": "heading",
       "norm_label": "10.6 instruccion para iniciar una sesion",
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1085"
+      "source_location": "L1093"
     },
     {
       "id": "docs_plan_multiidioma_10_ejecuci\u00f3n_con_codex",
@@ -102579,7 +102579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1085",
+      "source_location": "L1093",
       "weight": 1.0
     },
     {
@@ -103030,7 +103030,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/plan-multiidioma.md",
-      "source_location": "L1107",
+      "source_location": "L1115",
       "weight": 1.0
     },
     {
@@ -126272,7 +126272,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "backend/filmai/correos/servicio.py",
-      "source_location": "L33",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -142908,5 +142908,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "b204afec499310440fecc87173cbd449dfcbfebc"
+  "built_at_commit": "16eb71873162f4282c5a51309b92e616557912ae"
 }

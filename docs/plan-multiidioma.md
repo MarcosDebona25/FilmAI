@@ -852,7 +852,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Pendiente |
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | Pendiente |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
-| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En curso: servicio y traslado verificados; layout compartido y publicación pendientes |
+| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En curso: servicio y layout compartido verificados; 523 backend verdes; publicación pendiente |
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
 | OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
 | OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Pendiente |
@@ -1081,6 +1081,14 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   anterior. Siete tests de correos verificaron este resultado junto al registro
   (1,964 s); unidad intermedia de registro verificada de nuevo (1,972 s).
   Se mantienen las cuatro referencias originales sin regenerarlas.
+
+- 08/10/2026, OT-50 unidad 4: recuperación hereda la base compartida y
+  conserva sus bloques y color previos. 34 tests verdes (25,469 s), incluidas
+  las cuatro referencias F0 intactas y la caída de correo posterior al commit.
+  Tres correos comparten HTML; notificación conserva solo texto hasta OT-51.
+  Suite completa de las cuatro unidades: 523 tests verdes (189,454 s); Ruff y
+  Prettier limpios. Frontend exacto `88f94c0` conserva 43/24/build de OT-13,
+  sin presentarlos como nueva ejecución. Publicación pendiente después OT-60.
 
 ### 10.6 Instrucción para iniciar una sesión
 

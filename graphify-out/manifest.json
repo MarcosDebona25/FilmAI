@@ -612,9 +612,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791425587.7998128,
-    "seen": 1791425601.8548288,
-    "ast_hash": "7f7207e74b994d04ba62e2493541f50d",
+    "mtime": 1791425970.8770256,
+    "seen": 1791425984.4329953,
+    "ast_hash": "4072e98a21a9f52af9d75b4efc38cd78",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791425587.8027742,
-    "seen": 1791425601.8549602,
-    "ast_hash": "545d6ce267f94b22b3c55240da47317b",
+    "mtime": 1791425970.8797967,
+    "seen": 1791425984.4331336,
+    "ast_hash": "7a32604bb3c88bec7fdb32baf7a83ce1",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2388,9 +2388,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
-    "mtime": 1791425587.8016422,
-    "seen": 1791425601.8555887,
-    "ast_hash": "6bc8061516980e1caadf3ee1184d71d9",
+    "mtime": 1791426294.3528821,
+    "seen": 1791426305.3493645,
+    "ast_hash": "0788930677539bf28777e3b7d51e41f6",
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
@@ -2448,9 +2448,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/correos/servicio.py": {
-    "mtime": 1791425295.4403226,
-    "seen": 1791425378.1009088,
-    "ast_hash": "df56dc2855511e853a313cf91cc6ba02",
+    "mtime": 1791425635.8870015,
+    "seen": 1791425730.6978097,
+    "ast_hash": "8a07f06637aec10052ea6e54a411da5a",
     "semantic_hash": ""
   },
   "backend/filmai/test_servicio_correos.py": {
@@ -2508,9 +2508,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/restablecer_contrasena/es/message.html": {
-    "mtime": 1791425087.3826249,
-    "seen": 1791425378.1013427,
-    "ast_hash": "5d4ecbc62c26c3db90da09e18af8c08b",
+    "mtime": 1791425633.519806,
+    "seen": 1791425730.7140195,
+    "ast_hash": "ef0ba7a669b3dba9d2522c0100a2d99f",
     "semantic_hash": ""
   },
   "backend/templates/correos/restablecer_contrasena/es/message.txt": {
@@ -2526,9 +2526,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/base.html": {
-    "mtime": 1791425421.7531846,
-    "seen": 1791425491.4877896,
-    "ast_hash": "6f0df59882d79f05f4f830d19599bd16",
+    "mtime": 1791425633.5193095,
+    "seen": 1791425730.7133539,
+    "ast_hash": "f00234c9b15a4dd306ee29f14f039497",
     "semantic_hash": ""
   }
 }

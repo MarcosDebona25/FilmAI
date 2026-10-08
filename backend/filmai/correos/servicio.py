@@ -18,6 +18,13 @@ def enviar_correo(caso, destinatario, contexto, idioma):
     """Renderiza una variante completa y delega en el backend de correo Django."""
     if caso not in CASOS or idioma not in settings.IDIOMAS_SOPORTADOS:
         raise ValueError("Caso o idioma de correo no soportado.")
+    contexto = {
+        **contexto,
+        "enlace_correo": contexto.get("activate_url") or contexto.get("reset_url"),
+        "color_secundario": "#a0a0a8"
+        if caso == "restablecer_contrasena"
+        else "#777777",
+    }
     prefijo = f"correos/{caso}/{idioma}"
     asunto = " ".join(
         render_to_string(f"{prefijo}/subject.txt", contexto).splitlines()
