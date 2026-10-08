@@ -845,14 +845,14 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integrada fuera de main con CI verde de ambas cabezas (ver 10.5) |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Completada: 08/10/2026; PRs #55/#56/#57 integrados con CI verde; 520 backend, merge final 51bcb2b (ver 10.5) |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Completada: 08/10/2026; PRs #58/#59/#60/#61 integrados fuera de main con CI 3/3 verde; 543 backend; merge final 10fe49f (ver 10.5) |
-| OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Parcial: 08/10/2026; cinco unidades locales verificadas; faltan respuestas directas y verificación final; sin publicación (ver 10.5) |
+| OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Parcial: 08/10/2026; cinco unidades integradas en `develop` y verificadas con la suite local completa; faltan las respuestas directas de F3 (OT-33) y la publicación/CI (ver 10.5) |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30, primer bloque de OT-31 | M | Pendiente |
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 con CI 3/3 verde sobre 6dee3b5; 546 backend; merge 65b7e7b solo a integración (ver 10.5) |
-| OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En validación: 08/10/2026; dos entregas locales, consumidores/API por clave y reserva bilingüe/contrato; base final y CI pendientes (ver 10.5) |
+| OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En validación: 08/10/2026; OT-41A y OT-41B integradas en `develop` (identidad por clave, `list_name_reserved`, `contracts/enums.json`); falta publicación/CI (ver 10.5) |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
-| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En curso: servicio y layout compartido verificados; 523 backend verdes; publicación pendiente |
+| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En validación: 08/10/2026; servicio y layout integrados en `develop` y verificados con la suite local completa; falta publicación/CI y OT-51…53 (ver 10.5) |
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
 | OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
 | OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Pendiente |
@@ -1256,6 +1256,31 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   caso reservado se comprueba separado. Primera suite normal: 559 en
   200,128 s, un 401 en la regresión anterior de baja; su clase pasó aislada
   (6 en 3,087 s). Repetición y CI pendientes, sin alterar sus oráculos.
+
+- 08/10/2026, **cierre parcial — rama única `develop`**. Se integraron en una
+  sola rama las tres entregas que estaban fuera de la línea principal:
+  OT-31 (`ec509d2`), OT-50 (`b14785c`) y OT-41A (`ed85794`), más el trabajo de
+  OT-41B que estaba **sin commitear** en el worktree `/tmp/filmai-i18n-ot41b-retoma`
+  (rescatado y commiteado como `7eb7584`). Únicos conflictos: `docs/decisiones.md`,
+  `docs/plan-multiidioma.md`, `graphify-out/` (regenerable) y los imports de
+  `backend/usuarios/serializers.py` (OT-31 vs OT-50; se conservaron ambos
+  lados y se quitó `render_to_string`, que ya no se usaba).
+  `contracts/openapi.yaml` regenerado con `FILMAI_ACTUALIZAR_REFERENCIAS=1`:
+  el docstring de `FronteraErroresMixin` aporta una `description` a los
+  esquemas `CambiarContrasena` y `Preferencias` (valorar si conviene ocultarlo
+  en OT-34/OT-72). Verificación final: **598 tests backend OK**, **73/73
+  Vitest**, `ruff format/check` limpios (124 archivos), Prettier de frontend
+  limpio, `makemigrations --check` sin cambios, y **login real contra la base
+  de desarrollo** (200 + cookies `access`/`refresh`; password inválida → 400
+  con el contrato vigente). Entorno: imagen de frontend reconstruida con
+  `next-intl@4.14.9` y contenedor **recreado** (el volumen anónimo de
+  `node_modules` solo se siembra al crear el contenedor); migraciones
+  `usuarios.0007_usuario_idioma` y `listas.0005_lista_clave` aplicadas en
+  desarrollo. Limpieza: 49→2 ramas locales, 36→2 remotas, 16 worktrees de
+  `/tmp` eliminados, stash de OT-13 descartado y PRs #42/#43/#66/#67 cerrados
+  con explicación. Contexto y SHAs de recuperación: `docs/cierre-parcial-2026-10-08.md`.
+  Corrida previa de 598 con un `401 != 200` intermitente (misma incidencia ya
+  documentada en OT-41A/OT-41B); su repetición salió en verde sin tocar tests.
 
 ### 10.6 Instrucción para iniciar una sesión
 

@@ -1086,6 +1086,8 @@ components:
   schemas:
     CambiarContrasena:
       type: object
+      description: Adjunta metadata después de que Serializer.is_valid reconstruye
+        errores.
       properties:
         old_password:
           type: string
@@ -1235,6 +1237,8 @@ components:
           - $ref: '#/components/schemas/NullEnum'
     Preferencias:
       type: object
+      description: Adjunta metadata después de que Serializer.is_valid reconstruye
+        errores.
       properties:
         tema:
           $ref: '#/components/schemas/TemaEnum'

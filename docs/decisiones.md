@@ -3128,3 +3128,51 @@ sus dos cabezas publicadas antes de integrarse.
   consistentes aprobados.
 - **Archivos**: identidad/serializer de listas, exportador y tests, catálogo
   de errores, escenario F0, CSVs i18n, contrato generado, specs y este registro.
+
+---
+
+## 08/10/2026 — Cierre parcial: entorno real, rama única `develop` y limpieza
+
+- **Fecha**: 08/10/2026
+- **Descripción**: cierre parcial para dejar el proyecto en un punto de
+  continuación claro. El entorno local se reparó y verificó: la imagen del
+  frontend se reconstruyó para instalar `next-intl@4.14.9` y el contenedor se
+  **recreó** (el volumen anónimo de `node_modules` se siembra desde la imagen
+  solo al crearlo, por eso el contenedor viejo arrancaba sin la dependencia y
+  entraba en bucle de reinicio), y en la base de desarrollo se aplicaron las
+  migraciones `usuarios.0007_usuario_idioma` y `listas.0005_lista_clave`.
+  Con eso se cerró la duda que quedaba abierta: **login real probado contra la
+  BD de desarrollo** (POST `/api/auth/login/` → 200 con cookies `access`,
+  `refresh` y `sessionid`; `GET /api/auth/user/` → 200; password inválida →
+  400 con el contrato de errores vigente), además de `Usuario.idioma` y
+  `Lista.clave` legibles en esa base.
+- **Integración**: todo el trabajo pasa a una sola rama, **`develop`**. Se
+  integraron las entregas que estaban fuera de la línea principal: OT-31
+  (frontera de errores, `ec509d2`), OT-50 (servicio y layout de correos,
+  `b14785c`) y OT-41A (identidad por clave, `ed85794`); y se rescató el
+  trabajo de **OT-41B que estaba sin commitear** en el worktree
+  `/tmp/filmai-i18n-ot41b-retoma` (`7eb7584`: `list_name_reserved`,
+  `contracts/enums.json`, comando `exportar_enums`, tests y este tipo de
+  registro). Los conflictos fueron solo de documentación y `graphify-out/`,
+  más los imports de `backend/usuarios/serializers.py` (OT-31 vs OT-50,
+  conservando ambos lados). `contracts/openapi.yaml` se regeneró con
+  `FILMAI_ACTUALIZAR_REFERENCIAS=1` porque el docstring de
+  `FronteraErroresMixin` llega como `description` a los esquemas
+  `CambiarContrasena` y `Preferencias`.
+- **Limpieza**: de 49 a 2 ramas locales y de 36 a 2 remotas (quedan `develop`
+  y `main`); 16 worktrees de `/tmp` eliminados; stash de OT-13 descartado
+  (verificado que todo su contenido está en `develop`); PRs #42, #43, #66 y
+  #67 cerrados con explicación. Los SHAs de las 47 ramas borradas y el
+  procedimiento de recuperación quedaron en `docs/cierre-parcial-2026-10-08.md`.
+  Antes de borrar se comprobó, archivo por archivo, que el contenido de los
+  worktrees estaba commiteado o supersuperado por versiones aprobadas.
+- **Pruebas**: suite backend completa **598 OK** (con los mounts de
+  `contracts/` y `docs/` que esos tests resuelven vía `BASE_DIR.parent`; la
+  corrida previa tuvo un `401 != 200` intermitente ya documentado en
+  OT-41A/OT-41B, y la repetición salió en verde sin tocar tests),
+  Vitest **73/73**, `ruff format`/`ruff check` limpios, Prettier de frontend
+  limpio y `makemigrations --check` sin migraciones pendientes.
+- **Archivos afectados**: `contracts/openapi.yaml` (regenerado),
+  `docs/plan-multiidioma.md` (estados y traspaso), `docs/decisiones.md`
+  (este registro), `docs/cierre-parcial-2026-10-08.md` (nuevo) y
+  `graphify-out/` (regenerado).
