@@ -35,4 +35,4 @@ def validar_avatar_id(avatar_id):
     from django.core.exceptions import ValidationError
 
     if not es_avatar_valido(avatar_id):
-        raise ValidationError("Elegí un avatar disponible.")
+        raise ValidationError("Elegí un avatar disponible.", code="avatar_invalid")

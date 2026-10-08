@@ -158,7 +158,7 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
         }
 
 
-class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
+class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerializer):
     """Login y registro con Google mediante ``id_token``."""
 
     nombre_usuario = serializers.CharField(max_length=25, required=False)
@@ -167,12 +167,19 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
     )
     genero = serializers.ChoiceField(choices=TipoGenero.choices, required=False)
 
+    def campo_error(self, codigo, ruta, campo):
+        if codigo == "required" and ruta[0] == "non_field_errors":
+            return "id_token"
+        return super().campo_error(codigo, ruta, campo)
+
     def validate_nombre_usuario(self, value):
         if not USERNAME_REGEX.fullmatch(value):
-            raise serializers.ValidationError("Alfanumérico, 5-25 caracteres.")
+            raise serializers.ValidationError(
+                "Alfanumérico, 5-25 caracteres.", code="username_invalid"
+            )
         if Usuario.objects.filter(nombre_usuario__iexact=value).exists():
             raise serializers.ValidationError(
-                "El nombre de usuario ya está registrado."
+                "El nombre de usuario ya está registrado.", code="username_already_used"
             )
         return value
 
@@ -180,11 +187,14 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
         hoy = date.today()
         if value > hoy:
             raise serializers.ValidationError(
-                "La fecha de nacimiento no puede ser futura."
+                "La fecha de nacimiento no puede ser futura.",
+                code="birth_date_in_future",
             )
         edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
-        if edad < 13:
-            raise serializers.ValidationError("Debés tener al menos 13 años.")
+        if edad < MINIMUM_AGE:
+            raise serializers.ValidationError(
+                "Debés tener al menos 13 años.", code="minimum_age"
+            )
         return value
 
     def validate(self, attrs):
@@ -196,7 +206,9 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
 
         id_token = attrs.get("id_token")
         if not id_token:
-            raise serializers.ValidationError("Se requiere el id_token de Google.")
+            raise serializers.ValidationError(
+                "Se requiere el id_token de Google.", code="required"
+            )
 
         adapter = adapter_class(request)
         app = adapter.get_provider().app
@@ -221,7 +233,7 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 "Google login: error al verificar el id_token (%s)", type(err).__name__
             )
             raise serializers.ValidationError(
-                "No se pudo autenticar con Google."
+                "No se pudo autenticar con Google.", code="google_authentication_failed"
             ) from err
 
         # allauth todavía no resolvió `is_existing`; consultamos el vínculo directo.
@@ -244,7 +256,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 raise serializers.ValidationError(
                     dict.fromkeys(
                         faltantes, "Este campo es obligatorio para completar tu cuenta."
-                    )
+                    ),
+                    code="required",
                 )
 
             # Evita que allauth persista una cuenta con correo duplicado.
@@ -256,7 +269,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 if correo and Usuario.objects.filter(correo__iexact=correo).exists():
                     raise serializers.ValidationError(
                         "Ya existe una cuenta registrada con este correo."
-                        " Iniciá sesión con tu contraseña."
+                        " Iniciá sesión con tu contraseña.",
+                        code="email_already_used",
                     )
 
         try:
@@ -272,10 +286,12 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 type(err).__name__,
             )
             raise serializers.ValidationError(
-                "No se pudo autenticar con Google."
+                "No se pudo autenticar con Google.", code="google_authentication_failed"
             ) from err
         if isinstance(ret, HttpResponseBadRequest):
-            raise serializers.ValidationError(ret.content)
+            raise serializers.ValidationError(
+                ret.content, code="google_authentication_failed"
+            )
 
         if not login.is_existing:
             login.lookup()
@@ -284,7 +300,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                     login.save(request, connect=True)
             except IntegrityError as err:
                 raise serializers.ValidationError(
-                    "El correo o nombre de usuario ya está registrado."
+                    "El correo o nombre de usuario ya está registrado.",
+                    code="email_or_username_already_used",
                 ) from err
             self.post_signup(login, attrs)
 
@@ -489,9 +506,12 @@ class UsuarioPerfilSerializer(FronteraUsuarioMixin, serializers.ModelSerializer)
         hoy = date.today()
         if value > hoy:
             raise serializers.ValidationError(
-                "La fecha de nacimiento no puede ser futura."
+                "La fecha de nacimiento no puede ser futura.",
+                code="birth_date_in_future",
             )
         edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
-        if edad < 13:
-            raise serializers.ValidationError("Debés tener al menos 13 años.")
+        if edad < MINIMUM_AGE:
+            raise serializers.ValidationError(
+                "Debés tener al menos 13 años.", code="minimum_age"
+            )
         return value
