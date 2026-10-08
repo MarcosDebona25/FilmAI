@@ -2724,3 +2724,21 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   todavía no modifica validadores de dominio ni el manejador de producción.
 - **Archivos afectados**: `backend/filmai/errores/{catalogo,validacion}.py`,
   `backend/filmai/test_metadatos_errores.py` y `openspec/specs/error-contract/spec.md`.
+
+---
+
+## 08/10/2026 — Composición y compatibilidad del sobre de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: una función independiente del transporte construye el sobre
+  registrado y otra lo agrega sin reemplazar campos heredados. Cada hoja de
+  validación conserva su orden, campo y parámetros; los índices de mensajes
+  no forman parte del campo, mientras los elementos de serializers anidados
+  usan rutas como `items.0.nombre`. Las listas generales conservan su contenido
+  bajo `non_field_errors`. Se validan estados, formas y colisiones reservadas;
+  `debug` solo se agrega al habilitarlo explícitamente. El portador de metadatos
+  debe construirse después de la última conversión de DRF: no se promete que
+  sobreviva a `validate` o `validate_<field>`. La adopción de esa frontera en
+  módulos reales corresponde a OT-31 y OT-32.
+- **Archivos afectados**: `backend/filmai/errores/sobre.py`,
+  `backend/filmai/test_sobre_errores.py` y `openspec/specs/error-contract/spec.md`.

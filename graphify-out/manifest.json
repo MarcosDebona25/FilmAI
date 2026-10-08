@@ -666,9 +666,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791423932.603996,
-    "seen": 1791423977.6712792,
-    "ast_hash": "f55a82d99b742c8545e52c935f5de3b4",
+    "mtime": 1791423986.6963742,
+    "seen": 1791424028.0206404,
+    "ast_hash": "4954ae84bd1fcc23e8d33b3ff0d19b18",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -2436,9 +2436,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/error-contract/spec.md": {
-    "mtime": 1791423932.6551929,
-    "seen": 1791423977.6728892,
-    "ast_hash": "df39576c7d2951db5e02feac51262b9e",
+    "mtime": 1791423986.7306085,
+    "seen": 1791424028.021658,
+    "ast_hash": "6188c61b8cb460b63a650a5d6375714a",
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
@@ -2529,6 +2529,18 @@
     "mtime": 1791423932.603996,
     "seen": 1791423977.654424,
     "ast_hash": "8ec5cb11f682b2b614e81355842ad98d",
+    "semantic_hash": ""
+  },
+  "backend/filmai/errores/sobre.py": {
+    "mtime": 1791423986.6963742,
+    "seen": 1791424028.0019588,
+    "ast_hash": "c0fd58a463ada55be2cc7fdcbe4c4350",
+    "semantic_hash": ""
+  },
+  "backend/filmai/test_sobre_errores.py": {
+    "mtime": 1791423986.6963742,
+    "seen": 1791424028.002443,
+    "ast_hash": "236094b0fbd10c066e458c4a77235db3",
     "semantic_hash": ""
   }
 }
