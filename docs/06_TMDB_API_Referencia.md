@@ -366,11 +366,14 @@
    tendencias y novedades (mantenimiento/seed del corpus), nunca reemplaza al
    discovery en vivo ni pisa datos locales.
 
-## Idioma explícito del cliente (OT-60, primera entrega)
+## Idioma explícito del cliente y las vistas (OT-60)
 
 El cliente y su caché admiten `en-US` y `es-MX`. Listados, búsqueda, detalles
 y géneros envían `language`, incluido en los parámetros que forman la clave
 Redis. Los TTL no cambian. Keywords, créditos y cambios conservan el contrato
 global. La fábrica sin argumentos devuelve el cliente inglés compartido por
-materialización; cada cliente mantiene un idioma fijo. La conexión con el
-idioma del request se entrega en la segunda unidad de OT-60.
+materialización; cada cliente mantiene un idioma fijo. Las seis vistas públicas
+localizables seleccionan ese cliente por el encabezado Accept-Language, con
+pesos y regiones, o inglés por defecto. Su autenticación permanece vacía;
+keywords conserva el servicio global. La evidencia contra TMDB está en
+`docs/i18n/tmdb-verificacion-ot60.md`.

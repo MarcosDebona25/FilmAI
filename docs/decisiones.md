@@ -2879,3 +2879,32 @@ cambiaron las URLs o los oráculos de pruebas para adaptar el entorno.
 - **Archivos afectados**: settings, cliente, caché, fábrica de servicios,
   tests de catálogo, doc 06, specs `tmdb-client`/`tmdb-cache` y plan. Las vistas
   y la verificación real se registrarán en la segunda entrega de OT-60.
+
+---
+
+## 08/10/2026 — Idioma de vistas públicas y evidencia TMDB (OT-60)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: las seis vistas localizables seleccionan el servicio a
+  partir del idioma efectivo del request. Su autenticación continúa vacía: el
+  encabezado con pesos/regiones o EN decide. Keywords permanece global y la
+  materialización conserva su llamada canónica. La evidencia real confirma
+  ambas variantes, igualdad de la muestra inglesa, géneros de series e
+  imágenes. Una traducción ausente puede devolver un título original no
+  vacío; OT-61 conservará campos presentes y completará solo vacíos.
+- **Tests**: tres pruebas nuevas cubren las seis rutas y encabezados/default,
+  aciertos Redis separados desde HTTP, llamada de materialización y keywords
+  globales. Los 29 tests enfocados pasan en 21,276 s; no se cambiaron tests
+  anteriores en esta segunda unidad. La suite completa de ambas unidades
+  pasó 528 tests en 189,141 s. Ruff/Prettier limpios; el árbol frontend
+  `88f94c0` coincide con el validado en OT-13 (43 unitarios/24 e2e/build).
+  La publicación y el cierre esperan CI de las cabezas sobre integración.
+- **Archivos afectados**: vistas, `services/idioma_tmdb.py`, tests nuevos,
+  evidencia `docs/i18n/tmdb-verificacion-ot60.md`, spec de endpoints y plan.
+
+Validación final tras rebase sobre OT-70: 554 tests backend en 269,277 s,
+Ruff (108 archivos) y Prettier limpios. El árbol frontend coincide con
+`267f94944eecbb1347b5ff60bce1b2da3241073b`; el CI nuevo de OT-70 comprobó
+73 unitarios, 30 e2e y build. La evidencia anterior 528/43/24 corresponde
+a la base previa y queda conservada como historial. OT-60 requiere CI de
+sus dos cabezas publicadas antes de integrarse.

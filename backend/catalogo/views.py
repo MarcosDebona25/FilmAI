@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import materializar
 from catalogo.services.tmdb import get_catalog_service
 
@@ -71,13 +72,16 @@ class CatalogoBaseView(APIView):
     throttle_classes: ClassVar = [ScopedRateThrottle]
     throttle_scope = "catalogo"
 
+    def _service(self, request):
+        return get_catalog_service(idioma_tmdb(request))
+
     def _page(self, request):
         return _int_param(request.query_params.get("page"), "page", default=1)
 
 
 class TrendingView(CatalogoBaseView):
     def get(self, request):
-        service = get_catalog_service()
+        service = self._service(request)
         data = service.get_trending(
             request.query_params.get("media_type", "all"),
             request.query_params.get("time_window", "week"),
@@ -88,7 +92,7 @@ class TrendingView(CatalogoBaseView):
 
 class NowPlayingView(CatalogoBaseView):
     def get(self, request):
-        data = get_catalog_service().get_now_playing(self._page(request))
+        data = self._service(request).get_now_playing(self._page(request))
         return Response(data)
 
 
@@ -100,7 +104,7 @@ class DiscoverView(CatalogoBaseView):
         min_rating = _float_param(
             request.query_params.get("min_rating"), "min_rating", default=None
         )
-        data = get_catalog_service().discover(
+        data = self._service(request).discover(
             tipo, genero, anio, min_rating, self._page(request)
         )
         return Response(data)
@@ -112,14 +116,14 @@ class SearchView(CatalogoBaseView):
         if not query:
             raise ValidationError({"query": "This parameter is required."})
         tipo = _validate_tipo(request.query_params.get("tipo"))
-        data = get_catalog_service().search(query, tipo, self._page(request))
+        data = self._service(request).search(query, tipo, self._page(request))
         return Response(data)
 
 
 class MovieDetailView(CatalogoBaseView):
     def get(self, request, id_tmdb):
         id_tmdb = _int_param(id_tmdb, "id_tmdb")
-        data = get_catalog_service().get_movie_detail(id_tmdb)
+        data = self._service(request).get_movie_detail(id_tmdb)
         _materializar_sin_interrumpir(id_tmdb, "movie")
         return Response(data)
 
@@ -127,7 +131,7 @@ class MovieDetailView(CatalogoBaseView):
 class TVDetailView(CatalogoBaseView):
     def get(self, request, id_tmdb):
         id_tmdb = _int_param(id_tmdb, "id_tmdb")
-        data = get_catalog_service().get_tv_detail(id_tmdb)
+        data = self._service(request).get_tv_detail(id_tmdb)
         _materializar_sin_interrumpir(id_tmdb, "tv")
         return Response(data)
 

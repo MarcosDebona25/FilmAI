@@ -137,3 +137,19 @@ This MUST NOT alter the response contract defined above: the body stays the raw 
 - GIVEN materialization raises
 - WHEN the detail endpoint handles the request
 - THEN the client still receives 200 with the unchanged TMDB body
+
+### Requirement: Idioma en vistas públicas (OT-60)
+
+Tendencias, estrenos, descubrimiento, búsqueda y detalles MUST resolver
+`Accept-Language` con el núcleo de idioma y seleccionar `en-US`/`es-MX`.
+Estas vistas públicas mantienen autenticación deshabilitada y por tanto usan
+encabezado/default, sin consultar una cuenta. Keywords MUST conservar su
+contrato global. La materialización MUST seguir usando el servicio canónico
+inglés. El fallback de campos vacíos se entrega en OT-61.
+
+#### Scenario: Caché separada desde HTTP
+
+- GIVEN la misma URL de detalle consultada en EN y ES
+- WHEN cada consulta se repite
+- THEN cada respuesta respeta su idioma y reutiliza su propia entrada Redis
+- AND la materialización recibe solamente identificador y tipo
