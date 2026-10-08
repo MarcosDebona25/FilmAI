@@ -142,3 +142,18 @@ models. Tests MUST use `httpx.MockTransport` (no real network calls).
 - GIVEN a mocked TMDB response body
 - WHEN any method is called
 - THEN the parsed JSON body is returned unchanged
+
+### Requirement: Idioma fijo del cliente (OT-60, primera entrega)
+
+El cliente MUST aceptar `en-US` por defecto o `es-MX`. Tendencias, estrenos,
+descubrimiento, búsqueda, detalle de película/serie y géneros MUST enviar
+`language` explícito. Keywords, créditos y cambios MUST conservar sus
+parámetros globales. Un idioma no soportado MUST fallar antes del HTTP.
+
+#### Scenario: Clientes independientes
+
+- GIVEN clientes EN y ES usados durante el mismo proceso
+- WHEN ambos consultan el mismo título
+- THEN cada solicitud conserva el idioma de su propio cliente
+- AND la fábrica sin argumentos comparte el cliente EN canónico
+- AND el cliente ES no modifica el estado del cliente EN

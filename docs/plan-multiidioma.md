@@ -856,7 +856,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
 | OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
 | OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Pendiente |
-| OT-60 | F6, pasos 1, 2 y 3 | Idioma como parámetro del cliente, idioma en vistas públicas, comprobaciones contra la API real | OT-20 | M | Pendiente |
+| OT-60 | F6, pasos 1, 2 y 3 | Idioma como parámetro del cliente, idioma en vistas públicas, comprobaciones contra la API real | OT-20 | M | En curso: cliente y caché localizados verificados; vistas y evidencia real pendientes de entrega |
 | OT-61 | F6, paso 4 | Fallback a inglés en detalle y listados | OT-60 | M | Pendiente |
 | OT-62 | F6, pasos 5 y 6 | `ProduccionTraduccion`, `generos_ids`, materialización y relleno | OT-60 | M | Pendiente |
 | OT-63 | F6, pasos 7, 8 y 9 | Serializadores por idioma, géneros por idioma, sincronización nocturna | OT-61, OT-62 | M | Pendiente |
@@ -1132,6 +1132,14 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
     pasó, sin cambiar `.env`, producción ni tests. No se aplicaron migraciones
     a la base de desarrollo. Publicación y CI de tres PRs quedan pendientes;
     main permanece fuera de alcance.
+
+- 08/10/2026, cierre OT-20: #57 integrado con CI verde de su cabeza final
+  `c4cad5b` mediante merge `51bcb2b`, únicamente en `feat/i18n-multiidioma`.
+- 08/10/2026, OT-60 primera unidad: cliente fijo EN/ES, fábrica independiente
+  y separación de caché verificados con 29 tests (7,159 s). El usuario aprobó
+  añadir solo `language: en-US` a los cuatro fixtures previos de caché; se
+  mantienen sus comprobaciones de hit, almacenamiento y TTL. Las vistas se
+  entregan por separado. OT-60 todavía no está cerrada.
 
 ### 10.6 Instrucción para iniciar una sesión
 
