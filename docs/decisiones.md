@@ -2742,3 +2742,24 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   módulos reales corresponde a OT-31 y OT-32.
 - **Archivos afectados**: `backend/filmai/errores/sobre.py`,
   `backend/filmai/test_sobre_errores.py` y `openspec/specs/error-contract/spec.md`.
+
+---
+
+## 08/10/2026 — Emisión doble del manejador y oráculos F0 de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el manejador agrega códigos, parámetros y hojas al cuerpo
+  heredado de las excepciones DRF reconocidas, conservando HTTP y encabezados.
+  Los métodos y formatos de contenido provienen del request; no se interpretan
+  mensajes. El retorno TMDB y los endpoints con respuestas directas permanecen
+  para OT-31/OT-32; la cobertura obligatoria de códigos se cierra en OT-34.
+  Se aplicó la autorización vigente del usuario para adaptar los tests nuevos
+  de F0: OT-01 compara campos heredados y contenido de listas raíz, mientras
+  OT-02 conserva completa su matriz de estados/credenciales y compara el detalle
+  anterior. Los tests nuevos prueban el sobre por separado, incluido HTTP real.
+  También se conserva el 403 y detalle de `PermissionDenied` de Django, que
+  DRF reconoce aunque carezca de `default_code`; se prueba en ambos modos DEBUG.
+  No se modifican tests anteriores al plan ni archivos de referencia originales.
+- **Archivos afectados**: `backend/filmai/exceptions.py`,
+  `backend/filmai/{tests_contrato,tests_estado_cuenta,test_manejador_sobre}.py` y
+  `openspec/specs/error-contract/spec.md`.
