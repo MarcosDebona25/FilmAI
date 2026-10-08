@@ -26,9 +26,10 @@ class PreferenciasTests(TestCase):
         )
 
     def test_get_defaults_y_put_parcial_conservan_campos_omitidos(self):
-        """Los cinco defaults del modelo se devuelven y cada preferencia es independiente."""
+        """Los defaults se devuelven y cada preferencia es independiente."""
         esperado = {
             "tema": "oscuro",
+            "idioma": None,
             "perfil_publico": True,
             "notif_recomendaciones": True,
             "notif_resenas": True,

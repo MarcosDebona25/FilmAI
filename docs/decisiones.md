@@ -2651,3 +2651,23 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   registro de verificación de OT-42 y catálogo transitorio de OT-70. Las
   autorizaciones se conservan en las notas del plan; esta entrada no afirma
   que dichas órdenes estén implementadas.
+
+---
+
+## 08/10/2026 — Idioma en preferencias y altas (OT-20, segunda entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: preferencias acepta `en`/`es`; rechaza nulo o valores
+  no soportados. Nulo se conserva para lectura de cuentas anteriores y altas
+  fuera del registro. Detalles y perfil exponen el campo solo en lectura.
+  Ambos adaptadores guardan el idioma de la cuenta nueva; el retorno temprano
+  de Google mantiene el idioma de cuentas existentes. `Accept-Language` no
+  necesita configuración CORS adicional porque es un encabezado permitido
+  directamente por el navegador. El esquema distingue lectura nullable y
+  escritura restringida mediante un serializer de respuesta.
+- **Verificación**: once tests de idioma/preferencias aprobados (4,071 s),
+  incluido guardado social real con la frontera OAuth aislada; esquema F0
+  regenerado por la autorización vigente, conservando su prueba de paridad.
+  Solo se amplía la igualdad exacta de preferencias autorizada por F2.
+- **Archivos afectados**: adaptadores, serializers, preferencias, tests de
+  usuarios, `contracts/openapi.yaml`, doc 03, plan y spec `i18n-core`.

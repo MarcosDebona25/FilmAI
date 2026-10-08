@@ -2,7 +2,9 @@
 
 from typing import ClassVar
 
+from django.conf import settings
 from django.db import transaction
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -16,10 +18,15 @@ from .perfil import bloquear_usuario, cerrar_sesion
 
 
 class PreferenciasSerializer(serializers.ModelSerializer):
+    idioma = serializers.ChoiceField(
+        choices=settings.IDIOMAS_SOPORTADOS, required=False, allow_null=False
+    )
+
     class Meta:
         model = Usuario
         fields = (
             "tema",
+            "idioma",
             "perfil_publico",
             "notif_recomendaciones",
             "notif_resenas",
@@ -33,20 +40,30 @@ class PreferenciasSerializer(serializers.ModelSerializer):
         return instance
 
 
+class PreferenciasLecturaSerializer(PreferenciasSerializer):
+    """Las cuentas anteriores pueden leerse con idioma nulo, sin permitir borrarlo."""
+
+    idioma = serializers.ChoiceField(
+        choices=settings.IDIOMAS_SOPORTADOS, allow_null=True, read_only=True
+    )
+
+
 class PreferenciasView(GenericAPIView):
     serializer_class = PreferenciasSerializer
     permission_classes: ClassVar[list] = [permissions.IsAuthenticated]
 
+    @extend_schema(responses=PreferenciasLecturaSerializer)
     def get(self, request):
-        return Response(self.get_serializer(request.user).data)
+        return Response(PreferenciasLecturaSerializer(request.user).data)
 
+    @extend_schema(responses=PreferenciasLecturaSerializer)
     def put(self, request):
         with transaction.atomic():
             usuario = bloquear_usuario(request)
             serializer = self.get_serializer(usuario, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-        return Response(serializer.data)
+        return Response(PreferenciasLecturaSerializer(usuario).data)
 
 
 class DesactivarCuentaView(GenericAPIView):

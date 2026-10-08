@@ -287,6 +287,7 @@ class UsuarioDetallesSerializer(serializers.ModelSerializer):
             "estado",
             "avatar_id",
             "fecha_registro",
+            "idioma",
         )
         read_only_fields = fields
 
@@ -402,6 +403,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
             "avatar_id",
             "estado",
             "fecha_registro",
+            "idioma",
             "tiene_contrasena_local",
         )
         read_only_fields = (
@@ -411,6 +413,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
             "genero",
             "estado",
             "fecha_registro",
+            "idioma",
         )
 
     def get_tiene_contrasena_local(self, usuario):
