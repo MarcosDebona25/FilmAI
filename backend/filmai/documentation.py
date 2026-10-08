@@ -9,7 +9,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.cache import patch_cache_control, patch_vary_headers
 
-from .errores.sobre import conservar_legacy, construir_sobre
+from .errores.sobre import construir_sobre
 
 
 def documentacion_para_staff(vista, recurso):
@@ -42,12 +42,7 @@ def documentacion_para_staff(vista, recurso):
                 "documentation_staff_required", 403, debug=settings.DEBUG
             )
             respuesta = JsonResponse(
-                conservar_legacy(
-                    {
-                        "detail": "Para consultar esta documentación, ingresá al Admin con una cuenta staff."
-                    },
-                    sobre,
-                ),
+                sobre,
                 status=403,
             )
 

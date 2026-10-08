@@ -1,6 +1,8 @@
 # Plan de implementación por fases: multiidioma (inglés y español) en FilmAI
 
-> Alcance de este documento: es un plan, no una implementación. La sesión de planificación solo entrega este archivo en `docs/plan-multiidioma.md`, sin tocar código, dependencias ni migraciones. La implementación se ejecuta con Codex, por órdenes de trabajo (sección 10). El documento es autosuficiente: quien lo ejecute no tiene acceso a la conversación en la que se elaboró.
+> Estado al 08/10/2026: OT-71–83 implementadas y verificadas localmente en `develop`. OT-90 tiene documentación y previsualización de correos; faltan CI remoto y revisión en un cliente real. Ver `docs/siguientes-pasos-multiidioma.md`.
+
+> Alcance original de este documento: es un plan, no una implementación. La sesión de planificación solo entrega este archivo en `docs/plan-multiidioma.md`, sin tocar código, dependencias ni migraciones. La implementación se ejecuta con Codex, por órdenes de trabajo (sección 10). El documento es autosuficiente: quien lo ejecute no tiene acceso a la conversación en la que se elaboró.
 
 Fecha de elaboración: 07/10/2026. Estado del repositorio analizado: rama `main`, commit `a7dabaf`, árbol limpio.
 
@@ -105,7 +107,7 @@ FilmAI tiene el backend completo (salvo el chatbot) y una base de frontend de 9 
 - Lógica que depende de la etiqueta: `backend/listas/services.py:17,27-29,52-57`, `backend/listas/views.py:46-52,271`, `backend/listas/migrations/0004_calificadas_en_vistas.py:25`, `backend/usuarios/management/commands/seed.py:50,299,311-313`, `backend/usuarios/management/commands/reparar_recursos_usuarios.py:32` y el texto de `backend/listas/exceptions.py:43`.
 - La API devuelve `nombre` y `tipo` crudos (`backend/listas/serializers.py:55-62`).
 - Un nombre personalizado se valida contra los nombres del propio usuario, incluidas las predeterminadas (`backend/listas/serializers.py:34-40`); una etiqueta traducida como "Watchlist" no queda reservada.
-- Género: `CharField` con valores `masculino`, `femenino`, `no_especifica` (`backend/usuarios/models.py:20-22,94`). Los valores ya son estables. Hay tres etiquetas distintas para `no_especifica`: "No especificar" (`frontend/app/(public)/register/page.tsx:24-28`), "No especificado" (`frontend/app/perfil/page.tsx:37-46`) y "No especifica" en el backend.
+- Género: `CharField` con valores `masculino`, `femenino`, `no_especifica` (`backend/usuarios/models.py:20-22,96`). Los valores ya son estables. Hay tres etiquetas distintas para `no_especifica`: "No especificar" (`frontend/app/(public)/register/page.tsx:24-28`), "No especificado" (`frontend/app/perfil/page.tsx:37-46`) y "No especifica" en el backend.
 - La API nunca expone etiquetas de `choices`; solo valores.
 
 ### 2.6 Usuario, flujos y baja de cuenta
@@ -738,25 +740,25 @@ La pseudo-localización se considera útil pero opcional: es barata y conviene s
 
 Se puede empezar a implementar las interfaces de Claude Design cuando todo lo siguiente es verificable:
 
-- [ ] Las tres suites están en verde en CI, con `next build` incluido.
-- [ ] `useTranslations` funciona en componentes de servidor y de cliente, y `docs/i18n/guia.md` explica cómo agregar un texto.
-- [ ] `frontend/messages/en` y `frontend/messages/es` contienen las claves de todas las pantallas diseñadas, con plurales y parámetros, sin fragmentos concatenables.
-- [ ] El test de paridad de catálogos pasa y falla al quitar una clave.
-- [ ] El backend responde errores solo con el sobre de códigos y no emite las claves anteriores.
-- [ ] `contracts/error-codes.json` está al día y cada código tiene traducción en ambos idiomas.
-- [ ] `frontend/lib/errors.ts` convierte cualquier `ApiError` en un mensaje localizado, por campo y general.
-- [ ] `frontend/lib/format.ts` cubre fecha corta, fecha larga, decimal, entero con miles y duración, y es el único lugar con locales de Intl.
-- [ ] El selector cambia el idioma con y sin sesión, y la elección persiste en la cuenta y en la cookie.
-- [ ] La semilla crea cuentas en `es` y en `en`, documentadas en el README.
-- [ ] `<html lang>` y los metadatos siguen el idioma activo.
-- [ ] `GET /api/lists/` devuelve `clave` y las etiquetas de listas y género salen de `enums`.
-- [ ] Los endpoints de catálogo devuelven datos en el idioma del request, con inglés como respaldo, e indican los campos en respaldo.
-- [ ] Los cuatro correos existen en ambos idiomas, en texto y HTML, y sus enlaces usan `/confirm-email` y `/reset-password`.
-- [ ] Las rutas visibles están en inglés y definidas en `frontend/lib/routes.ts`.
-- [ ] La regla de lint contra literales está activa y la lista de excepciones contiene solo las pantallas heredadas.
-- [ ] El recorrido e2e pasa en `en` y en `es`.
-- [ ] `docs/decisiones.md`, doc 03, doc 04 y las specs reflejan el estado real.
-- [ ] `idioma_efectivo` está documentado como punto de extensión para el chatbot.
+- [ ] Las tres suites están en verde en CI, con `next build` incluido. Las verificaciones locales pasan; falta la ejecución remota en `develop`.
+- [x] `useTranslations` funciona en componentes de servidor y de cliente, y `docs/i18n/guia.md` explica cómo agregar un texto.
+- [x] `frontend/messages/en` y `frontend/messages/es` contienen las claves de las pantallas diseñadas dentro del alcance aprobado (excluye chatbot, muestras y diseño), con plurales y parámetros, sin fragmentos concatenables.
+- [x] El test de paridad de catálogos pasa y falla al quitar una clave.
+- [x] El backend responde errores solo con el sobre de códigos y no emite las claves anteriores.
+- [x] `contracts/error-codes.json` está al día y cada código tiene traducción en ambos idiomas.
+- [x] `frontend/lib/errors.ts` convierte cualquier `ApiError` en un mensaje localizado, por campo y general.
+- [x] `frontend/lib/format.ts` cubre fecha corta, fecha larga, decimal, entero con miles y duración, y es el único lugar con locales de Intl.
+- [x] El selector cambia el idioma con y sin sesión, y la elección persiste en la cuenta y en la cookie.
+- [x] La semilla crea cuentas en `es` y en `en`, documentadas en el README.
+- [x] `<html lang>` y los metadatos siguen el idioma activo.
+- [x] `GET /api/lists/` devuelve `clave` y las etiquetas de listas y género salen de `enums`.
+- [x] Los endpoints de catálogo devuelven datos en el idioma del request, con inglés como respaldo, e indican los campos en respaldo.
+- [x] Los cuatro correos existen en ambos idiomas, en texto y HTML, y sus enlaces usan `/confirm-email` y `/reset-password`.
+- [x] Las rutas visibles están en inglés y definidas en `frontend/lib/routes.ts`.
+- [x] La regla de lint contra literales está activa y la lista de excepciones contiene solo las pantallas heredadas.
+- [x] El recorrido e2e pasa en `en` y en `es`.
+- [x] `docs/decisiones.md`, doc 03, doc 04 y las specs reflejan el estado real.
+- [x] `idioma_efectivo` está documentado como punto de extensión para el chatbot.
 
 ---
 
@@ -861,18 +863,18 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-62 | F6, pasos 5 y 6 | `ProduccionTraduccion`, `generos_ids`, materialización y relleno | OT-60 | M | Completada: 08/10/2026 en `develop`; suite backend completa OK; verificada contra la API real; falta CI |
 | OT-63 | F6, pasos 7, 8 y 9 | Serializadores por idioma, géneros por idioma, sincronización nocturna | OT-61, OT-62 | M | Completada: 08/10/2026 en `develop`; suite backend completa OK; verificada contra la API real; falta CI |
 | OT-70 | F7, pasos 1 a 4 | next-intl configurado, sin cambio visible | F1 | M | Completada: 08/10/2026; PRs #63/#64/#65 integrados solo en integración con CI 3/3 verde; 546 backend, 73 unitarios y 30 e2e; merge final 600aaee (ver 10.5) |
-| OT-71 | F7, paso 5 | `lib/format.ts` y reemplazo de los usos de `es-AR` | OT-70 | S | Pendiente |
-| OT-72 | F7, pasos 6, 7 y 10 | `Accept-Language`, `ApiError` con códigos, `lib/errors.ts`, API simulada de e2e | OT-70, OT-34 | M | Pendiente |
-| OT-73 | F7, pasos 8 y 9 | Validaciones por código y etiquetas desde `enums` | OT-72 | S | Pendiente |
-| OT-74 | F7, pasos 11, 12 y 13 | Selector, sincronización entre cookie y cuenta, locale del botón de Google | OT-70, OT-20 | M | Pendiente |
-| OT-75 | F7, paso 14 | Rutas en inglés en frontend, backend y tests, en un solo PR | OT-70 | M | Pendiente |
-| OT-76 | F7, paso 15 | Tres pantallas piloto migradas | OT-73, OT-74, OT-75 | M | Pendiente |
-| OT-77 | F7, paso 16 | Catálogos completos sembrados desde `claves.csv` | OT-70, OT-12, OT-13 | M | Pendiente |
-| OT-80 | F8, pasos 1, 2, 3 y 6 | Paridad, reglas de lint, script de residuos | OT-77, OT-34, OT-41 | M | Pendiente |
-| OT-81 | F8, pasos 4 y 5 | Selectores independientes del idioma en las pantallas piloto y recorrido e2e en ambos idiomas | OT-76, OT-52 | M | Pendiente |
-| OT-82 | F8, paso 7, primera parte | Tests del backend afirmando por código, con ambas formas emitidas | OT-72 | M | Pendiente |
-| OT-83 | F8, paso 7, segunda parte | Formato anterior de errores eliminado | OT-82 | S | Pendiente |
-| OT-90 | F9, todos | Documentación alineada, guía de uso y lista de la sección 8 completa | Todas | M | Pendiente |
+| OT-71 | F7, paso 5 | `lib/format.ts` y reemplazo de los usos de `es-AR` | OT-70 | S | Implementada y verificada local |
+| OT-72 | F7, pasos 6, 7 y 10 | `Accept-Language`, `ApiError` con códigos, `lib/errors.ts`, API simulada de e2e | OT-70, OT-34 | M | Implementada y verificada local |
+| OT-73 | F7, pasos 8 y 9 | Validaciones por código y etiquetas desde `enums` | OT-72 | S | Implementada y verificada local |
+| OT-74 | F7, pasos 11, 12 y 13 | Selector, sincronización entre cookie y cuenta, locale del botón de Google | OT-70, OT-20 | M | Implementada y verificada local |
+| OT-75 | F7, paso 14 | Rutas en inglés en frontend, backend y tests, en un solo PR | OT-70 | M | Implementada y verificada local |
+| OT-76 | F7, paso 15 | Tres pantallas piloto migradas | OT-73, OT-74, OT-75 | M | Implementada y verificada local |
+| OT-77 | F7, paso 16 | Catálogos completos sembrados desde `claves.csv` | OT-70, OT-12, OT-13 | M | Implementada y verificada local |
+| OT-80 | F8, pasos 1, 2, 3 y 6 | Paridad, reglas de lint, script de residuos | OT-77, OT-34, OT-41 | M | Implementada y verificada local |
+| OT-81 | F8, pasos 4 y 5 | Selectores independientes del idioma en las pantallas piloto y recorrido e2e en ambos idiomas | OT-76, OT-52 | M | Implementada y verificada local |
+| OT-82 | F8, paso 7, primera parte | Tests del backend afirmando por código, con ambas formas emitidas | OT-72 | M | Implementada y verificada local |
+| OT-83 | F8, paso 7, segunda parte | Formato anterior de errores eliminado | OT-82 | S | Implementada y verificada local |
+| OT-90 | F9, todos | Documentación alineada, guía de uso y lista de la sección 8 completa | Todas | M | Documentada; aceptación externa pendiente |
 
 ### 10.5 Notas de traspaso
 
@@ -1059,7 +1061,7 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 - 08/10/2026, OT-20 verificada: repetición normal completa **520 tests**
   en 190,527 s, resultado OK. Ruff y formato/frontend limpios. Se conserva el
   fallo intermitente anterior sin atribuir una causa ni cambiar tests previos.
-  Frontend exacto `88f94c0`: evidencia vigente de OT-13 43 unitarios/24 e2e/build;
+  Frontend exacto `88f96c0`: evidencia vigente de OT-13 43 unitarios/24 e2e/build;
   no se presenta como corrida nueva. Semilla PR #57 hacia integración; solo
   se integra con CI verde de su cabeza final. Núcleo/API #55/#56 ya integrados.
 
@@ -1122,7 +1124,7 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
     10,93 s**, build, TypeScript, ESLint, Prettier y Ruff aprobados.
   - Los **30 e2e en 41,0 s** verificados previamente en `28b7862` siguen
     siendo evidencia vigente, no una ejecución nueva: el árbol frontend
-    `267f94944eecbb1347b5ff60bce1b2da3241073b` coincide exactamente tras el
+    `267f96964eecbb1347b5ff60bce1b2da3241073b` coincide exactamente tras el
     rebase. Ahora el puerto 3100 pertenece a otra aplicación y no se detuvo;
     el intento aislado no pudo iniciar SWC sin su caché/red. El CI de las
     cabezas publicadas debe repetir la suite completa antes de integrar.
@@ -1147,7 +1149,7 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   `docs/i18n/tmdb-verificacion-ot60.md`; variantes, muestra inglesa, géneros
   TV, falta de traducción e imágenes comprobados. Pendiente integrar ambas
   unidades con CI verde. Suite completa local: 528 tests en 189,141 s, OK;
-  Ruff y Prettier limpios. Frontend exacto `88f94c0` conserva la evidencia
+  Ruff y Prettier limpios. Frontend exacto `88f96c0` conserva la evidencia
   vigente 43/24/build de OT-13; no se presenta como nueva ejecución.
 
 - 08/10/2026, cierre de OT-70: PRs #63/#64/#65 integrados únicamente en
@@ -1157,7 +1159,7 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 
 - 08/10/2026, OT-60 tras rebase sobre OT-70: 554 backend en 269,277 s,
   Ruff (108 archivos) y Prettier aprobados. Frontend conserva el árbol
-  `267f94944eecbb1347b5ff60bce1b2da3241073b`, con evidencia nueva de CI
+  `267f96964eecbb1347b5ff60bce1b2da3241073b`, con evidencia nueva de CI
   OT-70: 73 unitarios, 30 e2e y build; no se presenta como otra ejecución
   local. Se preservó el respaldo anterior antes del rebase y se regeneró
   el grafo en ambas unidades. Pendiente CI e integración de OT-60.
@@ -1187,8 +1189,8 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 
 - 08/10/2026, pausa de entregas OT-31 por instrucción del usuario: trabajo
   local en `/tmp/filmai-i18n-ot31-retoma`, rama `feat/i18n-ot31-frontera`,
-  desde integración 10fe49f. Unidades anteriores: e194fee (351 líneas authored),
-  54b6d94 (205), 7adee17 (261), 76b7911 (244); la última unidad Google cierra
+  desde integración 10fe49f. Unidades anteriores: e196fee (351 líneas authored),
+  54b6d96 (205), 7adee17 (261), 76b7911 (244); la última unidad Google cierra
   sobre esas cuatro. Cada commit incluye código/tests, decisión/spec y grafo.
   No hay push, PR ni merge de OT-31; main permanece fuera del trabajo.
   Pendientes para completar OT-31: sobre en documentación JSON, handlers
@@ -1229,7 +1231,7 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   las cuatro referencias F0 intactas y la caída de correo posterior al commit.
   Tres correos comparten HTML; notificación conserva solo texto hasta OT-51.
   Suite completa de las cuatro unidades: 523 tests verdes (189,454 s); Ruff y
-  Prettier limpios. Frontend exacto `88f94c0` conserva 43/24/build de OT-13,
+  Prettier limpios. Frontend exacto `88f96c0` conserva 43/24/build de OT-13,
   sin presentarlos como nueva ejecución. Publicación pendiente después OT-60.
 - 08/10/2026, cierre de OT-40: PR #62 integrado en `feat/i18n-multiidioma`
   mediante merge `65b7e7b`, cabeza exacta `6dee3b5` con los tres jobs CI verdes.
@@ -1259,7 +1261,7 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 
 - 08/10/2026, **cierre parcial — rama única `develop`**. Se integraron en una
   sola rama las tres entregas que estaban fuera de la línea principal:
-  OT-31 (`ec509d2`), OT-50 (`b14785c`) y OT-41A (`ed85794`), más el trabajo de
+  OT-31 (`ec509d2`), OT-50 (`b14785c`) y OT-41A (`ed85796`), más el trabajo de
   OT-41B que estaba **sin commitear** en el worktree `/tmp/filmai-i18n-ot41b-retoma`
   (rescatado y commiteado como `7eb7584`). Únicos conflictos: `docs/decisiones.md`,
   `docs/plan-multiidioma.md`, `graphify-out/` (regenerable) y los imports de
@@ -1321,3 +1323,12 @@ Entrega: resumen de lo hecho, resultado de las suites y lista de dudas o desvío
 - Comprobar que cada cita de archivo y línea sigue vigente al iniciar cada fase; el repositorio puede haber avanzado desde `a7dabaf`.
 - Al cerrar cada fase: suites completas, lint y formato en ambos proyectos, entrada en `docs/decisiones.md`, `graphify update .`.
 - Al cerrar F9: recorrer la lista de la sección 8 punto por punto.
+
+
+### 08/10/2026 — implementación OT-71–90 en develop
+
+Se completan las capas compartidas y los tres pilotos bilingües; el resto mantiene la lista de excepciones. Las rutas de frontend y correos se migran juntas. Los tests por código precedieron a la eliminación del formato anterior; el ejecutor ahora rechaza claves extra. Se corrigió además la ausencia de `campos_en_ingles` en listas y mis reseñas, con prueba por campo y comprobación de consultas SQL.
+
+El usuario confirmó que el idioma de una página abierta desde un correo respeta la cookie y el navegador del dispositivo, sin forzar el idioma del correo. OT-90 deja guía, specs y ocho EML/HTML para revisión. El CI remoto y la revisión en un cliente real siguen pendientes, sin confundirlos con las verificaciones locales.
+
+Pair programming del 09/10/2026: idioma de una respuesta SSE en curso, cambio durante una solicitud y localización de tarjetas/errores. Se conserva la arquitectura del chatbot acordada el 08/10 (idioma efectivo, voseo, tools localizadas, BGE-M3 y corpus inglés); no se implementa B-02–B-06.

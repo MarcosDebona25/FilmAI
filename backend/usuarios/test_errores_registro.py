@@ -41,7 +41,7 @@ class ErroresRegistroTests(TestCase):
     def test_duplicados_mantienen_campos_y_http_de_registro(self):
         """A diferencia del perfil, el duplicado detectado en registro sigue siendo 400."""
         usuario = UsuarioFactory()
-        for campo, valor, codigo, mensaje in (
+        for campo, valor, codigo, _mensaje in (
             (
                 "correo",
                 usuario.correo,
@@ -58,7 +58,7 @@ class ErroresRegistroTests(TestCase):
             with self.subTest(campo=campo):
                 response = self.registrar({campo: valor})
                 self.assertEqual(response.status_code, 400)
-                self.assertEqual(response.data[campo], [mensaje])
+                self.assertEqual(response.data["code"], "validation_error")
                 self.assertEqual(
                     response.data["errors"],
                     [{"field": campo, "code": codigo, "params": {}}],
@@ -94,15 +94,15 @@ class ErroresRegistroTests(TestCase):
                     response.data["errors"],
                     [{"field": campo, "code": codigo, "params": parametros}],
                 )
-                self.assertIn(campo, response.data)
+                self.assertIn(
+                    campo, {entry["field"] for entry in response.data["errors"]}
+                )
 
     def test_mismatch_heredado_conserva_traduccion_y_non_field_errors(self):
         """El código se asigna por la condición, sin interpretar texto traducido."""
         response = self.registrar({"password2": "OtraClave456!"})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["non_field_errors"], ["Las contraseñas no coinciden"]
-        )
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(
             response.data["errors"],
             [{"field": None, "code": "passwords_do_not_match", "params": {}}],
@@ -139,9 +139,7 @@ class ErroresRegistroTests(TestCase):
         with patch.object(UsuarioAccountAdapter, "clean_password", validar):
             response = self.registrar({})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["non_field_errors"], ["Rechazo posterior de contraseña."]
-        )
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(
             response.data["errors"],
             [

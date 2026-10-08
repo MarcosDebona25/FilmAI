@@ -1,6 +1,8 @@
 {
   "status": 502,
   "body": {
-    "detail": "TMDB request exhausted retry budget"
+    "code": "upstream_error",
+    "params": {},
+    "errors": []
   }
 }

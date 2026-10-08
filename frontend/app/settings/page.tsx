@@ -1,5 +1,9 @@
 "use client";
 
+import { LoaderCircle } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslations } from "next-intl";
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -7,33 +11,36 @@ import { toast } from "sonner";
 import { useAccount, type Preferencias } from "@/components/AccountProvider";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
-import { ADVERTENCIA_BAJA } from "@/lib/profile-draft";
+
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 
-const INTERRUPTORES: { campo: keyof Preferencias; titulo: string; descripcion: string }[] = [
-  {
-    campo: "perfil_publico",
-    titulo: "Perfil público",
-    descripcion: "Preferencia de visibilidad para futuras vistas públicas.",
-  },
-  {
-    campo: "notif_recomendaciones",
-    titulo: "Recomendaciones semanales",
-    descripcion: "Preferencia para futuros correos de sugerencias.",
-  },
-  {
-    campo: "notif_resenas",
-    titulo: "Reseñas en tus listas",
-    descripcion: "Preferencia para futuros avisos sobre reseñas.",
-  },
-  {
-    campo: "notif_novedades",
-    titulo: "Novedades de FilmAI",
-    descripcion: "Preferencia para futuros correos de novedades.",
-  },
-];
-
 export default function PreferenciasPage() {
+  const theme = useTranslations("enums.theme");
+  const t = useTranslations("legacy.settings");
+  const language = useTranslations("settings.language");
+  const INTERRUPTORES: { campo: keyof Preferencias; titulo: string; descripcion: string }[] = [
+    {
+      campo: "perfil_publico",
+      titulo: t("publicProfile"),
+      descripcion: t("publicProfileHelp"),
+    },
+    {
+      campo: "notif_recomendaciones",
+      titulo: t("weeklyLabel"),
+      descripcion: t("weeklyHelp"),
+    },
+    {
+      campo: "notif_resenas",
+      titulo: t("reviewsLabel"),
+      descripcion: t("reviewsHelp"),
+    },
+    {
+      campo: "notif_novedades",
+      titulo: t("newsLabel"),
+      descripcion: t("newsHelp"),
+    },
+  ];
+
   const router = useRouter();
   const { preferencias, cargando, error, recargar, actualizarPreferencia, limpiar } = useAccount();
   const [guardando, setGuardando] = useState<string | null>(null);
@@ -65,7 +72,7 @@ export default function PreferenciasPage() {
     try {
       await actualizarPreferencia(campo, valor);
     } catch {
-      toast.error("No pudimos guardar la preferencia. Intentá de nuevo.");
+      toast.error(t("saveError"));
     } finally {
       setGuardando(null);
     }
@@ -77,26 +84,26 @@ export default function PreferenciasPage() {
     try {
       await apiFetch("/api/account/deactivate/", { method: "POST" });
       limpiar();
-      toast.success("Tu cuenta fue dada de baja.");
+      toast.success(t("deactivated"));
       router.replace("/");
     } catch {
-      setErrorBaja("No pudimos dar de baja tu cuenta. Sigue activa; intentá de nuevo.");
+      setErrorBaja(t("deactivateError"));
       setDandoBaja(false);
     }
   }
 
   return (
     <main id="contenido" className="mx-auto max-w-3xl px-6 py-10">
-      <nav aria-label="Ruta de navegación" className="mb-8 text-sm text-muted-foreground">
-        Preferencias
+      <nav aria-label={t("breadcrumb")} className="mb-8 text-sm text-foreground/75">
+        {t("heading")}
       </nav>
-      <h1 className="mb-8 text-3xl font-bold text-foreground">Preferencias</h1>
-      {cargando ? <p role="status">Cargando preferencias…</p> : null}
+      <h1 className="mb-8 text-3xl font-bold text-foreground">{t("heading")}</h1>
+      {cargando ? <p role="status">{t("loading")}</p> : null}
       {error ? (
         <div role="alert" className="mb-6 rounded-xl border border-destructive p-4">
           <p>{error}</p>
-          <Button className="mt-3" variant="secondary" onClick={() => void recargar()}>
-            Reintentar
+          <Button className="mt-3 min-h-11" variant="secondary" onClick={() => void recargar()}>
+            {t("retry")}
           </Button>
         </div>
       ) : null}
@@ -104,11 +111,11 @@ export default function PreferenciasPage() {
         <div className="space-y-10">
           <section aria-labelledby="apariencia">
             <h2 id="apariencia" className="mb-4 text-xl font-semibold">
-              Apariencia
+              {t("appearance")}
             </h2>
             <fieldset className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-card p-5">
-              <legend className="sr-only">Tema de la interfaz</legend>
-              <span className="font-medium">Tema</span>
+              <legend className="sr-only">{t("themeLegend")}</legend>
+              <span className="font-medium">{t("theme")}</span>
               <div className="flex gap-4">
                 {(["oscuro", "claro"] as const).map((tema) => (
                   <label key={tema} className="flex min-h-11 cursor-pointer items-center gap-2">
@@ -121,23 +128,30 @@ export default function PreferenciasPage() {
                       onChange={() => void cambiar("tema", tema)}
                       className="accent-primary"
                     />
-                    {tema === "oscuro" ? "Oscuro" : "Claro"}
+                    {theme(tema)}
                   </label>
                 ))}
               </div>
             </fieldset>
           </section>
 
+          <section aria-labelledby="t-idioma">
+            <h2 id="t-idioma" className="mb-4 scroll-mt-24 text-xl font-semibold">
+              {language("label")}
+            </h2>
+            <p className="mb-4 text-sm text-foreground/75">{language("description")}</p>
+            <LanguageSwitcher account />
+          </section>
+
           <section aria-labelledby="privacidad">
             <h2 id="privacidad" className="mb-4 text-xl font-semibold">
-              Privacidad
+              {t("privacy")}
             </h2>
             <p
               className="mb-4 rounded-lg border border-border bg-muted p-4 text-sm text-foreground"
               role="note"
             >
-              Estas preferencias se guardan, pero todavía no cambian la visibilidad de reseñas o
-              listas ni activan correos.
+              {t("futureFeatures")}
             </p>
             <div className="divide-y divide-border rounded-xl bg-card px-5">
               {INTERRUPTORES.slice(0, 1).map(({ campo, titulo, descripcion }) => (
@@ -147,7 +161,7 @@ export default function PreferenciasPage() {
                 >
                   <span>
                     <span className="block font-medium">{titulo}</span>
-                    <span className="block text-sm text-muted-foreground">{descripcion}</span>
+                    <span className="block text-sm text-foreground/75">{descripcion}</span>
                   </span>
                   <input
                     type="checkbox"
@@ -164,7 +178,7 @@ export default function PreferenciasPage() {
 
           <section aria-labelledby="notificaciones">
             <h2 id="notificaciones" className="mb-4 text-xl font-semibold">
-              Notificaciones
+              {t("notifications")}
             </h2>
             <div className="divide-y divide-border rounded-xl bg-card px-5">
               {INTERRUPTORES.slice(1).map(({ campo, titulo, descripcion }) => (
@@ -174,7 +188,7 @@ export default function PreferenciasPage() {
                 >
                   <span>
                     <span className="block font-medium">{titulo}</span>
-                    <span className="block text-sm text-muted-foreground">{descripcion}</span>
+                    <span className="block text-sm text-foreground/75">{descripcion}</span>
                   </span>
                   <input
                     type="checkbox"
@@ -191,18 +205,16 @@ export default function PreferenciasPage() {
 
           <section aria-labelledby="cuenta" className="border-t border-border pt-8">
             <h2 id="cuenta" className="mb-3 text-xl font-semibold">
-              Cuenta
+              {t("account")}
             </h2>
-            <p className="mb-5 text-sm text-muted-foreground">
-              La baja de la cuenta es irreversible. No podrás volver a iniciar sesión ni
-              reactivarla.
-            </p>
+            <p className="mb-5 text-sm text-foreground/75">{t("deactivateWarning")}</p>
             <Button
+              className="min-h-11"
               ref={bajaButtonRef}
               variant="destructive"
               onClick={() => setConfirmarBaja(true)}
             >
-              Dar de baja cuenta
+              {t("deactivateAccount")}
             </Button>
           </section>
         </div>
@@ -218,9 +230,9 @@ export default function PreferenciasPage() {
         >
           <div className="w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
             <h2 id="baja-titulo" className="text-xl font-semibold">
-              ¿Dar de baja tu cuenta?
+              {t("deactivateTitle")}
             </h2>
-            <p className="mt-3 text-sm text-muted-foreground">{ADVERTENCIA_BAJA}</p>
+            <p className="mt-3 text-sm text-foreground/75">{t("deactivateConfirm")}</p>
             {errorBaja && (
               <p role="alert" className="mt-4 text-sm text-destructive">
                 {errorBaja}
@@ -228,19 +240,24 @@ export default function PreferenciasPage() {
             )}
             <div className="mt-6 flex justify-end gap-3">
               <Button
+                className="min-h-11"
                 ref={cancelarRef}
                 variant="secondary"
                 disabled={dandoBaja}
                 onClick={cerrarBaja}
               >
-                Cancelar
+                {t("cancel")}
               </Button>
               <Button
+                className="min-h-11"
                 variant="destructive"
                 disabled={dandoBaja}
                 onClick={() => void desactivarCuenta()}
               >
-                {dandoBaja ? "Dando de baja…" : "Dar de baja"}
+                {dandoBaja && (
+                  <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden="true" />
+                )}
+                {t("deactivate")}
               </Button>
             </div>
           </div>

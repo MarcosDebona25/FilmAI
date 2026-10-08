@@ -1,6 +1,16 @@
 {
   "status": 400,
   "body": {
-    "page": "Must be a positive integer."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "page",
+        "code": "min_value",
+        "params": {
+          "minValue": 1
+        }
+      }
+    ]
   }
 }

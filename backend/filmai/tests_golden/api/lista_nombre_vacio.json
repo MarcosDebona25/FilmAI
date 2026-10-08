@@ -1,4 +1,14 @@
 {
   "status": 400,
-  "body": ["El nombre no puede estar vacío."]
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "blank",
+        "params": {}
+      }
+    ]
+  }
 }

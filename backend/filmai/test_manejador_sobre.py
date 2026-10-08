@@ -15,7 +15,6 @@ from rest_framework.exceptions import (
     ValidationError,
 )
 from rest_framework.test import APIClient
-from rest_framework.views import exception_handler as drf_exception_handler
 
 from catalogo.exceptions import TMDBNotFound
 from filmai.errores.base import ExcepcionAPI
@@ -41,12 +40,12 @@ class ManejadorSobreTests(SimpleTestCase):
             with self.subTest(codigo=codigo):
                 response = filmai_exception_handler(excepcion, {})
                 self.assertEqual(response.status_code, estado)
-                self.assertIn("detail", response.data)
+                self.assertIn("code", response.data)
                 self.assertEqual(response.data["code"], codigo)
                 self.assertEqual(response.data["errors"], [])
                 self.assertNotIn("debug", response.data)
         response = filmai_exception_handler(NombreListaDuplicado(), {})
-        self.assertEqual(response.data["codigo"], "nombre_lista_duplicado")
+        self.assertEqual(response.data["code"], "list_name_duplicated")
         response = filmai_exception_handler(Throttled(wait=42), {})
         self.assertEqual(response["Retry-After"], "42")
 
@@ -59,14 +58,14 @@ class ManejadorSobreTests(SimpleTestCase):
         )
         response = filmai_exception_handler(error, {})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data["nombre"], ["Largo"])
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(
             response.data["errors"],
             [{"field": "nombre", "code": "max_length", "params": {"maxLength": 25}}],
         )
         response = filmai_exception_handler(ValidationError(["General"]), {})
-        self.assertEqual(response.data["non_field_errors"], ["General"])
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertIsNone(response.data["errors"][0]["field"])
 
     def test_excepcion_base_y_metodo_reciben_parametros_sin_parsear_texto(self):
@@ -90,7 +89,7 @@ class ManejadorSobreTests(SimpleTestCase):
         with self.assertLogs("filmai.exceptions", level="ERROR"):
             publico = filmai_exception_handler(RuntimeError("diagnóstico interno"), {})
         self.assertEqual(publico.status_code, 500)
-        self.assertEqual(publico.data["detail"], "Error interno del servidor.")
+        self.assertEqual(publico.data["code"], "server_error")
         self.assertEqual(publico.data["code"], "server_error")
         self.assertNotIn("debug", publico.data)
         with (
@@ -106,10 +105,9 @@ class ManejadorSobreTests(SimpleTestCase):
         for debug in (False, True):
             with self.subTest(debug=debug), override_settings(DEBUG=debug):
                 error = DjangoPermissionDenied("Restricción interna")
-                heredada = drf_exception_handler(error, {})
                 response = filmai_exception_handler(error, {})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.data["detail"], heredada.data["detail"])
+                self.assertIn(response.data["code"], CATALOGO)
                 self.assertEqual(response.data["code"], "permission_denied")
                 self.assertEqual(response.data["errors"], [])
                 self.assertEqual("debug" in response.data, debug)
@@ -118,7 +116,7 @@ class ManejadorSobreTests(SimpleTestCase):
         """OT-32 normaliza el manejador global; el especializado sigue igual."""
         response = filmai_exception_handler(TMDBNotFound("No encontrada"), {})
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.data["detail"], "No encontrada")
+        self.assertEqual(response.data["code"], "upstream_not_found")
         self.assertEqual(response.data["code"], "upstream_not_found")
         self.assertEqual(response.data["errors"], [])
 

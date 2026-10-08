@@ -1,6 +1,16 @@
 {
   "status": 400,
   "body": {
-    "apellido": ["Solo letras y espacios entre palabras, máximo 50 caracteres."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "apellido",
+        "code": "person_name_invalid",
+        "params": {
+          "maxLength": 50
+        }
+      }
+    ]
   }
 }

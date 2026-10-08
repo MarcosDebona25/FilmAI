@@ -377,3 +377,14 @@ localizables seleccionan ese cliente por el encabezado Accept-Language, con
 pesos y regiones, o inglés por defecto. Su autenticación permanece vacía;
 keywords conserva el servicio global. La evidencia contra TMDB está en
 `docs/i18n/tmdb-verificacion-ot60.md`.
+
+
+## Respaldo, persistencia y consumo frontend (OT-61–63, OT-72–76)
+
+Los listados y detalles en español completan únicamente los campos vacíos con su versión inglesa, por identidad TMDB. `campos_en_ingles` identifica cuáles se completaron; el frontend marca el campo presentado con `lang="en"`. Los datos ya traducidos no se reemplazan. Pósters y backdrops también se resuelven por idioma.
+
+`ProduccionAudiovisual` mantiene el contenido canónico inglés y `generos_ids`; `ProduccionTraduccion` guarda título, sinopsis y póster por producción/idioma. Listas y mis reseñas seleccionan título y póster por `idioma_efectivo(request)`, sin modificar el texto escrito por el usuario. El prefetch evita una consulta SQL por cada tarjeta. `GET /api/catalogo/genres/?tipo=movie|tv` entrega nombres localizados para los filtros futuros; sus IDs son estables.
+
+`python manage.py rellenar_traducciones` procesa producciones enriquecidas, por lotes e idempotentemente. Los registros sin `fecha_enriquecimiento` se completan al materializarse. La sincronización diaria reintenta traducciones pendientes; no altera el texto canónico ni el hash de embeddings. En la base revisada el 08/10/2026 no quedan producciones enriquecidas pendientes; las 39 filas sin enriquecer quedan fuera del relleno.
+
+El cliente frontend envía `Accept-Language` en cada solicitud. La localización de TMDB usa `es-MX`, mientras fechas y números de interfaz usan `es-AR`. El chatbot utilizará tools localizadas y responderá en el idioma efectivo; su corpus BGE-M3 conserva el inglés (decisión del 08/10/2026). Su comportamiento durante SSE se revisará en el pair programming del 09/10/2026.

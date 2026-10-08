@@ -1,6 +1,14 @@
 {
   "status": 400,
   "body": {
-    "old_password": ["La contraseña actual es incorrecta."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "old_password",
+        "code": "current_password_incorrect",
+        "params": {}
+      }
+    ]
   }
 }

@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from "./render";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import PerfilPage from "@/app/perfil/page";
-import PreferenciasPage from "@/app/preferencias/page";
+import PerfilPage from "@/app/profile/page";
+import PreferenciasPage from "@/app/settings/page";
 import { NavigationGuard } from "@/components/NavigationGuard";
+import { Avatar } from "@/components/Avatar";
 import { apiFetch } from "@/lib/api";
 const { account, router } = vi.hoisted(() => ({
   account: {
@@ -45,6 +46,17 @@ beforeEach(() => {
     "fetch",
     vi.fn().mockResolvedValue({ ok: true, json: async () => ({ disponible: true }) })
   );
+});
+it.each([
+  ["en", "Your avatar"],
+  ["es", "Tu avatar"],
+] as const)("el avatar conserva su nombre accesible en %s si falla la imagen", (locale, label) => {
+  render(<Avatar perfil={{ ...account.perfil, idioma: null }} avatares={account.avatares} />, {
+    locale,
+  });
+  fireEvent.error(screen.getByRole("img", { name: label }));
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(screen.getByLabelText(label)).toHaveTextContent("JP");
 });
 describe("edición de perfil", () => {
   it("solo ofrece cambiar avatar al editar, previsualiza y lo persiste al guardar", async () => {
@@ -91,7 +103,7 @@ describe("edición de perfil", () => {
     render(
       <NavigationGuard>
         <PerfilPage />
-        <a href="/preferencias">Ir a preferencias</a>
+        <a href="/settings">Ir a preferencias</a>
       </NavigationGuard>
     );
     await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
@@ -101,7 +113,7 @@ describe("edición de perfil", () => {
     await userEvent.click(screen.getByRole("link", { name: "Ir a preferencias" }));
     expect(router.push).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Salir sin guardar" }));
-    expect(router.push).toHaveBeenCalledWith("/preferencias");
+    expect(router.push).toHaveBeenCalledWith("/settings");
   });
   it("muestra el resultado de disponibilidad en verde o rojo", async () => {
     render(

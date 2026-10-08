@@ -1,6 +1,14 @@
 {
   "status": 400,
   "body": {
-    "correo": ["El correo ya está registrado."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "correo",
+        "code": "email_already_used",
+        "params": {}
+      }
+    ]
   }
 }

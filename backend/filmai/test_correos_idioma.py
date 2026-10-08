@@ -26,8 +26,8 @@ class MatrizDeCorreosTests(SimpleTestCase):
         mail.outbox.clear()
         contexto = {
             "user": usuario or SimpleNamespace(nombre="Ana", apellido="Pérez"),
-            "activate_url": "https://filmai.test/confirmar-correo/key/",
-            "reset_url": "https://filmai.test/restablecer-contrasena/uid/token/",
+            "activate_url": "https://filmai.test/confirm-email/key/",
+            "reset_url": "https://filmai.test/reset-password/uid/token/",
         }
         enviar_correo(caso, "destino@example.com", contexto, idioma)
         correo = mail.outbox[-1]

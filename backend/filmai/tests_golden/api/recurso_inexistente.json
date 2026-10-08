@@ -1,6 +1,8 @@
 {
   "status": 404,
   "body": {
-    "detail": "El recurso solicitado no existe."
+    "code": "not_found",
+    "params": {},
+    "errors": []
   }
 }

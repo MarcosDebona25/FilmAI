@@ -6,7 +6,6 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 
 from catalogo.factories import ResenaFactory
-from filmai.errores.sobre import RESERVADOS
 from usuarios.factories import UsuarioFactory
 from usuarios.models import EstadoCuenta
 from usuarios.serializers import LoginSerializer
@@ -15,7 +14,7 @@ from usuarios.serializers import LoginSerializer
 @override_settings(DEBUG=False)
 class EstadoCuentaCaracterizacionTests(TestCase):
     def test_mensaje_inactivo_del_serializer_se_oculta_en_la_respuesta(self):
-        """El mensaje específico existe, pero HTTP siempre usa el 403 genérico."""
+        """El diagnóstico queda interno; el HTTP público identifica el estado solo con credenciales correctas."""
         client = APIClient()
         for estado, mensaje in (
             (EstadoCuenta.BAJA, "Tu cuenta fue dada de baja."),
@@ -38,13 +37,12 @@ class EstadoCuentaCaracterizacionTests(TestCase):
                     respuesta = client.post("/api/auth/login/", datos, format="json")
                     self.assertEqual(respuesta.status_code, 403)
                     self.assertEqual(
-                        {
-                            clave: valor
-                            for clave, valor in respuesta.json().items()
-                            if clave not in RESERVADOS
-                        },
-                        {"detail": "No tenés permisos para realizar esta acción."},
+                        respuesta.json()["code"],
+                        "account_deactivated"
+                        if estado == EstadoCuenta.BAJA
+                        else "account_pending_confirmation",
                     )
+                    self.assertNotIn("detail", respuesta.json())
                 # OT-33: con credencial incorrecta el estado ya no se revela.
                 with self.subTest(estado=estado, campo=campo, password="incorrecta"):
                     datos = {campo: identificador, "password": "WrongPassword123!"}

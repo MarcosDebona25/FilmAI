@@ -4,7 +4,11 @@ from django.test import SimpleTestCase
 from rest_framework import serializers
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
-from filmai.errores.sobre import conservar_legacy, construir_sobre, entradas_validacion
+from filmai.errores.sobre import (
+    construir_sobre,
+    entradas_validacion,
+    validar_respuesta_error,
+)
 from filmai.errores.validacion import ErrorValidacion
 
 
@@ -48,9 +52,8 @@ class SobreErroresTests(SimpleTestCase):
         entradas = entradas_validacion(error)
         self.assertEqual([entrada["field"] for entrada in entradas], [None, None])
         sobre = construir_sobre("validation_error", 400, errores=entradas)
-        cuerpo = conservar_legacy(error.detail, sobre)
-        self.assertEqual(cuerpo["non_field_errors"], ["Primero", "Segundo"])
-        self.assertEqual(len(cuerpo["errors"]), 2)
+        self.assertEqual(set(sobre), {"code", "params", "errors"})
+        self.assertEqual(len(sobre["errors"]), 2)
 
     def test_debug_solo_aparece_cuando_se_habilita_y_no_modifica_el_contrato(self):
         """El mismo error conserva código, estado esperado y parámetros sin debug público."""
@@ -62,18 +65,13 @@ class SobreErroresTests(SimpleTestCase):
         self.assertEqual(interno.pop("debug"), {"message": "Diagnóstico"})
         self.assertEqual(interno, publico)
 
-    def test_legacy_no_pierde_claves_y_rechaza_nombres_reservados(self):
-        """detail/codigo se conservan; code no puede sobrescribir un campo del request."""
-        anterior = {"codigo": "nombre_lista_duplicado", "detail": "Duplicada"}
+    def test_contrato_rechaza_textos_y_claves_heredadas(self):
+        """La puerta global de la suite impide reintroducir detail, codigo o campos."""
         sobre = construir_sobre("list_name_duplicated", 409)
-        nuevo = conservar_legacy(anterior, sobre)
-        self.assertEqual({clave: nuevo[clave] for clave in anterior}, anterior)
-        self.assertEqual(
-            anterior, {"codigo": "nombre_lista_duplicado", "detail": "Duplicada"}
-        )
-        for reservado in ("code", "params", "errors", "debug"):
-            with self.subTest(campo=reservado), self.assertRaises(ValueError):
-                conservar_legacy({reservado: "texto"}, sobre)
+        validar_respuesta_error(409, sobre)
+        for campo in ("detail", "codigo", "nombre"):
+            with self.subTest(campo=campo), self.assertRaises(AssertionError):
+                validar_respuesta_error(409, {**sobre, campo: "interno"})
 
     def test_codigos_y_estados_invalidos_no_forman_un_sobre(self):
         """La validación pura rechaza unknown, HTTP ajeno y hojas en errores generales."""

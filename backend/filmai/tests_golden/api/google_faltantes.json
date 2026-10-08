@@ -1,8 +1,24 @@
 {
   "status": 400,
   "body": {
-    "nombre_usuario": ["Este campo es obligatorio para completar tu cuenta."],
-    "fecha_nacimiento": ["Este campo es obligatorio para completar tu cuenta."],
-    "genero": ["Este campo es obligatorio para completar tu cuenta."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "nombre_usuario",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "fecha_nacimiento",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "genero",
+        "code": "required",
+        "params": {}
+      }
+    ]
   }
 }

@@ -15,8 +15,8 @@ class ServicioCorreosTests(SimpleTestCase):
         mail.outbox.clear()
         self.contexto = {
             "user": SimpleNamespace(nombre="Correo", apellido="Servicio"),
-            "activate_url": "https://filmai.test/confirmar-correo/key/",
-            "reset_url": "https://filmai.test/restablecer-contrasena/uid/token/",
+            "activate_url": "https://filmai.test/confirm-email/key/",
+            "reset_url": "https://filmai.test/reset-password/uid/token/",
         }
 
     def test_cuatro_casos_se_envian_con_formatos_previos(self):

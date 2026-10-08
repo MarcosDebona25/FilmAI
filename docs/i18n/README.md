@@ -1,8 +1,8 @@
 # Curaduría de textos para multiidioma
 
 `equivalencias.json` conserva la tabla original. `claves.csv` agrega destinos
-semánticos y textos completos para revisión; no crea catálogos de producción.
-La siembra corresponde a OT-77, después de la revisión editorial de OT-13.
+semánticos y textos completos para revisión; alimenta los catálogos de producción mediante `frontend/scripts/i18n/generate.py`.
+OT-77 implementa la siembra reproducible posterior a la revisión editorial de OT-13.
 
 Cada `origen_id` es la posición original, empezando en 1. Hay una fila por
 entrada y se conservan exactamente `es_original`, `en_original` y `pantallas`.
@@ -90,7 +90,7 @@ La comprobación de datos verificó 634 IDs únicos, el original inmutable,
 los 41 nombres de pantalla, claves sin colisiones y el texto de baja intacto.
 Un analizador de FormatJS validó sintaxis ICU y paridad ES/EN de argumentos
 y tags en las 451 filas utilizables: 28 filas con plurales y 3 con tags.
-Estas comprobaciones validan estructura; OT-13 registra la aprobación editorial. No se modificó código, tests ni dependencias del repo.
+Estas comprobaciones validan estructura; OT-13 registra la aprobación editorial. OT-77/80 generan los catálogos y verifican su paridad en CI.
 
 Se propone integrar el CSV por bloques acumulativos, conservando los IDs:
 
@@ -113,3 +113,5 @@ aprobadas en OT-13 permanecen intactas. El mensaje distingue un nombre del
 sistema de un nombre personalizado duplicado. `contracts/enums.json` publica
 las identidades, valores de género y nombres reservados ES/EN; se reproduce
 con `python manage.py exportar_enums`.
+
+La guía de implementación está en [guia.md](guia.md). La previsualización de correos y sus EML están en [revision-correos/index.html](revision-correos/index.html).

@@ -1,6 +1,20 @@
 {
   "status": 400,
   "body": {
-    "genero": ["\"otro\" no es una elección válida."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "genero",
+        "code": "invalid_choice",
+        "params": {
+          "allowedValues": [
+            "masculino",
+            "femenino",
+            "no_especifica"
+          ]
+        }
+      }
+    ]
   }
 }

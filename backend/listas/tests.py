@@ -101,7 +101,7 @@ class ListasEndpointsTests(TestCase):
         respuesta = self.cliente.get("/api/lists/?id_tmdb=550")
 
         self.assertEqual(respuesta.status_code, 400)
-        self.assertIn("tipo", respuesta.data)
+        self.assertIn("tipo", {entry["field"] for entry in respuesta.data["errors"]})
 
     def test_crea_lista_con_nombre_normalizado_y_caracteres_permitidos(self):
         """Los nombres naturales se guardan consistentes para la unicidad."""
@@ -125,7 +125,7 @@ class ListasEndpointsTests(TestCase):
         )
 
         self.assertEqual(respuesta.status_code, 409)
-        self.assertEqual(respuesta.data["codigo"], "nombre_lista_duplicado")
+        self.assertEqual(respuesta.data["code"], "list_name_duplicated")
 
     def test_rechaza_nombre_invalido_o_mas_largo_de_ochenta_caracteres(self):
         """El límite se aplica tras normalizar y tampoco se admiten guiones."""
@@ -138,8 +138,10 @@ class ListasEndpointsTests(TestCase):
 
         self.assertEqual(con_guion.status_code, 400)
         self.assertEqual(demasiado_largo.status_code, 400)
-        self.assertIn("nombre", con_guion.data)
-        self.assertIn("nombre", demasiado_largo.data)
+        self.assertIn("nombre", {entry["field"] for entry in con_guion.data["errors"]})
+        self.assertIn(
+            "nombre", {entry["field"] for entry in demasiado_largo.data["errors"]}
+        )
 
     def test_predeterminadas_no_se_renombran_ni_eliminan(self):
         """La API sostiene la regla incluso si un cliente evita el menú UI."""
@@ -150,7 +152,7 @@ class ListasEndpointsTests(TestCase):
 
         self.assertEqual(renombrar.status_code, 409)
         self.assertEqual(eliminar.status_code, 409)
-        self.assertEqual(renombrar.data["codigo"], "lista_predeterminada_protegida")
+        self.assertEqual(renombrar.data["code"], "default_list_protected")
         self.assertTrue(Lista.objects.filter(pk=self.favoritos.pk).exists())
 
     def test_renombrar_preserva_el_resumen_de_la_lista(self):
@@ -214,7 +216,7 @@ class ListasEndpointsTests(TestCase):
         )
 
         self.assertEqual(respuesta.status_code, 409)
-        self.assertEqual(respuesta.data["codigo"], "item_duplicado")
+        self.assertEqual(respuesta.data["code"], "list_item_duplicated")
         self.assertEqual(Tiene.objects.filter(lista=lista).count(), 1)
 
     def test_items_usa_cursor_de_veinte_resultados(self):
@@ -242,9 +244,7 @@ class ListasEndpointsTests(TestCase):
         respuesta = self.cliente.delete(f"/api/lists/{self.vistas.pk}/items/{item.pk}/")
 
         self.assertEqual(respuesta.status_code, 409)
-        self.assertEqual(
-            respuesta.data["codigo"], "calificacion_impide_quitar_de_vistas"
-        )
+        self.assertEqual(respuesta.data["code"], "rating_blocks_removal_from_watched")
         self.assertTrue(Tiene.objects.filter(pk=item.pk).exists())
 
     def test_quitar_item_de_lista_propietaria(self):
@@ -340,9 +340,7 @@ class QuitarDeVistasBorrandoCalificacionTests(TestCase):
         respuesta = self._quitar()
 
         self.assertEqual(respuesta.status_code, 409)
-        self.assertEqual(
-            respuesta.data["codigo"], "calificacion_impide_quitar_de_vistas"
-        )
+        self.assertEqual(respuesta.data["code"], "rating_blocks_removal_from_watched")
         self.assertTrue(Calificacion.objects.exists())
         self.assertTrue(Tiene.objects.filter(pk=self.item.pk).exists())
 

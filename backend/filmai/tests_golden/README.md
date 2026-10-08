@@ -44,7 +44,4 @@ Las cinco restricciones de contraseña sí se capturan desde el registro.
 Los 91 escenarios cubren orígenes y formas diferentes, no pretenden igualar el
 conteo agregado de textos únicos del plan.
 
-Durante F3 se incorporará un sobre nuevo. Estas referencias comparan el cuerpo
-completo anterior. El usuario autorizó ajustar estas pruebas nuevas en OT-30
-para comparar los campos heredados durante la emisión doble y probar por
-separado el sobre nuevo. OT-01 conserva la comparación estricta actual.
+OT-82 migró estas referencias al contrato por códigos mientras se emitían ambas formas. OT-83 retira las claves anteriores: los errores registran `code`, `params` y `errors`; los éxitos conservan datos de máquina y `code`. El ejecutor comprueba además que ningún 4xx/5xx de `/api/` tenga claves extra. Los HTTP y las matrices de credenciales/validación siguen siendo el oráculo.

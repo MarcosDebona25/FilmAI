@@ -145,7 +145,7 @@ FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños
 
 | Contexto                                            | Control                                                                                                                                                          |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `English` / `Español`. Se aplica al instante y se guarda en la cuenta.  |
+| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `English` / `Español`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
 | **Footer con sesión**                               | Muestra el idioma actual y enlaza a Preferencias. Escritorio: ítem con globo en la columna Information. Móvil: fila «Language · English ›». No cambia el idioma. |
 | **Sin sesión: Landing, inicio de sesión, registro** | Pastilla `EN` / `ES` arriba a la derecha (escritorio y móvil). Solo escribe la cookie del idioma.                                                                |
 | **Footer sin sesión (escritorio)**                  | El mismo selector, con los nombres completos `English` / `Español`.                                                                                              |
@@ -154,7 +154,7 @@ FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños
 - No hay selector en el menú del avatar ni en el navbar.
 - Los mensajes de error se muestran a partir de códigos: el backend no envía texto de interfaz. Toda la copia sale de los catálogos de idioma, con voseo en español.
 - Los datos de TMDB (títulos, sinopsis, géneros, pósters) siguen el idioma activo y, si falta una traducción, se muestra la versión en inglés de ese campo.
-- Rutas visibles en inglés (`/profile`, `/settings`, `/my-reviews`, `/lists`, `/confirm-email/[key]`, `/reset-password/[uid]/[token]`, `/complete-signup`; `/login` y `/register` no cambian). Aún no implementadas en el frontend.
+- Rutas visibles en inglés (`/profile`, `/settings`, `/my-reviews`, `/lists`, `/confirm-email/[key]`, `/reset-password/[uid]/[token]`, `/complete-signup`; `/login` y `/register` no cambian). Implementadas; `/lists` permanece protegido, sin pantalla nueva.
 - Cada botón tiene al menos 40 px de alto y un nombre accesible completo (`aria-label`).
 
 ---

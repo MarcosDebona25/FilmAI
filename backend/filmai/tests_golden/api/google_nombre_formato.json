@@ -1,4 +1,14 @@
 {
   "status": 400,
-  "body": ["Alfanumérico, 5-25 caracteres."]
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "username_invalid",
+        "params": {}
+      }
+    ]
+  }
 }

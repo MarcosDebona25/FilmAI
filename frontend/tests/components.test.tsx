@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format";
 import { fireEvent, render, screen, waitFor } from "./render";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -47,12 +48,21 @@ describe("modal accesible", () => {
   });
 });
 describe("tarjeta de reseña", () => {
+  it("marca en inglés únicamente un título tomado del respaldo", () => {
+    const view = render(
+      <ReviewCard item={{ ...item, campos_en_ingles: ["titulo"] }} onAction={vi.fn()} />
+    );
+    expect(screen.getByRole("heading", { name: item.titulo })).toHaveAttribute("lang", "en");
+    view.rerender(<ReviewCard item={{ ...item, campos_en_ingles: [] }} onAction={vi.fn()} />);
+    expect(screen.getByRole("heading", { name: item.titulo })).not.toHaveAttribute("lang");
+  });
+
   it("distingue la nota de la fecha con una estrella y etiqueta accesible", () => {
     render(<ReviewCard item={item} onAction={vi.fn()} />);
     const rating = screen.getByLabelText("Calificación: 8 de 10");
     expect(rating).toHaveTextContent("8/10");
     expect(rating.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
-    expect(screen.getByText("3/10/2026")).toBeVisible();
+    expect(screen.getByText(formatDate("2026-10-03", "es"))).toBeVisible();
   });
   it.each([48, 72])(
     "oculta Leer más cuando el texto ocupa %s px y cabe en tres líneas",

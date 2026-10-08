@@ -1,6 +1,8 @@
 {
   "status": 401,
   "body": {
-    "detail": "Credenciales inválidas. Verificá tu correo/nombre de usuario y contraseña."
+    "code": "invalid_credentials",
+    "params": {},
+    "errors": []
   }
 }

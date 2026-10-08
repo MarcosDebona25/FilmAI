@@ -80,17 +80,8 @@ def construir_sobre(
     return sobre
 
 
-def conservar_legacy(cuerpo, sobre):
-    """El formato nuevo no reemplaza ni sobrescribe campos durante F3-F7."""
-    if not isinstance(cuerpo, dict):
-        cuerpo = {"non_field_errors": cuerpo}
-    if RESERVADOS.intersection(cuerpo):
-        raise ValueError("Un campo heredado colisiona con el sobre de errores.")
-    return {**cuerpo, **sobre}
-
-
 def agregar_codigo_exito(response, codigo):
-    """Suma `code` a una respuesta exitosa sin tocar `detail` ni otras claves."""
+    """Emite el código de éxito y preserva datos de máquina sin textos heredados."""
     definicion = obtener_codigo(codigo)
     if definicion.categoria != "success":
         raise ValueError("Se requiere un código de éxito.")
@@ -98,7 +89,10 @@ def agregar_codigo_exito(response, codigo):
         raise ValueError("El estado HTTP no corresponde al código de éxito.")
     if not isinstance(response.data, dict) or "code" in response.data:
         raise ValueError("La respuesta exitosa no admite el campo code.")
-    response.data = {**response.data, "code": codigo}
+    response.data = {
+        clave: valor for clave, valor in response.data.items() if clave != "detail"
+    }
+    response.data["code"] = codigo
     return response
 
 
@@ -106,6 +100,9 @@ def validar_respuesta_error(estado, cuerpo, *, debug=False):
     """Comprueba que un cuerpo de error cumple el sobre; lanza AssertionError."""
     if not isinstance(cuerpo, dict):
         raise AssertionError(f"El cuerpo de un {estado} no es un objeto: {cuerpo!r}.")
+    adicionales = set(cuerpo) - {"code", "params", "errors", "debug"}
+    if adicionales:
+        raise AssertionError(f"Claves ajenas al contrato: {sorted(adicionales)}.")
     faltantes = {"code", "params", "errors"} - set(cuerpo)
     if faltantes:
         raise AssertionError(f"Falta el sobre ({sorted(faltantes)}) en un {estado}.")

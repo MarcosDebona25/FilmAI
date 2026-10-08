@@ -55,6 +55,7 @@ class CadaCodigoCumpleElSobreTests(SimpleTestCase):
                         Response({"detail": "x"}, status=estado), codigo
                     )
                     self.assertEqual(respuesta.data["code"], codigo)
+                    self.assertNotIn("detail", respuesta.data)
                     with self.assertRaises(ValueError):
                         agregar_codigo_exito(Response({}, status=404), codigo)
 

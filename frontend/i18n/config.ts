@@ -27,3 +27,6 @@ export function resolveLocale(cookie?: string, acceptLanguage?: string | null): 
   }
   return defaultLocale;
 }
+
+export const intlLocales = { en: "en-US", es: "es-AR" } as const;
+export const durationUnitDisplay = { en: "narrow", es: "short" } as const;

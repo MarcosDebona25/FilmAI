@@ -1,11 +1,13 @@
 "use client";
 
+import { useLocale } from "next-intl";
+import { translateError } from "@/lib/errors";
 import { useRef, useState } from "react";
 import { Star, LoaderCircle } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
-import { cambiosResena, type MiResena } from "@/lib/reviews";
+import { cambiosResena, ReviewValidationError, type MiResena } from "@/lib/reviews";
 
 export function ReviewModal({
   item,
@@ -18,6 +20,7 @@ export function ReviewModal({
   onClose: () => void;
   onSuccess: (updated: MiResena | null) => void;
 }) {
+  const locale = useLocale();
   const [valor, setValor] = useState(item.valor);
   const [hover, setHover] = useState<number | null>(null);
   const [texto, setTexto] = useState(item.texto ?? "");
@@ -32,7 +35,9 @@ export function ReviewModal({
     try {
       if (action === "edit") body = cambiosResena(item, valor, texto);
     } catch (err) {
-      setError((err as Error).message);
+      setError(
+        translateError(err instanceof ReviewValidationError ? err : { code: "unknown" }, locale)
+      );
       textRef.current?.focus();
       return;
     }

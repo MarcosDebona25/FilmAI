@@ -1,6 +1,8 @@
 {
   "status": 500,
   "body": {
-    "detail": "Error interno del servidor."
+    "code": "server_error",
+    "params": {},
+    "errors": []
   }
 }

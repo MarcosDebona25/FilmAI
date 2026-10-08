@@ -1,6 +1,8 @@
 {
   "status": 400,
   "body": {
-    "codigo": "expirado"
+    "code": "link_expired",
+    "params": {},
+    "errors": []
   }
 }

@@ -91,8 +91,8 @@ class ConfirmarCorreoTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         # El subject sale de nuestro template (prefijo global vacío).
         self.assertEqual(mail.outbox[0].subject, "[FilmAI] Confirmación de cuenta")
-        # La key viaja en el enlace .../confirmar-correo/<key>/
-        match = re.search(r"/confirmar-correo/([^/\s\"<]+)/", mail.outbox[0].body)
+        # La key viaja en el enlace .../confirm-email/<key>/
+        match = re.search(r"/confirm-email/([^/\s\"<]+)/", mail.outbox[0].body)
         self.assertIsNotNone(match)
         return match.group(1)
 
@@ -158,12 +158,12 @@ class ConfirmarCorreoTests(TestCase):
 
         response = self._confirmar(key)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["codigo"], "ya_confirmada")
+        self.assertEqual(response.json()["code"], "already_confirmed")
 
     def test_key_corrupta_reporta_invalido(self):
         response = self._confirmar("key-totalmente-falsa")
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["codigo"], "invalido")
+        self.assertEqual(response.json()["code"], "link_invalid")
 
     def test_key_expirada_reporta_expirado(self):
         key = self._registrar()
@@ -177,7 +177,7 @@ class ConfirmarCorreoTests(TestCase):
             response = self._confirmar(key)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["codigo"], "expirado")
+        self.assertEqual(response.json()["code"], "link_expired")
 
 
 class RecuperarContrasenaTests(TestCase):
@@ -223,9 +223,7 @@ class RecuperarContrasenaTests(TestCase):
         self.assertEqual(
             mail.outbox[0].subject, "[FilmAI] Restablecimiento de contraseña"
         )
-        match = re.search(
-            r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body
-        )
+        match = re.search(r"/reset-password/([^/]+)/([^/]+)/", mail.outbox[0].body)
         self.assertIsNotNone(match)
         self.assertIn("válido durante 1 hora", mail.outbox[0].body)
         # El saludo muestra nombre + apellido (docs/decisiones.md 24/08/2026).
@@ -250,7 +248,7 @@ class RecuperarContrasenaTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         # Misma respuesta que para un correo existente (docs/02 CU-020 obs.).
-        self.assertIn("detail", response.json())
+        self.assertIn("code", response.json())
         self.assertEqual(len(mail.outbox), 0)
 
     def test_solicitud_cuenta_pendiente_o_baja_no_envia_email(self):
@@ -269,9 +267,7 @@ class RecuperarContrasenaTests(TestCase):
     def test_confirmar_actualiza_contraseña_y_permite_login(self):
         self._crear_usuario_activo()
         self._solicitar("recuperar@filmai.com")
-        match = re.search(
-            r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body
-        )
+        match = re.search(r"/reset-password/([^/]+)/([^/]+)/", mail.outbox[0].body)
 
         response = self.client.post(
             "/api/auth/password/reset/confirm/",
@@ -313,7 +309,7 @@ class RecuperarContrasenaTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["codigo"], "invalido")
+        self.assertEqual(response.json()["code"], "link_invalid")
 
     def test_confirmar_token_expirado_devuelve_invalido(self):
         import datetime as dt_mod
@@ -323,9 +319,7 @@ class RecuperarContrasenaTests(TestCase):
 
         self._crear_usuario_activo()
         self._solicitar("recuperar@filmai.com")
-        match = re.search(
-            r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body
-        )
+        match = re.search(r"/reset-password/([^/]+)/([^/]+)/", mail.outbox[0].body)
 
         futuro = dt_mod.datetime.now() + dt_mod.timedelta(hours=2)
         with mock_patch.object(
@@ -343,14 +337,12 @@ class RecuperarContrasenaTests(TestCase):
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["codigo"], "invalido")
+        self.assertEqual(response.json()["code"], "link_invalid")
 
     def test_confirmar_politica_debil_rechazada(self):
         self._crear_usuario_activo()
         self._solicitar("recuperar@filmai.com")
-        match = re.search(
-            r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body
-        )
+        match = re.search(r"/reset-password/([^/]+)/([^/]+)/", mail.outbox[0].body)
 
         response = self.client.post(
             "/api/auth/password/reset/confirm/",
@@ -364,7 +356,9 @@ class RecuperarContrasenaTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn("password1", response.json())
+        self.assertIn(
+            "password1", {entry["field"] for entry in response.json()["errors"]}
+        )
 
     def test_rate_limit_email_5_intentos_por_dia(self):
         """El throttle por email permite 5 solicitudes por día, luego bloquea."""

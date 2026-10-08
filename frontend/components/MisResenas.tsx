@@ -1,4 +1,5 @@
 "use client";
+import { routes } from "@/lib/routes";
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -98,7 +99,7 @@ export function MisResenas() {
               <p>Todavía no calificaste ninguna producción ni escribiste reseñas.</p>
               <Link
                 className="mt-4 inline-flex min-h-11 items-center text-primary underline"
-                href="/perfil"
+                href={routes.profile}
               >
                 Volver a mi perfil
               </Link>

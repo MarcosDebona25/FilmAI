@@ -1,20 +1,17 @@
 "use client";
+import { routes } from "@/lib/routes";
+import { useTranslations } from "next-intl";
+import enums from "@/i18n/enums.json";
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { GoogleButton } from "@/components/GoogleButton";
 import { completarRegistroGoogle, tieneGooglePendiente } from "@/lib/google-auth";
-import { validarFechaNacimiento, validarNombreUsuario } from "@/lib/validation";
+import { useValidation } from "@/lib/use-validation";
 
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
-
-const GENEROS = [
-  { value: "masculino", label: "Masculino" },
-  { value: "femenino", label: "Femenino" },
-  { value: "no_especifica", label: "No especificar" },
-];
 
 type Campo = "nombre_usuario" | "fecha_nacimiento" | "genero";
 type Errores = Partial<Record<Campo, string | null>>;
@@ -36,6 +33,15 @@ function ErrorTexto({ mensaje }: { mensaje?: string | null }) {
 }
 
 export default function CompletarGooglePage() {
+  const labels = useTranslations("enums.gender");
+  const errors = useTranslations("errors.codes");
+  const GENEROS = enums.genderValues.map((value) => ({
+    value,
+    label: labels(value as "masculino"),
+  }));
+
+  const { validarFechaNacimiento, validarNombreUsuario } = useValidation();
+
   const router = useRouter();
   const [form, setForm] = useState<Record<Campo, string>>({
     nombre_usuario: "",
@@ -51,7 +57,7 @@ export default function CompletarGooglePage() {
   // el flujo pendiente). Si no hay marca, no es un registro Google válido.
   useEffect(() => {
     if (!tieneGooglePendiente()) {
-      router.replace("/login");
+      router.replace(routes.login);
     }
   }, [router]);
 
@@ -62,7 +68,7 @@ export default function CompletarGooglePage() {
   function validarCampo(campo: Campo, valor: string): string | null {
     if (campo === "nombre_usuario") return validarNombreUsuario(valor);
     if (campo === "fecha_nacimiento") return validarFechaNacimiento(valor);
-    return valor ? null : "Campo obligatorio.";
+    return valor ? null : errors("required");
   }
 
   function onBlurCampo(campo: Campo) {
@@ -79,7 +85,7 @@ export default function CompletarGooglePage() {
     const nuevosErrores: Errores = {
       nombre_usuario: validarNombreUsuario(form.nombre_usuario),
       fecha_nacimiento: validarFechaNacimiento(form.fecha_nacimiento),
-      genero: form.genero ? null : "Campo obligatorio.",
+      genero: form.genero ? null : errors("required"),
     };
     setErrores(nuevosErrores);
     setTocados({ nombre_usuario: true, fecha_nacimiento: true, genero: true });

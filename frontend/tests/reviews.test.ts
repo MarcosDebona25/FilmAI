@@ -25,12 +25,18 @@ describe("contratos de edición y paginación", () => {
     expect(cambiosResena({ ...item, texto: null }, 8, "")).toEqual({});
   });
   it("no transforma texto vacío en una eliminación implícita", () =>
-    expect(() => cambiosResena(item, 8, " ")).toThrow("Eliminar reseña"));
+    expect(() => cambiosResena(item, 8, " ")).toThrow(
+      expect.objectContaining({ code: "review_update_empty" })
+    ));
   it.each([0, 11, 2.5])("rechaza nota inválida %s", (valor) =>
-    expect(() => cambiosResena(item, valor, item.texto!)).toThrow("1 a 10")
+    expect(() => cambiosResena(item, valor, item.texto!)).toThrow(
+      expect.objectContaining({ code: "invalid" })
+    )
   );
   it("limita a 1000 caracteres", () =>
-    expect(() => cambiosResena(item, 8, "a".repeat(1001))).toThrow("1000"));
+    expect(() => cambiosResena(item, 8, "a".repeat(1001))).toThrow(
+      expect.objectContaining({ code: "max_length", params: { maxLength: 1000 } })
+    ));
   it("reutiliza solo el cursor en nuestra ruta de API", () =>
     expect(rutaPagina("https://otro.example/api/reviews/mias/?cursor=a%3D")).toBe(
       "/api/reviews/mias/?cursor=a%3D"

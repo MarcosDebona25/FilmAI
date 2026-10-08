@@ -1,12 +1,18 @@
 "use client";
+import { routes } from "@/lib/routes";
 
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
+import { persistLocale } from "@/i18n/client";
+import type { AppLocale } from "@/i18n/config";
+import { translateError } from "@/lib/errors";
+import { protectedRoutes } from "@/lib/routes";
 import { ApiError, apiFetch } from "@/lib/api";
 
 export type Perfil = {
   pk: number;
+  idioma: AppLocale | null;
   nombre: string;
   apellido: string;
   nombre_usuario: string;
@@ -20,6 +26,7 @@ export type Perfil = {
 
 export type AvatarOption = { id: number; src: string };
 export type Preferencias = {
+  idioma: AppLocale | null;
   tema: "oscuro" | "claro";
   perfil_publico: boolean;
   notif_recomendaciones: boolean;
@@ -71,6 +78,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     try {
       const nuevoPerfil = await apiFetch<Perfil>("/api/profile/");
       setPerfil(nuevoPerfil);
+      if (nuevoPerfil.idioma && persistLocale(nuevoPerfil.idioma)) router.refresh();
       const [catalogo, ajustes] = await Promise.all([
         apiFetch<AvatarOption[]>("/api/avatars/"),
         apiFetch<Preferencias>("/api/preferences/"),
@@ -81,13 +89,11 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         limpiar();
-        if (
-          ["/perfil", "/preferencias", "/mis-resenas"].some((ruta) => pathname.startsWith(ruta))
-        ) {
+        if (protectedRoutes.some((ruta) => pathname.startsWith(ruta))) {
           router.replace(`/login?next=${encodeURIComponent(pathname)}`);
         }
       } else {
-        setError("No pudimos cargar tu cuenta. Intentá de nuevo.");
+        setError(translateError({ code: "unknown" }));
       }
     } finally {
       setCargando(false);
@@ -95,7 +101,11 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   }, [limpiar, pathname, router]);
 
   useEffect(() => {
-    if (["/login", "/register", "/completar-google"].includes(pathname)) {
+    if (
+      ([routes.login, routes.register, routes.completeSignup] as readonly string[]).includes(
+        pathname
+      )
+    ) {
       setCargando(false);
       return;
     }
@@ -108,6 +118,19 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   ) {
     if (!preferencias) return;
     const anterior = preferencias;
+    if (campo === "idioma") {
+      const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
+        method: "PUT",
+        body: { idioma: valor },
+      });
+      setPreferencias(confirmada);
+      setPerfil((current) => (current ? { ...current, idioma: confirmada.idioma } : current));
+      if (confirmada.idioma) {
+        persistLocale(confirmada.idioma);
+        router.refresh();
+      }
+      return;
+    }
     const optimista = { ...anterior, [campo]: valor };
     setPreferencias(optimista);
     if (campo === "tema") aplicarTema(valor as Preferencias["tema"]);
@@ -146,6 +169,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
 export function useAccount() {
   const context = useContext(AccountContext);
-  if (!context) throw new Error("useAccount requiere AccountProvider");
+  if (!context) throw new Error("useAccount requires AccountProvider");
   return context;
 }

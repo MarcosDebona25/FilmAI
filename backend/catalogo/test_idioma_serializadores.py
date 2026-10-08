@@ -55,6 +55,28 @@ class TitulosPorIdiomaTests(TestCase):
             {("Fight Club", "/en.jpg"), ("Cure", "/c.jpg")},
         )
 
+    def test_listas_y_resenas_marcan_respaldo_por_campo_sin_marcar_ingles_nativo(self):
+        """Solo los campos sin traducción llevan marca; inglés nativo no es un respaldo."""
+        ProduccionTraduccion.objects.filter(
+            produccion=self.traducida, idioma="es"
+        ).update(poster="")
+        for url in (f"/api/lists/{self.lista.pk}/items/", "/api/reviews/mias/"):
+            with self.subTest(url=url):
+                filas = self.cliente.get(url, HTTP_ACCEPT_LANGUAGE="es").json()[
+                    "results"
+                ]
+                por_titulo = {fila["titulo"]: fila for fila in filas}
+                self.assertEqual(
+                    por_titulo["El club de la pelea"]["campos_en_ingles"], ["poster"]
+                )
+                self.assertEqual(
+                    por_titulo["Cure"]["campos_en_ingles"], ["titulo", "poster"]
+                )
+                for fila in self.cliente.get(url, HTTP_ACCEPT_LANGUAGE="en").json()[
+                    "results"
+                ]:
+                    self.assertNotIn("campos_en_ingles", fila)
+
     def test_el_idioma_guardado_de_la_cuenta_gana_al_encabezado(self):
         self.usuario.idioma = "es"
         self.usuario.save(update_fields=["idioma"])

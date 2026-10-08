@@ -1,6 +1,19 @@
 {
   "status": 400,
   "body": {
-    "tipo": "Must be either 'movie' or 'tv'."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "tipo",
+        "code": "invalid_choice",
+        "params": {
+          "allowedValues": [
+            "movie",
+            "tv"
+          ]
+        }
+      }
+    ]
   }
 }

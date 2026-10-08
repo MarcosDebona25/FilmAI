@@ -375,7 +375,7 @@ class RecuperarContrasenaSerializer(FronteraErroresMixin, serializers.Serializer
 
         uid = user_pk_to_url_str(usuario)
         token = default_token_generator.make_token(usuario)
-        reset_url = f"{settings.FRONTEND_URL}/restablecer-contrasena/{uid}/{token}/"
+        reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
         contexto = {"user": usuario, "reset_url": reset_url}
 
         try:

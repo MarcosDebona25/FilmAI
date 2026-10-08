@@ -1,6 +1,14 @@
 {
   "status": 400,
   "body": {
-    "non_field_errors": ["El correo o nombre de usuario ya está registrado."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "email_or_username_already_used",
+        "params": {}
+      }
+    ]
   }
 }

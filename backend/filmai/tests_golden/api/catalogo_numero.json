@@ -1,6 +1,16 @@
 {
   "status": 400,
   "body": {
-    "min_rating": "Must be a number."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "min_rating",
+        "code": "invalid",
+        "params": {
+          "expectedType": "number"
+        }
+      }
+    ]
   }
 }

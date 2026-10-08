@@ -1,6 +1,16 @@
 {
   "status": 400,
   "body": {
-    "id_tmdb": "Must be an integer."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "id_tmdb",
+        "code": "invalid",
+        "params": {
+          "expectedType": "integer"
+        }
+      }
+    ]
   }
 }

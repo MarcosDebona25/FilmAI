@@ -1,6 +1,6 @@
 {
   "status": 200,
   "body": {
-    "detail": "La contraseña fue restablecida. Inicia sesión nuevamente."
+    "code": "password_reset_completed"
   }
 }

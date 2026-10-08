@@ -118,20 +118,18 @@ class ContratoErroresAPITests(TestCase):
             else json.loads(respuesta.content)
         )
         archivo = REFERENCIAS / f"{nombre}.json"
-        # OT-30: F0 conserva su oráculo legacy durante la emisión doble.
-        # Los tests específicos del sobre verifican las claves nuevas aparte.
+        # OT-82: oráculo por código mientras todavía se emiten ambas formas.
         if isinstance(cuerpo, dict):
-            cuerpo = {
-                clave: valor
-                for clave, valor in cuerpo.items()
-                if clave not in RESERVADOS
-            }
-        # El sobre normaliza listas raíz; F0 compara su contenido original.
-        if archivo.exists() and isinstance(
-            json.loads(archivo.read_text())["body"], list
-        ):
-            if isinstance(cuerpo, dict) and set(cuerpo) == {"non_field_errors"}:
-                cuerpo = cuerpo["non_field_errors"]
+            if respuesta.status_code >= 400:
+                cuerpo = {
+                    clave: valor
+                    for clave, valor in cuerpo.items()
+                    if clave in RESERVADOS
+                }
+            else:
+                cuerpo = {
+                    clave: valor for clave, valor in cuerpo.items() if clave != "detail"
+                }
         # Roundtrip elimina ErrorDetail y fuerza la forma JSON que ve el cliente.
         actual = json.loads(
             json.dumps({"status": respuesta.status_code, "body": cuerpo})

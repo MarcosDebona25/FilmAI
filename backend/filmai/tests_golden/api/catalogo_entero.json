@@ -1,6 +1,16 @@
 {
   "status": 400,
   "body": {
-    "page": "Must be an integer."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "page",
+        "code": "invalid",
+        "params": {
+          "expectedType": "integer"
+        }
+      }
+    ]
   }
 }

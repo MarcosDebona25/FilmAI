@@ -1,8 +1,16 @@
 {
   "status": 400,
   "body": {
-    "nombre_usuario": [
-      "Asegúrese de que este campo no tenga más de 25 caracteres."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "nombre_usuario",
+        "code": "max_length",
+        "params": {
+          "maxLength": 25
+        }
+      }
     ]
   }
 }

@@ -1,6 +1,14 @@
 {
   "status": 400,
   "body": {
-    "query": "This parameter is required."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "query",
+        "code": "required",
+        "params": {}
+      }
+    ]
   }
 }

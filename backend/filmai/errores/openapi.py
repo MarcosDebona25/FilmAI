@@ -31,8 +31,7 @@ def _esquemas():
         "ErrorEnvelope": {
             "type": "object",
             "description": (
-                "Sobre de toda respuesta 4xx/5xx. Durante la ventana de "
-                "compatibilidad se emite junto a las claves anteriores."
+                "Sobre definitivo de toda respuesta 4xx/5xx; sin texto de interfaz."
             ),
             "properties": {
                 "code": {"type": "string", "enum": _ERRORES},
@@ -48,6 +47,7 @@ def _esquemas():
                 },
             },
             "required": ["code", "params", "errors"],
+            "additionalProperties": False,
         },
     }
 

@@ -1,6 +1,14 @@
 {
   "status": 400,
   "body": {
-    "nombre_usuario": ["El nombre de usuario ya está registrado."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "nombre_usuario",
+        "code": "username_already_used",
+        "params": {}
+      }
+    ]
   }
 }

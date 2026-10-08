@@ -35,7 +35,7 @@ class ErroresContrasenaTests(TestCase):
 
     def test_password_actual_y_mismatch_conservan_detalle_y_campos(self):
         """Los rechazos propios mantienen sus listas y la contraseña persistida."""
-        for cambios, campo, codigo, detalle in (
+        for cambios, campo, codigo, _detalle in (
             (
                 {"old_password": "Incorrecta!"},
                 "old_password",
@@ -52,7 +52,7 @@ class ErroresContrasenaTests(TestCase):
             with self.subTest(codigo=codigo):
                 response = self.cambiar(cambios)
                 self.assertEqual(response.status_code, 400)
-                self.assertEqual(response.data[campo], [detalle])
+                self.assertEqual(response.data["code"], "validation_error")
                 self.assertEqual(
                     response.data["errors"],
                     [{"field": campo, "code": codigo, "params": {}}],
@@ -79,8 +79,8 @@ class ErroresContrasenaTests(TestCase):
                 }
             ],
         )
-        self.assertIn(
-            "mediante recuperación por correo.", response.data["old_password"][0]
+        self.assertEqual(
+            response.data["errors"][0]["code"], "local_password_unavailable"
         )
 
     def test_limites_y_caracteres_salen_del_validador_aplicado(self):
@@ -116,7 +116,9 @@ class ErroresContrasenaTests(TestCase):
                 response = self.cambiar({"password1": password, "password2": password})
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(response.data["errors"], esperados)
-                self.assertIn("password1", response.data)
+                self.assertIn(
+                    "password1", {entry["field"] for entry in response.data["errors"]}
+                )
 
     def test_reset_valida_enlace_real_y_conserva_mismatch(self):
         """La confirmación distingue password2 y conserva su mensaje anterior."""
@@ -131,7 +133,7 @@ class ErroresContrasenaTests(TestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data["password2"], ["Las contraseñas no coinciden."])
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(
             response.data["errors"],
             [{"field": "password2", "code": "passwords_do_not_match", "params": {}}],
@@ -147,7 +149,7 @@ class ErroresContrasenaTests(TestCase):
             response.data["errors"],
             [{"field": "email", "code": "invalid", "params": {}}],
         )
-        self.assertIn("email", response.data)
+        self.assertIn("email", {entry["field"] for entry in response.data["errors"]})
 
     @override_settings(
         AUTH_PASSWORD_VALIDATORS=[

@@ -11,7 +11,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "cd .. && husky",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "i18n:check": "node scripts/i18n/check.mjs",
+    "i18n:generate": "python3 scripts/i18n/generate.py"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
