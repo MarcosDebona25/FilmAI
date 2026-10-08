@@ -123,3 +123,12 @@ messages. Characterization references change only under the accepted F0
 regeneration authorization. Test all eight variants, effective locale, expiry
 context and URL routes. Review the rendered emails in a real client at OT-52
 and OT-90 as required by the plan. OT-13 adds no sending code or tests.
+
+## Implementation progress
+
+OT-50 first unit centralizes the four sends and moves existing Spanish
+templates unchanged. Original F0 references remain identical, including the
+text-only password notification and different whitespace handling of allauth
+and reset. The previous notification transport-failure test targets the new
+transport location under explicit user authorization; its assertions remain
+unchanged. Shared HTML layout and later localization remain pending.
