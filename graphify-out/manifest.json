@@ -1812,9 +1812,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791418565.8290548,
-    "seen": 1791418575.557508,
-    "ast_hash": "68acc39512b62d2e3494da3992c4724a",
+    "mtime": 1791418628.2162452,
+    "seen": 1791418637.6175294,
+    "ast_hash": "0d7e1821ea2c7170bb8c4adf222078f3",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2430,9 +2430,9 @@
     "semantic_hash": ""
   },
   "docs/i18n/README.md": {
-    "mtime": 1791418566.0674899,
-    "seen": 1791418575.5574608,
-    "ast_hash": "0fa6320b002970265dfb3ca5bc9b8f4d",
+    "mtime": 1791418628.416304,
+    "seen": 1791418637.6174836,
+    "ast_hash": "7c274e2e27f05061980728b24e8933b1",
     "semantic_hash": ""
   }
 }
