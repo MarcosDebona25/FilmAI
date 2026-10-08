@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from filmai.errores.serializadores import FronteraErroresMixin
+from filmai.errores.sobre import agregar_codigo_exito
 from filmai.errores.validacion import ErrorValidacion
 
 from .avatares import AVATARES
@@ -31,9 +32,9 @@ def bloquear_usuario(request):
     return usuario
 
 
-def cerrar_sesion(request, mensaje):
+def cerrar_sesion(request, mensaje, codigo):
     logout(request)
-    response = Response({"detail": mensaje})
+    response = agregar_codigo_exito(Response({"detail": mensaje}), codigo)
     unset_jwt_cookies(response)
     return response
 
@@ -120,4 +121,5 @@ class CambiarContrasenaView(GenericAPIView):
         return cerrar_sesion(
             request,
             "Contraseña actualizada. Inicia sesión nuevamente en tus dispositivos.",
+            "password_updated",
         )

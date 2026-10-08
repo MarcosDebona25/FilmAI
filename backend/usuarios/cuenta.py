@@ -82,5 +82,7 @@ class DesactivarCuentaView(GenericAPIView):
             for token in OutstandingToken.objects.filter(user=usuario).iterator():
                 BlacklistedToken.objects.get_or_create(token=token)
             return cerrar_sesion(
-                request, "Tu cuenta fue dada de baja. Tus datos se conservan."
+                request,
+                "Tu cuenta fue dada de baja. Tus datos se conservan.",
+                "account_deactivated_successfully",
             )

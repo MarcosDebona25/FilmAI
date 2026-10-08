@@ -29,25 +29,29 @@ class EstadoCuentaCaracterizacionTests(TestCase):
                 ("email", usuario.correo),
                 ("username", usuario.nombre_usuario),
             ):
-                for password in ("Password123!", "WrongPassword123!"):
-                    with self.subTest(estado=estado, campo=campo, password=password):
-                        datos = {campo: identificador, "password": password}
-                        serializer = LoginSerializer(data=datos)
-                        with self.assertRaises(PermissionDenied) as error:
-                            serializer.is_valid(raise_exception=True)
-                        self.assertEqual(str(error.exception.detail), mensaje)
-                        respuesta = client.post(
-                            "/api/auth/login/", datos, format="json"
-                        )
-                        self.assertEqual(respuesta.status_code, 403)
-                        self.assertEqual(
-                            {
-                                clave: valor
-                                for clave, valor in respuesta.json().items()
-                                if clave not in RESERVADOS
-                            },
-                            {"detail": "No tenés permisos para realizar esta acción."},
-                        )
+                with self.subTest(estado=estado, campo=campo, password="correcta"):
+                    datos = {campo: identificador, "password": "Password123!"}
+                    serializer = LoginSerializer(data=datos)
+                    with self.assertRaises(PermissionDenied) as error:
+                        serializer.is_valid(raise_exception=True)
+                    self.assertEqual(str(error.exception.detail), mensaje)
+                    respuesta = client.post("/api/auth/login/", datos, format="json")
+                    self.assertEqual(respuesta.status_code, 403)
+                    self.assertEqual(
+                        {
+                            clave: valor
+                            for clave, valor in respuesta.json().items()
+                            if clave not in RESERVADOS
+                        },
+                        {"detail": "No tenés permisos para realizar esta acción."},
+                    )
+                # OT-33: con credencial incorrecta el estado ya no se revela.
+                with self.subTest(estado=estado, campo=campo, password="incorrecta"):
+                    datos = {campo: identificador, "password": "WrongPassword123!"}
+                    respuesta = client.post("/api/auth/login/", datos, format="json")
+                    self.assertEqual(respuesta.status_code, 400)
+                    self.assertEqual(respuesta.json()["code"], "invalid_credentials")
+                    self.assertNotIn(mensaje, str(respuesta.json()))
 
     def test_resena_y_calificacion_siguen_publicas_tras_baja(self):
         """La baja real conserva datos y la comunidad aún ve texto, nota y autor."""

@@ -9,6 +9,7 @@ poder distinguir por qué falló un enlace de confirmación.
 """
 
 import logging
+from functools import wraps
 from typing import ClassVar
 
 from allauth.account import app_settings as allauth_account_settings
@@ -34,6 +35,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+
+from filmai.errores.sobre import agregar_codigo_exito
 
 from .models import Usuario
 from .serializers import (
@@ -90,6 +93,29 @@ class LoginView(BaseLoginView):
     authentication_classes = (LenientJWTCookieAuthentication,)
 
 
+def con_codigo_exito(vista, codigo, estado=status.HTTP_200_OK):
+    """Envuelve una vista ya resuelta para sumar `code` a su POST exitoso.
+
+    `functools.wraps` conserva `cls`/`view_class`, así que drf-spectacular sigue
+    viendo la clase original (y sus extensiones de dj-rest-auth): el esquema
+    OpenAPI no cambia.
+    """
+
+    @wraps(vista)
+    def envuelta(request, *args, **kwargs):
+        response = vista(request, *args, **kwargs)
+        if (
+            request.method == "POST"
+            and response.status_code == estado
+            and isinstance(response.data, dict)
+            and "detail" in response.data
+        ):
+            agregar_codigo_exito(response, codigo)
+        return response
+
+    return envuelta
+
+
 class RegisterView(BaseRegisterView):
     """Registro tradicional sin el `complete_signup` de dj-rest-auth.
 
@@ -143,7 +169,7 @@ class CSRFTokenView(APIView):
         return super().dispatch(*args, **kwargs)
 
     def get(self, request):
-        return Response({"detail": "ok"})
+        return agregar_codigo_exito(Response({"detail": "ok"}), "csrf_ready")
 
 
 class UsernameDisponibleView(APIView):
@@ -223,7 +249,7 @@ class ConfirmarCorreoView(APIView):
             return Response(
                 {"codigo": "ya_confirmada"}, status=status.HTTP_400_BAD_REQUEST
             )
-        return Response({"detail": "ok"})
+        return agregar_codigo_exito(Response({"detail": "ok"}), "email_confirmed")
 
 
 class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
@@ -244,13 +270,16 @@ class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(
-            {
-                "detail": (
-                    "Si el correo está registrado, se envió un email con "
-                    "instrucciones para restablecer la contraseña."
-                )
-            }
+        return agregar_codigo_exito(
+            Response(
+                {
+                    "detail": (
+                        "Si el correo está registrado, se envió un email con "
+                        "instrucciones para restablecer la contraseña."
+                    )
+                }
+            ),
+            "password_reset_requested",
         )
 
 
@@ -277,5 +306,7 @@ class RestablecerContrasenaView(APIView):
         from .perfil import cerrar_sesion
 
         return cerrar_sesion(
-            request, "La contraseña fue restablecida. Inicia sesión nuevamente."
+            request,
+            "La contraseña fue restablecida. Inicia sesión nuevamente.",
+            "password_reset_completed",
         )

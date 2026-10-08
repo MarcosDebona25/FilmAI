@@ -24,15 +24,19 @@ from django.http import HttpResponseBadRequest
 from django.utils.translation import gettext as _
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
 
 from filmai.correos.servicio import enviar_correo
+from filmai.errores.base import ExcepcionAPI
 from filmai.errores.serializadores import FronteraErroresMixin
 from filmai.errores.validacion import ErrorValidacion
 
 from .avatares import es_avatar_valido
 from .errores import CampoNombreUsuario, FronteraUsuarioMixin
-from .exceptions import NombreUsuarioOcupado
+from .exceptions import (
+    CuentaInactiva,
+    NombreUsuarioOcupado,
+    cuenta_inactiva_login,
+)
 from .models import EstadoCuenta, TipoGenero, Usuario
 from .passwords import guardar_contrasena
 from .validators import MINIMUM_AGE, USERNAME_REGEX, validar_nombre_persona
@@ -56,14 +60,24 @@ class LoginSerializer(BaseLoginSerializer):
         elif username:
             usuario = Usuario.objects.filter(nombre_usuario__iexact=username).first()
 
-        if usuario is not None and not usuario.is_active:
-            if usuario.estado == EstadoCuenta.BAJA:
-                raise PermissionDenied("Tu cuenta fue dada de baja.")
-            raise PermissionDenied(
-                "Tu cuenta aún no está activa. Revisá tu correo para confirmarla."
-            )
+        # El estado solo se revela a quien conoce la contraseña (plan 3.3); con
+        # una incorrecta se sigue el camino normal y responde invalid_credentials.
+        if (
+            usuario is not None
+            and not usuario.is_active
+            and usuario.check_password(attrs.get("password") or "")
+        ):
+            raise cuenta_inactiva_login(usuario)
 
-        return super().validate(attrs)
+        try:
+            return super().validate(attrs)
+        except serializers.ValidationError as error:
+            if not (email or username):
+                raise
+            # Mismo HTTP 400 y cuerpo heredado; solo cambia el código a uno propio.
+            raise ExcepcionAPI(
+                "invalid_credentials", contexto="login", detalle=error.detail
+            ) from error
 
     @staticmethod
     def validate_email_verification_status(user, email=None):
@@ -244,7 +258,7 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
         es_existente = cuenta_existente is not None
 
         if es_existente and not cuenta_existente.user.is_active:
-            raise PermissionDenied("Tu cuenta no está activa.")
+            raise CuentaInactiva(cuenta_existente.user, "Tu cuenta no está activa.")
 
         if not es_existente:
             # Google no provee estos campos obligatorios del perfil FilmAI.
@@ -306,7 +320,7 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
 
         attrs["user"] = login.account.user
         if not attrs["user"].is_active:
-            raise PermissionDenied("Tu cuenta no está activa.")
+            raise CuentaInactiva(attrs["user"], "Tu cuenta no está activa.")
         return attrs
 
 

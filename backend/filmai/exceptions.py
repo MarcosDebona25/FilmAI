@@ -1,6 +1,7 @@
 """Manejador global de excepciones de FilmAI."""
 
 import logging
+import math
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
@@ -129,6 +130,9 @@ def filmai_exception_handler(exc, context):
         logger.warning("Excepción pendiente de registrar: %s", codigo)
         return response
     request = context.get("request")
+    if isinstance(exc, Throttled) and exc.wait is not None:
+        # DRF ya fija `Retry-After` con `exc.wait`; el parámetro lo repite en el sobre.
+        parametros = {"retry_after_seconds": math.ceil(exc.wait)}
     if isinstance(exc, MethodNotAllowed) and request is not None:
         parametros = {"method": request.method}
     elif codigo == "unsupported_media_type" and request is not None:
