@@ -666,9 +666,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791418565.8318932,
-    "seen": 1791418575.5574574,
-    "ast_hash": "a9c22867fd18707e3efb7f878341f902",
+    "mtime": 1791419034.9613087,
+    "seen": 1791419040.7184546,
+    "ast_hash": "4467201feabec5f84f00e6875c977392",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1812,9 +1812,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791418675.8281515,
-    "seen": 1791418685.51627,
-    "ast_hash": "f8c7538198f5d46528d10e4234873796",
+    "mtime": 1791419034.965878,
+    "seen": 1791419040.7185447,
+    "ast_hash": "a92920042353142994e78e6b67076c22",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2433,6 +2433,12 @@
     "mtime": 1791418675.8268058,
     "seen": 1791418685.5162225,
     "ast_hash": "941a0d91e5c51a6b13eb2dbef427d212",
+    "semantic_hash": ""
+  },
+  "openspec/specs/error-contract/spec.md": {
+    "mtime": 1791418986.5046809,
+    "seen": 1791419017.4373152,
+    "ast_hash": "88377ab8d2a9e5fe27c01c1ee4e0f3a4",
     "semantic_hash": ""
   }
 }
