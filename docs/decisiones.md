@@ -2859,3 +2859,23 @@ conserva el árbol `267f94944eecbb1347b5ff60bce1b2da3241073b`, validado con
 30 e2e antes del rebase; esa evidencia se reutiliza y el CI la repetirá.
 El puerto 3100 pertenece ahora a otra aplicación. No se detuvo ni se
 cambiaron las URLs o los oráculos de pruebas para adaptar el entorno.
+
+---
+
+## 08/10/2026 — Cliente TMDB y caché por idioma (OT-60, primera entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el mapa EN/ES se expresa como `en-US`/`es-MX`. Cada cliente
+  tiene un idioma fijo; la fábrica comparte una instancia por idioma y
+  normaliza la llamada sin argumentos al inglés canónico. Los siete métodos
+  localizables envían `language`; Redis incluye el mismo valor en su hash de
+  parámetros, conservando formato y TTL. Los métodos globales no lo envían.
+- **Tests**: cinco pruebas nuevas cubren parámetros HTTP EN/ES, endpoints
+  globales, dos entradas Redis con aciertos separados, independencia de
+  clientes y rechazo de idioma no soportado antes del HTTP. Los 29 tests
+  enfocados pasan en 7,159 s. El usuario autorizó ampliar únicamente los cuatro
+  fixtures anteriores de caché con `language: en-US`, conservando sus
+  comprobaciones de acierto, almacenamiento y vencimiento.
+- **Archivos afectados**: settings, cliente, caché, fábrica de servicios,
+  tests de catálogo, doc 06, specs `tmdb-client`/`tmdb-cache` y plan. Las vistas
+  y la verificación real se registrarán en la segunda entrega de OT-60.

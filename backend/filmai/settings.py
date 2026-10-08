@@ -141,6 +141,7 @@ PASSWORD_RESET_TIMEOUT = 60 * 60
 LANGUAGE_CODE = "es-ar"
 IDIOMAS_SOPORTADOS = ("en", "es")
 IDIOMA_POR_DEFECTO = "en"
+IDIOMAS_TMDB = {"en": "en-US", "es": "es-MX"}
 TIME_ZONE = "America/Argentina/Buenos_Aires"
 USE_I18N = True
 USE_TZ = True

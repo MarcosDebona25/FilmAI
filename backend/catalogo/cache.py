@@ -4,6 +4,18 @@ from hashlib import sha256
 import redis
 from django.conf import settings
 
+ENDPOINTS_LOCALIZADOS = frozenset(
+    {
+        "trending",
+        "now_playing",
+        "discover",
+        "search",
+        "movie_detail",
+        "tv_detail",
+        "genres",
+    }
+)
+
 ENDPOINT_TTLS = {
     "trending": 6 * 3600,
     "now_playing": 6 * 3600,
@@ -41,6 +53,15 @@ class TMDBClientCache:
         self.redis = redis_client
 
     def _cached_call(self, endpoint, params, producer):
+        if endpoint in ENDPOINTS_LOCALIZADOS:
+            params = {
+                **params,
+                "language": getattr(
+                    self.client,
+                    "idioma",
+                    settings.IDIOMAS_TMDB[settings.IDIOMA_POR_DEFECTO],
+                ),
+            }
         key = _build_key(endpoint, params)
         redis_available = True
         try:

@@ -520,7 +520,12 @@ class TMDBClientCacheTest(SimpleTestCase):
 
     def test_cache_hit_no_tmdb_call(self):
         cache, calls = self.make_cache()
-        params = {"media_type": "all", "time_window": "week", "page": 1}
+        params = {
+            "media_type": "all",
+            "time_window": "week",
+            "page": 1,
+            "language": "en-US",
+        }
         self.redis.set(_build_key("trending", params), '{"cached": true}')
 
         result = cache.get_trending()
@@ -535,7 +540,13 @@ class TMDBClientCacheTest(SimpleTestCase):
         result = cache.get_trending()
 
         key = _build_key(
-            "trending", {"media_type": "all", "time_window": "week", "page": 1}
+            "trending",
+            {
+                "media_type": "all",
+                "time_window": "week",
+                "page": 1,
+                "language": "en-US",
+            },
         )
         self.assertEqual(result, body)
         self.assertEqual(len(calls), 1)
@@ -575,6 +586,8 @@ class TMDBClientCacheTest(SimpleTestCase):
                     "tv_detail": {"id_tmdb": 1399},
                     "keywords": {"id_tmdb": 550, "tipo": "movie"},
                 }[endpoint]
+                if endpoint != "keywords":
+                    key_params["language"] = "en-US"
                 key = _build_key(endpoint, key_params)
                 self.assertAlmostEqual(
                     self.redis.ttl(key), ENDPOINT_TTLS[endpoint], delta=1
@@ -679,7 +692,7 @@ class TMDBClientCacheTest(SimpleTestCase):
 
         cache, _ = self.make_cache()
         cache.get_genres("movie")
-        key = _build_key("genres", {"tipo": "movie"})
+        key = _build_key("genres", {"tipo": "movie", "language": "en-US"})
 
         self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["genres"])
 

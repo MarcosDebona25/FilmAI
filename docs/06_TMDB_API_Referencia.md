@@ -365,3 +365,12 @@
 5. **Sync diaria (C-04b)**: el beat de Celery a las 3 AM sincroniza populares,
    tendencias y novedades (mantenimiento/seed del corpus), nunca reemplaza al
    discovery en vivo ni pisa datos locales.
+
+## Idioma explícito del cliente (OT-60, primera entrega)
+
+El cliente y su caché admiten `en-US` y `es-MX`. Listados, búsqueda, detalles
+y géneros envían `language`, incluido en los parámetros que forman la clave
+Redis. Los TTL no cambian. Keywords, créditos y cambios conservan el contrato
+global. La fábrica sin argumentos devuelve el cliente inglés compartido por
+materialización; cada cliente mantiene un idioma fijo. La conexión con el
+idioma del request se entrega en la segunda unidad de OT-60.

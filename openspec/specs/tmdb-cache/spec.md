@@ -73,3 +73,17 @@ The system SHALL serialize stored entries to JSON and deserialize on retrieval s
 - GIVEN a TMDB response is stored
 - WHEN the entry is retrieved from cache
 - THEN the deserialized structure matches the original TMDB response
+
+### Requirement: Separación de respuestas por idioma
+
+Los parámetros canónicos de los siete endpoints localizables MUST incluir
+`language` antes de calcular la clave. El formato de clave y los TTL MUST
+permanecer iguales; las entradas antiguas expiran normalmente. Keywords,
+créditos y cambios MUST conservar claves independientes del idioma.
+
+#### Scenario: Mismo título en dos idiomas
+
+- GIVEN consultas EN y ES al mismo identificador
+- WHEN cada consulta se repite
+- THEN existen dos entradas diferentes y cada repetición usa su entrada
+- AND solo se realiza una llamada HTTP por idioma

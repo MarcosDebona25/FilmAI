@@ -30,7 +30,16 @@ _DISCOVER_DATE_PARAM = {
 
 
 class TMDBClient:
-    def __init__(self, *, api_key=None, base_url=None, timeout=None, transport=None):
+    def __init__(
+        self, *, api_key=None, base_url=None, timeout=None, transport=None, idioma=None
+    ):
+        self.idioma = (
+            settings.IDIOMAS_TMDB[settings.IDIOMA_POR_DEFECTO]
+            if idioma is None
+            else idioma
+        )
+        if self.idioma not in settings.IDIOMAS_TMDB.values():
+            raise ValueError("Idioma TMDB no soportado.")
         self.api_key = settings.TMDB_API_KEY if api_key is None else api_key
         self.base_url = settings.TMDB_API_BASE_URL if base_url is None else base_url
         self.timeout = settings.TMDB_TIMEOUT if timeout is None else timeout
@@ -42,6 +51,9 @@ class TMDBClient:
 
     def _get(self, path, params=None):
         return self._request(path, params or {})
+
+    def _get_localizado(self, path, params=None):
+        return self._get(path, {**(params or {}), "language": self.idioma})
 
     def _request(self, path, params):
         request_params = {**params, "api_key": self.api_key}
@@ -100,10 +112,12 @@ class TMDBClient:
         raise TMDBError(message)
 
     def get_trending(self, media_type="all", time_window="week", page=1):
-        return self._get(f"/trending/{media_type}/{time_window}", {"page": page})
+        return self._get_localizado(
+            f"/trending/{media_type}/{time_window}", {"page": page}
+        )
 
     def get_now_playing(self, page=1):
-        return self._get("/movie/now_playing", {"page": page})
+        return self._get_localizado("/movie/now_playing", {"page": page})
 
     def discover(
         self,
@@ -136,16 +150,16 @@ class TMDBClient:
             params["vote_average.gte"] = min_rating
         if sort_by is not None:
             params["sort_by"] = sort_by
-        return self._get(f"/discover/{tipo}", params)
+        return self._get_localizado(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1):
-        return self._get(f"/search/{tipo}", {"query": query, "page": page})
+        return self._get_localizado(f"/search/{tipo}", {"query": query, "page": page})
 
     def get_movie_detail(self, id_tmdb):
-        return self._get(f"/movie/{id_tmdb}")
+        return self._get_localizado(f"/movie/{id_tmdb}")
 
     def get_tv_detail(self, id_tmdb):
-        return self._get(f"/tv/{id_tmdb}")
+        return self._get_localizado(f"/tv/{id_tmdb}")
 
     def get_keywords(self, id_tmdb, tipo):
         return self._get(f"/{tipo}/{id_tmdb}/keywords")
@@ -161,4 +175,4 @@ class TMDBClient:
     def get_genres(self, tipo):
         # Catálogo de géneros con sus ids. Difiere por tipo: película tiene
         # `Action` y `Adventure` separados, serie tiene `Action & Adventure`.
-        return self._get(f"/genre/{tipo}/list")
+        return self._get_localizado(f"/genre/{tipo}/list")
