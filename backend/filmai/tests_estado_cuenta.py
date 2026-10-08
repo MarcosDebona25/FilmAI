@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 
 from catalogo.factories import ResenaFactory
+from filmai.errores.sobre import RESERVADOS
 from usuarios.factories import UsuarioFactory
 from usuarios.models import EstadoCuenta
 from usuarios.serializers import LoginSerializer
@@ -40,7 +41,11 @@ class EstadoCuentaCaracterizacionTests(TestCase):
                         )
                         self.assertEqual(respuesta.status_code, 403)
                         self.assertEqual(
-                            respuesta.json(),
+                            {
+                                clave: valor
+                                for clave, valor in respuesta.json().items()
+                                if clave not in RESERVADOS
+                            },
                             {"detail": "No tenés permisos para realizar esta acción."},
                         )
 
