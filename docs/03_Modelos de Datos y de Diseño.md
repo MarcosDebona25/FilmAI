@@ -160,3 +160,12 @@ borrados en cascada al dar de baja una cuenta.
 - `ProduccionEmbedding` (nueva, fase posterior del Módulo 5): relación **1:1** con ProduccionAudiovisual (`produccion_id` con restricción UNIQUE, no una FK común; nunca dos filas de embedding por producción) + columna vectorial `vector(1024)` (extensión pgvector) + índice HNSW `vector_cosine_ops`. Almacena el embedding del texto canónico `Title + Genres + Directors + Cast + Keywords + Synopsis` (normalizado: espacios, vacíos y orden de arrays). Los campos cuantitativos (calificación promedio, año, duración, tipo, estatus) no se embedbean: se filtran por SQL sobre los resultados. No se aplica unicidad al vector (producciones distintas pueden tener vectores iguales o muy similares).
 - **Campos de control e idempotencia (08/09/2026):** `source_hash` (SHA-256 del texto canónico), `model_version` (versión/proveedor del modelo de embeddings) y `estado` (`pending` | `processing` | `ready` | `failed`). Antes de invocar al proveedor se compara hash y versión: si no cambiaron y el estado es `ready`, no se recomputa. Si cambia el contenido o el modelo, la regeneración es legítima.
 - **Generación asíncrona (08/09/2026, reemplaza la decisión del 25/08/2026 de embeddings síncronos):** la materialización persiste la producción y crea el registro con estado `pending`; una tarea Celery genera el vector sin bloquear catálogo ni detalle, con reintentos/backoff, backfill para `failed` y claim/lease idempotente (Celery puede duplicar tareas; la persistencia es condicional al claim vigente). La búsqueda semántica solo considera embeddings `ready`; las producciones pendientes o fallidas siguen visibles y se resuelven on-demand vía TMDB.
+
+### Idioma de aplicación (OT-20, 08/10/2026)
+
+`Usuario.idioma` es un VARCHAR(2) nullable con opciones `en` y `es`. La
+migración no rellena las cuentas anteriores. Una operación usa el idioma
+guardado, luego `Accept-Language` con pesos y regiones, y por último `en`.
+Esta resolución es explícita y no modifica el idioma global de Django.
+La exposición en preferencias y el guardado en registros se completan en
+las entregas siguientes de OT-20.
