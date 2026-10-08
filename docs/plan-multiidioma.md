@@ -843,7 +843,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Completada: 08/10/2026; correspondencia completa de F0 y HTTP/429 definidos; integrada fuera de main con CI en verde |
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integrada fuera de main con CI verde de ambas cabezas (ver 10.5) |
-| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | En curso: núcleo, preferencias y registros implementados; semilla y cierre pendientes |
+| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Verificada: 08/10/2026; núcleo/API #55/#56 integrados; 520 backend verdes y semilla #57 en cierre CI (ver 10.5) |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30 | M | Pendiente |
@@ -1038,6 +1038,30 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   El usuario también aprobó las 53 traducciones EN transitorias propuestas
   para OT-70 en `/tmp/filmai-ot70-copia-faltante.csv`; el agente de esa orden
   las versionará con trazabilidad propia, conservando ES hasta OT-76.
+
+- 08/10/2026, OT-20 tercera unidad: seed completo asigna `es` a usuario001/
+  usuario003 y `en` a usuario002; README documentado. Dos tests nuevos pasan
+  en 3,663 s: recreación repetida y modo de reseñas conservando idiomas. No se
+  ejecuta seed ni migración en la base de desarrollo. Regresión completa
+  backend en curso. El árbol frontend coincide exactamente con el validado
+  en OT-13 (43 unitarios, 24 e2e y build); CI comprobará cada nueva cabeza.
+
+- 08/10/2026, verificación OT-20: PR #55 y #56 integrados con CI completo
+  verde, solo en `feat/i18n-multiidioma` (merges `54d31b1` y `fee46bb`).
+  La suite local con semilla corrió 520 tests en 184,491 s: cinco fallos de
+  autenticación 401 dentro del test preexistente de preferencias. No se toca
+  su comportamiento ni se da por cerrado OT-20; se instrumenta JWT en un
+  runner temporal para determinar la causa. Los dos tests de semilla pasan.
+  El usuario aprobó para OT-41 `list_name_reserved`, HTTP 409, sin parámetros:
+  «Ese nombre está reservado para una lista predeterminada.» / “This name is
+  reserved for a default list.”. Esa copia nueva se registra al implementarla.
+
+- 08/10/2026, OT-20 verificada: repetición normal completa **520 tests**
+  en 190,527 s, resultado OK. Ruff y formato/frontend limpios. Se conserva el
+  fallo intermitente anterior sin atribuir una causa ni cambiar tests previos.
+  Frontend exacto `88f94c0`: evidencia vigente de OT-13 43 unitarios/24 e2e/build;
+  no se presenta como corrida nueva. Semilla PR #57 hacia integración; solo
+  se integra con CI verde de su cabeza final. Núcleo/API #55/#56 ya integrados.
 
 ### 10.6 Instrucción para iniciar una sesión
 
