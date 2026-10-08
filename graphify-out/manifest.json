@@ -318,9 +318,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "backend/usuarios/management/commands/seed.py": {
-    "mtime": 1790887513.1038384,
-    "seen": 1791417713.9063487,
-    "ast_hash": "0ea067cf6c2d5450f31ca10cc7df81d0",
+    "mtime": 1791422539.517297,
+    "seen": 1791422626.515347,
+    "ast_hash": "5f30fb80dddd40113b15b5b7205f47b0",
     "semantic_hash": ""
   },
   "backend/usuarios/management/commands/send_test_email.py": {
@@ -552,9 +552,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790739825.8924315,
-    "seen": 1791417713.9064825,
-    "ast_hash": "57f5efc5ebaf2dedf5d546ade9e37517",
+    "mtime": 1791422539.5185256,
+    "seen": 1791422626.524848,
+    "ast_hash": "6106ab1794ee53af8683ecaf4ef0b755",
     "semantic_hash": ""
   },
   "backend/requirements.txt": {
@@ -666,9 +666,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791422356.9144363,
-    "seen": 1791422367.0811024,
-    "ast_hash": "94a608d4b2b5c6f8e71ee4ea64d19a06",
+    "mtime": 1791423475.6407917,
+    "seen": 1791423488.7752273,
+    "ast_hash": "cb5070c666c045429ee185a0b08e4a5f",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1668,9 +1668,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/development-seed/spec.md": {
-    "mtime": 1790887513.143874,
-    "seen": 1791417713.9065254,
-    "ast_hash": "13613835167e01def9663481b6fefe45",
+    "mtime": 1791422614.809948,
+    "seen": 1791422626.527926,
+    "ast_hash": "1b918050be778702c90657c9f5766c1a",
     "semantic_hash": ""
   },
   "backend/filmai/documentation.py": {
@@ -1812,9 +1812,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791422356.919275,
-    "seen": 1791422367.0812314,
-    "ast_hash": "f8dc794a3149f048e168793ba1bb9fde",
+    "mtime": 1791423475.646487,
+    "seen": 1791423488.7753735,
+    "ast_hash": "1e2f9809fd88f662e2f2081e463318cb",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2448,9 +2448,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
-    "mtime": 1791422356.918135,
-    "seen": 1791422367.082001,
-    "ast_hash": "51f947b7196111e6233938ba0b0b097b",
+    "mtime": 1791423475.6448283,
+    "seen": 1791423488.7762408,
+    "ast_hash": "66dd62ccc356c1984fb732f9c47f87dc",
     "semantic_hash": ""
   },
   "docs/i18n/revision-ot13.md": {
@@ -2487,6 +2487,12 @@
     "mtime": 1791422209.1884298,
     "seen": 1791422367.074168,
     "ast_hash": "dc91a0dbef04b31201e4eb02f7fee320",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/test_seed_idioma.py": {
+    "mtime": 1791422540.0833874,
+    "seen": 1791422626.516514,
+    "ast_hash": "03c812a53d2b720e97ef17ff3e0d6447",
     "semantic_hash": ""
   }
 }

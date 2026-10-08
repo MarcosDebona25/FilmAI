@@ -154,4 +154,6 @@ resolution, including weighted/regional headers and a real reversible migration
 test without backfill. Preferences now reads null for previous accounts but only writes supported
 locales. User details/profile expose the field read-only; traditional and Google
 registration persist the new account locale while existing Google accounts keep
-their saved locale. Seed integration remains pending within OT-20. This does not claim the frontend or emails are complete.
+their saved locale. The full development seed now creates known ES/EN accounts; its reviews-only
+mode preserves existing languages. The full backend suite passes 520 tests. Final delivery integration is gated
+on its own CI; frontend/email/TMDB requirements remain future phases. This does not claim the frontend or emails are complete.
