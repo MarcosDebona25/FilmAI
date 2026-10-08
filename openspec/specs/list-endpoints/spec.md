@@ -7,6 +7,19 @@ in them through `/api/lists/`.
 
 ## Requirements
 
+### Stable identity of existing predetermined lists
+
+`Lista.clave` MUST support `favoritos`, `pendientes`, and `vistas`, and MUST
+remain nullable during the migration of application code to these identities.
+The existing `nombre`, list IDs, and `Tiene` relations MUST be preserved.
+
+Migration `listas.0005_lista_clave` MUST assign each existing predetermined
+list its key from `Lower(nombre)`. Personalized lists MUST remain without a
+key, including those whose names match a predetermined name.
+An unknown predetermined name MUST stop the migration explicitly and roll
+back its schema and data changes. Reversing the migration MUST clear keys
+before removing the column, while preserving lists and items.
+
 ### Summary and membership
 
 `GET /api/lists/` MUST return active lists belonging to the authenticated user.
