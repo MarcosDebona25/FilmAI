@@ -155,4 +155,5 @@ test without backfill. Preferences now reads null for previous accounts but only
 locales. User details/profile expose the field read-only; traditional and Google
 registration persist the new account locale while existing Google accounts keep
 their saved locale. The full development seed now creates known ES/EN accounts; its reviews-only
-mode preserves existing languages. Full-suite and CI closure remain in progress. This does not claim the frontend or emails are complete.
+mode preserves existing languages. The full backend suite passes 520 tests. Final delivery integration is gated
+on its own CI; frontend/email/TMDB requirements remain future phases. This does not claim the frontend or emails are complete.
