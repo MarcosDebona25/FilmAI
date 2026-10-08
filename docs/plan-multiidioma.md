@@ -840,9 +840,9 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-02 | F0, pasos 4, 5 y 6 | Caracterización de correos, esquema OpenAPI capturado y supuestos de 2.6 comprobados | OT-00 | S | Completada: 07/10/2026; F0 integrada, 508/43/24 y CI en verde (ver 10.5) |
 | OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Completada: 07/10/2026; F0 integrada, 508/43/24 y CI en verde (ver 10.5) |
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Completada: 08/10/2026; PR #47 integrado fuera de main; CI en verde |
-| OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Pendiente |
-| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Implementada: 08/10/2026; 634 filas, revisión editorial OT-13 pendiente |
-| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Pendiente |
+| OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Completada: 08/10/2026; correspondencia completa de F0 y HTTP/429 definidos; integrada fuera de main con CI en verde |
+| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
+| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Borrador sin aprobar: 08/10/2026; rama `docs/i18n-ot13-copia-specs`, PR en draft; falta la aprobación editorial del usuario |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Pendiente |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
@@ -938,6 +938,16 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   usuario: contacto@filmai.com en textos curados, originales conservados.
   Sin código, tests ni dependencias modificados; referencia de suites completas
   508/43/24 y build verde. CI por PR y graphify antes del commit; no merge a main.
+
+- 08/10/2026, OT-11: rama `docs/i18n-ot11-contrato-errores`, apilada sobre el bloque C de OT-12. Spec `error-contract` y correspondencia en `docs/i18n/errores.csv` (88 filas). Auditoría documental: 91/91 referencias de API de F0 citadas (las cuatro de correos pertenecen a OT-13/F5) y todas sus cadenas de mensaje presentes en el CSV (recomprobado al cerrar). Se documentan normalizaciones de librerías instaladas, respuestas exitosas, ramas defensivas y textos fuera de API. Sin cambios de producción ni tests. El usuario aprobó propagar la espera real de TMDB cuando esté informada y omitir parámetro/encabezado si se desconoce; también confirmó códigos por significado y estados permitidos por contexto, conservando el HTTP actual durante multiidioma. Sin dudas pendientes de contrato; copia nueva reservada para aprobación en OT-13.
+
+- 08/10/2026, corte de la sesión (cierre hecho con Claude Code sobre el trabajo que Codex dejó sin commitear). Estado para retomar:
+  - Integrado en `feat/i18n-multiidioma`: F0 completa, OT-10, OT-11 y OT-12. Nada llegó a `main`; el PR de seguimiento #43 sigue en draft.
+  - OT-13 es lo único abierto de F1. Su borrador está en la rama `docs/i18n-ot13-copia-specs` (PR en draft hacia la rama de integración): `docs/i18n/copia-propuesta.csv` con 91 filas en `pendiente_aprobacion`, `docs/i18n/revision-ot13.md` con las seis dudas de curaduría (IDs 214, 215, 320, 355, 448 y 535) y su checklist, y las specs `i18n-core` y `emails` marcadas como borrador. Nada de eso está aprobado ni habilita la siembra de catálogos.
+  - Para retomar: el usuario aprueba o corrige la copia y resuelve las seis dudas; después se cierra OT-13 siguiendo el checklist de `revision-ot13.md` y recién entonces empieza F2 (OT-20). OT-30 y OT-40 dependen solo de OT-11 y de F1 respectivamente, pero no se adelantaron.
+  - No se tocó código de producción ni tests desde F0: la referencia de suites sigue siendo 508 backend, 43 unitarios y 24 e2e, verificada por CI en cada PR.
+  - Los PRs con base `docs/**` no disparan CI (el workflow filtra por rama destino `main` o `feat/**`); hay que reapuntarlos a la rama de integración y cerrarlos y reabrirlos para que corra.
+  - Quedan worktrees de Codex en `/tmp/filmai-i18n-*`. Su contenido ya está commiteado en las ramas correspondientes; se pueden quitar con `git worktree remove`.
 
 ### 10.6 Instrucción para iniciar una sesión
 
