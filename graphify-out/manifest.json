@@ -180,15 +180,15 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1791426567.6259844,
-    "seen": 1791426617.3079019,
-    "ast_hash": "d9ce96bbd90f822a5158a07c4c50fe6a",
+    "mtime": 1791434907.4915783,
+    "seen": 1791435387.408622,
+    "ast_hash": "1a26db9a7ca47482633f4f6086967261",
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
-    "mtime": 1791432535.2491758,
-    "seen": 1791432761.3399334,
-    "ast_hash": "e8d8af2b09092dc148fbc6585e6a40b9",
+    "mtime": 1791434680.5304842,
+    "seen": 1791435387.4089267,
+    "ast_hash": "7c16c8bb65ffd7697adb81595500df3d",
     "semantic_hash": ""
   },
   "backend/filmai/urls.py": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/serializers.py": {
-    "mtime": 1791433288.8153415,
-    "seen": 1791434194.1196015,
-    "ast_hash": "bb573ecd33c7dc896aea474e09dd9bd0",
+    "mtime": 1791435133.2798474,
+    "seen": 1791435387.4167607,
+    "ast_hash": "5c473671b10e435964ab21d73a4fd20b",
     "semantic_hash": ""
   },
   "backend/usuarios/signals.py": {
@@ -384,9 +384,9 @@
     "semantic_hash": "0693397da7ff42c32e538842bc7c4570"
   },
   "backend/usuarios/tests.py": {
-    "mtime": 1790887513.1038384,
-    "seen": 1791426617.3081236,
-    "ast_hash": "a22a876acc746b2f47b210d6a0919601",
+    "mtime": 1791434680.5113165,
+    "seen": 1791435387.417275,
+    "ast_hash": "9cc4a1603026c097d3f73bbbe0c1be03",
     "semantic_hash": ""
   },
   "backend/usuarios/validators.py": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/views.py": {
-    "mtime": 1791433772.1022615,
-    "seen": 1791434194.1204324,
-    "ast_hash": "f4f6326cc6a993a884e89973361db468",
+    "mtime": 1791434666.532521,
+    "seen": 1791435387.4173598,
+    "ast_hash": "33a204be7c7afdeb177244aefa6acaf5",
     "semantic_hash": ""
   },
   "docs/03_DiagramaClases_DiagramaTablas.json": {
@@ -612,9 +612,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791434183.3497033,
-    "seen": 1791434194.1279242,
-    "ast_hash": "29eaec36d733aa9e3806d205ddfb4ef2",
+    "mtime": 1791435378.3457525,
+    "seen": 1791435387.424687,
+    "ast_hash": "426a24d4d7079480a52a5f1bc2bece9e",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1200,16 +1200,16 @@
     "semantic_hash": "5e57ca9b9bcee5cb8e1aa9f65609a33a"
   },
   "backend/filmai/exceptions.py": {
-    "mtime": 1791433094.7996006,
-    "seen": 1791434194.1113274,
-    "ast_hash": "a58d0393914d1d32102fd5aa05be58f4",
+    "mtime": 1791434887.641692,
+    "seen": 1791435387.4085531,
+    "ast_hash": "a1afca8b6b96108643119ad7d5fbe3d4",
     "semantic_hash": ""
   },
   "backend/filmai/views.py": {
-    "mtime": 1789238232.5241694,
-    "seen": 1791426617.3080442,
-    "ast_hash": "91e639569e28681067f74304102dd5b4",
-    "semantic_hash": "91e639569e28681067f74304102dd5b4"
+    "mtime": 1791434437.0548599,
+    "seen": 1791435387.4140532,
+    "ast_hash": "03e522057c7147171921655e944b4dd3",
+    "semantic_hash": ""
   },
   "backend/usuarios/avatares.py": {
     "mtime": 1791428979.4220953,
@@ -1428,9 +1428,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/test_perfil.py": {
-    "mtime": 1791429085.2971637,
-    "seen": 1791431151.1519606,
-    "ast_hash": "6af86ad67c7bd5ac6191591695d6a43d",
+    "mtime": 1791434680.5119386,
+    "seen": 1791435387.4172308,
+    "ast_hash": "3a71cca01c022d4ee15821f650402919",
     "semantic_hash": ""
   },
   "docs/reportes_dev/modulo-4-api.md": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/documentation.py": {
-    "mtime": 1790740411.6936991,
-    "seen": 1791426617.3078856,
-    "ast_hash": "82e2c889ed0d5040d9105a686e05e634",
+    "mtime": 1791434437.0969887,
+    "seen": 1791435387.4081972,
+    "ast_hash": "21b37bc300d10e43e8f05151f30504b1",
     "semantic_hash": ""
   },
   "backend/templates/filmai/documentacion_restringida.html": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791434183.3783855,
-    "seen": 1791434194.1281018,
-    "ast_hash": "4dd7fd11da17e79f30be0923c85f185d",
+    "mtime": 1791435378.3706348,
+    "seen": 1791435387.42486,
+    "ast_hash": "c0caff83476cd2bf786fdfe762d14882",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -1806,9 +1806,9 @@
     "semantic_hash": ""
   },
   "contracts/openapi.yaml": {
-    "mtime": 1791433772.0483842,
-    "seen": 1791434194.1275659,
-    "ast_hash": "f395b7798874ea59c612aa0189ac6ca7",
+    "mtime": 1791435169.6751676,
+    "seen": 1791435387.4242897,
+    "ast_hash": "febbc97fbbf68be0f3d6113c86384d5b",
     "semantic_hash": ""
   },
   "backend/filmai/tests_contrato.py": {
@@ -2382,9 +2382,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/error-contract/spec.md": {
-    "mtime": 1791429285.563444,
-    "seen": 1791431151.159448,
-    "ast_hash": "236f3a6371c7a58c8a44a03a57181de2",
+    "mtime": 1791435378.3718426,
+    "seen": 1791435387.4256368,
+    "ast_hash": "7730c4d5e72a774d4b22d476425abe28",
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
@@ -2478,9 +2478,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/errores/sobre.py": {
-    "mtime": 1791433072.8785322,
-    "seen": 1791434194.1112752,
-    "ast_hash": "8e3fa90648f52570f2b0bf4ee21f7ae0",
+    "mtime": 1791434437.097631,
+    "seen": 1791435387.4084754,
+    "ast_hash": "edb7b4154dd07d2bbe520a2988b88fa8",
     "semantic_hash": ""
   },
   "backend/filmai/test_sobre_errores.py": {
@@ -2805,6 +2805,60 @@
     "mtime": 1791433288.8155997,
     "seen": 1791434194.119746,
     "ast_hash": "e8c3f5e07ff4cb45e33a8c5f853f6243",
+    "semantic_hash": ""
+  },
+  "backend/filmai/errores/contrato.py": {
+    "mtime": 1791434384.6324184,
+    "seen": 1791435387.4084244,
+    "ast_hash": "4472793ac46e039899ee6cb67e58e1df",
+    "semantic_hash": ""
+  },
+  "backend/filmai/errores/openapi.py": {
+    "mtime": 1791434907.4743524,
+    "seen": 1791435387.4084265,
+    "ast_hash": "04e6d2066250750eb63796981e74aa7e",
+    "semantic_hash": ""
+  },
+  "backend/filmai/management/__init__.py": {
+    "mtime": 1791434384.6231494,
+    "seen": 1791435387.4086163,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "backend/filmai/management/commands/__init__.py": {
+    "mtime": 1791434384.6231494,
+    "seen": 1791435387.408618,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "backend/filmai/management/commands/exportar_contrato.py": {
+    "mtime": 1791434384.6360214,
+    "seen": 1791435387.4086194,
+    "ast_hash": "1b5f133f6b4e159f6da8619aeb704b4b",
+    "semantic_hash": ""
+  },
+  "backend/filmai/pruebas.py": {
+    "mtime": 1791434887.6419084,
+    "seen": 1791435387.4086208,
+    "ast_hash": "ba9a77736220be5c01dc6ec5aefb2ad7",
+    "semantic_hash": ""
+  },
+  "backend/filmai/test_cobertura_codigos.py": {
+    "mtime": 1791435167.6364558,
+    "seen": 1791435387.40867,
+    "ast_hash": "4f19c59b56230e9ea5d7acbe0220ec77",
+    "semantic_hash": ""
+  },
+  "backend/filmai/test_contrato_codigos.py": {
+    "mtime": 1791434680.5307467,
+    "seen": 1791435387.4086711,
+    "ast_hash": "630db8800c4b687bb2f5078b3312bbd7",
+    "semantic_hash": ""
+  },
+  "contracts/error-codes.json": {
+    "mtime": 1791434409.7479358,
+    "seen": 1791435387.4174018,
+    "ast_hash": "7698a23a41223ce83ff6d5b43cdd033f",
     "semantic_hash": ""
   }
 }

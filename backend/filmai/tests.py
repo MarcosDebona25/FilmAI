@@ -273,11 +273,10 @@ class DocumentacionApiTests(TestCase):
         respuesta = self.client.get(reverse("schema"), HTTP_ACCEPT="application/json")
         self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(
-            respuesta.json(),
-            {
-                "detail": "Para consultar esta documentación, ingresá al Admin con una cuenta staff."
-            },
+            respuesta.json()["detail"],
+            "Para consultar esta documentación, ingresá al Admin con una cuenta staff.",
         )
+        self.assertEqual(respuesta.json()["code"], "documentation_staff_required")
 
     def test_staff_puede_leer_documentacion_con_cookie_jwt_invalida(self):
         # El navegador conserva la sesión del Admin aunque el JWT de la API

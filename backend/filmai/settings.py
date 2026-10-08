@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     "catalogo",
     "listas",
     "chatbot",
+    # Paquete de configuración: solo aporta comandos de gestión (exportar_contrato).
+    "filmai",
 ]
 
 MIDDLEWARE = [
@@ -172,10 +174,17 @@ REST_FRAMEWORK = {
     },
 }
 
+# Valida el sobre de errores en toda respuesta de la suite (OT-34).
+TEST_RUNNER = "filmai.pruebas.EjecutorConSobre"
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "FilmAI API",
     "DESCRIPTION": "API del backend de FilmAI.",
     "VERSION": "1.0.0",
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "filmai.errores.openapi.agregar_sobre_de_errores",
+    ],
 }
 
 # Permite que el frontend (localhost:3000) haga requests al backend (localhost:8000).

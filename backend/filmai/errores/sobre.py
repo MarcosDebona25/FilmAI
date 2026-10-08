@@ -100,3 +100,32 @@ def agregar_codigo_exito(response, codigo):
         raise ValueError("La respuesta exitosa no admite el campo code.")
     response.data = {**response.data, "code": codigo}
     return response
+
+
+def validar_respuesta_error(estado, cuerpo, *, debug=False):
+    """Comprueba que un cuerpo de error cumple el sobre; lanza AssertionError."""
+    if not isinstance(cuerpo, dict):
+        raise AssertionError(f"El cuerpo de un {estado} no es un objeto: {cuerpo!r}.")
+    faltantes = {"code", "params", "errors"} - set(cuerpo)
+    if faltantes:
+        raise AssertionError(f"Falta el sobre ({sorted(faltantes)}) en un {estado}.")
+    codigo = cuerpo["code"]
+    if codigo not in CATALOGO:
+        raise AssertionError(f"Código no registrado en un {estado}: {codigo!r}.")
+    definicion = CATALOGO[codigo]
+    if definicion.categoria != "error" or estado not in definicion.contextos.values():
+        raise AssertionError(f"{codigo} no corresponde al estado HTTP {estado}.")
+    definicion.validar_parametros(cuerpo["params"])
+    if cuerpo["errors"] and codigo != "validation_error":
+        raise AssertionError("Solo validation_error admite hojas.")
+    for hoja in cuerpo["errors"]:
+        if set(hoja) != {"field", "code", "params"}:
+            raise AssertionError(f"Hoja mal formada: {hoja!r}.")
+        if hoja["code"] not in CATALOGO:
+            raise AssertionError(f"Hoja con código no registrado: {hoja['code']!r}.")
+        hoja_def = CATALOGO[hoja["code"]]
+        if hoja_def.contextos.get("validacion") != 400:
+            raise AssertionError(f"{hoja['code']} no es una hoja de validación.")
+        hoja_def.validar_parametros(hoja["params"])
+    if ("debug" in cuerpo) != debug:
+        raise AssertionError("El campo debug debe existir solo con DEBUG=True.")

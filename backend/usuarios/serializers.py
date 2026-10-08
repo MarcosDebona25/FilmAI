@@ -180,6 +180,12 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
     )
     genero = serializers.ChoiceField(choices=TipoGenero.choices, required=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo usamos `id_token`; `code` colisionaría con el `code` del sobre de
+        # errores si DRF lo rechazara (p. ej. un valor que no es texto).
+        self.fields.pop("code", None)
+
     def campo_error(self, codigo, ruta, campo):
         if codigo == "required" and ruta[0] == "non_field_errors":
             return "id_token"

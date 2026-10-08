@@ -1,0 +1,573 @@
+{
+  "version": 1,
+  "codes": {
+    "account_deactivated": {
+      "category": "error",
+      "contexts": {
+        "login": 403
+      },
+      "params": {}
+    },
+    "account_deactivated_successfully": {
+      "category": "success",
+      "contexts": {
+        "cuenta": 200
+      },
+      "params": {}
+    },
+    "account_pending_confirmation": {
+      "category": "error",
+      "contexts": {
+        "login": 403
+      },
+      "params": {}
+    },
+    "already_confirmed": {
+      "category": "error",
+      "contexts": {
+        "enlace": 400
+      },
+      "params": {}
+    },
+    "avatar_invalid": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "allowedIds": "integer[]"
+      }
+    },
+    "birth_date_in_future": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "blank": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "confirmation_email_sent": {
+      "category": "success",
+      "contexts": {
+        "confirmacion": 200
+      },
+      "params": {}
+    },
+    "csrf_ready": {
+      "category": "success",
+      "contexts": {
+        "csrf": 200
+      },
+      "params": {}
+    },
+    "current_password_incorrect": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "default_list_protected": {
+      "category": "error",
+      "contexts": {
+        "listas": 409
+      },
+      "params": {}
+    },
+    "documentation_staff_required": {
+      "category": "error",
+      "contexts": {
+        "documentacion": 403
+      },
+      "params": {}
+    },
+    "email_already_used": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "email_confirmed": {
+      "category": "success",
+      "contexts": {
+        "confirmacion": 200
+      },
+      "params": {}
+    },
+    "email_or_username_already_used": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "google_authentication_failed": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "invalid": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "expectedType": "string"
+      }
+    },
+    "invalid_choice": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "allowedValues": "string[]"
+      }
+    },
+    "invalid_credentials": {
+      "category": "error",
+      "contexts": {
+        "autenticacion": 401,
+        "login": 400
+      },
+      "params": {}
+    },
+    "invalid_token": {
+      "category": "error",
+      "contexts": {
+        "autenticacion": 401
+      },
+      "params": {}
+    },
+    "link_expired": {
+      "category": "error",
+      "contexts": {
+        "enlace": 400
+      },
+      "params": {}
+    },
+    "link_invalid": {
+      "category": "error",
+      "contexts": {
+        "enlace": 400
+      },
+      "params": {}
+    },
+    "list_item_duplicated": {
+      "category": "error",
+      "contexts": {
+        "listas": 409
+      },
+      "params": {}
+    },
+    "list_name_duplicated": {
+      "category": "error",
+      "contexts": {
+        "listas": 409
+      },
+      "params": {}
+    },
+    "list_name_invalid_characters": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "list_name_missing_alphanumeric": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "list_name_reserved": {
+      "category": "error",
+      "contexts": {
+        "listas": 409
+      },
+      "params": {}
+    },
+    "local_password_unavailable": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "logged_out": {
+      "category": "success",
+      "contexts": {
+        "logout": 200
+      },
+      "params": {}
+    },
+    "max_length": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "maxLength": "integer"
+      }
+    },
+    "max_value": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "maxValue": "number"
+      }
+    },
+    "method_not_allowed": {
+      "category": "error",
+      "contexts": {
+        "api": 405
+      },
+      "params": {
+        "method": "string"
+      }
+    },
+    "min_length": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "minLength": "integer"
+      }
+    },
+    "min_value": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "minValue": "number"
+      }
+    },
+    "minimum_age": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "minAge": "integer"
+      }
+    },
+    "not_a_dict": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "not_acceptable": {
+      "category": "error",
+      "contexts": {
+        "api": 406
+      },
+      "params": {}
+    },
+    "not_authenticated": {
+      "category": "error",
+      "contexts": {
+        "autenticacion": 401
+      },
+      "params": {}
+    },
+    "not_found": {
+      "category": "error",
+      "contexts": {
+        "api": 404
+      },
+      "params": {}
+    },
+    "null": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "number_not_finite": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "parse_error": {
+      "category": "error",
+      "contexts": {
+        "api": 400
+      },
+      "params": {}
+    },
+    "password_entirely_numeric": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "password_no_digit": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "password_no_lower": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "password_no_special": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "specialCharacters": "string"
+      }
+    },
+    "password_no_upper": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "password_reset_completed": {
+      "category": "success",
+      "contexts": {
+        "recuperacion": 200
+      },
+      "params": {}
+    },
+    "password_reset_requested": {
+      "category": "success",
+      "contexts": {
+        "recuperacion": 200
+      },
+      "params": {}
+    },
+    "password_too_common": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "password_too_short": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "minLength": "integer"
+      }
+    },
+    "password_too_short_or_long": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "maxLength": "integer",
+        "minLength": "integer"
+      }
+    },
+    "password_too_similar": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "attribute": "string"
+      }
+    },
+    "password_updated": {
+      "category": "success",
+      "contexts": {
+        "perfil": 200
+      },
+      "params": {}
+    },
+    "passwords_do_not_match": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "permission_denied": {
+      "category": "error",
+      "contexts": {
+        "api": 403
+      },
+      "params": {}
+    },
+    "person_name_invalid": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "maxLength": "integer"
+      }
+    },
+    "rating_blocks_removal_from_watched": {
+      "category": "error",
+      "contexts": {
+        "listas": 409
+      },
+      "params": {}
+    },
+    "rating_duplicated": {
+      "category": "error",
+      "contexts": {
+        "calificaciones": 409
+      },
+      "params": {}
+    },
+    "registration_pending_confirmation": {
+      "category": "success",
+      "contexts": {
+        "registro": 201
+      },
+      "params": {}
+    },
+    "required": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "review_update_empty": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "fieldNames": "string[]"
+      }
+    },
+    "server_error": {
+      "category": "error",
+      "contexts": {
+        "api": 500
+      },
+      "params": {}
+    },
+    "session_revoked": {
+      "category": "error",
+      "contexts": {
+        "autenticacion": 401
+      },
+      "params": {}
+    },
+    "throttled": {
+      "category": "error",
+      "contexts": {
+        "api": 429
+      },
+      "params": {
+        "retry_after_seconds": "integer"
+      },
+      "minimums": {
+        "retry_after_seconds": 0
+      }
+    },
+    "unique": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "unsupported_media_type": {
+      "category": "error",
+      "contexts": {
+        "api": 415
+      },
+      "params": {
+        "mediaType": "string"
+      }
+    },
+    "upstream_bad_request": {
+      "category": "error",
+      "contexts": {
+        "tmdb": 400
+      },
+      "params": {}
+    },
+    "upstream_error": {
+      "category": "error",
+      "contexts": {
+        "tmdb": 502
+      },
+      "params": {}
+    },
+    "upstream_not_found": {
+      "category": "error",
+      "contexts": {
+        "tmdb": 404
+      },
+      "params": {}
+    },
+    "upstream_unavailable": {
+      "category": "error",
+      "contexts": {
+        "tmdb": 503
+      },
+      "params": {}
+    },
+    "username_already_used": {
+      "category": "error",
+      "contexts": {
+        "perfil": 409,
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "username_invalid": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {
+        "maxLength": "integer",
+        "minLength": "integer"
+      }
+    },
+    "username_not_allowed": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
+    "validation_error": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    }
+  }
+}
