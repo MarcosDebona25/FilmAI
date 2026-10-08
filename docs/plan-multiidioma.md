@@ -849,7 +849,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30 | M | Pendiente |
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
-| OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | En validación: 08/10/2026; base OT-30 final 10fe49f; 546 backend aprobados; PR hacia integración y CI de cabeza final pendientes (ver 10.5) |
+| OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 con CI 3/3 verde sobre 6dee3b5; 546 backend; merge 65b7e7b solo a integración (ver 10.5) |
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | Pendiente |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
 | OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | Pendiente |
@@ -860,7 +860,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-61 | F6, paso 4 | Fallback a inglés en detalle y listados | OT-60 | M | Pendiente |
 | OT-62 | F6, pasos 5 y 6 | `ProduccionTraduccion`, `generos_ids`, materialización y relleno | OT-60 | M | Pendiente |
 | OT-63 | F6, pasos 7, 8 y 9 | Serializadores por idioma, géneros por idioma, sincronización nocturna | OT-61, OT-62 | M | Pendiente |
-| OT-70 | F7, pasos 1 a 4 | next-intl configurado, sin cambio visible | F1 | M | Pendiente |
+| OT-70 | F7, pasos 1 a 4 | next-intl configurado, sin cambio visible | F1 | M | Implementada y verificada localmente: 08/10/2026; 546 backend y 73 unitarios en verde; 30 e2e anteriores vigentes por árbol idéntico; CI e integración de tres unidades pendientes (ver 10.5) |
 | OT-71 | F7, paso 5 | `lib/format.ts` y reemplazo de los usos de `es-AR` | OT-70 | S | Pendiente |
 | OT-72 | F7, pasos 6, 7 y 10 | `Accept-Language`, `ApiError` con códigos, `lib/errors.ts`, API simulada de e2e | OT-70, OT-34 | M | Pendiente |
 | OT-73 | F7, pasos 8 y 9 | Validaciones por código y etiquetas desde `enums` | OT-72 | S | Pendiente |
@@ -1106,6 +1106,32 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   coincide con el árbol validado en OT-13 (43 unitarios, 24 e2e y build),
   evidencia reutilizada y no una ejecución nueva. Se requiere CI sobre la
   cabeza publicada antes de integrar OT-40; main permanece sin merges.
+
+- 08/10/2026, cierre de OT-40: PR #62 integrado con merge commit
+  `65b7e7b3d9f821e06e104db6164fc7b414dae96c` únicamente en
+  `feat/i18n-multiidioma`; los tres jobs CI pasaron sobre la cabeza exacta
+  `6dee3b55bfe714769bd427c1699c7cc96b99b5a4`. Backend: 546 tests.
+
+- 08/10/2026, OT-70 preparado sobre la cabeza final de OT-40 mediante un
+  único rebase, con respaldos de las tres unidades y grafo actualizado en
+  cada una. Núcleo next-intl sin prefijos, 77 textos transitorios aprobados,
+  cuatro metadatos localizados y proveedor de render español. Las páginas
+  mantienen sus textos actuales y los tests heredados sus selectores.
+  - Nueva verificación de esta base: backend **546 tests en 199,264 s** en
+    contenedor aislado con `TEST.NAME=test_filmai_ot70`; unitarios **73 en
+    10,93 s**, build, TypeScript, ESLint, Prettier y Ruff aprobados.
+  - Los **30 e2e en 41,0 s** verificados previamente en `28b7862` siguen
+    siendo evidencia vigente, no una ejecución nueva: el árbol frontend
+    `267f94944eecbb1347b5ff60bce1b2da3241073b` coincide exactamente tras el
+    rebase. Ahora el puerto 3100 pertenece a otra aplicación y no se detuvo;
+    el intento aislado no pudo iniciar SWC sin su caché/red. El CI de las
+    cabezas publicadas debe repetir la suite completa antes de integrar.
+  - La lectura directa de `.env` por Docker no interpreta comentarios
+    inline: el primer intento backend se detuvo en configuración sin ejecutar
+    tests. Docker Compose interpreta ese archivo y la repetición completa
+    pasó, sin cambiar `.env`, producción ni tests. No se aplicaron migraciones
+    a la base de desarrollo. Publicación y CI de tres PRs quedan pendientes;
+    main permanece fuera de alcance.
 
 ### 10.6 Instrucción para iniciar una sesión
 
