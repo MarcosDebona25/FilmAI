@@ -2688,6 +2688,8 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   backend: 520 tests en 184,491 s, con cinco fallos de autenticación 401 en
   subcasos de una prueba anterior de preferencias. La entrega API previa pasó
   su CI completo y los tests enfocados; se investiga la causa antes del cierre.
-  Frontend conserva exactamente el árbol validado en OT-13.
+  La repetición normal completa pasó: 520 tests en 190,527 s. El rechazo
+  intermitente anterior quedó registrado, sin causa determinada ni cambios
+  a sus oráculos. Frontend conserva el árbol validado en OT-13.
 - **Archivos afectados**: `seed.py`, test de semilla, README, plan y specs
   `development-seed` e `i18n-core`.
