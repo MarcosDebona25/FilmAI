@@ -18,9 +18,17 @@ def hojas(detalle, ruta=()):
 
 
 class ErrorValidacion(ValidationError):
-    def __init__(self, detalle, codigo="invalid", *, parametros_por_ruta=None):
+    def __init__(
+        self,
+        detalle,
+        codigo="invalid",
+        *,
+        parametros_por_ruta=None,
+        campos_por_ruta=None,
+    ):
         super().__init__(detalle, code=codigo)
         self.parametros_por_ruta = {}
+        self.campos_por_ruta = dict(campos_por_ruta or {})
         pendientes = dict(parametros_por_ruta or {})
         for ruta, hoja in hojas(self.detail):
             definicion = obtener_codigo(hoja.code)
@@ -29,6 +37,11 @@ class ErrorValidacion(ValidationError):
             parametros = pendientes.pop(ruta, {})
             definicion.validar_parametros(parametros)
             self.parametros_por_ruta[ruta] = dict(parametros)
+        if set(self.campos_por_ruta).difference(self.parametros_por_ruta):
+            raise ValueError("Hay campos sin una hoja de validación correspondiente.")
+        for campo in self.campos_por_ruta.values():
+            if campo is not None and not isinstance(campo, str):
+                raise ValueError("El campo debe ser una ruta o nulo.")
         if pendientes:
             raise ValueError(
                 "Hay parámetros sin una hoja de validación correspondiente."
