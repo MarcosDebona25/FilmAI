@@ -2710,3 +2710,17 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
 - **Archivos afectados**: `backend/filmai/errores/{__init__,catalogo,base}.py`,
   `backend/filmai/test_catalogo_errores.py` y `openspec/specs/error-contract/spec.md`.
 
+---
+
+## 08/10/2026 — Hojas y metadatos de validación de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se completa el catálogo de hojas de validación y se introduce
+  una excepción que conserva parámetros por ruta después de la conversión de
+  DRF. Los errores Django agregados se convierten antes de perder sus códigos;
+  solo se copian parámetros declarados o límites provistos explícitamente por
+  el validador, excluyendo valores sensibles. Se rechazan límites no finitos,
+  booleanos como números y metadatos sin una hoja correspondiente. Esta unidad
+  todavía no modifica validadores de dominio ni el manejador de producción.
+- **Archivos afectados**: `backend/filmai/errores/{catalogo,validacion}.py`,
+  `backend/filmai/test_metadatos_errores.py` y `openspec/specs/error-contract/spec.md`.
