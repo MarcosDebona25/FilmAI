@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="{{ idioma }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -50,7 +50,7 @@
                   color: #e0e0e0;
                 "
               >
-                {% load nombres %}Hola {{ user|nombre_completo }},
+                {% load nombres %}{% block saludo %}Hola {{ user|nombre_completo }},{% endblock %}
                 <br /><br />
                 {% block introduccion %}¡Bienvenido/a a FilmAI! Para activar su cuenta necesitamos
                 confirmar su dirección de correo electrónico.{% endblock %}
@@ -84,8 +84,8 @@
                   color: {{ color_secundario }};
                 "
               >
-                Si el botón no funciona, copie y pegue este enlace en su
-                navegador:<br />
+                {% block enlace_alternativo %}Si el botón no funciona, copie y pegue este enlace en su
+                navegador:{% endblock %}<br />
                 <a
                   href="{{ enlace_correo }}"
                   style="color: #f5c518; word-break: break-all"
@@ -117,7 +117,7 @@
                   color: {{ color_secundario }};
                 "
               >
-                El equipo de FilmAI
+                {% block firma %}El equipo de FilmAI{% endblock %}
               </td>
             </tr>
           </table>

@@ -1,0 +1,11 @@
+{% load nombres %}Hi {{ user|nombre_completo:"en" }},
+
+We received a request to reset the password for your FilmAI account. To continue, open this link:
+
+{{ reset_url }}
+
+This link is valid for {{ expiry_hours }} hour{{ expiry_hours|pluralize }}. If it has expired, you can request another from the log in screen with “Forgot your password?”.
+
+If you didn’t make this request, ignore this message: your password won’t change.
+
+The FilmAI team

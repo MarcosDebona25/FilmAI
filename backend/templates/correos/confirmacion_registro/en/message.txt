@@ -1,0 +1,13 @@
+{% load nombres %}Hi {{ user|nombre_completo:"en" }},
+
+Welcome to FilmAI! To activate your account we need to confirm your email address.
+
+Confirm your account by opening this link:
+
+{{ activate_url }}
+
+This link is valid for {{ expiry_hours }} hour{{ expiry_hours|pluralize }}. If it has expired, you can request another from the sign-up screen with “Resend link”.
+
+If you didn’t create this account, ignore this message.
+
+The FilmAI team

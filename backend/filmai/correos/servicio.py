@@ -29,6 +29,7 @@ def enviar_correo(caso, destinatario, contexto, idioma):
         raise ValueError("Caso o idioma de correo no soportado.")
     contexto = {
         **contexto,
+        "idioma": idioma,
         # La notificación no lleva token: enlaza al inicio de sesión real.
         "enlace_correo": f"{settings.FRONTEND_URL}/login/"
         if caso == "contrasena_actualizada"

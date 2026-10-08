@@ -29,6 +29,7 @@ from filmai.correos.servicio import enviar_correo
 from filmai.errores.base import ExcepcionAPI
 from filmai.errores.serializadores import FronteraErroresMixin
 from filmai.errores.validacion import ErrorValidacion
+from filmai.idioma import idioma_efectivo
 
 from .avatares import es_avatar_valido
 from .errores import CampoNombreUsuario, FronteraUsuarioMixin
@@ -378,7 +379,12 @@ class RecuperarContrasenaSerializer(FronteraErroresMixin, serializers.Serializer
         contexto = {"user": usuario, "reset_url": reset_url}
 
         try:
-            enviar_correo("restablecer_contrasena", usuario.correo, contexto, "es")
+            enviar_correo(
+                "restablecer_contrasena",
+                usuario.correo,
+                contexto,
+                idioma_efectivo(self.context.get("request"), usuario),
+            )
         except Exception:
             # Mantiene la misma respuesta para no revelar la existencia de la cuenta.
             logger.exception(
@@ -431,7 +437,11 @@ class RestablecerContrasenaSerializer(FronteraErroresMixin, serializers.Serializ
                 self.usuario, self.validated_data["token"]
             ):
                 raise EnlaceRestablecimientoInvalido
-            guardar_contrasena(self.usuario, self.validated_data["password1"])
+            guardar_contrasena(
+                self.usuario,
+                self.validated_data["password1"],
+                self.context.get("request"),
+            )
         return self.usuario
 
 

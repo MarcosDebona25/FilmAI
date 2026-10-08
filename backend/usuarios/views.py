@@ -306,7 +306,9 @@ class RestablecerContrasenaView(APIView):
     throttle_scope = "restablecer_contrasena"
 
     def post(self, request):
-        serializer = RestablecerContrasenaSerializer(data=request.data)
+        serializer = RestablecerContrasenaSerializer(
+            data=request.data, context={"request": request}
+        )
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
