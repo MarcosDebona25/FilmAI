@@ -666,9 +666,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791419034.9613087,
-    "seen": 1791419040.7184546,
-    "ast_hash": "4467201feabec5f84f00e6875c977392",
+    "mtime": 1791420890.9940028,
+    "seen": 1791420899.0880287,
+    "ast_hash": "1b0dceb07e50de61e77a1d9dae29aec9",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1812,8 +1812,8 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791419034.965878,
-    "seen": 1791419040.7185447,
+    "mtime": 1791420872.967476,
+    "seen": 1791420899.0881243,
     "ast_hash": "a92920042353142994e78e6b67076c22",
     "semantic_hash": ""
   },
@@ -2430,8 +2430,8 @@
     "semantic_hash": ""
   },
   "docs/i18n/README.md": {
-    "mtime": 1791418675.8268058,
-    "seen": 1791418685.5162225,
+    "mtime": 1791420872.9652998,
+    "seen": 1791420899.0880313,
     "ast_hash": "941a0d91e5c51a6b13eb2dbef427d212",
     "semantic_hash": ""
   },
@@ -2439,6 +2439,18 @@
     "mtime": 1791418986.5046809,
     "seen": 1791419017.4373152,
     "ast_hash": "88377ab8d2a9e5fe27c01c1ee4e0f3a4",
+    "semantic_hash": ""
+  },
+  "openspec/specs/emails/spec.md": {
+    "mtime": 1791420873.071369,
+    "seen": 1791420899.0888236,
+    "ast_hash": "ad83f3d87511ff316fff1a24249c5c98",
+    "semantic_hash": ""
+  },
+  "openspec/specs/i18n-core/spec.md": {
+    "mtime": 1791420890.9911184,
+    "seen": 1791420899.0889254,
+    "ast_hash": "f183a219f462095979eb35805c26de39",
     "semantic_hash": ""
   }
 }
