@@ -20,12 +20,23 @@ An unknown predetermined name MUST stop the migration explicitly and roll
 back its schema and data changes. Reversing the migration MUST clear keys
 before removing the column, while preserving lists and items.
 
+### Runtime identity and provisioning
+
+Provisioning, presentation order, rating membership and removal guards MUST
+identify predetermined lists by `clave`, independently of `nombre`.
+Provisioning MUST preserve renamed lists and their IDs. During the nullable
+transition it MAY locate a missing-key resource by its legacy name, without
+recreating it or changing its name. A conflicting type or identity MUST fail.
+The development seed and repair audit MUST use these same identities.
+
 ### Summary and membership
 
 `GET /api/lists/` MUST return active lists belonging to the authenticated user.
-Each list MUST include its ID, name, type, `cantidad_items`,
+Each list MUST include its ID, name, type, nullable `clave`, `cantidad_items`,
 `cantidad_peliculas`, `cantidad_series`, and up to five recent non-empty poster
 paths in `preview_posters`.
+Personalized lists MUST expose `clave = null`. Predetermined summaries MUST
+be ordered by `favoritos`, `pendientes`, `vistas`, even after a stored rename.
 
 When `id_tmdb` and `tipo` (`movie` or `tv`) are supplied together, every list
 MUST also include `contiene` and, when true, `item_id`. Supplying only one of

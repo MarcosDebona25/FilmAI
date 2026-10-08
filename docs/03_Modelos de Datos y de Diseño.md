@@ -95,6 +95,13 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
   permanece nullable durante la adaptación del código de OT-41; las
   restricciones de unicidad y coherencia corresponden a OT-42.
 
+- **Consumo de identidad (08/10/2026, OT-41A):** calificaciones, pertenencia,
+  bloqueo de remoción, orden de resúmenes y semilla usan `clave`. La API la
+  expone como nula para personalizadas. La provisión conserva recursos
+  renombrados y sus IDs; solo usa el nombre heredado como respaldo al completar
+  una clave nula durante la transición. Nombres reservados y su contrato
+  exportado se completan en la segunda entrega de OT-41.
+
 - **Usuario - Chat:** Chat también tiene una FK idUsuario, lo que muestra que cada chat es creado por un usuario en particular. Un usuario puede tener varios chats distintos.
 
 - **Chat - Mensaje:** Mensaje contiene una FK idChat, de modo que todos los mensajes pertenecen a un chat específico. Un chat puede tener muchos mensajes, pero cada mensaje se guarda siempre dentro de un único chat.

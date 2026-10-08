@@ -32,7 +32,7 @@ from .exceptions import (
     ListaPredeterminadaProtegida,
     NombreListaDuplicado,
 )
-from .models import Lista, Tiene, TipoLista
+from .models import ClaveLista, Lista, Tiene, TipoLista
 from .pagination import ListaItemCursorPagination
 from .serializers import (
     AgregarItemSerializer,
@@ -44,9 +44,9 @@ from .serializers import (
 )
 
 _ORDEN_PREDETERMINADAS = Case(
-    When(nombre="Favoritos", tipo=TipoLista.PREDETERMINADA, then=Value(0)),
-    When(nombre="Pendientes", tipo=TipoLista.PREDETERMINADA, then=Value(1)),
-    When(nombre="Vistas", tipo=TipoLista.PREDETERMINADA, then=Value(2)),
+    When(clave=ClaveLista.FAVORITOS, tipo=TipoLista.PREDETERMINADA, then=Value(0)),
+    When(clave=ClaveLista.PENDIENTES, tipo=TipoLista.PREDETERMINADA, then=Value(1)),
+    When(clave=ClaveLista.VISTAS, tipo=TipoLista.PREDETERMINADA, then=Value(2)),
     default=Value(3),
     output_field=IntegerField(),
 )
@@ -268,7 +268,7 @@ class ListaItemDetailView(APIView):
         # La regla es solo de «Vistas»: quitar de Favoritos algo calificado
         # nunca estuvo bloqueado, así que el flag tampoco borra nada ahí.
         calificacion = None
-        if lista.tipo == TipoLista.PREDETERMINADA and lista.nombre == "Vistas":
+        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave == ClaveLista.VISTAS:
             calificacion = Calificacion.objects.filter(
                 usuario=request.user, produccion=item.produccion, activa=True
             ).first()
