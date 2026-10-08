@@ -856,11 +856,11 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
 | OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
 | OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Pendiente |
-| OT-60 | F6, pasos 1, 2 y 3 | Idioma como parámetro del cliente, idioma en vistas públicas, comprobaciones contra la API real | OT-20 | M | En curso: cliente y caché localizados verificados; vistas y evidencia real pendientes de entrega |
+| OT-60 | F6, pasos 1, 2 y 3 | Idioma como parámetro del cliente, idioma en vistas públicas, comprobaciones contra la API real | OT-20 | M | En curso: cliente, caché, vistas y evidencia real verificados; publicación y suites finales pendientes |
 | OT-61 | F6, paso 4 | Fallback a inglés en detalle y listados | OT-60 | M | Pendiente |
 | OT-62 | F6, pasos 5 y 6 | `ProduccionTraduccion`, `generos_ids`, materialización y relleno | OT-60 | M | Pendiente |
 | OT-63 | F6, pasos 7, 8 y 9 | Serializadores por idioma, géneros por idioma, sincronización nocturna | OT-61, OT-62 | M | Pendiente |
-| OT-70 | F7, pasos 1 a 4 | next-intl configurado, sin cambio visible | F1 | M | Implementada y verificada localmente: 08/10/2026; 546 backend y 73 unitarios en verde; 30 e2e anteriores vigentes por árbol idéntico; CI e integración de tres unidades pendientes (ver 10.5) |
+| OT-70 | F7, pasos 1 a 4 | next-intl configurado, sin cambio visible | F1 | M | Completada: 08/10/2026; PRs #63/#64/#65 integrados solo en integración con CI 3/3 verde; 546 backend, 73 unitarios y 30 e2e; merge final 600aaee (ver 10.5) |
 | OT-71 | F7, paso 5 | `lib/format.ts` y reemplazo de los usos de `es-AR` | OT-70 | S | Pendiente |
 | OT-72 | F7, pasos 6, 7 y 10 | `Accept-Language`, `ApiError` con códigos, `lib/errors.ts`, API simulada de e2e | OT-70, OT-34 | M | Pendiente |
 | OT-73 | F7, pasos 8 y 9 | Validaciones por código y etiquetas desde `enums` | OT-72 | S | Pendiente |
@@ -1140,6 +1140,27 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   añadir solo `language: en-US` a los cuatro fixtures previos de caché; se
   mantienen sus comprobaciones de hit, almacenamiento y TTL. Las vistas se
   entregan por separado. OT-60 todavía no está cerrada.
+
+- 08/10/2026, OT-60 segunda unidad: seis vistas públicas seleccionan idioma
+  por encabezado/default sin cambiar autenticación. Tres tests nuevos y 29
+  enfocados verdes (21,276 s). Evidencia real en
+  `docs/i18n/tmdb-verificacion-ot60.md`; variantes, muestra inglesa, géneros
+  TV, falta de traducción e imágenes comprobados. Pendiente integrar ambas
+  unidades con CI verde. Suite completa local: 528 tests en 189,141 s, OK;
+  Ruff y Prettier limpios. Frontend exacto `88f94c0` conserva la evidencia
+  vigente 43/24/build de OT-13; no se presenta como nueva ejecución.
+
+- 08/10/2026, cierre de OT-70: PRs #63/#64/#65 integrados únicamente en
+  `feat/i18n-multiidioma` con CI 3/3 verde de cada cabeza exacta. Merge final
+  `600aaee`; CI final de `6614fb8`: 546 backend (167,496 s), 73 unitarios
+  y 30 e2e (1,1 min), ejecuciones nuevas. Main permanece sin merges.
+
+- 08/10/2026, OT-60 tras rebase sobre OT-70: 554 backend en 269,277 s,
+  Ruff (108 archivos) y Prettier aprobados. Frontend conserva el árbol
+  `267f94944eecbb1347b5ff60bce1b2da3241073b`, con evidencia nueva de CI
+  OT-70: 73 unitarios, 30 e2e y build; no se presenta como otra ejecución
+  local. Se preservó el respaldo anterior antes del rebase y se regeneró
+  el grafo en ambas unidades. Pendiente CI e integración de OT-60.
 
 ### 10.6 Instrucción para iniciar una sesión
 

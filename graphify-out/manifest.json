@@ -84,10 +84,10 @@
     "semantic_hash": ""
   },
   "backend/catalogo/views.py": {
-    "mtime": 1791426566.6493642,
-    "seen": 1791426617.307862,
-    "ast_hash": "a8fcfe3cf79830ddf0807f51590835a4",
-    "semantic_hash": "a8fcfe3cf79830ddf0807f51590835a4"
+    "mtime": 1791426640.0528157,
+    "seen": 1791427630.2270648,
+    "ast_hash": "6abed10054eb93490d781d9693040dea",
+    "semantic_hash": ""
   },
   "backend/chatbot/__init__.py": {
     "mtime": 1787089748.0961275,
@@ -660,15 +660,15 @@
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
-    "mtime": 1791426567.6259844,
-    "seen": 1791426617.3083696,
-    "ast_hash": "771e83099e4a6b1ec8d90742fab07594",
+    "mtime": 1791427762.382982,
+    "seen": 1791427767.9701848,
+    "ast_hash": "c8addb46fb2ed3c4aa525d7b6d89822c",
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791426602.3178759,
-    "seen": 1791426617.3083708,
-    "ast_hash": "dbbacb703c5ad605a7906bcf8128770e",
+    "mtime": 1791427936.269381,
+    "seen": 1791427960.2539697,
+    "ast_hash": "e61ee14c4c5942c13ea3950b92e20e63",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1380,10 +1380,10 @@
     "semantic_hash": "5e3cb3748e2efb42920ad061bb8d8394"
   },
   "openspec/specs/tmdb-endpoints/spec.md": {
-    "mtime": 1791426566.7689753,
-    "seen": 1791426617.3084097,
-    "ast_hash": "bdc74e325c3c1a2695b89475f9e6c793",
-    "semantic_hash": "bdc74e325c3c1a2695b89475f9e6c793"
+    "mtime": 1791426640.1254125,
+    "seen": 1791427630.260844,
+    "ast_hash": "3c8ca80b4d43f6fd2bd0c8a2312420fb",
+    "semantic_hash": ""
   },
   "backend/catalogo/management/__init__.py": {
     "mtime": 1789958026.8264565,
@@ -1812,9 +1812,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791426602.330751,
-    "seen": 1791426617.308376,
-    "ast_hash": "a24caacf7b57120e6596d1a9897fc69c",
+    "mtime": 1791427936.2769275,
+    "seen": 1791427960.2544208,
+    "ast_hash": "32216fe3d488dd735a151763a346af56",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2586,8 +2586,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1791426566.6877186,
-    "seen": 1791426617.3081882,
+    "mtime": 1791427770.2018213,
+    "seen": 1791427796.0959258,
     "ast_hash": "0f851f21683a1f2dd483d86f5c0a9bae",
     "semantic_hash": ""
   },
@@ -2616,8 +2616,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1791426566.6883044,
-    "seen": 1791426617.3081908,
+    "mtime": 1791427770.2018213,
+    "seen": 1791427796.0960653,
     "ast_hash": "5049e7c703de1ce1321d78dfeda61240",
     "semantic_hash": ""
   },
@@ -2643,6 +2643,24 @@
     "mtime": 1791426567.6259844,
     "seen": 1791426617.3078558,
     "ast_hash": "fde788a6a628d10262f2c296763d7f02",
+    "semantic_hash": ""
+  },
+  "backend/catalogo/services/idioma_tmdb.py": {
+    "mtime": 1791426640.0485036,
+    "seen": 1791427630.2262244,
+    "ast_hash": "4a7ed140e7ada4f88b5c673aed93773b",
+    "semantic_hash": ""
+  },
+  "backend/catalogo/test_idioma_vistas.py": {
+    "mtime": 1791426640.0528157,
+    "seen": 1791427630.2267,
+    "ast_hash": "26255597bd7f936ba55ea5aede71fd92",
+    "semantic_hash": ""
+  },
+  "docs/i18n/tmdb-verificacion-ot60.md": {
+    "mtime": 1791426640.0610392,
+    "seen": 1791427630.258476,
+    "ast_hash": "b66a9622e0b64bc58af71c1e236049aa",
     "semantic_hash": ""
   }
 }
