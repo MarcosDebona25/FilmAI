@@ -78,6 +78,20 @@ class Lista(models.Model):
                 "usuario",
                 name="uq_lista_usuario_nombre",
             ),
+            # Cada usuario tiene a lo sumo una lista por clave de sistema.
+            models.UniqueConstraint(
+                fields=["usuario", "clave"],
+                condition=models.Q(clave__isnull=False),
+                name="uq_lista_usuario_clave",
+            ),
+            # Solo las predeterminadas llevan clave, y todas la llevan.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(tipo="predeterminada", clave__isnull=False)
+                    | models.Q(tipo="personalizada", clave__isnull=True)
+                ),
+                name="ck_lista_tipo_clave",
+            ),
         ]
 
     def __str__(self):

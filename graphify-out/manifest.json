@@ -246,9 +246,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "backend/listas/models.py": {
-    "mtime": 1791426566.6575682,
-    "seen": 1791426617.3080633,
-    "ast_hash": "cc52429a92e7432ddc29617060de636a",
+    "mtime": 1791435413.439507,
+    "seen": 1791436002.272624,
+    "ast_hash": "f13c24fe1b5ab41bf747079c615dfef5",
     "semantic_hash": ""
   },
   "backend/listas/tests.py": {
@@ -612,9 +612,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791435378.3457525,
-    "seen": 1791435387.424687,
-    "ast_hash": "426a24d4d7079480a52a5f1bc2bece9e",
+    "mtime": 1791435990.7786326,
+    "seen": 1791436002.2823234,
+    "ast_hash": "c0ece6f7033943bb50b9990f2f165254",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791435378.3706348,
-    "seen": 1791435387.42486,
-    "ast_hash": "c0caff83476cd2bf786fdfe762d14882",
+    "mtime": 1791435990.8008726,
+    "seen": 1791436002.2824984,
+    "ast_hash": "644c6a8280f87553ad3971da188ac2e7",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2664,9 +2664,9 @@
     "semantic_hash": ""
   },
   "backend/listas/test_identidad.py": {
-    "mtime": 1791429208.6552413,
-    "seen": 1791431151.1505415,
-    "ast_hash": "6ac83a7783153a3dd58af092be7e9489",
+    "mtime": 1791435675.5242295,
+    "seen": 1791436002.2728043,
+    "ast_hash": "441a273877926fc55434c900ff6eb6ae",
     "semantic_hash": ""
   },
   "backend/listas/test_reservados.py": {
@@ -2859,6 +2859,18 @@
     "mtime": 1791434409.7479358,
     "seen": 1791435387.4174018,
     "ast_hash": "7698a23a41223ce83ff6d5b43cdd033f",
+    "semantic_hash": ""
+  },
+  "backend/listas/migrations/0006_lista_restricciones_clave.py": {
+    "mtime": 1791435413.3989778,
+    "seen": 1791436002.2725735,
+    "ast_hash": "afb0ac32cda6805d80fcc12af80356e2",
+    "semantic_hash": ""
+  },
+  "backend/listas/test_restricciones_clave.py": {
+    "mtime": 1791435675.528101,
+    "seen": 1791436002.27293,
+    "ast_hash": "f288332bb3ea195e0da75037d699e2f2",
     "semantic_hash": ""
   }
 }

@@ -3281,3 +3281,41 @@ sus dos cabezas publicadas antes de integrarse.
   `backend/filmai/management/`, `backend/usuarios/{views,serializers}.py`,
   tests citados, `contracts/{error-codes.json,openapi.yaml}`,
   `openspec/specs/error-contract/spec.md`, `docs/plan-multiidioma.md`.
+
+## 08/10/2026 — OT-42: restricciones de `clave` y prueba sobre un volcado (cierra F4)
+
+- **Descripción**: F4 paso 5 (contraer). Migración `listas.0006` en dos partes:
+  1. `RunPython` de verificación que se detiene con un mensaje explícito (ids de
+     lista y usuario) si hay predeterminadas sin clave, personalizadas con
+     clave o claves repetidas por usuario; es reversible (no-op).
+  2. `uq_lista_usuario_clave` (único por `usuario`+`clave` cuando la clave no es
+     nula) y `ck_lista_tipo_clave` (predeterminada ⇔ clave presente;
+     personalizada ⇔ clave nula). `nombre` se conserva (D6).
+- **Prueba sobre copia de datos reales**: volcado `pg_dump` de la base de
+  desarrollo restaurado en una base temporal (`ot42_copia`, eliminada al
+  terminar). Con `listas.0005` en la copia: 4 usuarios, 13 listas, 78 ítems,
+  0 predeterminadas sin clave, 0 personalizadas con clave, 0 claves repetidas.
+  El superusuario `admin` (creado sin la señal) no tenía listas
+  predeterminadas: se reparó **solo en la copia** con
+  `reparar_recursos_usuarios` (+3 listas, 16 en total, 4 usuarios con las tres
+  claves). Avance a `0006`, retroceso a `0005` y nuevo avance: mismos conteos
+  (16 listas, 78 ítems) en cada paso. Salvedad: el entrypoint del backend
+  ejecuta `migrate` en cada arranque, por lo que la línea base posterior a la
+  reparación ya se tomó con `0006` reaplicada; la de `0005` pura es la primera
+  (4/13/78).
+- **Aviso**: por ese mismo entrypoint, las corridas de tests con Docker de esta
+  sesión aplicaron `0006` a la base de desarrollo (sus datos eran válidos, no
+  hubo cambios de filas). `admin` sigue sin listas predeterminadas allí; no se
+  tocó la base original.
+- **Test existente tocado**: `listas/test_identidad.py::test_provision_completa_
+  nulas_heredadas_sin_recrear_filas` simulaba una predeterminada sin clave, que
+  la restricción ahora prohíbe; quita `ck_lista_tipo_clave` solo dentro de ese
+  test (DDL transaccional, se revierte) para conservar la cobertura de la ruta
+  de compleción.
+- **Pruebas nuevas**: `listas/test_restricciones_clave.py` (restricciones de
+  base y migración en ambos sentidos, con datos inválidos). Suite backend
+  **644 OK**, `ruff` limpio, `makemigrations --check` sin cambios. **F4 queda
+  cerrada** (falta publicar/CI).
+- **Archivos afectados**: `backend/listas/{models.py,migrations/0006_*.py,
+  test_restricciones_clave.py,test_identidad.py}`, `docs/plan-multiidioma.md`,
+  `graphify-out/`.
