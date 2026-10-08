@@ -36,6 +36,12 @@ CSV records the source and approval of each message. It is separate from
 OT-13's immutable approval record. OT-76 changes Spanish treatment/copy;
 OT-77 seeds the complete design catalogs. Neither change is performed here.
 
+The four existing metadata entry points resolve descriptions and page titles
+through `generateMetadata`; branding and icons remain identical. Unit renders
+use a real Spanish next-intl provider by default and may explicitly request
+English while retaining an existing custom wrapper. Existing Spanish selectors
+and assertions remain unchanged.
+
 ## Requirements
 
 ### Requirement: Supported locales and backend resolution
@@ -169,11 +175,18 @@ closure gates. OT-13 adds no production implementation or tests.
 
 ## Implementation progress
 
-OT-20 first delivery implements the nullable user field and explicit backend
-resolution, including weighted/regional headers and a real reversible migration
-test without backfill. Preferences now reads null for previous accounts but only writes supported
-locales. User details/profile expose the field read-only; traditional and Google
-registration persist the new account locale while existing Google accounts keep
-their saved locale. The full development seed now creates known ES/EN accounts; its reviews-only
-mode preserves existing languages. The full backend suite passes 520 tests. Final delivery integration is gated
-on its own CI; frontend/email/TMDB requirements remain future phases. This does not claim the frontend or emails are complete.
+OT-20 is integrated through PRs #55, #56 and #57 with green CI, ending at
+`51bcb2b`. It implements the nullable user locale without backfill, weighted
+backend resolution, readable user fields, preferences writes, locale on new
+traditional/Google accounts and known ES/EN development accounts. Existing
+Google accounts and the reviews-only seed retain their saved language.
+
+OT-70 is locally implemented in three units based on OT-40's final head.
+Request configuration, 77 approved transitional messages, four localized
+metadata entry points and the Spanish test provider are implemented; their
+publication CI and integration remain pending. The backend passes 546 tests
+and frontend passes 73 unit tests, build, types, lint and format. The unchanged
+frontend tree retains the previously verified 30 e2e as prior evidence until
+CI repeats them. Formatting, API-code consumption, selector synchronization,
+routes, pilot migration, complete design catalogs, emails and TMDB are not
+claimed complete by this frontend delivery.
