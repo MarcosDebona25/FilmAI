@@ -1,0 +1,92 @@
+clave,codigo,tipo,parametros_icu,es_propuesto,en_propuesto,estado
+errors.codes.validation_error,validation_error,error,,Revisá los datos ingresados.,Check the information you entered.,pendiente_aprobacion
+errors.codes.not_authenticated,not_authenticated,error,,Iniciá sesión para continuar.,Log in to continue.,pendiente_aprobacion
+errors.codes.invalid_credentials,invalid_credentials,error,,El correo o nombre de usuario y la contraseña no coinciden.,The email or username and password do not match.,pendiente_aprobacion
+errors.codes.permission_denied,permission_denied,error,,No tenés permisos para realizar esta acción.,You don’t have permission to do this.,pendiente_aprobacion
+errors.codes.documentation_staff_required,documentation_staff_required,error,,Ingresá al Admin con una cuenta del equipo para consultar esta documentación.,Log in to the Admin with a staff account to view this documentation.,pendiente_aprobacion
+errors.codes.not_found,not_found,error,,No encontramos lo que buscás.,We couldn’t find what you’re looking for.,pendiente_aprobacion
+errors.codes.method_not_allowed,method_not_allowed,error,,Esta acción no está disponible para esta solicitud.,This action is not available for this request.,pendiente_aprobacion
+errors.codes.not_acceptable,not_acceptable,error,,No podemos responder en el formato solicitado.,We can’t respond in the requested format.,pendiente_aprobacion
+errors.codes.unsupported_media_type,unsupported_media_type,error,,El formato de los datos enviados no es compatible.,The format of the submitted data is not supported.,pendiente_aprobacion
+errors.codes.parse_error,parse_error,error,,No pudimos leer los datos enviados. Revisalos e intentá de nuevo.,We couldn’t read the submitted data. Check it and try again.,pendiente_aprobacion
+errors.codes.throttled,throttled,error,,Hiciste demasiadas solicitudes. Intentá de nuevo más tarde.,You’ve made too many requests. Try again later.,pendiente_aprobacion
+errors.codes.server_error,server_error,error,,Ocurrió un error. Intentá de nuevo más tarde.,Something went wrong. Try again later.,pendiente_aprobacion
+errors.codes.upstream_bad_request,upstream_bad_request,error,,No pudimos consultar el catálogo con esos datos.,We couldn’t query the catalog with those details.,pendiente_aprobacion
+errors.codes.upstream_not_found,upstream_not_found,error,,No encontramos esta película o serie en el catálogo.,We couldn’t find this movie or TV show in the catalog.,pendiente_aprobacion
+errors.codes.upstream_error,upstream_error,error,,El catálogo no pudo responder. Intentá de nuevo más tarde.,The catalog couldn’t respond. Try again later.,pendiente_aprobacion
+errors.codes.upstream_unavailable,upstream_unavailable,error,,El catálogo no está disponible en este momento. Intentá de nuevo más tarde.,The catalog is currently unavailable. Try again later.,pendiente_aprobacion
+errors.codes.invalid_token,invalid_token,error,,Tu sesión no es válida o venció. Iniciá sesión de nuevo.,Your session is invalid or has expired. Log in again.,pendiente_aprobacion
+errors.codes.session_revoked,session_revoked,error,,Tu sesión se cerró después de un cambio de contraseña. Iniciá sesión de nuevo.,Your session was closed after a password change. Log in again.,pendiente_aprobacion
+errors.codes.account_deactivated,account_deactivated,error,,Tu cuenta fue dada de baja.,Your account has been deactivated.,pendiente_aprobacion
+errors.codes.account_pending_confirmation,account_pending_confirmation,error,,Tu cuenta todavía no está activa. Revisá tu correo para confirmarla.,Your account is not active yet. Check your email to confirm it.,pendiente_aprobacion
+errors.codes.link_expired,link_expired,error,,Este enlace venció. Pedí uno nuevo.,This link has expired. Request a new one.,pendiente_aprobacion
+errors.codes.link_invalid,link_invalid,error,,Este enlace no es válido o venció. Pedí uno nuevo.,This link is invalid or has expired. Request a new one.,pendiente_aprobacion
+errors.codes.already_confirmed,already_confirmed,error,,Este enlace ya no puede usarse para confirmar la cuenta.,This link can no longer be used to confirm the account.,pendiente_aprobacion
+errors.codes.list_name_duplicated,list_name_duplicated,error,,Ya tenés una lista con ese nombre.,You already have a list with that name.,pendiente_aprobacion
+errors.codes.list_item_duplicated,list_item_duplicated,error,,Esta película o serie ya está en la lista.,This movie or TV show is already in the list.,pendiente_aprobacion
+errors.codes.default_list_protected,default_list_protected,error,,Las listas predeterminadas no se pueden renombrar ni eliminar.,Default lists can’t be renamed or deleted.,pendiente_aprobacion
+errors.codes.rating_blocks_removal_from_watched,rating_blocks_removal_from_watched,error,,"Para quitarla de Vistas, primero eliminá tu calificación.","To remove it from Watched, first delete your rating.",pendiente_aprobacion
+errors.codes.rating_duplicated,rating_duplicated,error,,Ya calificaste esta película o serie.,You’ve already rated this movie or TV show.,pendiente_aprobacion
+errors.codes.username_already_used,username_already_used,error,,Ese nombre de usuario ya está en uso.,That username is already in use.,pendiente_aprobacion
+errors.codes.required,required,error,,Completá este campo.,Complete this field.,pendiente_aprobacion
+errors.codes.blank,blank,error,,Este campo no puede quedar vacío.,This field can’t be empty.,pendiente_aprobacion
+errors.codes.null,null,error,,Este campo necesita un valor.,This field needs a value.,pendiente_aprobacion
+errors.codes.invalid,invalid,error,,Ingresá un valor válido.,Enter a valid value.,pendiente_aprobacion
+errors.codes.invalid_choice,invalid_choice,error,,Elegí una opción válida.,Choose a valid option.,pendiente_aprobacion
+errors.codes.max_length,max_length,error,maxLength,"Usá como máximo {maxLength, plural, one {# carácter} other {# caracteres}}.","Use no more than {maxLength, plural, one {# character} other {# characters}}.",pendiente_aprobacion
+errors.codes.min_length,min_length,error,minLength,"Usá al menos {minLength, plural, one {# carácter} other {# caracteres}}.","Use at least {minLength, plural, one {# character} other {# characters}}.",pendiente_aprobacion
+errors.codes.min_value,min_value,error,minValue,"Ingresá un valor mayor o igual a {minValue, number}.","Enter a value greater than or equal to {minValue, number}.",pendiente_aprobacion
+errors.codes.max_value,max_value,error,maxValue,"Ingresá un valor menor o igual a {maxValue, number}.","Enter a value less than or equal to {maxValue, number}.",pendiente_aprobacion
+errors.codes.unique,unique,error,,Ese valor ya está en uso.,That value is already in use.,pendiente_aprobacion
+errors.codes.not_a_dict,not_a_dict,error,,No pudimos leer estos datos. Revisalos e intentá de nuevo.,We couldn’t read these details. Check them and try again.,pendiente_aprobacion
+errors.codes.number_not_finite,number_not_finite,error,,Ingresá un número válido.,Enter a valid number.,pendiente_aprobacion
+errors.codes.email_already_used,email_already_used,error,,Ese correo ya está registrado.,That email is already registered.,pendiente_aprobacion
+errors.codes.email_or_username_already_used,email_or_username_already_used,error,,Ese correo o nombre de usuario ya está en uso.,That email or username is already in use.,pendiente_aprobacion
+errors.codes.username_invalid,username_invalid,error,"minLength,maxLength",Usá entre {minLength} y {maxLength} letras o números para tu nombre de usuario.,Use between {minLength} and {maxLength} letters or numbers for your username.,pendiente_aprobacion
+errors.codes.username_not_allowed,username_not_allowed,error,,No podés usar ese nombre de usuario. Elegí otro.,You can’t use that username. Choose another one.,pendiente_aprobacion
+errors.codes.person_name_invalid,person_name_invalid,error,,Usá solo letras y espacios para tu nombre o apellido.,Use only letters and spaces for your first or last name.,pendiente_aprobacion
+errors.codes.birth_date_in_future,birth_date_in_future,error,,La fecha de nacimiento no puede estar en el futuro.,Your date of birth can’t be in the future.,pendiente_aprobacion
+errors.codes.minimum_age,minimum_age,error,minAge,"Tenés que tener al menos {minAge, plural, one {# año} other {# años}} para crear una cuenta.","You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.",pendiente_aprobacion
+errors.codes.avatar_invalid,avatar_invalid,error,,Elegí uno de los avatares disponibles.,Choose one of the available avatars.,pendiente_aprobacion
+errors.codes.local_password_unavailable,local_password_unavailable,error,,Tu cuenta no tiene contraseña local. Podés crear una con «¿Olvidaste tu contraseña?».,Your account doesn’t have a local password. You can create one with “Forgot your password?”.,pendiente_aprobacion
+errors.codes.current_password_incorrect,current_password_incorrect,error,,La contraseña actual es incorrecta.,The current password is incorrect.,pendiente_aprobacion
+errors.codes.passwords_do_not_match,passwords_do_not_match,error,,Las contraseñas no coinciden.,The passwords do not match.,pendiente_aprobacion
+errors.codes.password_too_short_or_long,password_too_short_or_long,error,"minLength,maxLength",La contraseña tiene que tener entre {minLength} y {maxLength} caracteres.,The password must contain between {minLength} and {maxLength} characters.,pendiente_aprobacion
+errors.codes.password_no_upper,password_no_upper,error,,La contraseña tiene que incluir al menos un carácter en mayúscula.,The password must include at least one uppercase character.,pendiente_aprobacion
+errors.codes.password_no_lower,password_no_lower,error,,La contraseña tiene que incluir al menos un carácter en minúscula.,The password must include at least one lowercase character.,pendiente_aprobacion
+errors.codes.password_no_digit,password_no_digit,error,,La contraseña tiene que incluir al menos un número.,The password must include at least one number.,pendiente_aprobacion
+errors.codes.password_no_special,password_no_special,error,specialCharacters,La contraseña tiene que incluir al menos uno de estos caracteres: {specialCharacters}.,The password must include at least one of these characters: {specialCharacters}.,pendiente_aprobacion
+errors.codes.password_too_short,password_too_short,error,minLength,"La contraseña tiene que tener al menos {minLength, plural, one {# carácter} other {# caracteres}}.","The password must contain at least {minLength, plural, one {# character} other {# characters}}.",pendiente_aprobacion
+errors.codes.password_too_common,password_too_common,error,,Esta contraseña es demasiado común. Elegí otra.,This password is too common. Choose another one.,pendiente_aprobacion
+errors.codes.password_entirely_numeric,password_entirely_numeric,error,,La contraseña no puede contener solo números.,The password can’t contain only numbers.,pendiente_aprobacion
+errors.codes.password_too_similar,password_too_similar,error,,La contraseña se parece demasiado a tus datos personales. Elegí otra.,The password is too similar to your personal information. Choose another one.,pendiente_aprobacion
+errors.codes.google_authentication_failed,google_authentication_failed,error,,No pudimos verificar tu acceso con Google. Intentá de nuevo.,We couldn’t verify your Google sign-in. Try again.,pendiente_aprobacion
+errors.codes.list_name_missing_alphanumeric,list_name_missing_alphanumeric,error,,El nombre de la lista tiene que incluir al menos una letra o un número.,The list name must include at least one letter or number.,pendiente_aprobacion
+errors.codes.list_name_invalid_characters,list_name_invalid_characters,error,,"El nombre de la lista solo puede contener letras, números y espacios.","The list name can only contain letters, numbers and spaces.",pendiente_aprobacion
+errors.codes.review_update_empty,review_update_empty,error,,Indicá la calificación o el texto de la reseña que querés actualizar.,Provide the rating or review text you want to update.,pendiente_aprobacion
+errors.codes.password_reset_requested,password_reset_requested,success,,"Si ese correo tiene una cuenta activa, te enviamos un enlace para restablecer la contraseña.","If that email has an active account, we’ve sent a link to reset the password.",pendiente_aprobacion
+errors.codes.password_reset_completed,password_reset_completed,success,,Tu contraseña se restableció. Iniciá sesión de nuevo.,Your password has been reset. Log in again.,pendiente_aprobacion
+errors.codes.password_updated,password_updated,success,,Tu contraseña se actualizó. Iniciá sesión de nuevo en tus dispositivos.,Your password was updated. Log in again on your devices.,pendiente_aprobacion
+errors.codes.account_deactivated_successfully,account_deactivated_successfully,success,,Tu cuenta fue dada de baja. Tus datos se conservan.,Your account has been deactivated. Your data is retained.,pendiente_aprobacion
+errors.codes.email_confirmed,email_confirmed,success,,Tu correo se confirmó.,Your email has been confirmed.,pendiente_aprobacion
+errors.codes.csrf_ready,csrf_ready,success,,Listo para continuar.,Ready to continue.,pendiente_aprobacion
+errors.codes.registration_pending_confirmation,registration_pending_confirmation,success,,Te enviamos un enlace para confirmar tu cuenta.,We’ve sent a link to confirm your account.,pendiente_aprobacion
+errors.codes.confirmation_email_sent,confirmation_email_sent,success,,Te enviamos un nuevo enlace de confirmación.,We’ve sent a new confirmation link.,pendiente_aprobacion
+errors.codes.logged_out,logged_out,success,,Cerraste sesión en este dispositivo.,You’ve logged out on this device.,pendiente_aprobacion
+errors.codes.unknown,,fallback,,No pudimos completar la acción. Intentá de nuevo.,We couldn’t complete the action. Try again.,pendiente_aprobacion
+errors.codes.throttledWithWait,,variant,retryAfterSeconds,"Hiciste demasiadas solicitudes. Intentá de nuevo en {retryAfterSeconds, plural, one {# segundo} other {# segundos}}.","You’ve made too many requests. Try again in {retryAfterSeconds, plural, one {# second} other {# seconds}}.",pendiente_aprobacion
+settings.language.label,,selector,,Idioma,Language,pendiente_aprobacion
+settings.language.selectLabel,,selector,,Elegí el idioma,Choose your language,pendiente_aprobacion
+settings.language.description,,selector,,Elegí el idioma de FilmAI.,Choose the language for FilmAI.,pendiente_aprobacion
+settings.language.english,,selector,,English,English,pendiente_aprobacion
+settings.language.spanish,,selector,,Español,Español,pendiente_aprobacion
+settings.language.changing,,selector,,Cambiando idioma…,Changing language…,pendiente_aprobacion
+settings.language.updated,,selector,,Idioma actualizado.,Language updated.,pendiente_aprobacion
+settings.language.saveError,,selector,,No pudimos guardar el idioma. Intentá de nuevo.,We couldn’t save your language. Try again.,pendiente_aprobacion
+errors.fields.correo.invalid,,field,,Ingresá un correo válido.,Enter a valid email address.,pendiente_aprobacion
+errors.fields.email.invalid,,field,,Ingresá un correo válido.,Enter a valid email address.,pendiente_aprobacion
+errors.fields.fecha_nacimiento.invalid,,field,,Ingresá una fecha de nacimiento válida.,Enter a valid date of birth.,pendiente_aprobacion
+errors.fields.nombre.invalid,,field,,Ingresá un nombre válido.,Enter a valid first name.,pendiente_aprobacion
+errors.fields.apellido.invalid,,field,,Ingresá un apellido válido.,Enter a valid last name.,pendiente_aprobacion
+errors.fields.password.required,,field,,Ingresá tu contraseña.,Enter your password.,pendiente_aprobacion
+emails.confirmation.subject,,email,,[FilmAI] Confirmación de cuenta,[FilmAI] Confirm your account,pendiente_aprobacion

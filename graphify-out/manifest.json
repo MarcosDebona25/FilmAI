@@ -2440,5 +2440,23 @@
     "seen": 1791419017.4373152,
     "ast_hash": "88377ab8d2a9e5fe27c01c1ee4e0f3a4",
     "semantic_hash": ""
+  },
+  "docs/i18n/revision-ot13.md": {
+    "mtime": 1791419093.4422534,
+    "seen": 1791419102.7802303,
+    "ast_hash": "b59f2e85571e04b28242da61bc81907c",
+    "semantic_hash": ""
+  },
+  "openspec/specs/emails/spec.md": {
+    "mtime": 1791419093.4429698,
+    "seen": 1791419102.780903,
+    "ast_hash": "e1e23ffe0c1044211253165df39bc4ea",
+    "semantic_hash": ""
+  },
+  "openspec/specs/i18n-core/spec.md": {
+    "mtime": 1791419093.4437354,
+    "seen": 1791419102.7810354,
+    "ast_hash": "0f985d871d3a807169c4b014d7a6829c",
+    "semantic_hash": ""
   }
 }
