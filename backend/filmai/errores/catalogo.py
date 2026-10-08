@@ -167,6 +167,138 @@ CATALOGO = {
 }
 
 
+# Cada hoja conserva HTTP 400; el manejador utiliza validation_error arriba.
+CATALOGO.update(
+    {
+        "required": DefinicionCodigo("Este campo es requerido.", {"validacion": 400}),
+        "blank": DefinicionCodigo(
+            "Este campo no puede estar en blanco.", {"validacion": 400}
+        ),
+        "null": DefinicionCodigo("Este campo no puede ser nulo.", {"validacion": 400}),
+        "invalid": DefinicionCodigo(
+            "Valor inválido.", {"validacion": 400}, {"expectedType": "string"}
+        ),
+        "invalid_choice": DefinicionCodigo(
+            "La elección no es válida.",
+            {"validacion": 400},
+            {"allowedValues": "string[]"},
+        ),
+        "max_length": DefinicionCodigo(
+            "El texto supera la longitud máxima.",
+            {"validacion": 400},
+            {"maxLength": "integer"},
+        ),
+        "min_length": DefinicionCodigo(
+            "El texto no alcanza la longitud mínima.",
+            {"validacion": 400},
+            {"minLength": "integer"},
+        ),
+        "min_value": DefinicionCodigo(
+            "El valor no alcanza el mínimo.",
+            {"validacion": 400},
+            {"minValue": "number"},
+        ),
+        "max_value": DefinicionCodigo(
+            "El valor supera el máximo.", {"validacion": 400}, {"maxValue": "number"}
+        ),
+        "unique": DefinicionCodigo("Este valor ya existe.", {"validacion": 400}),
+        "not_a_dict": DefinicionCodigo("Se esperaba un objeto.", {"validacion": 400}),
+        "number_not_finite": DefinicionCodigo(
+            "Se esperaba un número finito.", {"validacion": 400}
+        ),
+        "email_already_used": DefinicionCodigo(
+            "El correo ya está registrado.", {"validacion": 400}
+        ),
+        "email_or_username_already_used": DefinicionCodigo(
+            "El correo o nombre de usuario ya está registrado.", {"validacion": 400}
+        ),
+        "username_invalid": DefinicionCodigo(
+            "Alfanumérico, 5-25 caracteres.",
+            {"validacion": 400},
+            {"minLength": "integer", "maxLength": "integer"},
+        ),
+        "username_not_allowed": DefinicionCodigo(
+            "El nombre de usuario no está permitido.", {"validacion": 400}
+        ),
+        "person_name_invalid": DefinicionCodigo(
+            "Solo letras y espacios entre palabras, máximo 50 caracteres.",
+            {"validacion": 400},
+            {"maxLength": "integer"},
+        ),
+        "birth_date_in_future": DefinicionCodigo(
+            "La fecha de nacimiento no puede ser futura.", {"validacion": 400}
+        ),
+        "minimum_age": DefinicionCodigo(
+            "Debés tener al menos 13 años.", {"validacion": 400}, {"minAge": "integer"}
+        ),
+        "avatar_invalid": DefinicionCodigo(
+            "El avatar no está disponible.",
+            {"validacion": 400},
+            {"allowedIds": "integer[]"},
+        ),
+        "local_password_unavailable": DefinicionCodigo(
+            "La cuenta no tiene contraseña local.", {"validacion": 400}
+        ),
+        "current_password_incorrect": DefinicionCodigo(
+            "La contraseña actual es incorrecta.", {"validacion": 400}
+        ),
+        "passwords_do_not_match": DefinicionCodigo(
+            "Las contraseñas no coinciden.", {"validacion": 400}
+        ),
+        "password_too_short_or_long": DefinicionCodigo(
+            "La contraseña debe tener entre 8 y 20 caracteres.",
+            {"validacion": 400},
+            {"minLength": "integer", "maxLength": "integer"},
+        ),
+        "password_no_upper": DefinicionCodigo(
+            "La contraseña debe contener al menos una mayúscula.", {"validacion": 400}
+        ),
+        "password_no_lower": DefinicionCodigo(
+            "La contraseña debe contener al menos una minúscula.", {"validacion": 400}
+        ),
+        "password_no_digit": DefinicionCodigo(
+            "La contraseña debe contener al menos un dígito.", {"validacion": 400}
+        ),
+        "password_no_special": DefinicionCodigo(
+            "La contraseña debe contener un carácter especial (@#$%&*!).",
+            {"validacion": 400},
+            {"specialCharacters": "string"},
+        ),
+        "password_too_short": DefinicionCodigo(
+            "La contraseña es demasiado corta.",
+            {"validacion": 400},
+            {"minLength": "integer"},
+        ),
+        "password_too_common": DefinicionCodigo(
+            "La contraseña tiene un valor demasiado común.", {"validacion": 400}
+        ),
+        "password_entirely_numeric": DefinicionCodigo(
+            "La contraseña es completamente numérica.", {"validacion": 400}
+        ),
+        "password_too_similar": DefinicionCodigo(
+            "La contraseña es demasiado similar a los datos personales.",
+            {"validacion": 400},
+            {"attribute": "string"},
+        ),
+        "google_authentication_failed": DefinicionCodigo(
+            "No se pudo autenticar con Google.", {"validacion": 400}
+        ),
+        "list_name_missing_alphanumeric": DefinicionCodigo(
+            "El nombre debe incluir al menos una letra o número.", {"validacion": 400}
+        ),
+        "list_name_invalid_characters": DefinicionCodigo(
+            "El nombre solo puede contener letras, números y espacios.",
+            {"validacion": 400},
+        ),
+        "review_update_empty": DefinicionCodigo(
+            "Indicá al menos valor o texto para actualizar.",
+            {"validacion": 400},
+            {"fieldNames": "string[]"},
+        ),
+    }
+)
+
+
 def obtener_codigo(codigo):
     try:
         return CATALOGO[codigo]
