@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import materializar
 from catalogo.services.tmdb import get_catalog_service
@@ -93,7 +94,7 @@ class CatalogoBaseView(APIView):
     throttle_scope = "catalogo"
 
     def _service(self, request):
-        return get_catalog_service(idioma_tmdb(request))
+        return servicio_localizado(idioma_tmdb(request), get_catalog_service)
 
     def _page(self, request):
         return _int_param(request.query_params.get("page"), "page", default=1)
