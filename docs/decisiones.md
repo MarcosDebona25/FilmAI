@@ -2714,3 +2714,18 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   El layout compartido se entrega en las unidades siguientes de OT-50.
 - **Archivos afectados**: servicio, plantillas trasladadas, adaptador, reset
   serializer, passwords, tests, `.env.example`, plan y spec `emails`.
+
+---
+
+## 08/10/2026 — Layout de registro compartible (OT-50, unidad 2)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: registro hereda `correos/base.html` y conserva su introducción. La estructura, estilos, enlaces, texto y espacios
+  renderizados coinciden con el HTML anterior. Reenvío y recuperación se incorporan en
+  las unidades siguientes, preservando sus diferencias de contenido y color.
+- **Verificación**: siete tests de correo pasan en 1,964 s; las cuatro
+  referencias completas F0 permanecen iguales sin regenerarse. No se añade
+  una prueba que replique la herencia: la comparación del envío real verifica
+  el resultado del layout.
+- **Archivos afectados**: base HTML, variante de registro, decisiones,
+  plan y spec `emails`.
