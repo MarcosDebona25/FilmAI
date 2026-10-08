@@ -19,13 +19,13 @@ from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
 from django.http import HttpResponseBadRequest
-from django.template.loader import render_to_string
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
+
+from filmai.correos.servicio import enviar_correo
 
 from .avatares import es_avatar_valido
 from .exceptions import NombreUsuarioOcupado
@@ -315,22 +315,7 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
         contexto = {"user": usuario, "reset_url": reset_url}
 
         try:
-            asunto = render_to_string(
-                "registration/recuperar_contrasena_subject.txt", contexto
-            ).strip()
-            cuerpo_texto = render_to_string(
-                "registration/recuperar_contrasena_message.txt", contexto
-            )
-            cuerpo_html = render_to_string(
-                "registration/recuperar_contrasena_message.html", contexto
-            )
-            send_mail(
-                asunto,
-                cuerpo_texto,
-                settings.DEFAULT_FROM_EMAIL,
-                [usuario.correo],
-                html_message=cuerpo_html,
-            )
+            enviar_correo("restablecer_contrasena", usuario.correo, contexto, "es")
         except Exception:
             # Mantiene la misma respuesta para no revelar la existencia de la cuenta.
             logger.exception(

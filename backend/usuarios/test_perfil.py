@@ -419,7 +419,7 @@ class ContrasenaTests(TestCase):
         with (
             self.captureOnCommitCallbacks(execute=True),
             patch(
-                "usuarios.passwords.send_mail",
+                "filmai.correos.servicio.send_mail",
                 side_effect=RuntimeError("correo no disponible"),
             ),
         ):

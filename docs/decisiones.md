@@ -2693,3 +2693,24 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   a sus oráculos. Frontend conserva el árbol validado en OT-13.
 - **Archivos afectados**: `seed.py`, test de semilla, README, plan y specs
   `development-seed` e `i18n-core`.
+
+---
+
+## 08/10/2026 — Servicio único sin cambiar copia de correos (OT-50, unidad 1)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: los cuatro flujos delegan el render y transporte en
+  `filmai.correos.servicio.enviar_correo`. Las plantillas actuales se trasladan
+  intactas a `correos/<caso>/es/`; la notificación de contraseña conserva su
+  texto anterior como plantilla. El servicio mantiene los espacios extremos
+  que cada flujo enviaba. Confirmación/recuperación conservan sus enlaces;
+  cambio de contraseña conserva el envío posterior al commit y su política
+  de fallo. Esta unidad no selecciona EN ni añade HTML a la notificación.
+- **Tests**: las cuatro referencias F0 coinciden sin regeneración. Tres tests
+  nuevos verifican formatos, rechazo de entradas internas y propagación del
+  fallo al flujo responsable. Los 34 tests enfocados pasan en 25,339 s. El
+  usuario autorizó cambiar únicamente el destino del mock de transporte del
+  test de fallo de notificación, manteniendo HTTP y comprobación de contraseña.
+  El layout compartido se entrega en las unidades siguientes de OT-50.
+- **Archivos afectados**: servicio, plantillas trasladadas, adaptador, reset
+  serializer, passwords, tests, `.env.example`, plan y spec `emails`.

@@ -852,7 +852,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Pendiente |
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | Pendiente |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
-| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | Pendiente |
+| OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | En curso: servicio y traslado verificados; layout compartido y publicación pendientes |
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
 | OT-52 | F5, pasos 4 y 6 | Plantillas en inglés y elección del idioma del destinatario | OT-51 | M | Pendiente |
 | OT-53 | F5, paso 5 | Copia en español pasada a la de la tabla | OT-52 | S | Pendiente |
@@ -1062,6 +1062,14 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   Frontend exacto `88f94c0`: evidencia vigente de OT-13 43 unitarios/24 e2e/build;
   no se presenta como corrida nueva. Semilla PR #57 hacia integración; solo
   se integra con CI verde de su cabeza final. Núcleo/API #55/#56 ya integrados.
+
+- 08/10/2026, OT-50 unidad 1: servicio único y plantillas ES trasladadas sin
+  cambiar textos; las cuatro referencias F0 coinciden sin regeneración. Tres
+  tests nuevos y 34 enfocados verdes (25,339 s). El usuario autorizó solo
+  cambiar el destino del mock de fallo de notificación a
+  `filmai.correos.servicio.send_mail`, preservando HTTP y contraseña. Contenedor
+  de pruebas con entrypoint explícito y DB `test_filmai_ot50`, sin aplicar
+  migraciones a desarrollo. Layout y publicación pendientes.
 
 ### 10.6 Instrucción para iniciar una sesión
 
