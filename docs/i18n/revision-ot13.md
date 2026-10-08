@@ -70,7 +70,7 @@ es exacta, no un mínimo ni un rango.
 - [x] Actualizar el CSV de curaduría conservando columnas originales inmutables.
 - [x] Validar sintaxis ICU con el analizador usado en OT-12 y paridad de argumentos.
 - [x] Revisar specs `i18n-core` y `emails`; quitar su estado de borrador solo al aprobar.
-- [ ] Root registra decisión/traspaso, actualiza graphify y coordina formato/CI.
+- [x] Root registra decisión/traspaso, actualiza graphify y coordina formato/CI.
 
 Se mantienen dos unidades de revisión menores de 400 líneas: specs juntas;
 y copia CSV más esta revisión. La aprobación editorial habilita el cierre de
@@ -80,14 +80,16 @@ OT-13 una vez verificadas las suites y publicada la entrega hacia integración.
 
 Validación editorial y de datos aprobada: 91 mensajes nuevos, 451 filas ICU
 utilizables y 425 claves sin colisiones; originales y baja intactos.
-Ruff, ESLint, Prettier, TypeScript, los 43 tests unitarios del frontend y el
-build pasan en la sesión retomada. Se repite la suite backend con el contrato
-OpenAPI copiado a `/contracts` dentro del contenedor: el montaje de desarrollo
-solo incluye `backend/`. Playwright corre con `CI=1` para arrancar su servidor.
-Los resultados finales se registrarán antes de integrar.
+Verificación local del 08/10/2026: Ruff, ESLint, Prettier y TypeScript pasan;
+backend **508 tests**, 162,455 s; Vitest **43 tests**, 5,35 s; Playwright
+**24 tests**, 41,9 s; build de producción aprobado. La primera corrida backend
+falló por ausencia de `/contracts/openapi.yaml` en el montaje local; se copió
+el contrato al contenedor y la suite completa repetida pasó. Playwright se
+arrancó con `CI=1`. No hubo cambios de producción, tests ni dependencias.
 
-Specs y decisión: PR #53 hacia `feat/i18n-multiidioma`. Copia, curaduría y
-registro: segunda entrega apilada sobre la primera. El PR #52 se sustituye
-por estas dos entregas; su CI del borrador no se usa para aprobarlas.
+Specs y decisión: PR #53, integrado con merge commit únicamente en
+`feat/i18n-multiidioma` tras sus tres checks verdes. Copia, curaduría y registro:
+PR #54, con la base actualizada a integración; se integrará solo con CI verde
+de su cabeza final. El PR #52 fue cerrado y sustituido por estas dos entregas.
 El respaldo del checkout inicial queda en `/tmp/filmai-retoma-08oct/` y en
 el stash `respaldo ot13 aprobado antes de dividir entrega`. Main queda fuera.
