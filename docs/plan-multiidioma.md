@@ -849,8 +849,8 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30 | M | Pendiente |
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
-| OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | En validación: 08/10/2026; base OT-30 final 10fe49f; 546 backend aprobados; PR hacia integración y CI de cabeza final pendientes (ver 10.5) |
-| OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | Pendiente |
+| OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 integrado fuera de main con CI 3/3 verde; 546 backend aprobados; merge final 65b7e7b (ver 10.5) |
+| OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En progreso: 08/10/2026; dos entregas, consumidores/API por clave y nombres reservados/contrato (ver 10.5) |
 | OT-42 | F4, paso 5 | Restricciones y prueba sobre un volcado de desarrollo | OT-41 | S | Pendiente |
 | OT-50 | F5, pasos 1 y 7 | Servicio único y layout base, con las plantillas actuales sin cambios de texto | OT-20, OT-02 | M | Pendiente |
 | OT-51 | F5, pasos 2 y 3 | Vigencias por contexto y HTML de "contraseña actualizada" | OT-50 | S | Pendiente |
@@ -1106,6 +1106,22 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   coincide con el árbol validado en OT-13 (43 unitarios, 24 e2e y build),
   evidencia reutilizada y no una ejecución nueva. Se requiere CI sobre la
   cabeza publicada antes de integrar OT-40; main permanece sin merges.
+
+- 08/10/2026, cierre de OT-40: PR #62 integrado en `feat/i18n-multiidioma`
+  mediante merge `65b7e7b`, cabeza exacta `6dee3b5` con los tres jobs CI verdes.
+  La suite local normal pasó 546 tests en 196,439 s; main permanece intacta.
+
+- 08/10/2026, OT-41A: consumidores y API por clave, con siete tests nuevos
+  aprobados junto a doce regresiones de contraseña (19 en 16,229 s). Provisión y semilla conservan los nombres; auditoría
+  cuenta por clave. La segunda entrega agrega nombres reservados, el código
+  `list_name_reserved` HTTP 409 sin parámetros y su copia bilingüe aprobada
+  como fila nueva, sin alterar las 91 aprobadas de OT-13. No se ejecutan
+  semilla ni reparación sobre desarrollo; OT-42 repara solo copia temporal.
+  Primera suite: 552 en 198,548 s, un 401 inesperado en una regresión previa
+  de rollback de contraseña. La clase y los siete nuevos pasaron juntos (19);
+  repetición normal completa: 553 aprobados en 201,893 s. Ruff, Prettier y
+  consistencia de migraciones aprobados. Publicación espera la cola OT-70/60
+  y una verificación de la base final, sin declarar integrada esta entrega.
 
 ### 10.6 Instrucción para iniciar una sesión
 

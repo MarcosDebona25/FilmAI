@@ -5,7 +5,7 @@ from django.db import transaction
 
 from usuarios.models import Usuario
 from usuarios.provisioning import (
-    LISTAS_PREDETERMINADAS,
+    nombres_listas_predeterminadas,
     provisionar_recursos_por_defecto,
 )
 
@@ -29,7 +29,7 @@ class Command(BaseCommand):
         if options["dry_run"]:
             for usuario in usuarios:
                 listas = usuario.listas.filter(
-                    nombre__in=LISTAS_PREDETERMINADAS
+                    clave__in=nombres_listas_predeterminadas()
                 ).count()
                 self.stdout.write(
                     f"{usuario.pk}: listas {listas}/3, chats {usuario.chats.count()}/1"

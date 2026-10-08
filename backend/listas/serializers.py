@@ -55,6 +55,7 @@ class AgregarItemSerializer(PertenenciaQuerySerializer):
 class ListaResumenSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     nombre = serializers.CharField()
+    clave = serializers.CharField(allow_null=True)
     tipo = serializers.CharField()
     cantidad_items = serializers.IntegerField()
     cantidad_peliculas = serializers.IntegerField()
