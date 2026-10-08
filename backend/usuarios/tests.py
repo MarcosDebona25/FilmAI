@@ -78,6 +78,11 @@ class ConfirmarCorreoTests(TestCase):
         "password2": "Password123!",
     }
 
+    def setUp(self):
+        # Estas pruebas afirman la copia en español; sin preferencia el correo
+        # sale en inglés (idioma por defecto, OT-52).
+        self.client.defaults["HTTP_ACCEPT_LANGUAGE"] = "es"
+
     def _registrar(self) -> str:
         response = self.client.post(
             "/api/auth/registration/", self.PAYLOAD, content_type="application/json"
@@ -187,6 +192,7 @@ class RecuperarContrasenaTests(TestCase):
     def setUp(self):
         from django.core.cache import cache
 
+        self.client.defaults["HTTP_ACCEPT_LANGUAGE"] = "es"  # copia en español
         cache.clear()
 
     def _crear_usuario_activo(self, correo: str = "recuperar@filmai.com"):

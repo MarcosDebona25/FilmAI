@@ -1,0 +1,3 @@
+{% extends "correos/base_en.html" %}{% block titulo %}Confirm your email{% endblock %}{% block introduccion %}You asked to confirm this email address on your FilmAI account. Confirm it to keep using your account.{% endblock %}{% block boton %}Confirm my email{% endblock %}{% block advertencia %}This link is valid for {{ expiry_hours }} hour{{ expiry_hours|pluralize }}.
+                <br /><br />
+                If you didn’t request this confirmation, ignore this message: no changes will be made.{% endblock %}

@@ -59,7 +59,12 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
         caso = casos.get(template_prefix)
         if caso is None:
             return super().send_mail(template_prefix, email, context)
-        return enviar_correo(caso, email, context, "es")
+        # Idioma guardado del destinatario; si es nulo, el del request; si no, inglés.
+        idioma = idioma_efectivo(
+            context.get("request") or getattr(self, "request", None),
+            context.get("user"),
+        )
+        return enviar_correo(caso, email, context, idioma)
 
     def get_email_confirmation_url(self, request, emailconfirmation):
         """Envía la confirmación a la pantalla correspondiente de la SPA."""

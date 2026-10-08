@@ -1,0 +1,13 @@
+{% load nombres %}Hi {{ user|nombre_completo:"en" }},
+
+You asked to confirm this email address on your FilmAI account. Confirm it to keep using your account.
+
+Confirm your email by opening this link:
+
+{{ activate_url }}
+
+This link is valid for {{ expiry_hours }} hour{{ expiry_hours|pluralize }}.
+
+If you didn’t request this confirmation, ignore this message: no changes will be made.
+
+The FilmAI team

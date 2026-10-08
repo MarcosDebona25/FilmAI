@@ -117,7 +117,7 @@ class CambiarContrasenaView(GenericAPIView):
                 data=request.data, context={"usuario": usuario}
             )
             serializer.is_valid(raise_exception=True)
-            guardar_contrasena(usuario, serializer.validated_data["password1"])
+            guardar_contrasena(usuario, serializer.validated_data["password1"], request)
         return cerrar_sesion(
             request,
             "Contraseña actualizada. Inicia sesión nuevamente en tus dispositivos.",

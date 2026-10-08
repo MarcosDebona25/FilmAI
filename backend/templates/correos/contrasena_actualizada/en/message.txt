@@ -1,0 +1,9 @@
+{% load nombres %}Hi {{ user|nombre_completo:"en" }},
+
+The password for your FilmAI account was updated. For security, we closed the open sessions on all your devices: you’ll need to log in again.
+
+{{ enlace_correo }}
+
+If you didn’t make this change, recover your account from the log in screen with “Forgot your password?” and choose a new password.
+
+The FilmAI team

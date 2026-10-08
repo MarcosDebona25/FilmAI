@@ -23,8 +23,12 @@ from usuarios.models import EstadoCuenta
 class CorreosContratoTests(TestCase):
     """Ejercita cada flujo de envío; no reconstruye las plantillas en el test."""
 
+    idioma = "es"
+    sufijo = ""
+
     def setUp(self):
-        self.client = APIClient()
+        # Las referencias de F0 son la variante en español; `.en` las de inglés.
+        self.client = APIClient(HTTP_ACCEPT_LANGUAGE=self.idioma)
         mail.outbox.clear()
 
     def assert_correo(self, caso):
@@ -52,7 +56,12 @@ class CorreosContratoTests(TestCase):
                 if tipo == "text/html"
             ],
         }
-        archivo = Path(__file__).parent / "tests_golden" / "correos" / f"{caso}.json"
+        archivo = (
+            Path(__file__).parent
+            / "tests_golden"
+            / "correos"
+            / f"{caso}{self.sufijo}.json"
+        )
         if os.environ.get("FILMAI_ACTUALIZAR_REFERENCIAS") == "1":
             archivo.parent.mkdir(parents=True, exist_ok=True)
             archivo.write_text(
@@ -132,3 +141,10 @@ class CorreosContratoTests(TestCase):
             )
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(len(self.assert_correo("contrasena_actualizada")["html"]), 1)
+
+
+class CorreosContratoInglesTests(CorreosContratoTests):
+    """Las mismas cuatro rutas reales, con el request en inglés (OT-52)."""
+
+    idioma = "en"
+    sufijo = ".en"
