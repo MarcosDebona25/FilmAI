@@ -2671,3 +2671,23 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   Solo se amplía la igualdad exacta de preferencias autorizada por F2.
 - **Archivos afectados**: adaptadores, serializers, preferencias, tests de
   usuarios, `contracts/openapi.yaml`, doc 03, plan y spec `i18n-core`.
+
+---
+
+## 08/10/2026 — Cuentas ES/EN conocidas en la semilla (OT-20, tercera entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el seed completo asigna español a usuario001/usuario003 e
+  inglés a usuario002, manteniendo sus credenciales. El modo de reseñas no
+  asigna ni reemplaza idiomas. El README documenta esas cuentas y el contrato
+  de preferencias. No se resetea la base automáticamente ni se rellena el
+  idioma de usuarios previos; el integrante decide cuándo usar el seed.
+- **Verificación**: dos tests pasan en 3,663 s sobre la base de pruebas:
+  recreación repetida con idiomas deterministas y conservación del admin;
+  modo de reseñas conservando un idioma guardado y uno nulo. Suite completa
+  backend: 520 tests en 184,491 s, con cinco fallos de autenticación 401 en
+  subcasos de una prueba anterior de preferencias. La entrega API previa pasó
+  su CI completo y los tests enfocados; se investiga la causa antes del cierre.
+  Frontend conserva exactamente el árbol validado en OT-13.
+- **Archivos afectados**: `seed.py`, test de semilla, README, plan y specs
+  `development-seed` e `i18n-core`.

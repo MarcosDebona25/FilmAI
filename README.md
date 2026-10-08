@@ -276,15 +276,23 @@ El backend crea automáticamente un superusuario al arrancar, usando las variabl
 
 #### Cuentas de prueba
 
-El comando `seed` crea tres cuentas de desarrollo con el email verificado y la misma contraseña:
+El comando `seed` crea tres cuentas de desarrollo con el email verificado,
+idiomas conocidos y la misma contraseña:
 
-| Email                   | Contraseña     |
-| ----------------------- | -------------- |
-| `usuario001@filmai.com` | `Password123!` |
-| `usuario002@filmai.com` | `Password123!` |
-| `usuario003@filmai.com` | `Password123!` |
+| Email                   | Contraseña     | Idioma       |
+| ----------------------- | -------------- | ------------ |
+| `usuario001@filmai.com` | `Password123!` | Español (es) |
+| `usuario002@filmai.com` | `Password123!` | English (en) |
+| `usuario003@filmai.com` | `Password123!` | Español (es) |
 
-Para recrear los datos de desarrollo:
+La migración de idioma no rellena las cuentas anteriores ni cambia
+`LANGUAGE_CODE`. Sin preferencia guardada, el backend usa `Accept-Language`
+(pesos y regiones), con inglés como respaldo. El registro normal y Google
+guarda el idioma activo; se cambia con `PUT /api/preferences/` enviando
+`{"idioma": "en"}` o `{"idioma": "es"}`. Los datos de usuario y perfil lo
+exponen en lectura. `seed --solo-resenas` conserva los idiomas existentes.
+
+Para recrear los datos de desarrollo, cuando el integrante decida hacerlo:
 
 ```bash
 docker compose exec backend python manage.py seed

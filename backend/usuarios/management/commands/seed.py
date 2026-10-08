@@ -189,6 +189,7 @@ class Command(BaseCommand):
                 nombre_usuario=f"usuario{i:03d}",
                 correo=f"usuario{i:03d}@filmai.com",
                 password=SEED_PASSWORD,
+                idioma="es" if i % 2 else "en",
             )
             # allauth necesita un EmailAddress verificado para permitir el
             # login cuando ACCOUNT_EMAIL_VERIFICATION es "mandatory".
