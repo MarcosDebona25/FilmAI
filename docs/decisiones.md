@@ -3211,3 +3211,35 @@ sus dos cabezas publicadas antes de integrarse.
   `backend/catalogo/{views,serializers_reviews}.py`,
   `backend/filmai/exceptions.py`, los tests citados, `docs/plan-multiidioma.md`
   y `graphify-out/`.
+
+## 08/10/2026 — OT-33: espera del 429, códigos de éxito y estados de cuenta
+
+- **Descripción**: F3 pasos 5, 6 y 7, sin quitar claves heredadas.
+  - **429**: `Throttled` con espera emite `params.retry_after_seconds`
+    (`ceil(wait)`); el encabezado `Retry-After` ya lo fija DRF.
+  - **Éxito**: las respuestas con texto suman `code` junto a `detail`
+    (`password_reset_requested`, `password_reset_completed`, `password_updated`,
+    `account_deactivated_successfully`, `email_confirmed`, `csrf_ready`).
+    Para vistas de dj-rest-auth (registro `registration_pending_confirmation`,
+    reenvío `confirmation_email_sent`, logout `logged_out`) se usa el decorador
+    `con_codigo_exito`, que envuelve la vista con `functools.wraps`; **no** se
+    subclasean porque drf-spectacular perdería sus extensiones y cambiaría
+    `contracts/openapi.yaml` (se probó y se descartó).
+  - **Login**: `CuentaInactiva` (subclase de `PermissionDenied`) emite
+    `account_deactivated` / `account_pending_confirmation` con el mismo 403 y
+    `detail` genérico, **solo si la contraseña (o el token de Google) es
+    correcta**. Con contraseña incorrecta la cuenta inactiva responde como
+    cualquier otra: `invalid_credentials` (HTTP 400, cuerpo `non_field_errors`
+    heredado). Las credenciales inválidas de cualquier cuenta pasan de
+    `validation_error` a `invalid_credentials`.
+- **Cambio de comportamiento deliberado**: cuenta de baja/pendiente con
+  contraseña incorrecta pasa de 403 a 400 (el plan 3.3 pide no revelar el
+  estado a quien no controla la cuenta). Se ajustó el test OT-02
+  `filmai/tests_estado_cuenta.py` (separa contraseña correcta/incorrecta), lo
+  autorizado para tests de F0 cuando el plan cambia el comportamiento.
+- **Pruebas**: `usuarios/test_codigos_exito_estado.py` (11 tests); suite
+  backend completa **622 OK**, `ruff` limpio, `openapi.yaml` sin cambios.
+- **Archivos afectados**: `backend/filmai/{exceptions,urls}.py`,
+  `backend/filmai/errores/sobre.py`, `backend/usuarios/{exceptions,serializers,
+  views,perfil,cuenta}.py`, tests citados, `docs/plan-multiidioma.md`,
+  `graphify-out/`.

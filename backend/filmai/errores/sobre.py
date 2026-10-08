@@ -87,3 +87,16 @@ def conservar_legacy(cuerpo, sobre):
     if RESERVADOS.intersection(cuerpo):
         raise ValueError("Un campo heredado colisiona con el sobre de errores.")
     return {**cuerpo, **sobre}
+
+
+def agregar_codigo_exito(response, codigo):
+    """Suma `code` a una respuesta exitosa sin tocar `detail` ni otras claves."""
+    definicion = obtener_codigo(codigo)
+    if definicion.categoria != "success":
+        raise ValueError("Se requiere un código de éxito.")
+    if response.status_code not in definicion.contextos.values():
+        raise ValueError("El estado HTTP no corresponde al código de éxito.")
+    if not isinstance(response.data, dict) or "code" in response.data:
+        raise ValueError("La respuesta exitosa no admite el campo code.")
+    response.data = {**response.data, "code": codigo}
+    return response

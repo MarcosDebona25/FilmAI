@@ -847,7 +847,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Completada: 08/10/2026; PRs #58/#59/#60/#61 integrados fuera de main con CI 3/3 verde; 543 backend; merge final 10fe49f (ver 10.5) |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Parcial: 08/10/2026; cinco unidades integradas en `develop` y verificadas con la suite local completa; faltan las respuestas directas de F3 (OT-33) y la publicación/CI (ver 10.5) |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30, primer bloque de OT-31 | M | Completada: 08/10/2026 en `develop`; 611 backend OK; falta publicar/CI (ver 10.5) |
-| OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
+| OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Completada: 08/10/2026 en `develop`; 622 backend OK; falta publicar/CI (ver 10.5) |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
 | OT-40 | F4, paso 1 | Campo `clave` con migración de datos y su test | F1 | S | Completada: 08/10/2026; PR #62 con CI 3/3 verde sobre 6dee3b5; 546 backend; merge 65b7e7b solo a integración (ver 10.5) |
 | OT-41 | F4, pasos 2, 3 y 4 | Código por `clave`, `clave` en la API, nombres reservados, `contracts/enums.json` | OT-40 | M | En validación: 08/10/2026; OT-41A y OT-41B integradas en `develop` (identidad por clave, `list_name_reserved`, `contracts/enums.json`); falta publicación/CI (ver 10.5) |
@@ -1283,6 +1283,8 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   documentada en OT-41A/OT-41B); su repetición salió en verde sin tocar tests.
 
 - 08/10/2026, OT-32 en `develop` (sin merge a main): códigos en `listas` y `catalogo`, parámetros de catálogo normalizados con cuerpo irregular intacto, TMDB con sobre en el manejador global (429 de TMDB como `throttled` sin espera). Dos tests del manejador global ajustados (autorizado). 611 backend OK, Ruff limpio. Siguiente: OT-33.
+
+- 08/10/2026, OT-33 en `develop` (sin merge a main): `retry_after_seconds` en el 429, `code` en respuestas exitosas (decorador `con_codigo_exito` para vistas de dj-rest-auth, OpenAPI intacto) y estados de cuenta en el login solo tras validar contraseña/token. Desvío deliberado: baja/pendiente con contraseña incorrecta pasa de 403 a 400 `invalid_credentials`; test de OT-02 ajustado. 622 backend OK. Siguiente: OT-34.
 
 ### 10.6 Instrucción para iniciar una sesión
 
