@@ -123,3 +123,19 @@ messages. Characterization references change only under the accepted F0
 regeneration authorization. Test all eight variants, effective locale, expiry
 context and URL routes. Review the rendered emails in a real client at OT-52
 and OT-90 as required by the plan. OT-13 adds no sending code or tests.
+
+## Implementation progress
+
+OT-50 centralizes the four sends in `filmai.correos.servicio.enviar_correo`.
+Spanish templates retain their previous copy and rendered whitespace. Three
+HTML variants share `correos/base.html`; reset retains its separate title,
+action, warning and secondary color. Password notification remains text-only
+until OT-51. Registration/reset routes and transaction/failure policies stay
+unchanged. The user authorized only retargeting the notification failure mock
+to the service transport, preserving its assertions.
+
+All four original F0 references remain identical without regeneration. Three
+new tests verify formats, invalid internal inputs and transport failure. The
+full local suite passes 523 tests; integration awaits rebase and exact-head CI.
+Expiry context/notification HTML (OT-51), recipient language/English (OT-52)
+and reviewed Spanish copy (OT-53) remain future requirements.
