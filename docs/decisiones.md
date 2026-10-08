@@ -2580,3 +2580,21 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   La aprobación editorial pertenece a OT-13.
 - **Archivos afectados**: `docs/i18n/claves.csv`, `docs/i18n/README.md`,
   `docs/plan-multiidioma.md`.
+
+---
+
+## 08/10/2026 — Catálogo y correspondencia del contrato de errores
+
+- **Fecha**: 08/10/2026
+- **Descripción**: OT-11 especifica el sobre, códigos, parámetros, normalización
+  de terceros y respuestas exitosas. El CSV documenta las 91 referencias de F0
+  y todas sus cadenas distintas, fuentes defensivas y exclusiones fuera de API.
+  El catálogo ejecutable y la exportación quedan para F3; la copia para OT-13.
+  No cambian producción ni tests. Se conserva la emisión doble y se validan
+  credenciales antes de revelar estados de cuenta. El usuario aprobó códigos
+  por significado con estados HTTP por contexto, conservando el estado actual
+  (credenciales: 400 en login, 401 en autenticación; username: 400 en validación,
+  409 en perfil). También aprobó propagar Retry-After real de TMDB y omitir
+  parámetro/encabezado si se desconoce la espera, sin inventar segundos.
+- **Archivos afectados**: `openspec/specs/error-contract/spec.md`,
+  `docs/i18n/errores.csv`, `docs/decisiones.md` y `docs/plan-multiidioma.md`.
