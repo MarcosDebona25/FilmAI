@@ -180,9 +180,9 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1790217244.1183503,
-    "seen": 1791417713.9062035,
-    "ast_hash": "9a97675e3954222f90ec97428cd62377",
+    "mtime": 1791421940.0842261,
+    "seen": 1791422054.318613,
+    "ast_hash": "8f3e7b1a8a5823bac8ed3e6d0b5974b6",
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
@@ -354,9 +354,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "backend/usuarios/models.py": {
-    "mtime": 1790390867.820161,
-    "seen": 1791417713.9063587,
-    "ast_hash": "12a344603fb39978782b19df631c5222",
+    "mtime": 1791421940.0851433,
+    "seen": 1791422054.3273656,
+    "ast_hash": "1c810af79e73e5adf5d63a000a153d4c",
     "semantic_hash": ""
   },
   "backend/usuarios/serializers.py": {
@@ -642,9 +642,9 @@
     "semantic_hash": "560779b55988641fd021de6ae9ce003f"
   },
   "docs/03_Modelos de Datos y de Dise\u00f1o.md": {
-    "mtime": 1790887513.1038384,
-    "seen": 1791417713.906503,
-    "ast_hash": "d081fa386f2b646f2c6ef3ec272cc97a",
+    "mtime": 1791422040.8881924,
+    "seen": 1791422054.3345351,
+    "ast_hash": "3db069879f8dadd9e1f446f19dab2c5c",
     "semantic_hash": ""
   },
   "docs/04_Lineamientos_UI.md": {
@@ -666,9 +666,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791420890.9940028,
-    "seen": 1791420899.0880287,
-    "ast_hash": "1b0dceb07e50de61e77a1d9dae29aec9",
+    "mtime": 1791422040.8842182,
+    "seen": 1791422054.3346555,
+    "ast_hash": "766ed6ceef4baf6cc538f7b838cf0aff",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1812,9 +1812,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791421207.0706172,
-    "seen": 1791421216.5629659,
-    "ast_hash": "a70dac63d55deb30fe6a9b470834a765",
+    "mtime": 1791422040.890339,
+    "seen": 1791422054.334787,
+    "ast_hash": "dee6dfa77fe86b8ea76ea90754de7ac9",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2448,15 +2448,39 @@
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
-    "mtime": 1791420890.9911184,
-    "seen": 1791420899.0889254,
-    "ast_hash": "f183a219f462095979eb35805c26de39",
+    "mtime": 1791422040.8887508,
+    "seen": 1791422054.3357174,
+    "ast_hash": "1d4ca4f5c05bbec77f401540f0fd248f",
     "semantic_hash": ""
   },
   "docs/i18n/revision-ot13.md": {
     "mtime": 1791421207.0685563,
     "seen": 1791421216.5629625,
     "ast_hash": "42be66c6c952d5f14e95df41a0ac9bb5",
+    "semantic_hash": ""
+  },
+  "backend/filmai/idioma.py": {
+    "mtime": 1791421940.1234684,
+    "seen": 1791422054.3186083,
+    "ast_hash": "95caba9ac88150932c62f398e7239846",
+    "semantic_hash": ""
+  },
+  "backend/filmai/test_idioma.py": {
+    "mtime": 1791421989.7851088,
+    "seen": 1791422054.3186147,
+    "ast_hash": "eb18ea97942936a615733367854030a4",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/migrations/0007_usuario_idioma.py": {
+    "mtime": 1791421942.5261927,
+    "seen": 1791422054.3273144,
+    "ast_hash": "7ae2ee76479e40ba482be766d6b5b7e5",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/test_migracion_idioma.py": {
+    "mtime": 1791421989.7851088,
+    "seen": 1791422054.3277714,
+    "ast_hash": "3ce7acb3ee6cdc747856d238319ccd74",
     "semantic_hash": ""
   }
 }

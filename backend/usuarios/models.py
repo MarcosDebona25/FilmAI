@@ -110,6 +110,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         choices=Tema.choices,
         default=Tema.OSCURO,
     )
+    idioma = models.CharField(
+        "idioma",
+        max_length=2,
+        choices=(("en", "English"), ("es", "Español")),
+        null=True,
+        blank=True,
+    )
     perfil_publico = models.BooleanField("perfil público", default=True)
     notif_recomendaciones = models.BooleanField("notif. recomendaciones", default=True)
     notif_resenas = models.BooleanField("notif. reseñas", default=True)
