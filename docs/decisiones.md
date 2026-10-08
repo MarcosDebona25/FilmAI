@@ -3243,3 +3243,41 @@ sus dos cabezas publicadas antes de integrarse.
   `backend/filmai/errores/sobre.py`, `backend/usuarios/{exceptions,serializers,
   views,perfil,cuenta}.py`, tests citados, `docs/plan-multiidioma.md`,
   `graphify-out/`.
+
+## 08/10/2026 — OT-34: contrato exportado, sobre en OpenAPI y modo estricto (cierra F3)
+
+- **Descripción**: F3 pasos 8 y 9 más el rechazo de códigos no registrados.
+  - `exportar_contrato` (`filmai/management/commands/`) escribe
+    `contracts/error-codes.json` desde el catálogo (categoría, contextos HTTP,
+    esquema de parámetros; **sin** mensajes internos). Para que Django vea el
+    comando, `filmai` se agrega a `INSTALLED_APPS` (sin modelos ni migraciones).
+    Un test compara el archivo completo.
+  - `validar_respuesta_error` + `EjecutorConSobre` (`TEST_RUNNER`): toda
+    respuesta 4xx/5xx JSON bajo `/api/` de **toda la suite** se valida (sobre,
+    código registrado, estado HTTP del contexto, parámetros, ausencia de
+    `debug` con `DEBUG=False`). Esto destapó respuestas sin sobre, ya corregidas:
+    errores directos de enlaces (`link_expired`, `link_invalid`,
+    `already_confirmed`), 401 de simplejwt (`token_not_valid` →
+    `invalid_token`; `user_inactive`/`password_changed` → `session_revoked`),
+    403 de documentación y los handlers 404/500 de Django.
+  - **Modo estricto** (`FILMAI_SOBRE_ESTRICTO`, solo en la suite): un código o
+    una hoja sin registrar lanza `ValueError`. En producción degrada al código
+    genérico del estado (401/403/404/500) y registra el error.
+  - OpenAPI: componentes `ErrorEnvelope`/`ErrorEntry` y respuestas `4XX`/`5XX`
+    en cada operación (hook `agregar_sobre_de_errores`); solo se añade.
+  - `GoogleSocialLoginSerializer` descarta el campo heredado `code`: un valor
+    no textual lo habría hecho chocar con el `code` del sobre (500). Solo se
+    usa `id_token`. Un test verifica que ningún serializer declare
+    `code`/`params`/`errors`/`debug`.
+- **Tests existentes tocados** (igualdades pre-plan autorizadas para
+  confirmación/restablecimiento/documentación): `usuarios/tests.py`,
+  `usuarios/test_perfil.py` y `filmai/tests.py` comparan `codigo`/`detail` en vez
+  del cuerpo completo.
+- **Pruebas**: `test_contrato_codigos.py`, `test_cobertura_codigos.py` (un caso
+  por código del catálogo); suite backend **634 OK**, `ruff` limpio,
+  `makemigrations --check` sin cambios. **F3 queda cerrada.**
+- **Archivos afectados**: `backend/filmai/{errores/{contrato,openapi,sobre}.py,
+  exceptions,pruebas,views,documentation,settings,urls}.py`,
+  `backend/filmai/management/`, `backend/usuarios/{views,serializers}.py`,
+  tests citados, `contracts/{error-codes.json,openapi.yaml}`,
+  `openspec/specs/error-contract/spec.md`, `docs/plan-multiidioma.md`.

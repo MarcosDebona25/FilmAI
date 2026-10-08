@@ -153,12 +153,12 @@ class ConfirmarCorreoTests(TestCase):
 
         response = self._confirmar(key)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"codigo": "ya_confirmada"})
+        self.assertEqual(response.json()["codigo"], "ya_confirmada")
 
     def test_key_corrupta_reporta_invalido(self):
         response = self._confirmar("key-totalmente-falsa")
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"codigo": "invalido"})
+        self.assertEqual(response.json()["codigo"], "invalido")
 
     def test_key_expirada_reporta_expirado(self):
         key = self._registrar()
@@ -172,7 +172,7 @@ class ConfirmarCorreoTests(TestCase):
             response = self._confirmar(key)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"codigo": "expirado"})
+        self.assertEqual(response.json()["codigo"], "expirado")
 
 
 class RecuperarContrasenaTests(TestCase):
@@ -307,7 +307,7 @@ class RecuperarContrasenaTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"codigo": "invalido"})
+        self.assertEqual(response.json()["codigo"], "invalido")
 
     def test_confirmar_token_expirado_devuelve_invalido(self):
         import datetime as dt_mod
@@ -337,7 +337,7 @@ class RecuperarContrasenaTests(TestCase):
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"codigo": "invalido"})
+        self.assertEqual(response.json()["codigo"], "invalido")
 
     def test_confirmar_politica_debil_rechazada(self):
         self._crear_usuario_activo()

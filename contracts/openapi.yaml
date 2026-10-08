@@ -15,6 +15,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/csrf/:
     get:
       operationId: auth_csrf_retrieve
@@ -33,6 +45,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/google/:
     post:
       operationId: auth_google_create
@@ -59,6 +83,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/GoogleSocialLogin'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -90,6 +126,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Login'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/logout/:
     post:
       operationId: auth_logout_create
@@ -111,6 +159,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/RestAuthDetail'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/password/change:
     post:
       operationId: auth_password_change_create
@@ -138,6 +198,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/CambiarContrasena'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/password/change/:
     post:
       operationId: auth_password_change_create_2
@@ -165,6 +237,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/CambiarContrasena'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/password/reset/:
     post:
       operationId: auth_password_reset_create
@@ -181,6 +265,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/password/reset/confirm/:
     post:
       operationId: auth_password_reset_confirm_create
@@ -197,6 +293,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/registration/:
     post:
       operationId: auth_registration_create
@@ -234,6 +342,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Register'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/registration/resend-email/:
     post:
       operationId: auth_registration_resend_email_create
@@ -266,6 +386,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/RestAuthDetail'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/registration/verify-email/:
     post:
       operationId: auth_registration_verify_email_create
@@ -290,6 +422,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/token/refresh:
     post:
       operationId: auth_token_refresh_create
@@ -316,6 +460,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/RefreshSesion'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/token/refresh/:
     post:
       operationId: auth_token_refresh_create_2
@@ -342,6 +498,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/RefreshSesion'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/token/verify/:
     post:
       operationId: auth_token_verify_create
@@ -369,6 +537,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenVerify'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/user/:
     get:
       operationId: auth_user_retrieve
@@ -393,6 +573,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioDetalles'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     put:
       operationId: auth_user_update
       description: |-
@@ -427,6 +619,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioDetalles'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     patch:
       operationId: auth_user_partial_update
       description: |-
@@ -461,6 +665,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioDetalles'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/auth/username-available/:
     get:
       operationId: auth_username_available_retrieve
@@ -479,6 +695,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/avatars/:
     get:
       operationId: avatars_retrieve
@@ -491,6 +719,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/discover/:
     get:
       operationId: catalogo_discover_retrieve
@@ -501,6 +741,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/keywords/:
     get:
       operationId: catalogo_keywords_retrieve
@@ -511,6 +763,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/movie/{id_tmdb}/:
     get:
       operationId: catalogo_movie_retrieve
@@ -527,6 +791,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/now-playing/:
     get:
       operationId: catalogo_now_playing_retrieve
@@ -537,6 +813,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/search/:
     get:
       operationId: catalogo_search_retrieve
@@ -547,6 +835,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/trending/:
     get:
       operationId: catalogo_trending_retrieve
@@ -557,6 +857,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/tv/{id_tmdb}/:
     get:
       operationId: catalogo_tv_retrieve
@@ -573,6 +885,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/:
     get:
       operationId: lists_retrieve
@@ -585,6 +909,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     post:
       operationId: lists_create
       description: Lista y crea listas del usuario autenticado.
@@ -596,6 +932,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/{lista_id}/:
     put:
       operationId: lists_update
@@ -614,6 +962,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     delete:
       operationId: lists_destroy
       description: Renombra o elimina una lista personalizada.
@@ -631,6 +991,18 @@ paths:
       responses:
         '204':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/{lista_id}/items/:
     get:
       operationId: lists_items_retrieve
@@ -649,6 +1021,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     post:
       operationId: lists_items_create
       description: Pagina o agrega producciones a una lista propia.
@@ -666,6 +1050,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/{lista_id}/items/{item_id}/:
     delete:
       operationId: lists_items_destroy
@@ -705,6 +1101,18 @@ paths:
       responses:
         '204':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/preferences/:
     get:
       operationId: preferences_retrieve
@@ -720,6 +1128,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/PreferenciasLectura'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     put:
       operationId: preferences_update
       tags:
@@ -745,6 +1165,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/PreferenciasLectura'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/profile/:
     get:
       operationId: profile_retrieve
@@ -760,6 +1192,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioPerfil'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     put:
       operationId: profile_update
       tags:
@@ -786,6 +1230,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioPerfil'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/profile/change-password/:
     post:
       operationId: profile_change_password_create
@@ -813,6 +1269,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/CambiarContrasena'
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/reviews/:
     get:
       operationId: reviews_retrieve
@@ -836,6 +1304,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     post:
       operationId: reviews_create
       description: Reseñas de la comunidad sobre una producción, y alta de la propia.
@@ -847,6 +1327,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/reviews/{calificacion_id}/:
     put:
       operationId: reviews_update
@@ -865,6 +1357,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     delete:
       operationId: reviews_destroy
       description: |-
@@ -892,6 +1396,18 @@ paths:
       responses:
         '204':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/reviews/{calificacion_id}/texto/:
     delete:
       operationId: reviews_texto_destroy
@@ -910,6 +1426,18 @@ paths:
       responses:
         '204':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/reviews/mias/:
     get:
       operationId: reviews_mias_retrieve
@@ -938,6 +1466,18 @@ paths:
       responses:
         '200':
           description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -1082,6 +1622,18 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 components:
   schemas:
     CambiarContrasena:
@@ -1127,8 +1679,6 @@ components:
       description: Login y registro con Google mediante ``id_token``.
       properties:
         access_token:
-          type: string
-        code:
           type: string
         id_token:
           type: string
@@ -1505,6 +2055,154 @@ components:
       - nombre_usuario
       - pk
       - tiene_contrasena_local
+    ErrorEntry:
+      type: object
+      description: Una hoja de validación por campo.
+      properties:
+        field:
+          type: string
+          nullable: true
+        code:
+          type: string
+          enum:
+          - avatar_invalid
+          - birth_date_in_future
+          - blank
+          - current_password_incorrect
+          - email_already_used
+          - email_or_username_already_used
+          - google_authentication_failed
+          - invalid
+          - invalid_choice
+          - list_name_invalid_characters
+          - list_name_missing_alphanumeric
+          - local_password_unavailable
+          - max_length
+          - max_value
+          - min_length
+          - min_value
+          - minimum_age
+          - not_a_dict
+          - 'null'
+          - number_not_finite
+          - password_entirely_numeric
+          - password_no_digit
+          - password_no_lower
+          - password_no_special
+          - password_no_upper
+          - password_too_common
+          - password_too_short
+          - password_too_short_or_long
+          - password_too_similar
+          - passwords_do_not_match
+          - person_name_invalid
+          - required
+          - review_update_empty
+          - unique
+          - username_already_used
+          - username_invalid
+          - username_not_allowed
+          - validation_error
+        params:
+          type: object
+          description: Valores de máquina; nunca texto para mostrar.
+          additionalProperties: true
+      required:
+      - field
+      - code
+      - params
+    ErrorEnvelope:
+      type: object
+      description: Sobre de toda respuesta 4xx/5xx. Durante la ventana de compatibilidad
+        se emite junto a las claves anteriores.
+      properties:
+        code:
+          type: string
+          enum:
+          - account_deactivated
+          - account_pending_confirmation
+          - already_confirmed
+          - avatar_invalid
+          - birth_date_in_future
+          - blank
+          - current_password_incorrect
+          - default_list_protected
+          - documentation_staff_required
+          - email_already_used
+          - email_or_username_already_used
+          - google_authentication_failed
+          - invalid
+          - invalid_choice
+          - invalid_credentials
+          - invalid_token
+          - link_expired
+          - link_invalid
+          - list_item_duplicated
+          - list_name_duplicated
+          - list_name_invalid_characters
+          - list_name_missing_alphanumeric
+          - list_name_reserved
+          - local_password_unavailable
+          - max_length
+          - max_value
+          - method_not_allowed
+          - min_length
+          - min_value
+          - minimum_age
+          - not_a_dict
+          - not_acceptable
+          - not_authenticated
+          - not_found
+          - 'null'
+          - number_not_finite
+          - parse_error
+          - password_entirely_numeric
+          - password_no_digit
+          - password_no_lower
+          - password_no_special
+          - password_no_upper
+          - password_too_common
+          - password_too_short
+          - password_too_short_or_long
+          - password_too_similar
+          - passwords_do_not_match
+          - permission_denied
+          - person_name_invalid
+          - rating_blocks_removal_from_watched
+          - rating_duplicated
+          - required
+          - review_update_empty
+          - server_error
+          - session_revoked
+          - throttled
+          - unique
+          - unsupported_media_type
+          - upstream_bad_request
+          - upstream_error
+          - upstream_not_found
+          - upstream_unavailable
+          - username_already_used
+          - username_invalid
+          - username_not_allowed
+          - validation_error
+        params:
+          type: object
+          description: Valores de máquina; nunca texto para mostrar.
+          additionalProperties: true
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorEntry'
+        debug:
+          type: object
+          description: Solo con DEBUG=True; el frontend no lo lee.
+          properties:
+            message:
+              type: string
+      required:
+      - code
+      - params
+      - errors
   securitySchemes:
     cookieAuth:
       type: apiKey

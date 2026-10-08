@@ -477,7 +477,7 @@ class RecuperacionSesionTests(TestCase):
             "_now",
             return_value=datetime.now() + timedelta(hours=2),
         ):
-            self.assertEqual(self.confirmar().json(), {"codigo": "invalido"})
+            self.assertEqual(self.confirmar().json()["codigo"], "invalido")
         response = self.confirmar({**self.payload, "password2": "Diferente123!"})
         self.assertEqual(response.status_code, 400)
         self.assertIn("password2", response.json())

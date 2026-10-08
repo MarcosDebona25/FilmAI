@@ -17,6 +17,9 @@ from rest_framework.exceptions import (
 )
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
+from rest_framework_simplejwt.exceptions import (
+    AuthenticationFailed as JWTAuthenticationFailed,
+)
 
 from catalogo.exceptions import (
     TMDBBadRequest,
@@ -104,6 +107,30 @@ _CODIGOS_TMDB = {
 }
 
 
+# simplejwt guarda su código propio en `detail["code"]` (DetailDictMixin).
+_CODIGOS_SIMPLEJWT = {
+    "token_not_valid": "invalid_token",
+    "bad_authorization_header": "invalid_token",
+    "user_not_found": "invalid_token",
+    "user_inactive": "session_revoked",
+    "password_changed": "session_revoked",
+}
+
+
+# Último recurso en producción cuando una excepción llega sin código registrado.
+_CODIGO_POR_ESTADO = {
+    401: "not_authenticated",
+    403: "permission_denied",
+    404: "not_found",
+    500: "server_error",
+}
+
+
+def _codigo_simplejwt(exc):
+    sub = exc.detail.get("code") if isinstance(exc.detail, dict) else None
+    return _CODIGOS_SIMPLEJWT.get(str(sub), "invalid_token")
+
+
 def filmai_exception_handler(exc, context):
     """Añade el sobre a las excepciones DRF sin alterar HTTP, headers ni legacy."""
     response = _respuesta_legacy(exc, context)
@@ -111,9 +138,13 @@ def filmai_exception_handler(exc, context):
     errores = []
     if isinstance(exc, TMDBError):
         codigo = _CODIGOS_TMDB.get(type(exc), "upstream_error")
+    elif isinstance(exc, JWTAuthenticationFailed):
+        codigo = _codigo_simplejwt(exc)
     elif isinstance(exc, ValidationError):
         codigo = "validation_error"
-        errores = entradas_validacion(exc, estricto=False)
+        errores = entradas_validacion(
+            exc, estricto=getattr(settings, "FILMAI_SOBRE_ESTRICTO", False)
+        )
     elif isinstance(exc, Http404):
         codigo = "not_found"
     elif isinstance(exc, DjangoPermissionDenied):
@@ -126,9 +157,15 @@ def filmai_exception_handler(exc, context):
         if codigo == "error" and response.status_code == 500:
             codigo = "server_error"
     if codigo not in CATALOGO:
-        # OT-31/OT-32 adoptan aliases de terceros; OT-34 impone cobertura total.
-        logger.warning("Excepción pendiente de registrar: %s", codigo)
-        return response
+        # La suite corre en modo estricto (filmai.pruebas): un código sin
+        # registrar es un bug a corregir, no algo que degradar en silencio.
+        if getattr(settings, "FILMAI_SOBRE_ESTRICTO", False):
+            raise ValueError(f"Código no registrado en el catálogo: {codigo}.")
+        logger.error("Excepción sin código registrado: %s", codigo)
+        codigo = _CODIGO_POR_ESTADO.get(response.status_code)
+        if codigo is None:
+            return response
+        parametros = {}
     request = context.get("request")
     if isinstance(exc, Throttled) and exc.wait is not None:
         # DRF ya fija `Retry-After` con `exc.wait`; el parámetro lo repite en el sobre.

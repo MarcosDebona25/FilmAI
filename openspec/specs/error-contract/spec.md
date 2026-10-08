@@ -321,3 +321,15 @@ OT-82 migrates old assertions to codes; OT-83 removes legacy text keys.
 - AND DEBUG=False responses contain no debug
 - AND reserved envelope names do not collide with serializer request fields
 - AND removing a public code translation or changing the export fails CI
+
+### Implementation status (OT-34, 08/10/2026)
+
+`exportar_contrato` writes `contracts/error-codes.json` (no internal messages);
+`filmai.pruebas.EjecutorConSobre` validates every 4xx/5xx JSON response under
+`/api/` in the backend suite, and `FILMAI_SOBRE_ESTRICTO` makes unregistered
+codes fail there (production degrades to the generic status code). The OpenAPI
+schema publishes `ErrorEnvelope`/`ErrorEntry` and `4XX`/`5XX` responses.
+simplejwt codes map as `token_not_valid`/`bad_authorization_header`/
+`user_not_found` → `invalid_token`; `user_inactive`/`password_changed` →
+`session_revoked`. Link errors map `expirado`/`invalido`/`ya_confirmada` to
+`link_expired`/`link_invalid`/`already_confirmed`.

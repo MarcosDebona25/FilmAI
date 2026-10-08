@@ -27,6 +27,7 @@ from dj_rest_auth.registration.views import (
     SocialLoginView,
 )
 from dj_rest_auth.views import LoginView as BaseLoginView
+from django.conf import settings
 from django.core import signing
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -36,7 +37,11 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from filmai.errores.sobre import agregar_codigo_exito
+from filmai.errores.sobre import (
+    agregar_codigo_exito,
+    conservar_legacy,
+    construir_sobre,
+)
 
 from .models import Usuario
 from .serializers import (
@@ -91,6 +96,14 @@ class LoginView(BaseLoginView):
     """
 
     authentication_classes = (LenientJWTCookieAuthentication,)
+
+
+def _error_enlace(legacy, codigo):
+    """400 directo de enlaces: conserva `{"codigo": ...}` y suma el sobre."""
+    sobre = construir_sobre(codigo, status.HTTP_400_BAD_REQUEST, debug=settings.DEBUG)
+    return Response(
+        conservar_legacy({"codigo": legacy}, sobre), status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 def con_codigo_exito(vista, codigo, estado=status.HTTP_200_OK):
@@ -225,30 +238,26 @@ class ConfirmarCorreoView(APIView):
             )
         except signing.SignatureExpired:
             logger.info("ConfirmarCorreo: key expirada")
-            return Response({"codigo": "expirado"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("expirado", "link_expired")
         except (signing.BadSignature, ValueError, TypeError) as exc:
             logger.warning(
                 "ConfirmarCorreo: key inválida — %s: %s", type(exc).__name__, exc
             )
-            return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("invalido", "link_invalid")
 
         email_address = (
             EmailAddress.objects.filter(pk=pk).select_related("user").first()
         )
         if email_address is None:
-            return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("invalido", "link_invalid")
         if email_address.verified:
-            return Response(
-                {"codigo": "ya_confirmada"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return _error_enlace("ya_confirmada", "already_confirmed")
 
         # Delega en allauth: marca `verified=True` y pasa por nuestro adapter
         # (estado → ACTIVA). Si devuelve None hubo una carrera y otro request
         # la confirmó primero.
         if mark_email_address_as_verified(request._request, email_address) is None:
-            return Response(
-                {"codigo": "ya_confirmada"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return _error_enlace("ya_confirmada", "already_confirmed")
         return agregar_codigo_exito(Response({"detail": "ok"}), "email_confirmed")
 
 
@@ -302,7 +311,7 @@ class RestablecerContrasenaView(APIView):
             serializer.is_valid(raise_exception=True)
             serializer.save()
         except EnlaceRestablecimientoInvalido:
-            return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("invalido", "link_invalid")
         from .perfil import cerrar_sesion
 
         return cerrar_sesion(
