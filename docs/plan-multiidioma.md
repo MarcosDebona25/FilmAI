@@ -632,7 +632,7 @@ Dependencias: F0, luego F1, luego F2. Después de F2, las fases F3, F4, F5 y F6 
     10. Actualizar la API simulada de e2e al sobre nuevo.
   - **7c. Selector y sincronización**:
     11. `Preferencias` gana `idioma`; `AccountProvider` aplica la regla de 3.2.
-    12. `LanguageSwitcher` mínimo en Preferencias y en las páginas públicas.
+    12. `LanguageSwitcher` según el diseño del 08/10/2026 (ver `docs/decisiones.md`): segmentado `English | Español` en Preferencias; pastilla `EN | ES` arriba a la derecha en Landing, inicio de sesión y registro; selector en el footer solo sin sesión. Con sesión, el footer muestra el idioma actual y enlaza a Preferencias (`#t-idioma`), sin selector propio.
     13. Pasar el locale al botón de Google (`frontend/components/GoogleButton.tsx:46-51`).
   - **7d. Rutas y pantallas piloto (traducir)**:
     14. Renombrar rutas según 3.8, con `lib/routes.ts`, en el mismo PR que los dos enlaces del backend.

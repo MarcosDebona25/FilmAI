@@ -10,13 +10,13 @@
           "id": "cls-usuario",
           "type": "node",
           "parent": "1",
-          "label": "Usuario\n+ nombreUsuario: String\n+ correo: String\n+ contraseña: String (hash)\n+ googleId: String [0..1]\n+ nombre: String\n+ apellido: String\n+ fechaNacimiento: Date\n+ genero: TipoGenero\n+ estado: EstadoCuenta\n+ fechaRegistro: Date\n+ avatarId: Integer\n+ tema: String\n+ perfilPublico: Boolean\n+ notifRecomendaciones: Boolean\n+ notifReseñas: Boolean\n+ notifNovedades: Boolean\n+ calcularEdad(): Integer\n+ esMayorDeEdad(): Bool\n+ cambiarEstado(): Void\n+ actualizarPerfil(): Void\n+ estaActivo(): Bool\n+ agregarLista(): Void\n+ removerLista(): Bool\n+ buscarListaPorNombre(): Lista\n+ tieneLista(): Bool\n+ publicarCalificacion(): Void\n+ removerCalificacion(): Bool\n+ tieneCalificacionEn(): Bool\n+ agregarNuevoChat(): Void\n+ eliminarChat(): Bool"
+          "label": "Usuario\n+ nombreUsuario: String\n+ correo: String\n+ contraseña: String (hash)\n+ googleId: String [0..1]\n+ nombre: String\n+ apellido: String\n+ fechaNacimiento: Date\n+ genero: TipoGenero\n+ estado: EstadoCuenta\n+ fechaRegistro: Date\n+ avatarId: Integer\n+ tema: String\n+ idioma: String [0..1]\n+ perfilPublico: Boolean\n+ notifRecomendaciones: Boolean\n+ notifReseñas: Boolean\n+ notifNovedades: Boolean\n+ calcularEdad(): Integer\n+ esMayorDeEdad(): Bool\n+ cambiarEstado(): Void\n+ actualizarPerfil(): Void\n+ estaActivo(): Bool\n+ agregarLista(): Void\n+ removerLista(): Bool\n+ buscarListaPorNombre(): Lista\n+ tieneLista(): Bool\n+ publicarCalificacion(): Void\n+ removerCalificacion(): Bool\n+ tieneCalificacionEn(): Bool\n+ agregarNuevoChat(): Void\n+ eliminarChat(): Bool"
         },
         {
           "id": "cls-produccion",
           "type": "node",
           "parent": "1",
-          "label": "ProduccionAudiovisual\n+ idProduccion: Integer\n+ idTMDB: Integer\n+ tipo: TipoProduccion\n+ titulo: String\n+ poster: String\n+ sinopsis: String\n+ fechaLanzamiento: Date\n+ reparto: List<String>\n+ directores: List<String>\n+ estatus: String\n+ generos: List<String>\n+ keywords: List<String>\n+ calificacionPromedio: Float\n+ cantidadTemporadas: Integer\n+ cantidadEpisodios: Integer\n+ duracion: Integer\n+ actualizarDatosDesdeTMDB(): Void\n+ tieneGenero(): Bool\n+ calcularCalificacionPromedioLocal(): Float\n+ obtenerCantidadCalificaciones(): Integer\n+ obtenerDuracionFormateada(): String\n+ obtenerTotalCapitulos(): Integer"
+          "label": "ProduccionAudiovisual\n+ idProduccion: Integer\n+ idTMDB: Integer\n+ tipo: TipoProduccion\n+ titulo: String\n+ poster: String\n+ sinopsis: String\n+ fechaLanzamiento: Date\n+ reparto: List<String>\n+ directores: List<String>\n+ estatus: String\n+ generos: List<String>\n+ generosIds: List<Integer>\n+ keywords: List<String>\n+ calificacionPromedio: Float\n+ cantidadTemporadas: Integer\n+ cantidadEpisodios: Integer\n+ duracion: Integer\n+ actualizarDatosDesdeTMDB(): Void\n+ tieneGenero(): Bool\n+ calcularCalificacionPromedioLocal(): Float\n+ obtenerCantidadCalificaciones(): Integer\n+ obtenerDuracionFormateada(): String\n+ obtenerTotalCapitulos(): Integer"
         },
         {
           "id": "cls-calificacion",
@@ -34,7 +34,7 @@
           "id": "cls-lista",
           "type": "node",
           "parent": "1",
-          "label": "Lista\n+ idLista: Integer\n+ nombre: String\n+ tipo: TipoLista\n+ activa: Bool\n+ agregarItem(): Void\n+ removerItem(): Bool\n+ contieneItem(): Bool\n+ vaciar(): Void\n+ obtenerCantidadItems(): Integer\n+ renombrar(): Bool\n+ esPredeterminada(): Bool\n+ estaActiva(): Bool\n+ bajaLista(): Bool"
+          "label": "Lista\n+ idLista: Integer\n+ nombre: String\n+ tipo: TipoLista\n+ clave: String [0..1]\n+ activa: Bool\n+ agregarItem(): Void\n+ removerItem(): Bool\n+ contieneItem(): Bool\n+ vaciar(): Void\n+ obtenerCantidadItems(): Integer\n+ renombrar(): Bool\n+ esPredeterminada(): Bool\n+ estaActiva(): Bool\n+ bajaLista(): Bool"
         },
         {
           "id": "cls-chat",
@@ -83,6 +83,12 @@
           "type": "node",
           "parent": "1",
           "label": "ProduccionEmbedding\n+ idEmbedding: Integer\n+ vector: Vector(1024) [pgvector]\n+ sourceHash: String\n+ modelVersion: String\n+ estado: EstadoEmbedding\n+ fechaActualizacion: DateTime\n+ generarVector(): Void\n+ requiereRegeneracion(): Bool"
+        },
+        {
+          "id": "cls-traduccion",
+          "type": "node",
+          "parent": "1",
+          "label": "ProduccionTraduccion\n+ idTraduccion: Integer\n+ idioma: String\n+ titulo: String\n+ sinopsis: String\n+ poster: String"
         },
         {
           "id": "enum-estado-embedding",
@@ -213,6 +219,14 @@
           "parent": "1",
           "source": "cls-embedding",
           "target": "enum-estado-embedding"
+        },
+        {
+          "id": "e-produccion-traduccion",
+          "type": "edge",
+          "parent": "1",
+          "source": "cls-produccion",
+          "target": "cls-traduccion",
+          "label": "1..1 ─ 0..* (composición)"
         }
       ]
     },
@@ -225,7 +239,7 @@
           "id": "tbl-usuario",
           "type": "node",
           "parent": "1",
-          "label": "Usuario\nPK  id INTEGER\n    nombreUsuario VARCHAR(25) UNIQUE\n    correo VARCHAR(100) UNIQUE\n    contraseña VARCHAR(128)\n    googleId VARCHAR(100) UNIQUE [null]\n    nombre VARCHAR(50)\n    apellido VARCHAR(50)\n    fechaNacimiento DATE\n    genero VARCHAR(25)\n    estado VARCHAR(25)\n    fechaRegistro DATE\n    avatarId TINYINT\n    tema VARCHAR(10)\n    perfilPublico BOOLEAN\n    notifRecomendaciones BOOLEAN\n    notifReseñas BOOLEAN\n    notifNovedades BOOLEAN"
+          "label": "Usuario\nPK  id INTEGER\n    nombreUsuario VARCHAR(25) UNIQUE\n    correo VARCHAR(100) UNIQUE\n    contraseña VARCHAR(128)\n    googleId VARCHAR(100) UNIQUE [null]\n    nombre VARCHAR(50)\n    apellido VARCHAR(50)\n    fechaNacimiento DATE\n    genero VARCHAR(25)\n    estado VARCHAR(25)\n    fechaRegistro DATE\n    avatarId TINYINT\n    tema VARCHAR(10)\n    idioma VARCHAR(2) [null]\n    perfilPublico BOOLEAN\n    notifRecomendaciones BOOLEAN\n    notifReseñas BOOLEAN\n    notifNovedades BOOLEAN"
         },
         {
           "id": "nota-campos-tecnicos",
@@ -237,7 +251,7 @@
           "id": "tbl-produccion",
           "type": "node",
           "parent": "1",
-          "label": "ProduccionAudiovisual\nPK  idProduccion INTEGER\n    idTMDB INTEGER\n    tipo VARCHAR(25)\n    titulo VARCHAR(100)\n    poster VARCHAR(250)\n    sinopsis VARCHAR(2000)\n    fechaLanzamiento DATE\n    reparto VARCHAR[]\n    directores VARCHAR[]\n    estatus VARCHAR(25)\n    generos VARCHAR[]\n    keywords VARCHAR[]\n    calificacionPromedio REAL\n    cantidadTemporadas INTEGER\n    cantidadEpisodios INTEGER\n    duracion INTEGER\nUNIQUE (idTMDB, tipo)"
+          "label": "ProduccionAudiovisual\nPK  idProduccion INTEGER\n    idTMDB INTEGER\n    tipo VARCHAR(25)\n    titulo VARCHAR(100)\n    poster VARCHAR(250)\n    sinopsis VARCHAR(2000)\n    fechaLanzamiento DATE\n    reparto VARCHAR[]\n    directores VARCHAR[]\n    estatus VARCHAR(25)\n    generos VARCHAR[]\n    generosIds INTEGER[]\n    keywords VARCHAR[]\n    calificacionPromedio REAL\n    cantidadTemporadas INTEGER\n    cantidadEpisodios INTEGER\n    duracion INTEGER\nUNIQUE (idTMDB, tipo)"
         },
         {
           "id": "tbl-calificacion",
@@ -255,7 +269,7 @@
           "id": "tbl-lista",
           "type": "node",
           "parent": "1",
-          "label": "Lista\nPK  idLista INTEGER\n    nombre VARCHAR(80)\n    tipo VARCHAR(25)\n    activa BOOLEAN\nFK  idUsuario INTEGER\nUNIQUE (idUsuario, nombre)"
+          "label": "Lista\nPK  idLista INTEGER\n    nombre VARCHAR(80)\n    clave VARCHAR(25) [null]\n    tipo VARCHAR(25)\n    activa BOOLEAN\nFK  idUsuario INTEGER\nUNIQUE (idUsuario, nombre)\nUNIQUE (idUsuario, clave) [clave no nula]"
         },
         {
           "id": "tbl-tiene",
@@ -280,6 +294,12 @@
           "type": "node",
           "parent": "1",
           "label": "ProduccionEmbedding\nPK  idEmbedding INTEGER\n    vector VECTOR(1024) [pgvector]\n    sourceHash VARCHAR(64)\n    modelVersion VARCHAR(50)\n    estado VARCHAR(20) (pending|processing|ready|failed)\n    fechaActualizacion TIMESTAMP\nFK  idProduccion INTEGER UNIQUE (1:1)\nINDEX HNSW (vector vector_cosine_ops)"
+        },
+        {
+          "id": "tbl-traduccion",
+          "type": "node",
+          "parent": "1",
+          "label": "ProduccionTraduccion\nPK  idTraduccion INTEGER\nFK  idProduccion INTEGER\n    idioma VARCHAR(5)\n    titulo VARCHAR(100)\n    sinopsis VARCHAR(2000)\n    poster VARCHAR(250)\nUNIQUE (idProduccion, idioma)"
         },
         {
           "id": "e-usuario-calificacion",
@@ -352,6 +372,14 @@
           "source": "tbl-produccion",
           "target": "tbl-embedding",
           "label": "1:1"
+        },
+        {
+          "id": "e-produccion-traduccion",
+          "type": "edge",
+          "parent": "1",
+          "source": "tbl-produccion",
+          "target": "tbl-traduccion",
+          "label": "1:N"
         }
       ]
     }
