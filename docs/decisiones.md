@@ -2729,3 +2729,16 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   el resultado del layout.
 - **Archivos afectados**: base HTML, variante de registro, decisiones,
   plan y spec `emails`.
+
+---
+
+## 08/10/2026 — Reenvío sobre el layout común (OT-50, unidad 3)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: reenvío hereda la base del registro y sustituye únicamente
+  su introducción, conservando estilos, enlaces, vigencia y texto anterior.
+- **Verificación**: la prueba completa de cuatro correos y los tres tests
+  nuevos pasaron sobre ambas confirmaciones compartidas (1,964 s); la unidad
+  intermedia de registro también pasó siete tests (1,972 s). Referencias F0
+  intactas, sin modificar ni regenerar sus oráculos.
+- **Archivos afectados**: variante HTML de reenvío, decisiones, plan y spec.

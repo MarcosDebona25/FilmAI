@@ -612,9 +612,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791425527.7119975,
-    "seen": 1791425540.381752,
-    "ast_hash": "e144f72398e0ab528f8e4b7fecf65bb3",
+    "mtime": 1791425587.7998128,
+    "seen": 1791425601.8548288,
+    "ast_hash": "7f7207e74b994d04ba62e2493541f50d",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791425527.7142506,
-    "seen": 1791425540.381988,
-    "ast_hash": "230d18bdff68b523e5f311f0df40f291",
+    "mtime": 1791425587.8027742,
+    "seen": 1791425601.8549602,
+    "ast_hash": "545d6ce267f94b22b3c55240da47317b",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2388,9 +2388,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
-    "mtime": 1791425527.7133446,
-    "seen": 1791425540.3830066,
-    "ast_hash": "03c127f21b8e9eea020f172fc20f62f3",
+    "mtime": 1791425587.8016422,
+    "seen": 1791425601.8555887,
+    "ast_hash": "6bc8061516980e1caadf3ee1184d71d9",
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
@@ -2460,9 +2460,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_correo/es/message.html": {
-    "mtime": 1791425527.7078168,
-    "seen": 1791425540.3806794,
-    "ast_hash": "69e88ce844b0bf4ba6ecb9bafc8254da",
+    "mtime": 1791425587.7561114,
+    "seen": 1791425601.8537536,
+    "ast_hash": "1473d0656aba61f783f50a7dd21474ed",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_correo/es/message.txt": {
