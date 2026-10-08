@@ -841,7 +841,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Completada: 07/10/2026; F0 integrada, 508/43/24 y CI en verde (ver 10.5) |
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Completada: 08/10/2026; PR #47 integrado fuera de main; CI en verde |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Pendiente |
-| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | En curso: bloque A, filas 1–270; faltan B/C y aprobación OT-13 |
+| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | En curso: bloques A/B, filas 1–499; falta C y aprobación OT-13 |
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Pendiente |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Pendiente |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
@@ -919,6 +919,14 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   se resuelven en OT-13. La tabla original sigue intacta. Backend/frontend son
   idénticos a OT-10: referencia 508/43/24 y build, con CI verde en PR #47.
   Se verifica trazabilidad del bloque y se actualiza graphify antes del commit.
+
+- 08/10/2026, OT-12, bloque B: rama `docs/i18n-ot12-claves-cuenta-listas`.
+  Se agregan las filas 271–499 de búsqueda, reseñas, autenticación, listas,
+  perfil y preferencias; total acumulado 499. Originales y pantallas exactos;
+  copia de baja preservada, sin catálogos ni modificaciones de código/tests.
+  La guía amplía el uso de ICU y las reglas de curaduría. Pendientes bloque C y
+  revisión editorial OT-13. Verificación y suites completas mediante CI por PR;
+  referencia de aplicación sin cambios: 508 backend, 43 unitarios y 24 e2e.
 
 ### 10.6 Instrucción para iniciar una sesión
 
