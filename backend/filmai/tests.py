@@ -171,7 +171,8 @@ class ExceptionHandlerTests(SimpleTestCase):
         response = filmai_exception_handler(TMDBNotFound("No encontrada"), {})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, {"detail": "No encontrada"})
+        self.assertEqual(response.data["detail"], "No encontrada")
+        self.assertEqual(response.data["code"], "upstream_not_found")
 
     def test_404_de_django_devuelve_json_en_espanol(self):
         response = filmai_exception_handler(Http404(), {})

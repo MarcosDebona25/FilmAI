@@ -17,7 +17,15 @@ from rest_framework.exceptions import (
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
-from catalogo.exceptions import TMDBError, tmdb_exception_handler
+from catalogo.exceptions import (
+    TMDBBadRequest,
+    TMDBError,
+    TMDBNotFound,
+    TMDBRateLimited,
+    TMDBServerError,
+    TMDBTransportError,
+    tmdb_exception_handler,
+)
 
 from .errores.catalogo import CATALOGO
 from .errores.sobre import conservar_legacy, construir_sobre, entradas_validacion
@@ -85,15 +93,24 @@ _CODIGOS_HEREDADOS = {
 }
 
 
+# El manejador TMDB conserva `{"detail": ...}` y su HTTP; aquí solo se le da código.
+_CODIGOS_TMDB = {
+    TMDBBadRequest: "upstream_bad_request",
+    TMDBNotFound: "upstream_not_found",
+    TMDBRateLimited: "throttled",
+    TMDBServerError: "upstream_error",
+    TMDBTransportError: "upstream_unavailable",
+}
+
+
 def filmai_exception_handler(exc, context):
     """Añade el sobre a las excepciones DRF sin alterar HTTP, headers ni legacy."""
-    # TMDB y las respuestas directas se normalizan en sus órdenes propias.
-    if isinstance(exc, TMDBError):
-        return tmdb_exception_handler(exc, context)
     response = _respuesta_legacy(exc, context)
     parametros = getattr(exc, "parametros", {})
     errores = []
-    if isinstance(exc, ValidationError):
+    if isinstance(exc, TMDBError):
+        codigo = _CODIGOS_TMDB.get(type(exc), "upstream_error")
+    elif isinstance(exc, ValidationError):
         codigo = "validation_error"
         errores = entradas_validacion(exc, estricto=False)
     elif isinstance(exc, Http404):

@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/views.py": {
-    "mtime": 1791426640.0528157,
-    "seen": 1791427630.2270648,
-    "ast_hash": "6abed10054eb93490d781d9693040dea",
+    "mtime": 1791432418.3267388,
+    "seen": 1791432761.3379807,
+    "ast_hash": "b005565f97c55214c6b9328a3be807fe",
     "semantic_hash": ""
   },
   "backend/chatbot/__init__.py": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
-    "mtime": 1790741329.6480494,
-    "seen": 1791426617.3079107,
-    "ast_hash": "6ed18ee25017869d1c32ebd45dac8ca8",
+    "mtime": 1791432535.2491758,
+    "seen": 1791432761.3399334,
+    "ast_hash": "e8d8af2b09092dc148fbc6585e6a40b9",
     "semantic_hash": ""
   },
   "backend/filmai/urls.py": {
@@ -612,9 +612,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791431089.4072325,
-    "seen": 1791431151.1586463,
-    "ast_hash": "d127765155f0d6fa9a0c23ebf64dffab",
+    "mtime": 1791432746.366772,
+    "seen": 1791432761.359702,
+    "ast_hash": "f77da881823149e7e997f6ccddcb2acb",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1200,9 +1200,9 @@
     "semantic_hash": "5e57ca9b9bcee5cb8e1aa9f65609a33a"
   },
   "backend/filmai/exceptions.py": {
-    "mtime": 1791426566.655709,
-    "seen": 1791426617.307899,
-    "ast_hash": "8c7933f4e46a77ca3a9b21535f7ec226",
+    "mtime": 1791432382.3818703,
+    "seen": 1791432761.3395114,
+    "ast_hash": "0ef6569916d3d018d179976c98b68254",
     "semantic_hash": ""
   },
   "backend/filmai/views.py": {
@@ -1374,9 +1374,9 @@
     "semantic_hash": ""
   },
   "backend/listas/serializers.py": {
-    "mtime": 1791429285.5548127,
-    "seen": 1791431151.150538,
-    "ast_hash": "f6779bc04d4587c957a5d6cecff04820",
+    "mtime": 1791432418.3267388,
+    "seen": 1791432761.3475022,
+    "ast_hash": "eaec97e665993e1422b54385fadaaa08",
     "semantic_hash": ""
   },
   "backend/listas/urls.py": {
@@ -1584,9 +1584,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/serializers_reviews.py": {
-    "mtime": 1790732723.416707,
-    "seen": 1791426617.307844,
-    "ast_hash": "53a63072d868fc8940a1613aa5f6a808",
+    "mtime": 1791432374.8876297,
+    "seen": 1791432761.3372288,
+    "ast_hash": "153cfffa0c608a5eb3cbac8e97558ce0",
     "semantic_hash": ""
   },
   "backend/catalogo/tests_reviews.py": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791431068.5980072,
-    "seen": 1791431151.1587815,
-    "ast_hash": "13c782f1f344a80d810f55c869704d58",
+    "mtime": 1791432746.3970373,
+    "seen": 1791432761.359893,
+    "ast_hash": "5e363de66bd553fad18a0c65cf2f4971",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2490,9 +2490,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/test_manejador_sobre.py": {
-    "mtime": 1791426566.655709,
-    "seen": 1791426617.3079064,
-    "ast_hash": "0714ca6eb7043f5cd582d11122b16876",
+    "mtime": 1791432396.3486423,
+    "seen": 1791432761.339797,
+    "ast_hash": "1b7c354cdb3fb96b7f0e658383b10a20",
     "semantic_hash": ""
   },
   "backend/listas/migrations/0005_lista_clave.py": {
@@ -2787,6 +2787,18 @@
     "mtime": 1791431140.3960578,
     "seen": 1791431151.1586442,
     "ast_hash": "2354b3f43f2674160291cb8f8907aeb6",
+    "semantic_hash": ""
+  },
+  "backend/catalogo/test_codigos_errores.py": {
+    "mtime": 1791432422.214681,
+    "seen": 1791432761.3376844,
+    "ast_hash": "0bc16aef389578ee1dc20122df56e9d7",
+    "semantic_hash": ""
+  },
+  "backend/listas/test_codigos_errores.py": {
+    "mtime": 1791432317.8805268,
+    "seen": 1791432761.3475504,
+    "ast_hash": "f85e66d22f447fe6c9264c377be47ba4",
     "semantic_hash": ""
   }
 }

@@ -114,11 +114,13 @@ class ManejadorSobreTests(SimpleTestCase):
                 self.assertEqual(response.data["errors"], [])
                 self.assertEqual("debug" in response.data, debug)
 
-    def test_tmdb_conserva_retorno_heredado_hasta_su_orden(self):
-        """OT-30 preserva el alcance TMDB y la regresión anterior al plan."""
+    def test_tmdb_agrega_sobre_y_conserva_detail_y_estado(self):
+        """OT-32 normaliza el manejador global; el especializado sigue igual."""
         response = filmai_exception_handler(TMDBNotFound("No encontrada"), {})
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.data, {"detail": "No encontrada"})
+        self.assertEqual(response.data["detail"], "No encontrada")
+        self.assertEqual(response.data["code"], "upstream_not_found")
+        self.assertEqual(response.data["errors"], [])
 
 
 @override_settings(DEBUG=False)
