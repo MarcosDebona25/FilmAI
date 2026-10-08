@@ -839,9 +839,9 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-01 | F0, paso 3 | Caracterización de las respuestas de error de la API | OT-00 | M | Completada: 07/10/2026; F0 integrada, 508/43/24 y CI en verde (ver 10.5) |
 | OT-02 | F0, pasos 4, 5 y 6 | Caracterización de correos, esquema OpenAPI capturado y supuestos de 2.6 comprobados | OT-00 | S | Completada: 07/10/2026; F0 integrada, 508/43/24 y CI en verde (ver 10.5) |
 | OT-03 | F0, pasos 7 y 8 | `next build` en CI y locale fijo en Playwright | OT-00 | S | Completada: 07/10/2026; F0 integrada, 508/43/24 y CI en verde (ver 10.5) |
-| OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Implementada: 08/10/2026; decisiones y glosario registrados; CI pendiente |
+| OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Completada: 08/10/2026; PR #47 integrado fuera de main; CI en verde |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Pendiente |
-| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Pendiente |
+| OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | En curso: bloque A, filas 1–270; faltan B/C y aprobación OT-13 |
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Pendiente |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Pendiente |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
@@ -910,6 +910,15 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
 - 08/10/2026, OT-10: rama `docs/i18n-ot10-decisiones-glosario`. Verificadas 634 entradas y 41 pantallas sin modificar `equivalencias.json`; decisiones del plan y las 14 respuestas de la sección 9 registradas. `es-MX` tiene entrada propia; la decisión de TMDB solo inglés del 30/09 queda reemplazada como alcance, conservando el comportamiento vigente hasta F6. Glosario por concepto y registro de la cuestión de baja conservada para otro alcance.
   - Sin código, tests ni datos modificados. Baseline vigente de F0: backend 508, Vitest 43, Playwright 24 y build en verde; no se agregan pruebas para una entrega documental. Las specs nuevas de contrato, núcleo y correos corresponden a OT-11/OT-13.
   - Registradas las instrucciones posteriores: rama de integración, PRs por orden y prohibición de merge a main; excepciones acotadas para nuevas pruebas de F0 y tamaño de OT-01. El doc 02 se corregirá al cierre para reflejar 24 horas de confirmación, según respuesta del usuario. Sin decisiones pendientes de OT-10; copia nueva y curaduría se revisan en OT-13.
+
+- 08/10/2026, OT-12, bloque A: rama `docs/i18n-ot12-claves-descubrimiento`.
+  Curadas las filas 1–270, con originales y pantallas preservados, destinos
+  semánticos y mensajes completos ICU. La entrega se divide por grupos en tres
+  PRs de documentación: descubrimiento, cuenta/listas y administración/correos.
+  No se crean catálogos ni se modifican tests; las dudas y la aprobación editorial
+  se resuelven en OT-13. La tabla original sigue intacta. Backend/frontend son
+  idénticos a OT-10: referencia 508/43/24 y build, con CI verde en PR #47.
+  Se verifica trazabilidad del bloque y se actualiza graphify antes del commit.
 
 ### 10.6 Instrucción para iniciar una sesión
 
