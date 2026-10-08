@@ -146,3 +146,10 @@ Backend locale/registration/preferences/seed tests, frontend catalog/error
 parity tests, Intl format tests and both-locale pilot e2e MUST pass in their
 implementation phases. Lint, format, full suites and Next.js build remain
 closure gates. OT-13 adds no production implementation or tests.
+
+## Implementation progress
+
+OT-20 first delivery implements the nullable user field and explicit backend
+resolution, including weighted/regional headers and a real reversible migration
+test without backfill. Preferences, registration and seed integration remain
+pending within OT-20. This does not claim the frontend or emails are complete.
