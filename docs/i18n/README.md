@@ -18,14 +18,14 @@ Los textos curados pueden cambiar sin perder esa referencia.
 
 | Estado        | Filas | Tratamiento                                                   |
 | ------------- | ----: | ------------------------------------------------------------- |
-| `ok`          |   406 | Mensajes revisados; aprobar curaduría antes de sembrar        |
-| `fragmento`   |    40 | Frase completa recompuesta; aprobar antes de sembrar          |
+| `ok`          |   408 | Mensajes aprobados en OT-13                                   |
+| `fragmento`   |    43 | Frase completa recompuesta y aprobada en OT-13                |
 | `muestra`     |    61 | Datos de ejemplo excluidos                                    |
-| `diseño`      |   100 | Mesas, documentación de diseño y previsualizaciones excluidas |
+| `diseño`      |   101 | Mesas, documentación de diseño y previsualizaciones excluidas |
 | `chatbot`     |    21 | Módulo fuera de alcance, incluido su lanzador compartido      |
-| `incoherente` |     6 | Pendientes sin texto curado: no se pueden sembrar             |
+| `incoherente` |     0 | Sin pendientes; las exclusiones no se siembran                |
 
-Las 446 filas utilizables apuntan a 423 claves distintas. Una clave repetida
+Las 451 filas utilizables apuntan a 425 claves distintas. Una clave repetida
 solo es válida si ambos mensajes curados son idénticos. Así varias filas de
 un grupo conservan su trazabilidad sin crear traducciones duplicadas.
 Los 41 nombres de pantalla del original se conservan; no se perdió ninguna
@@ -66,25 +66,20 @@ y `auth.signUp.genderLabel`. Las listas predeterminadas usan `Favorites`,
 La copia de baja de cuenta de 487–491 y 568 se conserva exactamente en
 ambos idiomas, conforme a la decisión del usuario.
 
-Quedan pendientes de OT-13, sin mensaje curado:
-
-- 214–215: final de confirmaciones de quitar de Vistas; falta evidencia
-  del inicio de la frase y de qué se elimina en cada variante.
-- 320: «Calificación » sin formato documentado del valor que sigue.
-- 355: «contraseña» en minúscula, compartido entre login y acceso admin;
-  falta confirmar si etiqueta autónoma o fragmento de otra frase.
-- 448: `es` / `en` sin contexto; puede ser un dato de locale. No se interpreta
-  como una oración ni se inventa un uso visible.
-- 535: «Incluye» sin evidencia de si es encabezado o frase cortada.
-
-Las filas 584–585 incorporan `contacto@filmai.com`, confirmado por el usuario;
+Las seis dudas fueron resueltas por el usuario en OT-13 el 08/10/2026:
+214/215 reutilizan las confirmaciones completas de eliminación; 320 expresa
+una nota exacta X/10; 355 reutiliza la etiqueta de contraseña; 448 es metadato
+de locale excluido y 535 es el encabezado autónomo de recursos.
+`revision-ot13.md` registra los destinos y `copia-propuesta.csv` contiene los
+91 textos nuevos aprobados. No quedan filas incoherentes pendientes.
+Las filas 584/585 incorporan `contacto@filmai.com`, confirmado por el usuario;
 las columnas originales conservan el marcador de contacto.
 
 Las claves de pantallas futuras son propuestas de función; se confirman al
 implementar cada diseño. Los grupos 245–247, 260–262, 319 y los nombres
 accesibles de filtros (292 y 325) conservan observaciones específicas para
 revisar su ubicación y concordancia. Los mensajes nuevos de errores y del
-selector faltan en el original: se redactan y aprueban en OT-13.
+selector faltan en el original: fueron redactados y aprobados en OT-13.
 `emails.*` es referencia para las plantillas de backend de F5, no un namespace
 que se envíe al proveedor de cliente. `legal.*` se carga solo en términos.
 
@@ -93,9 +88,8 @@ que se envíe al proveedor de cliente. `legal.*` se carga solo en términos.
 La comprobación de datos verificó 634 IDs únicos, el original inmutable,
 los 41 nombres de pantalla, claves sin colisiones y el texto de baja intacto.
 Un analizador de FormatJS validó sintaxis ICU y paridad ES/EN de argumentos
-y tags en las 446 filas utilizables: 28 filas con plurales y 3 con tags.
-Estas comprobaciones validan estructura; la aprobación editorial sigue
-pendiente de OT-13. No se modificó código, tests ni dependencias del repo.
+y tags en las 451 filas utilizables: 28 filas con plurales y 3 con tags.
+Estas comprobaciones validan estructura; OT-13 registra la aprobación editorial. No se modificó código, tests ni dependencias del repo.
 
 Se propone integrar el CSV por bloques acumulativos, conservando los IDs:
 
