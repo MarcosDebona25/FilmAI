@@ -2763,3 +2763,36 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
 - **Archivos afectados**: `backend/filmai/exceptions.py`,
   `backend/filmai/{tests_contrato,tests_estado_cuenta,test_manejador_sobre}.py` y
   `openspec/specs/error-contract/spec.md`.
+
+---
+
+## 08/10/2026 — Clave estable para las listas existentes (OT-40)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se agrega `Lista.clave` nullable con los valores
+  `favoritos`, `pendientes` y `vistas`. La migración `0005_lista_clave` asigna
+  las claves a las predeterminadas existentes por `Lower(nombre)` y rechaza
+  explícitamente los nombres desconocidos antes de escribir. Las
+  personalizadas permanecen sin clave, incluso si comparten una etiqueta del
+  sistema. La reversión vacía las claves y quita la columna sin perder filas.
+- **Motivo**: separar la identidad del texto mostrado permite localizar las
+  etiquetas sin cambiar nombres ni relaciones. Se conserva la nulabilidad
+  hasta que OT-41 adapte la provisión y los consumidores; OT-42 agregará las
+  restricciones. Se prueba el viaje real del esquema y los datos con
+  `MigrationExecutor`, en una base de tests aislada de desarrollo. Las otras
+  apps permanecen en sus hojas actuales; se conserva el idioma de las cuentas.
+- **Archivos**: `backend/listas/models.py`,
+  `backend/listas/migrations/0005_lista_clave.py`,
+  `backend/listas/test_migracion_clave.py`,
+  `docs/03_Modelos de Datos y de Diseño.md`, `openspec/specs/list-endpoints/spec.md`.
+- **Validación final sobre OT-30**: tres pruebas de migración aprobadas en
+  3,769 s y suite normal completa de 546 aprobada en 196,439 s. Ruff, Prettier
+  y consistencia de migraciones aprobados; no cambia el árbol frontend.
+- **Historial de verificación**: tres pruebas aprobaron en 3,507 s sobre OT-20A.
+  Suite de 515 aprobada en 212,284 s con diagnóstico temporal que registra
+  excepciones JWT sin tokens ni hashes. La corrida normal previa tuvo un 401
+  inesperado en un test anterior de baja; el diagnóstico no lo reprodujo ni
+  estableció su causa. Sobre la base anterior, su clase pasó aislada y la
+  repetición completa de 511 pasó en 168,260 s sin modificar tests existentes.
+  Ruff, Prettier y consistencia de migraciones aprobados. El frontend conserva
+  el árbol validado en OT-13; se requiere CI sobre la cabeza final.

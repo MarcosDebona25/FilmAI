@@ -87,6 +87,14 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 - **Usuario - Lista:** La tabla Lista tiene una FK idUsuario, lo que indica que cada lista le pertenece al usuario que la creó. Un usuario puede tener varias listas (tanto las predeterminadas como las personalizadas).
 
+- **Identidad de listas predeterminadas (08/10/2026, OT-40):** `Lista.clave`
+  admite `favoritos`, `pendientes` y `vistas`. La migración asigna la clave a
+  las predeterminadas existentes según el nombre sin distinguir mayúsculas;
+  conserva nombres, IDs y relaciones `Tiene`, y se detiene si encuentra un
+  nombre desconocido. Las personalizadas conservan `clave = NULL`. El campo
+  permanece nullable durante la adaptación del código de OT-41; las
+  restricciones de unicidad y coherencia corresponden a OT-42.
+
 - **Usuario - Chat:** Chat también tiene una FK idUsuario, lo que muestra que cada chat es creado por un usuario en particular. Un usuario puede tener varios chats distintos.
 
 - **Chat - Mensaje:** Mensaje contiene una FK idChat, de modo que todos los mensajes pertenecen a un chat específico. Un chat puede tener muchos mensajes, pero cada mensaje se guarda siempre dentro de un único chat.
