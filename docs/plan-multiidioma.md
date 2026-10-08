@@ -842,8 +842,8 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Completada: 08/10/2026; PR #47 integrado fuera de main; CI en verde |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Completada: 08/10/2026; correspondencia completa de F0 y HTTP/429 definidos; integrada fuera de main con CI en verde |
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
-| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integración condicionada al CI de cada cabeza (ver 10.5) |
-| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Pendiente |
+| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integrada fuera de main con CI verde de ambas cabezas (ver 10.5) |
+| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | En curso: núcleo nullable y resolución implementados; preferencias, registro y semilla pendientes |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30 | M | Pendiente |
@@ -1014,6 +1014,21 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   PR #53 integrado con merge commit en `feat/i18n-multiidioma`, con CI verde.
   PR #54 reapuntado a integración; solo se integra cuando pase el CI de su
   cabeza final. PR #52 cerrado y sustituido por #53/#54. Ningún merge a main.
+
+- 08/10/2026, cierre de F1: PR #54 integrado con CI verde de su cabeza
+  `7c34285`, merge `8d97762`, únicamente en `feat/i18n-multiidioma`.
+  OT-13 está cerrada. Empieza OT-20 desde esa integración, en tres unidades:
+  núcleo; preferencias/registros; semilla. La primera tiene cuatro pruebas
+  enfocadas verdes (1,013 s), incluida migración real sin relleno. No se
+  modifica la base de desarrollo ni se ejecuta la semilla automáticamente.
+  - Autorización nueva OT-31/32: adaptar solo igualdades exactas pre-plan de
+    confirmación/reset/documentación/TMDB para verificar campos heredados,
+    conservando HTTP, con sobre nuevo probado por separado. Afecta
+    `filmai/tests.py` (TMDB y documentación) y `usuarios/tests.py`
+    (confirmación y reset); no es permiso general para cambiar otras pruebas.
+  - OT-42: reparar recursos faltantes SOLO en la copia temporal del volcado,
+    antes del baseline; nunca en la base de desarrollo original.
+  - OT-70: título transitorio «Mis reseñas» / “My reviews” aprobado.
 
 ### 10.6 Instrucción para iniciar una sesión
 

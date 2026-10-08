@@ -2617,3 +2617,37 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
 - **Archivos afectados**: `docs/i18n/copia-propuesta.csv`, `claves.csv`,
   `revision-ot13.md`, `README.md`, `docs/plan-multiidioma.md`,
   `openspec/specs/i18n-core/spec.md` y `openspec/specs/emails/spec.md`.
+
+---
+
+## 08/10/2026 — Núcleo de idioma por operación (OT-20, primera entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se agrega `Usuario.idioma` nullable con opciones `en`/`es`,
+  sin relleno de cuentas anteriores. `idioma_efectivo` prioriza la cuenta,
+  luego el encabezado HTTP analizado por Django y por último inglés. Descarta
+  preferencias con peso cero y resuelve regiones al idioma base. Mantiene
+  `LANGUAGE_CODE=es-ar` y no activa traducción global. Preferencias, altas y
+  semilla se completan en las siguientes entregas de OT-20.
+- **Verificación**: cuatro tests nuevos cubren negociación, prioridad de cuenta
+  explícita, aislamiento del locale global y migración real ida/vuelta de una
+  cuenta previa. Pasan en 1,013 s; Ruff sin errores. No se aplicó la migración
+  ni se ejecutó la semilla contra la base de desarrollo.
+- **Archivos afectados**: configuración, modelo y migración de usuarios,
+  `filmai/idioma.py`, sus tests, doc 03 y spec `i18n-core`.
+
+## 08/10/2026 — Excepciones acotadas de verificación del plan
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario autorizó ajustar las igualdades exactas anteriores
+  al plan para errores de confirmación, restablecimiento, documentación y TMDB
+  en OT-31/32. Se conserva el HTTP y la expectativa de cada campo heredado;
+  el sobre nuevo se prueba por separado. No habilita cambios a otros tests.
+  También autorizó reparar recursos faltantes del superusuario únicamente en
+  la copia temporal del volcado de OT-42, antes de establecer su referencia;
+  la base de desarrollo original permanece intacta. Para OT-70 aprobó el
+  título transitorio «Mis reseñas» / “My reviews”.
+- **Archivos afectados al implementar**: tests de usuarios y filmai de OT-31/32,
+  registro de verificación de OT-42 y catálogo transitorio de OT-70. Las
+  autorizaciones se conservan en las notas del plan; esta entrada no afirma
+  que dichas órdenes estén implementadas.
