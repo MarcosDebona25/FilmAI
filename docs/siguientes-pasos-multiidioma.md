@@ -53,15 +53,13 @@ Son chicos, pero conviene cerrarlos primero:
    de la API cambió por adición).
 3. **Revisar los correos en un cliente real** (plan 10.1): con
    `RESEND_TEST_RECIPIENT`, enviar los 4 casos en `en` y `es`.
-4. **Validar la copia provisional** del saludo sin nombre: «Hola usuario,» /
-   “Hi there,” (la tabla de copia no tenía ese caso).
-5. **Rellenar las traducciones de la base de desarrollo**:
+4. **Rellenar las traducciones de la base de desarrollo**:
    `docker compose exec backend python manage.py rellenar_traducciones`
    (quedaron 88 producciones pendientes; la sincronización nocturna también las
    va completando de a 100).
-6. **`admin` no tiene listas predeterminadas** en la base de desarrollo
+5. **`admin` no tiene listas predeterminadas** en la base de desarrollo
    (se creó sin la señal): `python manage.py reparar_recursos_usuarios`.
-7. Decidir si el docstring de `FronteraErroresMixin`, que hoy aparece como
+6. Decidir si el docstring de `FronteraErroresMixin`, que hoy aparece como
    `description` de dos esquemas en `openapi.yaml`, se oculta del contrato.
 
 ## 3. Siguientes órdenes de trabajo

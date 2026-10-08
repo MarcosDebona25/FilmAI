@@ -3332,9 +3332,8 @@ sus dos cabezas publicadas antes de integrarse.
   idioma guardado del destinatario, luego el del request, luego inglés. Lo
   resuelve el llamador (adaptador de allauth, recuperación, cambio y
   restablecimiento de contraseña) y el servicio renderiza una variante explícita.
-  **Decisión provisional**: el saludo sin nombre es «Hola usuario,» / “Hi
-  there,”; la tabla no trae copia aprobada para ese caso (pendiente de
-  validación del usuario).
+  **Decisión**: el saludo sin nombre es «Hola usuario,» / “Hi there,”. La
+  tabla no traía copia para ese caso; el usuario la aprobó el 08/10/2026.
 - **OT-53**: la copia en español pasa a la de `docs/i18n/claves.csv` (filas
   603–634, voseo) y ambos idiomas suman encabezado, motivo y pie con año. El
   layout `base.html` queda neutro (sin texto). La notificación de contraseña no
