@@ -402,10 +402,10 @@
     "semantic_hash": ""
   },
   "docs/03_DiagramaClases_DiagramaTablas.json": {
-    "mtime": 1788888483.391053,
-    "seen": 1791426617.3081295,
-    "ast_hash": "b29044bfec4d4a8ab87a9e89748b8957",
-    "semantic_hash": "b29044bfec4d4a8ab87a9e89748b8957"
+    "mtime": 1791500220.5003755,
+    "seen": 1791500232.6945472,
+    "ast_hash": "853bb82f4db7e805974e167c65a0694c",
+    "semantic_hash": ""
   },
   "frontend/app/(public)/login/page.tsx": {
     "mtime": 1788017399.1360962,
@@ -570,15 +570,15 @@
     "semantic_hash": "0c50456fb6457d0147bbab1299c68024"
   },
   "docs/01_Presentaci\u00f3n Idea-Proyecto.docx.md": {
-    "mtime": 1788017399.1200962,
-    "seen": 1791426617.3083603,
-    "ast_hash": "6cf89bd74f287abac66756e52132e168",
-    "semantic_hash": "6cf89bd74f287abac66756e52132e168"
+    "mtime": 1791500172.7145882,
+    "seen": 1791500210.6682525,
+    "ast_hash": "bef37b449f872c4b982c32f72ecab53e",
+    "semantic_hash": ""
   },
   "docs/02_Especificaci\u00f3n de Requerimientos.md": {
-    "mtime": 1791056551.1682634,
-    "seen": 1791426617.3083622,
-    "ast_hash": "214c4599f2de58d289214bbfd6f863d9",
+    "mtime": 1791500190.84439,
+    "seen": 1791500210.6682544,
+    "ast_hash": "479ff1b62373c6fcdb4c3b80faf3ae65",
     "semantic_hash": ""
   },
   "docs/03_DiagramaCU.md": {
@@ -588,15 +588,15 @@
     "semantic_hash": "560779b55988641fd021de6ae9ce003f"
   },
   "docs/03_Modelos de Datos y de Dise\u00f1o.md": {
-    "mtime": 1791429285.5548127,
-    "seen": 1791431151.1585314,
-    "ast_hash": "91f3c791b33ca58272d58b79ea767bc7",
+    "mtime": 1791500172.7224844,
+    "seen": 1791500210.6682932,
+    "ast_hash": "b1fe938e6c07e7bbb6b8db3a639ee7ab",
     "semantic_hash": ""
   },
   "docs/04_Lineamientos_UI.md": {
-    "mtime": 1791057049.4096134,
-    "seen": 1791426617.3083665,
-    "ast_hash": "3d676b71db91033eb35fa79dff98e26b",
+    "mtime": 1791500191.1069787,
+    "seen": 1791500210.668295,
+    "ast_hash": "ee02fec046be93b1c0d9ddc004068d8e",
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
@@ -612,9 +612,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791438914.255655,
-    "seen": 1791439166.7076788,
-    "ast_hash": "31da043a6b96a7d9e4bedf6d7e832127",
+    "mtime": 1791500202.367956,
+    "seen": 1791500210.6683674,
+    "ast_hash": "900fa6575e7f8eb3ef4654e1f86e2391",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791438914.2639763,
-    "seen": 1791439166.7077677,
-    "ast_hash": "29e534505d5a3f46778b36a01e75534a",
+    "mtime": 1791499684.3877282,
+    "seen": 1791499712.8755274,
+    "ast_hash": "1d2131d6459182845220f15d8c819c60",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2388,9 +2388,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
-    "mtime": 1791437928.9166756,
-    "seen": 1791439166.7084048,
-    "ast_hash": "1f36ee46b99f8ae046a61d87cc4c608a",
+    "mtime": 1791439706.1774325,
+    "seen": 1791499712.876451,
+    "ast_hash": "2cc7d8885d35abd327d35d3a934cbdf9",
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
@@ -3024,9 +3024,15 @@
     "semantic_hash": ""
   },
   "docs/siguientes-pasos-multiidioma.md": {
-    "mtime": 1791439154.7776532,
-    "seen": 1791439166.7079804,
-    "ast_hash": "a392056439442b94e8ad71fe29ba1e4d",
+    "mtime": 1791499684.3995357,
+    "seen": 1791499712.8758833,
+    "ast_hash": "6b656e5b6ee9d8fc12eb773045bc243d",
+    "semantic_hash": ""
+  },
+  "PRODUCT.md": {
+    "mtime": 1791497662.7546892,
+    "seen": 1791499712.8725936,
+    "ast_hash": "c405b5ea63d1a569bf18767a84775fc3",
     "semantic_hash": ""
   }
 }

@@ -73,7 +73,7 @@ En este orden (dependencias en la tabla 10.4 del plan):
 | OT-71 | `lib/format.ts` y reemplazo de los usos de `es-AR`                                | OT-70               |
 | OT-72 | `Accept-Language` en cada request, `ApiError` con códigos, `lib/errors.ts`, API simulada de e2e | OT-70, OT-34 (lista) |
 | OT-73 | Validaciones por código y etiquetas desde `contracts/enums.json`                  | OT-72               |
-| OT-74 | Selector de idioma, sincronización cookie ↔ cuenta, locale del botón de Google     | OT-70, OT-20        |
+| OT-74 | Selector de idioma (ubicaciones: ver `docs/04`, 4.1), sincronización cookie ↔ cuenta, locale del botón de Google | OT-70, OT-20        |
 | OT-75 | Rutas en inglés en frontend, backend y tests, **en un solo PR**                   | OT-70               |
 | OT-76 | Tres pantallas piloto migradas                                                    | OT-73, OT-74, OT-75 |
 | OT-77 | Catálogos completos sembrados desde `docs/i18n/claves.csv`                        | OT-70               |

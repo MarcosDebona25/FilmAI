@@ -40,7 +40,7 @@
 
 - **Usuario - Calificación:** La cardinalidad establecida permite que un usuario no tenga calificaciones asociadas (por ejemplo, al crear la cuenta) o tenga múltiples calificaciones (cuenta con trayectoria en el sistema).
 
-- **Usuario - Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las listas de Vistos, Pendientes y Favoritos, las cuales no pueden ser eliminadas. Además, cada usuario tiene la posibilidad de crear otras listas personalizadas.
+- **Usuario - Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las listas Favoritos, Pendientes y Vistas (identificadas por `Lista.clave`; la interfaz muestra Favorites, Watchlist y Watched según el idioma), las cuales no pueden ser eliminadas. Además, cada usuario tiene la posibilidad de crear otras listas personalizadas.
 
 - **Reseña - Calificación:** La cardinalidad establecida refleja que una calificación (numérica) opcionalmente puede tener una reseña (textual) asociada. Se modela como relación de composición dado que una reseña no puede existir sin su respectiva calificación.
 
@@ -87,13 +87,15 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 - **Usuario - Lista:** La tabla Lista tiene una FK idUsuario, lo que indica que cada lista le pertenece al usuario que la creó. Un usuario puede tener varias listas (tanto las predeterminadas como las personalizadas).
 
-- **Identidad de listas predeterminadas (08/10/2026, OT-40):** `Lista.clave`
-  admite `favoritos`, `pendientes` y `vistas`. La migración asigna la clave a
-  las predeterminadas existentes según el nombre sin distinguir mayúsculas;
-  conserva nombres, IDs y relaciones `Tiene`, y se detiene si encuentra un
-  nombre desconocido. Las personalizadas conservan `clave = NULL`. El campo
-  permanece nullable durante la adaptación del código de OT-41; las
-  restricciones de unicidad y coherencia corresponden a OT-42.
+- **Identidad de listas predeterminadas (08/10/2026, OT-40 y OT-42):** `Lista.clave`
+  (VARCHAR(25), NULLABLE) admite `favoritos`, `pendientes` y `vistas`. La
+  migración asignó la clave a las predeterminadas existentes según el nombre
+  sin distinguir mayúsculas; conserva nombres, IDs y relaciones `Tiene`, y se
+  detiene si encuentra un nombre desconocido. Las personalizadas tienen
+  `clave = NULL`. Dos restricciones la protegen: `uq_lista_usuario_clave`
+  (a lo sumo una lista por clave y usuario) y `ck_lista_tipo_clave` (toda
+  predeterminada lleva clave y ninguna personalizada la lleva). `nombre` se
+  conserva en español.
 
 - **Consumo de identidad (08/10/2026, OT-41A):** calificaciones, pertenencia,
   bloqueo de remoción, orden de resúmenes y semilla usan `clave`. La API la
@@ -110,7 +112,9 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 - **Calificación - Produccion Audiovisual:** Toda calificación debe estar asociada a una producción mediante la FK idProduccion. Esto permite que una producción tenga muchas calificaciones, pero cada calificación corresponde a una única producción.
 
-- **Produccion Audiovisual (entidad base):** Esta tabla reúne todos los datos sincronizados desde TMDB (título, póster, géneros, reparto, duración, temporadas, etc.). Desde acá se relacionan tanto las calificaciones como los ítems que aparecen en las distintas listas.
+- **Produccion Audiovisual (entidad base):** Esta tabla reúne todos los datos sincronizados desde TMDB (título, póster, géneros, reparto, duración, temporadas, etc.). Desde acá se relacionan tanto las calificaciones como los ítems que aparecen en las distintas listas. Es la versión canónica, en inglés (de ella sale el corpus de embeddings).
+
+- **Produccion Audiovisual - Produccion Traduccion (08/10/2026, OT-62):** una producción puede tener cero o una traducción por idioma no canónico (`ProduccionTraduccion`: título, sinopsis y póster en ese idioma). La FK `produccion` elimina en cascada y la restricción `uq_traduccion_produccion_idioma` impide repetir (producción, idioma). Un campo vacío significa que TMDB no tiene esa traducción y quien lee usa el canónico.
 
 **Observaciones:**
 
@@ -131,6 +135,7 @@ superior es una lámina de origen, no una opción del selector. El catálogo gen
 se usa para validar la API y exponer las opciones al frontend.
 
 - `tema` (VARCHAR(10), NOT NULL, DEFAULT 'oscuro'): Preferencia de tema de la interfaz. Valores posibles: 'oscuro', 'claro'.
+- `idioma` (VARCHAR(2), NULLABLE): idioma de la aplicación. Valores posibles: 'en', 'es'. Ver la sección «Idioma de aplicación».
 - `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
 - `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
 - `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
@@ -186,6 +191,15 @@ Preferencias permite leer el valor nulo de cuentas anteriores y guardar solo
 `en`/`es`; el perfil y los detalles de usuario exponen el idioma en lectura.
 El registro tradicional y Google guardan el idioma activo al crear la cuenta;
 el login Google de una cuenta existente conserva su idioma.
+
+### Traducciones del catálogo (OT-62, 08/10/2026)
+
+`ProduccionAudiovisual` conserva el contenido canónico en inglés. Se agregan:
+
+- `generos_ids` (INTEGER[]): IDs de TMDB de los géneros. La etiqueta se resuelve por idioma con la lista de géneros (`GET /api/catalogo/genres/`); `generos` (nombres en inglés) se conserva para los embeddings. `estatus` se trata como código y el frontend lo traduce.
+- `ProduccionTraduccion` (tabla `produccion_traduccion`): `id`, `produccion` (FK, cascada), `idioma` (VARCHAR(5)), `titulo` (VARCHAR(100)), `sinopsis` (VARCHAR(2000)) y `poster` (VARCHAR(250)), con `UNIQUE (produccion, idioma)`. Se completa al materializar la producción y en la sincronización nocturna (tercera pasada acotada) y con el comando `rellenar_traducciones`. Un error de TMDB al guardar la traducción se registra y no invalida el enriquecimiento canónico.
+- Los títulos y pósters de listas, previews y «Mis reseñas» se sirven según el idioma con respaldo al canónico. Limitación conocida: la sinopsis traducida se guarda, pero ningún serializador la expone todavía, y el orden por título usa el canónico.
+- El texto canónico de embeddings y su `source_hash` no cambian.
 
 ### Identidades exportadas y nombres reservados (OT-41B)
 

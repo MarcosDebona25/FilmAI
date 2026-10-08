@@ -3465,3 +3465,60 @@ sus dos cabezas publicadas antes de integrarse.
   y 06 (tools nuevas); abrir el SDD en `openspec/changes/chatbot/`; medir la
   latencia contra DeepSeek cuando haya key (RNF #6).
 - **Archivos afectados**: `docs/decisiones.md` (este registro).
+
+## 08/10/2026 — Selector de idioma: dónde vive en la interfaz
+
+- **Descripción**: el canvas de Claude Design decía «no hay selector de
+  idioma» y lo postergaba; el plan multiidioma ya lo pedía en Preferencias y en
+  las páginas públicas. Marcos aprobó esta ubicación y se actualizó el canvas
+  (versiones 288 y 289):
+  1. **Con sesión**: el idioma se cambia solo en Preferencias, sección
+     «Language» (segmentado `English | Español`, copia «Interface language» y
+     «Applies instantly and is saved to your account. Also used for the emails
+     we send you.»). No hay selector en el menú del avatar.
+  2. **Footer con sesión**: muestra el idioma actual y enlaza a Preferencias
+     (`#t-idioma`). Escritorio: ítem en la columna Information; móvil: fila
+     «Language · English ›». No cambia el idioma por sí mismo. Con sesión se
+     ocultan «Sign up» y «Log in» del footer de escritorio.
+  3. **Sin sesión**: pastilla `EN | ES` arriba a la derecha en Landing, inicio
+     de sesión y registro (escritorio y móvil). El footer de escritorio sin
+     sesión incluye el selector con los nombres completos. Estos controles solo
+     escriben la cookie (regla de `docs/plan-multiidioma.md` 3.2); el idioma
+     del registro define el de los correos de la cuenta nueva.
+  4. Cada idioma con su propio nombre, sin banderas.
+  5. **Formatos**: se unifica con el plan (3.5). En inglés los miles llevan
+     coma (`41,355`); en español, punto (`41.355`). El canvas deja de usar
+     `41.355` en inglés (Ficha) y sus notas se alinean.
+- **Archivos afectados**: `docs/04_Lineamientos_UI.md` (4, 4.1 y 5j),
+  `docs/plan-multiidioma.md` (fase 7c, paso 12),
+  `docs/siguientes-pasos-multiidioma.md` (OT-74). Sin cambios de código: el
+  `LanguageSwitcher` se implementa en OT-74.
+
+## 08/10/2026 — Documentos 01 a 04 alineados con el multiidioma
+
+- **Descripción**: se actualizan los documentos de dominio para reflejar el
+  multiidioma ya decidido e implementado en el backend. La documentación se
+  mantiene en español (la leen docentes hispanohablantes) y los textos de
+  interfaz citados en los casos de uso quedan como referencia en español; el
+  texto vigente de cada idioma vive en `docs/i18n/` y en los diseños.
+  1. **Doc 01**: objetivo específico y población incluyen inglés y español.
+  2. **Doc 02**: alcance, seis requisitos funcionales y RNF #17
+     (internacionalización); notas de idioma en CU-001, 003, 006, 008, 012,
+     013, 019, 020 y 021; sección final «Multiidioma». **Corrección**: CU-002
+     decía que el enlace de confirmación era permanente; vence a las 24 horas
+     (`ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1`), como el usuario confirmó el
+     08/10/2026.
+  3. **Doc 03**: «Vistos» pasa a «Vistas» y se documentan `Usuario.idioma`,
+     `Lista.clave` con sus dos restricciones (OT-42), `generos_ids` y la nueva
+     entidad `ProduccionTraduccion`. El JSON de los diagramas (clases y
+     tablas) suma esos campos y la entidad; los gráficos se regeneran desde él.
+  4. **Doc 04**: sección 4.1, rutas visibles en inglés (aún no implementadas),
+     formato de duración por idioma, etiquetas de listas por idioma y
+     accesibilidad (`lang`, `radiogroup`).
+  5. **Canvas de diseño**: se quitan de sus notas dos avisos desactualizados
+     sobre TMDB («quedan en inglés» y «decisión del 30/09 definitiva»), que la
+     decisión del 08/10/2026 (TMDB según idioma) reemplazó.
+- **Archivos afectados**: `docs/01_*`, `docs/02_*`, `docs/03_Modelos*`,
+  `docs/03_DiagramaClases_DiagramaTablas.json`, `docs/04_Lineamientos_UI.md`,
+  `docs/decisiones.md`. Pendiente: `docs/06_TMDB_API_Referencia.md` y las
+  specs de `openspec/` (fase 9 del plan).

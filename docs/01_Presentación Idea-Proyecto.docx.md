@@ -36,8 +36,9 @@ Desarrollar una aplicación web integral que permita a los usuarios gestionar, c
 - Implementar un sistema de registro, autenticación y gestión de usuarios.
 - Integrar la aplicación web con una base de datos externa (Ej: The Movie Database) para proporcionar un catálogo actualizado de películas y series con información detallada (posters, sinopsis, actores, etc).
 - Desarrollar un sistema completo de calificación por estrellas (1-10, solo valores enteros) con reseñas textuales, gestión de listas personalizadas (pendientes, favoritas, personalizadas) y una interfaz intuitiva para la navegación entre películas, series y perfil de usuario.
+- Ofrecer la interfaz, los correos y el contenido del catálogo en inglés (idioma nativo y por defecto) y en español, a elección del usuario (agregado el 08/10/2026).
 - Implementar un chatbot basado en LLM (accesible únicamente para usuarios autenticados) que analice preferencias, historial y perfil del usuario para generar recomendaciones contextuales, predicciones de compatibilidad y respuestas a consultas específicas sobre contenido audiovisual.
 
 ### 4. Población
 
-Usuarios casuales del mundo del entretenimiento audiovisual que quieran registrar sus visualizaciones y tener asistencia a la hora de elegir una nueva opción de entretenimiento.
+Usuarios casuales del mundo del entretenimiento audiovisual que quieran registrar sus visualizaciones y tener asistencia a la hora de elegir una nueva opción de entretenimiento, ya sea que usen la plataforma en inglés o en español (08/10/2026).
