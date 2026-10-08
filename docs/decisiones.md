@@ -3070,3 +3070,29 @@ sus dos cabezas publicadas antes de integrarse.
   de OT-13. Publicación pendiente después de rebase hacia integración.
 - **Archivos afectados**: base HTML, variante de recuperación, contexto del
   servicio, decisiones, plan y spec `emails`.
+---
+
+## 08/10/2026 — Consumidores y API de identidad de listas (OT-41A)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: provisión, calificaciones, bloqueo de remoción, orden de
+  resúmenes, semilla y auditoría usan `Lista.clave`. La API expone la clave y
+  devuelve nulo para personalizadas. La provisión conserva listas renombradas
+  y permite completar claves nulas por nombre heredado sin recrear sus filas;
+  un tipo o identidad incompatibles detienen la operación. Se conserva la
+  tupla pública de nombres para los tests anteriores. No cambia `nombre`.
+- **Motivo**: separar la identidad de la etiqueta evita que un renombrado
+  rompa la regla calificada implica vista. Las consultas por nombres quedan
+  solo en el respaldo de provisión; textos, docstrings y migraciones históricas
+  pueden conservar etiquetas. Nombres reservados y exportación quedan para
+  OT-41B y las restricciones para OT-42.
+- **Pruebas**: siete casos nuevos cubren altas/API, orden tras renombrar, el
+  flujo HTTP calificar–bloquear remoción–borrar nota, provisión/auditoría,
+  transición nula, semilla por clave y colisión del respaldo. Pasan junto a
+  doce regresiones de contraseña: 19 tests en 16,229 s, en base aislada.
+  Suite normal completa: 553 tests en 201,893 s; Ruff, Prettier y coherencia
+  de migraciones aprobados. La corrida previa de 552 tuvo un 401 inesperado
+  en una regresión anterior de rollback de contraseña; se conserva ese
+  resultado y su repetición sin modificar tests anteriores ni atribuir causa.
+- **Archivos**: listas (servicios, vistas, serializer y tests), provisión y
+  comandos de usuarios, doc 03, spec `list-endpoints` y plan multiidioma.
