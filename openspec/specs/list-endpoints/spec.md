@@ -52,6 +52,15 @@ items.
 Names MUST be unique per user without case sensitivity, be at most 80
 characters, and allow Unicode letters, numbers, and spaces.
 Predetermined lists MUST reject rename and deletion with a 409 conflict.
+Creating or renaming a personalized list MUST reject a reserved label from
+any supported language, after whitespace normalization and without case
+sensitivity, with `list_name_reserved`, HTTP 409 and empty params.
+The reserved labels MUST match the approved default-list catalog labels.
+Existing personalized names MUST be returned unchanged, without translation.
+
+`contracts/enums.json` MUST publish `defaultListKeys`, `genderValues` and
+`reservedListNames` by language. The export command MUST reproduce the file
+from model values and the backend reservation registry.
 
 ### Items
 

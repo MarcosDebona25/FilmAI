@@ -3096,3 +3096,35 @@ sus dos cabezas publicadas antes de integrarse.
   resultado y su repetición sin modificar tests anteriores ni atribuir causa.
 - **Archivos**: listas (servicios, vistas, serializer y tests), provisión y
   comandos de usuarios, doc 03, spec `list-endpoints` y plan multiidioma.
+
+---
+
+## 08/10/2026 — Reserva bilingüe y contrato de enums (OT-41B)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: crear o renombrar una personalizada rechaza las etiquetas
+  ES/EN del sistema sin distinguir mayúsculas y tras normalizar espacios.
+  Se registra `list_name_reserved`, HTTP 409 sin parámetros, con copia
+  aprobada por el usuario: «Ese nombre está reservado para una lista
+  predeterminada.» / “This name is reserved for a default list.” Es una fila
+  nueva; las 91 originales de OT-13 permanecen intactas. No se renombran
+  automáticamente listas personalizadas anteriores.
+- **Contrato**: `contracts/enums.json` publica `defaultListKeys`,
+  `genderValues` y `reservedListNames` por idioma. `exportar_enums` lo deriva
+  de los valores de los modelos y la reserva del backend; una prueba coteja
+  sus etiquetas con el CSV editorial aprobado. Género conserva su modelo.
+- **Regresión**: el escenario nuevo de F0 `lista_nombre_duplicado` pasa a
+  duplicar una personalizada real. Conserva su golden, HTTP y campos previos;
+  la reserva se verifica por separado. Aplica la autorización vigente para
+  tests nuevos de F0 cuando una fase cambia deliberadamente su comportamiento.
+  No se modifican tests anteriores al plan ni goldens de referencia.
+- **Pruebas**: seis casos nuevos y la regresión F0 pasan juntos: siete en
+  2,019 s. Cubren POST/PUT en ambos idiomas, reserva tras renombrar una
+  predeterminada, nombres anteriores sin traducir, exportación reproducible,
+  paridad editorial y código/copia aprobada. La primera suite normal tuvo
+  559 tests en 200,128 s, con un 401 inesperado en una regresión anterior de
+  baja. Su clase pasó aislada (6 en 3,087 s); se repite la suite sin cambiar
+  tests anteriores al plan ni atribuir causa. Ruff, Prettier y migraciones
+  consistentes aprobados.
+- **Archivos**: identidad/serializer de listas, exportador y tests, catálogo
+  de errores, escenario F0, CSVs i18n, contrato generado, specs y este registro.

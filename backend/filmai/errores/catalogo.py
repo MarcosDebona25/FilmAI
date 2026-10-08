@@ -111,6 +111,9 @@ CATALOGO = {
     "list_name_duplicated": DefinicionCodigo(
         "Ya tenés una lista con ese nombre.", {"listas": 409}
     ),
+    "list_name_reserved": DefinicionCodigo(
+        "Ese nombre está reservado para una lista predeterminada.", {"listas": 409}
+    ),
     "list_item_duplicated": DefinicionCodigo(
         "La producción ya pertenece a esta lista.", {"listas": 409}
     ),

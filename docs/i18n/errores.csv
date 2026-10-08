@@ -87,3 +87,4 @@ not_authenticated,top,401,null,{},dj_rest_auth/views.py:LogoutView.logout,Refres
 invalid_token,top,401,null,{},dj_rest_auth/views.py:LogoutView.logout,TokenError diagnostic,,direct library Response; normalize by exception type
 server_error,top,500,null,{},dj_rest_auth/views.py:LogoutView.logout,An error has occurred.,,direct library Response; normalize explicitly
 email_confirmed / csrf_ready,success,200,null,{},"backend/usuarios/views.py:146,226",ok,,source; route determines success code
+list_name_reserved,top,409,null,{},backend/listas/serializers.py:35,Ese nombre está reservado para una lista predeterminada.,,observed
