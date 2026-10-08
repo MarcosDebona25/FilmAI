@@ -147,6 +147,6 @@ All eight variants (4 cases × `en`/`es`) render subject, text and HTML from
 `correos/base_<locale>.html` copy. Callers pass `idioma_efectivo(request,
 user)`. Expiry hours come from settings through `vigencia_en_horas`. The
 password-updated action links to `FRONTEND_URL/login/`. The nameless greeting
-fallback (`usuario` / `there`) is provisional copy awaiting approval. Routes in
+fallback (`usuario` / `there`) was approved by the user on 08/10/2026. Routes in
 links remain the Spanish ones until OT-75. Manual review in a real client is
 still pending.
