@@ -13,6 +13,14 @@ Django validators → typed error + catalog → handler / explicit Response norm
                               ApiError → errors helper → en/es message catalogs
 ```
 
+## Implementation progress
+
+OT-30 starts with the general/domain/success registry and its typed exception.
+HTTP contexts, parameter types and nonnegative known waits are validated there.
+Validation leaf definitions, metadata preservation and handler integration remain
+pending; existing endpoint responses are unchanged at this boundary.
+The requirements below describe the completed contract, not this partial delivery.
+
 ## Requirements
 
 ### Requirement: Stable error envelope

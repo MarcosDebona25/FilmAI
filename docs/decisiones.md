@@ -2693,3 +2693,20 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   a sus oráculos. Frontend conserva el árbol validado en OT-13.
 - **Archivos afectados**: `seed.py`, test de semilla, README, plan y specs
   `development-seed` e `i18n-core`.
+
+---
+
+## 08/10/2026 — Catálogo general y excepción tipada de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se inicia OT-30 con un registro de códigos generales, de
+  dominio y de éxito, sus mensajes internos y estados por contexto. Login y
+  autenticación conservan 400/401 para `invalid_credentials`; validación y perfil
+  conservan 400/409 para `username_already_used`. La excepción base exige un
+  contexto cuando hay más de uno, rechaza códigos desconocidos y valida tipos
+  y rangos de parámetros. Cero segundos es una espera conocida válida. Los
+  códigos de éxito se registran sin alterar respuestas existentes. Esta unidad
+  todavía no integra el manejador ni el catálogo de hojas de validación.
+- **Archivos afectados**: `backend/filmai/errores/{__init__,catalogo,base}.py`,
+  `backend/filmai/test_catalogo_errores.py` y `openspec/specs/error-contract/spec.md`.
+
