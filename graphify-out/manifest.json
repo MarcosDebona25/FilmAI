@@ -612,9 +612,9 @@
     "semantic_hash": "4fed04a514c760459e589be8c4cab124"
   },
   "docs/decisiones.md": {
-    "mtime": 1791425363.710417,
-    "seen": 1791425378.101364,
-    "ast_hash": "8c7b805c5d70f9c7b5ba5a88ab0841d2",
+    "mtime": 1791425527.7119975,
+    "seen": 1791425540.381752,
+    "ast_hash": "e144f72398e0ab528f8e4b7fecf65bb3",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1758,9 +1758,9 @@
     "semantic_hash": ""
   },
   "docs/plan-multiidioma.md": {
-    "mtime": 1791425363.7133558,
-    "seen": 1791425378.10137,
-    "ast_hash": "d6ca0b6aedf1b44c81a958b86dee89f8",
+    "mtime": 1791425527.7142506,
+    "seen": 1791425540.381988,
+    "ast_hash": "230d18bdff68b523e5f311f0df40f291",
     "semantic_hash": ""
   },
   "backend/filmai/tests_correos_contrato.py": {
@@ -2388,9 +2388,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
-    "mtime": 1791425363.7123072,
-    "seen": 1791425378.1013937,
-    "ast_hash": "10f238def70c0a4d968c396064be7bd2",
+    "mtime": 1791425527.7133446,
+    "seen": 1791425540.3830066,
+    "ast_hash": "03c127f21b8e9eea020f172fc20f62f3",
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
@@ -2460,8 +2460,8 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_correo/es/message.html": {
-    "mtime": 1791425087.38202,
-    "seen": 1791425378.1013322,
+    "mtime": 1791425527.7078168,
+    "seen": 1791425540.3806794,
     "ast_hash": "69e88ce844b0bf4ba6ecb9bafc8254da",
     "semantic_hash": ""
   },
@@ -2478,9 +2478,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/es/message.html": {
-    "mtime": 1791425087.382395,
-    "seen": 1791425378.101336,
-    "ast_hash": "6c3628e26bc7b83f4779f79494e18459",
+    "mtime": 1791425421.7534046,
+    "seen": 1791425491.4879196,
+    "ast_hash": "e91d5d60e3ab8c68ea96e00e16740c01",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/es/message.txt": {
@@ -2523,6 +2523,12 @@
     "mtime": 1791425087.3854117,
     "seen": 1791425378.1013453,
     "ast_hash": "0dc028c0c7fc12a0d61a54f5d03d17ce",
+    "semantic_hash": ""
+  },
+  "backend/templates/correos/base.html": {
+    "mtime": 1791425421.7531846,
+    "seen": 1791425491.4877896,
+    "ast_hash": "6f0df59882d79f05f4f830d19599bd16",
     "semantic_hash": ""
   }
 }

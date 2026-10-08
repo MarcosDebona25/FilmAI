@@ -1071,6 +1071,12 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   de pruebas con entrypoint explícito y DB `test_filmai_ot50`, sin aplicar
   migraciones a desarrollo. Layout y publicación pendientes.
 
+- 08/10/2026, OT-50 unidad 2: registro hereda el layout compartible sin
+  cambios en sus referencias F0. Siete tests verdes (1,964 s). Recuperación
+  y reenvío se incorporan al layout en las siguientes unidades; sin cambiar
+  copia ni idioma. La división previa de ambas confirmaciones medía 411 líneas
+  escritas: se conserva en backup y se separa por flujo, sin recortar código.
+
 ### 10.6 Instrucción para iniciar una sesión
 
 ```text

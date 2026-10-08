@@ -1,7 +1,7 @@
 # Graph Report - filmai-i18n-ot50-retoma  (2026-10-08)
 
 ## Corpus Check
-- 368 files · ~733,614 words
+- 368 files · ~733,816 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `51bcb2b7`
+- Built from commit: `aa7c36b8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -862,10 +862,10 @@ Nodes (21): CU-008: Visualizar Catálogo, CU-010: Buscar Películas/Series por N
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Usuario` connect `Usuario` to `UsuarioPerfilSerializer`, `ContrasenaTests`, `RegisterSerializer`, `UsuarioFactory`, `seed.py`, `usuarios/views.py`, `CalificacionFactory`, `GoogleSocialLoginSerializer`, `LoginSerializer`, `SeedSoloResenasTests`, `PerfilTests`, `EstadoCuenta`, `provisioning.py`, `ResenaAdminTests`, `ConfirmarCorreoTests`, `AGENTS.md — Reglas para agentes en FilmAI`, `usuarios/admin.py`, `usuarios/adapter.py`, `usuarios/tests.py`, `perfil.py`, `usuarios/serializers.py`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+  _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **Why does `Regla 6: .agents/skills/ es la única fuente de skills` connect `Regla 6: .agents/skills/ es la única fuente de skills` to `explicar-al-implementar/SKILL.md`, `AGENTS.md — Reglas para agentes en FilmAI`, `Catalog of 33 AI writing patterns (content, language, style, communication, filler)`, `impeccable/SKILL.md`?**
-  _High betweenness centrality (0.066) - this node is a cross-community bridge._
-- **Why does `AGENTS.md — Reglas para agentes en FilmAI` connect `AGENTS.md — Reglas para agentes en FilmAI` to `README de FilmAI`, `Job backend: Ruff + tests Django`, `Regla 6: .agents/skills/ es la única fuente de skills`?**
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+- **Why does `UsuarioFactory` connect `UsuarioFactory` to `UsuarioPerfilSerializer`, `ContrasenaTests`, `seed.py`, `ListasEndpointsTests`, `CalificacionFactory`, `RecuperarContrasenaTests`, `LoginSerializer`, `SeedSoloResenasTests`, `PerfilTests`, `EstadoCuenta`, `LoginDualTests`, `ContratoErroresAPITests`, `tests_contrato.py`, `ResenaAdminTests`, `Calificacion`, `PaginadorCuentaSinAyudaDeLaVistaTests`, `Usuario`, `._calificacion_existente`, `usuarios/tests.py`, `ProduccionAudiovisualFactory`, `usuarios/serializers.py`, `CorreosContratoTests`, `PreferenciasIdiomaTests`?**
   _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **Are the 47 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 47 INFERRED edges - model-reasoned connections that need verification._

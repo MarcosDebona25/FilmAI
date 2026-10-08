@@ -132,3 +132,7 @@ text-only password notification and different whitespace handling of allauth
 and reset. The previous notification transport-failure test targets the new
 transport location under explicit user authorization; its assertions remain
 unchanged. Shared HTML layout and later localization remain pending.
+
+OT-50 second unit supplies the common HTML base for registration, preserving
+its complete rendered F0 reference. Resend and reset join that base in the
+following units; their original copy stays unchanged.
