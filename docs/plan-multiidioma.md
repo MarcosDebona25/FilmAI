@@ -845,7 +845,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integrada fuera de main con CI verde de ambas cabezas (ver 10.5) |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Completada: 08/10/2026; PRs #55/#56/#57 integrados con CI verde; 520 backend, merge final 51bcb2b (ver 10.5) |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Completada: 08/10/2026; #58/#59/#60/#61 integrados con CI verde, merge final 10fe49f; repetición backend 543 en verde (ver 10.5) |
-| OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | En progreso: frontera compartida implementada; adopción pendiente |
+| OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Parcial: 08/10/2026; cinco unidades locales verificadas; faltan respuestas directas y verificación final; sin publicación (ver 10.5) |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30, primer bloque de OT-31 | M | Pendiente |
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
 | OT-34 | F3, pasos 8 y 9 | Contrato exportado, sobre en OpenAPI, validación del sobre en toda la suite y rechazo de códigos no registrados | OT-31, OT-32, OT-33 | S | Pendiente |
@@ -1105,8 +1105,32 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   Cuarta unidad: códigos de registro y frontera en su segunda validación
   durante save; cinco pruebas nuevas y **15 tests** enfocados pasan.
   Proveedores y estados de cuenta quedan en OT-32/OT-33 respectivamente.
+  Quinta unidad: Google y validadores restantes; **108 tests** enfocados
+  pasan, incluidos F0 y regresiones Google. Token requerido conserva legacy
+  y explicita id_token en el sobre; credenciales de proveedor quedan para OT-32.
   OT-32 depende técnicamente de este bloque y lo reutiliza; se entrega después
   de OT-31. Publicación coordinada tras OT-40 → OT-70 → OT-60; sin merges a main.
+
+- 08/10/2026, pausa de entregas OT-31 por instrucción del usuario: trabajo
+  local en `/tmp/filmai-i18n-ot31-retoma`, rama `feat/i18n-ot31-frontera`,
+  desde integración 10fe49f. Unidades anteriores: e194fee (351 líneas authored),
+  54b6d94 (205), 7adee17 (261), 76b7911 (244); la última unidad Google cierra
+  sobre esas cuatro. Cada commit incluye código/tests, decisión/spec y grafo.
+  No hay push, PR ni merge de OT-31; main permanece fuera del trabajo.
+  Pendientes para completar OT-31: sobre en documentación JSON, handlers
+  Django 404/500 y errores directos de enlaces de confirmación/restablecimiento;
+  aplicar únicamente las igualdades pre-plan autorizadas (confirmación/reset/
+  documentación), preservando HTTP y campos legacy; tests nuevos del sobre
+  separados. Después: suite completa backend, verificaciones restantes y base
+  actualizada con la cola coordinada. OT-31 no se declara completada.
+  OT-32 no tiene implementación: worktree limpio
+  `/tmp/filmai-i18n-ot32-retoma`, rama `feat/i18n-ot32-normalizacion`, base
+  10fe49f. Reutilizar la frontera compartida de OT-31; conservar el manejador
+  TMDB especializado y su test directo legacy, normalizando solo el global.
+  Logs OT-31 en `/tmp/filmai-ot31-{perfil,contrasena,registro,google}-test.log`;
+  primer resultado contraseña conservado en
+  `/tmp/filmai-ot31-contrasena-primer-intento.log`; Prettier aprobado en
+  `/tmp/filmai-ot31-prettier.log`. Los grafos tienen logs por unidad en `/tmp`.
 
 ### 10.6 Instrucción para iniciar una sesión
 

@@ -2840,3 +2840,23 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
 - **Archivos afectados**: `backend/filmai/errores/serializadores.py`,
   `backend/usuarios/{errores,serializers,validators}.py`,
   `backend/usuarios/test_errores_registro.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos propios de Google y validadores restantes
+
+- **Fecha**: 08/10/2026
+- **Descripción**: Google adopta la frontera compartida y asigna códigos a
+  campos requeridos, reglas de perfil, duplicados y fallos operativos. El
+  token faltante conserva non_field_errors, pero el sobre identifica id_token.
+  Se preservan mensajes, HTTP y estados de cuenta anteriores; la clasificación
+  específica de credenciales de proveedor queda para OT-32 y los estados para
+  OT-33. El avatar de modelo/Admin y el conflicto de username también asignan
+  sus códigos registrados en el origen. Los nuevos tests comparten preparación
+  F0, sin heredar tests ni modificar referencias; cada caso de Google revierte
+  su preparación para no reutilizar el mismo correo dentro de un test.
+  **108 tests** enfocados pasan, incluidos F0 completo y regresiones Google;
+  la fecha del test de edad se deriva del día actual y se verificó aparte.
+- **Archivos afectados**: `backend/usuarios/{serializers,avatares,exceptions}.py`,
+  `backend/usuarios/test_errores_google.py` y `openspec/specs/error-contract/spec.md`.
