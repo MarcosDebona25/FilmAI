@@ -842,7 +842,7 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-10 | F1, pasos 1, 2 y 5 | Decisiones D1 a D13 y respuestas de la sección 9 registradas en `docs/decisiones.md`; glosario | F0 | S | Completada: 08/10/2026; PR #47 integrado fuera de main; CI en verde |
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Completada: 08/10/2026; correspondencia completa de F0 y HTTP/429 definidos; integrada fuera de main con CI en verde |
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
-| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Borrador sin aprobar: 08/10/2026; rama `docs/i18n-ot13-copia-specs`, PR en draft; falta la aprobación editorial del usuario |
+| OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integración condicionada al CI de cada cabeza (ver 10.5) |
 | OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Pendiente |
 | OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
@@ -948,6 +948,72 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   - No se tocó código de producción ni tests desde F0: la referencia de suites sigue siendo 508 backend, 43 unitarios y 24 e2e, verificada por CI en cada PR.
   - Los PRs con base `docs/**` no disparan CI (el workflow filtra por rama destino `main` o `feat/**`); hay que reapuntarlos a la rama de integración y cerrarlos y reabrirlos para que corra.
   - Quedan worktrees de Codex en `/tmp/filmai-i18n-*`. Su contenido ya está commiteado en las ramas correspondientes; se pueden quitar con `git worktree remove`.
+
+- 08/10/2026, continuación de OT-13 en `docs/i18n-ot13-copia-specs`:
+  el usuario aprobó los 91 textos nuevos ES/EN y las seis resoluciones de
+  curaduría. Se corrigieron mensajes de credenciales compartidos con Google,
+  límites de solicitudes compartidos con TMDB y reenvío condicional de correo.
+  214/215 reutilizan confirmaciones completas, 355 la etiqueta de contraseña,
+  448 se excluye como metadato de locale, 535 es encabezado y 320 es nota exacta
+  «Calificación {rating}/10». Los originales y la copia de baja se conservan.
+  - Curaduría: 634 IDs y 41 pantallas exactos; 451 filas utilizables, 425 claves
+    sin colisiones y ninguna fila incoherente. ICU/paridad de argumentos y tags
+    aprobados en 451 filas y en los 91 mensajes nuevos; 28 plurales y 3 tags.
+    Las specs de núcleo y correos reflejan la aprobación y el saludo de respaldo
+    localizado. Ningún archivo de producción o test fue modificado.
+  - Verificación local: Ruff, ESLint, Prettier y TypeScript aprobados;
+    Vitest **43 tests en 5 archivos**, 6,66 segundos. La nueva suite backend
+    quedó bloqueada por acceso denegado al socket de Docker. Playwright no pudo
+    abrir el servidor (listen EPERM); build de Turbopack falla por su operación
+    interna de abrir un puerto, también prohibida. No son suites completas en
+    verde; la última referencia íntegra continúa siendo CI anterior 508/43/24.
+  - Publicación pendiente: GitHub no es accesible y `.git` es de solo lectura
+    para las operaciones de cierre; `git stash` falla al crear index.lock.
+    Los cambios aprobados permanecen en el checkout, con respaldo adicional
+    en `/tmp/filmai-ot13-aprobada-snapshot`. No hubo nuevo commit, push ni merge.
+    Graphify se actualiza antes de detener la sesión.
+  - Próximo paso: cerrar OT-13 con permisos de entorno suficientes, dividir la
+    entrega en dos unidades (specs; copia/curaduría/registro) según chained-pr,
+    publicar y comprobar CI hacia `feat/i18n-multiidioma`. El PR #52 remoto sigue
+    conteniendo el borrador anterior; no representa todavía la copia aprobada.
+    Después puede empezar OT-20. Main sigue fuera de alcance.
+
+- 08/10/2026, nueva comprobación de cierre de OT-13:
+  - Se creó `docs/i18n-ot13-specs-aprobadas` desde el checkout de OT-13,
+    conservando los cambios aprobados. Todavía no contiene un commit nuevo.
+  - GitHub permite consultar el PR #52: sigue abierto en draft hacia
+    `feat/i18n-multiidioma`, con CI verde del borrador anterior. Ese CI no
+    verifica los cambios locales aprobados.
+  - Las escrituras necesarias siguen bloqueadas: `git add` no puede crear
+    `.git/index.lock` y `git fetch` no puede escribir `.git/FETCH_HEAD`.
+    Docker permite listar servicios, pero ejecutar la suite backend falla por
+    acceso denegado al socket. No se hizo push ni merge.
+  - ESLint, Prettier y TypeScript pasan; Vitest: 43 tests en 5 archivos,
+    4,91 segundos. Playwright no pudo iniciar su servidor; build falla al
+    abrir un puerto interno de Turbopack con EPERM. El cierre completo sigue
+    pendiente. Código de producción y tests permanecen sin cambios.
+  - Siguiente orden funcional: OT-20, después de cerrar F1. Incluye el campo
+    nullable de idioma sin relleno, resolución cuenta/Accept-Language/default,
+    preferencias y registro normal/Google, y cuentas de semilla ES/EN.
+    No se inició su implementación ni se avanzó hacia las interfaces.
+
+- 08/10/2026, retoma con permisos efectivos: Git, Docker y puertos funcionan.
+  Se respaldó el checkout aprobado y se dividió OT-13 desde la integración:
+  PR #53 contiene specs y decisión; la segunda entrega contiene copia,
+  curaduría y registro. PR #52 será sustituido, sin perder su historial.
+  ESLint, Prettier, TypeScript, 43 unitarios y build pasan. Se repite backend
+  tras copiar el contrato OpenAPI al contenedor (ausente del montaje local);
+  Playwright corre con `CI=1`. Se mantiene la prohibición de merge a main.
+
+- 08/10/2026, verificación final OT-13: backend 508 tests en 162,455 s;
+  Vitest 43 en 5,35 s; Playwright 24 en 41,9 s; Ruff, ESLint, Prettier,
+  TypeScript y build aprobados. ICU válido en 91 mensajes y 451 filas;
+  634 originales y baja intactos, 425 claves sin colisiones. La primera
+  corrida backend falló por el contrato OpenAPI ausente del montaje; se copió
+  `/contracts` al contenedor y pasó la repetición completa, sin modificar tests.
+  PR #53 integrado con merge commit en `feat/i18n-multiidioma`, con CI verde.
+  PR #54 reapuntado a integración; solo se integra cuando pase el CI de su
+  cabeza final. PR #52 cerrado y sustituido por #53/#54. Ningún merge a main.
 
 ### 10.6 Instrucción para iniciar una sesión
 
