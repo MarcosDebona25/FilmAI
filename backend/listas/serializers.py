@@ -3,7 +3,7 @@
 from rest_framework import serializers
 
 from catalogo.services.adapter import dominio_a_tmdb
-from catalogo.services.traducciones import texto_localizado
+from catalogo.services.traducciones import campos_en_ingles, texto_localizado
 from filmai.errores.base import ExcepcionAPI
 from filmai.errores.serializadores import FronteraErroresMixin
 
@@ -96,6 +96,13 @@ class ListaItemSerializer(serializers.Serializer):
     titulo = serializers.SerializerMethodField()
     poster = serializers.SerializerMethodField()
     anio = serializers.SerializerMethodField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        idioma = self.context.get("idioma")
+        if idioma and idioma != "en":
+            data["campos_en_ingles"] = campos_en_ingles(instance.produccion, idioma)
+        return data
 
     def get_titulo(self, item):
         return texto_localizado(item.produccion, "titulo", self.context.get("idioma"))

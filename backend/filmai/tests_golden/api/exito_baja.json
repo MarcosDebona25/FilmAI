@@ -1,6 +1,6 @@
 {
   "status": 200,
   "body": {
-    "detail": "Tu cuenta fue dada de baja. Tus datos se conservan."
+    "code": "account_deactivated_successfully"
   }
 }

@@ -1,6 +1,8 @@
 {
   "status": 400,
   "body": {
-    "detail": "TMDB returned HTTP 400"
+    "code": "upstream_bad_request",
+    "params": {},
+    "errors": []
   }
 }

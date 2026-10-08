@@ -1,6 +1,8 @@
 {
   "status": 401,
   "body": {
-    "detail": "Autenticación requerida. Por favor, iniciá sesión."
+    "code": "not_authenticated",
+    "params": {},
+    "errors": []
   }
 }

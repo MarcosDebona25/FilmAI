@@ -1,8 +1,14 @@
 {
   "status": 400,
   "body": {
-    "non_field_errors": [
-      "Ya existe una cuenta registrada con este correo. Iniciá sesión con tu contraseña."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "email_already_used",
+        "params": {}
+      }
     ]
   }
 }

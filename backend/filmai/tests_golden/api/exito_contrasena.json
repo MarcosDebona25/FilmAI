@@ -1,6 +1,6 @@
 {
   "status": 200,
   "body": {
-    "detail": "Contraseña actualizada. Inicia sesión nuevamente en tus dispositivos."
+    "code": "password_updated"
   }
 }

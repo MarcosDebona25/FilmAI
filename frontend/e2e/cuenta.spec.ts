@@ -7,13 +7,13 @@ test("el menú admite teclado y Mis reseñas muestra el estado vacío", async ({
   await page.route("**/api/reviews/mias/**", (route) =>
     route.fulfill({ json: { total: 0, next: null, results: [] } })
   );
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await page.getByRole("button", { name: "Menú de usuario" }).click();
   await expect(page.getByRole("menuitem", { name: "Mi perfil" })).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("menuitem", { name: "Mis reseñas" })).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/mis-resenas$/);
+  await expect(page).toHaveURL(/\/my-reviews$/);
   await expect(
     page.getByText("Todavía no calificaste ninguna producción ni escribiste reseñas.")
   ).toBeVisible();

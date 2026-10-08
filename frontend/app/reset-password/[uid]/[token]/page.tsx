@@ -1,17 +1,22 @@
 "use client";
+import { routes } from "@/lib/routes";
+
+import { useLocale, useTranslations } from "next-intl";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch, extraerErroresPorCampo } from "@/lib/api";
-import { validarConfirmacion, validarPassword } from "@/lib/validation";
+import { ApiError, apiFetch } from "@/lib/api";
+import { validarPassword, validarConfirmacion } from "@/lib/validation";
+import { validationError } from "@/lib/validation-error";
+import { translateError, type CodedError } from "@/lib/errors";
 
 const inputClass =
-  "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
+  "w-full rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
 class EnlaceInvalido extends Error {}
 
@@ -28,6 +33,10 @@ function decodificarParametro(valor?: string): string | undefined {
 type Estado = "formulario" | "ok" | "enlace_invalido";
 
 export default function RestablecerContrasenaPage() {
+  const t = useTranslations("legacy.reset");
+
+  const locale = useLocale();
+
   const params = useParams<{ uid: string; token: string }>();
   const [estado, setEstado] = useState<Estado>("formulario");
 
@@ -35,16 +44,18 @@ export default function RestablecerContrasenaPage() {
   const [confirmacion, setConfirmacion] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-  const [errorPassword, setErrorPassword] = useState<string | null>(null);
-  const [errorConfirmacion, setErrorConfirmacion] = useState<string | null>(null);
+  const [errorPassword, setErrorPassword] = useState<CodedError | null>(null);
+  const [errorConfirmacion, setErrorConfirmacion] = useState<CodedError | null>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const confirmationRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
 
   function validarEnBlur(
     valor: string,
-    set: (msg: string | null) => void,
+    set: (msg: CodedError | null) => void,
     validador: () => string | null
   ) {
-    set(valor ? validador() : null);
+    set(valor ? validationError(validador()) : null);
   }
 
   // CU-020: el enlace es válido durante 1 hora. Si el backend responde
@@ -55,8 +66,9 @@ export default function RestablecerContrasenaPage() {
     const errPass = validarPassword(password);
     const errConf = validarConfirmacion(password, confirmacion);
     if (errPass || errConf) {
-      setErrorPassword(errPass);
-      setErrorConfirmacion(errConf);
+      setErrorPassword(validationError(errPass));
+      setErrorConfirmacion(validationError(errConf));
+      (errPass ? passwordRef : confirmationRef).current?.focus();
       return;
     }
     setErrorPassword(null);
@@ -79,19 +91,21 @@ export default function RestablecerContrasenaPage() {
         return;
       }
       if (err instanceof ApiError && err.status === 400) {
-        const codigo =
-          err.details && typeof err.details === "object"
-            ? (err.details as { codigo?: unknown }).codigo
-            : undefined;
-        if (codigo === "invalido") {
+        if (err.code === "link_invalid" || err.code === "link_expired") {
           setEstado("enlace_invalido");
           return;
         }
-        const errores = extraerErroresPorCampo(err.details);
-        setErrorPassword(errores.password1 ?? errores.new_password1 ?? null);
-        setErrorConfirmacion(errores.password2 ?? errores.new_password2 ?? null);
+        const passwordError = err.errors.find((entry) =>
+          ["password1", "new_password1"].includes(entry.field ?? "")
+        );
+        const confirmationError = err.errors.find((entry) =>
+          ["password2", "new_password2"].includes(entry.field ?? "")
+        );
+        setErrorPassword(passwordError ?? null);
+        setErrorConfirmacion(confirmationError ?? (!passwordError ? err : null));
+        (passwordError ? passwordRef : confirmationRef).current?.focus();
       } else {
-        setErrorConfirmacion("No se pudo actualizar la contraseña. Intentá de nuevo.");
+        setErrorConfirmacion(err instanceof ApiError ? err : { code: "unknown" });
       }
     } finally {
       setLoading(false);
@@ -100,15 +114,13 @@ export default function RestablecerContrasenaPage() {
 
   if (estado === "ok") {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
+      <main id="contenido" className="flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center">
           <p className="mb-4 text-2xl font-bold text-foreground">FilmAI</p>
-          <h1 className="mb-3 text-2xl font-bold text-foreground">Contraseña actualizada</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
-            Tu contraseña fue restablecida. Ya podés iniciar sesión con tu nueva contraseña.
-          </p>
-          <Link href="/login" className="text-primary hover:underline">
-            Ir a iniciar sesión
+          <h1 className="mb-3 text-2xl font-bold text-foreground">{t("successTitle")}</h1>
+          <p className="mb-6 text-sm text-foreground/75">{t("successDescription")}</p>
+          <Link href={routes.login} className="text-primary hover:underline">
+            {t("goToLogin")}
           </Link>
         </div>
       </main>
@@ -117,17 +129,13 @@ export default function RestablecerContrasenaPage() {
 
   if (estado === "enlace_invalido") {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
+      <main id="contenido" className="flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center">
           <p className="mb-4 text-2xl font-bold text-foreground">FilmAI</p>
-          <h1 className="mb-3 text-2xl font-bold text-foreground">El enlace no es válido</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
-            Los enlaces de restablecimiento son válidos durante 1 hora o hasta que se usen. Podés
-            pedir uno nuevo desde &quot;¿Olvidaste tu contraseña?&quot; en la pantalla de inicio de
-            sesión.
-          </p>
-          <Link href="/login" className="text-primary hover:underline">
-            Volver a iniciar sesión
+          <h1 className="mb-3 text-2xl font-bold text-foreground">{t("invalidTitle")}</h1>
+          <p className="mb-6 text-sm text-foreground/75">{t("invalidDescription")}</p>
+          <Link href={routes.login} className="text-primary hover:underline">
+            {t("backToLogin")}
           </Link>
         </div>
       </main>
@@ -135,23 +143,22 @@ export default function RestablecerContrasenaPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
+    <main id="contenido" className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8">
         <p className="mb-4 text-center text-2xl font-bold text-foreground">FilmAI</p>
-        <h1 className="mb-1 text-2xl font-bold text-foreground">Crear nueva contraseña</h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Elegí una contraseña nueva para tu cuenta.
-        </p>
+        <h1 className="mb-1 text-2xl font-bold text-foreground">{t("title")}</h1>
+        <p className="mb-6 text-sm text-foreground/75">{t("description")}</p>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
           <div>
-            <label htmlFor="nueva-password" className="mb-1 block text-sm text-muted-foreground">
-              Nueva contraseña
+            <label htmlFor="nueva-password" className="mb-1 block text-sm text-foreground/75">
+              {t("passwordLabel")}
             </label>
             <div className="relative">
               <input
                 id="nueva-password"
-                className={inputClass}
+                ref={passwordRef}
+                className={`${inputClass} pr-12`}
                 type={mostrarPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -159,39 +166,36 @@ export default function RestablecerContrasenaPage() {
                   validarEnBlur(password, setErrorPassword, () => validarPassword(password))
                 }
                 autoComplete="new-password"
+                aria-invalid={Boolean(errorPassword)}
                 required
               />
               <button
                 type="button"
                 onClick={() => setMostrarPassword((v) => !v)}
-                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
-                aria-label="Mostrar u ocultar contraseña"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground/75 focus-visible:outline-2 focus-visible:outline-ring"
+                aria-label={t("togglePassword")}
               >
                 {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              De 8 a 20 caracteres, con mayúscula, minúscula, número y carácter especial
-              (@#$%&amp;!).
-            </p>
+            <p className="mt-1 text-xs text-foreground/75">{t("passwordHelp")}</p>
             {errorPassword && (
               <p className="mt-1 text-sm text-destructive" role="alert">
-                {errorPassword}
+                {translateError(errorPassword, locale, "password1")}
               </p>
             )}
           </div>
 
           <div>
-            <label
-              htmlFor="confirmar-password"
-              className="mb-1 block text-sm text-muted-foreground"
-            >
-              Confirmar contraseña
+            <label htmlFor="confirmar-password" className="mb-1 block text-sm text-foreground/75">
+              {t("confirmLabel")}
             </label>
             <div className="relative">
               <input
                 id="confirmar-password"
-                className={`${inputClass} pr-10`}
+                ref={confirmationRef}
+                aria-invalid={Boolean(errorConfirmacion)}
+                className={`${inputClass} pr-12`}
                 type={mostrarConfirmacion ? "text" : "password"}
                 value={confirmacion}
                 onChange={(e) => setConfirmacion(e.target.value)}
@@ -206,21 +210,30 @@ export default function RestablecerContrasenaPage() {
               <button
                 type="button"
                 onClick={() => setMostrarConfirmacion((v) => !v)}
-                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
-                aria-label="Mostrar u ocultar confirmación"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground/75 focus-visible:outline-2 focus-visible:outline-ring"
+                aria-label={t("toggleConfirmation")}
               >
                 {mostrarConfirmacion ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
             {errorConfirmacion && (
               <p className="mt-1 text-sm text-destructive" role="alert">
-                {errorConfirmacion}
+                {translateError(errorConfirmacion, locale, "password2")}
               </p>
             )}
           </div>
 
-          <Button type="submit" disabled={loading} size="lg">
-            {loading ? "Guardando…" : "Actualizar contraseña"}
+          <Button
+            className="min-h-11"
+            type="submit"
+            aria-busy={loading}
+            disabled={loading}
+            size="lg"
+          >
+            {loading && (
+              <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden="true" />
+            )}
+            {t("save")}
           </Button>
         </form>
       </div>

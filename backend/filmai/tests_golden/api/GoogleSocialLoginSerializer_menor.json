@@ -1,4 +1,14 @@
 {
   "status": 400,
-  "body": ["Debés tener al menos 13 años."]
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "minimum_age",
+        "params": {}
+      }
+    ]
+  }
 }

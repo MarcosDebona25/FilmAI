@@ -118,7 +118,7 @@ class CrearCalificacionTests(_BaseResenas):
         respuesta = self._calificar(valor=4)
 
         self.assertEqual(respuesta.status_code, 409)
-        self.assertEqual(respuesta.data["codigo"], "calificacion_duplicada")
+        self.assertEqual(respuesta.data["code"], "rating_duplicated")
         self.assertEqual(Calificacion.objects.count(), 1)
         self.assertEqual(Calificacion.objects.get().valor, 9)  # no la pisó
 
@@ -179,7 +179,9 @@ class ValidacionCalificacionTests(_BaseResenas):
                 respuesta = self._calificar(valor=valor)
 
                 self.assertEqual(respuesta.status_code, 400)
-                self.assertIn("valor", respuesta.data)
+                self.assertIn(
+                    "valor", {entry["field"] for entry in respuesta.data["errors"]}
+                )
                 self.assertFalse(Calificacion.objects.exists())
 
     def test_calificar_es_obligatorio(self):
@@ -192,13 +194,13 @@ class ValidacionCalificacionTests(_BaseResenas):
         )
 
         self.assertEqual(respuesta.status_code, 400)
-        self.assertIn("valor", respuesta.data)
+        self.assertIn("valor", {entry["field"] for entry in respuesta.data["errors"]})
 
     def test_el_texto_no_pasa_de_1000_caracteres(self):
         respuesta = self._calificar(texto="x" * 1001)
 
         self.assertEqual(respuesta.status_code, 400)
-        self.assertIn("texto", respuesta.data)
+        self.assertIn("texto", {entry["field"] for entry in respuesta.data["errors"]})
         self.assertFalse(Calificacion.objects.exists())
 
     def test_mil_caracteres_justos_entran(self):
@@ -212,7 +214,7 @@ class ValidacionCalificacionTests(_BaseResenas):
         respuesta = self._calificar(tipo="person")
 
         self.assertEqual(respuesta.status_code, 400)
-        self.assertIn("tipo", respuesta.data)
+        self.assertIn("tipo", {entry["field"] for entry in respuesta.data["errors"]})
         self.materializar.assert_not_called()
 
     def test_no_se_llama_a_tmdb_si_el_payload_es_invalido(self):
@@ -290,7 +292,7 @@ class ActualizarCalificacionTests(_BaseResenas):
         )
 
         self.assertEqual(respuesta.status_code, 400)
-        self.assertIn("texto", respuesta.data)
+        self.assertIn("texto", {entry["field"] for entry in respuesta.data["errors"]})
         self.assertEqual(calificacion.resena.texto, _RESENA)
 
     def test_el_valor_sigue_validandose_al_actualizar(self):
@@ -622,7 +624,7 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
             bloqueado = self._quitar_de_vistas(item_id)
             self.assertEqual(bloqueado.status_code, 409)
             self.assertEqual(
-                bloqueado.data["codigo"], "calificacion_impide_quitar_de_vistas"
+                bloqueado.data["code"], "rating_blocks_removal_from_watched"
             )
 
             # Borrar SOLO el texto no alcanza: la regla mira la calificación.

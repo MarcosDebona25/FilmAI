@@ -15,34 +15,12 @@ Django validators → typed error + catalog → handler / explicit Response norm
 
 ## Implementation progress
 
-OT-30 starts with the general/domain/success registry and its typed exception.
-HTTP contexts, parameter types and nonnegative known waits are validated there.
-Validation leaf definitions and metadata preservation are also implemented,
-including an explicit bridge for Django error lists and configured parameters.
-The pure envelope builder and legacy-body merger are implemented and tested.
-The metadata carrier must be constructed after the final DRF conversion; it
-is not guaranteed to survive validate/validate_<field> rewrapping.
-OT-31 now provides a shared final `Serializer.is_valid` boundary. It derives
-limits and choices from real fields and password-validator configuration,
-preserves nested/list paths and supports explicit field identity overrides
-without changing legacy bodies. Profile and preference serializers adopt this
-boundary; person-name, username-format and avatar validators provide typed
-codes and configuration-derived parameters. Password request/reset/change
-serializers also adopt it, preserving Django codes and configured limits;
-password complexity exposes the same limits and special characters it applies.
-Traditional registration also provides typed local validation codes and
-normalizes its second password validation at `save`, preserving its legacy
-non-field-error shape. Direct link errors, successful responses and other user
-origins remain pending. Google serializers provide codes for required fields,
-profile rules, duplicates and operational failures; a missing token identifies
-`id_token` while preserving legacy non-field errors. Specific provider credential
-classification remains OT-32; account-state behavior remains OT-33.
-OT-32 depends technically on this first OT-31 unit and reuses it.
-The global handler now adds the envelope for recognized DRF/core exceptions, preserving legacy fields,
-HTTP statuses and headers. TMDB retains its early return; direct endpoint
-responses and unregistered vendor origins await OT-31/OT-32, with mandatory
-full coverage in OT-34.
-The requirements below describe the completed contract, not this partial delivery.
+F3 registered typed errors and emitted the envelope alongside previous bodies.
+OT-82 migrated response assertions and golden references to codes while both
+forms were emitted. OT-83 removes the previous public fields. All error responses
+now contain only `code`, `params`, `errors` and conditional `debug`; successful
+responses preserve machine data and `code`, without `detail`. The final serializer
+boundary preserves validation identities, nested paths and configured parameters.
 
 ## Requirements
 
@@ -134,15 +112,15 @@ exact existing messages and aliases; these tables define public semantics.
 | `session_revoked`                    | 401                                   | Valid JWT no longer matches the user's current password hash.                                             |
 | `account_deactivated`                | 403                                   | Login to a deactivated account, only after credentials are verified.                                      |
 | `account_pending_confirmation`       | 403                                   | Login to a pending account, only after credentials are verified.                                          |
-| `link_expired`                       | 400                                   | Confirmation signature expired; legacy `codigo: expirado`.                                                |
-| `link_invalid`                       | 400                                   | Bad/missing confirmation or reset token; legacy `codigo: invalido`. Reset expiry stays indistinguishable. |
-| `already_confirmed`                  | 400                                   | Already consumed/cannot reactivate; legacy `codigo: ya_confirmada`.                                       |
-| `list_name_duplicated`               | 409                                   | Existing name; legacy `codigo: nombre_lista_duplicado`.                                                   |
+| `link_expired`                       | 400                                   | Confirmation signature expired.                                                |
+| `link_invalid`                       | 400                                   | Bad/missing confirmation or reset token. Reset expiry stays indistinguishable. |
+| `already_confirmed`                  | 400                                   | Already consumed/cannot reactivate.                                       |
+| `list_name_duplicated`               | 409                                   | Existing name.                                                   |
 | `list_name_reserved`                 | 409                                   | Reserved default-list label in ES or EN; no params. OT-41 approval.                                      |
-| `list_item_duplicated`               | 409                                   | Existing membership; legacy `codigo: item_duplicado`.                                                     |
-| `default_list_protected`             | 409                                   | Cannot rename/delete default list; legacy `codigo: lista_predeterminada_protegida`.                       |
-| `rating_blocks_removal_from_watched` | 409                                   | Remove rating first; legacy `codigo: calificacion_impide_quitar_de_vistas`.                               |
-| `rating_duplicated`                  | 409                                   | Existing rating; legacy `codigo: calificacion_duplicada`.                                                 |
+| `list_item_duplicated`               | 409                                   | Existing membership.                                                     |
+| `default_list_protected`             | 409                                   | Cannot rename/delete default list.                       |
+| `rating_blocks_removal_from_watched` | 409                                   | Remove rating first.                               |
+| `rating_duplicated`                  | 409                                   | Existing rating.                                                 |
 | `username_already_used`              | 400 validation / 409 profile conflict | Username already registered; profile conflict has empty errors.                                           |
 
 #### Validation leaf codes
@@ -274,7 +252,7 @@ unknown waits was explicitly approved by the user for OT-11.
 ### Requirement: Code-bearing successful responses
 
 Successful responses that currently contain UI text MUST add these codes in F3
-and remove their legacy `detail` in OT-83. Payloads with data retain those data;
+without `detail` after OT-83. Payloads with data retain those data;
 204 responses remain empty. Do not inject error arrays into successful bodies.
 
 | Current response / origin                                              | New code                                                                                                                 |
@@ -299,19 +277,18 @@ lookup uses `errors.fields.<field>.<code>`, then `errors.codes.<code>`, then
 Parameters used by ICU follow their declared name; the helper maps the explicit
 API key `retry_after_seconds` to ICU's `retryAfterSeconds` centrally.
 
-### Requirement: Compatibility and verification gates
+### Requirement: Definitive contract and verification gates
 
-F3–F7 MUST add the envelope alongside every existing detail/codigo/field key.
-Non-object root validation lists are normalized; their contents survive as
-`non_field_errors` during the compatibility window. Codes MUST be obtained
-from typed exceptions/validators, never inferred from message text.
-The user authorized adaptations to new F0 tests when a phase deliberately
-changes their observed behavior. OT-30 projects legacy fields in OT-01 and
-OT-02 account-state characterizations while testing the new envelope separately;
-it preserves the full account-state/credential matrix and the original goldens. Deliberate F0
-reference changes need a reviewed diff and explicit regeneration environment
-variable. Pre-plan tests retain the phase's original exceptions.
-OT-82 migrates old assertions to codes; OT-83 removes legacy text keys.
+Error bodies MUST contain no keys beyond `code`, `params`, `errors` and optional
+`debug`. Root validation lists MUST become leaves with null fields. Success
+payloads MUST retain their machine data and stable code, without `detail`.
+Codes come from typed exceptions and validators, never from message text.
+
+OT-82 migrated the response assertions before removing previous fields in OT-83.
+The HTTP, account-state/credential and validation matrices remain covered.
+Deliberate golden regeneration uses an explicit environment variable; the
+references now compare the public envelope. The suite's test client rejects any
+extra key on every 4xx/5xx JSON response under `/api/`.
 
 #### Scenario: Contract verification
 

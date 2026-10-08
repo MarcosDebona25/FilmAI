@@ -362,3 +362,7 @@ Referencia de verificación: [WebAIM WCAG 2 Checklist](https://webaim.org/standa
 | [`04_Lineamientos UI`](docs/04_Lineamientos_UI.md)                                            | Diseño de interfaces, componentes y accesibilidad         |
 | [`05_Plan de Desarrollo`](docs/05_Plan_de_Desarrollo.md)                                      | Tareas, criterios y estado de los módulos                 |
 | [`06_TMDB API Referencia`](docs/06_TMDB_API_Referencia.md)                                    | Referencia técnica de la API de TMDB                      |
+
+### Multiidioma
+
+Preferencias, confirmación de correo y restablecimiento funcionan en inglés y español. Las otras pantallas conservan su copia heredada hasta integrar sus diseños. Consultá [la guía](docs/i18n/guia.md) para textos, errores, formatos, selectores y verificaciones. El estado de aceptación está en [siguientes pasos](docs/siguientes-pasos-multiidioma.md).

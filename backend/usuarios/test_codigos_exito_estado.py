@@ -22,7 +22,7 @@ class EsperaDelLimiteTests(SimpleTestCase):
         self.assertEqual(respuesta.data["code"], "throttled")
         self.assertEqual(respuesta.data["params"], {"retry_after_seconds": 42})
         self.assertIn("Retry-After", respuesta)
-        self.assertIn("detail", respuesta.data)
+        self.assertIn("code", respuesta.data)
 
     def test_sin_espera_conocida_no_hay_parametros(self):
         respuesta = filmai_exception_handler(Throttled(), {})
@@ -53,7 +53,7 @@ class EstadosDeCuentaEnLoginTests(TestCase):
                     r = self._login(usuario, campo, "Password123!")
                     self.assertEqual(r.status_code, 403)
                     self.assertEqual(r.json()["code"], codigo)
-                    self.assertEqual(r.json()["detail"], GENERICO)
+                    self.assertIn("code", r.json())
 
     def test_credencial_incorrecta_nunca_revela_el_estado(self):
         activo = UsuarioFactory()
@@ -87,7 +87,7 @@ class CodigosDeExitoTests(TestCase):
 
     def test_csrf(self):
         r = self.cliente.get("/api/auth/csrf/")
-        self.assertEqual((r.json()["detail"], r.json()["code"]), ("ok", "csrf_ready"))
+        self.assertEqual(r.json()["code"], "csrf_ready")
 
     def test_recuperacion_conserva_intentos_restantes(self):
         r = self.cliente.post(
@@ -96,14 +96,14 @@ class CodigosDeExitoTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json()["code"], "password_reset_requested")
         self.assertIn("intentos_restantes", r.json())
-        self.assertIn("detail", r.json())
+        self.assertIn("code", r.json())
 
     def test_baja_de_cuenta(self):
         usuario = UsuarioFactory()
         self._autenticar(usuario)
         r = self.cliente.post("/api/account/deactivate/", {}, format="json")
         self.assertEqual(r.json()["code"], "account_deactivated_successfully")
-        self.assertIn("detail", r.json())
+        self.assertIn("code", r.json())
 
     def test_registro_y_reenvio(self):
         r = self.cliente.post(
@@ -122,7 +122,7 @@ class CodigosDeExitoTests(TestCase):
         )
         self.assertEqual(r.status_code, 201)
         self.assertEqual(r.json()["code"], "registration_pending_confirmation")
-        self.assertIn("detail", r.json())
+        self.assertIn("code", r.json())
         self.assertEqual(len(mail.outbox), 1)
         r = self.cliente.post(
             "/api/auth/registration/resend-email/",
@@ -142,7 +142,7 @@ class CodigosDeExitoTests(TestCase):
         r = self.cliente.post("/api/auth/logout/")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json()["code"], "logged_out")
-        self.assertIn("detail", r.json())
+        self.assertIn("code", r.json())
 
 
 class ConfirmacionDeCorreoTests(TestCase):

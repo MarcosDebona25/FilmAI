@@ -37,13 +37,13 @@ class CorreosContratoTests(TestCase):
 
         def normalizar(texto):
             texto = re.sub(
-                r"/confirmar-correo/[^/\s\"<]+/",
-                "/confirmar-correo/<key>/",
+                r"/confirm-email/[^/\s\"<]+/",
+                "/confirm-email/<key>/",
                 texto,
             )
             texto = re.sub(
-                r"/restablecer-contrasena/[^/\s\"<]+/[^/\s\"<]+/",
-                "/restablecer-contrasena/<uid>/<token>/",
+                r"/reset-password/[^/\s\"<]+/[^/\s\"<]+/",
+                "/reset-password/<uid>/<token>/",
                 texto,
             )
             # El año del pie cambia solo; no es parte de la copia.

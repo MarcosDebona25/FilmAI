@@ -20,7 +20,9 @@ class CodigosValidacionListasTests(TestCase):
     def _hoja(self, respuesta):
         self.assertEqual(respuesta.status_code, 400)
         self.assertEqual(respuesta.data["code"], "validation_error")
-        self.assertIn("nombre", respuesta.data)  # clave heredada intacta
+        self.assertIn(
+            "nombre", {entry["field"] for entry in respuesta.data["errors"]}
+        )  # clave heredada intacta
         self.assertEqual(len(respuesta.data["errors"]), 1)
         return respuesta.data["errors"][0]
 
@@ -51,7 +53,7 @@ class CodigosValidacionListasTests(TestCase):
         Lista.objects.create(usuario=self.usuario, nombre="Mi lista")
         respuesta = self._crear("mi lista")
         self.assertEqual(respuesta.status_code, 409)
-        self.assertEqual(respuesta.data["codigo"], "nombre_lista_duplicado")
+        self.assertEqual(respuesta.data["code"], "list_name_duplicated")
         self.assertEqual(respuesta.data["code"], "list_name_duplicated")
 
     def test_consulta_de_pertenencia_invalida_informa_campo_y_codigo(self):

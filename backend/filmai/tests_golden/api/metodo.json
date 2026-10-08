@@ -1,6 +1,8 @@
 {
   "status": 405,
   "body": {
-    "detail": "Método HTTP Método \"GET\" no permitido. no permitido para este endpoint."
+    "code": "method_not_allowed",
+    "params": {},
+    "errors": []
   }
 }

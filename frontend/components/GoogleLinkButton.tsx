@@ -1,4 +1,5 @@
 "use client";
+import { routes } from "@/lib/routes";
 
 import { useRouter } from "next/navigation";
 
@@ -7,7 +8,7 @@ import { marcarGooglePendiente } from "@/lib/google-auth";
 /** Botón estilizado de Google que inicia el flujo de registro con Google.
  *
  * A diferencia de `GoogleButton` (que abre el popup de Google), este solo
- * marca el flujo pendiente y navega a /completar-google, donde se pide el
+ * marca el flujo pendiente y navega a /complete-signup, donde se pide el
  * id_token junto con los datos faltantes (un único toque de Google).
  */
 export function GoogleLinkButton({ label = "Crear cuenta con Google" }: { label?: string }) {
@@ -18,7 +19,7 @@ export function GoogleLinkButton({ label = "Crear cuenta con Google" }: { label?
       type="button"
       onClick={() => {
         marcarGooglePendiente();
-        router.push("/completar-google");
+        router.push(routes.completeSignup);
       }}
       className="flex h-11 w-full max-w-xs items-center justify-center gap-3 rounded-md bg-[#1a1a1a] px-4 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label={label}

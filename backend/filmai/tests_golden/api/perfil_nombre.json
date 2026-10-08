@@ -1,4 +1,14 @@
 {
   "status": 400,
-  "body": ["Solo letras y espacios entre palabras, máximo 50 caracteres."]
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "person_name_invalid",
+        "params": {}
+      }
+    ]
+  }
 }

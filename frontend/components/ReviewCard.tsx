@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/lib/format";
 import Image from "next/image";
 import { Film, Star, MessageSquareDashed } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -13,6 +15,8 @@ export function ReviewCard({
   item: MiResena;
   onAction: (action: "edit" | "text" | "rating") => void;
 }) {
+  const formats = useFormats();
+  const content = useTranslations("common.content");
   const [expanded, setExpanded] = useState(false);
   const [truncated, setTruncated] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -60,18 +64,21 @@ export function ReviewCard({
         </div>
         <div className="min-w-0">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-            <h2 className="break-words text-lg font-semibold">{item.titulo}</h2>
+            <h2
+              lang={item.campos_en_ingles?.includes("titulo") ? "en" : undefined}
+              className="break-words text-lg font-semibold"
+            >
+              {item.titulo}
+            </h2>
             <time
               dateTime={item.fecha}
               className="pt-1 text-right text-xs tabular-nums text-foreground/75"
             >
-              {new Intl.DateTimeFormat("es-AR", { timeZone: "UTC" }).format(
-                new Date(`${item.fecha}T00:00:00Z`)
-              )}
+              {formats.date(item.fecha)}
             </time>
           </div>
           <p className="text-sm text-foreground/75">
-            {item.tipo === "movie" ? "Película" : "Serie"}
+            {content(item.tipo === "movie" ? "movie" : "tvShow")}
           </p>
           <p className="mt-1 text-sm tabular-nums">
             <span

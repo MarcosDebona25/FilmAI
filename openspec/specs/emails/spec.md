@@ -86,7 +86,7 @@ that Django interprets ICU syntax or adding a frontend i18n runtime to emails.
 
 Confirmation links MUST use `FRONTEND_URL/confirm-email/<key>/` and reset links
 MUST use `FRONTEND_URL/reset-password/<uid>/<token>/` after OT-75's coordinated
-route migration. Before that order, retain the existing Spanish routes.
+route migration. OT-75 migrates frontend routes, backend URLs, tests and golden mail references together.
 The password-updated recovery action MUST lead to the actual login/recovery
 flow; no new recovery endpoint or reusable reset token is invented.
 
@@ -147,6 +147,15 @@ All eight variants (4 cases × `en`/`es`) render subject, text and HTML from
 `correos/base_<locale>.html` copy. Callers pass `idioma_efectivo(request,
 user)`. Expiry hours come from settings through `vigencia_en_horas`. The
 password-updated action links to `FRONTEND_URL/login/`. The nameless greeting
-fallback (`usuario` / `there`) was approved by the user on 08/10/2026. Routes in
-links remain the Spanish ones until OT-75. Manual review in a real client is
-still pending.
+fallback (`usuario` / `there`) was approved by the user on 08/10/2026. OT-75 switches links to the English routes. Rendering is verified in both
+languages; review in a real mail client is still pending.
+
+
+### OT-75/90 follow-up
+
+Links MUST NOT force the recipient's language on the receiving browser: use
+that device's cookie, then browser preference, then English (confirmed by the
+user on 08/10/2026). The pilot routes support both locales. HTML previews and
+EML files for all eight variants live under `docs/i18n/revision-correos/`; no
+external mail was sent to create them. Do not equate browser rendering with
+verification in Gmail/Outlook/another real email client.

@@ -68,7 +68,7 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
 
     def get_email_confirmation_url(self, request, emailconfirmation):
         """Envía la confirmación a la pantalla correspondiente de la SPA."""
-        return f"{settings.FRONTEND_URL}/confirmar-correo/{emailconfirmation.key}/"
+        return f"{settings.FRONTEND_URL}/confirm-email/{emailconfirmation.key}/"
 
 
 class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):

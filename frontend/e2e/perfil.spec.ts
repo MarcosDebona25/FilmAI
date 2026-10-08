@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+import es from "../messages/es/common.json";
 import { prepararCuenta } from "./cuenta";
 
 test("edita nombre compuesto y avatar; la navbar refleja el cambio", async ({ page }) => {
   const cuenta = await prepararCuenta(page);
-  await page.goto("/perfil");
+  await page.goto("/profile");
   await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
   await expect(page.getByText("Pérez", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Editar perfil" }).click();
@@ -28,30 +29,28 @@ test("edita nombre compuesto y avatar; la navbar refleja el cambio", async ({ pa
     avatar_id: 26,
   });
   await expect(
-    page
-      .getByRole("button", { name: "Menú de usuario" })
-      .getByAltText("Avatar de Juan Carlos De la Cruz")
+    page.getByRole("button", { name: "Menú de usuario" }).getByAltText(es.common.avatar.currentAlt)
   ).toBeVisible();
 });
 
 test("enfoca el dato inválido y advierte antes de perder cambios", async ({ page }) => {
   await prepararCuenta(page);
-  await page.goto("/perfil");
+  await page.goto("/profile");
   await page.getByRole("button", { name: "Editar perfil" }).click();
   await page.getByLabel("Apellido", { exact: true }).fill("123");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByLabel("Apellido", { exact: true })).toBeFocused();
-  await expect(page.locator("#apellido-error")).toContainText("Solo letras");
+  await expect(page.locator("#apellido-error")).toHaveText(es.errors.codes.person_name_invalid);
 
-  await page.getByRole("link", { name: "FilmAI" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "FilmAI", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "¿Salir sin guardar?" })).toBeVisible();
   await page.getByRole("button", { name: "Seguir editando" }).click();
-  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page).toHaveURL(/\/profile$/);
 });
 
 test("cancelar conserva el borrador o descarta solo tras confirmar", async ({ page }) => {
   const cuenta = await prepararCuenta(page);
-  await page.goto("/perfil");
+  await page.goto("/profile");
   await page.getByRole("button", { name: "Editar perfil" }).click();
   await page.getByRole("button", { name: "Cambiar avatar" }).click();
   await page.getByRole("radio", { name: "Avatar 2", exact: true }).check();
@@ -67,7 +66,7 @@ test("cancelar conserva el borrador o descarta solo tras confirmar", async ({ pa
 });
 test("confirma navegación a un enlace y atrás/adelante sin perder el destino", async ({ page }) => {
   await prepararCuenta(page);
-  await page.goto("/preferencias");
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Menú de usuario" }).click();
   await page.getByRole("menuitem", { name: "Mi perfil" }).click();
   await page.getByRole("button", { name: "Editar perfil" }).click();
@@ -75,16 +74,16 @@ test("confirma navegación a un enlace y atrás/adelante sin perder el destino",
   await page.evaluate(() => history.back());
   await expect(page.getByRole("dialog", { name: "¿Salir sin guardar?" })).toBeVisible();
   await page.getByRole("button", { name: "Seguir editando" }).click();
-  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page).toHaveURL(/\/profile$/);
   await expect(page.getByLabel("Nombre", { exact: true })).toHaveValue("Pedro");
   await page.evaluate(() => history.back());
   await page.getByRole("button", { name: "Salir sin guardar" }).click();
-  await expect(page).toHaveURL(/\/preferencias$/);
+  await expect(page).toHaveURL(/\/settings$/);
   await page.evaluate(() => history.forward());
-  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page).toHaveURL(/\/profile$/);
   await page.getByRole("button", { name: "Editar perfil" }).click();
   await page.getByLabel("Nombre", { exact: true }).fill("Otro");
-  await page.getByRole("link", { name: "FilmAI" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "FilmAI", exact: true }).click();
   await page.getByRole("button", { name: "Salir sin guardar" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/");
 });
@@ -97,7 +96,7 @@ for (const theme of ["oscuro", "claro"])
     await page.route("**/api/auth/username-available/**", (route) =>
       route.fulfill({ json: { disponible: !route.request().url().includes("ocupado") } })
     );
-    await page.goto("/perfil");
+    await page.goto("/profile");
     await page.getByRole("button", { name: "Editar perfil" }).click();
     await page.getByLabel("Nombre de usuario", { exact: true }).fill("disponible");
     await expect(page.getByText("Disponible", { exact: true })).toHaveClass(/text-green/);
@@ -107,26 +106,26 @@ for (const theme of ["oscuro", "claro"])
 
 test("adelante con cambios permite continuar editando o confirmar el destino", async ({ page }) => {
   await prepararCuenta(page);
-  await page.goto("/perfil");
+  await page.goto("/profile");
   await page.getByRole("button", { name: "Menú de usuario" }).click();
   await page.getByRole("menuitem", { name: "Preferencias" }).click();
-  await expect(page).toHaveURL(/\/preferencias$/);
+  await expect(page).toHaveURL(/\/settings$/);
   await page.evaluate(() => history.back());
   await page.getByRole("button", { name: "Editar perfil" }).click();
   await page.getByLabel("Nombre", { exact: true }).fill("Pedro");
   await page.evaluate(() => history.forward());
   await page.getByRole("button", { name: "Seguir editando" }).click();
-  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page).toHaveURL(/\/profile$/);
   await expect(page.getByLabel("Nombre", { exact: true })).toHaveValue("Pedro");
   await page.evaluate(() => history.forward());
   await page.getByRole("button", { name: "Salir sin guardar" }).click();
-  await expect(page).toHaveURL(/\/preferencias$/);
+  await expect(page).toHaveURL(/\/settings$/);
 });
 test("recargar usa aviso nativo y Escape cierra el selector sin cambiar avatar", async ({
   page,
 }) => {
   const state = await prepararCuenta(page);
-  await page.goto("/perfil");
+  await page.goto("/profile");
   await page.getByRole("button", { name: "Editar perfil" }).click();
   await page.getByRole("button", { name: "Cambiar avatar" }).focus();
   await page.keyboard.press("Enter");

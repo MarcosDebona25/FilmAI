@@ -24,6 +24,21 @@ def texto_localizado(produccion, campo, idioma):
     return getattr(produccion, campo)
 
 
+def campos_en_ingles(produccion, idioma, campos=("titulo", "poster")):
+    """Marca el respaldo canónico sin consultar traducciones por cada campo."""
+    if not idioma or idioma == settings.IDIOMA_POR_DEFECTO:
+        return []
+    traduccion = next(
+        (fila for fila in produccion.traducciones.all() if fila.idioma == idioma), None
+    )
+    return [
+        campo
+        for campo in campos
+        if getattr(produccion, campo)
+        and (traduccion is None or not getattr(traduccion, campo))
+    ]
+
+
 def pendientes():
     """Producciones enriquecidas a las que les falta alguna traducción o los ids."""
     esperadas = len(idiomas_traducidos())

@@ -1,6 +1,8 @@
 {
   "status": 503,
   "body": {
-    "detail": "Invalid JSON response from TMDB"
+    "code": "upstream_unavailable",
+    "params": {},
+    "errors": []
   }
 }

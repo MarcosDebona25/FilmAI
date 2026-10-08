@@ -28,7 +28,7 @@ class CodigosTMDBTests(SimpleTestCase):
             with self.subTest(codigo=codigo):
                 respuesta = filmai_exception_handler(exc, {})
                 self.assertEqual(respuesta.status_code, estado)
-                self.assertEqual(respuesta.data["detail"], "x")
+                self.assertIn("code", respuesta.data)
                 self.assertEqual(respuesta.data["code"], codigo)
                 self.assertEqual(respuesta.data["params"], {})
                 self.assertEqual(respuesta.data["errors"], [])
@@ -56,12 +56,12 @@ class CodigosParametrosCatalogoTests(TestCase):
 
     def test_busqueda_sin_query(self):
         cuerpo, hoja = self._hoja("/api/catalogo/search/?tipo=movie")
-        self.assertEqual(cuerpo["query"], "This parameter is required.")
+        self.assertNotIn("query", cuerpo)
         self.assertEqual(hoja, {"field": "query", "code": "required", "params": {}})
 
     def test_tipo_invalido_informa_valores_permitidos(self):
         cuerpo, hoja = self._hoja("/api/catalogo/search/?query=a&tipo=person")
-        self.assertEqual(cuerpo["tipo"], "Must be either 'movie' or 'tv'.")
+        self.assertNotIn("tipo", cuerpo)
         self.assertEqual(hoja["code"], "invalid_choice")
         self.assertEqual(hoja["params"], {"allowedValues": ["movie", "tv"]})
 

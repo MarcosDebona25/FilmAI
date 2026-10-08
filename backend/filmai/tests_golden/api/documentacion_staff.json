@@ -1,6 +1,8 @@
 {
   "status": 403,
   "body": {
-    "detail": "Para consultar esta documentación, ingresá al Admin con una cuenta staff."
+    "code": "documentation_staff_required",
+    "params": {},
+    "errors": []
   }
 }

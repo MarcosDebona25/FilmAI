@@ -22,10 +22,7 @@ class ErroresPerfilTests(TestCase):
         """La conversión Django→DRF conserva código, límite y cuerpo anterior."""
         response = self.client.put("/api/profile/", {"nombre": "Ana123"}, format="json")
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["nombre"],
-            ["Solo letras y espacios entre palabras, máximo 50 caracteres."],
-        )
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(
             response.data["errors"],
@@ -65,16 +62,16 @@ class ErroresPerfilTests(TestCase):
                         else []
                     ),
                 )
-                self.assertIn("nombre_usuario", response.data)
+                self.assertIn(
+                    "nombre_usuario",
+                    {entry["field"] for entry in response.data["errors"]},
+                )
 
     def test_avatar_devuelve_ids_del_registro_y_el_detalle_anterior(self):
         """Los IDs traducibles salen del registro activo y conservan el texto previo."""
         response = self.client.put("/api/profile/", {"avatar_id": 999}, format="json")
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["avatar_id"],
-            [f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}"],
-        )
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(
             response.data["errors"],
             [
@@ -95,9 +92,7 @@ class ErroresPerfilTests(TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.data["code"], "username_already_used")
         self.assertEqual(response.data["errors"], [])
-        self.assertEqual(
-            response.data["nombre_usuario"], "El nombre de usuario ya está registrado."
-        )
+        self.assertEqual(response.data["code"], "username_already_used")
 
     def test_preferencias_usa_claves_machine_y_rechaza_null_sin_params(self):
         """Idioma inválido enumera claves soportadas; null conserva su propio código."""
@@ -118,6 +113,8 @@ class ErroresPerfilTests(TestCase):
                     response.data["errors"],
                     [{"field": "idioma", "code": codigo, "params": parametros}],
                 )
-                self.assertIn("idioma", response.data)
+                self.assertIn(
+                    "idioma", {entry["field"] for entry in response.data["errors"]}
+                )
         self.usuario.refresh_from_db()
         self.assertIsNone(self.usuario.idioma)

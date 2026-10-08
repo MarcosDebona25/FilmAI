@@ -1,6 +1,17 @@
 {
   "status": 400,
   "body": {
-    "nombre_usuario": ["Alfanumérico, 5-25 caracteres."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "nombre_usuario",
+        "code": "username_invalid",
+        "params": {
+          "minLength": 5,
+          "maxLength": 25
+        }
+      }
+    ]
   }
 }

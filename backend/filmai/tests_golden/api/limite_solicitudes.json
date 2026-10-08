@@ -1,6 +1,10 @@
 {
   "status": 429,
   "body": {
-    "detail": "Demasiadas solicitudes. Intentá de nuevo más tarde."
+    "code": "throttled",
+    "params": {
+      "retry_after_seconds": 42
+    },
+    "errors": []
   }
 }

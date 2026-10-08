@@ -42,9 +42,9 @@ for (const locale of ["es", "en"] as const) {
     );
     const messages = (locale === "es" ? es : en).legacy.metadata;
     for (const [path, title] of [
-      ["/perfil", messages.profile],
-      ["/preferencias", messages.settings],
-      ["/mis-resenas", messages.myReviews],
+      ["/profile", messages.profile],
+      ["/settings", messages.settings],
+      ["/my-reviews", messages.myReviews],
     ]) {
       await page.goto(path);
       await expect(page).toHaveTitle(`${title} | FilmAI`);

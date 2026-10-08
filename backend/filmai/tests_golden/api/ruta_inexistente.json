@@ -1,6 +1,8 @@
 {
   "status": 404,
   "body": {
-    "detail": "La ruta solicitada no existe."
+    "code": "not_found",
+    "params": {},
+    "errors": []
   }
 }

@@ -1,6 +1,8 @@
 {
   "status": 429,
   "body": {
-    "detail": "TMDB returned HTTP 429"
+    "code": "throttled",
+    "params": {},
+    "errors": []
   }
 }

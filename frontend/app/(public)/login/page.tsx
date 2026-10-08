@@ -1,4 +1,5 @@
 "use client";
+import { routes } from "@/lib/routes";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7,16 +8,22 @@ import { Suspense, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
+import { useAccount } from "@/components/AccountProvider";
+import { synchronizeAccountLocale } from "@/lib/account-locale";
 import { GoogleButton } from "@/components/GoogleButton";
 import { Button } from "@/components/ui/button";
+import { translateError } from "@/lib/errors";
 import { ApiError, apiFetch } from "@/lib/api";
 import { handleGoogleLogin } from "@/lib/google-auth";
-import { validarCorreo } from "@/lib/validation";
+import { useValidation } from "@/lib/use-validation";
 
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
 function LoginForm() {
+  const { validarCorreo } = useValidation();
+
+  const { recargar } = useAccount();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [identificador, setIdentificador] = useState("");
@@ -50,6 +57,9 @@ function LoginForm() {
         method: "POST",
         body: payload,
       });
+      await synchronizeAccountLocale();
+      await recargar();
+      router.refresh();
       toast.success(
         data.user?.nombre_usuario
           ? `¡Hola de nuevo, @${data.user.nombre_usuario}!`
@@ -58,9 +68,8 @@ function LoginForm() {
       // docs/04:635 — éxito de login → redirect al Home (hoy la landing "/";
       // cuando exista el catálogo de A-06 se actualiza el destino).
       router.push(destino);
-    } catch {
-      // docs/04:634 — el error de login siempre es genérico.
-      setError("Email, usuario o contraseña incorrectos.");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : translateError({ code: "unknown" }));
     } finally {
       setLoading(false);
     }
@@ -72,6 +81,8 @@ function LoginForm() {
     try {
       const result = await handleGoogleLogin(idToken);
       if (result.ok) {
+        await recargar();
+        router.refresh();
         toast.success(
           result.usuario
             ? `¡Hola de nuevo, @${result.usuario}!`
@@ -80,8 +91,8 @@ function LoginForm() {
         router.push(destino);
       } else if (result.faltaCampos) {
         // Cuenta nueva que entró por "Iniciar sesión con Google": se completa
-        // el registro en /completar-google.
-        router.push("/completar-google");
+        // el registro en /complete-signup.
+        router.push(routes.completeSignup);
       } else {
         setError(result.error);
       }
@@ -115,11 +126,7 @@ function LoginForm() {
       toast.success("Te enviamos un email con instrucciones para restablecer tu contraseña.");
       cerrarModalRecuperar();
     } catch (err) {
-      if (err instanceof ApiError && err.status === 429) {
-        setErrorCorreo("Esperá un minuto antes de volver a pedir un enlace.");
-      } else {
-        setErrorCorreo("No se pudo enviar el email. Intentá de nuevo en unos minutos.");
-      }
+      setErrorCorreo(err instanceof ApiError ? err.message : translateError({ code: "unknown" }));
     } finally {
       setLoadingRecuperar(false);
     }
@@ -145,11 +152,13 @@ function LoginForm() {
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="mb-1 block text-sm text-muted-foreground">
+            <label htmlFor="login-identifier" className="mb-1 block text-sm text-muted-foreground">
               Email o nombre de usuario
             </label>
             <input
               className={inputClass}
+              id="login-identifier"
+              name="username"
               value={identificador}
               onChange={(e) => setIdentificador(e.target.value)}
               autoComplete="username"
@@ -158,11 +167,15 @@ function LoginForm() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Contraseña</label>
+            <label htmlFor="login-password" className="mb-1 block text-sm text-muted-foreground">
+              Contraseña
+            </label>
             <div className="relative">
               <input
                 className={inputClass}
                 type={mostrarPassword ? "text" : "password"}
+                id="login-password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
@@ -203,7 +216,7 @@ function LoginForm() {
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           ¿No tenés cuenta?{" "}
-          <Link href="/register" className="text-primary hover:underline">
+          <Link href={routes.register} className="text-primary hover:underline">
             Registrate
           </Link>
         </p>

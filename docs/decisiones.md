@@ -3522,3 +3522,73 @@ sus dos cabezas publicadas antes de integrarse.
   `docs/03_DiagramaClases_DiagramaTablas.json`, `docs/04_Lineamientos_UI.md`,
   `docs/decisiones.md`. Pendiente: `docs/06_TMDB_API_Referencia.md` y las
   specs de `openspec/` (fase 9 del plan).
+
+
+## 08/10/2026 — OT-71: formatos por idioma
+
+**Descripción:** Se centralizan fechas medias/largas en UTC, enteros, notas decimales y duración en `frontend/lib/format.ts`, con `en-US`/`es-AR`. Perfil y ReviewCard usan la utilidad; los tests comparan contra Intl para respetar CLDR sin composición manual.
+
+
+## 08/10/2026 — OT-72: errores por código y encabezados
+
+**Descripción:** `apiFetch` y el bootstrap CSRF mandan Accept-Language. `ApiError` expone código, parámetros y hojas; `lib/errors.ts` busca mensaje de campo, código y desconocido, y convierte la espera a ICU en un único lugar. Los consumidores y la API simulada no leen diagnósticos ni cuerpos anteriores.
+
+
+## 08/10/2026 — OT-73: validaciones y enumeraciones
+
+**Descripción:** Los validadores de `lib/validation.ts` y los errores de `lib/reviews.ts` devuelven identidades estables. La traducción se hace en el consumidor. Género y tema usan etiquetas del catálogo; el contrato de enums se copia por generación dentro del frontend porque Docker/Turbopack no acceden al directorio padre. Un test exige igualdad con `contracts/enums.json`.
+
+
+## 08/10/2026 — OT-74: selector y sincronización
+
+**Descripción:** Se implementan radios reutilizables en Preferencias, la pastilla EN/ES pública y el footer mínimo aprobado (`LanguageSwitcher.tsx`, `LocaleControls.tsx`). Con sesión, AccountProvider confirma el PUT antes de cambiar cuenta/cookie/render; el fallo conserva el idioma. Login y Google sincronizan la cuenta; idioma nulo conserva el dispositivo. El footer autenticado enlaza a `/settings#t-idioma`, sin login/registro ni selector propio. Google recibe el locale vigente.
+
+
+## 08/10/2026 — OT-75: rutas inglesas coordinadas
+
+**Descripción:** Se renombraron páginas y enlaces en `frontend/app`, centralizados en `lib/routes.ts`; también los enlaces de `usuarios/adapter.py` y `serializers.py`, los tests y referencias de correo. `/lists` solo cambia en protección. El usuario confirmó que abrir un correo respeta cookie/navegador del dispositivo, aunque el idioma difiera del mensaje; no se añade un parámetro de idioma.
+
+
+## 08/10/2026 — OT-76: tres pilotos bilingües
+
+**Descripción:** Preferencias, confirmación y restablecimiento consumen catálogos sin rediseñar los layouts heredados. Confirmación usa voseo y reset incluye `*` en la ayuda. Los errores de reset se guardan como códigos para traducirse al renderizar. Los controles tienen foco visible, área táctil completa y estados de carga. Las demás pantallas conservan las excepciones aprobadas.
+
+
+## 08/10/2026 — OT-77: siembra reproducible
+
+**Descripción:** `frontend/scripts/i18n/generate.py` genera desde los CSV aprobados, conserva la copia transitoria y excluye ejemplos, diseño, chatbot y correos. La copia legal se guarda separada de common para no enviarla a todas las páginas. `--check` detecta divergencias semánticas respecto de la fuente; las declaraciones de next-intl se regeneran con el build.
+
+
+## 08/10/2026 — OT-80: controles de idioma
+
+**Descripción:** Paridad de claves, argumentos, tags, plurales, códigos y enums en Vitest; reglas ESLint contra literales visibles, debug y formatos fuera de `lib/format.ts`; script de residuos. Las 13 excepciones heredadas tienen techo probado. CI incorpora `develop` y el control de residuos. Archivos: `frontend/scripts/i18n`, tests, ESLint y `.github/workflows/ci.yml`.
+
+
+## 08/10/2026 — OT-81: recorridos bilingües
+
+**Descripción:** Playwright recorre registro, confirmación, login, cambio de idioma persistente y reset en en/es. También prueba footer y selector a 390/1280 px, teclado y fallo de guardado. Los controles heredados de registro/login reciben asociaciones label/input para usar nombres y campos estables sin rediseñarlos. La navegación de tests de perfil se acota al banner porque ahora existe un footer.
+
+
+## 08/10/2026 — OT-82: aserciones por código
+
+**Descripción:** Se migran tests y las referencias de API a código, campo de hoja y parámetros, preservando matrices HTTP, credenciales, seguridad y regresión. Se verificó la migración con emisión doble antes de contraer el contrato; una aserción de éxito convertida por error se corrigió y pasó antes de retirar las claves anteriores.
+
+
+## 08/10/2026 — OT-83: contrato definitivo
+
+**Descripción:** Se retira el mezclador legacy y se construye el sobre directamente en el manejador y respuestas explícitas (`filmai/exceptions.py`, `errores/sobre.py`, vistas y documentación de API). Los éxitos conservan datos de máquina y code sin detail. El ejecutor rechaza claves extra en todos los errores de API. OpenAPI y golden references reflejan el formato definitivo.
+
+
+## 08/10/2026 — OT-90: documentación y aceptación externa
+
+**Descripción:** Se alinean documentos 02, 04 y 06, specs canónicas, guía de uso, README y AGENTS. Los modelos del doc 03 ya estaban actualizados y no se duplican. La base de desarrollo quedó con tres listas para admin y cero traducciones pendientes entre producciones enriquecidas; las 39 sin enriquecer se completarán al materializarse. Se preparan ocho EML y una vista HTML sin enviar correo externo. El CI remoto y la revisión en cliente real se registran como pendientes hasta contar con evidencia. Chatbot queda fuera de esta entrega; el pair programming del 09/10 debe revisar idioma en SSE, cambio durante una solicitud y localización de tarjetas/errores.
+
+
+## 08/10/2026 — Marcas de respaldo en filas persistidas
+
+**Descripción:** La revisión de OT-72/76 encontró que listas y mis reseñas localizaban título/póster sin exponer `campos_en_ingles`. Se agrega esa marca por campo fuera del inglés en `catalogo/services/traducciones.py`, `serializers_reviews.py` y `listas/serializers.py`, usando el prefetch existente. Los tests verifican traducción parcial, traducción ausente, inglés nativo y que no crezcan consultas por fila. ReviewCard marca el título de respaldo con `lang="en"`.
+
+
+## 08/10/2026 — Etiqueta compartida del avatar
+
+**Descripción:** El control reforzado de literales detectó etiquetas accesibles en español en `frontend/components/Avatar.tsx`. Se usa la clave aprobada `common.avatar.currentAlt` tanto para la imagen como para las iniciales. Dos casos unitarios verifican el nombre accesible en inglés y español después de un fallo de imagen; no se amplían las excepciones heredadas.

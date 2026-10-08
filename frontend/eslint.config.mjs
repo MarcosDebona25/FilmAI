@@ -1,3 +1,4 @@
+import { legacyFiles, rules } from "./scripts/i18n/rules.mjs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
@@ -12,6 +13,17 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    files: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
+    plugins: { i18n: { rules } },
+    rules: { "i18n/no-debug": "error", "i18n/centralized-formats": "error" },
+  },
+  { files: ["lib/format.ts"], rules: { "i18n/centralized-formats": "off" } },
+  {
+    files: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
+    ignores: [...legacyFiles, "components/ui/**"],
+    rules: { "i18n/no-visible-literals": "error" },
+  },
   // Desactiva las reglas de ESLint que chocan con Prettier (debe ir al final).
   eslintConfigPrettier,
   {

@@ -1,6 +1,14 @@
 {
   "status": 400,
   "body": {
-    "password2": ["Las contraseñas no coinciden."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "password2",
+        "code": "passwords_do_not_match",
+        "params": {}
+      }
+    ]
   }
 }

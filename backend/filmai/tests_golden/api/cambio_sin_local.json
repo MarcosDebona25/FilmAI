@@ -1,8 +1,14 @@
 {
   "status": 400,
   "body": {
-    "old_password": [
-      "Tu cuenta no tiene contraseña local. Puedes establecerla mediante recuperación por correo."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "old_password",
+        "code": "local_password_unavailable",
+        "params": {}
+      }
     ]
   }
 }

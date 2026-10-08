@@ -1,8 +1,14 @@
 {
   "status": 400,
   "body": {
-    "fecha_nacimiento": [
-      "Fecha con formato erróneo. Use uno de los siguientes formatos en su lugar: YYYY-MM-DD, DD/MM/YYYY."
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "fecha_nacimiento",
+        "code": "invalid",
+        "params": {}
+      }
     ]
   }
 }

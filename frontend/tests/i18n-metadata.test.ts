@@ -25,9 +25,9 @@ describe("metadatos en los cuatro puntos actuales", () => {
     const messages = (locale === "es" ? es : en).legacy.metadata;
     const [root, profile, settings, reviews] = await Promise.all([
       import("@/app/layout"),
-      import("@/app/perfil/layout"),
-      import("@/app/preferencias/layout"),
-      import("@/app/mis-resenas/page"),
+      import("@/app/profile/layout"),
+      import("@/app/settings/layout"),
+      import("@/app/my-reviews/page"),
     ]);
     expect(await root.generateMetadata()).toEqual({
       title: "FilmAI",

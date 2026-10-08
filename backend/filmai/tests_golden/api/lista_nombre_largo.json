@@ -1,4 +1,14 @@
 {
   "status": 400,
-  "body": ["El nombre no puede superar los 80 caracteres."]
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "max_length",
+        "params": {}
+      }
+    ]
+  }
 }

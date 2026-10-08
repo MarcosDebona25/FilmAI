@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 
+import { Footer, PublicLanguageControl } from "@/components/LocaleControls";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
 import { NavigationGuard } from "@/components/NavigationGuard";
@@ -40,8 +41,10 @@ export default async function RootLayout({
         <NextIntlClientProvider>
           <AccountProvider>
             <NavigationGuard>
+              <PublicLanguageControl />
               <Navbar />
               {children}
+              <Footer />
             </NavigationGuard>
           </AccountProvider>
           <Toaster position="top-center" />

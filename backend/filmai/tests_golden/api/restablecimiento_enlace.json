@@ -1,6 +1,8 @@
 {
   "status": 400,
   "body": {
-    "codigo": "invalido"
+    "code": "link_invalid",
+    "params": {},
+    "errors": []
   }
 }

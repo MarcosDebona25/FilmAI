@@ -1,6 +1,8 @@
 {
   "status": 404,
   "body": {
-    "detail": "TMDB returned HTTP 404"
+    "code": "upstream_not_found",
+    "params": {},
+    "errors": []
   }
 }

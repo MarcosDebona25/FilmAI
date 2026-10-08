@@ -83,5 +83,8 @@ module keeps owning `Tiene`.
 ### Errors and ownership
 
 All endpoints MUST require authentication. A list or item belonging to another
-user MUST appear as 404. Business conflicts MUST expose a stable `codigo` and a
-human-readable `detail`.
+user MUST appear as 404. Business conflicts MUST expose a stable `code` and the common error envelope, without interface text.
+
+### Definitive error contract
+
+OT-83 removes public `codigo`, `detail` and root field keys. Use `list_name_duplicated`, `list_name_reserved`, `list_item_duplicated`, `default_list_protected` and `rating_blocks_removal_from_watched`, with the common error envelope. Request fields and enum values retain their spelling. Frontend labels for default lists use the exported stable keys.

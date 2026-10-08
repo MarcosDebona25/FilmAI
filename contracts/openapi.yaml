@@ -2140,8 +2140,7 @@ components:
       - params
     ErrorEnvelope:
       type: object
-      description: Sobre de toda respuesta 4xx/5xx. Durante la ventana de compatibilidad
-        se emite junto a las claves anteriores.
+      description: Sobre definitivo de toda respuesta 4xx/5xx; sin texto de interfaz.
       properties:
         code:
           type: string
@@ -2230,6 +2229,7 @@ components:
       - code
       - params
       - errors
+      additionalProperties: false
   securitySchemes:
     cookieAuth:
       type: apiKey

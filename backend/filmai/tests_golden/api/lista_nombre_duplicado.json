@@ -1,7 +1,8 @@
 {
   "status": 409,
   "body": {
-    "codigo": "nombre_lista_duplicado",
-    "detail": "Ya tenés una lista con ese nombre."
+    "code": "list_name_duplicated",
+    "params": {},
+    "errors": []
   }
 }

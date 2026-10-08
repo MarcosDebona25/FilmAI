@@ -1,6 +1,14 @@
 {
   "status": 400,
   "body": {
-    "correo": ["Introduzca una dirección de correo electrónico válida."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "correo",
+        "code": "invalid",
+        "params": {}
+      }
+    ]
   }
 }

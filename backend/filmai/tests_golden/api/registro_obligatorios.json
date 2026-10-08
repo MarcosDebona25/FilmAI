@@ -1,13 +1,49 @@
 {
   "status": 400,
   "body": {
-    "password1": ["Este campo es requerido."],
-    "password2": ["Este campo es requerido."],
-    "correo": ["Este campo es requerido."],
-    "nombre_usuario": ["Este campo es requerido."],
-    "nombre": ["Este campo es requerido."],
-    "apellido": ["Este campo es requerido."],
-    "fecha_nacimiento": ["Este campo es requerido."],
-    "genero": ["Este campo es requerido."]
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "password1",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "password2",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "correo",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "nombre_usuario",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "nombre",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "apellido",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "fecha_nacimiento",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "genero",
+        "code": "required",
+        "params": {}
+      }
+    ]
   }
 }

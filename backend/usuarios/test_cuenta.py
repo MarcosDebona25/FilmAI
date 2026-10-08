@@ -109,7 +109,9 @@ class PreferenciasTests(TestCase):
                     content_type="application/json",
                 )
                 self.assertEqual(response.status_code, 400, response.content)
-                self.assertIn(campo, response.json())
+                self.assertIn(
+                    campo, {entry["field"] for entry in response.json()["errors"]}
+                )
                 self.usuario.refresh_from_db()
                 self.assertTrue(self.usuario.notif_recomendaciones)
 

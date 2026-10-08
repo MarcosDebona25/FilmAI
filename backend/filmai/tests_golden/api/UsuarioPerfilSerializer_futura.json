@@ -1,4 +1,14 @@
 {
   "status": 400,
-  "body": ["La fecha de nacimiento no puede ser futura."]
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "birth_date_in_future",
+        "params": {}
+      }
+    ]
+  }
 }

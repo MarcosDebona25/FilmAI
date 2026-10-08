@@ -1,6 +1,8 @@
 {
   "status": 403,
   "body": {
-    "detail": "No tenés permisos para realizar esta acción."
+    "code": "permission_denied",
+    "params": {},
+    "errors": []
   }
 }

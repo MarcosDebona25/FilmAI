@@ -1,8 +1,8 @@
 {
   "status": 400,
   "body": {
-    "non_field_errors": [
-      "No puede iniciar sesión con las credenciales proporcionadas."
-    ]
+    "code": "invalid_credentials",
+    "params": {},
+    "errors": []
   }
 }

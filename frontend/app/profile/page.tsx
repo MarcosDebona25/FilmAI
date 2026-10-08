@@ -1,5 +1,9 @@
 "use client";
+import { routes } from "@/lib/routes";
 
+import { translateError } from "@/lib/errors";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/lib/format";
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -11,41 +15,29 @@ import { useNavigationGuard } from "@/components/NavigationGuard";
 import { tieneCambios, colorDisponibilidad, type Borrador } from "@/lib/profile-draft";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/ui/button";
+import { currentLocale } from "@/i18n/client";
 import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
-import {
-  normalizarNombre,
-  validarApellido,
-  validarNombre,
-  validarNombreUsuario,
-  validarPassword,
-  validarConfirmacion,
-} from "@/lib/validation";
+import { useValidation } from "@/lib/use-validation";
+import { normalizarNombre } from "@/lib/validation";
 
 type Campo = "nombre" | "apellido" | "nombre_usuario";
 const INPUT =
   "mt-1 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring";
 
-function fechaVisible(fecha: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${fecha}T00:00:00Z`));
-}
-
-function generoVisible(genero: string) {
-  return (
-    (
-      { masculino: "Masculino", femenino: "Femenino", no_especifica: "No especificado" } as Record<
-        string,
-        string
-      >
-    )[genero] ?? genero
-  );
-}
-
 export default function PerfilPage() {
+  const {
+    validarApellido,
+    validarNombre,
+    validarNombreUsuario,
+    validarPassword,
+    validarConfirmacion,
+  } = useValidation();
+
+  const formats = useFormats();
+  const labels = useTranslations("enums.gender");
+  const generoVisible = (value: string) =>
+    labels.has(value as "masculino") ? labels(value as "masculino") : value;
+  const fechaVisible = (value: string) => formats.date(value, "long");
   const router = useRouter();
   const { setDirty, requestExit } = useNavigationGuard();
   const { perfil, avatares, cargando, error, recargar, actualizarPerfil } = useAccount();
@@ -92,7 +84,7 @@ export default function PerfilPage() {
           apiUrl(
             `/api/auth/username-available/?username=${encodeURIComponent(borrador.nombre_usuario)}`
           ),
-          { signal: controller.signal }
+          { signal: controller.signal, headers: { "Accept-Language": currentLocale() } }
         );
         if (!res.ok) throw new Error("availability");
         const data: { disponible: boolean } = await res.json();
@@ -105,7 +97,7 @@ export default function PerfilPage() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [borrador?.nombre_usuario, editando, perfil, borrador]);
+  }, [borrador?.nombre_usuario, editando, perfil, borrador, validarNombreUsuario]);
 
   function iniciarEdicion() {
     if (!perfil) return;
@@ -167,12 +159,10 @@ export default function PerfilPage() {
       toast.success("Perfil actualizado.");
     } catch (err) {
       if (err instanceof ApiError) {
-        const campos = extraerErroresPorCampo(err.details);
-        setErrores(
-          err.status === 409 ? { nombre_usuario: "Este usuario ya está en uso." } : campos
-        );
+        const campos = extraerErroresPorCampo(err);
+        setErrores(err.code === "username_already_used" ? { nombre_usuario: err.message } : campos);
       }
-      toast.error("No pudimos guardar el perfil. Revisá los datos e intentá de nuevo.");
+      toast.error(err instanceof ApiError ? err.message : translateError({ code: "unknown" }));
     } finally {
       setGuardando(false);
     }
@@ -202,10 +192,10 @@ export default function PerfilPage() {
         body: { old_password: oldPassword, password1, password2 },
       });
       toast.success("Contraseña actualizada. Iniciá sesión nuevamente.");
-      router.replace("/login");
+      router.replace(routes.login);
     } catch (err) {
-      if (err instanceof ApiError) setErrores(extraerErroresPorCampo(err.details));
-      toast.error("No pudimos cambiar la contraseña.");
+      if (err instanceof ApiError) setErrores(extraerErroresPorCampo(err));
+      toast.error(err instanceof ApiError ? err.message : translateError({ code: "unknown" }));
       setCambiandoPassword(false);
     }
   }

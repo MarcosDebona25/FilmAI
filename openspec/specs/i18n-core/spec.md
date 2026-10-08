@@ -4,8 +4,8 @@
 
 The user approved OT-13's 91 new bilingual messages and six curation decisions
 on 08/10/2026. OT-11 and OT-12 are integrated into `feat/i18n-multiidioma`.
-This spec defines accepted behavior for the implementation phases; it does
-not claim that production code has already implemented these requirements.
+OT-71–83 implement the shared layers and the three approved pilot screens on
+`develop`. Other visible screens retain their documented Spanish exceptions.
 
 ```text
 Browser cookie + Accept-Language → Next.js request locale → en/es catalogs
@@ -33,8 +33,8 @@ messages have matching English keys. The user approved 53 missing English
 translations and the temporary `Mis reseñas` / `My reviews` title on 08/10/2026;
 the other English messages reuse approved curated copy. The versioned OT-70
 CSV records the source and approval of each message. It is separate from
-OT-13's immutable approval record. OT-76 changes Spanish treatment/copy;
-OT-77 seeds the complete design catalogs. Neither change is performed here.
+OT-13's immutable approval record. OT-76 changes confirmation to voseo and fixes the password-help character list;
+OT-77 seeds the complete approved design catalogs reproducibly.
 
 The four existing metadata entry points resolve descriptions and page titles
 through `generateMetadata`; branding and icons remain identical. Unit renders
@@ -190,3 +190,39 @@ frontend tree retains the previously verified 30 e2e as prior evidence until
 CI repeats them. Formatting, API-code consumption, selector synchronization,
 routes, pilot migration, complete design catalogs, emails and TMDB are not
 claimed complete by this frontend delivery.
+
+
+## Implemented frontend behavior (OT-71–83)
+
+`lib/format.ts` is the only formatting boundary: medium/long UTC dates, integers,
+one-decimal ratings and hour/minute durations, using `en-US`/`es-AR`. Profile and
+review cards consume it. `ApiError` exposes status, code, params and leaves,
+without retaining prior response bodies. The translator prefers field-specific
+copy, then code, then unknown; known waits use ICU plurals. CSRF bootstrap and
+username availability also send `Accept-Language`.
+
+The language control uses native grouped radios with full names and visible
+focus. Signed-in users change language only in Settings; saving succeeds before
+account/cookie/render change. Null saved language preserves device resolution.
+Login and Google completion synchronize the account before navigation. Public
+Landing/login/register show EN/ES at the top right; the desktop footer offers
+full names. Authenticated footer links to `/settings#t-idioma`, shows the current
+language in Information on desktop or a single mobile row, and omits sign-up/login
+links. Navbar and avatar contain no language control.
+
+Routes live in `lib/routes.ts`: `/profile`, `/settings`, `/my-reviews`, `/lists`,
+`/complete-signup`, `/confirm-email/[key]`, `/reset-password/[uid]/[token]`.
+`/lists` has protection but no new screen. Settings and both mail destinations
+are bilingual. Opening a mail link uses the receiving device's cookie/header
+resolution, even when it differs from the mail language (user confirmation on
+08/10/2026); links do not override locale.
+
+The generator reads approved CSVs from scratch, excludes sample/design/chatbot
+rows and emails, and splits legal copy from the client catalog. It also copies
+the stable enum contract into the frontend for Docker/Turbopack builds. Tests
+verify reproducibility, key/argument/tag/plural/code/enum parity. ESLint rejects
+visible literals outside 13 named legacy exceptions, debug reads and formatting
+outside the shared module. CI covers `develop`; runtime fallback titles carry
+`lang="en"` according to `campos_en_ingles`.
+
+Persisted list items and personal-review rows MUST expose `campos_en_ingles` outside English, including separate title/poster fallback identities. The marker reuses prefetched translations; it MUST NOT introduce SQL queries per field or per row. English-native rows do not carry a fallback marker.

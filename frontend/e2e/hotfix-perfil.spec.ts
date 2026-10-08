@@ -55,7 +55,7 @@ for (const width of [390, 1440])
   }) => {
     await page.setViewportSize({ width, height: 900 });
     const state = await prepararCuenta(page);
-    await page.goto("/perfil");
+    await page.goto("/profile");
     await page.getByRole("button", { name: "Editar perfil" }).click();
     const trigger = page.getByRole("button", { name: "Cambiar avatar" });
     await expect(trigger).toHaveCSS("cursor", "pointer");
@@ -95,7 +95,7 @@ for (const theme of ["oscuro", "claro"])
     await page.route("**/api/preferences/", (route) =>
       route.fulfill({ json: { tema: theme, perfil_publico: true } })
     );
-    await page.goto("/perfil");
+    await page.goto("/profile");
     await expect(page.locator("html")).toHaveCSS(
       "color-scheme",
       theme === "oscuro" ? "dark" : "light"
@@ -120,7 +120,7 @@ for (const theme of ["oscuro", "claro"])
     expect((await colors(cancel)).contrast).toBeGreaterThanOrEqual(4.5);
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
-    await page.goto("/preferencias");
+    await page.goto("/settings");
     await expect(page.locator("html")).toHaveCSS(
       "color-scheme",
       theme === "oscuro" ? "dark" : "light"

@@ -27,9 +27,7 @@ class ErroresGoogleTests(TestCase):
         """El origen identifica id_token aunque el cuerpo anterior sea no-field."""
         response = self.google("token")
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["non_field_errors"], ["Se requiere el id_token de Google."]
-        )
+        self.assertEqual(response.data["code"], "validation_error")
         self.assertEqual(
             response.data["errors"],
             [{"field": "id_token", "code": "required", "params": {}}],
@@ -40,10 +38,7 @@ class ErroresGoogleTests(TestCase):
         response = self.google("faltantes")
         self.assertEqual(response.status_code, 400)
         for campo in ("nombre_usuario", "fecha_nacimiento", "genero"):
-            self.assertEqual(
-                response.data[campo],
-                ["Este campo es obligatorio para completar tu cuenta."],
-            )
+            self.assertIn(campo, {entry["field"] for entry in response.data["errors"]})
         self.assertEqual(
             response.data["errors"],
             [
@@ -69,7 +64,7 @@ class ErroresGoogleTests(TestCase):
                     response.data["errors"],
                     [{"field": None, "code": codigo, "params": {}}],
                 )
-                self.assertIn("non_field_errors", response.data)
+                self.assertEqual(response.data["code"], "validation_error")
                 transaction.set_rollback(True)
 
     def test_edad_google_recupera_limite_tras_validacion_de_campos(self):

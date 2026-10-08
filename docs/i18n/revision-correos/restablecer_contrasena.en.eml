@@ -1,0 +1,178 @@
+Content-Type: multipart/alternative;
+ boundary="===============2733340212887926553=="
+MIME-Version: 1.0
+Subject: [FilmAI] Reset your password
+From: FilmAI <onboarding@resend.dev>
+To: revision@example.com
+Date: Thu, 08 Oct 2026 23:22:46 -0000
+Message-ID: <179150176679.1.14932115256806426547@ba1ae826721f>
+
+--===============2733340212887926553==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+
+Hi Ana Pérez,
+
+We received a request to reset the password for your FilmAI account. To continue, open this link:
+
+http://localhost:3000/confirm-email/revision/
+
+This link is valid for 1 hour. If it has expired, you can request another from the log in screen with “Forgot your password?”.
+
+If you didn’t make this request, ignore this message: your password won’t change.
+
+The FilmAI team
+
+You’re receiving this email because someone asked to recover access to a FilmAI account.
+© 2026 FilmAI. Movie and TV show data and images provided by TMDB.
+--===============2733340212887926553==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset your password</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #0d0d14;
+      font-family: Arial, Helvetica, sans-serif;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #0d0d14; padding: 32px 16px"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              max-width: 480px;
+              background-color: #161625;
+              border: 1px solid #2a2a45;
+              border-radius: 16px;
+            "
+          >
+            <tr>
+              <td style="padding: 40px 40px 8px 40px">
+                <span style="font-size: 24px; font-weight: bold; color: #e0e0e0"
+                  >FilmAI</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 24px 40px;
+                  font-size: 15px;
+                  line-height: 1.6;
+                  color: #e0e0e0;
+                "
+              >
+                <span style="display: block; font-size: 20px; font-weight: bold; padding-bottom: 16px"
+                  >Reset your password</span
+                >
+                Hi Ana Pérez,
+                <br /><br />
+                We received a request to reset the password for your FilmAI account. To continue, tap the button.
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 8px 40px 24px 40px">
+                <a
+                  href="http://localhost:3000/confirm-email/revision/"
+                  style="
+                    display: inline-block;
+                    background-color: #e67e22;
+                    color: #ffffff;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 15px;
+                    padding: 12px 32px;
+                    border-radius: 10px;
+                  "
+                  >Reset my password</a
+                >
+              </td>
+            </tr>
+            
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 0 40px 24px 40px;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: #a0a0a8;
+                "
+              >
+                If the button doesn’t work, copy and paste this link into your browser:<br />
+                <a
+                  href="http://localhost:3000/confirm-email/revision/"
+                  style="color: #f5c518; word-break: break-all"
+                  >http://localhost:3000/confirm-email/revision/</a
+                >
+              </td>
+            </tr>
+            
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 8px 40px;
+                  border-top: 1px solid #2a2a45;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: #a0a0a8;
+                "
+              >
+                This link is valid for 1 hour. If it has expired, you can request another from the log in screen with “Forgot your password?”.
+                <br /><br />
+                If you didn’t make this request, ignore this message: your password won’t change.
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 16px 40px;
+                  font-size: 13px;
+                  color: #a0a0a8;
+                "
+              >
+                The FilmAI team
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 0 40px 32px 40px;
+                  font-size: 12px;
+                  line-height: 1.6;
+                  color: #a0a0a8;
+                "
+              >
+                You’re receiving this email because someone asked to recover access to a FilmAI account.
+                <br />
+                © 2026 FilmAI. Movie and TV show data and images provided by TMDB.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+--===============2733340212887926553==--
