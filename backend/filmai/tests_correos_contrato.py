@@ -41,11 +41,13 @@ class CorreosContratoTests(TestCase):
                 "/confirmar-correo/<key>/",
                 texto,
             )
-            return re.sub(
+            texto = re.sub(
                 r"/restablecer-contrasena/[^/\s\"<]+/[^/\s\"<]+/",
                 "/restablecer-contrasena/<uid>/<token>/",
                 texto,
             )
+            # El año del pie cambia solo; no es parte de la copia.
+            return re.sub(r"© \d{4}", "© <year>", texto)
 
         observado = {
             "asunto": correo.subject,

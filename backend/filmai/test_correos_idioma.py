@@ -15,12 +15,9 @@ from usuarios.factories import UsuarioFactory
 LOCMEM = "django.core.mail.backends.locmem.EmailBackend"
 # Palabras que solo pueden aparecer en uno de los dos idiomas.
 PROPIAS = {
-    "es": ("Hola", "El equipo de FilmAI"),
-    "en": ("Hi ", "The FilmAI team"),
+    "es": ("Hola", "El equipo de FilmAI", "provistos por TMDB"),
+    "en": ("Hi ", "The FilmAI team", "provided by TMDB"),
 }
-# El texto plano español de esta notificación conserva la copia anterior (sin
-# saludo ni enlace) hasta que OT-53 la reemplace por la de la tabla.
-PENDIENTE_OT53 = ("contrasena_actualizada", "es")
 
 
 @override_settings(EMAIL_BACKEND=LOCMEM, FRONTEND_URL="https://filmai.test")
@@ -45,10 +42,7 @@ class MatrizDeCorreosTests(SimpleTestCase):
                     self.assertTrue(asunto.startswith("[FilmAI] "))
                     self.assertNotIn("\n", asunto)
                     self.assertIn(f'<html lang="{idioma}">', html)
-                    partes = (texto, html)
-                    if (caso, idioma) == PENDIENTE_OT53:
-                        partes = (html,)
-                    for parte in partes:
+                    for parte in (texto, html):
                         self.assertIn("Ana Pérez", parte)
                         self.assertIn("https://filmai.test/", parte)
                         self.assertIsNone(re.search(r"\{[{%#]|\{\w+[,}]", parte))
@@ -74,14 +68,19 @@ class MatrizDeCorreosTests(SimpleTestCase):
             _, texto_es, html_es = self._enviar(caso, "es", sin_nombre)
             _, texto_en, html_en = self._enviar(caso, "en", sin_nombre)
             with self.subTest(caso=caso):
-                partes_es = (texto_es, html_es)
-                if (caso, "es") == PENDIENTE_OT53:
-                    partes_es = (html_es,)
-                for parte in partes_es:
+                for parte in (texto_es, html_es):
                     self.assertIn("Hola usuario,", parte)
                 for parte in (texto_en, html_en):
                     self.assertIn("Hi there,", parte)
                     self.assertNotIn("usuario", parte)
+
+    def test_la_copia_en_espanol_usa_voseo_y_no_usted(self):
+        for caso in sorted(CASOS):
+            _, texto, html = self._enviar(caso, "es")
+            with self.subTest(caso=caso):
+                for parte in (texto, html):
+                    for formal in ("usted", " su cuenta", "copie y pegue", "ignore "):
+                        self.assertNotIn(formal, parte)
 
     def test_vigencia_en_ingles_usa_singular_y_plural(self):
         self.assertIn(
