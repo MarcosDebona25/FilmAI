@@ -843,8 +843,8 @@ Se recomienda el orden numérico, que respeta todas las dependencias. Las fases 
 | OT-11 | F1, paso 3 | Spec `error-contract` con cada mensaje del inventario asignado a un código | OT-10 | M | Completada: 08/10/2026; correspondencia completa de F0 y HTTP/429 definidos; integrada fuera de main con CI en verde |
 | OT-12 | F1, paso 4 | `docs/i18n/claves.csv` con clave, namespace y estado por fila. Puede partirse por grupos de pantallas | OT-10 | L | Completada: 08/10/2026; 634 filas en los PRs #48, #49 y #50, integrados fuera de main; revisión editorial OT-13 pendiente |
 | OT-13 | F1, paso 6 | Copia faltante redactada y specs `i18n-core` y `emails` | OT-11, OT-12 | S | Completada: 08/10/2026; copia y curaduría aprobadas; entregas #53/#54 hacia integración; suites 508/43/24 y build aprobados; integrada fuera de main con CI verde de ambas cabezas (ver 10.5) |
-| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Verificada: 08/10/2026; núcleo/API #55/#56 integrados; 520 backend verdes y semilla #57 en cierre CI (ver 10.5) |
-| OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | Pendiente |
+| OT-20 | F2, todos | Campo `idioma`, `idioma_efectivo`, preferencias, registro y semilla con cuentas en ambos idiomas | F1 | S | Completada: 08/10/2026; PRs #55/#56/#57 integrados con CI verde; 520 backend, merge final 51bcb2b (ver 10.5) |
+| OT-30 | F3, pasos 1 y 3 | Catálogo, excepción base y sobre nuevo emitido junto al formato anterior | OT-11 | M | En validación: 08/10/2026; cuatro entregas, PRs #58/#59/#60 y última entrega; base OT-20 final 51bcb2b; repetición local y CI finales en curso (ver 10.5) |
 | OT-31 | F3, paso 2 | Códigos en `usuarios` y `filmai` | OT-30 | M | Pendiente |
 | OT-32 | F3, pasos 2 y 4 | Códigos en `listas` y `catalogo`; casos irregulares normalizados | OT-30 | M | Pendiente |
 | OT-33 | F3, pasos 5, 6 y 7 | Espera en el 429, códigos en respuestas exitosas, estados de cuenta en el inicio de sesión | OT-31 | S | Pendiente |
@@ -1062,6 +1062,30 @@ Cada sesión agrega aquí, al cerrar, una entrada breve: fecha, orden, rama o PR
   Frontend exacto `88f94c0`: evidencia vigente de OT-13 43 unitarios/24 e2e/build;
   no se presenta como corrida nueva. Semilla PR #57 hacia integración; solo
   se integra con CI verde de su cabeza final. Núcleo/API #55/#56 ya integrados.
+
+- 08/10/2026, cierre OT-20 e inicio de publicación OT-30: los PRs #55,
+  #56 y #57 quedaron integrados con CI verde únicamente en
+  `feat/i18n-multiidioma`, merge final `51bcb2b`. Se conserva la evidencia
+  local de 520 tests y la incidencia intermitente documentada, sin atribuirle
+  una causa no demostrada. OT-30 parte de esa base en cuatro unidades:
+  catálogo/excepción, hojas/metadatos, composición del sobre y manejador/F0.
+  Se conservan decisiones de ambas órdenes y se regenera el grafo por unidad.
+  Las autorizaciones vigentes permiten adaptar los tests nuevos de F0 OT-01
+  y OT-02 para comparar campos heredados; permanecen la matriz completa de
+  credenciales/estados y los goldens originales. Los tests nuevos comprueban
+  el sobre por separado y la regresión de PermissionDenied de Django en ambos
+  modos DEBUG. La última cabeza requiere su suite completa nueva y CI verde;
+  no se integra ningún PR de esta cadena hasta coordinar su cabeza exacta.
+  El tracker #43 continúa draft y main permanece fuera de los merges.
+
+- 08/10/2026, primera verificación OT-30 sobre OT-20 final: **543 tests**
+  en 189,235 s; dos subcasos del nuevo test de preferencias de idioma devolvieron
+  401 en vez de 400. La clase aislada pasó sus tres tests en 1,683 s. Se conserva
+  el resultado fallido sin atribuirle causa ni cambiar el código/tests de OT-20;
+  la repetición completa está en curso. Las cuatro unidades pasan sus pruebas
+  propias (4, 9 y 16 acumuladas; 7 del manejador) y el formato/lint. Los PRs
+  #58 y #59 tienen los tres jobs CI verdes para sus cabezas exactas; #60 y la
+  última entrega requieren completar su verificación antes de integrar.
 
 ### 10.6 Instrucción para iniciar una sesión
 

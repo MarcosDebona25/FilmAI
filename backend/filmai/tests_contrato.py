@@ -37,6 +37,7 @@ from catalogo.client import TMDBClient
 from catalogo.exceptions import CalificacionDuplicada
 from catalogo.serializers_reviews import ActualizarCalificacionSerializer
 from catalogo.services.tmdb import get_catalog_service
+from filmai.errores.sobre import RESERVADOS
 from filmai.exceptions import filmai_exception_handler
 from filmai.views import custom_500
 from listas.exceptions import (
@@ -105,11 +106,25 @@ class ContratoErroresAPITests(TestCase):
             if hasattr(respuesta, "data")
             else json.loads(respuesta.content)
         )
+        archivo = REFERENCIAS / f"{nombre}.json"
+        # OT-30: F0 conserva su oráculo legacy durante la emisión doble.
+        # Los tests específicos del sobre verifican las claves nuevas aparte.
+        if isinstance(cuerpo, dict):
+            cuerpo = {
+                clave: valor
+                for clave, valor in cuerpo.items()
+                if clave not in RESERVADOS
+            }
+        # El sobre normaliza listas raíz; F0 compara su contenido original.
+        if archivo.exists() and isinstance(
+            json.loads(archivo.read_text())["body"], list
+        ):
+            if isinstance(cuerpo, dict) and set(cuerpo) == {"non_field_errors"}:
+                cuerpo = cuerpo["non_field_errors"]
         # Roundtrip elimina ErrorDetail y fuerza la forma JSON que ve el cliente.
         actual = json.loads(
             json.dumps({"status": respuesta.status_code, "body": cuerpo})
         )
-        archivo = REFERENCIAS / f"{nombre}.json"
         if os.environ.get("REGENERAR_REFERENCIAS_API") == "1":
             REFERENCIAS.mkdir(parents=True, exist_ok=True)
             archivo.write_text(json.dumps(actual, ensure_ascii=False, indent=2) + "\n")
