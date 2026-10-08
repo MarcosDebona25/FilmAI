@@ -16,6 +16,21 @@ Los textos curados pueden cambiar sin perder esa referencia.
 | `grupo`                   | IDs de los fragmentos que forman una sola frase                      |
 | `observaciones`           | Motivo del cambio, datos variables y revisiones pendientes           |
 
+| Estado        | Filas | Tratamiento                                                   |
+| ------------- | ----: | ------------------------------------------------------------- |
+| `ok`          |   406 | Mensajes revisados; aprobar curaduría antes de sembrar        |
+| `fragmento`   |    40 | Frase completa recompuesta; aprobar antes de sembrar          |
+| `muestra`     |    61 | Datos de ejemplo excluidos                                    |
+| `diseño`      |   100 | Mesas, documentación de diseño y previsualizaciones excluidas |
+| `chatbot`     |    21 | Módulo fuera de alcance, incluido su lanzador compartido      |
+| `incoherente` |     6 | Pendientes sin texto curado: no se pueden sembrar             |
+
+Las 446 filas utilizables apuntan a 423 claves distintas. Una clave repetida
+solo es válida si ambos mensajes curados son idénticos. Así varias filas de
+un grupo conservan su trazabilidad sin crear traducciones duplicadas.
+Los 41 nombres de pantalla del original se conservan; no se perdió ninguna
+pantalla ni se incorporaron textos de otra persona o fuente.
+
 ## Frases y datos variables
 
 ICU expresa cantidades y plurales en una sola frase. `lists.count.items`
@@ -50,3 +65,47 @@ y `auth.signUp.genderLabel`. Las listas predeterminadas usan `Favorites`,
 `Prefer not to say`. Los identificadores de API conservan el español.
 La copia de baja de cuenta de 487–491 y 568 se conserva exactamente en
 ambos idiomas, conforme a la decisión del usuario.
+
+Quedan pendientes de OT-13, sin mensaje curado:
+
+- 214–215: final de confirmaciones de quitar de Vistas; falta evidencia
+  del inicio de la frase y de qué se elimina en cada variante.
+- 320: «Calificación » sin formato documentado del valor que sigue.
+- 355: «contraseña» en minúscula, compartido entre login y acceso admin;
+  falta confirmar si etiqueta autónoma o fragmento de otra frase.
+- 448: `es` / `en` sin contexto; puede ser un dato de locale. No se interpreta
+  como una oración ni se inventa un uso visible.
+- 535: «Incluye» sin evidencia de si es encabezado o frase cortada.
+
+Las filas 584–585 incorporan `contacto@filmai.com`, confirmado por el usuario;
+las columnas originales conservan el marcador de contacto.
+
+Las claves de pantallas futuras son propuestas de función; se confirman al
+implementar cada diseño. Los grupos 245–247, 260–262, 319 y los nombres
+accesibles de filtros (292 y 325) conservan observaciones específicas para
+revisar su ubicación y concordancia. Los mensajes nuevos de errores y del
+selector faltan en el original: se redactan y aprueban en OT-13.
+`emails.*` es referencia para las plantillas de backend de F5, no un namespace
+que se envíe al proveedor de cliente. `legal.*` se carga solo en términos.
+
+## Verificación y partición
+
+La comprobación de datos verificó 634 IDs únicos, el original inmutable,
+los 41 nombres de pantalla, claves sin colisiones y el texto de baja intacto.
+Un analizador de FormatJS validó sintaxis ICU y paridad ES/EN de argumentos
+y tags en las 446 filas utilizables: 28 filas con plurales y 3 con tags.
+Estas comprobaciones validan estructura; la aprobación editorial sigue
+pendiente de OT-13. No se modificó código, tests ni dependencias del repo.
+
+Se propone integrar el CSV por bloques acumulativos, conservando los IDs:
+
+1. 1–270: navegación compartida, diseño, Home y ficha; 270 filas.
+2. 271–499: búsqueda, reseñas, autenticación, listas, perfil y preferencias;
+   229 filas nuevas, total acumulado 499.
+3. 500–634: exclusiones del chatbot, errores, acceso, términos, footer y
+   correos; 135 filas nuevas, total acumulado 634.
+
+Los cortes no separan un grupo de fragmentos. El grupo reutilizado de ítems
+(241–242 y 414–415) se completa en el segundo bloque con los mismos valores.
+Durante la integración parcial, una referencia de grupo a un ID futuro indica
+trazabilidad prevista; el CSV completo resuelve todas las referencias.
