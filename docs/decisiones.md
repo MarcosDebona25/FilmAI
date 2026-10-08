@@ -2598,3 +2598,22 @@ literales de los diseños. Estas reglas incorporan las 14 respuestas de la secci
   parámetro/encabezado si se desconoce la espera, sin inventar segundos.
 - **Archivos afectados**: `openspec/specs/error-contract/spec.md`,
   `docs/i18n/errores.csv`, `docs/decisiones.md` y `docs/plan-multiidioma.md`.
+
+---
+
+## 08/10/2026 — Aprobación editorial y resolución de la curaduría multiidioma
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario aprobó las 91 filas bilingües de OT-13 y resolvió
+  las seis dudas. Las confirmaciones 214/215 reutilizan frases completas de
+  eliminación; 355 es la etiqueta de contraseña; 448 es metadato de locale
+  excluido; 535 es un encabezado autónomo y 320 filtra una nota exacta X/10.
+  Los mensajes de credenciales cubren Google y contraseña, el límite compartido
+  con TMDB no culpa al usuario y el reenvío evita prometer un envío que no ocurre
+  para destinatarios desconocidos o ya confirmados. Se preservan los originales
+  y los textos de baja. El CSV tiene 451 filas utilizables y 425 claves distintas,
+  sin incoherentes. Las specs aprobadas definen requisitos aún por implementar;
+  la aprobación no afirma cambios de producción ni cierre de CI.
+- **Archivos afectados**: `docs/i18n/copia-propuesta.csv`, `claves.csv`,
+  `revision-ot13.md`, `README.md`, `docs/plan-multiidioma.md`,
+  `openspec/specs/i18n-core/spec.md` y `openspec/specs/emails/spec.md`.
