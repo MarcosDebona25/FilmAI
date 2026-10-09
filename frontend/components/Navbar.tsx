@@ -1,4 +1,5 @@
 "use client";
+import { routes } from "@/lib/routes";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -13,12 +14,12 @@ import { useAccount } from "@/components/AccountProvider";
 import { apiFetch } from "@/lib/api";
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 
-const SIN_NAVBAR = ["/", "/login", "/register", "/completar-google"];
+const SIN_NAVBAR = ["/", routes.login, routes.register, routes.completeSignup];
 
 const NAV_LINKS = [
   { label: "Inicio", href: "/inicio" },
   { label: "Buscar", href: "/buscar" },
-  { label: "Listas", href: "/listas" },
+  { label: "Listas", href: routes.lists },
 ] as const;
 
 function noImplementado() {
@@ -155,7 +156,7 @@ export function Navbar() {
                 >
                   <Link
                     ref={firstItemRef}
-                    href="/perfil"
+                    href={routes.profile}
                     role="menuitem"
                     onClick={() => setMenuAbierto(false)}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
@@ -164,7 +165,7 @@ export function Navbar() {
                     Mi perfil
                   </Link>
                   <Link
-                    href="/mis-resenas"
+                    href={routes.myReviews}
                     role="menuitem"
                     onClick={() => setMenuAbierto(false)}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
@@ -173,7 +174,7 @@ export function Navbar() {
                     Mis reseñas
                   </Link>
                   <Link
-                    href="/preferencias"
+                    href={routes.settings}
                     role="menuitem"
                     onClick={() => setMenuAbierto(false)}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
@@ -198,10 +199,10 @@ export function Navbar() {
             </div>
           ) : !cargando ? (
             <>
-              <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
+              <Button variant="ghost" size="sm" onClick={() => router.push(routes.login)}>
                 Iniciar sesión
               </Button>
-              <Button size="sm" onClick={() => router.push("/register")}>
+              <Button size="sm" onClick={() => router.push(routes.register)}>
                 Registrarse
               </Button>
             </>

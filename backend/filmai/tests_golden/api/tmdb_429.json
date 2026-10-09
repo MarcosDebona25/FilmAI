@@ -1,0 +1,8 @@
+{
+  "status": 429,
+  "body": {
+    "code": "throttled",
+    "params": {},
+    "errors": []
+  }
+}

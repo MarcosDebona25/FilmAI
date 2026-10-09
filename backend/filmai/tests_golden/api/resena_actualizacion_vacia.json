@@ -1,0 +1,19 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "review_update_empty",
+        "params": {
+          "fieldNames": [
+            "valor",
+            "texto"
+          ]
+        }
+      }
+    ]
+  }
+}

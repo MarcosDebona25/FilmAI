@@ -1,0 +1,16 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "nombre",
+        "code": "person_name_invalid",
+        "params": {
+          "maxLength": 50
+        }
+      }
+    ]
+  }
+}

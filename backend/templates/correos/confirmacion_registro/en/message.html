@@ -1,0 +1,3 @@
+{% extends "correos/base_en.html" %}{% block titulo %}Confirm your account{% endblock %}{% block encabezado %}Confirm your account{% endblock %}{% block introduccion %}Welcome to FilmAI! To activate your account we need to confirm your email address.{% endblock %}{% block boton %}Confirm my account{% endblock %}{% block advertencia %}This link is valid for {{ expiry_hours }} hour{{ expiry_hours|pluralize }}. If it has expired, you can request another from the sign-up screen with “Resend link”.
+                <br /><br />
+                If you didn’t create this account, ignore this message.{% endblock %}{% block motivo %}You’re receiving this email because someone registered this address on FilmAI.{% endblock %}

@@ -1,7 +1,9 @@
+import type { AppLocale } from "@/i18n/config";
 import type { Page } from "@playwright/test";
 
 const initialProfile = {
   pk: 1,
+  idioma: null as AppLocale | null,
   nombre: "Juan",
   apellido: "Pérez",
   nombre_usuario: "juanperez",
@@ -13,9 +15,10 @@ const initialProfile = {
   tiene_contrasena_local: true,
 };
 
-export async function prepararCuenta(page: Page) {
-  let perfil = { ...initialProfile };
+export async function prepararCuenta(page: Page, idioma: AppLocale | null = null) {
+  let perfil = { ...initialProfile, idioma };
   let preferencias = {
+    idioma,
     tema: "oscuro",
     perfil_publico: true,
     notif_recomendaciones: true,
@@ -40,8 +43,10 @@ export async function prepararCuenta(page: Page) {
     })
   );
   await page.route("**/api/preferences/", async (route) => {
-    if (route.request().method() === "PUT")
+    if (route.request().method() === "PUT") {
       preferencias = { ...preferencias, ...route.request().postDataJSON() };
+      perfil = { ...perfil, idioma: preferencias.idioma };
+    }
     await route.fulfill({ json: preferencias });
   });
   await page.route("**/api/auth/username-available/**", (route) =>

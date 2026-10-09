@@ -6,7 +6,7 @@ test("guarda el tema y muestra el alcance pendiente de las otras preferencias", 
   page,
 }) => {
   const cuenta = await prepararCuenta(page);
-  await page.goto("/preferencias");
+  await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Preferencias" })).toBeVisible();
   await expect(page.getByRole("note")).toContainText("todavía no cambian la visibilidad");
   await page.getByRole("radio", { name: "Claro" }).check();
@@ -21,9 +21,9 @@ test("baja: advertencia aprobada, cancelar y confirmar", async ({ page }) => {
   let calls = 0;
   await page.route("**/api/account/deactivate/", async (route) => {
     calls++;
-    await route.fulfill({ status: 200, json: { detail: "Baja" } });
+    await route.fulfill({ status: 200, json: { code: "account_deactivated_successfully" } });
   });
-  await page.goto("/preferencias");
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Dar de baja cuenta" }).click();
   await expect(page.getByRole("dialog")).toContainText("Esta acción es irreversible.");
   await expect(page.getByRole("dialog")).toContainText(

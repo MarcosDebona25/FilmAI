@@ -276,15 +276,23 @@ El backend crea automáticamente un superusuario al arrancar, usando las variabl
 
 #### Cuentas de prueba
 
-El comando `seed` crea tres cuentas de desarrollo con el email verificado y la misma contraseña:
+El comando `seed` crea tres cuentas de desarrollo con el email verificado,
+idiomas conocidos y la misma contraseña:
 
-| Email                   | Contraseña     |
-| ----------------------- | -------------- |
-| `usuario001@filmai.com` | `Password123!` |
-| `usuario002@filmai.com` | `Password123!` |
-| `usuario003@filmai.com` | `Password123!` |
+| Email                   | Contraseña     | Idioma       |
+| ----------------------- | -------------- | ------------ |
+| `usuario001@filmai.com` | `Password123!` | Español (es) |
+| `usuario002@filmai.com` | `Password123!` | English (en) |
+| `usuario003@filmai.com` | `Password123!` | Español (es) |
 
-Para recrear los datos de desarrollo:
+La migración de idioma no rellena las cuentas anteriores ni cambia
+`LANGUAGE_CODE`. Sin preferencia guardada, el backend usa `Accept-Language`
+(pesos y regiones), con inglés como respaldo. El registro normal y Google
+guarda el idioma activo; se cambia con `PUT /api/preferences/` enviando
+`{"idioma": "en"}` o `{"idioma": "es"}`. Los datos de usuario y perfil lo
+exponen en lectura. `seed --solo-resenas` conserva los idiomas existentes.
+
+Para recrear los datos de desarrollo, cuando el integrante decida hacerlo:
 
 ```bash
 docker compose exec backend python manage.py seed
@@ -354,3 +362,7 @@ Referencia de verificación: [WebAIM WCAG 2 Checklist](https://webaim.org/standa
 | [`04_Lineamientos UI`](docs/04_Lineamientos_UI.md)                                            | Diseño de interfaces, componentes y accesibilidad         |
 | [`05_Plan de Desarrollo`](docs/05_Plan_de_Desarrollo.md)                                      | Tareas, criterios y estado de los módulos                 |
 | [`06_TMDB API Referencia`](docs/06_TMDB_API_Referencia.md)                                    | Referencia técnica de la API de TMDB                      |
+
+### Multiidioma
+
+Preferencias, confirmación de correo y restablecimiento funcionan en inglés y español. Las otras pantallas conservan su copia heredada hasta integrar sus diseños. Consultá [la guía](docs/i18n/guia.md) para textos, errores, formatos, selectores y verificaciones. El estado de aceptación está en [siguientes pasos](docs/siguientes-pasos-multiidioma.md).

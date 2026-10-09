@@ -1,0 +1,14 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "min_rating",
+        "code": "number_not_finite",
+        "params": {}
+      }
+    ]
+  }
+}

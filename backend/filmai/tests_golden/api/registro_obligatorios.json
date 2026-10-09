@@ -1,0 +1,49 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "password1",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "password2",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "correo",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "nombre_usuario",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "nombre",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "apellido",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "fecha_nacimiento",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "genero",
+        "code": "required",
+        "params": {}
+      }
+    ]
+  }
+}

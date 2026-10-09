@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Roboto } from "next/font/google";
 import { Toaster } from "sonner";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 
+import { Footer, PublicLanguageControl } from "@/components/LocaleControls";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
 import { NavigationGuard } from "@/components/NavigationGuard";
@@ -17,29 +20,35 @@ const roboto = Roboto({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "FilmAI",
-  description: "Plataforma de reseñas cinematográficas con recomendaciones inteligentes.",
-  icons: {
-    icon: "/icons8-movies-32.png",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("legacy.metadata");
+  return {
+    title: "FilmAI",
+    description: t("description"),
+    icons: { icon: "/icons8-movies-32.png" },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="es" className="dark" suppressHydrationWarning>
+    <html lang={locale} className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} ${roboto.variable} antialiased`}>
-        <AccountProvider>
-          <NavigationGuard>
-            <Navbar />
-            {children}
-          </NavigationGuard>
-        </AccountProvider>
-        <Toaster position="top-center" />
+        <NextIntlClientProvider>
+          <AccountProvider>
+            <NavigationGuard>
+              <PublicLanguageControl />
+              <Navbar />
+              {children}
+              <Footer />
+            </NavigationGuard>
+          </AccountProvider>
+          <Toaster position="top-center" />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

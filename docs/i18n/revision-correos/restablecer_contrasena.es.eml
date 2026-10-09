@@ -1,0 +1,178 @@
+Content-Type: multipart/alternative;
+ boundary="===============6497871577615747958=="
+MIME-Version: 1.0
+Subject: =?utf-8?q?=5BFilmAI=5D_Restablecimiento_de_contrase=C3=B1a?=
+From: FilmAI <onboarding@resend.dev>
+To: revision@example.com
+Date: Thu, 08 Oct 2026 23:22:46 -0000
+Message-ID: <179150176679.1.10396694232238002469@ba1ae826721f>
+
+--===============6497871577615747958==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+
+Hola Ana Pérez,
+
+Recibimos una solicitud para restablecer la contraseña de tu cuenta de FilmAI. Para continuar, abrí este enlace:
+
+http://localhost:3000/confirm-email/revision/
+
+Este enlace es válido durante 1 hora. Si se venció, podés pedir otro desde la pantalla de inicio de sesión con «¿Olvidaste tu contraseña?».
+
+Si no hiciste esta solicitud, ignorá este mensaje: tu contraseña no se modificará.
+
+El equipo de FilmAI
+
+Recibís este correo porque se pidió recuperar el acceso a una cuenta de FilmAI.
+© 2026 FilmAI. Datos e imágenes de películas y series provistos por TMDB.
+--===============6497871577615747958==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Restablecé tu contraseña</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #0d0d14;
+      font-family: Arial, Helvetica, sans-serif;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #0d0d14; padding: 32px 16px"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              max-width: 480px;
+              background-color: #161625;
+              border: 1px solid #2a2a45;
+              border-radius: 16px;
+            "
+          >
+            <tr>
+              <td style="padding: 40px 40px 8px 40px">
+                <span style="font-size: 24px; font-weight: bold; color: #e0e0e0"
+                  >FilmAI</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 24px 40px;
+                  font-size: 15px;
+                  line-height: 1.6;
+                  color: #e0e0e0;
+                "
+              >
+                <span style="display: block; font-size: 20px; font-weight: bold; padding-bottom: 16px"
+                  >Restablecé tu contraseña</span
+                >
+                Hola Ana Pérez,
+                <br /><br />
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta de FilmAI. Para continuar, tocá el botón.
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 8px 40px 24px 40px">
+                <a
+                  href="http://localhost:3000/confirm-email/revision/"
+                  style="
+                    display: inline-block;
+                    background-color: #e67e22;
+                    color: #ffffff;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 15px;
+                    padding: 12px 32px;
+                    border-radius: 10px;
+                  "
+                  >Restablecer mi contraseña</a
+                >
+              </td>
+            </tr>
+            
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 0 40px 24px 40px;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: #a0a0a8;
+                "
+              >
+                Si el botón no funciona, copiá y pegá este enlace en tu navegador:<br />
+                <a
+                  href="http://localhost:3000/confirm-email/revision/"
+                  style="color: #f5c518; word-break: break-all"
+                  >http://localhost:3000/confirm-email/revision/</a
+                >
+              </td>
+            </tr>
+            
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 8px 40px;
+                  border-top: 1px solid #2a2a45;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: #a0a0a8;
+                "
+              >
+                Este enlace es válido durante 1 hora. Si se venció, podés pedir otro desde la pantalla de inicio de sesión con «¿Olvidaste tu contraseña?».
+                <br /><br />
+                Si no hiciste esta solicitud, ignorá este mensaje: tu contraseña no se modificará.
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 16px 40px;
+                  font-size: 13px;
+                  color: #a0a0a8;
+                "
+              >
+                El equipo de FilmAI
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 0 40px 32px 40px;
+                  font-size: 12px;
+                  line-height: 1.6;
+                  color: #a0a0a8;
+                "
+              >
+                Recibís este correo porque se pidió recuperar el acceso a una cuenta de FilmAI.
+                <br />
+                © 2026 FilmAI. Datos e imágenes de películas y series provistos por TMDB.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+--===============6497871577615747958==--

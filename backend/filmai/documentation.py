@@ -3,10 +3,13 @@
 from functools import wraps
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.cache import patch_cache_control, patch_vary_headers
+
+from .errores.sobre import construir_sobre
 
 
 def documentacion_para_staff(vista, recurso):
@@ -35,10 +38,11 @@ def documentacion_para_staff(vista, recurso):
                 status=403,
             )
         else:
+            sobre = construir_sobre(
+                "documentation_staff_required", 403, debug=settings.DEBUG
+            )
             respuesta = JsonResponse(
-                {
-                    "detail": "Para consultar esta documentación, ingresá al Admin con una cuenta staff."
-                },
+                sobre,
                 status=403,
             )
 

@@ -12,9 +12,7 @@ Ninguna abre su propia transacción: quien llama las pone dentro de la suya,
 así la calificación y el ítem se guardan o se descartan juntos.
 """
 
-from listas.models import Lista, Tiene, TipoLista
-
-VISTAS = "Vistas"
+from listas.models import ClaveLista, Lista, Tiene, TipoLista
 
 
 def lista_vistas(usuario):
@@ -25,7 +23,7 @@ def lista_vistas(usuario):
     `reparar_recursos_usuarios`; crearla acá escondería el problema.
     """
     return Lista.objects.get(
-        usuario=usuario, nombre=VISTAS, tipo=TipoLista.PREDETERMINADA
+        usuario=usuario, clave=ClaveLista.VISTAS, tipo=TipoLista.PREDETERMINADA
     )
 
 
@@ -51,7 +49,7 @@ def quitar_de_vistas(usuario, produccion):
     """
     Tiene.objects.filter(
         lista__usuario=usuario,
-        lista__nombre=VISTAS,
+        lista__clave=ClaveLista.VISTAS,
         lista__tipo=TipoLista.PREDETERMINADA,
         produccion=produccion,
     ).delete()

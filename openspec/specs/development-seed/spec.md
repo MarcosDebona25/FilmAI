@@ -46,3 +46,19 @@ percent of up to 15 ratings, adding text to ratings without it while preserving
 existing reviews.
 Every seventh review created by a run MUST start inactive so the Admin can
 exercise its moderation filter. Reviews MUST remain attached to valid ratings.
+
+### Requirement: Known bilingual development accounts
+
+The full `seed` MUST assign `es` to usuario001/usuario003 and `en` to
+usuario002, preserving the existing documented credentials. Repeating a full
+seed recreates the same language assignments. `seed --solo-resenas` MUST NOT
+assign or replace any account language, including null for older accounts.
+No automatic database reset or language backfill is introduced.
+
+#### Scenario: Seed accounts in a test database
+
+- WHEN the full command runs twice
+- THEN the three known development emails keep the documented ES/EN assignments
+- AND the preserved administrator's language is unchanged
+- WHEN only reviews are seeded for previous accounts
+- THEN their saved or null languages remain unchanged

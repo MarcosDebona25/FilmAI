@@ -38,16 +38,15 @@ from catalogo.models import (
 from chatbot.factories import MensajeFactory
 from chatbot.models import Chat, Mensaje, TipoAutor
 from listas.factories import ListaFactory
-from listas.models import Lista, Tiene, TipoLista
+from listas.models import ClaveLista, Lista, Tiene, TipoLista
 from listas.services import agregar_a_vistas
 from usuarios.factories import UsuarioFactory
 from usuarios.models import EstadoCuenta, Usuario
+from usuarios.provisioning import nombres_listas_predeterminadas
 
 # Contraseña común para todos los usuarios de prueba (útil para login manual).
 SEED_PASSWORD = "Password123!"
 
-# Listas predeterminadas que se crean para cada usuario (CU-009).
-LISTAS_PREDETERMINADAS = ["Favoritos", "Pendientes", "Vistas"]
 
 CANTIDAD_USUARIOS = 3
 CANTIDAD_PRODUCCIONES = 50
@@ -189,6 +188,7 @@ class Command(BaseCommand):
                 nombre_usuario=f"usuario{i:03d}",
                 correo=f"usuario{i:03d}@filmai.com",
                 password=SEED_PASSWORD,
+                idioma="es" if i % 2 else "en",
             )
             # allauth necesita un EmailAddress verificado para permitir el
             # login cuando ACCOUNT_EMAIL_VERIFICATION es "mandatory".
@@ -296,21 +296,18 @@ class Command(BaseCommand):
             listas = {}
             # Las listas predeterminadas ya las crea la señal post_save de
             # `usuarios` al dar de alta el usuario; aquí solo se reutilizan.
-            for nombre in LISTAS_PREDETERMINADAS:
-                lista, _ = Lista.objects.get_or_create(
-                    usuario=usuario,
-                    nombre=nombre,
-                    defaults={"tipo": TipoLista.PREDETERMINADA},
+            for clave in nombres_listas_predeterminadas():
+                listas[clave] = usuario.listas.get(
+                    clave=clave, tipo=TipoLista.PREDETERMINADA
                 )
-                listas[nombre] = lista
 
             for _ in range(random.randint(1, 2)):
                 ListaFactory.create(usuario=usuario)
 
             # Puebla las predeterminadas a través de la tabla intermedia Tiene.
-            self._poblar_lista(listas["Favoritos"], producciones, 4)
-            self._poblar_lista(listas["Pendientes"], producciones, 5)
-            self._poblar_lista(listas["Vistas"], producciones, 3)
+            self._poblar_lista(listas[ClaveLista.FAVORITOS], producciones, 4)
+            self._poblar_lista(listas[ClaveLista.PENDIENTES], producciones, 5)
+            self._poblar_lista(listas[ClaveLista.VISTAS], producciones, 3)
 
     @staticmethod
     def _poblar_lista(lista, producciones, cantidad):

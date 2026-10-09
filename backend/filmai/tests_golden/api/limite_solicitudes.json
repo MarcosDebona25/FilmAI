@@ -1,0 +1,10 @@
+{
+  "status": 429,
+  "body": {
+    "code": "throttled",
+    "params": {
+      "retry_after_seconds": 42
+    },
+    "errors": []
+  }
+}

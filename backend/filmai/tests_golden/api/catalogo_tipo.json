@@ -1,0 +1,19 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "tipo",
+        "code": "invalid_choice",
+        "params": {
+          "allowedValues": [
+            "movie",
+            "tv"
+          ]
+        }
+      }
+    ]
+  }
+}

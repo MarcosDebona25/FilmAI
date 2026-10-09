@@ -1,0 +1,3 @@
+{% extends "correos/base_es.html" %}{% block titulo %}Confirmá tu cuenta{% endblock %}{% block encabezado %}Confirmá tu cuenta{% endblock %}{% block introduccion %}¡Bienvenido/a a FilmAI! Para activar tu cuenta necesitamos confirmar tu dirección de correo electrónico.{% endblock %}{% block boton %}Confirmar mi cuenta{% endblock %}{% block advertencia %}Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}. Si se venció, podés pedir otro desde la pantalla de registro con «Reenviar enlace».
+                <br /><br />
+                Si no creaste esta cuenta, ignorá este mensaje.{% endblock %}{% block motivo %}Recibís este correo porque alguien registró esta dirección en FilmAI.{% endblock %}

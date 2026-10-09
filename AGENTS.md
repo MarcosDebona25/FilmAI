@@ -82,3 +82,14 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - **Backend**: Django 5.1 + Django REST Framework, PostgreSQL 16, Redis, Celery (todo en Docker, `docker compose`).
 - **Frontend**: Next.js + Tailwind + Shadcn.
 - **Modelo de usuario**: `usuarios.Usuario` como `AUTH_USER_MODEL` (detalles en `docs/decisiones.md`).
+
+## 10. Multiidioma
+
+- No introducir literales visibles fuera de las excepciones de `frontend/scripts/i18n/rules.mjs`; retirar cada excepción al integrar su diseño.
+- Mantener paridad de claves, argumentos ICU, códigos y enumeraciones; generar los catálogos desde los CSV aprobados y ejecutar `npm run i18n:check`.
+- Traducir errores por código; nunca consumir `debug`, `detail` ni `codigo`. Usar `lib/format.ts` para los formatos.
+- Rutas visibles en `frontend/lib/routes.ts`; enlaces de correo y frontend se modifican juntos.
+
+## 11. Códigos HTTP
+
+- Siempre que se mencione un código de estado HTTP (en el chat, la documentación, los comentarios o los mensajes de commit), acompañarlo de su nombre entre paréntesis. Ejemplo: 200 (OK), 404 (Not Found), 429 (Too Many Requests).

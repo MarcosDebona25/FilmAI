@@ -1,0 +1,16 @@
+{% load nombres %}Hola {{ user|nombre_completo:"es" }},
+
+Pediste confirmar esta dirección de correo electrónico en tu cuenta de FilmAI. Confirmala para seguir usando tu cuenta.
+
+Confirmá tu correo abriendo este enlace:
+
+{{ enlace_correo }}
+
+Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}.
+
+Si no pediste esta confirmación, ignorá este mensaje: no se hará ningún cambio.
+
+El equipo de FilmAI
+
+Recibís este correo porque se usó esta dirección en una cuenta de FilmAI.
+© {{ anio }} FilmAI. Datos e imágenes de películas y series provistos por TMDB.

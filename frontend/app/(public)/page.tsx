@@ -1,4 +1,5 @@
 "use client";
+import { routes } from "@/lib/routes";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -61,7 +62,7 @@ export default function PublicHome() {
             size="lg"
             variant="secondary"
             className="w-full"
-            onClick={() => router.push("/register")}
+            onClick={() => router.push(routes.register)}
           >
             Registrarse
           </Button>
@@ -69,7 +70,7 @@ export default function PublicHome() {
             size="lg"
             variant="secondary"
             className="w-full"
-            onClick={() => router.push("/login")}
+            onClick={() => router.push(routes.login)}
           >
             Iniciar sesión
           </Button>

@@ -1,8 +1,10 @@
 from dj_rest_auth.registration.views import ResendEmailVerificationView
+from dj_rest_auth.views import LogoutView
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser
 
@@ -25,6 +27,7 @@ from usuarios.views import (
     RegisterView,
     RestablecerContrasenaView,
     UsernameDisponibleView,
+    con_codigo_exito,
 )
 
 handler404 = "filmai.views.custom_404"
@@ -119,8 +122,21 @@ urlpatterns = [
         name="rest_password_reset_confirm",
     ),
     path("api/auth/login/", LoginView.as_view(), name="rest_login"),
+    path(
+        "api/auth/logout/",
+        con_codigo_exito(LogoutView.as_view(), "logged_out"),
+        name="rest_logout",
+    ),
     path("api/auth/", include("dj_rest_auth.urls")),
-    path("api/auth/registration/", RegisterView.as_view(), name="rest_register"),
+    path(
+        "api/auth/registration/",
+        con_codigo_exito(
+            RegisterView.as_view(),
+            "registration_pending_confirmation",
+            status.HTTP_201_CREATED,
+        ),
+        name="rest_register",
+    ),
     path(
         "api/auth/registration/verify-email/",
         ConfirmarCorreoView.as_view(),
@@ -128,7 +144,9 @@ urlpatterns = [
     ),
     path(
         "api/auth/registration/resend-email/",
-        ResendEmailVerificationView.as_view(),
+        con_codigo_exito(
+            ResendEmailVerificationView.as_view(), "confirmation_email_sent"
+        ),
         name="rest_resend_email",
     ),
     # ``\w`` también permite guion bajo.

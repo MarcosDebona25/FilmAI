@@ -1,4 +1,7 @@
 "use client";
+import { routes } from "@/lib/routes";
+import { useTranslations } from "next-intl";
+import enums from "@/i18n/enums.json";
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -7,25 +10,12 @@ import { Check, Eye, EyeOff, Info, Loader2, X } from "lucide-react";
 
 import { GoogleLinkButton } from "@/components/GoogleLinkButton";
 import { Button } from "@/components/ui/button";
+import { currentLocale } from "@/i18n/client";
 import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
-import {
-  validarApellido,
-  validarConfirmacion,
-  validarCorreo,
-  validarFechaNacimiento,
-  validarNombre,
-  validarNombreUsuario,
-  validarPassword,
-} from "@/lib/validation";
+import { useValidation } from "@/lib/use-validation";
 
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
-
-const GENEROS = [
-  { value: "masculino", label: "Masculino" },
-  { value: "femenino", label: "Femenino" },
-  { value: "no_especifica", label: "No especificar" },
-];
 
 type Campo =
   | "nombre"
@@ -38,17 +28,6 @@ type Campo =
   | "password2";
 
 type Errores = Partial<Record<Campo, string>>;
-
-const VALIDADORES: Record<Campo, (valor: string, form: Record<Campo, string>) => string | null> = {
-  nombre: (v) => validarNombre(v),
-  apellido: (v) => validarApellido(v),
-  nombre_usuario: (v) => validarNombreUsuario(v),
-  correo: (v) => validarCorreo(v),
-  fecha_nacimiento: (v) => validarFechaNacimiento(v),
-  genero: (v) => (v ? null : "Campo obligatorio."),
-  password1: (v) => validarPassword(v),
-  password2: (v, form) => validarConfirmacion(form.password1, v),
-};
 
 /** Fecha máxima para el datepicker: hoy −13 años (enforcement visual; el backend valida). */
 function maxFechaNacimiento(): string {
@@ -67,6 +46,33 @@ function ErrorTexto({ mensaje }: { mensaje?: string }) {
 }
 
 export default function RegisterPage() {
+  const labels = useTranslations("enums.gender");
+  const errors = useTranslations("errors.codes");
+  const GENEROS = enums.genderValues.map((value) => ({
+    value,
+    label: labels(value as "masculino"),
+  }));
+
+  const {
+    validarApellido,
+    validarConfirmacion,
+    validarCorreo,
+    validarFechaNacimiento,
+    validarNombre,
+    validarNombreUsuario,
+    validarPassword,
+  } = useValidation();
+  const VALIDADORES: Record<Campo, (valor: string, form: Record<Campo, string>) => string | null> =
+    {
+      nombre: (v) => validarNombre(v),
+      apellido: (v) => validarApellido(v),
+      nombre_usuario: (v) => validarNombreUsuario(v),
+      correo: (v) => validarCorreo(v),
+      fecha_nacimiento: (v) => validarFechaNacimiento(v),
+      genero: (v) => (v ? null : errors("required")),
+      password1: (v) => validarPassword(v),
+      password2: (v, form) => validarConfirmacion(form.password1, v),
+    };
   const [form, setForm] = useState<Record<Campo, string>>({
     nombre: "",
     apellido: "",
@@ -119,7 +125,7 @@ export default function RegisterPage() {
       try {
         const res = await fetch(
           apiUrl(`/api/auth/username-available/?username=${encodeURIComponent(valor)}`),
-          { signal: controller.signal }
+          { signal: controller.signal, headers: { "Accept-Language": currentLocale() } }
         );
         if (!res.ok) {
           // Un error (p.ej. 429 por rate limit) no es "ocupado": se vuelve a
@@ -137,7 +143,7 @@ export default function RegisterPage() {
       clearTimeout(debounceRef.current);
       controller.abort();
     };
-  }, [form.nombre_usuario]);
+  }, [form.nombre_usuario, validarNombreUsuario]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -173,7 +179,7 @@ export default function RegisterPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         // Errores de campo del backend → inline bajo cada input.
-        const porCampo = extraerErroresPorCampo(err.details);
+        const porCampo = extraerErroresPorCampo(err);
         const mapeados: Errores = {};
         for (const campo of Object.keys(VALIDADORES) as Campo[]) {
           if (porCampo[campo]) mapeados[campo] = porCampo[campo];
@@ -263,7 +269,7 @@ export default function RegisterPage() {
                 {error}
               </p>
             )}
-            <Link href="/login" className="text-primary hover:underline">
+            <Link href={routes.login} className="text-primary hover:underline">
               ¿Ya confirmaste? Iniciar sesión
             </Link>
           </div>
@@ -294,9 +300,13 @@ export default function RegisterPage() {
 
         <form onSubmit={onSubmit} noValidate className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Nombre</label>
+            <label htmlFor="register-nombre" className="mb-1 block text-sm text-muted-foreground">
+              Nombre
+            </label>
             <input
               className={`${inputClass} ${tocados.nombre && errores.nombre ? "border-destructive" : ""}`}
+              id="register-nombre"
+              name="nombre"
               value={form.nombre}
               onChange={(e) => setField("nombre", e.target.value)}
               onBlur={() => onBlurCampo("nombre")}
@@ -306,9 +316,13 @@ export default function RegisterPage() {
             <ErrorTexto mensaje={tocados.nombre ? errores.nombre : undefined} />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Apellido</label>
+            <label htmlFor="register-apellido" className="mb-1 block text-sm text-muted-foreground">
+              Apellido
+            </label>
             <input
               className={`${inputClass} ${tocados.apellido && errores.apellido ? "border-destructive" : ""}`}
+              id="register-apellido"
+              name="apellido"
               value={form.apellido}
               onChange={(e) => setField("apellido", e.target.value)}
               onBlur={() => onBlurCampo("apellido")}
@@ -318,7 +332,12 @@ export default function RegisterPage() {
             <ErrorTexto mensaje={tocados.apellido ? errores.apellido : undefined} />
           </div>
           <div className="col-span-2">
-            <label className="mb-1 block text-sm text-muted-foreground">Nombre de usuario</label>
+            <label
+              htmlFor="register-nombre_usuario"
+              className="mb-1 block text-sm text-muted-foreground"
+            >
+              Nombre de usuario
+            </label>
             <input
               className={`${inputClass} ${
                 tocados.nombre_usuario && errores.nombre_usuario
@@ -327,6 +346,8 @@ export default function RegisterPage() {
                     ? "border-green-600"
                     : ""
               }`}
+              id="register-nombre_usuario"
+              name="nombre_usuario"
               value={form.nombre_usuario}
               onChange={(e) => setField("nombre_usuario", e.target.value)}
               onBlur={() => onBlurCampo("nombre_usuario")}
@@ -338,10 +359,14 @@ export default function RegisterPage() {
             {usernameValido && hintUsername()}
           </div>
           <div className="col-span-2">
-            <label className="mb-1 block text-sm text-muted-foreground">Correo</label>
+            <label htmlFor="register-correo" className="mb-1 block text-sm text-muted-foreground">
+              Correo
+            </label>
             <input
               className={`${inputClass} ${tocados.correo && errores.correo ? "border-destructive" : ""}`}
               type="email"
+              id="register-correo"
+              name="correo"
               value={form.correo}
               onChange={(e) => setField("correo", e.target.value)}
               onBlur={() => onBlurCampo("correo")}
@@ -351,11 +376,18 @@ export default function RegisterPage() {
             <ErrorTexto mensaje={tocados.correo ? errores.correo : undefined} />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Fecha de nacimiento</label>
+            <label
+              htmlFor="register-fecha_nacimiento"
+              className="mb-1 block text-sm text-muted-foreground"
+            >
+              Fecha de nacimiento
+            </label>
             <input
               className={`${inputClass} ${tocados.fecha_nacimiento && errores.fecha_nacimiento ? "border-destructive" : ""}`}
               type="date"
               max={maxFechaNacimiento()}
+              id="register-fecha_nacimiento"
+              name="fecha_nacimiento"
               value={form.fecha_nacimiento}
               onChange={(e) => setField("fecha_nacimiento", e.target.value)}
               onBlur={() => onBlurCampo("fecha_nacimiento")}
@@ -366,9 +398,13 @@ export default function RegisterPage() {
             <ErrorTexto mensaje={tocados.fecha_nacimiento ? errores.fecha_nacimiento : undefined} />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Género</label>
+            <label htmlFor="register-genero" className="mb-1 block text-sm text-muted-foreground">
+              Género
+            </label>
             <select
               className={`${inputClass} ${tocados.genero && errores.genero ? "border-destructive" : ""}`}
+              id="register-genero"
+              name="genero"
               value={form.genero}
               onChange={(e) => setField("genero", e.target.value)}
               onBlur={() => onBlurCampo("genero")}
@@ -387,7 +423,10 @@ export default function RegisterPage() {
             <ErrorTexto mensaje={tocados.genero ? errores.genero : undefined} />
           </div>
           <div className="col-span-2">
-            <label className="mb-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <label
+              htmlFor="register-password1"
+              className="mb-1 flex items-center gap-1.5 text-sm text-muted-foreground"
+            >
               Contraseña
               <span className="group relative inline-flex">
                 <Info className="size-3.5 cursor-help" />
@@ -407,6 +446,8 @@ export default function RegisterPage() {
               <input
                 className={`${inputClass} pr-10 ${tocados.password1 && errores.password1 ? "border-destructive" : ""}`}
                 type={mostrarPassword1 ? "text" : "password"}
+                id="register-password1"
+                name="password1"
                 value={form.password1}
                 onChange={(e) => setField("password1", e.target.value)}
                 onBlur={() => onBlurCampo("password1")}
@@ -426,11 +467,18 @@ export default function RegisterPage() {
             <ErrorTexto mensaje={tocados.password1 ? errores.password1 : undefined} />
           </div>
           <div className="col-span-2">
-            <label className="mb-1 block text-sm text-muted-foreground">Confirmar contraseña</label>
+            <label
+              htmlFor="register-password2"
+              className="mb-1 block text-sm text-muted-foreground"
+            >
+              Confirmar contraseña
+            </label>
             <div className="relative">
               <input
                 className={`${inputClass} pr-10 ${tocados.password2 && errores.password2 ? "border-destructive" : ""}`}
                 type={mostrarPassword2 ? "text" : "password"}
+                id="register-password2"
+                name="password2"
                 value={form.password2}
                 onChange={(e) => setField("password2", e.target.value)}
                 onBlur={() => onBlurCampo("password2")}
@@ -463,7 +511,7 @@ export default function RegisterPage() {
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           ¿Ya tenés cuenta?{" "}
-          <Link href="/login" className="text-primary hover:underline">
+          <Link href={routes.login} className="text-primary hover:underline">
             Iniciar sesión
           </Link>
         </p>

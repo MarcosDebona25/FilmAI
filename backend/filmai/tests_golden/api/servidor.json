@@ -1,0 +1,8 @@
+{
+  "status": 500,
+  "body": {
+    "code": "server_error",
+    "params": {},
+    "errors": []
+  }
+}

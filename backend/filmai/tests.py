@@ -171,13 +171,14 @@ class ExceptionHandlerTests(SimpleTestCase):
         response = filmai_exception_handler(TMDBNotFound("No encontrada"), {})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, {"detail": "No encontrada"})
+        self.assertEqual(response.data["code"], "upstream_not_found")
+        self.assertEqual(response.data["code"], "upstream_not_found")
 
     def test_404_de_django_devuelve_json_en_espanol(self):
         response = filmai_exception_handler(Http404(), {})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data["detail"], "El recurso solicitado no existe.")
+        self.assertEqual(response.data["code"], "not_found")
 
     def test_method_not_allowed_acepta_detail_como_lista(self):
         exception = MethodNotAllowed("GET")
@@ -186,18 +187,13 @@ class ExceptionHandlerTests(SimpleTestCase):
         response = filmai_exception_handler(exception, {})
 
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-        self.assertEqual(
-            response.data["detail"], "Método HTTP GET no permitido para este endpoint."
-        )
+        self.assertEqual(response.data["code"], "method_not_allowed")
 
     def test_throttled_devuelve_429_con_mensaje_consistente(self):
         response = filmai_exception_handler(Throttled(wait=10), {})
 
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-        self.assertEqual(
-            response.data["detail"],
-            "Demasiadas solicitudes. Intentá de nuevo más tarde.",
-        )
+        self.assertEqual(response.data["code"], "throttled")
         self.assertEqual(response["Retry-After"], "10")
 
     def test_handlers_de_django_devuelven_json(self):
@@ -271,12 +267,8 @@ class DocumentacionApiTests(TestCase):
     def test_cliente_json_recibe_403_explicativo(self):
         respuesta = self.client.get(reverse("schema"), HTTP_ACCEPT="application/json")
         self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(
-            respuesta.json(),
-            {
-                "detail": "Para consultar esta documentación, ingresá al Admin con una cuenta staff."
-            },
-        )
+        self.assertEqual(respuesta.json()["code"], "documentation_staff_required")
+        self.assertEqual(respuesta.json()["code"], "documentation_staff_required")
 
     def test_staff_puede_leer_documentacion_con_cookie_jwt_invalida(self):
         # El navegador conserva la sesión del Admin aunque el JWT de la API

@@ -1,0 +1,8 @@
+{
+  "status": 503,
+  "body": {
+    "code": "upstream_unavailable",
+    "params": {},
+    "errors": []
+  }
+}

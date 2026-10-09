@@ -7,12 +7,36 @@ in them through `/api/lists/`.
 
 ## Requirements
 
+### Stable identity of existing predetermined lists
+
+`Lista.clave` MUST support `favoritos`, `pendientes`, and `vistas`, and MUST
+remain nullable during the migration of application code to these identities.
+The existing `nombre`, list IDs, and `Tiene` relations MUST be preserved.
+
+Migration `listas.0005_lista_clave` MUST assign each existing predetermined
+list its key from `Lower(nombre)`. Personalized lists MUST remain without a
+key, including those whose names match a predetermined name.
+An unknown predetermined name MUST stop the migration explicitly and roll
+back its schema and data changes. Reversing the migration MUST clear keys
+before removing the column, while preserving lists and items.
+
+### Runtime identity and provisioning
+
+Provisioning, presentation order, rating membership and removal guards MUST
+identify predetermined lists by `clave`, independently of `nombre`.
+Provisioning MUST preserve renamed lists and their IDs. During the nullable
+transition it MAY locate a missing-key resource by its legacy name, without
+recreating it or changing its name. A conflicting type or identity MUST fail.
+The development seed and repair audit MUST use these same identities.
+
 ### Summary and membership
 
 `GET /api/lists/` MUST return active lists belonging to the authenticated user.
-Each list MUST include its ID, name, type, `cantidad_items`,
+Each list MUST include its ID, name, type, nullable `clave`, `cantidad_items`,
 `cantidad_peliculas`, `cantidad_series`, and up to five recent non-empty poster
 paths in `preview_posters`.
+Personalized lists MUST expose `clave = null`. Predetermined summaries MUST
+be ordered by `favoritos`, `pendientes`, `vistas`, even after a stored rename.
 
 When `id_tmdb` and `tipo` (`movie` or `tv`) are supplied together, every list
 MUST also include `contiene` and, when true, `item_id`. Supplying only one of
@@ -28,6 +52,15 @@ items.
 Names MUST be unique per user without case sensitivity, be at most 80
 characters, and allow Unicode letters, numbers, and spaces.
 Predetermined lists MUST reject rename and deletion with a 409 conflict.
+Creating or renaming a personalized list MUST reject a reserved label from
+any supported language, after whitespace normalization and without case
+sensitivity, with `list_name_reserved`, HTTP 409 and empty params.
+The reserved labels MUST match the approved default-list catalog labels.
+Existing personalized names MUST be returned unchanged, without translation.
+
+`contracts/enums.json` MUST publish `defaultListKeys`, `genderValues` and
+`reservedListNames` by language. The export command MUST reproduce the file
+from model values and the backend reservation registry.
 
 ### Items
 
@@ -50,5 +83,8 @@ module keeps owning `Tiene`.
 ### Errors and ownership
 
 All endpoints MUST require authentication. A list or item belonging to another
-user MUST appear as 404. Business conflicts MUST expose a stable `codigo` and a
-human-readable `detail`.
+user MUST appear as 404. Business conflicts MUST expose a stable `code` and the common error envelope, without interface text.
+
+### Definitive error contract
+
+OT-83 removes public `codigo`, `detail` and root field keys. Use `list_name_duplicated`, `list_name_reserved`, `list_item_duplicated`, `default_list_protected` and `rating_blocks_removal_from_watched`, with the common error envelope. Request fields and enum values retain their spelling. Frontend labels for default lists use the exported stable keys.

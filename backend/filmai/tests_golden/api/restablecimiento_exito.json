@@ -1,0 +1,6 @@
+{
+  "status": 200,
+  "body": {
+    "code": "password_reset_completed"
+  }
+}
