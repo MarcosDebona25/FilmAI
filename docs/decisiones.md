@@ -3592,3 +3592,24 @@ sus dos cabezas publicadas antes de integrarse.
 ## 08/10/2026 — Etiqueta compartida del avatar
 
 **Descripción:** El control reforzado de literales detectó etiquetas accesibles en español en `frontend/components/Avatar.tsx`. Se usa la clave aprobada `common.avatar.currentAlt` tanto para la imagen como para las iniciales. Dos casos unitarios verifican el nombre accesible en inglés y español después de un fallo de imagen; no se amplían las excepciones heredadas.
+
+
+## 09/10/2026 — Cierre del plan multiidioma y montajes del backend
+
+**Descripción:** Verificación de cierre sobre `develop` (`5ed0472`): CI remoto verde en sus tres jobs (ejecución 37861657623), suites locales repetidas (Django 686, Vitest 96, Playwright 37), contratos y catálogos regenerados sin diferencias, y recorridos contra la API y el frontend reales en inglés y español. Se encontró que `docker compose exec backend python manage.py test` fallaba en 5 tests porque el contenedor no veía `contracts/` ni `docs/i18n/` (los tests y los comandos `exportar_contrato`/`exportar_enums` los resuelven como `BASE_DIR.parent`); en CI pasaban por tener el repo completo. Se decide montar `./contracts` (escritura, para los comandos de exportación) y `./docs/i18n` (solo lectura) en el servicio `backend`, en lugar de cambiar cómo el código resuelve esas rutas, porque así el contenedor y CI comparten la misma disposición. Quien ya tenga el contenedor creado debe recrearlo con `docker compose up -d backend`. Solo resta la revisión manual de correos en un cliente real, que no bloquea las interfaces. Archivos: `docker-compose.yml`.
+
+
+## 09/10/2026 — Se retiran los documentos de planificación del multiidioma
+
+**Descripción:** Terminado el plan, se eliminan `docs/plan-multiidioma.md`, `docs/siguientes-pasos-multiidioma.md` y, de `docs/i18n/`, `README.md`, `glosario.md`, `errores.csv`, `equivalencias.json` y `tmdb-verificacion-ot60.md`, para no dejar documentos de trabajo dispersos. Siguen disponibles en el historial de git (último commit que los contiene: `5ed0472`). Lo que sigue vigente se conservó: las fuentes de la copia, el glosario, las notas para implementar pantallas y el pendiente de correos pasan a `docs/i18n/guia.md`; la evidencia del comportamiento de TMDB pasa al doc 06. Quedan en `docs/i18n/` solo la guía, los tres CSV que usan el generador y los tests, y `revision-correos/` hasta completar esa revisión. Las entradas anteriores de este archivo que citan el plan o sus órdenes de trabajo (OT-xx) se conservan como historia. La base de desarrollo se volvió a sembrar con `seed --borrar-catalogo`: las cuentas de prueba tienen ahora su idioma guardado. Archivos: los eliminados, `docs/i18n/guia.md`, docs 02, 04 y 06, `openspec/specs/error-contract/spec.md`, `backend/catalogo/services/fallback.py`.
+
+
+## 09/10/2026 — Chatbot: temas de idioma abiertos para el pair programming
+
+**Descripción:** No es una decisión: son los puntos que Gonza y Marcos deben resolver juntos antes de implementar B-02–B-06, y que el plan multiidioma dejó deliberadamente sin cerrar. Lo ya acordado el 08/10/2026 (ver «Arquitectura del chatbot (Módulo 5)») se mantiene: respuestas en `idioma_efectivo()`, español con voseo, tools de TMDB localizadas, BGE-M3 sobre el corpus canónico en inglés y sin duplicar embeddings. Quedan abiertos:
+
+1. **Idioma de una respuesta SSE en curso.** Cómo se fija el idioma al abrir el stream para que no cambie a mitad de la respuesta.
+2. **Cambio de idioma durante una solicitud.** Qué pasa si el usuario cambia el idioma en Preferencias mientras hay una respuesta en curso.
+3. **Tarjetas y errores.** Cómo se localizan las tarjetas de producciones dentro del chat y los errores del stream.
+
+Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.py`, la spec `i18n-core` y las 21 filas `chatbot` de `docs/i18n/claves.csv`, que tienen la copia del diseño todavía sin sembrar. Al resolverlos, registrar la decisión en una entrada nueva.

@@ -375,8 +375,23 @@ global. La fábrica sin argumentos devuelve el cliente inglés compartido por
 materialización; cada cliente mantiene un idioma fijo. Las seis vistas públicas
 localizables seleccionan ese cliente por el encabezado Accept-Language, con
 pesos y regiones, o inglés por defecto. Su autenticación permanece vacía;
-keywords conserva el servicio global. La evidencia contra TMDB está en
-`docs/i18n/tmdb-verificacion-ot60.md`.
+keywords conserva el servicio global. 
+
+Comportamiento del proveedor verificado contra la API real el 08/10/2026
+(observaciones de esa fecha, no garantías):
+
+- Omitir `language` equivale a `en-US` en título, sinopsis, póster y géneros
+  (`/movie/550`, `/movie/10778`, `/tv/1396`).
+- `en-US` y `es-MX` figuran en `/configuration/primary_translations`. Los
+  géneros conservan sus IDs entre idiomas; algunos nombres llegan sin traducir
+  (`10759` es “Action & Adventure” en ambos).
+- TMDB no rellena con otro idioma: sin traducción, la sinopsis llega vacía y el
+  título puede ser el original (`1559362` devuelve «荒木又右衛門»). Por eso el
+  respaldo completa campo por campo solo lo vacío y no deduce la ausencia de
+  traducción a partir del título.
+- Las imágenes se filtran con códigos sin región
+  (`include_image_language=es,en,null`). No hay endpoint de imágenes propio ni
+  cambio en la política de pósters.
 
 
 ## Respaldo, persistencia y consumo frontend (OT-61–63, OT-72–76)

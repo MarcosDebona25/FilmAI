@@ -1,7 +1,7 @@
 """Completa con inglés los campos que TMDB devuelve vacíos en otro idioma.
 
 TMDB no rellena con otro idioma: sin traducción, la sinopsis llega vacía
-(docs/i18n/tmdb-verificacion-ot60.md). El respaldo se pide solo cuando hace
+(docs/06_TMDB_API_Referencia.md). El respaldo se pide solo cuando hace
 falta, pasa por la misma caché y nunca pisa un valor no vacío.
 """
 
