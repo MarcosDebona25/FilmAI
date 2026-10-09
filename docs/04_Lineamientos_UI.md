@@ -141,7 +141,7 @@ Todas las pantallas autenticadas comparten:
 
 ### 4.1 Idioma y selector de idioma
 
-FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños de Claude Design están en inglés; el español sale de `docs/i18n/equivalencias.json`. Los formatos siguen al idioma vía Intl (inglés: `8.5`, `41,355`, `Sep 28, 2026`; español: `8,5`, `41.355`, `28 sept 2026`).
+FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños de Claude Design están en inglés; el español sale de `docs/i18n/claves.csv`, que conserva la tabla de equivalencias original en sus columnas `es_original` y `en_original`. Los formatos siguen al idioma vía Intl (inglés: `8.5`, `41,355`, `Sep 28, 2026`; español: `8,5`, `41.355`, `28 sept 2026`).
 
 | Contexto                                            | Control                                                                                                                                                          |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |

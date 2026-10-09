@@ -780,7 +780,7 @@ El perfil permite elegir avatar mediante modal desde una capa visible al editar.
 
 ### Multiidioma (08/10/2026)
 
-FilmAI es nativa en inglés y admite español. Las reglas acordadas (detalle y decisiones en `docs/decisiones.md` y `docs/plan-multiidioma.md`) son:
+FilmAI es nativa en inglés y admite español. Las reglas acordadas (decisiones en `docs/decisiones.md`; uso en `docs/i18n/guia.md`) son:
 
 - **Resolución del idioma.** Con sesión, la cuenta es la fuente de verdad; la cookie `filmai_locale` es su espejo para renderizar. Sin sesión se usa la cookie. El backend resuelve, en este orden: idioma guardado en la cuenta, encabezado `Accept-Language` y, por último, inglés. Al iniciar sesión gana el idioma guardado.
 - **Selector.** Con sesión, solo en Preferencias; el pie de página con sesión muestra el idioma actual y enlaza a Preferencias. Sin sesión, una pastilla `EN | ES` en landing, inicio de sesión y registro, y el selector en el pie de página de escritorio (ubicaciones en doc 04, sección 4.1).
@@ -791,4 +791,4 @@ FilmAI es nativa en inglés y admite español. Las reglas acordadas (detalle y d
 - **Formatos.** Inglés con `en-US` (`8.5`, `41,355`, `Sep 28, 2026`, `2h 49m`) y español con `es-AR` (`8,5`, `41.355`, `28 sept 2026`, `2 h 49 min`), siempre con `Intl`.
 - **Rutas visibles en inglés** (implementadas en el frontend; `/lists` sigue sin pantalla): `/profile`, `/settings`, `/my-reviews`, `/lists`, `/confirm-email/[key]`, `/reset-password/[uid]/[token]` y `/complete-signup`; `/login` y `/register` no cambian.
 - **Español.** Voseo en toda la copia. Los textos de los casos de uso de este documento se citan en español como referencia; el texto vigente de cada idioma vive en los catálogos (`docs/i18n/`) y en los diseños.
-- **Estado.** Backend (idioma por cuenta, errores por código, listas por clave, correos y TMDB por idioma) integrado en `develop`. Frontend: infraestructura, selector, rutas inglesas y tres pantallas piloto implementados (`docs/siguientes-pasos-multiidioma.md`). Las pantallas no migradas siguen en español hasta implementar su diseño nuevo.
+- **Estado.** Backend (idioma por cuenta, errores por código, listas por clave, correos y TMDB por idioma) integrado en `develop`. Frontend: infraestructura, selector, rutas inglesas y tres pantallas piloto implementados y verificados el 09/10/2026 (`docs/i18n/guia.md`). Las pantallas no migradas siguen en español hasta implementar su diseño nuevo.

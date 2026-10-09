@@ -3,8 +3,10 @@
 ## Purpose and evidence
 
 Define the multilingual API contract implemented in F3 and consumed in F7.
-`docs/i18n/errores.csv` maps every message observed in the 91 OT-01 references,
-source branches absent from those references, and explicit non-API exclusions.
+Every message observed in the 91 OT-01 references, plus source branches absent
+from those references, was mapped to a code before the previous format was
+removed. That inventory was retired with the plan and remains in git history;
+`contracts/error-codes.json` is the living source.
 
 ```text
 Django validators → typed error + catalog → handler / explicit Response normalization

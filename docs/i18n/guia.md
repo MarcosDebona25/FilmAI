@@ -4,7 +4,7 @@ La aplicación admite `en` y `es` sin prefijos de idioma en las rutas. Las panta
 
 ## Agregar texto
 
-Usá una clave que describa la función y una frase completa. La copia aprobada vive en `claves.csv` y `copia-propuesta.csv`. `npm run i18n:generate` produce `messages/{en,es}/common.json`, `legal.json` y la copia de `contracts/enums.json` dentro del frontend. `legacy.*` conserva la copia de las pantallas existentes, con voseo en confirmación y el `*` de la ayuda de contraseña corregidos. El generador parte de los CSV, nunca de los catálogos existentes. Después, ejecutá `npm run format`.
+Usá una clave que describa la función y una frase completa. La copia aprobada vive en `claves.csv` y `copia-propuesta.csv` (ver «Fuentes de la copia»). `npm run i18n:generate` produce `messages/{en,es}/common.json`, `legal.json` y la copia de `contracts/enums.json` dentro del frontend. `legacy.*` conserva la copia de las pantallas existentes, con voseo en confirmación y el `*` de la ayuda de contraseña corregidos. El generador parte de los CSV, nunca de los catálogos existentes. Después, ejecutá `npm run format`.
 
 En un componente cliente, `useTranslations("settings.language")` entrega una función `t` para pedir claves del namespace. En componentes de servidor usá `getTranslations` de `next-intl/server`. Para cantidades usá una frase ICU con `plural`; para enlaces dentro de una frase, `t.rich`. Los argumentos son valores del dominio, no fragmentos de texto. Los catálogos de correos no llegan al navegador y `legal.json` queda separado para cargarlo únicamente cuando exista la página de términos. Sus claves y argumentos ya están tipados. Esa página importará el catálogo de su locale y lo pasará a su propio proveedor; en servidor puede usar `createTranslator` con ese catálogo. El proveedor global sigue enviando solo `common.json`.
 
@@ -48,8 +48,62 @@ Ejecutá Vitest, Playwright, TypeScript, build, ESLint, Prettier, Ruff y Django.
 
 `revision-correos/index.html` reúne ocho variantes renderizadas con los enlaces nuevos; los EML vecinos se pueden abrir en un cliente de correo. Son ejemplos sin tokens reales y no se enviaron al exterior. Comprobá asunto, texto, HTML, tamaños móvil/escritorio, enlaces y ausencia de texto del otro idioma. La revisión en un cliente real sigue siendo una aceptación humana, distinta de las pruebas de render.
 
-## Chatbot
-
-Esta entrega no implementa B-02–B-06. La decisión vigente pide respuestas en `idioma_efectivo()`, español con voseo y tools TMDB localizadas. BGE-M3 consulta el corpus canónico inglés; no se duplican embeddings. En el pair programming del 09/10/2026 hay que acordar cómo fijar el idioma de una respuesta SSE en curso, qué pasa al cambiar Preferencias durante esa solicitud y cómo localizar tarjetas y errores.
-
 El botón de Google recibe `locale` y la carga inicial del SDK usa `hl`, según la [documentación oficial de GIS](https://developers.google.com/identity/gsi/web/guides/display-button). La librería mantiene un solo script y elimina las escuchas de carga cuando cambia el idioma o se desmonta el componente.
+
+## Fuentes de la copia
+
+`claves.csv` tiene una fila por texto del diseño (634) y es la fuente de los catálogos. `copia-propuesta.csv` suma los textos que el diseño no traía (errores, selector, nombres reservados). `ot70-catalogo-transitorio.csv` guarda la copia `legacy.*` de las pantallas heredadas y se reduce al integrar cada diseño.
+
+| Columna                       | Qué contiene                                                         |
+| ----------------------------- | -------------------------------------------------------------------- |
+| `origen_id`                   | Posición en la tabla de equivalencias original; no cambia            |
+| `es_original` / `en_original` | Texto tal como estaba en el diseño; no se edita                      |
+| `clave` / `namespace`         | Destino que describe una función, por ejemplo `search.results.count` |
+| `estado`                      | Decide si la fila se siembra                                         |
+| `es_curado` / `en_curado`     | Mensaje completo, con argumentos y plurales cuando corresponde       |
+| `grupo`                       | IDs de los fragmentos que forman una sola frase                      |
+| `observaciones`               | Motivo del cambio y datos variables                                  |
+
+Se siembran las filas `ok` (408) y `fragmento` (43). Quedan fuera `muestra` (61, datos de ejemplo), `diseño` (101, mesas y documentación del canvas) y `chatbot` (21, módulo todavía sin implementar). Una clave repetida solo es válida si sus dos mensajes curados son idénticos. Las claves de pantallas todavía no construidas son propuestas: se confirman al implementar cada diseño.
+
+## Glosario
+
+| Concepto             | Inglés            | Español                | Uso                                    |
+| -------------------- | ----------------- | ---------------------- | -------------------------------------- |
+| Cuenta               | Account           | Cuenta                 | Cuenta del usuario, distinta de perfil |
+| Perfil               | Profile           | Perfil                 | Datos personales                       |
+| Preferencias         | Settings          | Preferencias           | Configuración y selector de idioma     |
+| Inicio de sesión     | Log in            | Iniciar sesión         | Acción de autenticarse                 |
+| Registro             | Sign up           | Crear cuenta           | Alta de cuenta                         |
+| Calificación         | Rating            | Calificación           | Nota entera de 1 a 10                  |
+| Reseña               | Review            | Reseña                 | Texto asociado a una calificación      |
+| Favoritos            | Favorites         | Favoritos              | Lista con `clave=favoritos`            |
+| Pendientes           | Watchlist         | Pendientes             | Lista con `clave=pendientes`           |
+| Vistas               | Watched           | Vistas                 | Lista con `clave=vistas`               |
+| Género de producción | Genre             | Género                 | Filtro del catálogo                    |
+| Género de persona    | Gender            | Género                 | Campo del perfil                       |
+| Género no declarado  | Prefer not to say | No especificar         | Valor `no_especifica`                  |
+| Tema oscuro          | Dark              | Oscuro                 | Valor `oscuro`                         |
+| Tema claro           | Light             | Claro                  | Valor `claro`                          |
+| Película             | Movie             | Película               | API `movie`, dominio `pelicula`        |
+| Serie                | TV show           | Serie                  | API `tv`, dominio `serie`              |
+| Confirmación         | Confirm account   | Confirmar cuenta       | Activación mediante enlace             |
+| Restablecimiento     | Reset password    | Restablecer contraseña | Recuperación mediante enlace           |
+| Reenvío de enlace    | Resend link       | Reenviar enlace        | Acción de las pantallas de correo      |
+
+Genre y Gender usan claves distintas aunque coincidan en español. Rating y Review nunca son intercambiables. El español usa voseo («elegí», «guardá», «podés»). No se traducen nombres de usuario, de personas, de listas personalizadas ni reseñas de la comunidad; los títulos de las producciones los da TMDB por idioma.
+
+## Al implementar una pantalla nueva
+
+- Pedí el catálogo con `apiFetch`. Las vistas públicas de catálogo no autentican: su idioma sale solo de `Accept-Language`, nunca de la cuenta.
+- `campos_en_ingles` no viaja en las respuestas en inglés; tratalo como opcional.
+- Las producciones del `seed` son datos inventados sin traducción: sus títulos salen en inglés con `lang="en"` aunque la interfaz esté en español. Es el respaldo previsto.
+- Las cuentas del `seed` tienen idioma guardado (`usuario001` y `003` en `es`, `usuario002` en `en`), así que al iniciar sesión manda la cuenta y no el navegador.
+- El `.env` de desarrollo usa Resend: registrarse o pedir un restablecimiento envía correos reales.
+- Retirá el archivo de `legacyFiles` en `frontend/scripts/i18n/rules.mjs` y su copia `legacy.*` al integrar el diseño.
+
+## Pendiente
+
+Falta abrir los ocho EML de `revision-correos/` en un cliente de correo real y registrar cliente, versión y resultado. No bloquea las interfaces.
+
+El chatbot (B-02–B-06) no está implementado. Sus temas de idioma abiertos están en `docs/decisiones.md`, entrada del 09/10/2026.
