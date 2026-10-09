@@ -1,0 +1,8 @@
+{
+  "status": 404,
+  "body": {
+    "code": "upstream_not_found",
+    "params": {},
+    "errors": []
+  }
+}

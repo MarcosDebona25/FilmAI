@@ -8,6 +8,8 @@ from rest_framework import serializers
 
 from catalogo.models import Resena
 from catalogo.services.adapter import dominio_a_tmdb
+from catalogo.services.traducciones import campos_en_ingles, texto_localizado
+from filmai.errores.serializadores import FronteraErroresMixin
 
 # El modelo define `max_length=1000` y el rango 1-10 por validadores y
 # CheckConstraint. Acá se repiten como límites del serializer para que el error
@@ -17,7 +19,7 @@ _MAX_TEXTO = Resena._meta.get_field("texto").max_length
 _MIN_VALOR, _MAX_VALOR = 1, 10
 
 
-class _CalificacionEntradaBase(serializers.Serializer):
+class _CalificacionEntradaBase(FronteraErroresMixin, serializers.Serializer):
     """Lo que comparten crear y actualizar: el rango y el largo del texto."""
 
     valor = serializers.IntegerField(min_value=_MIN_VALOR, max_value=_MAX_VALOR)
@@ -56,10 +58,16 @@ class ActualizarCalificacionSerializer(_CalificacionEntradaBase):
         max_length=_MAX_TEXTO, allow_blank=False, required=False
     )
 
+    def parametros_error(self, codigo, campo):
+        if codigo == "review_update_empty":
+            return {"fieldNames": ["valor", "texto"]}
+        return super().parametros_error(codigo, campo)
+
     def validate(self, attrs):
         if not attrs:
             raise serializers.ValidationError(
-                "Indicá al menos `valor` o `texto` para actualizar."
+                "Indicá al menos `valor` o `texto` para actualizar.",
+                code="review_update_empty",
             )
         return attrs
 
@@ -83,7 +91,7 @@ class CalificacionSerializer(serializers.Serializer):
         return dominio_a_tmdb(calificacion.produccion.tipo)
 
 
-class ProduccionQuerySerializer(serializers.Serializer):
+class ProduccionQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida `?id_tmdb=&tipo=` de las lecturas.
 
     Se validan como cualquier payload en vez de leerlos a mano de
@@ -123,5 +131,22 @@ class MiResenaSerializer(CalificacionSerializer):
     clickear. Hereda el `id`, que es lo que necesitan editar y eliminar.
     """
 
-    titulo = serializers.CharField(source="produccion.titulo")
-    poster = serializers.CharField(source="produccion.poster")
+    titulo = serializers.SerializerMethodField()
+    poster = serializers.SerializerMethodField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        idioma = self.context.get("idioma")
+        if idioma and idioma != "en":
+            data["campos_en_ingles"] = campos_en_ingles(instance.produccion, idioma)
+        return data
+
+    def get_titulo(self, calificacion):
+        return texto_localizado(
+            calificacion.produccion, "titulo", self.context.get("idioma")
+        )
+
+    def get_poster(self, calificacion):
+        return texto_localizado(
+            calificacion.produccion, "poster", self.context.get("idioma")
+        )

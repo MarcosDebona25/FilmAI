@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Editing the authenticated user's own profile, selecting predefined avatars, confirming account deactivation, and managing their own ratings and reviews in "Mis reseñas" (P-06). The reviews screen consumes `reviews-api`.
+Editing the authenticated user's own profile, selecting predefined avatars, confirming account deactivation, and managing their own ratings and reviews in `/my-reviews` (P-06). The reviews screen consumes `reviews-api`.
 
 ## Requirements
 
@@ -45,3 +45,15 @@ The edit dialog MUST be titled `Editar calificación y reseña de "{title}"`. Ed
 - WHEN the user confirms text deletion
 - THEN the card keeps its rating and explains that no review text exists
 - AND Vistas membership is unchanged
+
+
+### Locale integration
+
+Settings (`/settings`) is bilingual and contains the only signed-in language
+control, between Appearance and Notifications, at anchor `t-idioma`. The account
+locale is persisted before cookie/render change; a failed save preserves the
+old locale. Profile (`/profile`) and reviews (`/my-reviews`) retain legacy copy
+until their designs are implemented, while their validations, formats, errors
+and enum labels use the shared locale helpers. Default-list labels come from
+stable keys, not names stored in the database. Footer language links navigate
+with a real anchor/Link and remain available on mobile.

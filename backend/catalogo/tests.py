@@ -54,6 +54,7 @@ from catalogo.models import (
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
+    ProduccionTraduccion,
     Resena,
     TipoProduccion,
 )
@@ -520,7 +521,12 @@ class TMDBClientCacheTest(SimpleTestCase):
 
     def test_cache_hit_no_tmdb_call(self):
         cache, calls = self.make_cache()
-        params = {"media_type": "all", "time_window": "week", "page": 1}
+        params = {
+            "media_type": "all",
+            "time_window": "week",
+            "page": 1,
+            "language": "en-US",
+        }
         self.redis.set(_build_key("trending", params), '{"cached": true}')
 
         result = cache.get_trending()
@@ -535,7 +541,13 @@ class TMDBClientCacheTest(SimpleTestCase):
         result = cache.get_trending()
 
         key = _build_key(
-            "trending", {"media_type": "all", "time_window": "week", "page": 1}
+            "trending",
+            {
+                "media_type": "all",
+                "time_window": "week",
+                "page": 1,
+                "language": "en-US",
+            },
         )
         self.assertEqual(result, body)
         self.assertEqual(len(calls), 1)
@@ -575,6 +587,8 @@ class TMDBClientCacheTest(SimpleTestCase):
                     "tv_detail": {"id_tmdb": 1399},
                     "keywords": {"id_tmdb": 550, "tipo": "movie"},
                 }[endpoint]
+                if endpoint != "keywords":
+                    key_params["language"] = "en-US"
                 key = _build_key(endpoint, key_params)
                 self.assertAlmostEqual(
                     self.redis.ttl(key), ENDPOINT_TTLS[endpoint], delta=1
@@ -679,7 +693,7 @@ class TMDBClientCacheTest(SimpleTestCase):
 
         cache, _ = self.make_cache()
         cache.get_genres("movie")
-        key = _build_key("genres", {"tipo": "movie"})
+        key = _build_key("genres", {"tipo": "movie", "language": "en-US"})
 
         self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["genres"])
 
@@ -1848,7 +1862,8 @@ class MaterializacionSerieTests(MaterializacionBase):
     def test_consulta_los_endpoints_de_series(self):
         materializar(1396, "tv")
 
-        self.servicio.get_tv_detail.assert_called_once_with(1396)
+        # Canónico (inglés) + traducción al español: una llamada por idioma (OT-62).
+        self.assertEqual(self.servicio.get_tv_detail.call_args_list, [call(1396)] * 2)
         self.servicio.get_movie_detail.assert_not_called()
         self.servicio.get_credits.assert_called_once_with(1396, "tv")
         self.servicio.get_keywords.assert_called_once_with(1396, "tv")
@@ -1888,7 +1903,7 @@ class MaterializacionIdempotenteTests(MaterializacionBase):
 
         produccion = materializar(550, "movie", forzar=True)
 
-        self.servicio.get_movie_detail.assert_called_once_with(550)
+        self.assertEqual(self.servicio.get_movie_detail.call_args_list, [call(550)] * 2)
         self.assertEqual(produccion.directores, ["David Fincher"])
         self.assertGreater(produccion.fecha_enriquecimiento, hace_una_hora)
 
@@ -2281,6 +2296,7 @@ class SyncCatalogoTests(TestCase):
                 "ya_existentes": 1,
                 "refrescadas": 0,
                 "omitidas": 1,
+                "traducciones": 0,
                 "errores": 0,
             },
         )
@@ -2492,6 +2508,11 @@ class SyncCatalogoIntegracionTests(_ParchesDeMaterializacion, TestCase):
             tipo=TipoProduccion.PELICULA,
             titulo="Inception",
             fecha_enriquecimiento=ayer,
+        )
+        # Ya traducida: tampoco le queda nada pendiente a la pasada de
+        # traducciones (OT-63), así que de verdad no se la vuelve a pedir.
+        ProduccionTraduccion.objects.create(
+            produccion=intacta, idioma="es", titulo="El origen"
         )
         self.servicio.get_changes.side_effect = lambda tipo, page: _pagina_de_cambios(
             1, 1, [550] if tipo == "movie" else []

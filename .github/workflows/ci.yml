@@ -5,7 +5,7 @@
 # GitHub bloquee el merge si algo falla aunque el dev no tenga el hook andando.
 #
 # Jobs:
-#   - frontend: ESLint, TypeScript, catálogo de avatares y Prettier
+#   - frontend: ESLint, TypeScript, catálogo de avatares, Prettier y build
 #   - e2e: recorridos de perfil en Chromium con API controlada
 #   - backend:  Ruff check + Ruff format --check + tests (Django)
 # =============================================================================
@@ -13,9 +13,9 @@
 name: CI
 
 # Cuándo se ejecuta:
-#   - pull_request: en cada PR hacia `main` o hacia una rama `feat/**`
+#   - pull_request: en cada PR hacia `main`, `develop` o una rama `feat/**`
 #                   (lo importante: bloquea el merge).
-#   - push:         en cada push directo a `main` (re-verifica lo que ya entró).
+#   - push:         en cada push directo a `main` o `develop` (re-verifica lo que entró).
 #
 # `branches` filtra por la rama DESTINO del PR, no por la de origen. Incluir
 # `feat/**` es lo que hace que un PR apilado —uno cuya base es otra rama de
@@ -31,16 +31,17 @@ on:
   pull_request:
     branches:
       - main
+      - develop
       - "feat/**"
   push:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   # --------------------------------------------------------------------------
-  # Frontend: ESLint + TypeScript + Prettier + catálogo
+  # Frontend: ESLint + TypeScript + Prettier + catálogo + build
   # --------------------------------------------------------------------------
   frontend:
-    name: Frontend (lint + types + format)
+    name: Frontend (lint + types + format + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -68,8 +69,14 @@ jobs:
       - name: Tests unitarios de frontend
         run: npm run test:unit
 
+      - name: Control de residuos de idioma
+        run: npm run i18n:check
+
       - name: TypeScript
         run: npx tsc --noEmit
+
+      - name: Build de producción del frontend
+        run: npm run build
 
       - name: Catálogo de avatares sincronizado
         run: python3 ../scripts/sync_avatars.py --check

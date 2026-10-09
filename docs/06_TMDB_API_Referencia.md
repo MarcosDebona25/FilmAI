@@ -333,11 +333,19 @@
 | Herramienta del LLM (B-02)           | Endpoint(s) de TMDB                                   |
 | :----------------------------------- | :---------------------------------------------------- |
 | `buscar_por_titulo(titulo, tipo)`    | `GET /search/movie`, `GET /search/tv`                 |
-| `top_por_genero(genero, tipo, page)` | `GET /discover/movie`, `GET /discover/tv`             |
+| `descubrir(filtros, tipo, page)`     | `GET /discover/movie`, `GET /discover/tv`             |
 | `similares_a(id_tmdb, tipo)`         | `GET /movie/{id}/similar`, `GET /tv/{id}/similar`     |
+| `buscar_por_persona(nombre)`         | `GET /search/person` y los créditos de la persona     |
+| `detalle(id_tmdb, tipo)`             | `GET /movie/{id}`, `GET /tv/{id}`                     |
 | `buscar_semantico(query)`            | No usa TMDB: pgvector sobre embeddings locales (B-06) |
-| Detalle on-demand                    | `GET /movie/{id}`, `GET /tv/{id}`                     |
+| `mis_listas()`                       | No usa TMDB: listas del usuario por SQL               |
+| `mostrar_tarjetas(ids)`              | No usa TMDB: valida ids del turno, hasta 3 tarjetas   |
 | Keywords para embeddings (C-04)      | `GET /movie/{id}/keywords`, `GET /tv/{id}/keywords`   |
+
+`descubrir` generaliza el `top_por_genero` original. Las firmas son orientativas
+hasta el diseño de B-02. Al cliente TMDB le faltan `get_similar` y
+`search_person`. Todas las tools consultan TMDB en el idioma del turno
+(decisiones del 08/10/2026 y 09/10/2026).
 
 ---
 
@@ -365,3 +373,41 @@
 5. **Sync diaria (C-04b)**: el beat de Celery a las 3 AM sincroniza populares,
    tendencias y novedades (mantenimiento/seed del corpus), nunca reemplaza al
    discovery en vivo ni pisa datos locales.
+
+## Idioma explícito del cliente y las vistas (OT-60)
+
+El cliente y su caché admiten `en-US` y `es-MX`. Listados, búsqueda, detalles
+y géneros envían `language`, incluido en los parámetros que forman la clave
+Redis. Los TTL no cambian. Keywords, créditos y cambios conservan el contrato
+global. La fábrica sin argumentos devuelve el cliente inglés compartido por
+materialización; cada cliente mantiene un idioma fijo. Las seis vistas públicas
+localizables seleccionan ese cliente por el encabezado Accept-Language, con
+pesos y regiones, o inglés por defecto. Su autenticación permanece vacía;
+keywords conserva el servicio global. 
+
+Comportamiento del proveedor verificado contra la API real el 08/10/2026
+(observaciones de esa fecha, no garantías):
+
+- Omitir `language` equivale a `en-US` en título, sinopsis, póster y géneros
+  (`/movie/550`, `/movie/10778`, `/tv/1396`).
+- `en-US` y `es-MX` figuran en `/configuration/primary_translations`. Los
+  géneros conservan sus IDs entre idiomas; algunos nombres llegan sin traducir
+  (`10759` es “Action & Adventure” en ambos).
+- TMDB no rellena con otro idioma: sin traducción, la sinopsis llega vacía y el
+  título puede ser el original (`1559362` devuelve «荒木又右衛門»). Por eso el
+  respaldo completa campo por campo solo lo vacío y no deduce la ausencia de
+  traducción a partir del título.
+- Las imágenes se filtran con códigos sin región
+  (`include_image_language=es,en,null`). No hay endpoint de imágenes propio ni
+  cambio en la política de pósters.
+
+
+## Respaldo, persistencia y consumo frontend (OT-61–63, OT-72–76)
+
+Los listados y detalles en español completan únicamente los campos vacíos con su versión inglesa, por identidad TMDB. `campos_en_ingles` identifica cuáles se completaron; el frontend marca el campo presentado con `lang="en"`. Los datos ya traducidos no se reemplazan. Pósters y backdrops también se resuelven por idioma.
+
+`ProduccionAudiovisual` mantiene el contenido canónico inglés y `generos_ids`; `ProduccionTraduccion` guarda título, sinopsis y póster por producción/idioma. Listas y mis reseñas seleccionan título y póster por `idioma_efectivo(request)`, sin modificar el texto escrito por el usuario. El prefetch evita una consulta SQL por cada tarjeta. `GET /api/catalogo/genres/?tipo=movie|tv` entrega nombres localizados para los filtros futuros; sus IDs son estables.
+
+`python manage.py rellenar_traducciones` procesa producciones enriquecidas, por lotes e idempotentemente. Los registros sin `fecha_enriquecimiento` se completan al materializarse. La sincronización diaria reintenta traducciones pendientes; no altera el texto canónico ni el hash de embeddings. En la base revisada el 08/10/2026 no quedan producciones enriquecidas pendientes; las 39 filas sin enriquecer quedan fuera del relleno.
+
+El cliente frontend envía `Accept-Language` en cada solicitud. La localización de TMDB usa `es-MX`, mientras fechas y números de interfaz usan `es-AR`. El chatbot utilizará tools localizadas en el idioma efectivo, fijado al abrir el stream; la prosa sigue el idioma del mensaje del usuario y su corpus BGE-M3 conserva el inglés (decisiones del 08/10/2026 y 09/10/2026).

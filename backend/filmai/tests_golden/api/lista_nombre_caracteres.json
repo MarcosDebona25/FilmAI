@@ -1,0 +1,14 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": null,
+        "code": "list_name_invalid_characters",
+        "params": {}
+      }
+    ]
+  }
+}

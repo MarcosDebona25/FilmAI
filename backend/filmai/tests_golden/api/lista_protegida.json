@@ -1,0 +1,8 @@
+{
+  "status": 409,
+  "body": {
+    "code": "default_list_protected",
+    "params": {},
+    "errors": []
+  }
+}

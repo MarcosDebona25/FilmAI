@@ -40,7 +40,7 @@
 
 - **Usuario - Calificación:** La cardinalidad establecida permite que un usuario no tenga calificaciones asociadas (por ejemplo, al crear la cuenta) o tenga múltiples calificaciones (cuenta con trayectoria en el sistema).
 
-- **Usuario - Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las listas de Vistos, Pendientes y Favoritos, las cuales no pueden ser eliminadas. Además, cada usuario tiene la posibilidad de crear otras listas personalizadas.
+- **Usuario - Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las listas Favoritos, Pendientes y Vistas (identificadas por `Lista.clave`; la interfaz muestra Favorites, Watchlist y Watched según el idioma), las cuales no pueden ser eliminadas. Además, cada usuario tiene la posibilidad de crear otras listas personalizadas.
 
 - **Reseña - Calificación:** La cardinalidad establecida refleja que una calificación (numérica) opcionalmente puede tener una reseña (textual) asociada. Se modela como relación de composición dado que una reseña no puede existir sin su respectiva calificación.
 
@@ -87,6 +87,23 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 - **Usuario - Lista:** La tabla Lista tiene una FK idUsuario, lo que indica que cada lista le pertenece al usuario que la creó. Un usuario puede tener varias listas (tanto las predeterminadas como las personalizadas).
 
+- **Identidad de listas predeterminadas (08/10/2026, OT-40 y OT-42):** `Lista.clave`
+  (VARCHAR(25), NULLABLE) admite `favoritos`, `pendientes` y `vistas`. La
+  migración asignó la clave a las predeterminadas existentes según el nombre
+  sin distinguir mayúsculas; conserva nombres, IDs y relaciones `Tiene`, y se
+  detiene si encuentra un nombre desconocido. Las personalizadas tienen
+  `clave = NULL`. Dos restricciones la protegen: `uq_lista_usuario_clave`
+  (a lo sumo una lista por clave y usuario) y `ck_lista_tipo_clave` (toda
+  predeterminada lleva clave y ninguna personalizada la lleva). `nombre` se
+  conserva en español.
+
+- **Consumo de identidad (08/10/2026, OT-41A):** calificaciones, pertenencia,
+  bloqueo de remoción, orden de resúmenes y semilla usan `clave`. La API la
+  expone como nula para personalizadas. La provisión conserva recursos
+  renombrados y sus IDs; solo usa el nombre heredado como respaldo al completar
+  una clave nula durante la transición. Nombres reservados y su contrato
+  exportado se completan en la segunda entrega de OT-41.
+
 - **Usuario - Chat:** Chat también tiene una FK idUsuario, lo que muestra que cada chat es creado por un usuario en particular. Un usuario puede tener varios chats distintos.
 
 - **Chat - Mensaje:** Mensaje contiene una FK idChat, de modo que todos los mensajes pertenecen a un chat específico. Un chat puede tener muchos mensajes, pero cada mensaje se guarda siempre dentro de un único chat.
@@ -95,7 +112,9 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 - **Calificación - Produccion Audiovisual:** Toda calificación debe estar asociada a una producción mediante la FK idProduccion. Esto permite que una producción tenga muchas calificaciones, pero cada calificación corresponde a una única producción.
 
-- **Produccion Audiovisual (entidad base):** Esta tabla reúne todos los datos sincronizados desde TMDB (título, póster, géneros, reparto, duración, temporadas, etc.). Desde acá se relacionan tanto las calificaciones como los ítems que aparecen en las distintas listas.
+- **Produccion Audiovisual (entidad base):** Esta tabla reúne todos los datos sincronizados desde TMDB (título, póster, géneros, reparto, duración, temporadas, etc.). Desde acá se relacionan tanto las calificaciones como los ítems que aparecen en las distintas listas. Es la versión canónica, en inglés (de ella sale el corpus de embeddings).
+
+- **Produccion Audiovisual - Produccion Traduccion (08/10/2026, OT-62):** una producción puede tener cero o una traducción por idioma no canónico (`ProduccionTraduccion`: título, sinopsis y póster en ese idioma). La FK `produccion` elimina en cascada y la restricción `uq_traduccion_produccion_idioma` impide repetir (producción, idioma). Un campo vacío significa que TMDB no tiene esa traducción y quien lee usa el canónico.
 
 **Observaciones:**
 
@@ -116,6 +135,7 @@ superior es una lámina de origen, no una opción del selector. El catálogo gen
 se usa para validar la API y exponer las opciones al frontend.
 
 - `tema` (VARCHAR(10), NOT NULL, DEFAULT 'oscuro'): Preferencia de tema de la interfaz. Valores posibles: 'oscuro', 'claro'.
+- `idioma` (VARCHAR(2), NULLABLE): idioma de la aplicación. Valores posibles: 'en', 'es'. Ver la sección «Idioma de aplicación».
 - `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
 - `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
 - `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
@@ -148,6 +168,8 @@ borrados en cascada al dar de baja una cuenta.
 **Cambio en Mensaje:**
 
 - `texto` cambia de VARCHAR(250) a TEXT para no truncar respuestas del chatbot (una respuesta del LLM puede superar 250 caracteres).
+- `tarjetas` (JSON, nuevo; decisiones del 08/10/2026 y 09/10/2026, todavía sin migración): lista de hasta 3 títulos que el chatbot mostró junto a su respuesta. Cada elemento guarda `id_tmdb`, `tipo`, `titulo`, `poster` y `año` tal como se mostraron, en el idioma del turno; el historial los devuelve sin volver a traducir. No es una entidad ni tiene FK a ProduccionAudiovisual: mostrar una tarjeta no materializa la producción. Los mensajes del usuario la llevan vacía.
+- El mensaje del usuario admite hasta 500 caracteres; el límite se valida en la API, no en la columna.
 
 **Cambio en Reseña:**
 
@@ -160,3 +182,32 @@ borrados en cascada al dar de baja una cuenta.
 - `ProduccionEmbedding` (nueva, fase posterior del Módulo 5): relación **1:1** con ProduccionAudiovisual (`produccion_id` con restricción UNIQUE, no una FK común; nunca dos filas de embedding por producción) + columna vectorial `vector(1024)` (extensión pgvector) + índice HNSW `vector_cosine_ops`. Almacena el embedding del texto canónico `Title + Genres + Directors + Cast + Keywords + Synopsis` (normalizado: espacios, vacíos y orden de arrays). Los campos cuantitativos (calificación promedio, año, duración, tipo, estatus) no se embedbean: se filtran por SQL sobre los resultados. No se aplica unicidad al vector (producciones distintas pueden tener vectores iguales o muy similares).
 - **Campos de control e idempotencia (08/09/2026):** `source_hash` (SHA-256 del texto canónico), `model_version` (versión/proveedor del modelo de embeddings) y `estado` (`pending` | `processing` | `ready` | `failed`). Antes de invocar al proveedor se compara hash y versión: si no cambiaron y el estado es `ready`, no se recomputa. Si cambia el contenido o el modelo, la regeneración es legítima.
 - **Generación asíncrona (08/09/2026, reemplaza la decisión del 25/08/2026 de embeddings síncronos):** la materialización persiste la producción y crea el registro con estado `pending`; una tarea Celery genera el vector sin bloquear catálogo ni detalle, con reintentos/backoff, backfill para `failed` y claim/lease idempotente (Celery puede duplicar tareas; la persistencia es condicional al claim vigente). La búsqueda semántica solo considera embeddings `ready`; las producciones pendientes o fallidas siguen visibles y se resuelven on-demand vía TMDB.
+
+### Idioma de aplicación (OT-20, 08/10/2026)
+
+`Usuario.idioma` es un VARCHAR(2) nullable con opciones `en` y `es`. La
+migración no rellena las cuentas anteriores. Una operación usa el idioma
+guardado, luego `Accept-Language` con pesos y regiones, y por último `en`.
+Esta resolución es explícita y no modifica el idioma global de Django.
+Preferencias permite leer el valor nulo de cuentas anteriores y guardar solo
+`en`/`es`; el perfil y los detalles de usuario exponen el idioma en lectura.
+El registro tradicional y Google guardan el idioma activo al crear la cuenta;
+el login Google de una cuenta existente conserva su idioma.
+
+### Traducciones del catálogo (OT-62, 08/10/2026)
+
+`ProduccionAudiovisual` conserva el contenido canónico en inglés. Se agregan:
+
+- `generos_ids` (INTEGER[]): IDs de TMDB de los géneros. La etiqueta se resuelve por idioma con la lista de géneros (`GET /api/catalogo/genres/`); `generos` (nombres en inglés) se conserva para los embeddings. `estatus` se trata como código y el frontend lo traduce.
+- `ProduccionTraduccion` (tabla `produccion_traduccion`): `id`, `produccion` (FK, cascada), `idioma` (VARCHAR(5)), `titulo` (VARCHAR(100)), `sinopsis` (VARCHAR(2000)) y `poster` (VARCHAR(250)), con `UNIQUE (produccion, idioma)`. Se completa al materializar la producción y en la sincronización nocturna (tercera pasada acotada) y con el comando `rellenar_traducciones`. Un error de TMDB al guardar la traducción se registra y no invalida el enriquecimiento canónico.
+- Los títulos y pósters de listas, previews y «Mis reseñas» se sirven según el idioma con respaldo al canónico. Limitación conocida: la sinopsis traducida se guarda, pero ningún serializador la expone todavía, y el orden por título usa el canónico.
+- El texto canónico de embeddings y su `source_hash` no cambian.
+
+### Identidades exportadas y nombres reservados (OT-41B)
+
+`contracts/enums.json` contiene las claves de listas predeterminadas, los
+valores de género y los nombres reservados por idioma. La API rechaza crear
+o renombrar una personalizada con cualquiera de esas etiquetas, sin
+distinguir mayúsculas, con `list_name_reserved` y HTTP 409. Los nombres
+personalizados ya almacenados se devuelven sin traducción ni cambios
+automáticos. Género conserva `masculino`, `femenino` y `no_especifica`.

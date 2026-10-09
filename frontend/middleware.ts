@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 // Rutas protegidas (docs/05 — A-09). Se redirigen a /login si no hay sesión.
-const PROTECTED_PREFIXES = ["/perfil", "/listas", "/mis-resenas", "/preferencias"];
+import { protectedRoutes } from "@/lib/routes";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const protegida = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+  const protegida = protectedRoutes.some((p) => pathname.startsWith(p));
 
   if (!protegida) return NextResponse.next();
 
@@ -24,5 +24,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/perfil/:path*", "/listas/:path*", "/mis-resenas/:path*", "/preferencias/:path*"],
+  matcher: ["/profile/:path*", "/lists/:path*", "/my-reviews/:path*", "/settings/:path*"],
 };

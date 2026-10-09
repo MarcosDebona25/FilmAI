@@ -9,6 +9,7 @@ poder distinguir por qué falló un enlace de confirmación.
 """
 
 import logging
+from functools import wraps
 from typing import ClassVar
 
 from allauth.account import app_settings as allauth_account_settings
@@ -26,6 +27,7 @@ from dj_rest_auth.registration.views import (
     SocialLoginView,
 )
 from dj_rest_auth.views import LoginView as BaseLoginView
+from django.conf import settings
 from django.core import signing
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -34,6 +36,11 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+
+from filmai.errores.sobre import (
+    agregar_codigo_exito,
+    construir_sobre,
+)
 
 from .models import Usuario
 from .serializers import (
@@ -90,6 +97,35 @@ class LoginView(BaseLoginView):
     authentication_classes = (LenientJWTCookieAuthentication,)
 
 
+def _error_enlace(codigo):
+    """400 directo de enlaces con código estable."""
+    sobre = construir_sobre(codigo, status.HTTP_400_BAD_REQUEST, debug=settings.DEBUG)
+    return Response(sobre, status=status.HTTP_400_BAD_REQUEST)
+
+
+def con_codigo_exito(vista, codigo, estado=status.HTTP_200_OK):
+    """Envuelve una vista ya resuelta para sumar `code` a su POST exitoso.
+
+    `functools.wraps` conserva `cls`/`view_class`, así que drf-spectacular sigue
+    viendo la clase original (y sus extensiones de dj-rest-auth): el esquema
+    OpenAPI no cambia.
+    """
+
+    @wraps(vista)
+    def envuelta(request, *args, **kwargs):
+        response = vista(request, *args, **kwargs)
+        if (
+            request.method == "POST"
+            and response.status_code == estado
+            and isinstance(response.data, dict)
+            and "detail" in response.data
+        ):
+            agregar_codigo_exito(response, codigo)
+        return response
+
+    return envuelta
+
+
 class RegisterView(BaseRegisterView):
     """Registro tradicional sin el `complete_signup` de dj-rest-auth.
 
@@ -143,7 +179,7 @@ class CSRFTokenView(APIView):
         return super().dispatch(*args, **kwargs)
 
     def get(self, request):
-        return Response({"detail": "ok"})
+        return agregar_codigo_exito(Response({"detail": "ok"}), "csrf_ready")
 
 
 class UsernameDisponibleView(APIView):
@@ -199,31 +235,27 @@ class ConfirmarCorreoView(APIView):
             )
         except signing.SignatureExpired:
             logger.info("ConfirmarCorreo: key expirada")
-            return Response({"codigo": "expirado"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("link_expired")
         except (signing.BadSignature, ValueError, TypeError) as exc:
             logger.warning(
                 "ConfirmarCorreo: key inválida — %s: %s", type(exc).__name__, exc
             )
-            return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("link_invalid")
 
         email_address = (
             EmailAddress.objects.filter(pk=pk).select_related("user").first()
         )
         if email_address is None:
-            return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("link_invalid")
         if email_address.verified:
-            return Response(
-                {"codigo": "ya_confirmada"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return _error_enlace("already_confirmed")
 
         # Delega en allauth: marca `verified=True` y pasa por nuestro adapter
         # (estado → ACTIVA). Si devuelve None hubo una carrera y otro request
         # la confirmó primero.
         if mark_email_address_as_verified(request._request, email_address) is None:
-            return Response(
-                {"codigo": "ya_confirmada"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        return Response({"detail": "ok"})
+            return _error_enlace("already_confirmed")
+        return agregar_codigo_exito(Response({"detail": "ok"}), "email_confirmed")
 
 
 class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
@@ -244,13 +276,16 @@ class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(
-            {
-                "detail": (
-                    "Si el correo está registrado, se envió un email con "
-                    "instrucciones para restablecer la contraseña."
-                )
-            }
+        return agregar_codigo_exito(
+            Response(
+                {
+                    "detail": (
+                        "Si el correo está registrado, se envió un email con "
+                        "instrucciones para restablecer la contraseña."
+                    )
+                }
+            ),
+            "password_reset_requested",
         )
 
 
@@ -268,14 +303,18 @@ class RestablecerContrasenaView(APIView):
     throttle_scope = "restablecer_contrasena"
 
     def post(self, request):
-        serializer = RestablecerContrasenaSerializer(data=request.data)
+        serializer = RestablecerContrasenaSerializer(
+            data=request.data, context={"request": request}
+        )
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
         except EnlaceRestablecimientoInvalido:
-            return Response({"codigo": "invalido"}, status=status.HTTP_400_BAD_REQUEST)
+            return _error_enlace("link_invalid")
         from .perfil import cerrar_sesion
 
         return cerrar_sesion(
-            request, "La contraseña fue restablecida. Inicia sesión nuevamente."
+            request,
+            "La contraseña fue restablecida. Inicia sesión nuevamente.",
+            "password_reset_completed",
         )

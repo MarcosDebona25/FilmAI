@@ -3,31 +3,49 @@
 from rest_framework import serializers
 
 from catalogo.services.adapter import dominio_a_tmdb
+from catalogo.services.traducciones import campos_en_ingles, texto_localizado
+from filmai.errores.base import ExcepcionAPI
+from filmai.errores.serializadores import FronteraErroresMixin
 
+from .identidades import es_nombre_reservado
 from .models import Lista
 
+_MAX_NOMBRE = 80
 
-class NombreListaSerializer(serializers.Serializer):
+
+class NombreListaSerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida el nombre de una lista personalizada."""
 
     nombre = serializers.CharField()
 
+    def parametros_error(self, codigo, campo):
+        if codigo == "max_length":
+            return {"maxLength": _MAX_NOMBRE}
+        return super().parametros_error(codigo, campo)
+
     def validate_nombre(self, value):
         nombre = " ".join(value.split())
         if not nombre:
-            raise serializers.ValidationError("El nombre no puede estar vacío.")
-        if len(nombre) > 80:
             raise serializers.ValidationError(
-                "El nombre no puede superar los 80 caracteres."
+                "El nombre no puede estar vacío.", code="blank"
+            )
+        if len(nombre) > _MAX_NOMBRE:
+            raise serializers.ValidationError(
+                "El nombre no puede superar los 80 caracteres.", code="max_length"
             )
         if not any(caracter.isalnum() for caracter in nombre):
             raise serializers.ValidationError(
-                "El nombre debe incluir al menos una letra o número."
+                "El nombre debe incluir al menos una letra o número.",
+                code="list_name_missing_alphanumeric",
             )
         if any(not (caracter.isalnum() or caracter == " ") for caracter in nombre):
             raise serializers.ValidationError(
-                "Solo se permiten letras, números y espacios."
+                "Solo se permiten letras, números y espacios.",
+                code="list_name_invalid_characters",
             )
+
+        if es_nombre_reservado(nombre):
+            raise ExcepcionAPI("list_name_reserved")
 
         usuario = self.context["request"].user
         lista_id = self.context.get("lista_id")
@@ -41,7 +59,7 @@ class NombreListaSerializer(serializers.Serializer):
         return nombre
 
 
-class PertenenciaQuerySerializer(serializers.Serializer):
+class PertenenciaQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida la producción cuya pertenencia a listas se quiere consultar."""
 
     id_tmdb = serializers.IntegerField(min_value=1)
@@ -55,6 +73,7 @@ class AgregarItemSerializer(PertenenciaQuerySerializer):
 class ListaResumenSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     nombre = serializers.CharField()
+    clave = serializers.CharField(allow_null=True)
     tipo = serializers.CharField()
     cantidad_items = serializers.IntegerField()
     cantidad_peliculas = serializers.IntegerField()
@@ -74,9 +93,22 @@ class ListaItemSerializer(serializers.Serializer):
     fecha_agregado = serializers.DateTimeField()
     id_tmdb = serializers.IntegerField(source="produccion.id_tmdb")
     tipo = serializers.SerializerMethodField()
-    titulo = serializers.CharField(source="produccion.titulo")
-    poster = serializers.CharField(source="produccion.poster")
+    titulo = serializers.SerializerMethodField()
+    poster = serializers.SerializerMethodField()
     anio = serializers.SerializerMethodField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        idioma = self.context.get("idioma")
+        if idioma and idioma != "en":
+            data["campos_en_ingles"] = campos_en_ingles(instance.produccion, idioma)
+        return data
+
+    def get_titulo(self, item):
+        return texto_localizado(item.produccion, "titulo", self.context.get("idioma"))
+
+    def get_poster(self, item):
+        return texto_localizado(item.produccion, "poster", self.context.get("idioma"))
 
     def get_tipo(self, item):
         return dominio_a_tmdb(item.produccion.tipo)
@@ -86,7 +118,7 @@ class ListaItemSerializer(serializers.Serializer):
         return fecha.year if fecha else None
 
 
-class QuitarItemQuerySerializer(serializers.Serializer):
+class QuitarItemQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     """`?borrar_calificacion=` al quitar un ítem de «Vistas» (C-08, fase 3).
 
     `BooleanField` acepta las formas usuales (`true`, `1`, `false`, `0`) y

@@ -10,7 +10,7 @@ The user's own ratings and reviews (CU-015): publishing, editing and deleting a 
 
 A rating (1-10) is required; its text is optional and at most 1000 characters. The API MUST expose the pair as one resource under `/api/reviews/`, and the `{id}` in every path MUST be the `Calificacion` primary key, because the rating is what always exists.
 
-A user MUST NOT rate the same production twice. A second attempt MUST answer 409 with a stable `codigo`, not a 500 from the database constraint.
+A user MUST NOT rate the same production twice. A second attempt MUST answer 409 with a stable `code`, not a 500 from the database constraint.
 
 #### Scenario: Rating without text
 
@@ -24,7 +24,7 @@ A user MUST NOT rate the same production twice. A second attempt MUST answer 409
 
 - GIVEN a user who already rated a production
 - WHEN they POST another rating for it
-- THEN the response is 409 with `codigo: "calificacion_duplicada"`
+- THEN the response is 409 with `code: "rating_duplicated"`
 - AND the stored rating keeps its original value
 
 ### Requirement: Writing goes through materialization
@@ -192,7 +192,7 @@ Two frontend calls MUST NOT be the mechanism: they are not atomic, and a failure
 
 - GIVEN the same state
 - WHEN the item is deleted with no flag
-- THEN the response is 409 with `codigo: "calificacion_impide_quitar_de_vistas"`
+- THEN the response is 409 with `code: "rating_blocks_removal_from_watched"`
 - AND nothing is deleted
 
 ## What this capability does not touch
@@ -206,3 +206,21 @@ Two frontend calls MUST NOT be the mechanism: they are not atomic, and a failure
 
 - Both paginated lists count their total with a `COUNT(*)` on every page request, inside `paginate_queryset()`. Fine at the current scale; if it ever hurts, the count belongs on the first page only.
 - `Calificacion.fecha` is a `DateField`, so every rating from the same day ties; the cursor breaks the tie by descending id. An ordering closer to real time would need a `DateTimeField` and a migration.
+
+### Requirement: Account deactivation preserves community reviews
+
+Logical account deactivation MUST preserve existing active ratings and reviews.
+The community endpoint continues to expose their text, rating and author's
+username to other users, as established by the current account lifecycle.
+
+#### Scenario: An author deactivates their account
+
+- GIVEN an active rating with an active review
+- WHEN its author successfully calls `POST /api/account/deactivate/`
+- THEN the account is in state `baja`
+- AND another authenticated user still sees the review text, rating and username
+  through `GET /api/reviews/?id_tmdb=...&tipo=...`
+
+### Definitive error contract
+
+Errors expose only `code`, `params`, `errors` and conditional development `debug`. Previous `codigo`, `detail` and root field keys are removed. Rating duplication uses `rating_duplicated`; removal from the watched list uses `rating_blocks_removal_from_watched`. The frontend displays localized messages and marks fallback English titles with `lang="en"`.

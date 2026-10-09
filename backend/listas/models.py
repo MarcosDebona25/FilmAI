@@ -25,6 +25,14 @@ class TipoLista(models.TextChoices):
     PERSONALIZADA = "personalizada", "Personalizada"
 
 
+class ClaveLista(models.TextChoices):
+    """Identidad estable de cada lista predeterminada, independiente del nombre."""
+
+    FAVORITOS = "favoritos"
+    PENDIENTES = "pendientes"
+    VISTAS = "vistas"
+
+
 class Lista(models.Model):
     """Lista de producciones de un usuario.
 
@@ -34,6 +42,9 @@ class Lista(models.Model):
     """
 
     nombre = models.CharField("nombre", max_length=80)
+    clave = models.CharField(
+        "clave", max_length=25, choices=ClaveLista.choices, null=True, blank=True
+    )
     tipo = models.CharField(
         "tipo",
         max_length=25,
@@ -66,6 +77,20 @@ class Lista(models.Model):
                 Lower("nombre"),
                 "usuario",
                 name="uq_lista_usuario_nombre",
+            ),
+            # Cada usuario tiene a lo sumo una lista por clave de sistema.
+            models.UniqueConstraint(
+                fields=["usuario", "clave"],
+                condition=models.Q(clave__isnull=False),
+                name="uq_lista_usuario_clave",
+            ),
+            # Solo las predeterminadas llevan clave, y todas la llevan.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(tipo="predeterminada", clave__isnull=False)
+                    | models.Q(tipo="personalizada", clave__isnull=True)
+                ),
+                name="ck_lista_tipo_clave",
             ),
         ]
 

@@ -51,6 +51,8 @@ App Autenticada
 
 > \* Mixta = visible sin login, pero acciones (calificar, agregar a listas) requieren autenticación.
 
+> El selector de idioma no es una pantalla sino un control presente en Landing, Login, Registro, el pie de página y Preferencias (ver 4.1).
+
 ---
 
 ## 3. Decisiones de Diseño
@@ -73,6 +75,9 @@ App Autenticada
 - Animación slide-in desde derecha (desktop) / slide-up (mobile).
 - Badge sutil en el FAB cuando hay respuesta nueva sin leer.
 - Visible en todas las pantallas; inactivo si el usuario no está autenticado.
+- El campo de mensaje no deja escribir más de 500 caracteres.
+- Mientras el bot responde no se envía otro mensaje: se puede escribir el borrador y el botón de enviar pasa a ser «Cancelar».
+- Una respuesta muestra como máximo 3 tarjetas de títulos, con el idioma de la interfaz; el texto de la respuesta sigue el idioma en que escribió el usuario (decisión del 09/10/2026).
 
 ### 3.2 Home: Solo Descubrimiento + Búsqueda como Panel Overlay
 
@@ -134,8 +139,26 @@ Todas las pantallas autenticadas comparten:
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - "Buscar" click → panel overlay que reemplaza el content area con el buscador.
-- **Footer**: mínimo, sin prioridad en esta etapa.
+- **Footer**: mínimo. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión (escritorio) incluye el selector de idioma (ver 4.1).
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
+
+### 4.1 Idioma y selector de idioma
+
+FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños de Claude Design están en inglés; el español sale de `docs/i18n/claves.csv`, que conserva la tabla de equivalencias original en sus columnas `es_original` y `en_original`. Los formatos siguen al idioma vía Intl (inglés: `8.5`, `41,355`, `Sep 28, 2026`; español: `8,5`, `41.355`, `28 sept 2026`).
+
+| Contexto                                            | Control                                                                                                                                                          |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `English` / `Español`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
+| **Footer con sesión**                               | Muestra el idioma actual y enlaza a Preferencias. Escritorio: ítem con globo en la columna Information. Móvil: fila «Language · English ›». No cambia el idioma. |
+| **Sin sesión: Landing, inicio de sesión, registro** | Pastilla `EN` / `ES` arriba a la derecha (escritorio y móvil). Solo escribe la cookie del idioma.                                                                |
+| **Footer sin sesión (escritorio)**                  | El mismo selector, con los nombres completos `English` / `Español`.                                                                                              |
+
+- Cada idioma se muestra con su propio nombre; sin banderas.
+- No hay selector en el menú del avatar ni en el navbar.
+- Los mensajes de error se muestran a partir de códigos: el backend no envía texto de interfaz. Toda la copia sale de los catálogos de idioma, con voseo en español.
+- Los datos de TMDB (títulos, sinopsis, géneros, pósters) siguen el idioma activo y, si falta una traducción, se muestra la versión en inglés de ese campo.
+- Rutas visibles en inglés (`/profile`, `/settings`, `/my-reviews`, `/lists`, `/confirm-email/[key]`, `/reset-password/[uid]/[token]`, `/complete-signup`; `/login` y `/register` no cambian). Implementadas; `/lists` permanece protegido, sin pantalla nueva.
+- Cada botón tiene al menos 40 px de alto y un nombre accesible completo (`aria-label`).
 
 ---
 
@@ -298,7 +321,7 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 
 | Bloque                | Datos                                                                                                                                                                                                                                                                                                                                                                                                                               | Fuente                                          |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| **Hero**              | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`Xh Ymin` para pelis o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips                                                                                                                                                                                                           | `ProduccionAudiovisual` + TMDB                  |
+| **Hero**              | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`2h 49m` en inglés o `2 h 49 min` en español para pelis, o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips                                                                                                                                                                       | `ProduccionAudiovisual` + TMDB                  |
 | **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015; si ya calificaste muestra la nota —`⭐ 9/10`— y abre el modal en modo Editar, con la opción "Quitar calificación"), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario)                                            | `Lista`                                         |
 | **Sinopsis**          | Card dentro del info-col (columna derecha), debajo de los botones de acción. Texto completo colapsable con "[leer más ▾]" si excede 300 caracteres.                                                                                                                                                                                                                                                                                 | `ProduccionAudiovisual.sinopsis`                |
 | **CastCard**          | Card full-width debajo del Hero: Director (nombre) + Cast (lista de actores). Colapsable con "[mostrar más ▾]" si hay más de 10 actores. **Sin fotos**.                                                                                                                                                                                                                                                                             | `ProduccionAudiovisual.reparto` + `.directores` |
@@ -413,7 +436,7 @@ de un componente "Modal" en Figma:
 
 ## 5e. Sección Listas (CU-009, CU-012)
 
-> Las listas son personales. Las predeterminadas (Favoritos, Pendientes, Vistas) se crean automáticamente al registrarse y no pueden renombrarse, eliminarse ni reordenarse.
+> Las listas son personales. Las predeterminadas (Favoritos, Pendientes, Vistas) se crean automáticamente al registrarse y no pueden renombrarse, eliminarse ni reordenarse. Se identifican por su clave y la interfaz muestra la etiqueta del idioma activo (Favorites, Watchlist, Watched en inglés); no se puede crear una lista personalizada con esos nombres en ningún idioma.
 > Las listas personalizadas se gestionan con modales dedicados y se reordenan con drag & drop.
 
 ### Vista General de Listas
@@ -601,7 +624,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ## 5f. Autenticación (CU-001, CU-002, CU-003)
 
-> Login y Registro comparten la misma caja centrada. La transición entre ambos es inmediata: el contenido del form se reemplaza, el logo y el layout exterior permanecen fijos.
+> Login y Registro (y la Landing) incluyen arriba a la derecha la pastilla de idioma `EN | ES` (ver 4.1); sin sesión solo escribe la cookie, y el idioma activo al registrarse queda guardado en la cuenta y define el de los correos. Login y Registro comparten la misma caja centrada. La transición entre ambos es inmediata: el contenido del form se reemplaza, el logo y el layout exterior permanecen fijos.
 
 ### Login
 
@@ -982,6 +1005,13 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 │  │ ● Oscuro    ○ Claro              │    │
 │  └──────────────────────────────────┘    │
 │                                          │
+│  ──── Idioma ────                        │
+│                                          │
+│  Idioma de la interfaz                   │
+│  ┌──────────────────────────────────┐    │
+│  │ ● English   ○ Español            │    │
+│  └──────────────────────────────────┘    │
+│                                          │
 │  ──── Privacidad ────                    │
 │                                          │
 │  Perfil público                          │
@@ -1009,6 +1039,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 | Sección            | Controles                           | Descripción                                                                                                                                                                                                                                                                 |
 | ------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                                                                                                                                  |
+| **Idioma**         | Segmentado English / Español        | Cambio inmediato, se guarda en la cuenta y define también el idioma de los correos. Con sesión es el único lugar donde se cambia. Default: el del navegador (inglés si no hay otro).                                                                                        |
 | **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                                                                                                                                |
 | **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                                                                                          |
 | **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar." Botones Cancelar / Dar de baja. |
@@ -1170,6 +1201,7 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 - **Etiquetas y textos alternativos:** Todos los campos de formulario deben tener `<label>` asociado. Las imágenes informativas (posters, avatares) deben tener texto alternativo (`alt`). Las imágenes decorativas deben tener `alt=""`.
 - **Encabezados jerárquicos:** Usar una estructura de encabezados lógica (h1 → h2 → h3) sin saltar niveles.
 - **Texto redimensionable:** El contenido debe ser legible con zoom del 200% sin pérdida de funcionalidad.
+- **Idioma:** `<html lang>` refleja el idioma activo (`en` o `es`). Los fragmentos que llegan en otro idioma (por ejemplo, campos de TMDB marcados en `campos_en_ingles`) llevan su propio `lang`. El selector de idioma es un grupo de opciones (`radiogroup`) con nombre accesible completo para cada idioma, no solo la sigla.
 
 ### 11.2 Componentes específicos
 

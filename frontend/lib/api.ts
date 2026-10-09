@@ -1,3 +1,6 @@
+import { currentLocale } from "@/i18n/client";
+import { translateError, fieldErrors, type FieldError, type ErrorParams } from "./errors";
+
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export function apiUrl(path: string): string {
@@ -34,10 +37,13 @@ async function getCsrfToken(): Promise<string> {
   // backend, que la setea con `ensure_csrf_cookie`. Se deduplica con una única
   // promesa en vuelo para no disparar varias peticiones concurrentes.
   if (!csrfFetch) {
-    csrfFetch = fetch(apiUrl("/api/auth/csrf/"), { credentials: "include" })
+    csrfFetch = fetch(apiUrl("/api/auth/csrf/"), {
+      credentials: "include",
+      headers: { "Accept-Language": currentLocale() },
+    })
       .then(() => {
         const token = readCookie("csrftoken");
-        if (!token) throw new Error("No se pudo obtener el token CSRF.");
+        if (!token) throw new ApiError(0, { code: "unknown" });
         return token;
       })
       .finally(() => {
@@ -48,51 +54,29 @@ async function getCsrfToken(): Promise<string> {
 }
 
 export class ApiError extends Error {
-  status: number;
-  details: unknown;
+  readonly status: number;
+  readonly code: string;
+  readonly params: ErrorParams;
+  readonly errors: FieldError[];
 
-  constructor(status: number, message: string, details: unknown) {
-    super(message);
+  constructor(status: number, data: unknown) {
+    const envelope = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+    const code = typeof envelope.code === "string" ? envelope.code : "unknown";
+    const params =
+      envelope.params && typeof envelope.params === "object"
+        ? (envelope.params as ErrorParams)
+        : {};
+    const errors = Array.isArray(envelope.errors) ? (envelope.errors as FieldError[]) : [];
+    super(translateError(errors.find((entry) => !entry.field) ?? { code, params }));
     this.status = status;
-    this.details = details;
+    this.code = code;
+    this.params = params;
+    this.errors = errors;
   }
 }
 
-function extractError(data: unknown): string | null {
-  if (!data || typeof data !== "object") return null;
-  const obj = data as Record<string, unknown>;
-  if (typeof obj.detail === "string") return obj.detail;
-  const nonField = obj.non_field_errors;
-  if (Array.isArray(nonField) && nonField.length) return String(nonField[0]);
-  for (const key of Object.keys(obj)) {
-    const value = obj[key];
-    if (Array.isArray(value) && value.length) return `${key}: ${value[0]}`;
-    if (typeof value === "string") return `${key}: ${value}`;
-  }
-  return null;
-}
-
-/**
- * Convierte errores DRF `{campo: [msgs]}` en un mapa `{campo: primerMensaje}`.
- *
- * Los errores globales del serializer (`non_field_errors`) y el detalle
- * genérico (`detail`) NO son campos: excluirlos evita que una pantalla
- * muestre "corregí los campos marcados" sin ningún campo resaltado. Esos
- * mensajes se presentan aparte vía `extractError`.
- */
-export function extraerErroresPorCampo(details: unknown): Record<string, string> {
-  const CLAVES_NO_CAMPO = new Set(["non_field_errors", "detail"]);
-  const errores: Record<string, string> = {};
-  if (!details || typeof details !== "object") return errores;
-  for (const [campo, valor] of Object.entries(details as Record<string, unknown>)) {
-    if (CLAVES_NO_CAMPO.has(campo)) continue;
-    if (Array.isArray(valor) && typeof valor[0] === "string") {
-      errores[campo] = valor[0];
-    } else if (typeof valor === "string") {
-      errores[campo] = valor;
-    }
-  }
-  return errores;
+export function extraerErroresPorCampo(error: ApiError): Record<string, string> {
+  return fieldErrors(error);
 }
 
 interface ApiOptions {
@@ -103,7 +87,7 @@ interface ApiOptions {
 export async function apiFetch<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
   const { method = "GET", body } = options;
 
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { "Accept-Language": currentLocale() };
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
   // CSRF: solo las mutaciones requieren el header (los métodos seguros no
@@ -134,7 +118,7 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
   }
 
   if (!res.ok) {
-    throw new ApiError(res.status, extractError(data) ?? `Error ${res.status}`, data);
+    throw new ApiError(res.status, data);
   }
 
   return data as T;

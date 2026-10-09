@@ -21,7 +21,7 @@ async function reviews(page: Page, empty = false) {
     calls++;
     if (fail) {
       fail = false;
-      await route.fulfill({ status: 500, json: { detail: "error" } });
+      await route.fulfill({ status: 500, json: { code: "server_error", params: {}, errors: [] } });
       return;
     }
     if (request.method() === "GET")
@@ -46,7 +46,7 @@ async function reviews(page: Page, empty = false) {
 }
 test("muestra póster de reemplazo, texto expandible y edición precargada", async ({ page }) => {
   const state = await reviews(page);
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await expect(page.getByRole("img", { name: "Sin póster de Interstellar" })).toBeVisible();
   await expect(page.getByLabel("Calificación: 8 de 10").locator("svg")).toBeVisible();
   await expect(page.getByLabel("Calificación: 8 de 10").locator("svg")).toHaveCSS(
@@ -78,7 +78,7 @@ test("eliminar texto conserva la nota; quitar calificación elimina la tarjeta",
   page,
 }) => {
   const state = await reviews(page);
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await page.getByRole("button", { name: "Eliminar reseña", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("Vistas se conservan");
   await page.getByRole("dialog").getByRole("button", { name: "Cancelar" }).click();
@@ -97,7 +97,7 @@ test("eliminar texto conserva la nota; quitar calificación elimina la tarjeta",
 });
 test("el fallo de escritura conserva datos y permite reintentar", async ({ page }) => {
   const state = await reviews(page);
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await page.getByRole("button", { name: "Quitar calificación" }).click();
   state.fail();
   await page.getByRole("dialog").getByRole("button", { name: "Quitar calificación" }).click();
@@ -108,9 +108,9 @@ test("el fallo de escritura conserva datos y permite reintentar", async ({ page 
 });
 test("estado vacío permite regresar al perfil", async ({ page }) => {
   await reviews(page, true);
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await page.getByRole("link", { name: "Volver a mi perfil" }).click();
-  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page).toHaveURL(/\/profile$/);
 });
 test("paginación por cursor deduplica y conserva tarjetas ante error", async ({ page }) => {
   await prepararCuenta(page);
@@ -120,7 +120,10 @@ test("paginación por cursor deduplica y conserva tarjetas ante error", async ({
     if (new URL(route.request().url()).search) {
       if (fail) {
         fail = false;
-        await route.fulfill({ status: 500, json: {} });
+        await route.fulfill({
+          status: 500,
+          json: { code: "server_error", params: {}, errors: [] },
+        });
         return;
       }
       await route.fulfill({
@@ -142,7 +145,7 @@ test("paginación por cursor deduplica y conserva tarjetas ante error", async ({
         },
       });
   });
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await expect(page.getByRole("main").getByRole("alert")).toContainText("No pudimos cargar");
   await expect(page.getByRole("article")).toHaveCount(1);
   await page.getByRole("button", { name: "Reintentar" }).click();
@@ -152,7 +155,7 @@ test("paginación por cursor deduplica y conserva tarjetas ante error", async ({
 test("mobile: la tarjeta no desborda y el diálogo contiene el foco", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await reviews(page);
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await page.getByRole("button", { name: "Editar", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Actualizar" }).focus();
   await page.keyboard.press("Tab");
@@ -178,7 +181,7 @@ test("póster cargado y composición responsive con texto limitado a 1000 caract
       ),
     })
   );
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   const poster = page.getByAltText("Póster de Interstellar");
   await expect(poster).toBeVisible();
   expect(await poster.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
@@ -220,7 +223,7 @@ test("carga inicial fallida ofrece reintento y conserva un listado utilizable", 
 }) => {
   const state = await reviews(page);
   state.fail();
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await expect(page.getByRole("main").getByRole("alert")).toContainText("No pudimos cargar");
   await page.getByRole("button", { name: "Reintentar" }).click();
   await expect(page.getByRole("article")).toHaveCount(1);
@@ -230,7 +233,7 @@ test("Leer más sigue el recorte real al cambiar el ancho de la tarjeta", async 
   const state = await reviews(page);
   state.items()[0].texto = "Una reseña que se adapta al ancho de pantalla. ".repeat(3);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/mis-resenas");
+  await page.goto("/my-reviews");
   await expect(page.getByRole("article")).toBeVisible();
   await expect(page.getByRole("button", { name: "Leer más" })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 900 });

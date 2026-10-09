@@ -1,0 +1,8 @@
+{
+  "status": 401,
+  "body": {
+    "code": "not_authenticated",
+    "params": {},
+    "errors": []
+  }
+}

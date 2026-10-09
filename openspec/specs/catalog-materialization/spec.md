@@ -171,3 +171,16 @@ This window is NOT the primary refresh mechanism. Actual change detection belong
 - WHEN `materializar(id_tmdb, tipo_tmdb, forzar=True)` is called
 - THEN TMDB is queried again
 - AND the row's fields and `fecha_enriquecimiento` are updated in place
+
+### Requirement: Traducciones persistidas (OT-62, OT-63)
+
+`ProduccionAudiovisual` MUST seguir siendo canónica en inglés; el texto de
+embeddings y su `source_hash` no cambian. El enriquecimiento MUST guardar
+`generos_ids` y, por cada idioma no canónico, una fila `ProduccionTraduccion`
+(título, sinopsis, póster) con `update_or_create`. Un fallo al traer la
+traducción MUST registrarse sin invalidar el enriquecimiento canónico.
+`rellenar_traducciones` MUST completar de forma idempotente y por lotes las
+filas enriquecidas pendientes; la sincronización nocturna ejecuta ese relleno
+acotado por `CELERY_BACKFILL_LIMIT` y lo informa en `traducciones`.
+Los serializers de ítems de lista, previews y «mis reseñas» MUST elegir título
+y póster por idioma efectivo con respaldo al canónico, sin consultas por fila.

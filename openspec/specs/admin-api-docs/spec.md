@@ -63,3 +63,22 @@ in the same browser.
 - GIVEN a staff user with a valid Django Admin session and an invalid `access` cookie
 - WHEN they request either documentation route
 - THEN the route returns 200
+
+### Requirement: The generated schema has a versioned baseline
+
+`contracts/openapi.yaml` MUST preserve the output of `python manage.py spectacular`.
+A backend test MUST fail when the generated schema differs semantically from that
+baseline. Reference regeneration MUST require `FILMAI_ACTUALIZAR_REFERENCIAS=1`.
+
+#### Scenario: Schema changes without updating its contract
+
+- GIVEN the generated schema differs from `contracts/openapi.yaml`
+- WHEN the backend contract test runs without the regeneration variable
+- THEN the test fails and leaves the versioned contract unchanged
+
+#### Current limitation (OT-02)
+
+The baseline captures existing introspection warnings and omissions from views
+without declared serializers. It does not assert that every endpoint is fully
+specified. OT-02 preserves this behavior rather than changing API documentation
+outside its characterization scope.

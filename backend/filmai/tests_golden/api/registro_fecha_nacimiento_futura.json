@@ -1,0 +1,14 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "fecha_nacimiento",
+        "code": "birth_date_in_future",
+        "params": {}
+      }
+    ]
+  }
+}

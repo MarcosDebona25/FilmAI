@@ -137,7 +137,9 @@ class PerfilTests(TestCase):
                     content_type="application/json",
                 )
                 self.assertEqual(response.status_code, 400, response.content)
-                self.assertIn(campo, response.json())
+                self.assertIn(
+                    campo, {entry["field"] for entry in response.json()["errors"]}
+                )
                 self.usuario.refresh_from_db()
                 self.assertEqual(self.usuario.apellido, "Pérez")
 
@@ -260,7 +262,9 @@ class ContrasenaTests(TestCase):
                 cache.clear()
                 response = self.cambiar({**self.payload, **cambios})
                 self.assertEqual(response.status_code, 400, response.content)
-                self.assertIn(campo, response.json())
+                self.assertIn(
+                    campo, {entry["field"] for entry in response.json()["errors"]}
+                )
                 self.usuario.refresh_from_db()
                 self.assertTrue(self.usuario.check_password("Password123!"))
                 self.assertEqual(self.client.get("/api/profile/").status_code, 200)
@@ -391,7 +395,9 @@ class ContrasenaTests(TestCase):
         )
         response = self.cambiar()
         self.assertEqual(response.status_code, 400)
-        self.assertIn("recuperación por correo", str(response.json()))
+        self.assertEqual(
+            response.json()["errors"][0]["code"], "local_password_unavailable"
+        )
         self.usuario.refresh_from_db()
         self.assertFalse(self.usuario.has_usable_password())
 
@@ -419,7 +425,7 @@ class ContrasenaTests(TestCase):
         with (
             self.captureOnCommitCallbacks(execute=True),
             patch(
-                "usuarios.passwords.send_mail",
+                "filmai.correos.servicio.send_mail",
                 side_effect=RuntimeError("correo no disponible"),
             ),
         ):
@@ -477,10 +483,12 @@ class RecuperacionSesionTests(TestCase):
             "_now",
             return_value=datetime.now() + timedelta(hours=2),
         ):
-            self.assertEqual(self.confirmar().json(), {"codigo": "invalido"})
+            self.assertEqual(self.confirmar().json()["code"], "link_invalid")
         response = self.confirmar({**self.payload, "password2": "Diferente123!"})
         self.assertEqual(response.status_code, 400)
-        self.assertIn("password2", response.json())
+        self.assertIn(
+            "password2", {entry["field"] for entry in response.json()["errors"]}
+        )
         self.usuario.refresh_from_db()
         self.assertTrue(self.usuario.check_password("Password123!"))
 
@@ -519,9 +527,7 @@ class RecuperacionSesionTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
-        enlace = re.search(
-            r"/restablecer-contrasena/([^/]+)/([^/]+)/", mail.outbox[0].body
-        )
+        enlace = re.search(r"/reset-password/([^/]+)/([^/]+)/", mail.outbox[0].body)
         self.assertIsNotNone(enlace)
         self.assertEqual(
             self.confirmar(

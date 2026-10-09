@@ -1,0 +1,16 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "page",
+        "code": "min_value",
+        "params": {
+          "minValue": 1
+        }
+      }
+    ]
+  }
+}

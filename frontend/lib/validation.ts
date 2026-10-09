@@ -1,5 +1,5 @@
 // Reglas de validación del CU-001 (docs/02) para el formulario de registro.
-// Cada validador devuelve null si el valor es válido, o el mensaje de error.
+// Cada validador devuelve null o un código independiente del idioma.
 
 const NOMBRE_REGEX = /^\p{L}+(?: \p{L}+)*$/u;
 export const USERNAME_REGEX = /^[A-Za-z0-9]{5,25}$/;
@@ -8,9 +8,9 @@ const ESPECIAL_REGEX = /[@#$%&*!]/;
 
 export function validarNombre(valor: string): string | null {
   const v = normalizarNombre(valor);
-  if (!v) return "Campo obligatorio.";
-  if (v.length > 50) return "Máximo 50 caracteres.";
-  if (!NOMBRE_REGEX.test(v)) return "Solo letras y espacios entre palabras.";
+  if (!v) return "required";
+  if (v.length > 50) return "max_length";
+  if (!NOMBRE_REGEX.test(v)) return "person_name_invalid";
   return null;
 }
 
@@ -23,14 +23,14 @@ export function validarApellido(valor: string): string | null {
 }
 
 export function validarNombreUsuario(valor: string): string | null {
-  if (!valor) return "Campo obligatorio.";
-  if (!USERNAME_REGEX.test(valor)) return "Alfanumérico, de 5 a 25 caracteres.";
+  if (!valor) return "required";
+  if (!USERNAME_REGEX.test(valor)) return "username_invalid";
   return null;
 }
 
 export function validarCorreo(valor: string): string | null {
-  if (!valor) return "Campo obligatorio.";
-  if (!CORREO_REGEX.test(valor)) return "Formato de correo inválido.";
+  if (!valor) return "required";
+  if (!CORREO_REGEX.test(valor)) return "invalid";
   return null;
 }
 
@@ -43,26 +43,26 @@ function calcularEdad(fecha: Date): number {
 }
 
 export function validarFechaNacimiento(valor: string): string | null {
-  if (!valor) return "Campo obligatorio.";
+  if (!valor) return "required";
   const fecha = new Date(`${valor}T00:00:00`);
-  if (Number.isNaN(fecha.getTime())) return "Fecha inválida.";
-  if (fecha > new Date()) return "No puede ser una fecha futura.";
-  if (calcularEdad(fecha) < 13) return "Debés tener al menos 13 años.";
+  if (Number.isNaN(fecha.getTime())) return "invalid";
+  if (fecha > new Date()) return "birth_date_in_future";
+  if (calcularEdad(fecha) < 13) return "minimum_age";
   return null;
 }
 
 export function validarPassword(valor: string): string | null {
-  if (!valor) return "Campo obligatorio.";
-  if (valor.length < 8 || valor.length > 20) return "Debe tener entre 8 y 20 caracteres.";
-  if (!/[A-Z]/.test(valor)) return "Debe tener al menos una mayúscula.";
-  if (!/[a-z]/.test(valor)) return "Debe tener al menos una minúscula.";
-  if (!/\d/.test(valor)) return "Debe tener al menos un número.";
-  if (!ESPECIAL_REGEX.test(valor)) return "Debe tener un carácter especial (@#$%&*!).";
+  if (!valor) return "required";
+  if (valor.length < 8 || valor.length > 20) return "password_too_short_or_long";
+  if (!/[A-Z]/.test(valor)) return "password_no_upper";
+  if (!/[a-z]/.test(valor)) return "password_no_lower";
+  if (!/\d/.test(valor)) return "password_no_digit";
+  if (!ESPECIAL_REGEX.test(valor)) return "password_no_special";
   return null;
 }
 
 export function validarConfirmacion(password: string, confirmacion: string): string | null {
-  if (!confirmacion) return "Campo obligatorio.";
-  if (password !== confirmacion) return "Las contraseñas no coinciden.";
+  if (!confirmacion) return "required";
+  if (password !== confirmacion) return "passwords_do_not_match";
   return null;
 }

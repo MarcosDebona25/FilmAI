@@ -7,6 +7,9 @@ from django.conf import settings
 from django.db import transaction
 from django.utils.dateparse import parse_date
 
+from filmai.correos.servicio import enviar_correo
+from filmai.idioma import idioma_efectivo
+
 from .models import EstadoCuenta, TipoGenero, Usuario
 
 
@@ -25,6 +28,7 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
 
         user.fecha_nacimiento = data.get("fecha_nacimiento")
         user.genero = data.get("genero", TipoGenero.NO_ESPECIFICA)
+        user.idioma = idioma_efectivo(request, user)
 
         if "password1" in data:
             user.set_password(data["password1"])
@@ -47,9 +51,24 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
             usuario.save(update_fields=["estado"])
             return super().confirm_email(request, email_address)
 
+    def send_mail(self, template_prefix, email, context):
+        casos = {
+            "account/email/email_confirmation_signup": "confirmacion_registro",
+            "account/email/email_confirmation": "confirmacion_correo",
+        }
+        caso = casos.get(template_prefix)
+        if caso is None:
+            return super().send_mail(template_prefix, email, context)
+        # Idioma guardado del destinatario; si es nulo, el del request; si no, inglés.
+        idioma = idioma_efectivo(
+            context.get("request") or getattr(self, "request", None),
+            context.get("user"),
+        )
+        return enviar_correo(caso, email, context, idioma)
+
     def get_email_confirmation_url(self, request, emailconfirmation):
         """Envía la confirmación a la pantalla correspondiente de la SPA."""
-        return f"{settings.FRONTEND_URL}/confirmar-correo/{emailconfirmation.key}/"
+        return f"{settings.FRONTEND_URL}/confirm-email/{emailconfirmation.key}/"
 
 
 class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
@@ -86,6 +105,7 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
         user.nombre = nombre
         user.apellido = apellido
         user.estado = EstadoCuenta.ACTIVA
+        user.idioma = idioma_efectivo(request, user)
 
         extra = getattr(request, "google_extra", {})
         user.nombre_usuario = extra.get("nombre_usuario") or ""

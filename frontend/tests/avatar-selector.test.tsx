@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "./render";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { AvatarSelector } from "@/components/AvatarSelector";

@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     "catalogo",
     "listas",
     "chatbot",
+    # Paquete de configuración: solo aporta comandos de gestión (exportar_contrato).
+    "filmai",
 ]
 
 MIDDLEWARE = [
@@ -139,6 +141,9 @@ PASSWORD_RESET_TIMEOUT = 60 * 60
 
 # Internationalization: https://docs.djangoproject.com/en/5.1/topics/i18n/
 LANGUAGE_CODE = "es-ar"
+IDIOMAS_SOPORTADOS = ("en", "es")
+IDIOMA_POR_DEFECTO = "en"
+IDIOMAS_TMDB = {"en": "en-US", "es": "es-MX"}
 TIME_ZONE = "America/Argentina/Buenos_Aires"
 USE_I18N = True
 USE_TZ = True
@@ -169,10 +174,17 @@ REST_FRAMEWORK = {
     },
 }
 
+# Valida el sobre de errores en toda respuesta de la suite (OT-34).
+TEST_RUNNER = "filmai.pruebas.EjecutorConSobre"
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "FilmAI API",
     "DESCRIPTION": "API del backend de FilmAI.",
     "VERSION": "1.0.0",
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "filmai.errores.openapi.agregar_sobre_de_errores",
+    ],
 }
 
 # Permite que el frontend (localhost:3000) haga requests al backend (localhost:8000).

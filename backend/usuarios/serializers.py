@@ -19,19 +19,28 @@ from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
 from django.http import HttpResponseBadRequest
-from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
+
+from filmai.correos.servicio import enviar_correo
+from filmai.errores.base import ExcepcionAPI
+from filmai.errores.serializadores import FronteraErroresMixin
+from filmai.errores.validacion import ErrorValidacion
+from filmai.idioma import idioma_efectivo
 
 from .avatares import es_avatar_valido
-from .exceptions import NombreUsuarioOcupado
+from .errores import CampoNombreUsuario, FronteraUsuarioMixin
+from .exceptions import (
+    CuentaInactiva,
+    NombreUsuarioOcupado,
+    cuenta_inactiva_login,
+)
 from .models import EstadoCuenta, TipoGenero, Usuario
 from .passwords import guardar_contrasena
-from .validators import USERNAME_REGEX, validar_nombre_persona
+from .validators import MINIMUM_AGE, USERNAME_REGEX, validar_nombre_persona
 
 logger = logging.getLogger(__name__)
 
@@ -52,14 +61,24 @@ class LoginSerializer(BaseLoginSerializer):
         elif username:
             usuario = Usuario.objects.filter(nombre_usuario__iexact=username).first()
 
-        if usuario is not None and not usuario.is_active:
-            if usuario.estado == EstadoCuenta.BAJA:
-                raise PermissionDenied("Tu cuenta fue dada de baja.")
-            raise PermissionDenied(
-                "Tu cuenta aún no está activa. Revisá tu correo para confirmarla."
-            )
+        # El estado solo se revela a quien conoce la contraseña (plan 3.3); con
+        # una incorrecta se sigue el camino normal y responde invalid_credentials.
+        if (
+            usuario is not None
+            and not usuario.is_active
+            and usuario.check_password(attrs.get("password") or "")
+        ):
+            raise cuenta_inactiva_login(usuario)
 
-        return super().validate(attrs)
+        try:
+            return super().validate(attrs)
+        except serializers.ValidationError as error:
+            if not (email or username):
+                raise
+            # Mismo HTTP 400 y cuerpo heredado; solo cambia el código a uno propio.
+            raise ExcepcionAPI(
+                "invalid_credentials", contexto="login", detalle=error.detail
+            ) from error
 
     @staticmethod
     def validate_email_verification_status(user, email=None):
@@ -67,7 +86,7 @@ class LoginSerializer(BaseLoginSerializer):
         return None
 
 
-class RegisterSerializer(BaseRegisterSerializer):
+class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     """Registro tradicional (CU-001) con los campos del modelo `Usuario`."""
 
     correo = serializers.EmailField(required=True)
@@ -86,15 +105,19 @@ class RegisterSerializer(BaseRegisterSerializer):
     def validate_correo(self, value):
         value = get_adapter().clean_email(value)
         if Usuario.objects.filter(correo__iexact=value).exists():
-            raise serializers.ValidationError("El correo ya está registrado.")
+            raise serializers.ValidationError(
+                "El correo ya está registrado.", code="email_already_used"
+            )
         return value
 
     def validate_nombre_usuario(self, value):
         if not USERNAME_REGEX.fullmatch(value):
-            raise serializers.ValidationError("Alfanumérico, 5-25 caracteres.")
+            raise serializers.ValidationError(
+                "Alfanumérico, 5-25 caracteres.", code="username_invalid"
+            )
         if Usuario.objects.filter(nombre_usuario__iexact=value).exists():
             raise serializers.ValidationError(
-                "El nombre de usuario ya está registrado."
+                "El nombre de usuario ya está registrado.", code="username_already_used"
             )
         return value
 
@@ -102,7 +125,7 @@ class RegisterSerializer(BaseRegisterSerializer):
         try:
             return validar_nombre_persona(value)
         except DjangoValidationError as err:
-            raise serializers.ValidationError(err.messages) from err
+            raise ErrorValidacion.desde_django(err) from err
 
     def validate_apellido(self, value):
         return self.validate_nombre(value)
@@ -111,12 +134,30 @@ class RegisterSerializer(BaseRegisterSerializer):
         hoy = date.today()
         if value > hoy:
             raise serializers.ValidationError(
-                "La fecha de nacimiento no puede ser futura."
+                "La fecha de nacimiento no puede ser futura.",
+                code="birth_date_in_future",
             )
         edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
-        if edad < 13:
-            raise serializers.ValidationError("Debés tener al menos 13 años.")
+        if edad < MINIMUM_AGE:
+            raise serializers.ValidationError(
+                "Debés tener al menos 13 años.", code="minimum_age"
+            )
         return value
+
+    def validate(self, data):
+        if data["password1"] != data["password2"]:
+            raise serializers.ValidationError(
+                _("The two password fields didn't match."),
+                code="passwords_do_not_match",
+            )
+        return super().validate(data)
+
+    def save(self, request):
+        try:
+            return super().save(request)
+        except serializers.ValidationError as error:
+            # BaseRegister vuelve a validar con el usuario construido en memoria.
+            raise self.error_con_metadatos(error.detail) from error
 
     def get_cleaned_data(self):
         return {
@@ -131,7 +172,7 @@ class RegisterSerializer(BaseRegisterSerializer):
         }
 
 
-class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
+class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerializer):
     """Login y registro con Google mediante ``id_token``."""
 
     nombre_usuario = serializers.CharField(max_length=25, required=False)
@@ -140,12 +181,25 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
     )
     genero = serializers.ChoiceField(choices=TipoGenero.choices, required=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo usamos `id_token`; `code` colisionaría con el `code` del sobre de
+        # errores si DRF lo rechazara (p. ej. un valor que no es texto).
+        self.fields.pop("code", None)
+
+    def campo_error(self, codigo, ruta, campo):
+        if codigo == "required" and ruta[0] == "non_field_errors":
+            return "id_token"
+        return super().campo_error(codigo, ruta, campo)
+
     def validate_nombre_usuario(self, value):
         if not USERNAME_REGEX.fullmatch(value):
-            raise serializers.ValidationError("Alfanumérico, 5-25 caracteres.")
+            raise serializers.ValidationError(
+                "Alfanumérico, 5-25 caracteres.", code="username_invalid"
+            )
         if Usuario.objects.filter(nombre_usuario__iexact=value).exists():
             raise serializers.ValidationError(
-                "El nombre de usuario ya está registrado."
+                "El nombre de usuario ya está registrado.", code="username_already_used"
             )
         return value
 
@@ -153,11 +207,14 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
         hoy = date.today()
         if value > hoy:
             raise serializers.ValidationError(
-                "La fecha de nacimiento no puede ser futura."
+                "La fecha de nacimiento no puede ser futura.",
+                code="birth_date_in_future",
             )
         edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
-        if edad < 13:
-            raise serializers.ValidationError("Debés tener al menos 13 años.")
+        if edad < MINIMUM_AGE:
+            raise serializers.ValidationError(
+                "Debés tener al menos 13 años.", code="minimum_age"
+            )
         return value
 
     def validate(self, attrs):
@@ -169,7 +226,9 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
 
         id_token = attrs.get("id_token")
         if not id_token:
-            raise serializers.ValidationError("Se requiere el id_token de Google.")
+            raise serializers.ValidationError(
+                "Se requiere el id_token de Google.", code="required"
+            )
 
         adapter = adapter_class(request)
         app = adapter.get_provider().app
@@ -194,7 +253,7 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 "Google login: error al verificar el id_token (%s)", type(err).__name__
             )
             raise serializers.ValidationError(
-                "No se pudo autenticar con Google."
+                "No se pudo autenticar con Google.", code="google_authentication_failed"
             ) from err
 
         # allauth todavía no resolvió `is_existing`; consultamos el vínculo directo.
@@ -206,7 +265,7 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
         es_existente = cuenta_existente is not None
 
         if es_existente and not cuenta_existente.user.is_active:
-            raise PermissionDenied("Tu cuenta no está activa.")
+            raise CuentaInactiva(cuenta_existente.user, "Tu cuenta no está activa.")
 
         if not es_existente:
             # Google no provee estos campos obligatorios del perfil FilmAI.
@@ -217,7 +276,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 raise serializers.ValidationError(
                     dict.fromkeys(
                         faltantes, "Este campo es obligatorio para completar tu cuenta."
-                    )
+                    ),
+                    code="required",
                 )
 
             # Evita que allauth persista una cuenta con correo duplicado.
@@ -229,7 +289,8 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 if correo and Usuario.objects.filter(correo__iexact=correo).exists():
                     raise serializers.ValidationError(
                         "Ya existe una cuenta registrada con este correo."
-                        " Iniciá sesión con tu contraseña."
+                        " Iniciá sesión con tu contraseña.",
+                        code="email_already_used",
                     )
 
         try:
@@ -245,10 +306,12 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                 type(err).__name__,
             )
             raise serializers.ValidationError(
-                "No se pudo autenticar con Google."
+                "No se pudo autenticar con Google.", code="google_authentication_failed"
             ) from err
         if isinstance(ret, HttpResponseBadRequest):
-            raise serializers.ValidationError(ret.content)
+            raise serializers.ValidationError(
+                ret.content, code="google_authentication_failed"
+            )
 
         if not login.is_existing:
             login.lookup()
@@ -257,13 +320,14 @@ class GoogleSocialLoginSerializer(BaseSocialLoginSerializer):
                     login.save(request, connect=True)
             except IntegrityError as err:
                 raise serializers.ValidationError(
-                    "El correo o nombre de usuario ya está registrado."
+                    "El correo o nombre de usuario ya está registrado.",
+                    code="email_or_username_already_used",
                 ) from err
             self.post_signup(login, attrs)
 
         attrs["user"] = login.account.user
         if not attrs["user"].is_active:
-            raise PermissionDenied("Tu cuenta no está activa.")
+            raise CuentaInactiva(attrs["user"], "Tu cuenta no está activa.")
         return attrs
 
 
@@ -287,6 +351,7 @@ class UsuarioDetallesSerializer(serializers.ModelSerializer):
             "estado",
             "avatar_id",
             "fecha_registro",
+            "idioma",
         )
         read_only_fields = fields
 
@@ -295,7 +360,7 @@ class EnlaceRestablecimientoInvalido(Exception):
     """Señala un ``uid`` o token de restablecimiento inválido o vencido."""
 
 
-class RecuperarContrasenaSerializer(serializers.Serializer):
+class RecuperarContrasenaSerializer(FronteraErroresMixin, serializers.Serializer):
     """Solicitud de restablecimiento sin revelar si un correo está registrado."""
 
     email = serializers.EmailField()
@@ -310,25 +375,15 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
 
         uid = user_pk_to_url_str(usuario)
         token = default_token_generator.make_token(usuario)
-        reset_url = f"{settings.FRONTEND_URL}/restablecer-contrasena/{uid}/{token}/"
+        reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
         contexto = {"user": usuario, "reset_url": reset_url}
 
         try:
-            asunto = render_to_string(
-                "registration/recuperar_contrasena_subject.txt", contexto
-            ).strip()
-            cuerpo_texto = render_to_string(
-                "registration/recuperar_contrasena_message.txt", contexto
-            )
-            cuerpo_html = render_to_string(
-                "registration/recuperar_contrasena_message.html", contexto
-            )
-            send_mail(
-                asunto,
-                cuerpo_texto,
-                settings.DEFAULT_FROM_EMAIL,
-                [usuario.correo],
-                html_message=cuerpo_html,
+            enviar_correo(
+                "restablecer_contrasena",
+                usuario.correo,
+                contexto,
+                idioma_efectivo(self.context.get("request"), usuario),
             )
         except Exception:
             # Mantiene la misma respuesta para no revelar la existencia de la cuenta.
@@ -339,7 +394,7 @@ class RecuperarContrasenaSerializer(serializers.Serializer):
         return usuario
 
 
-class RestablecerContrasenaSerializer(serializers.Serializer):
+class RestablecerContrasenaSerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida el enlace y persiste la nueva contraseña."""
 
     password1 = serializers.CharField(trim_whitespace=False, write_only=True)
@@ -350,7 +405,8 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs["password1"] != attrs["password2"]:
             raise serializers.ValidationError(
-                {"password2": ["Las contraseñas no coinciden."]}
+                {"password2": ["Las contraseñas no coinciden."]},
+                code="passwords_do_not_match",
             )
 
         try:
@@ -367,7 +423,9 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
         try:
             validate_password(attrs["password1"], user=self.usuario)
         except DjangoValidationError as err:
-            raise serializers.ValidationError({"password1": err.messages}) from err
+            raise serializers.ValidationError(
+                {"password1": ErrorValidacion.desde_django(err).detail}
+            ) from err
 
         return attrs
 
@@ -379,15 +437,19 @@ class RestablecerContrasenaSerializer(serializers.Serializer):
                 self.usuario, self.validated_data["token"]
             ):
                 raise EnlaceRestablecimientoInvalido
-            guardar_contrasena(self.usuario, self.validated_data["password1"])
+            guardar_contrasena(
+                self.usuario,
+                self.validated_data["password1"],
+                self.context.get("request"),
+            )
         return self.usuario
 
 
-class UsuarioPerfilSerializer(serializers.ModelSerializer):
+class UsuarioPerfilSerializer(FronteraUsuarioMixin, serializers.ModelSerializer):
     """CU-006: solo nombre, apellido, nombre de usuario y avatar editables."""
 
     tiene_contrasena_local = serializers.SerializerMethodField()
-    nombre_usuario = serializers.RegexField(USERNAME_REGEX, max_length=25)
+    nombre_usuario = CampoNombreUsuario(USERNAME_REGEX, max_length=25)
 
     class Meta:
         model = Usuario
@@ -402,6 +464,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
             "avatar_id",
             "estado",
             "fecha_registro",
+            "idioma",
             "tiene_contrasena_local",
         )
         read_only_fields = (
@@ -411,6 +474,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
             "genero",
             "estado",
             "fecha_registro",
+            "idioma",
         )
 
     def get_tiene_contrasena_local(self, usuario):
@@ -429,7 +493,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
         try:
             return validar_nombre_persona(value)
         except DjangoValidationError as err:
-            raise serializers.ValidationError(err.messages) from err
+            raise ErrorValidacion.desde_django(err) from err
 
     def validate_apellido(self, value):
         return self.validate_nombre(value)
@@ -446,7 +510,8 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
             from .avatares import AVATAR_IDS_VALIDOS
 
             raise serializers.ValidationError(
-                f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}"
+                f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}",
+                code="avatar_invalid",
             )
         return value
 
@@ -455,9 +520,12 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
         hoy = date.today()
         if value > hoy:
             raise serializers.ValidationError(
-                "La fecha de nacimiento no puede ser futura."
+                "La fecha de nacimiento no puede ser futura.",
+                code="birth_date_in_future",
             )
         edad = hoy.year - value.year - ((hoy.month, hoy.day) < (value.month, value.day))
-        if edad < 13:
-            raise serializers.ValidationError("Debés tener al menos 13 años.")
+        if edad < MINIMUM_AGE:
+            raise serializers.ValidationError(
+                "Debés tener al menos 13 años.", code="minimum_age"
+            )
         return value

@@ -2340,6 +2340,10 @@ pagination_reviews,exceptions,tests_reviews}.py`,
 
 ## 30/09/2026 — El contenido de TMDB sigue en inglés, por ahora
 
+> Decisión de alcance reemplazada el 08/10/2026 por el plan de multiidioma y
+> la elección de `es-MX` registrada abajo. El comportamiento actual se conserva
+> hasta implementar F6; esta entrada permanece como antecedente histórico.
+
 - **Fecha**: 30/09/2026
 - **Hallazgo**: el cliente de TMDB (`catalogo/client.py`) nunca manda el
   parámetro `language`, así que TMDB responde en su idioma por defecto
@@ -2397,3 +2401,1300 @@ Series` arriba de las filas. «Todo» es el valor por defecto y mezcla los dos
 - **Archivos afectados**: `frontend/components/MisResenas.tsx`,
   `frontend/tests/mis-resenas.test.tsx`, `openspec/specs/reviews-api/spec.md`,
   `openspec/specs/profile-ui/spec.md`.
+
+
+---
+
+## 07/10/2026 — OT-03: build de producción en CI y locale de Playwright
+
+- **Fecha**: 07/10/2026
+- **Descripción**: el job de frontend ejecuta `npm run build`, que usa
+  `next build --turbopack`, para detectar errores de compilación y renderizado
+  de producción antes de integrar cambios. Playwright fija `locale: "es-AR"`
+  para que los formatos y el idioma del navegador sean reproducibles, como
+  exige F0 del plan de multiidioma. No se modifica ningún test existente.
+- **Archivos afectados**: `.github/workflows/ci.yml`,
+  `frontend/playwright.config.ts` y `docs/plan-multiidioma.md`.
+
+---
+
+## 07/10/2026 — OT-02: referencias de correos y del esquema antes del multiidioma
+
+- **Fecha**: 07/10/2026
+- **Descripción**: se caracteriza la salida real de los cuatro flujos de correo
+  (asunto, texto y HTML), normalizando únicamente las claves y tokens de los
+  enlaces. La notificación de contraseña actualizada conserva su ausencia
+  actual de HTML. Las referencias solo se regeneran con
+  `FILMAI_ACTUALIZAR_REFERENCIAS=1`; la ejecución normal falla ante divergencias.
+  El contrato OpenAPI se captura con el comando `spectacular` y se compara
+  semánticamente para que el formato del YAML no genere diferencias falsas.
+  Se conserva la salida actual del generador, que informa 14 advertencias
+  (11 únicas) y 100 errores de introspección (21 únicos), principalmente por
+  vistas sin serializer declarado: este archivo no garantiza una descripción
+  completa de todos los endpoints.
+- **Comprobación de comportamiento**: los mensajes específicos de cuenta
+  inactiva se lanzan antes de validar la contraseña, por correo o nombre de
+  usuario, y HTTP los reemplaza por el 403 genérico de permisos. La baja real
+  conserva la reseña, la nota y el nombre del autor en la comunidad. Esta orden
+  no cambia ninguno de esos comportamientos; la validación previa de credenciales
+  corresponde a F3.
+- **Archivos afectados**: `backend/filmai/tests_correos_contrato.py`,
+  `backend/filmai/tests_esquema.py`, `backend/filmai/tests_estado_cuenta.py`,
+  `backend/filmai/tests_golden/correos/`, `contracts/openapi.yaml`,
+  `openspec/specs/admin-api-docs/spec.md`, `openspec/specs/reviews-api/spec.md`
+  y `docs/plan-multiidioma.md`.
+
+## 07/10/2026 — Caracterización del contrato de respuestas previo a multiidioma
+
+- **Fecha**: 07/10/2026
+- **Descripción**: se agregaron pruebas de caracterización en `backend/filmai/tests_contrato.py` y
+referencias JSON en `backend/filmai/tests_golden/api/`. Comparan el estado HTTP y
+el cuerpo completo que produce el código actual, con `DEBUG=False` y `es-ar`.
+La regeneración solo se permite con `REGENERAR_REFERENCIAS_API=1`; una ejecución
+normal nunca reescribe referencias. Esto permite detectar cambios involuntarios
+al introducir el contrato de códigos en las siguientes órdenes.
+
+Se ejercitan endpoints y serializers reales. Google se aísla en la frontera
+OAuth y TMDB en el transporte HTTP; los mensajes siguen siendo los que genera
+el código de producción. Las ramas defensivas se distinguen de los flujos HTTP
+en `backend/filmai/tests_golden/README.md`. La spec
+`openspec/specs/api-characterization/spec.md` describe esta red de seguridad.
+No se modificaron comportamiento ni tests existentes.
+
+La verificación combinada de F0 detectó que algunos escenarios de catálogo
+inicializaban el servicio singleton antes de rechazar parámetros inválidos.
+Las nuevas pruebas limpian esa caché en `setUp` y mediante `addCleanup`, que
+Django ejecuta también ante un fallo. Así no alteran el estado que reciben
+otros tests; los cuerpos de referencia y los tests existentes se conservan.
+
+
+---
+
+## 08/10/2026 — Multiidioma: decisiones del plan y alcance de implementación
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se registra el diseño aprobado de `docs/plan-multiidioma.md`,
+  secciones 1 a 4 y respuestas de la sección 9. Este registro define el trabajo
+  pendiente; no afirma que F2 a F9 estén implementadas.
+
+| Decisión | Regla acordada |
+| --- | --- |
+| D1: idiomas e infraestructura | Inglés y español; inglés nativo de los diseños y por defecto. Frontend con next-intl 4.x, mensajes ICU y sin prefijos de idioma en las rutas. |
+| D2: resolución y persistencia | La cuenta es la fuente de verdad con sesión; la cookie `filmai_locale` es su espejo para renderizar. Selector autenticado guarda preferencias y cookie; sin sesión solo cookie. Login sincroniza el idioma guardado. Backend resuelve cuenta, `Accept-Language`, `en`, en ese orden. Registro local y Google guardan el idioma del encabezado. |
+| D3: responsabilidad del backend | El backend emite códigos, no traducciones de respuestas. `LANGUAGE_CODE` sigue en `es-ar`, sin LocaleMiddleware. Solo correos y TMDB consumen el idioma efectivo. El chatbot queda fuera de la implementación. |
+| D4 y D5: contrato de errores | Sobre `code`, `params`, `errors`; cada error tiene `field` o nulo, `code` y `params`. Códigos ingleses snake_case; campos y enumeraciones actuales siguen en español. `debug` solo con DEBUG=True y nunca se muestra en frontend. Catálogo único y exportación versionada. |
+| D6: enumeraciones | `Lista.clave` identifica `favoritos`, `pendientes`, `vistas`; nulo para personalizadas. Nombres almacenados en español; etiquetas traducidas en frontend. Se reservan nombres predeterminados en ambos idiomas y se unifica género por valor estable. |
+| D7: texto de interfaz y baja | Se preservan los textos y comportamiento de baja de cuenta. La migración actual es intermedia: capas compartidas y tres pilotos; las pantallas restantes conservan español fijo hasta su rediseño. |
+| D8: contenido de TMDB | Idioma por request, caché por idioma y fallback campo por campo a inglés. Persistencia canónica y embeddings en inglés; traducciones en `ProduccionTraduccion`, géneros identificados por ID. Pósters por idioma, con respaldo al original. |
+| D9: formatos | Intl con `en-US` y `es-AR`; fecha medium/long en ambos idiomas. Se acepta «28 sept 2026» y se corrigen los diseños. Duración con NumberFormat: narrow en inglés y short en español («2 h 49 min»). Toda lógica de formato se centraliza. |
+| D10: rutas | Rutas visibles en inglés, incluida `/complete-signup`; constantes compartidas. Backend, frontend y tests cambian juntos. No se necesitan redirecciones: no hay producción ni enlaces permanentes emitidos. |
+| D11: vocabulario y alcance | Glosario en `docs/i18n/glosario.md`; copia española con voseo. No se incorporan instrucciones del sistema de diseño, nombres de mesas de trabajo ni datos de muestra como textos de interfaz. |
+| D12: correos | Cuatro casos en texto y HTML, plantillas por idioma con base y servicio compartidos. Idioma del destinatario; vigencias por contexto (24 horas de confirmación, 1 hora de restablecimiento). |
+| D13: catálogos | `equivalencias.json` queda inmutable (634 entradas, 41 pantallas). CSV por fila con clave, namespace y estado. Fragmentos se recomponen con ICU; se excluyen muestras/diseño/chatbot. Errores y selector nuevos requieren aprobación de copia antes de sembrar. |
+
+La ventana de compatibilidad F3–F7 conserva las claves anteriores junto al sobre
+nuevo. F8 primero migra las aserciones y después elimina las claves anteriores.
+Los estados `account_deactivated` y `account_pending_confirmation` se revelan
+únicamente después de validar contraseña o token de Google; credenciales
+incorrectas siempre producen `invalid_credentials`.
+
+Se migran Preferencias y las pantallas de confirmación y restablecimiento como
+pilotos. Login, registro, completar Google, perfil, reseñas, navbar y modales
+conservan textos heredados y una lista de excepciones de lint que solo disminuye.
+Las capas compartidas, errores, validación, etiquetas, formatos, metadatos y rutas
+sí se adaptan. La interfaz mixta es una consecuencia aceptada, sin usuarios reales.
+
+Las cuentas existentes no reciben relleno de idioma: la semilla crea cuentas
+conocidas en `es` y `en`. Idioma nulo queda para altas externas al registro
+(superusuario y Admin); se usa el encabezado hasta que el usuario elija.
+Las correcciones menores de la tabla se aplican a la curaduría; el original no
+se reescribe. La duración y los formatos de miles se obtienen de Intl, no de
+literales de los diseños. Estas reglas incorporan las 14 respuestas de la sección 9.
+
+- **Archivos afectados**: `docs/decisiones.md`, `docs/i18n/glosario.md` y
+  `docs/plan-multiidioma.md`. Los archivos de producción se modifican en sus OT.
+
+---
+
+## 08/10/2026 — TMDB en español mexicano con respaldo a inglés
+
+- **Fecha**: 08/10/2026
+- **Descripción**: por decisión del usuario, español usa `es-MX` e inglés
+  `en-US` al consultar TMDB. Una variante fija evita selección regional por
+  usuario o país y prioriza títulos de distribución latinoamericana. La medición
+  histórica tuvo 7 sinopsis vacías de 80 con es-MX frente a 5 con es-ES; F6 cubre
+  los campos vacíos con la versión inglesa e identifica el respaldo en la API.
+  Los pósters cambian por idioma con respaldo al original. Esto reemplaza la
+  decisión de alcance de mantener TMDB únicamente en inglés del 30/09/2026;
+  el corpus de embeddings y la producción canónica continúan en inglés.
+- **Archivos afectados**: `docs/decisiones.md`; implementación posterior en
+  `backend/filmai/idioma.py`, cliente, servicios y modelos de catálogo.
+
+---
+
+## 08/10/2026 — Baja de cuenta: cuestión de copia conservada para revisión futura
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario decidió no cambiar copia ni comportamiento de baja
+  en este trabajo. La baja es lógica y conserva todos los datos. Un administrador
+  puede reactivar desde Django Admin, pero el usuario no puede hacerlo solo.
+  Reseñas y calificaciones continúan públicas con nombre de usuario; correo y
+  username siguen ocupados. La copia dice «irreversible» y no permite reactivar:
+  describe la capacidad del usuario, no la del administrador. Los términos hablan
+  de baja definitiva y supresión de datos a pedido, cuyo circuito no existe hoy;
+  la interfaz no avisa que las reseñas permanecen públicas. Queda como cuestión
+  pendiente para otro alcance, sin cambiar estos textos al sembrar catálogos.
+- **Archivos afectados**: `docs/decisiones.md`; no se modifica la lógica de baja.
+
+---
+
+## 08/10/2026 — Ejecución de multiidioma fuera de main y excepciones de pruebas
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario amplió la sesión al resto del plan, autorizó agentes
+  paralelos y eligió una rama de integración con PRs por orden. Los cambios se
+  mantienen en `feat/i18n-multiidioma`; el PR de seguimiento #43 permanece en draft.
+  No se permite merge a main, incluso con CI verde. Las entregas se integran
+  únicamente en esa rama después de verificar sus checks.
+  Se autorizó `size:exception` solo para OT-01. Se autoriza adaptar exclusivamente
+  las nuevas pruebas y referencias de F0 cuando las fases cambien deliberadamente
+  el comportamiento: en OT-30 se afirma la proyección heredada durante emisión
+  doble y se prueba el sobre nuevo por separado. Los tests anteriores al plan
+  mantienen las restricciones y excepciones originales.
+  Ante la contradicción del doc 02 sobre enlaces permanentes, el usuario confirmó
+  conservar la vigencia actual de 24 horas y corregir ese documento al alinearlo.
+- **Archivos afectados**: `docs/decisiones.md`, `docs/plan-multiidioma.md`;
+  pruebas nuevas de F0 al implementar cambios deliberados y doc 02 al cerrar.
+
+---
+
+## 08/10/2026 — Curaduría trazable por grupos de pantallas
+
+- **Fecha**: 08/10/2026
+- **Descripción**: OT-12 conserva la tabla original y registra en CSV cada ID,
+  texto y pantalla de origen junto a la clave semántica, estado y texto curado.
+  Los fragmentos se proponen como mensajes completos ICU; las claves de pantallas
+  futuras quedan provisionales hasta implementar sus diseños. Se entrega en tres
+  bloques por grupos para facilitar revisión, sin sembrar catálogos todavía.
+  El primer bloque cubre las entradas 1–270; los dos siguientes completan 634.
+  La aprobación editorial pertenece a OT-13.
+- **Archivos afectados**: `docs/i18n/claves.csv`, `docs/i18n/README.md`,
+  `docs/plan-multiidioma.md`.
+
+---
+
+## 08/10/2026 — Catálogo y correspondencia del contrato de errores
+
+- **Fecha**: 08/10/2026
+- **Descripción**: OT-11 especifica el sobre, códigos, parámetros, normalización
+  de terceros y respuestas exitosas. El CSV documenta las 91 referencias de F0
+  y todas sus cadenas distintas, fuentes defensivas y exclusiones fuera de API.
+  El catálogo ejecutable y la exportación quedan para F3; la copia para OT-13.
+  No cambian producción ni tests. Se conserva la emisión doble y se validan
+  credenciales antes de revelar estados de cuenta. El usuario aprobó códigos
+  por significado con estados HTTP por contexto, conservando el estado actual
+  (credenciales: 400 en login, 401 en autenticación; username: 400 en validación,
+  409 en perfil). También aprobó propagar Retry-After real de TMDB y omitir
+  parámetro/encabezado si se desconoce la espera, sin inventar segundos.
+- **Archivos afectados**: `openspec/specs/error-contract/spec.md`,
+  `docs/i18n/errores.csv`, `docs/decisiones.md` y `docs/plan-multiidioma.md`.
+
+---
+
+## 08/10/2026 — Aprobación editorial y resolución de la curaduría multiidioma
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario aprobó las 91 filas bilingües de OT-13 y resolvió
+  las seis dudas. Las confirmaciones 214/215 reutilizan frases completas de
+  eliminación; 355 es la etiqueta de contraseña; 448 es metadato de locale
+  excluido; 535 es un encabezado autónomo y 320 filtra una nota exacta X/10.
+  Los mensajes de credenciales cubren Google y contraseña, el límite compartido
+  con TMDB no culpa al usuario y el reenvío evita prometer un envío que no ocurre
+  para destinatarios desconocidos o ya confirmados. Se preservan los originales
+  y los textos de baja. El CSV tiene 451 filas utilizables y 425 claves distintas,
+  sin incoherentes. Las specs aprobadas definen requisitos aún por implementar;
+  la aprobación no afirma cambios de producción ni cierre de CI.
+- **Archivos afectados**: `docs/i18n/copia-propuesta.csv`, `claves.csv`,
+  `revision-ot13.md`, `README.md`, `docs/plan-multiidioma.md`,
+  `openspec/specs/i18n-core/spec.md` y `openspec/specs/emails/spec.md`.
+
+---
+
+## 08/10/2026 — Núcleo de idioma por operación (OT-20, primera entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se agrega `Usuario.idioma` nullable con opciones `en`/`es`,
+  sin relleno de cuentas anteriores. `idioma_efectivo` prioriza la cuenta,
+  luego el encabezado HTTP analizado por Django y por último inglés. Descarta
+  preferencias con peso cero y resuelve regiones al idioma base. Mantiene
+  `LANGUAGE_CODE=es-ar` y no activa traducción global. Preferencias, altas y
+  semilla se completan en las siguientes entregas de OT-20.
+- **Verificación**: cuatro tests nuevos cubren negociación, prioridad de cuenta
+  explícita, aislamiento del locale global y migración real ida/vuelta de una
+  cuenta previa. Pasan en 1,013 s; Ruff sin errores. No se aplicó la migración
+  ni se ejecutó la semilla contra la base de desarrollo.
+- **Archivos afectados**: configuración, modelo y migración de usuarios,
+  `filmai/idioma.py`, sus tests, doc 03 y spec `i18n-core`.
+
+## 08/10/2026 — Excepciones acotadas de verificación del plan
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el usuario autorizó ajustar las igualdades exactas anteriores
+  al plan para errores de confirmación, restablecimiento, documentación y TMDB
+  en OT-31/32. Se conserva el HTTP y la expectativa de cada campo heredado;
+  el sobre nuevo se prueba por separado. No habilita cambios a otros tests.
+  También autorizó reparar recursos faltantes del superusuario únicamente en
+  la copia temporal del volcado de OT-42, antes de establecer su referencia;
+  la base de desarrollo original permanece intacta. Para OT-70 aprobó el
+  título transitorio «Mis reseñas» / “My reviews”.
+- **Archivos afectados al implementar**: tests de usuarios y filmai de OT-31/32,
+  registro de verificación de OT-42 y catálogo transitorio de OT-70. Las
+  autorizaciones se conservan en las notas del plan; esta entrada no afirma
+  que dichas órdenes estén implementadas.
+
+---
+
+## 08/10/2026 — Idioma en preferencias y altas (OT-20, segunda entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: preferencias acepta `en`/`es`; rechaza nulo o valores
+  no soportados. Nulo se conserva para lectura de cuentas anteriores y altas
+  fuera del registro. Detalles y perfil exponen el campo solo en lectura.
+  Ambos adaptadores guardan el idioma de la cuenta nueva; el retorno temprano
+  de Google mantiene el idioma de cuentas existentes. `Accept-Language` no
+  necesita configuración CORS adicional porque es un encabezado permitido
+  directamente por el navegador. El esquema distingue lectura nullable y
+  escritura restringida mediante un serializer de respuesta.
+- **Verificación**: once tests de idioma/preferencias aprobados (4,071 s),
+  incluido guardado social real con la frontera OAuth aislada; esquema F0
+  regenerado por la autorización vigente, conservando su prueba de paridad.
+  Solo se amplía la igualdad exacta de preferencias autorizada por F2.
+- **Archivos afectados**: adaptadores, serializers, preferencias, tests de
+  usuarios, `contracts/openapi.yaml`, doc 03, plan y spec `i18n-core`.
+
+---
+
+## 08/10/2026 — Cuentas ES/EN conocidas en la semilla (OT-20, tercera entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el seed completo asigna español a usuario001/usuario003 e
+  inglés a usuario002, manteniendo sus credenciales. El modo de reseñas no
+  asigna ni reemplaza idiomas. El README documenta esas cuentas y el contrato
+  de preferencias. No se resetea la base automáticamente ni se rellena el
+  idioma de usuarios previos; el integrante decide cuándo usar el seed.
+- **Verificación**: dos tests pasan en 3,663 s sobre la base de pruebas:
+  recreación repetida con idiomas deterministas y conservación del admin;
+  modo de reseñas conservando un idioma guardado y uno nulo. Suite completa
+  backend: 520 tests en 184,491 s, con cinco fallos de autenticación 401 en
+  subcasos de una prueba anterior de preferencias. La entrega API previa pasó
+  su CI completo y los tests enfocados; se investiga la causa antes del cierre.
+  La repetición normal completa pasó: 520 tests en 190,527 s. El rechazo
+  intermitente anterior quedó registrado, sin causa determinada ni cambios
+  a sus oráculos. Frontend conserva el árbol validado en OT-13.
+- **Archivos afectados**: `seed.py`, test de semilla, README, plan y specs
+  `development-seed` e `i18n-core`.
+
+---
+
+## 08/10/2026 — Catálogo general y excepción tipada de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se inicia OT-30 con un registro de códigos generales, de
+  dominio y de éxito, sus mensajes internos y estados por contexto. Login y
+  autenticación conservan 400/401 para `invalid_credentials`; validación y perfil
+  conservan 400/409 para `username_already_used`. La excepción base exige un
+  contexto cuando hay más de uno, rechaza códigos desconocidos y valida tipos
+  y rangos de parámetros. Cero segundos es una espera conocida válida. Los
+  códigos de éxito se registran sin alterar respuestas existentes. Esta unidad
+  todavía no integra el manejador ni el catálogo de hojas de validación.
+- **Archivos afectados**: `backend/filmai/errores/{__init__,catalogo,base}.py`,
+  `backend/filmai/test_catalogo_errores.py` y `openspec/specs/error-contract/spec.md`.
+
+---
+
+## 08/10/2026 — Hojas y metadatos de validación de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se completa el catálogo de hojas de validación y se introduce
+  una excepción que conserva parámetros por ruta después de la conversión de
+  DRF. Los errores Django agregados se convierten antes de perder sus códigos;
+  solo se copian parámetros declarados o límites provistos explícitamente por
+  el validador, excluyendo valores sensibles. Se rechazan límites no finitos,
+  booleanos como números y metadatos sin una hoja correspondiente. Esta unidad
+  todavía no modifica validadores de dominio ni el manejador de producción.
+- **Archivos afectados**: `backend/filmai/errores/{catalogo,validacion}.py`,
+  `backend/filmai/test_metadatos_errores.py` y `openspec/specs/error-contract/spec.md`.
+
+---
+
+## 08/10/2026 — Composición y compatibilidad del sobre de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: una función independiente del transporte construye el sobre
+  registrado y otra lo agrega sin reemplazar campos heredados. Cada hoja de
+  validación conserva su orden, campo y parámetros; los índices de mensajes
+  no forman parte del campo, mientras los elementos de serializers anidados
+  usan rutas como `items.0.nombre`. Las listas generales conservan su contenido
+  bajo `non_field_errors`. Se validan estados, formas y colisiones reservadas;
+  `debug` solo se agrega al habilitarlo explícitamente. El portador de metadatos
+  debe construirse después de la última conversión de DRF: no se promete que
+  sobreviva a `validate` o `validate_<field>`. La adopción de esa frontera en
+  módulos reales corresponde a OT-31 y OT-32.
+- **Archivos afectados**: `backend/filmai/errores/sobre.py`,
+  `backend/filmai/test_sobre_errores.py` y `openspec/specs/error-contract/spec.md`.
+
+---
+
+## 08/10/2026 — Emisión doble del manejador y oráculos F0 de OT-30
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el manejador agrega códigos, parámetros y hojas al cuerpo
+  heredado de las excepciones DRF reconocidas, conservando HTTP y encabezados.
+  Los métodos y formatos de contenido provienen del request; no se interpretan
+  mensajes. El retorno TMDB y los endpoints con respuestas directas permanecen
+  para OT-31/OT-32; la cobertura obligatoria de códigos se cierra en OT-34.
+  Se aplicó la autorización vigente del usuario para adaptar los tests nuevos
+  de F0: OT-01 compara campos heredados y contenido de listas raíz, mientras
+  OT-02 conserva completa su matriz de estados/credenciales y compara el detalle
+  anterior. Los tests nuevos prueban el sobre por separado, incluido HTTP real.
+  También se conserva el 403 y detalle de `PermissionDenied` de Django, que
+  DRF reconoce aunque carezca de `default_code`; se prueba en ambos modos DEBUG.
+  No se modifican tests anteriores al plan ni archivos de referencia originales.
+- **Archivos afectados**: `backend/filmai/exceptions.py`,
+  `backend/filmai/{tests_contrato,tests_estado_cuenta,test_manejador_sobre}.py` y
+  `openspec/specs/error-contract/spec.md`.
+
+---
+
+## 08/10/2026 — Clave estable para las listas existentes (OT-40)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: se agrega `Lista.clave` nullable con los valores
+  `favoritos`, `pendientes` y `vistas`. La migración `0005_lista_clave` asigna
+  las claves a las predeterminadas existentes por `Lower(nombre)` y rechaza
+  explícitamente los nombres desconocidos antes de escribir. Las
+  personalizadas permanecen sin clave, incluso si comparten una etiqueta del
+  sistema. La reversión vacía las claves y quita la columna sin perder filas.
+- **Motivo**: separar la identidad del texto mostrado permite localizar las
+  etiquetas sin cambiar nombres ni relaciones. Se conserva la nulabilidad
+  hasta que OT-41 adapte la provisión y los consumidores; OT-42 agregará las
+  restricciones. Se prueba el viaje real del esquema y los datos con
+  `MigrationExecutor`, en una base de tests aislada de desarrollo. Las otras
+  apps permanecen en sus hojas actuales; se conserva el idioma de las cuentas.
+- **Archivos**: `backend/listas/models.py`,
+  `backend/listas/migrations/0005_lista_clave.py`,
+  `backend/listas/test_migracion_clave.py`,
+  `docs/03_Modelos de Datos y de Diseño.md`, `openspec/specs/list-endpoints/spec.md`.
+- **Validación final sobre OT-30**: tres pruebas de migración aprobadas en
+  3,769 s y suite normal completa de 546 aprobada en 196,439 s. Ruff, Prettier
+  y consistencia de migraciones aprobados; no cambia el árbol frontend.
+- **Historial de verificación**: tres pruebas aprobaron en 3,507 s sobre OT-20A.
+  Suite de 515 aprobada en 212,284 s con diagnóstico temporal que registra
+  excepciones JWT sin tokens ni hashes. La corrida normal previa tuvo un 401
+  inesperado en un test anterior de baja; el diagnóstico no lo reprodujo ni
+  estableció su causa. Sobre la base anterior, su clase pasó aislada y la
+  repetición completa de 511 pasó en 168,260 s sin modificar tests existentes.
+  Ruff, Prettier y consistencia de migraciones aprobados. El frontend conserva
+  el árbol validado en OT-13; se requiere CI sobre la cabeza final.
+
+## 08/10/2026 — Núcleo de idioma del frontend sin prefijos (OT-70 A)
+
+El frontend usa next-intl 4.14.9 con un proveedor en el layout raíz. La cookie
+`filmai_locale` soportada gana al encabezado `Accept-Language`, que se interpreta
+por pesos y regiones; el respaldo es inglés. Leer cookies y encabezados en el
+servidor vuelve dinámico el render, como prevé el plan. El middleware conserva
+su responsabilidad de autenticación y las rutas mantienen sus nombres actuales.
+La declaración de mensajes generada se versiona para que TypeScript funcione
+antes del build en CI. Se modifican `frontend/i18n/`, `messages/`, el layout,
+`next.config.ts`, las dependencias y `tsconfig.json`; se agregan pruebas de
+resolución y del idioma del documento. Las pantallas conservan su copia actual.
+
+Verificación del núcleo: 65 tests unitarios, TypeScript, ESLint y Prettier
+aprobados; cuatro recorridos de idioma pasan en el servidor propio del puerto
+3117. El puerto habitual 3100 respondía desde otro servidor; la configuración
+de verificación fue temporal y no se versiona. Reversión: retirar el plugin,
+`i18n/`, los catálogos iniciales y el proveedor para volver al layout anterior.
+El build de producción y Ruff también pasan; backend sin cambios funcionales.
+## 08/10/2026 — Catálogo transitorio aprobado para las piezas actuales (OT-70 B)
+
+El usuario aprobó 53 traducciones inglesas faltantes y el título temporal
+«Mis reseñas» / «My reviews». Las 77 claves de `legacy` conservan la copia
+española actual de preferencias, confirmación, restablecimiento, validaciones
+y metadatos; las restantes traducciones inglesas reutilizan copia aprobada
+de OT-13. `docs/i18n/ot70-catalogo-transitorio.csv` registra textos, archivos
+de origen y aprobación, sin alterar el CSV de 91 mensajes de OT-13.
+Los mensajes viven en `frontend/messages/{en,es}/common.json` y no traducen
+todavía las páginas. OT-76 aplicará el voseo; OT-77 sembrará los catálogos
+completos de los diseños. Los tests comprueban claves, aprobación, sintaxis
+ICU y conservación de los textos actuales sensibles. Revertir esta unidad
+retira solo el catálogo transitorio y su registro, preservando el núcleo.
+Verificación: 69 tests unitarios, TypeScript, ESLint y Prettier pasan;
+los cuatro recorridos de idioma pasan con el catálogo completo transitorio.
+## 08/10/2026 — Metadatos localizados y proveedor de pruebas (OT-70 C)
+
+`generateMetadata` localiza los cuatro puntos existentes: layout raíz,
+perfil, preferencias y mis reseñas. Los títulos conservan el sufijo FilmAI;
+«Mis reseñas» / «My reviews» usa la aprobación temporal del usuario.
+`frontend/tests/render.tsx` envuelve el render con next-intl en español y
+conserva cualquier proveedor particular; permite inglés mediante una opción.
+Los cuatro archivos de tests existentes solo cambian ese import, sin tocar
+selectores ni aserciones. Se agregan pruebas de los cuatro metadatos en ambos
+idiomas, del envoltorio y del resultado en navegador. Esta unidad se revierte
+independientemente de los catálogos y del núcleo de resolución de idioma.
+El tipado experimental genera declaraciones para ambos idiomas; `AppConfig`
+acepta la unión de sus catálogos literales para pasar español o inglés al
+proveedor sin forzar tipos. Verificación final: 73 unitarios, TypeScript,
+ESLint, Prettier, build y Ruff aprobados. Los 30 e2e (24 heredados y 6 nuevos)
+pasan en 41,0 segundos con la configuración habitual y servidor propio 3100.
+La primera ejecución dejó un servidor propio huérfano: se identificó por su
+PID y directorio, se detuvo junto al servidor temporal 3117 y se repitió la
+suite íntegra en 3100. Los intentos temporales fallaron por comparar URLs
+absolutas del puerto habitual y por un reinicio de desarrollo durante la
+corrección de tipos. No se modificaron esas aserciones ni la configuración.
+
+Validación tras el único rebase sobre OT-40: backend 546 tests en 199,264 s
+con base aislada `test_filmai_ot70`; 73 unitarios en 10,93 s, build,
+TypeScript, ESLint, Prettier y Ruff (105 archivos) aprobados. El frontend
+conserva el árbol `267f94944eecbb1347b5ff60bce1b2da3241073b`, validado con
+30 e2e antes del rebase; esa evidencia se reutiliza y el CI la repetirá.
+El puerto 3100 pertenece ahora a otra aplicación. No se detuvo ni se
+cambiaron las URLs o los oráculos de pruebas para adaptar el entorno.
+
+---
+
+## 08/10/2026 — Cliente TMDB y caché por idioma (OT-60, primera entrega)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el mapa EN/ES se expresa como `en-US`/`es-MX`. Cada cliente
+  tiene un idioma fijo; la fábrica comparte una instancia por idioma y
+  normaliza la llamada sin argumentos al inglés canónico. Los siete métodos
+  localizables envían `language`; Redis incluye el mismo valor en su hash de
+  parámetros, conservando formato y TTL. Los métodos globales no lo envían.
+- **Tests**: cinco pruebas nuevas cubren parámetros HTTP EN/ES, endpoints
+  globales, dos entradas Redis con aciertos separados, independencia de
+  clientes y rechazo de idioma no soportado antes del HTTP. Los 29 tests
+  enfocados pasan en 7,159 s. El usuario autorizó ampliar únicamente los cuatro
+  fixtures anteriores de caché con `language: en-US`, conservando sus
+  comprobaciones de acierto, almacenamiento y vencimiento.
+- **Archivos afectados**: settings, cliente, caché, fábrica de servicios,
+  tests de catálogo, doc 06, specs `tmdb-client`/`tmdb-cache` y plan. Las vistas
+  y la verificación real se registrarán en la segunda entrega de OT-60.
+
+---
+
+## 08/10/2026 — Idioma de vistas públicas y evidencia TMDB (OT-60)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: las seis vistas localizables seleccionan el servicio a
+  partir del idioma efectivo del request. Su autenticación continúa vacía: el
+  encabezado con pesos/regiones o EN decide. Keywords permanece global y la
+  materialización conserva su llamada canónica. La evidencia real confirma
+  ambas variantes, igualdad de la muestra inglesa, géneros de series e
+  imágenes. Una traducción ausente puede devolver un título original no
+  vacío; OT-61 conservará campos presentes y completará solo vacíos.
+- **Tests**: tres pruebas nuevas cubren las seis rutas y encabezados/default,
+  aciertos Redis separados desde HTTP, llamada de materialización y keywords
+  globales. Los 29 tests enfocados pasan en 21,276 s; no se cambiaron tests
+  anteriores en esta segunda unidad. La suite completa de ambas unidades
+  pasó 528 tests en 189,141 s. Ruff/Prettier limpios; el árbol frontend
+  `88f94c0` coincide con el validado en OT-13 (43 unitarios/24 e2e/build).
+  La publicación y el cierre esperan CI de las cabezas sobre integración.
+- **Archivos afectados**: vistas, `services/idioma_tmdb.py`, tests nuevos,
+  evidencia `docs/i18n/tmdb-verificacion-ot60.md`, spec de endpoints y plan.
+
+Validación final tras rebase sobre OT-70: 554 tests backend en 269,277 s,
+Ruff (108 archivos) y Prettier limpios. El árbol frontend coincide con
+`267f94944eecbb1347b5ff60bce1b2da3241073b`; el CI nuevo de OT-70 comprobó
+73 unitarios, 30 e2e y build. La evidencia anterior 528/43/24 corresponde
+a la base previa y queda conservada como historial. OT-60 requiere CI de
+sus dos cabezas publicadas antes de integrarse.
+
+---
+
+## 08/10/2026 — Frontera compartida de errores de serializers
+
+- **Fecha**: 08/10/2026
+- **Descripción**: OT-31 construye `ErrorValidacion` al terminar `is_valid`,
+  después de las reconstrucciones de DRF. Los parámetros provienen de los
+  campos y validadores configurados; las rutas distinguen listas de elementos
+  y listas de mensajes. Una identidad de campo explícita conserva el cuerpo
+  heredado cuando su forma no identifica el campo; los errores generales
+  usan contextos declarados. Siete tests nuevos ejercitan serializers reales,
+  validación anidada y configuración distinta, además de doce regresiones.
+  La adopción productiva queda pendiente. OT-32 reutilizará esta utilidad,
+  por lo que se registra su dependencia técnica del primer bloque de OT-31
+  y se ordenan ambas entregas sin cambiar el contrato funcional aprobado.
+- **Archivos afectados**: `backend/filmai/errores/{serializadores,validacion,sobre}.py`,
+  `backend/filmai/test_frontera_serializadores.py`,
+  `openspec/specs/error-contract/spec.md` y `docs/plan-multiidioma.md`.
+
+
+---
+
+## 08/10/2026 — Códigos de perfil y preferencias
+
+- **Fecha**: 08/10/2026
+- **Descripción**: el perfil y las preferencias adoptan la frontera final
+  compartida. Nombre de persona, formato del username y avatar asignan el
+  código en su validador original, preservando mensajes y HTTP anteriores.
+  Límites, choices e IDs se obtienen de constantes de reglas, campos reales
+  y registro activo. El conflicto de username mantiene 409 sin hojas.
+  Cinco tests HTTP nuevos comprueban el sobre por separado; usan un access
+  token vinculado al usuario para respetar la revalidación bajo bloqueo.
+  Los tests previos continúan cubriendo autenticación JWT sin cambios.
+- **Archivos afectados**: `backend/usuarios/{errores,validators,serializers,cuenta}.py`,
+  `backend/usuarios/test_errores_perfil.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos de solicitudes y cambios de contraseña
+
+- **Fecha**: 08/10/2026
+- **Descripción**: recuperación, restablecimiento y cambio autenticado adoptan
+  la frontera final. Los errores propios asignan códigos explícitos; las listas
+  de Django conservan sus códigos antes de la conversión DRF. Complejidad
+  publica los mismos límites y caracteres que aplica, sin adjuntar parámetros
+  a mensajes con `%` ni interpretar textos. Se conservan mensajes, campos y
+  HTTP anteriores; enlaces inválidos y respuestas exitosas quedan para sus
+  unidades respectivas. No se modifica persistencia ni envío de correos.
+  Seis pruebas nuevas verifican el sobre mediante endpoints reales, incluida
+  una configuración Django de mínimo 11; **53 tests** enfocados pasan.
+  Se conserva el primer resultado con fallos 401 en subcasos pre-plan, cuya
+  repetición pasó sin modificar esos tests ni atribuir una causa.
+- **Archivos afectados**: `backend/usuarios/{perfil,serializers,validators}.py`,
+  `backend/usuarios/test_errores_contrasena.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos del registro y frontera posterior en save
+
+- **Fecha**: 08/10/2026
+- **Descripción**: registro tradicional asigna códigos en sus condiciones de
+  duplicado, formato, nombre, edad y mismatch, preservando listas y traducción
+  heredada de dj-rest-auth. La edad mínima es la misma constante que aplica la
+  validación. La frontera compartida también devuelve una excepción normalizada
+  para `save`: BaseRegister vuelve a validar contraseña cuando construye el
+  usuario, después de `is_valid`. Un test provoca un fallo tipado en esa etapa
+  real y verifica metadata, non_field_errors y ausencia de usuario persistido.
+  No se interpreta texto ni se reemplaza el algoritmo de persistencia heredado.
+  Cinco pruebas nuevas y **15 tests** enfocados pasan; normalización de
+  proveedores y estados de cuenta se mantiene en OT-32/OT-33 respectivamente.
+- **Archivos afectados**: `backend/filmai/errores/serializadores.py`,
+  `backend/usuarios/{errores,serializers,validators}.py`,
+  `backend/usuarios/test_errores_registro.py` y `openspec/specs/error-contract/spec.md`.
+
+
+---
+
+## 08/10/2026 — Códigos propios de Google y validadores restantes
+
+- **Fecha**: 08/10/2026
+- **Descripción**: Google adopta la frontera compartida y asigna códigos a
+  campos requeridos, reglas de perfil, duplicados y fallos operativos. El
+  token faltante conserva non_field_errors, pero el sobre identifica id_token.
+  Se preservan mensajes, HTTP y estados de cuenta anteriores; la clasificación
+  específica de credenciales de proveedor queda para OT-32 y los estados para
+  OT-33. El avatar de modelo/Admin y el conflicto de username también asignan
+  sus códigos registrados en el origen. Los nuevos tests comparten preparación
+  F0, sin heredar tests ni modificar referencias; cada caso de Google revierte
+  su preparación para no reutilizar el mismo correo dentro de un test.
+  **108 tests** enfocados pasan, incluidos F0 completo y regresiones Google;
+  la fecha del test de edad se deriva del día actual y se verificó aparte.
+- **Archivos afectados**: `backend/usuarios/{serializers,avatares,exceptions}.py`,
+  `backend/usuarios/test_errores_google.py` y `openspec/specs/error-contract/spec.md`.
+## 08/10/2026 — Servicio único sin cambiar copia de correos (OT-50, unidad 1)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: los cuatro flujos delegan el render y transporte en
+  `filmai.correos.servicio.enviar_correo`. Las plantillas actuales se trasladan
+  intactas a `correos/<caso>/es/`; la notificación de contraseña conserva su
+  texto anterior como plantilla. El servicio mantiene los espacios extremos
+  que cada flujo enviaba. Confirmación/recuperación conservan sus enlaces;
+  cambio de contraseña conserva el envío posterior al commit y su política
+  de fallo. Esta unidad no selecciona EN ni añade HTML a la notificación.
+- **Tests**: las cuatro referencias F0 coinciden sin regeneración. Tres tests
+  nuevos verifican formatos, rechazo de entradas internas y propagación del
+  fallo al flujo responsable. Los 34 tests enfocados pasan en 25,339 s. El
+  usuario autorizó cambiar únicamente el destino del mock de transporte del
+  test de fallo de notificación, manteniendo HTTP y comprobación de contraseña.
+  El layout compartido se entrega en las unidades siguientes de OT-50.
+- **Archivos afectados**: servicio, plantillas trasladadas, adaptador, reset
+  serializer, passwords, tests, `.env.example`, plan y spec `emails`.
+
+---
+
+## 08/10/2026 — Layout de registro compartible (OT-50, unidad 2)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: registro hereda `correos/base.html` y conserva su introducción. La estructura, estilos, enlaces, texto y espacios
+  renderizados coinciden con el HTML anterior. Reenvío y recuperación se incorporan en
+  las unidades siguientes, preservando sus diferencias de contenido y color.
+- **Verificación**: siete tests de correo pasan en 1,964 s; las cuatro
+  referencias completas F0 permanecen iguales sin regenerarse. No se añade
+  una prueba que replique la herencia: la comparación del envío real verifica
+  el resultado del layout.
+- **Archivos afectados**: base HTML, variante de registro, decisiones,
+  plan y spec `emails`.
+
+---
+
+## 08/10/2026 — Reenvío sobre el layout común (OT-50, unidad 3)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: reenvío hereda la base del registro y sustituye únicamente
+  su introducción, conservando estilos, enlaces, vigencia y texto anterior.
+- **Verificación**: la prueba completa de cuatro correos y los tres tests
+  nuevos pasaron sobre ambas confirmaciones compartidas (1,964 s); la unidad
+  intermedia de registro también pasó siete tests (1,972 s). Referencias F0
+  intactas, sin modificar ni regenerar sus oráculos.
+- **Archivos afectados**: variante HTML de reenvío, decisiones, plan y spec.
+
+---
+
+## 08/10/2026 — Recuperación sobre el layout común (OT-50, unidad 4)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: recuperación hereda la misma base y conserva título,
+  introducción, botón y advertencia propios. El servicio suministra enlace
+  común y color secundario para preservar exactamente cada variante actual;
+  el contexto del caller no se modifica. Los cuatro flujos pasan por el
+  servicio, tres comparten HTML y contraseña actualizada conserva solo texto
+  hasta OT-51. `FRONTEND_URL` queda documentada en `.env.example`.
+- **Verificación**: 34 tests pasan en 25,469 s; las cuatro referencias F0
+  completas siguen idénticas sin regeneración. Incluye el fallo de correo
+  posterior al commit con su mock trasladado por autorización expresa.
+  Suite completa de las cuatro unidades: 523 tests, OK en 189,454 s. Ruff y
+  Prettier limpios. Frontend exacto `88f94c0` conserva la evidencia 43/24/build
+  de OT-13. Publicación pendiente después de rebase hacia integración.
+- **Archivos afectados**: base HTML, variante de recuperación, contexto del
+  servicio, decisiones, plan y spec `emails`.
+---
+
+## 08/10/2026 — Consumidores y API de identidad de listas (OT-41A)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: provisión, calificaciones, bloqueo de remoción, orden de
+  resúmenes, semilla y auditoría usan `Lista.clave`. La API expone la clave y
+  devuelve nulo para personalizadas. La provisión conserva listas renombradas
+  y permite completar claves nulas por nombre heredado sin recrear sus filas;
+  un tipo o identidad incompatibles detienen la operación. Se conserva la
+  tupla pública de nombres para los tests anteriores. No cambia `nombre`.
+- **Motivo**: separar la identidad de la etiqueta evita que un renombrado
+  rompa la regla calificada implica vista. Las consultas por nombres quedan
+  solo en el respaldo de provisión; textos, docstrings y migraciones históricas
+  pueden conservar etiquetas. Nombres reservados y exportación quedan para
+  OT-41B y las restricciones para OT-42.
+- **Pruebas**: siete casos nuevos cubren altas/API, orden tras renombrar, el
+  flujo HTTP calificar–bloquear remoción–borrar nota, provisión/auditoría,
+  transición nula, semilla por clave y colisión del respaldo. Pasan junto a
+  doce regresiones de contraseña: 19 tests en 16,229 s, en base aislada.
+  Suite normal completa: 553 tests en 201,893 s; Ruff, Prettier y coherencia
+  de migraciones aprobados. La corrida previa de 552 tuvo un 401 inesperado
+  en una regresión anterior de rollback de contraseña; se conserva ese
+  resultado y su repetición sin modificar tests anteriores ni atribuir causa.
+- **Archivos**: listas (servicios, vistas, serializer y tests), provisión y
+  comandos de usuarios, doc 03, spec `list-endpoints` y plan multiidioma.
+
+---
+
+## 08/10/2026 — Reserva bilingüe y contrato de enums (OT-41B)
+
+- **Fecha**: 08/10/2026
+- **Descripción**: crear o renombrar una personalizada rechaza las etiquetas
+  ES/EN del sistema sin distinguir mayúsculas y tras normalizar espacios.
+  Se registra `list_name_reserved`, HTTP 409 sin parámetros, con copia
+  aprobada por el usuario: «Ese nombre está reservado para una lista
+  predeterminada.» / “This name is reserved for a default list.” Es una fila
+  nueva; las 91 originales de OT-13 permanecen intactas. No se renombran
+  automáticamente listas personalizadas anteriores.
+- **Contrato**: `contracts/enums.json` publica `defaultListKeys`,
+  `genderValues` y `reservedListNames` por idioma. `exportar_enums` lo deriva
+  de los valores de los modelos y la reserva del backend; una prueba coteja
+  sus etiquetas con el CSV editorial aprobado. Género conserva su modelo.
+- **Regresión**: el escenario nuevo de F0 `lista_nombre_duplicado` pasa a
+  duplicar una personalizada real. Conserva su golden, HTTP y campos previos;
+  la reserva se verifica por separado. Aplica la autorización vigente para
+  tests nuevos de F0 cuando una fase cambia deliberadamente su comportamiento.
+  No se modifican tests anteriores al plan ni goldens de referencia.
+- **Pruebas**: seis casos nuevos y la regresión F0 pasan juntos: siete en
+  2,019 s. Cubren POST/PUT en ambos idiomas, reserva tras renombrar una
+  predeterminada, nombres anteriores sin traducir, exportación reproducible,
+  paridad editorial y código/copia aprobada. La primera suite normal tuvo
+  559 tests en 200,128 s, con un 401 inesperado en una regresión anterior de
+  baja. Su clase pasó aislada (6 en 3,087 s); se repite la suite sin cambiar
+  tests anteriores al plan ni atribuir causa. Ruff, Prettier y migraciones
+  consistentes aprobados.
+- **Archivos**: identidad/serializer de listas, exportador y tests, catálogo
+  de errores, escenario F0, CSVs i18n, contrato generado, specs y este registro.
+
+---
+
+## 08/10/2026 — Cierre parcial: entorno real, rama única `develop` y limpieza
+
+- **Fecha**: 08/10/2026
+- **Descripción**: cierre parcial para dejar el proyecto en un punto de
+  continuación claro. El entorno local se reparó y verificó: la imagen del
+  frontend se reconstruyó para instalar `next-intl@4.14.9` y el contenedor se
+  **recreó** (el volumen anónimo de `node_modules` se siembra desde la imagen
+  solo al crearlo, por eso el contenedor viejo arrancaba sin la dependencia y
+  entraba en bucle de reinicio), y en la base de desarrollo se aplicaron las
+  migraciones `usuarios.0007_usuario_idioma` y `listas.0005_lista_clave`.
+  Con eso se cerró la duda que quedaba abierta: **login real probado contra la
+  BD de desarrollo** (POST `/api/auth/login/` → 200 con cookies `access`,
+  `refresh` y `sessionid`; `GET /api/auth/user/` → 200; password inválida →
+  400 con el contrato de errores vigente), además de `Usuario.idioma` y
+  `Lista.clave` legibles en esa base.
+- **Integración**: todo el trabajo pasa a una sola rama, **`develop`**. Se
+  integraron las entregas que estaban fuera de la línea principal: OT-31
+  (frontera de errores, `ec509d2`), OT-50 (servicio y layout de correos,
+  `b14785c`) y OT-41A (identidad por clave, `ed85794`); y se rescató el
+  trabajo de **OT-41B que estaba sin commitear** en el worktree
+  `/tmp/filmai-i18n-ot41b-retoma` (`7eb7584`: `list_name_reserved`,
+  `contracts/enums.json`, comando `exportar_enums`, tests y este tipo de
+  registro). Los conflictos fueron solo de documentación y `graphify-out/`,
+  más los imports de `backend/usuarios/serializers.py` (OT-31 vs OT-50,
+  conservando ambos lados). `contracts/openapi.yaml` se regeneró con
+  `FILMAI_ACTUALIZAR_REFERENCIAS=1` porque el docstring de
+  `FronteraErroresMixin` llega como `description` a los esquemas
+  `CambiarContrasena` y `Preferencias`.
+- **Limpieza**: de 49 a 2 ramas locales y de 36 a 2 remotas (quedan `develop`
+  y `main`); 16 worktrees de `/tmp` eliminados; stash de OT-13 descartado
+  (verificado que todo su contenido está en `develop`); PRs #42, #43, #66 y
+  #67 cerrados con explicación. Los SHAs de las 47 ramas borradas y el
+  procedimiento de recuperación quedaron en `docs/cierre-parcial-2026-10-08.md`.
+  Antes de borrar se comprobó, archivo por archivo, que el contenido de los
+  worktrees estaba commiteado o supersuperado por versiones aprobadas.
+- **Pruebas**: suite backend completa **598 OK** (con los mounts de
+  `contracts/` y `docs/` que esos tests resuelven vía `BASE_DIR.parent`; la
+  corrida previa tuvo un `401 != 200` intermitente ya documentado en
+  OT-41A/OT-41B, y la repetición salió en verde sin tocar tests),
+  Vitest **73/73**, `ruff format`/`ruff check` limpios, Prettier de frontend
+  limpio y `makemigrations --check` sin migraciones pendientes.
+- **Archivos afectados**: `contracts/openapi.yaml` (regenerado),
+  `docs/plan-multiidioma.md` (estados y traspaso), `docs/decisiones.md`
+  (este registro), `docs/cierre-parcial-2026-10-08.md` (nuevo) y
+  `graphify-out/` (regenerado).
+
+## 08/10/2026 — OT-32: códigos en `listas` y `catalogo`, TMDB normalizado
+
+- **Descripción**: F3 paso 2 (resto) y paso 4 (TMDB). Sin cambiar textos, HTTP
+  ni claves heredadas, cada error de `listas` y `catalogo` lleva un código del
+  catálogo y sus parámetros:
+  - `listas`: `NombreListaSerializer` usa `FronteraErroresMixin`; emite
+    `blank`, `max_length` (`maxLength: 80`), `list_name_missing_alphanumeric`
+    y `list_name_invalid_characters`. Los serializers de consulta adoptan la
+    misma frontera (`min_value`, `invalid_choice`, `invalid`).
+  - `catalogo`: los parámetros de las vistas (`_int_param`, `_float_param`,
+    `_validate_tipo`, `query`) lanzan `ErrorValidacion` con el texto en inglés
+    heredado (cuerpo irregular `{campo: "texto"}` intacto) y código
+    `required`/`invalid`/`min_value`/`number_not_finite`/`invalid_choice`.
+    La actualización de reseñas vacía emite `review_update_empty`
+    (`fieldNames: ["valor", "texto"]`).
+  - TMDB: el manejador **global** agrega el sobre (`upstream_bad_request`,
+    `upstream_not_found`, `upstream_error`, `upstream_unavailable`); el
+    manejador especializado `tmdb_exception_handler` y su test directo no se
+    tocan. **Decisión**: `TMDBRateLimited` (429) usa `throttled` sin
+    `retry_after_seconds`, porque TMDB no informa la espera; OT-33 agrega el
+    parámetro y `Retry-After` al 429 propio.
+  - Los conflictos de `listas` y `CalificacionDuplicada` ya se mapeaban por
+    `_CODIGOS_HEREDADOS`; no requirieron cambio.
+- **Tests existentes tocados** (autorizado por el plan: "normalizando solo el
+  global"): `filmai/tests.py::test_handler_global_conserva_el_mapeo_de_tmdb` y
+  `filmai/test_manejador_sobre.py::test_tmdb_agrega_sobre_...` verifican
+  `detail`, HTTP y `code` en vez de igualdad exacta del cuerpo.
+- **Pruebas**: nuevos `listas/test_codigos_errores.py` y
+  `catalogo/test_codigos_errores.py`; suite backend completa **611 OK**,
+  `ruff format`/`ruff check` limpios.
+- **Archivos afectados**: `backend/listas/serializers.py`,
+  `backend/catalogo/{views,serializers_reviews}.py`,
+  `backend/filmai/exceptions.py`, los tests citados, `docs/plan-multiidioma.md`
+  y `graphify-out/`.
+
+## 08/10/2026 — OT-33: espera del 429, códigos de éxito y estados de cuenta
+
+- **Descripción**: F3 pasos 5, 6 y 7, sin quitar claves heredadas.
+  - **429**: `Throttled` con espera emite `params.retry_after_seconds`
+    (`ceil(wait)`); el encabezado `Retry-After` ya lo fija DRF.
+  - **Éxito**: las respuestas con texto suman `code` junto a `detail`
+    (`password_reset_requested`, `password_reset_completed`, `password_updated`,
+    `account_deactivated_successfully`, `email_confirmed`, `csrf_ready`).
+    Para vistas de dj-rest-auth (registro `registration_pending_confirmation`,
+    reenvío `confirmation_email_sent`, logout `logged_out`) se usa el decorador
+    `con_codigo_exito`, que envuelve la vista con `functools.wraps`; **no** se
+    subclasean porque drf-spectacular perdería sus extensiones y cambiaría
+    `contracts/openapi.yaml` (se probó y se descartó).
+  - **Login**: `CuentaInactiva` (subclase de `PermissionDenied`) emite
+    `account_deactivated` / `account_pending_confirmation` con el mismo 403 y
+    `detail` genérico, **solo si la contraseña (o el token de Google) es
+    correcta**. Con contraseña incorrecta la cuenta inactiva responde como
+    cualquier otra: `invalid_credentials` (HTTP 400, cuerpo `non_field_errors`
+    heredado). Las credenciales inválidas de cualquier cuenta pasan de
+    `validation_error` a `invalid_credentials`.
+- **Cambio de comportamiento deliberado**: cuenta de baja/pendiente con
+  contraseña incorrecta pasa de 403 a 400 (el plan 3.3 pide no revelar el
+  estado a quien no controla la cuenta). Se ajustó el test OT-02
+  `filmai/tests_estado_cuenta.py` (separa contraseña correcta/incorrecta), lo
+  autorizado para tests de F0 cuando el plan cambia el comportamiento.
+- **Pruebas**: `usuarios/test_codigos_exito_estado.py` (11 tests); suite
+  backend completa **622 OK**, `ruff` limpio, `openapi.yaml` sin cambios.
+- **Archivos afectados**: `backend/filmai/{exceptions,urls}.py`,
+  `backend/filmai/errores/sobre.py`, `backend/usuarios/{exceptions,serializers,
+  views,perfil,cuenta}.py`, tests citados, `docs/plan-multiidioma.md`,
+  `graphify-out/`.
+
+## 08/10/2026 — OT-34: contrato exportado, sobre en OpenAPI y modo estricto (cierra F3)
+
+- **Descripción**: F3 pasos 8 y 9 más el rechazo de códigos no registrados.
+  - `exportar_contrato` (`filmai/management/commands/`) escribe
+    `contracts/error-codes.json` desde el catálogo (categoría, contextos HTTP,
+    esquema de parámetros; **sin** mensajes internos). Para que Django vea el
+    comando, `filmai` se agrega a `INSTALLED_APPS` (sin modelos ni migraciones).
+    Un test compara el archivo completo.
+  - `validar_respuesta_error` + `EjecutorConSobre` (`TEST_RUNNER`): toda
+    respuesta 4xx/5xx JSON bajo `/api/` de **toda la suite** se valida (sobre,
+    código registrado, estado HTTP del contexto, parámetros, ausencia de
+    `debug` con `DEBUG=False`). Esto destapó respuestas sin sobre, ya corregidas:
+    errores directos de enlaces (`link_expired`, `link_invalid`,
+    `already_confirmed`), 401 de simplejwt (`token_not_valid` →
+    `invalid_token`; `user_inactive`/`password_changed` → `session_revoked`),
+    403 de documentación y los handlers 404/500 de Django.
+  - **Modo estricto** (`FILMAI_SOBRE_ESTRICTO`, solo en la suite): un código o
+    una hoja sin registrar lanza `ValueError`. En producción degrada al código
+    genérico del estado (401/403/404/500) y registra el error.
+  - OpenAPI: componentes `ErrorEnvelope`/`ErrorEntry` y respuestas `4XX`/`5XX`
+    en cada operación (hook `agregar_sobre_de_errores`); solo se añade.
+  - `GoogleSocialLoginSerializer` descarta el campo heredado `code`: un valor
+    no textual lo habría hecho chocar con el `code` del sobre (500). Solo se
+    usa `id_token`. Un test verifica que ningún serializer declare
+    `code`/`params`/`errors`/`debug`.
+- **Tests existentes tocados** (igualdades pre-plan autorizadas para
+  confirmación/restablecimiento/documentación): `usuarios/tests.py`,
+  `usuarios/test_perfil.py` y `filmai/tests.py` comparan `codigo`/`detail` en vez
+  del cuerpo completo.
+- **Pruebas**: `test_contrato_codigos.py`, `test_cobertura_codigos.py` (un caso
+  por código del catálogo); suite backend **634 OK**, `ruff` limpio,
+  `makemigrations --check` sin cambios. **F3 queda cerrada.**
+- **Archivos afectados**: `backend/filmai/{errores/{contrato,openapi,sobre}.py,
+  exceptions,pruebas,views,documentation,settings,urls}.py`,
+  `backend/filmai/management/`, `backend/usuarios/{views,serializers}.py`,
+  tests citados, `contracts/{error-codes.json,openapi.yaml}`,
+  `openspec/specs/error-contract/spec.md`, `docs/plan-multiidioma.md`.
+
+## 08/10/2026 — OT-42: restricciones de `clave` y prueba sobre un volcado (cierra F4)
+
+- **Descripción**: F4 paso 5 (contraer). Migración `listas.0006` en dos partes:
+  1. `RunPython` de verificación que se detiene con un mensaje explícito (ids de
+     lista y usuario) si hay predeterminadas sin clave, personalizadas con
+     clave o claves repetidas por usuario; es reversible (no-op).
+  2. `uq_lista_usuario_clave` (único por `usuario`+`clave` cuando la clave no es
+     nula) y `ck_lista_tipo_clave` (predeterminada ⇔ clave presente;
+     personalizada ⇔ clave nula). `nombre` se conserva (D6).
+- **Prueba sobre copia de datos reales**: volcado `pg_dump` de la base de
+  desarrollo restaurado en una base temporal (`ot42_copia`, eliminada al
+  terminar). Con `listas.0005` en la copia: 4 usuarios, 13 listas, 78 ítems,
+  0 predeterminadas sin clave, 0 personalizadas con clave, 0 claves repetidas.
+  El superusuario `admin` (creado sin la señal) no tenía listas
+  predeterminadas: se reparó **solo en la copia** con
+  `reparar_recursos_usuarios` (+3 listas, 16 en total, 4 usuarios con las tres
+  claves). Avance a `0006`, retroceso a `0005` y nuevo avance: mismos conteos
+  (16 listas, 78 ítems) en cada paso. Salvedad: el entrypoint del backend
+  ejecuta `migrate` en cada arranque, por lo que la línea base posterior a la
+  reparación ya se tomó con `0006` reaplicada; la de `0005` pura es la primera
+  (4/13/78).
+- **Aviso**: por ese mismo entrypoint, las corridas de tests con Docker de esta
+  sesión aplicaron `0006` a la base de desarrollo (sus datos eran válidos, no
+  hubo cambios de filas). `admin` sigue sin listas predeterminadas allí; no se
+  tocó la base original.
+- **Test existente tocado**: `listas/test_identidad.py::test_provision_completa_
+  nulas_heredadas_sin_recrear_filas` simulaba una predeterminada sin clave, que
+  la restricción ahora prohíbe; quita `ck_lista_tipo_clave` solo dentro de ese
+  test (DDL transaccional, se revierte) para conservar la cobertura de la ruta
+  de compleción.
+- **Pruebas nuevas**: `listas/test_restricciones_clave.py` (restricciones de
+  base y migración en ambos sentidos, con datos inválidos). Suite backend
+  **644 OK**, `ruff` limpio, `makemigrations --check` sin cambios. **F4 queda
+  cerrada** (falta publicar/CI).
+- **Archivos afectados**: `backend/listas/{models.py,migrations/0006_*.py,
+  test_restricciones_clave.py,test_identidad.py}`, `docs/plan-multiidioma.md`,
+  `graphify-out/`.
+
+## 08/10/2026 — OT-51/52/53: correos localizados (cierra F5)
+
+- **OT-51**: la vigencia de los enlaces sale de la configuración
+  (`ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS`, `PASSWORD_RESET_TIMEOUT`) vía
+  `vigencia_en_horas`, con singular/plural en plantilla. "Contraseña
+  actualizada" gana HTML; su acción enlaza a `FRONTEND_URL/login/` (el inicio
+  de sesión real; no se inventa un token ni un endpoint de recuperación).
+- **OT-52**: plantillas `en` para los cuatro casos y `base_<idioma>.html` con la
+  copia compartida. Idioma del correo = `idioma_efectivo(request, usuario)`:
+  idioma guardado del destinatario, luego el del request, luego inglés. Lo
+  resuelve el llamador (adaptador de allauth, recuperación, cambio y
+  restablecimiento de contraseña) y el servicio renderiza una variante explícita.
+  **Decisión**: el saludo sin nombre es «Hola usuario,» / “Hi there,”. La
+  tabla no traía copia para ese caso; el usuario la aprobó el 08/10/2026.
+- **OT-53**: la copia en español pasa a la de `docs/i18n/claves.csv` (filas
+  603–634, voseo) y ambos idiomas suman encabezado, motivo y pie con año. El
+  layout `base.html` queda neutro (sin texto). La notificación de contraseña no
+  muestra la fila "copiá y pegá este enlace" (la tabla no la incluye).
+- **Tests existentes tocados** (cambio deliberado de F5): `usuarios/tests.py`
+  (`ConfirmarCorreoTests`, `RecuperarContrasenaTests`) y las referencias de F0
+  envían `Accept-Language: es`, porque sin preferencia el correo ahora sale en
+  inglés. Las 4 referencias `es` se regeneraron en OT-53 (y la de contraseña
+  en OT-51, por el HTML); se agregaron 4 referencias `.en`. El año del pie se
+  normaliza en las referencias.
+- **Pruebas**: `filmai/test_correos_idioma.py` (matriz 4 casos × 2 idiomas ×
+  3 partes, idioma del destinatario, saludo de reserva, voseo) y
+  `test_servicio_correos.py` (vigencias). **Pendiente manual**: revisar los
+  correos en un cliente real con `RESEND_TEST_RECIPIENT` (plan 10.1).
+- **Archivos afectados**: `backend/filmai/correos/servicio.py`,
+  `backend/templates/correos/**`, `backend/usuarios/{adapter,passwords,
+  serializers,views,perfil}.py`, `backend/usuarios/templatetags/nombres.py`,
+  tests y referencias citadas, `openspec/specs/emails/spec.md`.
+
+## 08/10/2026 — OT-60 a OT-63: TMDB según idioma (cierra F6)
+
+- **OT-60**: ya integrada (cliente con `language`, clave de caché por idioma,
+  vistas públicas por `Accept-Language`); se da por cerrada con la suite
+  completa de esta etapa.
+- **OT-61**: `catalogo/services/fallback.py`. Fuera del inglés, detalles y
+  listados se envuelven en `CatalogoConRespaldo`: si `title`/`name`/`overview`
+  llegan vacíos se pide la versión inglesa (cacheada) y se completa campo por
+  campo. **Decisión**: la marca se llama `campos_en_ingles` (lista por detalle
+  y por ítem de listado) y solo se agrega fuera del inglés, para que el
+  passthrough en inglés no cambie. En listados se combina la misma página por
+  (`media_type`, `id`); un ítem sin par en la página inglesa queda como llegó.
+- **OT-62**: `ProduccionTraduccion` (producción, idioma, título, sinopsis,
+  póster; único por producción+idioma) y `ProduccionAudiovisual.generos_ids`,
+  migración `catalogo.0006`. `materializar` guarda la traducción de cada idioma
+  no canónico después del canónico; un `TMDBError` ahí se registra y no
+  invalida el enriquecimiento. Comando idempotente `rellenar_traducciones`
+  (`--limite`, `--lote`). El texto canónico de embeddings y su hash no cambian
+  (test de invariancia).
+- **OT-63**: `texto_localizado` elige título/póster por idioma con respaldo
+  canónico; lo usan ítems de lista, previews de listas y «mis reseñas» con
+  `prefetch_related("produccion__traducciones")`. Nuevo
+  `GET /api/catalogo/genres/` por idioma. La sincronización nocturna suma una
+  tercera pasada acotada (`CELERY_BACKFILL_LIMIT`) que rellena traducciones
+  pendientes y la informa en `traducciones`.
+- **Tests existentes tocados** (adiciones previstas por la fase): dos
+  aserciones de "una sola llamada" al detalle pasan a dos (una por idioma);
+  las estadísticas de la sync incluyen `traducciones`; la fila "intacta" del
+  test de refresco se crea ya traducida. `contracts/openapi.yaml` suma la ruta
+  de géneros.
+- **Verificación con la API real** (08/10/2026): `movie/1559362` con
+  `Accept-Language: es` devuelve la sinopsis inglesa y
+  `campos_en_ingles: ["overview"]`; `genres?tipo=tv` devuelve «Animación»,
+  «Comedia»; `rellenar_traducciones --limite 5` guardó 5 traducciones
+  (p. ej. «Buscando a Nemo») y `generos_ids` en la base de desarrollo.
+- **Limitación conocida**: el orden por título usa el título canónico; la
+  sinopsis traducida se guarda pero ningún serializer la expone todavía.
+- **Archivos afectados**: `backend/catalogo/{models,views,urls,tasks,reviews,
+  serializers_reviews}.py`, `backend/catalogo/services/{fallback,traducciones,
+  materialization}.py`, `backend/catalogo/management/commands/
+  rellenar_traducciones.py`, migración `0006`, `backend/listas/{views,
+  serializers}.py`, tests nuevos (`test_fallback_idioma`, `test_traducciones`,
+  `test_idioma_serializadores`), specs `tmdb-endpoints` y
+  `catalog-materialization`.
+
+## 08/10/2026 — Limpieza de `docs/` y documento de siguientes pasos
+
+- Nuevo `docs/siguientes-pasos-multiidioma.md`: estado por fase, pendientes y
+  órdenes que faltan (F7 a F9), con los comandos del entorno.
+- Eliminados `docs/cierre-parcial-2026-10-08.md` (reemplazado por el anterior;
+  sus SHAs de recuperación quedan en el historial, commit `05a53a2`) y
+  `docs/i18n/revision-ot13.md` (lista de verificación de una orden cerrada).
+- Se conservan los demás archivos de `docs/i18n/` porque los leen tests o el
+  plan (`claves.csv`, `copia-propuesta.csv`, `ot70-catalogo-transitorio.csv`,
+  `equivalencias.json`, `errores.csv`, `glosario.md`,
+  `tmdb-verificacion-ot60.md`). `docs/reportes_dev/` y `docs/wireframes/` no se
+  tocaron: son material del equipo y de diseño, no del plan multiidioma.
+
+## 08/10/2026 — Arquitectura del chatbot (Módulo 5): DeepSeek, SSE sobre ASGI y contexto por SQL
+
+- **Descripción**: Gonza y Marcos acordaron la arquitectura general antes de
+  implementar B-02 a B-06. Complementa la decisión del 18/08/2026 (tool
+  calling + pgvector + BGE-M3), que sigue vigente.
+  1. **Proveedor**: DeepSeek, por su API compatible con OpenAI (SDK `openai`
+     con `base_url` propia). Un único adaptador "compatible con OpenAI"
+     permite pasar a Groq, OpenAI o Gemini cambiando el `.env`. Todavía no
+     hay API key: mientras tanto se trabaja con un proveedor falso. Como los
+     datos se procesan en servidores de terceros fuera del país, la
+     anonimización (RNF #3) es estricta: el LLM no recibe nombre, apellido,
+     correo ni nombre de usuario.
+  2. **Transporte**: streaming SSE sobre ASGI desde el inicio, sin pasar por
+     una versión síncrona. El orquestador es un async generator que emite
+     eventos (`estado`, `texto`, `tarjetas`, `fin`, `error`). Para probarlo
+     sin HTTP ni front se usa el comando `manage.py chatear`. El código async
+     queda acotado al loop del orquestador y a un único ejecutor de tools,
+     que envuelve con `sync_to_async` el código sync existente (ORM, cliente
+     TMDB, Ollama). `POST /api/chat/mensajes/` es una vista async de Django
+     (DRF no es async); el `GET` del historial sigue en DRF.
+  3. **Cancelación (CU-014)**: el front aborta el `fetch` y Django cancela la
+     vista al detectar la desconexión. La pregunta y la respuesta se guardan
+     juntas, recién al terminar: una solicitud cancelada o fallida no deja
+     nada persistido. Se verifica con un test en la implementación.
+  4. **Respuesta**: texto en markdown + tarjetas de títulos. La tool de
+     presentación `mostrar_tarjetas` solo acepta ids devueltos por otra tool
+     en el mismo turno y descarta los que están en «Vistas». Nuevo campo
+     `Mensaje.tarjetas` (JSON).
+  5. **Contexto personal (cambia B-05)**: se arma por SQL en cada mensaje, en
+     lugar de precomputarse en `Chat.contexto`: lo que le gustó (nota 7 o
+     más, con un extracto de su reseña), lo que no le gustó (4 o menos),
+     últimas vistas y favoritos. `Chat.contexto` queda para el estado de la
+     conversación (títulos ya recomendados).
+  6. **Idioma y alcance**: responde en el idioma de `idioma_efectivo()` y las
+     tools consultan TMDB con `TMDBClient(idioma=...)`. Solo habla de cine,
+     series y del historial del usuario; en español, con voseo.
+  7. **Límites**: mensaje de hasta 500 caracteres, unos 20 mensajes por hora
+     por usuario, últimos 10 mensajes como historial, como máximo 4 vueltas
+     de tools y una sola solicitud en curso por chat.
+  8. **Tools**: `buscar_por_titulo`, `descubrir` (generaliza
+     `top_por_genero`), `similares_a`, `buscar_por_persona`, `detalle`,
+     `buscar_semantico`, `mis_listas` y `mostrar_tarjetas`. Al cliente TMDB
+     le faltan `get_similar` y `search_person`.
+- **Motivo**: SSE es la práctica habitual en chats con LLM y, bajo ASGI,
+  esperar la respuesta del modelo no ocupa un worker. Pasar antes por una
+  versión síncrona obligaba a reescribir el orquestador como async. Precomputar
+  el contexto exigía señales en calificaciones, listas y reseñas que las
+  operaciones masivas (seed, migraciones, acciones del Admin) no disparan, y no
+  ahorra tiempo frente a la latencia del LLM. Lo que no le gustó al usuario
+  informa tanto como lo que sí.
+- **Pendiente**: actualizar los docs 03 (`Mensaje.tarjetas`), 05 (B-02 a B-05)
+  y 06 (tools nuevas); abrir el SDD en `openspec/changes/chatbot/`; medir la
+  latencia contra DeepSeek cuando haya key (RNF #6).
+- **Archivos afectados**: `docs/decisiones.md` (este registro).
+
+## 08/10/2026 — Selector de idioma: dónde vive en la interfaz
+
+- **Descripción**: el canvas de Claude Design decía «no hay selector de
+  idioma» y lo postergaba; el plan multiidioma ya lo pedía en Preferencias y en
+  las páginas públicas. Marcos aprobó esta ubicación y se actualizó el canvas
+  (versiones 288 y 289):
+  1. **Con sesión**: el idioma se cambia solo en Preferencias, sección
+     «Language» (segmentado `English | Español`, copia «Interface language» y
+     «Applies instantly and is saved to your account. Also used for the emails
+     we send you.»). No hay selector en el menú del avatar.
+  2. **Footer con sesión**: muestra el idioma actual y enlaza a Preferencias
+     (`#t-idioma`). Escritorio: ítem en la columna Information; móvil: fila
+     «Language · English ›». No cambia el idioma por sí mismo. Con sesión se
+     ocultan «Sign up» y «Log in» del footer de escritorio.
+  3. **Sin sesión**: pastilla `EN | ES` arriba a la derecha en Landing, inicio
+     de sesión y registro (escritorio y móvil). El footer de escritorio sin
+     sesión incluye el selector con los nombres completos. Estos controles solo
+     escriben la cookie (regla de `docs/plan-multiidioma.md` 3.2); el idioma
+     del registro define el de los correos de la cuenta nueva.
+  4. Cada idioma con su propio nombre, sin banderas.
+  5. **Formatos**: se unifica con el plan (3.5). En inglés los miles llevan
+     coma (`41,355`); en español, punto (`41.355`). El canvas deja de usar
+     `41.355` en inglés (Ficha) y sus notas se alinean.
+- **Archivos afectados**: `docs/04_Lineamientos_UI.md` (4, 4.1 y 5j),
+  `docs/plan-multiidioma.md` (fase 7c, paso 12),
+  `docs/siguientes-pasos-multiidioma.md` (OT-74). Sin cambios de código: el
+  `LanguageSwitcher` se implementa en OT-74.
+
+## 08/10/2026 — Documentos 01 a 04 alineados con el multiidioma
+
+- **Descripción**: se actualizan los documentos de dominio para reflejar el
+  multiidioma ya decidido e implementado en el backend. La documentación se
+  mantiene en español (la leen docentes hispanohablantes) y los textos de
+  interfaz citados en los casos de uso quedan como referencia en español; el
+  texto vigente de cada idioma vive en `docs/i18n/` y en los diseños.
+  1. **Doc 01**: objetivo específico y población incluyen inglés y español.
+  2. **Doc 02**: alcance, seis requisitos funcionales y RNF #17
+     (internacionalización); notas de idioma en CU-001, 003, 006, 008, 012,
+     013, 019, 020 y 021; sección final «Multiidioma». **Corrección**: CU-002
+     decía que el enlace de confirmación era permanente; vence a las 24 horas
+     (`ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1`), como el usuario confirmó el
+     08/10/2026.
+  3. **Doc 03**: «Vistos» pasa a «Vistas» y se documentan `Usuario.idioma`,
+     `Lista.clave` con sus dos restricciones (OT-42), `generos_ids` y la nueva
+     entidad `ProduccionTraduccion`. El JSON de los diagramas (clases y
+     tablas) suma esos campos y la entidad; los gráficos se regeneran desde él.
+  4. **Doc 04**: sección 4.1, rutas visibles en inglés (aún no implementadas),
+     formato de duración por idioma, etiquetas de listas por idioma y
+     accesibilidad (`lang`, `radiogroup`).
+  5. **Canvas de diseño**: se quitan de sus notas dos avisos desactualizados
+     sobre TMDB («quedan en inglés» y «decisión del 30/09 definitiva»), que la
+     decisión del 08/10/2026 (TMDB según idioma) reemplazó.
+- **Archivos afectados**: `docs/01_*`, `docs/02_*`, `docs/03_Modelos*`,
+  `docs/03_DiagramaClases_DiagramaTablas.json`, `docs/04_Lineamientos_UI.md`,
+  `docs/decisiones.md`. Pendiente: `docs/06_TMDB_API_Referencia.md` y las
+  specs de `openspec/` (fase 9 del plan).
+
+
+## 08/10/2026 — OT-71: formatos por idioma
+
+**Descripción:** Se centralizan fechas medias/largas en UTC, enteros, notas decimales y duración en `frontend/lib/format.ts`, con `en-US`/`es-AR`. Perfil y ReviewCard usan la utilidad; los tests comparan contra Intl para respetar CLDR sin composición manual.
+
+
+## 08/10/2026 — OT-72: errores por código y encabezados
+
+**Descripción:** `apiFetch` y el bootstrap CSRF mandan Accept-Language. `ApiError` expone código, parámetros y hojas; `lib/errors.ts` busca mensaje de campo, código y desconocido, y convierte la espera a ICU en un único lugar. Los consumidores y la API simulada no leen diagnósticos ni cuerpos anteriores.
+
+
+## 08/10/2026 — OT-73: validaciones y enumeraciones
+
+**Descripción:** Los validadores de `lib/validation.ts` y los errores de `lib/reviews.ts` devuelven identidades estables. La traducción se hace en el consumidor. Género y tema usan etiquetas del catálogo; el contrato de enums se copia por generación dentro del frontend porque Docker/Turbopack no acceden al directorio padre. Un test exige igualdad con `contracts/enums.json`.
+
+
+## 08/10/2026 — OT-74: selector y sincronización
+
+**Descripción:** Se implementan radios reutilizables en Preferencias, la pastilla EN/ES pública y el footer mínimo aprobado (`LanguageSwitcher.tsx`, `LocaleControls.tsx`). Con sesión, AccountProvider confirma el PUT antes de cambiar cuenta/cookie/render; el fallo conserva el idioma. Login y Google sincronizan la cuenta; idioma nulo conserva el dispositivo. El footer autenticado enlaza a `/settings#t-idioma`, sin login/registro ni selector propio. Google recibe el locale vigente.
+
+
+## 08/10/2026 — OT-75: rutas inglesas coordinadas
+
+**Descripción:** Se renombraron páginas y enlaces en `frontend/app`, centralizados en `lib/routes.ts`; también los enlaces de `usuarios/adapter.py` y `serializers.py`, los tests y referencias de correo. `/lists` solo cambia en protección. El usuario confirmó que abrir un correo respeta cookie/navegador del dispositivo, aunque el idioma difiera del mensaje; no se añade un parámetro de idioma.
+
+
+## 08/10/2026 — OT-76: tres pilotos bilingües
+
+**Descripción:** Preferencias, confirmación y restablecimiento consumen catálogos sin rediseñar los layouts heredados. Confirmación usa voseo y reset incluye `*` en la ayuda. Los errores de reset se guardan como códigos para traducirse al renderizar. Los controles tienen foco visible, área táctil completa y estados de carga. Las demás pantallas conservan las excepciones aprobadas.
+
+
+## 08/10/2026 — OT-77: siembra reproducible
+
+**Descripción:** `frontend/scripts/i18n/generate.py` genera desde los CSV aprobados, conserva la copia transitoria y excluye ejemplos, diseño, chatbot y correos. La copia legal se guarda separada de common para no enviarla a todas las páginas. `--check` detecta divergencias semánticas respecto de la fuente; las declaraciones de next-intl se regeneran con el build.
+
+
+## 08/10/2026 — OT-80: controles de idioma
+
+**Descripción:** Paridad de claves, argumentos, tags, plurales, códigos y enums en Vitest; reglas ESLint contra literales visibles, debug y formatos fuera de `lib/format.ts`; script de residuos. Las 13 excepciones heredadas tienen techo probado. CI incorpora `develop` y el control de residuos. Archivos: `frontend/scripts/i18n`, tests, ESLint y `.github/workflows/ci.yml`.
+
+
+## 08/10/2026 — OT-81: recorridos bilingües
+
+**Descripción:** Playwright recorre registro, confirmación, login, cambio de idioma persistente y reset en en/es. También prueba footer y selector a 390/1280 px, teclado y fallo de guardado. Los controles heredados de registro/login reciben asociaciones label/input para usar nombres y campos estables sin rediseñarlos. La navegación de tests de perfil se acota al banner porque ahora existe un footer.
+
+
+## 08/10/2026 — OT-82: aserciones por código
+
+**Descripción:** Se migran tests y las referencias de API a código, campo de hoja y parámetros, preservando matrices HTTP, credenciales, seguridad y regresión. Se verificó la migración con emisión doble antes de contraer el contrato; una aserción de éxito convertida por error se corrigió y pasó antes de retirar las claves anteriores.
+
+
+## 08/10/2026 — OT-83: contrato definitivo
+
+**Descripción:** Se retira el mezclador legacy y se construye el sobre directamente en el manejador y respuestas explícitas (`filmai/exceptions.py`, `errores/sobre.py`, vistas y documentación de API). Los éxitos conservan datos de máquina y code sin detail. El ejecutor rechaza claves extra en todos los errores de API. OpenAPI y golden references reflejan el formato definitivo.
+
+
+## 08/10/2026 — OT-90: documentación y aceptación externa
+
+**Descripción:** Se alinean documentos 02, 04 y 06, specs canónicas, guía de uso, README y AGENTS. Los modelos del doc 03 ya estaban actualizados y no se duplican. La base de desarrollo quedó con tres listas para admin y cero traducciones pendientes entre producciones enriquecidas; las 39 sin enriquecer se completarán al materializarse. Se preparan ocho EML y una vista HTML sin enviar correo externo. El CI remoto y la revisión en cliente real se registran como pendientes hasta contar con evidencia. Chatbot queda fuera de esta entrega; el pair programming del 09/10 debe revisar idioma en SSE, cambio durante una solicitud y localización de tarjetas/errores.
+
+
+## 08/10/2026 — Marcas de respaldo en filas persistidas
+
+**Descripción:** La revisión de OT-72/76 encontró que listas y mis reseñas localizaban título/póster sin exponer `campos_en_ingles`. Se agrega esa marca por campo fuera del inglés en `catalogo/services/traducciones.py`, `serializers_reviews.py` y `listas/serializers.py`, usando el prefetch existente. Los tests verifican traducción parcial, traducción ausente, inglés nativo y que no crezcan consultas por fila. ReviewCard marca el título de respaldo con `lang="en"`.
+
+
+## 08/10/2026 — Etiqueta compartida del avatar
+
+**Descripción:** El control reforzado de literales detectó etiquetas accesibles en español en `frontend/components/Avatar.tsx`. Se usa la clave aprobada `common.avatar.currentAlt` tanto para la imagen como para las iniciales. Dos casos unitarios verifican el nombre accesible en inglés y español después de un fallo de imagen; no se amplían las excepciones heredadas.
+
+
+## 09/10/2026 — Cierre del plan multiidioma y montajes del backend
+
+**Descripción:** Verificación de cierre sobre `develop` (`5ed0472`): CI remoto verde en sus tres jobs (ejecución 37861657623), suites locales repetidas (Django 686, Vitest 96, Playwright 37), contratos y catálogos regenerados sin diferencias, y recorridos contra la API y el frontend reales en inglés y español. Se encontró que `docker compose exec backend python manage.py test` fallaba en 5 tests porque el contenedor no veía `contracts/` ni `docs/i18n/` (los tests y los comandos `exportar_contrato`/`exportar_enums` los resuelven como `BASE_DIR.parent`); en CI pasaban por tener el repo completo. Se decide montar `./contracts` (escritura, para los comandos de exportación) y `./docs/i18n` (solo lectura) en el servicio `backend`, en lugar de cambiar cómo el código resuelve esas rutas, porque así el contenedor y CI comparten la misma disposición. Quien ya tenga el contenedor creado debe recrearlo con `docker compose up -d backend`. Solo resta la revisión manual de correos en un cliente real, que no bloquea las interfaces. Archivos: `docker-compose.yml`.
+
+
+## 09/10/2026 — Se retiran los documentos de planificación del multiidioma
+
+**Descripción:** Terminado el plan, se eliminan `docs/plan-multiidioma.md`, `docs/siguientes-pasos-multiidioma.md` y, de `docs/i18n/`, `README.md`, `glosario.md`, `errores.csv`, `equivalencias.json` y `tmdb-verificacion-ot60.md`, para no dejar documentos de trabajo dispersos. Siguen disponibles en el historial de git (último commit que los contiene: `5ed0472`). Lo que sigue vigente se conservó: las fuentes de la copia, el glosario, las notas para implementar pantallas y el pendiente de correos pasan a `docs/i18n/guia.md`; la evidencia del comportamiento de TMDB pasa al doc 06. Quedan en `docs/i18n/` solo la guía, los tres CSV que usan el generador y los tests, y `revision-correos/` hasta completar esa revisión. Las entradas anteriores de este archivo que citan el plan o sus órdenes de trabajo (OT-xx) se conservan como historia. La base de desarrollo se volvió a sembrar con `seed --borrar-catalogo`: las cuentas de prueba tienen ahora su idioma guardado. Archivos: los eliminados, `docs/i18n/guia.md`, docs 02, 04 y 06, `openspec/specs/error-contract/spec.md`, `backend/catalogo/services/fallback.py`.
+
+
+## 09/10/2026 — Chatbot: temas de idioma abiertos para el pair programming
+
+**Descripción:** No es una decisión: son los puntos que Gonza y Marcos deben resolver juntos antes de implementar B-02–B-06, y que el plan multiidioma dejó deliberadamente sin cerrar. Lo ya acordado el 08/10/2026 (ver «Arquitectura del chatbot (Módulo 5)») se mantiene: respuestas en `idioma_efectivo()`, español con voseo, tools de TMDB localizadas, BGE-M3 sobre el corpus canónico en inglés y sin duplicar embeddings. Quedan abiertos:
+
+1. **Idioma de una respuesta SSE en curso.** Cómo se fija el idioma al abrir el stream para que no cambie a mitad de la respuesta.
+2. **Cambio de idioma durante una solicitud.** Qué pasa si el usuario cambia el idioma en Preferencias mientras hay una respuesta en curso.
+3. **Tarjetas y errores.** Cómo se localizan las tarjetas de producciones dentro del chat y los errores del stream.
+
+Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.py`, la spec `i18n-core` y las 21 filas `chatbot` de `docs/i18n/claves.csv`, que tienen la copia del diseño todavía sin sembrar. Al resolverlos, registrar la decisión en una entrada nueva.
+
+## 09/10/2026 — Chatbot: idioma, tarjetas, errores y límites (cierra los temas abiertos)
+
+- **Descripción**: Gonza y Marcos resolvieron en pair programming los tres
+  temas de idioma que quedaron abiertos y ajustaron varios puntos de la
+  arquitectura del 08/10/2026, que sigue vigente en todo lo que acá no se
+  menciona.
+  1. **Idioma del turno**: la vista resuelve `idioma_efectivo(request, usuario)`
+     una sola vez, antes de abrir el stream, y lo pasa como dato inmutable al
+     prompt, a las tools y a `TMDBClient`. Nadie más lee `usuario.idioma`
+     durante el turno. Las tools, las tarjetas y los estados usan siempre ese
+     idioma (`en` o `es`).
+  2. **Idioma de la prosa (reemplaza el punto 6 del 08/10)**: el modelo
+     responde en el idioma en que el usuario escribió el mensaje, sea cual sea
+     (un usuario con la interfaz en inglés que escribe en portugués recibe la
+     respuesta en portugués, con títulos y tarjetas en inglés). Si el idioma
+     del mensaje no se puede identificar (por ejemplo «?»), responde en el
+     idioma del turno. La detección la hace el modelo por instrucción del
+     prompt, que recibe el idioma del turno como respaldo; no hay detección en
+     código. El voseo aplica solo cuando responde en español.
+  3. **Cambio de idioma durante una solicitud**: la respuesta en curso termina
+     con el idioma con que empezó; el cambio rige desde el mensaje siguiente.
+     Los mensajes anteriores quedan como se escribieron. No se agrega
+     `Mensaje.idioma`: el servidor no sabe en qué idioma respondió el modelo.
+  4. **Tarjetas**: `Mensaje.tarjetas` guarda el texto tal como se mostró
+     (`id_tmdb`, `tipo`, `titulo`, `poster`, `año`), en el idioma del turno, y
+     el historial lo devuelve sin volver a traducir. Como máximo 3 tarjetas por
+     respuesta: `mostrar_tarjetas` recorta en el servidor y el prompt se lo
+     avisa al modelo. La forma del JSON se valida al escribir con una clase de
+     Python; no hay modelo `Tarjeta` ni FK a `ProduccionAudiovisual`. Mostrar
+     una tarjeta no materializa la producción: eso sigue ocurriendo al abrir la
+     ficha, calificar o agregar a una lista. Para descartar lo que está en
+     «Vistas» alcanza con comparar `id_tmdb` y `tipo`.
+  5. **Errores y estados**: viajan por código, nunca como texto. Antes de abrir
+     el stream se responde HTTP normal con el sobre `{code, params, errors}`:
+     401 (Unauthorized) sin sesión, 403 (Forbidden) por CSRF o cuenta no
+     activa, 400 (Bad Request) por mensaje vacío o de más de 500 caracteres,
+     409 (Conflict) si ya hay una solicitud en curso y 429 (Too Many Requests)
+     por el límite por hora, con `retry_after_seconds`.
+     Con el stream abierto, el evento `error` lleva el mismo sobre: proveedor
+     caído, timeout, cuota del proveedor, tope de vueltas de tools o falla al
+     guardar. La falla de una tool (TMDB u Ollama) no corta el turno: se le
+     devuelve al modelo. Las tarjetas con ids inválidos se descartan en
+     silencio. La cancelación (CU-014), una pregunta fuera de alcance y una
+     búsqueda sin resultados no son errores. Si el stream termina sin evento
+     `fin`, el front lo trata como error de red. El evento `estado` también es
+     un código que el front traduce.
+  6. **Mensaje del usuario**: hasta 500 caracteres, con tres controles: el
+     campo no deja escribir más (`maxLength`), el front valida antes de enviar
+     y el servidor rechaza con 400 (Bad Request). El navegador cuenta en unidades UTF-16 y
+     Python en puntos de código, así que el navegador es siempre el más
+     estricto.
+  7. **Sin cola de mensajes**: mientras el bot responde no se puede enviar
+     otro mensaje. El usuario puede escribir el borrador, el botón de enviar
+     pasa a ser «Cancelar» y el servidor lo refuerza con el 409 (Conflict).
+  8. **Ruta**: `POST /api/chat/messages/` (corrige el `/api/chat/mensajes/` de
+     la entrada del 08/10).
+- **Motivo**: complicarse lo menos posible. Fijar el idioma al entrar evita
+  estados intermedios. El texto guardado es coherente con que el mensaje queda
+  en el idioma en que se escribió, y evita las cuatro llamadas a TMDB por
+  título que cuesta `materializar()` dentro de un turno que debe cumplir el
+  RNF #6. Dejar que la prosa siga el idioma del mensaje no cuesta nada, porque
+  lo resuelve el modelo y BGE-M3 es multilingüe. Una cola de mensajes complica
+  la cancelación, el guardado al final del turno y el límite por hora.
+- **Abierto para la próxima sesión** (no son decisiones):
+  1. Paso a ASGI: hoy `settings.py` solo define `WSGI_APPLICATION` y no hay
+     servidor ASGI en `docker-compose.yml`.
+  2. La vista async queda fuera de DRF: hay que resolver a mano la
+     autenticación por cookie JWT, el CSRF y el sobre de errores.
+  3. Dónde se versiona el contrato de los eventos SSE, que drf-spectacular no
+     incluye en `contracts/openapi.yaml`.
+  4. Cómo se garantiza una sola solicitud en curso por chat.
+  5. Lista exacta de códigos de error y de estado, y cuántos mensajes visibles
+     distintos tiene el usuario.
+  6. Copia del chatbot: curar las 21 filas `chatbot` de
+     `docs/i18n/claves.csv`, pasar la conversación de ejemplo a `muestra` y
+     agregar las filas que faltan (cancelación y errores). La aprueban Gonza y
+     Marcos antes de sembrar.
+  7. Texto del prompt: un prompt base con un bloque de estilo por idioma.
+  8. Verificar con la key real que el modelo respeta la regla de idioma con
+     historial mezclado y medir la latencia (RNF #6).
+  9. Abrir el SDD en `openspec/changes/chatbot/` si se decide usarlo.
+- **Archivos afectados**: `docs/decisiones.md`, docs 02 (CU-013), 03
+  (`Mensaje.tarjetas`), 04 (§3.1), 05 (B-02 a B-05) y 06 (tools),
+  `docs/i18n/guia.md` y `PRODUCT.md`.

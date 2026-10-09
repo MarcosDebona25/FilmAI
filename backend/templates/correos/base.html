@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="{{ idioma }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block titulo %}{% endblock %}</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #0d0d14;
+      font-family: Arial, Helvetica, sans-serif;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #0d0d14; padding: 32px 16px"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              max-width: 480px;
+              background-color: #161625;
+              border: 1px solid #2a2a45;
+              border-radius: 16px;
+            "
+          >
+            <tr>
+              <td style="padding: 40px 40px 8px 40px">
+                <span style="font-size: 24px; font-weight: bold; color: #e0e0e0"
+                  >FilmAI</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 24px 40px;
+                  font-size: 15px;
+                  line-height: 1.6;
+                  color: #e0e0e0;
+                "
+              >
+                <span style="display: block; font-size: 20px; font-weight: bold; padding-bottom: 16px"
+                  >{% block encabezado %}{% endblock %}</span
+                >
+                {% block saludo %}{% endblock %}
+                <br /><br />
+                {% block introduccion %}{% endblock %}
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 8px 40px 24px 40px">
+                <a
+                  href="{{ enlace_correo }}"
+                  style="
+                    display: inline-block;
+                    background-color: #e67e22;
+                    color: #ffffff;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 15px;
+                    padding: 12px 32px;
+                    border-radius: 10px;
+                  "
+                  >{% block boton %}{% endblock %}</a
+                >
+              </td>
+            </tr>
+            {% block fila_enlace %}
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 0 40px 24px 40px;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: {{ color_secundario }};
+                "
+              >
+                {% block enlace_alternativo %}{% endblock %}<br />
+                <a
+                  href="{{ enlace_correo }}"
+                  style="color: #f5c518; word-break: break-all"
+                  >{{ enlace_correo }}</a
+                >
+              </td>
+            </tr>
+            {% endblock %}
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 8px 40px;
+                  border-top: 1px solid #2a2a45;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: {{ color_secundario }};
+                "
+              >
+                {% block advertencia %}{% endblock %}
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 16px 40px 16px 40px;
+                  font-size: 13px;
+                  color: {{ color_secundario }};
+                "
+              >
+                {% block firma %}{% endblock %}
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 0 40px 32px 40px;
+                  font-size: 12px;
+                  line-height: 1.6;
+                  color: {{ color_secundario }};
+                "
+              >
+                {% block motivo %}{% endblock %}
+                <br />
+                {% block derechos %}{% endblock %}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

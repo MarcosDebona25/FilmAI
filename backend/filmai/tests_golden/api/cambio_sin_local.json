@@ -1,0 +1,14 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "old_password",
+        "code": "local_password_unavailable",
+        "params": {}
+      }
+    ]
+  }
+}

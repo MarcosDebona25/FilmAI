@@ -1,8 +1,20 @@
+import type { CodedError } from "./errors";
+
+export class ReviewValidationError extends Error implements CodedError {
+  constructor(
+    public code: string,
+    public params = {}
+  ) {
+    super(code);
+  }
+}
+
 export type MiResena = {
   id: number;
   id_tmdb: number;
   tipo: "movie" | "tv";
   titulo: string;
+  campos_en_ingles?: string[];
   poster: string;
   valor: number;
   fecha: string;
@@ -23,10 +35,10 @@ export function combinarResenas(actuales: MiResena[], nuevas: MiResena[]) {
 export function cambiosResena(item: MiResena, valor: number, texto: string) {
   const body: { valor?: number; texto?: string } = {};
   if (!Number.isInteger(valor) || valor < 1 || valor > 10)
-    throw new Error("Seleccioná una calificación de 1 a 10.");
-  if (texto.length > 1000) throw new Error("La reseña no puede superar los 1000 caracteres.");
+    throw new ReviewValidationError("invalid");
+  if (texto.length > 1000) throw new ReviewValidationError("max_length", { maxLength: 1000 });
   const limpio = texto.trim();
-  if (item.texto && !limpio) throw new Error("Para borrar el texto, usá Eliminar reseña.");
+  if (item.texto && !limpio) throw new ReviewValidationError("review_update_empty");
   if (valor !== item.valor) body.valor = valor;
   if (limpio && limpio !== (item.texto ?? "")) body.texto = limpio;
   return body;

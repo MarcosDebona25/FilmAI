@@ -1,0 +1,8 @@
+{
+  "defaultListKeys": ["favoritos", "pendientes", "vistas"],
+  "genderValues": ["masculino", "femenino", "no_especifica"],
+  "reservedListNames": {
+    "en": ["Favorites", "Watchlist", "Watched"],
+    "es": ["Favoritos", "Pendientes", "Vistas"]
+  }
+}

@@ -202,6 +202,7 @@ def sync_catalogo_diaria():
         "ya_existentes": 0,  # descubrimiento: ya estaban (no implica escritura)
         "refrescadas": 0,  # refresco: ítems re-enriquecidos con forzar=True
         "omitidas": 0,
+        "traducciones": 0,  # relleno: producciones con traducción completada
         "errores": 0,
     }
 
@@ -261,6 +262,22 @@ def sync_catalogo_diaria():
             else:
                 estadisticas["nuevas"] += 1
                 existentes.add((id_tmdb, tipo))
+
+    # --- Pasada 3: traducciones pendientes --------------------------------
+    # Las dos pasadas anteriores ya guardan la traducción de lo que tocan
+    # (`materializar` la escribe junto al canónico). Esto recoge lo que quedó
+    # atrás: filas previas a OT-62 o traducciones que fallaron otra noche.
+    # Acotado, igual que el backfill de embeddings, para no agotar el límite
+    # de TMDB en una sola corrida.
+    from catalogo.services.traducciones import rellenar
+
+    try:
+        relleno = rellenar(limite=settings.CELERY_BACKFILL_LIMIT)
+        estadisticas["traducciones"] = relleno["procesadas"]
+        estadisticas["errores"] += relleno["fallidas"]
+    except Exception:
+        logger.exception("sync_catalogo_diaria: falló el relleno de traducciones")
+        estadisticas["errores"] += 1
 
     logger.info("sync_catalogo_diaria: %s", estadisticas)
     return estadisticas

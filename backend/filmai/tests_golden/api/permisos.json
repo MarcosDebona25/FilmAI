@@ -1,0 +1,8 @@
+{
+  "status": 403,
+  "body": {
+    "code": "permission_denied",
+    "params": {},
+    "errors": []
+  }
+}

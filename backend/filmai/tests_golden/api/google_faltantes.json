@@ -1,0 +1,24 @@
+{
+  "status": 400,
+  "body": {
+    "code": "validation_error",
+    "params": {},
+    "errors": [
+      {
+        "field": "nombre_usuario",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "fecha_nacimiento",
+        "code": "required",
+        "params": {}
+      },
+      {
+        "field": "genero",
+        "code": "required",
+        "params": {}
+      }
+    ]
+  }
+}

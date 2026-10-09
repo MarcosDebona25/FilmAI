@@ -1,0 +1,732 @@
+{
+  "common": {
+    "brand": "FilmAI",
+    "content": {
+      "typeLabel": "Content type",
+      "all": "All",
+      "movies": "Movies",
+      "tvShows": "TV shows",
+      "movie": "Movie",
+      "tvShow": "TV show",
+      "typeShortLabel": "Type"
+    },
+    "media": {
+      "viewDetails": "View details",
+      "posterAlt": "{title} poster",
+      "tmdbRatingLabel": "TMDB rating: {rating} out of 10",
+      "favorite": "Favorite",
+      "watched": "Watched",
+      "watchlist": "Watchlist",
+      "noPoster": "No poster"
+    },
+    "carousel": {
+      "seeMore": "See more",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "rating": {
+      "rate": "Rate",
+      "remove": "Remove rating",
+      "starValueLabel": "{rating} out of 10",
+      "label": "Rating",
+      "tmdbLabel": "TMDB rating"
+    },
+    "lists": {
+      "add": "Add to list",
+      "reorderLabel": "Drag to reorder",
+      "defaultBadge": "Default",
+      "rename": "Rename",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "nameLabel": "List name",
+      "renameTitle": "Rename list",
+      "delete": "Delete list"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "retry": "Try again",
+      "edit": "Edit",
+      "close": "Close",
+      "update": "Update",
+      "done": "Done",
+      "clear": "Clear",
+      "delete": "Delete",
+      "save": "Save",
+      "create": "Create",
+      "explore": "Explore",
+      "remove": "Remove",
+      "saveChanges": "Save changes"
+    },
+    "review": {
+      "publish": "Post",
+      "delete": "Delete review",
+      "label": "Review",
+      "add": "Add review"
+    },
+    "search": {
+      "placeholder": "Search movies and TV shows"
+    },
+    "feedback": {
+      "dismissLabel": "Dismiss notice"
+    },
+    "filters": {
+      "clear": "Clear filters",
+      "sortLabel": "Sort",
+      "anyRating": "Any",
+      "ratingAtLeastNine": "9 or higher",
+      "ratingAtLeastEight": "8 or higher",
+      "ratingAtLeastSeven": "7 or higher",
+      "ratingAtLeastSix": "6 or higher",
+      "ratingAtLeastFive": "5 or higher",
+      "ratingBelowFive": "Below 5",
+      "title": "Filters",
+      "sortByLabel": "Sort by"
+    },
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "highestRating": "Highest rated",
+      "lowestRating": "Lowest rated"
+    },
+    "fields": {
+      "optionalHint": "(optional)",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "username": "Username",
+      "birthDate": "Date of birth",
+      "passwordConfirm": "Confirm password"
+    },
+    "text": {
+      "readLess": "Read less",
+      "readMore": "Read more"
+    },
+    "disclosure": {
+      "showLess": "Show less",
+      "showMore": "Show {count} more"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "password": {
+      "showLabel": "Show password",
+      "currentLabel": "Current password",
+      "newLabel": "New password",
+      "repeatNewLabel": "Repeat new password"
+    },
+    "passwordReset": {
+      "sendLink": "Send link",
+      "backToLogin": "Back to log in"
+    },
+    "email": {
+      "resendLink": "Resend link"
+    },
+    "avatar": {
+      "currentAlt": "Your avatar",
+      "change": "Change avatar",
+      "chooseTitle": "Choose an avatar",
+      "optionsLabel": "Avatars"
+    }
+  },
+  "legacy": {
+    "metadata": {
+      "myReviews": "My reviews",
+      "description": "A movie review platform with smart recommendations.",
+      "profile": "My profile",
+      "settings": "Settings"
+    },
+    "settings": {
+      "heading": "Settings",
+      "appearance": "Appearance",
+      "theme": "Theme",
+      "dark": "Dark",
+      "light": "Light",
+      "notifications": "Notifications",
+      "weeklyLabel": "Weekly recommendations",
+      "reviewsLabel": "Reviews on your lists",
+      "newsLabel": "FilmAI news",
+      "account": "Account",
+      "deactivateWarning": "Deactivating your account is irreversible. You won’t be able to log in again or reactivate it.",
+      "deactivateTitle": "Deactivate your account?",
+      "cancel": "Cancel",
+      "deactivate": "Deactivate",
+      "retry": "Try again",
+      "breadcrumb": "Breadcrumb",
+      "publicProfile": "Public profile",
+      "publicProfileHelp": "Visibility preference for future public views.",
+      "weeklyHelp": "Preference for future recommendation emails.",
+      "reviewsHelp": "Preference for future review notifications.",
+      "newsHelp": "Preference for future news emails.",
+      "saveError": "We couldn’t save your preference. Try again.",
+      "deactivated": "Your account has been deactivated.",
+      "deactivateError": "We couldn’t deactivate your account. It is still active; try again.",
+      "loading": "Loading settings…",
+      "themeLegend": "Interface theme",
+      "privacy": "Privacy",
+      "futureFeatures": "These preferences are saved, but they do not yet change the visibility of reviews or lists or enable emails.",
+      "deactivateAccount": "Deactivate account",
+      "deactivating": "Deactivating…",
+      "deactivateConfirm": "This action is irreversible. All your sessions will be closed and you won’t be able to log in again or reactivate your account. Make sure you want to deactivate your account before continuing."
+    },
+    "confirmation": {
+      "successTitle": "Account confirmed",
+      "backToLogin": "Back to log in",
+      "loading": "Confirming your account…",
+      "successDescription": "Your account is now active. You can log in.",
+      "goToLogin": "Go to log in",
+      "alreadyTitle": "Account already confirmed",
+      "alreadyDescription": "This address was already confirmed. You can log in directly.",
+      "expiredTitle": "The link has expired",
+      "expiredDescription": "Confirmation links are valid for 24 hours. You can request a new one from the registration screen using the \"Resend email\" button.",
+      "backToRegister": "Back to registration",
+      "errorTitle": "Couldn’t confirm your account",
+      "errorDescription": "The link is invalid."
+    },
+    "reset": {
+      "backToLogin": "Back to log in",
+      "confirmLabel": "Confirm password",
+      "saveError": "Couldn’t update your password. Try again.",
+      "successTitle": "Password updated",
+      "successDescription": "Your password has been reset. You can now log in with your new password.",
+      "goToLogin": "Go to log in",
+      "invalidTitle": "The link is invalid",
+      "invalidDescription": "Reset links are valid for 1 hour or until they are used. You can request a new one from \"Forgot your password?\" on the login screen.",
+      "title": "Create a new password",
+      "description": "Choose a new password for your account.",
+      "passwordLabel": "New password",
+      "togglePassword": "Show or hide password",
+      "passwordHelp": "8 to 20 characters, with an uppercase letter, a lowercase letter, a number and a special character (@#$%&*!).",
+      "toggleConfirmation": "Show or hide confirmation",
+      "saving": "Saving…",
+      "save": "Update password"
+    },
+    "validation": {
+      "required": "Required field.",
+      "maxNameLength": "Maximum 50 characters.",
+      "personName": "Letters and spaces between words only.",
+      "username": "Alphanumeric, 5 to 25 characters.",
+      "email": "Invalid email format.",
+      "date": "Invalid date.",
+      "futureDate": "The date cannot be in the future.",
+      "minimumAge": "You must be at least 13 years old.",
+      "passwordLength": "Must contain between 8 and 20 characters.",
+      "passwordUpper": "Must include at least one uppercase letter.",
+      "passwordLower": "Must include at least one lowercase letter.",
+      "passwordDigit": "Must include at least one number.",
+      "passwordSpecial": "Must include a special character (@#$%&*!).",
+      "passwordMismatch": "Passwords don’t match."
+    }
+  },
+  "nav": {
+    "main": {
+      "brandHomeLabel": "FilmAI, go to Home",
+      "mainLabel": "Main",
+      "home": "Home",
+      "search": "Search",
+      "lists": "Lists",
+      "profileShort": "Profile",
+      "skipToContent": "Skip to content",
+      "profile": "My profile",
+      "ratingsReviews": "Ratings & reviews",
+      "settings": "Settings",
+      "terms": "Terms and Conditions",
+      "breadcrumbLabel": "Breadcrumb",
+      "brandLandingLabel": "FilmAI, back to the landing page",
+      "backHome": "Back to Home",
+      "brandLandingAlt": "FilmAI, go to the landing page",
+      "backLanding": "Back to the landing page"
+    },
+    "account": {
+      "userMenuLabel": "{name}’s menu",
+      "optionsLabel": "User options",
+      "logOut": "Log out",
+      "logIn": "Log in",
+      "signUp": "Sign up",
+      "profileLabel": "Your profile",
+      "deactivateTitle": "Deactivate account",
+      "deactivateConfirmTitle": "Deactivate your account?",
+      "deactivate": "Deactivate",
+      "menuTitle": "Account menu",
+      "logoutConfirmTitle": "Log out of FilmAI?",
+      "logoutConfirmDescription": "You’ll be logged out of FilmAI on this device."
+    }
+  },
+  "home": {
+    "hero": {
+      "trendingRank": "#{rank} trending",
+      "tmdbRatingLabel": "TMDB rating: {rating} out of 10",
+      "weeklyHighlight": "Featured this week"
+    },
+    "rows": {
+      "trendingTitle": "Trending this week",
+      "recommendedTitle": "Recommended for you",
+      "communityReviewsTitle": "Community reviews",
+      "recommendationReasonCombined": "Based on your high ratings in {genres}",
+      "newReleasesDescription": "Movies in theaters and TV shows released this year",
+      "recommendationReasonMovies": "Based on your high ratings in {genres}",
+      "inCinemasTitle": "In theaters now",
+      "recommendationReasonTv": "Based on your high ratings in {genres}",
+      "tvPremieresTitle": "TV shows released in {year}",
+      "trendingDescription": "Most viewed on TMDB in the last seven days",
+      "newReleasesTitle": "New releases"
+    },
+    "recommendation": {
+      "promptTitle": "What are we watching tonight?"
+    },
+    "rating": {
+      "watchedHint": "Rating {title} also adds it to Watched. You can write a review now or later, from its page or from Ratings & reviews."
+    },
+    "carousel": {
+      "previousRowLabel": "Previous in {rowTitle}",
+      "nextRowLabel": "Next in {rowTitle}",
+      "swipeRowHint": "{rowTitle}, swipe to see more"
+    },
+    "guest": {
+      "title": "What have you watched lately?",
+      "description": "With an account you can rate what you watch, build your lists, and get a row of recommendations based on your favorite genres.",
+      "loginAction": "I already have an account"
+    }
+  },
+  "title": {
+    "rating": {
+      "editSummary": "Your rating: {rating} out of 10. <edit>Edit</edit>",
+      "watchedHelp": "Rating {title} also adds it to Watched.",
+      "rangeHint": "(1 to 10)",
+      "previousLabel": "Before:",
+      "removeConfirmTitle": "Remove your rating?",
+      "removeBothDescription": "Your rating of {title} and your review will be deleted, and {title} will be removed from Watched. The rating and review can’t be recovered; you can add it back to Watched whenever you want.",
+      "removeOnlyDescription": "Your rating of {title} will be deleted, and {title} will be removed from Watched. The rating can’t be recovered; you can add it back to Watched whenever you want.",
+      "edit": "Edit rating",
+      "titleLabel": "Rate {title}",
+      "yourRating": "Your rating"
+    },
+    "feedback": {
+      "ratingReviewPublished": "Rating and review posted.",
+      "ratingReviewDeleted": "Rating and review removed.",
+      "ratingDeleted": "Rating removed.",
+      "ratingPublished": "Rating posted.",
+      "ratingReviewUpdated": "Rating and review updated.",
+      "ratingUpdated": "Rating updated.",
+      "reviewUpdated": "Review updated.",
+      "reviewDeleted": "Review deleted.",
+      "favoriteRemoved": "Removed from Favorites.",
+      "favoriteAdded": "Added to Favorites.",
+      "watchlistRemoved": "Removed from Watchlist.",
+      "watchlistAdded": "Added to Watchlist.",
+      "watchedRemoved": "Removed from Watched.",
+      "watchedAdded": "Added to Watched."
+    },
+    "metadata": {
+      "ratingVotesLabel": "TMDB rating: {rating} out of 10, {count, plural, one {# vote} other {# votes}}",
+      "voteCount": "TMDB · {count, plural, one {# vote} other {# votes}}",
+      "genresTitle": "Genres"
+    },
+    "lists": {
+      "addTitleLabel": "Add {title} to a list",
+      "heading": "Your lists",
+      "newAction": "New list",
+      "newNameLabel": "Name of the new list",
+      "nameExamplePlaceholder": "E.g., Sunday marathon",
+      "createAndAdd": "Create and add",
+      "defaultsHint": "Favorites, Watched, and Watchlist have their own buttons.",
+      "nameRequiredError": "Enter a name for the list.",
+      "nameDuplicateError": "You already have a list with that name.",
+      "createdAddedFeedback": "You created “{listName}” and added {title}.",
+      "removedFeedback": "You removed {title} from “{listName}”.",
+      "addedFeedback": "You added {title} to “{listName}”.",
+      "membershipCount": "In {count, plural, one {# list} other {# lists}}"
+    },
+    "synopsis": {
+      "heading": "Synopsis"
+    },
+    "credits": {
+      "heading": "Director and cast",
+      "directors": "Director",
+      "cast": "Cast"
+    },
+    "reviews": {
+      "heading": "Reviews",
+      "yourReview": "Your review",
+      "today": "today",
+      "filteredEmpty": "No reviews match these filters.",
+      "communityCount": "From the community ({count})",
+      "displayedCount": "Showing {shownCount} of {totalCount}"
+    },
+    "review": {
+      "placeholder": "What did you think?",
+      "deleteConfirmTitle": "Delete review?",
+      "deleteConfirmDescription": "The text of your review will be deleted. Your rating of {title} and the title in Watched will be kept. The text can’t be recovered."
+    },
+    "watched": {
+      "removeConfirmTitle": "Remove from Watched?",
+      "remove": "Remove from Watched"
+    }
+  },
+  "footer": {
+    "main": {
+      "tmdbAttribution": "Data and images provided by TMDB. FilmAI is an independent project and is not affiliated with or endorsed by TMDB.",
+      "descriptionDesktop": "Discover movies and TV shows, rate them, write your reviews, and organize your lists. And if you don’t know what to watch, an AI assistant recommends something based on your taste.",
+      "libraryHeading": "Your library",
+      "myLists": "My lists",
+      "informationHeading": "Information",
+      "copyright": "© {year} FilmAI. All rights reserved.",
+      "descriptionMobile": "Discover, rate, and organize movies and TV shows, with recommendations from an AI assistant."
+    }
+  },
+  "lists": {
+    "count": {
+      "items": "{count, plural, one {# item} other {# items}}",
+      "movies": "{count, plural, one {# movie} other {# movies}}",
+      "summary": "{count, plural, one {# list} other {# lists}} · {defaultCount, plural, one {# default} other {# defaults}}"
+    },
+    "card": {
+      "actionsLabel": "Actions for the list {listName}",
+      "overflowCount": "{count} more"
+    },
+    "create": {
+      "title": "Create new list"
+    },
+    "name": {
+      "allowedCharactersHelp": "Letters, numbers, and spaces only.",
+      "requiredError": "The name can’t be empty.",
+      "invalidCharactersError": "Use only letters, numbers, and spaces."
+    },
+    "delete": {
+      "confirmTitle": "Delete “{listName}”?",
+      "confirmDescription": "This can’t be undone. All items in the list will be lost."
+    },
+    "feedback": {
+      "orderSaved": "Order saved.",
+      "renamed": "List renamed.",
+      "created": "List created.",
+      "deleted": "List deleted.",
+      "itemRemoved": "Item removed."
+    },
+    "detail": {
+      "pageTitle": "List detail",
+      "actionsLabel": "Actions for {listName}",
+      "filterLabel": "Filter {listName}",
+      "searchLabel": "Search in {listName}",
+      "sortRecentlyAdded": "Recently added",
+      "sortFirstAdded": "First added",
+      "sortTitleAscending": "Title A–Z",
+      "filteredEmpty": "No titles in this list match these filters.",
+      "removeItemLabel": "Remove {title} from {listName}",
+      "emptyTitle": "This list is still empty",
+      "emptyDescription": "From any title page you can add movies and TV shows with “Add to list”.",
+      "removeConfirmTitle": "Remove “{title}” from {listName}?"
+    }
+  },
+  "search": {
+    "input": {
+      "label": "Search the catalog",
+      "clearLabel": "Clear search"
+    },
+    "filters": {
+      "genreLabel": "Genre",
+      "allGenres": "All",
+      "yearLabel": "Year",
+      "openLabel": "Filters{activeCount, plural, =0 {} one {, # active} other {, # active}}",
+      "apply": "Show results",
+      "activeCount": "{count, plural, one {# active} other {# active}}"
+    },
+    "results": {
+      "count": "{count, plural, one {# result} other {# results}}",
+      "queryHint": "for “{query}”",
+      "unrated": "No ratings",
+      "emptyTitle": "Nothing for “{query}”",
+      "emptyHint": "Check the spelling or try the original title: the catalog comes from TMDB."
+    },
+    "pagination": {
+      "label": "Results pages",
+      "position": "Page {page} of {pageCount}"
+    }
+  },
+  "reviews": {
+    "filters": {
+      "label": "Filter ratings",
+      "titleSearchLabel": "Search by title",
+      "presenceLabel": "Show",
+      "all": "All",
+      "withReview": "With review",
+      "withoutReview": "No review",
+      "ratingValueLabel": "Rating {rating}/10",
+      "singleResultAction": "View {count, plural, one {# result} other {# results}}",
+      "resultsAction": "View {count, plural, one {# result} other {# results}}",
+      "openLabel": "Filters and sort{activeCount, plural, =0 {} one {, # active} other {, # active}}",
+      "orderPrefix": "Sort: {sortLabel}",
+      "removeChipLabel": "Remove filter {filterLabel}",
+      "dialogTitle": "Filters and sort"
+    },
+    "results": {
+      "filteredEmpty": "No ratings match these filters.",
+      "ratingCount": "{count, plural, one {# rating} other {# ratings}}",
+      "withReviewCount": "{count, plural, one {# with review} other {# with reviews}}"
+    },
+    "card": {
+      "ratingLabel": "Your rating: {rating} out of 10",
+      "ratedDate": "Rated on {date}",
+      "addReviewLabel": "Add a review for {title}",
+      "moreActionsLabel": "More actions for {title}",
+      "actionsLabel": "Actions for {title}"
+    },
+    "editor": {
+      "title": "Edit rating and review"
+    }
+  },
+  "auth": {
+    "landing": {
+      "posterCollageAlt": "Collage of movie posters",
+      "description": "A movie review platform with smart recommendations.",
+      "explore": "Explore the catalog",
+      "loginPrompt": "Already have an account?"
+    },
+    "login": {
+      "description": "Log in with your FilmAI account.",
+      "alternativeDivider": "or with your account",
+      "invalidCredentials": "Incorrect email, username, or password.",
+      "identifierLabel": "Email or username",
+      "signUpPrompt": "Don’t have an account?"
+    },
+    "google": {
+      "continue": "Continue with Google"
+    },
+    "password": {
+      "label": "Password",
+      "forgot": "Forgot your password?",
+      "ruleSatisfiedLabel": "(met)",
+      "ruleMissingLabel": "(missing)",
+      "confirmMismatch": "Passwords don’t match.",
+      "lengthRule": "Between 8 and 20 characters",
+      "caseRule": "Uppercase and lowercase letters",
+      "numberRule": "One number",
+      "symbolRule": "One symbol: @ # $ % & * !"
+    },
+    "passwordReset": {
+      "title": "Reset password",
+      "description": "We’ll send you a link to create a new password. It also works if you log in with Google and never had one.",
+      "sentDescription": "If {email} has an account, you’ll receive a link in a few minutes. Check your spam folder too."
+    },
+    "signUp": {
+      "description": "Rate what you watch and build your lists.",
+      "alternativeDivider": "or with your email",
+      "nameHelp": "Letters and spaces only. 50 characters max.",
+      "usernameAvailable": "Available",
+      "usernameHelp": "Between 5 and 25 characters. Letters and numbers only.",
+      "minimumAgeHelp": "You must be at least 13 years old.",
+      "genderLabel": "Gender",
+      "termsAcceptance": "I have read and accept FilmAI’s <terms>Terms and Conditions</terms>.",
+      "termsNewTabHint": "(opens in a new tab)",
+      "termsRequiredError": "To create your account you need to accept the Terms and Conditions."
+    },
+    "confirmation": {
+      "pageTitle": "Account confirmation",
+      "inboxTitle": "Check your inbox",
+      "sentDescription": "We sent a confirmation link to {email}.",
+      "spamHint": "If you can’t find it, check your spam folder.",
+      "resendCountdown": "Request another in {remainingTime}",
+      "alreadyConfirmedPrompt": "Already confirmed?",
+      "successTitle": "Account confirmed",
+      "successDescription": "You can now log in with your email or username.",
+      "invalidTitle": "This link no longer works",
+      "invalidDescription": "It expired or was already used. Request a new one and check your inbox."
+    },
+    "adminAccess": {
+      "pageTitle": "Admin access",
+      "documentationTitle": "Internal documentation",
+      "loginDescription": "Internal documentation is only for the FilmAI team. Log in with an admin account to continue.",
+      "includedResources": "Includes",
+      "invalidCredentials": "Incorrect admin credentials.",
+      "logIn": "Log in as admin",
+      "publicPrompt": "Not part of the team?",
+      "backToApp": "Back to FilmAI",
+      "deniedTitle": "Your account has no access",
+      "deniedDescription": "You’re logged in as {username}, which isn’t an admin account. To view the internal documentation, log in with an account that has that permission.",
+      "switchAccount": "Switch account"
+    }
+  },
+  "enums": {
+    "gender": {
+      "masculino": "Male",
+      "femenino": "Female",
+      "no_especifica": "Prefer not to say"
+    },
+    "defaultList": {
+      "favoritos": "Favorites",
+      "pendientes": "Watchlist",
+      "vistas": "Watched"
+    },
+    "theme": {
+      "oscuro": "Dark",
+      "claro": "Light"
+    }
+  },
+  "profile": {
+    "header": {
+      "memberEmail": "{email} · Member since {date}",
+      "memberSince": "Member since {date}"
+    },
+    "editor": {
+      "title": "Edit profile"
+    },
+    "personal": {
+      "heading": "Personal details",
+      "edit": "Edit details",
+      "readOnlyFieldHint": "This field is read-only and can’t be edited.",
+      "readOnlyFieldsHint": "These fields are read-only and can’t be edited."
+    },
+    "password": {
+      "heading": "Change password",
+      "logoutWarning": "You’ll be logged out on all devices and will need to log in again.",
+      "requirements": "Between 8 and 20 characters, with at least one uppercase letter, one lowercase letter, one number, and one symbol (@ # $ % & * !)."
+    },
+    "account": {
+      "heading": "Your account"
+    }
+  },
+  "settings": {
+    "appearance": {
+      "heading": "Appearance",
+      "themeLabel": "Theme",
+      "themeHelp": "Applies instantly and is saved to your account."
+    },
+    "notifications": {
+      "heading": "Notifications",
+      "weeklyLabel": "Weekly recommendations",
+      "weeklyHelp": "Every week we email you suggestions based on what you’ve rated.",
+      "reviewsLabel": "Reviews on your lists",
+      "reviewsHelp": "We let you know when there are new reviews of titles on your lists.",
+      "newsLabel": "FilmAI news",
+      "newsHelp": "We email you about what’s new in FilmAI and new features."
+    },
+    "legal": {
+      "heading": "Legal",
+      "description": "The rules for using FilmAI and how your ratings and reviews are handled."
+    },
+    "account": {
+      "heading": "Account",
+      "deactivateWarning": "Deactivating your account is irreversible. You won’t be able to log in again or reactivate it.",
+      "deactivateConfirmDescription": "This action is irreversible. All your sessions will be closed and you won’t be able to log in again or reactivate your account."
+    },
+    "language": {
+      "label": "Language",
+      "selectLabel": "Choose your language",
+      "description": "Choose the language for FilmAI.",
+      "english": "English",
+      "spanish": "Español",
+      "changing": "Changing language…",
+      "updated": "Language updated.",
+      "saveError": "We couldn’t save your language. Try again."
+    }
+  },
+  "errors": {
+    "pages": {
+      "errorTitle": "Error page",
+      "ticketIllustrationAlt": "A movie ticket torn in half",
+      "serverTitle": "Server error",
+      "notFoundTitle": "This page doesn’t exist",
+      "unexpectedTitle": "Something went wrong",
+      "notFoundDescription": "The page you’re looking for doesn’t exist or was moved. Start from Home or search for what you wanted to watch.",
+      "unexpectedDescription": "An unexpected error occurred. Try again in a few minutes."
+    },
+    "codes": {
+      "validation_error": "Check the information you entered.",
+      "not_authenticated": "Log in to continue.",
+      "invalid_credentials": "The sign-in details are invalid. Check them and try again.",
+      "permission_denied": "You don’t have permission to do this.",
+      "documentation_staff_required": "Log in to the Admin with a staff account to view this documentation.",
+      "not_found": "We couldn’t find what you’re looking for.",
+      "method_not_allowed": "This action is not available for this request.",
+      "not_acceptable": "We can’t respond in the requested format.",
+      "unsupported_media_type": "The format of the submitted data is not supported.",
+      "parse_error": "We couldn’t read the submitted data. Check it and try again.",
+      "throttled": "There are too many requests. Try again later.",
+      "server_error": "Something went wrong. Try again later.",
+      "upstream_bad_request": "We couldn’t query the catalog with those details.",
+      "upstream_not_found": "We couldn’t find this movie or TV show in the catalog.",
+      "upstream_error": "The catalog couldn’t respond. Try again later.",
+      "upstream_unavailable": "The catalog is currently unavailable. Try again later.",
+      "invalid_token": "Your session is invalid or has expired. Log in again.",
+      "session_revoked": "Your session was closed after a password change. Log in again.",
+      "account_deactivated": "Your account has been deactivated.",
+      "account_pending_confirmation": "Your account is not active yet. Check your email to confirm it.",
+      "link_expired": "This link has expired. Request a new one.",
+      "link_invalid": "This link is invalid or has expired. Request a new one.",
+      "already_confirmed": "This link can no longer be used to confirm the account.",
+      "list_name_duplicated": "You already have a list with that name.",
+      "list_item_duplicated": "This movie or TV show is already in the list.",
+      "default_list_protected": "Default lists can’t be renamed or deleted.",
+      "rating_blocks_removal_from_watched": "To remove it from Watched, first delete your rating.",
+      "rating_duplicated": "You’ve already rated this movie or TV show.",
+      "username_already_used": "That username is already in use.",
+      "required": "Complete this field.",
+      "blank": "This field can’t be empty.",
+      "null": "This field needs a value.",
+      "invalid": "Enter a valid value.",
+      "invalid_choice": "Choose a valid option.",
+      "max_length": "Use no more than {maxLength, plural, one {# character} other {# characters}}.",
+      "min_length": "Use at least {minLength, plural, one {# character} other {# characters}}.",
+      "min_value": "Enter a value greater than or equal to {minValue, number}.",
+      "max_value": "Enter a value less than or equal to {maxValue, number}.",
+      "unique": "That value is already in use.",
+      "not_a_dict": "We couldn’t read these details. Check them and try again.",
+      "number_not_finite": "Enter a valid number.",
+      "email_already_used": "That email is already registered.",
+      "email_or_username_already_used": "That email or username is already in use.",
+      "username_invalid": "Use between {minLength} and {maxLength} letters or numbers for your username.",
+      "username_not_allowed": "You can’t use that username. Choose another one.",
+      "person_name_invalid": "Use only letters and spaces for your first or last name.",
+      "birth_date_in_future": "Your date of birth can’t be in the future.",
+      "minimum_age": "You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.",
+      "avatar_invalid": "Choose one of the available avatars.",
+      "local_password_unavailable": "Your account doesn’t have a local password. You can create one with “Forgot your password?”.",
+      "current_password_incorrect": "The current password is incorrect.",
+      "passwords_do_not_match": "The passwords do not match.",
+      "password_too_short_or_long": "The password must contain between {minLength} and {maxLength} characters.",
+      "password_no_upper": "The password must include at least one uppercase character.",
+      "password_no_lower": "The password must include at least one lowercase character.",
+      "password_no_digit": "The password must include at least one number.",
+      "password_no_special": "The password must include at least one of these characters: {specialCharacters}.",
+      "password_too_short": "The password must contain at least {minLength, plural, one {# character} other {# characters}}.",
+      "password_too_common": "This password is too common. Choose another one.",
+      "password_entirely_numeric": "The password can’t contain only numbers.",
+      "password_too_similar": "The password is too similar to your personal information. Choose another one.",
+      "google_authentication_failed": "We couldn’t verify your Google sign-in. Try again.",
+      "list_name_missing_alphanumeric": "The list name must include at least one letter or number.",
+      "list_name_invalid_characters": "The list name can only contain letters, numbers and spaces.",
+      "review_update_empty": "Provide the rating or review text you want to update.",
+      "password_reset_requested": "If that email has an active account, we’ve sent a link to reset the password.",
+      "password_reset_completed": "Your password has been reset. Log in again.",
+      "password_updated": "Your password was updated. Log in again on your devices.",
+      "account_deactivated_successfully": "Your account has been deactivated. Your data is retained.",
+      "email_confirmed": "Your email has been confirmed.",
+      "csrf_ready": "Ready to continue.",
+      "registration_pending_confirmation": "We’ve sent a link to confirm your account.",
+      "confirmation_email_sent": "If your account needs confirmation, we’ve sent a new link.",
+      "logged_out": "You’ve logged out on this device.",
+      "unknown": "We couldn’t complete the action. Try again.",
+      "throttledWithWait": "There are too many requests. Try again in {retryAfterSeconds, plural, one {# second} other {# seconds}}.",
+      "list_name_reserved": "This name is reserved for a default list."
+    },
+    "fields": {
+      "correo": {
+        "invalid": "Enter a valid email address."
+      },
+      "email": {
+        "invalid": "Enter a valid email address."
+      },
+      "fecha_nacimiento": {
+        "invalid": "Enter a valid date of birth."
+      },
+      "nombre": {
+        "invalid": "Enter a valid first name."
+      },
+      "apellido": {
+        "invalid": "Enter a valid last name."
+      },
+      "password": {
+        "required": "Enter your password."
+      }
+    }
+  }
+}
