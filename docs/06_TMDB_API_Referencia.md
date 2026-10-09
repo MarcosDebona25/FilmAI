@@ -333,11 +333,19 @@
 | Herramienta del LLM (B-02)           | Endpoint(s) de TMDB                                   |
 | :----------------------------------- | :---------------------------------------------------- |
 | `buscar_por_titulo(titulo, tipo)`    | `GET /search/movie`, `GET /search/tv`                 |
-| `top_por_genero(genero, tipo, page)` | `GET /discover/movie`, `GET /discover/tv`             |
+| `descubrir(filtros, tipo, page)`     | `GET /discover/movie`, `GET /discover/tv`             |
 | `similares_a(id_tmdb, tipo)`         | `GET /movie/{id}/similar`, `GET /tv/{id}/similar`     |
+| `buscar_por_persona(nombre)`         | `GET /search/person` y los créditos de la persona     |
+| `detalle(id_tmdb, tipo)`             | `GET /movie/{id}`, `GET /tv/{id}`                     |
 | `buscar_semantico(query)`            | No usa TMDB: pgvector sobre embeddings locales (B-06) |
-| Detalle on-demand                    | `GET /movie/{id}`, `GET /tv/{id}`                     |
+| `mis_listas()`                       | No usa TMDB: listas del usuario por SQL               |
+| `mostrar_tarjetas(ids)`              | No usa TMDB: valida ids del turno, hasta 3 tarjetas   |
 | Keywords para embeddings (C-04)      | `GET /movie/{id}/keywords`, `GET /tv/{id}/keywords`   |
+
+`descubrir` generaliza el `top_por_genero` original. Las firmas son orientativas
+hasta el diseño de B-02. Al cliente TMDB le faltan `get_similar` y
+`search_person`. Todas las tools consultan TMDB en el idioma del turno
+(decisiones del 08/10/2026 y 09/10/2026).
 
 ---
 
@@ -402,4 +410,4 @@ Los listados y detalles en español completan únicamente los campos vacíos con
 
 `python manage.py rellenar_traducciones` procesa producciones enriquecidas, por lotes e idempotentemente. Los registros sin `fecha_enriquecimiento` se completan al materializarse. La sincronización diaria reintenta traducciones pendientes; no altera el texto canónico ni el hash de embeddings. En la base revisada el 08/10/2026 no quedan producciones enriquecidas pendientes; las 39 filas sin enriquecer quedan fuera del relleno.
 
-El cliente frontend envía `Accept-Language` en cada solicitud. La localización de TMDB usa `es-MX`, mientras fechas y números de interfaz usan `es-AR`. El chatbot utilizará tools localizadas y responderá en el idioma efectivo; su corpus BGE-M3 conserva el inglés (decisión del 08/10/2026). Su comportamiento durante SSE se revisará en el pair programming del 09/10/2026.
+El cliente frontend envía `Accept-Language` en cada solicitud. La localización de TMDB usa `es-MX`, mientras fechas y números de interfaz usan `es-AR`. El chatbot utilizará tools localizadas en el idioma efectivo, fijado al abrir el stream; la prosa sigue el idioma del mensaje del usuario y su corpus BGE-M3 conserva el inglés (decisiones del 08/10/2026 y 09/10/2026).

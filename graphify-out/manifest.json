@@ -558,9 +558,9 @@
     "semantic_hash": ""
   },
   "docs/02_Especificaci\u00f3n de Requerimientos.md": {
-    "mtime": 1791511830.694653,
-    "seen": 1791512396.9825041,
-    "ast_hash": "006982368da37419fff44cbad223a0d3",
+    "mtime": 1791583005.2878284,
+    "seen": 1791583013.1174884,
+    "ast_hash": "c3bc629daa5890e87cd41a1c85ee71b1",
     "semantic_hash": ""
   },
   "docs/03_DiagramaCU.md": {
@@ -570,33 +570,33 @@
     "semantic_hash": "560779b55988641fd021de6ae9ce003f"
   },
   "docs/03_Modelos de Datos y de Dise\u00f1o.md": {
-    "mtime": 1791500172.7224844,
-    "seen": 1791500210.6682932,
-    "ast_hash": "b1fe938e6c07e7bbb6b8db3a639ee7ab",
+    "mtime": 1791582984.006079,
+    "seen": 1791583013.1175323,
+    "ast_hash": "910cf2b6872ed8394d3f2695ef8152ea",
     "semantic_hash": ""
   },
   "docs/04_Lineamientos_UI.md": {
-    "mtime": 1791511830.700478,
-    "seen": 1791512396.9828053,
-    "ast_hash": "708a08b6e89951edab90cc0a57b7119f",
+    "mtime": 1791582994.845962,
+    "seen": 1791583013.1175337,
+    "ast_hash": "916b70b8c0434ab2b379077188d28463",
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1791056553.8902962,
-    "seen": 1791426617.308368,
-    "ast_hash": "7cc405d9308b13ff5a0d27582f21783a",
+    "mtime": 1791583005.470775,
+    "seen": 1791583013.117535,
+    "ast_hash": "966493000f25e0ceed00e631f7cfc4b8",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
-    "mtime": 1791511830.6848357,
-    "seen": 1791512396.9828484,
-    "ast_hash": "0ec01f6061ef05b504e9ded2139b674a",
+    "mtime": 1791582992.5983942,
+    "seen": 1791583013.1175368,
+    "ast_hash": "bc555a81b8ef8c6d2c009fbecc4fdb6c",
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791511830.7046587,
-    "seen": 1791512396.9828506,
-    "ast_hash": "011f20f4e492a3d1476b74de0d0f212e",
+    "mtime": 1791582982.8665242,
+    "seen": 1791583013.1175382,
+    "ast_hash": "dd89dbeab868e9f9d9fbfe6bcd25cfef",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -2946,9 +2946,9 @@
     "semantic_hash": ""
   },
   "PRODUCT.md": {
-    "mtime": 1791497662.7546892,
-    "seen": 1791499712.8725936,
-    "ast_hash": "c405b5ea63d1a569bf18767a84775fc3",
+    "mtime": 1791582997.0730288,
+    "seen": 1791583013.1156116,
+    "ast_hash": "ffb3f6f153161e3ad5c13a026a972074",
     "semantic_hash": ""
   },
   "frontend/app/complete-signup/page.tsx": {
@@ -3120,9 +3120,9 @@
     "semantic_hash": ""
   },
   "docs/i18n/guia.md": {
-    "mtime": 1791511830.7014353,
-    "seen": 1791512396.9828534,
-    "ast_hash": "ef47f41c5756cfb4afbca6cbbe8cb468",
+    "mtime": 1791582995.9581566,
+    "seen": 1791583013.1175406,
+    "ast_hash": "2c50257a1c32b134bdad1d49c6b0c377",
     "semantic_hash": ""
   },
   "docs/i18n/revision-correos/README.md": {

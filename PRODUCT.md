@@ -26,7 +26,7 @@ Proyecto académico (Seminario Integrador, UTN-FRSF) de dos personas, que se pre
 
 - Módulos: auth (local + Google), catálogo (Home, Buscar, Ficha), calificaciones y reseñas, listas, perfil y preferencias, chatbot (FAB, solo con sesión), moderación en el Admin.
 - Home y Ficha se ven sin sesión; calificar, listas y chatbot exigen sesión.
-- Pendiente: chatbot (B-02 a B-06) sin implementar; arquitectura acordada el 08/10/2026 (`docs/decisiones.md`).
+- Pendiente: chatbot (B-02 a B-06) sin implementar; arquitectura acordada el 08/10/2026 y reglas de idioma, tarjetas y errores el 09/10/2026 (`docs/decisiones.md`).
 
 ## Brand Commitments
 

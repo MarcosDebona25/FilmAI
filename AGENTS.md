@@ -89,3 +89,7 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - Mantener paridad de claves, argumentos ICU, códigos y enumeraciones; generar los catálogos desde los CSV aprobados y ejecutar `npm run i18n:check`.
 - Traducir errores por código; nunca consumir `debug`, `detail` ni `codigo`. Usar `lib/format.ts` para los formatos.
 - Rutas visibles en `frontend/lib/routes.ts`; enlaces de correo y frontend se modifican juntos.
+
+## 11. Códigos HTTP
+
+- Siempre que se mencione un código de estado HTTP (en el chat, la documentación, los comentarios o los mensajes de commit), acompañarlo de su nombre entre paréntesis. Ejemplo: 200 (OK), 404 (Not Found), 429 (Too Many Requests).

@@ -168,6 +168,8 @@ borrados en cascada al dar de baja una cuenta.
 **Cambio en Mensaje:**
 
 - `texto` cambia de VARCHAR(250) a TEXT para no truncar respuestas del chatbot (una respuesta del LLM puede superar 250 caracteres).
+- `tarjetas` (JSON, nuevo; decisiones del 08/10/2026 y 09/10/2026, todavía sin migración): lista de hasta 3 títulos que el chatbot mostró junto a su respuesta. Cada elemento guarda `id_tmdb`, `tipo`, `titulo`, `poster` y `año` tal como se mostraron, en el idioma del turno; el historial los devuelve sin volver a traducir. No es una entidad ni tiene FK a ProduccionAudiovisual: mostrar una tarjeta no materializa la producción. Los mensajes del usuario la llevan vacía.
+- El mensaje del usuario admite hasta 500 caracteres; el límite se valida en la API, no en la columna.
 
 **Cambio en Reseña:**
 
