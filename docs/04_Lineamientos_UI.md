@@ -75,6 +75,9 @@ App Autenticada
 - Animación slide-in desde derecha (desktop) / slide-up (mobile).
 - Badge sutil en el FAB cuando hay respuesta nueva sin leer.
 - Visible en todas las pantallas; inactivo si el usuario no está autenticado.
+- El campo de mensaje no deja escribir más de 500 caracteres.
+- Mientras el bot responde no se envía otro mensaje: se puede escribir el borrador y el botón de enviar pasa a ser «Cancelar».
+- Una respuesta muestra como máximo 3 tarjetas de títulos, con el idioma de la interfaz; el texto de la respuesta sigue el idioma en que escribió el usuario (decisión del 09/10/2026).
 
 ### 3.2 Home: Solo Descubrimiento + Búsqueda como Panel Overlay
 

@@ -3613,3 +3613,88 @@ sus dos cabezas publicadas antes de integrarse.
 3. **Tarjetas y errores.** Cómo se localizan las tarjetas de producciones dentro del chat y los errores del stream.
 
 Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.py`, la spec `i18n-core` y las 21 filas `chatbot` de `docs/i18n/claves.csv`, que tienen la copia del diseño todavía sin sembrar. Al resolverlos, registrar la decisión en una entrada nueva.
+
+## 09/10/2026 — Chatbot: idioma, tarjetas, errores y límites (cierra los temas abiertos)
+
+- **Descripción**: Gonza y Marcos resolvieron en pair programming los tres
+  temas de idioma que quedaron abiertos y ajustaron varios puntos de la
+  arquitectura del 08/10/2026, que sigue vigente en todo lo que acá no se
+  menciona.
+  1. **Idioma del turno**: la vista resuelve `idioma_efectivo(request, usuario)`
+     una sola vez, antes de abrir el stream, y lo pasa como dato inmutable al
+     prompt, a las tools y a `TMDBClient`. Nadie más lee `usuario.idioma`
+     durante el turno. Las tools, las tarjetas y los estados usan siempre ese
+     idioma (`en` o `es`).
+  2. **Idioma de la prosa (reemplaza el punto 6 del 08/10)**: el modelo
+     responde en el idioma en que el usuario escribió el mensaje, sea cual sea
+     (un usuario con la interfaz en inglés que escribe en portugués recibe la
+     respuesta en portugués, con títulos y tarjetas en inglés). Si el idioma
+     del mensaje no se puede identificar (por ejemplo «?»), responde en el
+     idioma del turno. La detección la hace el modelo por instrucción del
+     prompt, que recibe el idioma del turno como respaldo; no hay detección en
+     código. El voseo aplica solo cuando responde en español.
+  3. **Cambio de idioma durante una solicitud**: la respuesta en curso termina
+     con el idioma con que empezó; el cambio rige desde el mensaje siguiente.
+     Los mensajes anteriores quedan como se escribieron. No se agrega
+     `Mensaje.idioma`: el servidor no sabe en qué idioma respondió el modelo.
+  4. **Tarjetas**: `Mensaje.tarjetas` guarda el texto tal como se mostró
+     (`id_tmdb`, `tipo`, `titulo`, `poster`, `año`), en el idioma del turno, y
+     el historial lo devuelve sin volver a traducir. Como máximo 3 tarjetas por
+     respuesta: `mostrar_tarjetas` recorta en el servidor y el prompt se lo
+     avisa al modelo. La forma del JSON se valida al escribir con una clase de
+     Python; no hay modelo `Tarjeta` ni FK a `ProduccionAudiovisual`. Mostrar
+     una tarjeta no materializa la producción: eso sigue ocurriendo al abrir la
+     ficha, calificar o agregar a una lista. Para descartar lo que está en
+     «Vistas» alcanza con comparar `id_tmdb` y `tipo`.
+  5. **Errores y estados**: viajan por código, nunca como texto. Antes de abrir
+     el stream se responde HTTP normal con el sobre `{code, params, errors}`:
+     401 (Unauthorized) sin sesión, 403 (Forbidden) por CSRF o cuenta no
+     activa, 400 (Bad Request) por mensaje vacío o de más de 500 caracteres,
+     409 (Conflict) si ya hay una solicitud en curso y 429 (Too Many Requests)
+     por el límite por hora, con `retry_after_seconds`.
+     Con el stream abierto, el evento `error` lleva el mismo sobre: proveedor
+     caído, timeout, cuota del proveedor, tope de vueltas de tools o falla al
+     guardar. La falla de una tool (TMDB u Ollama) no corta el turno: se le
+     devuelve al modelo. Las tarjetas con ids inválidos se descartan en
+     silencio. La cancelación (CU-014), una pregunta fuera de alcance y una
+     búsqueda sin resultados no son errores. Si el stream termina sin evento
+     `fin`, el front lo trata como error de red. El evento `estado` también es
+     un código que el front traduce.
+  6. **Mensaje del usuario**: hasta 500 caracteres, con tres controles: el
+     campo no deja escribir más (`maxLength`), el front valida antes de enviar
+     y el servidor rechaza con 400 (Bad Request). El navegador cuenta en unidades UTF-16 y
+     Python en puntos de código, así que el navegador es siempre el más
+     estricto.
+  7. **Sin cola de mensajes**: mientras el bot responde no se puede enviar
+     otro mensaje. El usuario puede escribir el borrador, el botón de enviar
+     pasa a ser «Cancelar» y el servidor lo refuerza con el 409 (Conflict).
+  8. **Ruta**: `POST /api/chat/messages/` (corrige el `/api/chat/mensajes/` de
+     la entrada del 08/10).
+- **Motivo**: complicarse lo menos posible. Fijar el idioma al entrar evita
+  estados intermedios. El texto guardado es coherente con que el mensaje queda
+  en el idioma en que se escribió, y evita las cuatro llamadas a TMDB por
+  título que cuesta `materializar()` dentro de un turno que debe cumplir el
+  RNF #6. Dejar que la prosa siga el idioma del mensaje no cuesta nada, porque
+  lo resuelve el modelo y BGE-M3 es multilingüe. Una cola de mensajes complica
+  la cancelación, el guardado al final del turno y el límite por hora.
+- **Abierto para la próxima sesión** (no son decisiones):
+  1. Paso a ASGI: hoy `settings.py` solo define `WSGI_APPLICATION` y no hay
+     servidor ASGI en `docker-compose.yml`.
+  2. La vista async queda fuera de DRF: hay que resolver a mano la
+     autenticación por cookie JWT, el CSRF y el sobre de errores.
+  3. Dónde se versiona el contrato de los eventos SSE, que drf-spectacular no
+     incluye en `contracts/openapi.yaml`.
+  4. Cómo se garantiza una sola solicitud en curso por chat.
+  5. Lista exacta de códigos de error y de estado, y cuántos mensajes visibles
+     distintos tiene el usuario.
+  6. Copia del chatbot: curar las 21 filas `chatbot` de
+     `docs/i18n/claves.csv`, pasar la conversación de ejemplo a `muestra` y
+     agregar las filas que faltan (cancelación y errores). La aprueban Gonza y
+     Marcos antes de sembrar.
+  7. Texto del prompt: un prompt base con un bloque de estilo por idioma.
+  8. Verificar con la key real que el modelo respeta la regla de idioma con
+     historial mezclado y medir la latencia (RNF #6).
+  9. Abrir el SDD en `openspec/changes/chatbot/` si se decide usarlo.
+- **Archivos afectados**: `docs/decisiones.md`, docs 02 (CU-013), 03
+  (`Mensaje.tarjetas`), 04 (§3.1), 05 (B-02 a B-05) y 06 (tools),
+  `docs/i18n/guia.md` y `PRODUCT.md`.
