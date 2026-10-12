@@ -1,5 +1,5 @@
 "use client";
-import { routes } from "@/lib/routes";
+import { isAccessPath, routes } from "@/lib/routes";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -13,8 +13,6 @@ import { Avatar } from "@/components/Avatar";
 import { useAccount } from "@/components/AccountProvider";
 import { apiFetch } from "@/lib/api";
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
-
-const SIN_NAVBAR = ["/", routes.login, routes.register, routes.completeSignup];
 
 const NAV_LINKS = [
   { label: "Inicio", href: "/inicio" },
@@ -92,7 +90,7 @@ export function Navbar() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [confirmarLogout]);
 
-  if (SIN_NAVBAR.includes(pathname)) return null;
+  if (isAccessPath(pathname)) return null;
 
   async function logout() {
     try {

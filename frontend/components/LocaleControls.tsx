@@ -5,32 +5,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useAccount } from "./AccountProvider";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { routes } from "@/lib/routes";
-
-export function PublicLanguageControl() {
-  const path = usePathname();
-  const { perfil, cargando } = useAccount();
-  if (
-    perfil ||
-    cargando ||
-    !([routes.home, routes.login, routes.register] as readonly string[]).includes(path)
-  )
-    return null;
-  return (
-    <div className="absolute top-4 right-4 z-20">
-      <LanguageSwitcher compact />
-    </div>
-  );
-}
+import { isAccessPath, routes } from "@/lib/routes";
 
 export function Footer() {
   const { perfil, cargando } = useAccount();
+  const path = usePathname();
   const locale = useLocale();
   const language = useTranslations("settings.language");
   const t = useTranslations("footer.main");
   const nav = useTranslations("nav.main");
   const auth = useTranslations("nav.account");
-  if (cargando) return null;
+  if (cargando || isAccessPath(path)) return null;
   const languageLink = (
     <Link
       href={routes.language}

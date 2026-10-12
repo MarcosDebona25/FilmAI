@@ -1,81 +1,52 @@
-"use client";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+
+import { AccessShell } from "@/components/access/AccessShell";
+import { TicketMark } from "@/components/access/Logo";
+import { primaryButtonClass, secondaryButtonClass } from "@/components/access/fields";
 import { routes } from "@/lib/routes";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
-
-// Poster lateral intercambiable: cambiá el array (o el orden) para rotar.
-const POSTERS = [
-  { src: "/collage-posters/Opcion 1.jpg", label: "Opción 1" },
-  { src: "/collage-posters/Opcion 2.jpg", label: "Opción 2" },
-  { src: "/collage-posters/Opcion 3.jpg", label: "Opción 3" },
-];
-
-export default function PublicHome() {
-  const router = useRouter();
-  const [poster, setPoster] = useState(POSTERS[0].src);
-
+export default async function LandingPage() {
+  const t = await getTranslations("auth.landing");
+  const nav = await getTranslations("nav");
   return (
-    <main className="flex min-h-screen flex-col md:flex-row">
-      {/* Poster lateral (oculto en pantallas chicas) */}
-      <aside className="relative hidden md:block md:w-1/2">
-        <Image
-          src={poster}
-          alt="Collage de posters de películas"
-          fill
-          priority
-          sizes="(max-width: 767px) 0px, 50vw"
-          className="object-cover"
-        />
-        {process.env.NODE_ENV === "development" && (
-          <select
-            value={poster}
-            onChange={(e) => setPoster(e.target.value)}
-            aria-label="Elegir poster"
-            className="absolute bottom-4 left-4 rounded-lg border border-border bg-card/80 px-3 py-2 text-sm text-foreground backdrop-blur"
+    <AccessShell>
+      <div className="flex flex-col items-center gap-9 text-center">
+        <div className="flex items-center gap-4 sm:gap-[18px]">
+          <TicketMark width={72} height={54} />
+          <h1
+            translate="no"
+            className="font-display text-[72px] leading-[0.9] tracking-[0.05em] sm:text-[104px]"
           >
-            {POSTERS.map((p) => (
-              <option key={p.src} value={p.src}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        )}
-      </aside>
-
-      {/* Contenido centrado */}
-      <section className="flex flex-1 flex-col items-center justify-center gap-6 px-8 py-16 text-center">
-        <h1 className="font-heading text-4xl font-bold tracking-normal text-foreground md:text-5xl">
-          FilmAI
-        </h1>
-        <p className="max-w-md text-lg text-muted-foreground">
-          Plataforma de reseñas cinematográficas con recomendaciones inteligentes.
-        </p>
-        <div className="flex w-full max-w-xs flex-col gap-3">
-          <Button size="lg" className="w-full" onClick={() => router.push("/inicio")}>
-            Explorar catálogo
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="w-full"
-            onClick={() => router.push(routes.register)}
-          >
-            Registrarse
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="w-full"
-            onClick={() => router.push(routes.login)}
-          >
-            Iniciar sesión
-          </Button>
+            FilmAI
+          </h1>
         </div>
-      </section>
-    </main>
+        <p className="max-w-[460px] text-[19px] leading-[1.45] text-muted-foreground sm:text-[22px]">
+          {t("description")}
+        </p>
+        <div className="flex w-full max-w-[380px] flex-col gap-3">
+          <Link href="/inicio" className={`${primaryButtonClass} gap-2 text-[17px]`}>
+            {t("explore")}
+            <ChevronRight aria-hidden="true" className="size-[18px]" />
+          </Link>
+          <Link href={routes.register} className={`${secondaryButtonClass} text-[17px]`}>
+            {nav("account.signUp")}
+          </Link>
+          <p className="mt-1.5 text-center text-muted-foreground">
+            {t("loginPrompt")}{" "}
+            <Link href={routes.login} className="font-semibold text-foreground">
+              {nav("account.logIn")}
+            </Link>
+          </p>
+        </div>
+        <Link
+          href={routes.terms}
+          className="text-[13px] text-fg-3 underline underline-offset-[3px]"
+        >
+          {nav("main.terms")}
+        </Link>
+      </div>
+    </AccessShell>
   );
 }

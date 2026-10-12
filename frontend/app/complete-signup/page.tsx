@@ -3,6 +3,7 @@ import { routes } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import enums from "@/i18n/enums.json";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -35,6 +36,7 @@ function ErrorTexto({ mensaje }: { mensaje?: string | null }) {
 export default function CompletarGooglePage() {
   const labels = useTranslations("enums.gender");
   const errors = useTranslations("errors.codes");
+  const auth = useTranslations("auth.signUp");
   const GENEROS = enums.genderValues.map((value) => ({
     value,
     label: labels(value as "masculino"),
@@ -52,6 +54,8 @@ export default function CompletarGooglePage() {
   const [tocados, setTocados] = useState<Partial<Record<Campo, boolean>>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [acepta, setAcepta] = useState(false);
+  const [errorTerminos, setErrorTerminos] = useState<string | null>(null);
 
   // Solo se llega acá tras "Continuar con Google" en login/registro (que marcó
   // el flujo pendiente). Si no hay marca, no es un registro Google válido.
@@ -89,7 +93,9 @@ export default function CompletarGooglePage() {
     };
     setErrores(nuevosErrores);
     setTocados({ nombre_usuario: true, fecha_nacimiento: true, genero: true });
-    if (Object.values(nuevosErrores).some(Boolean)) {
+    // El registro con Google también exige aceptar los términos.
+    setErrorTerminos(acepta ? null : auth("termsRequiredError"));
+    if (Object.values(nuevosErrores).some(Boolean) || !acepta) {
       setError("Completá los campos y tocá de nuevo el botón de Google.");
       return;
     }
@@ -100,6 +106,7 @@ export default function CompletarGooglePage() {
         nombre_usuario: form.nombre_usuario,
         fecha_nacimiento: form.fecha_nacimiento,
         genero: form.genero,
+        acepta_terminos: true,
       });
       if (result.ok) {
         router.push("/");
@@ -180,6 +187,38 @@ export default function CompletarGooglePage() {
               ))}
             </select>
             <ErrorTexto mensaje={tocados.genero ? errores.genero : undefined} />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start gap-3">
+              <input
+                id="terminos"
+                type="checkbox"
+                checked={acepta}
+                onChange={(e) => {
+                  setAcepta(e.target.checked);
+                  setErrorTerminos(null);
+                }}
+                aria-invalid={Boolean(errorTerminos)}
+                className="mt-0.5 size-5 flex-none accent-primary"
+              />
+              <label htmlFor="terminos" className="text-sm text-muted-foreground">
+                {auth.rich("termsAcceptance", {
+                  terms: (chunks) => (
+                    <Link
+                      href={routes.terms}
+                      target="_blank"
+                      rel="noopener"
+                      className="font-semibold text-foreground underline"
+                    >
+                      {chunks}
+                      <span className="sr-only"> {auth("termsNewTabHint")}</span>
+                    </Link>
+                  ),
+                })}
+              </label>
+            </div>
+            <ErrorTexto mensaje={errorTerminos} />
           </div>
 
           {error && (
