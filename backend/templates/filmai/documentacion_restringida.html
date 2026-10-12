@@ -1,16 +1,48 @@
 <!doctype html>
-<html lang="es">
+<html lang="{{ idioma }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Acceso a la documentación · FilmAI</title>
+    <title>{{ titulo }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap"
+    />
     <style>
-      :root {
+      /* Tokens del canvas «FilmAI — Sistema y catálogo». Solo se muestra el
+         tema oscuro; el claro queda definido para activarlo con
+         `class="tema-claro"` en <html> cuando se implemente. */
+      :root,
+      .tema-oscuro {
+        --bg: #0d0d14;
+        --raised: #15151f;
+        --raised-2: #1d1d2a;
+        --line: #262636;
+        --fg: #ededf2;
+        --fg-2: #a6a6b8;
+        --fg-3: #84849a;
+        --accent: #f5c518;
+        --on-accent: #14110a;
+        --accent-text: #f5c518;
+        --danger: #f2483b;
         color-scheme: dark;
-        font-family: Arial, Helvetica, sans-serif;
-        background: #0d0d14;
-        color: #f2f2f5;
+      }
+      .tema-claro {
+        --bg: #f5f5f8;
+        --raised: #ffffff;
+        --raised-2: #ececf2;
+        --line: #e2e2ea;
+        --fg: #14141c;
+        --fg-2: #4d4d60;
+        --fg-3: #66667a;
+        --accent: #f5c518;
+        --on-accent: #14110a;
+        --accent-text: #8a6400;
+        --danger: #c0392b;
+        color-scheme: light;
       }
       * {
         box-sizing: border-box;
@@ -18,89 +50,374 @@
       body {
         margin: 0;
         min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Hanken Grotesk", system-ui, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
       }
-      .page {
-        width: min(100% - 40px, 720px);
+      a {
+        color: inherit;
+      }
+      .d {
+        font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+        font-weight: 800;
+      }
+      header {
+        width: 100%;
+        max-width: 1360px;
         margin: 0 auto;
-        padding: clamp(36px, 7vw, 88px) 0;
+        padding: 20px 40px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
       .brand {
-        color: #f5c518;
-        font-size: 1.4rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-      }
-      main {
-        margin-top: clamp(3.6px, 0.55vw, 7px);
-        border-top: 1px solid #363649;
-        padding-top: 36px;
-      }
-      h1 {
-        max-width: 18ch;
-        margin: 0 0 22px;
-        font-size: clamp(2.15rem, 6vw, 3.4rem);
-        line-height: 1.12;
-        letter-spacing: -0.03em;
-      }
-      p {
-        max-width: 58ch;
-        margin: 0 0 16px;
-        color: #d0d0db;
-        font-size: 1.08rem;
-        line-height: 1.65;
-      }
-      .actions {
-        margin-top: 36px;
-      }
-      .button {
-        display: inline-block;
-        border-radius: 10px;
-        background: #f5c518;
-        color: #17120a;
-        padding: 14px 22px;
-        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--fg);
         text-decoration: none;
       }
-      .button:hover {
-        background: #ffe263;
+      .brand .d {
+        font-size: 30px;
+        line-height: 1;
+        letter-spacing: 0.05em;
       }
-      .button:focus-visible {
-        outline: 3px solid #fff;
-        outline-offset: 4px;
+      .pill {
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--raised-2);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--fg-2);
       }
-      .hint {
-        margin-top: 18px;
-        font-size: 0.96rem;
+      main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 24px 96px;
+      }
+      .card {
+        width: min(440px, 100%);
+        padding: 36px;
+        border-radius: 18px;
+        background: var(--raised);
+        box-shadow: inset 0 0 0 1px var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .intro {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 15px;
+      }
+      .icon {
+        flex: none;
+        width: 52px;
+        height: 52px;
+        border-radius: 999px;
+        background: var(--raised-2);
+        display: grid;
+        place-items: center;
+        color: var(--accent-text);
+      }
+      .icon.danger {
+        color: var(--danger);
+      }
+      h1 {
+        margin: 0;
+        font-size: 56px;
+        line-height: 0.95;
+        text-wrap: balance;
+      }
+      p {
+        margin: 0;
+        color: var(--fg-2);
+        text-wrap: pretty;
+      }
+      .alert {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--danger);
+        font-weight: 600;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      label {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      input {
+        width: 100%;
+        height: 52px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--bg);
+        color: var(--fg);
+        font: 400 16px "Hanken Grotesk", system-ui, sans-serif;
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      input[aria-invalid="true"] {
+        box-shadow: inset 0 0 0 1px var(--danger);
+      }
+      input:focus-visible,
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .password {
+        position: relative;
+      }
+      .password input {
+        padding-right: 52px;
+      }
+      .toggle {
+        position: absolute;
+        right: 4px;
+        top: 4px;
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--fg-3);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+      }
+      .primary,
+      .secondary {
+        height: 52px;
+        padding: 0 22px;
+        border: 0;
+        border-radius: 10px;
+        font: 600 16px "Hanken Grotesk", system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .primary {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+      .primary:hover {
+        filter: brightness(1.08);
+      }
+      .secondary {
+        background: var(--raised-2);
+        color: var(--fg);
+      }
+      form .primary {
+        margin-top: 4px;
+      }
+      .footnote {
+        text-align: center;
+        font-size: 15px;
+      }
+      .footnote a {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      @media (max-width: 600px) {
+        header {
+          padding: 16px 20px;
+        }
+        .brand .d {
+          font-size: 26px;
+        }
+        main {
+          align-items: flex-start;
+          padding: 28px 20px 40px;
+        }
+        /* En celular el formulario va directo sobre el fondo, sin tarjeta. */
+        .card {
+          width: 100%;
+          padding: 0;
+          border-radius: 0;
+          background: none;
+          box-shadow: none;
+          gap: 20px;
+        }
+        .icon {
+          width: 48px;
+          height: 48px;
+        }
+        h1 {
+          font-size: 44px;
+        }
+        input {
+          background: var(--raised);
+        }
+        .actions {
+          flex-direction: column;
+        }
       }
       ::selection {
-        background: #f5c518;
-        color: #17120a;
+        background: var(--accent);
+        color: var(--on-accent);
       }
     </style>
   </head>
-  <body>
-    <div class="page">
-      <div class="brand">FilmAI</div>
-      <main>
-        <h1>La documentación requiere una cuenta staff</h1>
-        {% if sesion_iniciada %}
-        <p>
-          Tu sesión actual no tiene permisos de administración para ver {{ recurso }}.
-        </p>
-        <p>Ingresá al Admin con una cuenta staff para continuar.</p>
+  <body class="tema-oscuro">
+    <header>
+      <a class="brand" href="{{ url_app }}" aria-label="{{ t.home_label }}">
+        <svg width="32" height="24" viewBox="0 0 32 24" aria-hidden="true">
+          <path
+            d="M4 0h24a4 4 0 0 1 4 4v5a3 3 0 0 0 0 6v5a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4v-5a3 3 0 0 0 0-6V4a4 4 0 0 1 4-4Z"
+            style="fill: var(--accent)"
+          ></path>
+          <polygon
+            points="16 6.8 17.29 10.22 20.95 10.39 18.09 12.68 19.06 16.21 16 14.2 12.94 16.21 13.91 12.68 11.05 10.39 14.71 10.22"
+            style="fill: var(--on-accent)"
+          ></polygon>
+        </svg>
+        <span class="d">FilmAI</span>
+      </a>
+      <span class="pill">{{ t.pill }}</span>
+    </header>
+    <main id="contenido">
+      <div class="card">
+        {% if estado == "sin_permisos" %}
+        <div class="intro">
+          <div class="title-row">
+            <span class="icon danger" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+                <path d="m14.5 9.5-5 5"></path>
+                <path d="m9.5 9.5 5 5"></path>
+              </svg>
+            </span>
+            <h1 class="d">{{ t.denied_title }}</h1>
+          </div>
+          <p>
+            {{ t.denied_intro_before }}
+            <strong style="color: var(--fg)">{{ nombre_usuario }}</strong>{{ t.denied_intro_after }}
+          </p>
+        </div>
+        <div class="actions">
+          <a class="primary" href="{{ url_cuenta_otra }}">{{ t.switch_account }}</a>
+          <a class="secondary" href="{{ url_app }}">{{ t.back_to_home }}</a>
+        </div>
         {% else %}
-        <p>
-          Para consultar {{ recurso }}, ingresá al Admin de FilmAI con una
-          cuenta staff.
+        <div class="intro">
+          <div class="title-row">
+            <span class="icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <h1 class="d">{{ t.login_title }}</h1>
+          </div>
+          <p>{{ t.login_intro }}</p>
+        </div>
+        {% if error %}
+        <p class="alert" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v4"></path>
+            <path d="M12 16h.01"></path>
+          </svg>
+          {% if error == "too_many_attempts" %}{{ t.too_many_attempts }}{% else %}{{ t.invalid_credentials }}{% endif %}
         </p>
         {% endif %}
-        <div class="actions">
-          <a class="button" href="{{ url_login }}"
-            >Iniciar sesión en el Admin</a
-          >
-        </div>
-        <p class="hint">Después de iniciar sesión, volverás a esta página.</p>
-      </main>
-    </div>
+        <form method="post" action="{{ url_login }}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ ruta }}" />
+          <div class="field">
+            <label for="admin-usuario">{{ t.identifier_label }}</label>
+            <input
+              id="admin-usuario"
+              name="usuario"
+              type="text"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+              {% if error %}aria-invalid="true"{% endif %}
+            />
+          </div>
+          <div class="field">
+            <label for="admin-clave">{{ t.password_label }}</label>
+            <div class="password">
+              <input
+                id="admin-clave"
+                name="clave"
+                type="password"
+                autocomplete="current-password"
+                required
+                {% if error %}aria-invalid="true"{% endif %}
+              />
+              <button
+                type="button"
+                class="toggle"
+                id="alternar-clave"
+                aria-label="{{ t.show_password }}"
+                aria-controls="admin-clave"
+                data-mostrar="{{ t.show_password }}"
+                data-ocultar="{{ t.hide_password }}"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="primary">{{ t.submit }}</button>
+        </form>
+        <p class="footnote">
+          {{ t.not_member }} <a href="{{ url_app }}">{{ t.back_to_app }}</a>
+        </p>
+        {% endif %}
+      </div>
+    </main>
+    <script>
+      (function () {
+        var boton = document.getElementById("alternar-clave");
+        var campo = document.getElementById("admin-clave");
+        if (!boton || !campo) return;
+        boton.addEventListener("click", function () {
+          var oculto = campo.type === "password";
+          campo.type = oculto ? "text" : "password";
+          boton.setAttribute(
+            "aria-label",
+            oculto ? boton.dataset.ocultar : boton.dataset.mostrar
+          );
+        });
+      })();
+    </script>
   </body>
 </html>
