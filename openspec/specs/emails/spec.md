@@ -159,3 +159,15 @@ user on 08/10/2026). The pilot routes support both locales. HTML previews and
 EML files for all eight variants live under `docs/i18n/revision-correos/`; no
 external mail was sent to create them. Do not equate browser rendering with
 verification in Gmail/Outlook/another real email client.
+
+### Visual design from the canvas (12/10/2026)
+
+The shared `correos/base.html` follows the four email artboards of the design
+canvas: dark card with an accent bar, ticket mark and `FilmAI` wordmark, 40px
+display title, primary yellow button (secondary outlined button for
+password-updated), copyable link row and a divider before the warning and
+signature. The reason and rights lines sit below the card. Colors are the
+design tokens (`#0d0d14`, `#15151f`, `#262636`, `#a6a6b8`, `#84849a`,
+`#f5c518`); the previous orange and the `color_secundario` context value are
+removed. Copy, subjects and plain text are unchanged. HTML stays table-based with
+inline styles and system-font fallbacks for mail clients that ignore web fonts.
