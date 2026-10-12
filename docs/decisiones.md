@@ -3765,3 +3765,20 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Descripción**: `NotFoundScreen` tiene dos variantes aprobadas en el canvas. **Con sesión**: «This page doesn’t exist», Back to Home y Search. **Sin sesión**: «We can’t find that page», Back to Home, Log in y «New to FilmAI? Create a free account». Mientras se resuelve la sesión se muestra la variante con sesión, que no pide cuenta.
 - **Encabezado**: sin sesión desaparece el enlace a Lists, como en la propuesta; la barra inferior móvil ya solo existía con sesión.
 - **Archivos afectados**: `frontend/components/errors/ErrorScreens.tsx`, `frontend/components/Navbar.tsx`, `docs/i18n/copia-propuesta.csv` (4 claves `errors.pages.*`), catálogos generados, `tests/errors-and-account-menu.test.tsx` y `e2e/errores-menu.spec.ts`.
+
+---
+
+## 12/10/2026 — Correos de cuenta con el diseño del canvas
+
+- **Fecha**: 12/10/2026
+- **Descripción**: los cuatro correos (confirmación de cuenta, confirmación de correo, restablecer contraseña y contraseña actualizada) adoptan el diseño de las cuatro pantallas «Correo-*» del canvas, en español e inglés.
+- **Decisiones**:
+  1. **Una sola base**: se rediseña `correos/base.html`; las plantillas por caso y por idioma conservan sus bloques, asunto y texto plano. La copia ya coincidía con el canvas, solo se unió la advertencia en un único párrafo.
+  2. **Estilo**: tarjeta oscura con barra de acento, marca, título grande, botón amarillo y fila de enlace copiable. «Contraseña actualizada» usa botón secundario con borde, como en el canvas, y no repite el enlace.
+  3. **Cliente de correo**: tabla con estilos en línea. La tipografía de marca se declara con alternativas del sistema, porque Gmail y otros clientes ignoran las fuentes web. La marca usa una celda amarilla con estrella en lugar del SVG del canvas, que muchos clientes eliminan.
+  4. **Tema**: solo oscuro. El canvas ofrece una variante clara, que no se implementa en correo porque el cliente decide el esquema.
+  5. **Omitido**: las líneas «From» y «Subject» del canvas son anotaciones de la maqueta, no parte del mensaje.
+  6. **Limpieza**: se elimina `color_secundario` del contexto del servicio y el naranja anterior.
+- **Pruebas**: referencias doradas regeneradas (`tests_golden/correos/*.json`) y `test_html_sigue_el_diseno_del_canvas` en `filmai/test_servicio_correos.py`.
+- **Archivos afectados**: `backend/templates/correos/base.html`, `backend/templates/correos/*/*/message.html`, `backend/filmai/correos/servicio.py`, `backend/filmai/test_servicio_correos.py`, `backend/filmai/tests_golden/correos/`, `openspec/specs/emails/spec.md`.
+

@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791820117.2018328,
-    "seen": 1791820846.6064293,
-    "ast_hash": "697cd2024e2c18899d334547c39cdbe4",
+    "mtime": 1791821797.1623926,
+    "seen": 1791821809.04122,
+    "ast_hash": "8d68115e033c303b5ed3914b4e58006b",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1716,27 +1716,27 @@
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/confirmacion_registro.json": {
-    "mtime": 1791583476.6672661,
-    "seen": 1791813490.6226332,
-    "ast_hash": "75b6a9088e5b5a2b690d3d529a74b248",
+    "mtime": 1791821714.0040429,
+    "seen": 1791821809.0288556,
+    "ast_hash": "98521d921ea16c913d00118f5d5547a7",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/contrasena_actualizada.json": {
-    "mtime": 1791583476.670072,
-    "seen": 1791813490.6226358,
-    "ast_hash": "d3823c856ed8e5bfa909bdcaf1dcc2d4",
+    "mtime": 1791821714.715858,
+    "seen": 1791821809.0288582,
+    "ast_hash": "0084a1d50960e1e0e3b5bdf9be3f0b16",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/reenvio_confirmacion.json": {
-    "mtime": 1791583476.6720965,
-    "seen": 1791813490.622638,
-    "ast_hash": "af5cb1b5352e137a4d86b5f0cf81eaf4",
+    "mtime": 1791821714.9717987,
+    "seen": 1791821809.0288603,
+    "ast_hash": "43b0eea37d615214072937077ea46ff0",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/restablecimiento.json": {
-    "mtime": 1791583476.6745486,
-    "seen": 1791813490.6226408,
-    "ast_hash": "dbdee33b37db58c422a868ba31f3c74c",
+    "mtime": 1791821715.2281325,
+    "seen": 1791821809.0288627,
+    "ast_hash": "101ab847ebae636eb502e646e09920c7",
     "semantic_hash": ""
   },
   "contracts/openapi.yaml": {
@@ -2310,9 +2310,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
-    "mtime": 1791583476.9186502,
-    "seen": 1791813490.6301193,
-    "ast_hash": "88fe20174f29641b4c1f1d03875012df",
+    "mtime": 1791821797.158027,
+    "seen": 1791821809.0420234,
+    "ast_hash": "facda9616a151f7b1ee643a8aa2ec366",
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
@@ -2526,9 +2526,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/correos/servicio.py": {
-    "mtime": 1791583476.5667813,
-    "seen": 1791813490.6223729,
-    "ast_hash": "09999ae8c1a208f0d346fe35b8a9ff1e",
+    "mtime": 1791821701.8506918,
+    "seen": 1791821809.0228636,
+    "ast_hash": "08638e86d9199873734da61d481ab6bd",
     "semantic_hash": ""
   },
   "backend/filmai/errores/serializadores.py": {
@@ -2544,9 +2544,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/test_servicio_correos.py": {
-    "mtime": 1791583476.5980663,
-    "seen": 1791813490.6224966,
-    "ast_hash": "ac390c435defe748afdb508bae05a2c6",
+    "mtime": 1791821755.2673056,
+    "seen": 1791821809.02417,
+    "ast_hash": "cd8681bf73ec0d5a69b4bf217ee5c3a7",
     "semantic_hash": ""
   },
   "backend/listas/identidades.py": {
@@ -2622,15 +2622,15 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/base.html": {
-    "mtime": 1791583476.6928198,
-    "seen": 1791813490.62908,
-    "ast_hash": "9efc3123fcd057356ca4d631430638ec",
+    "mtime": 1791821696.9845796,
+    "seen": 1791821809.0398703,
+    "ast_hash": "71eed41c86d760e85520b59a4dc519ce",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_correo/es/message.html": {
-    "mtime": 1791583476.706044,
-    "seen": 1791813490.6290894,
-    "ast_hash": "ca122cd996aaa0ce37eb461a3aa731a6",
+    "mtime": 1791821701.85008,
+    "seen": 1791821809.040067,
+    "ast_hash": "41eedb20df487d2bd1bc211a97ad0236",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_correo/es/message.txt": {
@@ -2646,9 +2646,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/es/message.html": {
-    "mtime": 1791583476.713358,
-    "seen": 1791813490.629142,
-    "ast_hash": "ed031beb3ad224c64b54917a44f1a3fe",
+    "mtime": 1791821701.8497932,
+    "seen": 1791821809.040282,
+    "ast_hash": "0cae1766e3eeed60a6564bf99a85d21a",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/es/message.txt": {
@@ -2676,9 +2676,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/restablecer_contrasena/es/message.html": {
-    "mtime": 1791583476.7280438,
-    "seen": 1791813490.629172,
-    "ast_hash": "5540cd35fae89b99ebbca144d66525dc",
+    "mtime": 1791821701.8504183,
+    "seen": 1791821809.040746,
+    "ast_hash": "58b2264eee2b32d65ab15228ef72d504",
     "semantic_hash": ""
   },
   "backend/templates/correos/restablecer_contrasena/es/message.txt": {
@@ -2826,27 +2826,27 @@
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/confirmacion_registro.en.json": {
-    "mtime": 1791583476.6658185,
-    "seen": 1791813490.6226318,
-    "ast_hash": "65b4e87d0dff265c6c50da27cc2a2369",
+    "mtime": 1791821712.463858,
+    "seen": 1791821809.0288532,
+    "ast_hash": "b1b7104273cef4f525dc1292c146d22c",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/contrasena_actualizada.en.json": {
-    "mtime": 1791583476.668627,
-    "seen": 1791813490.6226342,
-    "ast_hash": "324382b1c5767ce45cd32dfe5c713fc6",
+    "mtime": 1791821713.2136583,
+    "seen": 1791821809.0288568,
+    "ast_hash": "4b2dc80c48fe97a5d13d4c0d0c2cbfba",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/reenvio_confirmacion.en.json": {
-    "mtime": 1791583476.67123,
-    "seen": 1791813490.6226368,
-    "ast_hash": "79f991fb29a88832edcfeb70b242b409",
+    "mtime": 1791821713.4676654,
+    "seen": 1791821809.0288591,
+    "ast_hash": "9f088ee73522256075795856f0eb85db",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/restablecimiento.en.json": {
-    "mtime": 1791583476.6730924,
-    "seen": 1791813490.62264,
-    "ast_hash": "4fd04182b55c8c06f3b20438c9f48376",
+    "mtime": 1791821713.7254076,
+    "seen": 1791821809.0288615,
+    "ast_hash": "9fe566166a6be1d9eb42da3f03d8e4db",
     "semantic_hash": ""
   },
   "backend/templates/correos/base_en.html": {
@@ -2862,9 +2862,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_correo/en/message.html": {
-    "mtime": 1791583476.696082,
-    "seen": 1791813490.6290853,
-    "ast_hash": "0ff7757e0d830334f56ff53453b4ace7",
+    "mtime": 1791821701.850215,
+    "seen": 1791821809.0399609,
+    "ast_hash": "1ea2c78bb4098989fbdf3e37fbab5dc0",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_correo/en/message.txt": {
@@ -2880,9 +2880,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/en/message.html": {
-    "mtime": 1791583476.7118883,
-    "seen": 1791813490.6290934,
-    "ast_hash": "0c324c044125d8aceeec82ac78cc8ece",
+    "mtime": 1791821701.8499122,
+    "seen": 1791821809.0401769,
+    "ast_hash": "a716c9753ebcc36dfd0b372eca761cb1",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/en/message.txt": {
@@ -2898,9 +2898,9 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/contrasena_actualizada/en/message.html": {
-    "mtime": 1791583476.7174308,
-    "seen": 1791813490.6291473,
-    "ast_hash": "50269e810fba19551b45da7e910c7446",
+    "mtime": 1791821701.8496537,
+    "seen": 1791821809.0403862,
+    "ast_hash": "f4feb42ac1caf2202b55e06bceaf63e6",
     "semantic_hash": ""
   },
   "backend/templates/correos/contrasena_actualizada/en/message.txt": {
@@ -2916,15 +2916,15 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/contrasena_actualizada/es/message.html": {
-    "mtime": 1791583476.720051,
-    "seen": 1791813490.6291564,
-    "ast_hash": "894e1ae6e680d3223b71f5c87903a858",
+    "mtime": 1791821701.8494468,
+    "seen": 1791821809.0404909,
+    "ast_hash": "e859e62dbae85a4537d2f72458aaf8f2",
     "semantic_hash": ""
   },
   "backend/templates/correos/restablecer_contrasena/en/message.html": {
-    "mtime": 1791583476.725833,
-    "seen": 1791813490.6291647,
-    "ast_hash": "fa5b413e3aae06665b2a53a45bd0739a",
+    "mtime": 1791821701.8505526,
+    "seen": 1791821809.0406387,
+    "ast_hash": "a51556d83df02edab7d429aa318cdfba",
     "semantic_hash": ""
   },
   "backend/templates/correos/restablecer_contrasena/en/message.txt": {
