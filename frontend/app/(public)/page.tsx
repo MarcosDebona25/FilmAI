@@ -12,7 +12,7 @@ export default async function LandingPage() {
   const nav = await getTranslations("nav");
   return (
     <AccessShell>
-      <div className="flex flex-col items-center gap-9 text-center">
+      <div className="flex flex-col items-center gap-9 text-center lg:pt-[75px]">
         <div className="flex items-center gap-4 sm:gap-[18px]">
           <TicketMark width={72} height={54} className="max-sm:h-[39px] max-sm:w-[52px]" />
           <h1

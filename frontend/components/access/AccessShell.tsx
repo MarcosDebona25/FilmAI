@@ -24,7 +24,7 @@ export function AccessShell({
   return (
     <div className="relative min-h-screen bg-background tracking-normal text-foreground">
       <div className="absolute top-4 right-4 z-20 lg:top-6 lg:right-8">
-        <LanguageSwitcher compact />
+        <LanguageSwitcher />
       </div>
       <div
         className={`grid min-h-screen ${poster === "side" ? weights : "grid-cols-1 lg:grid-cols-[5fr_6fr]"}`}
