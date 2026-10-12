@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { Footer } from "@/components/LocaleControls";
+import { MobileTabs } from "@/components/MobileTabs";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
 import { NavigationGuard } from "@/components/NavigationGuard";
@@ -45,6 +46,7 @@ export default async function RootLayout({
               <Navbar />
               {children}
               <Footer />
+              <MobileTabs />
             </NavigationGuard>
           </AccountProvider>
           <Toaster position="top-center" />

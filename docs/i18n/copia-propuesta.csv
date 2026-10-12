@@ -96,3 +96,4 @@ common.fields.email,,field,,Correo electrónico,Email,aprobado
 nav.main.termsUpdated,,label,date,Última actualización: {date},"Last updated: {date}",aprobado
 nav.main.termsOnPage,,label,,En esta página,On this page,aprobado
 auth.signUp.submitPending,,label,,Completá todos los campos y aceptá los Términos y Condiciones para continuar.,Complete all fields and accept the Terms and Conditions to continue.,aprobado
+errors.pages.notFoundCode,,label,,Error 404,Error 404,aprobado

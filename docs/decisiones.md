@@ -3725,3 +3725,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   4. **`/complete-signup`**: mismo comportamiento; el botón de Google queda inerte (`inert`) hasta que el formulario es válido.
 - **Motivo**: evitar una UI invasiva y no permitir envíos que se sabe que fallan.
 - **Archivos afectados**: `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `docs/i18n/copia-propuesta.csv` (`auth.signUp.submitPending`), catálogos generados, `docs/04_Lineamientos_UI.md` (11.3), tests `tests/access-screens.test.tsx`, `tests/complete-signup.test.tsx`, `e2e/acceso.spec.ts`.
+
+## 12/10/2026 — Pantallas de error y menú de cuenta (sección 11 del canvas)
+
+- **Fecha**: 12/10/2026
+- **Descripción**: se implementan «404 and error» (escritorio y celular) y «Account menu» del canvas «FilmAI — Sistema y catálogo».
+- **Decisiones**:
+  1. **404 (Not Found)**: `app/not-found.tsx` con el código «Error 404», Back to Home y Search. **Error inesperado**: `app/error.tsx` con «Try again» (llama a `reset()` de Next) y Back to Home. Ambas comparten `components/errors/ErrorScreens.tsx` y conservan el encabezado y el pie del sitio. Clave nueva: `errors.pages.notFoundCode`.
+  2. **Rutas**: `routes.explore` (`/home`) y `routes.search` (`/search`) se enlazan aunque esas pantallas aún no existan; mientras tanto muestran la pantalla 404. La landing apunta a `routes.explore` en lugar del literal `/inicio`.
+  3. **Encabezado**: `Navbar` sigue el canvas (marca, Home/Search/Lists, avatar) y sale de las excepciones legacy. Sin sesión ofrece Log in y Sign up como enlaces. La página actual lleva `aria-current`.
+  4. **Menú de cuenta** (`components/AccountMenu.tsx`): cabecera con nombre y `@usuario`, Mi perfil, Calificaciones y reseñas, Preferencias y Cerrar sesión; teclado completo (flechas, Home, End, Escape). Cerrar sesión pide confirmación con `alertdialog` (el foco inicial queda en Cancelar). Si el servidor falla se avisa con un toast traducido y la sesión se mantiene.
+  5. **Celular**: barra inferior `MobileTabs` (Home, Search, Lists, Profile) solo con sesión. Hasta integrar Perfil móvil (sección 9, donde el canvas ubica «Log out»), el avatar del encabezado abre el mismo menú en celular para no perder el cierre de sesión.
+  6. **Tema**: solo oscuro; todo usa tokens semánticos (`bg-raised`, `text-fg-2`, `border-line`…), de modo que el tema claro se activa sin tocar estos componentes.
+- **Motivo**: cerrar la sección 11 del canvas y retirar `Navbar` de las excepciones del linter i18n.
+- **Archivos afectados**: `frontend/components/{Navbar,AccountMenu,MobileTabs}.tsx`, `frontend/components/errors/ErrorScreens.tsx`, `frontend/app/{not-found,error,layout}.tsx`, `frontend/app/(public)/page.tsx`, `frontend/lib/routes.ts`, `frontend/scripts/i18n/rules.mjs`, `docs/i18n/copia-propuesta.csv`, catálogos generados, tests `tests/errors-and-account-menu.test.tsx`, `e2e/errores-menu.spec.ts` y ajustes en `e2e/cuenta.spec.ts` y `e2e/perfil.spec.ts`.
