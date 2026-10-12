@@ -3849,3 +3849,11 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Fecha**: 12/10/2026
 - **Descripción**: la pantalla `/terms` se ajusta al artboard «Terms · mobile»: índice «On this page» plegable (`<details>`), enlace de regreso (con sesión a Settings, sin sesión a la portada), título de 48 px, secciones con h2 de 28 px y márgenes del canvas. En escritorio no cambia: sigue pendiente la miga de pan Profile › Settings › Terms del artboard de escritorio.
 - **Archivos afectados**: `frontend/app/terms/page.tsx`, `frontend/components/TermsBackLink.tsx`, `frontend/tests/terms-back-link.test.tsx`, `frontend/e2e/acceso.spec.ts`.
+
+---
+
+## 12/10/2026 — Estado de la interfaz frente al canvas en el plan de desarrollo
+
+- **Fecha**: 12/10/2026
+- **Descripción**: `docs/05_Plan_de_Desarrollo.md` gana la sección «Estado de la interfaz frente al canvas de Claude Design», con una fila por sección del canvas y cuatro estados (✅ completa, 🟡 parcial, 🔁 rehacer, ⬜ falta), para que se vea qué pantallas ya coinciden con el diseño y cuáles hay que desarrollar o actualizar. Se corrigieron filas desactualizadas (rutas de A-02, A-06 y A-07, y Q-02, que ya está implementada) y se marcaron P-02, P-04 y P-06 como «UI a rehacer».
+- **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`. La nota «Interfaces: código vs pendientes» del canvas refleja el mismo estado.
