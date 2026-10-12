@@ -76,6 +76,37 @@ describe("pantalla 404", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("sin sesión invita a iniciar sesión o crear una cuenta, sin buscar", () => {
+    account.perfil = null;
+    render(<NotFoundScreen />, { locale: "en" });
+    expect(
+      screen.getByRole("heading", { level: 1, name: en.errors.pages.notFoundSignedOutTitle })
+    ).toBeVisible();
+    expect(screen.getByText(en.errors.pages.notFoundSignedOutDescription)).toBeVisible();
+    expect(screen.getByRole("link", { name: en.nav.main.backHome })).toHaveAttribute(
+      "href",
+      routes.explore
+    );
+    expect(screen.getByRole("link", { name: en.nav.account.logIn })).toHaveAttribute(
+      "href",
+      routes.login
+    );
+    expect(screen.getByRole("link", { name: en.errors.pages.createFreeAccount })).toHaveAttribute(
+      "href",
+      routes.register
+    );
+    expect(screen.queryByRole("link", { name: en.nav.main.search })).not.toBeInTheDocument();
+  });
+
+  it("mientras se resuelve la sesión conserva la variante con sesión", () => {
+    account.perfil = null;
+    account.cargando = true;
+    render(<NotFoundScreen />, { locale: "en" });
+    expect(
+      screen.getByRole("heading", { level: 1, name: en.errors.pages.notFoundTitle })
+    ).toBeVisible();
+  });
+
   it("se muestra en español", () => {
     render(<NotFoundScreen />, { locale: "es" });
     expect(

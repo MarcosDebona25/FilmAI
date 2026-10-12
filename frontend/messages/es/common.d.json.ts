@@ -635,7 +635,11 @@ declare const messages: {
       "unexpectedTitle": "Algo salió mal",
       "notFoundDescription": "La página que buscás no existe o fue movida. Probá desde el inicio o buscá lo que querías ver.",
       "unexpectedDescription": "Ocurrió un error inesperado. Intentá de nuevo en unos minutos.",
-      "notFoundCode": "Error 404"
+      "notFoundCode": "Error 404",
+      "notFoundSignedOutTitle": "No encontramos esa página",
+      "notFoundSignedOutDescription": "La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.",
+      "newToFilmAI": "¿Primera vez en FilmAI?",
+      "createFreeAccount": "Creá una cuenta gratis"
     },
     "codes": {
       "validation_error": "Revisá los datos ingresados.",

@@ -635,7 +635,11 @@ declare const messages: {
       "unexpectedTitle": "Something went wrong",
       "notFoundDescription": "The page you’re looking for doesn’t exist or was moved. Start from Home or search for what you wanted to watch.",
       "unexpectedDescription": "An unexpected error occurred. Try again in a few minutes.",
-      "notFoundCode": "Error 404"
+      "notFoundCode": "Error 404",
+      "notFoundSignedOutTitle": "We can’t find that page",
+      "notFoundSignedOutDescription": "The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",
+      "newToFilmAI": "New to FilmAI?",
+      "createFreeAccount": "Create a free account"
     },
     "codes": {
       "validation_error": "Check the information you entered.",

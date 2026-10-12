@@ -21,7 +21,8 @@ from .idioma import idioma_efectivo
 
 # Intentos fallidos por IP antes de bloquear el formulario (vence solo).
 INTENTOS_MAXIMOS = 10
-VENTANA_SEGUNDOS = 15 * 60
+VENTANA_MINUTOS = 60
+VENTANA_SEGUNDOS = VENTANA_MINUTOS * 60
 
 # Rutas a las que el formulario puede devolver al usuario tras ingresar.
 RUTAS_DOCUMENTACION = ("/api/docs/", "/api/schema/")
@@ -44,7 +45,15 @@ TEXTOS = {
         "hide_password": "Hide password",
         "submit": "Log in as admin",
         "invalid_credentials": "Incorrect admin credentials.",
-        "too_many_attempts": "Too many attempts. Try again in a few minutes.",
+        "too_many_attempts": (
+            "Too many failed attempts. Access is blocked for up to 60 minutes."
+        ),
+        "attempt_policy": (
+            "For security, after 10 failed attempts access from this "
+            "network is blocked for 60 minutes."
+        ),
+        "attempts_left_one": "1 attempt left before access is blocked.",
+        "attempts_left_other": "{n} attempts left before access is blocked.",
         "not_member": "Not part of the team?",
         "back_to_app": "Back to FilmAI",
         "denied_title": "Your account has no access",
@@ -76,7 +85,15 @@ TEXTOS = {
         "hide_password": "Ocultar contraseña",
         "submit": "Ingresar como administrador",
         "invalid_credentials": "Credenciales de administración incorrectas.",
-        "too_many_attempts": "Demasiados intentos. Probá de nuevo en unos minutos.",
+        "too_many_attempts": (
+            "Demasiados intentos fallidos. El acceso queda bloqueado hasta 60 minutos."
+        ),
+        "attempt_policy": (
+            "Por seguridad, tras 10 intentos fallidos el acceso desde esta "
+            "red se bloquea durante 60 minutos."
+        ),
+        "attempts_left_one": "Te queda 1 intento antes de que se bloquee el acceso.",
+        "attempts_left_other": "Te quedan {n} intentos antes de que se bloquee el acceso.",
         "not_member": "¿No sos parte del equipo?",
         "back_to_app": "Volver a FilmAI",
         "denied_title": "Tu cuenta no tiene acceso",
@@ -111,7 +128,7 @@ def _destino_seguro(request, candidato):
     return reverse("swagger-ui")
 
 
-def _respuesta_acceso(request, *, estado, ruta, error="", status=403):
+def _respuesta_acceso(request, *, estado, ruta, error="", restantes=None, status=403):
     """Renderiza el estado «iniciar sesión» o «sin permisos» de la página."""
     idioma = idioma_efectivo(request)
     textos = TEXTOS[idioma]
@@ -122,6 +139,13 @@ def _respuesta_acceso(request, *, estado, ruta, error="", status=403):
         "t": textos,
         "estado": estado,
         "error": error,
+        "aviso_restantes": (
+            textos[
+                "attempts_left_one" if restantes == 1 else "attempts_left_other"
+            ].format(n=restantes)
+            if restantes
+            else ""
+        ),
         "ruta": ruta,
         "recurso": textos["resource"][nombre_recurso],
         "url_login": reverse("docs-login"),
@@ -221,11 +245,12 @@ def ingresar_a_documentacion(request):
                 # Iguala el costo de hashear para no revelar si la cuenta existe.
                 Usuario().set_password(password)
             cache.add(clave, 0, VENTANA_SEGUNDOS)
-            cache.incr(clave)
+            fallidos = cache.incr(clave)
             respuesta = _respuesta_acceso(
                 request,
                 estado="iniciar_sesion",
                 error="invalid_credentials",
+                restantes=max(INTENTOS_MAXIMOS - fallidos, 0),
                 ruta=destino,
                 status=403,
             )

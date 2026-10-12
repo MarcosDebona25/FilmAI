@@ -5,6 +5,7 @@ import { RotateCw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
+import { useAccount } from "@/components/AccountProvider";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/access/styles";
 import { routes } from "@/lib/routes";
 
@@ -44,11 +45,13 @@ function ErrorLayout({
   title,
   description,
   children,
+  footer,
 }: {
   code: string;
   title: string;
   description: string;
   children: ReactNode;
+  footer?: ReactNode;
 }) {
   const t = useTranslations("errors.pages");
   return (
@@ -66,15 +69,46 @@ function ErrorLayout({
         <div className="mt-3.5 flex flex-col gap-2.5 md:mt-3 md:flex-row md:flex-wrap md:gap-3">
           {children}
         </div>
+        {footer}
       </div>
     </main>
   );
 }
 
-/** 404 (Not Found): la ruta no existe. Ofrece volver al inicio o buscar. */
+/**
+ * 404 (Not Found): la ruta no existe. Con sesión ofrece volver al inicio o
+ * buscar; sin sesión invita a iniciar sesión o crear una cuenta. Mientras se
+ * resuelve la sesión se muestra la variante con sesión, que no pide cuenta.
+ */
 export function NotFoundScreen() {
   const t = useTranslations("errors.pages");
   const nav = useTranslations("nav.main");
+  const account = useTranslations("nav.account");
+  const { perfil, cargando } = useAccount();
+  if (!cargando && !perfil) {
+    return (
+      <ErrorLayout
+        code={t("notFoundCode")}
+        title={t("notFoundSignedOutTitle")}
+        description={t("notFoundSignedOutDescription")}
+        footer={
+          <p className="text-fg-2 max-md:text-center max-md:text-[15px]">
+            {t("newToFilmAI")}{" "}
+            <Link href={routes.register} className="font-semibold text-foreground">
+              {t("createFreeAccount")}
+            </Link>
+          </p>
+        }
+      >
+        <Link href={routes.explore} className={`${primaryButtonClass} ${actionClass}`}>
+          {nav("backHome")}
+        </Link>
+        <Link href={routes.login} className={`${secondaryButtonClass} ${actionClass}`}>
+          {account("logIn")}
+        </Link>
+      </ErrorLayout>
+    );
+  }
   return (
     <ErrorLayout
       code={t("notFoundCode")}

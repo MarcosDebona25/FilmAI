@@ -416,7 +416,7 @@ class IngresoDocumentacionTests(TestCase):
             self._publicar("adminfilm", "incorrecta")
         respuesta = self._publicar("adminfilm")
         self.assertEqual(respuesta.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-        self.assertContains(respuesta, "Too many attempts", status_code=429)
+        self.assertContains(respuesta, "Too many failed attempts", status_code=429)
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_ingreso_correcto_reinicia_el_contador(self):
@@ -427,6 +427,23 @@ class IngresoDocumentacionTests(TestCase):
         from django.core.cache import cache
 
         self.assertEqual(cache.get("docs-login:127.0.0.1", 0), 0)
+
+    def test_avisa_la_politica_y_los_intentos_restantes(self):
+        from filmai.documentation import INTENTOS_MAXIMOS
+
+        formulario = self.client.get(reverse("swagger-ui"), HTTP_ACCEPT="text/html")
+        self.assertContains(formulario, "blocked for 60 minutes", status_code=403)
+        respuesta = self._publicar("adminfilm", "incorrecta")
+        self.assertContains(
+            respuesta,
+            f"{INTENTOS_MAXIMOS - 1} attempts left before access is blocked.",
+            status_code=403,
+        )
+
+    def test_el_bloqueo_dura_una_hora(self):
+        from filmai.documentation import VENTANA_SEGUNDOS
+
+        self.assertEqual(VENTANA_SEGUNDOS, 3600)
 
     def test_mensajes_en_espanol_segun_el_navegador(self):
         respuesta = self._publicar(

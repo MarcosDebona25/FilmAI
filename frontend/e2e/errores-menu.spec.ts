@@ -41,6 +41,36 @@ for (const viewport of viewports) {
       await sinDesborde(page);
     });
 
+    test("404 sin sesión: invita a iniciar sesión o crear cuenta", async ({ page, baseURL }) => {
+      await page.context().addCookies([{ name: "csrftoken", value: "test", url: baseURL! }]);
+      await page.route("**/api/profile/", (route) =>
+        route.fulfill({ status: 401, json: { code: "not_authenticated", params: {}, errors: [] } })
+      );
+      const response = await page.goto("/esta-pagina-no-existe");
+      expect(response?.status()).toBe(404);
+      await expect(
+        page.getByRole("heading", { name: es.errors.pages.notFoundSignedOutTitle, level: 1 })
+      ).toBeVisible();
+      await expect(page.getByText(es.errors.pages.notFoundSignedOutDescription)).toBeVisible();
+      const principal = page.getByRole("main");
+      await expect(principal.getByRole("link", { name: es.nav.main.backHome })).toHaveAttribute(
+        "href",
+        "/home"
+      );
+      await expect(principal.getByRole("link", { name: es.nav.account.logIn })).toHaveAttribute(
+        "href",
+        "/login"
+      );
+      await expect(
+        principal.getByRole("link", { name: es.errors.pages.createFreeAccount })
+      ).toHaveAttribute("href", "/register");
+      await expect(principal.getByRole("link", { name: es.nav.main.search })).toHaveCount(0);
+      // Sin sesión no hay barra de pestañas ni enlace a Lists.
+      await expect(page.getByRole("link", { name: es.nav.main.lists })).toHaveCount(0);
+      await expect(page.getByRole("link", { name: es.nav.main.profileShort })).toHaveCount(0);
+      await sinDesborde(page);
+    });
+
     test("error inesperado: Reintentar vuelve a pedir los datos", async ({ page }) => {
       await prepararCuenta(page);
       let fallar = true;

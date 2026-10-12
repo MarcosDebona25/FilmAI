@@ -49,7 +49,7 @@ export function Navbar() {
           </span>
         </Link>
         <nav aria-label={t("main.mainLabel")} className="hidden gap-1 md:flex">
-          {NAV_LINKS.map((item) => {
+          {NAV_LINKS.filter((item) => item.key !== "lists" || perfil).map((item) => {
             const current = pathname === item.href;
             return (
               <Link
