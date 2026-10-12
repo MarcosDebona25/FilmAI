@@ -3739,3 +3739,20 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   6. **Tema**: solo oscuro; todo usa tokens semánticos (`bg-raised`, `text-fg-2`, `border-line`…), de modo que el tema claro se activa sin tocar estos componentes.
 - **Motivo**: cerrar la sección 11 del canvas y retirar `Navbar` de las excepciones del linter i18n.
 - **Archivos afectados**: `frontend/components/{Navbar,AccountMenu,MobileTabs}.tsx`, `frontend/components/errors/ErrorScreens.tsx`, `frontend/app/{not-found,error,layout}.tsx`, `frontend/app/(public)/page.tsx`, `frontend/lib/routes.ts`, `frontend/scripts/i18n/rules.mjs`, `docs/i18n/copia-propuesta.csv`, catálogos generados, tests `tests/errors-and-account-menu.test.tsx`, `e2e/errores-menu.spec.ts` y ajustes en `e2e/cuenta.spec.ts` y `e2e/perfil.spec.ts`.
+
+---
+
+## 12/10/2026 — Acceso a la documentación interna (sección 12 del canvas)
+
+- **Fecha**: 12/10/2026
+- **Descripción**: la página 403 de `/api/docs/` y `/api/schema/` pasa a seguir «Admin access» del canvas (escritorio y celular): estado «iniciar sesión» con formulario real, estado de error y estado «sin permisos».
+- **Decisiones**:
+  1. **Dónde vive**: es una página servida por Django (`templates/filmai/documentacion_restringida.html`), no una ruta de Next.js, porque protege recursos del backend y usa la sesión de Django. Un solo HTML responsive: en celular el formulario se muestra sin tarjeta, como en el canvas.
+  2. **Formulario**: `POST /api/docs/login/` (`ingresar_a_documentacion`, `csrf_protect`) autentica por correo o nombre de usuario, exige `is_staff` y cuenta activa, abre la sesión de Django y vuelve a la ruta pedida. Una contraseña incorrecta, una cuenta inexistente y una cuenta común con clave válida reciben el mismo aviso («Incorrect admin credentials.»), con costo de hash igualado para no revelar qué cuentas existen. El destino `next` solo puede ser `/api/docs/` o `/api/schema/`; cualquier otro valor vuelve a Swagger.
+  3. **Límite de intentos**: 10 fallos por IP cada 15 minutos (caché de Django); al superarlo responde 429 (Too Many Requests) con aviso. Un ingreso correcto reinicia el contador. Es una defensa nueva respecto del Admin de Django, que no limita intentos.
+  4. **Sin permisos**: una sesión sin `is_staff` ve «Your account has no access» con su `@usuario`. **Diferencia con el canvas**: «Switch account» no enlaza al login de la aplicación (que abre una sesión JWT distinta y no sirve para la documentación) sino al mismo formulario (`?cuenta=otra`); el ingreso staff reemplaza la sesión anterior. «Back to FilmAI» y «Back to Home» apuntan a `FRONTEND_URL`.
+  5. **Idioma**: el canvas está en inglés, pero la página respeta la regla de idioma de la aplicación: cuenta → `Accept-Language` → inglés (`idioma_efectivo`), con textos en/es de paridad verificada por test. Antes estaba fija en español.
+  6. **Tema**: solo oscuro; los tokens del tema claro quedan definidos en la plantilla (`.tema-claro`) para activarlo luego.
+  7. **Omitido**: la lista vacía «Includes» del canvas no se renderiza (no tiene contenido).
+- **Motivo**: cerrar la sección 12 del canvas y reemplazar el aviso con enlace al login del Admin por un acceso con el mismo diseño que el resto del producto.
+- **Archivos afectados**: `backend/filmai/documentation.py`, `backend/filmai/urls.py`, `backend/templates/filmai/documentacion_restringida.html`, `backend/filmai/tests.py` (`DocumentacionApiTests` actualizada e `IngresoDocumentacionTests` nueva), `frontend/e2e/documentacion-admin.spec.ts`, `openspec/specs/admin-api-docs/spec.md`.

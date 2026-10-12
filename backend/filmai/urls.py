@@ -14,7 +14,10 @@ from catalogo.reviews import (
     MisCalificacionesView,
     ResenaTextoView,
 )
-from filmai.documentation import documentacion_para_staff
+from filmai.documentation import (
+    documentacion_para_staff,
+    ingresar_a_documentacion,
+)
 from usuarios.authentication import RefreshSesionView
 from usuarios.cuenta import DesactivarCuentaView, PreferenciasView
 from usuarios.perfil import AvataresView, CambiarContrasenaView, PerfilView
@@ -58,6 +61,7 @@ urlpatterns = [
         ),
         name="swagger-ui",
     ),
+    path("api/docs/login/", ingresar_a_documentacion, name="docs-login"),
     path("api/catalogo/", include("catalogo.urls")),
     path("api/lists/", include("listas.urls")),
     # C-08. El `{id}` es la pk de la Calificacion; `/texto/` borra solo el

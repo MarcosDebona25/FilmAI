@@ -231,38 +231,72 @@ class DocumentacionApiTests(TestCase):
                     status.HTTP_403_FORBIDDEN,
                 )
 
-    def test_navegador_anonimo_recibe_ayuda_y_enlace_de_ingreso(self):
-        for nombre, recurso in (
-            ("schema", "el esquema OpenAPI"),
-            ("swagger-ui", "Swagger UI"),
-        ):
+    def test_navegador_anonimo_recibe_formulario_de_ingreso(self):
+        for nombre, ruta in (("schema", "/api/schema/"), ("swagger-ui", "/api/docs/")):
             with self.subTest(ruta=nombre):
                 respuesta = self.client.get(reverse(nombre), HTTP_ACCEPT="text/html")
                 self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
                 self.assertTrue(respuesta["Content-Type"].startswith("text/html"))
-                self.assertContains(respuesta, recurso, status_code=403)
-                self.assertContains(respuesta, "cuenta staff", status_code=403)
+                self.assertContains(respuesta, "Admin access", status_code=403)
                 self.assertContains(
-                    respuesta,
-                    f"/admin/login/?next=%2Fapi%2F{'schema' if nombre == 'schema' else 'docs'}%2F",
-                    status_code=403,
+                    respuesta, 'action="/api/docs/login/"', status_code=403
                 )
+                self.assertContains(
+                    respuesta, f'name="next" value="{ruta}"', status_code=403
+                )
+                self.assertContains(respuesta, "csrfmiddlewaretoken", status_code=403)
+                self.assertNotContains(respuesta, 'role="alert"', status_code=403)
+                self.assertEqual(respuesta["Cache-Control"], "private, no-store")
 
-    def test_navegador_con_sesion_comun_recibe_mensaje_especifico(self):
-        self.client.force_login(UsuarioFactory())
-        for nombre, recurso in (
-            ("schema", "el esquema OpenAPI"),
-            ("swagger-ui", "Swagger UI"),
-        ):
+    def test_navegador_con_sesion_comun_recibe_estado_sin_permisos(self):
+        self.client.force_login(UsuarioFactory(nombre_usuario="juanperez"))
+        for nombre in ("schema", "swagger-ui"):
             with self.subTest(ruta=nombre):
                 respuesta = self.client.get(reverse(nombre), HTTP_ACCEPT="text/html")
+                self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
                 self.assertContains(
-                    respuesta,
-                    f"Tu sesión actual no tiene permisos de administración para ver {recurso}.",
-                    status_code=403,
-                    html=False,
+                    respuesta, "Your account has no access", status_code=403
                 )
-                self.assertNotContains(respuesta, "{{ recurso }}", status_code=403)
+                self.assertContains(respuesta, "juanperez", status_code=403)
+                self.assertContains(respuesta, "?cuenta=otra", status_code=403)
+                self.assertNotContains(
+                    respuesta, "csrfmiddlewaretoken", status_code=403
+                )
+
+    def test_cambiar_de_cuenta_vuelve_al_formulario(self):
+        self.client.force_login(UsuarioFactory())
+        respuesta = self.client.get(
+            reverse("swagger-ui"), {"cuenta": "otra"}, HTTP_ACCEPT="text/html"
+        )
+        self.assertContains(respuesta, "Admin access", status_code=403)
+        self.assertContains(respuesta, 'action="/api/docs/login/"', status_code=403)
+
+    def test_idioma_sale_de_accept_language_y_cae_en_ingles(self):
+        for encabezado, texto in (
+            ("es-AR,es;q=0.9", "Acceso de administración"),
+            ("fr-FR", "Admin access"),
+        ):
+            with self.subTest(encabezado=encabezado):
+                respuesta = self.client.get(
+                    reverse("swagger-ui"),
+                    HTTP_ACCEPT="text/html",
+                    HTTP_ACCEPT_LANGUAGE=encabezado,
+                )
+                self.assertContains(respuesta, texto, status_code=403)
+
+    def test_sin_permisos_usa_el_idioma_de_la_cuenta(self):
+        self.client.force_login(UsuarioFactory(idioma="es"))
+        respuesta = self.client.get(reverse("swagger-ui"), HTTP_ACCEPT="text/html")
+        self.assertContains(respuesta, "Tu cuenta no tiene acceso", status_code=403)
+
+    def test_textos_en_y_es_tienen_las_mismas_claves(self):
+        from filmai.documentation import TEXTOS
+
+        self.assertEqual(set(TEXTOS["en"]), set(TEXTOS["es"]))
+        self.assertEqual(set(TEXTOS["en"]["resource"]), set(TEXTOS["es"]["resource"]))
+        for idioma, textos in TEXTOS.items():
+            with self.subTest(idioma=idioma):
+                self.assertTrue(all(textos[k] for k in textos))
 
     def test_cliente_json_recibe_403_explicativo(self):
         respuesta = self.client.get(reverse("schema"), HTTP_ACCEPT="application/json")
@@ -284,6 +318,123 @@ class DocumentacionApiTests(TestCase):
                     ).status_code,
                     status.HTTP_200_OK,
                 )
+
+
+class IngresoDocumentacionTests(TestCase):
+    """Formulario propio para abrir la sesión que exige la documentación."""
+
+    def setUp(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        self.addCleanup(cache.clear)
+        self.url = reverse("docs-login")
+        self.staff = UsuarioFactory(
+            nombre_usuario="adminfilm", correo="admin@example.com", is_staff=True
+        )
+        self.staff.set_password("Palomitas24!")
+        self.staff.save()
+        self.comun = UsuarioFactory(nombre_usuario="juanperez")
+        self.comun.set_password("Palomitas24!")
+        self.comun.save()
+
+    def _publicar(self, usuario, clave="Palomitas24!", destino="/api/docs/", **extra):
+        return self.client.post(
+            self.url,
+            {"usuario": usuario, "clave": clave, "next": destino},
+            HTTP_ACCEPT="text/html",
+            **extra,
+        )
+
+    def test_staff_ingresa_con_usuario_o_correo_y_vuelve_a_la_ruta(self):
+        for identificador in ("adminfilm", "ADMINFILM", "admin@example.com"):
+            with self.subTest(identificador=identificador):
+                self.client.logout()
+                respuesta = self._publicar(identificador, destino="/api/schema/")
+                self.assertRedirects(
+                    respuesta, "/api/schema/", fetch_redirect_response=False
+                )
+                self.assertEqual(
+                    self.client.get(
+                        reverse("schema"), HTTP_ACCEPT="application/json"
+                    ).status_code,
+                    status.HTTP_200_OK,
+                )
+
+    def test_credenciales_incorrectas_y_cuenta_comun_reciben_el_mismo_aviso(self):
+        casos = (
+            ("adminfilm", "incorrecta"),
+            ("inexistente", "Palomitas24!"),
+            ("juanperez", "Palomitas24!"),
+        )
+        for usuario, clave in casos:
+            with self.subTest(usuario=usuario):
+                respuesta = self._publicar(usuario, clave)
+                self.assertContains(
+                    respuesta, "Incorrect admin credentials.", status_code=403
+                )
+                self.assertContains(respuesta, 'aria-invalid="true"', status_code=403)
+                self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_cuenta_dada_de_baja_no_ingresa(self):
+        from usuarios.models import EstadoCuenta
+
+        self.staff.estado = EstadoCuenta.BAJA
+        self.staff.save()
+        respuesta = self._publicar("adminfilm")
+        self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_destino_externo_o_desconocido_vuelve_a_swagger(self):
+        for destino in ("https://evil.example/", "//evil.example", "/admin/", ""):
+            with self.subTest(destino=destino):
+                self.client.logout()
+                respuesta = self._publicar("adminfilm", destino=destino)
+                self.assertRedirects(
+                    respuesta, "/api/docs/", fetch_redirect_response=False
+                )
+
+    def test_exige_token_csrf(self):
+        from django.test import Client
+
+        cliente = Client(enforce_csrf_checks=True)
+        respuesta = cliente.post(
+            self.url, {"usuario": "adminfilm", "clave": "Palomitas24!"}
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertNotIn("_auth_user_id", cliente.session)
+
+    def test_solo_acepta_post(self):
+        self.assertEqual(
+            self.client.get(self.url).status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def test_bloquea_tras_demasiados_intentos_fallidos(self):
+        from filmai.documentation import INTENTOS_MAXIMOS
+
+        for _ in range(INTENTOS_MAXIMOS):
+            self._publicar("adminfilm", "incorrecta")
+        respuesta = self._publicar("adminfilm")
+        self.assertEqual(respuesta.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertContains(respuesta, "Too many attempts", status_code=429)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_ingreso_correcto_reinicia_el_contador(self):
+        for _ in range(3):
+            self._publicar("adminfilm", "incorrecta")
+        self._publicar("adminfilm")
+        self.client.logout()
+        from django.core.cache import cache
+
+        self.assertEqual(cache.get("docs-login:127.0.0.1", 0), 0)
+
+    def test_mensajes_en_espanol_segun_el_navegador(self):
+        respuesta = self._publicar(
+            "adminfilm", "incorrecta", HTTP_ACCEPT_LANGUAGE="es-AR"
+        )
+        self.assertContains(
+            respuesta, "Credenciales de administración incorrectas.", status_code=403
+        )
 
 
 class CeleryAppTests(SimpleTestCase):

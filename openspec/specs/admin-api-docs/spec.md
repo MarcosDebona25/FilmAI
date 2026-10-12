@@ -28,29 +28,53 @@ a regular user MUST NOT expose either resource.
 ### Requirement: Access denial explains the next step
 
 For browser requests, both documentation routes MUST respond with an HTML page
-and HTTP 403. The page MUST say that a staff account is required, explain when
-the current session lacks permission, and link to the Django Admin login with
-`next` returning to the requested route. Clients requesting JSON MUST receive
-a 403 JSON response with a useful `detail` message.
+and HTTP 403. The page MUST show an admin login form when there is no usable
+session, and an explanation naming the current account when the session lacks
+`is_staff`, with an action to switch account. The page MUST be served in the
+account's language, then the `Accept-Language` preference, then English.
+Clients requesting JSON MUST receive a 403 JSON response with a useful
+`detail` message.
 
 #### Scenario: A visitor opens the schema in a browser
 
-- GIVEN no Admin session and an `Accept: text/html` request
+- GIVEN no Django session and an `Accept: text/html` request
 - WHEN `/api/schema/` is opened
-- THEN the response is an HTML page with status 403
-- AND the login link returns to `/api/schema/` after successful sign-in
+- THEN the response is an HTML page with status 403 containing the login form
+- AND the form returns to `/api/schema/` after a successful login
 
 #### Scenario: A signed-in user lacks staff permission
 
 - GIVEN a valid session for a regular user
 - WHEN `/api/docs/` is opened in a browser
 - THEN the response explains that the current account lacks administration access
+- AND offers to switch account and to go back to the application
 
 #### Scenario: A programmatic client requests JSON
 
 - GIVEN no Admin session and an `Accept: application/json` request
 - WHEN `/api/schema/` is requested
 - THEN the response is a 403 JSON object explaining how to get access
+
+### Requirement: The login form only admits active staff
+
+`POST /api/docs/login/` MUST require a CSRF token, authenticate by email or
+username, and open the Django session only for active accounts with
+`is_staff=True`. Wrong credentials, unknown accounts and regular accounts MUST
+produce the same message. After ten failed attempts from one IP in fifteen
+minutes the form MUST answer 429 until the window expires. The `next` value
+MUST be `/api/docs/` or `/api/schema/`; anything else returns to `/api/docs/`.
+
+#### Scenario: Staff logs in with email or username
+
+- GIVEN a staff account
+- WHEN the form is submitted with its email or username and a valid password
+- THEN the user is redirected to the requested documentation route with a session
+
+#### Scenario: A regular account submits a valid password
+
+- GIVEN an account without `is_staff`
+- WHEN the form is submitted with its correct credentials
+- THEN no session is opened and the generic incorrect-credentials message appears
 
 ### Requirement: An expired API cookie does not break the Admin session
 

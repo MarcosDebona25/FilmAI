@@ -186,15 +186,15 @@
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
-    "mtime": 1791583476.5999303,
-    "seen": 1791813490.6224988,
-    "ast_hash": "2459c2b32a3673008e0d098804d1f41f",
+    "mtime": 1791818722.9287696,
+    "seen": 1791819470.9288158,
+    "ast_hash": "e876930101599289d13a859147088e42",
     "semantic_hash": ""
   },
   "backend/filmai/urls.py": {
-    "mtime": 1791583476.6756551,
-    "seen": 1791813490.6226423,
-    "ast_hash": "ced8070b406fe4bf4618f8baceadc97f",
+    "mtime": 1791818608.3228893,
+    "seen": 1791819470.934171,
+    "ast_hash": "69b3e7223b5b58854c3fc88f3a3283fd",
     "semantic_hash": ""
   },
   "backend/filmai/wsgi.py": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791817477.9162936,
-    "seen": 1791817979.7053132,
-    "ast_hash": "8d64e235ec1a8de738c821ec433557b4",
+    "mtime": 1791818995.9894152,
+    "seen": 1791819470.947415,
+    "ast_hash": "26f3f830e4fbbf522c18d7de5b5e6a56",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1554,9 +1554,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/admin-api-docs/spec.md": {
-    "mtime": 1791583476.914154,
-    "seen": 1791813490.6300085,
-    "ast_hash": "ca291a70e4c023a1b6f87946a76eebc6",
+    "mtime": 1791818996.0180898,
+    "seen": 1791819470.9481666,
+    "ast_hash": "60fc690c942e07f60d5648859a84069f",
     "semantic_hash": ""
   },
   "openspec/specs/development-seed/spec.md": {
@@ -1566,15 +1566,15 @@
     "semantic_hash": ""
   },
   "backend/filmai/documentation.py": {
-    "mtime": 1791583476.5684044,
-    "seen": 1791813490.622375,
-    "ast_hash": "c6966593d8a45dbf60be5de12c4affd0",
+    "mtime": 1791818686.7475684,
+    "seen": 1791819470.9275131,
+    "ast_hash": "ae0010c106496c425d5a2858f167dbd6",
     "semantic_hash": ""
   },
   "backend/templates/filmai/documentacion_restringida.html": {
-    "mtime": 1790741329.5714989,
-    "seen": 1791426617.3083508,
-    "ast_hash": "f892c1dd59b460a9199103d3745cb7d8",
+    "mtime": 1791818636.3849502,
+    "seen": 1791819470.9470112,
+    "ast_hash": "fe9a321be63be669fd9c30dc731cf1f8",
     "semantic_hash": ""
   },
   "backend/listas/migrations/0004_calificadas_en_vistas.py": {
@@ -2448,8 +2448,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1791817837.2979639,
-    "seen": 1791817979.6995802,
+    "mtime": 1791819371.4038107,
+    "seen": 1791819470.9408646,
     "ast_hash": "86ef117b2905c6a569748857d69f9b3b",
     "semantic_hash": ""
   },
@@ -2478,8 +2478,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1791817837.3020885,
-    "seen": 1791817979.699583,
+    "mtime": 1791819371.4079442,
+    "seen": 1791819470.9409144,
     "ast_hash": "9b020b87ef92c444faad7001abad52a8",
     "semantic_hash": ""
   },
@@ -3255,6 +3255,12 @@
     "mtime": 1791817279.4044306,
     "seen": 1791817979.7000697,
     "ast_hash": "f2ee95ebb048b68410565f2c1c4c6080",
+    "semantic_hash": ""
+  },
+  "frontend/e2e/documentacion-admin.spec.ts": {
+    "mtime": 1791818773.5129364,
+    "seen": 1791819470.9396126,
+    "ast_hash": "ae7b20b4de8d916384b9e59fdc3d6905",
     "semantic_hash": ""
   }
 }
