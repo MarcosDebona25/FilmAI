@@ -15,9 +15,8 @@ import {
   PasswordField,
   TextField,
   fieldClass,
-  primaryButtonClass,
-  secondaryButtonClass,
 } from "@/components/access/fields";
+import { primaryButtonClass, secondaryButtonClass } from "@/components/access/styles";
 import enums from "@/i18n/enums.json";
 import { currentLocale } from "@/i18n/client";
 import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
@@ -276,7 +275,7 @@ export default function RegisterPage() {
           <span className="h-px flex-1 bg-border" />
         </div>
         <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4">
             <TextField
               label={common("fields.firstName")}
               name="nombre"
@@ -450,7 +449,7 @@ export default function RegisterPage() {
             {nav("signUp")}
           </button>
         </form>
-        <p className="border-t border-border pt-[22px] text-center text-muted-foreground">
+        <p className="text-center text-muted-foreground">
           {t("landing.loginPrompt")}{" "}
           <Link href={routes.login} className="font-semibold text-foreground">
             {nav("logIn")}

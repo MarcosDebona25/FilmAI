@@ -93,3 +93,5 @@ emails.confirmation.subject,,email,,[FilmAI] Confirmación de cuenta,[FilmAI] Co
 errors.codes.list_name_reserved,list_name_reserved,error,,Ese nombre está reservado para una lista predeterminada.,This name is reserved for a default list.,aprobado
 errors.codes.terms_not_accepted,terms_not_accepted,error,,Para crear tu cuenta tenés que aceptar los Términos y Condiciones.,To create your account you need to accept the Terms and Conditions.,aprobado
 common.fields.email,,field,,Correo electrónico,Email,aprobado
+nav.main.termsUpdated,,label,date,Última actualización: {date},"Last updated: {date}",aprobado
+nav.main.termsOnPage,,label,,En esta página,On this page,aprobado

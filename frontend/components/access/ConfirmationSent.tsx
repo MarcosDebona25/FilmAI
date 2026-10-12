@@ -13,8 +13,15 @@ import { AccessLogo } from "./Logo";
 import { FieldError } from "./fields";
 
 /** Estado «Revisá tu correo»: reenvío con espera de 60 s entre pedidos. */
+// El mensaje tipado solo admite texto: se marca la posición del correo para
+// poder resaltarlo sin duplicar la clave del catálogo.
+const EMAIL_MARKER = "\u0001";
+
 export function ConfirmationSent({ email }: { email: string }) {
   const t = useTranslations("auth.confirmation");
+  const [sentBefore, sentAfter = ""] = t("sentDescription", { email: EMAIL_MARKER }).split(
+    EMAIL_MARKER
+  );
   const common = useTranslations("common");
   const nav = useTranslations("nav.account");
   const [remaining, setRemaining] = useState(RESEND_COOLDOWN_SECONDS);
@@ -52,7 +59,9 @@ export function ConfirmationSent({ email }: { email: string }) {
         {t("inboxTitle")}
       </h1>
       <p className="text-balance text-muted-foreground">
-        {t("sentDescription", { email })}
+        {sentBefore}
+        <strong className="font-semibold text-foreground">{email}</strong>
+        {sentAfter}
         <br />
         {t("spamHint")}
       </p>

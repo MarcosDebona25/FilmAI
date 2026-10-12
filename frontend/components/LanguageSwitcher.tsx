@@ -52,7 +52,7 @@ export function LanguageSwitcher({
     <div>
       <fieldset
         aria-busy={saving}
-        className="inline-flex rounded-full border border-border bg-card p-1"
+        className={`inline-flex rounded-full border border-border bg-card ${compact ? "p-0.5" : "p-1"}`}
         role="radiogroup"
         aria-label={t("selectLabel")}
       >
@@ -60,7 +60,7 @@ export function LanguageSwitcher({
         {locales.map((language) => (
           <label
             key={language}
-            className={`relative flex min-h-11 touch-manipulation min-w-11 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-medium focus-within:ring-2 focus-within:ring-ring ${locale === language ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"} ${saving ? "cursor-wait opacity-70" : ""}`}
+            className={`relative flex min-h-11 touch-manipulation min-w-11 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-medium focus-within:ring-2 focus-within:ring-ring ${compact ? "min-h-10 min-w-10 px-3 font-semibold" : ""} ${locale === language ? (compact ? "bg-selected text-selected-foreground" : "bg-primary text-primary-foreground") : "text-foreground hover:bg-muted"} ${saving ? "cursor-wait opacity-70" : ""}`}
           >
             <input
               className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"

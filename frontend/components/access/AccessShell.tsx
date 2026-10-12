@@ -22,7 +22,7 @@ export function AccessShell({
 }) {
   const t = useTranslations("auth.landing");
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen bg-background tracking-normal text-foreground">
       <div className="absolute top-4 right-4 z-20 lg:top-6 lg:right-8">
         <LanguageSwitcher compact />
       </div>
@@ -45,7 +45,7 @@ export function AccessShell({
             className="absolute inset-0 bg-linear-to-r from-[rgb(var(--scrim)/0.1)] via-[rgb(var(--scrim)/0.3)] to-[rgb(var(--scrim))] max-lg:bg-[rgb(var(--scrim)/0.82)] max-lg:bg-none"
           />
         </div>
-        <main className="relative z-10 flex items-center justify-center px-5 py-16 lg:p-12">
+        <main className="relative z-10 flex items-center justify-center px-5 pt-[104px] pb-10 lg:p-12">
           {children}
         </main>
       </div>
