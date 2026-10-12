@@ -40,6 +40,8 @@ type Campo =
 
 type Errores = Partial<Record<Campo, string>>;
 
+const ERROR_DELAY_MS = 600;
+
 /** Fecha máxima para el selector: hoy −13 años (el backend es quien valida). */
 function maxFechaNacimiento(): string {
   const d = new Date();
@@ -75,8 +77,12 @@ export default function RegisterPage() {
     password2: "",
   });
   const [acepta, setAcepta] = useState(false);
-  const [errores, setErrores] = useState<Errores>({});
-  const [tocados, setTocados] = useState<Partial<Record<Campo, boolean>>>({});
+  // «Sucio» = el usuario escribió o eligió algo en el campo; foco y blur no cuentan.
+  const [sucios, setSucios] = useState<Partial<Record<Campo, boolean>>>({});
+  const [erroresServidor, setErroresServidor] = useState<Errores>({});
+  // Copia con retardo: el error de un campo de texto aparece cuando el usuario
+  // hace una pausa, no en cada pulsación.
+  const [diferido, setDiferido] = useState(form);
   const [usernameEstado, setUsernameEstado] = useState<
     "idle" | "checking" | "disponible" | "ocupado"
   >("idle");
@@ -99,20 +105,36 @@ export default function RegisterPage() {
     password2: (v, actual) => validarConfirmacion(actual.password1, v),
   };
 
+  const formularioValido =
+    acepta &&
+    usernameEstado === "disponible" &&
+    (Object.keys(validadores) as (keyof typeof form)[]).every(
+      (campo) => !validadores[campo](form[campo], form)
+    );
+
+  useEffect(() => {
+    const id = setTimeout(() => setDiferido(form), ERROR_DELAY_MS);
+    return () => clearTimeout(id);
+  }, [form]);
+
   function setField(campo: keyof typeof form, valor: string) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
+    setSucios((prev) => ({ ...prev, [campo]: true }));
+    setErroresServidor((prev) => ({ ...prev, [campo]: undefined }));
   }
 
-  function onBlurCampo(campo: keyof typeof form) {
-    setTocados((prev) => ({ ...prev, [campo]: true }));
-    setErrores((prev) => ({
-      ...prev,
-      [campo]: validadores[campo](form[campo], form) ?? undefined,
-    }));
-  }
-
-  function mostrar(campo: Campo): string | undefined {
-    return tocados[campo] ? errores[campo] : undefined;
+  /**
+   * Error visible de un campo: solo si el usuario ya lo modificó y el valor
+   * actual sigue siendo inválido. En texto espera a que haga una pausa;
+   * en selección y fecha (`inmediato`) aparece al instante.
+   */
+  function mostrar(campo: Campo, inmediato = false): string | undefined {
+    if (erroresServidor[campo]) return erroresServidor[campo];
+    if (campo === "acepta_terminos" || !sucios[campo]) return undefined;
+    const actual = validadores[campo](form[campo], form);
+    if (!actual) return undefined;
+    if (inmediato) return actual;
+    return validadores[campo](diferido[campo], diferido) ? actual : undefined;
   }
 
   // Disponibilidad del nombre de usuario en vivo, con debounce.
@@ -152,17 +174,7 @@ export default function RegisterPage() {
     event.preventDefault();
     setError(null);
 
-    const nuevos: Errores = {};
-    for (const campo of Object.keys(validadores) as (keyof typeof form)[]) {
-      const mensaje = validadores[campo](form[campo], form);
-      if (mensaje) nuevos[campo] = mensaje;
-    }
-    if (!acepta) nuevos.acepta_terminos = t("signUp.termsRequiredError");
-    if (Object.keys(nuevos).length > 0) {
-      setErrores(nuevos);
-      setTocados(Object.fromEntries(Object.keys(nuevos).map((c) => [c, true])));
-      return;
-    }
+    if (!formularioValido) return;
 
     setLoading(true);
     try {
@@ -190,11 +202,7 @@ export default function RegisterPage() {
           if (porCampo[campo]) mapeados[campo] = porCampo[campo];
         }
         if (Object.keys(mapeados).length > 0) {
-          setErrores((prev) => ({ ...prev, ...mapeados }));
-          setTocados((prev) => ({
-            ...prev,
-            ...Object.fromEntries(Object.keys(mapeados).map((c) => [c, true])),
-          }));
+          setErroresServidor((prev) => ({ ...prev, ...mapeados }));
           if ("nombre_usuario" in mapeados) setUsernameEstado("ocupado");
         } else {
           setError(err.message);
@@ -283,7 +291,6 @@ export default function RegisterPage() {
               maxLength={50}
               value={form.nombre}
               onChange={(e) => setField("nombre", e.target.value)}
-              onBlur={() => onBlurCampo("nombre")}
               error={mostrar("nombre")}
               help={t("signUp.nameHelp")}
             />
@@ -294,7 +301,6 @@ export default function RegisterPage() {
               maxLength={50}
               value={form.apellido}
               onChange={(e) => setField("apellido", e.target.value)}
-              onBlur={() => onBlurCampo("apellido")}
               error={mostrar("apellido")}
               help={t("signUp.nameHelp")}
             />
@@ -306,7 +312,6 @@ export default function RegisterPage() {
             prefix="@"
             value={form.nombre_usuario}
             onChange={(e) => setField("nombre_usuario", e.target.value)}
-            onBlur={() => onBlurCampo("nombre_usuario")}
             error={usernameError}
             status={usernameStatus}
             help={t("signUp.usernameHelp")}
@@ -318,7 +323,6 @@ export default function RegisterPage() {
             autoComplete="email"
             value={form.correo}
             onChange={(e) => setField("correo", e.target.value)}
-            onBlur={() => onBlurCampo("correo")}
             error={mostrar("correo")}
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -329,8 +333,7 @@ export default function RegisterPage() {
               max={maxFechaNacimiento()}
               value={form.fecha_nacimiento}
               onChange={(e) => setField("fecha_nacimiento", e.target.value)}
-              onBlur={() => onBlurCampo("fecha_nacimiento")}
-              error={mostrar("fecha_nacimiento")}
+              error={mostrar("fecha_nacimiento", true)}
               help={t("signUp.minimumAgeHelp")}
             />
             <div className="flex flex-col gap-2">
@@ -343,8 +346,7 @@ export default function RegisterPage() {
                 className={fieldClass}
                 value={form.genero}
                 onChange={(e) => setField("genero", e.target.value)}
-                onBlur={() => onBlurCampo("genero")}
-                aria-invalid={mostrar("genero") ? true : undefined}
+                aria-invalid={mostrar("genero", true) ? true : undefined}
               >
                 <option value="" disabled />
                 {enums.genderValues.map((value) => (
@@ -353,7 +355,7 @@ export default function RegisterPage() {
                   </option>
                 ))}
               </select>
-              {mostrar("genero") && <FieldError>{mostrar("genero")}</FieldError>}
+              {mostrar("genero", true) && <FieldError>{mostrar("genero", true)}</FieldError>}
             </div>
           </div>
           <PasswordField
@@ -362,7 +364,6 @@ export default function RegisterPage() {
             autoComplete="new-password"
             value={form.password1}
             onChange={(e) => setField("password1", e.target.value)}
-            onBlur={() => onBlurCampo("password1")}
             error={mostrar("password1")}
           >
             <ul className="flex flex-col gap-1.5 text-sm" aria-label={t("password.label")}>
@@ -392,13 +393,7 @@ export default function RegisterPage() {
             autoComplete="new-password"
             value={form.password2}
             onChange={(e) => setField("password2", e.target.value)}
-            onBlur={() => onBlurCampo("password2")}
-            error={
-              mostrar("password2") ??
-              (tocados.password2 && form.password2 && form.password2 !== form.password1
-                ? t("password.confirmMismatch")
-                : undefined)
-            }
+            error={mostrar("password2")}
           />
           <div className="flex flex-col gap-2">
             <div
@@ -411,7 +406,7 @@ export default function RegisterPage() {
                 checked={acepta}
                 onChange={(e) => {
                   setAcepta(e.target.checked);
-                  setErrores((prev) => ({ ...prev, acepta_terminos: undefined }));
+                  setErroresServidor((prev) => ({ ...prev, acepta_terminos: undefined }));
                 }}
                 aria-invalid={mostrar("acepta_terminos") ? true : undefined}
                 aria-describedby="terminos-error"
@@ -443,11 +438,17 @@ export default function RegisterPage() {
           {error && <FieldError>{error}</FieldError>}
           <button
             type="submit"
-            aria-disabled={!acepta || loading}
-            className={`${primaryButtonClass} ${!acepta ? "opacity-60" : ""}`}
+            disabled={!formularioValido || loading}
+            aria-describedby={formularioValido ? undefined : "registro-pendiente"}
+            className={`${primaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
           >
             {nav("signUp")}
           </button>
+          {!formularioValido && (
+            <p id="registro-pendiente" className="-mt-2 text-center text-[13px] text-fg-3">
+              {t("signUp.submitPending")}
+            </p>
+          )}
         </form>
         <p className="text-center text-muted-foreground">
           {t("landing.loginPrompt")}{" "}

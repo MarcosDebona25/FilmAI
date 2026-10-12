@@ -3715,3 +3715,13 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Archivos afectados**: backend (`usuarios/models.py`, migración `0008_fecha_aceptacion_terminos`, `serializers.py`, `adapter.py`, `admin.py`, `factories.py`, seed, `filmai/errores/catalogo.py`, `contracts/error-codes.json` y `contracts/openapi.yaml`, golden de registro y tests); frontend (`app/(public)/page.tsx`, `login`, `register`, `confirm-email`, `terms`, `complete-signup`, `components/access/*`, `lib/legal.ts`, `lib/password-rules.ts`, `lib/pending-email.ts`, `lib/routes.ts`, `app/globals.css`, `app/layout.tsx`, `scripts/i18n/*`, catálogos y tests unitarios/Playwright); docs 02, 03 (y JSON del diagrama), 04, `docs/i18n/copia-propuesta.csv` y `guia.md`.
 - **Tests**: Django (registro sin/falso/verdadero, Google sin aceptación, fecha guardada, seed con fecha, contratos y golden); Vitest (reglas de contraseña, cuenta regresiva, Markdown legal, registro, login, recuperación y confirmación); Playwright (landing, login, registro, términos y confirmación en escritorio y celular).
 
+## 12/10/2026 — Validación inline del registro: sin errores por foco/blur y envío condicionado
+
+- **Fecha**: 12/10/2026
+- **Descripción**: El formulario de registro marcaba cada campo al perder el foco, lo que llenaba la pantalla de errores al recorrerlo con Tab, y dejaba pulsar «Sign up» con datos inválidos. Se cambió a:
+  1. **Campo «sucio»**: un campo solo puede mostrar error después de que la persona escribe o elige algo en él; foco y blur no intervienen. El error se deriva del valor actual (sin estado duplicado), por lo que la confirmación de contraseña se revalida sola al editar la contraseña original.
+  2. **Retardo en texto**: el error de un campo de texto aparece tras ~600 ms sin teclear; selección y fecha, al instante. Un campo escrito y vaciado muestra «obligatorio».
+  3. **Botón con `disabled` nativo** hasta que todo es válido, el usuario está disponible y los Términos están aceptados, con un texto de ayuda (`auth.signUp.submitPending`). Los errores del servidor se muestran en su campo y se limpian al editarlo.
+  4. **`/complete-signup`**: mismo comportamiento; el botón de Google queda inerte (`inert`) hasta que el formulario es válido.
+- **Motivo**: evitar una UI invasiva y no permitir envíos que se sabe que fallan.
+- **Archivos afectados**: `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `docs/i18n/copia-propuesta.csv` (`auth.signUp.submitPending`), catálogos generados, `docs/04_Lineamientos_UI.md` (11.3), tests `tests/access-screens.test.tsx`, `tests/complete-signup.test.tsx`, `e2e/acceso.spec.ts`.

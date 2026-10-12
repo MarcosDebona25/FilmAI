@@ -520,7 +520,8 @@
       "genderLabel": "Gender",
       "termsAcceptance": "I have read and accept FilmAI’s <terms>Terms and Conditions</terms>.",
       "termsNewTabHint": "(opens in a new tab)",
-      "termsRequiredError": "To create your account you need to accept the Terms and Conditions."
+      "termsRequiredError": "To create your account you need to accept the Terms and Conditions.",
+      "submitPending": "Complete all fields and accept the Terms and Conditions to continue."
     },
     "confirmation": {
       "pageTitle": "Account confirmation",

@@ -116,17 +116,13 @@ for (const viewport of viewports) {
       await page.locator('[name="password1"]').fill("Popcorn24!");
       await page.locator('[name="password2"]').fill("Popcorn24!");
 
-      // Sin aceptar los términos no se envía.
+      // Sin aceptar los términos el botón sigue deshabilitado.
       const submit = page.getByRole("button", { name: en.nav.account.signUp, exact: true });
-      await expect(submit).toHaveAttribute("aria-disabled", "true");
-      await submit.click({ force: true });
-      await expect(
-        page.getByRole("alert").filter({ hasText: en.auth.signUp.termsRequiredError })
-      ).toBeVisible();
+      await expect(submit).toBeDisabled();
       expect(payload).toBeNull();
 
       await page.locator('[name="acepta_terminos"]').check();
-      await expect(submit).toHaveAttribute("aria-disabled", "false");
+      await expect(submit).toBeEnabled();
       await submit.click();
       await expect(
         page.getByRole("heading", { name: en.auth.confirmation.inboxTitle })
