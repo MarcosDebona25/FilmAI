@@ -26,7 +26,7 @@ export default async function LandingPage() {
           {t("description")}
         </p>
         <div className="flex w-full max-w-[380px] flex-col gap-3">
-          <Link href="/inicio" className={`${primaryButtonClass} gap-2 text-[17px]`}>
+          <Link href={routes.explore} className={`${primaryButtonClass} gap-2 text-[17px]`}>
             {t("explore")}
             <ChevronRight aria-hidden="true" className="size-[18px]" />
           </Link>

@@ -2,7 +2,6 @@
 export const legacyFiles = [
   "app/complete-signup/page.tsx",
   "app/profile/page.tsx",
-  "components/Navbar.tsx",
   "components/AvatarSelector.tsx",
   "components/MisResenas.tsx",
   "components/NavigationGuard.tsx",

@@ -634,7 +634,8 @@ declare const messages: {
       "notFoundTitle": "This page doesn’t exist",
       "unexpectedTitle": "Something went wrong",
       "notFoundDescription": "The page you’re looking for doesn’t exist or was moved. Start from Home or search for what you wanted to watch.",
-      "unexpectedDescription": "An unexpected error occurred. Try again in a few minutes."
+      "unexpectedDescription": "An unexpected error occurred. Try again in a few minutes.",
+      "notFoundCode": "Error 404"
     },
     "codes": {
       "validation_error": "Check the information you entered.",
