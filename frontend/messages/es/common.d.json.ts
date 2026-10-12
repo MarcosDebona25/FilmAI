@@ -377,7 +377,8 @@ declare const messages: {
       "informationHeading": "Información",
       "copyright": "© {year} FilmAI. Todos los derechos reservados.",
       "descriptionMobile": "Descubrí, calificá y organizá películas y series, con recomendaciones de un asistente con IA.",
-      "languageLink": "Idioma: {language}. Cambiá el idioma en Preferencias."
+      "languageLink": "Idioma: {language}. Cambiá el idioma en Preferencias.",
+      "askFilmAI": "Preguntale a FilmAI"
     }
   },
   "lists": {

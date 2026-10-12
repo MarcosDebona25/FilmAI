@@ -69,6 +69,11 @@ export function Footer() {
                     {nav("search")}
                   </Link>
                 </li>
+                <li>
+                  <Link href={routes.askFilmAI} className={linkClass}>
+                    {t("askFilmAI")}
+                  </Link>
+                </li>
               </ul>
             </nav>
             <nav aria-label={t("libraryHeading")} className="flex flex-col gap-3">
@@ -137,6 +142,12 @@ export function Footer() {
           <li className="border-b border-line">
             <Link href={routes.terms} className={rowClass}>
               {nav("terms")}
+              <ChevronRight aria-hidden="true" className="size-4" />
+            </Link>
+          </li>
+          <li className="border-b border-line">
+            <Link href={routes.askFilmAI} className={rowClass}>
+              {t("askFilmAI")}
               <ChevronRight aria-hidden="true" className="size-4" />
             </Link>
           </li>

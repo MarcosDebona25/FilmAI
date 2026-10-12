@@ -139,7 +139,7 @@ Todas las pantallas autenticadas comparten:
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - "Buscar" click → panel overlay que reemplaza el content area con el buscador.
-- **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore, Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1). No aparece en las pantallas de acceso.
+- **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», provisoriamente a un 404 hasta desarrollar el chatbot), Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1). No aparece en las pantallas de acceso.
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
 
 ### 4.1 Idioma y selector de idioma

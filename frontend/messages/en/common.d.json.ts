@@ -377,7 +377,8 @@ declare const messages: {
       "informationHeading": "Information",
       "copyright": "© {year} FilmAI. All rights reserved.",
       "descriptionMobile": "Discover, rate, and organize movies and TV shows, with recommendations from an AI assistant.",
-      "languageLink": "Language: {language}. Change it in Settings."
+      "languageLink": "Language: {language}. Change it in Settings.",
+      "askFilmAI": "Ask FilmAI"
     }
   },
   "lists": {

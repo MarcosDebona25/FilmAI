@@ -102,3 +102,4 @@ errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no exis
 errors.pages.newToFilmAI,,label,,¿Primera vez en FilmAI?,New to FilmAI?,aprobado
 errors.pages.createFreeAccount,,label,,Creá una cuenta gratis,Create a free account,aprobado
 footer.main.languageLink,,selector,language,"Idioma: {language}. Cambiá el idioma en Preferencias.","Language: {language}. Change it in Settings.",aprobado
+footer.main.askFilmAI,,label,,Preguntale a FilmAI,Ask FilmAI,aprobado
