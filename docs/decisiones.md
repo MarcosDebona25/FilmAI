@@ -3782,3 +3782,20 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Pruebas**: referencias doradas regeneradas (`tests_golden/correos/*.json`) y `test_html_sigue_el_diseno_del_canvas` en `filmai/test_servicio_correos.py`.
 - **Archivos afectados**: `backend/templates/correos/base.html`, `backend/templates/correos/*/*/message.html`, `backend/filmai/correos/servicio.py`, `backend/filmai/test_servicio_correos.py`, `backend/filmai/tests_golden/correos/`, `openspec/specs/emails/spec.md`.
 
+
+---
+
+## 12/10/2026 — Footer del canvas en escritorio y celular
+
+- **Fecha**: 12/10/2026
+- **Descripción**: el pie de página se reconstruye según los tableros «Footer · desktop» y «Footer · mobile» del canvas, que son la referencia vigente. Reemplaza al pie anterior (`LocaleControls.tsx`), que mezclaba una versión mínima con el selector de idioma.
+- **Decisiones**:
+  1. **Escritorio**: marca con descripción y tres columnas (Explore: Home y Search; Your library: My lists, Ratings & reviews, My profile y Settings; Information: Terms and Conditions e idioma), más una fila inferior con la atribución de TMDB y el copyright.
+  2. **Celular**: marca con descripción corta y lista de filas (Terms and Conditions e Idioma con el idioma actual), con la atribución y el copyright debajo. Las columnas de navegación no se repiten porque la barra inferior ya cubre Home, Search, Lists y Profile.
+  3. **Idioma**: con sesión es un enlace a `/settings#t-idioma` (solo se cambia en Preferencias). Sin sesión, el canvas solo define la pastilla de escritorio; en celular se usa la pastilla compacta `EN | ES` ya existente, y se suman las filas Sign up y Log in porque no hay barra inferior.
+  4. **Omitido**: el enlace «Ask FilmAI» del canvas no se implementa porque el chatbot (sección 10) aún no tiene ruta; la clave sigue excluida del catálogo (D11). Se agrega cuando exista la pantalla.
+  5. **Visibilidad**: sigue montado en el layout raíz y se oculta en las pantallas de acceso (`isAccessPath`), de modo que aparece en todas las páginas con encabezado (Settings, Profile, My reviews, Terms, errores y reset-password).
+  6. **Tema**: usa los tokens del sistema (`line`, `fg-2`, `fg-3`), así que sigue el tema claro/oscuro.
+  7. **Copia**: reutiliza las claves `footer.main.*` y `nav.*`; solo se agrega `footer.main.languageLink` (nombre accesible del enlace de idioma) en `copia-propuesta.csv`.
+- **Pruebas**: `tests/footer.test.tsx` (enlaces, con/sin sesión, ocultamiento) y `e2e/i18n-flows.spec.ts` actualizado (390 y 1280 px).
+- **Archivos afectados**: `frontend/components/Footer.tsx` (nuevo), `frontend/components/LocaleControls.tsx` (eliminado), `frontend/app/layout.tsx`, `docs/i18n/copia-propuesta.csv`, catálogos generados, `docs/04_Lineamientos_UI.md`, `openspec/specs/i18n-core/spec.md`.

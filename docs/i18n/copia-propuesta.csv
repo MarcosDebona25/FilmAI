@@ -101,3 +101,4 @@ errors.pages.notFoundSignedOutTitle,,label,,No encontramos esa página,We can’
 errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.,"The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",aprobado
 errors.pages.newToFilmAI,,label,,¿Primera vez en FilmAI?,New to FilmAI?,aprobado
 errors.pages.createFreeAccount,,label,,Creá una cuenta gratis,Create a free account,aprobado
+footer.main.languageLink,,selector,language,"Idioma: {language}. Cambiá el idioma en Preferencias.","Language: {language}. Change it in Settings.",aprobado

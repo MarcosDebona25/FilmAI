@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { Footer } from "@/components/LocaleControls";
+import { Footer } from "@/components/Footer";
 import { MobileTabs } from "@/components/MobileTabs";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
