@@ -440,7 +440,9 @@ export default function RegisterPage() {
             type="submit"
             disabled={!formularioValido || loading}
             aria-describedby={formularioValido ? undefined : "registro-pendiente"}
-            className={`${primaryButtonClass} disabled:cursor-not-allowed disabled:opacity-60`}
+            // Deshabilitado por formulario incompleto: bloqueado. Mientras envía: espera
+            // (`primaryButtonClass` ya trae `disabled:cursor-wait`, por eso el `!`).
+            className={`${primaryButtonClass} disabled:opacity-60 ${loading ? "" : "disabled:cursor-not-allowed!"}`}
           >
             {nav("signUp")}
           </button>

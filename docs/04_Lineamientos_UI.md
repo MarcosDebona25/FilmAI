@@ -148,12 +148,12 @@ FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños
 
 | Contexto                                            | Control                                                                                                                                                          |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `English` / `Español`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
+| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `EN` / `ES`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
 | **Footer con sesión**                               | Muestra el idioma actual y enlaza a Preferencias. Escritorio: ítem con globo en la columna Information. Móvil: fila «Language · English ›». No cambia el idioma. |
 | **Sin sesión: Landing, inicio de sesión, registro** | Pastilla `EN` / `ES` arriba a la derecha (escritorio y móvil). Solo escribe la cookie del idioma.                                                                |
-| **Footer sin sesión (escritorio)**                  | El mismo selector, con los nombres completos `English` / `Español`.                                                                                              |
+| **Footer sin sesión (escritorio)**                  | El mismo selector `EN` / `ES`.                                                                                              |
 
-- Cada idioma se muestra con su propio nombre; sin banderas.
+- Un único estilo de selector, `EN` / `ES`, en todo el sistema (12/10/2026). El nombre completo (`English`, `Español`) queda como etiqueta accesible; sin banderas.
 - No hay selector en el menú del avatar ni en el navbar.
 - Los mensajes de error se muestran a partir de códigos: el backend no envía texto de interfaz. Toda la copia sale de los catálogos de idioma, con voseo en español.
 - Los datos de TMDB (títulos, sinopsis, géneros, pósters) siguen el idioma activo y, si falta una traducción, se muestra la versión en inglés de ese campo.
@@ -633,7 +633,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │                                          │
 │               FilmAI                     │
 │                                          │
-│         Iniciar sesión                   │
+│         Ingresar                         │
 │                                          │
 │  Email o nombre de usuario               │
 │  ┌──────────────────────────────────┐    │
@@ -647,7 +647,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  ¿Olvidaste tu contraseña?              │
 │                                          │
 │  ┌──────────────────────────────────┐    │
-│  │      Iniciar sesión             │    │
+│  │      Ingresar                   │    │
 │  └──────────────────────────────────┘    │
 │                                          │
 │  ────────── o ──────────                 │
@@ -678,7 +678,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ```
 ┌──────────────────────────────────────────┐
 │               FilmAI                     │
-│         Crear cuenta                     │
+│         Registrarse                      │
 │                                          │
 │  Nombre                                  │
 │  ┌──────────────────────────────────┐    │
@@ -714,13 +714,13 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  │                          [👁]    │    │
 │  └──────────────────────────────────┘    │
 │  ┌──────────────────────────────────┐    │
-│  │        Crear cuenta              │    │
+│  │        Registrarse               │    │
 │  └──────────────────────────────────┘    │
 │  ────────── o ──────────                 │
 │  ┌──────────────────────────────────┐    │
 │  │  G   Registrarse con Google      │    │
 │  └──────────────────────────────────┘    │
-│  ¿Ya tenés cuenta? Iniciar sesión       │
+│  ¿Ya tenés cuenta? Ingresar             │
 └──────────────────────────────────────────┘
 ```
 
@@ -751,7 +751,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 | Estado                    | Comportamiento                                                                          |
 | ------------------------- | --------------------------------------------------------------------------------------- |
-| Error de validación       | Mensaje inline debajo de cada campo. Botón "Crear cuenta" deshabilitado hasta corregir. |
+| Error de validación       | Mensaje inline debajo de cada campo. Botón "Registrarse" deshabilitado hasta corregir. |
 | Email o usuario duplicado | Error de servidor: "El email o nombre de usuario ya está registrado."                   |
 | Registro exitoso          | Redirect a Confirmación de cuenta.                                                      |
 
@@ -776,7 +776,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │                                          │
 │  ──────────────────────────────          │
 │                                          │
-│  ¿Ya confirmaste? Iniciar sesión        │
+│  ¿Ya confirmaste? Ingresar              │
 │                                          │
 └──────────────────────────────────────────┘
 ```
@@ -785,8 +785,8 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - **Token válido**: pantalla «Cuenta confirmada» con el botón que lleva al Login.
 - **Reenviar enlace**: queda deshabilitado con la cuenta regresiva «Pedir otro en 0:42» (60 segundos entre pedidos). Tras el envío vuelve a esperar.
 - **Enlace vencido o ya usado**: título «Este enlace ya no funciona» y botón «Reenviar enlace». Como el enlace solo trae la clave, el reenvío usa el correo guardado en este navegador al registrarse (`sessionStorage`); si no está, pide el correo antes de reenviar.
-- **Cuenta confirmada** (incluye «ya confirmada»): título «Cuenta confirmada» y botón «Iniciar sesión».
-- **"Iniciar sesión"**: vuelve al Login.
+- **Cuenta confirmada** (incluye «ya confirmada»): título «Cuenta confirmada» y botón «Ingresar».
+- **"Ingresar"**: vuelve al Login.
 
 ---
 
@@ -1021,7 +1021,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 │                                          │
 │  Idioma de la interfaz                   │
 │  ┌──────────────────────────────────┐    │
-│  │ ● English   ○ Español            │    │
+│  │ ● EN   ○ ES                      │    │
 │  └──────────────────────────────────┘    │
 │                                          │
 │  ──── Privacidad ────                    │
@@ -1051,7 +1051,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 | Sección            | Controles                           | Descripción                                                                                                                                                                                                                                                                 |
 | ------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                                                                                                                                  |
-| **Idioma**         | Segmentado English / Español        | Cambio inmediato, se guarda en la cuenta y define también el idioma de los correos. Con sesión es el único lugar donde se cambia. Default: el del navegador (inglés si no hay otro).                                                                                        |
+| **Idioma**         | Segmentado EN / ES                 | Cambio inmediato, se guarda en la cuenta y define también el idioma de los correos. Con sesión es el único lugar donde se cambia. Default: el del navegador (inglés si no hay otro).                                                                                        |
 | **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                                                                                                                                |
 | **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                                                                                          |
 | **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar." Botones Cancelar / Dar de baja. |

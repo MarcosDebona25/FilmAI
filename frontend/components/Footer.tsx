@@ -179,7 +179,7 @@ export function Footer() {
                 </Link>
               </li>
               <li className="py-3">
-                <LanguageSwitcher compact />
+                <LanguageSwitcher />
               </li>
             </>
           )}

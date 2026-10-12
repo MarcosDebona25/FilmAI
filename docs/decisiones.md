@@ -3813,3 +3813,39 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Pendiente**: al desarrollar el chatbot (sección 10), definir la ruta final de la pantalla, actualizar `routes.askFilmAI` y retirar la nota de ruta provisoria; revisar la clave del catálogo.
 - **Pruebas**: `tests/footer.test.tsx` verifica el enlace (escritorio y celular, con y sin sesión).
 - **Archivos afectados**: `frontend/components/Footer.tsx`, `frontend/lib/routes.ts`, `frontend/tests/footer.test.tsx`, `docs/i18n/copia-propuesta.csv`, catálogos generados.
+
+---
+
+## 12/10/2026 — Selector de idioma único EN | ES
+
+- **Fecha**: 12/10/2026
+- **Descripción**: el selector «English | Español» (Settings y footer de escritorio sin sesión) pasa al mismo estilo que el selector `EN | ES` de las pantallas de acceso y del footer móvil, para tener un único componente en todo el sistema. Se actualizó el canvas (Footer, Settings escritorio y móvil, nota de decisiones de idioma).
+- **Decisiones**:
+  1. `LanguageSwitcher` pierde la prop `compact`: siempre muestra `EN` / `ES` (píldora de 40 px, activo con `bg-selected`).
+  2. El nombre completo («English», «Español») se conserva como `aria-label` del radio, así que lectores de pantalla y pruebas no cambian.
+  3. Las claves `settings.language.english` / `spanish` siguen en el catálogo, ahora solo como etiqueta accesible.
+4. Regla de ubicación sin sesión (confirmada el 12/10/2026): si la pantalla no tiene navbar (Landing, Log in, Sign up, Account confirmation), el selector va arriba a la derecha; si tiene navbar (Terms, 404, error inesperado), va en el footer. Con sesión no hay selector fuera de Settings. Se probó ponerlo también en el navbar de Terms y se descartó; Terms queda como estaba.
+5. El canvas gana la variante sin sesión del footer móvil (`Footer-Movil.dc.html`, prop `sesion`) y el padding superior de 75 px del contenido de la Landing en escritorio, que ya estaban en el código.
+- **Archivos afectados**: `frontend/components/LanguageSwitcher.tsx`, `frontend/components/Footer.tsx`, `frontend/components/access/AccessShell.tsx`, `docs/04_Lineamientos_UI.md`.
+- **Nota sobre el canvas**: My profile, Settings y Ratings & reviews se marcaron como «hay que rehacer» (el artboard es la fuente de verdad); no se implementó nada en esta entrada.
+
+---
+
+## 12/10/2026 — «Ingresar» / «Registrarse» en lugar de «Iniciar sesión» / «Crear cuenta»
+
+- **Fecha**: 12/10/2026
+- **Descripción**: en celular, con el texto en español, «Iniciar sesión» y «Crear cuenta» no entran en una fila del navbar junto al logo (se partían en dos líneas en el 404 sin sesión). Se acortan los rótulos del glosario en español: Log in → **Ingresar**, Sign up → **Registrarse**. El inglés no cambia.
+- **Decisiones**:
+  1. Se modifican las claves `nav.account.logIn` y `nav.account.signUp` en `docs/i18n/claves.csv` (`es_original` y `es_curado`); los catálogos se regeneran.
+  2. El glosario de `docs/i18n/guia.md` y los textos de `docs/04_Lineamientos_UI.md` que nombran esos botones se actualizan.
+  3. **Sin cambios**: los casos de uso (CU-001, CU-003) y las frases con verbo («Iniciá sesión de nuevo», «Creá una cuenta gratis»), que no son rótulos de botón.
+- **Corrección relacionada**: el botón de registro deshabilitado por formulario incompleto mostraba el cursor `wait` (progress) porque `primaryButtonClass` aplica `disabled:cursor-wait` y le ganaba a `disabled:cursor-not-allowed`. Ahora usa `not-allowed` mientras el formulario es inválido y `wait` solo mientras envía.
+- **Archivos afectados**: `docs/i18n/claves.csv`, `docs/i18n/guia.md`, `docs/04_Lineamientos_UI.md`, catálogos generados, `frontend/app/(public)/register/page.tsx`.
+
+---
+
+## 12/10/2026 — Terms and Conditions en celular
+
+- **Fecha**: 12/10/2026
+- **Descripción**: la pantalla `/terms` se ajusta al artboard «Terms · mobile»: índice «On this page» plegable (`<details>`), enlace de regreso (con sesión a Settings, sin sesión a la portada), título de 48 px, secciones con h2 de 28 px y márgenes del canvas. En escritorio no cambia: sigue pendiente la miga de pan Profile › Settings › Terms del artboard de escritorio.
+- **Archivos afectados**: `frontend/app/terms/page.tsx`, `frontend/components/TermsBackLink.tsx`, `frontend/tests/terms-back-link.test.tsx`, `frontend/e2e/acceso.spec.ts`.

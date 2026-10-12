@@ -200,3 +200,19 @@ test("terminos: se sirve en el idioma elegido y sin sesión", async ({ page, bas
   await expect(page.locator("main section")).toHaveCount(12);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
 });
+
+test("terminos en celular: índice plegable y regreso a la portada", async ({ page, baseURL }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await prepararIdioma(page, baseURL!, "en");
+  await page.route("**/api/profile/", (route) =>
+    route.fulfill({ status: 401, json: { code: "not_authenticated", params: {}, errors: [] } })
+  );
+  await page.goto("/terms");
+  await expect(page.getByRole("link", { name: en.nav.main.backLanding })).toBeVisible();
+  const index = page.locator("details");
+  await expect(index).not.toHaveAttribute("open", "");
+  await index.locator("summary").click();
+  await index.getByRole("link", { name: /Your account/ }).click();
+  await expect(page).toHaveURL(/#s-3$/);
+  await sinDesborde(page);
+});

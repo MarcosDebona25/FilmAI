@@ -73,8 +73,8 @@ Se siembran las filas `ok` (408) y `fragmento` (43). Quedan fuera `muestra` (61,
 | Cuenta               | Account           | Cuenta                 | Cuenta del usuario, distinta de perfil |
 | Perfil               | Profile           | Perfil                 | Datos personales                       |
 | Preferencias         | Settings          | Preferencias           | Configuración y selector de idioma     |
-| Inicio de sesión     | Log in            | Iniciar sesión         | Acción de autenticarse                 |
-| Registro             | Sign up           | Crear cuenta           | Alta de cuenta                         |
+| Inicio de sesión     | Log in            | Ingresar               | Acción de autenticarse                 |
+| Registro             | Sign up           | Registrarse            | Alta de cuenta                         |
 | Calificación         | Rating            | Calificación           | Nota entera de 1 a 10                  |
 | Reseña               | Review            | Reseña                 | Texto asociado a una calificación      |
 | Favoritos            | Favorites         | Favoritos              | Lista con `clave=favoritos`            |
