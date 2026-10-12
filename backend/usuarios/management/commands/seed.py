@@ -184,6 +184,8 @@ class Command(BaseCommand):
         """Crea los usuarios de prueba con credenciales deterministas."""
         usuarios = []
         for i in range(1, CANTIDAD_USUARIOS + 1):
+            # La factory fija `fecha_aceptacion_terminos` (cuenta con términos
+            # aceptados, como exige el registro real).
             usuario = UsuarioFactory.create(
                 nombre_usuario=f"usuario{i:03d}",
                 correo=f"usuario{i:03d}@filmai.com",

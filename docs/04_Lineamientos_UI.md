@@ -736,10 +736,11 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 | Género               | Dropdown: Masculino / Femenino / No especificar.                                                |
 | Contraseña           | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*!`). |
 | Confirmar contraseña | Debe coincidir con Contraseña.                                                                  |
+| Términos y Condiciones | Casilla obligatoria. El enlace abre `/terms` en una pestaña nueva. Sin marcar, «Sign up» se ve atenuado (`aria-disabled`) y al activarlo muestra el error bajo la casilla; no se envía. El backend lo vuelve a exigir. |
 
 #### Google OAuth
 
-- Botón "Registrarse con Google" inicia flujo OAuth.
+- Botón "Continuar con Google" inicia el flujo OAuth. El alta con Google también exige aceptar los Términos y Condiciones: la casilla está en la pantalla intermedia (`/complete-signup`).
 - Si la cuenta de Google ya está asociada → inicia sesión directamente.
 - Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género) en una pantalla intermedia.
 - El usuario nuevo creado con Google queda en estado **activa** directamente (Google ya verificó el correo; no requiere confirmación por email).
@@ -781,9 +782,20 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ```
 
 - Se accede tras registro exitoso o desde el link del email. El token es el de confirmación de email de **allauth** (no un JWT propio); la ruta la resuelve el backend y Next.js muestra éxito/error.
-- **Token válido**: toast "Cuenta confirmada." → redirect al Login.
-- **Reenviar enlace**: toast "Enlace reenviado." Rate-limit: 1 cada 60 segundos.
+- **Token válido**: pantalla «Cuenta confirmada» con el botón que lleva al Login.
+- **Reenviar enlace**: queda deshabilitado con la cuenta regresiva «Pedir otro en 0:42» (60 segundos entre pedidos). Tras el envío vuelve a esperar.
+- **Enlace vencido o ya usado**: título «Este enlace ya no funciona» y botón «Reenviar enlace». Como el enlace solo trae la clave, el reenvío usa el correo guardado en este navegador al registrarse (`sessionStorage`); si no está, pide el correo antes de reenviar.
+- **Cuenta confirmada** (incluye «ya confirmada»): título «Cuenta confirmada» y botón «Iniciar sesión».
 - **"Iniciar sesión"**: vuelve al Login.
+
+---
+
+### Implementación (12/10/2026)
+
+- Las cuatro pantallas (Landing, Login, Registro y Confirmación) siguen el canvas «FilmAI — Sistema y catálogo», sección «Access», en escritorio y celular: collage de pósters a la izquierda (detrás del contenido en celular), formulario a la derecha y selector `EN | ES` arriba a la derecha. No llevan barra de navegación ni pie.
+- Tema: solo oscuro por ahora. Los tokens del canvas (`--raised`, `--raised-2`, `--line`, `--fg-2`, `--fg-3`, `--ok`, `--on-accent`) viven en `app/globals.css` y quedan preparados para el tema claro cuando exista Apariencia en Preferencias.
+- Tipografía: Big Shoulders (títulos, `font-display`) y Hanken Grotesk (texto).
+- Términos: `/terms` es una versión mínima que renderiza `frontend/content/legal/terms.{en,es}.md`; se refina con el punto 9 (con/sin sesión, escritorio/celular).
 
 ---
 

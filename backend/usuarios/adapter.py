@@ -5,6 +5,7 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 
 from filmai.correos.servicio import enviar_correo
@@ -29,6 +30,7 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
         user.fecha_nacimiento = data.get("fecha_nacimiento")
         user.genero = data.get("genero", TipoGenero.NO_ESPECIFICA)
         user.idioma = idioma_efectivo(request, user)
+        user.fecha_aceptacion_terminos = timezone.now()
 
         if "password1" in data:
             user.set_password(data["password1"])
@@ -114,5 +116,6 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
         user.fecha_nacimiento = parse_date(fecha) if isinstance(fecha, str) else fecha
 
         user.genero = extra.get("genero") or TipoGenero.NO_ESPECIFICA
+        user.fecha_aceptacion_terminos = timezone.now()
 
         return user

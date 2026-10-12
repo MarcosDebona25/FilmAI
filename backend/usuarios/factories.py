@@ -1,6 +1,7 @@
 """Factories de usuarios para desarrollo y pruebas."""
 
 import factory
+from django.utils import timezone
 
 from .avatares import AVATAR_IDS_VALIDOS
 from .models import EstadoCuenta, Tema, TipoGenero, Usuario
@@ -23,6 +24,8 @@ class UsuarioFactory(factory.django.DjangoModelFactory):
         "random_element", elements=tuple(sorted(AVATAR_IDS_VALIDOS))
     )
     tema = Tema.OSCURO
+    # Toda cuenta nueva acepta los términos al registrarse; el seed hereda esto.
+    fecha_aceptacion_terminos = factory.LazyFunction(timezone.now)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):

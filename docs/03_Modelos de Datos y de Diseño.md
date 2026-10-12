@@ -136,6 +136,7 @@ se usa para validar la API y exponer las opciones al frontend.
 
 - `tema` (VARCHAR(10), NOT NULL, DEFAULT 'oscuro'): Preferencia de tema de la interfaz. Valores posibles: 'oscuro', 'claro'.
 - `idioma` (VARCHAR(2), NULLABLE): idioma de la aplicación. Valores posibles: 'en', 'es'. Ver la sección «Idioma de aplicación».
+- `fechaAceptacionTerminos` (TIMESTAMP, NULLABLE; 12/10/2026): momento en que la cuenta aceptó los Términos y Condiciones al registrarse. El registro local y el de Google lo exigen y lo fijan con la hora del servidor. Las cuentas anteriores quedan en nulo; el seed y las factories lo completan.
 - `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
 - `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
 - `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
