@@ -81,6 +81,7 @@ class RegistroIdiomaTests(TestCase):
                     "apellido": "Nueva",
                     "fecha_nacimiento": "1990-01-01",
                     "genero": "no_especifica",
+                    "acepta_terminos": True,
                     "password1": "Password123!",
                     "password2": "Password123!",
                     "idioma": "es" if esperado == "en" else "en",

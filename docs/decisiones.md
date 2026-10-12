@@ -3698,3 +3698,20 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Archivos afectados**: `docs/decisiones.md`, docs 02 (CU-013), 03
   (`Mensaje.tarjetas`), 04 (§3.1), 05 (B-02 a B-05) y 06 (tools),
   `docs/i18n/guia.md` y `PRODUCT.md`.
+
+## 12/10/2026 — Interfaces de acceso y aceptación de los Términos y Condiciones
+
+- **Fecha**: 12/10/2026
+- **Descripción**: se implementan Landing, Login, Registro y Confirmación del canvas «FilmAI — Sistema y catálogo» (sección «Access»), en escritorio y celular, y se exige aceptar los Términos y Condiciones al crear una cuenta.
+- **Decisiones**:
+  1. **Aceptación en la cuenta**: `Usuario.fecha_aceptacion_terminos` (`DateTimeField`, nulo). El registro local recibe `acepta_terminos` (obligatorio: falta → `required`; falso → `terms_not_accepted`, 400 (Bad Request)). El alta con Google lo exige solo para cuentas nuevas y se rechaza con el mismo código en el campo `acepta_terminos`. El servidor fija la fecha con su hora; el cliente no la envía. Las cuentas anteriores quedan en nulo (no se inventa una aceptación); el seed y la factory crean las cuentas con la fecha.
+  2. **Texto legal en Markdown**: `frontend/content/legal/terms.{en,es}.md`, copiado del artboard «Terms and Conditions» del canvas, para que un abogado lo revise sin tocar código. Se retiró `legal.json` del catálogo i18n y del generador: el texto legal ya no sale de los CSV. `/terms` es una versión mínima (se refina en el punto 9: con/sin sesión y escritorio/celular).
+  3. **Reenvío del enlace vencido**: la pantalla solo conoce la clave, no el correo. El correo se guarda en `sessionStorage` al registrarse y se usa para reenviar; si no está, la pantalla lo pide. La espera entre reenvíos es de 60 s en el cliente.
+  4. **Tema**: solo oscuro. Se actualizaron los tokens oscuros al sistema del canvas y se agregaron los propios (`--raised`, `--line`, `--fg-2`, `--fg-3`, `--ok`, `--on-accent`); el claro llega con Apariencia en Preferencias.
+  5. **Tipografía**: Big Shoulders (títulos) y Hanken Grotesk (texto) reemplazan a Inter y Roboto.
+  6. **Pantallas completas**: Landing, Login, Registro y Confirmación ocultan barra y pie (`isAccessPath` en `lib/routes.ts`); el selector de idioma sin sesión vive en el marco de esas pantallas y reemplaza a `PublicLanguageControl`.
+  7. Se eliminan `GoogleLinkButton` y las excepciones legacy de Landing, Login y Registro; `complete-signup` queda como excepción hasta que tenga diseño.
+- **Motivo**: cumplir con la exigencia de aceptación con evidencia en la cuenta y permitir la revisión jurídica del texto sin acoplarlo al catálogo.
+- **Archivos afectados**: backend (`usuarios/models.py`, migración `0008_fecha_aceptacion_terminos`, `serializers.py`, `adapter.py`, `admin.py`, `factories.py`, seed, `filmai/errores/catalogo.py`, `contracts/error-codes.json` y `contracts/openapi.yaml`, golden de registro y tests); frontend (`app/(public)/page.tsx`, `login`, `register`, `confirm-email`, `terms`, `complete-signup`, `components/access/*`, `lib/legal.ts`, `lib/password-rules.ts`, `lib/pending-email.ts`, `lib/routes.ts`, `app/globals.css`, `app/layout.tsx`, `scripts/i18n/*`, catálogos y tests unitarios/Playwright); docs 02, 03 (y JSON del diagrama), 04, `docs/i18n/copia-propuesta.csv` y `guia.md`.
+- **Tests**: Django (registro sin/falso/verdadero, Google sin aceptación, fecha guardada, seed con fecha, contratos y golden); Vitest (reglas de contraseña, cuenta regresiva, Markdown legal, registro, login, recuperación y confirmación); Playwright (landing, login, registro, términos y confirmación en escritorio y celular).
+

@@ -481,6 +481,13 @@
       },
       "params": {}
     },
+    "terms_not_accepted": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
     "throttled": {
       "category": "error",
       "contexts": {

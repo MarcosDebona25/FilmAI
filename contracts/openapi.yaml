@@ -1717,6 +1717,8 @@ components:
           format: date
         genero:
           $ref: '#/components/schemas/GeneroEnum'
+        acepta_terminos:
+          type: boolean
     Idioma704Enum:
       enum:
       - en
@@ -1898,7 +1900,10 @@ components:
           format: date
         genero:
           $ref: '#/components/schemas/GeneroEnum'
+        acepta_terminos:
+          type: boolean
       required:
+      - acepta_terminos
       - apellido
       - correo
       - fecha_nacimiento
@@ -2125,6 +2130,7 @@ components:
           - person_name_invalid
           - required
           - review_update_empty
+          - terms_not_accepted
           - unique
           - username_already_used
           - username_invalid
@@ -2200,6 +2206,7 @@ components:
           - review_update_empty
           - server_error
           - session_revoked
+          - terms_not_accepted
           - throttled
           - unique
           - unsupported_media_type

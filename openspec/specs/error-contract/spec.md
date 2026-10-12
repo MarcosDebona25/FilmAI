@@ -148,6 +148,7 @@ exact existing messages and aliases; these tables define public semantics.
 | `person_name_invalid`            | Letters/spaces only; `maxLength: 50`.                                                                                    |
 | `birth_date_in_future`           | Future birth date.                                                                                                       |
 | `minimum_age`                    | Under the required age; `minAge: 13`.                                                                                    |
+| `terms_not_accepted`             | The sign-up (local or Google) was sent without accepting the Terms and Conditions; field `acepta_terminos`.              |
 | `avatar_invalid`                 | Avatar not in the active registry; `allowedIds: integer[]`.                                                              |
 | `local_password_unavailable`     | Google-only account cannot change a local password.                                                                      |
 | `current_password_incorrect`     | Wrong old password.                                                                                                      |
