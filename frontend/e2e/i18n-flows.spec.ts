@@ -142,19 +142,18 @@ for (const width of [390, 1280]) {
     // La landing ocupa toda la ventana: sin pie. El pie sin sesión vive en /terms.
     await expect(page.locator("footer")).toHaveCount(0);
     await page.goto("/terms");
-    if (width >= 768)
-      await expect(page.locator("footer").getByRole("radio", { name: "Español" })).toBeChecked();
-    else await expect(page.locator("footer").getByRole("radiogroup")).toHaveCount(0);
+    await expect(page.locator("footer").getByRole("radio", { name: "Español" })).toBeChecked();
     await prepararCuenta(page, "en");
     await page.goto("/settings");
     await expect(
-      page.locator("footer").getByRole("link", { name: /Language · English/ })
+      page.locator("footer").getByRole("link", { name: /Language: English/ })
     ).toBeVisible();
     await expect(page.locator("footer").getByRole("radio")).toHaveCount(0);
     await expect(page.locator("footer").getByRole("link", { name: "Sign up" })).toHaveCount(0);
     await page
       .locator("footer")
-      .getByRole("link", { name: /Language · English/ })
+      .getByRole("link", { name: /Language: English/ })
+      .first()
       .click();
     await expect(page).toHaveURL(/\/settings#t-idioma$/);
     await expect(page.locator("#t-idioma")).toBeInViewport();
