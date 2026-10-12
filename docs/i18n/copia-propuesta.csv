@@ -97,3 +97,7 @@ nav.main.termsUpdated,,label,date,Última actualización: {date},"Last updated: 
 nav.main.termsOnPage,,label,,En esta página,On this page,aprobado
 auth.signUp.submitPending,,label,,Completá todos los campos y aceptá los Términos y Condiciones para continuar.,Complete all fields and accept the Terms and Conditions to continue.,aprobado
 errors.pages.notFoundCode,,label,,Error 404,Error 404,aprobado
+errors.pages.notFoundSignedOutTitle,,label,,No encontramos esa página,We can’t find that page,aprobado
+errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.,"The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",aprobado
+errors.pages.newToFilmAI,,label,,¿Primera vez en FilmAI?,New to FilmAI?,aprobado
+errors.pages.createFreeAccount,,label,,Creá una cuenta gratis,Create a free account,aprobado

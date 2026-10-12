@@ -237,6 +237,10 @@
       form .primary {
         margin-top: 4px;
       }
+      .note {
+        font-size: 14px;
+        color: var(--fg-3);
+      }
       .footnote {
         text-align: center;
         font-size: 15px;
@@ -352,6 +356,7 @@
           </svg>
           {% if error == "too_many_attempts" %}{{ t.too_many_attempts }}{% else %}{{ t.invalid_credentials }}{% endif %}
         </p>
+        {% if aviso_restantes %}<p class="note" role="status">{{ aviso_restantes }}</p>{% endif %}
         {% endif %}
         <form method="post" action="{{ url_login }}">
           {% csrf_token %}
@@ -398,6 +403,7 @@
           </div>
           <button type="submit" class="primary">{{ t.submit }}</button>
         </form>
+        <p class="note">{{ t.attempt_policy }}</p>
         <p class="footnote">
           {{ t.not_member }} <a href="{{ url_app }}">{{ t.back_to_app }}</a>
         </p>

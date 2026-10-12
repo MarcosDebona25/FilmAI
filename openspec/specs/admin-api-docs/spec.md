@@ -60,8 +60,9 @@ Clients requesting JSON MUST receive a 403 JSON response with a useful
 `POST /api/docs/login/` MUST require a CSRF token, authenticate by email or
 username, and open the Django session only for active accounts with
 `is_staff=True`. Wrong credentials, unknown accounts and regular accounts MUST
-produce the same message. After ten failed attempts from one IP in fifteen
-minutes the form MUST answer 429 until the window expires. The `next` value
+produce the same message. After ten failed attempts from one IP in sixty
+minutes the form MUST answer 429 until the window expires. The page MUST state
+this policy and the attempts left after a failure. The `next` value
 MUST be `/api/docs/` or `/api/schema/`; anything else returns to `/api/docs/`.
 
 #### Scenario: Staff logs in with email or username
