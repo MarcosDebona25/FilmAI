@@ -69,7 +69,12 @@ export type CompletarGoogleResult =
 
 export async function completarRegistroGoogle(
   idToken: string,
-  campos: { nombre_usuario: string; fecha_nacimiento: string; genero: string }
+  campos: {
+    nombre_usuario: string;
+    fecha_nacimiento: string;
+    genero: string;
+    acepta_terminos: boolean;
+  }
 ): Promise<CompletarGoogleResult> {
   try {
     const data = await apiFetch<{ user?: { nombre_usuario?: string } }>("/api/auth/google/", {

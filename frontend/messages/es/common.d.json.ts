@@ -97,7 +97,8 @@ declare const messages: {
       "lastName": "Apellido",
       "username": "Nombre de usuario",
       "birthDate": "Fecha de nacimiento",
-      "passwordConfirm": "Confirmar contraseña"
+      "passwordConfirm": "Confirmar contraseña",
+      "email": "Correo electrónico"
     },
     "text": {
       "readLess": "Leer menos",
@@ -709,7 +710,8 @@ declare const messages: {
       "logged_out": "Cerraste sesión en este dispositivo.",
       "unknown": "No pudimos completar la acción. Intentá de nuevo.",
       "throttledWithWait": "Hay demasiadas solicitudes. Intentá de nuevo en {retryAfterSeconds, plural, one {# segundo} other {# segundos}}.",
-      "list_name_reserved": "Ese nombre está reservado para una lista predeterminada."
+      "list_name_reserved": "Ese nombre está reservado para una lista predeterminada.",
+      "terms_not_accepted": "Para crear tu cuenta tenés que aceptar los Términos y Condiciones."
     },
     "fields": {
       "correo": {

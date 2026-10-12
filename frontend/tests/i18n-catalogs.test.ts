@@ -4,8 +4,6 @@ import { parse, TYPE, type MessageFormatElement } from "@formatjs/icu-messagefor
 import { describe, expect, it } from "vitest";
 import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
-import legalEn from "@/messages/en/legal.json";
-import legalEs from "@/messages/es/legal.json";
 import codes from "../../contracts/error-codes.json";
 import enums from "../../contracts/enums.json";
 import { translateError, type ErrorParams } from "@/lib/errors";
@@ -38,10 +36,7 @@ function contract(elements: MessageFormatElement[]): string[] {
 }
 
 describe("contrato bilingüe completo", () => {
-  it.each([
-    [en, es],
-    [legalEn, legalEs],
-  ])("compara claves, argumentos, tags y ramas ICU", (english, spanish) => {
+  it.each([[en, es]])("compara claves, argumentos, tags y ramas ICU", (english, spanish) => {
     const a = flatten(english),
       b = flatten(spanish);
     expect(Object.keys(a).sort()).toEqual(Object.keys(b).sort());

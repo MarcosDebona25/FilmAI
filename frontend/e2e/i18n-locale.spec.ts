@@ -9,7 +9,7 @@ test.describe("idioma del documento sin prefijos", () => {
     await page.goto("/login");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: "Iniciar sesión" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: en.nav.account.logIn })).toBeVisible();
   });
 
   test("sin cookie usa la región del navegador", async ({ page }) => {

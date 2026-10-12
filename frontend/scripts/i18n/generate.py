@@ -27,7 +27,8 @@ def catalogs(locale):
     for row in csv.DictReader((ROOT / "docs/i18n/copia-propuesta.csv").open()):
         put(messages, row["clave"], row[f"{locale}_propuesto"])
     messages.pop("emails", None)
-    legal = messages.pop("legal", {})
+    # El texto legal vive en `frontend/content/legal/*.md` (revisión jurídica).
+    messages.pop("legal", None)
     messages["legacy"]["reset"]["passwordHelp"] = messages["legacy"]["reset"][
         "passwordHelp"
     ].replace("@#$%&!", "@#$%&*!")
@@ -45,7 +46,7 @@ def catalogs(locale):
             ]:
                 value = value.replace(old, new)
             confirmation[key] = value
-    return {"common.json": messages, "legal.json": {"legal": legal}}
+    return {"common.json": messages}
 
 
 if __name__ == "__main__":
