@@ -3799,3 +3799,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   7. **Copia**: reutiliza las claves `footer.main.*` y `nav.*`; solo se agrega `footer.main.languageLink` (nombre accesible del enlace de idioma) en `copia-propuesta.csv`.
 - **Pruebas**: `tests/footer.test.tsx` (enlaces, con/sin sesión, ocultamiento) y `e2e/i18n-flows.spec.ts` actualizado (390 y 1280 px).
 - **Archivos afectados**: `frontend/components/Footer.tsx` (nuevo), `frontend/components/LocaleControls.tsx` (eliminado), `frontend/app/layout.tsx`, `docs/i18n/copia-propuesta.csv`, catálogos generados, `docs/04_Lineamientos_UI.md`, `openspec/specs/i18n-core/spec.md`.
+
+---
+
+## 12/10/2026 — Enlace «Ask FilmAI» en el footer (provisorio)
+
+- **Fecha**: 12/10/2026
+- **Descripción**: se agrega al footer el enlace «Ask FilmAI» del canvas aunque el chatbot todavía no exista, por pedido explícito. Reemplaza el punto 4 de la entrada «Footer del canvas en escritorio y celular» (que lo omitía).
+- **Decisiones**:
+  1. **Ubicación**: columna Explore en escritorio y fila entre Terms and Conditions e Idioma en celular, con y sin sesión.
+  2. **Ruta provisoria**: `routes.askFilmAI = "/chat"`. No hay pantalla, así que hoy responde 404 (Not Found).
+  3. **Copia**: nueva clave `footer.main.askFilmAI` en `copia-propuesta.csv` («Preguntale a FilmAI» / «Ask FilmAI»); la fila `chatbot` de `claves.csv` sigue excluida (D11).
+- **Pendiente**: al desarrollar el chatbot (sección 10), definir la ruta final de la pantalla, actualizar `routes.askFilmAI` y retirar la nota de ruta provisoria; revisar la clave del catálogo.
+- **Pruebas**: `tests/footer.test.tsx` verifica el enlace (escritorio y celular, con y sin sesión).
+- **Archivos afectados**: `frontend/components/Footer.tsx`, `frontend/lib/routes.ts`, `frontend/tests/footer.test.tsx`, `docs/i18n/copia-propuesta.csv`, catálogos generados.

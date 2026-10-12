@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-10-12)
 
 ## Corpus Check
-- 475 files · ~775,041 words
+- 475 files · ~775,322 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a2518fe2`
+- Built from commit: `db5dd1cb`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -953,9 +953,9 @@ Nodes (50): allauth_account_internal_flows_email_verification, allauth_socialacc
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AppLocale` connect `config.ts` to `register/page.tsx`, `legal.ts`, `cuenta.ts`, `apiFetch`, `profile/page.tsx`, `vitest`?**
-  _High betweenness centrality (0.149) - this node is a cross-community bridge._
+  _High betweenness centrality (0.154) - this node is a cross-community bridge._
 - **Why does `Usuario` connect `Usuario` to `usuarios/views.py`, `perfil.py`, `PerfilTests`, `LoginDualTests`, `django_test`, `ProduccionAudiovisualFactory`, `usuarios/serializers.py`, `FronteraErroresMixin`, `RegistroIdiomaTests`, `ConfirmarCorreoTests`, `UsuarioFactory`, `ErroresRegistroTests`, `documentation.py`, `catalogo/admin.py`, `ContrasenaTests`, `ProduccionAudiovisual`, `GoogleOAuthTests`, `RecuperacionSesionTests`, `django_db`?**
-  _High betweenness centrality (0.130) - this node is a cross-community bridge._
+  _High betweenness centrality (0.129) - this node is a cross-community bridge._
 - **Are the 63 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 63 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `TMDBClient` (e.g. with `TMDBBadRequest` and `TMDBError`) actually correct?**

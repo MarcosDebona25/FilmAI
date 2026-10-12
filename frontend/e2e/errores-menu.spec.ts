@@ -65,9 +65,12 @@ for (const viewport of viewports) {
         principal.getByRole("link", { name: es.errors.pages.createFreeAccount })
       ).toHaveAttribute("href", "/register");
       await expect(principal.getByRole("link", { name: es.nav.main.search })).toHaveCount(0);
-      // Sin sesión no hay barra de pestañas ni enlace a Lists.
-      await expect(page.getByRole("link", { name: es.nav.main.lists })).toHaveCount(0);
-      await expect(page.getByRole("link", { name: es.nav.main.profileShort })).toHaveCount(0);
+      // Sin sesión no hay barra de pestañas ni enlace a Lists. El footer sí lista
+      // «Mis listas» y «Mi perfil», por eso la coincidencia es exacta.
+      await expect(page.getByRole("link", { name: es.nav.main.lists, exact: true })).toHaveCount(0);
+      await expect(
+        page.getByRole("link", { name: es.nav.main.profileShort, exact: true })
+      ).toHaveCount(0);
       await sinDesborde(page);
     });
 

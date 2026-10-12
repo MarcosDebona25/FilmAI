@@ -24824,7 +24824,7 @@
       "file_type": "code",
       "norm_label": "isaccesspath()",
       "source_file": "frontend/lib/routes.ts",
-      "source_location": "L19"
+      "source_location": "L21"
     },
     {
       "id": "frontend_lib_use_validation_usevalidation",
@@ -36799,7 +36799,7 @@
       "file_type": "code",
       "norm_label": "protectedroutes",
       "source_file": "frontend/lib/routes.ts",
-      "source_location": "L26"
+      "source_location": "L28"
     },
     {
       "id": "frontend_middleware",
@@ -132442,7 +132442,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/lib/routes.ts",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -132453,7 +132453,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/lib/routes.ts",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -177307,5 +177307,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "a2518fe2f3e0d1bcc5ff06a49fde59075640ef42"
+  "built_at_commit": "db5dd1cbf8056c3fa4c215cde9b72d34bdfb816f"
 }

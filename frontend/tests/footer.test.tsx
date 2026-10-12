@@ -50,6 +50,12 @@ describe("footer del canvas", () => {
     expect(found[en.nav.main.profile]).toHaveAttribute("href", routes.profile);
     expect(found[en.nav.main.settings]).toHaveAttribute("href", routes.settings);
     expect(found[en.nav.main.terms]).toHaveAttribute("href", routes.terms);
+    // El chatbot aún no existe: el enlace está, aunque hoy lleve a un 404 (Not Found).
+    expect(
+      screen
+        .getAllByRole("link", { name: en.footer.main.askFilmAI })
+        .map((l) => l.getAttribute("href"))
+    ).toEqual([routes.askFilmAI, routes.askFilmAI]);
 
     const language = en.footer.main.languageLink.replace("{language}", "English");
     expect(screen.getAllByRole("link", { name: language })).toHaveLength(2);
@@ -73,6 +79,7 @@ describe("footer del canvas", () => {
 
     expect(found[es.nav.account.signUp]).toHaveAttribute("href", routes.register);
     expect(found[es.nav.account.logIn]).toHaveAttribute("href", routes.login);
+    expect(screen.getAllByRole("link", { name: es.footer.main.askFilmAI })).toHaveLength(2);
     expect(within(footer).getAllByRole("radiogroup").length).toBeGreaterThan(0);
     expect(within(footer).queryByRole("link", { name: /Preferencias\./ })).toBeNull();
   });

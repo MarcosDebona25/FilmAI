@@ -9,6 +9,8 @@ export const routes = {
   language: "/settings#t-idioma",
   myReviews: "/my-reviews",
   lists: "/lists",
+  // Provisoria: el chatbot aún no existe, así que hoy responde 404 (Not Found).
+  askFilmAI: "/chat",
   completeSignup: "/complete-signup",
   terms: "/terms",
   confirmEmail: (key: string) => `/confirm-email/${encodeURIComponent(key)}`,
