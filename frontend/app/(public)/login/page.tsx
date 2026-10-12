@@ -10,12 +10,8 @@ import { GoogleButton } from "@/components/GoogleButton";
 import { Modal } from "@/components/Modal";
 import { AccessLogo } from "@/components/access/Logo";
 import { AccessShell } from "@/components/access/AccessShell";
-import {
-  FieldError,
-  PasswordField,
-  TextField,
-  primaryButtonClass,
-} from "@/components/access/fields";
+import { FieldError, PasswordField, TextField } from "@/components/access/fields";
+import { primaryButtonClass } from "@/components/access/styles";
 import { synchronizeAccountLocale } from "@/lib/account-locale";
 import { ApiError, apiFetch } from "@/lib/api";
 import { translateError } from "@/lib/errors";
@@ -114,6 +110,19 @@ function ResetPasswordDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+function ForgotPassword({ onClick }: { onClick: () => void }) {
+  const t = useTranslations("auth.password");
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="-my-3 min-h-11 text-sm font-semibold text-fg-2 underline underline-offset-[3px] hover:text-foreground"
+    >
+      {t("forgot")}
+    </button>
+  );
+}
+
 function LoginForm() {
   const t = useTranslations("auth");
   const nav = useTranslations("nav.account");
@@ -187,7 +196,7 @@ function LoginForm() {
           <h1 className="mb-3 font-display text-[48px] leading-[0.95] sm:text-[60px]">
             {nav("logIn")}
           </h1>
-          <p className="text-muted-foreground">{t("login.description")}</p>
+          <p className="hidden text-muted-foreground sm:block">{t("login.description")}</p>
         </div>
         <div className="flex justify-center">
           <GoogleButton text="signin_with" onSuccess={onGoogle} />
@@ -209,22 +218,14 @@ function LoginForm() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
+            labelAction={<ForgotPassword onClick={() => setResetOpen(true)} />}
           />
-          <div className="-mt-1">
-            <button
-              type="button"
-              onClick={() => setResetOpen(true)}
-              className="min-h-11 text-sm font-semibold text-foreground underline underline-offset-[3px]"
-            >
-              {t("password.forgot")}
-            </button>
-          </div>
           {error && <FieldError>{error}</FieldError>}
           <button type="submit" disabled={loading} className={primaryButtonClass}>
             {nav("logIn")}
           </button>
         </form>
-        <p className="border-t border-border pt-[22px] text-center text-muted-foreground">
+        <p className="text-center text-muted-foreground">
           {t("login.signUpPrompt")}{" "}
           <Link href={routes.register} className="font-semibold text-foreground">
             {nav("signUp")}

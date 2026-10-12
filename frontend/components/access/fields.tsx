@@ -88,15 +88,24 @@ type PasswordFieldProps = Omit<ComponentProps<"input">, "id" | "type"> & {
   id?: string;
   error?: string | null;
   children?: ReactNode;
+  /** Acción junto a la etiqueta (p. ej. «¿Olvidaste tu contraseña?»). */
+  labelAction?: ReactNode;
 };
 
-export function PasswordField({ label, id, error, children, ...input }: PasswordFieldProps) {
+export function PasswordField({
+  label,
+  id,
+  error,
+  children,
+  labelAction,
+  ...input
+}: PasswordFieldProps) {
   const t = useTranslations("common.password");
   const generated = useId();
   const fieldId = id ?? generated;
   const [visible, setVisible] = useState(false);
   return (
-    <div className="flex flex-col gap-2">
+    <div className="relative flex flex-col gap-2">
       <label htmlFor={fieldId} className="text-sm font-semibold">
         {label}
       </label>
@@ -123,6 +132,11 @@ export function PasswordField({ label, id, error, children, ...input }: Password
           )}
         </button>
       </div>
+      {labelAction && (
+        <div className="flex justify-end sm:absolute sm:top-0 sm:right-0 sm:-mt-3.5">
+          {labelAction}
+        </div>
+      )}
       <div id={`${fieldId}-info`} className="flex flex-col gap-2">
         {error ? <FieldError>{error}</FieldError> : null}
         {children}
@@ -130,9 +144,3 @@ export function PasswordField({ label, id, error, children, ...input }: Password
     </div>
   );
 }
-
-export const primaryButtonClass =
-  "flex h-[52px] w-full items-center justify-center rounded-[10px] bg-primary text-base font-semibold text-primary-foreground no-underline hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-70";
-
-export const secondaryButtonClass =
-  "flex h-[52px] w-full items-center justify-center gap-3 rounded-[10px] bg-secondary text-base font-semibold text-foreground no-underline hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";

@@ -238,7 +238,9 @@ declare const messages: {
       "brandLandingLabel": "FilmAI, back to the landing page",
       "backHome": "Back to Home",
       "brandLandingAlt": "FilmAI, go to the landing page",
-      "backLanding": "Back to the landing page"
+      "backLanding": "Back to the landing page",
+      "termsUpdated": "Last updated: {date}",
+      "termsOnPage": "On this page"
     },
     "account": {
       "userMenuLabel": "{name}’s menu",

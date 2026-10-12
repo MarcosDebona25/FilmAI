@@ -9,6 +9,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-big-shoulders), "Arial Narrow", sans-serif;
+  --color-selected: var(--selected-bg);
+  --color-selected-foreground: var(--selected-fg);
   --color-raised: var(--raised);
   --color-raised-2: var(--raised-2);
   --color-line: var(--line);
@@ -154,12 +156,11 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
     /* Tracking: 0 = normal · 0.01em/0.02em = letras más separadas. */
     letter-spacing: 0.01em;
   }
   html {
-    @apply font-sans;
     scrollbar-gutter: stable;
   }
 }

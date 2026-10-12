@@ -3,9 +3,23 @@ import { useTranslations } from "next-intl";
 
 import { routes } from "@/lib/routes";
 
-export function TicketMark({ width = 32, height = 24 }: { width?: number; height?: number }) {
+export function TicketMark({
+  width = 32,
+  height = 24,
+  className = "",
+}: {
+  width?: number;
+  height?: number;
+  className?: string;
+}) {
   return (
-    <svg width={width} height={height} viewBox="0 0 32 24" aria-hidden="true" className="flex-none">
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 32 24"
+      aria-hidden="true"
+      className={`flex-none ${className}`}
+    >
       <path
         d="M4 0h24a4 4 0 0 1 4 4v5a3 3 0 0 0 0 6v5a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4v-5a3 3 0 0 0 0-6V4a4 4 0 0 1 4-4Z"
         className="fill-primary"

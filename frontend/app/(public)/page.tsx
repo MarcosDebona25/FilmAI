@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import { AccessShell } from "@/components/access/AccessShell";
 import { TicketMark } from "@/components/access/Logo";
-import { primaryButtonClass, secondaryButtonClass } from "@/components/access/fields";
+import { primaryButtonClass, secondaryButtonClass } from "@/components/access/styles";
 import { routes } from "@/lib/routes";
 
 export default async function LandingPage() {
@@ -14,7 +14,7 @@ export default async function LandingPage() {
     <AccessShell>
       <div className="flex flex-col items-center gap-9 text-center">
         <div className="flex items-center gap-4 sm:gap-[18px]">
-          <TicketMark width={72} height={54} />
+          <TicketMark width={72} height={54} className="max-sm:h-[39px] max-sm:w-[52px]" />
           <h1
             translate="no"
             className="font-display text-[72px] leading-[0.9] tracking-[0.05em] sm:text-[104px]"
@@ -42,7 +42,7 @@ export default async function LandingPage() {
         </div>
         <Link
           href={routes.terms}
-          className="text-[13px] text-fg-3 underline underline-offset-[3px]"
+          className="inline-flex min-h-11 items-center text-[13px] text-fg-3 underline underline-offset-[3px] max-sm:absolute max-sm:bottom-3 max-sm:left-1/2 max-sm:-translate-x-1/2"
         >
           {nav("main.terms")}
         </Link>

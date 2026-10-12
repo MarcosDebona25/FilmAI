@@ -33,7 +33,7 @@ export default async function TermsPage() {
           {nav("backLanding")}
         </Link>
         <h1 className="font-display text-[48px] leading-[0.95] sm:text-[72px]">{doc.title}</h1>
-        <p className="text-sm text-fg-3">{date}</p>
+        <p className="text-sm text-fg-3">{nav("termsUpdated", { date })}</p>
         {doc.intro.map((block, index) =>
           block.type === "p" ? (
             <p key={index} className="max-w-[80ch] leading-[1.7] text-muted-foreground">
@@ -43,7 +43,8 @@ export default async function TermsPage() {
         )}
       </div>
       <div className="grid gap-6 md:grid-cols-[240px_minmax(0,1fr)] md:gap-16">
-        <nav aria-label={nav("mainLabel")} className="md:sticky md:top-6 md:self-start">
+        <nav aria-label={nav("termsOnPage")} className="md:sticky md:top-6 md:self-start">
+          <p className="mb-2 px-3 text-xs text-fg-3">{nav("termsOnPage")}</p>
           <ol className="flex flex-col gap-0.5">
             {doc.sections.map((section) => (
               <li key={section.id}>
