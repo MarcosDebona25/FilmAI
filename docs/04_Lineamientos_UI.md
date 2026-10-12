@@ -1229,6 +1229,9 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 - Los formularios deben mostrar mensajes de error asociados mediante `aria-describedby`.
 - Los campos con error deben tener el atributo `aria-invalid="true"`.
 - Los mensajes de error deben ser visibles y comunicados por lectores de pantalla.
+- **Cuándo aparece un error (formularios de acceso)**: solo después de que la persona escribe o elige un valor inválido en ese campo. Foco y blur no cambian la validación: recorrer el formulario con Tab no muestra errores. En campos de texto el mensaje espera una pausa breve (~600 ms) para no marcar errores a mitad de tecleo; en selección y fecha aparece al instante. Un campo escrito y luego vaciado muestra «obligatorio».
+- **Revalidación cruzada**: la confirmación de contraseña se revalida al editar la contraseña original (siempre que la confirmación ya se haya modificado).
+- **Botón de envío**: queda deshabilitado (`disabled` nativo) hasta que todos los campos pasan sus reglas, el nombre de usuario figura disponible y los Términos están aceptados; mientras tanto, un texto cercano indica qué falta (`auth.signUp.submitPending`). Los errores devueltos por el backend se muestran en su campo y se limpian al editarlo.
 
 ### Consistencia de botones del perfil y sus modales
 

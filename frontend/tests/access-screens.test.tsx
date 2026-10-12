@@ -62,14 +62,84 @@ async function fillRegister(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("registro", () => {
-  it("sin aceptar los términos no envía y muestra el error del checkbox", async () => {
+  it("recorrer el formulario con foco y blur no muestra errores", async () => {
     const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
+    await user.click(screen.getByLabelText(en.common.fields.firstName));
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(screen.queryAllByRole("alert")).toHaveLength(0);
+    expect(screen.getByRole("button", { name: en.nav.account.signUp })).toBeDisabled();
+  });
+
+  it("el error de un campo aparece al escribir un valor inválido y se va al corregirlo", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const email = screen.getByLabelText(en.common.fields.email);
+    await user.type(email, "abc");
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    await user.type(email, "@example.com");
+    await waitFor(() => expect(screen.queryAllByRole("alert")).toHaveLength(0));
+  });
+
+  it("un campo que se escribió y se vació muestra que es obligatorio", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const name = screen.getByLabelText(en.common.fields.firstName);
+    await user.type(name, "J");
+    await user.clear(name);
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+  });
+
+  it("la confirmación se revalida al editar la contraseña original", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const password = screen.getByLabelText(en.auth.password.label, { selector: "input" });
+    const confirm = screen.getByLabelText(en.common.fields.passwordConfirm);
+    await user.type(password, "Popcorn24!");
+    await user.type(confirm, "Popcorn24!");
+    await waitFor(() => expect(screen.queryAllByRole("alert")).toHaveLength(0));
+
+    // Al cambiar la original, la confirmación ya no coincide: el error aparece.
+    await user.type(password, "x");
+    expect(await screen.findByText(en.errors.codes.passwords_do_not_match)).toBeInTheDocument();
+
+    // Al volver a la contraseña original, el error desaparece sin tocar la confirmación.
+    await user.type(password, "{Backspace}");
+    await waitFor(() =>
+      expect(screen.queryByText(en.errors.codes.passwords_do_not_match)).toBeNull()
+    );
+  });
+
+  it("la confirmación sin editar no muestra error aunque cambie la contraseña", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await user.type(
+      screen.getByLabelText(en.auth.password.label, { selector: "input" }),
+      "Popcorn24!"
+    );
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    expect(screen.queryByText(en.errors.codes.passwords_do_not_match)).toBeNull();
+  });
+
+  it("el botón se habilita solo con todo válido, disponible y con los términos aceptados", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const submit = screen.getByRole("button", { name: en.nav.account.signUp });
     await fillRegister(user);
-    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
-    expect(await screen.findByText(en.auth.signUp.termsRequiredError)).toBeInTheDocument();
-    expect(screen.getByRole("checkbox")).toHaveAttribute("aria-invalid", "true");
-    expect(apiFetch).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.getByText(en.auth.signUp.usernameAvailable)).toBeInTheDocument()
+    );
+    expect(submit).toBeDisabled();
+    expect(screen.getByText(en.auth.signUp.submitPending)).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox"));
+    expect(submit).toBeEnabled();
+    expect(screen.queryByText(en.auth.signUp.submitPending)).toBeNull();
+    await user.click(screen.getByRole("checkbox"));
+    expect(submit).toBeDisabled();
   });
 
   it("aceptando los términos envía acepta_terminos y muestra la bandeja de entrada", async () => {
@@ -77,7 +147,9 @@ describe("registro", () => {
     render(<RegisterPage />, { locale: "en" });
     await fillRegister(user);
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
+    const submit = screen.getByRole("button", { name: en.nav.account.signUp });
+    await waitFor(() => expect(submit).toBeEnabled());
+    await user.click(submit);
     await waitFor(() => expect(apiFetch).toHaveBeenCalled());
     const [path, options] = vi.mocked(apiFetch).mock.calls[0];
     expect(path).toBe("/api/auth/registration/");
@@ -115,7 +187,9 @@ describe("registro", () => {
     );
     await user.type(screen.getByLabelText(es.common.fields.passwordConfirm), "Popcorn24!");
     await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: es.nav.account.signUp }));
+    const submit = screen.getByRole("button", { name: es.nav.account.signUp });
+    await waitFor(() => expect(submit).toBeEnabled());
+    await user.click(submit);
     expect(await screen.findByText(es.errors.codes.terms_not_accepted)).toBeInTheDocument();
   });
 
