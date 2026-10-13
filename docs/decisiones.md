@@ -3900,3 +3900,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   4. **Desempate de géneros**: por la calificación más reciente, aprovechando el orden del modelo (`-fecha, -id`) y que `Counter.most_common` respeta el orden de aparición en los empates.
 - **Tests**: `catalogo/tests_recomendado.py` (16 casos, con recortes de respuestas reales de TMDB del 13/10/2026) y 3 en `catalogo/tests.py` (`min_votos` en el cliente y la caché, y `min_votes` en la vista). Suite completa: 725 tests.
 - **Archivos afectados**: `catalogo/services/recomendado.py`, `catalogo/views.py`, `catalogo/urls.py`, `catalogo/client.py`, `catalogo/cache.py`, `catalogo/tests_recomendado.py`, `catalogo/tests.py`, `contracts/openapi.yaml`, `openspec/specs/recommendations-api/spec.md`, `openspec/specs/tmdb-endpoints/spec.md`, `openspec/changes/home-catalogo/tasks.md`.
+
+---
+
+## 13/10/2026 — Piezas compartidas del catálogo en el frontend (C-05, PR 3)
+
+- **Fecha**: 13/10/2026
+- **Descripción**: se agregan las piezas que reusan el Home, Search (C-06) y el detalle de listas (L-03), según el SDD (`openspec/changes/home-catalogo/`, fase 2) y las medidas del canvas (tarjeta de 132 px en celular y 176 px en escritorio, título de fila de 30/40 px).
+  1. **`lib/catalog.ts`**: `normalizeTitle` convierte un item de TMDB (de `trending`, `discover`, `now-playing` o `recommended`) en un `Title` de la app. Descarta lo que no es película ni serie (TMDB puede mezclar personas en `trending/all`) y deja la nota en `null` cuando es 0: el 13/10/2026, 9 de 100 títulos de tendencias no tenían votos y «★ 0,0» confundiría. Marca `tituloEnIngles`/`sinopsisEnIngles` a partir de `campos_en_ingles`.
+  2. **`tmdbImage(path, size)`**: arma URLs de imágenes de TMDB con la misma validación que `posterUrl` de `lib/reviews.ts` (solo rutas de TMDB o `https://image.tmdb.org`). `posterUrl` queda como está; se puede unificar al rehacer Mis reseñas.
+  3. **`routes.title(tipo, id)`** → `/movie/{id}` o `/tv/{id}`. Responde 404 (Not Found) hasta C-07.
+  4. **`TypeSelector`**, **`MediaCard`** y **`MediaRow`** en `components/features/`. La nota se lee con una etiqueta oculta («TMDB rating: 7.7 out of 10») y la estrella con el número quedan `aria-hidden`. La fila es una lista (`ul`/`li`) con snap en celular y flechas que mueven el 90 % del ancho visible en escritorio, sin animación con `prefers-reduced-motion`. Vacía y sin cargar no se dibuja; cargando muestra 5 esqueletos.
+  5. No hizo falta copia nueva: se usan `common.content.*`, `common.media.*` y `home.carousel.*`, ya sembradas.
+- **Tests**: Vitest, con recortes de respuestas reales de TMDB del 13/10/2026 (`tests/catalog-fixtures.ts`): `catalog.test.ts` (9), `media-card.test.tsx` (6), `type-selector.test.tsx` (2) y `media-row.test.tsx` (4). Suite completa: 165.
+- **Archivos afectados**: `frontend/lib/catalog.ts`, `frontend/lib/routes.ts`, `frontend/components/features/{TypeSelector,MediaCard,MediaRow}.tsx`, `frontend/tests/{catalog-fixtures.ts,catalog.test.ts,media-card.test.tsx,type-selector.test.tsx,media-row.test.tsx}`, `openspec/changes/home-catalogo/tasks.md`.
