@@ -6,6 +6,7 @@ from catalogo.views import (
     KeywordsView,
     MovieDetailView,
     NowPlayingView,
+    RecommendedView,
     SearchView,
     TrendingView,
     TVDetailView,
@@ -17,6 +18,7 @@ urlpatterns = [
     path("trending/", TrendingView.as_view(), name="trending"),
     path("now-playing/", NowPlayingView.as_view(), name="now_playing"),
     path("discover/", DiscoverView.as_view(), name="discover"),
+    path("recommended/", RecommendedView.as_view(), name="recommended"),
     path("search/", SearchView.as_view(), name="search"),
     # Sin conversor `int:` a propósito: la validación de `id_tmdb` la hace
     # `_int_param` dentro de la vista, que devuelve 400 ante un valor no

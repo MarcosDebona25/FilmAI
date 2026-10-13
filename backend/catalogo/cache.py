@@ -112,6 +112,7 @@ class TMDBClientCache:
         anio_desde=None,
         anio_hasta=None,
         sort_by=None,
+        min_votos=None,
     ):
         # Todos los filtros entran en la clave: dos consultas que difieren en
         # la década son dos respuestas distintas, no un cache hit.
@@ -125,6 +126,10 @@ class TMDBClientCache:
             "anio_hasta": anio_hasta,
             "sort_by": sort_by,
         }
+        # Solo cuando se usa: así las consultas sin mínimo (C-03, C-04c)
+        # conservan la clave que ya tenían en Redis.
+        if min_votos is not None:
+            params["min_votos"] = min_votos
         return self._cached_call(
             "discover",
             params,
@@ -137,6 +142,7 @@ class TMDBClientCache:
                 anio_desde,
                 anio_hasta,
                 sort_by,
+                min_votos,
             ),
         )
 
