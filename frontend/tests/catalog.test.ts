@@ -40,6 +40,14 @@ describe("normalizeTitle", () => {
     ]);
   });
 
+  it("descarta un título repetido, pero no una serie con el mismo número", () => {
+    const serieMismoId = { ...reacher, id: insidious.id };
+
+    expect(
+      normalizeTitles([insidious, insidious, serieMismoId]).map((t) => `${t.tipo}-${t.id}`)
+    ).toEqual(["movie-1291595", "tv-1291595"]);
+  });
+
   it("sin votos no hay nota y sin fecha no hay año", () => {
     // El 13/10/2026, 9 de 100 títulos de trending tenían vote_average 0.
     const titulo = normalizeTitle({ ...insidious, vote_average: 0, release_date: "" });

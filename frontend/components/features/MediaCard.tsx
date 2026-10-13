@@ -21,10 +21,13 @@ export function MediaCard({ title, showType }: { title: Title; showType: boolean
   const poster = title.poster && failed !== title.poster ? title.poster : null;
   const tipo = t(title.tipo === "movie" ? "content.movie" : "content.tvShow");
 
+  // `relative`: la etiqueta `sr-only` de la nota es `absolute`. Sin un ancestro
+  // posicionado dentro de la fila, escapa del `overflow` del `ul` y estira la
+  // página hasta el ancho de todas las tarjetas.
   return (
     <Link
       href={routes.title(title.tipo, title.id)}
-      className="group flex w-[132px] flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:w-[176px] md:gap-3"
+      className="group relative flex w-[132px] flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:w-[176px] md:gap-3"
     >
       <span className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-raised transition-[transform,box-shadow] duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgb(0_0_0/0.45)] group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
         {poster ? (
