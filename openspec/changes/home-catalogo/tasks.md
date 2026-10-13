@@ -37,27 +37,27 @@ long; Django finds any `test*.py`). TMDB is mocked at the `TMDBClientCache`
 level, with items copied from a real response captured on 13/10/2026, never
 invented (lesson of C-04a).
 
-- [ ] 1.1 RED: without a session → 401 (Unauthorized) with the envelope
-- [ ] 1.2 RED: no ratings, or only ratings below 7 → 200 `{generos: [], results: []}`
+- [x] 1.1 RED: without a session → 401 (Unauthorized) with the envelope
+- [x] 1.2 RED: no ratings, or only ratings below 7 → 200 `{generos: [], results: []}`
       and TMDB is never called
-- [ ] 1.3 RED: the top 3 genres by count reach `discover` joined with `|`, with
+- [x] 1.3 RED: the top 3 genres by count reach `discover` joined with `|`, with
       `popularity.desc` and `vote_count.gte=100`
-- [ ] 1.4 RED: a tie between genres goes to the most recent rating
-- [ ] 1.5 RED: a title in «Watched» does not come back; one in «Watchlist» does
-- [ ] 1.6 RED: a movie and a show with the same TMDB id: excluding the movie
+- [x] 1.4 RED: a tie between genres goes to the most recent rating
+- [x] 1.5 RED: a title in «Watched» does not come back; one in «Watchlist» does
+- [x] 1.6 RED: a movie and a show with the same TMDB id: excluding the movie
       does not drop the show (the pair, not the id)
-- [ ] 1.7 RED: `tipo=movie` only uses movie ratings; `tipo=tv` only TV ratings
-- [ ] 1.8 RED: `tipo=all` alternates movie and TV, fills with the other type when
+- [x] 1.7 RED: `tipo=movie` only uses movie ratings; `tipo=tv` only TV ratings
+- [x] 1.8 RED: `tipo=all` alternates movie and TV, fills with the other type when
       one runs out, and caps at 15
-- [ ] 1.9 RED: `generos` comes in the request's language (`Accept-Language: es`)
-- [ ] 1.10 RED: an inactive rating (`activa=False`) does not count
-- [ ] 1.11 RED: `tipo=foo` → 400 (Bad Request) with `invalid_choice`
-- [ ] 1.12 GREEN: `RecommendedView` + the service in `catalogo/services/recomendado.py`
-- [ ] 1.13 RED → GREEN: `discover?min_votes=50` reaches TMDB as `vote_count.gte`
+- [x] 1.9 RED: `generos` comes in the request's language (`Accept-Language: es`)
+- [x] 1.10 RED: an inactive rating (`activa=False`) does not count
+- [x] 1.11 RED: `tipo=foo` → 400 (Bad Request) with `invalid_choice`
+- [x] 1.12 GREEN: `RecommendedView` + the service in `catalogo/services/recomendado.py`
+- [x] 1.13 RED → GREEN: `discover?min_votes=50` reaches TMDB as `vote_count.gte`
       and changes the cache key; `min_votes=0` → 400 (Bad Request)
-- [ ] 1.14 Regenerate `contracts/openapi.yaml` (`FILMAI_ACTUALIZAR_REFERENCIAS=1`)
-- [ ] 1.15 Canonical spec `openspec/specs/recommendations-api/spec.md`
-- [ ] 1.16 `ruff format . && ruff check .` and the full `python manage.py test`
+- [x] 1.14 Regenerate `contracts/openapi.yaml` (`FILMAI_ACTUALIZAR_REFERENCIAS=1`)
+- [x] 1.15 Canonical spec `openspec/specs/recommendations-api/spec.md`
+- [x] 1.16 `ruff format . && ruff check .` and the full `python manage.py test`
 
 ## Phase 2: Shared frontend pieces (PR 3)
 

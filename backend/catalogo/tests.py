@@ -512,6 +512,20 @@ class TMDBClientCacheTest(SimpleTestCase):
         )
         return TMDBClientCache(client, self.redis), calls
 
+    def test_discover_con_minimo_de_votos_llega_a_tmdb_y_separa_la_cache(self):
+        # C-05: Recomendado y las series nuevas del Home dejan afuera los
+        # títulos con pocos votos (sin votos y contenido adulto sin marcar).
+        cache, calls = self.make_cache()
+
+        cache.discover("tv", min_votos=50)
+        cache.discover("tv")
+
+        self.assertEqual(calls[0].url.params["vote_count.gte"], "50")
+        self.assertNotIn("vote_count.gte", calls[1].url.params)
+        # Sin el mínimo es otra consulta: si compartieran la clave, la segunda
+        # devolvería de la caché la respuesta filtrada.
+        self.assertEqual(len(calls), 2)
+
     def test_build_key_is_stable(self):
         first = _build_key("search", {"query": "Fight Club", "page": 1})
         second = _build_key("search", {"page": 1, "query": "Fight Club"})
@@ -719,6 +733,28 @@ class ParamValidationTest(SimpleTestCase):
         response = DiscoverView.as_view()(request)
 
         self.assertEqual(response.status_code, 400)
+        get_service.assert_not_called()
+
+    @patch("catalogo.views.get_catalog_service")
+    def test_discover_pasa_min_votes_al_servicio(self, get_service):
+        # C-05: las series nuevas del Home piden `min_votes=50`.
+        get_service.return_value.discover.return_value = {"results": []}
+        request = self.factory.get("/api/catalogo/discover/?tipo=tv&min_votes=50")
+
+        response = DiscoverView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        _, kwargs = get_service.return_value.discover.call_args
+        self.assertEqual(kwargs["min_votos"], 50)
+
+    @patch("catalogo.views.get_catalog_service")
+    def test_discover_rechaza_min_votes_menor_que_uno(self, get_service):
+        request = self.factory.get("/api/catalogo/discover/?min_votes=0")
+
+        response = DiscoverView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["errors"][0]["field"], "min_votes")
         get_service.assert_not_called()
 
     def test_optional_integer_param_preserves_none_default(self):

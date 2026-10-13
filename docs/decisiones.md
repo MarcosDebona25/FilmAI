@@ -3887,3 +3887,16 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   11. **Errores**: la fila que falla se oculta y un único toast avisa; si fallan todas, mensaje con «Try again».
 - **Entrega**: cuatro PRs contra `develop/ui-design`: SDD y docs, backend, piezas compartidas (`TypeSelector`, `MediaCard`, `MediaRow`) y la página.
 - **Archivos afectados**: `openspec/changes/home-catalogo/`, `docs/04_Lineamientos_UI.md` (§2: el Home pasa a «Mixta»; §3.3 y §5), `docs/decisiones.md`.
+
+---
+
+## 13/10/2026 — Recomendado para ti: implementación del backend (C-05, PR 2)
+
+- **Fecha**: 13/10/2026
+- **Descripción**: se implementa `GET /api/catalogo/recommended/` según el SDD (`openspec/changes/home-catalogo/design.md` §2) y el parámetro `min_votes` de `GET /api/catalogo/discover/`. Decisiones de implementación:
+  1. **Servicio aparte** en `catalogo/services/recomendado.py`, sin HTTP ni idiomas: la vista le pasa el servicio de TMDB ya localizado (`servicio_localizado`) y una función que traduce ids de género a nombres. Así los resultados llevan `campos_en_ingles` como el resto del catálogo, y el servicio se prueba con un TMDB falso.
+  2. **Nombres de géneros reusados**: la lógica de `GenresView` (nombre vacío en español → inglés) pasa a `_generos_localizados(tipo, idioma)` en `catalogo/views.py`, que usan las dos vistas.
+  3. **`min_votos` entra en la clave de caché solo cuando se usa**: las consultas de `discover` sin mínimo (C-03, C-04c) conservan la clave que ya tenían en Redis.
+  4. **Desempate de géneros**: por la calificación más reciente, aprovechando el orden del modelo (`-fecha, -id`) y que `Counter.most_common` respeta el orden de aparición en los empates.
+- **Tests**: `catalogo/tests_recomendado.py` (16 casos, con recortes de respuestas reales de TMDB del 13/10/2026) y 3 en `catalogo/tests.py` (`min_votos` en el cliente y la caché, y `min_votes` en la vista). Suite completa: 725 tests.
+- **Archivos afectados**: `catalogo/services/recomendado.py`, `catalogo/views.py`, `catalogo/urls.py`, `catalogo/client.py`, `catalogo/cache.py`, `catalogo/tests_recomendado.py`, `catalogo/tests.py`, `contracts/openapi.yaml`, `openspec/specs/recommendations-api/spec.md`, `openspec/specs/tmdb-endpoints/spec.md`, `openspec/changes/home-catalogo/tasks.md`.
