@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import materializar
+from catalogo.services.recomendado import recomendar
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.validacion import ErrorValidacion
 
@@ -125,8 +126,12 @@ class DiscoverView(CatalogoBaseView):
         min_rating = _float_param(
             request.query_params.get("min_rating"), "min_rating", default=None
         )
+        # C-05: deja afuera títulos con pocos votos (`vote_count.gte` en TMDB).
+        min_votos = _int_param(
+            request.query_params.get("min_votes"), "min_votes", default=None
+        )
         data = self._service(request).discover(
-            tipo, genero, anio, min_rating, self._page(request)
+            tipo, genero, anio, min_rating, self._page(request), min_votos=min_votos
         )
         return Response(data)
 
@@ -166,18 +171,21 @@ class GenresView(CatalogoBaseView):
 
     def get(self, request):
         tipo = _validate_tipo(request.query_params.get("tipo", "movie"))
-        idioma = idioma_tmdb(request)
-        datos = get_catalog_service(idioma).get_genres(tipo)
-        generos = datos.get("genres") or []
-        if any(not (genero.get("name") or "").strip() for genero in generos):
-            en_ingles = {
-                genero.get("id"): genero.get("name")
-                for genero in get_catalog_service().get_genres(tipo).get("genres") or []
-            }
-            for genero in generos:
-                if not (genero.get("name") or "").strip():
-                    genero["name"] = en_ingles.get(genero.get("id")) or ""
-        return Response({"genres": generos})
+        return Response({"genres": _generos_localizados(tipo, idioma_tmdb(request))})
+
+
+def _generos_localizados(tipo, idioma):
+    """Géneros de TMDB en `idioma`; un nombre vacío se completa con el inglés."""
+    generos = get_catalog_service(idioma).get_genres(tipo).get("genres") or []
+    if any(not (genero.get("name") or "").strip() for genero in generos):
+        en_ingles = {
+            genero.get("id"): genero.get("name")
+            for genero in get_catalog_service().get_genres(tipo).get("genres") or []
+        }
+        for genero in generos:
+            if not (genero.get("name") or "").strip():
+                genero["name"] = en_ingles.get(genero.get("id")) or ""
+    return generos
 
 
 class KeywordsView(CatalogoBaseView):
@@ -186,3 +194,41 @@ class KeywordsView(CatalogoBaseView):
         tipo = _validate_tipo(request.query_params.get("tipo"))
         data = get_catalog_service().get_keywords(id_tmdb, tipo)
         return Response(data)
+
+
+class RecommendedView(APIView):
+    """«Recomendado para ti» del Home (C-05), solo con sesión.
+
+    `tipo` es `all` (por defecto), `movie` o `tv`. Responde `{generos, results}`:
+    los nombres de los géneros usados (como mucho 3, en el idioma del pedido) y
+    hasta 15 títulos con la forma de TMDB más `media_type`. Sin calificaciones
+    de 7 o más, las dos listas vienen vacías.
+    """
+
+    # No hereda de `CatalogoBaseView`, que es pública: usa la autenticación y el
+    # permiso por defecto del proyecto (cookie JWT + `IsAuthenticated`), así que
+    # sin sesión DRF responde 401 antes de llegar a `get`.
+    throttle_classes: ClassVar = [ScopedRateThrottle]
+    throttle_scope = "catalogo"
+    tipos: ClassVar = ["all", "movie", "tv"]
+
+    def get(self, request):
+        tipo = request.query_params.get("tipo", "all")
+        if tipo not in self.tipos:
+            raise _error_param(
+                "tipo",
+                "Must be one of 'all', 'movie' or 'tv'.",
+                "invalid_choice",
+                {"allowedValues": self.tipos},
+            )
+        idioma = idioma_tmdb(request)
+        datos = recomendar(
+            request.user,
+            tipo,
+            servicio=servicio_localizado(idioma, get_catalog_service),
+            nombres_de_generos=lambda t: {
+                genero["id"]: genero["name"]
+                for genero in _generos_localizados(t, idioma)
+            },
+        )
+        return Response(datos)
