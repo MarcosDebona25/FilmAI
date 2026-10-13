@@ -13,9 +13,11 @@
 name: CI
 
 # Cuándo se ejecuta:
-#   - pull_request: en cada PR hacia `main`, `develop` o una rama `feat/**`
+#   - pull_request: en cada PR hacia `main`, `develop`, una rama `develop/**`
+#                   (por ejemplo `develop/ui-design`) o una rama `feat/**`
 #                   (lo importante: bloquea el merge).
-#   - push:         en cada push directo a `main` o `develop` (re-verifica lo que entró).
+#   - push:         en cada push directo a `main`, `develop` o `develop/**`
+#                   (re-verifica lo que entró).
 #
 # `branches` filtra por la rama DESTINO del PR, no por la de origen. Incluir
 # `feat/**` es lo que hace que un PR apilado —uno cuya base es otra rama de
@@ -32,9 +34,10 @@ on:
     branches:
       - main
       - develop
+      - "develop/**"
       - "feat/**"
   push:
-    branches: [main, develop]
+    branches: [main, develop, "develop/**"]
 
 jobs:
   # --------------------------------------------------------------------------
