@@ -3867,3 +3867,23 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Motivo**: sin esto, un PR hacia `develop/ui-design` se mergeaba sin correr ruff, los tests de Django, Vitest, Playwright ni el build. Para un `pull_request`, GitHub toma el workflow del commit de merge, así que este mismo PR ya corre con el disparador nuevo y verifica por primera vez los commits del 12/10/2026.
 - **Test salteado en el CI**: al correr por primera vez sobre `develop/ui-design`, falló `frontend/e2e/documentacion-admin.spec.ts` (del 12/10/2026). Ese test usa el backend real (`docker compose exec backend ...`) y el job de Playwright solo levanta Next.js, con la API simulada. Se saltea cuando existe la variable `CI` (`test.skip(!!process.env.CI, ...)`) y sigue corriendo en local con Docker levantado. El backend de esa pantalla ya tiene cobertura en la suite de Django. Si se quiere en el CI, hay que levantar Docker Compose en el job de Playwright.
 - **Archivos afectados**: `.github/workflows/ci.yml`, `frontend/e2e/documentacion-admin.spec.ts`, `docs/decisiones.md`.
+
+---
+
+## 13/10/2026 — Home de descubrimiento (C-05): SDD y decisiones
+
+- **Fecha**: 13/10/2026
+- **Descripción**: Gonza abre el SDD de C-05 en `openspec/changes/home-catalogo/` (proposal, design y tasks). Decisiones del usuario:
+  1. **Orden de las pantallas del catálogo**: Home → Ficha (C-07 con el modal de C-08) → Buscar (C-06). La ficha es el destino de todas las tarjetas y la necesita L-04; Buscar reusa piezas del Home.
+  2. **Ruta de la ficha**: `/movie/[id]` y `/tv/[id]`, con el helper `routes.title(tipo, id)`. Mismo nombre que la API (`/api/catalogo/movie/<id>/`) y que TMDB, y Next.js responde 404 (Not Found) solo ante un tipo inválido porque esa carpeta no existe. Se descartó `/title/[tipo]/[id]`, que obliga a validar el tipo a mano. El tipo va en la URL en las dos opciones porque TMDB numera películas y series por separado.
+  3. **Recomendado para ti**: `GET /api/catalogo/recommended/?tipo=all|movie|tv`, con sesión. Por tipo, los 3 géneros más repetidos entre las calificaciones activas de 7 o más (empate: el de la calificación más reciente); `discover` con los géneros unidos con OR, `popularity.desc` y `vote_count.gte=100`; se excluyen los pares `(id_tmdb, tipo)` de «Vistas»; hasta 15 de la primera página. Devuelve los nombres de los géneros usados para el subtítulo de la fila. Verificado contra TMDB el 13/10/2026: con OR quedan 14.610 películas y con AND 841; sin mínimo de votos, 9 de 20 películas tenían menos de 100 votos y aparecía un anime adulto sin la marca `adult`.
+  4. **Novedades de series**: `discover` gana el parámetro `min_votes` (`vote_count.gte`) y la fila lo usa con 50: sin mínimo, 10 de 20 series de 2026 tenían menos de 50 votos; con 50 quedan 150 y con 100 solo 73. `now-playing` no admite ese filtro y queda como está.
+  5. **Hero**: en «Todo», el primer título de tendencias con imagen de fondo («#N en tendencias»); en «Películas» y «Series», el primero de ese tipo que no sea el Hero de «Todo» («Destacada de la semana»). Regla pedida el 03/10/2026 en el canvas.
+  6. **Botón «Ask FilmAI»** en el Home ya, solo con sesión, hacia `/chat` (404 (Not Found) hasta B-04), como el enlace del footer.
+  7. **El selector vive en la URL** (`/home?type=movie|tv`), para que se conserve al volver de una ficha.
+  8. **Tamaño de las filas**: Tendencias y Novedades, 20 (una página de TMDB); Recomendado, hasta 15.
+  9. **«Todo» alterna película y serie** en Recomendado y Novedades. El usuario pidió revisar más adelante, con datos reales, separar filas por tipo al estilo Netflix (descartado el 30/09/2026 por largo en celular y siete pedidos al cargar; además deja el selector casi sin uso y el canvas dibuja filas mezcladas).
+  10. **Barra de navegación sobre el Hero** en escritorio, solo en `/home`, como el artboard. Toca `components/Navbar.tsx` (Marcos).
+  11. **Errores**: la fila que falla se oculta y un único toast avisa; si fallan todas, mensaje con «Try again».
+- **Entrega**: cuatro PRs contra `develop/ui-design`: SDD y docs, backend, piezas compartidas (`TypeSelector`, `MediaCard`, `MediaRow`) y la página.
+- **Archivos afectados**: `openspec/changes/home-catalogo/`, `docs/04_Lineamientos_UI.md` (§2: el Home pasa a «Mixta»; §3.3 y §5), `docs/decisiones.md`.
