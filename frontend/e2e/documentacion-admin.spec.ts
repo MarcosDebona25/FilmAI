@@ -15,6 +15,10 @@ const SUFIJO = `${Date.now().toString(36)}`.slice(-6);
 const STAFF = `e2estaff${SUFIJO}`;
 const COMUN = `e2ecomun${SUFIJO}`;
 
+// El job de Playwright del CI levanta solo Next.js, sin el backend de Docker
+// Compose: allí `docker compose exec` falla antes de empezar.
+test.skip(!!process.env.CI, "Requiere el backend de Docker Compose.");
+
 const viewports = [
   { name: "escritorio", width: 1440, height: 900 },
   { name: "celular", width: 390, height: 844 },
