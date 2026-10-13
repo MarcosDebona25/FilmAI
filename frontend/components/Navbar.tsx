@@ -27,7 +27,13 @@ export function Navbar() {
   if (isAccessPath(pathname)) return null;
 
   return (
-    <header>
+    // En el Home de escritorio la barra va sobre la imagen del Hero (canvas,
+    // C-05): no ocupa lugar y el Hero empieza arriba de todo.
+    <header
+      className={
+        pathname === routes.explore ? "md:absolute md:inset-x-0 md:top-0 md:z-20" : undefined
+      }
+    >
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:p-3 focus:text-foreground focus:outline-2 focus:outline-ring"
