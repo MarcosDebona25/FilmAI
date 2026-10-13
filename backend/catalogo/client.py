@@ -129,13 +129,15 @@ class TMDBClient:
         anio_desde=None,
         anio_hasta=None,
         sort_by=None,
+        min_votos=None,
     ):
         """Busca producciones por filtros. Todo es opcional menos el tipo.
 
         `anio` filtra un año puntual; `anio_desde`/`anio_hasta` un rango, que
         es lo que el seed usa para muestrear por década (C-04c). `sort_by`
         decide qué entra primero: `vote_count.desc` trae los títulos que la
-        gente conoce, el orden por defecto trae lo que trendea hoy.
+        gente conoce, el orden por defecto trae lo que trendea hoy. `min_votos`
+        deja afuera los títulos con pocos votos (C-05).
         """
         params = {"page": page}
         if genero is not None:
@@ -150,6 +152,8 @@ class TMDBClient:
             params["vote_average.gte"] = min_rating
         if sort_by is not None:
             params["sort_by"] = sort_by
+        if min_votos is not None:
+            params["vote_count.gte"] = min_votos
         return self._get_localizado(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1):

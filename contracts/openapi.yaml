@@ -852,6 +852,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/recommended/:
+    get:
+      operationId: catalogo_recommended_retrieve
+      description: |-
+        «Recomendado para ti» del Home (C-05), solo con sesión.
+
+        `tipo` es `all` (por defecto), `movie` o `tv`. Responde `{generos, results}`:
+        los nombres de los géneros usados (como mucho 3, en el idioma del pedido) y
+        hasta 15 títulos con la forma de TMDB más `media_type`. Sin calificaciones
+        de 7 o más, las dos listas vienen vacías.
+      tags:
+      - catalogo
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/search/:
     get:
       operationId: catalogo_search_retrieve

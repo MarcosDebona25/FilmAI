@@ -37,6 +37,14 @@ The system MUST forward each query/path parameter to the matching cache-method a
 - WHEN the endpoint handles it
 - THEN `discover("movie", genero=28, anio=2024, min_rating=7.5, page=...)` is invoked
 
+#### Scenario: Discover with a minimum of votes (C-05)
+
+- GIVEN `/api/catalogo/discover/` with `tipo=tv&min_votes=50`
+- WHEN the endpoint handles it
+- THEN `discover` is invoked with `min_votos=50`, sent to TMDB as `vote_count.gte=50`
+- AND the cache key includes it, so the same query without the minimum is a different entry
+- AND `min_votes=0` or a non-integer answers 400 without calling the service
+
 #### Scenario: Search params
 
 - GIVEN `/api/catalogo/search/` with `query=Inception&tipo=movie`
