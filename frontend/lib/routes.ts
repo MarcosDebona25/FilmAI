@@ -13,6 +13,8 @@ export const routes = {
   askFilmAI: "/chat",
   completeSignup: "/complete-signup",
   terms: "/terms",
+  /** Ficha de una película o serie (C-07). Hasta que exista, responde 404 (Not Found). */
+  title: (tipo: "movie" | "tv", id: number) => `/${tipo}/${id}`,
   confirmEmail: (key: string) => `/confirm-email/${encodeURIComponent(key)}`,
   resetPassword: (uid: string, token: string) =>
     `/reset-password/${encodeURIComponent(uid)}/${encodeURIComponent(token)}`,

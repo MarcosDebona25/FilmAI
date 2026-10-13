@@ -61,14 +61,14 @@ invented (lesson of C-04a).
 
 ## Phase 2: Shared frontend pieces (PR 3)
 
-- [ ] 2.1 `routes.title(tipo, id)` → `/movie/{id}` and `/tv/{id}`
-- [ ] 2.2 `lib/catalog.ts` + Vitest: a TMDB movie and show normalize to the same
+- [x] 2.1 `routes.title(tipo, id)` → `/movie/{id}` and `/tv/{id}`
+- [x] 2.2 `lib/catalog.ts` + Vitest: a TMDB movie and show normalize to the same
       shape; no date → no year; `campos_en_ingles` comes through
-- [ ] 2.3 `TypeSelector` + Vitest: `aria-pressed`, keyboard, labels from `home.*`
-- [ ] 2.4 `MediaCard` + Vitest: meta with and without type, `★ 8,5` in Spanish,
+- [x] 2.3 `TypeSelector` + Vitest: `aria-pressed`, keyboard, labels from `home.*`
+- [x] 2.4 `MediaCard` + Vitest: meta with and without type, `★ 8,5` in Spanish,
       placeholder without poster, `lang="en"` on an English fallback
-- [ ] 2.5 `MediaRow` + Vitest: previous/next buttons, skeletons, hidden when empty
-- [ ] 2.6 No new file enters the exceptions of `scripts/i18n/rules.mjs`;
+- [x] 2.5 `MediaRow` + Vitest: previous/next buttons, skeletons, hidden when empty
+- [x] 2.6 No new file enters the exceptions of `scripts/i18n/rules.mjs`;
       `npm run i18n:check`, `npm run format:check`, `npm run lint`
 
 ## Phase 3: The page (PR 4)
