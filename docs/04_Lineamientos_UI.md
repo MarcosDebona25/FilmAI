@@ -35,7 +35,7 @@ App Autenticada
 | 1   | Login                                         | CU-003         | Pública             |
 | 2   | Registro                                      | CU-001         | Pública             |
 | 3   | Confirmación de cuenta                        | CU-002         | Pública (vía email) |
-| 4   | Home (autenticado)                            | CU-013         | Autenticada         |
+| 4   | Home                                          | CU-013         | Mixta*              |
 | 5   | Buscar (panel overlay con catálogo unificado) | CU-008, CU-010 | Mixta*              |
 | 6   | Ficha de detalle                              | CU-008, CU-011 | Mixta*              |
 | 7   | Modal: Publicar/Modificar reseña              | CU-015         | Autenticada         |
@@ -110,10 +110,12 @@ este modelo (Inicio, Buscar, Listas + avatar).
 
 **Lógica**:
 
-1. Géneros de producciones calificadas con 7+ por el usuario.
-2. Llamada a `/discover/movie` o `/discover/tv` con filtro de géneros, ordenado por `popularity.desc`.
-3. Excluir IDs que el usuario ya tiene en «Vistas». Con la regla «calificada ⇒ vista» (30/09/2026) esto ya cubre lo calificado, sin excluir «Pendientes».
-4. Devolver 10-15 resultados.
+1. Por cada tipo, los **3 géneros más repetidos** entre las producciones de ese tipo calificadas con 7+ por el usuario. Un empate lo gana el género de la calificación más reciente.
+2. Llamada a `/discover/movie` o `/discover/tv` con esos géneros unidos con OR (`with_genres=a|b|c`), ordenado por `popularity.desc` y con `vote_count.gte=100`. El mínimo de votos saca títulos sin votos y contenido adulto que TMDB no marca como tal (verificado el 13/10/2026).
+3. Excluir los pares `(id_tmdb, tipo)` que el usuario ya tiene en «Vistas». Con la regla «calificada ⇒ vista» (30/09/2026) esto ya cubre lo calificado, sin excluir «Pendientes».
+4. Devolver hasta 15 resultados de la primera página de TMDB. En «Todo» se alternan película y serie hasta 15.
+
+**Endpoint**: `GET /api/catalogo/recommended/?tipo=all|movie|tv`, solo con sesión. Devuelve también los nombres de los géneros usados (como mucho 3), que la fila muestra como subtítulo («Based on your high ratings in Thriller, Drama, and Crime»). Sin calificaciones de 7 o más responde vacío y la fila se oculta.
 
 ---
 
@@ -187,14 +189,24 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 **Selector global (30/09/2026):** arriba de las filas, `Todo · Películas · Series`. «Todo» es el valor por defecto y mezcla los dos tipos; «Películas» y «Series» cambian la fuente de cada fila. En «Recomendado para ti», cada tipo usa los géneros de lo que el usuario calificó con 7+ de ese tipo, y «Todo» es la unión de ambos, sin traducir géneros entre películas y series.
 
+**Implementación (13/10/2026, SDD `openspec/changes/home-catalogo/`):**
+
+- Ruta `/home`, pública. El selector vive en la URL (`/home?type=movie` o `?type=tv`; sin parámetro, «Todo»), así que al volver de una ficha se conserva. En escritorio va dentro del Hero, debajo de la barra; en celular, entre la barra y el Hero.
+- **Hero**: en «Todo», el primer título de tendencias con imagen de fondo, con la etiqueta «#N en tendencias» según su posición real. En «Películas» y «Series», el primero de ese tipo con imagen de fondo que no sea el Hero de «Todo», con la etiqueta «Destacada de la semana». Así cada opción del selector tiene un Hero distinto. Sinopsis recortada a 3 líneas y un único botón, «Ver detalle».
+- En escritorio la barra de navegación se dibuja sobre la imagen del Hero, sin fondo propio (solo en `/home`).
+- Tendencias y Novedades muestran una página de TMDB (20 títulos); Recomendado, hasta 15. En «Todo», Recomendado y Novedades alternan película y serie.
+- Cada tarjeta lleva a la ficha: `/movie/[id]` o `/tv/[id]` (C-07). Calificación como «★ 8,5», nunca «X/10».
+- Sin sesión, al final de las filas: «¿Qué viste últimamente?» con «Registrarse» y «Ya tengo cuenta».
+- Con sesión, botón flotante «Ask FilmAI» hacia `/chat`, que responde 404 (Not Found) hasta que exista el chatbot (B-04).
+
 ### Secciones
 
-| Fila                | Visible para                          | Fuente de datos                                   |
-| ------------------- | ------------------------------------- | ------------------------------------------------- |
-| Hero                | Todos                                 | TMDB trending (rotativo o destacado fijo)         |
-| Recomendado para ti | Solo autenticados con ≥1 calificación | TMDB `/discover` filtrado por géneros             |
-| Tendencias          | Todos                                 | TMDB `/trending`                                  |
-| Novedades           | Todos                                 | TMDB `/movie/now_playing`, `/discover` año actual |
+| Fila                | Visible para                                     | Fuente de datos                                                            |
+| ------------------- | ------------------------------------------------ | -------------------------------------------------------------------------- |
+| Hero                | Todos                                            | TMDB trending (rotativo o destacado fijo)                                  |
+| Recomendado para ti | Solo autenticados con ≥1 calificación de 7 o más | TMDB `/discover` filtrado por géneros (ver 3.3)                            |
+| Tendencias          | Todos                                            | TMDB `/trending`                                                           |
+| Novedades           | Todos                                            | TMDB `/movie/now_playing`, `/discover/tv` año actual con al menos 50 votos |
 
 - Cada fila: título + opcional "Ver más →" + scroll horizontal de MediaCards.
 - Con «Todo» (por defecto), las filas mezclan películas y series, con badge de tipo en cada card; con «Películas» o «Series», cada fila muestra solo ese tipo.
@@ -203,13 +215,13 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 ### Estados del Home
 
-| Estado                    | Comportamiento                                                        |
-| ------------------------- | --------------------------------------------------------------------- |
-| No autenticado            | Hero + Tendencias + Novedades. FAB chatbot inactivo.                  |
-| Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti".                     |
-| Autenticado con historial | Las 3 filas completas.                                                |
-| Loading                   | Skeleton cards (4-5 placeholders) por fila.                           |
-| Error TMDB                | Toast "No se pudo cargar el contenido." + datos cacheados si existen. |
+| Estado                    | Comportamiento                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| No autenticado            | Hero + Tendencias + Novedades + invitación a registrarse. Sin FAB.                             |
+| Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti".                                              |
+| Autenticado con historial | Las 3 filas completas.                                                                         |
+| Loading                   | Skeleton cards (4-5 placeholders) por fila.                                                    |
+| Error TMDB                | La fila que falla se oculta y un único toast avisa. Si fallan todas, mensaje con «Reintentar». |
 
 ---
 
