@@ -78,6 +78,13 @@ export function normalizeTitle(item: TmdbItem, tipoPorDefecto?: MediaType): Titl
   };
 }
 
+/** Normaliza una lista y descarta repetidos (mismo tipo e id), que TMDB a veces manda. */
 export function normalizeTitles(items: TmdbItem[], tipoPorDefecto?: MediaType): Title[] {
-  return items.flatMap((item) => normalizeTitle(item, tipoPorDefecto) ?? []);
+  const vistos = new Set<string>();
+  return items.flatMap((item) => {
+    const titulo = normalizeTitle(item, tipoPorDefecto);
+    if (!titulo || vistos.has(`${titulo.tipo}-${titulo.id}`)) return [];
+    vistos.add(`${titulo.tipo}-${titulo.id}`);
+    return [titulo];
+  });
 }

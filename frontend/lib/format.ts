@@ -37,6 +37,12 @@ export function formatDuration(minutes: number, locale: AppLocale) {
     .filter(Boolean)
     .join(" ");
 }
+/** «Thriller, Drama, and Crime» / «Suspense, Drama y Crimen». */
+export function formatList(values: string[], locale: AppLocale) {
+  return new Intl.ListFormat(intlLocales[locale], { style: "long", type: "conjunction" }).format(
+    values
+  );
+}
 export function useFormats() {
   const locale = useLocale();
   return {
@@ -45,5 +51,6 @@ export function useFormats() {
     number: (value: number) => formatNumber(value, locale),
     rating: (value: number) => formatRating(value, locale),
     duration: (minutes: number) => formatDuration(minutes, locale),
+    list: (values: string[]) => formatList(values, locale),
   };
 }
