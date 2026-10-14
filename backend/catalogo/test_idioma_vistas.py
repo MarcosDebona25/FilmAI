@@ -19,7 +19,7 @@ class VistasIdiomaTests(SimpleTestCase):
         parche = patch("catalogo.views.get_catalog_service", side_effect=self._servicio)
         parche.start()
         self.addCleanup(parche.stop)
-        parche_materializar = patch("catalogo.views.materializar")
+        parche_materializar = patch("catalogo.views.materializar_en_segundo_plano")
         self.materializar = parche_materializar.start()
         self.addCleanup(parche_materializar.stop)
         self.addCleanup(self._cerrar_clientes)

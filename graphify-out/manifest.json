@@ -78,15 +78,15 @@
     "semantic_hash": ""
   },
   "backend/catalogo/tests.py": {
-    "mtime": 1791927857.226765,
-    "seen": 1791928617.1063163,
-    "ast_hash": "4a679565cc3dcc13678edc65574b510c",
+    "mtime": 1791950316.5963204,
+    "seen": 1791989865.2315295,
+    "ast_hash": "62912c6c714ef81fc8b2b19b836734b6",
     "semantic_hash": ""
   },
   "backend/catalogo/views.py": {
-    "mtime": 1791945259.9237814,
-    "seen": 1791945638.5284042,
-    "ast_hash": "757f4dd4eecd714db57f9fc98f0fff22",
+    "mtime": 1791950283.082716,
+    "seen": 1791989865.2317214,
+    "ast_hash": "7ed0fe54486aa287569df2bf2295ae37",
     "semantic_hash": ""
   },
   "backend/chatbot/__init__.py": {
@@ -540,9 +540,9 @@
     "semantic_hash": "a75dafcaf8ed3c4cda22045b57a9902d"
   },
   "docker-compose.yml": {
-    "mtime": 1791897962.591425,
-    "seen": 1791913090.3756418,
-    "ast_hash": "98c3db864c44992099d662e433a1efdd",
+    "mtime": 1791950404.339612,
+    "seen": 1791989865.2493804,
+    "ast_hash": "09e8b99a133a30172e22923edeaa3e74",
     "semantic_hash": ""
   },
   "docs/01_Presentaci\u00f3n Idea-Proyecto.docx.md": {
@@ -576,9 +576,9 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1791948973.6677861,
-    "seen": 1791950168.5079432,
-    "ast_hash": "147e1e99580dcc3194dd1c75a859530c",
+    "mtime": 1791950404.3401382,
+    "seen": 1791989865.249547,
+    "ast_hash": "35d60b04acbacea011977921ff46bd63",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791950155.0031877,
-    "seen": 1791950168.5079749,
-    "ast_hash": "6fc00f557826d2082bf72f29eb754934",
+    "mtime": 1791989851.224424,
+    "seen": 1791989865.2495801,
+    "ast_hash": "1d8576cf52a73b67a453b3a0ff75a41f",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1254,9 +1254,9 @@
     "semantic_hash": "869cef97b06b19924c1b0df3a51c74a3"
   },
   "backend/catalogo/services/materialization.py": {
-    "mtime": 1791495494.6910322,
-    "seen": 1791913090.3752186,
-    "ast_hash": "2a62020cfda442dcca3e9a6aa5a5a8ef",
+    "mtime": 1791950283.0808632,
+    "seen": 1791989865.2311227,
+    "ast_hash": "bb05c347094b261f87c3038cec4fd4bd",
     "semantic_hash": ""
   },
   "backend/catalogo/services/tmdb.py": {
@@ -1266,9 +1266,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/tasks.py": {
-    "mtime": 1791495494.7312994,
-    "seen": 1791913090.375223,
-    "ast_hash": "b68d435ff7f52bcf32e00cc8c4427bb9",
+    "mtime": 1791950411.4071822,
+    "seen": 1791989865.2312841,
+    "ast_hash": "5f7d9710ee35fa5e3f260c051b73072d",
     "semantic_hash": ""
   },
   "backend/filmai/celery.py": {
@@ -1290,9 +1290,9 @@
     "semantic_hash": "8c801ec00523df7e3104a06dd42f2221"
   },
   "openspec/specs/catalog-materialization/spec.md": {
-    "mtime": 1791495494.9904602,
-    "seen": 1791913090.3756711,
-    "ast_hash": "30fe39fce24fa49ea379691bdaedf65a",
+    "mtime": 1791950411.406925,
+    "seen": 1791989865.2501795,
+    "ast_hash": "335f6b31d7eb5754df35a1fd8f168aaf",
     "semantic_hash": ""
   },
   "openspec/specs/embedding-infrastructure/spec.md": {
@@ -2448,8 +2448,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1791949968.8572998,
-    "seen": 1791950168.5027957,
+    "mtime": 1791989255.5354593,
+    "seen": 1791989865.244137,
     "ast_hash": "60b9d36dbe22e859a1efab6468f7e5e5",
     "semantic_hash": ""
   },
@@ -2478,8 +2478,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1791949968.8585773,
-    "seen": 1791950168.5027983,
+    "mtime": 1791989255.6364534,
+    "seen": 1791989865.2441986,
     "ast_hash": "a214971378fc18d3008e1067b582a44a",
     "semantic_hash": ""
   },
@@ -2514,9 +2514,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/test_idioma_vistas.py": {
-    "mtime": 1791495494.7380443,
-    "seen": 1791913090.3752294,
-    "ast_hash": "26255597bd7f936ba55ea5aede71fd92",
+    "mtime": 1791950283.0869174,
+    "seen": 1791989865.2314785,
+    "ast_hash": "c35d20532404b3ffaf3d59521746df41",
     "semantic_hash": ""
   },
   "backend/filmai/correos/__init__.py": {
@@ -2802,9 +2802,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/test_fallback_idioma.py": {
-    "mtime": 1791495494.7355886,
-    "seen": 1791913090.375226,
-    "ast_hash": "0ab4739a31030ffb0f0254dd4866f031",
+    "mtime": 1791950283.0867476,
+    "seen": 1791989865.2313824,
+    "ast_hash": "e6e9d3d12daba0640c62fbcaadbaa1de",
     "semantic_hash": ""
   },
   "backend/catalogo/test_idioma_serializadores.py": {
