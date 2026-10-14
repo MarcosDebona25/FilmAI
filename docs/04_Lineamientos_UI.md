@@ -362,13 +362,15 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | Vista (👁, quitar) | Producción calificada          | **Pide confirmación antes de quitar**: la API responde 409 `calificacion_impide_quitar_de_vistas` (CU-011: si la calificaste, la viste). El modal dice "Se eliminarán tu calificación de X/10 y tu **reseña**. Esto no se puede deshacer.", con el texto de la reseña visible en un preview truncado a 2 líneas y "ver completa". Al confirmar, se reintenta con `?borrar_calificacion=true`, que borra las dos cosas y quita el ítem en una sola transacción. | Si cancela, la producción sigue en Vistas y la calificación intacta.                                   |
 | Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas                                                                                                                                                                                                                                                                                                                                                                                                                   | Check/uncheck toggle                                                                                   |
 
+El relleno sólido de Favoritos, Vista y Pendiente usa el color de acento, como la estrella de la nota propia; en el ojo y el reloj, la pupila y las agujas toman el color del botón para seguir viéndose (14/10/2026).
+
 Los botones de acción directa son visibles solo para usuarios autenticados. Para no autenticados, se muestra "Inicia sesión para calificar o guardar" con link a Login.
 
 ### Breadcrumb — comportamiento
 
 - Único elemento de navegación hacia atrás (sin botón Volver extra).
-- Desktop: top-left del content area, 14px, color secundario.
-- Mobile: mismo comportamiento, scroll horizontal si no entra en el ancho.
+- Desktop: top-left del content area, debajo de la barra y alineado con el póster, 14px, color secundario. Va sobre una píldora con velo (`scrim` al 60 % y desenfoque) para leerse sobre cualquier fondo: suelto encima de la imagen se perdía (14/10/2026).
+- Mobile: un enlace «‹ {origen}» al último tramo, en la misma píldora y la misma esquina.
 - Cada tramo es un link clickeable excepto el último (página actual, en negrita).
 - El penúltimo tramo (origen) restaura la vista anterior preservando scroll y resultados si es Buscar.
 
@@ -376,7 +378,7 @@ Los botones de acción directa son visibles solo para usuarios autenticados. Par
 
 | Estado         | Qué se muestra                                                                                  |
 | -------------- | ----------------------------------------------------------------------------------------------- |
-| Loading        | Skeleton del Hero (poster placeholder + líneas) + skeleton de 3 ReviewCards.                    |
+| Loading        | Skeleton del Hero (fondo, póster, título, datos, botones, géneros y sinopsis) + skeleton de 3 ReviewCards. Con sesión no aparece "Inicia sesión para calificar o guardar" mientras carga. |
 | Éxito          | Contenido completo como se describe arriba.                                                     |
 | No autenticado | Contenido visible, acciones directas reemplazadas por "Inicia sesión para calificar o guardar". |
 | Error TMDB     | Toast "No se pudo cargar la información. Intente nuevamente." + botón Reintentar.               |

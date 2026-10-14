@@ -274,6 +274,22 @@ export function ReviewsSection({
             {error}
           </p>
         )}
+        {!pagina &&
+          !error &&
+          [0, 1, 2].map((i) => (
+            <div
+              key={i}
+              aria-hidden="true"
+              className="grid grid-cols-[40px_minmax(0,1fr)] gap-4 border-t border-line py-[22px]"
+            >
+              <span className="size-10 animate-pulse rounded-full bg-raised motion-reduce:animate-none" />
+              <span className="flex flex-col gap-2.5 pt-1">
+                <span className="h-4 w-48 animate-pulse rounded bg-raised motion-reduce:animate-none" />
+                <span className="h-4 w-full animate-pulse rounded bg-raised motion-reduce:animate-none" />
+                <span className="h-4 w-2/3 animate-pulse rounded bg-raised motion-reduce:animate-none" />
+              </span>
+            </div>
+          ))}
         {pagina?.results.map((resena) => (
           <article
             key={`${resena.nombre_usuario}-${resena.fecha}`}
