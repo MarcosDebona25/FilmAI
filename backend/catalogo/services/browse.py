@@ -66,6 +66,7 @@ def explorar(
     nota=None,
     page=1,
     a_estrenar=False,
+    decada=None,
 ):
     """Una página de Buscar, con la forma de los listados de TMDB.
 
@@ -73,14 +74,27 @@ def explorar(
     frontend los normalice igual que las filas del Home.
     """
     tipos = ("movie", "tv") if tipo == "all" else (tipo,)
-    # «A estrenar» reemplaza al año: es la misma opción del selector.
+    # «A estrenar», una década o un año: es la misma opción del selector, así
+    # que el período se resuelve acá a un rango de fechas.
+    if a_estrenar:
+        desde, hasta = (hoy() + timedelta(days=1)).isoformat(), None
+    elif decada is not None:
+        desde, hasta = f"{decada}-01-01", f"{decada + 9}-12-31"
+    else:
+        desde = hasta = None
+    # Lo anunciado todavía no tiene votos (2027: 946 películas en TMDB y
+    # ninguna con 50, 14/10/2026): sin nota, va sin mínimo. Una nota sin votos
+    # no dice nada, así que con nota el mínimo se mantiene.
+    futuro = a_estrenar or (anio is not None and anio > anio_actual())
     filtros = {
         "q": q,
         "genero": genero,
-        "anio": None if a_estrenar else anio,
+        "anio": None if desde else anio,
         "nota": nota,
         "page": page,
-        "desde": (hoy() + timedelta(days=1)).isoformat() if a_estrenar else None,
+        "desde": desde,
+        "hasta": hasta,
+        "sin_minimo": futuro and nota is None,
     }
     if len(tipos) == 1:
         lados = [_lado(servicio, tipos[0], genero=genero, **_sin_genero(filtros))]
@@ -136,16 +150,13 @@ def _genero_para(tipo, genero):
     return GENERO_EN_SERIES.get(genero, genero)
 
 
-def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde):
+def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde, hasta, sin_minimo):
     """Resultados de un tipo, con `media_type` puesto."""
     if genero is False:
         # TMDB no tiene ese género para este tipo: no hay nada que pedir.
         return _VACIO
     if not q:
         minimo, maximo = NOTAS.get(nota, (None, None))
-        # Lo anunciado todavía no tiene votos (2027: 946 películas en TMDB y
-        # ninguna con 50, 14/10/2026): un año futuro sin nota va sin mínimo.
-        futuro = desde is not None or (anio is not None and anio > anio_actual())
         datos = servicio.discover(
             tipo,
             genero,
@@ -155,12 +166,13 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde):
             sort_by="popularity.desc",
             # Siempre con mínimo de votos: sin él, los primeros puestos se
             # llenan de títulos sin votos y «Menos de 5» de títulos sin nota.
-            min_votos=None if futuro and nota is None else MIN_VOTOS_NOTA,
+            min_votos=None if sin_minimo else MIN_VOTOS_NOTA,
             max_rating=maximo,
             sin_generos=NEWS_Y_TALK if tipo == "tv" and genero is None else None,
             desde_fecha=desde,
+            hasta_fecha=hasta,
         )
-    elif genero is None and nota is None and desde is None:
+    elif genero is None and nota is None and desde is None and hasta is None:
         datos = servicio.search(q, tipo, page, anio=anio)
     else:
         # La búsqueda por nombre de TMDB tampoco filtra por fecha.
@@ -173,6 +185,7 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde):
             nota=nota,
             page=page,
             desde=desde,
+            hasta=hasta,
         )
     for item in datos.get("results") or []:
         item["media_type"] = tipo
@@ -183,7 +196,7 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde):
     }
 
 
-def _ventana(servicio, tipo, *, q, genero, anio, nota, page, desde=None):
+def _ventana(servicio, tipo, *, q, genero, anio, nota, page, desde=None, hasta=None):
     """Los primeros 100 de la búsqueda de TMDB, filtrados por género y nota.
 
     La página 1 dice cuántas hay; las demás (hasta la 5) salen en paralelo.
@@ -202,7 +215,7 @@ def _ventana(servicio, tipo, *, q, genero, anio, nota, page, desde=None):
     items = [
         item for pagina in (primera, *resto) for item in pagina.get("results") or []
     ]
-    elegidos = [item for item in items if _pasa(item, genero, nota, desde)]
+    elegidos = [item for item in items if _pasa(item, genero, nota, desde, hasta)]
     desde = (page - 1) * POR_PAGINA
     return {
         "total_pages": ceil(len(elegidos) / POR_PAGINA),
@@ -211,14 +224,14 @@ def _ventana(servicio, tipo, *, q, genero, anio, nota, page, desde=None):
     }
 
 
-def _pasa(item, genero, nota, desde=None):
+def _pasa(item, genero, nota, desde=None, hasta=None):
     if genero is not None and genero not in (item.get("genre_ids") or []):
         return False
-    if desde is not None:
-        # Sin fecha no se sabe si estrena: queda afuera. AAAA-MM-DD se compara
+    if desde is not None or hasta is not None:
+        # Sin fecha no se sabe cuándo es: queda afuera. AAAA-MM-DD se compara
         # como texto.
         fecha = item.get("release_date") or item.get("first_air_date") or ""
-        if fecha < desde:
+        if not fecha or (desde and fecha < desde) or (hasta and fecha > hasta):
             return False
     if nota is None:
         return True

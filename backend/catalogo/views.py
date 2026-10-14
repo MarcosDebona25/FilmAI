@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from catalogo.services.browse import NOTAS, explorar, generos_de_todo
+from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_todo
 from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
@@ -190,8 +190,19 @@ class BrowseView(CatalogoBaseView):
             nota=nota,
             page=page,
             a_estrenar=self._a_estrenar(params.get("a_estrenar")),
+            decada=self._decada(params.get("decada")),
         )
         return Response(datos)
+
+    def _decada(self, valor):
+        """Década del selector de año (antes de 1990): 1900, 1910… hasta la actual."""
+        decada = _int_param(valor, "decada", default=None)
+        if decada is None:
+            return None
+        permitidas = [str(d) for d in range(1900, anio_actual() // 10 * 10 + 1, 10)]
+        # `allowedValues` es una lista de textos en el contrato de errores.
+        self._opcion(str(decada), "decada", permitidas)
+        return decada
 
     def _a_estrenar(self, valor):
         """«A estrenar» del selector de año: `true` o nada."""

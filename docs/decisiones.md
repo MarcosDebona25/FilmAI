@@ -4142,3 +4142,15 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Verificado contra TMDB real**: 4118 títulos a estrenar (Avengers: Doomsday, Neuromante, The Mongoose…), 458 series; «avatar» con «A estrenar» trae Avatar 4 y Avatar 5.
 - **Tests**: backend, 4 en `tests_browse.py` (desde mañana sin mínimo, con nota conserva el mínimo, ventana por fecha con los dos títulos reales de «dune» posteriores al 14/10/2026, valor inválido) y 1 de cliente y caché. Frontend, 2 en `search.test.ts` y 1 en `search-view.test.tsx`. Todos fallaban antes del cambio.
 - **Archivos afectados**: `backend/catalogo/{client,cache,views}.py`, `backend/catalogo/services/browse.py`, tests de `catalogo`, `frontend/lib/search.ts`, `frontend/components/features/{SearchView,FiltersSheet}.tsx`, tests, copia de i18n y mensajes, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 14/10/2026 — Décadas antes de 1990 en el año de Buscar
+
+- **Fecha**: 14/10/2026
+- **Descripción**: el selector de año tenía 127 opciones, del año actual a 1900. El usuario eligió entre cuatro variantes: años sueltos del actual a 1990 y, antes, décadas hasta la de 1900. Las otras eran solo décadas, años desde 2000 con décadas antes, y dejarlo como estaba. Quedan 46 opciones más «Cualquiera» y «A estrenar».
+  1. **Etiqueta**: «Década de 1980» en español, «1980s» en inglés (`search.filters.decade`). Un formato corto como «Años 10» sería ambiguo entre 1910 y 2010.
+  2. **API**: `browse/?decada=1980` reemplaza a `anio`. Sin texto, `discover` va del 1/1/1980 al 31/12/1989 (`discover(desde_fecha=, hasta_fecha=)`), con el mínimo de 50 votos. Con texto va a la ventana, filtrada por ese rango. Una década fuera de 1900…la actual, o que no termina en 0, da 400 `invalid_choice` (con `allowedValues` como textos, que es lo que pide el contrato de errores).
+  3. **`explorar()`** resuelve el período a un rango `desde`/`hasta` («A estrenar»: desde mañana; década: su rango) y a una sola regla `sin_minimo` (lo futuro sin nota). `_lado` y la ventana ya no saben de dónde vino el rango.
+  4. **URL**: `year=1980s`. `anioDesdeOpcion` ignora lo que no es una década válida.
+- **Verificado contra TMDB real (con ≥50 votos)**: 1980s, 2561 películas (Terminator, Los cazadores del arca perdida, Volver al futuro); 1950s, 943 (12 Angry Men, Vertigo); 1920s, 187 (Nosferatu); 1900s, 48 (Viaje a la Luna).
+- **Tests**: backend, 3 en `tests_browse.py` (década sin texto con rango y mínimo, ventana con las 9 películas reales de «dune» de los 80, décadas inválidas) y 1 de cliente y caché. Frontend, 2 en `search.test.ts` y el test del selector, que ahora verifica que la última opción es «Década de 1900».
+- **Archivos afectados**: `backend/catalogo/{client,cache,views}.py`, `backend/catalogo/services/browse.py`, tests de `catalogo`, `frontend/lib/search.ts`, `frontend/components/features/{SearchView,FiltersSheet}.tsx`, tests, copia de i18n y mensajes, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
