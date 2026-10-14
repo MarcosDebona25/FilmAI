@@ -178,7 +178,13 @@ export function SearchView() {
     if (!nodo || !puedeSeguir || typeof IntersectionObserver === "undefined") return;
     const observador = new IntersectionObserver(
       (entradas) => {
-        if (entradas.some((entrada) => entrada.isIntersecting)) cambiar({ pagina: cargadas + 1 });
+        if (!entradas.some((entrada) => entrada.isIntersecting)) return;
+        // El aviso llega asincrónico y `cambiar` recuerda la búsqueda de cuando
+        // se creó el observador: si la URL ya cambió (un filtro elegido
+        // mientras tanto), avanzar con la vieja lo borraría. Se compara
+        // normalizada para que el orden de los parámetros no importe.
+        const actual = urlDeBusqueda(busquedaDesdeUrl(new URLSearchParams(window.location.search)));
+        if (actual === url) cambiar({ pagina: cargadas + 1 });
       },
       { rootMargin: `0px 0px ${ANTICIPO} 0px` }
     );
