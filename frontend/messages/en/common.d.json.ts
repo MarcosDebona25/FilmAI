@@ -453,7 +453,8 @@ declare const messages: {
       "anyYear": "Any",
       "tmdbRatingLabel": "TMDB rating",
       "ratingShort": "{value}+",
-      "ratingShortBelowFive": "<5"
+      "ratingShortBelowFive": "<5",
+      "upcoming": "Upcoming"
     },
     "results": {
       "count": "{count, plural, one {# result} other {# results}}",

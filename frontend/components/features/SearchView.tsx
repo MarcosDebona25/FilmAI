@@ -17,6 +17,8 @@ import {
   MAX_TEXTO,
   NOTAS,
   aniosDisponibles,
+  anioDesdeOpcion,
+  opcionDeAnio,
   busquedaDesdeUrl,
   consultaApi,
   filtrosActivos,
@@ -305,13 +307,12 @@ export function SearchView() {
             <label className={pildora}>
               {t("search.filters.yearLabel")}
               <select
-                value={busqueda.anio ?? ""}
-                onChange={(evento) =>
-                  cambiar({ anio: evento.target.value ? Number(evento.target.value) : null })
-                }
+                value={opcionDeAnio(busqueda.anio)}
+                onChange={(evento) => cambiar({ anio: anioDesdeOpcion(evento.target.value) })}
                 className={selector}
               >
                 <option value="">{t("search.filters.anyYear")}</option>
+                <option value="upcoming">{t("search.filters.upcoming")}</option>
                 {aniosDisponibles(new Date().getFullYear()).map((anio) => (
                   <option key={anio} value={anio}>
                     {anio}

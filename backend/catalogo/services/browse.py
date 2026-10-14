@@ -15,6 +15,7 @@ El diseño completo está en `openspec/changes/search-catalogo/design.md`.
 """
 
 from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
 from math import ceil
 
 from django.utils import timezone
@@ -56,7 +57,15 @@ _VACIO = {"page": 1, "total_pages": 0, "total_results": 0, "results": []}
 
 
 def explorar(
-    servicio, *, q=None, tipo="all", genero=None, anio=None, nota=None, page=1
+    servicio,
+    *,
+    q=None,
+    tipo="all",
+    genero=None,
+    anio=None,
+    nota=None,
+    page=1,
+    a_estrenar=False,
 ):
     """Una página de Buscar, con la forma de los listados de TMDB.
 
@@ -64,7 +73,15 @@ def explorar(
     frontend los normalice igual que las filas del Home.
     """
     tipos = ("movie", "tv") if tipo == "all" else (tipo,)
-    filtros = {"q": q, "genero": genero, "anio": anio, "nota": nota, "page": page}
+    # «A estrenar» reemplaza al año: es la misma opción del selector.
+    filtros = {
+        "q": q,
+        "genero": genero,
+        "anio": None if a_estrenar else anio,
+        "nota": nota,
+        "page": page,
+        "desde": (hoy() + timedelta(days=1)).isoformat() if a_estrenar else None,
+    }
     if len(tipos) == 1:
         lados = [_lado(servicio, tipos[0], genero=genero, **_sin_genero(filtros))]
     else:
@@ -95,9 +112,13 @@ def generos_de_todo(peliculas, series):
     return list(peliculas) + [por_id[i] for i in SERIES_SIN_PAR if i in por_id]
 
 
+def hoy():
+    """En una función para que los tests fijen la fecha (zona de Argentina)."""
+    return timezone.localdate()
+
+
 def anio_actual():
-    """En una función para que los tests fijen el año."""
-    return timezone.localdate().year
+    return hoy().year
 
 
 def _sin_genero(filtros):
@@ -115,7 +136,7 @@ def _genero_para(tipo, genero):
     return GENERO_EN_SERIES.get(genero, genero)
 
 
-def _lado(servicio, tipo, *, q, genero, anio, nota, page):
+def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde):
     """Resultados de un tipo, con `media_type` puesto."""
     if genero is False:
         # TMDB no tiene ese género para este tipo: no hay nada que pedir.
@@ -124,7 +145,7 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page):
         minimo, maximo = NOTAS.get(nota, (None, None))
         # Lo anunciado todavía no tiene votos (2027: 946 películas en TMDB y
         # ninguna con 50, 14/10/2026): un año futuro sin nota va sin mínimo.
-        futuro = anio is not None and anio > anio_actual()
+        futuro = desde is not None or (anio is not None and anio > anio_actual())
         datos = servicio.discover(
             tipo,
             genero,
@@ -137,12 +158,21 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page):
             min_votos=None if futuro and nota is None else MIN_VOTOS_NOTA,
             max_rating=maximo,
             sin_generos=NEWS_Y_TALK if tipo == "tv" and genero is None else None,
+            desde_fecha=desde,
         )
-    elif genero is None and nota is None:
+    elif genero is None and nota is None and desde is None:
         datos = servicio.search(q, tipo, page, anio=anio)
     else:
+        # La búsqueda por nombre de TMDB tampoco filtra por fecha.
         datos = _ventana(
-            servicio, tipo, q=q, genero=genero, anio=anio, nota=nota, page=page
+            servicio,
+            tipo,
+            q=q,
+            genero=genero,
+            anio=anio,
+            nota=nota,
+            page=page,
+            desde=desde,
         )
     for item in datos.get("results") or []:
         item["media_type"] = tipo
@@ -153,7 +183,7 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page):
     }
 
 
-def _ventana(servicio, tipo, *, q, genero, anio, nota, page):
+def _ventana(servicio, tipo, *, q, genero, anio, nota, page, desde=None):
     """Los primeros 100 de la búsqueda de TMDB, filtrados por género y nota.
 
     La página 1 dice cuántas hay; las demás (hasta la 5) salen en paralelo.
@@ -172,7 +202,7 @@ def _ventana(servicio, tipo, *, q, genero, anio, nota, page):
     items = [
         item for pagina in (primera, *resto) for item in pagina.get("results") or []
     ]
-    elegidos = [item for item in items if _pasa(item, genero, nota)]
+    elegidos = [item for item in items if _pasa(item, genero, nota, desde)]
     desde = (page - 1) * POR_PAGINA
     return {
         "total_pages": ceil(len(elegidos) / POR_PAGINA),
@@ -181,9 +211,15 @@ def _ventana(servicio, tipo, *, q, genero, anio, nota, page):
     }
 
 
-def _pasa(item, genero, nota):
+def _pasa(item, genero, nota, desde=None):
     if genero is not None and genero not in (item.get("genre_ids") or []):
         return False
+    if desde is not None:
+        # Sin fecha no se sabe si estrena: queda afuera. AAAA-MM-DD se compara
+        # como texto.
+        fecha = item.get("release_date") or item.get("first_air_date") or ""
+        if fecha < desde:
+            return False
     if nota is None:
         return True
     if (item.get("vote_count") or 0) < MIN_VOTOS_NOTA:

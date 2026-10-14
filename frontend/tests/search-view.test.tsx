@@ -182,6 +182,21 @@ describe("Buscar", () => {
     expect(reemplazos).toEqual(["/search?genre=878", "/search?rating=lt5"]);
   });
 
+  it("«A estrenar» es una opción del año, no una lista de años futuros", () => {
+    render(<SearchView />, { locale: "es" });
+
+    const anio = screen.getByRole("combobox", { name: "Año" });
+    const opciones = within(anio).getAllByRole("option");
+    expect(opciones.slice(0, 2).map((opcion) => opcion.textContent)).toEqual([
+      "Cualquiera",
+      "A estrenar",
+    ]);
+    expect(opciones[2]).toHaveTextContent(String(new Date().getFullYear()));
+    fireEvent.change(anio, { target: { value: "upcoming" } });
+
+    expect(reemplazos).toEqual(["/search?year=upcoming"]);
+  });
+
   it("cambiar el tipo conserva un género común y descarta los que cambian de id", () => {
     estado.params = new URLSearchParams("genre=18");
     const { unmount } = render(<SearchView />, { locale: "en" });

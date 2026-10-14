@@ -189,8 +189,15 @@ class BrowseView(CatalogoBaseView):
             anio=_int_param(params.get("anio"), "anio", default=None),
             nota=nota,
             page=page,
+            a_estrenar=self._a_estrenar(params.get("a_estrenar")),
         )
         return Response(datos)
+
+    def _a_estrenar(self, valor):
+        """«A estrenar» del selector de año: `true` o nada."""
+        if valor in (None, ""):
+            return False
+        return self._opcion(valor, "a_estrenar", ["true"]) == "true"
 
     @staticmethod
     def _opcion(valor, nombre, permitidos):

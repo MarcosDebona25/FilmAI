@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BUSQUEDA_VACIA,
   aniosDisponibles,
+  anioDesdeOpcion,
+  opcionDeAnio,
   busquedaDesdeUrl,
   consultaApi,
   filtrosActivos,
@@ -59,6 +61,28 @@ describe("urlDeBusqueda", () => {
   });
 });
 
+describe("«A estrenar»", () => {
+  it("va en la URL como year=upcoming y a la API como a_estrenar, sin año", () => {
+    const busqueda = busquedaDesdeUrl(new URLSearchParams("q=avatar&year=upcoming"));
+
+    expect(busqueda.anio).toBe("proximos");
+    expect(urlDeBusqueda(busqueda)).toBe("/search?q=avatar&year=upcoming");
+    expect(consultaApi(busqueda)).toBe(
+      "/api/catalogo/browse/?q=avatar&tipo=all&a_estrenar=true&page=1"
+    );
+    expect(filtrosActivos(busqueda)).toBe(1);
+  });
+
+  it("el selector traduce sus valores al estado y de vuelta", () => {
+    expect(anioDesdeOpcion("upcoming")).toBe("proximos");
+    expect(anioDesdeOpcion("1999")).toBe(1999);
+    expect(anioDesdeOpcion("")).toBeNull();
+    expect(opcionDeAnio("proximos")).toBe("upcoming");
+    expect(opcionDeAnio(1999)).toBe("1999");
+    expect(opcionDeAnio(null)).toBe("");
+  });
+});
+
 describe("consultaApi", () => {
   it("traduce al contrato de browse/ (nota con +, «Menos de 5» como m5)", () => {
     expect(
@@ -78,13 +102,12 @@ describe("filtrosActivos", () => {
 });
 
 describe("aniosDisponibles", () => {
-  it("va de cinco años adelante (lo anunciado) a 1900", () => {
+  it("va del año actual a 1900 (lo futuro es «A estrenar»)", () => {
     const anios = aniosDisponibles(2026);
 
-    expect(anios[0]).toBe(2031);
-    expect(anios).toContain(2026);
+    expect(anios[0]).toBe(2026);
     expect(anios.at(-1)).toBe(1900);
-    expect(anios).toHaveLength(132);
+    expect(anios).toHaveLength(127);
   });
 });
 

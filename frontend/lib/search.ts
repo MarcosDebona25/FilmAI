@@ -10,11 +10,14 @@ import { routes } from "@/lib/routes";
 /** Nota en la URL: `9`…`5` es «N o más»; `lt5`, «Menos de 5». */
 export type Nota = "9" | "8" | "7" | "6" | "5" | "lt5";
 
+/** «A estrenar» (14/10/2026): lo que estrena después de hoy, en vez de años futuros. */
+export const A_ESTRENAR = "proximos";
+
 export interface Busqueda {
   q: string;
   tipo: ContentType;
   genero: number | null;
-  anio: number | null;
+  anio: number | typeof A_ESTRENAR | null;
   nota: Nota | null;
   pagina: number;
 }
@@ -24,11 +27,8 @@ export const MAX_TEXTO = 50;
 export const NOTAS: Nota[] = ["9", "8", "7", "6", "5", "lt5"];
 const TIPOS: ContentType[] = ["all", "movie", "tv"];
 const PRIMER_ANIO = 1900;
-/**
- * Años futuros en el selector: TMDB ya tiene anunciadas producciones hasta
- * cinco años adelante (Avatar 5 en 2031, verificado el 14/10/2026).
- */
-const ANIOS_ANUNCIADOS = 5;
+/** Valor de «A estrenar» en la URL y en el selector de año. */
+const OPCION_A_ESTRENAR = "upcoming";
 
 export const BUSQUEDA_VACIA: Busqueda = {
   q: "",
@@ -51,7 +51,7 @@ export function busquedaDesdeUrl(params: URLSearchParams): Busqueda {
     q: (params.get("q") ?? "").slice(0, MAX_TEXTO),
     tipo: TIPOS.includes(tipo) ? tipo : "all",
     genero: entero(params.get("genre")),
-    anio: entero(params.get("year")),
+    anio: anioDesdeOpcion(params.get("year") ?? ""),
     nota: NOTAS.includes(nota) ? nota : null,
     pagina: entero(params.get("page")) ?? 1,
   };
@@ -62,7 +62,7 @@ export function urlDeBusqueda(busqueda: Busqueda) {
   if (busqueda.q) params.set("q", busqueda.q);
   if (busqueda.tipo !== "all") params.set("type", busqueda.tipo);
   if (busqueda.genero !== null) params.set("genre", String(busqueda.genero));
-  if (busqueda.anio !== null) params.set("year", String(busqueda.anio));
+  if (busqueda.anio !== null) params.set("year", opcionDeAnio(busqueda.anio));
   if (busqueda.nota !== null) params.set("rating", busqueda.nota);
   if (busqueda.pagina > 1) params.set("page", String(busqueda.pagina));
   const consulta = params.toString();
@@ -75,7 +75,8 @@ export function consultaApi(busqueda: Busqueda) {
   if (q) params.set("q", q);
   params.set("tipo", busqueda.tipo);
   if (busqueda.genero !== null) params.set("genero", String(busqueda.genero));
-  if (busqueda.anio !== null) params.set("anio", String(busqueda.anio));
+  if (busqueda.anio === A_ESTRENAR) params.set("a_estrenar", "true");
+  else if (busqueda.anio !== null) params.set("anio", String(busqueda.anio));
   if (busqueda.nota !== null)
     params.set("nota", busqueda.nota === "lt5" ? "m5" : `${busqueda.nota}+`);
   params.set("page", String(busqueda.pagina));
@@ -87,10 +88,20 @@ export function filtrosActivos(busqueda: Busqueda) {
   return [busqueda.genero, busqueda.anio, busqueda.nota].filter((valor) => valor !== null).length;
 }
 
-/** Opciones del selector de año: de cinco años adelante (lo anunciado) a 1900. */
+/** Opciones del selector de año, del actual a 1900; lo futuro es «A estrenar». */
 export function aniosDisponibles(actual: number) {
-  const ultimo = actual + ANIOS_ANUNCIADOS;
-  return Array.from({ length: ultimo - PRIMER_ANIO + 1 }, (_, i) => ultimo - i);
+  return Array.from({ length: actual - PRIMER_ANIO + 1 }, (_, i) => actual - i);
+}
+
+/** Valor de un `<option>` del selector de año (o de `?year=`) → estado. */
+export function anioDesdeOpcion(valor: string): Busqueda["anio"] {
+  return valor === OPCION_A_ESTRENAR ? A_ESTRENAR : entero(valor);
+}
+
+/** Estado → valor del selector de año (y de `?year=`). */
+export function opcionDeAnio(anio: Busqueda["anio"]) {
+  if (anio === A_ESTRENAR) return OPCION_A_ESTRENAR;
+  return anio === null ? "" : String(anio);
 }
 
 /** Clave de `common.filters.*` con el nombre largo de cada nota. */
