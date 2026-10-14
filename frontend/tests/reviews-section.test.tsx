@@ -65,7 +65,10 @@ beforeEach(() => {
   estado.llamadas = [];
   estado.vacia = false;
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  vi.restoreAllMocks();
+});
 
 describe("reseñas de la comunidad", () => {
   it("se leen sin sesión, con el total y de a una página", async () => {
@@ -108,13 +111,26 @@ describe("reseñas de la comunidad", () => {
     ).toBeInTheDocument();
   });
 
-  it("una reseña larga se pliega con «Read more»", async () => {
+  it("si el texto recortado se corta, ofrece «Read more» y lo despliega", async () => {
+    // jsdom no calcula alturas: se simula un contenido más alto que lo visible.
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(120);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(72);
     render(<ReviewsSection {...props} />, { locale: "en" });
     const larga = await screen.findByText(LARGA);
 
     expect(larga).toHaveClass("line-clamp-3");
-    fireEvent.click(screen.getByRole("button", { name: "Read more" }));
+    fireEvent.click((await screen.findAllByRole("button", { name: "Read more" }))[0]);
     expect(larga).not.toHaveClass("line-clamp-3");
+    expect(screen.getByRole("button", { name: "Read less" })).toBeInTheDocument();
+  });
+
+  it("si el texto entra entero, no hay «Read more»", async () => {
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(72);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(72);
+    render(<ReviewsSection {...props} />, { locale: "en" });
+
+    await screen.findByText(LARGA);
+    expect(screen.queryByRole("button", { name: "Read more" })).toBeNull();
   });
 
   it("sin reseñas lo dice", async () => {

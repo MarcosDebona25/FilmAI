@@ -29,6 +29,7 @@ import {
 } from "@/lib/title";
 import type { ListaFicha } from "@/lib/title-lists";
 import { useCatalog } from "@/lib/use-catalog";
+import { useDesborde } from "@/lib/use-desborde";
 import { cn } from "@/lib/utils";
 
 const ESTRELLA =
@@ -68,6 +69,10 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const [nombreLista, setNombreLista] = useState<string | null>(null);
   const [modal, setModal] = useState<Modal>(null);
   const [sinopsisCompleta, setSinopsisCompleta] = useState(false);
+  const [sinopsisRef, sinopsisDesborda] = useDesborde<HTMLParagraphElement>(
+    sinopsisCompleta,
+    detalle.data?.overview ?? ""
+  );
 
   const recargarListas = useCallback(() => {
     return apiFetch<ListaFicha[]>(`/api/lists/?id_tmdb=${id}&tipo=${tipo}`).then(setListas, () =>
@@ -196,7 +201,6 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   }
 
   const cargandoUsuario = conSesion && (mia === undefined || listas === null);
-  const larga = (ficha?.sinopsis.length ?? 0) > 300;
 
   return (
     <main id="contenido" className="pb-16">
@@ -400,15 +404,16 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                   {t("title.synopsis.heading")}
                 </h2>
                 <p
+                  ref={sinopsisRef}
                   lang={ficha.sinopsisEnIngles ? "en" : undefined}
                   className={cn(
                     "text-[17px] leading-[1.6] text-pretty",
-                    larga && !sinopsisCompleta && "line-clamp-5"
+                    !sinopsisCompleta && "line-clamp-5"
                   )}
                 >
                   {ficha.sinopsis}
                 </p>
-                {larga && (
+                {(sinopsisDesborda || sinopsisCompleta) && (
                   <button
                     type="button"
                     aria-expanded={sinopsisCompleta}
