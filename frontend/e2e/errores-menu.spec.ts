@@ -122,9 +122,8 @@ for (const viewport of viewports) {
       } else {
         await principal.getByRole("link", { name: es.nav.main.search }).click();
         await expect(page).toHaveURL(/\/search$/);
-        await expect(
-          page.getByRole("heading", { name: es.errors.pages.notFoundTitle, level: 1 })
-        ).toBeVisible();
+        // Desde C-06 (14/10/2026) Buscar existe: antes el enlace llevaba al 404.
+        await expect(page.getByRole("searchbox")).toBeVisible();
       }
     });
 

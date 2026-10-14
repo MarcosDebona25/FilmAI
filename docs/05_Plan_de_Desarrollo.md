@@ -17,13 +17,13 @@ Actualizado el **14/10/2026** en la rama `develop/ui-design`. Fuente de verdad v
 | 11 · Errors | 404 con y sin sesión, error inesperado, Account menu | ✅ Completa | `app/not-found.tsx`, `app/error.tsx`, `components/Navbar.tsx` | Nada. El 404 sin sesión era una propuesta del canvas y ya está aplicado. |
 | 12 · Admin access | Acceso a la documentación interna (Swagger / esquema) | ✅ Completa | La sirve Django (`backend/filmai/documentation.py`) | Nada. |
 | 13 · Emails | Los 4 correos transaccionales (inglés y español) | ✅ Completa | `backend/templates/correos/` | Revisarlos en un cliente de correo real. |
-| Navegación | Navbar, barra inferior del celular y Footer (con «Ask FilmAI») | ✅ Completa | `components/Navbar.tsx`, `MobileTabs.tsx`, `Footer.tsx` | Los enlaces Search y Lists llevan a 404 hasta que existan sus pantallas. |
+| Navegación | Navbar, barra inferior del celular y Footer (con «Ask FilmAI») | ✅ Completa | `components/Navbar.tsx`, `MobileTabs.tsx`, `Footer.tsx` | El enlace Lists lleva a 404 hasta que exista su pantalla; Search existe desde C-06 (14/10/2026). |
 | 9 · Profile and settings | Terms and Conditions | 🟡 Parcial | `/terms` | Celular completo. En escritorio falta la miga de pan Profile › Settings › Terms con sesión. |
 | 9 · Profile and settings | My profile, Settings | 🔁 Rehacer | `/profile`, `/settings` | El código es anterior al canvas y no coincide con los artboards (escritorio y celular). Settings conserva la sección «Language» con el selector EN \| ES. |
 | 6 · Ratings & reviews | Ratings & reviews | 🔁 Rehacer | `/my-reviews` | Mismo caso: rehacer según el artboard. |
 | 3 · Home | Home | ✅ Completa | `/home` (`components/features/HomeView.tsx`) | Nada. Las tarjetas llevan a `/movie/[id]` y `/tv/[id]`, que responden 404 (Not Found) hasta C-07, y «Ask FilmAI» a `/chat` hasta B-04. |
 | 4 · Title page + rating | Ficha y modal de calificar/reseñar | ✅ Completa | `/movie/[id]`, `/tv/[id]` (`components/features/title/`) | Nada. La miga de pan acepta `?from=search` y `?from=list-{id}` para cuando existan Search y el detalle de listas. |
-| 5 · Search | Search | ⬜ Falta | `/search` responde 404 | Desarrollar (C-06). |
+| 5 · Search | Search | 🟡 En curso | `/search` (`components/features/SearchView.tsx`) | Escritorio listo (C-06, PR 3); falta la hoja de filtros del celular y la vuelta desde la ficha (PR 4). |
 | 8 · Lists | Lists y List detail | ⬜ Falta | `/lists` responde 404 | Desarrollar (L-02, L-03, L-04). |
 | 10 · Chatbot | Chatbot | ⬜ Falta | «Ask FilmAI» apunta a `/chat`, que responde 404 | Desarrollar (B-02 a B-05). Al hacerlo: fijar la ruta final, el idioma de la respuesta en curso, el cambio de idioma durante una solicitud y la localización de tarjetas y errores. |
 
