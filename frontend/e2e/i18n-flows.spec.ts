@@ -55,7 +55,7 @@ for (const locale of ["en", "es"] as const) {
     await page.locator('[name="username"]').fill("anaperez");
     await page.locator('[name="password"]').fill("Password123*");
     await page.getByRole("button", { name: messages.nav.account.logIn, exact: true }).click();
-    await expect(page).toHaveURL(baseURL! + "/");
+    await expect(page).toHaveURL(baseURL! + "/home");
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     await page.goto("/settings");
     await expect(

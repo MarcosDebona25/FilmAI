@@ -137,7 +137,7 @@ function LoginForm() {
 
   const destination = (() => {
     const next = searchParams.get("next");
-    return next && next.startsWith("/") ? next : "/";
+    return next && next.startsWith("/") ? next : routes.explore;
   })();
 
   async function onSubmit(event: FormEvent) {

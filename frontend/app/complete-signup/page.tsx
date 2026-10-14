@@ -113,7 +113,7 @@ export default function CompletarGooglePage() {
         acepta_terminos: true,
       });
       if (result.ok) {
-        router.push("/");
+        router.push(routes.explore);
       } else if (result.erroresPorCampo && Object.keys(result.erroresPorCampo).length > 0) {
         // Errores de campo del backend (p.ej. username ocupado) → inline.
         setErroresServidor((prev) => ({ ...prev, ...result.erroresPorCampo! }));
