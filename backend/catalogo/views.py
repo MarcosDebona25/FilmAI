@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
-from catalogo.services.materialization import materializar
+from catalogo.services.materialization import materializar_en_segundo_plano
 from catalogo.services.recomendado import recomendar
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.validacion import ErrorValidacion
@@ -72,18 +72,18 @@ def _validate_tipo(value):
 
 
 def _materializar_sin_interrumpir(id_tmdb, tipo_tmdb):
-    """Materializa la producción sin que un fallo afecte la respuesta.
+    """Encola la materialización sin que un fallo afecte ni demore la respuesta.
 
     El contrato de estos endpoints (C-03) es passthrough puro de TMDB: si
-    nuestra base está caída o el enriquecimiento falla, el usuario igual tiene
-    que ver la ficha. `materializar()` propaga sus errores a propósito para que
-    quien la llama fije la política; acá la política es registrar y seguir.
+    nuestra base o el broker están caídos, el usuario igual tiene que ver la
+    ficha. El enriquecimiento corre en Celery (14/10/2026): hacerlo acá sumaba
+    hasta un segundo a la primera visita.
     """
     try:
-        materializar(id_tmdb, tipo_tmdb)
+        materializar_en_segundo_plano(id_tmdb, tipo_tmdb)
     except Exception:
         # Amplio a propósito: es el límite entre el contrato de C-03 y todo lo
-        # que puede salir mal del lado nuestro (base, red, TMDB, broker).
+        # que puede salir mal del lado nuestro (base, broker).
         logger.exception(
             "No se pudo materializar la producción (%s, %s)", id_tmdb, tipo_tmdb
         )

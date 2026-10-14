@@ -76,6 +76,7 @@ from catalogo.tasks import (
     _ids_cambiados,
     backfill_embeddings,
     generar_embedding,
+    materializar_produccion,
     sync_catalogo_diaria,
 )
 from catalogo.views import (
@@ -802,7 +803,7 @@ class EndpointIntegrationTest(SimpleTestCase):
         # vistas de detalle se anula acá para no arrastrar escrituras a
         # Postgres a un `SimpleTestCase`; tiene su propia cobertura en
         # `VistasDeDetalleMaterializanTests`.
-        parche = patch("catalogo.views.materializar")
+        parche = patch("catalogo.views.materializar_en_segundo_plano")
         parche.start()
         self.addCleanup(parche.stop)
 
@@ -2076,11 +2077,11 @@ class MaterializacionFrescuraTests(SimpleTestCase):
 
 
 class VistasDeDetalleMaterializanTests(TestCase):
-    """El detalle sigue siendo passthrough de TMDB y además materializa (C-04a).
+    """El detalle sigue siendo passthrough de TMDB y materializa en Celery (C-04a).
 
-    Se parchea `get_catalog_service` en los dos módulos que lo usan: la vista
-    lo llama para armar la respuesta y el enriquecimiento lo llama de nuevo
-    (en producción esa segunda llamada es un acierto de caché en Redis).
+    Desde el 14/10/2026 la vista no enriquece: encola `materializar_produccion`
+    solo si la fila falta o le falta el detalle. Acá se parchea esa tarea; lo
+    que hace adentro se prueba en `MaterializarProduccionTareaTests`.
     """
 
     def setUp(self):
@@ -2093,56 +2094,89 @@ class VistasDeDetalleMaterializanTests(TestCase):
             parche = patch(f"{modulo}.get_catalog_service", return_value=self.servicio)
             parche.start()
             self.addCleanup(parche.stop)
-        parche_tarea = patch("catalogo.services.materialization.generar_embedding")
+        parche_embedding = patch("catalogo.services.materialization.generar_embedding")
+        parche_embedding.start()
+        self.addCleanup(parche_embedding.stop)
+        parche_tarea = patch(
+            "catalogo.services.materialization.materializar_produccion"
+        )
         self.tarea = parche_tarea.start()
         self.addCleanup(parche_tarea.stop)
         self.api = APIClient()
 
-    def test_detalle_de_pelicula_materializa_sin_tocar_la_respuesta(self):
+    def test_primera_visita_encola_y_responde_sin_escribir(self):
+        response = self.api.get("/api/catalogo/movie/550/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, _DETALLE_MOVIE)
+        self.tarea.delay.assert_called_once_with(550, "movie")
+        # El enriquecimiento ya no corre en el pedido: ni filas ni llamadas
+        # a créditos o keywords.
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 0)
+        self.servicio.get_credits.assert_not_called()
+
+    def test_una_serie_se_encola_con_su_tipo(self):
+        response = self.api.get("/api/catalogo/tv/1396/")
+
+        self.assertEqual(response.data, _DETALLE_TV)
+        self.tarea.delay.assert_called_once_with(1396, "tv")
+
+    def test_una_fila_completa_no_encola_nada(self):
         with self.captureOnCommitCallbacks(execute=True):
+            materializar(550, "movie")
+
+        self.api.get("/api/catalogo/movie/550/")
+        self.api.get("/api/catalogo/movie/550/")
+
+        self.tarea.delay.assert_not_called()
+
+    def test_una_fila_sin_enriquecer_se_vuelve_a_encolar(self):
+        # Por ejemplo, si la tarea anterior falló después de crear la fila.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo=""
+        )
+
+        self.api.get("/api/catalogo/movie/550/")
+
+        self.tarea.delay.assert_called_once_with(550, "movie")
+
+    def test_un_fallo_al_encolar_no_rompe_la_respuesta(self):
+        # Contrato de C-03: el detalle es passthrough puro de TMDB. Si el broker
+        # o la base fallan, el usuario igual ve la ficha.
+        self.tarea.delay.side_effect = RuntimeError("broker caído")
+
+        with self.assertLogs("catalogo.views", level="ERROR"):
             response = self.api.get("/api/catalogo/movie/550/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, _DETALLE_MOVIE)
+
+
+class MaterializarProduccionTareaTests(MaterializacionBase):
+    """La tarea que encola la ficha: materializa y nunca lanza (14/10/2026)."""
+
+    def test_materializa_y_encola_el_embedding(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            materializar_produccion(550, "movie")
 
         produccion = ProduccionAudiovisual.objects.get(
             id_tmdb=550, tipo=TipoProduccion.PELICULA
         )
         self.assertEqual(produccion.titulo, "Fight Club")
+        self.assertIsNotNone(produccion.fecha_enriquecimiento)
         self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
         self.tarea.delay.assert_called_once_with(produccion.id)
 
-    def test_detalle_de_serie_materializa_sin_tocar_la_respuesta(self):
-        response = self.api.get("/api/catalogo/tv/1396/")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, _DETALLE_TV)
-
-        produccion = ProduccionAudiovisual.objects.get(
-            id_tmdb=1396, tipo=TipoProduccion.SERIE
-        )
-        self.assertEqual(produccion.titulo, "Breaking Bad")
-        self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
-
-    def test_abrir_el_detalle_dos_veces_no_duplica_nada(self):
-        with self.captureOnCommitCallbacks(execute=True):
-            self.api.get("/api/catalogo/movie/550/")
-            self.api.get("/api/catalogo/movie/550/")
-
-        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
-        self.assertEqual(ProduccionEmbedding.objects.count(), 1)
-        self.tarea.delay.assert_called_once()
-
-    def test_un_fallo_al_materializar_no_rompe_la_respuesta(self):
-        # Contrato de C-03: el detalle es passthrough puro de TMDB. Si nuestra
-        # base o el enriquecimiento fallan, el usuario igual ve la ficha.
-        with patch(
-            "catalogo.views.materializar", side_effect=RuntimeError("base caída")
+    def test_un_fallo_se_registra_y_no_se_propaga(self):
+        with (
+            patch(
+                "catalogo.services.materialization.materializar",
+                side_effect=RuntimeError("TMDB caído"),
+            ),
+            self.assertLogs("catalogo.tasks", level="ERROR"),
         ):
-            response = self.api.get("/api/catalogo/movie/550/")
+            materializar_produccion(550, "movie")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, _DETALLE_MOVIE)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 0)
 
 

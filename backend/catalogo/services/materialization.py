@@ -26,7 +26,7 @@ from catalogo.models import (
 )
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.tmdb import get_catalog_service
-from catalogo.tasks import generar_embedding
+from catalogo.tasks import generar_embedding, materializar_produccion
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,27 @@ def materializar(id_tmdb, tipo_tmdb, forzar=False):
 
     _encolar_embedding(produccion)
     return produccion
+
+
+def materializar_en_segundo_plano(id_tmdb, tipo_tmdb):
+    """Variante de las vistas de detalle: quien abre la ficha no espera a TMDB.
+
+    Si la fila ya está completa no hay nada caro que hacer y no se encola nada:
+    encolar en cada visita llenaría la cola de trabajo repetido (el mismo
+    criterio que `_encolar_embedding`). Si no existe o le falta el detalle —la
+    primera visita, o la red de seguridad de 90 días—, `materializar()` corre
+    en el worker de Celery.
+
+    Medido el 14/10/2026: la primera visita tardaba entre 1 y 1,6 s en
+    responder. ~0,5 s eran la llamada a TMDB de la propia vista y el resto, el
+    enriquecimiento (detalle canónico, créditos, keywords y traducción).
+    Calificar o agregar a una lista no dependen de esto: materializan por su
+    cuenta antes de escribir.
+    """
+    produccion = _buscar_produccion(id_tmdb, tmdb_a_dominio(tipo_tmdb))
+    if produccion is not None and not _necesita_enriquecimiento(produccion):
+        return
+    materializar_produccion.delay(id_tmdb, tipo_tmdb)
 
 
 def _buscar_produccion(id_tmdb, tipo):
