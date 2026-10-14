@@ -27,7 +27,7 @@ The field MUST accept any text up to 50 characters and search 350 ms after the l
 
 ### Requirement: Filters
 
-The page MUST offer the type selector (All · Movies · TV shows), Genre (from `genres/?tipo=` of the current type), Year (Any, then five years ahead — announced productions — down to 1900) and TMDB rating (Any, 9 or higher … 5 or higher, Below 5). Changing the type MUST keep the genre only when it has the same id for movies and shows. The five show-only genres TMDB does not translate (Kids, News, Reality, Soap, Talk) MUST use the app's copy. On mobile the filters MUST live in a «Filters» sheet opened by a button that announces how many are active; each change applies at once and «Show results» closes it.
+The page MUST offer the type selector (All · Movies · TV shows), Genre (from `genres/?tipo=` of the current type), Year (Any, «Upcoming» — what premieres after today — then the current year down to 1900) and TMDB rating (Any, 9 or higher … 5 or higher, Below 5). Changing the type MUST keep the genre only when it has the same id for movies and shows. The five show-only genres TMDB does not translate (Kids, News, Reality, Soap, Talk) MUST use the app's copy. On mobile the filters MUST live in a «Filters» sheet opened by a button that announces how many are active; each change applies at once and «Show results» closes it.
 
 #### Scenario: Mobile sheet
 
