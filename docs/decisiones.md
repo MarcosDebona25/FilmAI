@@ -3933,3 +3933,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Cierre de C-05**: con este PR se completan las cuatro entregas del SDD (#69 a #72). Según AGENTS.md §9, se elimina `openspec/changes/home-catalogo/`; las specs canónicas son `recommendations-api` y `home-ui`. Queda pendiente actualizar con Marcos la nota «Interfaces: código vs pendientes» del canvas (Home ✅).
 - **Tests**: Vitest `home.test.ts` (7: regla del Hero, mezcla, `?type=`, `formatList`) y `home-page.test.tsx` (6: sin sesión, con sesión, fila que falla, `?type=movie`, selector en la URL, todo falla y reintento); un caso nuevo en `catalog.test.ts` (repetidos). Playwright `e2e/home.spec.ts` (6, escritorio y celular, API simulada con recortes reales de TMDB); `e2e/i18n-flows.spec.ts` espera `/home` después del login.
 - **Archivos afectados**: `frontend/app/home/page.tsx`, `frontend/components/features/{HomeView,HomeHero,MediaCard}.tsx`, `frontend/components/Navbar.tsx`, `frontend/lib/{home,use-catalog,catalog,format}.ts`, `frontend/app/(public)/login/page.tsx`, `frontend/app/complete-signup/page.tsx`, tests y e2e, `openspec/specs/home-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`; se elimina `openspec/changes/home-catalogo/`.
+
+---
+
+## 14/10/2026 — Ficha de detalle (C-07): SDD y decisiones
+
+- **Fecha**: 14/10/2026
+- **Descripción**: Gonza abre el SDD de C-07 en `openspec/changes/title-page/`, que incluye el modal de calificar (mitad frontend de C-08) y las acciones de listas (L-04). Decisiones del usuario:
+  1. **L-04 la construye Gonza dentro de C-07** (era de Marcos): está en la misma pantalla y «Watched» está atado a la calificación (regla «calificada ⇒ vista» del 30/09/2026 y el 409 al quitarla). La API de L-01 ya trae la pertenencia con `item_id`, el alta y la baja con `?borrar_calificacion=true`.
+  2. **Reseñas de la comunidad públicas**: `GET /api/reviews/?id_tmdb=&tipo=` deja de pedir sesión; el `POST` la sigue pidiendo. Coincide con la nota del canvas («las calificaciones y reseñas son públicas y se ven en la ficha»).
+  3. **Orden y filtro por nota** en esas reseñas, como el canvas: `orden` (`fecha-desc`, `fecha-asc`, `nota-desc`, `nota-asc`) y `nota_min`/`nota_max`. Para que el cursor no dependa de un offset entre miles de notas iguales, los órdenes por nota usan una clave única anotada (`valor * 10^9 + id`). La respuesta suma `total_comunidad` (sin filtros) para «Showing X of N».
+  4. **El origen de la miga de pan viaja en la URL**: `?from=home|search|reviews|list-{id}`; sin parámetro, Home. Se descartó `sessionStorage`, que se pierde al recargar o abrir otra pestaña.
+- **También**: endpoint nuevo `GET /api/catalogo/{movie|tv}/{id}/credits/` con directores (en series, `created_by`: verificado el 13/10/2026 que Breaking Bad no tiene director a nivel serie) y reparto con personaje; las calificaciones se muestran «★ N», no «X/10»; sin sesión, «Log in to rate or save» con `?next=` a la misma ficha.
+- **Entrega**: cinco PRs contra `develop/ui-design`: SDD y docs, backend, modal y confirmaciones, acciones de listas, y la página.
+- **Archivos afectados**: `openspec/changes/title-page/`, `docs/04_Lineamientos_UI.md` (§5c), `docs/05_Plan_de_Desarrollo.md` (L-04), `docs/decisiones.md`.

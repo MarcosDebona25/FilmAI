@@ -272,6 +272,15 @@ panel overlay a pantalla completa.
 Se accede clickeando cualquier MediaCard desde Home, Buscar, o Listas. Reemplaza el content
 area dentro del shell (navbar + FAB se mantienen). La navegación hacia atrás es vía breadcrumb.
 
+**Implementación (14/10/2026, SDD `openspec/changes/title-page/`).** Manda el canvas («Title page · desktop/mobile»); donde esta sección dice otra cosa, vale esto:
+
+- Rutas `/movie/[id]` y `/tv/[id]`. El origen viaja en la URL: `?from=home`, `search`, `reviews` o `list-{id}`; sin parámetro, la miga empieza en Home.
+- Calificaciones como «★ 9» o «★ 8,5», nunca «X/10» (decisión del 03/10/2026), en la ficha, el modal y las reseñas.
+- «Director and cast»: en películas, los directores; en series, los creadores («Created by»), porque TMDB no tiene director a nivel serie. El reparto lleva el personaje y se pliega pasados los 10.
+- Las reseñas de la comunidad son públicas (se leen sin sesión) y tienen orden (más nuevas, más viejas, mejor y peor calificadas) y filtro por nota (9 o más … menos de 5), con «Load more».
+- Las acciones de listas (Favorite, Watched, Watchlist y «Add to list» con creación de lista en el lugar) se construyen en C-07; L-04 queda cubierta ahí.
+- Sin sesión, las acciones se reemplazan por «Log in to rate or save», que vuelve a la misma ficha después de ingresar.
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │  Inicio > Breaking Bad                                             │  ← breadcrumb
