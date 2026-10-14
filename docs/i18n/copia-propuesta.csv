@@ -124,3 +124,4 @@ search.filters.tmdbRatingLabel,,label,,Calificación de TMDB,TMDB rating,aprobad
 search.filters.ratingShort,,label,value,{value}+,{value}+,aprobado
 search.filters.ratingShortBelowFive,,label,,<5,<5,aprobado
 search.filters.upcoming,,label,,A estrenar,Upcoming,aprobado
+search.filters.decade,,label,decade,Década de {decade},{decade}s,aprobado
