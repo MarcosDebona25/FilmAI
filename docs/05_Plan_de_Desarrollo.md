@@ -17,7 +17,7 @@ Actualizado el **14/10/2026** en la rama `develop/ui-design`. Fuente de verdad v
 | 11 · Errors | 404 con y sin sesión, error inesperado, Account menu | ✅ Completa | `app/not-found.tsx`, `app/error.tsx`, `components/Navbar.tsx` | Nada. El 404 sin sesión era una propuesta del canvas y ya está aplicado. |
 | 12 · Admin access | Acceso a la documentación interna (Swagger / esquema) | ✅ Completa | La sirve Django (`backend/filmai/documentation.py`) | Nada. |
 | 13 · Emails | Los 4 correos transaccionales (inglés y español) | ✅ Completa | `backend/templates/correos/` | Revisarlos en un cliente de correo real. |
-| Navegación | Navbar, barra inferior del celular y Footer (con «Ask FilmAI») | ✅ Completa | `components/Navbar.tsx`, `MobileTabs.tsx`, `Footer.tsx` | Los enlaces Search y Lists llevan a 404 hasta que existan sus pantallas. |
+| Navegación | Navbar, barra inferior del celular y Footer (con «Ask FilmAI») | ✅ Completa | `components/Navbar.tsx`, `MobileTabs.tsx`, `Footer.tsx` | El enlace Lists lleva a 404 hasta que exista su pantalla; Search existe desde C-06 (14/10/2026). |
 | 9 · Profile and settings | Terms and Conditions | 🟡 Parcial | `/terms` | Celular completo. En escritorio falta la miga de pan Profile › Settings › Terms con sesión. |
 | 9 · Profile and settings | My profile, Settings | 🔁 Rehacer | `/profile`, `/settings` | El código es anterior al canvas y no coincide con los artboards (escritorio y celular). Settings conserva la sección «Language» con el selector EN \| ES. |
 | 6 · Ratings & reviews | Ratings & reviews | 🔁 Rehacer | `/my-reviews` | Mismo caso: rehacer según el artboard. |
