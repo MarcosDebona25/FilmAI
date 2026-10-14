@@ -37,10 +37,10 @@ Tests with real TMDB responses captured on 13-14/10/2026, never invented.
 
 ## Phase 2: Rating modal and confirmations (PR 3)
 
-- [ ] 2.1 `StarRating` + Vitest: arrows, Home/End, hover preview, `aria-checked`, two rows on mobile
-- [ ] 2.2 `RatingDialog` + Vitest: publish disabled without a rating, counter, 1000 limit, Watched notice only if not in Watched, edit preloads, «Remove rating» only when editing
-- [ ] 2.3 `ConfirmDialog` + Vitest: focus starts on Cancel, Escape cancels, the review preview is clamped
-- [ ] 2.4 New copy in `copia-propuesta.csv`, `npm run i18n:generate`, `i18n:check`
+- [x] 2.1 `StarRating` + Vitest: arrows, Home/End, hover preview, `aria-checked`, two rows on mobile
+- [x] 2.2 `RatingDialog` + Vitest: publish disabled without a rating, counter, 1000 limit, Watched notice only if not in Watched, edit preloads, «Remove rating» only when editing
+- [x] 2.3 `ConfirmDialog` + Vitest: focus starts on Cancel, Escape cancels, the review preview is clamped
+- [x] 2.4 No new copy needed for the dialogs (all seeded); the new keys go with PR 5. `i18n:check` clean
 
 ## Phase 3: List actions (PR 4)
 

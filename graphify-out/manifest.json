@@ -84,8 +84,8 @@
     "semantic_hash": ""
   },
   "backend/catalogo/views.py": {
-    "mtime": 1791942777.6117923,
-    "seen": 1791943441.1479373,
+    "mtime": 1791945259.9237814,
+    "seen": 1791945638.5284042,
     "ast_hash": "757f4dd4eecd714db57f9fc98f0fff22",
     "semantic_hash": ""
   },
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1791943012.3917916,
-    "seen": 1791943441.16727,
-    "ast_hash": "91ce839d1cbb8e36b83dc528574082fb",
+    "mtime": 1791945625.3397822,
+    "seen": 1791945638.5517197,
+    "ast_hash": "e7e74e30bb2562ba23c4b4fe790cb569",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1212,8 +1212,8 @@
     "semantic_hash": "d2f2c606e0fc73398ca2d116525a6738"
   },
   "backend/catalogo/urls.py": {
-    "mtime": 1791942767.5197628,
-    "seen": 1791943441.1479363,
+    "mtime": 1791945259.8848598,
+    "seen": 1791945638.528401,
     "ast_hash": "b9e0221b4414be21a4ff10cd7db65b5a",
     "semantic_hash": ""
   },
@@ -1302,8 +1302,8 @@
     "semantic_hash": "5e3cb3748e2efb42920ad061bb8d8394"
   },
   "openspec/specs/tmdb-endpoints/spec.md": {
-    "mtime": 1791943427.7128909,
-    "seen": 1791943441.1685896,
+    "mtime": 1791945260.3437815,
+    "seen": 1791945638.5528288,
     "ast_hash": "6884608911d8aca5b8215288ad4af23c",
     "semantic_hash": ""
   },
@@ -1518,32 +1518,32 @@
     "semantic_hash": ""
   },
   "backend/catalogo/pagination_reviews.py": {
-    "mtime": 1791942819.4477925,
-    "seen": 1791943441.1472743,
+    "mtime": 1791945259.7117815,
+    "seen": 1791945638.5265048,
     "ast_hash": "52260b1c03535214a4a72e130d9d3a42",
     "semantic_hash": ""
   },
   "backend/catalogo/reviews.py": {
-    "mtime": 1791942904.4059494,
-    "seen": 1791943441.147276,
+    "mtime": 1791945259.7597816,
+    "seen": 1791945638.5265102,
     "ast_hash": "5cb9d04dada4f56c86ec8b72f01925df",
     "semantic_hash": ""
   },
   "backend/catalogo/serializers_reviews.py": {
-    "mtime": 1791942819.3675904,
-    "seen": 1791943441.1472774,
+    "mtime": 1791945259.764143,
+    "seen": 1791945638.5265136,
     "ast_hash": "a04d50a6d156fb30441e51e247315bed",
     "semantic_hash": ""
   },
   "backend/catalogo/tests_reviews.py": {
-    "mtime": 1791942705.9477913,
-    "seen": 1791943441.1479347,
+    "mtime": 1791945259.8836472,
+    "seen": 1791945638.5283976,
     "ast_hash": "ad8b87f30c5eb0b896d43ff39d5e2d9c",
     "semantic_hash": ""
   },
   "openspec/specs/reviews-api/spec.md": {
-    "mtime": 1791943012.3638315,
-    "seen": 1791943441.168513,
+    "mtime": 1791945260.314869,
+    "seen": 1791945638.5527554,
     "ast_hash": "eee19539b8ac7c77cfacf98ec47e9fd0",
     "semantic_hash": ""
   },
@@ -1740,8 +1740,8 @@
     "semantic_hash": ""
   },
   "contracts/openapi.yaml": {
-    "mtime": 1791942988.0120177,
-    "seen": 1791943441.1670578,
+    "mtime": 1791945259.9280262,
+    "seen": 1791945638.5514255,
     "ast_hash": "b0c2b1f8f770a50f1d5fe39a9d7817f7",
     "semantic_hash": ""
   },
@@ -3558,14 +3558,14 @@
     "semantic_hash": ""
   },
   "backend/catalogo/services/creditos.py": {
-    "mtime": 1791942767.407792,
-    "seen": 1791943441.147352,
+    "mtime": 1791945259.8357816,
+    "seen": 1791945638.5267084,
     "ast_hash": "0c27412784afe0b86c459a228bfee075",
     "semantic_hash": ""
   },
   "backend/catalogo/tests_ficha.py": {
-    "mtime": 1791942705.9477913,
-    "seen": 1791943441.1479,
+    "mtime": 1791945259.8393917,
+    "seen": 1791945638.5283067,
     "ast_hash": "3309a92f35865bc5fef6692b4a204fb3",
     "semantic_hash": ""
   },
@@ -3582,9 +3582,51 @@
     "semantic_hash": ""
   },
   "openspec/changes/title-page/tasks.md": {
-    "mtime": 1791943012.3864186,
-    "seen": 1791943441.1679733,
-    "ast_hash": "93b8c48ab64f8463235086170d27ec15",
+    "mtime": 1791945625.3373194,
+    "seen": 1791945638.5522206,
+    "ast_hash": "a9076e64ef9204c8812831cbdbc5b81a",
+    "semantic_hash": ""
+  },
+  "frontend/components/features/title/ConfirmDialog.tsx": {
+    "mtime": 1791945580.9250462,
+    "seen": 1791945638.5450256,
+    "ast_hash": "c3b2ef085d17a16a029e6c056ce6eb85",
+    "semantic_hash": ""
+  },
+  "frontend/components/features/title/DialogShell.tsx": {
+    "mtime": 1791945581.428031,
+    "seen": 1791945638.5450273,
+    "ast_hash": "0959fa8fd408b777c8c9f6c132551bf0",
+    "semantic_hash": ""
+  },
+  "frontend/components/features/title/RatingDialog.tsx": {
+    "mtime": 1791945580.924746,
+    "seen": 1791945638.5450284,
+    "ast_hash": "5928b055b9ebb19467b61be4b550418f",
+    "semantic_hash": ""
+  },
+  "frontend/components/features/title/StarRating.tsx": {
+    "mtime": 1791945479.775785,
+    "seen": 1791945638.5450294,
+    "ast_hash": "0f0d98ece7ce9280327731e8a6435f11",
+    "semantic_hash": ""
+  },
+  "frontend/tests/confirm-dialog.test.tsx": {
+    "mtime": 1791945364.4477837,
+    "seen": 1791945638.5470426,
+    "ast_hash": "1044f13722edc84470252764501160b3",
+    "semantic_hash": ""
+  },
+  "frontend/tests/rating-dialog.test.tsx": {
+    "mtime": 1791945364.4437838,
+    "seen": 1791945638.547626,
+    "ast_hash": "030d981e552bc86e6f68f6a342d31433",
+    "semantic_hash": ""
+  },
+  "frontend/tests/star-rating.test.tsx": {
+    "mtime": 1791945364.4397836,
+    "seen": 1791945638.5477302,
+    "ast_hash": "670d06c2fd11a3844fb49b72ea2ee6d8",
     "semantic_hash": ""
   }
 }
