@@ -132,6 +132,7 @@ class TMDBClient:
         min_votos=None,
         max_rating=None,
         sin_generos=None,
+        desde_fecha=None,
     ):
         """Busca producciones por filtros. Todo es opcional menos el tipo.
 
@@ -141,7 +142,8 @@ class TMDBClient:
         gente conoce, el orden por defecto trae lo que trendea hoy. `min_votos`
         deja afuera los títulos con pocos votos (C-05) y `max_rating` es el
         techo de nota de «Below 5» en Buscar (C-06). `sin_generos` son ids
-        separados por coma que se excluyen (`without_genres`).
+        separados por coma que se excluyen (`without_genres`); `desde_fecha`
+        (AAAA-MM-DD) deja solo lo que estrena desde ese día («A estrenar»).
         """
         params = {"page": page}
         if genero is not None:
@@ -162,6 +164,8 @@ class TMDBClient:
             params["vote_average.lte"] = max_rating
         if sin_generos is not None:
             params["without_genres"] = sin_generos
+        if desde_fecha is not None:
+            params[f"{_DISCOVER_DATE_PARAM[tipo]}.gte"] = desde_fecha
         return self._get_localizado(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1, anio=None):

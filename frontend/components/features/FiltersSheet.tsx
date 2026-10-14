@@ -5,7 +5,15 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { DialogShell } from "@/components/features/title/DialogShell";
-import { ETIQUETA_NOTA, NOTAS, aniosDisponibles, type Busqueda, type Nota } from "@/lib/search";
+import {
+  ETIQUETA_NOTA,
+  NOTAS,
+  aniosDisponibles,
+  anioDesdeOpcion,
+  opcionDeAnio,
+  type Busqueda,
+  type Nota,
+} from "@/lib/search";
 import { cn } from "@/lib/utils";
 
 /**
@@ -84,13 +92,12 @@ export function FiltersSheet({
           </label>
           <select
             id={anioId}
-            value={busqueda.anio ?? ""}
-            onChange={(evento) =>
-              onCambiar({ anio: evento.target.value ? Number(evento.target.value) : null })
-            }
+            value={opcionDeAnio(busqueda.anio)}
+            onChange={(evento) => onCambiar({ anio: anioDesdeOpcion(evento.target.value) })}
             className={campo}
           >
             <option value="">{t("search.filters.anyYear")}</option>
+            <option value="upcoming">{t("search.filters.upcoming")}</option>
             {aniosDisponibles(new Date().getFullYear()).map((anio) => (
               <option key={anio} value={anio}>
                 {anio}

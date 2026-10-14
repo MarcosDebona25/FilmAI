@@ -9,6 +9,7 @@ de géneros. Están recortadas a los campos que mira la lógica.
 
 import copy
 import json
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
@@ -195,6 +196,48 @@ class SinTextoTests(BrowseBase):
 
         self.assertEqual(len(self.tmdb.de("discover")), 1)
         self.assertEqual(self.tmdb.de("search"), [])
+
+
+class AEstrenarTests(BrowseBase):
+    """«A estrenar»: lo que estrena después de hoy (pedido del usuario, 14/10/2026)."""
+
+    def setUp(self):
+        super().setUp()
+        parche = patch("catalogo.services.browse.hoy", return_value=date(2026, 10, 14))
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def test_sin_texto_pide_desde_maniana_sin_minimo_de_votos(self):
+        self.ok(tipo="movie", a_estrenar="true")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["desde_fecha"], "2026-10-15")
+        self.assertIsNone(params["min_votos"])
+        self.assertIsNone(params["anio"])
+
+    def test_con_nota_conserva_el_minimo(self):
+        self.ok(tipo="movie", a_estrenar="true", nota="7+")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["min_votos"], 50)
+
+    def test_con_texto_filtra_la_ventana_por_fecha(self):
+        # En las 100 primeras películas de «dune» hay dos con fecha posterior
+        # al 14/10/2026: Dune: Part Three (15/12) y The Diary of a Chambermaid
+        # (23/10).
+        datos = self.ok(q="dune", tipo="movie", a_estrenar="true")
+
+        self.assertEqual(len(self.tmdb.de("search", "movie")), 5)
+        self.assertEqual(
+            sorted(item["title"] for item in datos["results"]),
+            ["Dune: Part Three", "The Diary of a Chambermaid"],
+        )
+
+    def test_un_valor_que_no_es_true_se_rechaza(self):
+        respuesta = self.buscar(a_estrenar="quizas")
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data["errors"][0]["field"], "a_estrenar")
 
 
 class TextoSinFiltrosTests(BrowseBase):

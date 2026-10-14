@@ -73,9 +73,9 @@ export function MediaCard({
         >
           {title.titulo}
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-fg-3 md:gap-2 md:text-[13px]">
+        <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-fg-3 md:gap-x-2 md:text-[13px]">
           {(showType || title.anio) && (
-            <span>
+            <span className="whitespace-nowrap">
               {showType && tipo}
               {showType && title.anio && " · "}
               {title.anio}
@@ -96,7 +96,9 @@ export function MediaCard({
               <span aria-hidden="true">{formats.rating(title.nota)}</span>
             </span>
           )}
-          {title.nota === null && showUnrated && <span>{ts("unrated")}</span>}
+          {title.nota === null && showUnrated && (
+            <span className="whitespace-nowrap">{ts("unrated")}</span>
+          )}
         </span>
       </span>
     </Link>
