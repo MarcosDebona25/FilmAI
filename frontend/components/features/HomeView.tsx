@@ -172,6 +172,7 @@ export function HomeView() {
               }
               items={recomendados}
               showType={tipo === "all"}
+              from="home"
               loading={recomendado.status === "loading"}
             />
           )}
@@ -180,6 +181,7 @@ export function HomeView() {
             description={t("rows.trendingDescription")}
             items={titulosTendencia.slice(0, POR_FILA)}
             showType={tipo === "all"}
+            from="home"
             loading={tendencias.status === "loading"}
           />
           <MediaRow
@@ -187,6 +189,7 @@ export function HomeView() {
             description={descripcionNovedades}
             items={novedades}
             showType={tipo === "all"}
+            from="home"
             loading={enCines.status === "loading" || seriesDelAnio.status === "loading"}
           />
           {!cargando && !perfil && (

@@ -325,7 +325,9 @@ declare const messages: {
     "metadata": {
       "ratingVotesLabel": "TMDB rating: {rating} out of 10, {count, plural, one {# vote} other {# votes}}",
       "voteCount": "TMDB · {count, plural, one {# vote} other {# votes}}",
-      "genresTitle": "Genres"
+      "genresTitle": "Genres",
+      "seasons": "{count, plural, one {# season} other {# seasons}}",
+      "episodes": "{count, plural, one {# episode} other {# episodes}}"
     },
     "lists": {
       "addTitleLabel": "Add {title} to a list",
@@ -348,7 +350,8 @@ declare const messages: {
     "credits": {
       "heading": "Director and cast",
       "directors": "Director",
-      "cast": "Cast"
+      "cast": "Cast",
+      "creators": "Created by"
     },
     "reviews": {
       "heading": "Reviews",
@@ -356,7 +359,9 @@ declare const messages: {
       "today": "today",
       "filteredEmpty": "No reviews match these filters.",
       "communityCount": "From the community ({count})",
-      "displayedCount": "Showing {shownCount} of {totalCount}"
+      "displayedCount": "Showing {shownCount} of {totalCount}",
+      "loadMore": "Load more reviews",
+      "empty": "No reviews yet. Be the first to write one."
     },
     "review": {
       "placeholder": "What did you think?",
@@ -366,6 +371,12 @@ declare const messages: {
     "watched": {
       "removeConfirmTitle": "Remove from Watched?",
       "remove": "Remove from Watched"
+    },
+    "breadcrumb": {
+      "backTo": "Back to {label}"
+    },
+    "actions": {
+      "signedOutPrompt": "Log in to rate or save"
     }
   },
   "footer": {

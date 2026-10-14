@@ -103,3 +103,10 @@ errors.pages.newToFilmAI,,label,,¿Primera vez en FilmAI?,New to FilmAI?,aprobad
 errors.pages.createFreeAccount,,label,,Creá una cuenta gratis,Create a free account,aprobado
 footer.main.languageLink,,selector,language,"Idioma: {language}. Cambiá el idioma en Preferencias.","Language: {language}. Change it in Settings.",aprobado
 footer.main.askFilmAI,,label,,Preguntale a FilmAI,Ask FilmAI,aprobado
+title.credits.creators,,label,,Creación,Created by,aprobado
+title.metadata.seasons,,label,count,"{count, plural, one {# temporada} other {# temporadas}}","{count, plural, one {# season} other {# seasons}}",aprobado
+title.metadata.episodes,,label,count,"{count, plural, one {# episodio} other {# episodios}}","{count, plural, one {# episode} other {# episodes}}",aprobado
+title.breadcrumb.backTo,,label,label,Volver a {label},Back to {label},aprobado
+title.actions.signedOutPrompt,,label,,Ingresá para calificar o guardar,Log in to rate or save,aprobado
+title.reviews.loadMore,,label,,Cargar más reseñas,Load more reviews,aprobado
+title.reviews.empty,,label,,Todavía no hay reseñas. Escribí la primera.,No reviews yet. Be the first to write one.,aprobado
