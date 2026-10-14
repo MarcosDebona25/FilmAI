@@ -446,18 +446,30 @@
       "yearLabel": "Year",
       "openLabel": "Filters{activeCount, plural, =0 {} one {, # active} other {, # active}}",
       "apply": "Show results",
-      "activeCount": "{count, plural, one {# active} other {# active}}"
+      "activeCount": "{count, plural, one {# active} other {# active}}",
+      "anyYear": "Any"
     },
     "results": {
       "count": "{count, plural, one {# result} other {# results}}",
       "queryHint": "for “{query}”",
       "unrated": "No ratings",
       "emptyTitle": "Nothing for “{query}”",
-      "emptyHint": "Check the spelling or try the original title: the catalog comes from TMDB."
+      "emptyHint": "Check the spelling or try the original title: the catalog comes from TMDB.",
+      "emptyFiltersTitle": "Nothing with these filters"
     },
     "pagination": {
       "label": "Results pages",
       "position": "Page {page} of {pageCount}"
+    },
+    "close": {
+      "shortcut": "Esc"
+    },
+    "genres": {
+      "kids": "Kids",
+      "news": "News",
+      "reality": "Reality",
+      "soap": "Soap",
+      "talk": "Talk"
     }
   },
   "reviews": {

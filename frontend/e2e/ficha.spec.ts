@@ -131,6 +131,16 @@ async function prepararFicha(page: Page) {
     }
     if (url.pathname === "/api/lists/5/items/")
       return route.fulfill({ status: 201, json: { item_id: 91 } });
+    if (url.pathname === "/api/lists/3/items/" && method === "POST") {
+      estado.listas[2] = { ...estado.listas[2], contiene: true, item_id: 71, cantidad_items: 1 };
+      return route.fulfill({ status: 201, json: { item_id: 71 } });
+    }
+    if (url.pathname === "/api/lists/2/items/" && method === "POST") {
+      // Como el servidor: entrar a Vistas saca de Pendientes (14/10/2026).
+      estado.listas[1] = { ...estado.listas[1], contiene: true, item_id: 70, cantidad_items: 1 };
+      estado.listas[2] = { ...estado.listas[2], contiene: false, item_id: null, cantidad_items: 0 };
+      return route.fulfill({ status: 201, json: { item_id: 70 } });
+    }
     if (url.pathname === "/api/lists/2/items/70/") {
       if (url.searchParams.get("borrar_calificacion") !== "true") {
         return route.fulfill({
@@ -236,6 +246,25 @@ test.describe("ficha en escritorio con sesión", () => {
       "aria-pressed",
       "false"
     );
+  });
+
+  test("marcar Watched algo que está en Watchlist lo saca de Watchlist", async ({ page }) => {
+    await prepararCuenta(page);
+    await prepararFicha(page);
+    await page.goto("/movie/157336");
+
+    const watchlist = page.getByRole("button", { name: en.common.media.watchlist });
+    await watchlist.click();
+    await expect(watchlist).toHaveAttribute("aria-pressed", "true");
+
+    await page.getByRole("button", { name: en.common.media.watched }).click();
+
+    await expect(page.getByText(en.title.feedback.watchedAddedFromWatchlist)).toBeVisible();
+    await expect(page.getByRole("button", { name: en.common.media.watched })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(watchlist).toHaveAttribute("aria-pressed", "false");
   });
 
   test("ordenar y filtrar la comunidad, y crear una lista nueva", async ({ page }) => {
