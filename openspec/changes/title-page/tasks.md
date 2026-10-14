@@ -22,18 +22,18 @@
 
 Tests with real TMDB responses captured on 13-14/10/2026, never invented.
 
-- [ ] 1.1 RED → GREEN: credits of a movie → directors from the crew, cast with characters, in TMDB order
-- [ ] 1.2 RED → GREEN: credits of a show → `directores` from `created_by`, not from the crew
-- [ ] 1.3 RED → GREEN: credits cap at 50; invalid id → 400 (Bad Request)
-- [ ] 1.4 RED → GREEN: community reviews without a session → 200, nothing excluded
-- [ ] 1.5 RED → GREEN: with a session the user's own review is still excluded
-- [ ] 1.6 RED → GREEN: `POST` without a session is still 401 (Unauthorized)
-- [ ] 1.7 RED → GREEN: each `orden` sorts as stated; unknown value → 400
-- [ ] 1.8 RED → GREEN: `nota_min`/`nota_max` filter inclusively; out of range → 400
-- [ ] 1.9 RED → GREEN: following `next` with `orden=nota-desc` over many equal ratings never repeats or skips a review
-- [ ] 1.10 RED → GREEN: `total` counts the filtered set and `total_comunidad` the whole community
-- [ ] 1.11 Regenerate `contracts/openapi.yaml`; update `openspec/specs/reviews-api` and `tmdb-endpoints`
-- [ ] 1.12 `ruff` and the full `python manage.py test`
+- [x] 1.1 RED → GREEN: credits of a movie → directors from the crew, cast with characters, in TMDB order
+- [x] 1.2 RED → GREEN: credits of a show → `directores` from `created_by`, not from the crew
+- [x] 1.3 RED → GREEN: credits cap at 50; invalid id → 400 (Bad Request)
+- [x] 1.4 RED → GREEN: community reviews without a session → 200, nothing excluded
+- [x] 1.5 RED → GREEN: with a session the user's own review is still excluded
+- [x] 1.6 RED → GREEN: `POST` without a session is still 401 (Unauthorized)
+- [x] 1.7 RED → GREEN: each `orden` sorts as stated; unknown value → 400
+- [x] 1.8 RED → GREEN: `nota_min`/`nota_max` filter inclusively; out of range → 400
+- [x] 1.9 RED → GREEN: following `next` with `orden=nota-desc` over many equal ratings never repeats or skips a review
+- [x] 1.10 RED → GREEN: `total` counts the filtered set and `total_comunidad` the whole community
+- [x] 1.11 Regenerate `contracts/openapi.yaml`; update `openspec/specs/reviews-api` and `tmdb-endpoints`
+- [x] 1.12 `ruff` and the full `python manage.py test`
 
 ## Phase 2: Rating modal and confirmations (PR 3)
 

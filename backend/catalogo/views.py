@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import materializar
@@ -160,6 +161,16 @@ class TVDetailView(CatalogoBaseView):
         data = self._service(request).get_tv_detail(id_tmdb)
         _materializar_sin_interrumpir(id_tmdb, "tv")
         return Response(data)
+
+
+class CreditsView(CatalogoBaseView):
+    """Directores (en series, los creadores) y reparto con personaje (C-07)."""
+
+    tipo = None  # "movie" o "tv", lo fija la ruta
+
+    def get(self, request, id_tmdb):
+        id_tmdb = _int_param(id_tmdb, "id_tmdb")
+        return Response(creditos(self._service(request), self.tipo, id_tmdb))
 
 
 class GenresView(CatalogoBaseView):

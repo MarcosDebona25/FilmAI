@@ -8,7 +8,7 @@ Read-only DRF REST layer exposing the catalog to the frontend via `/api/catalogo
 
 ### Requirement: Endpoint surface
 
-The system MUST expose seven read-only `GET` endpoints, each delegating to exactly one `TMDBClientCache` method.
+The system MUST expose read-only `GET` endpoints, each delegating to a `TMDBClientCache` method.
 
 | Endpoint | Cache method |
 |---|---|
@@ -19,6 +19,9 @@ The system MUST expose seven read-only `GET` endpoints, each delegating to exact
 | `GET /api/catalogo/movie/{id_tmdb}/` | `get_movie_detail` |
 | `GET /api/catalogo/tv/{id_tmdb}/` | `get_tv_detail` |
 | `GET /api/catalogo/keywords/` | `get_keywords` |
+| `GET /api/catalogo/{movie,tv}/{id_tmdb}/credits/` | `get_credits` (and `get_tv_detail` for shows) |
+
+The credits endpoint (C-07) is the only one that reshapes TMDB's JSON: `{"directores": [...], "reparto": [{"nombre", "personaje"}]}`, at most 50 cast members in TMDB's order. For movies the directors are the crew with `job == "Director"`; for shows, the detail's `created_by`, because TMDB has no series-level director.
 
 #### Scenario: Raw JSON passthrough
 

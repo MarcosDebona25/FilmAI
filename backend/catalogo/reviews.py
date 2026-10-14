@@ -26,8 +26,11 @@ pasan por `listas/services.py`, porque la tabla es de ese módulo.
 """
 
 from django.db import IntegrityError, transaction
+from django.db.models import BigIntegerField, ExpressionWrapper, F
+from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -37,6 +40,7 @@ from catalogo.pagination_reviews import ResenaCursorPagination
 from catalogo.serializers_reviews import (
     ActualizarCalificacionSerializer,
     CalificacionSerializer,
+    ComunidadQuerySerializer,
     CrearCalificacionSerializer,
     MiResenaSerializer,
     ProduccionQuerySerializer,
@@ -69,10 +73,35 @@ def _calificacion_propia(request, calificacion_id):
     )
 
 
+# Orden de la comunidad (C-07). Los de nota usan una clave única anotada: el
+# cursor de DRF se ubica con el primer campo y desempata con un offset, que se
+# degrada cuando miles de reseñas tienen el mismo 8. `valor * 10^9 + id` ordena
+# igual que (valor, id) y no se repite.
+_ORDENES_COMUNIDAD = {
+    "fecha-desc": ("-fecha", "-id"),
+    "fecha-asc": ("fecha", "id"),
+    "nota-desc": ("-clave_nota",),
+    "nota-asc": ("clave_nota",),
+}
+# `Cast` antes de multiplicar: `valor` es un entero de 32 bits en Postgres y
+# 10 * 10^9 se pasa de rango (`ExpressionWrapper` solo declara el tipo final).
+_CLAVE_NOTA = ExpressionWrapper(
+    Cast("calificacion__valor", BigIntegerField()) * 1_000_000_000 + F("id"),
+    output_field=BigIntegerField(),
+)
+
+
 class CalificacionesView(APIView):
     """Reseñas de la comunidad sobre una producción, y alta de la propia."""
 
     pagination_class = ResenaCursorPagination
+
+    def get_permissions(self):
+        # Leer es público desde el 14/10/2026 (C-07): la ficha se ve sin sesión
+        # y las reseñas son públicas. Calificar sigue exigiendo sesión.
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return super().get_permissions()
 
     def get(self, request):
         """Las reseñas de los **demás** sobre una producción (§5c).
@@ -87,20 +116,33 @@ class CalificacionesView(APIView):
           consumidor, y una lista paginada no puede prometer que la propia caiga
           en la primera página.
         """
-        id_tmdb, tipo = _produccion_pedida(request)
-        resenas = (
-            Resena.objects.filter(
-                calificacion__produccion__id_tmdb=id_tmdb,
-                calificacion__produccion__tipo=tipo,
-                activa=True,
-                calificacion__activa=True,
-            )
-            .exclude(calificacion__usuario=request.user)
+        query = ComunidadQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        datos = query.validated_data
+        resenas = Resena.objects.filter(
+            calificacion__produccion__id_tmdb=datos["id_tmdb"],
+            calificacion__produccion__tipo=tmdb_a_dominio(datos["tipo"]),
+            activa=True,
+            calificacion__activa=True,
+        )
+        # Sin sesión no hay reseña propia que sacar.
+        if request.user.is_authenticated:
+            resenas = resenas.exclude(calificacion__usuario=request.user)
+        total_comunidad = resenas.count()
+
+        if "nota_min" in datos:
+            resenas = resenas.filter(calificacion__valor__gte=datos["nota_min"])
+        if "nota_max" in datos:
+            resenas = resenas.filter(calificacion__valor__lte=datos["nota_max"])
+        resenas = resenas.annotate(clave_nota=_CLAVE_NOTA).select_related(
             # Sin esto, serializar N reseñas dispara 2N consultas para traer la
             # calificación y el usuario de cada una (el problema N+1).
-            .select_related("calificacion__usuario")
+            "calificacion__usuario"
         )
+
         paginator = self.pagination_class()
+        paginator.ordering = _ORDENES_COMUNIDAD[datos["orden"]]
+        paginator.total_comunidad = total_comunidad
         pagina = paginator.paginate_queryset(resenas, request, view=self)
         return paginator.get_paginated_response(
             ResenaComunidadSerializer(pagina, many=True).data
