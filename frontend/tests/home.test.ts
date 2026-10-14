@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { normalizeTitle, type Title } from "@/lib/catalog";
 import { formatList } from "@/lib/format";
-import { alternar, elegirHero, tipoDesdeUrl } from "@/lib/home";
+import { alternar, elegirHero, tamanioTitulo, tipoDesdeUrl } from "@/lib/home";
 import { insidious, reacher } from "./catalog-fixtures";
 
 const pelicula = normalizeTitle(insidious) as Title;
@@ -51,5 +51,25 @@ describe("formatList", () => {
   it("une los géneros del subtítulo según el idioma", () => {
     expect(formatList(["Thriller", "Drama", "Crime"], "en")).toBe("Thriller, Drama, and Crime");
     expect(formatList(["Suspense", "Drama", "Crimen"], "es")).toBe("Suspense, Drama y Crimen");
+  });
+});
+
+describe("tamanioTitulo", () => {
+  it("los títulos cortos conservan el tamaño del canvas", () => {
+    expect(tamanioTitulo("LINK CLICK")).toBe("grande");
+    expect(tamanioTitulo("Black Clover")).toBe("grande");
+    expect(tamanioTitulo("Abcdefghijklmnop")).toBe("grande"); // 16
+  });
+
+  it("los medianos y los largos achican la letra", () => {
+    expect(tamanioTitulo("Abcdefghijklmnopq")).toBe("mediano"); // 17
+    expect(tamanioTitulo("Spider-Man: Brand New Day")).toBe("mediano"); // 25
+    expect(tamanioTitulo("Insidious: Out of the Further")).toBe("chico"); // 29
+    expect(tamanioTitulo("Law & Order: Special Victims Unit")).toBe("chico"); // 33
+  });
+
+  it("cuenta caracteres, no unidades UTF-16", () => {
+    // Cada emoji ocupa dos unidades UTF-16; sigue siendo un carácter visible.
+    expect(tamanioTitulo("😀".repeat(16))).toBe("grande");
   });
 });

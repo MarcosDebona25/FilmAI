@@ -65,10 +65,13 @@ Each row MUST fetch its own data. A failed row MUST hide and the page MUST show 
 
 On desktop the site navbar MUST be drawn over the Hero backdrop, and the selector sits inside the Hero. On mobile the selector sits between the navbar and the Hero, and the Hero meta puts year and rating on one line and the genres on the next. Rows scroll horizontally inside themselves and MUST NOT widen the page at any width.
 
+The Hero title size MUST depend on its length in characters: up to 16 keeps the canvas size (152 px desktop, 72 px mobile), 17 to 28 uses 112/56 px and longer titles 88/44 px, always with a 0.9 line height and balanced lines.
+
 #### Scenario: A long title on desktop
 
-- GIVEN a Hero title that takes several lines at 152 px («Spider-Man: Brand New Day»)
-- THEN the Hero grows downward and its label stays at least 40 px below the selector
+- GIVEN a 33-character Hero title («Law & Order: Special Victims Unit»)
+- THEN it takes at most two lines
+- AND its label stays at least 40 px below the selector
 
 #### Scenario: Twenty cards on a phone
 

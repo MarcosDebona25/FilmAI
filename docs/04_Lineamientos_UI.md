@@ -192,7 +192,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 **Implementación (13/10/2026, SDD `openspec/changes/home-catalogo/`):**
 
 - Ruta `/home`, pública. El selector vive en la URL (`/home?type=movie` o `?type=tv`; sin parámetro, «Todo»), así que al volver de una ficha se conserva. En escritorio va dentro del Hero, debajo de la barra; en celular, entre la barra y el Hero.
-- **Hero**: en «Todo», el primer título de tendencias con imagen de fondo, con la etiqueta «#N en tendencias» según su posición real. En «Películas» y «Series», el primero de ese tipo con imagen de fondo que no sea el Hero de «Todo», con la etiqueta «Destacada de la semana». Así cada opción del selector tiene un Hero distinto. Sinopsis recortada a 3 líneas y un único botón, «Ver detalle».
+- **Hero**: en «Todo», el primer título de tendencias con imagen de fondo, con la etiqueta «#N en tendencias» según su posición real. En «Películas» y «Series», el primero de ese tipo con imagen de fondo que no sea el Hero de «Todo», con la etiqueta «Destacada de la semana». Así cada opción del selector tiene un Hero distinto. Sinopsis recortada a 3 líneas y un único botón, «Ver detalle». El tamaño del título depende de su largo (14/10/2026): hasta 16 caracteres, el del canvas (152 px en escritorio, 72 px en celular); de 17 a 28, 112/56 px; más largos, 88/44 px.
 - En escritorio la barra de navegación se dibuja sobre la imagen del Hero, sin fondo propio (solo en `/home`).
 - Tendencias y Novedades muestran una página de TMDB (20 títulos); Recomendado, hasta 15. En «Todo», Recomendado y Novedades alternan película y serie.
 - Cada tarjeta lleva a la ficha: `/movie/[id]` o `/tv/[id]` (C-07). Calificación como «★ 8,5», nunca «X/10».
