@@ -3988,3 +3988,19 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   5. **Foco**: los botones se arman con una función y no con un componente definido adentro de otro, que React volvería a montar en cada redibujo y dejaría sin foco a quien usa el teclado. Un test lo cubre (falla con la versión anidada).
 - **Tests**: Vitest `title-actions.test.tsx` (11). Revisado contra el canvas en escritorio y celular.
 - **Archivos afectados**: `frontend/components/features/title/{TitleActions,ListsMenu}.tsx`, `frontend/lib/title-lists.ts`, `frontend/tests/title-actions.test.tsx`, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Página de la ficha (C-07, PR 5)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `/movie/[id]` y `/tv/[id]` con `TitleView` y `CreditsSection` según los artboards de la ficha. La página es pública; con sesión suma la calificación propia y las listas.
+  1. **Se parte en dos PRs** para respetar el tope de revisión: este trae la página, los créditos y las acciones conectadas; el PR 6 trae las reseñas (la propia y la comunidad) y el cierre de C-07.
+  2. **Origen en la URL**: `routes.title(tipo, id, from)`; el Home pasa `from=home` en tarjetas y Hero. `?from=list-{id}` pide el nombre de la lista (`GET /api/lists/{id}/`) y usa `routes.list(id)` (`/lists/{id}`), que Marcos puede cambiar al hacer L-03. En celular la miga se reemplaza por un enlace «‹ {origen}» sobre la franja, con fondo semitransparente para que se lea sobre imágenes claras.
+  3. **Título por largo** con la regla del Home y tamaños propios (120/88/64 px en escritorio, 48/40/32 en celular) y `break-words` para que una palabra larga no se salga de la columna angosta del celular.
+  4. **Datos**: en celular las temporadas y episodios y la nota bajan a su propio renglón, como en el Hero del Home, para que ningún «·» quede colgando.
+  5. **Edición de la nota**: `planEdicion()` manda solo lo que cambió; vaciar una reseña que existía se hace con `DELETE …/texto/` aparte, porque la API rechaza un texto vacío. Después de calificar o quitar la nota se recargan las listas: el servidor suma o saca de Vistas y hace falta el `item_id` nuevo.
+  6. **Copia nueva** en `copia-propuesta.csv`: «Created by»/«Creación», temporadas y episodios (plural ICU), «Back to {label}», «Log in to rate or save», «Load more reviews» y el vacío de reseñas.
+  7. La barra de navegación va sobre la franja en la ficha, también en celular (canvas).
+- **Tests**: Vitest `title.test.ts` (7) y `title-view.test.tsx` (7). Los de la página se escribieron después del código; se verificó que detectan fallas rompiendo a propósito el borrado del texto y la recarga de listas (fallan los dos tests esperados). Revisado con datos reales de TMDB en escritorio y celular, con y sin sesión.
+- **Archivos afectados**: `frontend/app/{movie,tv}/[id]/page.tsx`, `frontend/components/features/title/{TitleView,CreditsSection}.tsx`, `frontend/components/features/{MediaCard,MediaRow,HomeView,HomeHero}.tsx`, `frontend/components/Navbar.tsx`, `frontend/lib/{title,routes,catalog}.ts`, catálogos generados, `docs/i18n/copia-propuesta.csv`, tests, `openspec/changes/title-page/tasks.md`.

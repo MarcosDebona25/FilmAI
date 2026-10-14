@@ -50,9 +50,20 @@ Tests with real TMDB responses captured on 13-14/10/2026, never invented.
 
 ## Phase 4: The page (PR 5)
 
-- [ ] 4.1 `lib/title.ts` + Vitest: runtime and seasons, breadcrumb for each `from`
-- [ ] 4.2 `TitleView`, `TitleHero`, `CreditsSection`, `ReviewsSection`
-- [ ] 4.3 `/movie/[id]` and `/tv/[id]`; `MediaCard` with `from=home`
-- [ ] 4.4 Playwright `e2e/ficha.spec.ts`, desktop and mobile: signed out, rate and edit, delete text, remove rating, Watched with a rating, add to a new list, community sort and filter, no horizontal overflow
-- [ ] 4.5 Canonical spec `title-page-ui`; doc 05 rows C-07, C-08, L-04 and the «Interfaces» table
-- [ ] 4.6 Remove `openspec/changes/title-page/` (AGENTS.md §9); `graphify update .`; all checks
+Split on 14/10/2026 to stay under the review budget: the page in PR 5, the
+reviews section in PR 6.
+
+- [x] 4.1 `lib/title.ts` + Vitest: detail normalization (runtime, seasons, episodes), origin from `?from=`, edit plan (emptying the text deletes it apart)
+- [x] 4.2 `TitleView` and `CreditsSection`: backdrop band, poster, breadcrumb (back link on mobile), title sized by length, tagline, meta, genres, synopsis, credits
+- [x] 4.3 `/movie/[id]` and `/tv/[id]`; `MediaCard`/`MediaRow`/Home Hero with `from=home`; navbar over the band on title pages
+- [x] 4.4 Rating dialog and remove-rating confirmation wired to the API; lists reloaded after rating changes
+- [x] 4.5 New copy: creators, seasons, episodes, back link, signed-out prompt, load more, empty reviews
+- [x] 4.6 Vitest `title.test.ts`, `title-view.test.tsx`
+
+## Phase 5: Reviews and close (PR 6)
+
+- [ ] 5.1 «Your review» card with Edit and Delete review (text only, confirmation)
+- [ ] 5.2 Community: sort, rating filter, «Showing X of N», «Load more», empty state, avatars
+- [ ] 5.3 Playwright `e2e/ficha.spec.ts`, desktop and mobile: signed out, rate and edit, delete text, remove rating, Watched with a rating, add to a new list, community sort and filter, no horizontal overflow
+- [ ] 5.4 Canonical spec `title-page-ui`; doc 05 rows C-07, C-08, L-04 and the «Interfaces» table
+- [ ] 5.5 Remove `openspec/changes/title-page/` (AGENTS.md §9); `graphify update .`; all checks
