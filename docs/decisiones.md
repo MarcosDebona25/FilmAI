@@ -3960,3 +3960,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   4. **`total_comunidad`** en la respuesta (sin filtros); `ResenaCursorPagination` lo agrega solo si la vista lo fija, así «Mis reseñas» no cambia.
 - **Tests**: `catalogo/tests_ficha.py` (4, créditos con recortes reales de TMDB) y en `tests_reviews.py` la lectura anónima, la escritura que sigue cerrada y `ComunidadOrdenYFiltroTests` (7, incluido el recorrido por cursor sobre 25 notas iguales).
 - **Archivos afectados**: `backend/catalogo/{reviews,views,urls,serializers_reviews,pagination_reviews}.py`, `backend/catalogo/services/creditos.py`, tests, `contracts/openapi.yaml`, `openspec/specs/{reviews-api,tmdb-endpoints}/spec.md`, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Modal de calificar y confirmaciones de la ficha (C-07, PR 3)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: componentes de `components/features/title/` según el canvas y el doc 04 §5d. No llaman a la API: avisan con `onSubmit`/`onConfirm` y la ficha (PR 5) decide qué pedir y qué toast mostrar; si la promesa falla, el error queda a la vista y el diálogo sigue abierto.
+  1. **`DialogShell`**: `<dialog>` nativo con `showModal()`, como `components/Modal.tsx` de Marcos (fondo inerte, Escape, foco de vuelta a quien lo abrió), con el diseño del canvas: tarjeta centrada en escritorio y hoja con agarre en celular. No se reusó `Modal` porque su caja y su título no coinciden con el canvas.
+  2. **`StarRating`**: `radiogroup` de WAI-ARIA con foco itinerante (solo la elegida entra en el orden de Tab), flechas, Home y End; al previsualizar una nota menor, las de la elegida que quedan afuera se ven tenues; dos filas de cinco en celular (objetivos de 44 px).
+  3. **`RatingDialog`**: «Rate {title}» o «Edit rating», «Rating: ★ N» en vivo, «Before: ★ N» al cambiar una nota existente, aviso de Vistas solo si la producción no está, reseña opcional con `maxLength` 1000 y contador, «Remove rating» solo al editar. En celular, Cancel y la acción van en dos columnas y «Remove rating» centrado debajo (canvas).
+  4. **`ConfirmDialog`**: `alertdialog` con el foco inicial en Cancelar (Enter no borra por error), vista previa de la reseña en dos renglones con «Read more» si es larga. El botón de peligro usa el rojo del sistema con texto oscuro (`--on-accent`, ~5,4:1); con blanco el contraste quedaba en 3,6:1.
+  5. Toda la copia ya estaba sembrada (`title.rating.*`, `title.review.*`, `common.*`).
+- **Tests**: Vitest `star-rating.test.tsx` (5), `rating-dialog.test.tsx` (6) y `confirm-dialog.test.tsx` (3). Suite: 196.
+- **Archivos afectados**: `frontend/components/features/title/{DialogShell,StarRating,RatingDialog,ConfirmDialog}.tsx`, tests, `openspec/changes/title-page/tasks.md`.
