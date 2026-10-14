@@ -4117,3 +4117,16 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Verificado contra TMDB real**: 2028 trae 135 títulos (The Batman: Part II, Fast Forever…).
 - **Tests**: 3 en `tests_browse.py` (año futuro sin mínimo, año actual con mínimo, año futuro con nota conserva el mínimo; los tres fallaban antes) y el de `aniosDisponibles` actualizado.
 - **Archivos afectados**: `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `frontend/lib/search.ts`, `frontend/tests/search.test.ts`, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 14/10/2026 — Buscar carga al bajar
+
+- **Fecha**: 14/10/2026
+- **Descripción**: idea del usuario: paginar a demanda, cargando más resultados al bajar. Eligió «automático al bajar» entre tres opciones: automático, un botón «Cargar más» y dejar la paginación clásica del canvas.
+  1. **`useCatalogPaginas`** (`lib/use-catalog.ts`): pide varias páginas de una consulta y comparte la caché con `useCatalog`. Devuelve las páginas en orden hasta la primera que falta, `cargandoMas` y el error, que solo se reintenta con otro `intento`.
+  2. **Un centinela con `IntersectionObserver`**: cuando el final de la grilla está a 600 px, `page` en la URL pasa a N+1 y se agrega esa página. `page` ahora significa cuántas páginas se cargaron, con un tope de 25: también acota lo que dispara un link con `page` alto. Con pocos resultados la grilla no llena la pantalla y la página siguiente se pide sola.
+  3. **Sin repetidos**: `normalizeTitles` descarta un título que llega en dos páginas, si la popularidad cambió entre pedidos.
+  4. **Error en una página siguiente**: lo cargado queda y aparece Reintentar al pie.
+  5. **Volver desde la ficha** (hallazgo probando contra Docker): las páginas vuelven de la caché, pero el scroll quedaba en 0, porque la URL cambia con `history.replaceState` y Next no restaura ese scroll. Ahora, al hacer clic en una tarjeta se guardan la URL y `scrollY` en `sessionStorage`. Al volver a la misma URL con todas las páginas cargadas, se restaura un cuadro después. Verificado con «Atrás» y con la miga: 4240 px antes y después.
+  6. **Carrera cazada por el CI**: con pocos resultados, el aviso «llegó al final» del observador llegaba después de elegir un filtro y avanzaba con la búsqueda vieja que recordaba su closure, borrando el filtro (`?genre=878&page=2` sin `rating`). El callback ahora compara la URL actual normalizada con la búsqueda de su render y, si cambió, no hace nada; el observador nuevo, creado con la búsqueda actual, sigue cargando.
+- **Tests**: `use-catalog-paginas.test.tsx` (3: orden aunque lleguen desordenadas, caché compartida, error y reintento). `search-view.test.tsx` reemplaza el de paginación por 5 (pide al acercarse el final, un aviso tardío no pisa un filtro nuevo, junta dos páginas sin repetidos y no pide más en la última, error en la página 2, restaura el scroll), con `IntersectionObserver` simulado porque jsdom no lo tiene. `search.test.ts` suma 2 del scroll guardado. El e2e baja hasta el final y espera `page=2`.
+- **Archivos afectados**: `frontend/lib/{use-catalog,search}.ts`, `frontend/components/features/SearchView.tsx`, tests y e2e, doc 04 §5b, spec `search-ui`, `docs/decisiones.md`.
