@@ -152,7 +152,7 @@ class RespaldoPorHTTPTests(SimpleTestCase):
         parche = patch("catalogo.views.get_catalog_service", side_effect=self._servicio)
         parche.start()
         self.addCleanup(parche.stop)
-        parche = patch("catalogo.views.materializar")
+        parche = patch("catalogo.views.materializar_en_segundo_plano")
         parche.start()
         self.addCleanup(parche.stop)
         self.addCleanup(lambda: [c._client.close() for c in self.clientes])
