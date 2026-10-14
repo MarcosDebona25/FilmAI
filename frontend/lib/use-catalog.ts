@@ -55,3 +55,58 @@ export function useCatalog<T>(path: string | null, intento = 0, cachear = true):
     ? { status: "error", data: null, error: resultado.error }
     : { status: "ok", data: resultado.data as T, error: null };
 }
+
+export type Paginas<T> = {
+  /** Las páginas ya llegadas, en orden, hasta la primera que falta. */
+  paginas: T[];
+  /** `loading` hasta que llega la primera; `error` si alguna falló. */
+  status: "loading" | "ok" | "error";
+  error: unknown;
+  /** Hay páginas pedidas que todavía no llegaron (las siguientes a la primera). */
+  cargandoMas: boolean;
+};
+
+/**
+ * Varias páginas de una misma consulta (Buscar al bajar, C-06). Comparte la
+ * caché con `useCatalog`: volver desde la ficha muestra al instante todo lo
+ * que ya se había cargado, y el navegador puede devolver el scroll a su lugar.
+ */
+export function useCatalogPaginas<T>(paths: string[], intento = 0): Paginas<T> {
+  const clave = `${paths.join("|")}#${intento}`;
+  const [, setLlegadas] = useState(0);
+  const [fallo, setFallo] = useState<{ clave: string; error: unknown } | null>(null);
+
+  useEffect(() => {
+    let vigente = true;
+    for (const path of paths) {
+      if (cache.has(path)) continue;
+      apiFetch(path).then(
+        (data) => {
+          cache.set(path, data);
+          if (vigente) setLlegadas((anterior) => anterior + 1);
+        },
+        (error: unknown) => {
+          if (vigente) setFallo({ clave, error });
+        }
+      );
+    }
+    return () => {
+      vigente = false;
+    };
+    // `clave` resume `paths` e `intento`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clave]);
+
+  const llegadas: T[] = [];
+  for (const path of paths) {
+    if (!cache.has(path)) break;
+    llegadas.push(cache.get(path) as T);
+  }
+  const error = fallo?.clave === clave ? fallo.error : null;
+  return {
+    paginas: llegadas,
+    status: error !== null ? "error" : llegadas.length === 0 ? "loading" : "ok",
+    error,
+    cargandoMas: llegadas.length > 0 && llegadas.length < paths.length && error === null,
+  };
+}

@@ -64,7 +64,8 @@ for (const viewport of viewports) {
       await page.getByRole("searchbox").fill("law");
 
       await expect(page.getByRole("main").getByRole("status")).toHaveText("4 results for “law”");
-      await expect(page).toHaveURL(/\/search\?q=law$/);
+      // Con pocos resultados la grilla no llena la pantalla: la página 2 se pide sola.
+      await expect(page).toHaveURL(/\/search\?q=law(&page=\d+)?$/);
       expect(consultas.at(-1)?.get("q")).toBe("law");
       await expect(
         page.getByRole("link", { name: /Law & Order: Special Victims Unit/ })
@@ -81,7 +82,7 @@ test.describe("buscar en escritorio", () => {
     extraHTTPHeaders: { "Accept-Language": "en-US,en;q=0.9" },
   });
 
-  test("los filtros y la página viajan a la API", async ({ page }) => {
+  test("los filtros viajan a la API y al bajar se pide la página siguiente", async ({ page }) => {
     const consultas = await prepararBuscar(page);
     await page.goto("/search?type=movie");
 
@@ -90,10 +91,11 @@ test.describe("buscar en escritorio", () => {
       .selectOption({ label: "Science Fiction" });
     await page.getByRole("combobox", { name: en.common.rating.label }).selectOption("8");
     await expect(page).toHaveURL(/rating=8$/);
-    // `exact`: «Next» también matchea el botón de las herramientas de Next.js en desarrollo.
-    await page.getByRole("button", { name: en.common.pagination.next, exact: true }).click();
+    // Carga al bajar: llegar al final de la grilla pide la página siguiente.
+    await page.mouse.wheel(0, 20000);
 
     await expect(page).toHaveURL(/\/search\?type=movie&genre=878&rating=8&page=2$/);
+    await expect.poll(() => consultas.at(-1)?.get("page")).toBe("2");
     const ultima = consultas.at(-1)!;
     expect(Object.fromEntries(ultima)).toEqual({
       tipo: "movie",

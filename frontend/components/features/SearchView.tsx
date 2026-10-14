@@ -11,7 +11,6 @@ import { TypeSelector, type ContentType } from "@/components/features/TypeSelect
 import { ApiError } from "@/lib/api";
 import { normalizeTitles, type TmdbItem } from "@/lib/catalog";
 import { translateError } from "@/lib/errors";
-import { useFormats } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import {
   ETIQUETA_NOTA,
@@ -21,16 +20,25 @@ import {
   busquedaDesdeUrl,
   consultaApi,
   filtrosActivos,
+  guardarScrollBusqueda,
   guardarUltimaBusqueda,
+  scrollGuardado,
   urlDeBusqueda,
   type Busqueda,
   type Nota,
 } from "@/lib/search";
-import { useCatalog } from "@/lib/use-catalog";
+import { useCatalog, useCatalogPaginas } from "@/lib/use-catalog";
 
 type Pagina = { page: number; total_pages: number; total_results: number; results: TmdbItem[] };
 type Generos = { genres: { id: number; name: string }[] };
 
+/**
+ * Páginas que se cargan como máximo (500 resultados; 1000 en «Todo»). También
+ * acota lo que dispara una URL con `page` alto: cada página es un pedido.
+ */
+const MAX_PAGINAS = 25;
+/** Distancia al final de la grilla a la que se pide la página siguiente. */
+const ANTICIPO = "600px";
 /** Espera después de la última tecla antes de buscar (doc 04 §5b). */
 const ESPERA_MS = 350;
 /** Géneros con el mismo id en películas y series: sobreviven a cambiar el tipo. */
@@ -56,14 +64,21 @@ function mensaje(error: unknown) {
 export function SearchView() {
   const t = useTranslations();
   const router = useRouter();
-  const formats = useFormats();
   const busqueda = busquedaDesdeUrl(useSearchParams());
   const activos = filtrosActivos(busqueda);
   const [texto, setTexto] = useState(busqueda.q);
   const [intento, setIntento] = useState(0);
   const [hoja, setHoja] = useState(false);
   const campo = useRef<HTMLInputElement>(null);
-  const resultados = useCatalog<Pagina>(consultaApi(busqueda), intento);
+  // Carga al bajar (pedido del usuario, 14/10/2026): `page` en la URL es cuántas
+  // páginas se cargaron, así volver desde la ficha las recupera de la caché.
+  const cargadas = Math.min(busqueda.pagina, MAX_PAGINAS);
+  const resultados = useCatalogPaginas<Pagina>(
+    Array.from({ length: cargadas }, (_, i) => consultaApi({ ...busqueda, pagina: i + 1 })),
+    intento
+  );
+  const centinela = useRef<HTMLDivElement>(null);
+  const scrollRestaurado = useRef(false);
   const generos = useCatalog<Generos>(`/api/catalogo/genres/?tipo=${busqueda.tipo}`, intento);
 
   function cambiar(cambios: Partial<Busqueda>) {
@@ -135,13 +150,49 @@ export function SearchView() {
     }
   }
 
-  function irAPagina(pagina: number) {
-    cambiar({ pagina });
-    window.scrollTo({ top: 0 });
-  }
+  const primera = resultados.paginas[0];
+  // `normalizeTitles` descarta repetidos: si la popularidad cambió entre una
+  // página y la siguiente, un título puede venir dos veces.
+  const titulos = normalizeTitles(resultados.paginas.flatMap((pagina) => pagina.results));
+  const hayMas = primera !== undefined && cargadas < Math.min(primera.total_pages, MAX_PAGINAS);
+  const puedeSeguir =
+    resultados.status === "ok" &&
+    !resultados.cargandoMas &&
+    resultados.paginas.length === cargadas &&
+    hayMas;
 
-  const titulos = normalizeTitles(resultados.data?.results ?? []);
-  const pagina = resultados.data;
+  // Al volver de una ficha, con todas las páginas ya en pantalla (salen de la
+  // caché), la grilla vuelve a donde estaba. Una sola vez por visita.
+  const todasCargadas = resultados.paginas.length === cargadas;
+  useEffect(() => {
+    if (scrollRestaurado.current || !todasCargadas) return;
+    scrollRestaurado.current = true;
+    const y = scrollGuardado(url);
+    // Un cuadro después: deja que Next termine su propio manejo del scroll.
+    if (y !== null) requestAnimationFrame(() => window.scrollTo({ top: y }));
+  }, [todasCargadas, url]);
+
+  // Cuando el final de la grilla se acerca a la pantalla, se pide la página siguiente.
+  useEffect(() => {
+    const nodo = centinela.current;
+    if (!nodo || !puedeSeguir || typeof IntersectionObserver === "undefined") return;
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        if (!entradas.some((entrada) => entrada.isIntersecting)) return;
+        // El aviso llega asincrónico y `cambiar` recuerda la búsqueda de cuando
+        // se creó el observador: si la URL ya cambió (un filtro elegido
+        // mientras tanto), avanzar con la vieja lo borraría. Se compara
+        // normalizada para que el orden de los parámetros no importe.
+        const actual = urlDeBusqueda(busquedaDesdeUrl(new URLSearchParams(window.location.search)));
+        if (actual === url) cambiar({ pagina: cargadas + 1 });
+      },
+      { rootMargin: `0px 0px ${ANTICIPO} 0px` }
+    );
+    observador.observe(nodo);
+    return () => observador.disconnect();
+    // `url` resume la búsqueda que usa `cambiar`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puedeSeguir, cargadas, url]);
   const q = busqueda.q.trim();
   const conCriterio = q !== "" || activos > 0;
   const opcionesGenero = (generos.data?.genres ?? []).map((genero) => ({
@@ -297,7 +348,7 @@ export function SearchView() {
         />
       )}
 
-      {resultados.status === "error" ? (
+      {resultados.status === "error" && resultados.paginas.length === 0 ? (
         <div className="flex flex-col items-start gap-4 py-16">
           <p role="alert" className="text-fg-2">
             {mensaje(resultados.error)}
@@ -310,7 +361,7 @@ export function SearchView() {
             {t("common.actions.retry")}
           </button>
         </div>
-      ) : resultados.status !== "ok" ? (
+      ) : resultados.status === "loading" ? (
         <ul aria-hidden="true" className={GRILLA}>
           {Array.from({ length: 12 }, (_, i) => (
             <li key={i} className="flex flex-col gap-2.5">
@@ -342,15 +393,20 @@ export function SearchView() {
         </div>
       ) : (
         <>
-          {conCriterio && pagina && (
+          {conCriterio && primera && (
             <p role="status" className="text-sm text-fg-2 md:text-[15px]">
               <span className="font-semibold text-foreground">
-                {t("search.results.count", { count: pagina.total_results })}
+                {t("search.results.count", { count: primera.total_results })}
               </span>
               {q && ` ${t("search.results.queryHint", { query: q })}`}
             </p>
           )}
-          <ul className={GRILLA}>
+          <ul
+            aria-busy={resultados.cargandoMas}
+            className={GRILLA}
+            // Abrir una ficha guarda dónde estaba la grilla (ver `scrollGuardado`).
+            onClickCapture={() => guardarScrollBusqueda(url, window.scrollY)}
+          >
             {titulos.map((titulo) => (
               <li key={`${titulo.tipo}-${titulo.id}`}>
                 <MediaCard
@@ -363,35 +419,31 @@ export function SearchView() {
               </li>
             ))}
           </ul>
-          {pagina && pagina.total_pages > 1 && (
-            <nav
-              aria-label={t("search.pagination.label")}
-              className="flex items-center justify-between gap-3 pt-3 md:justify-center md:gap-4 md:pt-4"
-            >
-              <button
-                type="button"
-                disabled={busqueda.pagina <= 1}
-                onClick={() => irAPagina(busqueda.pagina - 1)}
-                className="h-11 cursor-pointer rounded-[10px] px-3.5 font-medium text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default disabled:opacity-50 md:px-4"
-              >
-                {t("common.pagination.previous")}
-              </button>
-              <span className="text-sm text-fg-2 tabular-nums md:text-[15px]">
-                {t("search.pagination.position", {
-                  page: formats.number(busqueda.pagina),
-                  pageCount: formats.number(pagina.total_pages),
-                })}
-              </span>
-              <button
-                type="button"
-                disabled={busqueda.pagina >= pagina.total_pages}
-                onClick={() => irAPagina(busqueda.pagina + 1)}
-                className="h-11 cursor-pointer rounded-[10px] bg-raised-2 px-4 font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default disabled:opacity-50 md:px-[18px]"
-              >
-                {t("common.pagination.next")}
-              </button>
-            </nav>
+          {resultados.cargandoMas && (
+            <ul aria-hidden="true" className={GRILLA}>
+              {Array.from({ length: 6 }, (_, i) => (
+                <li key={i} className="flex flex-col gap-2.5">
+                  <span className="block aspect-[2/3] w-full animate-pulse rounded-lg bg-raised motion-reduce:animate-none" />
+                  <span className="h-4 w-3/4 animate-pulse rounded bg-raised motion-reduce:animate-none" />
+                </li>
+              ))}
+            </ul>
           )}
+          {resultados.status === "error" && (
+            <div className="flex flex-col items-start gap-4 py-6">
+              <p role="alert" className="text-fg-2">
+                {mensaje(resultados.error)}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIntento((anterior) => anterior + 1)}
+                className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                {t("common.actions.retry")}
+              </button>
+            </div>
+          )}
+          <div ref={centinela} aria-hidden="true" />
         </>
       )}
     </main>
