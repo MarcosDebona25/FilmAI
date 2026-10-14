@@ -188,7 +188,7 @@ inglés los nombres vacíos.
 
 `GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`) and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
 
-- Without text it MUST use `discover` sorted by popularity, with at least 50 votes; shows MUST exclude News and Talk unless a genre is chosen.
+- Without text it MUST use `discover` sorted by popularity, with at least 50 votes, except for a future year without a rating filter (announced titles have no votes); shows MUST exclude News and Talk unless a genre is chosen.
 - With text and neither genre nor rating it MUST make one `search` per type, sending the year as `primary_release_year` or `first_air_date_year`.
 - With text and a genre or a rating it MUST read up to the first 5 TMDB pages per type, keep the matching items (rating with at least 50 votes) and paginate them 20 per type. A TMDB error in any page MUST fail the request, never return a partial count.
 - `all` MUST alternate movies and shows and add their totals. A genre MUST be mapped to its show id when TMDB uses another one (28 and 12 → 10759, 878 and 14 → 10765, 10752 → 10768); a genre with no counterpart MUST leave that side empty without calling TMDB for it.

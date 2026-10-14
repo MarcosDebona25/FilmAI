@@ -4107,3 +4107,13 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Cierre de C-06**: PRs #82 a #85. Según AGENTS.md §9 se elimina `openspec/changes/search-catalogo/`; la spec canónica nueva es `search-ui`, y se actualizó `tmdb-endpoints` en el PR 2.
 - **Tests**: Vitest suma 3 de `lib/search` (última búsqueda, incluido sin `sessionStorage`), 3 de `SearchView` (guarda la búsqueda, hoja con el badge y los filtros, Escape con la hoja abierta) y 1 de `TitleView` (la miga vuelve a la búsqueda). Playwright `e2e/buscar.spec.ts` (4): texto y tarjetas en escritorio y celular, filtros y página hacia la API, hoja de filtros; sin desborde horizontal.
 - **Archivos afectados**: `frontend/components/features/{FiltersSheet,SearchView,TypeSelector}.tsx`, `frontend/components/features/title/TitleView.tsx`, `frontend/lib/search.ts`, tests y e2e, copia de i18n y mensajes generados, `openspec/specs/search-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`; se elimina `openspec/changes/search-catalogo/`.
+
+## 14/10/2026 — Buscar encuentra lo anunciado
+
+- **Fecha**: 14/10/2026
+- **Descripción**: pedido del usuario: poder buscar producciones anunciadas en TMDB que no salen este año.
+  1. **El selector de año** va de cinco años adelante a 1900 (`ANIOS_ANUNCIADOS` en `lib/search.ts`). TMDB ya tiene producciones con fecha hasta 2031 (Avatar 5).
+  2. **Sin mínimo de votos para un año futuro.** La grilla sin texto pide al menos 50 votos para que no la llenen títulos sin votos, pero lo que no se estrenó no tiene votos: 2027 tiene 946 películas en TMDB y ninguna con 50 (verificado). Con un año futuro y sin filtro de nota, `discover` va sin mínimo. Con nota, el mínimo se mantiene, porque una nota sin votos no dice nada. El año actual sale de `timezone.localdate()` (zona de Argentina).
+- **Verificado contra TMDB real**: 2028 trae 135 títulos (The Batman: Part II, Fast Forever…).
+- **Tests**: 3 en `tests_browse.py` (año futuro sin mínimo, año actual con mínimo, año futuro con nota conserva el mínimo; los tres fallaban antes) y el de `aniosDisponibles` actualizado.
+- **Archivos afectados**: `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `frontend/lib/search.ts`, `frontend/tests/search.test.ts`, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
