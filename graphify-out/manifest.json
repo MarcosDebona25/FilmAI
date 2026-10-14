@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "docs/04_Lineamientos_UI.md": {
-    "mtime": 1792009758.9399621,
-    "seen": 1792009774.2810621,
-    "ast_hash": "6dedb1dcf86302c8af30d0b49c6c107a",
+    "mtime": 1792010162.4847567,
+    "seen": 1792010676.0894961,
+    "ast_hash": "82554ed9e8d326ebefa1828d47973fa6",
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792009758.9579666,
-    "seen": 1792009774.2811277,
-    "ast_hash": "d967914fb3d9fd593aad9461011583e4",
+    "mtime": 1792010162.4899626,
+    "seen": 1792010676.0895748,
+    "ast_hash": "dcf4bbfa20e8b08afe7ba013f9f8af26",
     "semantic_hash": ""
   },
   "docs/wireframes/Opcion 1/app.html": {
@@ -1302,9 +1302,9 @@
     "semantic_hash": "5e3cb3748e2efb42920ad061bb8d8394"
   },
   "openspec/specs/tmdb-endpoints/spec.md": {
-    "mtime": 1792009758.9538393,
-    "seen": 1792009774.2823012,
-    "ast_hash": "30f5ad227f06583979a423a9dbb84516",
+    "mtime": 1792010162.4854422,
+    "seen": 1792010676.090716,
+    "ast_hash": "796b0510562222692dca3c57f0e5920c",
     "semantic_hash": ""
   },
   "backend/catalogo/management/__init__.py": {
@@ -3714,21 +3714,21 @@
     "semantic_hash": ""
   },
   "backend/catalogo/services/browse.py": {
-    "mtime": 1792009597.7579906,
-    "seen": 1792009774.262754,
-    "ast_hash": "d85ec9871fb33ce5e20b435d73c0a6d3",
+    "mtime": 1792010097.6603513,
+    "seen": 1792010676.0708606,
+    "ast_hash": "feab2f9bd312e313c9130807df41e980",
     "semantic_hash": ""
   },
   "backend/catalogo/test_datos/tmdb_buscar.json": {
-    "mtime": 1791996826.2148015,
-    "seen": 1791999002.3858724,
-    "ast_hash": "0a0fbcbf79d90158ecf95abd115a1ab8",
+    "mtime": 1792010050.0539644,
+    "seen": 1792010676.071259,
+    "ast_hash": "cb89ad07218c88f4da48009aabdec7b6",
     "semantic_hash": ""
   },
   "backend/catalogo/tests_browse.py": {
-    "mtime": 1792009572.4105713,
-    "seen": 1792009774.2633464,
-    "ast_hash": "08a12443b7e4621266a3e068e57101f1",
+    "mtime": 1792010117.677964,
+    "seen": 1792010676.0714629,
+    "ast_hash": "37019f6df78ce3432abfd9d0864cbb96",
     "semantic_hash": ""
   },
   "frontend/app/search/page.tsx": {

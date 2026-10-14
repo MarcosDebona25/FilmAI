@@ -5,11 +5,15 @@ búsqueda por nombre acepta el año pero ignora género y nota, y `discover`
 acepta todos los filtros pero no texto. Este módulo elige, por cada tipo, la
 llamada que corresponde, y en «Todo» alterna películas y series.
 
-| Texto | Género o nota | Por tipo                                         |
-| ----- | ------------- | ------------------------------------------------ |
-| no    | cualquiera    | `discover`, por popularidad                      |
-| sí    | no            | `search`, con el año                             |
-| sí    | sí            | ventana: hasta 5 páginas de `search`, filtradas  |
+| Texto | Por tipo                                                         |
+| ----- | ---------------------------------------------------------------- |
+| no    | `discover`, por popularidad; «Todo» alterna películas y series   |
+| sí    | los primeros 100 de `search`, filtrados y ordenados por puntaje  |
+
+Con texto, el orden de TMDB es de relevancia y deja arriba títulos con 0 votos
+(«the office»: tres películas sin votos antes que la serie con 5579). Se ordena
+por el mayor entre los votos y la popularidad por 100: arriba lo consagrado o lo
+muy esperado, al fondo lo desconocido (pedido del usuario, 14/10/2026).
 
 El diseño completo está en `openspec/changes/search-catalogo/design.md`.
 """
@@ -25,6 +29,11 @@ POR_PAGINA = 20
 PAGINAS_VENTANA = 5
 # TMDB rechaza pedir una página mayor a 500 aunque informe más.
 MAX_PAGINAS = 500
+# Escala de la popularidad de TMDB frente a los votos en el orden con texto: una
+# popularidad de 100 (un estreno con mucho ruido) compite con 10 000 votos.
+# Con 100, Avengers: Doomsday (0 votos, popularidad 108) queda 5.º en
+# «avengers» y Dune: Part Three, 5.º en «dune» (14/10/2026).
+PESO_POPULARIDAD = 100
 # Votos mínimos sin texto y para filtrar por nota: sin él, «Menos de 5» se
 # llena de títulos sin votos. Mismo umbral que las series del año del Home (C-05).
 MIN_VOTOS_NOTA = 50
@@ -96,6 +105,9 @@ def explorar(
         "hasta": hasta,
         "sin_minimo": futuro and nota is None,
     }
+    if q:
+        return _con_texto(servicio, tipos, genero=genero, **_sin_genero(filtros))
+    del filtros["q"]
     if len(tipos) == 1:
         lados = [_lado(servicio, tipos[0], genero=genero, **_sin_genero(filtros))]
     else:
@@ -150,43 +162,70 @@ def _genero_para(tipo, genero):
     return GENERO_EN_SERIES.get(genero, genero)
 
 
-def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde, hasta, sin_minimo):
-    """Resultados de un tipo, con `media_type` puesto."""
-    if genero is False:
-        # TMDB no tiene ese género para este tipo: no hay nada que pedir.
-        return _VACIO
-    if not q:
-        minimo, maximo = NOTAS.get(nota, (None, None))
-        datos = servicio.discover(
-            tipo,
-            genero,
-            anio,
-            minimo,
-            page,
-            sort_by="popularity.desc",
-            # Siempre con mínimo de votos: sin él, los primeros puestos se
-            # llenan de títulos sin votos y «Menos de 5» de títulos sin nota.
-            min_votos=None if sin_minimo else MIN_VOTOS_NOTA,
-            max_rating=maximo,
-            sin_generos=NEWS_Y_TALK if tipo == "tv" and genero is None else None,
-            desde_fecha=desde,
-            hasta_fecha=hasta,
-        )
-    elif genero is None and nota is None and desde is None and hasta is None:
-        datos = servicio.search(q, tipo, page, anio=anio)
-    else:
-        # La búsqueda por nombre de TMDB tampoco filtra por fecha.
-        datos = _ventana(
+def _con_texto(servicio, tipos, *, q, genero, anio, nota, page, desde, hasta, **_):
+    """Con texto: los primeros 100 de cada tipo, juntos y ordenados por puntaje."""
+
+    def coincidencias(tipo):
+        genero_tipo = genero if len(tipos) == 1 else _genero_para(tipo, genero)
+        if genero_tipo is False:
+            # TMDB no tiene ese género para este tipo: no hay nada que pedir.
+            return []
+        return _ventana(
             servicio,
             tipo,
             q=q,
-            genero=genero,
+            genero=genero_tipo,
             anio=anio,
             nota=nota,
-            page=page,
             desde=desde,
             hasta=hasta,
         )
+
+    # Los dos tipos a la vez: cada uno pide hasta 5 páginas.
+    with ThreadPoolExecutor(max_workers=len(tipos)) as hilos:
+        listas = list(hilos.map(coincidencias, tipos))
+    # `sorted` es estable: en un empate queda el orden de relevancia de TMDB.
+    todos = sorted(
+        (item for lista in listas for item in lista), key=_puntaje, reverse=True
+    )
+    por_pagina = POR_PAGINA * len(tipos)
+    inicio = (page - 1) * por_pagina
+    return {
+        "page": page,
+        "total_pages": ceil(len(todos) / por_pagina),
+        "total_results": len(todos),
+        "results": todos[inicio : inicio + por_pagina],
+    }
+
+
+def _puntaje(item):
+    """Lo consagrado (votos) o lo muy esperado (popularidad de ahora) va arriba."""
+    return max(
+        item.get("vote_count") or 0, (item.get("popularity") or 0) * PESO_POPULARIDAD
+    )
+
+
+def _lado(servicio, tipo, *, genero, anio, nota, page, desde, hasta, sin_minimo):
+    """Sin texto: una página de `discover` de un tipo, con `media_type` puesto."""
+    if genero is False:
+        # TMDB no tiene ese género para este tipo: no hay nada que pedir.
+        return _VACIO
+    minimo, maximo = NOTAS.get(nota, (None, None))
+    datos = servicio.discover(
+        tipo,
+        genero,
+        anio,
+        minimo,
+        page,
+        sort_by="popularity.desc",
+        # Siempre con mínimo de votos: sin él, los primeros puestos se
+        # llenan de títulos sin votos y «Menos de 5» de títulos sin nota.
+        min_votos=None if sin_minimo else MIN_VOTOS_NOTA,
+        max_rating=maximo,
+        sin_generos=NEWS_Y_TALK if tipo == "tv" and genero is None else None,
+        desde_fecha=desde,
+        hasta_fecha=hasta,
+    )
     for item in datos.get("results") or []:
         item["media_type"] = tipo
     return {
@@ -196,13 +235,14 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page, desde, hasta, sin_mini
     }
 
 
-def _ventana(servicio, tipo, *, q, genero, anio, nota, page, desde=None, hasta=None):
-    """Los primeros 100 de la búsqueda de TMDB, filtrados por género y nota.
+def _ventana(servicio, tipo, *, q, genero, anio, nota, desde=None, hasta=None):
+    """Los primeros 100 de la búsqueda de TMDB que pasan los filtros.
 
     La página 1 dice cuántas hay; las demás (hasta la 5) salen en paralelo.
     `httpx.Client` y el cliente de Redis se pueden compartir entre hilos, y
     acá no se toca la base. Cada página queda en la caché por su cuenta: la
-    misma búsqueda con otro filtro no vuelve a llamar a TMDB.
+    misma búsqueda con otro filtro no vuelve a llamar a TMDB. Género, nota y
+    fechas se filtran acá porque la búsqueda por nombre de TMDB no los admite.
     """
     primera = servicio.search(q, tipo, 1, anio=anio)
     ultima = min(primera.get("total_pages") or 1, PAGINAS_VENTANA)
@@ -216,12 +256,9 @@ def _ventana(servicio, tipo, *, q, genero, anio, nota, page, desde=None, hasta=N
         item for pagina in (primera, *resto) for item in pagina.get("results") or []
     ]
     elegidos = [item for item in items if _pasa(item, genero, nota, desde, hasta)]
-    desde = (page - 1) * POR_PAGINA
-    return {
-        "total_pages": ceil(len(elegidos) / POR_PAGINA),
-        "total_results": len(elegidos),
-        "results": elegidos[desde : desde + POR_PAGINA],
-    }
+    for item in elegidos:
+        item["media_type"] = tipo
+    return elegidos
 
 
 def _pasa(item, genero, nota, desde=None, hasta=None):

@@ -4154,3 +4154,15 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Verificado contra TMDB real (con ≥50 votos)**: 1980s, 2561 películas (Terminator, Los cazadores del arca perdida, Volver al futuro); 1950s, 943 (12 Angry Men, Vertigo); 1920s, 187 (Nosferatu); 1900s, 48 (Viaje a la Luna).
 - **Tests**: backend, 3 en `tests_browse.py` (década sin texto con rango y mínimo, ventana con las 9 películas reales de «dune» de los 80, décadas inválidas) y 1 de cliente y caché. Frontend, 2 en `search.test.ts` y el test del selector, que ahora verifica que la última opción es «Década de 1900».
 - **Archivos afectados**: `backend/catalogo/{client,cache,views}.py`, `backend/catalogo/services/browse.py`, tests de `catalogo`, `frontend/lib/search.ts`, `frontend/components/features/{SearchView,FiltersSheet}.tsx`, tests, copia de i18n y mensajes, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 14/10/2026 — Buscar con texto ordena por votos y popularidad
+
+- **Fecha**: 14/10/2026
+- **Descripción**: el usuario notó resultados «medio randoms o desconocidos» arriba al buscar por nombre. TMDB ordena su búsqueda por relevancia: en «the office» ponía tres películas con 0 votos antes que la serie con 5579. El usuario eligió ordenar por votos, pero pidió que los estrenos esperados no se hundieran (no tienen votos). Solución: ordenar por el **mayor entre los votos y la popularidad de TMDB × 100** (`PESO_POPULARIDAD`).
+  1. **Por qué mixta.** Comparado con datos reales: los votos solos hunden Avengers: Doomsday (0 votos). La popularidad sola es ruidosa, porque mide lo de esta semana: «it» empezaba con It's Always Sunny y una serie de 3 votos. Con la mixta, en «avengers» quedan los clásicos y Doomsday 5.º; en «avatar», Avatar 1.º y Avatar: Seven Havens (a estrenar) 2.º; en «it», It 1.º. «Coincidencia exacta del título primero» se descartó, porque subía «Batman (1 voto)» y «Matrix (0)».
+  2. **Con texto siempre la ventana.** Para ordenar de verdad hay que tener los primeros 100 de cada tipo, no una página de 20. Ya no hay «una llamada cuando no hay filtros». La primera búsqueda tarda un poco más y después sale de la caché (1 h por página). La carga al bajar con texto termina en 100 por tipo.
+  3. **«Todo» con texto** mezcla películas y series por ese puntaje, de a 40 por página. Sin texto sigue alternando, como el Home.
+  4. Los empates conservan el orden de relevancia de TMDB (`sorted` es estable).
+- **Tests**: `tests_browse.py` reescribe los de texto: siempre 5 páginas con el año, total y páginas de la ventana, «Dune: Part Three» (0 votos, popularidad 32) 5.ª de 100 con el orden exacto de los primeros 5, «Todo» mezclado en orden y de a 40. A la captura `tmdb_buscar.json` se le sumó la popularidad real de cada título, por id, sin cambiar lo demás.
+- **Verificado contra TMDB real**: «the office» → The Office (5579 votos) primero; «it» → It; «avengers» → los cuatro clásicos y Doomsday 5.º.
+- **Archivos afectados**: `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `backend/catalogo/test_datos/tmdb_buscar.json`, doc 04 §5b, spec `tmdb-endpoints`, `docs/decisiones.md`.
