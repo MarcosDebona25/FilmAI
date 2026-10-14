@@ -157,7 +157,14 @@ export function TitleActions({
     );
   }
 
-  const favorito = porClave("favoritos")?.contiene ?? false;
+  // Ícono de una lista predeterminada: activo, se rellena con el color de acento
+  // (como la estrella de la nota propia). La pupila del ojo y las agujas del
+  // reloj toman el color del fondo del botón para seguir viéndose.
+  const icono = (clave: "favoritos" | "vistas" | "pendientes", recorte: string) =>
+    cn(
+      "size-5 md:size-[18px]",
+      porClave(clave)?.contiene && cn("fill-current text-primary", recorte)
+    );
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-2.5">
@@ -199,20 +206,20 @@ export function TitleActions({
       <div className="grid grid-cols-4 gap-2 md:contents">
         {toggle(
           "favoritos",
-          <Heart
-            aria-hidden="true"
-            className={cn("size-5 md:size-[18px]", favorito && "fill-current")}
-          />,
+          <Heart aria-hidden="true" className={icono("favoritos", "")} />,
           t("common.media.favorite")
         )}
         {toggle(
           "vistas",
-          <Eye aria-hidden="true" className="size-5 md:size-[18px]" />,
+          <Eye
+            aria-hidden="true"
+            className={icono("vistas", "[&>circle]:fill-raised-2 [&>circle]:stroke-raised-2")}
+          />,
           t("common.media.watched")
         )}
         {toggle(
           "pendientes",
-          <Clock aria-hidden="true" className="size-5 md:size-[18px]" />,
+          <Clock aria-hidden="true" className={icono("pendientes", "[&>path]:stroke-raised-2")} />,
           t("common.media.watchlist")
         )}
         <div className="md:relative">
