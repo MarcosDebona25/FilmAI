@@ -830,6 +830,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/movie/{id_tmdb}/credits/:
+    get:
+      operationId: catalogo_movie_credits_retrieve
+      description: Directores (en series, los creadores) y reparto con personaje (C-07).
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/now-playing/:
     get:
       operationId: catalogo_now_playing_retrieve
@@ -929,6 +958,35 @@ paths:
   /api/catalogo/tv/{id_tmdb}/:
     get:
       operationId: catalogo_tv_retrieve
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/tv/{id_tmdb}/credits/:
+    get:
+      operationId: catalogo_tv_credits_retrieve
+      description: Directores (en series, los creadores) y reparto con personaje (C-07).
       parameters:
       - in: path
         name: id_tmdb
@@ -1358,6 +1416,7 @@ paths:
       security:
       - jwtHeaderAuth: []
       - jwtCookieAuth: []
+      - {}
       responses:
         '200':
           description: No response body
