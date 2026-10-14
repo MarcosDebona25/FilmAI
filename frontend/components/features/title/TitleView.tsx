@@ -19,6 +19,7 @@ import type { MediaType } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
 import { routes } from "@/lib/routes";
+import { ultimaBusqueda } from "@/lib/search";
 import {
   normalizarFicha,
   origenDesde,
@@ -105,6 +106,13 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     };
   }, [conSesion, id, tipo]);
 
+  // Viniendo de Buscar, la miga vuelve a esa búsqueda. Se lee en un efecto: el
+  // servidor no tiene `sessionStorage` y el HTML de los dos tiene que coincidir.
+  const [vueltaBusqueda, setVueltaBusqueda] = useState<string>(routes.search);
+  useEffect(() => {
+    if (origen.tipo === "search") setVueltaBusqueda(ultimaBusqueda());
+  }, [origen.tipo]);
+
   const listaOrigen = origen.tipo === "lista" ? origen.id : null;
   useEffect(() => {
     if (!conSesion || listaOrigen === null) return;
@@ -141,7 +149,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const ficha = detalle.data ? normalizarFicha(detalle.data, tipo) : null;
   const miga = [
     ...(origen.tipo === "search"
-      ? [{ label: t("nav.main.search"), href: routes.search }]
+      ? [{ label: t("nav.main.search"), href: vueltaBusqueda }]
       : origen.tipo === "reviews"
         ? [
             { label: t("nav.main.profileShort"), href: routes.profile },

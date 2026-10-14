@@ -78,6 +78,7 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
+  window.sessionStorage.clear();
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
@@ -204,6 +205,42 @@ describe("Buscar", () => {
     navegacion.mockReturnValue([{ name: "http://localhost/search?q=dune" } as PerformanceEntry]);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(router.push).toHaveBeenCalledWith("/home");
+  });
+
+  it("guarda la búsqueda para que la miga de la ficha vuelva a ella", () => {
+    estado.params = new URLSearchParams("q=dune&genre=878");
+    render(<SearchView />, { locale: "en" });
+
+    expect(window.sessionStorage.getItem("filmai:ultima-busqueda")).toBe(
+      "/search?q=dune&genre=878"
+    );
+  });
+
+  it("en celular, «Filters» dice cuántos hay activos y abre la hoja", async () => {
+    estado.params = new URLSearchParams("genre=18&year=2020");
+    render(<SearchView />, { locale: "en" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Filters, 2 active" }));
+    const hoja = screen.getByRole("dialog", { name: "Filters" });
+    expect(await within(hoja).findByRole("option", { name: "Kids" })).toBeInTheDocument();
+    expect(within(hoja).getByRole("combobox", { name: "Year" })).toHaveValue("2020");
+
+    fireEvent.click(within(hoja).getByRole("button", { name: "Below 5" }));
+    fireEvent.click(within(hoja).getByRole("button", { name: "Clear" }));
+    fireEvent.click(within(hoja).getByRole("button", { name: "Show results" }));
+
+    expect(reemplazos).toEqual(["/search?genre=18&year=2020&rating=lt5", "/search"]);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("con la hoja abierta, Escape la cierra a ella y no sale de Buscar", () => {
+    render(<SearchView />, { locale: "en" });
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(router.back).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it("el campo no deja escribir más de 50 caracteres", () => {

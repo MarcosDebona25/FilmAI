@@ -447,7 +447,10 @@
       "openLabel": "Filtros{activeCount, plural, =0 {} one {, # activo} other {, # activos}}",
       "apply": "Ver resultados",
       "activeCount": "{count, plural, one {# activo} other {# activos}}",
-      "anyYear": "Cualquiera"
+      "anyYear": "Cualquiera",
+      "tmdbRatingLabel": "Calificación de TMDB",
+      "ratingShort": "{value}+",
+      "ratingShortBelowFive": "<5"
     },
     "results": {
       "count": "{count, plural, one {# resultado} other {# resultados}}",

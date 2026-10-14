@@ -120,3 +120,6 @@ search.genres.news,,label,,Noticias,News,aprobado
 search.genres.reality,,label,,Reality,Reality,aprobado
 search.genres.soap,,label,,Telenovelas,Soap,aprobado
 search.genres.talk,,label,,Entrevistas,Talk,aprobado
+search.filters.tmdbRatingLabel,,label,,Calificación de TMDB,TMDB rating,aprobado
+search.filters.ratingShort,,label,value,{value}+,{value}+,aprobado
+search.filters.ratingShortBelowFive,,label,,<5,<5,aprobado

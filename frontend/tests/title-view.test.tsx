@@ -163,6 +163,21 @@ describe("ficha con sesión", () => {
     expect(screen.queryByRole("button", { name: "Rate" })).toBeNull();
   });
 
+  it("viniendo de Buscar, la miga vuelve a la última búsqueda", async () => {
+    window.sessionStorage.setItem("filmai:ultima-busqueda", "/search?q=interstellar");
+    estado.params = new URLSearchParams("from=search");
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    const miga = screen.getByRole("navigation", { name: "Breadcrumb" });
+    await waitFor(() =>
+      expect(within(miga).getByRole("link", { name: "Search" })).toHaveAttribute(
+        "href",
+        "/search?q=interstellar"
+      )
+    );
+    window.sessionStorage.clear();
+  });
+
   it("viniendo de una lista, la miga la nombra", async () => {
     estado.params = new URLSearchParams("from=list-4");
     render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
