@@ -3974,3 +3974,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   5. Toda la copia ya estaba sembrada (`title.rating.*`, `title.review.*`, `common.*`).
 - **Tests**: Vitest `star-rating.test.tsx` (5), `rating-dialog.test.tsx` (6) y `confirm-dialog.test.tsx` (3). Suite: 196.
 - **Archivos afectados**: `frontend/components/features/title/{DialogShell,StarRating,RatingDialog,ConfirmDialog}.tsx`, tests, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Acciones de listas en la ficha (C-07 / L-04, PR 4)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `TitleActions` y `ListsMenu` en `components/features/title/`, con `lib/title-lists.ts` (tipo `ListaFicha` y cambios de pertenencia), según el canvas.
+  1. **Calificar**: «Rate» o «★ N» (en celular, «Your rating N» a todo el ancho); la etiqueta accesible con nota sale de `title.rating.editSummary` con `t.markup` («Your rating: 9 out of 10. Edit»).
+  2. **Favorite / Watched / Watchlist**: botones con `aria-pressed` que llaman a la API de L-01 (`POST …/items/`, `DELETE …/items/{item_id}/`) y avisan con el toast de cada lista. En celular van en una grilla de cuatro con «Lists».
+  3. **Quitar de Vistas algo calificado**: la API responde 409 `rating_blocks_removal_from_watched`; se pide confirmar con `ConfirmDialog` (texto de `title.rating.removeBoth/OnlyDescription` y la reseña como vista previa) y se reintenta con `?borrar_calificacion=true`, que borra calificación, reseña e ítem juntos. La ficha se entera con `onCalificacionBorrada`.
+  4. **«Add to list»**: panel bajo el botón en escritorio y hoja en celular, con las listas propias como casillas (`aria-pressed`), sus cantidades y «New list» en el lugar: el nombre vacío se rechaza antes de llamar a la API, `list_name_duplicated` muestra «You already have a list with that name.» y los errores de campo salen de `extraerErroresPorCampo`. Crear hace `POST /api/lists/` y después el alta del ítem.
+  5. **Foco**: los botones se arman con una función y no con un componente definido adentro de otro, que React volvería a montar en cada redibujo y dejaría sin foco a quien usa el teclado. Un test lo cubre (falla con la versión anidada).
+- **Tests**: Vitest `title-actions.test.tsx` (11). Revisado contra el canvas en escritorio y celular.
+- **Archivos afectados**: `frontend/components/features/title/{TitleActions,ListsMenu}.tsx`, `frontend/lib/title-lists.ts`, `frontend/tests/title-actions.test.tsx`, `openspec/changes/title-page/tasks.md`.
