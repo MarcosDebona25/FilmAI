@@ -24,6 +24,7 @@ from catalogo.models import (
     TipoProduccion,
 )
 from catalogo.tests import _ParchesDeMaterializacion
+from listas.factories import ListaFactory
 from listas.models import Tiene
 from usuarios.factories import UsuarioFactory
 
@@ -667,6 +668,111 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
 # ---------------------------------------------------------------------------
 # Lectura (fase 2): la comunidad, «Mis reseñas» y mi calificación en una ficha
 # ---------------------------------------------------------------------------
+
+
+class VistasSacaDePendientesTests(_ParchesDeMaterializacion, TestCase):
+    """Lo que ya viste deja de estar pendiente (regla del 14/10/2026).
+
+    Entrar a «Vistas» —con el botón Watched o calificando— saca la producción
+    de «Pendientes» del mismo usuario. Rige solo en el momento en que entra:
+    volver a agregarla a «Pendientes» para verla de nuevo sigue permitido.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.usuario = UsuarioFactory()
+        self.cliente = APIClient()
+        self.cliente.force_authenticate(self.usuario)
+        self.vistas = self.usuario.listas.get(nombre="Vistas")
+        self.pendientes = self.usuario.listas.get(nombre="Pendientes")
+
+    def _agregar(self, lista, cliente=None):
+        return (cliente or self.cliente).post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": 550, "tipo": "movie"},
+            format="json",
+        )
+
+    def _calificar(self):
+        respuesta = self.cliente.post(
+            "/api/reviews/",
+            {"id_tmdb": 550, "tipo": "movie", "valor": 8},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 201)
+
+    def _en(self, lista):
+        return lista.items.exists()
+
+    def test_el_boton_watched_la_saca_de_pendientes(self):
+        self.assertEqual(self._agregar(self.pendientes).status_code, 201)
+
+        self.assertEqual(self._agregar(self.vistas).status_code, 201)
+
+        self.assertTrue(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
+
+    def test_calificar_la_saca_de_pendientes(self):
+        self._agregar(self.pendientes)
+
+        self._calificar()
+
+        self.assertTrue(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
+
+    def test_volver_a_agregarla_a_pendientes_sigue_permitido(self):
+        # Ya vista, la quiere volver a ver: la agrega a «Pendientes» y después
+        # la califica. Calificar no la saca, porque ya estaba en «Vistas».
+        self._agregar(self.vistas)
+        self.assertEqual(self._agregar(self.pendientes).status_code, 201)
+
+        self._calificar()
+
+        self.assertTrue(self._en(self.pendientes))
+
+    def test_otras_listas_no_tocan_pendientes(self):
+        self._agregar(self.pendientes)
+        personalizada = ListaFactory(usuario=self.usuario, nombre="Ciencia ficción")
+
+        self._agregar(self.usuario.listas.get(nombre="Favoritos"))
+        self._agregar(personalizada)
+
+        self.assertTrue(self._en(self.pendientes))
+
+    def test_solo_toca_los_pendientes_de_quien_la_marca(self):
+        otro = UsuarioFactory()
+        cliente_otro = APIClient()
+        cliente_otro.force_authenticate(otro)
+        pendientes_del_otro = otro.listas.get(nombre="Pendientes")
+        self._agregar(pendientes_del_otro, cliente_otro)
+
+        self._agregar(self.vistas)
+
+        self.assertTrue(self._en(pendientes_del_otro))
+
+    def test_quitarla_de_vistas_no_la_devuelve_a_pendientes(self):
+        self._agregar(self.pendientes)
+        item_id = self._agregar(self.vistas).data["item_id"]
+
+        self.assertEqual(
+            self.cliente.delete(
+                f"/api/lists/{self.vistas.pk}/items/{item_id}/"
+            ).status_code,
+            204,
+        )
+
+        self.assertFalse(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
+
+    def test_si_el_alta_en_vistas_falla_pendientes_queda_intacta(self):
+        # Ya está en «Vistas» y la volvió a poner en «Pendientes»: un segundo
+        # alta en «Vistas» responde 409 y no debe borrar nada.
+        self._agregar(self.vistas)
+        self._agregar(self.pendientes)
+
+        self.assertEqual(self._agregar(self.vistas).status_code, 409)
+
+        self.assertTrue(self._en(self.pendientes))
 
 
 class _BaseLectura(TestCase):

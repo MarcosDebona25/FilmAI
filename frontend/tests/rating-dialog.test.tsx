@@ -24,6 +24,16 @@ describe("RatingDialog al calificar", () => {
     expect(screen.queryByText(/also adds it to Watched/)).toBeNull();
   });
 
+  it("si está en Watchlist, avisa que calificar también la saca de ahí", () => {
+    render(<RatingDialog {...base} enVistas={false} enPendientes onSubmit={vi.fn()} />, {
+      locale: "en",
+    });
+
+    expect(
+      screen.getByText("Rating Interstellar also adds it to Watched and removes it from Watchlist.")
+    ).toBeInTheDocument();
+  });
+
   it("cuenta los caracteres, limita a 1000 y manda nota y texto sin espacios de más", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<RatingDialog {...base} enVistas={false} onSubmit={onSubmit} />, { locale: "en" });

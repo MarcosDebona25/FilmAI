@@ -110,3 +110,5 @@ title.breadcrumb.backTo,,label,label,Volver a {label},Back to {label},aprobado
 title.actions.signedOutPrompt,,label,,Ingresá para calificar o guardar,Log in to rate or save,aprobado
 title.reviews.loadMore,,label,,Cargar más reseñas,Load more reviews,aprobado
 title.reviews.empty,,label,,Todavía no hay reseñas. Escribí la primera.,No reviews yet. Be the first to write one.,aprobado
+title.feedback.watchedAddedFromWatchlist,,feedback,,Agregada a Vistas y quitada de Pendientes.,Added to Watched and removed from Watchlist.,aprobado
+title.rating.watchedHelpFromWatchlist,,label,title,"Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",Rating {title} also adds it to Watched and removes it from Watchlist.,aprobado
