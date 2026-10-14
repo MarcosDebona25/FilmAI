@@ -30,6 +30,24 @@ logger = logging.getLogger(__name__)
 _RECLAMABLES = (EstadoEmbedding.PENDING, EstadoEmbedding.FAILED)
 
 
+@shared_task(name="catalogo.materializar_produccion")
+def materializar_produccion(id_tmdb, tipo_tmdb):
+    """Materializa en el worker lo que se abrió en una ficha (C-04a, 14/10/2026).
+
+    La encola `materializar_en_segundo_plano()` cuando la fila no existe o le
+    falta traer el detalle. Nunca lanza, igual que `generar_embedding`: si TMDB
+    o la base fallan, la fila queda sin enriquecer (o no se crea) y la próxima
+    visita la vuelve a encolar; reintentar acá en loop no aporta nada.
+    """
+    # Import adentro de la función: materialization.py importa este módulo.
+    from catalogo.services.materialization import materializar
+
+    try:
+        materializar(id_tmdb, tipo_tmdb)
+    except Exception:
+        logger.exception("materializar_produccion: falló (%s, %s)", id_tmdb, tipo_tmdb)
+
+
 @shared_task(name="catalogo.generar_embedding")
 def generar_embedding(produccion_id):
     """Genera el vector semántico de una producción ya materializada.
