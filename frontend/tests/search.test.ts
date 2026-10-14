@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   BUSQUEDA_VACIA,
@@ -6,6 +6,8 @@ import {
   busquedaDesdeUrl,
   consultaApi,
   filtrosActivos,
+  guardarUltimaBusqueda,
+  ultimaBusqueda,
   urlDeBusqueda,
 } from "@/lib/search";
 
@@ -80,5 +82,36 @@ describe("aniosDisponibles", () => {
     expect(anios[0]).toBe(2026);
     expect(anios.at(-1)).toBe(1900);
     expect(anios).toHaveLength(127);
+  });
+});
+
+describe("última búsqueda", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.sessionStorage.clear();
+  });
+
+  it("devuelve la que se guardó", () => {
+    guardarUltimaBusqueda("/search?q=dune&genre=878");
+
+    expect(ultimaBusqueda()).toBe("/search?q=dune&genre=878");
+  });
+
+  it("sin nada guardado, o con algo que no es de Buscar, va a /search", () => {
+    expect(ultimaBusqueda()).toBe("/search");
+    window.sessionStorage.setItem("filmai:ultima-busqueda", "https://otro.sitio/");
+    expect(ultimaBusqueda()).toBe("/search");
+  });
+
+  it("sin sessionStorage (modo privado) no rompe", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("bloqueado", "SecurityError");
+    });
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("bloqueado", "SecurityError");
+    });
+
+    expect(() => guardarUltimaBusqueda("/search?q=dune")).not.toThrow();
+    expect(ultimaBusqueda()).toBe("/search");
   });
 });

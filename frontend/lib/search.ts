@@ -86,3 +86,38 @@ export function filtrosActivos(busqueda: Busqueda) {
 export function aniosDisponibles(actual: number) {
   return Array.from({ length: actual - PRIMER_ANIO + 1 }, (_, i) => actual - i);
 }
+
+/** Clave de `common.filters.*` con el nombre largo de cada nota. */
+export const ETIQUETA_NOTA = {
+  "9": "ratingAtLeastNine",
+  "8": "ratingAtLeastEight",
+  "7": "ratingAtLeastSeven",
+  "6": "ratingAtLeastSix",
+  "5": "ratingAtLeastFive",
+  lt5: "ratingBelowFive",
+} as const;
+
+const CLAVE_ULTIMA = "filmai:ultima-busqueda";
+
+/**
+ * La miga «Search» de la ficha vuelve a la última búsqueda de esta pestaña
+ * (doc 04 §5b). `sessionStorage` puede no estar (modo privado, datos
+ * bloqueados): sin él, la miga lleva a `/search` sin parámetros.
+ */
+export function guardarUltimaBusqueda(url: string) {
+  try {
+    window.sessionStorage.setItem(CLAVE_ULTIMA, url);
+  } catch {
+    // Sin almacenamiento no hay vuelta a la búsqueda; no es un error.
+  }
+}
+
+export function ultimaBusqueda() {
+  try {
+    const url = window.sessionStorage.getItem(CLAVE_ULTIMA);
+    // Solo rutas de Buscar: lo guardado no puede llevar a otro lado.
+    return url?.startsWith(`${routes.search}?`) || url === routes.search ? url : routes.search;
+  } catch {
+    return routes.search;
+  }
+}
