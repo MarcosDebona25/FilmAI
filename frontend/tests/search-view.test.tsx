@@ -182,7 +182,7 @@ describe("Buscar", () => {
     expect(reemplazos).toEqual(["/search?genre=878", "/search?rating=lt5"]);
   });
 
-  it("«A estrenar» es una opción del año, no una lista de años futuros", () => {
+  it("el año ofrece «A estrenar», años sueltos y décadas antes de 1990", () => {
     render(<SearchView />, { locale: "es" });
 
     const anio = screen.getByRole("combobox", { name: "Año" });
@@ -192,6 +192,7 @@ describe("Buscar", () => {
       "A estrenar",
     ]);
     expect(opciones[2]).toHaveTextContent(String(new Date().getFullYear()));
+    expect(opciones.at(-1)).toHaveTextContent("Década de 1900");
     fireEvent.change(anio, { target: { value: "upcoming" } });
 
     expect(reemplazos).toEqual(["/search?year=upcoming"]);

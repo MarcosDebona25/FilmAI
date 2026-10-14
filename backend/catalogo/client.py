@@ -133,6 +133,7 @@ class TMDBClient:
         max_rating=None,
         sin_generos=None,
         desde_fecha=None,
+        hasta_fecha=None,
     ):
         """Busca producciones por filtros. Todo es opcional menos el tipo.
 
@@ -143,7 +144,8 @@ class TMDBClient:
         deja afuera los títulos con pocos votos (C-05) y `max_rating` es el
         techo de nota de «Below 5» en Buscar (C-06). `sin_generos` son ids
         separados por coma que se excluyen (`without_genres`); `desde_fecha`
-        (AAAA-MM-DD) deja solo lo que estrena desde ese día («A estrenar»).
+        (AAAA-MM-DD) deja solo lo que estrena desde ese día («A estrenar») y
+        `hasta_fecha`, hasta ese día (décadas en Buscar).
         """
         params = {"page": page}
         if genero is not None:
@@ -166,6 +168,8 @@ class TMDBClient:
             params["without_genres"] = sin_generos
         if desde_fecha is not None:
             params[f"{_DISCOVER_DATE_PARAM[tipo]}.gte"] = desde_fecha
+        if hasta_fecha is not None:
+            params[f"{_DISCOVER_DATE_PARAM[tipo]}.lte"] = hasta_fecha
         return self._get_localizado(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1, anio=None):

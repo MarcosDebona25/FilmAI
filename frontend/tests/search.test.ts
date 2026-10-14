@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   BUSQUEDA_VACIA,
-  aniosDisponibles,
+  opcionesDeAnio,
   anioDesdeOpcion,
   opcionDeAnio,
   busquedaDesdeUrl,
@@ -101,16 +101,6 @@ describe("filtrosActivos", () => {
   });
 });
 
-describe("aniosDisponibles", () => {
-  it("va del año actual a 1900 (lo futuro es «A estrenar»)", () => {
-    const anios = aniosDisponibles(2026);
-
-    expect(anios[0]).toBe(2026);
-    expect(anios.at(-1)).toBe(1900);
-    expect(anios).toHaveLength(127);
-  });
-});
-
 describe("última búsqueda", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -156,5 +146,38 @@ describe("scroll de la grilla", () => {
     window.sessionStorage.setItem("filmai:scroll-busqueda", "{no es json");
 
     expect(scrollGuardado("/search")).toBeNull();
+  });
+});
+
+describe("opcionesDeAnio", () => {
+  it("años sueltos del actual a 1990 y, antes, décadas hasta la de 1900", () => {
+    const opciones = opcionesDeAnio(2026);
+
+    expect(opciones[0]).toEqual({ valor: "2026", decada: null });
+    expect(opciones.find((o) => o.valor === "1990")).toBeDefined();
+    expect(opciones.find((o) => o.valor === "1989")).toBeUndefined();
+    expect(opciones.slice(37).map((o) => o.valor)).toEqual([
+      "1980s",
+      "1970s",
+      "1960s",
+      "1950s",
+      "1940s",
+      "1930s",
+      "1920s",
+      "1910s",
+      "1900s",
+    ]);
+    expect(opciones.at(-1)).toEqual({ valor: "1900s", decada: 1900 });
+  });
+
+  it("una década va en la URL como 1980s y a la API como decada=1980", () => {
+    const busqueda = busquedaDesdeUrl(new URLSearchParams("year=1980s"));
+
+    expect(busqueda.anio).toBe("1980s");
+    expect(urlDeBusqueda(busqueda)).toBe("/search?year=1980s");
+    expect(consultaApi(busqueda)).toBe("/api/catalogo/browse/?tipo=all&decada=1980&page=1");
+    // Lo que no es una década válida se ignora.
+    expect(busquedaDesdeUrl(new URLSearchParams("year=1985s")).anio).toBeNull();
+    expect(busquedaDesdeUrl(new URLSearchParams("year=1890s")).anio).toBeNull();
   });
 });
