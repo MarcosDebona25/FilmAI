@@ -8,7 +8,7 @@ The title page of a movie or TV show (C-07), with the rating dialog (C-08's fron
 
 ### Requirement: Routes and origin
 
-`/movie/{id}` and `/tv/{id}` MUST render the title page; a non-numeric id MUST answer 404 (Not Found). The breadcrumb MUST follow `?from=`: `home` → Home; `search` → Search; `reviews` → Profile › Ratings & reviews; `list-{id}` → Lists › {list name}; anything else or nothing → Home. On mobile the breadcrumb MUST be replaced by a back link to its last item.
+`/movie/{id}` and `/tv/{id}` MUST render the title page; a non-numeric id MUST answer 404 (Not Found). The breadcrumb MUST follow `?from=`: `home` → Home; `search` → Search; `reviews` → Profile › Ratings & reviews; `list-{id}` → Lists › {list name}; anything else or nothing → Home. The breadcrumb MUST sit at the top left, under the navbar and aligned with the poster, on a scrim pill that keeps it legible over any backdrop. On mobile it MUST be replaced by a back link to its last item, on the same pill.
 
 #### Scenario: Coming from a list
 
@@ -17,7 +17,7 @@ The title page of a movie or TV show (C-07), with the rating dialog (C-08's fron
 
 ### Requirement: Title data
 
-The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded when long). «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10.
+The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded only when it overflows). While the detail loads, the page MUST show a skeleton with the shape of the backdrop, poster, title, data, actions, genres, synopsis and three reviews. «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10.
 
 #### Scenario: A show
 
@@ -26,7 +26,12 @@ The page MUST show the backdrop band with the site navbar over it, the poster, t
 
 ### Requirement: Actions
 
-Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite, Watched, Watchlist as `aria-pressed` toggles over the lists API, and «Add to list» with the user's own lists and inline creation. Removing from Watched a rated title MUST ask for confirmation and then delete the rating with it.
+Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page; a signed-in user MUST NOT see it while the page loads. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite, Watched, Watchlist as `aria-pressed` toggles over the lists API, whose icons fill with the accent color when on, and «Add to list» with the user's own lists and inline creation. Removing from Watched a rated title MUST ask for confirmation and then delete the rating with it.
+
+#### Scenario: Signed in while the detail loads
+
+- GIVEN a signed-in user whose lists arrive before the title detail
+- THEN the page shows the skeleton and no «Log in to rate or save»
 
 #### Scenario: Watched with a rating
 
