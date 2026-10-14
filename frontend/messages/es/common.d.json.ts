@@ -325,7 +325,9 @@ declare const messages: {
     "metadata": {
       "ratingVotesLabel": "Calificación TMDB: {rating} de 10, {count, plural, one {# voto} other {# votos}}",
       "voteCount": "TMDB · {count, plural, one {# voto} other {# votos}}",
-      "genresTitle": "Géneros"
+      "genresTitle": "Géneros",
+      "seasons": "{count, plural, one {# temporada} other {# temporadas}}",
+      "episodes": "{count, plural, one {# episodio} other {# episodios}}"
     },
     "lists": {
       "addTitleLabel": "Agregar {title} a una lista",
@@ -348,7 +350,8 @@ declare const messages: {
     "credits": {
       "heading": "Dirección y reparto",
       "directors": "Dirección",
-      "cast": "Reparto"
+      "cast": "Reparto",
+      "creators": "Creación"
     },
     "reviews": {
       "heading": "Reseñas",
@@ -356,7 +359,9 @@ declare const messages: {
       "today": "hoy",
       "filteredEmpty": "Ninguna reseña coincide con estos filtros.",
       "communityCount": "De la comunidad ({count})",
-      "displayedCount": "Mostrando {shownCount} de {totalCount}"
+      "displayedCount": "Mostrando {shownCount} de {totalCount}",
+      "loadMore": "Cargar más reseñas",
+      "empty": "Todavía no hay reseñas. Escribí la primera."
     },
     "review": {
       "placeholder": "¿Qué te pareció?",
@@ -366,6 +371,12 @@ declare const messages: {
     "watched": {
       "removeConfirmTitle": "¿Quitar de Vistas?",
       "remove": "Quitar de Vistas"
+    },
+    "breadcrumb": {
+      "backTo": "Volver a {label}"
+    },
+    "actions": {
+      "signedOutPrompt": "Ingresá para calificar o guardar"
     }
   },
   "footer": {

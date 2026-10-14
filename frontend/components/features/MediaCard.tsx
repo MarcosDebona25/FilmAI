@@ -14,7 +14,16 @@ import { routes } from "@/lib/routes";
  * TMDB. Lleva a la ficha (C-07). La usan las filas del Home y, después, Search
  * y el detalle de listas (L-03).
  */
-export function MediaCard({ title, showType }: { title: Title; showType: boolean }) {
+export function MediaCard({
+  title,
+  showType,
+  from,
+}: {
+  title: Title;
+  showType: boolean;
+  /** Origen para la miga de pan de la ficha (`home`, `search`, `list-{id}`…). */
+  from?: string;
+}) {
   const t = useTranslations("common");
   const formats = useFormats();
   const [failed, setFailed] = useState<string | null>(null);
@@ -26,7 +35,7 @@ export function MediaCard({ title, showType }: { title: Title; showType: boolean
   // página hasta el ancho de todas las tarjetas.
   return (
     <Link
-      href={routes.title(title.tipo, title.id)}
+      href={routes.title(title.tipo, title.id, from)}
       className="group relative flex w-[132px] flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:w-[176px] md:gap-3"
     >
       <span className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-raised transition-[transform,box-shadow] duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgb(0_0_0/0.45)] group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">

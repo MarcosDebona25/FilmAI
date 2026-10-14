@@ -27,11 +27,15 @@ export function Navbar() {
   if (isAccessPath(pathname)) return null;
 
   return (
-    // En el Home de escritorio la barra va sobre la imagen del Hero (canvas,
-    // C-05): no ocupa lugar y el Hero empieza arriba de todo.
+    // La barra va sobre la imagen de fondo (canvas): en el Home solo en
+    // escritorio (C-05); en la ficha, siempre (C-07). No ocupa lugar.
     <header
       className={
-        pathname === routes.explore ? "md:absolute md:inset-x-0 md:top-0 md:z-20" : undefined
+        pathname === routes.explore
+          ? "md:absolute md:inset-x-0 md:top-0 md:z-20"
+          : /^\/(movie|tv)\/\d+$/.test(pathname)
+            ? "absolute inset-x-0 top-0 z-20"
+            : undefined
       }
     >
       <a
