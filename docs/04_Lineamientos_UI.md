@@ -240,7 +240,7 @@ navbar con «Buscar» como página actual; antes se describía como un panel ove
 │  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐        │
 │  │post│ │post│ │post│ │post│ │post│ │post│ │post│        │ ← grilla auto-fill 168 px
 │  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘        │
-│          [Anterior]   Página 1 de 2   [Siguiente]         │
+│  … al bajar se cargan más resultados                     │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -260,7 +260,7 @@ navbar con «Buscar» como página actual; antes se describía como un panel ove
 - **«Todo»**: alterna películas y series, como las filas del Inicio.
 - **Resultados**: MediaCards en grilla (2 columnas en celular) con tipo, año y nota de TMDB, o «Sin
   calificaciones». Cada tarjeta lleva a la ficha con `?from=search`.
-- **Paginación**: Anterior / Página X de Y / Siguiente; al cambiar de página vuelve arriba.
+- **Carga al bajar** (14/10/2026, pedido del usuario; reemplaza la paginación clásica del canvas): cuando el final de la grilla está a 600 px, se agrega la página siguiente, con un esqueleto mientras llega, hasta 25 páginas. Al terminar los resultados aparece el footer. Si falla una página, lo cargado queda y se ofrece Reintentar. Volver desde la ficha (Atrás o la miga) recupera las páginas cargadas y la posición del scroll.
 - **URL**: texto, tipo, filtros y página viven en la URL; recargar, compartir y volver atrás
   conservan la búsqueda. La miga «Buscar» de la ficha vuelve a la última búsqueda.
 - **Celular**: título «Buscar», campo, selector de tipo y un botón «Filtros» con la cantidad de
@@ -271,7 +271,7 @@ navbar con «Buscar» como página actual; antes se describía como un panel ove
 | Estado                  | Qué se muestra                                                                               |
 | ----------------------- | -------------------------------------------------------------------------------------------- |
 | Sin texto ni filtros    | Títulos populares, ordenados por popularidad.                                                |
-| Con resultados          | Contador «N resultados para “texto”» (o «N títulos» sin texto) + grilla + paginación.        |
+| Con resultados          | Contador «N resultados para “texto”» (o «N títulos» sin texto) + grilla que crece al bajar. |
 | Sin resultados          | «Nada para “texto”» + «Revisá cómo se escribe o probá el título original: el catálogo viene de TMDB.» + «Limpiar filtros». |
 | Cargando                | Grilla de pósters en esqueleto.                                                              |
 | Error API               | "No se pudo recuperar el catálogo." + botón Reintentar.                                     |

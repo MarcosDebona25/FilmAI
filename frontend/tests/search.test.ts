@@ -6,7 +6,9 @@ import {
   busquedaDesdeUrl,
   consultaApi,
   filtrosActivos,
+  guardarScrollBusqueda,
   guardarUltimaBusqueda,
+  scrollGuardado,
   ultimaBusqueda,
   urlDeBusqueda,
 } from "@/lib/search";
@@ -114,5 +116,22 @@ describe("última búsqueda", () => {
 
     expect(() => guardarUltimaBusqueda("/search?q=dune")).not.toThrow();
     expect(ultimaBusqueda()).toBe("/search");
+  });
+});
+
+describe("scroll de la grilla", () => {
+  afterEach(() => window.sessionStorage.clear());
+
+  it("devuelve la posición solo para la misma búsqueda", () => {
+    guardarScrollBusqueda("/search?q=batman&page=4", 4240);
+
+    expect(scrollGuardado("/search?q=batman&page=4")).toBe(4240);
+    expect(scrollGuardado("/search?q=batman")).toBeNull();
+  });
+
+  it("con algo roto guardado no rompe", () => {
+    window.sessionStorage.setItem("filmai:scroll-busqueda", "{no es json");
+
+    expect(scrollGuardado("/search")).toBeNull();
   });
 });

@@ -4,7 +4,7 @@ import { SearchView } from "@/components/features/SearchView";
 import type { TmdbItem } from "@/lib/catalog";
 import { limpiarCacheCatalogo } from "@/lib/use-catalog";
 import { reacher, svu } from "./catalog-fixtures";
-import { act, fireEvent, render, screen, within } from "./render";
+import { act, fireEvent, render, screen, waitFor, within } from "./render";
 
 /** Recortes reales de `search/movie?query=dune` del 14/10/2026. */
 const DUNE_2: TmdbItem = {
@@ -34,6 +34,9 @@ const estado = vi.hoisted(() => ({
   params: new URLSearchParams(),
   respuesta: null as null | Record<string, unknown>,
   falla: false,
+  /** Si está, la página N responde `porPagina[N - 1]`. */
+  porPagina: null as null | Record<string, unknown>[],
+  fallaPagina: null as null | number,
   pedidos: [] as string[],
 }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn() }));
@@ -49,9 +52,10 @@ vi.mock("@/lib/api", async (importOriginal) => {
     apiFetch: vi.fn(async (path: string) => {
       estado.pedidos.push(path);
       if (path.startsWith("/api/catalogo/genres/")) return { genres: GENEROS };
-      if (estado.falla)
+      const pagina = Number(new URL(path, "http://x").searchParams.get("page"));
+      if (estado.falla || estado.fallaPagina === pagina)
         throw new real.ApiError(502, { code: "upstream_error", params: {}, errors: [] });
-      return structuredClone(estado.respuesta);
+      return structuredClone(estado.porPagina ? estado.porPagina[pagina - 1] : estado.respuesta);
     }),
   };
 });
@@ -65,19 +69,52 @@ const pagina = (results: TmdbItem[], extra = {}) => ({
 });
 
 let reemplazos: string[];
+/** `IntersectionObserver` simulado: jsdom no lo implementa. */
+const observadores: { acercar: () => void }[] = [];
 beforeEach(() => {
   estado.params = new URLSearchParams();
   estado.respuesta = pagina([DUNE_2, reacher, DUNE_3, svu], { total_pages: 3, total_results: 57 });
   estado.falla = false;
+  estado.porPagina = null;
+  estado.fallaPagina = null;
   estado.pedidos = [];
+  observadores.length = 0;
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      constructor(
+        private callback: IntersectionObserverCallback,
+        opciones?: IntersectionObserverInit
+      ) {
+        // `next/link` también observa (precarga de enlaces): solo interesa el
+        // de la grilla, que anticipa 600 px.
+        if (opciones?.rootMargin?.includes("600px")) observadores.push(this);
+      }
+      observe() {}
+      unobserve() {}
+      takeRecords() {
+        return [];
+      }
+      disconnect() {
+        const i = observadores.indexOf(this);
+        if (i >= 0) observadores.splice(i, 1);
+      }
+      acercar() {
+        this.callback(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          this as unknown as IntersectionObserver
+        );
+      }
+    }
+  );
   reemplazos = [];
   limpiarCacheCatalogo();
-  vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   vi.spyOn(window.history, "replaceState").mockImplementation((_, __, url) => {
     reemplazos.push(String(url));
   });
 });
 afterEach(() => {
+  vi.unstubAllGlobals();
   window.sessionStorage.clear();
   vi.restoreAllMocks();
   vi.useRealTimers();
@@ -158,17 +195,69 @@ describe("Buscar", () => {
     expect(reemplazos).toEqual(["/search?type=tv&genre=18", "/search?type=tv"]);
   });
 
-  it("paginación: Previous apagado en la 1 y Next pide la siguiente", async () => {
+  it("al acercarse el final de la grilla pide la página siguiente", async () => {
     estado.params = new URLSearchParams("q=dune");
     render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
 
-    const paginas = await screen.findByRole("navigation", { name: "Results pages" });
-    expect(within(paginas).getByText("Page 1 of 3")).toBeInTheDocument();
-    expect(within(paginas).getByRole("button", { name: "Previous" })).toBeDisabled();
-    fireEvent.click(within(paginas).getByRole("button", { name: "Next" }));
+    act(() => observadores[0].acercar());
 
     expect(reemplazos).toEqual(["/search?q=dune&page=2"]);
-    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 });
+  });
+
+  it("con page=2 junta las dos páginas, sin repetidos, y deja de pedir en la última", async () => {
+    estado.params = new URLSearchParams("q=dune&page=2");
+    // Reacher llega en las dos páginas: la popularidad puede cambiar entre pedidos.
+    estado.porPagina = [
+      pagina([DUNE_2, reacher], { total_pages: 2, total_results: 3 }),
+      pagina([reacher, svu], { total_pages: 2, total_results: 3 }),
+    ];
+    render(<SearchView />, { locale: "en" });
+
+    expect(await screen.findByText("Law & Order: Special Victims Unit")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /Reacher/ })).toHaveLength(1);
+    expect(screen.getByText("Dune: Part Two")).toBeInTheDocument();
+    expect(observadores).toHaveLength(0);
+  });
+
+  it("abrir una ficha guarda el scroll y al volver la grilla vuelve ahí", async () => {
+    estado.params = new URLSearchParams("q=dune&page=2");
+    estado.porPagina = [
+      pagina([DUNE_2], { total_pages: 2, total_results: 2 }),
+      pagina([svu], { total_pages: 2, total_results: 2 }),
+    ];
+    vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cuadro) => {
+      cuadro(0);
+      return 0;
+    });
+    const { unmount } = render(<SearchView />, { locale: "en" });
+    window.scrollY = 1800;
+    // En el `<li>` y no en el enlace: el guardado escucha en la grilla y así
+    // jsdom no intenta navegar.
+    fireEvent.click((await screen.findByText("Law & Order: Special Victims Unit")).closest("li")!);
+    unmount();
+
+    render(<SearchView />, { locale: "en" });
+
+    await waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 1800 }));
+  });
+
+  it("si falla una página siguiente conserva lo cargado y ofrece reintentar", async () => {
+    estado.params = new URLSearchParams("q=dune&page=2");
+    estado.porPagina = [
+      pagina([DUNE_2], { total_pages: 3, total_results: 3 }),
+      pagina([svu], { total_pages: 3, total_results: 3 }),
+    ];
+    estado.fallaPagina = 2;
+    render(<SearchView />, { locale: "en" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("The catalog couldn’t respond.");
+    expect(screen.getByText("Dune: Part Two")).toBeInTheDocument();
+    estado.fallaPagina = null;
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(await screen.findByText("Law & Order: Special Victims Unit")).toBeInTheDocument();
   });
 
   it("sin resultados ofrece limpiar los filtros", async () => {
