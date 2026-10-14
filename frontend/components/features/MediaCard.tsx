@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import type { Title } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { routes } from "@/lib/routes";
+import { cn } from "@/lib/utils";
 
 /**
  * Tarjeta de un título: póster 2:3, nombre y una línea con tipo, año y nota de
@@ -18,13 +19,20 @@ export function MediaCard({
   title,
   showType,
   from,
+  fluid = false,
+  showUnrated = false,
 }: {
   title: Title;
   showType: boolean;
   /** Origen para la miga de pan de la ficha (`home`, `search`, `list-{id}`…). */
   from?: string;
+  /** En una grilla (Search, L-03) ocupa su columna en vez de 132/176 px. */
+  fluid?: boolean;
+  /** «No ratings» cuando TMDB no tiene nota (canvas de Search). */
+  showUnrated?: boolean;
 }) {
   const t = useTranslations("common");
+  const ts = useTranslations("search.results");
   const formats = useFormats();
   const [failed, setFailed] = useState<string | null>(null);
   const poster = title.poster && failed !== title.poster ? title.poster : null;
@@ -36,7 +44,10 @@ export function MediaCard({
   return (
     <Link
       href={routes.title(title.tipo, title.id, from)}
-      className="group relative flex w-[132px] flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:w-[176px] md:gap-3"
+      className={cn(
+        "group relative flex flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:gap-3",
+        fluid ? "w-full" : "w-[132px] md:w-[176px]"
+      )}
     >
       <span className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-raised transition-[transform,box-shadow] duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgb(0_0_0/0.45)] group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
         {poster ? (
@@ -45,7 +56,7 @@ export function MediaCard({
             src={poster}
             alt={t("media.posterAlt", { title: title.titulo })}
             fill
-            sizes="(min-width: 768px) 176px, 132px"
+            sizes={fluid ? "(min-width: 768px) 220px, 50vw" : "(min-width: 768px) 176px, 132px"}
             className="object-cover"
             onError={() => setFailed(poster)}
           />
@@ -85,6 +96,7 @@ export function MediaCard({
               <span aria-hidden="true">{formats.rating(title.nota)}</span>
             </span>
           )}
+          {title.nota === null && showUnrated && <span>{ts("unrated")}</span>}
         </span>
       </span>
     </Link>

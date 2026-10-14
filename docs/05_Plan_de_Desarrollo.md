@@ -23,7 +23,7 @@ Actualizado el **14/10/2026** en la rama `develop/ui-design`. Fuente de verdad v
 | 6 · Ratings & reviews | Ratings & reviews | 🔁 Rehacer | `/my-reviews` | Mismo caso: rehacer según el artboard. |
 | 3 · Home | Home | ✅ Completa | `/home` (`components/features/HomeView.tsx`) | Nada. Las tarjetas llevan a `/movie/[id]` y `/tv/[id]`, que responden 404 (Not Found) hasta C-07, y «Ask FilmAI» a `/chat` hasta B-04. |
 | 4 · Title page + rating | Ficha y modal de calificar/reseñar | ✅ Completa | `/movie/[id]`, `/tv/[id]` (`components/features/title/`) | Nada. La miga de pan acepta `?from=search` y `?from=list-{id}` para cuando existan Search y el detalle de listas. |
-| 5 · Search | Search | ⬜ Falta | `/search` responde 404 | Desarrollar (C-06). |
+| 5 · Search | Search | 🟡 En curso | `/search` (`components/features/SearchView.tsx`) | Escritorio listo (C-06, PR 3); falta la hoja de filtros del celular y la vuelta desde la ficha (PR 4). |
 | 8 · Lists | Lists y List detail | ⬜ Falta | `/lists` responde 404 | Desarrollar (L-02, L-03, L-04). |
 | 10 · Chatbot | Chatbot | ⬜ Falta | «Ask FilmAI» apunta a `/chat`, que responde 404 | Desarrollar (B-02 a B-05). Al hacerlo: fijar la ruta final, el idioma de la respuesta en curso, el cambio de idioma durante una solicitud y la localización de tarjetas y errores. |
 

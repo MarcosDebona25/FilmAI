@@ -449,18 +449,30 @@ declare const messages: {
       "yearLabel": "Año",
       "openLabel": "Filtros{activeCount, plural, =0 {} one {, # activo} other {, # activos}}",
       "apply": "Ver resultados",
-      "activeCount": "{count, plural, one {# activo} other {# activos}}"
+      "activeCount": "{count, plural, one {# activo} other {# activos}}",
+      "anyYear": "Cualquiera"
     },
     "results": {
       "count": "{count, plural, one {# resultado} other {# resultados}}",
       "queryHint": "para «{query}»",
       "unrated": "Sin calificaciones",
       "emptyTitle": "Nada para «{query}»",
-      "emptyHint": "Revisá cómo está escrito o probá con el título original: el catálogo viene de TMDB y muchas veces está en inglés."
+      "emptyHint": "Revisá cómo está escrito o probá con el título original: el catálogo viene de TMDB y muchas veces está en inglés.",
+      "emptyFiltersTitle": "Nada con estos filtros"
     },
     "pagination": {
       "label": "Páginas de resultados",
       "position": "Página {page} de {pageCount}"
+    },
+    "close": {
+      "shortcut": "Esc"
+    },
+    "genres": {
+      "kids": "Infantil",
+      "news": "Noticias",
+      "reality": "Reality",
+      "soap": "Telenovelas",
+      "talk": "Entrevistas"
     }
   },
   "reviews": {

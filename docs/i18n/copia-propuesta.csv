@@ -112,3 +112,11 @@ title.reviews.loadMore,,label,,Cargar más reseñas,Load more reviews,aprobado
 title.reviews.empty,,label,,Todavía no hay reseñas. Escribí la primera.,No reviews yet. Be the first to write one.,aprobado
 title.feedback.watchedAddedFromWatchlist,,feedback,,Agregada a Vistas y quitada de Pendientes.,Added to Watched and removed from Watchlist.,aprobado
 title.rating.watchedHelpFromWatchlist,,label,title,"Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",Rating {title} also adds it to Watched and removes it from Watchlist.,aprobado
+search.filters.anyYear,,label,,Cualquiera,Any,aprobado
+search.results.emptyFiltersTitle,,label,,Nada con estos filtros,Nothing with these filters,aprobado
+search.close.shortcut,,label,,Esc,Esc,aprobado
+search.genres.kids,,label,,Infantil,Kids,aprobado
+search.genres.news,,label,,Noticias,News,aprobado
+search.genres.reality,,label,,Reality,Reality,aprobado
+search.genres.soap,,label,,Telenovelas,Soap,aprobado
+search.genres.talk,,label,,Entrevistas,Talk,aprobado
