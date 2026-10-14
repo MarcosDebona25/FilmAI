@@ -104,6 +104,21 @@ class ProduccionQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     tipo = serializers.ChoiceField(choices=("movie", "tv"))
 
 
+class ComunidadQuerySerializer(ProduccionQuerySerializer):
+    """`?orden=&nota_min=&nota_max=` de las reseñas de la comunidad (C-07).
+
+    Los límites de nota son inclusivos: «9 o más» es `nota_min=9` y «menos de
+    5» es `nota_max=4`.
+    """
+
+    orden = serializers.ChoiceField(
+        choices=("fecha-desc", "fecha-asc", "nota-desc", "nota-asc"),
+        default="fecha-desc",
+    )
+    nota_min = serializers.IntegerField(min_value=1, max_value=10, required=False)
+    nota_max = serializers.IntegerField(min_value=1, max_value=10, required=False)
+
+
 class ResenaComunidadSerializer(serializers.Serializer):
     """Una ReviewCard de «Reseñas de la comunidad» (§5c).
 
