@@ -36,11 +36,11 @@ TMDB fixtures from responses captured on 14/10/2026, never invented.
 
 ## Phase 2: Search page, desktop (PR 3)
 
-- [ ] 2.1 Copy in `docs/i18n/copia-propuesta.csv` → generate → check
-- [ ] 2.2 `lib/search.ts`: URL ⇄ state, query to `browse/`, active filter count (unit tests)
-- [ ] 2.3 `MediaCard` fluid width and «No ratings»
-- [ ] 2.4 `SearchView`: field, Close/Escape, type, selects, count, grid, pager, states (tests)
-- [ ] 2.5 `app/search/page.tsx`
+- [x] 2.1 Copy in `docs/i18n/copia-propuesta.csv` → generate → check
+- [x] 2.2 `lib/search.ts`: URL ⇄ state, query to `browse/`, active filter count (unit tests)
+- [x] 2.3 `MediaCard` fluid width and «No ratings»
+- [x] 2.4 `SearchView`: field, Close/Escape, type, selects, count, grid, pager, states (tests)
+- [x] 2.5 `app/search/page.tsx`
 
 ## Phase 3: Mobile and return path (PR 4)
 

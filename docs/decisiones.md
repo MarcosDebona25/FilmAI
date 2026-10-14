@@ -4080,3 +4080,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   5. **Géneros sin traducir.** TMDB devuelve en inglés, también en `es-MX`, los cinco géneros solo de series (Kids, News, Reality, Soap, Talk). El frontend les pone nombre desde la copia de i18n (PR 3).
 - **Tests**: `catalogo/tests_browse.py` (28) sobre páginas reales de TMDB del 14/10/2026 (`catalogo/test_datos/tmdb_buscar.json`: «dune» en películas y series, «the office» en series, `discover` y géneros), más 4 de cliente y caché en `tests.py`. Todos fallaban antes del cambio.
 - **Archivos afectados**: `backend/catalogo/{client,cache,views,urls}.py`, `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `backend/catalogo/test_datos/tmdb_buscar.json`, `backend/catalogo/tests.py`, `openspec/specs/tmdb-endpoints/spec.md`, `openspec/changes/search-catalogo/{design,tasks}.md`, `docs/decisiones.md`.
+
+## 14/10/2026 — Página de Buscar (C-06, PR 3)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `/search` (`components/features/SearchView.tsx`, `lib/search.ts`) según el canvas «Search · desktop».
+  1. **La búsqueda vive en la URL** (`q`, `type`, `genre`, `year`, `rating`, `page`, en inglés como el `?type=` del Home). Se cambia con `history.replaceState`: no vuelve a pedir la página al servidor, y «Atrás» sale de Buscar. La nota se escribe `9`…`5` y `lt5`, y `lib/search.ts` la traduce a `9+` y `m5` de la API.
+  2. **Escribir espera 350 ms**; Enter busca enseguida. Cualquier cambio vuelve a la página 1.
+  3. **Cerrar / Escape** usa `performance.getEntriesByType("navigation")`: si el documento se cargó en otra página, se llegó navegando dentro de la app y se vuelve atrás; si se abrió directo en `/search`, va al Inicio. Con un `<dialog>` abierto, Escape es de él.
+  4. **Cambiar el tipo** conserva el género solo si es uno de los 8 con el mismo id en películas y series; los demás se descartan, porque en el otro tipo no existen.
+  5. **Géneros sin traducir**: los cinco solo de series que TMDB devuelve en inglés también en `es-MX` (Kids, News, Reality, Soap, Talk) toman el nombre de la copia (`search.genres.*`: Infantil, Noticias, Reality, Telenovelas, Entrevistas).
+  6. **`MediaCard`** suma `fluid`, para ocupar su columna de la grilla, y `showUnrated`, para el «No ratings» del canvas. El Home no cambia.
+  7. **Vacío**: «Nada para “texto”» (o «Nada con estos filtros») con «Limpiar filtros»; si no hay filtros activos, el botón dice «Borrar búsqueda».
+- **Tests**: Vitest `search.test.ts` (9, URL ⇄ estado ⇄ API) y `search-view.test.tsx` (11: pedido inicial, contador y tarjetas, espera de 350 ms, Enter, filtros y géneros traducidos, cambio de tipo, paginación, vacío, error y Reintentar, Escape, tope de 50). Se suma el e2e de la ficha «marcar Watched algo que está en Watchlist lo saca de Watchlist» (regla del PR #81). Capturas con datos reales de TMDB en escritorio y celular, sin desborde horizontal.
+- **Archivos afectados**: `frontend/app/search/page.tsx`, `frontend/components/features/{SearchView,MediaCard}.tsx`, `frontend/lib/search.ts`, tests y e2e, `docs/i18n/copia-propuesta.csv` y mensajes generados, `openspec/changes/search-catalogo/tasks.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
