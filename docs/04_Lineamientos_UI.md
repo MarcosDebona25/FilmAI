@@ -257,7 +257,8 @@ navbar con «Buscar» como página actual; antes se describía como un panel ove
   Bélica).
 - **Con texto y género o nota**: TMDB no admite esos filtros en su búsqueda por nombre; se aplican
   sobre los primeros 100 resultados por tipo (decisión del 14/10/2026). El año sí lo filtra TMDB.
-- **«Todo»**: alterna películas y series, como las filas del Inicio.
+- **Orden con texto** (14/10/2026, pedido del usuario): los primeros 100 por tipo, ordenados por el mayor entre los votos y la popularidad de TMDB × 100. Lo consagrado o lo muy esperado (un estreno sin votos todavía) queda arriba y lo desconocido al fondo. En «Todo» se mezclan películas y series por ese puntaje.
+- **«Todo» sin texto**: alterna películas y series, como las filas del Inicio.
 - **Resultados**: MediaCards en grilla (2 columnas en celular) con tipo, año y nota de TMDB, o «Sin
   calificaciones». Cada tarjeta lleva a la ficha con `?from=search`.
 - **Carga al bajar** (14/10/2026, pedido del usuario; reemplaza la paginación clásica del canvas): cuando el final de la grilla está a 600 px, se agrega la página siguiente, con un esqueleto mientras llega, hasta 25 páginas. Al terminar los resultados aparece el footer. Si falla una página, lo cargado queda y se ofrece Reintentar. Volver desde la ficha (Atrás o la miga) recupera las páginas cargadas y la posición del scroll.

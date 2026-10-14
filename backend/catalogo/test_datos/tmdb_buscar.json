@@ -16,7 +16,8 @@
       12
      ],
      "vote_average": 7.8,
-     "vote_count": 15710
+     "vote_count": 15710,
+     "popularity": 57.593
     },
     {
      "id": 693134,
@@ -27,7 +28,8 @@
       12
      ],
      "vote_average": 8.1,
-     "vote_count": 8730
+     "vote_count": 8730,
+     "popularity": 63.273
     },
     {
      "id": 841,
@@ -39,7 +41,8 @@
       12
      ],
      "vote_average": 6.2,
-     "vote_count": 3575
+     "vote_count": 3575,
+     "popularity": 13.687
     },
     {
      "id": 1170608,
@@ -50,7 +53,8 @@
       12
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 32.113
     },
     {
      "id": 697620,
@@ -62,7 +66,8 @@
       53
      ],
      "vote_average": 7.4,
-     "vote_count": 37
+     "vote_count": 37,
+     "popularity": 2.054
     },
     {
      "id": 915935,
@@ -74,7 +79,8 @@
       80
      ],
      "vote_average": 7.5,
-     "vote_count": 3520
+     "vote_count": 3520,
+     "popularity": 19.755
     },
     {
      "id": 271683,
@@ -84,7 +90,8 @@
       18
      ],
      "vote_average": 5.5,
-     "vote_count": 21
+     "vote_count": 21,
+     "popularity": 1.135
     },
     {
      "id": 627150,
@@ -95,7 +102,8 @@
       80
      ],
      "vote_average": 6.7,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 0.766
     },
     {
      "id": 881460,
@@ -107,7 +115,8 @@
       12
      ],
      "vote_average": 5.0,
-     "vote_count": 73
+     "vote_count": 73,
+     "popularity": 2.997
     },
     {
      "id": 633787,
@@ -117,7 +126,8 @@
       12
      ],
      "vote_average": 4.8,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 0.862
     },
     {
      "id": 533365,
@@ -125,7 +135,8 @@
      "release_date": "1952-02-29",
      "genre_ids": [],
      "vote_average": 6.2,
-     "vote_count": 12
+     "vote_count": 12,
+     "popularity": 1.198
     },
     {
      "id": 539644,
@@ -133,7 +144,8 @@
      "release_date": "1934-08-03",
      "genre_ids": [],
      "vote_average": 7.2,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 0.99
     },
     {
      "id": 911972,
@@ -145,7 +157,8 @@
       27
      ],
      "vote_average": 6.7,
-     "vote_count": 18
+     "vote_count": 18,
+     "popularity": 0.929
     },
     {
      "id": 919946,
@@ -155,7 +168,8 @@
       99
      ],
      "vote_average": 6.5,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 1.643
     },
     {
      "id": 744738,
@@ -165,7 +179,8 @@
       878
      ],
      "vote_average": 4.6,
-     "vote_count": 56
+     "vote_count": 56,
+     "popularity": 1.582
     },
     {
      "id": 1274770,
@@ -175,7 +190,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.444
     },
     {
      "id": 222339,
@@ -186,7 +202,8 @@
       878
      ],
      "vote_average": 4.0,
-     "vote_count": 26
+     "vote_count": 26,
+     "popularity": 1.361
     },
     {
      "id": 354144,
@@ -196,7 +213,8 @@
       53
      ],
      "vote_average": 9.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 1.237
     },
     {
      "id": 1026979,
@@ -206,7 +224,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.588
     },
     {
      "id": 285149,
@@ -216,7 +235,8 @@
       99
      ],
      "vote_average": 6.0,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 0.582
     }
    ]
   },
@@ -233,7 +253,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.542
     },
     {
      "id": 191720,
@@ -243,7 +264,8 @@
       99
      ],
      "vote_average": 7.8,
-     "vote_count": 784
+     "vote_count": 784,
+     "popularity": 6.21
     },
     {
      "id": 818926,
@@ -255,7 +277,8 @@
       9648
      ],
      "vote_average": 4.9,
-     "vote_count": 8
+     "vote_count": 8,
+     "popularity": 0.869
     },
     {
      "id": 378668,
@@ -267,7 +290,8 @@
       10751
      ],
      "vote_average": 6.5,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 1.577
     },
     {
      "id": 911777,
@@ -277,7 +301,8 @@
       18
      ],
      "vote_average": 6.8,
-     "vote_count": 8
+     "vote_count": 8,
+     "popularity": 0.68
     },
     {
      "id": 843281,
@@ -287,7 +312,8 @@
       878
      ],
      "vote_average": 2.6,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 0.669
     },
     {
      "id": 306391,
@@ -298,7 +324,8 @@
       35
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.779
     },
     {
      "id": 591883,
@@ -308,7 +335,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.401
     },
     {
      "id": 1729964,
@@ -318,7 +346,8 @@
       35
      ],
      "vote_average": 7.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.832
     },
     {
      "id": 112160,
@@ -330,7 +359,8 @@
       10749
      ],
      "vote_average": 5.379,
-     "vote_count": 413
+     "vote_count": 413,
+     "popularity": 8.068
     },
     {
      "id": 1472813,
@@ -341,7 +371,8 @@
       35
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 5.575
     },
     {
      "id": 695209,
@@ -349,7 +380,8 @@
      "release_date": "1988-08-06",
      "genre_ids": [],
      "vote_average": 7.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.787
     },
     {
      "id": 1712817,
@@ -359,7 +391,8 @@
       16
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.419
     },
     {
      "id": 1197345,
@@ -369,7 +402,8 @@
       99
      ],
      "vote_average": 7.5,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 0.637
     },
     {
      "id": 613359,
@@ -379,7 +413,8 @@
       10749
      ],
      "vote_average": 4.9,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 0.741
     },
     {
      "id": 1258181,
@@ -390,7 +425,8 @@
       35
      ],
      "vote_average": 6.4,
-     "vote_count": 38
+     "vote_count": 38,
+     "popularity": 4.955
     },
     {
      "id": 837411,
@@ -400,7 +436,8 @@
       18
      ],
      "vote_average": 1.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 2.663
     },
     {
      "id": 320003,
@@ -410,7 +447,8 @@
       18
      ],
      "vote_average": 5.2,
-     "vote_count": 175
+     "vote_count": 175,
+     "popularity": 3.191
     },
     {
      "id": 820712,
@@ -420,7 +458,8 @@
       18
      ],
      "vote_average": 5.984,
-     "vote_count": 63
+     "vote_count": 63,
+     "popularity": 2.37
     },
     {
      "id": 1538544,
@@ -428,7 +467,8 @@
      "release_date": "",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.46
     }
    ]
   },
@@ -443,7 +483,8 @@
      "release_date": "2011-04-28",
      "genre_ids": [],
      "vote_average": 1.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 0.844
     },
     {
      "id": 1639740,
@@ -455,7 +496,8 @@
       14
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 2.935
     },
     {
      "id": 794842,
@@ -467,7 +509,8 @@
       35
      ],
      "vote_average": 6.4,
-     "vote_count": 187
+     "vote_count": 187,
+     "popularity": 7.103
     },
     {
      "id": 871361,
@@ -477,7 +520,8 @@
       16
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.427
     },
     {
      "id": 874649,
@@ -487,7 +531,8 @@
       99
      ],
      "vote_average": 4.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 1.561
     },
     {
      "id": 1746830,
@@ -497,7 +542,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.37
     },
     {
      "id": 116231,
@@ -509,7 +555,8 @@
       10749
      ],
      "vote_average": 6.2,
-     "vote_count": 89
+     "vote_count": 89,
+     "popularity": 1.703
     },
     {
      "id": 683405,
@@ -520,7 +567,8 @@
       10770
      ],
      "vote_average": 4.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 1.607
     },
     {
      "id": 128776,
@@ -530,7 +578,8 @@
       18
      ],
      "vote_average": 5.2,
-     "vote_count": 16
+     "vote_count": 16,
+     "popularity": 1.645
     },
     {
      "id": 380438,
@@ -541,7 +590,8 @@
       10770
      ],
      "vote_average": 5.2,
-     "vote_count": 9
+     "vote_count": 9,
+     "popularity": 1.27
     },
     {
      "id": 934935,
@@ -552,7 +602,8 @@
       18
      ],
      "vote_average": 6.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 0.726
     },
     {
      "id": 36245,
@@ -563,7 +614,8 @@
       35
      ],
      "vote_average": 7.083,
-     "vote_count": 247
+     "vote_count": 247,
+     "popularity": 2.207
     },
     {
      "id": 768069,
@@ -574,7 +626,8 @@
       12
      ],
      "vote_average": 5.8,
-     "vote_count": 8
+     "vote_count": 8,
+     "popularity": 1.125
     },
     {
      "id": 1619411,
@@ -582,7 +635,8 @@
      "release_date": "",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.19
     },
     {
      "id": 1094473,
@@ -594,7 +648,8 @@
       12
      ],
      "vote_average": 6.5,
-     "vote_count": 81
+     "vote_count": 81,
+     "popularity": 6.343
     },
     {
      "id": 1595305,
@@ -604,7 +659,8 @@
       99
      ],
      "vote_average": 7.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.2
     },
     {
      "id": 1773004,
@@ -614,7 +670,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.838
     },
     {
      "id": 276563,
@@ -625,7 +682,8 @@
       99
      ],
      "vote_average": 6.9,
-     "vote_count": 12
+     "vote_count": 12,
+     "popularity": 1.86
     },
     {
      "id": 799785,
@@ -636,7 +694,8 @@
       28
      ],
      "vote_average": 7.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.029
     },
     {
      "id": 1173464,
@@ -648,7 +707,8 @@
       10770
      ],
      "vote_average": 7.8,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 1.525
     }
    ]
   },
@@ -663,7 +723,8 @@
      "release_date": "1984-07-18",
      "genre_ids": [],
      "vote_average": 6.2,
-     "vote_count": 9
+     "vote_count": 9,
+     "popularity": 1.104
     },
     {
      "id": 1552283,
@@ -676,7 +737,8 @@
       878
      ],
      "vote_average": 10.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.652
     },
     {
      "id": 481099,
@@ -686,7 +748,8 @@
       18
      ],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.123
     },
     {
      "id": 51196,
@@ -696,7 +759,8 @@
       35
      ],
      "vote_average": 4.6,
-     "vote_count": 64
+     "vote_count": 64,
+     "popularity": 1.332
     },
     {
      "id": 1720561,
@@ -706,7 +770,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.927
     },
     {
      "id": 1318919,
@@ -714,7 +779,8 @@
      "release_date": "2014-08-14",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.534
     },
     {
      "id": 971204,
@@ -724,7 +790,8 @@
       18
      ],
      "vote_average": 7.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.921
     },
     {
      "id": 539598,
@@ -732,7 +799,8 @@
      "release_date": "1934-10-05",
      "genre_ids": [],
      "vote_average": 9.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.034
     },
     {
      "id": 1367531,
@@ -742,7 +810,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.098
     },
     {
      "id": 129411,
@@ -752,7 +821,8 @@
       16
      ],
      "vote_average": 5.9,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 0.846
     },
     {
      "id": 707503,
@@ -763,7 +833,8 @@
       16
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.099
     },
     {
      "id": 273437,
@@ -773,7 +844,8 @@
       18
      ],
      "vote_average": 6.3,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 0.927
     },
     {
      "id": 582887,
@@ -785,7 +857,8 @@
       35
      ],
      "vote_average": 6.6,
-     "vote_count": 106
+     "vote_count": 106,
+     "popularity": 2.42
     },
     {
      "id": 492221,
@@ -795,7 +868,8 @@
       18
      ],
      "vote_average": 6.2,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 1.254
     },
     {
      "id": 1769849,
@@ -803,7 +877,8 @@
      "release_date": "",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.092
     },
     {
      "id": 474186,
@@ -814,7 +889,8 @@
       18
      ],
      "vote_average": 9.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.121
     },
     {
      "id": 778889,
@@ -824,7 +900,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.931
     },
     {
      "id": 1427449,
@@ -834,7 +911,8 @@
       18
      ],
      "vote_average": 5.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.92
     },
     {
      "id": 559166,
@@ -844,7 +922,8 @@
       35
      ],
      "vote_average": 6.0,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 1.202
     },
     {
      "id": 87558,
@@ -854,7 +933,8 @@
       35
      ],
      "vote_average": 5.1,
-     "vote_count": 75
+     "vote_count": 75,
+     "popularity": 3.68
     }
    ]
   },
@@ -871,7 +951,8 @@
       18
      ],
      "vote_average": 4.2,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 0.938
     },
     {
      "id": 1026141,
@@ -881,7 +962,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.902
     },
     {
      "id": 416653,
@@ -891,7 +973,8 @@
       99
      ],
      "vote_average": 7.5,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 1.659
     },
     {
      "id": 1685902,
@@ -901,7 +984,8 @@
       35
      ],
      "vote_average": 7.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.569
     },
     {
      "id": 203474,
@@ -911,7 +995,8 @@
       18
      ],
      "vote_average": 5.326,
-     "vote_count": 46
+     "vote_count": 46,
+     "popularity": 1.497
     },
     {
      "id": 1209016,
@@ -921,7 +1006,8 @@
       16
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.75
     },
     {
      "id": 460765,
@@ -929,7 +1015,8 @@
      "release_date": "1990-01-01",
      "genre_ids": [],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.067
     },
     {
      "id": 325799,
@@ -939,7 +1026,8 @@
       18
      ],
      "vote_average": 5.3,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 1.704
     },
     {
      "id": 134207,
@@ -949,7 +1037,8 @@
       18
      ],
      "vote_average": 6.2,
-     "vote_count": 8
+     "vote_count": 8,
+     "popularity": 0.965
     },
     {
      "id": 348119,
@@ -959,7 +1048,8 @@
       18
      ],
      "vote_average": 7.2,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 0.897
     },
     {
      "id": 351155,
@@ -970,7 +1060,8 @@
       18
      ],
      "vote_average": 4.8,
-     "vote_count": 19
+     "vote_count": 19,
+     "popularity": 1.646
     },
     {
      "id": 711591,
@@ -978,7 +1069,8 @@
      "release_date": "1974-01-01",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.898
     },
     {
      "id": 1212544,
@@ -986,7 +1078,8 @@
      "release_date": "2023-01-23",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.771
     },
     {
      "id": 452315,
@@ -996,7 +1089,8 @@
       35
      ],
      "vote_average": 5.8,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 1.066
     },
     {
      "id": 1137633,
@@ -1006,7 +1100,8 @@
       99
      ],
      "vote_average": 6.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 0.88
     },
     {
      "id": 319141,
@@ -1016,7 +1111,8 @@
       18
      ],
      "vote_average": 7.3,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 1.02
     },
     {
      "id": 608482,
@@ -1024,7 +1120,8 @@
      "release_date": "2014-11-28",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.044
     },
     {
      "id": 159896,
@@ -1034,7 +1131,8 @@
       16
      ],
      "vote_average": 5.8,
-     "vote_count": 71
+     "vote_count": 71,
+     "popularity": 1.02
     },
     {
      "id": 412275,
@@ -1044,7 +1142,8 @@
       10402
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.42
     },
     {
      "id": 461109,
@@ -1052,7 +1151,8 @@
      "release_date": "1910-12-02",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.399
     }
    ]
   }
@@ -1073,7 +1173,8 @@
       10759
      ],
      "vote_average": 7.2,
-     "vote_count": 665
+     "vote_count": 665,
+     "popularity": 35.578
     },
     {
      "id": 19566,
@@ -1085,7 +1186,8 @@
       18
      ],
      "vote_average": 6.781,
-     "vote_count": 389
+     "vote_count": 389,
+     "popularity": 8.217
     },
     {
      "id": 86046,
@@ -1095,7 +1197,8 @@
       18
      ],
      "vote_average": 9.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 6.669
     },
     {
      "id": 9156,
@@ -1107,7 +1210,8 @@
       18
      ],
      "vote_average": 6.9,
-     "vote_count": 253
+     "vote_count": 253,
+     "popularity": 7.504
     },
     {
      "id": 307531,
@@ -1119,7 +1223,8 @@
       10751
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.682
     },
     {
      "id": 15911,
@@ -1130,7 +1235,8 @@
       35
      ],
      "vote_average": 6.0,
-     "vote_count": 13
+     "vote_count": 13,
+     "popularity": 3.099
     },
     {
      "id": 338168,
@@ -1141,7 +1247,8 @@
       10765
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.262
     },
     {
      "id": 299177,
@@ -1149,7 +1256,8 @@
      "first_air_date": "2021-10-21",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.992
     },
     {
      "id": 136216,
@@ -1159,7 +1267,8 @@
       18
      ],
      "vote_average": 4.2,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 6.219
     },
     {
      "id": 101167,
@@ -1169,7 +1278,8 @@
       99
      ],
      "vote_average": 10.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.6
     },
     {
      "id": 313586,
@@ -1179,7 +1289,8 @@
       99
      ],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.833
     },
     {
      "id": 82577,
@@ -1189,7 +1300,8 @@
       99
      ],
      "vote_average": 8.5,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 2.153
     },
     {
      "id": 117869,
@@ -1201,7 +1313,8 @@
       18
      ],
      "vote_average": 8.8,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 0.942
     },
     {
      "id": 92774,
@@ -1211,7 +1324,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.397
     },
     {
      "id": 301685,
@@ -1222,7 +1336,8 @@
       80
      ],
      "vote_average": 7.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.598
     },
     {
      "id": 155759,
@@ -1232,7 +1347,8 @@
       35
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.423
     },
     {
      "id": 294783,
@@ -1242,7 +1358,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.416
     },
     {
      "id": 106885,
@@ -1252,7 +1369,8 @@
       99
      ],
      "vote_average": 10.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.388
     },
     {
      "id": 126274,
@@ -1262,7 +1380,8 @@
       16
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.104
     },
     {
      "id": 252976,
@@ -1273,7 +1392,8 @@
       80
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.813
     }
    ]
   },
@@ -1290,7 +1410,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.466
     },
     {
      "id": 88295,
@@ -1298,7 +1419,8 @@
      "first_air_date": "2018-01-11",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.89
     },
     {
      "id": 114723,
@@ -1308,7 +1430,8 @@
       99
      ],
      "vote_average": 1.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.852
     },
     {
      "id": 100261,
@@ -1316,7 +1439,8 @@
      "first_air_date": "2017-12-14",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.473
     },
     {
      "id": 249801,
@@ -1326,7 +1450,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.885
     },
     {
      "id": 209297,
@@ -1334,7 +1459,8 @@
      "first_air_date": "2016-03-24",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.467
     },
     {
      "id": 310804,
@@ -1342,7 +1468,8 @@
      "first_air_date": "2025-12-21",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.538
     },
     {
      "id": 98988,
@@ -1352,7 +1479,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.714
     },
     {
      "id": 212603,
@@ -1362,7 +1490,8 @@
       99
      ],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.818
     },
     {
      "id": 132766,
@@ -1372,7 +1501,8 @@
       99
      ],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.586
     },
     {
      "id": 126074,
@@ -1384,7 +1514,8 @@
       9648
      ],
      "vote_average": 6.813,
-     "vote_count": 16
+     "vote_count": 16,
+     "popularity": 4.875
     },
     {
      "id": 48865,
@@ -1394,7 +1525,8 @@
       18
      ],
      "vote_average": 8.1,
-     "vote_count": 893
+     "vote_count": 893,
+     "popularity": 29.491
     },
     {
      "id": 95885,
@@ -1407,7 +1539,8 @@
       10751
      ],
      "vote_average": 7.2,
-     "vote_count": 30
+     "vote_count": 30,
+     "popularity": 19.85
     },
     {
      "id": 110562,
@@ -1417,7 +1550,8 @@
       18
      ],
      "vote_average": 8.146,
-     "vote_count": 314
+     "vote_count": 314,
+     "popularity": 27.128
     },
     {
      "id": 96185,
@@ -1428,7 +1562,8 @@
       10768
      ],
      "vote_average": 7.5,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 2.902
     },
     {
      "id": 219558,
@@ -1438,7 +1573,8 @@
       80
      ],
      "vote_average": 5.0,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 5.003
     },
     {
      "id": 5721,
@@ -1449,7 +1585,8 @@
       35
      ],
      "vote_average": 6.796,
-     "vote_count": 142
+     "vote_count": 142,
+     "popularity": 35.174
     },
     {
      "id": 1583,
@@ -1459,7 +1596,8 @@
       18
      ],
      "vote_average": 5.0,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 4.761
     },
     {
      "id": 66676,
@@ -1470,7 +1608,8 @@
       18
      ],
      "vote_average": 7.6,
-     "vote_count": 481
+     "vote_count": 481,
+     "popularity": 23.01
     },
     {
      "id": 68901,
@@ -1480,7 +1619,8 @@
       99
      ],
      "vote_average": 7.905,
-     "vote_count": 74
+     "vote_count": 74,
+     "popularity": 8.481
     }
    ]
   },
@@ -1497,7 +1637,8 @@
       18
      ],
      "vote_average": 6.4,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 3.245
     },
     {
      "id": 4311,
@@ -1507,7 +1648,8 @@
       35
      ],
      "vote_average": 7.091,
-     "vote_count": 22
+     "vote_count": 22,
+     "popularity": 8.385
     },
     {
      "id": 63361,
@@ -1519,7 +1661,8 @@
       80
      ],
      "vote_average": 6.3,
-     "vote_count": 12
+     "vote_count": 12,
+     "popularity": 11.517
     },
     {
      "id": 66888,
@@ -1532,7 +1675,8 @@
       10766
      ],
      "vote_average": 8.077,
-     "vote_count": 13
+     "vote_count": 13,
+     "popularity": 5.42
     },
     {
      "id": 277704,
@@ -1543,7 +1687,8 @@
       80
      ],
      "vote_average": 6.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 0.985
     },
     {
      "id": 286654,
@@ -1553,7 +1698,8 @@
       18
      ],
      "vote_average": 4.5,
-     "vote_count": 19
+     "vote_count": 19,
+     "popularity": 4.134
     },
     {
      "id": 60616,
@@ -1564,7 +1710,8 @@
       18
      ],
      "vote_average": 7.9,
-     "vote_count": 157
+     "vote_count": 157,
+     "popularity": 8.741
     },
     {
      "id": 14315,
@@ -1575,7 +1722,8 @@
       35
      ],
      "vote_average": 6.815,
-     "vote_count": 143
+     "vote_count": 143,
+     "popularity": 15.318
     },
     {
      "id": 77963,
@@ -1586,7 +1734,8 @@
       10766
      ],
      "vote_average": 7.6,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 2.662
     },
     {
      "id": 15590,
@@ -1596,7 +1745,8 @@
       18
      ],
      "vote_average": 5.5,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 5.227
     },
     {
      "id": 71181,
@@ -1608,7 +1758,8 @@
       18
      ],
      "vote_average": 5.796,
-     "vote_count": 157
+     "vote_count": 157,
+     "popularity": 18.471
     },
     {
      "id": 203178,
@@ -1618,7 +1769,8 @@
       35
      ],
      "vote_average": 7.0,
-     "vote_count": 114
+     "vote_count": 114,
+     "popularity": 12.779
     },
     {
      "id": 61606,
@@ -1628,7 +1780,8 @@
       35
      ],
      "vote_average": 7.3,
-     "vote_count": 29
+     "vote_count": 29,
+     "popularity": 13.151
     },
     {
      "id": 281436,
@@ -1639,7 +1792,8 @@
       10768
      ],
      "vote_average": 8.3,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 3.622
     },
     {
      "id": 14362,
@@ -1649,7 +1803,8 @@
       18
      ],
      "vote_average": 7.6,
-     "vote_count": 11
+     "vote_count": 11,
+     "popularity": 8.889
     },
     {
      "id": 61609,
@@ -1659,7 +1814,8 @@
       18
      ],
      "vote_average": 7.3,
-     "vote_count": 10
+     "vote_count": 10,
+     "popularity": 3.841
     },
     {
      "id": 43060,
@@ -1670,7 +1826,8 @@
       10751
      ],
      "vote_average": 8.0,
-     "vote_count": 15
+     "vote_count": 15,
+     "popularity": 4.844
     },
     {
      "id": 128062,
@@ -1681,7 +1838,8 @@
       10768
      ],
      "vote_average": 7.9,
-     "vote_count": 23
+     "vote_count": 23,
+     "popularity": 5.586
     },
     {
      "id": 317555,
@@ -1691,7 +1849,8 @@
       99
      ],
      "vote_average": 7.5,
-     "vote_count": 10
+     "vote_count": 10,
+     "popularity": 5.748
     },
     {
      "id": 16502,
@@ -1701,7 +1860,8 @@
       18
      ],
      "vote_average": 5.7,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 4.252
     }
    ]
   },
@@ -1719,7 +1879,8 @@
       10762
      ],
      "vote_average": 6.9,
-     "vote_count": 54
+     "vote_count": 54,
+     "popularity": 10.383
     },
     {
      "id": 299028,
@@ -1729,7 +1890,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.972
     },
     {
      "id": 46641,
@@ -1739,7 +1901,8 @@
       18
      ],
      "vote_average": 5.5,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 3.549
     },
     {
      "id": 113072,
@@ -1749,7 +1912,8 @@
       99
      ],
      "vote_average": 6.0,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 1.515
     },
     {
      "id": 89059,
@@ -1759,7 +1923,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.849
     },
     {
      "id": 92558,
@@ -1769,7 +1934,8 @@
       99
      ],
      "vote_average": 4.7,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 2.35
     },
     {
      "id": 8943,
@@ -1780,7 +1946,8 @@
       10768
      ],
      "vote_average": 7.4,
-     "vote_count": 23
+     "vote_count": 23,
+     "popularity": 2.414
     },
     {
      "id": 242875,
@@ -1791,7 +1958,8 @@
       18
      ],
      "vote_average": 6.632,
-     "vote_count": 53
+     "vote_count": 53,
+     "popularity": 5.629
     },
     {
      "id": 120944,
@@ -1801,7 +1969,8 @@
       18
      ],
      "vote_average": 3.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.149
     },
     {
      "id": 232926,
@@ -1813,7 +1982,8 @@
       10765
      ],
      "vote_average": 7.948,
-     "vote_count": 105
+     "vote_count": 105,
+     "popularity": 11.87
     },
     {
      "id": 49313,
@@ -1823,7 +1993,8 @@
       99
      ],
      "vote_average": 6.4,
-     "vote_count": 11
+     "vote_count": 11,
+     "popularity": 3.744
     },
     {
      "id": 291945,
@@ -1833,7 +2004,8 @@
       99
      ],
      "vote_average": 6.5,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 1.744
     },
     {
      "id": 195900,
@@ -1845,7 +2017,8 @@
       9648
      ],
      "vote_average": 7.3,
-     "vote_count": 23
+     "vote_count": 23,
+     "popularity": 2.419
     },
     {
      "id": 65859,
@@ -1855,7 +2028,8 @@
       99
      ],
      "vote_average": 7.3,
-     "vote_count": 18
+     "vote_count": 18,
+     "popularity": 4.986
     },
     {
      "id": 249545,
@@ -1868,7 +2042,8 @@
       10765
      ],
      "vote_average": 6.3,
-     "vote_count": 39
+     "vote_count": 39,
+     "popularity": 13.129
     },
     {
      "id": 255582,
@@ -1878,7 +2053,8 @@
       99
      ],
      "vote_average": 6.1,
-     "vote_count": 8
+     "vote_count": 8,
+     "popularity": 0.828
     },
     {
      "id": 96645,
@@ -1888,7 +2064,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.907
     },
     {
      "id": 313406,
@@ -1898,7 +2075,8 @@
       99
      ],
      "vote_average": 8.7,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 4.43
     },
     {
      "id": 237890,
@@ -1908,7 +2086,8 @@
       99
      ],
      "vote_average": 7.5,
-     "vote_count": 83
+     "vote_count": 83,
+     "popularity": 6.603
     },
     {
      "id": 94880,
@@ -1918,7 +2097,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.109
     }
    ]
   },
@@ -1935,7 +2115,8 @@
       99
      ],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 2.235
     },
     {
      "id": 281371,
@@ -1946,7 +2127,8 @@
       80
      ],
      "vote_average": 8.0,
-     "vote_count": 56
+     "vote_count": 56,
+     "popularity": 4.403
     },
     {
      "id": 34324,
@@ -1956,7 +2138,8 @@
       99
      ],
      "vote_average": 6.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 0.947
     },
     {
      "id": 255919,
@@ -1966,7 +2149,8 @@
       99
      ],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 2.124
     },
     {
      "id": 139132,
@@ -1979,7 +2163,8 @@
       10768
      ],
      "vote_average": 6.8,
-     "vote_count": 8
+     "vote_count": 8,
+     "popularity": 1.804
     },
     {
      "id": 99705,
@@ -1989,7 +2174,8 @@
       99
      ],
      "vote_average": 6.4,
-     "vote_count": 9
+     "vote_count": 9,
+     "popularity": 2.251
     },
     {
      "id": 153170,
@@ -2000,7 +2186,8 @@
       10764
      ],
      "vote_average": 3.9,
-     "vote_count": 14
+     "vote_count": 14,
+     "popularity": 2.132
     },
     {
      "id": 126423,
@@ -2010,7 +2197,8 @@
       99
      ],
      "vote_average": 5.3,
-     "vote_count": 10
+     "vote_count": 10,
+     "popularity": 4.716
     },
     {
      "id": 290261,
@@ -2020,7 +2208,8 @@
       99
      ],
      "vote_average": 8.0,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 0.887
     },
     {
      "id": 207366,
@@ -2031,7 +2220,8 @@
       99
      ],
      "vote_average": 2.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 2.784
     },
     {
      "id": 202212,
@@ -2041,7 +2231,8 @@
       99
      ],
      "vote_average": 7.2,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 3.748
     },
     {
      "id": 196594,
@@ -2052,7 +2243,8 @@
       99
      ],
      "vote_average": 2.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 3.519
     },
     {
      "id": 133359,
@@ -2063,7 +2255,8 @@
       80
      ],
      "vote_average": 7.043,
-     "vote_count": 82
+     "vote_count": 82,
+     "popularity": 3.72
     },
     {
      "id": 296423,
@@ -2074,7 +2267,8 @@
       9648
      ],
      "vote_average": 9.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 1.701
     },
     {
      "id": 283390,
@@ -2084,7 +2278,8 @@
       35
      ],
      "vote_average": 6.0,
-     "vote_count": 18
+     "vote_count": 18,
+     "popularity": 3.403
     },
     {
      "id": 121774,
@@ -2094,7 +2289,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.525
     }
    ]
   }
@@ -2113,7 +2309,8 @@
       35
      ],
      "vote_average": 8.6,
-     "vote_count": 5579
+     "vote_count": 5579,
+     "popularity": 385.213
     },
     {
      "id": 2996,
@@ -2123,7 +2320,8 @@
       35
      ],
      "vote_average": 7.8,
-     "vote_count": 1010
+     "vote_count": 1010,
+     "popularity": 32.035
     },
     {
      "id": 128822,
@@ -2133,7 +2331,8 @@
       35
      ],
      "vote_average": 7.8,
-     "vote_count": 11
+     "vote_count": 11,
+     "popularity": 9.5
     },
     {
      "id": 256480,
@@ -2143,7 +2342,8 @@
       35
      ],
      "vote_average": 5.5,
-     "vote_count": 42
+     "vote_count": 42,
+     "popularity": 6.644
     },
     {
      "id": 90762,
@@ -2153,7 +2353,8 @@
       35
      ],
      "vote_average": 6.1,
-     "vote_count": 10
+     "vote_count": 10,
+     "popularity": 5.863
     },
     {
      "id": 24876,
@@ -2163,7 +2364,8 @@
       35
      ],
      "vote_average": 6.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 3.029
     },
     {
      "id": 249145,
@@ -2171,7 +2373,8 @@
      "first_air_date": "2008-05-28",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 3.738
     },
     {
      "id": 70633,
@@ -2181,7 +2384,8 @@
       35
      ],
      "vote_average": 3.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 5.46
     },
     {
      "id": 315371,
@@ -2191,7 +2395,8 @@
       18
      ],
      "vote_average": 4.0,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 3.992
     },
     {
      "id": 37054,
@@ -2201,7 +2406,8 @@
       35
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 3.145
     },
     {
      "id": 272429,
@@ -2211,7 +2417,8 @@
       35
      ],
      "vote_average": 5.2,
-     "vote_count": 5
+     "vote_count": 5,
+     "popularity": 1.86
     },
     {
      "id": 241100,
@@ -2221,7 +2428,8 @@
       18
      ],
      "vote_average": 7.95,
-     "vote_count": 101
+     "vote_count": 101,
+     "popularity": 6.509
     },
     {
      "id": 25477,
@@ -2231,7 +2439,8 @@
       10764
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.349
     },
     {
      "id": 24781,
@@ -2241,7 +2450,8 @@
       10764
      ],
      "vote_average": 10.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 1.484
     },
     {
      "id": 25800,
@@ -2251,7 +2461,8 @@
       35
      ],
      "vote_average": 9.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 2.343
     },
     {
      "id": 78163,
@@ -2262,7 +2473,8 @@
       35
      ],
      "vote_average": 6.5,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 4.698
     },
     {
      "id": 213307,
@@ -2272,7 +2484,8 @@
       35
      ],
      "vote_average": 6.8,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 2.85
     },
     {
      "id": 238989,
@@ -2282,7 +2495,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.648
     },
     {
      "id": 87427,
@@ -2293,7 +2507,8 @@
       18
      ],
      "vote_average": 6.0,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 4.102
     },
     {
      "id": 56860,
@@ -2301,7 +2516,8 @@
      "first_air_date": "",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.456
     }
    ]
   },
@@ -2316,7 +2532,8 @@
      "first_air_date": "",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.456
     },
     {
      "id": 53441,
@@ -2326,7 +2543,8 @@
       18
      ],
      "vote_average": 8.2,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 5.969
     },
     {
      "id": 132777,
@@ -2334,7 +2552,8 @@
      "first_air_date": "2018-11-15",
      "genre_ids": [],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.429
     },
     {
      "id": 56813,
@@ -2342,7 +2561,8 @@
      "first_air_date": "",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.463
     },
     {
      "id": 308989,
@@ -2353,7 +2573,8 @@
       80
      ],
      "vote_average": 7.3,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 0.681
     },
     {
      "id": 92791,
@@ -2363,7 +2584,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.907
     },
     {
      "id": 333628,
@@ -2373,7 +2595,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.791
     },
     {
      "id": 7819,
@@ -2383,7 +2606,8 @@
       10764
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.7
     },
     {
      "id": 261308,
@@ -2393,7 +2617,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 2.729
     },
     {
      "id": 284495,
@@ -2404,7 +2629,8 @@
       10765
      ],
      "vote_average": 7.9,
-     "vote_count": 47
+     "vote_count": 47,
+     "popularity": 6.962
     },
     {
      "id": 60647,
@@ -2414,7 +2640,8 @@
       18
      ],
      "vote_average": 8.5,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 1.883
     },
     {
      "id": 118039,
@@ -2422,7 +2649,8 @@
      "first_air_date": "2015-07-29",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.519
     },
     {
      "id": 287255,
@@ -2432,7 +2660,8 @@
       35
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.59
     },
     {
      "id": 314942,
@@ -2443,7 +2672,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.203
     },
     {
      "id": 237230,
@@ -2453,7 +2683,8 @@
       99
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 0.433
     },
     {
      "id": 280030,
@@ -2464,7 +2695,8 @@
       35
      ],
      "vote_average": 8.0,
-     "vote_count": 41
+     "vote_count": 41,
+     "popularity": 6.324
     },
     {
      "id": 133044,
@@ -2472,7 +2704,8 @@
      "first_air_date": "2010-02-11",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 2.016
     },
     {
      "id": 112456,
@@ -2484,7 +2717,8 @@
       9648
      ],
      "vote_average": 6.5,
-     "vote_count": 2
+     "vote_count": 2,
+     "popularity": 11.016
     },
     {
      "id": 50926,
@@ -2494,7 +2728,8 @@
       80
      ],
      "vote_average": 6.5,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 2.638
     },
     {
      "id": 6202,
@@ -2504,7 +2739,8 @@
       35
      ],
      "vote_average": 7.7,
-     "vote_count": 139
+     "vote_count": 139,
+     "popularity": 7.404
     }
    ]
   },
@@ -2521,7 +2757,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.532
     },
     {
      "id": 284884,
@@ -2531,7 +2768,8 @@
       35
      ],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 5.761
     },
     {
      "id": 130359,
@@ -2542,7 +2780,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.146
     },
     {
      "id": 322055,
@@ -2554,7 +2793,8 @@
       18
      ],
      "vote_average": 6.8,
-     "vote_count": 33
+     "vote_count": 33,
+     "popularity": 18.521
     },
     {
      "id": 309894,
@@ -2562,7 +2802,8 @@
      "first_air_date": "2024-11-02",
      "genre_ids": [],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.186
     },
     {
      "id": 114093,
@@ -2572,7 +2813,8 @@
       18
      ],
      "vote_average": 5.8,
-     "vote_count": 4
+     "vote_count": 4,
+     "popularity": 1.168
     },
     {
      "id": 154825,
@@ -2583,7 +2825,8 @@
       18
      ],
      "vote_average": 8.5,
-     "vote_count": 802
+     "vote_count": 802,
+     "popularity": 17.154
     },
     {
      "id": 89538,
@@ -2593,7 +2836,8 @@
       9648
      ],
      "vote_average": 7.6,
-     "vote_count": 6
+     "vote_count": 6,
+     "popularity": 2.567
     },
     {
      "id": 281010,
@@ -2606,7 +2850,8 @@
       35
      ],
      "vote_average": 7.7,
-     "vote_count": 30
+     "vote_count": 30,
+     "popularity": 16.148
     },
     {
      "id": 201084,
@@ -2617,7 +2862,8 @@
       18
      ],
      "vote_average": 6.3,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 10.465
     },
     {
      "id": 256300,
@@ -2628,7 +2874,8 @@
       9648
      ],
      "vote_average": 6.3,
-     "vote_count": 3
+     "vote_count": 3,
+     "popularity": 5.572
     },
     {
      "id": 302210,
@@ -2636,7 +2883,8 @@
      "first_air_date": "2025-08-16",
      "genre_ids": [],
      "vote_average": 8.0,
-     "vote_count": 1
+     "vote_count": 1,
+     "popularity": 0.645
     },
     {
      "id": 261792,
@@ -2647,7 +2895,8 @@
       9648
      ],
      "vote_average": 7.3,
-     "vote_count": 16
+     "vote_count": 16,
+     "popularity": 5.561
     },
     {
      "id": 259559,
@@ -2660,7 +2909,8 @@
       35
      ],
      "vote_average": 5.8,
-     "vote_count": 32
+     "vote_count": 32,
+     "popularity": 8.481
     },
     {
      "id": 68792,
@@ -2671,7 +2921,8 @@
       80
      ],
      "vote_average": 6.7,
-     "vote_count": 7
+     "vote_count": 7,
+     "popularity": 2.719
     },
     {
      "id": 295502,
@@ -2682,7 +2933,8 @@
       18
      ],
      "vote_average": 0.0,
-     "vote_count": 0
+     "vote_count": 0,
+     "popularity": 1.276
     }
    ]
   }
@@ -3297,5 +3549,6 @@
     "vote_count": 105
    }
   ]
- }
+ },
+ "popularidad_capturada": "2026-10-14 (agregada después, por id, para el orden de C-06)"
 }
