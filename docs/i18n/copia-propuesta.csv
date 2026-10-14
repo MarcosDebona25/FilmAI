@@ -123,3 +123,4 @@ search.genres.talk,,label,,Entrevistas,Talk,aprobado
 search.filters.tmdbRatingLabel,,label,,Calificación de TMDB,TMDB rating,aprobado
 search.filters.ratingShort,,label,value,{value}+,{value}+,aprobado
 search.filters.ratingShortBelowFive,,label,,<5,<5,aprobado
+search.filters.upcoming,,label,,A estrenar,Upcoming,aprobado
