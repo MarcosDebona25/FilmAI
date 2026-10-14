@@ -40,6 +40,10 @@ const TAMANIO_TITULO = {
   mediano: "text-[40px] md:text-[88px]",
   chico: "text-[32px] md:text-[64px]",
 } as const;
+// Esqueleto de carga: late salvo con movimiento reducido.
+const PULSO = "animate-pulse motion-reduce:animate-none";
+// `raised-2`: los bloques van sobre la franja de fondo, que ya es `raised`.
+const ESQUELETO = `${PULSO} rounded bg-raised-2`;
 const VELO_CELULAR =
   "linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.2) 60%), linear-gradient(180deg, rgb(var(--scrim) / 0.85) 0%, rgb(var(--scrim) / 0) 30%)";
 const VELO_ESCRITORIO =
@@ -203,7 +207,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const cargandoUsuario = conSesion && (mia === undefined || listas === null);
 
   return (
-    <main id="contenido" className="pb-16">
+    <main id="contenido" aria-busy={!ficha} className="pb-16">
       {/* Franja de fondo: la barra de navegación va encima (Navbar.tsx). */}
       <div className="relative h-[280px] overflow-hidden md:h-[620px]">
         {ficha?.backdrop ? (
@@ -217,7 +221,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
             className="object-cover object-[50%_30%]"
           />
         ) : (
-          <div className="absolute inset-0 bg-raised" />
+          <div className={cn("absolute inset-0 bg-raised", !ficha && PULSO)} />
         )}
         <div
           aria-hidden="true"
@@ -229,19 +233,46 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
           className="absolute inset-0 hidden md:block"
           style={{ background: VELO_ESCRITORIO }}
         />
-        <Link
-          href={volver.href}
-          aria-label={t("title.breadcrumb.backTo", { label: volver.label })}
-          className="relative mt-[60px] ml-4 inline-flex h-10 items-center gap-1 rounded-full bg-[rgb(var(--scrim)/0.6)] pr-3.5 pl-2 text-[15px] font-medium text-foreground no-underline backdrop-blur-sm md:hidden"
-        >
-          <ChevronLeft aria-hidden="true" className="size-5" />
-          {volver.label}
-        </Link>
+        {/* Arriba a la izquierda, debajo de la barra, sobre una píldora con velo:
+            encima del fondo, el texto suelto se perdía en las imágenes claras. */}
+        <div className="relative mx-auto max-w-[1360px] px-4 pt-[60px] md:px-10 md:pt-[100px]">
+          <Link
+            href={volver.href}
+            aria-label={t("title.breadcrumb.backTo", { label: volver.label })}
+            className="inline-flex h-10 items-center gap-1 rounded-full bg-[rgb(var(--scrim)/0.6)] pr-3.5 pl-2 text-[15px] font-medium text-foreground no-underline backdrop-blur-sm md:hidden"
+          >
+            <ChevronLeft aria-hidden="true" className="size-5" />
+            {volver.label}
+          </Link>
+          <nav
+            aria-label={t("nav.main.breadcrumbLabel")}
+            className="hidden h-10 items-center rounded-full bg-[rgb(var(--scrim)/0.6)] px-4 text-sm text-fg-2 backdrop-blur-sm md:inline-flex"
+          >
+            <ol className="flex items-center gap-2">
+              {miga.map((tramo) => (
+                <li key={tramo.href} className="flex items-center gap-2">
+                  <Link href={tramo.href} className="text-fg-2 hover:text-foreground">
+                    {tramo.label}
+                  </Link>
+                  <span aria-hidden="true">›</span>
+                </li>
+              ))}
+              <li aria-current="page" className="font-semibold text-foreground">
+                {ficha ? ficha.titulo : <span className={cn(ESQUELETO, "block h-3.5 w-24")} />}
+              </li>
+            </ol>
+          </nav>
+        </div>
       </div>
 
       <div className="relative mx-auto -mt-24 flex max-w-[1360px] flex-col gap-16 px-5 md:-mt-[380px] md:gap-24 md:px-10">
         <div className="grid grid-cols-[116px_minmax(0,1fr)] items-end gap-x-4 gap-y-6 md:grid-cols-[300px_minmax(0,1fr)] md:items-start md:gap-x-14">
-          <div className="relative aspect-[2/3] overflow-hidden rounded-[10px] bg-raised shadow-[0_14px_34px_rgb(0_0_0/0.5)] md:row-span-2 md:rounded-xl md:shadow-[0_24px_60px_rgb(0_0_0/0.5)]">
+          <div
+            className={cn(
+              "relative aspect-[2/3] overflow-hidden rounded-[10px] bg-raised shadow-[0_14px_34px_rgb(0_0_0/0.5)] md:row-span-2 md:rounded-xl md:shadow-[0_24px_60px_rgb(0_0_0/0.5)]",
+              !ficha && cn(PULSO, "bg-raised-2")
+            )}
+          >
             {ficha?.poster && (
               <Image
                 unoptimized
@@ -255,24 +286,6 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
           </div>
 
           <div className="flex min-w-0 flex-col gap-1.5 pb-1 md:gap-5 md:pt-7 md:pb-0">
-            <nav
-              aria-label={t("nav.main.breadcrumbLabel")}
-              className="hidden text-sm text-fg-2 md:block"
-            >
-              <ol className="flex flex-wrap items-center gap-2">
-                {miga.map((tramo) => (
-                  <li key={tramo.href} className="flex items-center gap-2">
-                    <Link href={tramo.href} className="text-fg-2 hover:text-foreground">
-                      {tramo.label}
-                    </Link>
-                    <span aria-hidden="true">›</span>
-                  </li>
-                ))}
-                <li aria-current="page" className="font-semibold text-foreground">
-                  {ficha?.titulo}
-                </li>
-              </ol>
-            </nav>
             {ficha ? (
               <>
                 <div className="flex flex-col gap-2.5">
@@ -354,19 +367,28 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 </p>
               </>
             ) : (
-              <div aria-hidden="true" className="flex flex-col gap-3">
-                <span className="h-12 w-2/3 animate-pulse rounded bg-raised md:h-24" />
-                <span className="h-4 w-1/2 animate-pulse rounded bg-raised" />
+              <div aria-hidden="true" className="flex flex-col gap-3 md:gap-5">
+                <span className={cn(ESQUELETO, "h-12 w-3/4 md:mb-[15px] md:h-[108px] md:w-2/3")} />
+                <span className={cn(ESQUELETO, "hidden h-6 w-1/3 md:block")} />
+                <span className={cn(ESQUELETO, "h-4 w-2/3 md:h-5 md:w-1/2")} />
               </div>
             )}
           </div>
 
           <div className="col-span-2 flex min-w-0 flex-col gap-8 md:col-span-1 md:col-start-2 md:gap-6">
-            {cargando || cargandoUsuario ? (
-              <span
+            {cargando || cargandoUsuario || (conSesion && !ficha) ? (
+              // Misma forma que las acciones: calificar y las cuatro listas.
+              <div
                 aria-hidden="true"
-                className="h-12 w-full animate-pulse rounded-lg bg-raised md:w-[520px]"
-              />
+                className="flex flex-col gap-3 md:flex-row md:items-center md:gap-2.5"
+              >
+                <span className={cn(ESQUELETO, "h-[52px] rounded-lg md:h-12 md:w-[104px]")} />
+                <span className="grid grid-cols-4 gap-2 md:contents">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span key={i} className={cn(ESQUELETO, "h-16 rounded-lg md:h-12 md:w-32")} />
+                  ))}
+                </span>
+              </div>
             ) : conSesion && listas && ficha ? (
               <TitleActions
                 titulo={ficha.titulo}
@@ -385,6 +407,24 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
               >
                 {t("title.actions.signedOutPrompt")}
               </Link>
+            )}
+            {!ficha && (
+              <div aria-hidden="true" className="flex flex-col gap-8 md:gap-6">
+                <span className="flex gap-2">
+                  {["w-20", "w-24", "w-16"].map((ancho) => (
+                    <span
+                      key={ancho}
+                      className={cn(ESQUELETO, "h-[30px] rounded-full md:h-8", ancho)}
+                    />
+                  ))}
+                </span>
+                <span className="flex flex-col gap-3 md:max-w-[720px]">
+                  <span className={cn(ESQUELETO, "mb-1 h-3 w-20")} />
+                  {["w-full", "w-full", "w-11/12", "w-2/3"].map((ancho, i) => (
+                    <span key={i} className={cn(ESQUELETO, "h-4", ancho)} />
+                  ))}
+                </span>
+              </div>
             )}
             {ficha && ficha.generos.length > 0 && (
               <ul aria-label={t("title.metadata.genresTitle")} className="flex flex-wrap gap-2">

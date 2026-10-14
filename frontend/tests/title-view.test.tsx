@@ -10,6 +10,7 @@ const estado = vi.hoisted(() => ({
   path: "/movie/157336",
   mia: null as null | Record<string, unknown>,
   fallaDetalle: false,
+  detalleColgado: false,
   llamadas: [] as { path: string; method: string; body?: unknown }[],
 }));
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -44,6 +45,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
       const method = opciones.method ?? "GET";
       estado.llamadas.push({ path, method, body: opciones.body });
       if (path === "/api/catalogo/movie/157336/") {
+        if (estado.detalleColgado) return new Promise(() => {});
         if (estado.fallaDetalle)
           throw new real.ApiError(502, { code: "upstream_error", params: {}, errors: [] });
         return structuredClone(datos.INTERSTELLAR);
@@ -89,6 +91,7 @@ beforeEach(() => {
   estado.path = "/movie/157336";
   estado.mia = null;
   estado.fallaDetalle = false;
+  estado.detalleColgado = false;
   estado.llamadas = [];
   limpiarCacheCatalogo();
 });
@@ -147,6 +150,17 @@ describe("ficha con sesión", () => {
   beforeEach(() => {
     // Forma de `/api/profile/`: el avatar arma las iniciales con nombre y apellido.
     estado.perfil = { nombre: "Juan", apellido: "Pérez", avatar_id: 1 };
+  });
+
+  it("mientras carga el detalle muestra el esqueleto y no invita a ingresar", async () => {
+    estado.detalleColgado = true;
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    // Las listas y la calificación propia llegan antes que el detalle.
+    await waitFor(() => expect(pedidas("/api/lists/?")).toHaveLength(1));
+    await waitFor(() => expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true"));
+    expect(screen.queryByRole("link", { name: "Log in to rate or save" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Rate" })).toBeNull();
   });
 
   it("viniendo de una lista, la miga la nombra", async () => {
