@@ -125,6 +125,30 @@ class SinTextoTests(BrowseBase):
         [(*_, params)] = self.tmdb.de("discover")
         self.assertIsNone(params["sin_generos"])
 
+    def test_un_anio_futuro_no_pide_minimo_de_votos(self):
+        # Lo anunciado no tiene votos: 2027 tiene 946 películas en TMDB y
+        # ninguna con 50 (verificado el 14/10/2026).
+        with patch("catalogo.services.browse.anio_actual", return_value=2026):
+            self.ok(tipo="movie", anio=2027)
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertIsNone(params["min_votos"])
+
+    def test_el_anio_actual_sigue_pidiendo_el_minimo(self):
+        with patch("catalogo.services.browse.anio_actual", return_value=2026):
+            self.ok(tipo="movie", anio=2026)
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["min_votos"], 50)
+
+    def test_un_anio_futuro_con_nota_conserva_el_minimo(self):
+        # Una nota sin votos no dice nada: filtrar por nota exige el mínimo.
+        with patch("catalogo.services.browse.anio_actual", return_value=2026):
+            self.ok(tipo="movie", anio=2027, nota="7+")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["min_votos"], 50)
+
     def test_las_paginas_se_topean_en_500(self):
         # TMDB informa 1001 páginas de `discover` (capturado), pero rechaza
         # pedir más allá de la 500.

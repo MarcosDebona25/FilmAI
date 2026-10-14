@@ -251,7 +251,7 @@ navbar con «Buscar» como página actual; antes se describía como un panel ove
   en celular no, para que el teclado no tape los resultados.
 - **Cerrar / Escape**: vuelve a donde estaba el usuario si venía de la app; si no, al Inicio.
 - **Tipo**: Todo / Películas / Series (el mismo selector del Inicio).
-- **Filtros**: Género, Año (Cualquiera y del año actual a 1900) y Nota de TMDB (Cualquiera, 9 o
+- **Filtros**: Género, Año (Cualquiera y de cinco años adelante a 1900, para encontrar lo anunciado) y Nota de TMDB (Cualquiera, 9 o
   más … 5 o más, Menos de 5; siempre con al menos 50 votos). En «Todo», el género se traduce a su
   equivalente de series cuando TMDB usa otro id (Acción y Aventura, Ciencia ficción y Fantasía,
   Bélica).
