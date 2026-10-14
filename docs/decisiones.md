@@ -4040,3 +4040,16 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Alternativas descartadas**: encolar en cada visita (cola llena de trabajo repetido) y dejarlo síncrono con solo un esqueleto de carga (la espera seguía).
 - **Tests**: `VistasDeDetalleMaterializanTests` reescrita (primera visita encola sin escribir, series con su tipo, fila completa no encola, fila sin enriquecer se reencola, fallo del broker no rompe la respuesta) y `MaterializarProduccionTareaTests` nueva (materializa y encola el embedding; un fallo se registra y no se propaga). Suite completa: 740 tests en verde. Verificado contra Docker: el worker recibe y completa las tareas, y las visitas a filas completas no encolan.
 - **Archivos afectados**: `backend/catalogo/{tasks,views}.py`, `backend/catalogo/services/materialization.py`, tests de `catalogo`, `openspec/specs/catalog-materialization/spec.md`, `docs/05_Plan_de_Desarrollo.md` (C-04a), `docker-compose.yml` (comentario del worker), `docs/decisiones.md`.
+
+## 14/10/2026 — Entrar a Vistas saca de Pendientes
+
+- **Fecha**: 14/10/2026
+- **Descripción**: cuando una producción entra a «Vistas» de un usuario, sale de sus «Pendientes» en la misma transacción. Lo que ya viste dejó de estar pendiente. Lo propuso el usuario y eligió la variante entre cuatro: «Watched y calificar», «solo el botón Watched», «prohibir las dos a la vez» y «dejarlo como está».
+  1. **Rige por los dos caminos de entrada.** El botón Watched (`POST /api/lists/{vistas}/items/`) y calificar (`POST /api/reviews/`, que ya agrega a Vistas por la regla del 30/09/2026). Los dos pasan por `listas/services.py` (`quitar_de_pendientes`), así el módulo de listas sigue siendo el único que escribe en `Tiene`.
+  2. **Solo en el momento en que entra.** Si ya estaba en Vistas no se toca Pendientes. Así volver a agregarla a Pendientes para verla de nuevo sigue permitido, y calificarla después no la saca.
+  3. **Quitar de Vistas no la devuelve a Pendientes.** No se guarda dónde estaba antes, y adivinarlo confunde.
+  4. **No se repara lo existente.** Las producciones que hoy están en las dos listas se quedan así, porque pueden ser un «quiero volver a verla» legítimo.
+  5. **Ficha:** un solo toast, «Added to Watched and removed from Watchlist», y el modal de calificar avisa que también sale de Watchlist.
+- **Alternativas descartadas**: prohibir estar en las dos listas (un 409 al agregar a Pendientes algo visto) haría perder el «volver a verla»; limitar la regla al botón Watched dejaría algo calificado como visto y pendiente a la vez.
+- **Tests**: backend `VistasSacaDePendientesTests` (7, por HTTP con la materialización real y TMDB simulado; 3 fallan con el código anterior y 4 cuidan los límites de la regla). Frontend: dos tests en `title-actions.test.tsx` y uno en `rating-dialog.test.tsx`; los dos de la regla fallan con los componentes anteriores.
+- **Archivos afectados**: `backend/listas/{services,views}.py`, `backend/catalogo/tests_reviews.py`, `frontend/components/features/title/{TitleActions,RatingDialog,TitleView}.tsx`, tests, `docs/i18n/copia-propuesta.csv` y mensajes generados, `docs/02_Especificación de Requerimientos.md` (CU-011), `docs/04_Lineamientos_UI.md` (§5c), specs `list-endpoints`, `reviews-api` y `title-page-ui`, `docs/decisiones.md`.

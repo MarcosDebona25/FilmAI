@@ -301,7 +301,8 @@
       "removeOnlyDescription": "Your rating of {title} will be deleted, and {title} will be removed from Watched. The rating can’t be recovered; you can add it back to Watched whenever you want.",
       "edit": "Edit rating",
       "titleLabel": "Rate {title}",
-      "yourRating": "Your rating"
+      "yourRating": "Your rating",
+      "watchedHelpFromWatchlist": "Rating {title} also adds it to Watched and removes it from Watchlist."
     },
     "feedback": {
       "ratingReviewPublished": "Rating and review posted.",
@@ -317,7 +318,8 @@
       "watchlistRemoved": "Removed from Watchlist.",
       "watchlistAdded": "Added to Watchlist.",
       "watchedRemoved": "Removed from Watched.",
-      "watchedAdded": "Added to Watched."
+      "watchedAdded": "Added to Watched.",
+      "watchedAddedFromWatchlist": "Added to Watched and removed from Watchlist."
     },
     "metadata": {
       "ratingVotesLabel": "TMDB rating: {rating} out of 10, {count, plural, one {# vote} other {# votes}}",
