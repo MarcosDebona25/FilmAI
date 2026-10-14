@@ -731,6 +731,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/browse/:
+    get:
+      operationId: catalogo_browse_retrieve
+      description: |-
+        Buscar (C-06): texto opcional, tipo y filtros, en una sola respuesta.
+
+        `q` admite cualquier texto: se recorta y se mide después (decisión del
+        14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
+        TMDB para cada combinación lo decide `services/browse.py`.
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/discover/:
     get:
       operationId: catalogo_discover_retrieve

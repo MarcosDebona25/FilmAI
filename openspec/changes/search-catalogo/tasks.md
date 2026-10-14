@@ -22,16 +22,17 @@
 
 TMDB fixtures from responses captured on 14/10/2026, never invented.
 
-- [ ] 1.1 RED → GREEN: client `search` sends `primary_release_year` / `first_air_date_year`; `discover` sends `vote_average.lte`; cache keys unchanged when unused
-- [ ] 1.2 RED → GREEN: no text → `discover` with filters and popularity order, `media_type` on every item
-- [ ] 1.3 RED → GREEN: text without genre/rating → one `search` per type, year forwarded
-- [ ] 1.4 RED → GREEN: text with genre or rating → window of up to 5 pages, filtered, paginated 20; fewer pages when TMDB has fewer
-- [ ] 1.5 RED → GREEN: «All» alternates movies and shows, sums totals, caps pages at 500
-- [ ] 1.6 RED → GREEN: genre mapping for shows in «All»; a genre with no counterpart empties that side
-- [ ] 1.7 RED → GREEN: rating `N+` / `m5` with at least 50 votes, in discover and in the window
-- [ ] 1.8 RED → GREEN: validation — `q` > 50 → 400 `max_length`; bad `tipo`/`nota` → 400 `invalid_choice`; `page` > 500 → 400; empty `q` = no text
-- [ ] 1.9 RED → GREEN: `genres/?tipo=all`
-- [ ] 1.10 Spec `tmdb-endpoints` updated
+- [x] 1.1 RED → GREEN: client `search` sends `primary_release_year` / `first_air_date_year`; `discover` sends `vote_average.lte`; cache keys unchanged when unused
+- [x] 1.2 RED → GREEN: no text → `discover` with filters and popularity order, `media_type` on every item
+- [x] 1.3 RED → GREEN: text without genre/rating → one `search` per type, year forwarded
+- [x] 1.4 RED → GREEN: text with genre or rating → window of up to 5 pages, filtered, paginated 20; fewer pages when TMDB has fewer
+- [x] 1.5 RED → GREEN: «All» alternates movies and shows, sums totals, caps pages at 500
+- [x] 1.6 RED → GREEN: genre mapping for shows in «All»; a genre with no counterpart empties that side
+- [x] 1.7 RED → GREEN: rating `N+` / `m5` with at least 50 votes, in discover and in the window
+- [x] 1.8 RED → GREEN: validation — `q` > 50 → 400 `max_length`; bad `tipo`/`nota` → 400 `invalid_choice`; `page` > 500 → 400; empty `q` = no text
+- [x] 1.9 RED → GREEN: `genres/?tipo=all`
+- [x] 1.10 Spec `tmdb-endpoints` updated
+- [x] 1.11 Default grid: at least 50 votes, shows without News and Talk (found against real TMDB on 14/10/2026)
 
 ## Phase 2: Search page, desktop (PR 3)
 

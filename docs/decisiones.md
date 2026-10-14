@@ -4068,3 +4068,15 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   8. **Sin botón «Buscar»**: la búsqueda arranca 350 ms después de dejar de escribir (canvas). Se actualizó CU-010 en doc 02.
 - **Fuera de alcance**: materializar lo que muestra la búsqueda (pendiente de C-04a para listados) y el bloque «Dónde verla» de la ficha (propuesto el 14/10/2026, se decide después de C-06).
 - **Archivos afectados**: `openspec/changes/search-catalogo/`, `docs/02_Especificación de Requerimientos.md` (CU-008, CU-010), `docs/04_Lineamientos_UI.md` (§5b y menciones al overlay), `docs/decisiones.md`.
+
+## 14/10/2026 — API de Buscar (C-06, PR 2)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `GET /api/catalogo/browse/` (`catalogo/services/browse.py`, `BrowseView`) y `genres/?tipo=all`, según el SDD.
+  1. **Cliente y caché.** `search(..., anio=)` manda `primary_release_year` o `first_air_date_year`. `discover` suma `max_rating` (`vote_average.lte`) y `sin_generos` (`without_genres`). Los tres entran a la clave de caché solo cuando se usan, así lo que ya estaba en Redis conserva su clave (mismo patrón que `min_votos`, C-05).
+  2. **Ventana en paralelo.** La página 1 primero y el resto con `ThreadPoolExecutor`; en «All», los dos tipos a la vez. `httpx.Client` y el cliente de Redis se pueden compartir entre hilos (verificado en httpx 0.28.1) y la ventana no toca la base. Si una página falla, falla la respuesta (502): un conteo parcial pasaría por real.
+  3. **Grilla por defecto (hallazgo contra TMDB real).** Sin texto, `discover/tv` por popularidad arrancaba con programas diarios (Barbara Karlich - Talk, Watch What Happens Live, The Tonight Show). Sin texto, `discover` pide siempre al menos 50 votos, y en series excluye News (10763) y Talk (10767) salvo que se elija un género. Con eso arranca con Law & Order: SVU, Reacher, The Office. En películas, el mínimo no cambia los primeros puestos.
+  4. **Medido contra TMDB real (Docker).** Sin texto, 1,2 s en frío. Con texto, ~0,45 s. Con texto y filtro en «All», la peor ventana en frío (batman, Acción) tardó 2,2 s: dos rondas en paralelo más, en español, el respaldo en inglés de cada página. La misma búsqueda con otro género sale de caché en 0,017 s. Se acepta, porque pasa solo la primera vez que alguien combina ese texto con un filtro en una hora.
+  5. **Géneros sin traducir.** TMDB devuelve en inglés, también en `es-MX`, los cinco géneros solo de series (Kids, News, Reality, Soap, Talk). El frontend les pone nombre desde la copia de i18n (PR 3).
+- **Tests**: `catalogo/tests_browse.py` (28) sobre páginas reales de TMDB del 14/10/2026 (`catalogo/test_datos/tmdb_buscar.json`: «dune» en películas y series, «the office» en series, `discover` y géneros), más 4 de cliente y caché en `tests.py`. Todos fallaban antes del cambio.
+- **Archivos afectados**: `backend/catalogo/{client,cache,views,urls}.py`, `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `backend/catalogo/test_datos/tmdb_buscar.json`, `backend/catalogo/tests.py`, `openspec/specs/tmdb-endpoints/spec.md`, `openspec/changes/search-catalogo/{design,tasks}.md`, `docs/decisiones.md`.

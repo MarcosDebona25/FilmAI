@@ -1,6 +1,7 @@
 from django.urls import path
 
 from catalogo.views import (
+    BrowseView,
     CreditsView,
     DiscoverView,
     GenresView,
@@ -21,6 +22,7 @@ urlpatterns = [
     path("discover/", DiscoverView.as_view(), name="discover"),
     path("recommended/", RecommendedView.as_view(), name="recommended"),
     path("search/", SearchView.as_view(), name="search"),
+    path("browse/", BrowseView.as_view(), name="browse"),
     # Sin conversor `int:` a propósito: la validación de `id_tmdb` la hace
     # `_int_param` dentro de la vista, que devuelve 400 ante un valor no
     # entero. Con `<int:...>` la URL no matchearía y Django respondería 404,

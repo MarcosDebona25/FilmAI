@@ -113,6 +113,8 @@ class TMDBClientCache:
         anio_hasta=None,
         sort_by=None,
         min_votos=None,
+        max_rating=None,
+        sin_generos=None,
     ):
         # Todos los filtros entran en la clave: dos consultas que difieren en
         # la década son dos respuestas distintas, no un cache hit.
@@ -130,6 +132,10 @@ class TMDBClientCache:
         # conservan la clave que ya tenían en Redis.
         if min_votos is not None:
             params["min_votos"] = min_votos
+        if max_rating is not None:
+            params["max_rating"] = max_rating
+        if sin_generos is not None:
+            params["sin_generos"] = sin_generos
         return self._cached_call(
             "discover",
             params,
@@ -143,13 +149,19 @@ class TMDBClientCache:
                 anio_hasta,
                 sort_by,
                 min_votos,
+                max_rating,
+                sin_generos,
             ),
         )
 
-    def search(self, query, tipo, page=1):
+    def search(self, query, tipo, page=1, anio=None):
         params = {"query": query, "tipo": tipo, "page": page}
+        # Igual que `min_votos`: solo cuando se usa, para no cambiar la clave de
+        # las búsquedas que ya están en Redis.
+        if anio is not None:
+            params["anio"] = anio
         return self._cached_call(
-            "search", params, lambda: self.client.search(query, tipo, page)
+            "search", params, lambda: self.client.search(query, tipo, page, anio)
         )
 
     def get_movie_detail(self, id_tmdb):

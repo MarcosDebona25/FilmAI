@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from catalogo.services.browse import NOTAS, explorar, generos_de_todo
 from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
@@ -147,6 +148,62 @@ class SearchView(CatalogoBaseView):
         return Response(data)
 
 
+class BrowseView(CatalogoBaseView):
+    """Buscar (C-06): texto opcional, tipo y filtros, en una sola respuesta.
+
+    `q` admite cualquier texto: se recorta y se mide después (decisión del
+    14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
+    TMDB para cada combinación lo decide `services/browse.py`.
+    """
+
+    MAX_TEXTO = 50
+    tipos: ClassVar = ["all", "movie", "tv"]
+
+    def get(self, request):
+        params = request.query_params
+        q = (params.get("q") or "").strip() or None
+        if q and len(q) > self.MAX_TEXTO:
+            raise _error_param(
+                "q",
+                f"Ensure this field has no more than {self.MAX_TEXTO} characters.",
+                "max_length",
+                {"maxLength": self.MAX_TEXTO},
+            )
+        tipo = self._opcion(params.get("tipo", "all"), "tipo", self.tipos)
+        nota = params.get("nota") or None
+        if nota is not None:
+            self._opcion(nota, "nota", list(NOTAS))
+        page = self._page(request)
+        if page > 500:
+            raise _error_param(
+                "page",
+                "Ensure this value is less than or equal to 500.",
+                "max_value",
+                {"maxValue": 500},
+            )
+        datos = explorar(
+            self._service(request),
+            q=q,
+            tipo=tipo,
+            genero=_int_param(params.get("genero"), "genero", default=None),
+            anio=_int_param(params.get("anio"), "anio", default=None),
+            nota=nota,
+            page=page,
+        )
+        return Response(datos)
+
+    @staticmethod
+    def _opcion(valor, nombre, permitidos):
+        if valor not in permitidos:
+            raise _error_param(
+                nombre,
+                f"Must be one of: {', '.join(permitidos)}.",
+                "invalid_choice",
+                {"allowedValues": permitidos},
+            )
+        return valor
+
+
 class MovieDetailView(CatalogoBaseView):
     def get(self, request, id_tmdb):
         id_tmdb = _int_param(id_tmdb, "id_tmdb")
@@ -181,8 +238,20 @@ class GenresView(CatalogoBaseView):
     """
 
     def get(self, request):
-        tipo = _validate_tipo(request.query_params.get("tipo", "movie"))
-        return Response({"genres": _generos_localizados(tipo, idioma_tmdb(request))})
+        tipo = request.query_params.get("tipo", "movie")
+        idioma = idioma_tmdb(request)
+        if tipo == "all":
+            # Buscar (C-06): los de películas y los de series sin par.
+            return Response(
+                {
+                    "genres": generos_de_todo(
+                        _generos_localizados("movie", idioma),
+                        _generos_localizados("tv", idioma),
+                    )
+                }
+            )
+        tipo = _validate_tipo(tipo)
+        return Response({"genres": _generos_localizados(tipo, idioma)})
 
 
 def _generos_localizados(tipo, idioma):
