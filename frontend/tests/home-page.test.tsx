@@ -85,7 +85,7 @@ describe("Home sin sesión", () => {
     expect(within(seccionHero).getByText("Horror, Thriller")).toBeInTheDocument();
     expect(within(seccionHero).getByRole("link", { name: /View details/ })).toHaveAttribute(
       "href",
-      "/movie/1291595"
+      "/movie/1291595?from=home"
     );
 
     expect(await fila("Trending this week")).toBeInTheDocument();

@@ -154,7 +154,7 @@ export function HomeHero({
                 </p>
               )}
               <Link
-                href={routes.title(titulo.tipo, titulo.id)}
+                href={routes.title(titulo.tipo, titulo.id, "home")}
                 className="mt-1.5 flex h-[52px] items-center justify-center gap-2 rounded-lg bg-primary px-6 font-semibold text-primary-foreground no-underline hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:mt-2 md:inline-flex md:h-12 md:self-start md:pr-[22px]"
               >
                 {t("common.media.viewDetails")}

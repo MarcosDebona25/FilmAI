@@ -20,12 +20,14 @@ export function MediaRow({
   items,
   showType,
   loading = false,
+  from,
 }: {
   title: string;
   description?: string;
   items: Title[];
   showType: boolean;
   loading?: boolean;
+  from?: string;
 }) {
   const t = useTranslations("home.carousel");
   const headingId = useId();
@@ -93,7 +95,7 @@ export function MediaRow({
             ))
           : items.map((item) => (
               <li key={`${item.tipo}-${item.id}`} className="shrink-0 snap-start">
-                <MediaCard title={item} showType={showType} />
+                <MediaCard title={item} showType={showType} from={from} />
               </li>
             ))}
       </ul>
