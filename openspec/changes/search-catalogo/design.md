@@ -48,7 +48,7 @@ comes from the language fallback as in every listing.
 
 | Text | Genre or rating | Per type                                                         | TMDB calls per type |
 | ---- | --------------- | ---------------------------------------------------------------- | ------------------- |
-| no   | any             | `discover(tipo, genero, anio, nota, page, sort=popularity.desc)` | 1                   |
+| no   | any             | `discover(tipo, genero, anio, nota, page, sort=popularity.desc)`, ≥50 votes; shows without News and Talk unless a genre is chosen | 1                   |
 | yes  | no              | `search(q, tipo, page, year)`                                    | 1                   |
 | yes  | yes             | window: `search` pages 1–5, then filter genre and rating here    | 1–5                 |
 

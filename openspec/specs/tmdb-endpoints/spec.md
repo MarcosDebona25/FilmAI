@@ -183,3 +183,27 @@ inglés los nombres vacíos.
 - WHEN se pide el detalle con `Accept-Language: es`
 - THEN `overview` trae el texto inglés y `campos_en_ingles` es `["overview"]`
 - AND una segunda solicitud no vuelve a llamar a TMDB
+
+### Requirement: Buscar combina discover y search (C-06)
+
+`GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`) and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
+
+- Without text it MUST use `discover` sorted by popularity, with at least 50 votes; shows MUST exclude News and Talk unless a genre is chosen.
+- With text and neither genre nor rating it MUST make one `search` per type, sending the year as `primary_release_year` or `first_air_date_year`.
+- With text and a genre or a rating it MUST read up to the first 5 TMDB pages per type, keep the matching items (rating with at least 50 votes) and paginate them 20 per type. A TMDB error in any page MUST fail the request, never return a partial count.
+- `all` MUST alternate movies and shows and add their totals. A genre MUST be mapped to its show id when TMDB uses another one (28 and 12 → 10759, 878 and 14 → 10765, 10752 → 10768); a genre with no counterpart MUST leave that side empty without calling TMDB for it.
+
+`GET /api/catalogo/genres/?tipo=all` MUST return the movie genres followed by the show-only ones with no movie counterpart (10762, 10763, 10764, 10766, 10767).
+
+#### Scenario: Text and genre on «All»
+
+- GIVEN «dune» with genre 878
+- WHEN `browse/?q=dune&genero=878` is requested
+- THEN movies are filtered by 878 and shows by 10765 within the first 5 pages of each
+- AND the results alternate movie and show
+
+#### Scenario: Default grid
+
+- GIVEN no text and no filters
+- WHEN `browse/?tipo=tv` is requested
+- THEN `discover/tv` is called with `vote_count.gte=50` and `without_genres=10763,10767`
