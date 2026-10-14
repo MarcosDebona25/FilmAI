@@ -304,7 +304,8 @@ declare const messages: {
       "removeOnlyDescription": "Se eliminará tu calificación de {title} e {title} dejará de estar en Vistas. La calificación no se puede recuperar; a Vistas podés volver a agregarla cuando quieras.",
       "edit": "Editar calificación",
       "titleLabel": "Calificar {title}",
-      "yourRating": "Tu calificación"
+      "yourRating": "Tu calificación",
+      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes."
     },
     "feedback": {
       "ratingReviewPublished": "Calificación y reseña publicadas.",
@@ -320,7 +321,8 @@ declare const messages: {
       "watchlistRemoved": "Quitada de Pendientes.",
       "watchlistAdded": "Agregada a Pendientes.",
       "watchedRemoved": "Quitada de Vistas.",
-      "watchedAdded": "Agregada a Vistas."
+      "watchedAdded": "Agregada a Vistas.",
+      "watchedAddedFromWatchlist": "Agregada a Vistas y quitada de Pendientes."
     },
     "metadata": {
       "ratingVotesLabel": "Calificación TMDB: {rating} de 10, {count, plural, one {# voto} other {# votos}}",

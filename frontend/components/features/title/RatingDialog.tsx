@@ -37,6 +37,7 @@ export function mensajeDeError(error: unknown) {
 export function RatingDialog({
   titulo,
   enVistas,
+  enPendientes = false,
   inicial,
   onSubmit,
   onRemoveRating,
@@ -44,6 +45,8 @@ export function RatingDialog({
 }: {
   titulo: string;
   enVistas: boolean;
+  /** En Watchlist: calificar también la saca de ahí (regla del 14/10/2026). */
+  enPendientes?: boolean;
   inicial?: { valor: number; texto: string | null };
   onSubmit: (datos: { valor: number; texto: string }) => Promise<void>;
   onRemoveRating?: () => void;
@@ -127,7 +130,9 @@ export function RatingDialog({
       {!enVistas && (
         <p className="flex items-center gap-2.5 text-sm text-fg-2">
           <Eye aria-hidden="true" className="size-[18px] shrink-0" />
-          {t("title.rating.watchedHelp", { title: titulo })}
+          {t(enPendientes ? "title.rating.watchedHelpFromWatchlist" : "title.rating.watchedHelp", {
+            title: titulo,
+          })}
         </p>
       )}
 

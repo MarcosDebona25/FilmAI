@@ -81,10 +81,19 @@ export function TitleActions({
       if (lista.contiene && lista.item_id !== null) {
         await apiFetch(`/api/lists/${lista.id}/items/${lista.item_id}/`, { method: "DELETE" });
         onListasChange(actualizarLista(listas, lista.id, sinItem(lista)));
+        toast.success(aviso(lista, false));
       } else {
-        await agregar(lista);
+        const nuevas = await agregar(lista);
+        // Lo que ya viste deja de estar pendiente: el servidor la sacó de
+        // Watchlist en la misma operación (regla del 14/10/2026).
+        const pendientes = porClave("pendientes");
+        if (lista.clave === "vistas" && pendientes?.contiene) {
+          onListasChange(actualizarLista(nuevas, pendientes.id, sinItem(pendientes)));
+          toast.success(t("title.feedback.watchedAddedFromWatchlist"));
+        } else {
+          toast.success(aviso(lista, true));
+        }
       }
-      toast.success(aviso(lista, !lista.contiene));
     } catch (motivo) {
       if (motivo instanceof ApiError && motivo.code === "rating_blocks_removal_from_watched") {
         setConfirmarVistas(lista);

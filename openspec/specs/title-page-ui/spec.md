@@ -26,7 +26,7 @@ The page MUST show the backdrop band with the site navbar over it, the poster, t
 
 ### Requirement: Actions
 
-Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page; a signed-in user MUST NOT see it while the page loads. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite, Watched, Watchlist as `aria-pressed` toggles over the lists API, whose icons fill with the accent color when on, and «Add to list» with the user's own lists and inline creation. Removing from Watched a rated title MUST ask for confirmation and then delete the rating with it.
+Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page; a signed-in user MUST NOT see it while the page loads. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite, Watched, Watchlist as `aria-pressed` toggles over the lists API, whose icons fill with the accent color when on; turning Watched on for a title in Watchlist MUST turn Watchlist off and say so in a single toast, and the rating dialog MUST warn that rating also removes it from Watchlist, and «Add to list» with the user's own lists and inline creation. Removing from Watched a rated title MUST ask for confirmation and then delete the rating with it.
 
 #### Scenario: Signed in while the detail loads
 
