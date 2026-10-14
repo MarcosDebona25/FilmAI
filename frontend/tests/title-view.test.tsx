@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => estado.params,
 }));
 vi.mock("@/components/AccountProvider", () => ({
-  useAccount: () => ({ perfil: estado.perfil, cargando: false }),
+  useAccount: () => ({ perfil: estado.perfil, avatares: [], cargando: false }),
 }));
 vi.mock("sonner", () => ({ toast }));
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -59,6 +59,8 @@ vi.mock("@/lib/api", async (importOriginal) => {
         return structuredClone(estado.mia);
       }
       if (path.startsWith("/api/lists/?")) return listas();
+      if (path.startsWith("/api/reviews/?"))
+        return { total: 0, total_comunidad: 0, next: null, previous: null, results: [] };
       if (path === "/api/lists/4/") return { id: 4, nombre: "Sci Fi" };
       if (path === "/api/reviews/" && method === "POST") {
         estado.mia = { id: 9, fecha: "2026-10-14", texto: null, ...(opciones.body as object) };
@@ -143,7 +145,8 @@ describe("ficha sin sesión", () => {
 
 describe("ficha con sesión", () => {
   beforeEach(() => {
-    estado.perfil = { nombre: "Juan" };
+    // Forma de `/api/profile/`: el avatar arma las iniciales con nombre y apellido.
+    estado.perfil = { nombre: "Juan", apellido: "Pérez", avatar_id: 1 };
   });
 
   it("viniendo de una lista, la miga la nombra", async () => {
