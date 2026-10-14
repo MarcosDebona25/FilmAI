@@ -156,5 +156,11 @@ test.describe("Hero en escritorio", () => {
     const etiqueta = await page.getByText(en.home.hero.weeklyHighlight).boundingBox();
     // Además del orden, un mínimo de aire entre los dos (48 px en el código).
     expect(etiqueta!.y - (selector!.y + selector!.height)).toBeGreaterThanOrEqual(40);
+    // La letra se achica según el largo: un título de 33 caracteres no pasa de dos renglones.
+    const renglones = await page.getByRole("heading", { level: 1 }).evaluate((h1) => {
+      const alto = h1.getBoundingClientRect().height;
+      return Math.round(alto / parseFloat(getComputedStyle(h1).lineHeight));
+    });
+    expect(renglones).toBeLessThanOrEqual(2);
   });
 });

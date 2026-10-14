@@ -29,3 +29,14 @@ export function alternar<T>(a: T[], b: T[], tope: number): T[] {
 export function tipoDesdeUrl(valor: string | null): ContentType {
   return valor === "movie" || valor === "tv" ? valor : "all";
 }
+
+/**
+ * Tamaño del título del Hero según su largo (pedido del 14/10/2026). A 152 px
+ * entran unos 19 caracteres por renglón en escritorio: los títulos cortos
+ * conservan el tamaño del canvas y los largos se achican para no comerse el
+ * Hero. Cuenta caracteres visibles, no unidades UTF-16.
+ */
+export function tamanioTitulo(titulo: string): "grande" | "mediano" | "chico" {
+  const largo = [...titulo].length;
+  return largo <= 16 ? "grande" : largo <= 28 ? "mediano" : "chico";
+}

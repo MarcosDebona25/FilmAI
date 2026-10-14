@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import type { ContentType } from "@/components/features/TypeSelector";
 import type { Title } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
+import { tamanioTitulo } from "@/lib/home";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,12 @@ import { cn } from "@/lib/utils";
 // izquierda a derecha, para que el texto se lea sobre cualquier imagen.
 const VELO_CELULAR =
   "linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.9) 32%, rgb(var(--scrim) / 0) 62%), linear-gradient(180deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0) 14%)";
+// Clases enteras (no armadas por partes) para que Tailwind las genere.
+const TAMANIO_TITULO = {
+  grande: "text-[72px] md:text-[152px]",
+  mediano: "text-[56px] md:text-[112px]",
+  chico: "text-[44px] md:text-[88px]",
+} as const;
 const VELO_ESCRITORIO =
   "linear-gradient(90deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.92) 28%, rgb(var(--scrim) / 0.25) 58%, rgb(var(--scrim) / 0) 74%), linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0) 34%), linear-gradient(180deg, rgb(var(--scrim) / 0.75) 0%, rgb(var(--scrim) / 0) 22%)";
 
@@ -95,7 +102,13 @@ export function HomeHero({
               <h1
                 id="hero-titulo"
                 lang={titulo.tituloEnIngles ? "en" : undefined}
-                className="mb-[15px] font-display text-[72px] leading-[0.9] md:text-[152px]"
+                className={cn(
+                  "mb-[15px] font-display text-balance",
+                  TAMANIO_TITULO[tamanioTitulo(titulo.titulo)],
+                  // Al final: `tailwind-merge` borra un `leading-*` que venga antes
+                  // de una clase de tamaño de letra.
+                  "leading-[0.9]"
+                )}
               >
                 {titulo.titulo}
               </h1>
