@@ -3947,3 +3947,16 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **También**: endpoint nuevo `GET /api/catalogo/{movie|tv}/{id}/credits/` con directores (en series, `created_by`: verificado el 13/10/2026 que Breaking Bad no tiene director a nivel serie) y reparto con personaje; las calificaciones se muestran «★ N», no «X/10»; sin sesión, «Log in to rate or save» con `?next=` a la misma ficha.
 - **Entrega**: cinco PRs contra `develop/ui-design`: SDD y docs, backend, modal y confirmaciones, acciones de listas, y la página.
 - **Archivos afectados**: `openspec/changes/title-page/`, `docs/04_Lineamientos_UI.md` (§5c), `docs/05_Plan_de_Desarrollo.md` (L-04), `docs/decisiones.md`.
+
+---
+
+## 14/10/2026 — Ficha: créditos y reseñas públicas con orden y filtro (C-07, PR 2)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: backend de la ficha según el SDD (`openspec/changes/title-page/design.md` §2).
+  1. **`GET /api/catalogo/{movie|tv}/{id}/credits/`** (público): `{directores, reparto: [{nombre, personaje}]}`, hasta 50 en el orden de TMDB. En series los «directores» son `created_by`. Servicio en `catalogo/services/creditos.py`; los créditos ya estaban en la caché de Redis.
+  2. **Reseñas de la comunidad públicas**: `CalificacionesView.get_permissions` devuelve `AllowAny` para `GET`; el `POST` sigue con `IsAuthenticated`. Sin sesión no se excluye nada; con sesión se sigue sacando la propia. El test `test_los_anonimos_no_leen_resenas` pasa a `test_los_anonimos_leen_las_resenas_de_todos`.
+  3. **Orden y filtro**: `ComunidadQuerySerializer` valida `orden`, `nota_min` y `nota_max`. Los órdenes por nota usan la clave anotada `valor * 10^9 + id`, con `Cast` a entero de 64 bits **antes** de multiplicar: `valor` es un entero de 32 bits en Postgres y sin el `Cast` la cuenta se pasaba de rango (`integer out of range`); `ExpressionWrapper` solo declara el tipo del resultado.
+  4. **`total_comunidad`** en la respuesta (sin filtros); `ResenaCursorPagination` lo agrega solo si la vista lo fija, así «Mis reseñas» no cambia.
+- **Tests**: `catalogo/tests_ficha.py` (4, créditos con recortes reales de TMDB) y en `tests_reviews.py` la lectura anónima, la escritura que sigue cerrada y `ComunidadOrdenYFiltroTests` (7, incluido el recorrido por cursor sobre 25 notas iguales).
+- **Archivos afectados**: `backend/catalogo/{reviews,views,urls,serializers_reviews,pagination_reviews}.py`, `backend/catalogo/services/creditos.py`, tests, `contracts/openapi.yaml`, `openspec/specs/{reviews-api,tmdb-endpoints}/spec.md`, `openspec/changes/title-page/tasks.md`.

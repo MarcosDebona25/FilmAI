@@ -81,11 +81,13 @@ Every endpoint MUST require authentication. A rating belonging to another user M
 
 ### Requirement: The community's reviews of a production
 
-`GET /api/reviews/?id_tmdb=&tipo=` MUST return the reviews other users wrote about that production, cursor-paginated at 20, newest first, with the author's username and avatar, the rating, the date and the text.
+`GET /api/reviews/?id_tmdb=&tipo=` MUST return the reviews other users wrote about that production, cursor-paginated at 20, with the author's username and avatar, the rating, the date and the text. Since 14/10/2026 (C-07) reading is public: it MUST answer without a session; writing still requires one.
 
-It MUST exclude three populations: ratings without text (there is nothing to read), moderated reviews, and the requester's own — which the detail screen renders separately, above the list.
+It MUST exclude three populations: ratings without text (there is nothing to read), moderated reviews, and — when there is a session — the requester's own, which the detail screen renders separately, above the list.
 
-The response MUST carry a `total` for the "Reseñas de la comunidad (N)" heading, which cursor pagination does not provide on its own.
+`orden` MUST accept `fecha-desc` (default), `fecha-asc`, `nota-desc` and `nota-asc`; `nota_min` and `nota_max` MUST filter by rating, inclusively, with integers from 1 to 10. Anything else MUST answer 400 naming the field. Following `next` MUST never repeat or skip a review, even when many share the same rating.
+
+The response MUST carry a `total` with the filtered count, which cursor pagination does not provide on its own, and a `total_comunidad` with the unfiltered count, for «From the community (N)» and «Showing X of N».
 
 Both query parameters are required; either one missing or malformed MUST answer 400. A production with no reviews MUST answer 200 with an empty list, not 404.
 
@@ -95,6 +97,19 @@ Both query parameters are required; either one missing or malformed MUST answer 
 - WHEN the community list is requested
 - THEN only the other user's review is returned
 - AND `total` is 1
+
+#### Scenario: Anonymous reader with a filter
+
+- GIVEN four reviews rated 3, 6, 8 and 10 and no session
+- WHEN the list is requested with `nota_min=8`
+- THEN the reviews rated 8 and 10 are returned, newest first
+- AND `total` is 2 and `total_comunidad` is 4
+
+#### Scenario: Sorting by rating over many ties
+
+- GIVEN 25 reviews rated 8 and 5 rated 9
+- WHEN the list is followed page by page with `orden=nota-desc`
+- THEN the 30 reviews arrive once each, the 9s first
 
 #### Scenario: A moderated review is hidden
 
