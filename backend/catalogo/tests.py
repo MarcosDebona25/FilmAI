@@ -591,6 +591,16 @@ class TMDBClientCacheTest(SimpleTestCase):
         self.assertNotIn("primary_release_date.gte", calls[2].url.params)
         self.assertEqual(len(calls), 3)
 
+    def test_discover_hasta_fecha_cierra_el_rango(self):
+        # C-06, décadas: del 1/1 del primer año al 31/12 del último.
+        cache, calls = self.make_cache()
+
+        cache.discover("movie", desde_fecha="1980-01-01", hasta_fecha="1989-12-31")
+        cache.discover("tv", desde_fecha="1980-01-01", hasta_fecha="1989-12-31")
+
+        self.assertEqual(calls[0].url.params["primary_release_date.lte"], "1989-12-31")
+        self.assertEqual(calls[1].url.params["first_air_date.lte"], "1989-12-31")
+
     def test_build_key_is_stable(self):
         first = _build_key("search", {"query": "Fight Club", "page": 1})
         second = _build_key("search", {"page": 1, "query": "Fight Club"})

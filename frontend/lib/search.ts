@@ -13,11 +13,14 @@ export type Nota = "9" | "8" | "7" | "6" | "5" | "lt5";
 /** «A estrenar» (14/10/2026): lo que estrena después de hoy, en vez de años futuros. */
 export const A_ESTRENAR = "proximos";
 
+/** Década antes de 1990, como `1980s` (14/10/2026). */
+export type Decada = `${number}s`;
+
 export interface Busqueda {
   q: string;
   tipo: ContentType;
   genero: number | null;
-  anio: number | typeof A_ESTRENAR | null;
+  anio: number | typeof A_ESTRENAR | Decada | null;
   nota: Nota | null;
   pagina: number;
 }
@@ -27,6 +30,8 @@ export const MAX_TEXTO = 50;
 export const NOTAS: Nota[] = ["9", "8", "7", "6", "5", "lt5"];
 const TIPOS: ContentType[] = ["all", "movie", "tv"];
 const PRIMER_ANIO = 1900;
+/** Desde acá los años van sueltos; antes, por década (14/10/2026). */
+const PRIMER_ANIO_SUELTO = 1990;
 /** Valor de «A estrenar» en la URL y en el selector de año. */
 const OPCION_A_ESTRENAR = "upcoming";
 
@@ -76,6 +81,7 @@ export function consultaApi(busqueda: Busqueda) {
   params.set("tipo", busqueda.tipo);
   if (busqueda.genero !== null) params.set("genero", String(busqueda.genero));
   if (busqueda.anio === A_ESTRENAR) params.set("a_estrenar", "true");
+  else if (typeof busqueda.anio === "string") params.set("decada", busqueda.anio.slice(0, 4));
   else if (busqueda.anio !== null) params.set("anio", String(busqueda.anio));
   if (busqueda.nota !== null)
     params.set("nota", busqueda.nota === "lt5" ? "m5" : `${busqueda.nota}+`);
@@ -88,14 +94,33 @@ export function filtrosActivos(busqueda: Busqueda) {
   return [busqueda.genero, busqueda.anio, busqueda.nota].filter((valor) => valor !== null).length;
 }
 
-/** Opciones del selector de año, del actual a 1900; lo futuro es «A estrenar». */
-export function aniosDisponibles(actual: number) {
-  return Array.from({ length: actual - PRIMER_ANIO + 1 }, (_, i) => actual - i);
+/**
+ * Opciones del selector de año (después de «Cualquiera» y «A estrenar»): años
+ * sueltos del actual a 1990 y, antes, décadas hasta la de 1900. `decada` lleva
+ * el año inicial para la etiqueta («Década de 1980»).
+ */
+export function opcionesDeAnio(actual: number) {
+  const anios = Array.from({ length: actual - PRIMER_ANIO_SUELTO + 1 }, (_, i) => ({
+    valor: String(actual - i),
+    decada: null as number | null,
+  }));
+  const decadas = Array.from(
+    { length: (PRIMER_ANIO_SUELTO - PRIMER_ANIO) / 10 },
+    (_, i) => PRIMER_ANIO_SUELTO - 10 * (i + 1)
+  ).map((decada) => ({ valor: `${decada}s`, decada: decada as number | null }));
+  return [...anios, ...decadas];
 }
 
 /** Valor de un `<option>` del selector de año (o de `?year=`) → estado. */
 export function anioDesdeOpcion(valor: string): Busqueda["anio"] {
-  return valor === OPCION_A_ESTRENAR ? A_ESTRENAR : entero(valor);
+  if (valor === OPCION_A_ESTRENAR) return A_ESTRENAR;
+  const decada = /^(\d{4})s$/.exec(valor);
+  if (decada) {
+    const inicio = Number(decada[1]);
+    const valida = inicio % 10 === 0 && inicio >= PRIMER_ANIO && inicio < PRIMER_ANIO_SUELTO;
+    return valida ? (valor as Decada) : null;
+  }
+  return entero(valor);
 }
 
 /** Estado → valor del selector de año (y de `?year=`). */

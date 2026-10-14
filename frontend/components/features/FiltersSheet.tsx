@@ -8,7 +8,7 @@ import { DialogShell } from "@/components/features/title/DialogShell";
 import {
   ETIQUETA_NOTA,
   NOTAS,
-  aniosDisponibles,
+  opcionesDeAnio,
   anioDesdeOpcion,
   opcionDeAnio,
   type Busqueda,
@@ -98,9 +98,11 @@ export function FiltersSheet({
           >
             <option value="">{t("search.filters.anyYear")}</option>
             <option value="upcoming">{t("search.filters.upcoming")}</option>
-            {aniosDisponibles(new Date().getFullYear()).map((anio) => (
-              <option key={anio} value={anio}>
-                {anio}
+            {opcionesDeAnio(new Date().getFullYear()).map((opcion) => (
+              <option key={opcion.valor} value={opcion.valor}>
+                {opcion.decada === null
+                  ? opcion.valor
+                  : t("search.filters.decade", { decade: String(opcion.decada) })}
               </option>
             ))}
           </select>

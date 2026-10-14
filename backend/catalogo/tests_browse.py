@@ -240,6 +240,38 @@ class AEstrenarTests(BrowseBase):
         self.assertEqual(respuesta.data["errors"][0]["field"], "a_estrenar")
 
 
+class DecadasTests(BrowseBase):
+    """Antes de 1990, el año se elige por década (pedido del usuario, 14/10/2026)."""
+
+    def test_sin_texto_pide_la_decada_entera_con_minimo_de_votos(self):
+        # Con 50 votos aparecen los clásicos: The Terminator, Back to the Future
+        # (1980s, verificado el 14/10/2026).
+        self.ok(tipo="movie", decada=1980)
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["desde_fecha"], "1980-01-01")
+        self.assertEqual(params["hasta_fecha"], "1989-12-31")
+        self.assertIsNone(params["anio"])
+        self.assertEqual(params["min_votos"], 50)
+
+    def test_con_texto_filtra_la_ventana_por_el_rango(self):
+        # De las 100 primeras películas de «dune», 9 son de los 80, entre ellas
+        # la de David Lynch (1984).
+        datos = self.ok(q="dune", tipo="movie", decada=1980)
+
+        fechas = [item["release_date"] for item in datos["results"]]
+        self.assertEqual(datos["total_results"], 9)
+        self.assertTrue(all("1980-01-01" <= fecha <= "1989-12-31" for fecha in fechas))
+        self.assertIn("Dune", [item["title"] for item in datos["results"]])
+
+    def test_una_decada_invalida_se_rechaza(self):
+        for valor in ("1985", "1890", "3000"):
+            with self.subTest(valor):
+                respuesta = self.buscar(decada=valor)
+                self.assertEqual(respuesta.status_code, 400)
+                self.assertEqual(respuesta.data["errors"][0]["field"], "decada")
+
+
 class TextoSinFiltrosTests(BrowseBase):
     """Texto sin género ni nota: una búsqueda de TMDB por tipo."""
 

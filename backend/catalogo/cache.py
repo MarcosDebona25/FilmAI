@@ -116,6 +116,7 @@ class TMDBClientCache:
         max_rating=None,
         sin_generos=None,
         desde_fecha=None,
+        hasta_fecha=None,
     ):
         # Todos los filtros entran en la clave: dos consultas que difieren en
         # la década son dos respuestas distintas, no un cache hit.
@@ -139,6 +140,8 @@ class TMDBClientCache:
             params["sin_generos"] = sin_generos
         if desde_fecha is not None:
             params["desde_fecha"] = desde_fecha
+        if hasta_fecha is not None:
+            params["hasta_fecha"] = hasta_fecha
         return self._cached_call(
             "discover",
             params,
@@ -155,6 +158,7 @@ class TMDBClientCache:
                 max_rating,
                 sin_generos,
                 desde_fecha,
+                hasta_fecha,
             ),
         )
 
