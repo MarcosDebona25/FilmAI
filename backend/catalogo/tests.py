@@ -527,6 +527,57 @@ class TMDBClientCacheTest(SimpleTestCase):
         # devolvería de la caché la respuesta filtrada.
         self.assertEqual(len(calls), 2)
 
+    def test_search_con_anio_usa_el_parametro_estricto_y_separa_la_cache(self):
+        # C-06: `year` es flojo en la búsqueda de TMDB («dune» con 2021 trae la
+        # de 1984, verificado el 14/10/2026); los estrictos son estos dos.
+        cache, calls = self.make_cache()
+
+        cache.search("dune", "movie", anio=2021)
+        cache.search("dune", "tv", anio=2024)
+        cache.search("dune", "movie")
+
+        self.assertEqual(calls[0].url.params["primary_release_year"], "2021")
+        self.assertEqual(calls[1].url.params["first_air_date_year"], "2024")
+        self.assertNotIn("primary_release_year", calls[1].url.params)
+        self.assertNotIn("year", calls[0].url.params)
+        self.assertNotIn("primary_release_year", calls[2].url.params)
+        self.assertEqual(len(calls), 3)
+
+    def test_search_sin_anio_conserva_su_clave_de_cache(self):
+        # Las búsquedas de siempre no cambian de clave: no se invalida lo que
+        # ya está en Redis.
+        cache, _ = self.make_cache()
+
+        cache.search("dune", "movie")
+
+        clave = _build_key(
+            "search",
+            {"query": "dune", "tipo": "movie", "page": 1, "language": "en-US"},
+        )
+        self.assertTrue(self.redis.exists(clave))
+
+    def test_discover_con_nota_maxima_llega_a_tmdb_y_separa_la_cache(self):
+        # C-06: «Below 5» es `vote_average.lte`.
+        cache, calls = self.make_cache()
+
+        cache.discover("movie", max_rating=4.99, min_votos=50)
+        cache.discover("movie", min_votos=50)
+
+        self.assertEqual(calls[0].url.params["vote_average.lte"], "4.99")
+        self.assertNotIn("vote_average.lte", calls[1].url.params)
+        self.assertEqual(len(calls), 2)
+
+    def test_discover_sin_generos_llega_a_tmdb_y_separa_la_cache(self):
+        # C-06: la grilla por defecto de Buscar deja afuera News y Talk.
+        cache, calls = self.make_cache()
+
+        cache.discover("tv", sin_generos="10763,10767")
+        cache.discover("tv")
+
+        self.assertEqual(calls[0].url.params["without_genres"], "10763,10767")
+        self.assertNotIn("without_genres", calls[1].url.params)
+        self.assertEqual(len(calls), 2)
+
     def test_build_key_is_stable(self):
         first = _build_key("search", {"query": "Fight Club", "page": 1})
         second = _build_key("search", {"page": 1, "query": "Fight Club"})
