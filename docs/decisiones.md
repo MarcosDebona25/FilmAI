@@ -4053,3 +4053,18 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Alternativas descartadas**: prohibir estar en las dos listas (un 409 al agregar a Pendientes algo visto) haría perder el «volver a verla»; limitar la regla al botón Watched dejaría algo calificado como visto y pendiente a la vez.
 - **Tests**: backend `VistasSacaDePendientesTests` (7, por HTTP con la materialización real y TMDB simulado; 3 fallan con el código anterior y 4 cuidan los límites de la regla). Frontend: dos tests en `title-actions.test.tsx` y uno en `rating-dialog.test.tsx`; los dos de la regla fallan con los componentes anteriores.
 - **Archivos afectados**: `backend/listas/{services,views}.py`, `backend/catalogo/tests_reviews.py`, `frontend/components/features/title/{TitleActions,RatingDialog,TitleView}.tsx`, tests, `docs/i18n/copia-propuesta.csv` y mensajes generados, `docs/02_Especificación de Requerimientos.md` (CU-011), `docs/04_Lineamientos_UI.md` (§5c), specs `list-endpoints`, `reviews-api` y `title-page-ui`, `docs/decisiones.md`.
+
+## 14/10/2026 — SDD de Buscar (C-06, PR 1)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: SDD en `openspec/changes/search-catalogo/` (proposal, design, tasks).
+  1. **Página, no overlay.** `/search`, como lo dibuja el canvas (navbar con «Search» como página actual). Se actualizaron doc 04 §5b y sus menciones al overlay.
+  2. **Texto con género o nota sobre los primeros 100.** Verificado contra TMDB: `search/movie` y `search/tv` ignoran género y nota («dune» con `with_genres=878&vote_average.gte=9` sigue dando 1115 resultados). Con texto y alguno de esos filtros, el backend toma hasta 5 páginas por tipo (la primera y después el resto en paralelo, cada una cacheada 1 h), filtra y pagina de a 20. Sin esos filtros, una llamada por tipo. Lo eligió el usuario entre tres opciones: «filtrar los primeros 100», «con texto, solo año» y «filtrar solo la página actual».
+  3. **Cualquier texto hasta 50.** Doc 02 decía alfanumérico sin signos; títulos como «Ocean's Eleven», «WALL·E» o «¿Qué pasó ayer?» los necesitan. Lo eligió el usuario.
+  4. **«All» alterna películas y series**, página N de cada una, como el Home. Se descartó `search/multi`: en la página 1 de «dune» trae 9 personas de 20 y su total las cuenta.
+  5. **Año con texto**: `primary_release_year` y `first_air_date_year`, que son estrictos. `year` es flojo: «dune» con 2021 trae la de 1984.
+  6. **Géneros en «All»**: equivalencias de película a serie (Acción y Aventura → 10759, Ciencia ficción y Fantasía → 10765, Bélica → 10768), verificadas con las listas de TMDB. `genres/?tipo=all` suma los cinco géneros solo de series sin par (Kids, News, Reality, Soap, Talk).
+  7. **Nota con al menos 50 votos**: sin ese mínimo, «Below 5» se llena de títulos sin votos. Es el mismo umbral que usa el Home para series.
+  8. **Sin botón «Buscar»**: la búsqueda arranca 350 ms después de dejar de escribir (canvas). Se actualizó CU-010 en doc 02.
+- **Fuera de alcance**: materializar lo que muestra la búsqueda (pendiente de C-04a para listados) y el bloque «Dónde verla» de la ficha (propuesto el 14/10/2026, se decide después de C-06).
+- **Archivos afectados**: `openspec/changes/search-catalogo/`, `docs/02_Especificación de Requerimientos.md` (CU-008, CU-010), `docs/04_Lineamientos_UI.md` (§5b y menciones al overlay), `docs/decisiones.md`.

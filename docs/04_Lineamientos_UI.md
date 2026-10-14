@@ -13,7 +13,7 @@ Página Pública (sin sesión)
 
 App Autenticada
 ├── Inicio (Home)          ← descubrimiento: recomendaciones, tendencias, novedades
-├── Buscar                 ← panel overlay con catálogo unificado + toggle Películas/Series + filtros
+├── Buscar                 ← página /search con catálogo unificado + toggle Todo/Películas/Series + filtros
 ├── Listas                 ← favoritos, pendientes, vistas + personalizadas
 └── [Avatar]               ← dropdown: Mi perfil / Mis reseñas / Preferencias / Cerrar sesión
 ```
@@ -23,7 +23,7 @@ App Autenticada
 - 3 links de navegación + avatar a la derecha.
 - El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil", "Mis reseñas", "Preferencias" y "Cerrar sesión".
 - «Mis reseñas» permite gestionar calificaciones y textos propios, con pósters y acciones de edición y eliminación.
-- "Buscar" abre un panel overlay que reemplaza la vista actual con el catálogo completo (grid + filtros + toggle Películas/Series).
+- "Buscar" abre la página `/search` con el catálogo completo (grid + filtros + toggle Todo/Películas/Series; 14/10/2026, antes un panel overlay).
 - El chatbot se accede desde un FAB flotante presente en todas las pantallas.
 
 ---
@@ -36,7 +36,7 @@ App Autenticada
 | 2   | Registro                                      | CU-001         | Pública             |
 | 3   | Confirmación de cuenta                        | CU-002         | Pública (vía email) |
 | 4   | Home                                          | CU-013         | Mixta*              |
-| 5   | Buscar (panel overlay con catálogo unificado) | CU-008, CU-010 | Mixta*              |
+| 5   | Buscar (página con catálogo unificado)        | CU-008, CU-010 | Mixta*              |
 | 6   | Ficha de detalle                              | CU-008, CU-011 | Mixta*              |
 | 7   | Modal: Publicar/Modificar reseña              | CU-015         | Autenticada         |
 | 8   | Modal: Confirmación (genérico)                | Varios         | Autenticada         |
@@ -83,12 +83,12 @@ App Autenticada
 
 **Decisión**: Home es exclusivamente una página de descubrimiento pasivo con filas de contenido
 (Recomendado, Tendencias, Novedades). El catálogo completo para exploración activa se accede
-desde el link "Buscar" en la navbar, que abre un panel overlay con grid, toggle de tipo
+desde el link "Buscar" en la navbar, que abre la página de búsqueda con grid, toggle de tipo
 (Todo / Películas / Series) y filtros.
 
 **Justificación**:
 
-- Distinción clara entre descubrir (Home) y buscar (panel overlay). No se mezclan.
+- Distinción clara entre descubrir (Home) y buscar (página `/search`). No se mezclan.
 - El modelo IMDb/MUBI: feed principal + búsqueda como acción separada.
 - La entidad `ProduccionAudiovisual` unifica películas y series con atributo `tipo`; la UI
   refleja esto ofreciendo un catálogo unificado con toggle en lugar de dos secciones duplicadas.
@@ -140,7 +140,7 @@ Todas las pantallas autenticadas comparten:
 - **Navbar**: 3 links funcionales (Inicio, Buscar, Listas) + avatar a la derecha.
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
-  - "Buscar" click → panel overlay que reemplaza el content area con el buscador.
+  - "Buscar" click → página `/search` con el buscador.
 - **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», provisoriamente a un 404 hasta desarrollar el chatbot), Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1). No aparece en las pantallas de acceso.
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
 
@@ -225,45 +225,56 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 ---
 
-## 5b. Buscar (Panel Overlay)
+## 5b. Buscar
 
-Se activa al clickear "Buscar" en la navbar. Reemplaza el content area del Home con un
-panel overlay a pantalla completa.
+Página `/search` (14/10/2026, según el canvas «Search · desktop» y «Search · mobile»: lleva la
+navbar con «Buscar» como página actual; antes se describía como un panel overlay). Se llega desde
+«Buscar» en la navbar o en la barra inferior del celular.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  TOOLBAR DE BÚSQUEDA                                     │
-│  [🔍 Buscar...__________]  [Todo|Pelis|Series]  [Género] [Año] [⭐ mín] │
-│                                                          │
-│  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐           │
-│  │    │ │    │ │    │ │    │ │    │ │    │           │
-│  │post│ │post│ │post│ │post│ │post│ │post│           │   ← grid responsive
-│  │Tít.│ │Tít.│ │Tít.│ │Tít.│ │Tít.│ │Tít.│           │
-│  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘           │
-│  ...                                                    │
-│  [←] [1] [2] [3] ... [15] [→]                          │
+│  [FilmAI]  Inicio  Buscar  Listas                [Avatar] │
+│  [🔍 Buscar películas y series__________ ✕]   Cerrar [Esc] │
+│  [Todo|Películas|Series]   Género [▾]  Año [▾]  Nota [▾]   │
+│  20 resultados para «dune»                               │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐        │
+│  │post│ │post│ │post│ │post│ │post│ │post│ │post│        │ ← grilla auto-fill 168 px
+│  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘        │
+│          [Anterior]   Página 1 de 2   [Siguiente]         │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ### Comportamiento
 
-- Panel overlay que cubre todo el viewport debajo del navbar.
-- Se abre/cierra con click en "Buscar" o tecla Escape.
-- Campo de búsqueda con autofocus al abrir.
-- **Toggle de tipo**: Todo / Películas / Series. Cambia el placeholder del input y el filtro
-  aplicado a la grilla.
-- **Filtros**: dropdowns de Género, Año, Calificación mínima.
-- **Resultados**: grid de MediaCards con badge de tipo (Película/Serie) y rating.
-- Paginación clásica al pie.
+- **Campo**: grande, con lupa y botón para borrar; acepta cualquier texto hasta 50 caracteres. La
+  búsqueda arranca sola 350 ms después de dejar de escribir. En escritorio toma el foco al abrir;
+  en celular no, para que el teclado no tape los resultados.
+- **Cerrar / Escape**: vuelve a donde estaba el usuario si venía de la app; si no, al Inicio.
+- **Tipo**: Todo / Películas / Series (el mismo selector del Inicio).
+- **Filtros**: Género, Año (Cualquiera y del año actual a 1900) y Nota de TMDB (Cualquiera, 9 o
+  más … 5 o más, Menos de 5; siempre con al menos 50 votos). En «Todo», el género se traduce a su
+  equivalente de series cuando TMDB usa otro id (Acción y Aventura, Ciencia ficción y Fantasía,
+  Bélica).
+- **Con texto y género o nota**: TMDB no admite esos filtros en su búsqueda por nombre; se aplican
+  sobre los primeros 100 resultados por tipo (decisión del 14/10/2026). El año sí lo filtra TMDB.
+- **«Todo»**: alterna películas y series, como las filas del Inicio.
+- **Resultados**: MediaCards en grilla (2 columnas en celular) con tipo, año y nota de TMDB, o «Sin
+  calificaciones». Cada tarjeta lleva a la ficha con `?from=search`.
+- **Paginación**: Anterior / Página X de Y / Siguiente; al cambiar de página vuelve arriba.
+- **URL**: texto, tipo, filtros y página viven en la URL; recargar, compartir y volver atrás
+  conservan la búsqueda. La miga «Buscar» de la ficha vuelve a la última búsqueda.
+- **Celular**: título «Buscar», campo, selector de tipo y un botón «Filtros» con la cantidad de
+  filtros activos, que abre una hoja con Género, Año, Nota de TMDB, «Limpiar» y «Ver resultados».
 
 ### Estados
 
-| Estado                  | Qué se muestra                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------ |
-| Default (sin búsqueda)  | Grilla completa con resultados populares, ordenados por popularidad.                       |
-| Búsqueda con resultados | Resultados paginados coincidentes. Contador "N resultados encontrados".                    |
-| Búsqueda sin resultados | Empty state: ilustración + "No se encontraron resultados" + sugerencia de ajustar filtros. |
-| Error API               | "No se pudo recuperar el catálogo." + botón reintentar.                                    |
+| Estado                  | Qué se muestra                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Sin texto ni filtros    | Títulos populares, ordenados por popularidad.                                                |
+| Con resultados          | Contador «N resultados para “texto”» (o «N títulos» sin texto) + grilla + paginación.        |
+| Sin resultados          | «Nada para “texto”» + «Revisá cómo se escribe o probá el título original: el catálogo viene de TMDB.» + «Limpiar filtros». |
+| Cargando                | Grilla de pósters en esqueleto.                                                              |
+| Error API               | "No se pudo recuperar el catálogo." + botón Reintentar.                                     |
 
 ---
 
@@ -1214,7 +1225,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 > Estado al 08/09/2026: la marca `[x]` indica que la pantalla está **definida/diseñada** en este documento, no necesariamente implementada. Implementadas hoy: Login, Registro, confirmación/restablecimiento y completado de Google. El resto (Home, Buscar, Detalle, Listas, Perfil, Mis reseñas, Preferencias, errores) queda como diseño aprobado para implementar según `docs/05_Plan_de_Desarrollo.md`.
 
 - [x] Home — Sección 5
-- [x] Buscar (panel overlay) — Sección 5b
+- [x] Buscar (página `/search`) — Sección 5b
 - [x] Ficha de detalle — Sección 5c
 - [x] Modales de reseña — Sección 5d
 - [x] Listas — Sección 5e
