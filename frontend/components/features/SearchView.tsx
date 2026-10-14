@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { FiltersSheet } from "@/components/features/FiltersSheet";
 import { MediaCard } from "@/components/features/MediaCard";
 import { TypeSelector, type ContentType } from "@/components/features/TypeSelector";
 import { ApiError } from "@/lib/api";
@@ -13,12 +14,14 @@ import { translateError } from "@/lib/errors";
 import { useFormats } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import {
+  ETIQUETA_NOTA,
   MAX_TEXTO,
   NOTAS,
   aniosDisponibles,
   busquedaDesdeUrl,
   consultaApi,
   filtrosActivos,
+  guardarUltimaBusqueda,
   urlDeBusqueda,
   type Busqueda,
   type Nota,
@@ -40,14 +43,6 @@ const SIN_TRADUCCION: Record<number, "kids" | "news" | "reality" | "soap" | "tal
   10766: "soap",
   10767: "talk",
 };
-const ETIQUETA_NOTA = {
-  "9": "ratingAtLeastNine",
-  "8": "ratingAtLeastEight",
-  "7": "ratingAtLeastSeven",
-  "6": "ratingAtLeastSix",
-  "5": "ratingAtLeastFive",
-  lt5: "ratingBelowFive",
-} as const;
 
 function mensaje(error: unknown) {
   return error instanceof ApiError ? error.message : translateError({ code: "unknown" });
@@ -63,8 +58,10 @@ export function SearchView() {
   const router = useRouter();
   const formats = useFormats();
   const busqueda = busquedaDesdeUrl(useSearchParams());
+  const activos = filtrosActivos(busqueda);
   const [texto, setTexto] = useState(busqueda.q);
   const [intento, setIntento] = useState(0);
+  const [hoja, setHoja] = useState(false);
   const campo = useRef<HTMLInputElement>(null);
   const resultados = useCatalog<Pagina>(consultaApi(busqueda), intento);
   const generos = useCatalog<Generos>(`/api/catalogo/genres/?tipo=${busqueda.tipo}`, intento);
@@ -82,6 +79,10 @@ export function SearchView() {
     return () => window.clearTimeout(espera);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo el texto dispara la espera
   }, [texto]);
+
+  // La miga «Search» de la ficha vuelve a esta búsqueda (no a una vacía).
+  const url = urlDeBusqueda(busqueda);
+  useEffect(() => guardarUltimaBusqueda(url), [url]);
 
   // En escritorio el campo toma el foco; en celular el teclado taparía los resultados.
   useEffect(() => {
@@ -127,7 +128,7 @@ export function SearchView() {
   }
 
   function limpiar() {
-    if (filtrosActivos(busqueda) > 0) {
+    if (activos > 0) {
       cambiar({ genero: null, anio: null, nota: null });
     } else {
       borrarTexto();
@@ -142,9 +143,13 @@ export function SearchView() {
   const titulos = normalizeTitles(resultados.data?.results ?? []);
   const pagina = resultados.data;
   const q = busqueda.q.trim();
-  const conCriterio = q !== "" || filtrosActivos(busqueda) > 0;
-  const etiquetaGenero = (genero: { id: number; name: string }) =>
-    SIN_TRADUCCION[genero.id] ? t(`search.genres.${SIN_TRADUCCION[genero.id]}`) : genero.name;
+  const conCriterio = q !== "" || activos > 0;
+  const opcionesGenero = (generos.data?.genres ?? []).map((genero) => ({
+    id: genero.id,
+    etiqueta: SIN_TRADUCCION[genero.id]
+      ? t(`search.genres.${SIN_TRADUCCION[genero.id]}`)
+      : genero.name,
+  }));
 
   const pildora =
     "inline-flex h-12 items-center gap-2.5 rounded-[10px] pr-1.5 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)]";
@@ -206,8 +211,29 @@ export function SearchView() {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <TypeSelector value={busqueda.tipo} onChange={elegirTipo} className="w-full md:w-auto" />
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full gap-2 md:w-auto">
+            <TypeSelector value={busqueda.tipo} onChange={elegirTipo} className="flex-1" compact />
+            {/* En celular los filtros van en una hoja (canvas «Search · mobile»). */}
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={t("search.filters.openLabel", { activeCount: activos })}
+              onClick={() => setHoja(true)}
+              className="inline-flex h-12 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-3.5 text-sm font-semibold shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:hidden"
+            >
+              <SlidersHorizontal aria-hidden="true" className="size-[18px]" />
+              {t("common.filters.title")}
+              {activos > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground"
+                >
+                  {activos}
+                </span>
+              )}
+            </button>
+          </div>
+          <div className="hidden flex-wrap items-center gap-3 md:flex">
             <label className={pildora}>
               {t("search.filters.genreLabel")}
               <select
@@ -218,9 +244,9 @@ export function SearchView() {
                 className={selector}
               >
                 <option value="">{t("search.filters.allGenres")}</option>
-                {generos.data?.genres.map((genero) => (
+                {opcionesGenero.map((genero) => (
                   <option key={genero.id} value={genero.id}>
-                    {etiquetaGenero(genero)}
+                    {genero.etiqueta}
                   </option>
                 ))}
               </select>
@@ -262,6 +288,14 @@ export function SearchView() {
           </div>
         </div>
       </search>
+      {hoja && (
+        <FiltersSheet
+          busqueda={busqueda}
+          generos={opcionesGenero}
+          onCambiar={cambiar}
+          onClose={() => setHoja(false)}
+        />
+      )}
 
       {resultados.status === "error" ? (
         <div className="flex flex-col items-start gap-4 py-16">
@@ -302,9 +336,7 @@ export function SearchView() {
               onClick={limpiar}
               className="mt-2 inline-flex h-12 cursor-pointer items-center rounded-[10px] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
             >
-              {filtrosActivos(busqueda) > 0
-                ? t("common.filters.clear")
-                : t("search.input.clearLabel")}
+              {activos > 0 ? t("common.filters.clear") : t("search.input.clearLabel")}
             </button>
           )}
         </div>
