@@ -17,6 +17,8 @@ El diseño completo está en `openspec/changes/search-catalogo/design.md`.
 from concurrent.futures import ThreadPoolExecutor
 from math import ceil
 
+from django.utils import timezone
+
 POR_PAGINA = 20
 # «Los primeros 100» (decisión del usuario, 14/10/2026): 5 páginas de TMDB.
 PAGINAS_VENTANA = 5
@@ -93,6 +95,11 @@ def generos_de_todo(peliculas, series):
     return list(peliculas) + [por_id[i] for i in SERIES_SIN_PAR if i in por_id]
 
 
+def anio_actual():
+    """En una función para que los tests fijen el año."""
+    return timezone.localdate().year
+
+
 def _sin_genero(filtros):
     return {clave: valor for clave, valor in filtros.items() if clave != "genero"}
 
@@ -115,6 +122,9 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page):
         return _VACIO
     if not q:
         minimo, maximo = NOTAS.get(nota, (None, None))
+        # Lo anunciado todavía no tiene votos (2027: 946 películas en TMDB y
+        # ninguna con 50, 14/10/2026): un año futuro sin nota va sin mínimo.
+        futuro = anio is not None and anio > anio_actual()
         datos = servicio.discover(
             tipo,
             genero,
@@ -124,7 +134,7 @@ def _lado(servicio, tipo, *, q, genero, anio, nota, page):
             sort_by="popularity.desc",
             # Siempre con mínimo de votos: sin él, los primeros puestos se
             # llenan de títulos sin votos y «Menos de 5» de títulos sin nota.
-            min_votos=MIN_VOTOS_NOTA,
+            min_votos=None if futuro and nota is None else MIN_VOTOS_NOTA,
             max_rating=maximo,
             sin_generos=NEWS_Y_TALK if tipo == "tv" and genero is None else None,
         )

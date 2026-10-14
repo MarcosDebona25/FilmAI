@@ -76,12 +76,13 @@ describe("filtrosActivos", () => {
 });
 
 describe("aniosDisponibles", () => {
-  it("va del año actual a 1900", () => {
+  it("va de cinco años adelante (lo anunciado) a 1900", () => {
     const anios = aniosDisponibles(2026);
 
-    expect(anios[0]).toBe(2026);
+    expect(anios[0]).toBe(2031);
+    expect(anios).toContain(2026);
     expect(anios.at(-1)).toBe(1900);
-    expect(anios).toHaveLength(127);
+    expect(anios).toHaveLength(132);
   });
 });
 
