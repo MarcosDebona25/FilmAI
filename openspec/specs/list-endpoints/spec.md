@@ -80,6 +80,26 @@ production adds it to its author's `Vistas` and deleting the rating removes it
 `listas/services.py` (`agregar_a_vistas`, `quitar_de_vistas`) so that the lists
 module keeps owning `Tiene`.
 
+Entering `Vistas` MUST remove the production from the same user's
+predetermined `Pendientes` list, in the same transaction (decided 14/10/2026:
+what you watched is no longer pending). It applies to both ways in —
+`POST /api/lists/{vistas}/items/` and rating — and only when the production
+actually enters: if it was already in `Vistas`, `Pendientes` is not touched,
+so re-adding it there to watch it again stays allowed. Removing from `Vistas`
+MUST NOT put it back in `Pendientes`. Other users' lists are never touched.
+
+#### Scenario: Marking as watched something pending
+
+- GIVEN a production in the user's `Pendientes`
+- WHEN they add it to `Vistas`, or rate it
+- THEN it is in `Vistas` and no longer in `Pendientes`
+
+#### Scenario: Watching it again
+
+- GIVEN a production already in `Vistas` that the user added again to `Pendientes`
+- WHEN they rate it
+- THEN it stays in `Pendientes`
+
 ### Errors and ownership
 
 All endpoints MUST require authentication. A list or item belonging to another

@@ -156,7 +156,7 @@ Supplying only one of the two parameters MUST answer 400, never fall back to the
 
 Every rating's production MUST be in its author's predetermined `Vistas` list (decided 30/09/2026: "if you rated it, you watched it"). CU-011 already enforced one half — a rated production cannot leave `Vistas` without confirming the rating's deletion. This requirement adds the other:
 
-- `POST /api/reviews/` MUST add the production to `Vistas` when it is not there, **in the same transaction** as the rating. If it cannot be added, the rating MUST NOT be stored.
+- `POST /api/reviews/` MUST add the production to `Vistas` when it is not there, **in the same transaction** as the rating. If it cannot be added, the rating MUST NOT be stored. Entering `Vistas` this way also removes it from the author's `Pendientes` (`list-endpoints`, 14/10/2026).
 - `DELETE /api/reviews/{id}/` MUST remove the production from the author's `Vistas`, in the same transaction as the deletion. It ends in the same state as removing from `Vistas` with `borrar_calificacion=true`.
 - Editing the rating or the text, and deleting only the text, MUST NOT change `Vistas`.
 

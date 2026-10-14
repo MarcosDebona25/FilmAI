@@ -44,6 +44,7 @@ from .serializers import (
     PertenenciaQuerySerializer,
     QuitarItemQuerySerializer,
 )
+from .services import quitar_de_pendientes
 
 _ORDEN_PREDETERMINADAS = Case(
     When(clave=ClaveLista.FAVORITOS, tipo=TipoLista.PREDETERMINADA, then=Value(0)),
@@ -249,6 +250,13 @@ class ListaItemsView(APIView):
         try:
             with transaction.atomic():
                 item = Tiene.objects.create(lista=lista, produccion=produccion)
+                # Lo que ya viste deja de estar pendiente (14/10/2026). En el
+                # mismo atomic: si el alta falla, «Pendientes» queda intacta.
+                if (
+                    lista.tipo == TipoLista.PREDETERMINADA
+                    and lista.clave == ClaveLista.VISTAS
+                ):
+                    quitar_de_pendientes(request.user, produccion)
         except IntegrityError:
             raise ItemDuplicado from None
         return Response(

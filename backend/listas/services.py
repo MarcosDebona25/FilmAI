@@ -6,7 +6,13 @@ en `Tiene`, que es de este módulo; en vez de armar a mano la consulta de la
 lista «Vistas» desde `catalogo`, se la pide a quien es dueño de la tabla.
 
 La vuelta no rige: marcar como vista sin calificar sigue siendo válido
-(CU-011). Por eso estas funciones las llama solo C-08, y nunca al revés.
+(CU-011). Por eso `agregar_a_vistas` y `quitar_de_vistas` las llama solo C-08,
+y nunca al revés.
+
+Desde el 14/10/2026, además, entrar a «Vistas» saca de «Pendientes»: lo que
+ya viste dejó de estar pendiente. Rige por los dos caminos (el botón Watched y
+calificar) y solo en el momento en que la producción entra: volver a agregarla
+a «Pendientes» para verla de nuevo sigue permitido.
 
 Ninguna abre su propia transacción: quien llama las pone dentro de la suya,
 así la calificación y el ítem se guardan o se descartan juntos.
@@ -28,8 +34,10 @@ def lista_vistas(usuario):
 
 
 def agregar_a_vistas(usuario, produccion):
-    """Agrega la producción a «Vistas». Si ya estaba, no hace nada.
+    """Agrega la producción a «Vistas» y la saca de «Pendientes».
 
+    Si ya estaba en «Vistas» no hace nada, tampoco con «Pendientes»: quien la
+    volvió a agregar ahí para verla de nuevo no la pierde al calificarla.
     Devuelve `True` si la agregó. `get_or_create` cubre el caso de quien la
     marcó como vista antes de calificarla: un segundo ítem chocaría con
     `uq_tiene_lista_produccion`.
@@ -37,7 +45,23 @@ def agregar_a_vistas(usuario, produccion):
     _, creado = Tiene.objects.get_or_create(
         lista=lista_vistas(usuario), produccion=produccion
     )
+    if creado:
+        quitar_de_pendientes(usuario, produccion)
     return creado
+
+
+def quitar_de_pendientes(usuario, produccion):
+    """Saca la producción de «Pendientes» del usuario. Si no estaba, no hace nada.
+
+    Devuelve `True` si la sacó, para que quien llama pueda avisarlo.
+    """
+    borrados, _ = Tiene.objects.filter(
+        lista__usuario=usuario,
+        lista__clave=ClaveLista.PENDIENTES,
+        lista__tipo=TipoLista.PREDETERMINADA,
+        produccion=produccion,
+    ).delete()
+    return borrados > 0
 
 
 def quitar_de_vistas(usuario, produccion):

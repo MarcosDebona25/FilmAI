@@ -114,6 +114,33 @@ describe("acciones de la ficha", () => {
     expect(favoritos).toMatchObject({ contiene: true, item_id: 80, cantidad_items: 1 });
   });
 
+  it("marcar como vista algo pendiente lo saca de Watchlist y lo avisa junto", async () => {
+    api.fetch.mockResolvedValue({ item_id: 90 });
+    const sinVer = LISTAS.map((l) => (l.id === 2 ? { ...l, contiene: false, item_id: null } : l));
+    const { onListasChange } = renderizar({ listas: sinVer });
+
+    fireEvent.click(screen.getByRole("button", { name: "Watched" }));
+
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith("Added to Watched and removed from Watchlist.")
+    );
+    const ultimas: ListaFicha[] = onListasChange.mock.calls.at(-1)![0];
+    expect(ultimas.find((l) => l.id === 2)).toMatchObject({ contiene: true, item_id: 90 });
+    expect(ultimas.find((l) => l.id === 3)).toMatchObject({ contiene: false, item_id: null });
+  });
+
+  it("marcar como vista algo que no está pendiente usa el aviso de siempre", async () => {
+    api.fetch.mockResolvedValue({ item_id: 90 });
+    const soloSinVer = LISTAS.map((l) =>
+      l.id === 2 || l.id === 3 ? { ...l, contiene: false, item_id: null } : l
+    );
+    renderizar({ listas: soloSinVer });
+
+    fireEvent.click(screen.getByRole("button", { name: "Watched" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Added to Watched."));
+  });
+
   it("después de alternar, el foco sigue en el mismo botón", async () => {
     // Si el botón se volviera a montar, quien usa el teclado perdería su lugar.
     api.fetch.mockResolvedValue({ item_id: 80 });

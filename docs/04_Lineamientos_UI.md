@@ -364,6 +364,8 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 
 El relleno sólido de Favoritos, Vista y Pendiente usa el color de acento, como la estrella de la nota propia; en el ojo y el reloj, la pupila y las agujas toman el color del botón para seguir viéndose (14/10/2026).
 
+Marcar Vista algo que está en Pendientes lo saca de Pendientes en la misma operación, con un solo toast: «Agregada a Vistas y quitada de Pendientes». Calificar hace lo mismo (calificar ya la marca como vista), y el modal lo avisa: «Al calificarla, {título} también se agrega a Vistas y sale de Pendientes». Quitar de Vistas no la devuelve a Pendientes (14/10/2026).
+
 Los botones de acción directa son visibles solo para usuarios autenticados. Para no autenticados, se muestra "Inicia sesión para calificar o guardar" con link a Login.
 
 ### Breadcrumb — comportamiento
