@@ -14,10 +14,10 @@ import { apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import type { MiCalificacion } from "@/lib/title";
+import { useDesborde } from "@/lib/use-desborde";
 
 const ESTRELLA =
   "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2";
-const LARGA = 280;
 
 type Resena = {
   nombre_usuario: string;
@@ -58,15 +58,16 @@ function Nota({ valor }: { valor: number }) {
 function Texto({ texto }: { texto: string }) {
   const t = useTranslations("common.text");
   const [abierto, setAbierto] = useState(false);
-  const larga = texto.length > LARGA;
+  const [ref, desborda] = useDesborde<HTMLParagraphElement>(abierto, texto);
   return (
     <>
       <p
-        className={`leading-[1.6] whitespace-pre-line text-pretty ${larga && !abierto ? "line-clamp-3" : ""}`}
+        ref={ref}
+        className={`leading-[1.6] whitespace-pre-line text-pretty ${abierto ? "" : "line-clamp-3"}`}
       >
         {texto}
       </p>
-      {larga && (
+      {(desborda || abierto) && (
         <button
           type="button"
           aria-expanded={abierto}
