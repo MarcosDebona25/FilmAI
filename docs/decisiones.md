@@ -4004,3 +4004,18 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   7. La barra de navegación va sobre la franja en la ficha, también en celular (canvas).
 - **Tests**: Vitest `title.test.ts` (7) y `title-view.test.tsx` (7). Los de la página se escribieron después del código; se verificó que detectan fallas rompiendo a propósito el borrado del texto y la recarga de listas (fallan los dos tests esperados). Revisado con datos reales de TMDB en escritorio y celular, con y sin sesión.
 - **Archivos afectados**: `frontend/app/{movie,tv}/[id]/page.tsx`, `frontend/components/features/title/{TitleView,CreditsSection}.tsx`, `frontend/components/features/{MediaCard,MediaRow,HomeView,HomeHero}.tsx`, `frontend/components/Navbar.tsx`, `frontend/lib/{title,routes,catalog}.ts`, catálogos generados, `docs/i18n/copia-propuesta.csv`, tests, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Reseñas de la ficha y cierre de C-07 (PR 6)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `ReviewsSection` en `components/features/title/` según el canvas, y cierre de C-07 (con la mitad visual de C-08 y L-04).
+  1. **«Your review»** arriba, solo si la calificación propia tiene texto: avatar, «★ N», fecha («today» si es de hoy), texto, «Edit» (abre el modal) y «Delete review» (confirmación y `DELETE …/texto/`; la nota queda).
+  2. **Comunidad pública** con orden y filtro por nota sobre los parámetros del PR 2 (`orden`, `nota_min`, `nota_max`; «Below 5» es `nota_max=4`), encabezado «From the community (N)» o «Showing X of N» con números formateados por idioma, «Load more reviews» sobre el cursor (solo se reusa la query del `next`, nunca su origen), vacío y vacío filtrado.
+  3. **Avatares**: `/api/avatars/` pide sesión, así que sin sesión cada reseña muestra la inicial del usuario; con sesión, el avatar del catálogo que ya carga `AccountProvider`.
+  4. «today» se calcula armando la fecha AAAA-MM-DD a mano y no con `toLocaleDateString`: los formatos viven solo en `lib/format.ts` (AGENTS.md §10).
+  5. **«Read more» solo si el texto se corta** (pedido del usuario el 14/10/2026: una sinopsis que entra entera no debe ofrecerlo). `useDesborde()` (`lib/use-desborde.ts`) mide el texto recortado (`scrollHeight` contra `clientHeight`) y vuelve a medir con un `ResizeObserver`; reemplaza las cuentas de caracteres (300 en la sinopsis, 280 en las reseñas, 140 en la vista previa de las confirmaciones), que no sabían del ancho de la pantalla. Verificado con la sinopsis real de Breaking Bad: entra en escritorio (sin botón) y se corta en celular (con botón).
+- **Cierre de C-07**: entregas #73 a #78. Según AGENTS.md §9 se elimina `openspec/changes/title-page/`; la spec canónica nueva es `title-page-ui` (y se actualizaron `reviews-api` y `tmdb-endpoints`). Queda pendiente actualizar con Marcos la nota «Interfaces» del canvas (Home y Ficha ✅).
+- **Tests**: Vitest `reviews-section.test.tsx` (7, incluido «Read more» con y sin desborde) y Playwright `e2e/ficha.spec.ts` (6, escritorio y celular, API simulada con memoria y datos reales de TMDB): sin sesión, calificar con reseña y borrar el texto, quitar de Vistas algo calificado, ordenar y filtrar la comunidad, crear una lista nueva, sin desborde horizontal.
+- **Archivos afectados**: `frontend/components/features/title/{ReviewsSection,TitleView}.tsx`, tests y e2e, `openspec/specs/title-page-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md` (C-07, C-08, L-04 y la tabla de interfaces), `docs/decisiones.md`; se elimina `openspec/changes/title-page/`.

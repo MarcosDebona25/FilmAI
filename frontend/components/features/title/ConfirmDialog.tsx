@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { DialogShell } from "@/components/features/title/DialogShell";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
+import { useDesborde } from "@/lib/use-desborde";
 
 /**
  * Confirmación antes de una acción que no se puede deshacer (borrar el texto,
@@ -34,6 +35,7 @@ export function ConfirmDialog({
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completa, setCompleta] = useState(false);
+  const [vistaPrevia, desborda] = useDesborde<HTMLQuoteElement>(completa, preview ?? "");
 
   async function aceptar() {
     setEnviando(true);
@@ -65,11 +67,12 @@ export function ConfirmDialog({
       {preview && (
         <div className="flex flex-col items-start gap-1">
           <blockquote
+            ref={vistaPrevia}
             className={`rounded-[10px] bg-background px-4 py-3 text-[15px] leading-[1.55] text-fg-2 ${completa ? "" : "line-clamp-2"}`}
           >
             {preview}
           </blockquote>
-          {preview.length > 140 && (
+          {(desborda || completa) && (
             <button
               type="button"
               aria-expanded={completa}

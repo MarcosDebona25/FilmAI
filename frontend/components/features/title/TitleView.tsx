@@ -12,6 +12,7 @@ import { useAccount } from "@/components/AccountProvider";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { CreditsSection } from "@/components/features/title/CreditsSection";
 import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
+import { ReviewsSection } from "@/components/features/title/ReviewsSection";
 import { TitleActions } from "@/components/features/title/TitleActions";
 import { ApiError, apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/title";
 import type { ListaFicha } from "@/lib/title-lists";
 import { useCatalog } from "@/lib/use-catalog";
+import { useDesborde } from "@/lib/use-desborde";
 import { cn } from "@/lib/utils";
 
 const ESTRELLA =
@@ -67,6 +69,10 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const [nombreLista, setNombreLista] = useState<string | null>(null);
   const [modal, setModal] = useState<Modal>(null);
   const [sinopsisCompleta, setSinopsisCompleta] = useState(false);
+  const [sinopsisRef, sinopsisDesborda] = useDesborde<HTMLParagraphElement>(
+    sinopsisCompleta,
+    detalle.data?.overview ?? ""
+  );
 
   const recargarListas = useCallback(() => {
     return apiFetch<ListaFicha[]>(`/api/lists/?id_tmdb=${id}&tipo=${tipo}`).then(setListas, () =>
@@ -195,7 +201,6 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   }
 
   const cargandoUsuario = conSesion && (mia === undefined || listas === null);
-  const larga = (ficha?.sinopsis.length ?? 0) > 300;
 
   return (
     <main id="contenido" className="pb-16">
@@ -399,15 +404,16 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                   {t("title.synopsis.heading")}
                 </h2>
                 <p
+                  ref={sinopsisRef}
                   lang={ficha.sinopsisEnIngles ? "en" : undefined}
                   className={cn(
                     "text-[17px] leading-[1.6] text-pretty",
-                    larga && !sinopsisCompleta && "line-clamp-5"
+                    !sinopsisCompleta && "line-clamp-5"
                   )}
                 >
                   {ficha.sinopsis}
                 </p>
-                {larga && (
+                {(sinopsisDesborda || sinopsisCompleta) && (
                   <button
                     type="button"
                     aria-expanded={sinopsisCompleta}
@@ -423,6 +429,18 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         </div>
 
         {creditos.data && <CreditsSection creditos={creditos.data} tipo={tipo} />}
+        {ficha && (
+          <ReviewsSection
+            tipo={tipo}
+            idTmdb={id}
+            titulo={ficha.titulo}
+            mia={conSesion ? (mia ?? null) : null}
+            onEditar={() => setModal("calificar")}
+            onTextoBorrado={() =>
+              setMia((actual) => (actual ? { ...actual, texto: null } : actual))
+            }
+          />
+        )}
       </div>
 
       {modal === "calificar" && ficha && (
