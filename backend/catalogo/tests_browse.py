@@ -272,31 +272,55 @@ class DecadasTests(BrowseBase):
                 self.assertEqual(respuesta.data["errors"][0]["field"], "decada")
 
 
-class TextoSinFiltrosTests(BrowseBase):
-    """Texto sin género ni nota: una búsqueda de TMDB por tipo."""
+def _puntaje(item):
+    return max(item["vote_count"], item.get("popularity", 0) * 100)
 
-    def test_un_tipo_es_una_sola_llamada_con_el_anio(self):
-        datos = self.ok(q="dune", tipo="movie", anio=2021, page=2)
 
-        self.assertEqual(
-            self.tmdb.de("search"), [("search", "movie", 2, {"anio": 2021})]
-        )
-        self.assertEqual(datos["total_results"], 1115)
-        self.assertEqual(datos["total_pages"], 56)
-        self.assertEqual(datos["page"], 2)
+class TextoTests(BrowseBase):
+    """Con texto: los primeros 100 por tipo, ordenados por votos y popularidad.
+
+    El orden de TMDB es de relevancia y deja arriba títulos con 0 votos
+    (pedido del usuario, 14/10/2026: lo desconocido, al fondo).
+    """
+
+    def test_siempre_lee_los_primeros_100_con_el_anio(self):
+        datos = self.ok(q="dune", tipo="movie", anio=2021)
+
+        llamadas = self.tmdb.de("search", "movie")
+        self.assertEqual(sorted(llamada[2] for llamada in llamadas), [1, 2, 3, 4, 5])
+        self.assertTrue(all(llamada[3] == {"anio": 2021} for llamada in llamadas))
+        self.assertEqual((datos["total_results"], datos["total_pages"]), (100, 5))
 
     def test_el_texto_llega_sin_espacios_de_mas(self):
-        self.ok(q="  dune ", tipo="tv")
+        datos = self.ok(q="  dune ", tipo="tv")
 
-        self.assertEqual(len(self.tmdb.de("search", "tv")), 1)
+        self.assertEqual(datos["total_results"], 96)
 
-    def test_todo_alterna_y_suma(self):
-        datos = self.ok(q="dune")
+    def test_lo_conocido_o_muy_esperado_arriba(self):
+        datos = self.ok(q="dune", tipo="movie")
 
-        tipos = [item["media_type"] for item in datos["results"]]
-        self.assertEqual(tipos[:4], ["movie", "tv", "movie", "tv"])
-        self.assertEqual(datos["total_results"], 1115 + 96)
-        self.assertEqual(datos["total_pages"], 56)
+        titulos = [item["title"] for item in datos["results"]]
+        # Dune: Part Three no tiene votos, pero su popularidad (32) la deja 5.ª
+        # entre 100, delante de títulos con cientos de votos.
+        self.assertEqual(
+            titulos[:5],
+            ["Dune", "Dune: Part Two", "Dune", "Anatomy of a Fall", "Dune: Part Three"],
+        )
+        puntajes = [_puntaje(item) for item in datos["results"]]
+        self.assertEqual(puntajes, sorted(puntajes, reverse=True))
+
+    def test_todo_mezcla_peliculas_y_series_por_puntaje(self):
+        primera = self.ok(q="dune")
+        segunda = self.ok(q="dune", page=2)
+
+        # 100 películas + 96 series, de a 40 (20 por tipo).
+        self.assertEqual((primera["total_results"], primera["total_pages"]), (196, 5))
+        self.assertEqual(len(primera["results"]), 40)
+        puntajes = [_puntaje(item) for item in primera["results"] + segunda["results"]]
+        self.assertEqual(puntajes, sorted(puntajes, reverse=True))
+        self.assertEqual(
+            {item["media_type"] for item in primera["results"]}, {"movie", "tv"}
+        )
 
 
 class VentanaTests(BrowseBase):
@@ -355,8 +379,8 @@ class VentanaTests(BrowseBase):
 
         # 10 películas de Science Fiction y 6 series de Sci-Fi & Fantasy.
         self.assertEqual(datos["total_results"], 16)
-        tipos = [item["media_type"] for item in datos["results"]]
-        self.assertEqual(tipos[:4], ["movie", "tv", "movie", "tv"])
+        puntajes = [_puntaje(item) for item in datos["results"]]
+        self.assertEqual(puntajes, sorted(puntajes, reverse=True))
         series = [item for item in datos["results"] if item["media_type"] == "tv"]
         self.assertTrue(all(10765 in item["genre_ids"] for item in series))
 
