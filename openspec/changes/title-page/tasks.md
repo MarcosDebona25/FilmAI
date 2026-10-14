@@ -44,9 +44,9 @@ Tests with real TMDB responses captured on 13-14/10/2026, never invented.
 
 ## Phase 3: List actions (PR 4)
 
-- [ ] 3.1 `TitleActions` + Vitest: toggles reflect membership, `aria-pressed`, toasts
-- [ ] 3.2 Watched off with a rating: 409 → confirm → retry with `borrar_calificacion=true`
-- [ ] 3.3 `ListsMenu` + Vitest: checklist, counts, inline creation with name errors from the API codes
+- [x] 3.1 `TitleActions` + Vitest: toggles reflect membership, `aria-pressed`, toasts
+- [x] 3.2 Watched off with a rating: 409 → confirm → retry with `borrar_calificacion=true`
+- [x] 3.3 `ListsMenu` + Vitest: checklist, counts, inline creation with name errors from the API codes
 
 ## Phase 4: The page (PR 5)
 
