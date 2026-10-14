@@ -127,3 +127,28 @@ export function ultimaBusqueda() {
     return routes.search;
   }
 }
+
+const CLAVE_SCROLL = "filmai:scroll-busqueda";
+
+/**
+ * Posición de la grilla al abrir una ficha, para devolverla al volver. La URL
+ * cambia con `history.replaceState`, por fuera del router de Next, así que
+ * Next no restaura ese scroll solo.
+ */
+export function guardarScrollBusqueda(url: string, y: number) {
+  try {
+    window.sessionStorage.setItem(CLAVE_SCROLL, JSON.stringify({ url, y }));
+  } catch {
+    // Sin almacenamiento se vuelve arriba de todo; no es un error.
+  }
+}
+
+/** El scroll guardado si es de esta misma búsqueda (misma URL). */
+export function scrollGuardado(url: string): number | null {
+  try {
+    const guardado = JSON.parse(window.sessionStorage.getItem(CLAVE_SCROLL) ?? "null");
+    return guardado?.url === url && typeof guardado.y === "number" ? guardado.y : null;
+  } catch {
+    return null;
+  }
+}

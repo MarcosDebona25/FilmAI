@@ -37,7 +37,7 @@ The page MUST offer the type selector (All · Movies · TV shows), Genre (from `
 
 ### Requirement: Results
 
-The page MUST show a responsive grid of MediaCards (two columns on mobile) leading to `/{type}/{id}?from=search`, with «No ratings» for titles without votes, a count «N results for “text”» (or «N results» without text) whenever there is text or a filter, and Previous / Page X of Y / Next that scrolls back to the top. Without text or filters it shows the popular titles with no count.
+The page MUST show a responsive grid of MediaCards (two columns on mobile) leading to `/{type}/{id}?from=search`, with «No ratings» for titles without votes, and a count «N results for “text”» (or «N results» without text) whenever there is text or a filter. More results MUST load as the user scrolls (decided 14/10/2026, replacing the canvas' Previous / Next): when the end of the grid is within 600 px, the next page is appended, up to 25 pages; repeated titles are dropped; a failed page keeps what was loaded and offers «Try again». `page` in the URL MUST mean how many pages are loaded, and coming back from the title page (Back or the crumb) MUST restore those pages from the cache and the scroll position. Without text or filters it shows the popular titles with no count.
 
 States: loading skeleton; empty «Nothing for “text”» (or «Nothing with these filters») with «Clear filters», or «Clear search» when no filter is on; API error with «Try again».
 
@@ -55,3 +55,9 @@ Search MUST keep its last URL in `sessionStorage` for the tab; the title page's 
 
 - GIVEN the user searched «interstellar» and opened a card
 - THEN the title page's «Search» crumb links to `/search?q=interstellar`
+
+#### Scenario: Loading more
+
+- GIVEN `/search?q=batman` showing page 1
+- WHEN the user scrolls near the end of the grid
+- THEN the URL becomes `?q=batman&page=2` and page 2 is appended below
