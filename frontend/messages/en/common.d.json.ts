@@ -450,7 +450,10 @@ declare const messages: {
       "openLabel": "Filters{activeCount, plural, =0 {} one {, # active} other {, # active}}",
       "apply": "Show results",
       "activeCount": "{count, plural, one {# active} other {# active}}",
-      "anyYear": "Any"
+      "anyYear": "Any",
+      "tmdbRatingLabel": "TMDB rating",
+      "ratingShort": "{value}+",
+      "ratingShortBelowFive": "<5"
     },
     "results": {
       "count": "{count, plural, one {# result} other {# results}}",
