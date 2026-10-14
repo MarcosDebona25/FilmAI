@@ -24,6 +24,11 @@ export const MAX_TEXTO = 50;
 export const NOTAS: Nota[] = ["9", "8", "7", "6", "5", "lt5"];
 const TIPOS: ContentType[] = ["all", "movie", "tv"];
 const PRIMER_ANIO = 1900;
+/**
+ * Años futuros en el selector: TMDB ya tiene anunciadas producciones hasta
+ * cinco años adelante (Avatar 5 en 2031, verificado el 14/10/2026).
+ */
+const ANIOS_ANUNCIADOS = 5;
 
 export const BUSQUEDA_VACIA: Busqueda = {
   q: "",
@@ -82,9 +87,10 @@ export function filtrosActivos(busqueda: Busqueda) {
   return [busqueda.genero, busqueda.anio, busqueda.nota].filter((valor) => valor !== null).length;
 }
 
-/** Opciones del selector de año, del actual a 1900. */
+/** Opciones del selector de año: de cinco años adelante (lo anunciado) a 1900. */
 export function aniosDisponibles(actual: number) {
-  return Array.from({ length: actual - PRIMER_ANIO + 1 }, (_, i) => actual - i);
+  const ultimo = actual + ANIOS_ANUNCIADOS;
+  return Array.from({ length: ultimo - PRIMER_ANIO + 1 }, (_, i) => ultimo - i);
 }
 
 /** Clave de `common.filters.*` con el nombre largo de cada nota. */
