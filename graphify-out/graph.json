@@ -63188,6 +63188,18 @@
       "type": "external"
     },
     {
+      "id": "frontend_tests_render_renderhook",
+      "label": "frontend_tests_render_renderhook",
+      "_origin": "semantic",
+      "community": 235,
+      "community_name": "HomeView.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "frontend_tests_render_renderhook",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "django_utils_translation_trans_real",
       "label": "django_utils_translation_trans_real",
       "_origin": "semantic",
@@ -64468,17 +64480,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "django_contrib_auth_admin",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "frontend_tests_render_renderhook",
-      "label": "frontend_tests_render_renderhook",
-      "community": 235,
-      "community_name": "HomeView.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "frontend_tests_render_renderhook",
       "source_file": "",
       "type": "external"
     }
@@ -98861,7 +98862,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/SearchView.tsx",
-      "source_location": "L309",
+      "source_location": "L315",
       "weight": 1.0
     },
     {
@@ -98873,7 +98874,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/SearchView.tsx",
-      "source_location": "L348",
+      "source_location": "L354",
       "weight": 1.0
     },
     {
@@ -98885,7 +98886,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/SearchView.tsx",
-      "source_location": "L402",
+      "source_location": "L408",
       "weight": 1.0
     },
     {
@@ -203073,5 +203074,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "a755f704aead7b3364156597df98f40f52d1ab3a"
+  "built_at_commit": "14000a51f87568bfa19207c4fa776e2fee05e4fa"
 }

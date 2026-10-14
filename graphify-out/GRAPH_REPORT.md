@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-10-14)
 
 ## Corpus Check
-- 550 files · ~935,972 words
+- 550 files · ~936,176 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 31 file(s) not represented in the graph (top: (none) 13, .eml 8, .toml 4)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a755f704`
+- Built from commit: `14000a51`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1139,11 +1139,11 @@ Nodes (4): 12.1 Configuracion, 12.2 Helper de cuenta simulada, 12.3 Lo que prueb
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `campos_en_ingles()` connect `campos_en_ingles` to `config.ts`, `TipoProduccion`, `MiResenaSerializer`, `listas/views.py`, `Requirement: Shape, size and mixing`?**
-  _High betweenness centrality (0.145) - this node is a cross-community bridge._
+  _High betweenness centrality (0.146) - this node is a cross-community bridge._
 - **Why does `UsuarioFactory` connect `UsuarioFactory` to `ComunidadOrdenYFiltroTests`, `ContrasenaTests`, `ListasEndpointsTests`, `PreferenciasIdiomaTests`, `UsuarioSocialAccountAdapter`, `PaginacionDeResenasTests`, `CalificacionYReglaDeVistasTests`, `ResenaAdminTests`, `RecuperarContrasenaTests`, `SeguridadCamposAdministradorTests`, `UsuarioPerfilSerializer`, `PerfilTests`, `RecuperacionSesionTests`, `Requirements`, `EndpointSobreTests`, `ProduccionAudiovisual`, `IngresoDocumentacionTests`, `_BaseRecomendado`, `IdentidadListaTests`, `ErroresContrasenaTests`, `GoogleOAuthTests`, `ErroresGoogleTests`, `usuarios/views.py`, `IdiomaDelDestinatarioTests`, `PreferenciasTests`, `chatbot/factories.py`, `BajaCuentaTests`, `django_conf`, `CodigosParametrosCatalogoTests`, `._calificacion_existente`, `usuarios/serializers.py`, `catalogo/tests.py`, `ErroresRegistroTests`, `ErroresPerfilTests`, `CodigosValidacionListasTests`, `ContratoErroresAPITests`, `LoginDualTests`, `Usuario`, `ProduccionAudiovisualFactory`, `CorreosContratoTests`, `Command`, `._resena`, `LoginSerializer`, `QuitarDeVistasBorrandoCalificacionTests`, `RestriccionesClaveTests`?**
-  _High betweenness centrality (0.120) - this node is a cross-community bridge._
+  _High betweenness centrality (0.117) - this node is a cross-community bridge._
 - **Why does `apiFetch()` connect `apiFetch` to `next-intl`, `lucide-react`, `Requirements`, `profile/page.tsx`, `config.ts`, `TitleView.tsx`, `HomeView.tsx`, `campos_en_ingles`, `vitest`?**
-  _High betweenness centrality (0.104) - this node is a cross-community bridge._
+  _High betweenness centrality (0.105) - this node is a cross-community bridge._
 - **Are the 68 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 68 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `materializar()` (e.g. with `TMDBClientCache` and `tmdb_a_dominio()`) actually correct?**

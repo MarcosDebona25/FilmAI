@@ -197,12 +197,27 @@ describe("Buscar", () => {
 
   it("al acercarse el final de la grilla pide la página siguiente", async () => {
     estado.params = new URLSearchParams("q=dune");
+    window.history.pushState(null, "", "/search?q=dune");
     render(<SearchView />, { locale: "en" });
     await screen.findByText("Dune: Part Two");
 
     act(() => observadores[0].acercar());
 
     expect(reemplazos).toEqual(["/search?q=dune&page=2"]);
+  });
+
+  it("un aviso que llega tarde no pisa un filtro elegido mientras tanto", async () => {
+    // Carrera que cazó el CI: con pocos resultados el aviso de «llegó al final»
+    // salía con la búsqueda vieja y borraba la nota recién elegida.
+    estado.params = new URLSearchParams("q=dune");
+    window.history.pushState(null, "", "/search?q=dune");
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+
+    window.history.pushState(null, "", "/search?q=dune&rating=8");
+    act(() => observadores[0].acercar());
+
+    expect(reemplazos).toEqual([]);
   });
 
   it("con page=2 junta las dos páginas, sin repetidos, y deja de pedir en la última", async () => {
