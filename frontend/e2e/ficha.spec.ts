@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import type { ListaFicha } from "../lib/title-lists";
 import en from "../messages/en/common.json";
 import { CREDITOS_INTERSTELLAR, INTERSTELLAR } from "../tests/title-fixtures";
 import { prepararCuenta } from "./cuenta";
@@ -61,7 +62,7 @@ async function prepararFicha(page: Page) {
         contiene: false,
         item_id: null as number | null,
       },
-    ],
+    ] as ListaFicha[],
     consultas: [] as string[],
   };
   await page.route("**/api/catalogo/**", (route) => {
@@ -116,7 +117,7 @@ async function prepararFicha(page: Page) {
     if (url.pathname === "/api/lists/" && method === "GET")
       return route.fulfill({ json: estado.listas });
     if (url.pathname === "/api/lists/" && method === "POST") {
-      const lista = {
+      const lista: ListaFicha = {
         id: 5,
         nombre: request.postDataJSON().nombre,
         clave: null,
