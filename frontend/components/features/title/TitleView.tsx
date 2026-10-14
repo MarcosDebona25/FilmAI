@@ -12,6 +12,7 @@ import { useAccount } from "@/components/AccountProvider";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { CreditsSection } from "@/components/features/title/CreditsSection";
 import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
+import { ReviewsSection } from "@/components/features/title/ReviewsSection";
 import { TitleActions } from "@/components/features/title/TitleActions";
 import { ApiError, apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
@@ -423,6 +424,18 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         </div>
 
         {creditos.data && <CreditsSection creditos={creditos.data} tipo={tipo} />}
+        {ficha && (
+          <ReviewsSection
+            tipo={tipo}
+            idTmdb={id}
+            titulo={ficha.titulo}
+            mia={conSesion ? (mia ?? null) : null}
+            onEditar={() => setModal("calificar")}
+            onTextoBorrado={() =>
+              setMia((actual) => (actual ? { ...actual, texto: null } : actual))
+            }
+          />
+        )}
       </div>
 
       {modal === "calificar" && ficha && (
