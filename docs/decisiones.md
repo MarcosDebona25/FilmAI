@@ -4304,5 +4304,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 
 - **Fecha**: 16/10/2026
 - **Descripción**: Marcos pidió dos ajustes en Listas. (1) En el detalle de una lista, las cajas Tipo, Nota de TMDB y Orden ocupaban todo el ancho de la fila (`flex-auto`), casi igual que el buscador. Ahora miden lo que su contenido (`flex-none`; el buscador no cambia) y «Clear filters» pasó de la fila del buscador al final de la fila de filtros, junto a lo que limpia. (2) Se eliminó el toast «Orden guardado» (`lists.feedback.orderSaved`, clave retirada del catálogo): el nuevo orden ya se ve en pantalla; el toast de error y la reversión se mantienen.
-- **Observación sobre datos locales**: al revisar por qué una tarjeta de una lista abría otra ficha, se vio que la tarjeta enlaza bien (`/{tipo}/{id_tmdb}`) y que 68 de los 69 ítems en listas de la BD local son producciones sintéticas de `manage.py seed` (títulos de Faker e `id_tmdb` bajos), cuyos ids coinciden con otros títulos reales de TMDB. No es un bug del enlace ni del backend; no ocurre con producciones materializadas desde TMDB.
+- **Observación sobre datos locales**: al revisar por qué una tarjeta de una lista abría otra ficha, se vio que la tarjeta enlaza bien (`/{tipo}/{id_tmdb}`) y que 21 producciones de la BD local eran sintéticas de `manage.py seed` (títulos de Faker, `id_tmdb` bajos y póster `https://…`), con ids que coinciden con otros títulos reales de TMDB; 14 de los 69 ítems en listas eran de esas. No es un bug del enlace ni del backend; no ocurre con producciones materializadas desde TMDB.
 - **Archivos afectados**: `frontend/components/features/lists/{ListDetailView,ListsView}.tsx`, `frontend/messages/{en,es}/common.json` (y `.d.json.ts`), `docs/i18n/claves.csv`, `frontend/tests/lists-view.test.tsx`, `frontend/e2e/listas.spec.ts`, `docs/decisiones.md`.
+
+## 16/10/2026 — Buscar: buscador 20 % más chico y «Clear filters» junto a los filtros
+
+- **Fecha**: 16/10/2026
+- **Descripción**: Marcos pidió reducir el buscador de Buscar un 20 % y poner «Clear filters» a la derecha de los filtros, como en Listas. En escritorio el campo pasó de 72 a 58 px de alto y de 34 a 27 px de texto (icono, márgenes y botón de borrar proporcionales); el ancho y el celular no cambian. «Clear filters» aparece al final de la fila Género/Año/Nota solo con filtros activos y quita género, año y nota sin tocar el texto (el del estado vacío se mantiene).
+- **Archivos afectados**: `frontend/components/features/SearchView.tsx`, `frontend/tests/search-view.test.tsx`, `docs/decisiones.md`.
+
+## 16/10/2026 — Datos locales: producciones reales y actividad con sentido
+
+- **Fecha**: 16/10/2026
+- **Descripción**: la BD de desarrollo tenía producciones de Faker y calificaciones/reseñas con texto de relleno, así que abrir una tarjeta mostraba otra ficha. A pedido de Marcos se borraron las 21 producciones sintéticas (con sus ítems, calificaciones y reseñas en cascada), se materializaron 60 títulos reales desde TMDB (`materializar`, por género y votos) y se regeneró la actividad de `usuario001/002/003`: entre 14 y 15 calificaciones cada uno, cercanas a la nota de TMDB con afinidad por género; reseñas en el idioma de cada cuenta; Vistas coherente con lo calificado (regla «calificada ⇒ Vistas»), Favoritos con lo calificado 9 o más, Pendientes sin lo ya visto y dos listas personalizadas temáticas por usuario. Se conservaron la lista «Hola muy buenos dias» y su ítem (manuales). Es solo la BD local: no hay migración ni cambio de código.
+- **Archivos afectados**: ninguno del repositorio (datos locales), `docs/decisiones.md`.
