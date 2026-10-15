@@ -26,19 +26,24 @@ pasan por `listas/services.py`, porque la tabla es de ese módulo.
 """
 
 from django.db import IntegrityError, transaction
+from django.db.models import BigIntegerField, Exists, ExpressionWrapper, F, OuterRef, Q
+from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from catalogo.exceptions import CalificacionDuplicada
-from catalogo.models import Calificacion, Resena
+from catalogo.models import Calificacion, ProduccionTraduccion, Resena
 from catalogo.pagination_reviews import ResenaCursorPagination
 from catalogo.serializers_reviews import (
     ActualizarCalificacionSerializer,
     CalificacionSerializer,
+    ComunidadQuerySerializer,
     CrearCalificacionSerializer,
     MiResenaSerializer,
+    MisResenasQuerySerializer,
     ProduccionQuerySerializer,
     ResenaComunidadSerializer,
 )
@@ -69,10 +74,51 @@ def _calificacion_propia(request, calificacion_id):
     )
 
 
+# Orden de la comunidad (C-07) y de «Mis reseñas», que siguen el mismo
+# criterio. Los de nota usan una clave única anotada: el cursor de DRF se ubica
+# con el primer campo y desempata con un offset, que se degrada cuando miles de
+# reseñas tienen el mismo 8. `valor * 10^9 + id` ordena igual que (valor, id) y
+# no se repite.
+_ORDENES = {
+    "fecha-desc": ("-fecha", "-id"),
+    "fecha-asc": ("fecha", "id"),
+    "nota-desc": ("-clave_nota",),
+    "nota-asc": ("clave_nota",),
+}
+
+
+def _clave_nota(campo_valor):
+    """La clave `valor * 10^9 + id` sobre la nota en `campo_valor`.
+
+    `Cast` antes de multiplicar: `valor` es un entero de 32 bits en Postgres y
+    10 * 10^9 se pasa de rango (`ExpressionWrapper` solo declara el tipo final).
+    """
+    return ExpressionWrapper(
+        Cast(campo_valor, BigIntegerField()) * 1_000_000_000 + F("id"),
+        output_field=BigIntegerField(),
+    )
+
+
+def _filtrar_nota(qs, datos, campo):
+    """`nota_min` y `nota_max` (inclusivos) sobre la nota en `campo`."""
+    if "nota_min" in datos:
+        qs = qs.filter(**{f"{campo}__gte": datos["nota_min"]})
+    if "nota_max" in datos:
+        qs = qs.filter(**{f"{campo}__lte": datos["nota_max"]})
+    return qs
+
+
 class CalificacionesView(APIView):
     """Reseñas de la comunidad sobre una producción, y alta de la propia."""
 
     pagination_class = ResenaCursorPagination
+
+    def get_permissions(self):
+        # Leer es público desde el 14/10/2026 (C-07): la ficha se ve sin sesión
+        # y las reseñas son públicas. Calificar sigue exigiendo sesión.
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return super().get_permissions()
 
     def get(self, request):
         """Las reseñas de los **demás** sobre una producción (§5c).
@@ -87,20 +133,32 @@ class CalificacionesView(APIView):
           consumidor, y una lista paginada no puede prometer que la propia caiga
           en la primera página.
         """
-        id_tmdb, tipo = _produccion_pedida(request)
-        resenas = (
-            Resena.objects.filter(
-                calificacion__produccion__id_tmdb=id_tmdb,
-                calificacion__produccion__tipo=tipo,
-                activa=True,
-                calificacion__activa=True,
-            )
-            .exclude(calificacion__usuario=request.user)
+        query = ComunidadQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        datos = query.validated_data
+        resenas = Resena.objects.filter(
+            calificacion__produccion__id_tmdb=datos["id_tmdb"],
+            calificacion__produccion__tipo=tmdb_a_dominio(datos["tipo"]),
+            activa=True,
+            calificacion__activa=True,
+        )
+        # Sin sesión no hay reseña propia que sacar.
+        if request.user.is_authenticated:
+            resenas = resenas.exclude(calificacion__usuario=request.user)
+        total_comunidad = resenas.count()
+
+        resenas = _filtrar_nota(resenas, datos, "calificacion__valor")
+        resenas = resenas.annotate(
+            clave_nota=_clave_nota("calificacion__valor")
+        ).select_related(
             # Sin esto, serializar N reseñas dispara 2N consultas para traer la
             # calificación y el usuario de cada una (el problema N+1).
-            .select_related("calificacion__usuario")
+            "calificacion__usuario"
         )
+
         paginator = self.pagination_class()
+        paginator.ordering = _ORDENES[datos["orden"]]
+        paginator.total_comunidad = total_comunidad
         pagina = paginator.paginate_queryset(resenas, request, view=self)
         return paginator.get_paginated_response(
             ResenaComunidadSerializer(pagina, many=True).data
@@ -235,10 +293,43 @@ class MisCalificacionesView(APIView):
                 ).data
             )
 
+        query = MisResenasQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        datos = query.validated_data
+        total_propias = propias.count()
+        propias = _filtrar_propias(propias, datos)
+
         paginator = self.pagination_class()
+        paginator.ordering = _ORDENES[datos["orden"]]
+        paginator.total_propias = total_propias
         pagina = paginator.paginate_queryset(propias, request, view=self)
         return paginator.get_paginated_response(
             MiResenaSerializer(
                 pagina, many=True, context={"idioma": idioma_efectivo(request)}
             ).data
         )
+
+
+def _filtrar_propias(propias, datos):
+    """Aplica los filtros de «Mis reseñas» y anota la clave de orden por nota."""
+    q = (datos.get("q") or "").strip()
+    if q:
+        # El título canónico o el de alguna traducción, sin acentos ni
+        # mayúsculas. `Exists` y no un JOIN: con varias traducciones, el JOIN
+        # repetiría la calificación.
+        traducido = ProduccionTraduccion.objects.filter(
+            produccion=OuterRef("produccion"), titulo__unaccent__icontains=q
+        )
+        propias = propias.filter(
+            Q(produccion__titulo__unaccent__icontains=q) | Exists(traducido)
+        )
+    if datos.get("texto") == "con":
+        propias = propias.filter(resena__isnull=False)
+    elif datos.get("texto") == "sin":
+        propias = propias.filter(resena__isnull=True)
+    if "clase" in datos:
+        propias = propias.filter(produccion__tipo=tmdb_a_dominio(datos["clase"]))
+    propias = _filtrar_nota(propias, datos, "valor")
+    # Mismo criterio que la comunidad, sobre la calificación: el orden por nota
+    # usa una clave única para que el cursor no se pierda entre empates.
+    return propias.annotate(clave_nota=_clave_nota("valor"))

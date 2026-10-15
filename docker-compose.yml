@@ -102,7 +102,8 @@ services:
     networks:
       - filmai_network
 
-  # 5. Celery worker — procesa tareas en segundo plano (hoy: generar_embedding, C-04a)
+  # 5. Celery worker — procesa tareas en segundo plano (hoy: materializar_produccion y
+  # generar_embedding de C-04a; la sync y el backfill de C-04b)
   # Misma imagen que el backend (mismo código, mismas dependencias), pero en
   # vez de levantar el servidor HTTP corre el proceso que escucha la cola de
   # tareas en Redis y las ejecuta una por una.

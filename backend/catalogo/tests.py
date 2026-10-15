@@ -76,6 +76,7 @@ from catalogo.tasks import (
     _ids_cambiados,
     backfill_embeddings,
     generar_embedding,
+    materializar_produccion,
     sync_catalogo_diaria,
 )
 from catalogo.views import (
@@ -512,6 +513,94 @@ class TMDBClientCacheTest(SimpleTestCase):
         )
         return TMDBClientCache(client, self.redis), calls
 
+    def test_discover_con_minimo_de_votos_llega_a_tmdb_y_separa_la_cache(self):
+        # C-05: Recomendado y las series nuevas del Home dejan afuera los
+        # títulos con pocos votos (sin votos y contenido adulto sin marcar).
+        cache, calls = self.make_cache()
+
+        cache.discover("tv", min_votos=50)
+        cache.discover("tv")
+
+        self.assertEqual(calls[0].url.params["vote_count.gte"], "50")
+        self.assertNotIn("vote_count.gte", calls[1].url.params)
+        # Sin el mínimo es otra consulta: si compartieran la clave, la segunda
+        # devolvería de la caché la respuesta filtrada.
+        self.assertEqual(len(calls), 2)
+
+    def test_search_con_anio_usa_el_parametro_estricto_y_separa_la_cache(self):
+        # C-06: `year` es flojo en la búsqueda de TMDB («dune» con 2021 trae la
+        # de 1984, verificado el 14/10/2026); los estrictos son estos dos.
+        cache, calls = self.make_cache()
+
+        cache.search("dune", "movie", anio=2021)
+        cache.search("dune", "tv", anio=2024)
+        cache.search("dune", "movie")
+
+        self.assertEqual(calls[0].url.params["primary_release_year"], "2021")
+        self.assertEqual(calls[1].url.params["first_air_date_year"], "2024")
+        self.assertNotIn("primary_release_year", calls[1].url.params)
+        self.assertNotIn("year", calls[0].url.params)
+        self.assertNotIn("primary_release_year", calls[2].url.params)
+        self.assertEqual(len(calls), 3)
+
+    def test_search_sin_anio_conserva_su_clave_de_cache(self):
+        # Las búsquedas de siempre no cambian de clave: no se invalida lo que
+        # ya está en Redis.
+        cache, _ = self.make_cache()
+
+        cache.search("dune", "movie")
+
+        clave = _build_key(
+            "search",
+            {"query": "dune", "tipo": "movie", "page": 1, "language": "en-US"},
+        )
+        self.assertTrue(self.redis.exists(clave))
+
+    def test_discover_con_nota_maxima_llega_a_tmdb_y_separa_la_cache(self):
+        # C-06: «Below 5» es `vote_average.lte`.
+        cache, calls = self.make_cache()
+
+        cache.discover("movie", max_rating=4.99, min_votos=50)
+        cache.discover("movie", min_votos=50)
+
+        self.assertEqual(calls[0].url.params["vote_average.lte"], "4.99")
+        self.assertNotIn("vote_average.lte", calls[1].url.params)
+        self.assertEqual(len(calls), 2)
+
+    def test_discover_sin_generos_llega_a_tmdb_y_separa_la_cache(self):
+        # C-06: la grilla por defecto de Buscar deja afuera News y Talk.
+        cache, calls = self.make_cache()
+
+        cache.discover("tv", sin_generos="10763,10767")
+        cache.discover("tv")
+
+        self.assertEqual(calls[0].url.params["without_genres"], "10763,10767")
+        self.assertNotIn("without_genres", calls[1].url.params)
+        self.assertEqual(len(calls), 2)
+
+    def test_discover_desde_fecha_usa_el_parametro_de_cada_tipo(self):
+        # C-06, «A estrenar»: estrenos desde una fecha, no un año.
+        cache, calls = self.make_cache()
+
+        cache.discover("movie", desde_fecha="2026-10-15")
+        cache.discover("tv", desde_fecha="2026-10-15")
+        cache.discover("movie")
+
+        self.assertEqual(calls[0].url.params["primary_release_date.gte"], "2026-10-15")
+        self.assertEqual(calls[1].url.params["first_air_date.gte"], "2026-10-15")
+        self.assertNotIn("primary_release_date.gte", calls[2].url.params)
+        self.assertEqual(len(calls), 3)
+
+    def test_discover_hasta_fecha_cierra_el_rango(self):
+        # C-06, décadas: del 1/1 del primer año al 31/12 del último.
+        cache, calls = self.make_cache()
+
+        cache.discover("movie", desde_fecha="1980-01-01", hasta_fecha="1989-12-31")
+        cache.discover("tv", desde_fecha="1980-01-01", hasta_fecha="1989-12-31")
+
+        self.assertEqual(calls[0].url.params["primary_release_date.lte"], "1989-12-31")
+        self.assertEqual(calls[1].url.params["first_air_date.lte"], "1989-12-31")
+
     def test_build_key_is_stable(self):
         first = _build_key("search", {"query": "Fight Club", "page": 1})
         second = _build_key("search", {"page": 1, "query": "Fight Club"})
@@ -721,6 +810,28 @@ class ParamValidationTest(SimpleTestCase):
         self.assertEqual(response.status_code, 400)
         get_service.assert_not_called()
 
+    @patch("catalogo.views.get_catalog_service")
+    def test_discover_pasa_min_votes_al_servicio(self, get_service):
+        # C-05: las series nuevas del Home piden `min_votes=50`.
+        get_service.return_value.discover.return_value = {"results": []}
+        request = self.factory.get("/api/catalogo/discover/?tipo=tv&min_votes=50")
+
+        response = DiscoverView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        _, kwargs = get_service.return_value.discover.call_args
+        self.assertEqual(kwargs["min_votos"], 50)
+
+    @patch("catalogo.views.get_catalog_service")
+    def test_discover_rechaza_min_votes_menor_que_uno(self, get_service):
+        request = self.factory.get("/api/catalogo/discover/?min_votes=0")
+
+        response = DiscoverView.as_view()(request)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["errors"][0]["field"], "min_votes")
+        get_service.assert_not_called()
+
     def test_optional_integer_param_preserves_none_default(self):
         self.assertIsNone(_int_param(None, "genero", default=None))
 
@@ -766,7 +877,7 @@ class EndpointIntegrationTest(SimpleTestCase):
         # vistas de detalle se anula acá para no arrastrar escrituras a
         # Postgres a un `SimpleTestCase`; tiene su propia cobertura en
         # `VistasDeDetalleMaterializanTests`.
-        parche = patch("catalogo.views.materializar")
+        parche = patch("catalogo.views.materializar_en_segundo_plano")
         parche.start()
         self.addCleanup(parche.stop)
 
@@ -2040,11 +2151,11 @@ class MaterializacionFrescuraTests(SimpleTestCase):
 
 
 class VistasDeDetalleMaterializanTests(TestCase):
-    """El detalle sigue siendo passthrough de TMDB y además materializa (C-04a).
+    """El detalle sigue siendo passthrough de TMDB y materializa en Celery (C-04a).
 
-    Se parchea `get_catalog_service` en los dos módulos que lo usan: la vista
-    lo llama para armar la respuesta y el enriquecimiento lo llama de nuevo
-    (en producción esa segunda llamada es un acierto de caché en Redis).
+    Desde el 14/10/2026 la vista no enriquece: encola `materializar_produccion`
+    solo si la fila falta o le falta el detalle. Acá se parchea esa tarea; lo
+    que hace adentro se prueba en `MaterializarProduccionTareaTests`.
     """
 
     def setUp(self):
@@ -2057,56 +2168,89 @@ class VistasDeDetalleMaterializanTests(TestCase):
             parche = patch(f"{modulo}.get_catalog_service", return_value=self.servicio)
             parche.start()
             self.addCleanup(parche.stop)
-        parche_tarea = patch("catalogo.services.materialization.generar_embedding")
+        parche_embedding = patch("catalogo.services.materialization.generar_embedding")
+        parche_embedding.start()
+        self.addCleanup(parche_embedding.stop)
+        parche_tarea = patch(
+            "catalogo.services.materialization.materializar_produccion"
+        )
         self.tarea = parche_tarea.start()
         self.addCleanup(parche_tarea.stop)
         self.api = APIClient()
 
-    def test_detalle_de_pelicula_materializa_sin_tocar_la_respuesta(self):
+    def test_primera_visita_encola_y_responde_sin_escribir(self):
+        response = self.api.get("/api/catalogo/movie/550/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, _DETALLE_MOVIE)
+        self.tarea.delay.assert_called_once_with(550, "movie")
+        # El enriquecimiento ya no corre en el pedido: ni filas ni llamadas
+        # a créditos o keywords.
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 0)
+        self.servicio.get_credits.assert_not_called()
+
+    def test_una_serie_se_encola_con_su_tipo(self):
+        response = self.api.get("/api/catalogo/tv/1396/")
+
+        self.assertEqual(response.data, _DETALLE_TV)
+        self.tarea.delay.assert_called_once_with(1396, "tv")
+
+    def test_una_fila_completa_no_encola_nada(self):
         with self.captureOnCommitCallbacks(execute=True):
+            materializar(550, "movie")
+
+        self.api.get("/api/catalogo/movie/550/")
+        self.api.get("/api/catalogo/movie/550/")
+
+        self.tarea.delay.assert_not_called()
+
+    def test_una_fila_sin_enriquecer_se_vuelve_a_encolar(self):
+        # Por ejemplo, si la tarea anterior falló después de crear la fila.
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo=""
+        )
+
+        self.api.get("/api/catalogo/movie/550/")
+
+        self.tarea.delay.assert_called_once_with(550, "movie")
+
+    def test_un_fallo_al_encolar_no_rompe_la_respuesta(self):
+        # Contrato de C-03: el detalle es passthrough puro de TMDB. Si el broker
+        # o la base fallan, el usuario igual ve la ficha.
+        self.tarea.delay.side_effect = RuntimeError("broker caído")
+
+        with self.assertLogs("catalogo.views", level="ERROR"):
             response = self.api.get("/api/catalogo/movie/550/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, _DETALLE_MOVIE)
+
+
+class MaterializarProduccionTareaTests(MaterializacionBase):
+    """La tarea que encola la ficha: materializa y nunca lanza (14/10/2026)."""
+
+    def test_materializa_y_encola_el_embedding(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            materializar_produccion(550, "movie")
 
         produccion = ProduccionAudiovisual.objects.get(
             id_tmdb=550, tipo=TipoProduccion.PELICULA
         )
         self.assertEqual(produccion.titulo, "Fight Club")
+        self.assertIsNotNone(produccion.fecha_enriquecimiento)
         self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
         self.tarea.delay.assert_called_once_with(produccion.id)
 
-    def test_detalle_de_serie_materializa_sin_tocar_la_respuesta(self):
-        response = self.api.get("/api/catalogo/tv/1396/")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, _DETALLE_TV)
-
-        produccion = ProduccionAudiovisual.objects.get(
-            id_tmdb=1396, tipo=TipoProduccion.SERIE
-        )
-        self.assertEqual(produccion.titulo, "Breaking Bad")
-        self.assertEqual(produccion.embedding.estado, EstadoEmbedding.PENDING)
-
-    def test_abrir_el_detalle_dos_veces_no_duplica_nada(self):
-        with self.captureOnCommitCallbacks(execute=True):
-            self.api.get("/api/catalogo/movie/550/")
-            self.api.get("/api/catalogo/movie/550/")
-
-        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
-        self.assertEqual(ProduccionEmbedding.objects.count(), 1)
-        self.tarea.delay.assert_called_once()
-
-    def test_un_fallo_al_materializar_no_rompe_la_respuesta(self):
-        # Contrato de C-03: el detalle es passthrough puro de TMDB. Si nuestra
-        # base o el enriquecimiento fallan, el usuario igual ve la ficha.
-        with patch(
-            "catalogo.views.materializar", side_effect=RuntimeError("base caída")
+    def test_un_fallo_se_registra_y_no_se_propaga(self):
+        with (
+            patch(
+                "catalogo.services.materialization.materializar",
+                side_effect=RuntimeError("TMDB caído"),
+            ),
+            self.assertLogs("catalogo.tasks", level="ERROR"),
         ):
-            response = self.api.get("/api/catalogo/movie/550/")
+            materializar_produccion(550, "movie")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, _DETALLE_MOVIE)
         self.assertEqual(ProduccionAudiovisual.objects.count(), 0)
 
 

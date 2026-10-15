@@ -6,6 +6,7 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as ErrorDjango
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from .adapter import UsuarioAccountAdapter
@@ -28,6 +29,7 @@ class ErroresRegistroTests(TestCase):
             "apellido": "Pérez",
             "fecha_nacimiento": "1990-01-01",
             "genero": "no_especifica",
+            "acepta_terminos": True,
             "password1": "NuevaClave456!",
             "password2": "NuevaClave456!",
         }
@@ -37,6 +39,32 @@ class ErroresRegistroTests(TestCase):
         return self.client.post(
             "/api/auth/registration/", {**self.payload, **cambios}, format="json"
         )
+
+    def test_registro_exige_aceptar_los_terminos(self):
+        """Sin el campo es `required`; en `false` es `terms_not_accepted`."""
+        sin_campo = {k: v for k, v in self.payload.items() if k != "acepta_terminos"}
+        cache.clear()
+        response = self.client.post("/api/auth/registration/", sin_campo, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["errors"],
+            [{"field": "acepta_terminos", "code": "required", "params": {}}],
+        )
+        response = self.registrar({"acepta_terminos": False})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["errors"],
+            [{"field": "acepta_terminos", "code": "terms_not_accepted", "params": {}}],
+        )
+        self.assertFalse(Usuario.objects.filter(correo=self.payload["correo"]).exists())
+
+    def test_registro_guarda_la_fecha_de_aceptacion(self):
+        antes = timezone.now()
+        response = self.registrar({})
+        self.assertEqual(response.status_code, 201)
+        usuario = Usuario.objects.get(correo=self.payload["correo"])
+        self.assertIsNotNone(usuario.fecha_aceptacion_terminos)
+        self.assertGreaterEqual(usuario.fecha_aceptacion_terminos, antes)
 
     def test_duplicados_mantienen_campos_y_http_de_registro(self):
         """A diferencia del perfil, el duplicado detectado en registro sigue siendo 400."""

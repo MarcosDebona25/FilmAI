@@ -116,13 +116,30 @@ The enqueue MUST be deferred to `transaction.on_commit()`. The worker runs in an
 - THEN the task has not been sent yet
 - AND exactly one on-commit callback is registered to send it
 
+### Requirement: Detail views materialize in the background
+
+Detail views MUST NOT enrich inside the request (14/10/2026: it added up to a second to the first visit). They MUST call `materializar_en_segundo_plano(id_tmdb, tipo_tmdb)`, which enqueues the Celery task `catalogo.materializar_produccion` only when the row does not exist or still needs enrichment, and enqueues nothing for a complete row. The task MUST call `materializar()` and MUST NOT raise: a failure is logged and the next visit enqueues it again, since the row is still missing or unenriched. Writes that need the row (rating, adding to a list) MUST keep materializing synchronously before writing.
+
+#### Scenario: First visit
+
+- GIVEN a production that is not in the database
+- WHEN `GET /api/catalogo/movie/{id}/` is handled
+- THEN the response is the TMDB body, no row is written during the request
+- AND `materializar_produccion` is enqueued once with `(id, "movie")`
+
+#### Scenario: Complete row
+
+- GIVEN an enriched row inside the staleness window
+- WHEN its detail is opened again
+- THEN nothing is enqueued
+
 ### Requirement: Failure isolation
 
-`materializar()` MUST propagate its errors so that each caller can choose its own failure policy. Detail views MUST NOT let a materialization failure alter their response: the body stays the raw TMDB passthrough defined by C-03, and the failure is logged.
+`materializar()` MUST propagate its errors so that each caller can choose its own failure policy. Detail views MUST NOT let a materialization failure (including a broker that cannot enqueue) alter their response: the body stays the raw TMDB passthrough defined by C-03, and the failure is logged.
 
 #### Scenario: Materialization failure leaves the response intact
 
-- GIVEN materialization raises for any reason
+- GIVEN enqueuing the materialization raises for any reason
 - WHEN `GET /api/catalogo/movie/{id}/` is handled
 - THEN the response is still 200 with the unchanged TMDB body
 - AND the failure is recorded in the logs

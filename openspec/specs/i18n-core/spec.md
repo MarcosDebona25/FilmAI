@@ -206,7 +206,7 @@ focus. Signed-in users change language only in Settings; saving succeeds before
 account/cookie/render change. Null saved language preserves device resolution.
 Login and Google completion synchronize the account before navigation. Public
 Landing/login/register show EN/ES at the top right; the desktop footer offers
-full names. Authenticated footer links to `/settings#t-idioma`, shows the current
+full names and the mobile footer a compact `EN | ES` pill. Authenticated footer links to `/settings#t-idioma`, shows the current
 language in Information on desktop or a single mobile row, and omits sign-up/login
 links. Navbar and avatar contain no language control.
 

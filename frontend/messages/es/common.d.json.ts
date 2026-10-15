@@ -97,7 +97,8 @@ declare const messages: {
       "lastName": "Apellido",
       "username": "Nombre de usuario",
       "birthDate": "Fecha de nacimiento",
-      "passwordConfirm": "Confirmar contraseña"
+      "passwordConfirm": "Confirmar contraseña",
+      "email": "Correo electrónico"
     },
     "text": {
       "readLess": "Leer menos",
@@ -128,7 +129,8 @@ declare const messages: {
       "currentAlt": "Tu avatar",
       "change": "Cambiar avatar",
       "chooseTitle": "Elegí un avatar",
-      "optionsLabel": "Avatares"
+      "optionsLabel": "Avatares",
+      "optionLabel": "Avatar {number}"
     }
   },
   "legacy": {
@@ -237,14 +239,16 @@ declare const messages: {
       "brandLandingLabel": "FilmAI, volver a la portada",
       "backHome": "Volver al inicio",
       "brandLandingAlt": "FilmAI, ir a la portada",
-      "backLanding": "Volver a la portada"
+      "backLanding": "Volver a la portada",
+      "termsUpdated": "Última actualización: {date}",
+      "termsOnPage": "En esta página"
     },
     "account": {
       "userMenuLabel": "Menú de {name}",
       "optionsLabel": "Opciones de usuario",
       "logOut": "Cerrar sesión",
-      "logIn": "Iniciar sesión",
-      "signUp": "Crear cuenta",
+      "logIn": "Ingresar",
+      "signUp": "Registrarse",
       "profileLabel": "Tu perfil",
       "deactivateTitle": "Dar de baja la cuenta",
       "deactivateConfirmTitle": "¿Dar de baja tu cuenta?",
@@ -301,7 +305,8 @@ declare const messages: {
       "removeOnlyDescription": "Se eliminará tu calificación de {title} e {title} dejará de estar en Vistas. La calificación no se puede recuperar; a Vistas podés volver a agregarla cuando quieras.",
       "edit": "Editar calificación",
       "titleLabel": "Calificar {title}",
-      "yourRating": "Tu calificación"
+      "yourRating": "Tu calificación",
+      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes."
     },
     "feedback": {
       "ratingReviewPublished": "Calificación y reseña publicadas.",
@@ -317,12 +322,15 @@ declare const messages: {
       "watchlistRemoved": "Quitada de Pendientes.",
       "watchlistAdded": "Agregada a Pendientes.",
       "watchedRemoved": "Quitada de Vistas.",
-      "watchedAdded": "Agregada a Vistas."
+      "watchedAdded": "Agregada a Vistas.",
+      "watchedAddedFromWatchlist": "Agregada a Vistas y quitada de Pendientes."
     },
     "metadata": {
       "ratingVotesLabel": "Calificación TMDB: {rating} de 10, {count, plural, one {# voto} other {# votos}}",
       "voteCount": "TMDB · {count, plural, one {# voto} other {# votos}}",
-      "genresTitle": "Géneros"
+      "genresTitle": "Géneros",
+      "seasons": "{count, plural, one {# temporada} other {# temporadas}}",
+      "episodes": "{count, plural, one {# episodio} other {# episodios}}"
     },
     "lists": {
       "addTitleLabel": "Agregar {title} a una lista",
@@ -345,7 +353,8 @@ declare const messages: {
     "credits": {
       "heading": "Dirección y reparto",
       "directors": "Dirección",
-      "cast": "Reparto"
+      "cast": "Reparto",
+      "creators": "Creación"
     },
     "reviews": {
       "heading": "Reseñas",
@@ -353,7 +362,9 @@ declare const messages: {
       "today": "hoy",
       "filteredEmpty": "Ninguna reseña coincide con estos filtros.",
       "communityCount": "De la comunidad ({count})",
-      "displayedCount": "Mostrando {shownCount} de {totalCount}"
+      "displayedCount": "Mostrando {shownCount} de {totalCount}",
+      "loadMore": "Cargar más reseñas",
+      "empty": "Todavía no hay reseñas. Escribí la primera."
     },
     "review": {
       "placeholder": "¿Qué te pareció?",
@@ -363,6 +374,12 @@ declare const messages: {
     "watched": {
       "removeConfirmTitle": "¿Quitar de Vistas?",
       "remove": "Quitar de Vistas"
+    },
+    "breadcrumb": {
+      "backTo": "Volver a {label}"
+    },
+    "actions": {
+      "signedOutPrompt": "Ingresá para calificar o guardar"
     }
   },
   "footer": {
@@ -373,7 +390,9 @@ declare const messages: {
       "myLists": "Mis listas",
       "informationHeading": "Información",
       "copyright": "© {year} FilmAI. Todos los derechos reservados.",
-      "descriptionMobile": "Descubrí, calificá y organizá películas y series, con recomendaciones de un asistente con IA."
+      "descriptionMobile": "Descubrí, calificá y organizá películas y series, con recomendaciones de un asistente con IA.",
+      "languageLink": "Idioma: {language}. Cambiá el idioma en Preferencias.",
+      "askFilmAI": "Preguntale a FilmAI"
     }
   },
   "lists": {
@@ -431,18 +450,35 @@ declare const messages: {
       "yearLabel": "Año",
       "openLabel": "Filtros{activeCount, plural, =0 {} one {, # activo} other {, # activos}}",
       "apply": "Ver resultados",
-      "activeCount": "{count, plural, one {# activo} other {# activos}}"
+      "activeCount": "{count, plural, one {# activo} other {# activos}}",
+      "anyYear": "Cualquiera",
+      "tmdbRatingLabel": "Calificación de TMDB",
+      "ratingShort": "{value}+",
+      "ratingShortBelowFive": "<5",
+      "upcoming": "A estrenar",
+      "decade": "Década de {decade}"
     },
     "results": {
       "count": "{count, plural, one {# resultado} other {# resultados}}",
       "queryHint": "para «{query}»",
       "unrated": "Sin calificaciones",
       "emptyTitle": "Nada para «{query}»",
-      "emptyHint": "Revisá cómo está escrito o probá con el título original: el catálogo viene de TMDB y muchas veces está en inglés."
+      "emptyHint": "Revisá cómo está escrito o probá con el título original: el catálogo viene de TMDB y muchas veces está en inglés.",
+      "emptyFiltersTitle": "Nada con estos filtros"
     },
     "pagination": {
       "label": "Páginas de resultados",
       "position": "Página {page} de {pageCount}"
+    },
+    "close": {
+      "shortcut": "Esc"
+    },
+    "genres": {
+      "kids": "Infantil",
+      "news": "Noticias",
+      "reality": "Reality",
+      "soap": "Telenovelas",
+      "talk": "Entrevistas"
     }
   },
   "reviews": {
@@ -459,12 +495,18 @@ declare const messages: {
       "openLabel": "Filtros y orden{activeCount, plural, =0 {} one {, # activo} other {, # activos}}",
       "orderPrefix": "Orden: {sortLabel}",
       "removeChipLabel": "Quitar filtro {filterLabel}",
-      "dialogTitle": "Filtros y orden"
+      "dialogTitle": "Filtros y orden",
+      "ratingChip": "Calificación {rating}"
     },
     "results": {
       "filteredEmpty": "Ninguna calificación coincide con estos filtros.",
       "ratingCount": "{count, plural, one {# calificación} other {# calificaciones}}",
-      "withReviewCount": "{count, plural, one {# con reseña} other {# con reseña}}"
+      "withReviewCount": "{count, plural, one {# con reseña} other {# con reseña}}",
+      "empty": "Todavía no calificaste ninguna película ni serie.",
+      "emptyAction": "Buscar qué calificar",
+      "loading": "Cargando tus calificaciones…",
+      "loadError": "No pudimos cargar tus calificaciones. Intentá de nuevo.",
+      "loadMore": "Cargar más calificaciones"
     },
     "card": {
       "ratingLabel": "Tu calificación: {rating} de 10",
@@ -520,7 +562,8 @@ declare const messages: {
       "genderLabel": "Género",
       "termsAcceptance": "Leí y acepto los <terms>Términos y condiciones</terms> de FilmAI.",
       "termsNewTabHint": "(se abre en otra pestaña)",
-      "termsRequiredError": "Para crear la cuenta tenés que aceptar los Términos y condiciones."
+      "termsRequiredError": "Para crear la cuenta tenés que aceptar los Términos y condiciones.",
+      "submitPending": "Completá todos los campos y aceptá los Términos y Condiciones para continuar."
     },
     "confirmation": {
       "pageTitle": "Confirmación de cuenta",
@@ -581,11 +624,25 @@ declare const messages: {
     "password": {
       "heading": "Cambiar contraseña",
       "logoutWarning": "Se cerrarán tus sesiones en todos los dispositivos. Tendrás que iniciar sesión nuevamente.",
-      "requirements": "Entre 8 y 20 caracteres, con al menos una mayúscula, una minúscula, un número y un símbolo (@ # $ % & * !)."
+      "requirements": "Entre 8 y 20 caracteres, con al menos una mayúscula, una minúscula, un número y un símbolo (@ # $ % & * !).",
+      "currentRequired": "Ingresá tu contraseña actual.",
+      "googleDescription": "Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.",
+      "sendLink": "Enviar enlace por correo",
+      "linkSent": "Te enviamos un enlace para establecer tu contraseña.",
+      "linkError": "No pudimos enviar el enlace. Intentá más tarde."
     },
     "account": {
       "heading": "Tu cuenta"
-    }
+    },
+    "username": {
+      "checking": "Comprobando disponibilidad…",
+      "taken": "No disponible"
+    },
+    "feedback": {
+      "updated": "Perfil actualizado.",
+      "passwordChanged": "Contraseña actualizada. Iniciá sesión nuevamente."
+    },
+    "loading": "Cargando perfil…"
   },
   "settings": {
     "appearance": {
@@ -619,7 +676,9 @@ declare const messages: {
       "spanish": "Español",
       "changing": "Cambiando idioma…",
       "updated": "Idioma actualizado.",
-      "saveError": "No pudimos guardar el idioma. Intentá de nuevo."
+      "saveError": "No pudimos guardar el idioma. Intentá de nuevo.",
+      "interfaceLabel": "Idioma de la interfaz",
+      "interfaceHelp": "Se aplica al instante y se guarda en tu cuenta. También lo usamos para los correos que te mandamos."
     }
   },
   "errors": {
@@ -630,7 +689,11 @@ declare const messages: {
       "notFoundTitle": "Esta página no existe",
       "unexpectedTitle": "Algo salió mal",
       "notFoundDescription": "La página que buscás no existe o fue movida. Probá desde el inicio o buscá lo que querías ver.",
-      "unexpectedDescription": "Ocurrió un error inesperado. Intentá de nuevo en unos minutos."
+      "unexpectedDescription": "Ocurrió un error inesperado. Intentá de nuevo en unos minutos.",
+      "notFoundCode": "Error 404",
+      "notFoundSignedOutTitle": "No encontramos esa página",
+      "notFoundSignedOutDescription": "La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.",
+      "signUpInvite": "¿Primera vez en FilmAI? <register>Creá una cuenta gratis</register> para calificar películas, guardar tus listas y recibir recomendaciones del asistente de FilmAI."
     },
     "codes": {
       "validation_error": "Revisá los datos ingresados.",
@@ -709,7 +772,8 @@ declare const messages: {
       "logged_out": "Cerraste sesión en este dispositivo.",
       "unknown": "No pudimos completar la acción. Intentá de nuevo.",
       "throttledWithWait": "Hay demasiadas solicitudes. Intentá de nuevo en {retryAfterSeconds, plural, one {# segundo} other {# segundos}}.",
-      "list_name_reserved": "Ese nombre está reservado para una lista predeterminada."
+      "list_name_reserved": "Ese nombre está reservado para una lista predeterminada.",
+      "terms_not_accepted": "Para crear tu cuenta tenés que aceptar los Términos y Condiciones."
     },
     "fields": {
       "correo": {

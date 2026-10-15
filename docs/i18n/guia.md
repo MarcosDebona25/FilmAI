@@ -4,9 +4,9 @@ La aplicación admite `en` y `es` sin prefijos de idioma en las rutas. Las panta
 
 ## Agregar texto
 
-Usá una clave que describa la función y una frase completa. La copia aprobada vive en `claves.csv` y `copia-propuesta.csv` (ver «Fuentes de la copia»). `npm run i18n:generate` produce `messages/{en,es}/common.json`, `legal.json` y la copia de `contracts/enums.json` dentro del frontend. `legacy.*` conserva la copia de las pantallas existentes, con voseo en confirmación y el `*` de la ayuda de contraseña corregidos. El generador parte de los CSV, nunca de los catálogos existentes. Después, ejecutá `npm run format`.
+Usá una clave que describa la función y una frase completa. La copia aprobada vive en `claves.csv` y `copia-propuesta.csv` (ver «Fuentes de la copia»). `npm run i18n:generate` produce `messages/{en,es}/common.json` y la copia de `contracts/enums.json` dentro del frontend. `legacy.*` conserva la copia de las pantallas existentes, con voseo en confirmación y el `*` de la ayuda de contraseña corregidos. El generador parte de los CSV, nunca de los catálogos existentes. Después, ejecutá `npm run format`.
 
-En un componente cliente, `useTranslations("settings.language")` entrega una función `t` para pedir claves del namespace. En componentes de servidor usá `getTranslations` de `next-intl/server`. Para cantidades usá una frase ICU con `plural`; para enlaces dentro de una frase, `t.rich`. Los argumentos son valores del dominio, no fragmentos de texto. Los catálogos de correos no llegan al navegador y `legal.json` queda separado para cargarlo únicamente cuando exista la página de términos. Sus claves y argumentos ya están tipados. Esa página importará el catálogo de su locale y lo pasará a su propio proveedor; en servidor puede usar `createTranslator` con ese catálogo. El proveedor global sigue enviando solo `common.json`.
+En un componente cliente, `useTranslations("settings.language")` entrega una función `t` para pedir claves del namespace. En componentes de servidor usá `getTranslations` de `next-intl/server`. Para cantidades usá una frase ICU con `plural`; para enlaces dentro de una frase, `t.rich`. Los argumentos son valores del dominio, no fragmentos de texto. Los catálogos de correos no llegan al navegador. El texto legal no está en el catálogo: vive en `frontend/content/legal/terms.{en,es}.md`, para que lo revise un abogado, y la página `/terms` lo renderiza en servidor.
 
 No escribas literales visibles en JSX, atributos o toasts fuera de las excepciones de `frontend/scripts/i18n/rules.mjs`. La lista tiene un máximo de 13 archivos y debe reducirse cuando cada diseño se integre. Los componentes de Shadcn son primitivas sin copia de producto; no integran esa lista. `npm run i18n:check` detecta residuos de español fuera de esas excepciones.
 
@@ -73,8 +73,8 @@ Se siembran las filas `ok` (408) y `fragmento` (43). Quedan fuera `muestra` (61,
 | Cuenta               | Account           | Cuenta                 | Cuenta del usuario, distinta de perfil |
 | Perfil               | Profile           | Perfil                 | Datos personales                       |
 | Preferencias         | Settings          | Preferencias           | Configuración y selector de idioma     |
-| Inicio de sesión     | Log in            | Iniciar sesión         | Acción de autenticarse                 |
-| Registro             | Sign up           | Crear cuenta           | Alta de cuenta                         |
+| Inicio de sesión     | Log in            | Ingresar               | Acción de autenticarse                 |
+| Registro             | Sign up           | Registrarse            | Alta de cuenta                         |
 | Calificación         | Rating            | Calificación           | Nota entera de 1 a 10                  |
 | Reseña               | Review            | Reseña                 | Texto asociado a una calificación      |
 | Favoritos            | Favorites         | Favoritos              | Lista con `clave=favoritos`            |

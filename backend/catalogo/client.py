@@ -129,13 +129,23 @@ class TMDBClient:
         anio_desde=None,
         anio_hasta=None,
         sort_by=None,
+        min_votos=None,
+        max_rating=None,
+        sin_generos=None,
+        desde_fecha=None,
+        hasta_fecha=None,
     ):
         """Busca producciones por filtros. Todo es opcional menos el tipo.
 
         `anio` filtra un año puntual; `anio_desde`/`anio_hasta` un rango, que
         es lo que el seed usa para muestrear por década (C-04c). `sort_by`
         decide qué entra primero: `vote_count.desc` trae los títulos que la
-        gente conoce, el orden por defecto trae lo que trendea hoy.
+        gente conoce, el orden por defecto trae lo que trendea hoy. `min_votos`
+        deja afuera los títulos con pocos votos (C-05) y `max_rating` es el
+        techo de nota de «Below 5» en Buscar (C-06). `sin_generos` son ids
+        separados por coma que se excluyen (`without_genres`); `desde_fecha`
+        (AAAA-MM-DD) deja solo lo que estrena desde ese día («A estrenar») y
+        `hasta_fecha`, hasta ese día (décadas en Buscar).
         """
         params = {"page": page}
         if genero is not None:
@@ -150,10 +160,29 @@ class TMDBClient:
             params["vote_average.gte"] = min_rating
         if sort_by is not None:
             params["sort_by"] = sort_by
+        if min_votos is not None:
+            params["vote_count.gte"] = min_votos
+        if max_rating is not None:
+            params["vote_average.lte"] = max_rating
+        if sin_generos is not None:
+            params["without_genres"] = sin_generos
+        if desde_fecha is not None:
+            params[f"{_DISCOVER_DATE_PARAM[tipo]}.gte"] = desde_fecha
+        if hasta_fecha is not None:
+            params[f"{_DISCOVER_DATE_PARAM[tipo]}.lte"] = hasta_fecha
         return self._get_localizado(f"/discover/{tipo}", params)
 
-    def search(self, query, tipo, page=1):
-        return self._get_localizado(f"/search/{tipo}", {"query": query, "page": page})
+    def search(self, query, tipo, page=1, anio=None):
+        """Búsqueda por nombre. TMDB no filtra acá por género ni por nota.
+
+        El año va con el mismo parámetro que `discover` (`primary_release_year`
+        o `first_air_date_year`): `year`, el genérico, es flojo y trae
+        producciones de otros años (verificado el 14/10/2026, C-06).
+        """
+        params = {"query": query, "page": page}
+        if anio is not None:
+            params[_DISCOVER_YEAR_PARAM[tipo]] = anio
+        return self._get_localizado(f"/search/{tipo}", params)
 
     def get_movie_detail(self, id_tmdb):
         return self._get_localizado(f"/movie/{id_tmdb}")

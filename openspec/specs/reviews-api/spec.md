@@ -81,11 +81,13 @@ Every endpoint MUST require authentication. A rating belonging to another user M
 
 ### Requirement: The community's reviews of a production
 
-`GET /api/reviews/?id_tmdb=&tipo=` MUST return the reviews other users wrote about that production, cursor-paginated at 20, newest first, with the author's username and avatar, the rating, the date and the text.
+`GET /api/reviews/?id_tmdb=&tipo=` MUST return the reviews other users wrote about that production, cursor-paginated at 20, with the author's username and avatar, the rating, the date and the text. Since 14/10/2026 (C-07) reading is public: it MUST answer without a session; writing still requires one.
 
-It MUST exclude three populations: ratings without text (there is nothing to read), moderated reviews, and the requester's own — which the detail screen renders separately, above the list.
+It MUST exclude three populations: ratings without text (there is nothing to read), moderated reviews, and — when there is a session — the requester's own, which the detail screen renders separately, above the list.
 
-The response MUST carry a `total` for the "Reseñas de la comunidad (N)" heading, which cursor pagination does not provide on its own.
+`orden` MUST accept `fecha-desc` (default), `fecha-asc`, `nota-desc` and `nota-asc`; `nota_min` and `nota_max` MUST filter by rating, inclusively, with integers from 1 to 10. Anything else MUST answer 400 naming the field. Following `next` MUST never repeat or skip a review, even when many share the same rating.
+
+The response MUST carry a `total` with the filtered count, which cursor pagination does not provide on its own, and a `total_comunidad` with the unfiltered count, for «From the community (N)» and «Showing X of N».
 
 Both query parameters are required; either one missing or malformed MUST answer 400. A production with no reviews MUST answer 200 with an empty list, not 404.
 
@@ -96,6 +98,19 @@ Both query parameters are required; either one missing or malformed MUST answer 
 - THEN only the other user's review is returned
 - AND `total` is 1
 
+#### Scenario: Anonymous reader with a filter
+
+- GIVEN four reviews rated 3, 6, 8 and 10 and no session
+- WHEN the list is requested with `nota_min=8`
+- THEN the reviews rated 8 and 10 are returned, newest first
+- AND `total` is 2 and `total_comunidad` is 4
+
+#### Scenario: Sorting by rating over many ties
+
+- GIVEN 25 reviews rated 8 and 5 rated 9
+- WHEN the list is followed page by page with `orden=nota-desc`
+- THEN the 30 reviews arrive once each, the 9s first
+
 #### Scenario: A moderated review is hidden
 
 - GIVEN a review with `activa = False`
@@ -105,6 +120,14 @@ Both query parameters are required; either one missing or malformed MUST answer 
 ### Requirement: The user's own reviews
 
 `GET /api/reviews/mias/` MUST return every rating of the authenticated user, newest first, cursor-paginated at 20, each with the production's title, type and poster so the row can navigate to its detail screen.
+
+Since 15/10/2026 (profile per the canvas) the list MUST accept, all optional and combinable: `q` (up to 100 characters, trimmed, matching the canonical title or any translation, case- and accent-insensitive through Postgres `unaccent`), `texto` (`con` | `sin`: with or without review), `clase` (`movie` | `tv`; not `tipo`, which selects the single-rating response), `nota_min` / `nota_max` (1–10, inclusive) and `orden` (`fecha-desc` by default, `fecha-asc`, `nota-desc`, `nota-asc`; the rating sorts use the unique key `valor × 10⁹ + id` so the cursor never repeats or skips ties). Invalid values MUST answer 400 naming the field. The page MUST carry `total` (with the filters) and `total_propias` (without them).
+
+#### Scenario: Accent-insensitive search
+
+- GIVEN the user rated «Amélie»
+- WHEN they ask `reviews/mias/?q=AMELIE`
+- THEN the list holds only «Amélie», with `total` 1 and `total_propias` counting all their ratings
 
 Unlike the community list it MUST include ratings without text — they can be edited from there — and MUST include the user's own moderated reviews: their text must not vanish from their own screens with no explanation available.
 
@@ -141,7 +164,7 @@ Supplying only one of the two parameters MUST answer 400, never fall back to the
 
 Every rating's production MUST be in its author's predetermined `Vistas` list (decided 30/09/2026: "if you rated it, you watched it"). CU-011 already enforced one half — a rated production cannot leave `Vistas` without confirming the rating's deletion. This requirement adds the other:
 
-- `POST /api/reviews/` MUST add the production to `Vistas` when it is not there, **in the same transaction** as the rating. If it cannot be added, the rating MUST NOT be stored.
+- `POST /api/reviews/` MUST add the production to `Vistas` when it is not there, **in the same transaction** as the rating. If it cannot be added, the rating MUST NOT be stored. Entering `Vistas` this way also removes it from the author's `Pendientes` (`list-endpoints`, 14/10/2026).
 - `DELETE /api/reviews/{id}/` MUST remove the production from the author's `Vistas`, in the same transaction as the deletion. It ends in the same state as removing from `Vistas` with `borrar_calificacion=true`.
 - Editing the rating or the text, and deleting only the text, MUST NOT change `Vistas`.
 

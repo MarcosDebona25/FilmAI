@@ -33,6 +33,14 @@ class SemillaIdiomaTests(TestCase):
             administrador.refresh_from_db()
             self.assertIsNone(administrador.idioma)
 
+    def test_seed_deja_las_cuentas_con_fecha_de_aceptacion_de_terminos(self):
+        call_command("seed", stdout=StringIO())
+        cuentas = Usuario.objects.filter(is_staff=False)
+        self.assertEqual(cuentas.count(), 3)
+        self.assertFalse(
+            cuentas.filter(fecha_aceptacion_terminos__isnull=True).exists()
+        )
+
     def test_solo_resenas_no_asigna_ni_reemplaza_idiomas(self):
         """Agregar actividad a cuentas previas no elige un idioma por ellas."""
         usuarios = (UsuarioFactory(idioma="es"), UsuarioFactory(idioma=None))

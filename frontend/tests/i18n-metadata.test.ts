@@ -6,8 +6,8 @@ import es from "@/messages/es/common.json";
 const state = vi.hoisted(() => ({ locale: "es" as "en" | "es" }));
 vi.mock("@/app/globals.css", () => ({}));
 vi.mock("next/font/google", () => ({
-  Inter: () => ({ variable: "--font-inter" }),
-  Roboto: () => ({ variable: "--font-roboto" }),
+  Hanken_Grotesk: () => ({ variable: "--font-hanken" }),
+  Big_Shoulders: () => ({ variable: "--font-big-shoulders" }),
 }));
 vi.mock("next-intl/server", () => ({
   getLocale: async () => state.locale,
@@ -36,6 +36,10 @@ describe("metadatos en los cuatro puntos actuales", () => {
     });
     expect(await profile.generateMetadata()).toEqual({ title: `${messages.profile} | FilmAI` });
     expect(await settings.generateMetadata()).toEqual({ title: `${messages.settings} | FilmAI` });
-    expect(await reviews.generateMetadata()).toEqual({ title: `${messages.myReviews} | FilmAI` });
+    // Como el título de la página (canvas): «Calificaciones y reseñas».
+    const nav = (locale === "es" ? es : en).nav.main;
+    expect(await reviews.generateMetadata()).toEqual({
+      title: `${nav.ratingsReviews} | FilmAI`,
+    });
   });
 });

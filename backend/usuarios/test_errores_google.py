@@ -47,6 +47,16 @@ class ErroresGoogleTests(TestCase):
             ],
         )
 
+    def test_alta_sin_aceptar_terminos_se_rechaza_con_su_codigo(self):
+        """Una cuenta nueva de Google exige la aceptación antes de crearse."""
+        response = self.google("sin_terminos")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["code"], "validation_error")
+        self.assertEqual(
+            response.data["errors"],
+            [{"field": "acepta_terminos", "code": "terms_not_accepted", "params": {}}],
+        )
+
     def test_fallos_operativos_y_carrera_de_integridad_tienen_codigos(self):
         """Las fallas aisladas de transporte/login y la carrera conservan HTTP 400."""
         for caso, codigo in (

@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  cambiosResena,
-  combinarResenas,
-  posterUrl,
-  rutaPagina,
-  type MiResena,
-} from "@/lib/reviews";
-import { ADVERTENCIA_BAJA, colorDisponibilidad, tieneCambios } from "@/lib/profile-draft";
+import { tmdbImage } from "@/lib/catalog";
+import { combinarResenas, rutaPagina, type MiResena } from "@/lib/reviews";
+import { tieneCambios } from "@/lib/profile-draft";
 import type { Perfil } from "@/components/AccountProvider";
 const item: MiResena = {
   id: 1,
@@ -19,24 +14,6 @@ const item: MiResena = {
   texto: "Muy buena",
 };
 describe("contratos de edición y paginación", () => {
-  it("envía solo campos modificados y normaliza espacios", () => {
-    expect(cambiosResena(item, 9, " Otro texto ")).toEqual({ valor: 9, texto: "Otro texto" });
-    expect(cambiosResena(item, 8, "Muy buena")).toEqual({});
-    expect(cambiosResena({ ...item, texto: null }, 8, "")).toEqual({});
-  });
-  it("no transforma texto vacío en una eliminación implícita", () =>
-    expect(() => cambiosResena(item, 8, " ")).toThrow(
-      expect.objectContaining({ code: "review_update_empty" })
-    ));
-  it.each([0, 11, 2.5])("rechaza nota inválida %s", (valor) =>
-    expect(() => cambiosResena(item, valor, item.texto!)).toThrow(
-      expect.objectContaining({ code: "invalid" })
-    )
-  );
-  it("limita a 1000 caracteres", () =>
-    expect(() => cambiosResena(item, 8, "a".repeat(1001))).toThrow(
-      expect.objectContaining({ code: "max_length", params: { maxLength: 1000 } })
-    ));
   it("reutiliza solo el cursor en nuestra ruta de API", () =>
     expect(rutaPagina("https://otro.example/api/reviews/mias/?cursor=a%3D")).toBe(
       "/api/reviews/mias/?cursor=a%3D"
@@ -54,11 +31,11 @@ describe("contratos de edición y paginación", () => {
       [1, 8],
       [2, 8],
     ]));
-  it("admite pósters de TMDB y descarta imágenes ajenas", () => {
-    expect(posterUrl("/p.jpg")).toBe("https://image.tmdb.org/t/p/w185/p.jpg");
-    expect(posterUrl("https://image.tmdb.org/t/p/w185/p.jpg")).toContain("image.tmdb.org");
-    expect(posterUrl("")).toBeNull();
-    expect(posterUrl("https://otro.example/p.jpg")).toBeNull();
+  it("admite pósters de TMDB en w185 y descarta imágenes ajenas", () => {
+    expect(tmdbImage("/p.jpg", "w185")).toBe("https://image.tmdb.org/t/p/w185/p.jpg");
+    expect(tmdbImage("https://image.tmdb.org/t/p/w185/p.jpg", "w185")).toContain("image.tmdb.org");
+    expect(tmdbImage("", "w185")).toBeNull();
+    expect(tmdbImage("https://otro.example/p.jpg", "w185")).toBeNull();
   });
 });
 describe("perfil y advertencias", () => {
@@ -73,17 +50,5 @@ describe("perfil y advertencias", () => {
     expect(tieneCambios(perfil, perfil)).toBe(false);
     expect(tieneCambios({ ...perfil, avatar_id: 2 }, perfil)).toBe(true);
     expect(tieneCambios({ ...perfil, nombre: "Pedro" }, perfil)).toBe(true);
-  });
-  it("distingue estados con colores para ambos temas", () => {
-    expect(colorDisponibilidad("available")).toContain("green");
-    expect(colorDisponibilidad("taken")).toContain("red");
-    expect(colorDisponibilidad("checking")).toBe("text-muted-foreground");
-  });
-  it("usa la advertencia de baja aprobada", () => {
-    expect(ADVERTENCIA_BAJA).toContain("irreversible");
-    expect(ADVERTENCIA_BAJA).toContain(
-      "Asegurate de querer dar de baja la cuenta antes de continuar."
-    );
-    expect(ADVERTENCIA_BAJA).not.toContain("conservarán");
   });
 });

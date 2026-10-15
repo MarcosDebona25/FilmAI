@@ -62,3 +62,15 @@ No automatic database reset or language backfill is introduced.
 - AND the preserved administrator's language is unchanged
 - WHEN only reviews are seeded for previous accounts
 - THEN their saved or null languages remain unchanged
+
+### Requirement: Seeded accounts record Terms acceptance
+
+Every account created by `seed` (and by `UsuarioFactory`) MUST have
+`fecha_aceptacion_terminos` set, as a real sign-up would. Accounts that predate
+the requirement keep a null value; the seed MUST NOT invent one for them.
+
+#### Scenario: Seed creates the development users
+
+- WHEN the full seed runs
+- THEN each non-staff user has a non-null `fecha_aceptacion_terminos`
+

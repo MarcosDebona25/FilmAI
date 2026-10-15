@@ -43,6 +43,11 @@
         "field": "genero",
         "code": "required",
         "params": {}
+      },
+      {
+        "field": "acepta_terminos",
+        "code": "required",
+        "params": {}
       }
     ]
   }

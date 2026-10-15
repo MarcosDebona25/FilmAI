@@ -3,14 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
     <title>{% block titulo %}{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&amp;family=Hanken+Grotesk:wght@400;600&amp;display=swap"
+    />
   </head>
   <body
     style="
       margin: 0;
       padding: 0;
       background-color: #0d0d14;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Hanken Grotesk', Arial, Helvetica, sans-serif;
     "
   >
     <table
@@ -18,7 +24,7 @@
       width="100%"
       cellpadding="0"
       cellspacing="0"
-      style="background-color: #0d0d14; padding: 32px 16px"
+      style="background-color: #0d0d14; padding: 24px 16px 40px"
     >
       <tr>
         <td align="center">
@@ -28,50 +34,95 @@
             cellpadding="0"
             cellspacing="0"
             style="
-              max-width: 480px;
-              background-color: #161625;
-              border: 1px solid #2a2a45;
+              max-width: 560px;
+              background-color: #15151f;
+              border: 1px solid #262636;
               border-radius: 16px;
+              overflow: hidden;
             "
           >
             <tr>
-              <td style="padding: 40px 40px 8px 40px">
-                <span style="font-size: 24px; font-weight: bold; color: #e0e0e0"
-                  >FilmAI</span
-                >
+              <td
+                height="4"
+                style="height: 4px; font-size: 0; line-height: 0; background-color: #f5c518"
+              >
+                &nbsp;
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 36px 40px 0 40px">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td
+                      align="center"
+                      width="32"
+                      height="24"
+                      style="
+                        width: 32px;
+                        height: 24px;
+                        background-color: #f5c518;
+                        border-radius: 6px;
+                        color: #14110a;
+                        font-size: 14px;
+                        line-height: 24px;
+                        font-family: Arial, Helvetica, sans-serif;
+                      "
+                      aria-hidden="true"
+                      >&#9733;</td
+                    >
+                    <td
+                      style="
+                        padding-left: 10px;
+                        font-family: 'Big Shoulders Display', 'Arial Narrow',
+                          Arial, sans-serif;
+                        font-size: 30px;
+                        font-weight: 800;
+                        line-height: 1;
+                        letter-spacing: 0.05em;
+                        color: #ededf2;
+                      "
+                      >FilmAI</td
+                    >
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
               <td
                 style="
-                  padding: 16px 40px 24px 40px;
-                  font-size: 15px;
-                  line-height: 1.6;
-                  color: #e0e0e0;
+                  padding: 24px 40px 0 40px;
+                  font-family: 'Big Shoulders Display', 'Arial Narrow', Arial,
+                    sans-serif;
+                  font-size: 40px;
+                  font-weight: 800;
+                  line-height: 1.05;
+                  color: #ededf2;
                 "
               >
-                <span style="display: block; font-size: 20px; font-weight: bold; padding-bottom: 16px"
-                  >{% block encabezado %}{% endblock %}</span
-                >
+                <h1 style="margin: 0; font: inherit; color: inherit">
+                  {% block encabezado %}{% endblock %}
+                </h1>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 20px 40px 0 40px;
+                  font-size: 16px;
+                  line-height: 1.6;
+                  color: #a6a6b8;
+                "
+              >
                 {% block saludo %}{% endblock %}
                 <br /><br />
                 {% block introduccion %}{% endblock %}
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding: 8px 40px 24px 40px">
+              <td align="left" style="padding: 24px 40px 0 40px">
                 <a
                   href="{{ enlace_correo }}"
-                  style="
-                    display: inline-block;
-                    background-color: #e67e22;
-                    color: #ffffff;
-                    text-decoration: none;
-                    font-weight: bold;
-                    font-size: 15px;
-                    padding: 12px 32px;
-                    border-radius: 10px;
-                  "
+                  style="{% block estilo_boton %}display: inline-block; background-color: #f5c518; color: #14110a; border: 1px solid #f5c518; {% endblock %}text-decoration: none; font-weight: 600; font-size: 16px; line-height: 24px; padding: 13px 32px; border-radius: 10px"
                   >{% block boton %}{% endblock %}</a
                 >
               </td>
@@ -79,12 +130,11 @@
             {% block fila_enlace %}
             <tr>
               <td
-                align="center"
                 style="
-                  padding: 0 40px 24px 40px;
+                  padding: 24px 40px 0 40px;
                   font-size: 13px;
                   line-height: 1.6;
-                  color: {{ color_secundario }};
+                  color: #84849a;
                 "
               >
                 {% block enlace_alternativo %}{% endblock %}<br />
@@ -97,36 +147,56 @@
             </tr>
             {% endblock %}
             <tr>
-              <td
-                style="
-                  padding: 16px 40px 8px 40px;
-                  border-top: 1px solid #2a2a45;
-                  font-size: 13px;
-                  line-height: 1.6;
-                  color: {{ color_secundario }};
-                "
-              >
-                {% block advertencia %}{% endblock %}
+              <td style="padding: 24px 40px 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding-top: 20px;
+                        border-top: 1px solid #262636;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        color: #a6a6b8;
+                      "
+                    >
+                      {% block advertencia %}{% endblock %}
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
               <td
                 style="
-                  padding: 16px 40px 16px 40px;
-                  font-size: 13px;
-                  color: {{ color_secundario }};
+                  padding: 24px 40px 36px 40px;
+                  font-size: 14px;
+                  color: #a6a6b8;
                 "
               >
                 {% block firma %}{% endblock %}
               </td>
             </tr>
+          </table>
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 560px"
+          >
             <tr>
               <td
+                align="center"
                 style="
-                  padding: 0 40px 32px 40px;
+                  padding: 20px 8px 0 8px;
                   font-size: 12px;
                   line-height: 1.6;
-                  color: {{ color_secundario }};
+                  color: #84849a;
                 "
               >
                 {% block motivo %}{% endblock %}

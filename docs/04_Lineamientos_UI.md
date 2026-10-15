@@ -13,7 +13,7 @@ Página Pública (sin sesión)
 
 App Autenticada
 ├── Inicio (Home)          ← descubrimiento: recomendaciones, tendencias, novedades
-├── Buscar                 ← panel overlay con catálogo unificado + toggle Películas/Series + filtros
+├── Buscar                 ← página /search con catálogo unificado + toggle Todo/Películas/Series + filtros
 ├── Listas                 ← favoritos, pendientes, vistas + personalizadas
 └── [Avatar]               ← dropdown: Mi perfil / Mis reseñas / Preferencias / Cerrar sesión
 ```
@@ -23,7 +23,7 @@ App Autenticada
 - 3 links de navegación + avatar a la derecha.
 - El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil", "Mis reseñas", "Preferencias" y "Cerrar sesión".
 - «Mis reseñas» permite gestionar calificaciones y textos propios, con pósters y acciones de edición y eliminación.
-- "Buscar" abre un panel overlay que reemplaza la vista actual con el catálogo completo (grid + filtros + toggle Películas/Series).
+- "Buscar" abre la página `/search` con el catálogo completo (grid + filtros + toggle Todo/Películas/Series; 14/10/2026, antes un panel overlay).
 - El chatbot se accede desde un FAB flotante presente en todas las pantallas.
 
 ---
@@ -35,8 +35,8 @@ App Autenticada
 | 1   | Login                                         | CU-003         | Pública             |
 | 2   | Registro                                      | CU-001         | Pública             |
 | 3   | Confirmación de cuenta                        | CU-002         | Pública (vía email) |
-| 4   | Home (autenticado)                            | CU-013         | Autenticada         |
-| 5   | Buscar (panel overlay con catálogo unificado) | CU-008, CU-010 | Mixta*              |
+| 4   | Home                                          | CU-013         | Mixta*              |
+| 5   | Buscar (página con catálogo unificado)        | CU-008, CU-010 | Mixta*              |
 | 6   | Ficha de detalle                              | CU-008, CU-011 | Mixta*              |
 | 7   | Modal: Publicar/Modificar reseña              | CU-015         | Autenticada         |
 | 8   | Modal: Confirmación (genérico)                | Varios         | Autenticada         |
@@ -83,12 +83,12 @@ App Autenticada
 
 **Decisión**: Home es exclusivamente una página de descubrimiento pasivo con filas de contenido
 (Recomendado, Tendencias, Novedades). El catálogo completo para exploración activa se accede
-desde el link "Buscar" en la navbar, que abre un panel overlay con grid, toggle de tipo
+desde el link "Buscar" en la navbar, que abre la página de búsqueda con grid, toggle de tipo
 (Todo / Películas / Series) y filtros.
 
 **Justificación**:
 
-- Distinción clara entre descubrir (Home) y buscar (panel overlay). No se mezclan.
+- Distinción clara entre descubrir (Home) y buscar (página `/search`). No se mezclan.
 - El modelo IMDb/MUBI: feed principal + búsqueda como acción separada.
 - La entidad `ProduccionAudiovisual` unifica películas y series con atributo `tipo`; la UI
   refleja esto ofreciendo un catálogo unificado con toggle en lugar de dos secciones duplicadas.
@@ -110,10 +110,12 @@ este modelo (Inicio, Buscar, Listas + avatar).
 
 **Lógica**:
 
-1. Géneros de producciones calificadas con 7+ por el usuario.
-2. Llamada a `/discover/movie` o `/discover/tv` con filtro de géneros, ordenado por `popularity.desc`.
-3. Excluir IDs que el usuario ya tiene en «Vistas». Con la regla «calificada ⇒ vista» (30/09/2026) esto ya cubre lo calificado, sin excluir «Pendientes».
-4. Devolver 10-15 resultados.
+1. Por cada tipo, los **3 géneros más repetidos** entre las producciones de ese tipo calificadas con 7+ por el usuario. Un empate lo gana el género de la calificación más reciente.
+2. Llamada a `/discover/movie` o `/discover/tv` con esos géneros unidos con OR (`with_genres=a|b|c`), ordenado por `popularity.desc` y con `vote_count.gte=100`. El mínimo de votos saca títulos sin votos y contenido adulto que TMDB no marca como tal (verificado el 13/10/2026).
+3. Excluir los pares `(id_tmdb, tipo)` que el usuario ya tiene en «Vistas». Con la regla «calificada ⇒ vista» (30/09/2026) esto ya cubre lo calificado, sin excluir «Pendientes».
+4. Devolver hasta 15 resultados de la primera página de TMDB. En «Todo» se alternan película y serie hasta 15.
+
+**Endpoint**: `GET /api/catalogo/recommended/?tipo=all|movie|tv`, solo con sesión. Devuelve también los nombres de los géneros usados (como mucho 3), que la fila muestra como subtítulo («Based on your high ratings in Thriller, Drama, and Crime»). Sin calificaciones de 7 o más responde vacío y la fila se oculta.
 
 ---
 
@@ -138,8 +140,8 @@ Todas las pantallas autenticadas comparten:
 - **Navbar**: 3 links funcionales (Inicio, Buscar, Listas) + avatar a la derecha.
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
-  - "Buscar" click → panel overlay que reemplaza el content area con el buscador.
-- **Footer**: mínimo. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión (escritorio) incluye el selector de idioma (ver 4.1).
+  - "Buscar" click → página `/search` con el buscador.
+- **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», provisoriamente a un 404 hasta desarrollar el chatbot), Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1). No aparece en las pantallas de acceso.
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
 
 ### 4.1 Idioma y selector de idioma
@@ -148,12 +150,12 @@ FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños
 
 | Contexto                                            | Control                                                                                                                                                          |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `English` / `Español`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
+| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `EN` / `ES`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
 | **Footer con sesión**                               | Muestra el idioma actual y enlaza a Preferencias. Escritorio: ítem con globo en la columna Information. Móvil: fila «Language · English ›». No cambia el idioma. |
 | **Sin sesión: Landing, inicio de sesión, registro** | Pastilla `EN` / `ES` arriba a la derecha (escritorio y móvil). Solo escribe la cookie del idioma.                                                                |
-| **Footer sin sesión (escritorio)**                  | El mismo selector, con los nombres completos `English` / `Español`.                                                                                              |
+| **Footer sin sesión (escritorio)**                  | El mismo selector `EN` / `ES`.                                                                                              |
 
-- Cada idioma se muestra con su propio nombre; sin banderas.
+- Un único estilo de selector, `EN` / `ES`, en todo el sistema (12/10/2026). El nombre completo (`English`, `Español`) queda como etiqueta accesible; sin banderas.
 - No hay selector en el menú del avatar ni en el navbar.
 - Los mensajes de error se muestran a partir de códigos: el backend no envía texto de interfaz. Toda la copia sale de los catálogos de idioma, con voseo en español.
 - Los datos de TMDB (títulos, sinopsis, géneros, pósters) siguen el idioma activo y, si falta una traducción, se muestra la versión en inglés de ese campo.
@@ -187,14 +189,24 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 **Selector global (30/09/2026):** arriba de las filas, `Todo · Películas · Series`. «Todo» es el valor por defecto y mezcla los dos tipos; «Películas» y «Series» cambian la fuente de cada fila. En «Recomendado para ti», cada tipo usa los géneros de lo que el usuario calificó con 7+ de ese tipo, y «Todo» es la unión de ambos, sin traducir géneros entre películas y series.
 
+**Implementación (13/10/2026, SDD `openspec/changes/home-catalogo/`):**
+
+- Ruta `/home`, pública. El selector vive en la URL (`/home?type=movie` o `?type=tv`; sin parámetro, «Todo»), así que al volver de una ficha se conserva. En escritorio va dentro del Hero, debajo de la barra; en celular, entre la barra y el Hero.
+- **Hero**: en «Todo», el primer título de tendencias con imagen de fondo, con la etiqueta «#N en tendencias» según su posición real. En «Películas» y «Series», el primero de ese tipo con imagen de fondo que no sea el Hero de «Todo», con la etiqueta «Destacada de la semana». Así cada opción del selector tiene un Hero distinto. Sinopsis recortada a 3 líneas y un único botón, «Ver detalle». El tamaño del título depende de su largo (14/10/2026): hasta 16 caracteres, el del canvas (152 px en escritorio, 72 px en celular); de 17 a 28, 112/56 px; más largos, 88/44 px.
+- En escritorio la barra de navegación se dibuja sobre la imagen del Hero, sin fondo propio (solo en `/home`).
+- Tendencias y Novedades muestran una página de TMDB (20 títulos); Recomendado, hasta 15. En «Todo», Recomendado y Novedades alternan película y serie.
+- Cada tarjeta lleva a la ficha: `/movie/[id]` o `/tv/[id]` (C-07). Calificación como «★ 8,5», nunca «X/10».
+- Sin sesión, al final de las filas: «¿Qué viste últimamente?» con «Registrarse» y «Ya tengo cuenta».
+- Con sesión, botón flotante «Ask FilmAI» hacia `/chat`, que responde 404 (Not Found) hasta que exista el chatbot (B-04).
+
 ### Secciones
 
-| Fila                | Visible para                          | Fuente de datos                                   |
-| ------------------- | ------------------------------------- | ------------------------------------------------- |
-| Hero                | Todos                                 | TMDB trending (rotativo o destacado fijo)         |
-| Recomendado para ti | Solo autenticados con ≥1 calificación | TMDB `/discover` filtrado por géneros             |
-| Tendencias          | Todos                                 | TMDB `/trending`                                  |
-| Novedades           | Todos                                 | TMDB `/movie/now_playing`, `/discover` año actual |
+| Fila                | Visible para                                     | Fuente de datos                                                            |
+| ------------------- | ------------------------------------------------ | -------------------------------------------------------------------------- |
+| Hero                | Todos                                            | TMDB trending (rotativo o destacado fijo)                                  |
+| Recomendado para ti | Solo autenticados con ≥1 calificación de 7 o más | TMDB `/discover` filtrado por géneros (ver 3.3)                            |
+| Tendencias          | Todos                                            | TMDB `/trending`                                                           |
+| Novedades           | Todos                                            | TMDB `/movie/now_playing`, `/discover/tv` año actual con al menos 50 votos |
 
 - Cada fila: título + opcional "Ver más →" + scroll horizontal de MediaCards.
 - Con «Todo» (por defecto), las filas mezclan películas y series, con badge de tipo en cada card; con «Películas» o «Series», cada fila muestra solo ese tipo.
@@ -203,55 +215,67 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 ### Estados del Home
 
-| Estado                    | Comportamiento                                                        |
-| ------------------------- | --------------------------------------------------------------------- |
-| No autenticado            | Hero + Tendencias + Novedades. FAB chatbot inactivo.                  |
-| Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti".                     |
-| Autenticado con historial | Las 3 filas completas.                                                |
-| Loading                   | Skeleton cards (4-5 placeholders) por fila.                           |
-| Error TMDB                | Toast "No se pudo cargar el contenido." + datos cacheados si existen. |
+| Estado                    | Comportamiento                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| No autenticado            | Hero + Tendencias + Novedades + invitación a registrarse. Sin FAB.                             |
+| Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti".                                              |
+| Autenticado con historial | Las 3 filas completas.                                                                         |
+| Loading                   | Skeleton cards (4-5 placeholders) por fila.                                                    |
+| Error TMDB                | La fila que falla se oculta y un único toast avisa. Si fallan todas, mensaje con «Reintentar». |
 
 ---
 
-## 5b. Buscar (Panel Overlay)
+## 5b. Buscar
 
-Se activa al clickear "Buscar" en la navbar. Reemplaza el content area del Home con un
-panel overlay a pantalla completa.
+Página `/search` (14/10/2026, según el canvas «Search · desktop» y «Search · mobile»: lleva la
+navbar con «Buscar» como página actual; antes se describía como un panel overlay). Se llega desde
+«Buscar» en la navbar o en la barra inferior del celular.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  TOOLBAR DE BÚSQUEDA                                     │
-│  [🔍 Buscar...__________]  [Todo|Pelis|Series]  [Género] [Año] [⭐ mín] │
-│                                                          │
-│  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐           │
-│  │    │ │    │ │    │ │    │ │    │ │    │           │
-│  │post│ │post│ │post│ │post│ │post│ │post│           │   ← grid responsive
-│  │Tít.│ │Tít.│ │Tít.│ │Tít.│ │Tít.│ │Tít.│           │
-│  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘           │
-│  ...                                                    │
-│  [←] [1] [2] [3] ... [15] [→]                          │
+│  [FilmAI]  Inicio  Buscar  Listas                [Avatar] │
+│  [🔍 Buscar películas y series__________ ✕]   Cerrar [Esc] │
+│  [Todo|Películas|Series]   Género [▾]  Año [▾]  Nota [▾]   │
+│  20 resultados para «dune»                               │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐        │
+│  │post│ │post│ │post│ │post│ │post│ │post│ │post│        │ ← grilla auto-fill 168 px
+│  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘        │
+│  … al bajar se cargan más resultados                     │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ### Comportamiento
 
-- Panel overlay que cubre todo el viewport debajo del navbar.
-- Se abre/cierra con click en "Buscar" o tecla Escape.
-- Campo de búsqueda con autofocus al abrir.
-- **Toggle de tipo**: Todo / Películas / Series. Cambia el placeholder del input y el filtro
-  aplicado a la grilla.
-- **Filtros**: dropdowns de Género, Año, Calificación mínima.
-- **Resultados**: grid de MediaCards con badge de tipo (Película/Serie) y rating.
-- Paginación clásica al pie.
+- **Campo**: grande, con lupa y botón para borrar; acepta cualquier texto hasta 50 caracteres. La
+  búsqueda arranca sola 350 ms después de dejar de escribir. En escritorio toma el foco al abrir;
+  en celular no, para que el teclado no tape los resultados.
+- **Cerrar / Escape**: vuelve a donde estaba el usuario si venía de la app; si no, al Inicio.
+- **Tipo**: Todo / Películas / Series (el mismo selector del Inicio).
+- **Filtros**: Género, Año (Cualquiera, «A estrenar» —lo que estrena después de hoy—, años sueltos del actual a 1990 y, antes, décadas: «Década de 1980» … «Década de 1900») y Nota de TMDB (Cualquiera, 9 o
+  más … 5 o más, Menos de 5; siempre con al menos 50 votos). En «Todo», el género se traduce a su
+  equivalente de series cuando TMDB usa otro id (Acción y Aventura, Ciencia ficción y Fantasía,
+  Bélica).
+- **Con texto y género o nota**: TMDB no admite esos filtros en su búsqueda por nombre; se aplican
+  sobre los primeros 100 resultados por tipo (decisión del 14/10/2026). El año sí lo filtra TMDB.
+- **Orden con texto** (14/10/2026, pedido del usuario): los primeros 100 por tipo, ordenados por el mayor entre los votos y la popularidad de TMDB × 100. Lo consagrado o lo muy esperado (un estreno sin votos todavía) queda arriba y lo desconocido al fondo. En «Todo» se mezclan películas y series por ese puntaje.
+- **«Todo» sin texto**: alterna películas y series, como las filas del Inicio.
+- **Resultados**: MediaCards en grilla (2 columnas en celular) con tipo, año y nota de TMDB, o «Sin
+  calificaciones». Cada tarjeta lleva a la ficha con `?from=search`.
+- **Carga al bajar** (14/10/2026, pedido del usuario; reemplaza la paginación clásica del canvas): cuando el final de la grilla está a 600 px, se agrega la página siguiente, con un esqueleto mientras llega, hasta 25 páginas. Al terminar los resultados aparece el footer. Si falla una página, lo cargado queda y se ofrece Reintentar. Volver desde la ficha (Atrás o la miga) recupera las páginas cargadas y la posición del scroll.
+- **URL**: texto, tipo, filtros y página viven en la URL; recargar, compartir y volver atrás
+  conservan la búsqueda. La miga «Buscar» de la ficha vuelve a la última búsqueda.
+- **Celular**: título «Buscar», campo, selector de tipo y un botón «Filtros» con la cantidad de
+  filtros activos, que abre una hoja con Género, Año, Nota de TMDB, «Limpiar» y «Ver resultados».
 
 ### Estados
 
-| Estado                  | Qué se muestra                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------ |
-| Default (sin búsqueda)  | Grilla completa con resultados populares, ordenados por popularidad.                       |
-| Búsqueda con resultados | Resultados paginados coincidentes. Contador "N resultados encontrados".                    |
-| Búsqueda sin resultados | Empty state: ilustración + "No se encontraron resultados" + sugerencia de ajustar filtros. |
-| Error API               | "No se pudo recuperar el catálogo." + botón reintentar.                                    |
+| Estado                  | Qué se muestra                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Sin texto ni filtros    | Títulos populares, ordenados por popularidad.                                                |
+| Con resultados          | Contador «N resultados para “texto”» (o «N títulos» sin texto) + grilla que crece al bajar. |
+| Sin resultados          | «Nada para “texto”» + «Revisá cómo se escribe o probá el título original: el catálogo viene de TMDB.» + «Limpiar filtros». |
+| Cargando                | Grilla de pósters en esqueleto.                                                              |
+| Error API               | "No se pudo recuperar el catálogo." + botón Reintentar.                                     |
 
 ---
 
@@ -259,6 +283,15 @@ panel overlay a pantalla completa.
 
 Se accede clickeando cualquier MediaCard desde Home, Buscar, o Listas. Reemplaza el content
 area dentro del shell (navbar + FAB se mantienen). La navegación hacia atrás es vía breadcrumb.
+
+**Implementación (14/10/2026, SDD `openspec/changes/title-page/`).** Manda el canvas («Title page · desktop/mobile»); donde esta sección dice otra cosa, vale esto:
+
+- Rutas `/movie/[id]` y `/tv/[id]`. El origen viaja en la URL: `?from=home`, `search`, `reviews` o `list-{id}`; sin parámetro, la miga empieza en Home.
+- Calificaciones como «★ 9» o «★ 8,5», nunca «X/10» (decisión del 03/10/2026), en la ficha, el modal y las reseñas.
+- «Director and cast»: en películas, los directores; en series, los creadores («Created by»), porque TMDB no tiene director a nivel serie. El reparto lleva el personaje y se pliega pasados los 10.
+- Las reseñas de la comunidad son públicas (se leen sin sesión) y tienen orden (más nuevas, más viejas, mejor y peor calificadas) y filtro por nota (9 o más … menos de 5), con «Load more».
+- Las acciones de listas (Favorite, Watched, Watchlist y «Add to list» con creación de lista en el lugar) se construyen en C-07; L-04 queda cubierta ahí.
+- Sin sesión, las acciones se reemplazan por «Log in to rate or save», que vuelve a la misma ficha después de ingresar.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -341,13 +374,17 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | Vista (👁, quitar) | Producción calificada          | **Pide confirmación antes de quitar**: la API responde 409 `calificacion_impide_quitar_de_vistas` (CU-011: si la calificaste, la viste). El modal dice "Se eliminarán tu calificación de X/10 y tu **reseña**. Esto no se puede deshacer.", con el texto de la reseña visible en un preview truncado a 2 líneas y "ver completa". Al confirmar, se reintenta con `?borrar_calificacion=true`, que borra las dos cosas y quita el ítem en una sola transacción. | Si cancela, la producción sigue en Vistas y la calificación intacta.                                   |
 | Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas                                                                                                                                                                                                                                                                                                                                                                                                                   | Check/uncheck toggle                                                                                   |
 
+El relleno sólido de Favoritos, Vista y Pendiente usa el color de acento, como la estrella de la nota propia; en el ojo y el reloj, la pupila y las agujas toman el color del botón para seguir viéndose (14/10/2026).
+
+Marcar Vista algo que está en Pendientes lo saca de Pendientes en la misma operación, con un solo toast: «Agregada a Vistas y quitada de Pendientes». Calificar hace lo mismo (calificar ya la marca como vista), y el modal lo avisa: «Al calificarla, {título} también se agrega a Vistas y sale de Pendientes». Quitar de Vistas no la devuelve a Pendientes (14/10/2026).
+
 Los botones de acción directa son visibles solo para usuarios autenticados. Para no autenticados, se muestra "Inicia sesión para calificar o guardar" con link a Login.
 
 ### Breadcrumb — comportamiento
 
 - Único elemento de navegación hacia atrás (sin botón Volver extra).
-- Desktop: top-left del content area, 14px, color secundario.
-- Mobile: mismo comportamiento, scroll horizontal si no entra en el ancho.
+- Desktop: top-left del content area, debajo de la barra y alineado con el póster, 14px, color secundario. Va sobre una píldora con velo (`scrim` al 60 % y desenfoque) para leerse sobre cualquier fondo: suelto encima de la imagen se perdía (14/10/2026).
+- Mobile: un enlace «‹ {origen}» al último tramo, en la misma píldora y la misma esquina.
 - Cada tramo es un link clickeable excepto el último (página actual, en negrita).
 - El penúltimo tramo (origen) restaura la vista anterior preservando scroll y resultados si es Buscar.
 
@@ -355,7 +392,7 @@ Los botones de acción directa son visibles solo para usuarios autenticados. Par
 
 | Estado         | Qué se muestra                                                                                  |
 | -------------- | ----------------------------------------------------------------------------------------------- |
-| Loading        | Skeleton del Hero (poster placeholder + líneas) + skeleton de 3 ReviewCards.                    |
+| Loading        | Skeleton del Hero (fondo, póster, título, datos, botones, géneros y sinopsis) + skeleton de 3 ReviewCards. Con sesión no aparece "Inicia sesión para calificar o guardar" mientras carga. |
 | Éxito          | Contenido completo como se describe arriba.                                                     |
 | No autenticado | Contenido visible, acciones directas reemplazadas por "Inicia sesión para calificar o guardar". |
 | Error TMDB     | Toast "No se pudo cargar la información. Intente nuevamente." + botón Reintentar.               |
@@ -633,7 +670,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │                                          │
 │               FilmAI                     │
 │                                          │
-│         Iniciar sesión                   │
+│         Ingresar                         │
 │                                          │
 │  Email o nombre de usuario               │
 │  ┌──────────────────────────────────┐    │
@@ -647,7 +684,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  ¿Olvidaste tu contraseña?              │
 │                                          │
 │  ┌──────────────────────────────────┐    │
-│  │      Iniciar sesión             │    │
+│  │      Ingresar                   │    │
 │  └──────────────────────────────────┘    │
 │                                          │
 │  ────────── o ──────────                 │
@@ -678,7 +715,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ```
 ┌──────────────────────────────────────────┐
 │               FilmAI                     │
-│         Crear cuenta                     │
+│         Registrarse                      │
 │                                          │
 │  Nombre                                  │
 │  ┌──────────────────────────────────┐    │
@@ -714,13 +751,13 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  │                          [👁]    │    │
 │  └──────────────────────────────────┘    │
 │  ┌──────────────────────────────────┐    │
-│  │        Crear cuenta              │    │
+│  │        Registrarse               │    │
 │  └──────────────────────────────────┘    │
 │  ────────── o ──────────                 │
 │  ┌──────────────────────────────────┐    │
 │  │  G   Registrarse con Google      │    │
 │  └──────────────────────────────────┘    │
-│  ¿Ya tenés cuenta? Iniciar sesión       │
+│  ¿Ya tenés cuenta? Ingresar             │
 └──────────────────────────────────────────┘
 ```
 
@@ -736,10 +773,11 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 | Género               | Dropdown: Masculino / Femenino / No especificar.                                                |
 | Contraseña           | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*!`). |
 | Confirmar contraseña | Debe coincidir con Contraseña.                                                                  |
+| Términos y Condiciones | Casilla obligatoria. El enlace abre `/terms` en una pestaña nueva. Sin marcar, «Sign up» se ve atenuado (`aria-disabled`) y al activarlo muestra el error bajo la casilla; no se envía. El backend lo vuelve a exigir. |
 
 #### Google OAuth
 
-- Botón "Registrarse con Google" inicia flujo OAuth.
+- Botón "Continuar con Google" inicia el flujo OAuth. El alta con Google también exige aceptar los Términos y Condiciones: la casilla está en la pantalla intermedia (`/complete-signup`).
 - Si la cuenta de Google ya está asociada → inicia sesión directamente.
 - Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género) en una pantalla intermedia.
 - El usuario nuevo creado con Google queda en estado **activa** directamente (Google ya verificó el correo; no requiere confirmación por email).
@@ -750,7 +788,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 | Estado                    | Comportamiento                                                                          |
 | ------------------------- | --------------------------------------------------------------------------------------- |
-| Error de validación       | Mensaje inline debajo de cada campo. Botón "Crear cuenta" deshabilitado hasta corregir. |
+| Error de validación       | Mensaje inline debajo de cada campo. Botón "Registrarse" deshabilitado hasta corregir. |
 | Email o usuario duplicado | Error de servidor: "El email o nombre de usuario ya está registrado."                   |
 | Registro exitoso          | Redirect a Confirmación de cuenta.                                                      |
 
@@ -775,15 +813,26 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │                                          │
 │  ──────────────────────────────          │
 │                                          │
-│  ¿Ya confirmaste? Iniciar sesión        │
+│  ¿Ya confirmaste? Ingresar              │
 │                                          │
 └──────────────────────────────────────────┘
 ```
 
 - Se accede tras registro exitoso o desde el link del email. El token es el de confirmación de email de **allauth** (no un JWT propio); la ruta la resuelve el backend y Next.js muestra éxito/error.
-- **Token válido**: toast "Cuenta confirmada." → redirect al Login.
-- **Reenviar enlace**: toast "Enlace reenviado." Rate-limit: 1 cada 60 segundos.
-- **"Iniciar sesión"**: vuelve al Login.
+- **Token válido**: pantalla «Cuenta confirmada» con el botón que lleva al Login.
+- **Reenviar enlace**: queda deshabilitado con la cuenta regresiva «Pedir otro en 0:42» (60 segundos entre pedidos). Tras el envío vuelve a esperar.
+- **Enlace vencido o ya usado**: título «Este enlace ya no funciona» y botón «Reenviar enlace». Como el enlace solo trae la clave, el reenvío usa el correo guardado en este navegador al registrarse (`sessionStorage`); si no está, pide el correo antes de reenviar.
+- **Cuenta confirmada** (incluye «ya confirmada»): título «Cuenta confirmada» y botón «Ingresar».
+- **"Ingresar"**: vuelve al Login.
+
+---
+
+### Implementación (12/10/2026)
+
+- Las cuatro pantallas (Landing, Login, Registro y Confirmación) siguen el canvas «FilmAI — Sistema y catálogo», sección «Access», en escritorio y celular: collage de pósters a la izquierda (detrás del contenido en celular), formulario a la derecha y selector `EN | ES` arriba a la derecha. No llevan barra de navegación ni pie.
+- Tema: solo oscuro por ahora. Los tokens del canvas (`--raised`, `--raised-2`, `--line`, `--fg-2`, `--fg-3`, `--ok`, `--on-accent`) viven en `app/globals.css` y quedan preparados para el tema claro cuando exista Apariencia en Preferencias.
+- Tipografía: Big Shoulders (títulos, `font-display`) y Hanken Grotesk (texto).
+- Términos: `/terms` es una versión mínima que renderiza `frontend/content/legal/terms.{en,es}.md`; se refina con el punto 9 (con/sin sesión, escritorio/celular).
 
 ---
 
@@ -1009,7 +1058,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 │                                          │
 │  Idioma de la interfaz                   │
 │  ┌──────────────────────────────────┐    │
-│  │ ● English   ○ Español            │    │
+│  │ ● EN   ○ ES                      │    │
 │  └──────────────────────────────────┘    │
 │                                          │
 │  ──── Privacidad ────                    │
@@ -1039,7 +1088,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 | Sección            | Controles                           | Descripción                                                                                                                                                                                                                                                                 |
 | ------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                                                                                                                                  |
-| **Idioma**         | Segmentado English / Español        | Cambio inmediato, se guarda en la cuenta y define también el idioma de los correos. Con sesión es el único lugar donde se cambia. Default: el del navegador (inglés si no hay otro).                                                                                        |
+| **Idioma**         | Segmentado EN / ES                 | Cambio inmediato, se guarda en la cuenta y define también el idioma de los correos. Con sesión es el único lugar donde se cambia. Default: el del navegador (inglés si no hay otro).                                                                                        |
 | **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                                                                                                                                |
 | **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                                                                                          |
 | **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar." Botones Cancelar / Dar de baja. |
@@ -1177,7 +1226,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 > Estado al 08/09/2026: la marca `[x]` indica que la pantalla está **definida/diseñada** en este documento, no necesariamente implementada. Implementadas hoy: Login, Registro, confirmación/restablecimiento y completado de Google. El resto (Home, Buscar, Detalle, Listas, Perfil, Mis reseñas, Preferencias, errores) queda como diseño aprobado para implementar según `docs/05_Plan_de_Desarrollo.md`.
 
 - [x] Home — Sección 5
-- [x] Buscar (panel overlay) — Sección 5b
+- [x] Buscar (página `/search`) — Sección 5b
 - [x] Ficha de detalle — Sección 5c
 - [x] Modales de reseña — Sección 5d
 - [x] Listas — Sección 5e
@@ -1217,6 +1266,9 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 - Los formularios deben mostrar mensajes de error asociados mediante `aria-describedby`.
 - Los campos con error deben tener el atributo `aria-invalid="true"`.
 - Los mensajes de error deben ser visibles y comunicados por lectores de pantalla.
+- **Cuándo aparece un error (formularios de acceso)**: solo después de que la persona escribe o elige un valor inválido en ese campo. Foco y blur no cambian la validación: recorrer el formulario con Tab no muestra errores. En campos de texto el mensaje espera una pausa breve (~600 ms) para no marcar errores a mitad de tecleo; en selección y fecha aparece al instante. Un campo escrito y luego vaciado muestra «obligatorio».
+- **Revalidación cruzada**: la confirmación de contraseña se revalida al editar la contraseña original (siempre que la confirmación ya se haya modificado).
+- **Botón de envío**: queda deshabilitado (`disabled` nativo) hasta que todos los campos pasan sus reglas, el nombre de usuario figura disponible y los Términos están aceptados; mientras tanto, un texto cercano indica qué falta (`auth.signUp.submitPending`). Los errores devueltos por el backend se muestran en su campo y se limpian al editarlo.
 
 ### Consistencia de botones del perfil y sus modales
 

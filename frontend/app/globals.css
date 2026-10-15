@@ -7,7 +7,17 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-big-shoulders), "Arial Narrow", sans-serif;
+  --color-selected: var(--selected-bg);
+  --color-selected-foreground: var(--selected-fg);
+  --color-raised: var(--raised);
+  --color-raised-2: var(--raised-2);
+  --color-line: var(--line);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-ok: var(--ok);
+  --color-on-accent: var(--on-accent);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -56,8 +66,8 @@
    - Superficies:  #161625  (--surface) / #1e1e32 (--surface2)
    - Borde:        #2a2a45  (--border)
    - Acento:       #f5c518  (--accent, dorado/ámbar)
-   - Texto:        #e0e0e0  (--text), dim #777 (--text-dim)
-   - Peligro:      #e74c3c  (--danger)
+   - Texto:        #ededf2, secundario #a6a6b8 (canvas de diseño, 12/10/2026)
+   - Peligro:      #f2483b  (--danger)
    ============================================================================= */
 :root {
   --background: #ffffff;
@@ -97,37 +107,48 @@
 
 .dark {
   --background: #0d0d14;
-  --foreground: #e0e0e0;
-  --card: #161625;
-  --card-foreground: #e0e0e0;
-  --popover: #161625;
-  --popover-foreground: #e0e0e0;
+  --foreground: #ededf2;
+  --card: #15151f;
+  --card-foreground: #ededf2;
+  --popover: #15151f;
+  --popover-foreground: #ededf2;
   --primary: #f5c518;
-  --primary-foreground: #121212;
-  --secondary: #1e1e32;
-  --secondary-foreground: #e0e0e0;
-  --muted: #1e1e32;
-  --muted-foreground: #777;
-  --accent: #1e1e32;
-  --accent-foreground: #e0e0e0;
-  --destructive: #e74c3c;
+  --primary-foreground: #14110a;
+  --secondary: #1d1d2a;
+  --secondary-foreground: #ededf2;
+  --muted: #1d1d2a;
+  --muted-foreground: #a6a6b8;
+  --accent: #1d1d2a;
+  --accent-foreground: #ededf2;
+  --destructive: #f2483b;
   --destructive-button: #fca5a5;
-  --border: #2a2a45;
-  --input: #2a2a45;
+  --border: #262636;
+  --input: #262636;
   --ring: #f5c518;
   --chart-1: #f5c518;
   --chart-2: #e67e22;
   --chart-3: #e74c3c;
   --chart-4: #2ecc71;
   --chart-5: #3498db;
-  --sidebar: #161625;
-  --sidebar-foreground: #e0e0e0;
+  --sidebar: #15151f;
+  --sidebar-foreground: #ededf2;
   --sidebar-primary: #f5c518;
   --sidebar-primary-foreground: #121212;
-  --sidebar-accent: #1e1e32;
-  --sidebar-accent-foreground: #e0e0e0;
-  --sidebar-border: #2a2a45;
+  --sidebar-accent: #1d1d2a;
+  --sidebar-accent-foreground: #ededf2;
+  --sidebar-border: #262636;
   --sidebar-ring: #f5c518;
+  /* Sistema de diseño (canvas «FilmAI — Sistema y catálogo») */
+  --raised: #15151f;
+  --raised-2: #1d1d2a;
+  --line: #262636;
+  --fg-2: #a6a6b8;
+  --fg-3: #84849a;
+  --on-accent: #14110a;
+  --ok: #4ade80;
+  --scrim: 13 13 20;
+  --selected-bg: #ededf2;
+  --selected-fg: #0d0d14;
 }
 
 @layer base {
@@ -135,12 +156,11 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
     /* Tracking: 0 = normal · 0.01em/0.02em = letras más separadas. */
     letter-spacing: 0.01em;
   }
   html {
-    @apply font-sans;
     scrollbar-gutter: stable;
   }
 }

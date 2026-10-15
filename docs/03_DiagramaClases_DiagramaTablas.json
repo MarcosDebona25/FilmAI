@@ -10,7 +10,7 @@
           "id": "cls-usuario",
           "type": "node",
           "parent": "1",
-          "label": "Usuario\n+ nombreUsuario: String\n+ correo: String\n+ contraseña: String (hash)\n+ googleId: String [0..1]\n+ nombre: String\n+ apellido: String\n+ fechaNacimiento: Date\n+ genero: TipoGenero\n+ estado: EstadoCuenta\n+ fechaRegistro: Date\n+ avatarId: Integer\n+ tema: String\n+ idioma: String [0..1]\n+ perfilPublico: Boolean\n+ notifRecomendaciones: Boolean\n+ notifReseñas: Boolean\n+ notifNovedades: Boolean\n+ calcularEdad(): Integer\n+ esMayorDeEdad(): Bool\n+ cambiarEstado(): Void\n+ actualizarPerfil(): Void\n+ estaActivo(): Bool\n+ agregarLista(): Void\n+ removerLista(): Bool\n+ buscarListaPorNombre(): Lista\n+ tieneLista(): Bool\n+ publicarCalificacion(): Void\n+ removerCalificacion(): Bool\n+ tieneCalificacionEn(): Bool\n+ agregarNuevoChat(): Void\n+ eliminarChat(): Bool"
+          "label": "Usuario\n+ nombreUsuario: String\n+ correo: String\n+ contraseña: String (hash)\n+ googleId: String [0..1]\n+ nombre: String\n+ apellido: String\n+ fechaNacimiento: Date\n+ genero: TipoGenero\n+ estado: EstadoCuenta\n+ fechaRegistro: Date\n+ fechaAceptacionTerminos: DateTime [0..1]\n+ avatarId: Integer\n+ tema: String\n+ idioma: String [0..1]\n+ perfilPublico: Boolean\n+ notifRecomendaciones: Boolean\n+ notifReseñas: Boolean\n+ notifNovedades: Boolean\n+ calcularEdad(): Integer\n+ esMayorDeEdad(): Bool\n+ cambiarEstado(): Void\n+ actualizarPerfil(): Void\n+ estaActivo(): Bool\n+ agregarLista(): Void\n+ removerLista(): Bool\n+ buscarListaPorNombre(): Lista\n+ tieneLista(): Bool\n+ publicarCalificacion(): Void\n+ removerCalificacion(): Bool\n+ tieneCalificacionEn(): Bool\n+ agregarNuevoChat(): Void\n+ eliminarChat(): Bool"
         },
         {
           "id": "cls-produccion",
@@ -239,7 +239,7 @@
           "id": "tbl-usuario",
           "type": "node",
           "parent": "1",
-          "label": "Usuario\nPK  id INTEGER\n    nombreUsuario VARCHAR(25) UNIQUE\n    correo VARCHAR(100) UNIQUE\n    contraseña VARCHAR(128)\n    googleId VARCHAR(100) UNIQUE [null]\n    nombre VARCHAR(50)\n    apellido VARCHAR(50)\n    fechaNacimiento DATE\n    genero VARCHAR(25)\n    estado VARCHAR(25)\n    fechaRegistro DATE\n    avatarId TINYINT\n    tema VARCHAR(10)\n    idioma VARCHAR(2) [null]\n    perfilPublico BOOLEAN\n    notifRecomendaciones BOOLEAN\n    notifReseñas BOOLEAN\n    notifNovedades BOOLEAN"
+          "label": "Usuario\nPK  id INTEGER\n    nombreUsuario VARCHAR(25) UNIQUE\n    correo VARCHAR(100) UNIQUE\n    contraseña VARCHAR(128)\n    googleId VARCHAR(100) UNIQUE [null]\n    nombre VARCHAR(50)\n    apellido VARCHAR(50)\n    fechaNacimiento DATE\n    genero VARCHAR(25)\n    estado VARCHAR(25)\n    fechaRegistro DATE\n    fechaAceptacionTerminos TIMESTAMP [null]\n    avatarId TINYINT\n    tema VARCHAR(10)\n    idioma VARCHAR(2) [null]\n    perfilPublico BOOLEAN\n    notifRecomendaciones BOOLEAN\n    notifReseñas BOOLEAN\n    notifNovedades BOOLEAN"
         },
         {
           "id": "nota-campos-tecnicos",

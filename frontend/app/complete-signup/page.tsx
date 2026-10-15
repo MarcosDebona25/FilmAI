@@ -3,6 +3,7 @@ import { routes } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import enums from "@/i18n/enums.json";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -35,6 +36,7 @@ function ErrorTexto({ mensaje }: { mensaje?: string | null }) {
 export default function CompletarGooglePage() {
   const labels = useTranslations("enums.gender");
   const errors = useTranslations("errors.codes");
+  const auth = useTranslations("auth.signUp");
   const GENEROS = enums.genderValues.map((value) => ({
     value,
     label: labels(value as "masculino"),
@@ -48,10 +50,13 @@ export default function CompletarGooglePage() {
     fecha_nacimiento: "",
     genero: "",
   });
-  const [errores, setErrores] = useState<Errores>({});
-  const [tocados, setTocados] = useState<Partial<Record<Campo, boolean>>>({});
+  // «Sucio» = el usuario escribió o eligió algo; foco y blur no muestran errores.
+  const [sucios, setSucios] = useState<Partial<Record<Campo, boolean>>>({});
+  const [erroresServidor, setErroresServidor] = useState<Errores>({});
+  const [diferido, setDiferido] = useState(form);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [acepta, setAcepta] = useState(false);
 
   // Solo se llega acá tras "Continuar con Google" en login/registro (que marcó
   // el flujo pendiente). Si no hay marca, no es un registro Google válido.
@@ -61,8 +66,15 @@ export default function CompletarGooglePage() {
     }
   }, [router]);
 
+  useEffect(() => {
+    const id = setTimeout(() => setDiferido(form), 600);
+    return () => clearTimeout(id);
+  }, [form]);
+
   function setField(campo: Campo, valor: string) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
+    setSucios((prev) => ({ ...prev, [campo]: true }));
+    setErroresServidor((prev) => ({ ...prev, [campo]: undefined }));
   }
 
   function validarCampo(campo: Campo, valor: string): string | null {
@@ -71,28 +83,26 @@ export default function CompletarGooglePage() {
     return valor ? null : errors("required");
   }
 
-  function onBlurCampo(campo: Campo) {
-    setTocados((prev) => ({ ...prev, [campo]: true }));
-    setErrores((prev) => ({ ...prev, [campo]: validarCampo(campo, form[campo]) }));
+  /** Error visible: solo si ya lo modificó; el texto espera a una pausa. */
+  function mostrar(campo: Campo): string | undefined {
+    if (erroresServidor[campo]) return erroresServidor[campo] ?? undefined;
+    if (!sucios[campo]) return undefined;
+    const actual = validarCampo(campo, form[campo]);
+    if (!actual) return undefined;
+    if (campo !== "nombre_usuario") return actual;
+    return validarCampo(campo, diferido[campo]) ? actual : undefined;
   }
+
+  const formularioValido =
+    acepta && (Object.keys(form) as Campo[]).every((campo) => !validarCampo(campo, form[campo]));
 
   async function onGoogle(idToken: string) {
     if (loading) return;
     setError(null);
 
-    // Validar ANTES de enviar: si falta algo, no se gasta el id_token fresco
-    // (es de un solo uso) y se vuelve a tocar el botón de Google.
-    const nuevosErrores: Errores = {
-      nombre_usuario: validarNombreUsuario(form.nombre_usuario),
-      fecha_nacimiento: validarFechaNacimiento(form.fecha_nacimiento),
-      genero: form.genero ? null : errors("required"),
-    };
-    setErrores(nuevosErrores);
-    setTocados({ nombre_usuario: true, fecha_nacimiento: true, genero: true });
-    if (Object.values(nuevosErrores).some(Boolean)) {
-      setError("Completá los campos y tocá de nuevo el botón de Google.");
-      return;
-    }
+    // El botón de Google solo está activo con el formulario válido; esto es un
+    // resguardo para no gastar el id_token (de un solo uso) con datos inválidos.
+    if (!formularioValido) return;
 
     setLoading(true);
     try {
@@ -100,12 +110,13 @@ export default function CompletarGooglePage() {
         nombre_usuario: form.nombre_usuario,
         fecha_nacimiento: form.fecha_nacimiento,
         genero: form.genero,
+        acepta_terminos: true,
       });
       if (result.ok) {
-        router.push("/");
+        router.push(routes.explore);
       } else if (result.erroresPorCampo && Object.keys(result.erroresPorCampo).length > 0) {
         // Errores de campo del backend (p.ej. username ocupado) → inline.
-        setErrores((prev) => ({ ...prev, ...result.erroresPorCampo! }));
+        setErroresServidor((prev) => ({ ...prev, ...result.erroresPorCampo! }));
         setError("Corregí los campos marcados y tocá de nuevo el botón de Google.");
       } else {
         setError(result.error);
@@ -131,43 +142,36 @@ export default function CompletarGooglePage() {
           <div>
             <label className="mb-1 block text-sm text-muted-foreground">Nombre de usuario</label>
             <input
-              className={`${inputClass} ${
-                tocados.nombre_usuario && errores.nombre_usuario ? "border-destructive" : ""
-              }`}
+              className={`${inputClass} ${mostrar("nombre_usuario") ? "border-destructive" : ""}`}
               value={form.nombre_usuario}
               onChange={(e) => setField("nombre_usuario", e.target.value)}
-              onBlur={() => onBlurCampo("nombre_usuario")}
               placeholder="5-25 caracteres alfanuméricos"
-              aria-invalid={Boolean(tocados.nombre_usuario && errores.nombre_usuario)}
+              aria-invalid={Boolean(mostrar("nombre_usuario"))}
               required
             />
-            <ErrorTexto mensaje={tocados.nombre_usuario ? errores.nombre_usuario : undefined} />
+            <ErrorTexto mensaje={mostrar("nombre_usuario")} />
           </div>
           <div>
             <label className="mb-1 block text-sm text-muted-foreground">Fecha de nacimiento</label>
             <input
-              className={`${inputClass} ${
-                tocados.fecha_nacimiento && errores.fecha_nacimiento ? "border-destructive" : ""
-              }`}
+              className={`${inputClass} ${mostrar("fecha_nacimiento") ? "border-destructive" : ""}`}
               type="date"
               max={maxFechaNacimiento()}
               value={form.fecha_nacimiento}
               onChange={(e) => setField("fecha_nacimiento", e.target.value)}
-              onBlur={() => onBlurCampo("fecha_nacimiento")}
-              aria-invalid={Boolean(tocados.fecha_nacimiento && errores.fecha_nacimiento)}
+              aria-invalid={Boolean(mostrar("fecha_nacimiento"))}
               required
             />
             <p className="mt-1 text-xs text-muted-foreground">Formato: dd/mm/aaaa</p>
-            <ErrorTexto mensaje={tocados.fecha_nacimiento ? errores.fecha_nacimiento : undefined} />
+            <ErrorTexto mensaje={mostrar("fecha_nacimiento")} />
           </div>
           <div>
             <label className="mb-1 block text-sm text-muted-foreground">Género</label>
             <select
-              className={`${inputClass} ${tocados.genero && errores.genero ? "border-destructive" : ""}`}
+              className={`${inputClass} ${mostrar("genero") ? "border-destructive" : ""}`}
               value={form.genero}
               onChange={(e) => setField("genero", e.target.value)}
-              onBlur={() => onBlurCampo("genero")}
-              aria-invalid={Boolean(tocados.genero && errores.genero)}
+              aria-invalid={Boolean(mostrar("genero"))}
               required
             >
               <option value="" disabled>
@@ -179,7 +183,36 @@ export default function CompletarGooglePage() {
                 </option>
               ))}
             </select>
-            <ErrorTexto mensaje={tocados.genero ? errores.genero : undefined} />
+            <ErrorTexto mensaje={mostrar("genero")} />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start gap-3">
+              <input
+                id="terminos"
+                type="checkbox"
+                checked={acepta}
+                onChange={(e) => {
+                  setAcepta(e.target.checked);
+                }}
+                className="mt-0.5 size-5 flex-none accent-primary"
+              />
+              <label htmlFor="terminos" className="text-sm text-muted-foreground">
+                {auth.rich("termsAcceptance", {
+                  terms: (chunks) => (
+                    <Link
+                      href={routes.terms}
+                      target="_blank"
+                      rel="noopener"
+                      className="font-semibold text-foreground underline"
+                    >
+                      {chunks}
+                      <span className="sr-only"> {auth("termsNewTabHint")}</span>
+                    </Link>
+                  ),
+                })}
+              </label>
+            </div>
           </div>
 
           {error && (
@@ -189,7 +222,15 @@ export default function CompletarGooglePage() {
           )}
 
           <div className="flex flex-col items-center gap-2">
-            <GoogleButton text="signup_with" onSuccess={onGoogle} onError={(m) => setError(m)} />
+            {/* `inert`: sin el formulario válido el botón de Google no se puede usar. */}
+            <div inert={!formularioValido} className={formularioValido ? "" : "opacity-50"}>
+              <GoogleButton text="signup_with" onSuccess={onGoogle} onError={(m) => setError(m)} />
+            </div>
+            {!formularioValido && (
+              <p className="text-center text-[13px] text-muted-foreground">
+                {auth("submitPending")}
+              </p>
+            )}
           </div>
         </form>
       </div>

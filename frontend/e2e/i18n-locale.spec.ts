@@ -9,7 +9,7 @@ test.describe("idioma del documento sin prefijos", () => {
     await page.goto("/login");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: "Iniciar sesión" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: en.nav.account.logIn })).toBeVisible();
   });
 
   test("sin cookie usa la región del navegador", async ({ page }) => {
@@ -41,10 +41,11 @@ for (const locale of ["es", "en"] as const) {
       route.fulfill({ json: { total: 0, next: null, results: [] } })
     );
     const messages = (locale === "es" ? es : en).legacy.metadata;
+    const nav = (locale === "es" ? es : en).nav.main;
     for (const [path, title] of [
       ["/profile", messages.profile],
       ["/settings", messages.settings],
-      ["/my-reviews", messages.myReviews],
+      ["/my-reviews", nav.ratingsReviews],
     ]) {
       await page.goto(path);
       await expect(page).toHaveTitle(`${title} | FilmAI`);

@@ -99,6 +99,15 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         default=EstadoCuenta.PENDIENTE,
     )
     fecha_registro = models.DateField("fecha de registro", auto_now_add=True)
+    fecha_aceptacion_terminos = models.DateTimeField(
+        "fecha de aceptación de los términos",
+        null=True,
+        blank=True,
+        help_text=(
+            "Momento en que la cuenta aceptó los Términos y Condiciones al "
+            "registrarse. Nulo en las cuentas anteriores a la exigencia."
+        ),
+    )
     avatar_id = models.PositiveSmallIntegerField(
         "id de avatar",
         default=1,

@@ -24,6 +24,7 @@ from catalogo.models import (
     TipoProduccion,
 )
 from catalogo.tests import _ParchesDeMaterializacion
+from listas.factories import ListaFactory
 from listas.models import Tiene
 from usuarios.factories import UsuarioFactory
 
@@ -669,6 +670,111 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
 # ---------------------------------------------------------------------------
 
 
+class VistasSacaDePendientesTests(_ParchesDeMaterializacion, TestCase):
+    """Lo que ya viste deja de estar pendiente (regla del 14/10/2026).
+
+    Entrar a «Vistas» —con el botón Watched o calificando— saca la producción
+    de «Pendientes» del mismo usuario. Rige solo en el momento en que entra:
+    volver a agregarla a «Pendientes» para verla de nuevo sigue permitido.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.usuario = UsuarioFactory()
+        self.cliente = APIClient()
+        self.cliente.force_authenticate(self.usuario)
+        self.vistas = self.usuario.listas.get(nombre="Vistas")
+        self.pendientes = self.usuario.listas.get(nombre="Pendientes")
+
+    def _agregar(self, lista, cliente=None):
+        return (cliente or self.cliente).post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": 550, "tipo": "movie"},
+            format="json",
+        )
+
+    def _calificar(self):
+        respuesta = self.cliente.post(
+            "/api/reviews/",
+            {"id_tmdb": 550, "tipo": "movie", "valor": 8},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 201)
+
+    def _en(self, lista):
+        return lista.items.exists()
+
+    def test_el_boton_watched_la_saca_de_pendientes(self):
+        self.assertEqual(self._agregar(self.pendientes).status_code, 201)
+
+        self.assertEqual(self._agregar(self.vistas).status_code, 201)
+
+        self.assertTrue(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
+
+    def test_calificar_la_saca_de_pendientes(self):
+        self._agregar(self.pendientes)
+
+        self._calificar()
+
+        self.assertTrue(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
+
+    def test_volver_a_agregarla_a_pendientes_sigue_permitido(self):
+        # Ya vista, la quiere volver a ver: la agrega a «Pendientes» y después
+        # la califica. Calificar no la saca, porque ya estaba en «Vistas».
+        self._agregar(self.vistas)
+        self.assertEqual(self._agregar(self.pendientes).status_code, 201)
+
+        self._calificar()
+
+        self.assertTrue(self._en(self.pendientes))
+
+    def test_otras_listas_no_tocan_pendientes(self):
+        self._agregar(self.pendientes)
+        personalizada = ListaFactory(usuario=self.usuario, nombre="Ciencia ficción")
+
+        self._agregar(self.usuario.listas.get(nombre="Favoritos"))
+        self._agregar(personalizada)
+
+        self.assertTrue(self._en(self.pendientes))
+
+    def test_solo_toca_los_pendientes_de_quien_la_marca(self):
+        otro = UsuarioFactory()
+        cliente_otro = APIClient()
+        cliente_otro.force_authenticate(otro)
+        pendientes_del_otro = otro.listas.get(nombre="Pendientes")
+        self._agregar(pendientes_del_otro, cliente_otro)
+
+        self._agregar(self.vistas)
+
+        self.assertTrue(self._en(pendientes_del_otro))
+
+    def test_quitarla_de_vistas_no_la_devuelve_a_pendientes(self):
+        self._agregar(self.pendientes)
+        item_id = self._agregar(self.vistas).data["item_id"]
+
+        self.assertEqual(
+            self.cliente.delete(
+                f"/api/lists/{self.vistas.pk}/items/{item_id}/"
+            ).status_code,
+            204,
+        )
+
+        self.assertFalse(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
+
+    def test_si_el_alta_en_vistas_falla_pendientes_queda_intacta(self):
+        # Ya está en «Vistas» y la volvió a poner en «Pendientes»: un segundo
+        # alta en «Vistas» responde 409 y no debe borrar nada.
+        self._agregar(self.vistas)
+        self._agregar(self.pendientes)
+
+        self.assertEqual(self._agregar(self.vistas).status_code, 409)
+
+        self.assertTrue(self._en(self.pendientes))
+
+
 class _BaseLectura(TestCase):
     """Varios usuarios y varias producciones: leer es cruzar datos de otros."""
 
@@ -808,13 +914,118 @@ class ResenasDeLaComunidadTests(_BaseLectura):
 
                 self.assertEqual(respuesta.status_code, 400)
 
-    def test_los_anonimos_no_leen_resenas(self):
-        # Decisión heredada de L-01 y del middleware de A-09: toda la API de
-        # datos propios exige sesión. La ficha pública de C-03 no muestra
-        # reseñas; el doc 04 pone «Inicia sesión para...» en ese lugar.
-        self.assertEqual(
-            APIClient().get("/api/reviews/?id_tmdb=550&tipo=movie").status_code, 401
+    def test_los_anonimos_leen_las_resenas_de_todos(self):
+        # Cambió el 14/10/2026 (C-07): las reseñas son públicas y la ficha se ve
+        # sin sesión. Sin usuario no hay «la propia» que sacar.
+        self._resena(valor=9, texto="La mía, visible para un anónimo.")
+        self._resena(usuario=UsuarioFactory(), valor=7, texto="De otra persona.")
+
+        respuesta = APIClient().get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.json()["total"], 2)
+
+    def test_los_anonimos_siguen_sin_poder_calificar(self):
+        respuesta = APIClient().post(
+            "/api/reviews/",
+            {"id_tmdb": 550, "tipo": "movie", "valor": 9},
+            format="json",
         )
+
+        self.assertEqual(respuesta.status_code, 401)
+
+
+class ComunidadOrdenYFiltroTests(_BaseLectura):
+    """`orden`, `nota_min` y `nota_max` en las reseñas de la comunidad (C-07)."""
+
+    URL = "/api/reviews/?id_tmdb=550&tipo=movie"
+
+    def setUp(self):
+        super().setUp()
+        self.anonimo = APIClient()
+
+    def _valores(self, respuesta):
+        return [resena["valor"] for resena in respuesta.json()["results"]]
+
+    def _sembrar(self):
+        # Cuatro personas, notas y fechas distintas.
+        for valor, fecha in (
+            (6, "2026-09-01"),
+            (10, "2026-09-03"),
+            (3, "2026-09-02"),
+            (8, "2026-09-04"),
+        ):
+            self._resena(usuario=UsuarioFactory(), valor=valor, fecha=fecha)
+
+    def test_cada_orden_ordena_como_dice(self):
+        self._sembrar()
+        casos = {
+            "fecha-desc": [8, 10, 3, 6],
+            "fecha-asc": [6, 3, 10, 8],
+            "nota-desc": [10, 8, 6, 3],
+            "nota-asc": [3, 6, 8, 10],
+        }
+        for orden, esperado in casos.items():
+            with self.subTest(orden=orden):
+                respuesta = self.anonimo.get(f"{self.URL}&orden={orden}")
+
+                self.assertEqual(self._valores(respuesta), esperado)
+
+    def test_sin_orden_son_las_mas_nuevas_primero(self):
+        self._sembrar()
+
+        self.assertEqual(self._valores(self.anonimo.get(self.URL)), [8, 10, 3, 6])
+
+    def test_un_orden_desconocido_responde_400(self):
+        respuesta = self.anonimo.get(f"{self.URL}&orden=azar")
+
+        self.assertEqual(respuesta.status_code, 400)
+        error = respuesta.json()["errors"][0]
+        self.assertEqual((error["field"], error["code"]), ("orden", "invalid_choice"))
+
+    def test_nota_min_y_nota_max_filtran_incluyendo_los_bordes(self):
+        self._sembrar()
+        casos = {
+            "&nota_min=8": [8, 10],
+            "&nota_max=6": [3, 6],
+            "&nota_min=6&nota_max=8": [8, 6],
+        }
+        for query, esperado in casos.items():
+            with self.subTest(query=query):
+                respuesta = self.anonimo.get(self.URL + query)
+
+                self.assertEqual(self._valores(respuesta), esperado)
+
+    def test_notas_fuera_de_rango_responden_400(self):
+        for query in ("&nota_min=0", "&nota_max=11", "&nota_min=abc"):
+            with self.subTest(query=query):
+                self.assertEqual(self.anonimo.get(self.URL + query).status_code, 400)
+
+    def test_total_cuenta_lo_filtrado_y_total_comunidad_todo(self):
+        self._sembrar()
+
+        datos = self.anonimo.get(f"{self.URL}&nota_min=8").json()
+
+        self.assertEqual((datos["total"], datos["total_comunidad"]), (2, 4))
+
+    def test_el_cursor_por_nota_no_repite_ni_saltea_con_muchas_notas_iguales(self):
+        # 25 reseñas con la misma nota y 5 con otra: con páginas de 20, la
+        # segunda página depende de desempatar bien entre los 8.
+        for _ in range(25):
+            self._resena(usuario=UsuarioFactory(), valor=8)
+        for _ in range(5):
+            self._resena(usuario=UsuarioFactory(), valor=9)
+
+        vistas = []
+        url = f"{self.URL}&orden=nota-desc"
+        while url:
+            datos = self.anonimo.get(url).json()
+            vistas += [(r["nombre_usuario"], r["valor"]) for r in datos["results"]]
+            url = datos["next"]
+
+        self.assertEqual(len(vistas), 30)
+        self.assertEqual(len(set(vistas)), 30)
+        self.assertEqual([valor for _, valor in vistas], [9] * 5 + [8] * 25)
 
 
 class MisResenasTests(_BaseLectura):

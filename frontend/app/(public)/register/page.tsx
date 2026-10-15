@@ -1,21 +1,31 @@
 "use client";
-import { routes } from "@/lib/routes";
-import { useTranslations } from "next-intl";
-import enums from "@/i18n/enums.json";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Check, Circle } from "lucide-react";
 
-import { Check, Eye, EyeOff, Info, Loader2, X } from "lucide-react";
-
-import { GoogleLinkButton } from "@/components/GoogleLinkButton";
-import { Button } from "@/components/ui/button";
+import { AccessShell } from "@/components/access/AccessShell";
+import { ConfirmationSent } from "@/components/access/ConfirmationSent";
+import { AccessLogo } from "@/components/access/Logo";
+import {
+  FieldError,
+  FieldOk,
+  PasswordField,
+  TextField,
+  fieldClass,
+} from "@/components/access/fields";
+import { primaryButtonClass, secondaryButtonClass } from "@/components/access/styles";
+import enums from "@/i18n/enums.json";
 import { currentLocale } from "@/i18n/client";
 import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
+import { translateError } from "@/lib/errors";
+import { marcarGooglePendiente } from "@/lib/google-auth";
+import { savePendingEmail } from "@/lib/pending-email";
+import { passwordRules } from "@/lib/password-rules";
+import { routes } from "@/lib/routes";
 import { useValidation } from "@/lib/use-validation";
-
-const inputClass =
-  "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
 type Campo =
   | "nombre"
@@ -25,34 +35,27 @@ type Campo =
   | "fecha_nacimiento"
   | "genero"
   | "password1"
-  | "password2";
+  | "password2"
+  | "acepta_terminos";
 
 type Errores = Partial<Record<Campo, string>>;
 
-/** Fecha máxima para el datepicker: hoy −13 años (enforcement visual; el backend valida). */
+const ERROR_DELAY_MS = 600;
+
+/** Fecha máxima para el selector: hoy −13 años (el backend es quien valida). */
 function maxFechaNacimiento(): string {
   const d = new Date();
   d.setFullYear(d.getFullYear() - 13);
   return d.toISOString().slice(0, 10);
 }
 
-function ErrorTexto({ mensaje }: { mensaje?: string }) {
-  if (!mensaje) return null;
-  return (
-    <p className="mt-1 text-xs text-destructive" role="alert">
-      {mensaje}
-    </p>
-  );
-}
-
 export default function RegisterPage() {
-  const labels = useTranslations("enums.gender");
+  const t = useTranslations("auth");
+  const common = useTranslations("common");
+  const nav = useTranslations("nav.account");
+  const gender = useTranslations("enums.gender");
   const errors = useTranslations("errors.codes");
-  const GENEROS = enums.genderValues.map((value) => ({
-    value,
-    label: labels(value as "masculino"),
-  }));
-
+  const router = useRouter();
   const {
     validarApellido,
     validarConfirmacion,
@@ -62,18 +65,8 @@ export default function RegisterPage() {
     validarNombreUsuario,
     validarPassword,
   } = useValidation();
-  const VALIDADORES: Record<Campo, (valor: string, form: Record<Campo, string>) => string | null> =
-    {
-      nombre: (v) => validarNombre(v),
-      apellido: (v) => validarApellido(v),
-      nombre_usuario: (v) => validarNombreUsuario(v),
-      correo: (v) => validarCorreo(v),
-      fecha_nacimiento: (v) => validarFechaNacimiento(v),
-      genero: (v) => (v ? null : errors("required")),
-      password1: (v) => validarPassword(v),
-      password2: (v, form) => validarConfirmacion(form.password1, v),
-    };
-  const [form, setForm] = useState<Record<Campo, string>>({
+
+  const [form, setForm] = useState<Record<Exclude<Campo, "acepta_terminos">, string>>({
     nombre: "",
     apellido: "",
     nombre_usuario: "",
@@ -83,35 +76,68 @@ export default function RegisterPage() {
     password1: "",
     password2: "",
   });
-  const [errores, setErrores] = useState<Errores>({});
-  const [tocados, setTocados] = useState<Partial<Record<Campo, boolean>>>({});
+  const [acepta, setAcepta] = useState(false);
+  // «Sucio» = el usuario escribió o eligió algo en el campo; foco y blur no cuentan.
+  const [sucios, setSucios] = useState<Partial<Record<Campo, boolean>>>({});
+  const [erroresServidor, setErroresServidor] = useState<Errores>({});
+  // Copia con retardo: el error de un campo de texto aparece cuando el usuario
+  // hace una pausa, no en cada pulsación.
+  const [diferido, setDiferido] = useState(form);
   const [usernameEstado, setUsernameEstado] = useState<
     "idle" | "checking" | "disponible" | "ocupado"
   >("idle");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [enviado, setEnviado] = useState(false);
-  const [reenviando, setReenviando] = useState(false);
-  const [reenviado, setReenviado] = useState(false);
-  const [mostrarPassword1, setMostrarPassword1] = useState(false);
-  const [mostrarPassword2, setMostrarPassword2] = useState(false);
-
+  const [enviadoA, setEnviadoA] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  function setField(field: Campo, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const validadores: Record<
+    Exclude<Campo, "acepta_terminos">,
+    (valor: string, actual: typeof form) => string | null
+  > = {
+    nombre: (v) => validarNombre(v),
+    apellido: (v) => validarApellido(v),
+    nombre_usuario: (v) => validarNombreUsuario(v),
+    correo: (v) => validarCorreo(v),
+    fecha_nacimiento: (v) => validarFechaNacimiento(v),
+    genero: (v) => (v ? null : errors("required")),
+    password1: (v) => validarPassword(v),
+    password2: (v, actual) => validarConfirmacion(actual.password1, v),
+  };
+
+  const formularioValido =
+    acepta &&
+    usernameEstado === "disponible" &&
+    (Object.keys(validadores) as (keyof typeof form)[]).every(
+      (campo) => !validadores[campo](form[campo], form)
+    );
+
+  useEffect(() => {
+    const id = setTimeout(() => setDiferido(form), ERROR_DELAY_MS);
+    return () => clearTimeout(id);
+  }, [form]);
+
+  function setField(campo: keyof typeof form, valor: string) {
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+    setSucios((prev) => ({ ...prev, [campo]: true }));
+    setErroresServidor((prev) => ({ ...prev, [campo]: undefined }));
   }
 
-  function validarCampo(campo: Campo, valor: string): string | null {
-    return VALIDADORES[campo](valor, form);
+  /**
+   * Error visible de un campo: solo si el usuario ya lo modificó y el valor
+   * actual sigue siendo inválido. En texto espera a que haga una pausa;
+   * en selección y fecha (`inmediato`) aparece al instante.
+   */
+  function mostrar(campo: Campo, inmediato = false): string | undefined {
+    if (erroresServidor[campo]) return erroresServidor[campo];
+    if (campo === "acepta_terminos" || !sucios[campo]) return undefined;
+    const actual = validadores[campo](form[campo], form);
+    if (!actual) return undefined;
+    if (inmediato) return actual;
+    return validadores[campo](diferido[campo], diferido) ? actual : undefined;
   }
 
-  function onBlurCampo(campo: Campo) {
-    setTocados((prev) => ({ ...prev, [campo]: true }));
-    setErrores((prev) => ({ ...prev, [campo]: validarCampo(campo, form[campo]) }));
-  }
-
-  // Disponibilidad de nombre de usuario en tiempo real (A-05), con debounce.
+  // Disponibilidad del nombre de usuario en vivo, con debounce.
   useEffect(() => {
     const valor = form.nombre_usuario.trim();
     clearTimeout(debounceRef.current);
@@ -128,8 +154,7 @@ export default function RegisterPage() {
           { signal: controller.signal, headers: { "Accept-Language": currentLocale() } }
         );
         if (!res.ok) {
-          // Un error (p.ej. 429 por rate limit) no es "ocupado": se vuelve a
-          // idle para no bloquear el formulario con un estado erróneo.
+          // Un error (p. ej. 429 (Too Many Requests)) no significa «ocupado».
           setUsernameEstado("idle");
           return;
         }
@@ -145,20 +170,11 @@ export default function RegisterPage() {
     };
   }, [form.nombre_usuario, validarNombreUsuario]);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
     setError(null);
 
-    const nuevosErrores: Errores = {};
-    for (const campo of Object.keys(VALIDADORES) as Campo[]) {
-      const mensaje = VALIDADORES[campo](form[campo], form);
-      if (mensaje) nuevosErrores[campo] = mensaje;
-    }
-    if (Object.keys(nuevosErrores).length > 0) {
-      setErrores(nuevosErrores);
-      setTocados(Object.fromEntries(Object.keys(nuevosErrores).map((c) => [c, true])));
-      return;
-    }
+    if (!formularioValido) return;
 
     setLoading(true);
     try {
@@ -173,349 +189,276 @@ export default function RegisterPage() {
           genero: form.genero,
           password1: form.password1,
           password2: form.password2,
+          acepta_terminos: true,
         },
       });
-      setEnviado(true);
+      savePendingEmail(form.correo);
+      setEnviadoA(form.correo);
     } catch (err) {
       if (err instanceof ApiError) {
-        // Errores de campo del backend → inline bajo cada input.
         const porCampo = extraerErroresPorCampo(err);
         const mapeados: Errores = {};
-        for (const campo of Object.keys(VALIDADORES) as Campo[]) {
+        for (const campo of [...Object.keys(validadores), "acepta_terminos"] as Campo[]) {
           if (porCampo[campo]) mapeados[campo] = porCampo[campo];
         }
         if (Object.keys(mapeados).length > 0) {
-          setErrores((prev) => ({ ...prev, ...mapeados }));
-          setTocados((prev) => ({
-            ...prev,
-            ...Object.fromEntries(Object.keys(mapeados).map((c) => [c, true])),
-          }));
+          setErroresServidor((prev) => ({ ...prev, ...mapeados }));
           if ("nombre_usuario" in mapeados) setUsernameEstado("ocupado");
         } else {
           setError(err.message);
         }
       } else {
-        setError("No se pudo crear la cuenta.");
+        setError(translateError({ code: "unknown" }));
       }
     } finally {
       setLoading(false);
     }
   }
 
-  const usernameValido = !validarNombreUsuario(form.nombre_usuario);
-
-  function hintUsername() {
-    if (usernameEstado === "checking") {
-      return (
-        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-          <Loader2 className="size-3 animate-spin" /> Verificando disponibilidad…
-        </p>
-      );
-    }
-    if (usernameEstado === "disponible") {
-      return (
-        <p className="mt-1 flex items-center gap-1 text-xs text-green-600">
-          <Check className="size-3" /> Nombre de usuario disponible
-        </p>
-      );
-    }
-    if (usernameEstado === "ocupado") {
-      return (
-        <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
-          <X className="size-3" /> Este nombre de usuario no está disponible
-        </p>
-      );
-    }
-    return null;
+  function onGoogle() {
+    marcarGooglePendiente();
+    router.push(routes.completeSignup);
   }
 
-  if (enviado) {
+  if (enviadoA) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center">
-          <h1 className="mb-3 text-2xl font-bold text-foreground">Revisá tu bandeja de entrada</h1>
-          <p className="mb-6 text-sm text-muted-foreground">
-            Te enviamos un enlace de confirmación a{" "}
-            <span className="text-foreground">{form.correo}</span>. El enlace es válido durante 24
-            horas. Si no lo encontrás, revisá la carpeta de spam.
-          </p>
-          <div className="flex flex-col items-center gap-3">
-            <button
-              type="button"
-              disabled={reenviando}
-              onClick={async () => {
-                setReenviando(true);
-                setError(null);
-                try {
-                  await apiFetch("/api/auth/registration/resend-email/", {
-                    method: "POST",
-                    body: { email: form.correo },
-                  });
-                  setReenviado(true);
-                } catch (err) {
-                  setError(
-                    err instanceof ApiError ? err.message : "No se pudo reenviar el correo."
-                  );
-                } finally {
-                  setReenviando(false);
-                }
-              }}
-              className="text-sm text-primary hover:underline disabled:opacity-50"
-            >
-              {reenviando ? "Reenviando…" : reenviado ? "✓ Correo reenviado" : "Reenviar correo"}
-            </button>
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
-            <Link href={routes.login} className="text-primary hover:underline">
-              ¿Ya confirmaste? Iniciar sesión
-            </Link>
-          </div>
-        </div>
-      </main>
+      <AccessShell>
+        <ConfirmationSent email={enviadoA} />
+      </AccessShell>
     );
   }
 
+  const reglas = passwordRules(form.password1);
+  const reglaTextos = {
+    length: t("password.lengthRule"),
+    case: t("password.caseRule"),
+    number: t("password.numberRule"),
+    symbol: t("password.symbolRule"),
+  } as const;
+  const usernameValido = !validarNombreUsuario(form.nombre_usuario);
+  const usernameError = mostrar("nombre_usuario");
+  const usernameStatus =
+    usernameError || !usernameValido ? null : usernameEstado === "disponible" ? (
+      <FieldOk id="usuario-estado">{t("signUp.usernameAvailable")}</FieldOk>
+    ) : usernameEstado === "ocupado" ? (
+      <FieldError>{errors("username_already_used")}</FieldError>
+    ) : null;
+
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8">
-        {/* Wireframe docs/04 §5f: el wordmark vive dentro de la caja, sin navbar. */}
-        <p className="mb-4 text-center text-2xl font-bold text-foreground">FilmAI</p>
-        <h1 className="mb-1 text-2xl font-bold text-foreground">Crear cuenta</h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Completá tus datos para registrarte en FilmAI.
-        </p>
-
-        <div className="mb-6 flex justify-center">
-          <GoogleLinkButton />
+    <AccessShell>
+      <div className="flex w-full max-w-[480px] flex-col gap-[22px]">
+        <AccessLogo className="mb-3 self-start" />
+        <div>
+          <h1 className="mb-3 font-display text-[48px] leading-[0.95] sm:text-[60px]">
+            {nav("signUp")}
+          </h1>
+          <p className="text-muted-foreground">{t("signUp.description")}</p>
         </div>
-
-        <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+        <button type="button" onClick={onGoogle} className={secondaryButtonClass}>
+          <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-white">
+            <svg className="size-4" viewBox="0 0 48 48">
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+              />
+            </svg>
+          </span>
+          {t("google.continue")}
+        </button>
+        <div aria-hidden="true" className="flex items-center gap-3.5 text-sm text-fg-3">
           <span className="h-px flex-1 bg-border" />
-          o con tu email
+          {t("signUp.alternativeDivider")}
           <span className="h-px flex-1 bg-border" />
         </div>
-
-        <form onSubmit={onSubmit} noValidate className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="register-nombre" className="mb-1 block text-sm text-muted-foreground">
-              Nombre
-            </label>
-            <input
-              className={`${inputClass} ${tocados.nombre && errores.nombre ? "border-destructive" : ""}`}
-              id="register-nombre"
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+          <div className="grid grid-cols-2 gap-4">
+            <TextField
+              label={common("fields.firstName")}
               name="nombre"
+              autoComplete="given-name"
+              maxLength={50}
               value={form.nombre}
               onChange={(e) => setField("nombre", e.target.value)}
-              onBlur={() => onBlurCampo("nombre")}
-              aria-invalid={Boolean(tocados.nombre && errores.nombre)}
-              required
+              error={mostrar("nombre")}
+              help={t("signUp.nameHelp")}
             />
-            <ErrorTexto mensaje={tocados.nombre ? errores.nombre : undefined} />
-          </div>
-          <div>
-            <label htmlFor="register-apellido" className="mb-1 block text-sm text-muted-foreground">
-              Apellido
-            </label>
-            <input
-              className={`${inputClass} ${tocados.apellido && errores.apellido ? "border-destructive" : ""}`}
-              id="register-apellido"
+            <TextField
+              label={common("fields.lastName")}
               name="apellido"
+              autoComplete="family-name"
+              maxLength={50}
               value={form.apellido}
               onChange={(e) => setField("apellido", e.target.value)}
-              onBlur={() => onBlurCampo("apellido")}
-              aria-invalid={Boolean(tocados.apellido && errores.apellido)}
-              required
+              error={mostrar("apellido")}
+              help={t("signUp.nameHelp")}
             />
-            <ErrorTexto mensaje={tocados.apellido ? errores.apellido : undefined} />
           </div>
-          <div className="col-span-2">
-            <label
-              htmlFor="register-nombre_usuario"
-              className="mb-1 block text-sm text-muted-foreground"
-            >
-              Nombre de usuario
-            </label>
-            <input
-              className={`${inputClass} ${
-                tocados.nombre_usuario && errores.nombre_usuario
-                  ? "border-destructive"
-                  : usernameEstado === "disponible"
-                    ? "border-green-600"
-                    : ""
-              }`}
-              id="register-nombre_usuario"
-              name="nombre_usuario"
-              value={form.nombre_usuario}
-              onChange={(e) => setField("nombre_usuario", e.target.value)}
-              onBlur={() => onBlurCampo("nombre_usuario")}
-              placeholder="5-25 caracteres alfanuméricos"
-              aria-invalid={Boolean(tocados.nombre_usuario && errores.nombre_usuario)}
-              required
-            />
-            <ErrorTexto mensaje={tocados.nombre_usuario ? errores.nombre_usuario : undefined} />
-            {usernameValido && hintUsername()}
-          </div>
-          <div className="col-span-2">
-            <label htmlFor="register-correo" className="mb-1 block text-sm text-muted-foreground">
-              Correo
-            </label>
-            <input
-              className={`${inputClass} ${tocados.correo && errores.correo ? "border-destructive" : ""}`}
-              type="email"
-              id="register-correo"
-              name="correo"
-              value={form.correo}
-              onChange={(e) => setField("correo", e.target.value)}
-              onBlur={() => onBlurCampo("correo")}
-              aria-invalid={Boolean(tocados.correo && errores.correo)}
-              required
-            />
-            <ErrorTexto mensaje={tocados.correo ? errores.correo : undefined} />
-          </div>
-          <div>
-            <label
-              htmlFor="register-fecha_nacimiento"
-              className="mb-1 block text-sm text-muted-foreground"
-            >
-              Fecha de nacimiento
-            </label>
-            <input
-              className={`${inputClass} ${tocados.fecha_nacimiento && errores.fecha_nacimiento ? "border-destructive" : ""}`}
+          <TextField
+            label={common("fields.username")}
+            name="nombre_usuario"
+            autoComplete="username"
+            prefix="@"
+            value={form.nombre_usuario}
+            onChange={(e) => setField("nombre_usuario", e.target.value)}
+            error={usernameError}
+            status={usernameStatus}
+            help={t("signUp.usernameHelp")}
+          />
+          <TextField
+            label={common("fields.email")}
+            name="correo"
+            type="email"
+            autoComplete="email"
+            value={form.correo}
+            onChange={(e) => setField("correo", e.target.value)}
+            error={mostrar("correo")}
+          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              label={common("fields.birthDate")}
+              name="fecha_nacimiento"
               type="date"
               max={maxFechaNacimiento()}
-              id="register-fecha_nacimiento"
-              name="fecha_nacimiento"
               value={form.fecha_nacimiento}
               onChange={(e) => setField("fecha_nacimiento", e.target.value)}
-              onBlur={() => onBlurCampo("fecha_nacimiento")}
-              aria-invalid={Boolean(tocados.fecha_nacimiento && errores.fecha_nacimiento)}
-              required
+              error={mostrar("fecha_nacimiento", true)}
+              help={t("signUp.minimumAgeHelp")}
             />
-            <p className="mt-1 text-xs text-muted-foreground">Formato: dd/mm/aaaa</p>
-            <ErrorTexto mensaje={tocados.fecha_nacimiento ? errores.fecha_nacimiento : undefined} />
+            <div className="flex flex-col gap-2">
+              <label htmlFor="genero" className="text-sm font-semibold">
+                {t("signUp.genderLabel")}
+              </label>
+              <select
+                id="genero"
+                name="genero"
+                className={fieldClass}
+                value={form.genero}
+                onChange={(e) => setField("genero", e.target.value)}
+                aria-invalid={mostrar("genero", true) ? true : undefined}
+              >
+                <option value="" disabled />
+                {enums.genderValues.map((value) => (
+                  <option key={value} value={value}>
+                    {gender(value as "masculino")}
+                  </option>
+                ))}
+              </select>
+              {mostrar("genero", true) && <FieldError>{mostrar("genero", true)}</FieldError>}
+            </div>
           </div>
-          <div>
-            <label htmlFor="register-genero" className="mb-1 block text-sm text-muted-foreground">
-              Género
-            </label>
-            <select
-              className={`${inputClass} ${tocados.genero && errores.genero ? "border-destructive" : ""}`}
-              id="register-genero"
-              name="genero"
-              value={form.genero}
-              onChange={(e) => setField("genero", e.target.value)}
-              onBlur={() => onBlurCampo("genero")}
-              aria-invalid={Boolean(tocados.genero && errores.genero)}
-              required
-            >
-              <option value="" disabled>
-                Selecciona uno
-              </option>
-              {GENEROS.map((g) => (
-                <option key={g.value} value={g.value}>
-                  {g.label}
-                </option>
+          <PasswordField
+            label={t("password.label")}
+            name="password1"
+            autoComplete="new-password"
+            value={form.password1}
+            onChange={(e) => setField("password1", e.target.value)}
+            error={mostrar("password1")}
+          >
+            <ul className="flex flex-col gap-1.5 text-sm" aria-label={t("password.label")}>
+              {(Object.keys(reglas) as (keyof typeof reglas)[]).map((regla) => (
+                <li key={regla} className="flex items-center gap-2">
+                  {reglas[regla] ? (
+                    <Check aria-hidden="true" className="size-[15px] flex-none text-ok" />
+                  ) : (
+                    <Circle aria-hidden="true" className="size-[15px] flex-none text-fg-3" />
+                  )}
+                  <span className={reglas[regla] ? "text-muted-foreground" : "text-foreground"}>
+                    {reglaTextos[regla]}
+                    <span className="sr-only">
+                      {" "}
+                      {reglas[regla]
+                        ? t("password.ruleSatisfiedLabel")
+                        : t("password.ruleMissingLabel")}
+                    </span>
+                  </span>
+                </li>
               ))}
-            </select>
-            <ErrorTexto mensaje={tocados.genero ? errores.genero : undefined} />
-          </div>
-          <div className="col-span-2">
-            <label
-              htmlFor="register-password1"
-              className="mb-1 flex items-center gap-1.5 text-sm text-muted-foreground"
+            </ul>
+          </PasswordField>
+          <PasswordField
+            label={common("fields.passwordConfirm")}
+            name="password2"
+            autoComplete="new-password"
+            value={form.password2}
+            onChange={(e) => setField("password2", e.target.value)}
+            error={mostrar("password2")}
+          />
+          <div className="flex flex-col gap-2">
+            <div
+              className={`flex items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--line)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
             >
-              Contraseña
-              <span className="group relative inline-flex">
-                <Info className="size-3.5 cursor-help" />
-                <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-56 -translate-x-1/2 rounded-lg border border-border bg-popover p-3 text-left text-xs font-normal text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">
-                  La contraseña debe tener:
-                  <ul className="mt-1 list-disc space-y-0.5 pl-4">
-                    <li>8 a 20 caracteres</li>
-                    <li>1 mayúscula</li>
-                    <li>1 minúscula</li>
-                    <li>1 número</li>
-                    <li>1 carácter especial (@#$%&*!)</li>
-                  </ul>
-                </span>
-              </span>
-            </label>
-            <div className="relative">
               <input
-                className={`${inputClass} pr-10 ${tocados.password1 && errores.password1 ? "border-destructive" : ""}`}
-                type={mostrarPassword1 ? "text" : "password"}
-                id="register-password1"
-                name="password1"
-                value={form.password1}
-                onChange={(e) => setField("password1", e.target.value)}
-                onBlur={() => onBlurCampo("password1")}
-                autoComplete="new-password"
-                aria-invalid={Boolean(tocados.password1 && errores.password1)}
-                required
+                id="terminos"
+                name="acepta_terminos"
+                type="checkbox"
+                checked={acepta}
+                onChange={(e) => {
+                  setAcepta(e.target.checked);
+                  setErroresServidor((prev) => ({ ...prev, acepta_terminos: undefined }));
+                }}
+                aria-invalid={mostrar("acepta_terminos") ? true : undefined}
+                aria-describedby="terminos-error"
+                className="mt-0.5 size-5 flex-none cursor-pointer accent-primary"
               />
-              <button
-                type="button"
-                onClick={() => setMostrarPassword1((v) => !v)}
-                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
-                aria-label="Mostrar u ocultar contraseña"
+              <label
+                htmlFor="terminos"
+                className="flex-1 cursor-pointer text-[15px] leading-[1.45] text-muted-foreground"
               >
-                {mostrarPassword1 ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+                {t.rich("signUp.termsAcceptance", {
+                  terms: (chunks) => (
+                    <Link
+                      href={routes.terms}
+                      target="_blank"
+                      rel="noopener"
+                      className="font-semibold text-foreground underline underline-offset-[3px]"
+                    >
+                      {chunks}
+                      <span className="sr-only"> {t("signUp.termsNewTabHint")}</span>
+                    </Link>
+                  ),
+                })}
+              </label>
             </div>
-            <ErrorTexto mensaje={tocados.password1 ? errores.password1 : undefined} />
-          </div>
-          <div className="col-span-2">
-            <label
-              htmlFor="register-password2"
-              className="mb-1 block text-sm text-muted-foreground"
-            >
-              Confirmar contraseña
-            </label>
-            <div className="relative">
-              <input
-                className={`${inputClass} pr-10 ${tocados.password2 && errores.password2 ? "border-destructive" : ""}`}
-                type={mostrarPassword2 ? "text" : "password"}
-                id="register-password2"
-                name="password2"
-                value={form.password2}
-                onChange={(e) => setField("password2", e.target.value)}
-                onBlur={() => onBlurCampo("password2")}
-                autoComplete="new-password"
-                aria-invalid={Boolean(tocados.password2 && errores.password2)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setMostrarPassword2((v) => !v)}
-                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
-                aria-label="Mostrar u ocultar contraseña"
-              >
-                {mostrarPassword2 ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+            <div id="terminos-error">
+              {mostrar("acepta_terminos") && <FieldError>{mostrar("acepta_terminos")}</FieldError>}
             </div>
-            <ErrorTexto mensaje={tocados.password2 ? errores.password2 : undefined} />
           </div>
-
-          {error && (
-            <p className="col-span-2 text-sm text-destructive" role="alert">
-              {error}
+          {error && <FieldError>{error}</FieldError>}
+          <button
+            type="submit"
+            disabled={!formularioValido || loading}
+            aria-describedby={formularioValido ? undefined : "registro-pendiente"}
+            // Deshabilitado por formulario incompleto: bloqueado. Mientras envía: espera
+            // (`primaryButtonClass` ya trae `disabled:cursor-wait`, por eso el `!`).
+            className={`${primaryButtonClass} disabled:opacity-60 ${loading ? "" : "disabled:cursor-not-allowed!"}`}
+          >
+            {nav("signUp")}
+          </button>
+          {!formularioValido && (
+            <p id="registro-pendiente" className="-mt-2 text-center text-[13px] text-fg-3">
+              {t("signUp.submitPending")}
             </p>
           )}
-
-          <Button type="submit" disabled={loading} size="lg" className="col-span-2">
-            {loading ? "Creando cuenta…" : "Crear cuenta"}
-          </Button>
         </form>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          ¿Ya tenés cuenta?{" "}
-          <Link href={routes.login} className="text-primary hover:underline">
-            Iniciar sesión
+        <p className="text-center text-muted-foreground">
+          {t("landing.loginPrompt")}{" "}
+          <Link href={routes.login} className="font-semibold text-foreground">
+            {nav("logIn")}
           </Link>
         </p>
       </div>
-    </main>
+    </AccessShell>
   );
 }

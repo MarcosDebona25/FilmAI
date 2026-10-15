@@ -6,14 +6,11 @@ import { prepararCuenta } from "./cuenta";
 test("edita nombre compuesto y avatar; la navbar refleja el cambio", async ({ page }) => {
   const cuenta = await prepararCuenta(page);
   await page.goto("/profile");
-  await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
+  // Canvas: el título de la página es el nombre de la persona.
+  await expect(page.getByRole("heading", { level: 1, name: "Juan Pérez" })).toBeVisible();
   await expect(page.getByText("Pérez", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Editar perfil" }).click();
-  await expect(
-    page
-      .getByText("Solo letras y espacios entre palabras; máximo 50 caracteres.", { exact: false })
-      .first()
-  ).toBeVisible();
+  await expect(page.getByText(es.auth.signUp.nameHelp).first()).toBeVisible();
   await page.getByLabel("Nombre", { exact: true }).fill("  Juan   Carlos  ");
   await page.getByLabel("Apellido", { exact: true }).fill(" De   la Cruz ");
   await page.getByRole("button", { name: "Cambiar avatar" }).click();
@@ -29,7 +26,9 @@ test("edita nombre compuesto y avatar; la navbar refleja el cambio", async ({ pa
     avatar_id: 26,
   });
   await expect(
-    page.getByRole("button", { name: "Menú de usuario" }).getByAltText(es.common.avatar.currentAlt)
+    page
+      .getByRole("button", { name: "Menú de Juan Carlos De la Cruz" })
+      .getByAltText(es.common.avatar.currentAlt)
   ).toBeVisible();
 });
 
@@ -40,9 +39,11 @@ test("enfoca el dato inválido y advierte antes de perder cambios", async ({ pag
   await page.getByLabel("Apellido", { exact: true }).fill("123");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByLabel("Apellido", { exact: true })).toBeFocused();
-  await expect(page.locator("#apellido-error")).toHaveText(es.errors.codes.person_name_invalid);
+  await expect(
+    page.getByRole("alert").filter({ hasText: es.errors.codes.person_name_invalid })
+  ).toBeVisible();
 
-  await page.getByRole("banner").getByRole("link", { name: "FilmAI", exact: true }).click();
+  await page.getByRole("banner").getByRole("link", { name: es.nav.main.brandHomeLabel }).click();
   await expect(page.getByRole("dialog", { name: "¿Salir sin guardar?" })).toBeVisible();
   await page.getByRole("button", { name: "Seguir editando" }).click();
   await expect(page).toHaveURL(/\/profile$/);
@@ -67,7 +68,7 @@ test("cancelar conserva el borrador o descarta solo tras confirmar", async ({ pa
 test("confirma navegación a un enlace y atrás/adelante sin perder el destino", async ({ page }) => {
   await prepararCuenta(page);
   await page.goto("/settings");
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
+  await page.getByRole("button", { name: "Menú de Juan Pérez" }).click();
   await page.getByRole("menuitem", { name: "Mi perfil" }).click();
   await page.getByRole("button", { name: "Editar perfil" }).click();
   await page.getByLabel("Nombre", { exact: true }).fill("Pedro");
@@ -83,11 +84,12 @@ test("confirma navegación a un enlace y atrás/adelante sin perder el destino",
   await expect(page).toHaveURL(/\/profile$/);
   await page.getByRole("button", { name: "Editar perfil" }).click();
   await page.getByLabel("Nombre", { exact: true }).fill("Otro");
-  await page.getByRole("banner").getByRole("link", { name: "FilmAI", exact: true }).click();
+  await page.getByRole("banner").getByRole("link", { name: es.nav.main.brandHomeLabel }).click();
   await page.getByRole("button", { name: "Salir sin guardar" }).click();
-  await expect(page).toHaveURL("http://127.0.0.1:3100/");
+  await expect(page).toHaveURL("http://127.0.0.1:3100/home");
 });
-for (const theme of ["oscuro", "claro"])
+// Solo tema oscuro desde el 15/10/2026.
+for (const theme of ["oscuro"])
   test(`disponibilidad verde y roja en tema ${theme}`, async ({ page }) => {
     await prepararCuenta(page);
     await page.route("**/api/preferences/", (route) =>
@@ -99,15 +101,16 @@ for (const theme of ["oscuro", "claro"])
     await page.goto("/profile");
     await page.getByRole("button", { name: "Editar perfil" }).click();
     await page.getByLabel("Nombre de usuario", { exact: true }).fill("disponible");
-    await expect(page.getByText("Disponible", { exact: true })).toHaveClass(/text-green/);
+    // Colores del canvas: `ok` y `destructive`.
+    await expect(page.getByText("Disponible", { exact: true })).toHaveClass(/text-ok/);
     await page.getByLabel("Nombre de usuario", { exact: true }).fill("ocupado");
-    await expect(page.getByText("No disponible", { exact: true })).toHaveClass(/text-red/);
+    await expect(page.getByText("No disponible", { exact: true })).toHaveClass(/text-destructive/);
   });
 
 test("adelante con cambios permite continuar editando o confirmar el destino", async ({ page }) => {
   await prepararCuenta(page);
   await page.goto("/profile");
-  await page.getByRole("button", { name: "Menú de usuario" }).click();
+  await page.getByRole("button", { name: "Menú de Juan Pérez" }).click();
   await page.getByRole("menuitem", { name: "Preferencias" }).click();
   await expect(page).toHaveURL(/\/settings$/);
   await page.evaluate(() => history.back());

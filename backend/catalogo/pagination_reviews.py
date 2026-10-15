@@ -1,10 +1,9 @@
 """Paginación de las reseñas (C-08)."""
 
-from rest_framework.pagination import CursorPagination
-from rest_framework.response import Response
+from filmai.paginacion import CursorConTotal
 
 
-class ResenaCursorPagination(CursorPagination):
+class ResenaCursorPagination(CursorConTotal):
     """Cursor de 20 para los dos scrolls infinitos: la ficha y «Mis reseñas».
 
     Cursor y no `?page=2` por la misma razón que L-01 lo eligió para los ítems
@@ -17,40 +16,23 @@ class ResenaCursorPagination(CursorPagination):
     criterio estable el orden entre ellas podría cambiar de una consulta a otra
     y el cursor perdería el hilo.
 
-    Agrega `total` a la respuesta, que `CursorPagination` no trae. No traerlo es
-    deliberado en DRF: un cursor no sabe cuántas filas hay detrás y así evita el
-    `COUNT(*)`. Pero el encabezado de §5c dice «Reseñas de la comunidad (N)», así
-    que el número hace falta.
+    El `total` lo agrega `CursorConTotal`: el encabezado de §5c dice «Reseñas de
+    la comunidad (N)», así que el número hace falta.
     """
 
     page_size = 20
     ordering = ("-fecha", "-id")
+    # La comunidad de la ficha lo fija con el total sin filtros, para «Showing X
+    # of N» (C-07). «Mis reseñas» no lo usa y la respuesta no lo trae.
+    total_comunidad = None
+    # «Mis reseñas» lo fija con el total propio sin filtros (15/10/2026), para
+    # distinguir «no calificaste nada» de «nada con estos filtros».
+    total_propias = None
 
-    def paginate_queryset(self, queryset, request, view=None):
-        """Cuenta el total acá, que es donde se ve el queryset completo.
-
-        La alternativa era que la vista pasara el total como argumento a
-        `get_paginated_response()`. Funciona, pero deja una trampa: ese método lo
-        llama también DRF por su cuenta en las vistas genéricas
-        (`ListAPIView.list()`), sin ese argumento. El día que alguien migre estas
-        vistas de `APIView` a una genérica, la respuesta empezaría a traer
-        `"total": null` **sin fallar** — y un encabezado que dice «Reseñas ()» no
-        se parece lo suficiente a un error como para que alguien lo investigue.
-
-        Contándolo acá no hay argumento que olvidar ni firma que no coincida con
-        la de DRF, y el paginador sirve igual en una vista genérica.
-        """
-        # Siempre es un QuerySet: `CursorPagination` le pide `.order_by()` dos
-        # líneas más abajo, así que una lista nunca llega hasta acá.
-        self.total = queryset.count()
-        return super().paginate_queryset(queryset, request, view)
-
-    def get_paginated_response(self, data):
-        return Response(
-            {
-                "total": self.total,
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "results": data,
-            }
-        )
+    def extras(self):
+        extras = {}
+        if self.total_comunidad is not None:
+            extras["total_comunidad"] = self.total_comunidad
+        if self.total_propias is not None:
+            extras["total_propias"] = self.total_propias
+        return extras

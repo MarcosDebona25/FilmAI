@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
-import { Inter, Roboto } from "next/font/google";
+import { Big_Shoulders, Hanken_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { Footer, PublicLanguageControl } from "@/components/LocaleControls";
+import { Footer } from "@/components/Footer";
+import { MobileTabs } from "@/components/MobileTabs";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
 import { NavigationGuard } from "@/components/NavigationGuard";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
 });
 
-const roboto = Roboto({
-  variable: "--font-roboto",
+const bigShoulders = Big_Shoulders({
+  variable: "--font-big-shoulders",
   subsets: ["latin"],
+  weight: ["800"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,14 +39,14 @@ export default async function RootLayout({
   const locale = await getLocale();
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} ${roboto.variable} antialiased`}>
+      <body className={`${hanken.variable} ${bigShoulders.variable} antialiased`}>
         <NextIntlClientProvider>
           <AccountProvider>
             <NavigationGuard>
-              <PublicLanguageControl />
               <Navbar />
               {children}
               <Footer />
+              <MobileTabs />
             </NavigationGuard>
           </AccountProvider>
           <Toaster position="top-center" />

@@ -8,7 +8,7 @@ Read-only DRF REST layer exposing the catalog to the frontend via `/api/catalogo
 
 ### Requirement: Endpoint surface
 
-The system MUST expose seven read-only `GET` endpoints, each delegating to exactly one `TMDBClientCache` method.
+The system MUST expose read-only `GET` endpoints, each delegating to a `TMDBClientCache` method.
 
 | Endpoint | Cache method |
 |---|---|
@@ -19,6 +19,9 @@ The system MUST expose seven read-only `GET` endpoints, each delegating to exact
 | `GET /api/catalogo/movie/{id_tmdb}/` | `get_movie_detail` |
 | `GET /api/catalogo/tv/{id_tmdb}/` | `get_tv_detail` |
 | `GET /api/catalogo/keywords/` | `get_keywords` |
+| `GET /api/catalogo/{movie,tv}/{id_tmdb}/credits/` | `get_credits` (and `get_tv_detail` for shows) |
+
+The credits endpoint (C-07) is the only one that reshapes TMDB's JSON: `{"directores": [...], "reparto": [{"nombre", "personaje"}]}`, at most 50 cast members in TMDB's order. For movies the directors are the crew with `job == "Director"`; for shows, the detail's `created_by`, because TMDB has no series-level director.
 
 #### Scenario: Raw JSON passthrough
 
@@ -36,6 +39,14 @@ The system MUST forward each query/path parameter to the matching cache-method a
 - GIVEN `/api/catalogo/discover/` with `tipo=movie&genero=28&anio=2024&min_rating=7.5`
 - WHEN the endpoint handles it
 - THEN `discover("movie", genero=28, anio=2024, min_rating=7.5, page=...)` is invoked
+
+#### Scenario: Discover with a minimum of votes (C-05)
+
+- GIVEN `/api/catalogo/discover/` with `tipo=tv&min_votes=50`
+- WHEN the endpoint handles it
+- THEN `discover` is invoked with `min_votos=50`, sent to TMDB as `vote_count.gte=50`
+- AND the cache key includes it, so the same query without the minimum is a different entry
+- AND `min_votes=0` or a non-integer answers 400 without calling the service
 
 #### Scenario: Search params
 
@@ -172,3 +183,27 @@ inglés los nombres vacíos.
 - WHEN se pide el detalle con `Accept-Language: es`
 - THEN `overview` trae el texto inglés y `campos_en_ingles` es `["overview"]`
 - AND una segunda solicitud no vuelve a llamar a TMDB
+
+### Requirement: Buscar combina discover y search (C-06)
+
+`GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 `invalid_choice`) and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
+
+- Without text it MUST use `discover` sorted by popularity, with at least 50 votes, except for a future year or `a_estrenar` without a rating filter (announced titles have no votes); `a_estrenar` sends `primary_release_date.gte` / `first_air_date.gte` with tomorrow's date; shows MUST exclude News and Talk unless a genre is chosen.
+- With text it MUST read up to the first 5 TMDB `search` pages per type (sending the year as `primary_release_year` or `first_air_date_year`), keep the items that pass the filters, and sort all of them — movies and shows together in `all` — by `max(vote_count, popularity × 100)`, descending, keeping TMDB's order on ties; pages hold 20 per type (40 in `all`). TMDB's relevance order puts titles with no votes first, and an upcoming title with high popularity must not sink (decided 14/10/2026).
+- Genre, rating, `a_estrenar` and `decada` MUST be filtered on those items (by release date for `a_estrenar` and `decada`, without a date out; rating with at least 50 votes). A TMDB error in any page MUST fail the request, never return a partial count.
+- Without text, `all` MUST alternate movies and shows and add their totals. A genre MUST be mapped to its show id when TMDB uses another one (28 and 12 → 10759, 878 and 14 → 10765, 10752 → 10768); a genre with no counterpart MUST leave that side empty without calling TMDB for it.
+
+`GET /api/catalogo/genres/?tipo=all` MUST return the movie genres followed by the show-only ones with no movie counterpart (10762, 10763, 10764, 10766, 10767).
+
+#### Scenario: Text and genre on «All»
+
+- GIVEN «dune» with genre 878
+- WHEN `browse/?q=dune&genero=878` is requested
+- THEN movies are filtered by 878 and shows by 10765 within the first 5 pages of each
+- AND the results alternate movie and show
+
+#### Scenario: Default grid
+
+- GIVEN no text and no filters
+- WHEN `browse/?tipo=tv` is requested
+- THEN `discover/tv` is called with `vote_count.gte=50` and `without_genres=10763,10767`

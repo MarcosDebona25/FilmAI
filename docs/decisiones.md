@@ -3698,3 +3698,583 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Archivos afectados**: `docs/decisiones.md`, docs 02 (CU-013), 03
   (`Mensaje.tarjetas`), 04 (§3.1), 05 (B-02 a B-05) y 06 (tools),
   `docs/i18n/guia.md` y `PRODUCT.md`.
+
+## 12/10/2026 — Interfaces de acceso y aceptación de los Términos y Condiciones
+
+- **Fecha**: 12/10/2026
+- **Descripción**: se implementan Landing, Login, Registro y Confirmación del canvas «FilmAI — Sistema y catálogo» (sección «Access»), en escritorio y celular, y se exige aceptar los Términos y Condiciones al crear una cuenta.
+- **Decisiones**:
+  1. **Aceptación en la cuenta**: `Usuario.fecha_aceptacion_terminos` (`DateTimeField`, nulo). El registro local recibe `acepta_terminos` (obligatorio: falta → `required`; falso → `terms_not_accepted`, 400 (Bad Request)). El alta con Google lo exige solo para cuentas nuevas y se rechaza con el mismo código en el campo `acepta_terminos`. El servidor fija la fecha con su hora; el cliente no la envía. Las cuentas anteriores quedan en nulo (no se inventa una aceptación); el seed y la factory crean las cuentas con la fecha.
+  2. **Texto legal en Markdown**: `frontend/content/legal/terms.{en,es}.md`, copiado del artboard «Terms and Conditions» del canvas, para que un abogado lo revise sin tocar código. Se retiró `legal.json` del catálogo i18n y del generador: el texto legal ya no sale de los CSV. `/terms` es una versión mínima (se refina en el punto 9: con/sin sesión y escritorio/celular).
+  3. **Reenvío del enlace vencido**: la pantalla solo conoce la clave, no el correo. El correo se guarda en `sessionStorage` al registrarse y se usa para reenviar; si no está, la pantalla lo pide. La espera entre reenvíos es de 60 s en el cliente.
+  4. **Tema**: solo oscuro. Se actualizaron los tokens oscuros al sistema del canvas y se agregaron los propios (`--raised`, `--line`, `--fg-2`, `--fg-3`, `--ok`, `--on-accent`); el claro llega con Apariencia en Preferencias.
+  5. **Tipografía**: Big Shoulders (títulos) y Hanken Grotesk (texto) reemplazan a Inter y Roboto.
+  6. **Pantallas completas**: Landing, Login, Registro y Confirmación ocultan barra y pie (`isAccessPath` en `lib/routes.ts`); el selector de idioma sin sesión vive en el marco de esas pantallas y reemplaza a `PublicLanguageControl`.
+  7. Se eliminan `GoogleLinkButton` y las excepciones legacy de Landing, Login y Registro; `complete-signup` queda como excepción hasta que tenga diseño.
+- **Motivo**: cumplir con la exigencia de aceptación con evidencia en la cuenta y permitir la revisión jurídica del texto sin acoplarlo al catálogo.
+- **Archivos afectados**: backend (`usuarios/models.py`, migración `0008_fecha_aceptacion_terminos`, `serializers.py`, `adapter.py`, `admin.py`, `factories.py`, seed, `filmai/errores/catalogo.py`, `contracts/error-codes.json` y `contracts/openapi.yaml`, golden de registro y tests); frontend (`app/(public)/page.tsx`, `login`, `register`, `confirm-email`, `terms`, `complete-signup`, `components/access/*`, `lib/legal.ts`, `lib/password-rules.ts`, `lib/pending-email.ts`, `lib/routes.ts`, `app/globals.css`, `app/layout.tsx`, `scripts/i18n/*`, catálogos y tests unitarios/Playwright); docs 02, 03 (y JSON del diagrama), 04, `docs/i18n/copia-propuesta.csv` y `guia.md`.
+- **Tests**: Django (registro sin/falso/verdadero, Google sin aceptación, fecha guardada, seed con fecha, contratos y golden); Vitest (reglas de contraseña, cuenta regresiva, Markdown legal, registro, login, recuperación y confirmación); Playwright (landing, login, registro, términos y confirmación en escritorio y celular).
+
+## 12/10/2026 — Validación inline del registro: sin errores por foco/blur y envío condicionado
+
+- **Fecha**: 12/10/2026
+- **Descripción**: El formulario de registro marcaba cada campo al perder el foco, lo que llenaba la pantalla de errores al recorrerlo con Tab, y dejaba pulsar «Sign up» con datos inválidos. Se cambió a:
+  1. **Campo «sucio»**: un campo solo puede mostrar error después de que la persona escribe o elige algo en él; foco y blur no intervienen. El error se deriva del valor actual (sin estado duplicado), por lo que la confirmación de contraseña se revalida sola al editar la contraseña original.
+  2. **Retardo en texto**: el error de un campo de texto aparece tras ~600 ms sin teclear; selección y fecha, al instante. Un campo escrito y vaciado muestra «obligatorio».
+  3. **Botón con `disabled` nativo** hasta que todo es válido, el usuario está disponible y los Términos están aceptados, con un texto de ayuda (`auth.signUp.submitPending`). Los errores del servidor se muestran en su campo y se limpian al editarlo.
+  4. **`/complete-signup`**: mismo comportamiento; el botón de Google queda inerte (`inert`) hasta que el formulario es válido.
+- **Motivo**: evitar una UI invasiva y no permitir envíos que se sabe que fallan.
+- **Archivos afectados**: `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `docs/i18n/copia-propuesta.csv` (`auth.signUp.submitPending`), catálogos generados, `docs/04_Lineamientos_UI.md` (11.3), tests `tests/access-screens.test.tsx`, `tests/complete-signup.test.tsx`, `e2e/acceso.spec.ts`.
+
+## 12/10/2026 — Pantallas de error y menú de cuenta (sección 11 del canvas)
+
+- **Fecha**: 12/10/2026
+- **Descripción**: se implementan «404 and error» (escritorio y celular) y «Account menu» del canvas «FilmAI — Sistema y catálogo».
+- **Decisiones**:
+  1. **404 (Not Found)**: `app/not-found.tsx` con el código «Error 404», Back to Home y Search. **Error inesperado**: `app/error.tsx` con «Try again» (llama a `reset()` de Next) y Back to Home. Ambas comparten `components/errors/ErrorScreens.tsx` y conservan el encabezado y el pie del sitio. Clave nueva: `errors.pages.notFoundCode`.
+  2. **Rutas**: `routes.explore` (`/home`) y `routes.search` (`/search`) se enlazan aunque esas pantallas aún no existan; mientras tanto muestran la pantalla 404. La landing apunta a `routes.explore` en lugar del literal `/inicio`.
+  3. **Encabezado**: `Navbar` sigue el canvas (marca, Home/Search/Lists, avatar) y sale de las excepciones legacy. Sin sesión ofrece Log in y Sign up como enlaces. La página actual lleva `aria-current`.
+  4. **Menú de cuenta** (`components/AccountMenu.tsx`): cabecera con nombre y `@usuario`, Mi perfil, Calificaciones y reseñas, Preferencias y Cerrar sesión; teclado completo (flechas, Home, End, Escape). Cerrar sesión pide confirmación con `alertdialog` (el foco inicial queda en Cancelar). Si el servidor falla se avisa con un toast traducido y la sesión se mantiene.
+  5. **Celular**: barra inferior `MobileTabs` (Home, Search, Lists, Profile) solo con sesión. Hasta integrar Perfil móvil (sección 9, donde el canvas ubica «Log out»), el avatar del encabezado abre el mismo menú en celular para no perder el cierre de sesión.
+  6. **Tema**: solo oscuro; todo usa tokens semánticos (`bg-raised`, `text-fg-2`, `border-line`…), de modo que el tema claro se activa sin tocar estos componentes.
+- **Motivo**: cerrar la sección 11 del canvas y retirar `Navbar` de las excepciones del linter i18n.
+- **Archivos afectados**: `frontend/components/{Navbar,AccountMenu,MobileTabs}.tsx`, `frontend/components/errors/ErrorScreens.tsx`, `frontend/app/{not-found,error,layout}.tsx`, `frontend/app/(public)/page.tsx`, `frontend/lib/routes.ts`, `frontend/scripts/i18n/rules.mjs`, `docs/i18n/copia-propuesta.csv`, catálogos generados, tests `tests/errors-and-account-menu.test.tsx`, `e2e/errores-menu.spec.ts` y ajustes en `e2e/cuenta.spec.ts` y `e2e/perfil.spec.ts`.
+
+---
+
+## 12/10/2026 — Acceso a la documentación interna (sección 12 del canvas)
+
+- **Fecha**: 12/10/2026
+- **Descripción**: la página 403 de `/api/docs/` y `/api/schema/` pasa a seguir «Admin access» del canvas (escritorio y celular): estado «iniciar sesión» con formulario real, estado de error y estado «sin permisos».
+- **Decisiones**:
+  1. **Dónde vive**: es una página servida por Django (`templates/filmai/documentacion_restringida.html`), no una ruta de Next.js, porque protege recursos del backend y usa la sesión de Django. Un solo HTML responsive: en celular el formulario se muestra sin tarjeta, como en el canvas.
+  2. **Formulario**: `POST /api/docs/login/` (`ingresar_a_documentacion`, `csrf_protect`) autentica por correo o nombre de usuario, exige `is_staff` y cuenta activa, abre la sesión de Django y vuelve a la ruta pedida. Una contraseña incorrecta, una cuenta inexistente y una cuenta común con clave válida reciben el mismo aviso («Incorrect admin credentials.»), con costo de hash igualado para no revelar qué cuentas existen. El destino `next` solo puede ser `/api/docs/` o `/api/schema/`; cualquier otro valor vuelve a Swagger.
+  3. **Límite de intentos** (aprobado por el equipo): 10 fallos por IP cada 60 minutos (caché de Django); al superarlo responde 429 (Too Many Requests). El formulario muestra siempre la política y, tras cada fallo, los intentos restantes. Un ingreso correcto reinicia el contador. Es una defensa nueva respecto del Admin de Django, que no limita intentos.
+  4. **Sin permisos**: una sesión sin `is_staff` ve «Your account has no access» con su `@usuario`. **Diferencia con el canvas**: «Switch account» no enlaza al login de la aplicación (que abre una sesión JWT distinta y no sirve para la documentación) sino al mismo formulario (`?cuenta=otra`); el ingreso staff reemplaza la sesión anterior. «Back to FilmAI» y «Back to Home» apuntan a `FRONTEND_URL`.
+  5. **Idioma**: el canvas está en inglés, pero la página respeta la regla de idioma de la aplicación: cuenta → `Accept-Language` → inglés (`idioma_efectivo`), con textos en/es de paridad verificada por test. Antes estaba fija en español.
+  6. **Tema**: solo oscuro; los tokens del tema claro quedan definidos en la plantilla (`.tema-claro`) para activarlo luego.
+  7. **Omitido**: la lista vacía «Includes» del canvas no se renderiza (no tiene contenido).
+- **Motivo**: cerrar la sección 12 del canvas y reemplazar el aviso con enlace al login del Admin por un acceso con el mismo diseño que el resto del producto.
+- **Archivos afectados**: `backend/filmai/documentation.py`, `backend/filmai/urls.py`, `backend/templates/filmai/documentacion_restringida.html`, `backend/filmai/tests.py` (`DocumentacionApiTests` actualizada e `IngresoDocumentacionTests` nueva), `frontend/e2e/documentacion-admin.spec.ts`, `openspec/specs/admin-api-docs/spec.md`.
+
+---
+
+## 12/10/2026 — 404 con y sin sesión (sección 11 del canvas)
+
+- **Fecha**: 12/10/2026
+- **Descripción**: `NotFoundScreen` tiene dos variantes aprobadas en el canvas. **Con sesión**: «This page doesn’t exist», Back to Home y Search. **Sin sesión**: «We can’t find that page», Back to Home, Log in y «New to FilmAI? Create a free account». Mientras se resuelve la sesión se muestra la variante con sesión, que no pide cuenta.
+- **Encabezado**: sin sesión desaparece el enlace a Lists, como en la propuesta; la barra inferior móvil ya solo existía con sesión.
+- **Archivos afectados**: `frontend/components/errors/ErrorScreens.tsx`, `frontend/components/Navbar.tsx`, `docs/i18n/copia-propuesta.csv` (4 claves `errors.pages.*`), catálogos generados, `tests/errors-and-account-menu.test.tsx` y `e2e/errores-menu.spec.ts`.
+
+---
+
+## 12/10/2026 — Correos de cuenta con el diseño del canvas
+
+- **Fecha**: 12/10/2026
+- **Descripción**: los cuatro correos (confirmación de cuenta, confirmación de correo, restablecer contraseña y contraseña actualizada) adoptan el diseño de las cuatro pantallas «Correo-*» del canvas, en español e inglés.
+- **Decisiones**:
+  1. **Una sola base**: se rediseña `correos/base.html`; las plantillas por caso y por idioma conservan sus bloques, asunto y texto plano. La copia ya coincidía con el canvas, solo se unió la advertencia en un único párrafo.
+  2. **Estilo**: tarjeta oscura con barra de acento, marca, título grande, botón amarillo y fila de enlace copiable. «Contraseña actualizada» usa botón secundario con borde, como en el canvas, y no repite el enlace.
+  3. **Cliente de correo**: tabla con estilos en línea. La tipografía de marca se declara con alternativas del sistema, porque Gmail y otros clientes ignoran las fuentes web. La marca usa una celda amarilla con estrella en lugar del SVG del canvas, que muchos clientes eliminan.
+  4. **Tema**: solo oscuro. El canvas ofrece una variante clara, que no se implementa en correo porque el cliente decide el esquema.
+  5. **Omitido**: las líneas «From» y «Subject» del canvas son anotaciones de la maqueta, no parte del mensaje.
+  6. **Limpieza**: se elimina `color_secundario` del contexto del servicio y el naranja anterior.
+- **Pruebas**: referencias doradas regeneradas (`tests_golden/correos/*.json`) y `test_html_sigue_el_diseno_del_canvas` en `filmai/test_servicio_correos.py`.
+- **Archivos afectados**: `backend/templates/correos/base.html`, `backend/templates/correos/*/*/message.html`, `backend/filmai/correos/servicio.py`, `backend/filmai/test_servicio_correos.py`, `backend/filmai/tests_golden/correos/`, `openspec/specs/emails/spec.md`.
+
+
+---
+
+## 12/10/2026 — Footer del canvas en escritorio y celular
+
+- **Fecha**: 12/10/2026
+- **Descripción**: el pie de página se reconstruye según los tableros «Footer · desktop» y «Footer · mobile» del canvas, que son la referencia vigente. Reemplaza al pie anterior (`LocaleControls.tsx`), que mezclaba una versión mínima con el selector de idioma.
+- **Decisiones**:
+  1. **Escritorio**: marca con descripción y tres columnas (Explore: Home y Search; Your library: My lists, Ratings & reviews, My profile y Settings; Information: Terms and Conditions e idioma), más una fila inferior con la atribución de TMDB y el copyright.
+  2. **Celular**: marca con descripción corta y lista de filas (Terms and Conditions e Idioma con el idioma actual), con la atribución y el copyright debajo. Las columnas de navegación no se repiten porque la barra inferior ya cubre Home, Search, Lists y Profile.
+  3. **Idioma**: con sesión es un enlace a `/settings#t-idioma` (solo se cambia en Preferencias). Sin sesión, el canvas solo define la pastilla de escritorio; en celular se usa la pastilla compacta `EN | ES` ya existente, y se suman las filas Sign up y Log in porque no hay barra inferior.
+  4. **Omitido**: el enlace «Ask FilmAI» del canvas no se implementa porque el chatbot (sección 10) aún no tiene ruta; la clave sigue excluida del catálogo (D11). Se agrega cuando exista la pantalla.
+  5. **Visibilidad**: sigue montado en el layout raíz y se oculta en las pantallas de acceso (`isAccessPath`), de modo que aparece en todas las páginas con encabezado (Settings, Profile, My reviews, Terms, errores y reset-password).
+  6. **Tema**: usa los tokens del sistema (`line`, `fg-2`, `fg-3`), así que sigue el tema claro/oscuro.
+  7. **Copia**: reutiliza las claves `footer.main.*` y `nav.*`; solo se agrega `footer.main.languageLink` (nombre accesible del enlace de idioma) en `copia-propuesta.csv`.
+- **Pruebas**: `tests/footer.test.tsx` (enlaces, con/sin sesión, ocultamiento) y `e2e/i18n-flows.spec.ts` actualizado (390 y 1280 px).
+- **Archivos afectados**: `frontend/components/Footer.tsx` (nuevo), `frontend/components/LocaleControls.tsx` (eliminado), `frontend/app/layout.tsx`, `docs/i18n/copia-propuesta.csv`, catálogos generados, `docs/04_Lineamientos_UI.md`, `openspec/specs/i18n-core/spec.md`.
+
+---
+
+## 12/10/2026 — Enlace «Ask FilmAI» en el footer (provisorio)
+
+- **Fecha**: 12/10/2026
+- **Descripción**: se agrega al footer el enlace «Ask FilmAI» del canvas aunque el chatbot todavía no exista, por pedido explícito. Reemplaza el punto 4 de la entrada «Footer del canvas en escritorio y celular» (que lo omitía).
+- **Decisiones**:
+  1. **Ubicación**: columna Explore en escritorio y fila entre Terms and Conditions e Idioma en celular, con y sin sesión.
+  2. **Ruta provisoria**: `routes.askFilmAI = "/chat"`. No hay pantalla, así que hoy responde 404 (Not Found).
+  3. **Copia**: nueva clave `footer.main.askFilmAI` en `copia-propuesta.csv` («Preguntale a FilmAI» / «Ask FilmAI»); la fila `chatbot` de `claves.csv` sigue excluida (D11).
+- **Pendiente**: al desarrollar el chatbot (sección 10), definir la ruta final de la pantalla, actualizar `routes.askFilmAI` y retirar la nota de ruta provisoria; revisar la clave del catálogo.
+- **Pruebas**: `tests/footer.test.tsx` verifica el enlace (escritorio y celular, con y sin sesión).
+- **Archivos afectados**: `frontend/components/Footer.tsx`, `frontend/lib/routes.ts`, `frontend/tests/footer.test.tsx`, `docs/i18n/copia-propuesta.csv`, catálogos generados.
+
+---
+
+## 12/10/2026 — Selector de idioma único EN | ES
+
+- **Fecha**: 12/10/2026
+- **Descripción**: el selector «English | Español» (Settings y footer de escritorio sin sesión) pasa al mismo estilo que el selector `EN | ES` de las pantallas de acceso y del footer móvil, para tener un único componente en todo el sistema. Se actualizó el canvas (Footer, Settings escritorio y móvil, nota de decisiones de idioma).
+- **Decisiones**:
+  1. `LanguageSwitcher` pierde la prop `compact`: siempre muestra `EN` / `ES` (píldora de 40 px, activo con `bg-selected`).
+  2. El nombre completo («English», «Español») se conserva como `aria-label` del radio, así que lectores de pantalla y pruebas no cambian.
+  3. Las claves `settings.language.english` / `spanish` siguen en el catálogo, ahora solo como etiqueta accesible.
+4. Regla de ubicación sin sesión (confirmada el 12/10/2026): si la pantalla no tiene navbar (Landing, Log in, Sign up, Account confirmation), el selector va arriba a la derecha; si tiene navbar (Terms, 404, error inesperado), va en el footer. Con sesión no hay selector fuera de Settings. Se probó ponerlo también en el navbar de Terms y se descartó; Terms queda como estaba.
+5. El canvas gana la variante sin sesión del footer móvil (`Footer-Movil.dc.html`, prop `sesion`) y el padding superior de 75 px del contenido de la Landing en escritorio, que ya estaban en el código.
+- **Archivos afectados**: `frontend/components/LanguageSwitcher.tsx`, `frontend/components/Footer.tsx`, `frontend/components/access/AccessShell.tsx`, `docs/04_Lineamientos_UI.md`.
+- **Nota sobre el canvas**: My profile, Settings y Ratings & reviews se marcaron como «hay que rehacer» (el artboard es la fuente de verdad); no se implementó nada en esta entrada.
+
+---
+
+## 12/10/2026 — «Ingresar» / «Registrarse» en lugar de «Iniciar sesión» / «Crear cuenta»
+
+- **Fecha**: 12/10/2026
+- **Descripción**: en celular, con el texto en español, «Iniciar sesión» y «Crear cuenta» no entran en una fila del navbar junto al logo (se partían en dos líneas en el 404 sin sesión). Se acortan los rótulos del glosario en español: Log in → **Ingresar**, Sign up → **Registrarse**. El inglés no cambia.
+- **Decisiones**:
+  1. Se modifican las claves `nav.account.logIn` y `nav.account.signUp` en `docs/i18n/claves.csv` (`es_original` y `es_curado`); los catálogos se regeneran.
+  2. El glosario de `docs/i18n/guia.md` y los textos de `docs/04_Lineamientos_UI.md` que nombran esos botones se actualizan.
+  3. **Sin cambios**: los casos de uso (CU-001, CU-003) y las frases con verbo («Iniciá sesión de nuevo», «Creá una cuenta gratis»), que no son rótulos de botón.
+- **Corrección relacionada**: el botón de registro deshabilitado por formulario incompleto mostraba el cursor `wait` (progress) porque `primaryButtonClass` aplica `disabled:cursor-wait` y le ganaba a `disabled:cursor-not-allowed`. Ahora usa `not-allowed` mientras el formulario es inválido y `wait` solo mientras envía.
+- **Archivos afectados**: `docs/i18n/claves.csv`, `docs/i18n/guia.md`, `docs/04_Lineamientos_UI.md`, catálogos generados, `frontend/app/(public)/register/page.tsx`.
+
+---
+
+## 12/10/2026 — Terms and Conditions en celular
+
+- **Fecha**: 12/10/2026
+- **Descripción**: la pantalla `/terms` se ajusta al artboard «Terms · mobile»: índice «On this page» plegable (`<details>`), enlace de regreso (con sesión a Settings, sin sesión a la portada), título de 48 px, secciones con h2 de 28 px y márgenes del canvas. En escritorio no cambia: sigue pendiente la miga de pan Profile › Settings › Terms del artboard de escritorio.
+- **Archivos afectados**: `frontend/app/terms/page.tsx`, `frontend/components/TermsBackLink.tsx`, `frontend/tests/terms-back-link.test.tsx`, `frontend/e2e/acceso.spec.ts`.
+
+---
+
+## 12/10/2026 — Estado de la interfaz frente al canvas en el plan de desarrollo
+
+- **Fecha**: 12/10/2026
+- **Descripción**: `docs/05_Plan_de_Desarrollo.md` gana la sección «Estado de la interfaz frente al canvas de Claude Design», con una fila por sección del canvas y cuatro estados (✅ completa, 🟡 parcial, 🔁 rehacer, ⬜ falta), para que se vea qué pantallas ya coinciden con el diseño y cuáles hay que desarrollar o actualizar. Se corrigieron filas desactualizadas (rutas de A-02, A-06 y A-07, y Q-02, que ya está implementada) y se marcaron P-02, P-04 y P-06 como «UI a rehacer».
+- **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`. La nota «Interfaces: código vs pendientes» del canvas refleja el mismo estado.
+
+---
+
+## 13/10/2026 — CI en las ramas `develop/**` y PRs hacia `develop/ui-design`
+
+- **Fecha**: 13/10/2026
+- **Descripción**: el CI pasa a correr en los PRs hacia una rama `develop/**` y en los push a esas ramas. Hasta ahora solo corría en `main`, `develop` y `feat/**`, así que `develop/ui-design` (creada el 12/10/2026, después de que `develop` se integró a `main` y se borró) no tenía ninguna verificación automática. Gonza trabaja las pantallas del catálogo (C-05 Home, C-06 Buscar, C-07 Ficha y el modal de C-08) en ramas propias, con PR hacia `develop/ui-design`, y las mergea él mismo con el CI en verde, como dice la sección 8 de `AGENTS.md`.
+- **Motivo**: sin esto, un PR hacia `develop/ui-design` se mergeaba sin correr ruff, los tests de Django, Vitest, Playwright ni el build. Para un `pull_request`, GitHub toma el workflow del commit de merge, así que este mismo PR ya corre con el disparador nuevo y verifica por primera vez los commits del 12/10/2026.
+- **Test salteado en el CI**: al correr por primera vez sobre `develop/ui-design`, falló `frontend/e2e/documentacion-admin.spec.ts` (del 12/10/2026). Ese test usa el backend real (`docker compose exec backend ...`) y el job de Playwright solo levanta Next.js, con la API simulada. Se saltea cuando existe la variable `CI` (`test.skip(!!process.env.CI, ...)`) y sigue corriendo en local con Docker levantado. El backend de esa pantalla ya tiene cobertura en la suite de Django. Si se quiere en el CI, hay que levantar Docker Compose en el job de Playwright.
+- **Archivos afectados**: `.github/workflows/ci.yml`, `frontend/e2e/documentacion-admin.spec.ts`, `docs/decisiones.md`.
+
+---
+
+## 13/10/2026 — Home de descubrimiento (C-05): SDD y decisiones
+
+- **Fecha**: 13/10/2026
+- **Descripción**: Gonza abre el SDD de C-05 en `openspec/changes/home-catalogo/` (proposal, design y tasks). Decisiones del usuario:
+  1. **Orden de las pantallas del catálogo**: Home → Ficha (C-07 con el modal de C-08) → Buscar (C-06). La ficha es el destino de todas las tarjetas y la necesita L-04; Buscar reusa piezas del Home.
+  2. **Ruta de la ficha**: `/movie/[id]` y `/tv/[id]`, con el helper `routes.title(tipo, id)`. Mismo nombre que la API (`/api/catalogo/movie/<id>/`) y que TMDB, y Next.js responde 404 (Not Found) solo ante un tipo inválido porque esa carpeta no existe. Se descartó `/title/[tipo]/[id]`, que obliga a validar el tipo a mano. El tipo va en la URL en las dos opciones porque TMDB numera películas y series por separado.
+  3. **Recomendado para ti**: `GET /api/catalogo/recommended/?tipo=all|movie|tv`, con sesión. Por tipo, los 3 géneros más repetidos entre las calificaciones activas de 7 o más (empate: el de la calificación más reciente); `discover` con los géneros unidos con OR, `popularity.desc` y `vote_count.gte=100`; se excluyen los pares `(id_tmdb, tipo)` de «Vistas»; hasta 15 de la primera página. Devuelve los nombres de los géneros usados para el subtítulo de la fila. Verificado contra TMDB el 13/10/2026: con OR quedan 14.610 películas y con AND 841; sin mínimo de votos, 9 de 20 películas tenían menos de 100 votos y aparecía un anime adulto sin la marca `adult`.
+  4. **Novedades de series**: `discover` gana el parámetro `min_votes` (`vote_count.gte`) y la fila lo usa con 50: sin mínimo, 10 de 20 series de 2026 tenían menos de 50 votos; con 50 quedan 150 y con 100 solo 73. `now-playing` no admite ese filtro y queda como está.
+  5. **Hero**: en «Todo», el primer título de tendencias con imagen de fondo («#N en tendencias»); en «Películas» y «Series», el primero de ese tipo que no sea el Hero de «Todo» («Destacada de la semana»). Regla pedida el 03/10/2026 en el canvas.
+  6. **Botón «Ask FilmAI»** en el Home ya, solo con sesión, hacia `/chat` (404 (Not Found) hasta B-04), como el enlace del footer.
+  7. **El selector vive en la URL** (`/home?type=movie|tv`), para que se conserve al volver de una ficha.
+  8. **Tamaño de las filas**: Tendencias y Novedades, 20 (una página de TMDB); Recomendado, hasta 15.
+  9. **«Todo» alterna película y serie** en Recomendado y Novedades. El usuario pidió revisar más adelante, con datos reales, separar filas por tipo al estilo Netflix (descartado el 30/09/2026 por largo en celular y siete pedidos al cargar; además deja el selector casi sin uso y el canvas dibuja filas mezcladas).
+  10. **Barra de navegación sobre el Hero** en escritorio, solo en `/home`, como el artboard. Toca `components/Navbar.tsx` (Marcos).
+  11. **Errores**: la fila que falla se oculta y un único toast avisa; si fallan todas, mensaje con «Try again».
+- **Entrega**: cuatro PRs contra `develop/ui-design`: SDD y docs, backend, piezas compartidas (`TypeSelector`, `MediaCard`, `MediaRow`) y la página.
+- **Archivos afectados**: `openspec/changes/home-catalogo/`, `docs/04_Lineamientos_UI.md` (§2: el Home pasa a «Mixta»; §3.3 y §5), `docs/decisiones.md`.
+
+---
+
+## 13/10/2026 — Recomendado para ti: implementación del backend (C-05, PR 2)
+
+- **Fecha**: 13/10/2026
+- **Descripción**: se implementa `GET /api/catalogo/recommended/` según el SDD (`openspec/changes/home-catalogo/design.md` §2) y el parámetro `min_votes` de `GET /api/catalogo/discover/`. Decisiones de implementación:
+  1. **Servicio aparte** en `catalogo/services/recomendado.py`, sin HTTP ni idiomas: la vista le pasa el servicio de TMDB ya localizado (`servicio_localizado`) y una función que traduce ids de género a nombres. Así los resultados llevan `campos_en_ingles` como el resto del catálogo, y el servicio se prueba con un TMDB falso.
+  2. **Nombres de géneros reusados**: la lógica de `GenresView` (nombre vacío en español → inglés) pasa a `_generos_localizados(tipo, idioma)` en `catalogo/views.py`, que usan las dos vistas.
+  3. **`min_votos` entra en la clave de caché solo cuando se usa**: las consultas de `discover` sin mínimo (C-03, C-04c) conservan la clave que ya tenían en Redis.
+  4. **Desempate de géneros**: por la calificación más reciente, aprovechando el orden del modelo (`-fecha, -id`) y que `Counter.most_common` respeta el orden de aparición en los empates.
+- **Tests**: `catalogo/tests_recomendado.py` (16 casos, con recortes de respuestas reales de TMDB del 13/10/2026) y 3 en `catalogo/tests.py` (`min_votos` en el cliente y la caché, y `min_votes` en la vista). Suite completa: 725 tests.
+- **Archivos afectados**: `catalogo/services/recomendado.py`, `catalogo/views.py`, `catalogo/urls.py`, `catalogo/client.py`, `catalogo/cache.py`, `catalogo/tests_recomendado.py`, `catalogo/tests.py`, `contracts/openapi.yaml`, `openspec/specs/recommendations-api/spec.md`, `openspec/specs/tmdb-endpoints/spec.md`, `openspec/changes/home-catalogo/tasks.md`.
+
+---
+
+## 13/10/2026 — Piezas compartidas del catálogo en el frontend (C-05, PR 3)
+
+- **Fecha**: 13/10/2026
+- **Descripción**: se agregan las piezas que reusan el Home, Search (C-06) y el detalle de listas (L-03), según el SDD (`openspec/changes/home-catalogo/`, fase 2) y las medidas del canvas (tarjeta de 132 px en celular y 176 px en escritorio, título de fila de 30/40 px).
+  1. **`lib/catalog.ts`**: `normalizeTitle` convierte un item de TMDB (de `trending`, `discover`, `now-playing` o `recommended`) en un `Title` de la app. Descarta lo que no es película ni serie (TMDB puede mezclar personas en `trending/all`) y deja la nota en `null` cuando es 0: el 13/10/2026, 9 de 100 títulos de tendencias no tenían votos y «★ 0,0» confundiría. Marca `tituloEnIngles`/`sinopsisEnIngles` a partir de `campos_en_ingles`.
+  2. **`tmdbImage(path, size)`**: arma URLs de imágenes de TMDB con la misma validación que `posterUrl` de `lib/reviews.ts` (solo rutas de TMDB o `https://image.tmdb.org`). `posterUrl` queda como está; se puede unificar al rehacer Mis reseñas.
+  3. **`routes.title(tipo, id)`** → `/movie/{id}` o `/tv/{id}`. Responde 404 (Not Found) hasta C-07.
+  4. **`TypeSelector`**, **`MediaCard`** y **`MediaRow`** en `components/features/`. La nota se lee con una etiqueta oculta («TMDB rating: 7.7 out of 10») y la estrella con el número quedan `aria-hidden`. La fila es una lista (`ul`/`li`) con snap en celular y flechas que mueven el 90 % del ancho visible en escritorio, sin animación con `prefers-reduced-motion`. Vacía y sin cargar no se dibuja; cargando muestra 5 esqueletos.
+  5. No hizo falta copia nueva: se usan `common.content.*`, `common.media.*` y `home.carousel.*`, ya sembradas.
+- **Tests**: Vitest, con recortes de respuestas reales de TMDB del 13/10/2026 (`tests/catalog-fixtures.ts`): `catalog.test.ts` (9), `media-card.test.tsx` (6), `type-selector.test.tsx` (2) y `media-row.test.tsx` (4). Suite completa: 165.
+- **Archivos afectados**: `frontend/lib/catalog.ts`, `frontend/lib/routes.ts`, `frontend/components/features/{TypeSelector,MediaCard,MediaRow}.tsx`, `frontend/tests/{catalog-fixtures.ts,catalog.test.ts,media-card.test.tsx,type-selector.test.tsx,media-row.test.tsx}`, `openspec/changes/home-catalogo/tasks.md`.
+
+---
+
+## 13/10/2026 — Home de descubrimiento en `/home` (C-05, PR 4) y cierre de C-05
+
+- **Fecha**: 13/10/2026
+- **Descripción**: se implementa la página `/home` según el SDD y los artboards «Home · desktop» y «Home · mobile» del canvas: Hero, Recomendado (con sesión), Tendencias, Novedades, selector en la URL, invitación a registrarse sin sesión y botón «Ask FilmAI» con sesión. El login y el alta con Google llevan a `/home` (A-04 cerrada). Decisiones de implementación:
+  1. **Selector con la History API** (`window.history.replaceState`) en lugar de `router.replace`: Next.js lo sincroniza con `useSearchParams` sin volver a pedir la página al servidor. Con `router.replace` cada clic esperaba esa ida y vuelta; en Playwright tardaba más de 5 s.
+  2. **Cada fila pide sus datos** con `useCatalog` (`lib/use-catalog.ts`), que guarda en memoria las respuestas públicas ya recibidas (volver a una opción del selector no repite el pedido) y nunca lo que falló ni Recomendado. Una fila que falla se oculta y un único toast (`id: "home-carga"`) muestra el error traducido por código; si fallan todas, el mismo mensaje con «Reintentar» (`common.actions.retry`). No hizo falta copia nueva.
+  3. **Barra sobre el Hero**: en `/home` y en escritorio, `components/Navbar.tsx` pasa a `md:absolute`; el Hero empieza arriba de todo.
+  4. **Tarjeta con `relative`**: la etiqueta `sr-only` de la nota es `absolute` y, sin un ancestro posicionado dentro de la fila, escapaba del `overflow` del `ul` y estiraba la página a ~3.900 px con 20 tarjetas. El test de Playwright usa 20 tarjetas y verifica que el documento no sea más ancho que la ventana (falla sin el arreglo).
+  5. **Datos de la línea del Hero en celular**: año y nota en un renglón y los géneros en el siguiente (`order-last`), para que ningún «·» quede colgando.
+  6. **Tipo por defecto en tendencias de un tipo** y **descarte de repetidos** en `normalizeTitles`. Verificado el 13/10/2026: TMDB manda `media_type` en `trending/movie` y `trending/tv`, pero no en `now_playing` ni en `discover`.
+  7. **`formatList`** en `lib/format.ts` para el subtítulo de Recomendado («Thriller, Drama, and Crime» / «Suspense, Drama y Crimen»).
+  8. **Títulos largos en el Hero** (reportado por el usuario con «Spider-Man: Brand New Day» en Movies): el texto del Hero estaba colgado del borde inferior de una capa `absolute` y, con varios renglones a 152 px, crecía hacia arriba encima del selector. Ahora solo la imagen es `absolute`; el texto va en el flujo y se empuja hacia abajo, con 48 px mínimos bajo el selector en escritorio, y la sección se agranda. En celular la altura del Hero pasa de fija (560 px) a mínima. Un test de Playwright con un título largo real («Law & Order: Special Victims Unit») falla con la versión anterior.
+  9. **Tamaño del título según su largo** (pedido del usuario el 14/10/2026: aun sin superponerse, un título largo quedaba muy pegado al selector, mientras que en All y TV shows se veía bien). `tamanioTitulo()` en `lib/home.ts` cuenta caracteres visibles: hasta 16 conserva el tamaño del canvas (152/72 px), de 17 a 28 usa 112/56 px y más largos 88/44 px; además `text-balance` reparte los renglones. A 152 px entran unos 19 caracteres por renglón en escritorio, así que «Spider-Man: Brand New Day» (25) queda en un renglón a 112 px. Se descartó medir el texto con JavaScript y achicarlo hasta que entre: más complejo y el título cambia de tamaño al cargar. En el camino apareció un detalle de `cn()`: `tailwind-merge` borra un `leading-*` que venga antes de una clase de tamaño de letra, así que el interlineado va al final.
+- **Cierre de C-05**: con este PR se completan las cuatro entregas del SDD (#69 a #72). Según AGENTS.md §9, se elimina `openspec/changes/home-catalogo/`; las specs canónicas son `recommendations-api` y `home-ui`. Queda pendiente actualizar con Marcos la nota «Interfaces: código vs pendientes» del canvas (Home ✅).
+- **Tests**: Vitest `home.test.ts` (7: regla del Hero, mezcla, `?type=`, `formatList`) y `home-page.test.tsx` (6: sin sesión, con sesión, fila que falla, `?type=movie`, selector en la URL, todo falla y reintento); un caso nuevo en `catalog.test.ts` (repetidos). Playwright `e2e/home.spec.ts` (6, escritorio y celular, API simulada con recortes reales de TMDB); `e2e/i18n-flows.spec.ts` espera `/home` después del login.
+- **Archivos afectados**: `frontend/app/home/page.tsx`, `frontend/components/features/{HomeView,HomeHero,MediaCard}.tsx`, `frontend/components/Navbar.tsx`, `frontend/lib/{home,use-catalog,catalog,format}.ts`, `frontend/app/(public)/login/page.tsx`, `frontend/app/complete-signup/page.tsx`, tests y e2e, `openspec/specs/home-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`; se elimina `openspec/changes/home-catalogo/`.
+
+---
+
+## 14/10/2026 — Ficha de detalle (C-07): SDD y decisiones
+
+- **Fecha**: 14/10/2026
+- **Descripción**: Gonza abre el SDD de C-07 en `openspec/changes/title-page/`, que incluye el modal de calificar (mitad frontend de C-08) y las acciones de listas (L-04). Decisiones del usuario:
+  1. **L-04 la construye Gonza dentro de C-07** (era de Marcos): está en la misma pantalla y «Watched» está atado a la calificación (regla «calificada ⇒ vista» del 30/09/2026 y el 409 al quitarla). La API de L-01 ya trae la pertenencia con `item_id`, el alta y la baja con `?borrar_calificacion=true`.
+  2. **Reseñas de la comunidad públicas**: `GET /api/reviews/?id_tmdb=&tipo=` deja de pedir sesión; el `POST` la sigue pidiendo. Coincide con la nota del canvas («las calificaciones y reseñas son públicas y se ven en la ficha»).
+  3. **Orden y filtro por nota** en esas reseñas, como el canvas: `orden` (`fecha-desc`, `fecha-asc`, `nota-desc`, `nota-asc`) y `nota_min`/`nota_max`. Para que el cursor no dependa de un offset entre miles de notas iguales, los órdenes por nota usan una clave única anotada (`valor * 10^9 + id`). La respuesta suma `total_comunidad` (sin filtros) para «Showing X of N».
+  4. **El origen de la miga de pan viaja en la URL**: `?from=home|search|reviews|list-{id}`; sin parámetro, Home. Se descartó `sessionStorage`, que se pierde al recargar o abrir otra pestaña.
+- **También**: endpoint nuevo `GET /api/catalogo/{movie|tv}/{id}/credits/` con directores (en series, `created_by`: verificado el 13/10/2026 que Breaking Bad no tiene director a nivel serie) y reparto con personaje; las calificaciones se muestran «★ N», no «X/10»; sin sesión, «Log in to rate or save» con `?next=` a la misma ficha.
+- **Entrega**: cinco PRs contra `develop/ui-design`: SDD y docs, backend, modal y confirmaciones, acciones de listas, y la página.
+- **Archivos afectados**: `openspec/changes/title-page/`, `docs/04_Lineamientos_UI.md` (§5c), `docs/05_Plan_de_Desarrollo.md` (L-04), `docs/decisiones.md`.
+
+---
+
+## 14/10/2026 — Ficha: créditos y reseñas públicas con orden y filtro (C-07, PR 2)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: backend de la ficha según el SDD (`openspec/changes/title-page/design.md` §2).
+  1. **`GET /api/catalogo/{movie|tv}/{id}/credits/`** (público): `{directores, reparto: [{nombre, personaje}]}`, hasta 50 en el orden de TMDB. En series los «directores» son `created_by`. Servicio en `catalogo/services/creditos.py`; los créditos ya estaban en la caché de Redis.
+  2. **Reseñas de la comunidad públicas**: `CalificacionesView.get_permissions` devuelve `AllowAny` para `GET`; el `POST` sigue con `IsAuthenticated`. Sin sesión no se excluye nada; con sesión se sigue sacando la propia. El test `test_los_anonimos_no_leen_resenas` pasa a `test_los_anonimos_leen_las_resenas_de_todos`.
+  3. **Orden y filtro**: `ComunidadQuerySerializer` valida `orden`, `nota_min` y `nota_max`. Los órdenes por nota usan la clave anotada `valor * 10^9 + id`, con `Cast` a entero de 64 bits **antes** de multiplicar: `valor` es un entero de 32 bits en Postgres y sin el `Cast` la cuenta se pasaba de rango (`integer out of range`); `ExpressionWrapper` solo declara el tipo del resultado.
+  4. **`total_comunidad`** en la respuesta (sin filtros); `ResenaCursorPagination` lo agrega solo si la vista lo fija, así «Mis reseñas» no cambia.
+- **Tests**: `catalogo/tests_ficha.py` (4, créditos con recortes reales de TMDB) y en `tests_reviews.py` la lectura anónima, la escritura que sigue cerrada y `ComunidadOrdenYFiltroTests` (7, incluido el recorrido por cursor sobre 25 notas iguales).
+- **Archivos afectados**: `backend/catalogo/{reviews,views,urls,serializers_reviews,pagination_reviews}.py`, `backend/catalogo/services/creditos.py`, tests, `contracts/openapi.yaml`, `openspec/specs/{reviews-api,tmdb-endpoints}/spec.md`, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Modal de calificar y confirmaciones de la ficha (C-07, PR 3)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: componentes de `components/features/title/` según el canvas y el doc 04 §5d. No llaman a la API: avisan con `onSubmit`/`onConfirm` y la ficha (PR 5) decide qué pedir y qué toast mostrar; si la promesa falla, el error queda a la vista y el diálogo sigue abierto.
+  1. **`DialogShell`**: `<dialog>` nativo con `showModal()`, como `components/Modal.tsx` de Marcos (fondo inerte, Escape, foco de vuelta a quien lo abrió), con el diseño del canvas: tarjeta centrada en escritorio y hoja con agarre en celular. No se reusó `Modal` porque su caja y su título no coinciden con el canvas.
+  2. **`StarRating`**: `radiogroup` de WAI-ARIA con foco itinerante (solo la elegida entra en el orden de Tab), flechas, Home y End; al previsualizar una nota menor, las de la elegida que quedan afuera se ven tenues; dos filas de cinco en celular (objetivos de 44 px).
+  3. **`RatingDialog`**: «Rate {title}» o «Edit rating», «Rating: ★ N» en vivo, «Before: ★ N» al cambiar una nota existente, aviso de Vistas solo si la producción no está, reseña opcional con `maxLength` 1000 y contador, «Remove rating» solo al editar. En celular, Cancel y la acción van en dos columnas y «Remove rating» centrado debajo (canvas).
+  4. **`ConfirmDialog`**: `alertdialog` con el foco inicial en Cancelar (Enter no borra por error), vista previa de la reseña en dos renglones con «Read more» si es larga. El botón de peligro usa el rojo del sistema con texto oscuro (`--on-accent`, ~5,4:1); con blanco el contraste quedaba en 3,6:1.
+  5. Toda la copia ya estaba sembrada (`title.rating.*`, `title.review.*`, `common.*`).
+- **Tests**: Vitest `star-rating.test.tsx` (5), `rating-dialog.test.tsx` (6) y `confirm-dialog.test.tsx` (3). Suite: 196.
+- **Archivos afectados**: `frontend/components/features/title/{DialogShell,StarRating,RatingDialog,ConfirmDialog}.tsx`, tests, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Acciones de listas en la ficha (C-07 / L-04, PR 4)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `TitleActions` y `ListsMenu` en `components/features/title/`, con `lib/title-lists.ts` (tipo `ListaFicha` y cambios de pertenencia), según el canvas.
+  1. **Calificar**: «Rate» o «★ N» (en celular, «Your rating N» a todo el ancho); la etiqueta accesible con nota sale de `title.rating.editSummary` con `t.markup` («Your rating: 9 out of 10. Edit»).
+  2. **Favorite / Watched / Watchlist**: botones con `aria-pressed` que llaman a la API de L-01 (`POST …/items/`, `DELETE …/items/{item_id}/`) y avisan con el toast de cada lista. En celular van en una grilla de cuatro con «Lists».
+  3. **Quitar de Vistas algo calificado**: la API responde 409 `rating_blocks_removal_from_watched`; se pide confirmar con `ConfirmDialog` (texto de `title.rating.removeBoth/OnlyDescription` y la reseña como vista previa) y se reintenta con `?borrar_calificacion=true`, que borra calificación, reseña e ítem juntos. La ficha se entera con `onCalificacionBorrada`.
+  4. **«Add to list»**: panel bajo el botón en escritorio y hoja en celular, con las listas propias como casillas (`aria-pressed`), sus cantidades y «New list» en el lugar: el nombre vacío se rechaza antes de llamar a la API, `list_name_duplicated` muestra «You already have a list with that name.» y los errores de campo salen de `extraerErroresPorCampo`. Crear hace `POST /api/lists/` y después el alta del ítem.
+  5. **Foco**: los botones se arman con una función y no con un componente definido adentro de otro, que React volvería a montar en cada redibujo y dejaría sin foco a quien usa el teclado. Un test lo cubre (falla con la versión anidada).
+- **Tests**: Vitest `title-actions.test.tsx` (11). Revisado contra el canvas en escritorio y celular.
+- **Archivos afectados**: `frontend/components/features/title/{TitleActions,ListsMenu}.tsx`, `frontend/lib/title-lists.ts`, `frontend/tests/title-actions.test.tsx`, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Página de la ficha (C-07, PR 5)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `/movie/[id]` y `/tv/[id]` con `TitleView` y `CreditsSection` según los artboards de la ficha. La página es pública; con sesión suma la calificación propia y las listas.
+  1. **Se parte en dos PRs** para respetar el tope de revisión: este trae la página, los créditos y las acciones conectadas; el PR 6 trae las reseñas (la propia y la comunidad) y el cierre de C-07.
+  2. **Origen en la URL**: `routes.title(tipo, id, from)`; el Home pasa `from=home` en tarjetas y Hero. `?from=list-{id}` pide el nombre de la lista (`GET /api/lists/{id}/`) y usa `routes.list(id)` (`/lists/{id}`), que Marcos puede cambiar al hacer L-03. En celular la miga se reemplaza por un enlace «‹ {origen}» sobre la franja, con fondo semitransparente para que se lea sobre imágenes claras.
+  3. **Título por largo** con la regla del Home y tamaños propios (120/88/64 px en escritorio, 48/40/32 en celular) y `break-words` para que una palabra larga no se salga de la columna angosta del celular.
+  4. **Datos**: en celular las temporadas y episodios y la nota bajan a su propio renglón, como en el Hero del Home, para que ningún «·» quede colgando.
+  5. **Edición de la nota**: `planEdicion()` manda solo lo que cambió; vaciar una reseña que existía se hace con `DELETE …/texto/` aparte, porque la API rechaza un texto vacío. Después de calificar o quitar la nota se recargan las listas: el servidor suma o saca de Vistas y hace falta el `item_id` nuevo.
+  6. **Copia nueva** en `copia-propuesta.csv`: «Created by»/«Creación», temporadas y episodios (plural ICU), «Back to {label}», «Log in to rate or save», «Load more reviews» y el vacío de reseñas.
+  7. La barra de navegación va sobre la franja en la ficha, también en celular (canvas).
+- **Tests**: Vitest `title.test.ts` (7) y `title-view.test.tsx` (7). Los de la página se escribieron después del código; se verificó que detectan fallas rompiendo a propósito el borrado del texto y la recarga de listas (fallan los dos tests esperados). Revisado con datos reales de TMDB en escritorio y celular, con y sin sesión.
+- **Archivos afectados**: `frontend/app/{movie,tv}/[id]/page.tsx`, `frontend/components/features/title/{TitleView,CreditsSection}.tsx`, `frontend/components/features/{MediaCard,MediaRow,HomeView,HomeHero}.tsx`, `frontend/components/Navbar.tsx`, `frontend/lib/{title,routes,catalog}.ts`, catálogos generados, `docs/i18n/copia-propuesta.csv`, tests, `openspec/changes/title-page/tasks.md`.
+
+---
+
+## 14/10/2026 — Reseñas de la ficha y cierre de C-07 (PR 6)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `ReviewsSection` en `components/features/title/` según el canvas, y cierre de C-07 (con la mitad visual de C-08 y L-04).
+  1. **«Your review»** arriba, solo si la calificación propia tiene texto: avatar, «★ N», fecha («today» si es de hoy), texto, «Edit» (abre el modal) y «Delete review» (confirmación y `DELETE …/texto/`; la nota queda).
+  2. **Comunidad pública** con orden y filtro por nota sobre los parámetros del PR 2 (`orden`, `nota_min`, `nota_max`; «Below 5» es `nota_max=4`), encabezado «From the community (N)» o «Showing X of N» con números formateados por idioma, «Load more reviews» sobre el cursor (solo se reusa la query del `next`, nunca su origen), vacío y vacío filtrado.
+  3. **Avatares**: `/api/avatars/` pide sesión, así que sin sesión cada reseña muestra la inicial del usuario; con sesión, el avatar del catálogo que ya carga `AccountProvider`.
+  4. «today» se calcula armando la fecha AAAA-MM-DD a mano y no con `toLocaleDateString`: los formatos viven solo en `lib/format.ts` (AGENTS.md §10).
+  5. **«Read more» solo si el texto se corta** (pedido del usuario el 14/10/2026: una sinopsis que entra entera no debe ofrecerlo). `useDesborde()` (`lib/use-desborde.ts`) mide el texto recortado (`scrollHeight` contra `clientHeight`) y vuelve a medir con un `ResizeObserver`; reemplaza las cuentas de caracteres (300 en la sinopsis, 280 en las reseñas, 140 en la vista previa de las confirmaciones), que no sabían del ancho de la pantalla. Verificado con la sinopsis real de Breaking Bad: entra en escritorio (sin botón) y se corta en celular (con botón).
+- **Cierre de C-07**: entregas #73 a #78. Según AGENTS.md §9 se elimina `openspec/changes/title-page/`; la spec canónica nueva es `title-page-ui` (y se actualizaron `reviews-api` y `tmdb-endpoints`). Queda pendiente actualizar con Marcos la nota «Interfaces» del canvas (Home y Ficha ✅).
+- **Tests**: Vitest `reviews-section.test.tsx` (7, incluido «Read more» con y sin desborde) y Playwright `e2e/ficha.spec.ts` (6, escritorio y celular, API simulada con memoria y datos reales de TMDB): sin sesión, calificar con reseña y borrar el texto, quitar de Vistas algo calificado, ordenar y filtrar la comunidad, crear una lista nueva, sin desborde horizontal.
+- **Archivos afectados**: `frontend/components/features/title/{ReviewsSection,TitleView}.tsx`, tests y e2e, `openspec/specs/title-page-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md` (C-07, C-08, L-04 y la tabla de interfaces), `docs/decisiones.md`; se elimina `openspec/changes/title-page/`.
+
+## 14/10/2026 — Ajustes de la ficha: toggles, miga de pan y carga (C-07)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: tres pedidos del usuario después de probar la ficha.
+  1. **Toggles de listas más evidentes.** Activos, Favorite, Watched y Watchlist rellenan el ícono con el color de acento, como la estrella de la nota propia. Antes solo se rellenaba el corazón y el ojo de Watched no cambiaba. En el ojo, la pupila toma el color del botón; en el reloj, las agujas. El doc 04 (§5c, «Acciones directas — comportamiento») ya pedía «relleno sólido» para los tres; el canvas solo lo hacía con el corazón.
+  2. **Miga de pan arriba a la izquierda.** En escritorio estaba en la columna del título, encima de la imagen de fondo, y en fondos claros o cargados (Breaking Bad) casi no se leía. Pasa a la esquina superior izquierda, debajo de la barra y alineada con el póster, sobre la misma píldora con velo del enlace «‹ Home» del celular. Así cumple el doc 04 («top-left del content area»).
+  3. **Estado de carga completo.** Mientras llega el detalle, la página muestra el esqueleto del fondo, el póster, el título, los datos, los cinco botones, los géneros, la sinopsis y tres reseñas (doc 04, «Estados»), con `aria-busy` en el `main`. Corrige además un error: con sesión, si las listas llegaban antes que el detalle, aparecía «Log in to rate or save».
+- **Medición de la primera visita**: la API tarda entre 1 y 1,6 s en una producción que no está en la base, contra 0,015 s después. La llamada a TMDB sola tarda ~0,5 s. El resto es la materialización síncrona (detalle canónico, créditos, keywords, traducción y escritura), que corre antes de responder. El usuario aprobó sacarla del pedido y pasarla a Celery; va en un PR aparte (backend).
+- **Tests**: Vitest `title-view.test.tsx` suma «mientras carga el detalle muestra el esqueleto y no invita a ingresar» (falla con la versión anterior). Playwright `e2e/ficha.spec.ts` sin cambios. Capturas revisadas en escritorio y celular.
+- **Archivos afectados**: `frontend/components/features/title/{TitleActions,TitleView,ReviewsSection}.tsx`, `frontend/tests/title-view.test.tsx`, `docs/04_Lineamientos_UI.md` (§5c), `openspec/specs/title-page-ui/spec.md`, `docs/decisiones.md`.
+
+## 14/10/2026 — La ficha materializa en segundo plano (C-04a)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: las vistas de detalle (`/api/catalogo/movie/<id>/`, `tv/<id>/`) dejan de enriquecer la producción dentro del pedido. Llaman a `materializar_en_segundo_plano()`, que encola la tarea de Celery `catalogo.materializar_produccion` solo si la fila no existe o le falta el detalle. Si la fila está completa no encola nada, con el mismo criterio de no llenar la cola que ya usa `_encolar_embedding`. La tarea llama a `materializar()` y nunca lanza: si falla, registra el error y la próxima visita la vuelve a encolar. Aprobado por el usuario después de medir la primera visita.
+- **Motivo**: la primera visita a una producción que no estaba en la base tardaba entre 1 y 1,6 s en responder. ~0,5 s eran la llamada a TMDB de la vista y el resto, el enriquecimiento (detalle canónico, créditos, keywords, traducción y escritura). Después del cambio, la primera visita responde en 0,2-0,8 s (solo TMDB) y el worker materializa en ~1,3-1,5 s sin que nadie espere. Las visitas siguientes siguen en ~0,015 s y no encolan nada.
+- **Qué no cambia**: calificar y agregar a una lista materializan por su cuenta antes de escribir (`reviews.py`, `listas/views.py`), así que no dependen de que la tarea haya terminado. Si el usuario califica mientras corre la tarea, las dos materializaciones son idempotentes y la carrera la resuelve `_obtener_o_crear`. El contrato de C-03 (passthrough de TMDB aunque falle algo de nuestro lado) ahora también cubre un broker caído.
+- **Alternativas descartadas**: encolar en cada visita (cola llena de trabajo repetido) y dejarlo síncrono con solo un esqueleto de carga (la espera seguía).
+- **Tests**: `VistasDeDetalleMaterializanTests` reescrita (primera visita encola sin escribir, series con su tipo, fila completa no encola, fila sin enriquecer se reencola, fallo del broker no rompe la respuesta) y `MaterializarProduccionTareaTests` nueva (materializa y encola el embedding; un fallo se registra y no se propaga). Suite completa: 740 tests en verde. Verificado contra Docker: el worker recibe y completa las tareas, y las visitas a filas completas no encolan.
+- **Archivos afectados**: `backend/catalogo/{tasks,views}.py`, `backend/catalogo/services/materialization.py`, tests de `catalogo`, `openspec/specs/catalog-materialization/spec.md`, `docs/05_Plan_de_Desarrollo.md` (C-04a), `docker-compose.yml` (comentario del worker), `docs/decisiones.md`.
+
+## 14/10/2026 — Entrar a Vistas saca de Pendientes
+
+- **Fecha**: 14/10/2026
+- **Descripción**: cuando una producción entra a «Vistas» de un usuario, sale de sus «Pendientes» en la misma transacción. Lo que ya viste dejó de estar pendiente. Lo propuso el usuario y eligió la variante entre cuatro: «Watched y calificar», «solo el botón Watched», «prohibir las dos a la vez» y «dejarlo como está».
+  1. **Rige por los dos caminos de entrada.** El botón Watched (`POST /api/lists/{vistas}/items/`) y calificar (`POST /api/reviews/`, que ya agrega a Vistas por la regla del 30/09/2026). Los dos pasan por `listas/services.py` (`quitar_de_pendientes`), así el módulo de listas sigue siendo el único que escribe en `Tiene`.
+  2. **Solo en el momento en que entra.** Si ya estaba en Vistas no se toca Pendientes. Así volver a agregarla a Pendientes para verla de nuevo sigue permitido, y calificarla después no la saca.
+  3. **Quitar de Vistas no la devuelve a Pendientes.** No se guarda dónde estaba antes, y adivinarlo confunde.
+  4. **No se repara lo existente.** Las producciones que hoy están en las dos listas se quedan así, porque pueden ser un «quiero volver a verla» legítimo.
+  5. **Ficha:** un solo toast, «Added to Watched and removed from Watchlist», y el modal de calificar avisa que también sale de Watchlist.
+- **Alternativas descartadas**: prohibir estar en las dos listas (un 409 al agregar a Pendientes algo visto) haría perder el «volver a verla»; limitar la regla al botón Watched dejaría algo calificado como visto y pendiente a la vez.
+- **Tests**: backend `VistasSacaDePendientesTests` (7, por HTTP con la materialización real y TMDB simulado; 3 fallan con el código anterior y 4 cuidan los límites de la regla). Frontend: dos tests en `title-actions.test.tsx` y uno en `rating-dialog.test.tsx`; los dos de la regla fallan con los componentes anteriores.
+- **Archivos afectados**: `backend/listas/{services,views}.py`, `backend/catalogo/tests_reviews.py`, `frontend/components/features/title/{TitleActions,RatingDialog,TitleView}.tsx`, tests, `docs/i18n/copia-propuesta.csv` y mensajes generados, `docs/02_Especificación de Requerimientos.md` (CU-011), `docs/04_Lineamientos_UI.md` (§5c), specs `list-endpoints`, `reviews-api` y `title-page-ui`, `docs/decisiones.md`.
+
+## 14/10/2026 — SDD de Buscar (C-06, PR 1)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: SDD en `openspec/changes/search-catalogo/` (proposal, design, tasks).
+  1. **Página, no overlay.** `/search`, como lo dibuja el canvas (navbar con «Search» como página actual). Se actualizaron doc 04 §5b y sus menciones al overlay.
+  2. **Texto con género o nota sobre los primeros 100.** Verificado contra TMDB: `search/movie` y `search/tv` ignoran género y nota («dune» con `with_genres=878&vote_average.gte=9` sigue dando 1115 resultados). Con texto y alguno de esos filtros, el backend toma hasta 5 páginas por tipo (la primera y después el resto en paralelo, cada una cacheada 1 h), filtra y pagina de a 20. Sin esos filtros, una llamada por tipo. Lo eligió el usuario entre tres opciones: «filtrar los primeros 100», «con texto, solo año» y «filtrar solo la página actual».
+  3. **Cualquier texto hasta 50.** Doc 02 decía alfanumérico sin signos; títulos como «Ocean's Eleven», «WALL·E» o «¿Qué pasó ayer?» los necesitan. Lo eligió el usuario.
+  4. **«All» alterna películas y series**, página N de cada una, como el Home. Se descartó `search/multi`: en la página 1 de «dune» trae 9 personas de 20 y su total las cuenta.
+  5. **Año con texto**: `primary_release_year` y `first_air_date_year`, que son estrictos. `year` es flojo: «dune» con 2021 trae la de 1984.
+  6. **Géneros en «All»**: equivalencias de película a serie (Acción y Aventura → 10759, Ciencia ficción y Fantasía → 10765, Bélica → 10768), verificadas con las listas de TMDB. `genres/?tipo=all` suma los cinco géneros solo de series sin par (Kids, News, Reality, Soap, Talk).
+  7. **Nota con al menos 50 votos**: sin ese mínimo, «Below 5» se llena de títulos sin votos. Es el mismo umbral que usa el Home para series.
+  8. **Sin botón «Buscar»**: la búsqueda arranca 350 ms después de dejar de escribir (canvas). Se actualizó CU-010 en doc 02.
+- **Fuera de alcance**: materializar lo que muestra la búsqueda (pendiente de C-04a para listados) y el bloque «Dónde verla» de la ficha (propuesto el 14/10/2026, se decide después de C-06).
+- **Archivos afectados**: `openspec/changes/search-catalogo/`, `docs/02_Especificación de Requerimientos.md` (CU-008, CU-010), `docs/04_Lineamientos_UI.md` (§5b y menciones al overlay), `docs/decisiones.md`.
+
+## 14/10/2026 — API de Buscar (C-06, PR 2)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `GET /api/catalogo/browse/` (`catalogo/services/browse.py`, `BrowseView`) y `genres/?tipo=all`, según el SDD.
+  1. **Cliente y caché.** `search(..., anio=)` manda `primary_release_year` o `first_air_date_year`. `discover` suma `max_rating` (`vote_average.lte`) y `sin_generos` (`without_genres`). Los tres entran a la clave de caché solo cuando se usan, así lo que ya estaba en Redis conserva su clave (mismo patrón que `min_votos`, C-05).
+  2. **Ventana en paralelo.** La página 1 primero y el resto con `ThreadPoolExecutor`; en «All», los dos tipos a la vez. `httpx.Client` y el cliente de Redis se pueden compartir entre hilos (verificado en httpx 0.28.1) y la ventana no toca la base. Si una página falla, falla la respuesta (502): un conteo parcial pasaría por real.
+  3. **Grilla por defecto (hallazgo contra TMDB real).** Sin texto, `discover/tv` por popularidad arrancaba con programas diarios (Barbara Karlich - Talk, Watch What Happens Live, The Tonight Show). Sin texto, `discover` pide siempre al menos 50 votos, y en series excluye News (10763) y Talk (10767) salvo que se elija un género. Con eso arranca con Law & Order: SVU, Reacher, The Office. En películas, el mínimo no cambia los primeros puestos.
+  4. **Medido contra TMDB real (Docker).** Sin texto, 1,2 s en frío. Con texto, ~0,45 s. Con texto y filtro en «All», la peor ventana en frío (batman, Acción) tardó 2,2 s: dos rondas en paralelo más, en español, el respaldo en inglés de cada página. La misma búsqueda con otro género sale de caché en 0,017 s. Se acepta, porque pasa solo la primera vez que alguien combina ese texto con un filtro en una hora.
+  5. **Géneros sin traducir.** TMDB devuelve en inglés, también en `es-MX`, los cinco géneros solo de series (Kids, News, Reality, Soap, Talk). El frontend les pone nombre desde la copia de i18n (PR 3).
+- **Tests**: `catalogo/tests_browse.py` (28) sobre páginas reales de TMDB del 14/10/2026 (`catalogo/test_datos/tmdb_buscar.json`: «dune» en películas y series, «the office» en series, `discover` y géneros), más 4 de cliente y caché en `tests.py`. Todos fallaban antes del cambio.
+- **Archivos afectados**: `backend/catalogo/{client,cache,views,urls}.py`, `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `backend/catalogo/test_datos/tmdb_buscar.json`, `backend/catalogo/tests.py`, `openspec/specs/tmdb-endpoints/spec.md`, `openspec/changes/search-catalogo/{design,tasks}.md`, `docs/decisiones.md`.
+
+## 14/10/2026 — Página de Buscar (C-06, PR 3)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: `/search` (`components/features/SearchView.tsx`, `lib/search.ts`) según el canvas «Search · desktop».
+  1. **La búsqueda vive en la URL** (`q`, `type`, `genre`, `year`, `rating`, `page`, en inglés como el `?type=` del Home). Se cambia con `history.replaceState`: no vuelve a pedir la página al servidor, y «Atrás» sale de Buscar. La nota se escribe `9`…`5` y `lt5`, y `lib/search.ts` la traduce a `9+` y `m5` de la API.
+  2. **Escribir espera 350 ms**; Enter busca enseguida. Cualquier cambio vuelve a la página 1.
+  3. **Cerrar / Escape** usa `performance.getEntriesByType("navigation")`: si el documento se cargó en otra página, se llegó navegando dentro de la app y se vuelve atrás; si se abrió directo en `/search`, va al Inicio. Con un `<dialog>` abierto, Escape es de él.
+  4. **Cambiar el tipo** conserva el género solo si es uno de los 8 con el mismo id en películas y series; los demás se descartan, porque en el otro tipo no existen.
+  5. **Géneros sin traducir**: los cinco solo de series que TMDB devuelve en inglés también en `es-MX` (Kids, News, Reality, Soap, Talk) toman el nombre de la copia (`search.genres.*`: Infantil, Noticias, Reality, Telenovelas, Entrevistas).
+  6. **`MediaCard`** suma `fluid`, para ocupar su columna de la grilla, y `showUnrated`, para el «No ratings» del canvas. El Home no cambia.
+  7. **Vacío**: «Nada para “texto”» (o «Nada con estos filtros») con «Limpiar filtros»; si no hay filtros activos, el botón dice «Borrar búsqueda».
+- **Tests**: Vitest `search.test.ts` (9, URL ⇄ estado ⇄ API) y `search-view.test.tsx` (11: pedido inicial, contador y tarjetas, espera de 350 ms, Enter, filtros y géneros traducidos, cambio de tipo, paginación, vacío, error y Reintentar, Escape, tope de 50). Se suma el e2e de la ficha «marcar Watched algo que está en Watchlist lo saca de Watchlist» (regla del PR #81). Capturas con datos reales de TMDB en escritorio y celular, sin desborde horizontal.
+- **Archivos afectados**: `frontend/app/search/page.tsx`, `frontend/components/features/{SearchView,MediaCard}.tsx`, `frontend/lib/search.ts`, tests y e2e, `docs/i18n/copia-propuesta.csv` y mensajes generados, `openspec/changes/search-catalogo/tasks.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 14/10/2026 — Buscar en celular, vuelta desde la ficha y cierre de C-06 (PR 4)
+
+- **Fecha**: 14/10/2026
+- **Descripción**: hoja de filtros del celular y vuelta a la última búsqueda, según el canvas «Search · mobile» y el doc 04 §5b.
+  1. **`FiltersSheet`** sobre `DialogShell` (la hoja de la ficha): Género y Año, la calificación de TMDB como botones (Cualquiera, 9+ … 5+, <5, cada uno con su nombre largo como nombre accesible), «Limpiar» y «Ver resultados». Cada cambio se aplica al momento, con los resultados detrás. El botón «Filtros» muestra la cantidad de filtros activos y la anuncia en su nombre accesible. En celular se esconden los selects de escritorio.
+  2. **`TypeSelector compact`**: en celular comparte la fila con «Filtros». Sin relleno lateral y con letra de 14 px, como el canvas, «Películas» y «Series» no se tocan. El Home no cambia.
+  3. **Vuelta desde la ficha**: Buscar guarda su URL en `sessionStorage` (`filmai:ultima-busqueda`) y la miga «Buscar» de la ficha la lee en un efecto, no al renderizar, para que coincida con el HTML del servidor. Solo acepta rutas de Buscar; sin almacenamiento, `/search`.
+  4. **Recorrido de navegación de Marcos** (`e2e/errores-menu.spec.ts`): esperaba el 404 de `/search` («hasta que exista»). Se ajustó en el PR 3 para esperar el buscador.
+- **Hallazgo del e2e**: en desarrollo, `getByRole("button", { name: "Next" })` también matchea «Open Next.js Dev Tools» (la comparación es por subcadena); el clic iba a ese botón. Se usa `exact: true`.
+- **Cierre de C-06**: PRs #82 a #85. Según AGENTS.md §9 se elimina `openspec/changes/search-catalogo/`; la spec canónica nueva es `search-ui`, y se actualizó `tmdb-endpoints` en el PR 2.
+- **Tests**: Vitest suma 3 de `lib/search` (última búsqueda, incluido sin `sessionStorage`), 3 de `SearchView` (guarda la búsqueda, hoja con el badge y los filtros, Escape con la hoja abierta) y 1 de `TitleView` (la miga vuelve a la búsqueda). Playwright `e2e/buscar.spec.ts` (4): texto y tarjetas en escritorio y celular, filtros y página hacia la API, hoja de filtros; sin desborde horizontal.
+- **Archivos afectados**: `frontend/components/features/{FiltersSheet,SearchView,TypeSelector}.tsx`, `frontend/components/features/title/TitleView.tsx`, `frontend/lib/search.ts`, tests y e2e, copia de i18n y mensajes generados, `openspec/specs/search-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`; se elimina `openspec/changes/search-catalogo/`.
+
+## 14/10/2026 — Buscar encuentra lo anunciado
+
+- **Fecha**: 14/10/2026
+- **Descripción**: pedido del usuario: poder buscar producciones anunciadas en TMDB que no salen este año.
+  1. **El selector de año** va de cinco años adelante a 1900 (`ANIOS_ANUNCIADOS` en `lib/search.ts`). TMDB ya tiene producciones con fecha hasta 2031 (Avatar 5).
+  2. **Sin mínimo de votos para un año futuro.** La grilla sin texto pide al menos 50 votos para que no la llenen títulos sin votos, pero lo que no se estrenó no tiene votos: 2027 tiene 946 películas en TMDB y ninguna con 50 (verificado). Con un año futuro y sin filtro de nota, `discover` va sin mínimo. Con nota, el mínimo se mantiene, porque una nota sin votos no dice nada. El año actual sale de `timezone.localdate()` (zona de Argentina).
+- **Verificado contra TMDB real**: 2028 trae 135 títulos (The Batman: Part II, Fast Forever…).
+- **Tests**: 3 en `tests_browse.py` (año futuro sin mínimo, año actual con mínimo, año futuro con nota conserva el mínimo; los tres fallaban antes) y el de `aniosDisponibles` actualizado.
+- **Archivos afectados**: `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `frontend/lib/search.ts`, `frontend/tests/search.test.ts`, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 14/10/2026 — Buscar carga al bajar
+
+- **Fecha**: 14/10/2026
+- **Descripción**: idea del usuario: paginar a demanda, cargando más resultados al bajar. Eligió «automático al bajar» entre tres opciones: automático, un botón «Cargar más» y dejar la paginación clásica del canvas.
+  1. **`useCatalogPaginas`** (`lib/use-catalog.ts`): pide varias páginas de una consulta y comparte la caché con `useCatalog`. Devuelve las páginas en orden hasta la primera que falta, `cargandoMas` y el error, que solo se reintenta con otro `intento`.
+  2. **Un centinela con `IntersectionObserver`**: cuando el final de la grilla está a 600 px, `page` en la URL pasa a N+1 y se agrega esa página. `page` ahora significa cuántas páginas se cargaron, con un tope de 25: también acota lo que dispara un link con `page` alto. Con pocos resultados la grilla no llena la pantalla y la página siguiente se pide sola.
+  3. **Sin repetidos**: `normalizeTitles` descarta un título que llega en dos páginas, si la popularidad cambió entre pedidos.
+  4. **Error en una página siguiente**: lo cargado queda y aparece Reintentar al pie.
+  5. **Volver desde la ficha** (hallazgo probando contra Docker): las páginas vuelven de la caché, pero el scroll quedaba en 0, porque la URL cambia con `history.replaceState` y Next no restaura ese scroll. Ahora, al hacer clic en una tarjeta se guardan la URL y `scrollY` en `sessionStorage`. Al volver a la misma URL con todas las páginas cargadas, se restaura un cuadro después. Verificado con «Atrás» y con la miga: 4240 px antes y después.
+  6. **Carrera cazada por el CI**: con pocos resultados, el aviso «llegó al final» del observador llegaba después de elegir un filtro y avanzaba con la búsqueda vieja que recordaba su closure, borrando el filtro (`?genre=878&page=2` sin `rating`). El callback ahora compara la URL actual normalizada con la búsqueda de su render y, si cambió, no hace nada; el observador nuevo, creado con la búsqueda actual, sigue cargando.
+- **Tests**: `use-catalog-paginas.test.tsx` (3: orden aunque lleguen desordenadas, caché compartida, error y reintento). `search-view.test.tsx` reemplaza el de paginación por 5 (pide al acercarse el final, un aviso tardío no pisa un filtro nuevo, junta dos páginas sin repetidos y no pide más en la última, error en la página 2, restaura el scroll), con `IntersectionObserver` simulado porque jsdom no lo tiene. `search.test.ts` suma 2 del scroll guardado. El e2e baja hasta el final y espera `page=2`.
+- **Archivos afectados**: `frontend/lib/{use-catalog,search}.ts`, `frontend/components/features/SearchView.tsx`, tests y e2e, doc 04 §5b, spec `search-ui`, `docs/decisiones.md`.
+
+## 14/10/2026 — «A estrenar» en vez de años futuros
+
+- **Fecha**: 14/10/2026
+- **Descripción**: el usuario prefirió una sola opción «A estrenar» (en inglés «Upcoming») en el selector de año, en lugar de listar años futuros hasta 2031. Reemplaza el punto 1 de «Buscar encuentra lo anunciado»: el selector vuelve a ir del año actual a 1900.
+  1. **API**: `browse/?a_estrenar=true`, que reemplaza a `anio`. Sin texto, `discover` filtra desde mañana con el parámetro de fecha de cada tipo (`primary_release_date.gte` / `first_air_date.gte`; `discover(desde_fecha=)` en el cliente, con clave de caché solo si se usa) y sin mínimo de votos, salvo que haya nota. Con texto va a la ventana de los primeros 100, porque la búsqueda por nombre de TMDB tampoco filtra por fecha, y deja lo que tiene fecha posterior a hoy; lo que no tiene fecha queda afuera. La fecha sale de `hoy()` (`timezone.localdate()`, zona de Argentina).
+  2. **Frontend**: en la URL va como `year=upcoming`. `anioDesdeOpcion` y `opcionDeAnio` (`lib/search.ts`) traducen entre el selector y el estado, y `consultaApi` manda `a_estrenar=true`. Cuenta como filtro activo en el badge del celular.
+  3. Se conserva la regla de «año futuro sin mínimo de votos» para quien pida un año futuro por la API.
+  4. **Tarjetas**: la línea de datos de `MediaCard` pasa a `flex-wrap` (como el canvas). Con «Sin calificaciones», el texto se partía en dos columnas apretadas; ahora baja entero al renglón siguiente cuando no entra.
+- **Verificado contra TMDB real**: 4118 títulos a estrenar (Avengers: Doomsday, Neuromante, The Mongoose…), 458 series; «avatar» con «A estrenar» trae Avatar 4 y Avatar 5.
+- **Tests**: backend, 4 en `tests_browse.py` (desde mañana sin mínimo, con nota conserva el mínimo, ventana por fecha con los dos títulos reales de «dune» posteriores al 14/10/2026, valor inválido) y 1 de cliente y caché. Frontend, 2 en `search.test.ts` y 1 en `search-view.test.tsx`. Todos fallaban antes del cambio.
+- **Archivos afectados**: `backend/catalogo/{client,cache,views}.py`, `backend/catalogo/services/browse.py`, tests de `catalogo`, `frontend/lib/search.ts`, `frontend/components/features/{SearchView,FiltersSheet}.tsx`, tests, copia de i18n y mensajes, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 14/10/2026 — Décadas antes de 1990 en el año de Buscar
+
+- **Fecha**: 14/10/2026
+- **Descripción**: el selector de año tenía 127 opciones, del año actual a 1900. El usuario eligió entre cuatro variantes: años sueltos del actual a 1990 y, antes, décadas hasta la de 1900. Las otras eran solo décadas, años desde 2000 con décadas antes, y dejarlo como estaba. Quedan 46 opciones más «Cualquiera» y «A estrenar».
+  1. **Etiqueta**: «Década de 1980» en español, «1980s» en inglés (`search.filters.decade`). Un formato corto como «Años 10» sería ambiguo entre 1910 y 2010.
+  2. **API**: `browse/?decada=1980` reemplaza a `anio`. Sin texto, `discover` va del 1/1/1980 al 31/12/1989 (`discover(desde_fecha=, hasta_fecha=)`), con el mínimo de 50 votos. Con texto va a la ventana, filtrada por ese rango. Una década fuera de 1900…la actual, o que no termina en 0, da 400 `invalid_choice` (con `allowedValues` como textos, que es lo que pide el contrato de errores).
+  3. **`explorar()`** resuelve el período a un rango `desde`/`hasta` («A estrenar»: desde mañana; década: su rango) y a una sola regla `sin_minimo` (lo futuro sin nota). `_lado` y la ventana ya no saben de dónde vino el rango.
+  4. **URL**: `year=1980s`. `anioDesdeOpcion` ignora lo que no es una década válida.
+- **Verificado contra TMDB real (con ≥50 votos)**: 1980s, 2561 películas (Terminator, Los cazadores del arca perdida, Volver al futuro); 1950s, 943 (12 Angry Men, Vertigo); 1920s, 187 (Nosferatu); 1900s, 48 (Viaje a la Luna).
+- **Tests**: backend, 3 en `tests_browse.py` (década sin texto con rango y mínimo, ventana con las 9 películas reales de «dune» de los 80, décadas inválidas) y 1 de cliente y caché. Frontend, 2 en `search.test.ts` y el test del selector, que ahora verifica que la última opción es «Década de 1900».
+- **Archivos afectados**: `backend/catalogo/{client,cache,views}.py`, `backend/catalogo/services/browse.py`, tests de `catalogo`, `frontend/lib/search.ts`, `frontend/components/features/{SearchView,FiltersSheet}.tsx`, tests, copia de i18n y mensajes, doc 04 §5b, specs `search-ui` y `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 14/10/2026 — Buscar con texto ordena por votos y popularidad
+
+- **Fecha**: 14/10/2026
+- **Descripción**: el usuario notó resultados «medio randoms o desconocidos» arriba al buscar por nombre. TMDB ordena su búsqueda por relevancia: en «the office» ponía tres películas con 0 votos antes que la serie con 5579. El usuario eligió ordenar por votos, pero pidió que los estrenos esperados no se hundieran (no tienen votos). Solución: ordenar por el **mayor entre los votos y la popularidad de TMDB × 100** (`PESO_POPULARIDAD`).
+  1. **Por qué mixta.** Comparado con datos reales: los votos solos hunden Avengers: Doomsday (0 votos). La popularidad sola es ruidosa, porque mide lo de esta semana: «it» empezaba con It's Always Sunny y una serie de 3 votos. Con la mixta, en «avengers» quedan los clásicos y Doomsday 5.º; en «avatar», Avatar 1.º y Avatar: Seven Havens (a estrenar) 2.º; en «it», It 1.º. «Coincidencia exacta del título primero» se descartó, porque subía «Batman (1 voto)» y «Matrix (0)».
+  2. **Con texto siempre la ventana.** Para ordenar de verdad hay que tener los primeros 100 de cada tipo, no una página de 20. Ya no hay «una llamada cuando no hay filtros». La primera búsqueda tarda un poco más y después sale de la caché (1 h por página). La carga al bajar con texto termina en 100 por tipo.
+  3. **«Todo» con texto** mezcla películas y series por ese puntaje, de a 40 por página. Sin texto sigue alternando, como el Home.
+  4. Los empates conservan el orden de relevancia de TMDB (`sorted` es estable).
+- **Tests**: `tests_browse.py` reescribe los de texto: siempre 5 páginas con el año, total y páginas de la ventana, «Dune: Part Three» (0 votos, popularidad 32) 5.ª de 100 con el orden exacto de los primeros 5, «Todo» mezclado en orden y de a 40. A la captura `tmdb_buscar.json` se le sumó la popularidad real de cada título, por id, sin cambiar lo demás.
+- **Verificado contra TMDB real**: «the office» → The Office (5579 votos) primero; «it» → It; «avengers» → los cuatro clásicos y Doomsday 5.º.
+- **Archivos afectados**: `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `backend/catalogo/test_datos/tmdb_buscar.json`, doc 04 §5b, spec `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 15/10/2026 — SDD de Perfil, Settings y Mis reseñas según el canvas
+
+- **Fecha**: 15/10/2026
+- **Descripción**: SDD en `openspec/changes/perfil-canvas/` para rehacer `/profile`, `/settings` y `/my-reviews` según el canvas (secciones 9 y 6), más la miga de Términos en escritorio. Estas pantallas eran de Marcos en el reparto del 13/10/2026. El 15/10 las tomó Gonza, porque Marcos no las había empezado (sin ramas ni PRs; lo último suyo, del 12/10, fueron acceso y Términos en celular).
+  1. **Errores encontrados al revisarlas**: Perfil y Mis reseñas mezclan idiomas, porque parte del texto está escrito a mano (AGENTS.md §10); Mis reseñas deja dos tarjetas de carga para siempre, no tiene miga, filtros ni links a la ficha, y usa el modal viejo de calificar.
+  2. **Solo tema oscuro por ahora** (decisión del usuario). El tema claro está roto en toda la app: solo cambian el fondo y el acento, porque los tokens propios (superficies, líneas, textos, velos) existen solo para oscuro. Settings deja de ofrecer el selector y `AccountProvider` aplica oscuro aunque la cuenta tenga «claro» guardado. La preferencia `tema` sigue en la API para cuando se haga la paleta clara del canvas.
+  3. **Se mantiene «Perfil público»** aunque el canvas no lo tiene (decisión del usuario): el día de mañana puede servir para que cada uno decida si sus calificaciones y reseñas son públicas. Como hoy las reseñas de la comunidad ya son públicas en la ficha, conserva el aviso de que se guarda pero todavía no cambia nada.
+  4. **Filtros de Mis reseñas en el backend** (`reviews/mias/`: `q`, `texto`, `clase`, `nota_min`/`nota_max`, `orden`, con `total` y `total_propias`). Con paginación por cursor no se puede filtrar del lado del cliente. El tipo va como `clase`, porque `id_tmdb` + `tipo` ya cambian la respuesta a «la calificación de una ficha».
+- **Entrega**: cinco PRs (SDD, backend, Settings, Perfil, Mis reseñas).
+- **Archivos afectados**: `openspec/changes/perfil-canvas/`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 15/10/2026 — Filtros de «Mis reseñas» en el backend (perfil según el canvas, PR 2)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: `GET /api/reviews/mias/` acepta `q`, `texto` (`con`/`sin`), `clase` (`movie`/`tv`), `nota_min`/`nota_max` y `orden`, validados con `MisResenasQuerySerializer`, y devuelve `total` (con filtros) y `total_propias` (sin filtros) para «Ver N resultados» y para distinguir «no calificaste nada» de «nada con estos filtros».
+  1. **Búsqueda sin acentos**: se activa la extensión `unaccent` de Postgres (migración `catalogo.0007_unaccent`) y `django.contrib.postgres` en `INSTALLED_APPS`, para usar `titulo__unaccent__icontains`. Filtrar en Python no sirve con paginación por cursor. Busca en el título canónico y en las traducciones; para las traducciones usa `Exists`, porque un JOIN repetiría la calificación si hubiera varias.
+  2. **`clase` y no `tipo`**: en esta ruta, `id_tmdb` + `tipo` ya devuelven la calificación de una ficha, y medio par sigue siendo 400 (lo cuida un test).
+  3. **Orden por nota con cursor estable**: la misma clave única que la comunidad de la ficha (C-07), sobre la calificación: `valor × 10⁹ + id`.
+- **Tests**: `catalogo/tests_mis_resenas_filtros.py` (11): sin filtros con los dos totales, búsqueda con mayúsculas y acentos, título traducido, con y sin reseña, clase, nota, orden por nota y fecha, cursor estable con 25 empates, filtros combinados, valores inválidos y `tipo` solo. Diez fallaban antes; el de `tipo` solo protege lo que ya andaba.
+- **Para el entorno local**: la migración nueva se aplica con `docker compose exec backend python manage.py migrate`.
+- **Archivos afectados**: `backend/catalogo/{reviews,serializers_reviews,pagination_reviews}.py`, `backend/catalogo/migrations/0007_unaccent.py`, `backend/filmai/settings.py`, `backend/catalogo/tests_mis_resenas_filtros.py`, spec `reviews-api`, `openspec/changes/perfil-canvas/tasks.md`, `docs/decisiones.md`.
+
+## 15/10/2026 — Settings según el canvas (perfil, PR 3)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: `/settings` rehecho según «Settings · desktop / mobile», más la miga de Términos en escritorio.
+  1. **Estructura del canvas**: miga Profile › Settings (en celular, «‹ Profile»); Language («Interface language» con EN | ES); Privacy; Notifications; Legal → Términos; Account con «Deactivate account». Títulos en la tipografía de cartel y filas separadas por líneas, como el canvas.
+  2. **Interruptores**: componente nuevo `components/ui/switch.tsx`, un `button` con `role="switch"` y `aria-checked`, nombrado por la etiqueta de su fila (`aria-labelledby`). Reemplaza las casillas de verificación.
+  3. **Solo oscuro**: no hay selector de tema, y `AccountProvider` aplica siempre `dark` (antes una cuenta con «claro» guardado veía la app rota).
+  4. **Textos honestos**: las notificaciones conservan «Preferencia para futuros correos» en lugar del texto del canvas («Every week we email you…»), porque hoy no se manda ningún correo. «Perfil público» conserva el aviso de que todavía no cambia nada.
+  5. **Baja**: usa `ConfirmDialog` de la ficha (`alertdialog`, foco en Cancelar, el error queda a la vista) con el texto aprobado en este registro, que es más largo que el del canvas.
+  6. **Ancla del idioma**: el título de Language conserva el id fijo `t-idioma`, porque el footer con sesión lleva a `/settings#t-idioma` (`routes.language`); lo cazó el e2e de i18n.
+  7. **Términos**: `TermsBackLink` decide los dos lugares según la sesión. En celular, el enlace de siempre. En escritorio, con sesión la miga Profile › Settings › Terms, y sin sesión «Back to the landing page».
+- **Tests**: `switch.test.tsx` (2), `terms-back-link.test.tsx` reescrito para los dos enlaces (jsdom no aplica CSS), la baja en `profile.test.tsx` con `alertdialog`. `e2e/preferencias.spec.ts` reescrito: un «claro» guardado no saca el `dark` y no hay selector; el interruptor guarda y se anuncia; la baja con su texto aprobado. El e2e de i18n pasa con el ancla.
+- **Archivos afectados**: `frontend/app/settings/page.tsx`, `frontend/app/terms/page.tsx`, `frontend/components/{TermsBackLink,AccountProvider}.tsx`, `frontend/components/ui/switch.tsx`, tests y e2e, copia de i18n y mensajes, `openspec/changes/perfil-canvas/tasks.md`, `docs/decisiones.md`.
+
+## 15/10/2026 — Perfil según el canvas (perfil, PR 4)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: `/profile` rehecho según «My profile · desktop / mobile». Se conserva la lógica de antes: borrador con aviso de cambios sin guardar, disponibilidad del usuario mientras se escribe, cambio de contraseña y el enlace para crearla en cuentas de Google sin contraseña local.
+  1. **Estructura del canvas**: encabezado con avatar, nombre en tipografía de cartel, `@usuario`, correo y fecha de alta; «Datos personales» como `dl` (dos columnas en celular); «Editar perfil» cambia esa sección por el formulario «Editar datos», con correo, fecha de nacimiento y género de solo lectura (candado y aviso); «Contraseña» desplegable (`aria-expanded`).
+  2. **Avatar en un diálogo**: `components/features/profile/AvatarDialog.tsx` sobre `DialogShell` de la ficha (tarjeta en escritorio, hoja en celular), con los avatares como `radiogroup` y el foco en el elegido. La elección queda en el borrador y se guarda con «Guardar cambios», como antes. Reemplaza a `AvatarSelector`, que se borra.
+  3. **«Tu cuenta» en celular**: en celular la barra no tiene menú de la cuenta, así que el Perfil lista Calificaciones y reseñas, Preferencias, Términos y «Cerrar sesión», que pide confirmación con `ConfirmDialog` (el mismo texto que el menú de escritorio).
+  4. **Todo el texto sale del catálogo**: se suman 11 claves aprobadas a `docs/i18n/copia-propuesta.csv` y `app/profile/page.tsx` y `lib/profile-draft.ts` dejan la lista de excepciones de i18n. Se borran `colorDisponibilidad` y `ADVERTENCIA_BAJA` (sin uso desde Settings); el test del catálogo fija el texto de la baja directamente.
+- **Tests**: `avatar-dialog.test.tsx` (nuevo, reemplaza a `avatar-selector.test.tsx`), `profile.test.tsx` y `reviews.test.ts` actualizados. `e2e/perfil.spec.ts` y `e2e/hotfix-perfil.spec.ts` adaptados a los nombres nuevos (editar, avatar y guardar).
+- **Archivos afectados**: `frontend/app/profile/page.tsx`, `frontend/components/features/profile/AvatarDialog.tsx`, `frontend/components/AvatarSelector.tsx` (borrado), `frontend/lib/profile-draft.ts`, `frontend/scripts/i18n/rules.mjs`, mensajes y copia de i18n, tests y e2e, `openspec/changes/perfil-canvas/tasks.md`, `docs/decisiones.md`.
+
+## 15/10/2026 — Calificaciones y reseñas según el canvas (perfil, PR 5, cierra el cambio)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: `/my-reviews` rehecha según «Ratings & reviews · desktop / mobile». Con este PR se cierra `perfil-canvas`.
+  1. **Filtros en la URL, con los nombres de Buscar**: `q`, `review=with|without`, `type=movie|tv`, `rating=9…5|lt5` y `sort=newest|oldest|highest|lowest`. El diseño hablaba de `texto`/`clase`/`nota`/`orden`, pero esos son los nombres de la API; en la URL se usan los mismos que en `/search` (`type`, `rating`) para que las dos pantallas se lean igual. `lib/my-reviews.ts` traduce: «Menos de 5» es `nota_max=4` (las notas son enteras) y «N o más», `nota_min=N`. El texto se aplica a los 350 ms, como en Buscar.
+  2. **Miga de vuelta con filtros**: la lista guarda su URL en `sessionStorage` y la miga «Calificaciones y reseñas» de la ficha vuelve ahí, como «Buscar» vuelve a la última búsqueda.
+  3. **Escritorio y celular**: en escritorio, cuatro selectores y «Limpiar filtros»; «Editar» y un menú «Más acciones» (`role="menu"`, flechas y Escape). En celular, «Filtros y orden» abre una hoja que aplica al momento y cierra con «Ver N resultados», cada filtro activo es un chip que lo quita, y un solo botón por fila abre las tres acciones en una hoja.
+  4. **Diálogos de la ficha**: editar usa `RatingDialog` y `planEdicion`; borrar el texto y quitar la calificación, `ConfirmDialog` con los textos y toasts de la ficha. Se borran `MisResenas`, `ReviewCard`, `ReviewModal` y `cambiosResena`.
+  5. **Lo editado queda en su lugar** aunque deje de coincidir con los filtros (por ejemplo, borrar el texto con «Con reseña» activo): que la fila desaparezca bajo el foco desorienta. La próxima carga lo acomoda. Quitar la calificación sí saca la fila y lleva el foco al título.
+  6. **«Agregar reseña» lleva a la ficha** (como el canvas), con `?from=reviews`. Los títulos también.
+  7. **Estados**: `total_propias = 0` muestra «Todavía no calificaste ninguna película ni serie» con un enlace a Buscar y sin filtros; filtros sin resultados ofrecen limpiarlos (conservando el orden). Las «tarjetas de carga eternas» eran tarjetas con `content-visibility: auto` que el navegador no pintaba fuera de pantalla; el diseño nuevo no las usa.
+  8. **Título de la pestaña**: «Calificaciones y reseñas», como el `h1` (antes «Mis reseñas»).
+- **Copia nueva** (`docs/i18n/copia-propuesta.csv`): estado vacío y su acción, carga, error, «Cargar más calificaciones» y el chip de la nota.
+- **Tests**: `my-reviews.test.ts` (URL ⇄ filtros ⇄ API, conteo, miga) y `my-reviews-view.test.tsx` (12: filtros, pausa del texto, vacío, sin coincidencias, chips, hoja, error, editar, borrar texto, quitar con foco, hoja de acciones). `e2e/mis-resenas.spec.ts` reescrito con un backend en memoria que filtra y pagina (6). Se borran los tests de las tarjetas y el modal viejos.
+- **Archivos afectados**: `frontend/app/my-reviews/page.tsx`, `frontend/components/features/reviews/`, `frontend/lib/{my-reviews,reviews}.ts`, `frontend/components/features/title/TitleView.tsx`, componentes viejos (borrados), `frontend/scripts/i18n/rules.mjs`, mensajes y copia de i18n, tests y e2e, spec `profile-ui` (reescrita para las tres pantallas), `docs/05_Plan_de_Desarrollo.md`, `openspec/changes/perfil-canvas/` (eliminado), `docs/decisiones.md`.
+
+## 15/10/2026 — API de listas para el canvas: detalle, filtros, nota de TMDB y orden (L-02/L-03, backend)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: el backend de listas se ajusta a los artboards «Lists» y «List detail» antes de hacer sus pantallas (las pantallas quedan para después). Decisiones de Marcos en el chat:
+  1. **`GET /api/lists/{id}/`**: devuelve el mismo resumen que `GET /api/lists/` para una lista propia, predeterminada o personalizada. Ya lo pedía la ficha para la miga «Lists › {nombre}» con `?from=list-{id}` y recibía 405 (Method Not Allowed), que descartaba sin aviso: la miga quedaba sin el nombre.
+  2. **Nota de TMDB en cada ítem**: `calificacion_promedio` en `GET /api/lists/{id}/items/`, la «★ 8.5» de la tarjeta. TMDB manda 0 cuando no hay votos; la API devuelve `null` y la UI muestra «Unrated».
+  3. **Filtros y orden en el backend** (la paginación es por cursor: filtrar en el cliente solo vería lo cargado): `q` (título canónico o traducido, sin acentos ni mayúsculas, como «Mis reseñas»), `clase` (`movie`/`tv`), `nota` (los tramos de Buscar `9+`…`5+` y `m5`) y `orden` (`agregado-desc` por defecto, `agregado-asc`, `titulo-asc`, `nota-desc`, `nota-asc`). La respuesta suma `total`, lo que pasa los filtros, para «Showing X of N».
+  4. **La nota es la de TMDB, no la del usuario**. Un título sin nota de TMDB no entra en ningún tramo (tampoco en «Below 5») y al ordenar por nota queda al final en los dos sentidos.
+  5. **Claves únicas para el cursor**: por nota, nota×1000 (TMDB trae tres decimales) seguida del id del ítem, como `clave_nota` en «Mis reseñas»; por título, el título que se ve en el idioma efectivo, sin acentos ni mayúsculas, con el id del ítem y collation «C», para que el orden de la base y la comparación del cursor coincidan. Esto cierra la limitación anotada antes («el orden por título usa el canónico en inglés»).
+  6. **Reordenar listas**: se implementa. `Lista.orden` (migración `0007_lista_orden`, que numera las existentes por id) y `PUT /api/lists/order/` con `{"ids": [...]}`, el orden completo de las personalizadas, que sirve igual para el arrastre y para «Move left / Move right» del canvas. Las predeterminadas siguen fijas adelante y las nuevas entran al final. Es tolerante con otra pestaña desactualizada: ids que no son personalizadas del usuario se ignoran y las que faltan quedan al final en su orden anterior. Ids repetidos o no positivos: 400 (Bad Request) en `ids`.
+- **Tests**: `backend/listas/tests_detalle_orden.py` (22: detalle propio, predeterminada, ajena 404 (Not Found), sin sesión 401 (Unauthorized); nota y `null`; búsqueda con acentos y traducciones; tipo; tramos sin los no calificados; combinados; cada orden; título en el idioma; cursor sin repetir ni saltear con empates en los tres órdenes; 400 por campo; orden de listas, nuevas al final, ids ajenos y faltantes, repetidos).
+- **Pendiente**: el doc 03 tiene que sumar `Lista.orden` (queda en la lista para revisar con Gonza, ver la entrada siguiente).
+- **Miga de la ficha**: con el `GET` funcionando, la miga que viene de una lista predeterminada mostraba el nombre guardado («Favoritos», en el idioma de alta de la cuenta). Ahora las predeterminadas se nombran por su `clave` con `enums.defaultList.*`; las personalizadas, por su nombre. Test en `title-view.test.tsx`.
+- **Archivos afectados**: `backend/listas/{models,views,serializers,pagination,urls}.py`, `backend/listas/migrations/0007_lista_orden.py`, `backend/listas/tests_detalle_orden.py`, `contracts/openapi.yaml` (regenerado), `openspec/specs/list-endpoints/spec.md`, `frontend/components/features/title/TitleView.tsx`, `frontend/tests/title-view.test.tsx`, `docs/decisiones.md`.
+
+## 15/10/2026 — Pendiente para pair programming: alinear los docs 02 y 03 con el código
+
+- **Fecha**: 15/10/2026
+- **Descripción**: el análisis del 15/10 encontró que los docs 02 y 03 quedaron atrás del código. Marcos decidió **no corregirlos solo**: se revisan con Gonza en pair programming. Al empezar esa sesión, un agente tiene que avisarlo y partir de esta lista.
+  - **Doc 02**: CU-010 y el RF de búsqueda hablan de «panel» y «grid paginada» (hoy es la página `/search` con scroll infinito; solo se actualizaron el paso 2 y parte de las observaciones). CU-008: filtro «calificación mínima 0–10» (hoy tramos 9+…5+ y <5; año con «Upcoming» y décadas). CU-008 2.A y CU-019 4.A: respaldo al catálogo local si TMDB cae (no implementado: 502 (Bad Gateway)). CU-008 y doc 03: «se materializa todo lo que muestra el catálogo» (hoy solo la ficha; C-04a 🟡). CU-021: avisar al administrador si la sincronización falla entera (no implementado). CU-005 y CU-015: «reseñas recientes» en el perfil (ni el código ni el canvas las muestran). CU-006: «edición inline» y «confirmación de cancelación» (hoy formulario «Edit details», contraseña aparte y aviso al salir). CU-009: el detalle de lista muestra «fecha de agregado» (el canvas muestra tipo, año y nota de TMDB). CU-012: falta reordenar listas. Sección «Gestión de reseñas propias desde perfil» (03/10): nota «X/10», títulos sin enlace, vacío que vuelve al perfil, sin filtros. «Multiidioma › Estado»: solo quedan `complete-signup` y `NavigationGuard` en español.
+  - **Doc 03**: `perfilPublico` describe visibilidad de reseñas y listas (las reseñas son públicas desde el 14/10 y el switch no cambia nada). `tema` claro/oscuro (la app es solo oscura). Falta `fecha_enriquecimiento` en el doc y en el JSON. Falta `Lista.orden` (entrada anterior). Los diagramas siguen pendientes de regenerarse desde el JSON.
+- **Archivos afectados**: `docs/decisiones.md`.
+
+## 15/10/2026 — 404 sin sesión: frase completa con la mención del asistente
+
+- **Fecha**: 15/10/2026
+- **Descripción**: el 404 sin sesión cortaba la invitación en «Create a free account»; el canvas seguía con «…to rate films and keep your lists.». Marcos pidió la frase completa y sumar el asistente: «New to FilmAI? Create a free account to rate films, keep your lists, and get personalized picks from the FilmAI assistant.» / «¿Primera vez en FilmAI? Creá una cuenta gratis para calificar películas, guardar tus listas y recibir recomendaciones del asistente de FilmAI.». Va como una sola clave con `t.rich` (`errors.pages.signUpInvite`, el enlace en `<register>`), en lugar de dos fragmentos concatenados que impedían ordenar la frase en cada idioma; se retiran `newToFilmAI` y `createFreeAccount`. El canvas («404 and error», escritorio y celular) se actualizó igual.
+- **Archivos afectados**: `docs/i18n/copia-propuesta.csv`, `frontend/messages/{en,es}/common.json` (y sus `.d.json.ts`), `frontend/components/errors/ErrorScreens.tsx`, `frontend/tests/errors-and-account-menu.test.tsx`, `frontend/e2e/errores-menu.spec.ts`, `docs/decisiones.md`.
+
+## 15/10/2026 — Canvas: el código como fuente de verdad en Home, Ficha y Search; propuesta de alta con Google
+
+- **Fecha**: 15/10/2026
+- **Descripción**: a pedido de Marcos, el canvas pasa a reflejar lo que el código ya decidió (versiones 317 y 318 del canvas):
+  1. **Home**: el título del Hero se achica según su largo (≤16 caracteres, 152 px; ≤28, 112 px; más, 88 px; en celular 72/56/44 px, con alto mínimo de 560 px en vez de fijo). Un ajuste «tituloHero» (corto, mediano, largo) lo prueba.
+  2. **Ficha**: la miga pasa arriba a la izquierda, sobre una píldora con velo; en celular, «‹ origen» con el mismo velo. Favorite, Watched y Watchlist activos rellenan el ícono con el color de acento (la pupila y las agujas toman el fondo del botón).
+  3. **Search**: el scroll infinito reemplaza «Previous / Page 1 of 2 / Next» (tarjetas vacías mientras carga más; ajuste «cargandoMas»). El año ofrece «Upcoming», los años del actual a 1990 y las décadas de 1980 a 1900.
+  4. **Alta con Google** (`/complete-signup`): artboards nuevos «Complete sign-up (Google)», escritorio y celular, en la sección 7, con selector EN/ES que cambia la copia y estados vacío, completo y usuario en uso. Es una **propuesta pendiente de aprobación de Marcos**; si se aprueba, pasa a código con claves `auth.completeSignUp.*` y la pantalla sale de `legacyFiles`.
+- **Archivos afectados**: canvas «FilmAI — Sistema y catálogo» (`Home`, `Home-Movil`, `Ficha`, `Ficha-Movil`, `Buscar`, `Buscar-Movil`, `Error-SinSesion`, `Error-SinSesion-Movil`, `CompletarRegistro`, `CompletarRegistro-Movil`, `canvas.json`), `docs/decisiones.md`.
+
+## 15/10/2026 — Reutilización de componentes y helpers (revisión end-to-end)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: Marcos pidió revisar el proyecto completo para reutilizar componentes y aprobó informe + refactor. Se unificó lo de riesgo bajo, sin cambiar comportamiento:
+  - **Backend**: un solo `_ORDENES` y los helpers `_clave_nota` y `_filtrar_nota` en `catalogo/reviews.py`; `ProduccionLocalizadaMixin` (título, póster y `campos_en_ingles`) compartido por `MiResenaSerializer` y `ListaItemSerializer`; `filmai/paginacion.py` `CursorConTotal`, base de los cursores de reseñas y de ítems de lista (`extras()` para `total_comunidad`/`total_propias`). **Bug corregido**: `MisResenasQuerySerializer` no tenía `FronteraErroresMixin`, así que sus 400 (Bad Request) salían con `params: {}` (sin `allowedValues`); test nuevo.
+  - **Frontend**: `lib/review-filters.ts` (órdenes, su valor en la API, etiquetas y `parametrosNota`) para la comunidad de la ficha y «Calificaciones y reseñas»; `tmdbImage` acepta `w185` y se borra `posterUrl`; `components/features/filters/SheetParts.tsx` (`SheetHeader`, `SegmentedPills`, `SheetFooter`) y `etiquetaNota` para las dos hojas de filtros; `components/ui/StarIcon.tsx` (7 usos); `components/ui/ErrorRetry.tsx` (8 usos, cada uno conserva su botón); `MediaCardSkeleton`; `lib/last-view.ts` (`crearUltimaVista`) y el parser `de()` compartido. Los `<option>` de la comunidad usan ahora los mismos valores internos que «Calificaciones y reseñas» (`highest`, `9`); la API recibe lo mismo.
+  - **Quedan propuestos, sin hacer** (riesgo medio, con estado): unificar el flujo de guardar/borrar calificación de `TitleView` y `MyReviewsView` en `lib/review-actions.ts`, y un `useCursorList` + `useSentinel` para los scrolls infinitos.
+- **Tests**: Django 826 OK; Vitest 273 (nuevo `review-filters.test.ts`); Playwright de ficha, búsqueda, reseñas, home, perfil, preferencias y errores en verde (`e2e/ficha.spec.ts` actualizado a los valores nuevos de los `<option>`).
+- **Archivos afectados**: `backend/catalogo/{reviews,serializers_reviews,pagination_reviews}.py`, `backend/catalogo/services/traducciones.py`, `backend/filmai/paginacion.py`, `backend/listas/{serializers,pagination}.py`, tests de catálogo; `frontend/lib/{review-filters,last-view,search,my-reviews,reviews,catalog}.ts`, `frontend/components/ui/{StarIcon,ErrorRetry}.tsx`, `frontend/components/features/filters/SheetParts.tsx`, `frontend/components/features/{MediaCard,SearchView,FiltersSheet,HomeHero}.tsx`, `frontend/components/features/reviews/`, `frontend/components/features/title/`, `frontend/app/{profile,settings}/page.tsx`, tests y `e2e/ficha.spec.ts`, `docs/decisiones.md`.
