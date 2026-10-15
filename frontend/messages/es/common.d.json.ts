@@ -621,6 +621,9 @@ declare const messages: {
       "fixHighlighted": "Corregí el campo marcado y tocá de nuevo el botón de Google.",
       "genderPlaceholder": "Elegí una opción",
       "cancel": "Cancelar y volver a iniciar sesión"
+    },
+    "session": {
+      "expired": "Tu sesión venció. Iniciá sesión de nuevo."
     }
   },
   "enums": {
