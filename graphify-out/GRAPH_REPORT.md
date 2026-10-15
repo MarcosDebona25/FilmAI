@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-10-15)
 
 ## Corpus Check
-- 565 files · ~838,230 words
+- 565 files · ~838,546 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0d70a7d2`
+- Built from commit: `a2c7514d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1027,11 +1027,11 @@ Nodes (3): Registro tradicional sin el `complete_signup` de dj-rest-auth.…, Re
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AppConfig` connect `AppConfig` to `api.ts`?**
-  _High betweenness centrality (0.184) - this node is a cross-community bridge._
+  _High betweenness centrality (0.180) - this node is a cross-community bridge._
 - **Why does `AppLocale` connect `api.ts` to `profile/page.tsx`, `@playwright/test`, `react`, `AppConfig`, `ListDetailView.tsx`, `vitest`?**
-  _High betweenness centrality (0.169) - this node is a cross-community bridge._
+  _High betweenness centrality (0.165) - this node is a cross-community bridge._
 - **Why does `Usuario` connect `Usuario` to `perfil.py`, `ContrasenaTests`, `ProduccionAudiovisual`, `PreferenciasTests`, `PerfilTests`, `RecuperacionSesionTests`, `GoogleOAuthTests`, `usuarios/serializers.py`, `usuarios/views.py`, `GoogleSocialLoginSerializer`, `SeedSoloResenasTests`, `IdentidadListaTests`, `CalificacionFactory`, `ConfirmarCorreoTests`, `catalogo/tests.py`, `ErroresRegistroTests`, `ResenaAdminTests`, `documentation.py`, `UsuarioFactory`?**
-  _High betweenness centrality (0.134) - this node is a cross-community bridge._
+  _High betweenness centrality (0.129) - this node is a cross-community bridge._
 - **Are the 69 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 69 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `TMDBClient` (e.g. with `TMDBBadRequest` and `TMDBError`) actually correct?**

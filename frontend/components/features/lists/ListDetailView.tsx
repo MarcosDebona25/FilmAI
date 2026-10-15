@@ -253,10 +253,10 @@ export function ListDetailView({ id }: { id: number }) {
 
   const nombre = lista ? nombreDe(lista) : null;
   const select =
-    "h-9 min-w-0 flex-1 cursor-pointer rounded-full border-0 bg-raised-2 px-2.5 text-center text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+    "h-9 min-w-0 cursor-pointer rounded-full border-0 bg-raised-2 px-2.5 text-center text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
   const caja = (activo: boolean) =>
     cn(
-      "flex h-11 min-w-0 flex-auto items-center gap-2 rounded-full py-0 pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3",
+      "flex h-11 min-w-0 flex-none items-center gap-2 rounded-full py-0 pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3",
       activo ? "shadow-[inset_0_0_0_1px_var(--fg-3)]" : "shadow-[inset_0_0_0_1px_var(--line)]"
     );
   const etiquetaNota = (nota: (typeof NOTAS)[number]) => t(`common.filters.${ETIQUETA_NOTA[nota]}`);
@@ -412,15 +412,6 @@ export function ListDetailView({ id }: { id: number }) {
                     </span>
                   )}
                 </button>
-                {filtrando && (
-                  <button
-                    type="button"
-                    onClick={limpiar}
-                    className="hidden h-12 flex-none cursor-pointer px-1.5 text-sm font-semibold text-fg-2 underline underline-offset-[3px] focus-visible:outline-2 focus-visible:outline-ring md:block"
-                  >
-                    {t("common.filters.clear")}
-                  </button>
-                )}
               </div>
 
               {/* Escritorio: tipo, nota de TMDB y orden en una fila. */}
@@ -482,6 +473,15 @@ export function ListDetailView({ id }: { id: number }) {
                     ))}
                   </select>
                 </label>
+                {filtrando && (
+                  <button
+                    type="button"
+                    onClick={limpiar}
+                    className="h-11 flex-none cursor-pointer px-1.5 text-sm font-semibold text-fg-2 underline underline-offset-[3px] focus-visible:outline-2 focus-visible:outline-ring"
+                  >
+                    {t("common.filters.clear")}
+                  </button>
+                )}
               </div>
 
               {/* Celular: el orden elegido y un chip por filtro, que lo quita. */}
