@@ -19,11 +19,11 @@
 
 ## Phase 1: Backend (PR 2)
 
-- [ ] 1.1 RED → GREEN: `q` matches canonical and translated titles, ignoring case and accents
-- [ ] 1.2 RED → GREEN: `texto=con|sin`, `clase=movie|tv`, `nota_min`/`nota_max`
-- [ ] 1.3 RED → GREEN: `orden` with a stable cursor (rating sorts use the unique key)
-- [ ] 1.4 RED → GREEN: `total` and `total_propias`; `tipo` alone still 400; invalid values 400 with stable codes
-- [ ] 1.5 Spec `reviews-api` updated
+- [x] 1.1 RED → GREEN: `q` matches canonical and translated titles, ignoring case and accents
+- [x] 1.2 RED → GREEN: `texto=con|sin`, `clase=movie|tv`, `nota_min`/`nota_max`
+- [x] 1.3 RED → GREEN: `orden` with a stable cursor (rating sorts use the unique key)
+- [x] 1.4 RED → GREEN: `total` and `total_propias`; `tipo` alone still 400; invalid values 400 with stable codes
+- [x] 1.5 Spec `reviews-api` updated
 
 ## Phase 2: Settings (PR 3)
 

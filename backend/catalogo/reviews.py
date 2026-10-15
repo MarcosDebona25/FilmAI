@@ -26,7 +26,7 @@ pasan por `listas/services.py`, porque la tabla es de ese módulo.
 """
 
 from django.db import IntegrityError, transaction
-from django.db.models import BigIntegerField, ExpressionWrapper, F
+from django.db.models import BigIntegerField, Exists, ExpressionWrapper, F, OuterRef, Q
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -35,7 +35,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from catalogo.exceptions import CalificacionDuplicada
-from catalogo.models import Calificacion, Resena
+from catalogo.models import Calificacion, ProduccionTraduccion, Resena
 from catalogo.pagination_reviews import ResenaCursorPagination
 from catalogo.serializers_reviews import (
     ActualizarCalificacionSerializer,
@@ -43,6 +43,7 @@ from catalogo.serializers_reviews import (
     ComunidadQuerySerializer,
     CrearCalificacionSerializer,
     MiResenaSerializer,
+    MisResenasQuerySerializer,
     ProduccionQuerySerializer,
     ResenaComunidadSerializer,
 )
@@ -277,10 +278,59 @@ class MisCalificacionesView(APIView):
                 ).data
             )
 
+        query = MisResenasQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        datos = query.validated_data
+        total_propias = propias.count()
+        propias = _filtrar_propias(propias, datos)
+
         paginator = self.pagination_class()
+        paginator.ordering = _ORDENES_PROPIAS[datos["orden"]]
+        paginator.total_propias = total_propias
         pagina = paginator.paginate_queryset(propias, request, view=self)
         return paginator.get_paginated_response(
             MiResenaSerializer(
                 pagina, many=True, context={"idioma": idioma_efectivo(request)}
             ).data
         )
+
+
+# Mismo criterio que la comunidad (C-07), sobre la calificación: el orden por
+# nota usa una clave única para que el cursor no se pierda entre empates.
+_ORDENES_PROPIAS = {
+    "fecha-desc": ("-fecha", "-id"),
+    "fecha-asc": ("fecha", "id"),
+    "nota-desc": ("-clave_nota",),
+    "nota-asc": ("clave_nota",),
+}
+
+
+def _filtrar_propias(propias, datos):
+    """Aplica los filtros de «Mis reseñas» y anota la clave de orden por nota."""
+    q = (datos.get("q") or "").strip()
+    if q:
+        # El título canónico o el de alguna traducción, sin acentos ni
+        # mayúsculas. `Exists` y no un JOIN: con varias traducciones, el JOIN
+        # repetiría la calificación.
+        traducido = ProduccionTraduccion.objects.filter(
+            produccion=OuterRef("produccion"), titulo__unaccent__icontains=q
+        )
+        propias = propias.filter(
+            Q(produccion__titulo__unaccent__icontains=q) | Exists(traducido)
+        )
+    if datos.get("texto") == "con":
+        propias = propias.filter(resena__isnull=False)
+    elif datos.get("texto") == "sin":
+        propias = propias.filter(resena__isnull=True)
+    if "clase" in datos:
+        propias = propias.filter(produccion__tipo=tmdb_a_dominio(datos["clase"]))
+    if "nota_min" in datos:
+        propias = propias.filter(valor__gte=datos["nota_min"])
+    if "nota_max" in datos:
+        propias = propias.filter(valor__lte=datos["nota_max"])
+    return propias.annotate(
+        clave_nota=ExpressionWrapper(
+            Cast("valor", BigIntegerField()) * 1_000_000_000 + F("id"),
+            output_field=BigIntegerField(),
+        )
+    )

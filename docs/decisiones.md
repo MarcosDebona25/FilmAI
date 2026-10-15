@@ -4177,3 +4177,14 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   4. **Filtros de Mis reseñas en el backend** (`reviews/mias/`: `q`, `texto`, `clase`, `nota_min`/`nota_max`, `orden`, con `total` y `total_propias`). Con paginación por cursor no se puede filtrar del lado del cliente. El tipo va como `clase`, porque `id_tmdb` + `tipo` ya cambian la respuesta a «la calificación de una ficha».
 - **Entrega**: cinco PRs (SDD, backend, Settings, Perfil, Mis reseñas).
 - **Archivos afectados**: `openspec/changes/perfil-canvas/`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 15/10/2026 — Filtros de «Mis reseñas» en el backend (perfil según el canvas, PR 2)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: `GET /api/reviews/mias/` acepta `q`, `texto` (`con`/`sin`), `clase` (`movie`/`tv`), `nota_min`/`nota_max` y `orden`, validados con `MisResenasQuerySerializer`, y devuelve `total` (con filtros) y `total_propias` (sin filtros) para «Ver N resultados» y para distinguir «no calificaste nada» de «nada con estos filtros».
+  1. **Búsqueda sin acentos**: se activa la extensión `unaccent` de Postgres (migración `catalogo.0007_unaccent`) y `django.contrib.postgres` en `INSTALLED_APPS`, para usar `titulo__unaccent__icontains`. Filtrar en Python no sirve con paginación por cursor. Busca en el título canónico y en las traducciones; para las traducciones usa `Exists`, porque un JOIN repetiría la calificación si hubiera varias.
+  2. **`clase` y no `tipo`**: en esta ruta, `id_tmdb` + `tipo` ya devuelven la calificación de una ficha, y medio par sigue siendo 400 (lo cuida un test).
+  3. **Orden por nota con cursor estable**: la misma clave única que la comunidad de la ficha (C-07), sobre la calificación: `valor × 10⁹ + id`.
+- **Tests**: `catalogo/tests_mis_resenas_filtros.py` (11): sin filtros con los dos totales, búsqueda con mayúsculas y acentos, título traducido, con y sin reseña, clase, nota, orden por nota y fecha, cursor estable con 25 empates, filtros combinados, valores inválidos y `tipo` solo. Diez fallaban antes; el de `tipo` solo protege lo que ya andaba.
+- **Para el entorno local**: la migración nueva se aplica con `docker compose exec backend python manage.py migrate`.
+- **Archivos afectados**: `backend/catalogo/{reviews,serializers_reviews,pagination_reviews}.py`, `backend/catalogo/migrations/0007_unaccent.py`, `backend/filmai/settings.py`, `backend/catalogo/tests_mis_resenas_filtros.py`, spec `reviews-api`, `openspec/changes/perfil-canvas/tasks.md`, `docs/decisiones.md`.
