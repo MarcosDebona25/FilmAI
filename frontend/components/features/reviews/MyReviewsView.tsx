@@ -77,8 +77,12 @@ export function MyReviewsView() {
   const activos = filtrosActivos(filtros);
   const filtrando = hayFiltros(filtros);
 
+  // Parte de la URL de ahora y no de lo renderizado: la espera del texto y
+  // «limpiar» pueden cruzarse antes de que `useSearchParams` se entere, y la
+  // espera devolvía los filtros ya quitados.
   function cambiar(cambios: Partial<FiltrosResenas>) {
-    window.history.replaceState(null, "", urlDeFiltros({ ...filtros, ...cambios }));
+    const actuales = filtrosDesdeUrl(new URLSearchParams(window.location.search));
+    window.history.replaceState(null, "", urlDeFiltros({ ...actuales, ...cambios }));
   }
 
   function limpiar() {
