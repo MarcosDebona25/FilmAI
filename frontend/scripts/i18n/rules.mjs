@@ -1,13 +1,10 @@
 // Excepciones temporales: se eliminan al integrar cada diseño definitivo.
 export const legacyFiles = [
   "app/complete-signup/page.tsx",
-  "app/profile/page.tsx",
-  "components/AvatarSelector.tsx",
   "components/MisResenas.tsx",
   "components/NavigationGuard.tsx",
   "components/ReviewCard.tsx",
   "components/ReviewModal.tsx",
-  "lib/profile-draft.ts",
 ];
 const visibleAttributes = new Set([
   "aria-label",

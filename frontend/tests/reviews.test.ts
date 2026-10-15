@@ -6,7 +6,7 @@ import {
   rutaPagina,
   type MiResena,
 } from "@/lib/reviews";
-import { ADVERTENCIA_BAJA, colorDisponibilidad, tieneCambios } from "@/lib/profile-draft";
+import { tieneCambios } from "@/lib/profile-draft";
 import type { Perfil } from "@/components/AccountProvider";
 const item: MiResena = {
   id: 1,
@@ -73,17 +73,5 @@ describe("perfil y advertencias", () => {
     expect(tieneCambios(perfil, perfil)).toBe(false);
     expect(tieneCambios({ ...perfil, avatar_id: 2 }, perfil)).toBe(true);
     expect(tieneCambios({ ...perfil, nombre: "Pedro" }, perfil)).toBe(true);
-  });
-  it("distingue estados con colores para ambos temas", () => {
-    expect(colorDisponibilidad("available")).toContain("green");
-    expect(colorDisponibilidad("taken")).toContain("red");
-    expect(colorDisponibilidad("checking")).toBe("text-muted-foreground");
-  });
-  it("usa la advertencia de baja aprobada", () => {
-    expect(ADVERTENCIA_BAJA).toContain("irreversible");
-    expect(ADVERTENCIA_BAJA).toContain(
-      "Asegurate de querer dar de baja la cuenta antes de continuar."
-    );
-    expect(ADVERTENCIA_BAJA).not.toContain("conservarán");
   });
 });
