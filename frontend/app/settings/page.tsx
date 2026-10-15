@@ -1,267 +1,228 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { useTranslations } from "next-intl";
-
-import { useEffect, useRef, useState } from "react";
+import { useId, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAccount, type Preferencias } from "@/components/AccountProvider";
-import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
+import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/api";
+import { routes } from "@/lib/routes";
 
-import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
+type Interruptor = "perfil_publico" | "notif_recomendaciones" | "notif_resenas" | "notif_novedades";
 
-export default function PreferenciasPage() {
-  const theme = useTranslations("enums.theme");
-  const t = useTranslations("legacy.settings");
-  const language = useTranslations("settings.language");
-  const INTERRUPTORES: { campo: keyof Preferencias; titulo: string; descripcion: string }[] = [
-    {
-      campo: "perfil_publico",
-      titulo: t("publicProfile"),
-      descripcion: t("publicProfileHelp"),
-    },
-    {
-      campo: "notif_recomendaciones",
-      titulo: t("weeklyLabel"),
-      descripcion: t("weeklyHelp"),
-    },
-    {
-      campo: "notif_resenas",
-      titulo: t("reviewsLabel"),
-      descripcion: t("reviewsHelp"),
-    },
-    {
-      campo: "notif_novedades",
-      titulo: t("newsLabel"),
-      descripcion: t("newsHelp"),
-    },
-  ];
-
+/**
+ * Settings según el canvas («Settings · desktop / mobile»). Sin selector de
+ * tema: por ahora la app es solo oscura (15/10/2026). «Perfil público» queda
+ * aunque el canvas no lo tiene, por decisión del usuario, con el aviso de que
+ * todavía no cambia nada.
+ */
+export default function SettingsPage() {
+  const t = useTranslations();
+  const legacy = useTranslations("legacy.settings");
   const router = useRouter();
   const { preferencias, cargando, error, recargar, actualizarPreferencia, limpiar } = useAccount();
-  const [guardando, setGuardando] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState<Interruptor | null>(null);
   const [confirmarBaja, setConfirmarBaja] = useState(false);
-  const [dandoBaja, setDandoBaja] = useState(false);
-  const [errorBaja, setErrorBaja] = useState<string | null>(null);
-  const cancelarRef = useRef<HTMLButtonElement>(null);
-  const bajaButtonRef = useRef<HTMLButtonElement>(null);
-  const bajaDialogRef = useRef<HTMLDivElement>(null);
+  const idioma = useId();
 
-  function cerrarBaja() {
-    setConfirmarBaja(false);
-    bajaButtonRef.current?.focus();
-  }
-
-  useEffect(() => {
-    if (!confirmarBaja) return;
-    cancelarRef.current?.focus();
-    function onEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !dandoBaja) cerrarBaja();
-      mantenerFocoEnDialogo(event, bajaDialogRef.current);
-    }
-    window.addEventListener("keydown", onEscape);
-    return () => window.removeEventListener("keydown", onEscape);
-  }, [confirmarBaja, dandoBaja]);
-
-  async function cambiar<K extends keyof Preferencias>(campo: K, valor: Preferencias[K]) {
+  async function cambiar(campo: Interruptor, valor: boolean) {
     setGuardando(campo);
     try {
-      await actualizarPreferencia(campo, valor);
+      await actualizarPreferencia(campo, valor as Preferencias[typeof campo]);
     } catch {
-      toast.error(t("saveError"));
+      toast.error(legacy("saveError"));
     } finally {
       setGuardando(null);
     }
   }
 
   async function desactivarCuenta() {
-    setErrorBaja(null);
-    setDandoBaja(true);
     try {
       await apiFetch("/api/account/deactivate/", { method: "POST" });
-      limpiar();
-      toast.success(t("deactivated"));
-      router.replace("/");
     } catch {
-      setErrorBaja(t("deactivateError"));
-      setDandoBaja(false);
+      // `ConfirmDialog` muestra el mensaje del error que se lanza.
+      throw new Error(legacy("deactivateError"));
     }
+    limpiar();
+    toast.success(legacy("deactivated"));
+    router.replace(routes.home);
   }
 
+  // Una fila del canvas: texto a la izquierda y el control a la derecha.
+  function fila(campo: Interruptor, titulo: string, detalle: string) {
+    const etiqueta = `${idioma}-${campo}`;
+    return (
+      <div
+        key={campo}
+        className="flex items-center gap-4 border-t border-line py-4 md:gap-6 md:py-[18px]"
+      >
+        <span className="flex flex-1 flex-col">
+          <span id={etiqueta} className="font-semibold">
+            {titulo}
+          </span>
+          <span className="text-sm text-fg-3">{detalle}</span>
+        </span>
+        <Switch
+          checked={Boolean(preferencias?.[campo])}
+          onChange={(valor) => void cambiar(campo, valor)}
+          labelledBy={etiqueta}
+          disabled={guardando !== null}
+        />
+      </div>
+    );
+  }
+
+  const titulo2 = "font-display text-[30px] leading-none md:text-[34px]";
+
   return (
-    <main id="contenido" className="mx-auto max-w-3xl px-6 py-10">
-      <nav aria-label={t("breadcrumb")} className="mb-8 text-sm text-foreground/75">
-        {t("heading")}
-      </nav>
-      <h1 className="mb-8 text-3xl font-bold text-foreground">{t("heading")}</h1>
-      {cargando ? <p role="status">{t("loading")}</p> : null}
-      {error ? (
-        <div role="alert" className="mb-6 rounded-xl border border-destructive p-4">
-          <p>{error}</p>
-          <Button className="mt-3 min-h-11" variant="secondary" onClick={() => void recargar()}>
-            {t("retry")}
-          </Button>
+    <main
+      id="contenido"
+      className="mx-auto flex max-w-[760px] flex-col gap-9 px-5 pt-4 pb-[120px] md:gap-14 md:px-10 md:pt-12 md:pb-24"
+    >
+      <div className="flex flex-col gap-2.5 md:gap-3.5">
+        <Link
+          href={routes.profile}
+          className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[15px] font-medium text-fg-2 no-underline md:hidden"
+        >
+          <ChevronLeft aria-hidden="true" className="size-5" />
+          {t("nav.main.profileShort")}
+        </Link>
+        <nav
+          aria-label={t("nav.main.breadcrumbLabel")}
+          className="hidden text-sm text-fg-2 md:block"
+        >
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link href={routes.profile} className="text-fg-2 hover:text-foreground">
+                {t("nav.main.profileShort")}
+              </Link>
+            </li>
+            <li aria-hidden="true">›</li>
+            <li aria-current="page" className="font-semibold text-foreground">
+              {t("nav.main.settings")}
+            </li>
+          </ol>
+        </nav>
+        <h1 className="font-display text-[48px] leading-none md:mb-[15px] md:text-[72px] md:leading-[0.95]">
+          {t("nav.main.settings")}
+        </h1>
+      </div>
+
+      {cargando && !preferencias && (
+        <p role="status" className="text-fg-2">
+          {legacy("loading")}
+        </p>
+      )}
+      {error && (
+        <div role="alert" className="flex flex-col items-start gap-3">
+          <p className="text-fg-2">{error}</p>
+          <button
+            type="button"
+            onClick={() => void recargar()}
+            className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            {t("common.actions.retry")}
+          </button>
         </div>
-      ) : null}
-      {preferencias ? (
-        <div className="space-y-10">
-          <section aria-labelledby="apariencia">
-            <h2 id="apariencia" className="mb-4 text-xl font-semibold">
-              {t("appearance")}
+      )}
+
+      {preferencias && (
+        <>
+          {/* Id fijo: el footer lleva a `routes.language` (`/settings#t-idioma`). */}
+          <section aria-labelledby="t-idioma" className="flex flex-col gap-3.5 md:gap-2">
+            <h2 id="t-idioma" className={`${titulo2} scroll-mt-24 md:mb-2`}>
+              {t("settings.language.label")}
             </h2>
-            <fieldset className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-card p-5">
-              <legend className="sr-only">{t("themeLegend")}</legend>
-              <span className="font-medium">{t("theme")}</span>
-              <div className="flex gap-4">
-                {(["oscuro", "claro"] as const).map((tema) => (
-                  <label key={tema} className="flex min-h-11 cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="tema"
-                      value={tema}
-                      checked={preferencias.tema === tema}
-                      disabled={guardando !== null}
-                      onChange={() => void cambiar("tema", tema)}
-                      className="accent-primary"
-                    />
-                    {theme(tema)}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <div className="flex flex-col gap-3 border-y border-line py-4 md:flex-row md:items-center md:gap-6 md:py-[18px]">
+              <span className="flex flex-1 flex-col">
+                <span className="font-semibold">{t("settings.language.interfaceLabel")}</span>
+                <span className="text-sm text-fg-3">{t("settings.language.interfaceHelp")}</span>
+              </span>
+              <LanguageSwitcher account />
+            </div>
           </section>
 
-          <section aria-labelledby="t-idioma">
-            <h2 id="t-idioma" className="mb-4 scroll-mt-24 text-xl font-semibold">
-              {language("label")}
+          <section aria-labelledby={`${idioma}-privacidad`} className="flex flex-col gap-2">
+            <h2 id={`${idioma}-privacidad`} className={`${titulo2} mb-1.5 md:mb-2`}>
+              {legacy("privacy")}
             </h2>
-            <p className="mb-4 text-sm text-foreground/75">{language("description")}</p>
-            <LanguageSwitcher account />
-          </section>
-
-          <section aria-labelledby="privacidad">
-            <h2 id="privacidad" className="mb-4 text-xl font-semibold">
-              {t("privacy")}
-            </h2>
-            <p
-              className="mb-4 rounded-lg border border-border bg-muted p-4 text-sm text-foreground"
-              role="note"
-            >
-              {t("futureFeatures")}
+            <p role="note" className="mb-2 text-sm text-fg-2">
+              {legacy("futureFeatures")}
             </p>
-            <div className="divide-y divide-border rounded-xl bg-card px-5">
-              {INTERRUPTORES.slice(0, 1).map(({ campo, titulo, descripcion }) => (
-                <label
-                  key={campo}
-                  className="flex min-h-18 cursor-pointer items-center justify-between gap-5 py-4"
-                >
-                  <span>
-                    <span className="block font-medium">{titulo}</span>
-                    <span className="block text-sm text-foreground/75">{descripcion}</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    name={campo}
-                    checked={Boolean(preferencias[campo])}
-                    disabled={guardando !== null}
-                    onChange={(event) => void cambiar(campo, event.target.checked)}
-                    className="size-5 shrink-0 accent-primary"
-                  />
-                </label>
-              ))}
+            <div className="border-b border-line">
+              {fila("perfil_publico", legacy("publicProfile"), legacy("publicProfileHelp"))}
             </div>
           </section>
 
-          <section aria-labelledby="notificaciones">
-            <h2 id="notificaciones" className="mb-4 text-xl font-semibold">
-              {t("notifications")}
+          <section aria-labelledby={`${idioma}-notificaciones`} className="flex flex-col gap-2">
+            <h2 id={`${idioma}-notificaciones`} className={`${titulo2} mb-1.5 md:mb-2`}>
+              {t("settings.notifications.heading")}
             </h2>
-            <div className="divide-y divide-border rounded-xl bg-card px-5">
-              {INTERRUPTORES.slice(1).map(({ campo, titulo, descripcion }) => (
-                <label
-                  key={campo}
-                  className="flex min-h-18 cursor-pointer items-center justify-between gap-5 py-4"
-                >
-                  <span>
-                    <span className="block font-medium">{titulo}</span>
-                    <span className="block text-sm text-foreground/75">{descripcion}</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    name={campo}
-                    checked={Boolean(preferencias[campo])}
-                    disabled={guardando !== null}
-                    onChange={(event) => void cambiar(campo, event.target.checked)}
-                    className="size-5 shrink-0 accent-primary"
-                  />
-                </label>
-              ))}
+            {/* Las descripciones dicen «para futuros correos»: hoy no se manda ninguno. */}
+            <div className="border-b border-line">
+              {fila(
+                "notif_recomendaciones",
+                t("settings.notifications.weeklyLabel"),
+                legacy("weeklyHelp")
+              )}
+              {fila(
+                "notif_resenas",
+                t("settings.notifications.reviewsLabel"),
+                legacy("reviewsHelp")
+              )}
+              {fila("notif_novedades", t("settings.notifications.newsLabel"), legacy("newsHelp"))}
             </div>
           </section>
 
-          <section aria-labelledby="cuenta" className="border-t border-border pt-8">
-            <h2 id="cuenta" className="mb-3 text-xl font-semibold">
-              {t("account")}
+          <section aria-labelledby={`${idioma}-legal`} className="flex flex-col gap-2">
+            <h2 id={`${idioma}-legal`} className={`${titulo2} mb-1.5 md:mb-2`}>
+              {t("settings.legal.heading")}
             </h2>
-            <p className="mb-5 text-sm text-foreground/75">{t("deactivateWarning")}</p>
-            <Button
-              className="min-h-11"
-              ref={bajaButtonRef}
-              variant="destructive"
-              onClick={() => setConfirmarBaja(true)}
+            <Link
+              href={routes.terms}
+              className="flex items-center gap-4 border-y border-line py-4 text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring md:gap-6 md:py-[18px]"
             >
-              {t("deactivateAccount")}
-            </Button>
+              <span className="flex flex-1 flex-col">
+                <span className="font-semibold">{t("nav.main.terms")}</span>
+                <span className="text-sm text-fg-3">{t("settings.legal.description")}</span>
+              </span>
+              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-fg-3" />
+            </Link>
           </section>
-        </div>
-      ) : null}
+
+          <section aria-labelledby={`${idioma}-cuenta`} className="flex flex-col gap-3">
+            <h2 id={`${idioma}-cuenta`} className={titulo2}>
+              {t("settings.account.heading")}
+            </h2>
+            <p className="text-[15px] text-fg-2 md:text-base">
+              {t("settings.account.deactivateWarning")}
+            </p>
+            <button
+              type="button"
+              onClick={() => setConfirmarBaja(true)}
+              className="h-[52px] cursor-pointer rounded-[10px] px-[18px] font-semibold text-destructive shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:self-start"
+            >
+              {legacy("deactivateAccount")}
+            </button>
+          </section>
+        </>
+      )}
 
       {confirmarBaja && (
-        <div
-          ref={bajaDialogRef}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="baja-titulo"
-        >
-          <div className="w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
-            <h2 id="baja-titulo" className="text-xl font-semibold">
-              {t("deactivateTitle")}
-            </h2>
-            <p className="mt-3 text-sm text-foreground/75">{t("deactivateConfirm")}</p>
-            {errorBaja && (
-              <p role="alert" className="mt-4 text-sm text-destructive">
-                {errorBaja}
-              </p>
-            )}
-            <div className="mt-6 flex justify-end gap-3">
-              <Button
-                className="min-h-11"
-                ref={cancelarRef}
-                variant="secondary"
-                disabled={dandoBaja}
-                onClick={cerrarBaja}
-              >
-                {t("cancel")}
-              </Button>
-              <Button
-                className="min-h-11"
-                variant="destructive"
-                disabled={dandoBaja}
-                onClick={() => void desactivarCuenta()}
-              >
-                {dandoBaja && (
-                  <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden="true" />
-                )}
-                {t("deactivate")}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          titulo={legacy("deactivateTitle")}
+          // El texto aprobado (docs/decisiones.md), más largo que el del canvas.
+          descripcion={legacy("deactivateConfirm")}
+          confirmar={legacy("deactivate")}
+          onConfirm={desactivarCuenta}
+          onCancel={() => setConfirmarBaja(false)}
+        />
       )}
     </main>
   );

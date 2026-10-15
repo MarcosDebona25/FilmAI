@@ -89,7 +89,9 @@ for (const width of [390, 1440])
     expect(state.getPerfil().avatar_id).toBe(2);
   });
 
-for (const theme of ["oscuro", "claro"])
+// Solo tema oscuro desde el 15/10/2026: un «claro» guardado igual se ve oscuro
+// (lo cubre e2e/preferencias.spec.ts).
+for (const theme of ["oscuro"])
   test(`botones consistentes y contraste al menos 4.5 en tema ${theme}`, async ({ page }) => {
     await prepararCuenta(page);
     await page.route("**/api/preferences/", (route) =>
@@ -131,12 +133,13 @@ for (const theme of ["oscuro", "claro"])
     await deactivate.hover();
     expect((await colors(deactivate)).contrast).toBeGreaterThanOrEqual(4.5);
     await deactivate.click();
+    // Canvas: el botón de la página es un contorno rojo y el de confirmar, rojo
+    // lleno, dentro de un `alertdialog`. Ya no comparten colores; los dos
+    // tienen que alcanzar el contraste.
     const confirm = page
-      .getByRole("dialog")
+      .getByRole("alertdialog")
       .getByRole("button", { name: "Dar de baja", exact: true });
     await page.mouse.move(0, 0);
     const confirmColors = await colors(confirm);
-    expect(confirmColors.color).toBe(danger.color);
-    expect(confirmColors.background).toBe(danger.background);
     expect(confirmColors.contrast).toBeGreaterThanOrEqual(4.5);
   });

@@ -1,13 +1,10 @@
 import { ChevronDown } from "lucide-react";
-import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { TicketMark } from "@/components/access/Logo";
 import { TermsBackLink } from "@/components/TermsBackLink";
 import type { AppLocale } from "@/i18n/config";
 import { formatDate } from "@/lib/format";
 import { loadTerms } from "@/lib/legal";
-import { routes } from "@/lib/routes";
 
 export async function generateMetadata() {
   const locale = (await getLocale()) as AppLocale;
@@ -28,13 +25,6 @@ export default async function TermsPage() {
     >
       <div className="flex flex-col gap-2.5 md:gap-3">
         <TermsBackLink />
-        <Link
-          href={routes.home}
-          className="hidden min-h-11 items-center gap-2 self-start text-sm font-semibold text-muted-foreground md:inline-flex"
-        >
-          <TicketMark width={24} height={18} />
-          {nav("backLanding")}
-        </Link>
         <h1 className="mb-1.5 font-display text-[48px] leading-[0.95] sm:text-[72px] md:mb-0">
           {doc.title}
         </h1>
