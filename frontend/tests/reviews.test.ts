@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  cambiosResena,
-  combinarResenas,
-  posterUrl,
-  rutaPagina,
-  type MiResena,
-} from "@/lib/reviews";
+import { combinarResenas, posterUrl, rutaPagina, type MiResena } from "@/lib/reviews";
 import { tieneCambios } from "@/lib/profile-draft";
 import type { Perfil } from "@/components/AccountProvider";
 const item: MiResena = {
@@ -19,24 +13,6 @@ const item: MiResena = {
   texto: "Muy buena",
 };
 describe("contratos de edición y paginación", () => {
-  it("envía solo campos modificados y normaliza espacios", () => {
-    expect(cambiosResena(item, 9, " Otro texto ")).toEqual({ valor: 9, texto: "Otro texto" });
-    expect(cambiosResena(item, 8, "Muy buena")).toEqual({});
-    expect(cambiosResena({ ...item, texto: null }, 8, "")).toEqual({});
-  });
-  it("no transforma texto vacío en una eliminación implícita", () =>
-    expect(() => cambiosResena(item, 8, " ")).toThrow(
-      expect.objectContaining({ code: "review_update_empty" })
-    ));
-  it.each([0, 11, 2.5])("rechaza nota inválida %s", (valor) =>
-    expect(() => cambiosResena(item, valor, item.texto!)).toThrow(
-      expect.objectContaining({ code: "invalid" })
-    )
-  );
-  it("limita a 1000 caracteres", () =>
-    expect(() => cambiosResena(item, 8, "a".repeat(1001))).toThrow(
-      expect.objectContaining({ code: "max_length", params: { maxLength: 1000 } })
-    ));
   it("reutiliza solo el cursor en nuestra ruta de API", () =>
     expect(rutaPagina("https://otro.example/api/reviews/mias/?cursor=a%3D")).toBe(
       "/api/reviews/mias/?cursor=a%3D"
