@@ -39,6 +39,33 @@ def campos_en_ingles(produccion, idioma, campos=("titulo", "poster")):
     ]
 
 
+class ProduccionLocalizadaMixin:
+    """Título, póster y `campos_en_ingles` de `instance.produccion` en el idioma.
+
+    Lo comparten las filas que cuelgan de una producción («Mis reseñas» y los
+    ítems de una lista). Cada serializer declara sus `titulo` y `poster` como
+    `SerializerMethodField`: si los declarara el mixin, DRF los pondría primero
+    y cambiaría el orden de las claves de la respuesta.
+    """
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        idioma = self.context.get("idioma")
+        if idioma and idioma != "en":
+            data["campos_en_ingles"] = campos_en_ingles(instance.produccion, idioma)
+        return data
+
+    def get_titulo(self, instance):
+        return texto_localizado(
+            instance.produccion, "titulo", self.context.get("idioma")
+        )
+
+    def get_poster(self, instance):
+        return texto_localizado(
+            instance.produccion, "poster", self.context.get("idioma")
+        )
+
+
 def pendientes():
     """Producciones enriquecidas a las que les falta alguna traducción o los ids."""
     esperadas = len(idiomas_traducidos())

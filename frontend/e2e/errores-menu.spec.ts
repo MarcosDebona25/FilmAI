@@ -3,6 +3,11 @@ import { expect, test, type Page } from "@playwright/test";
 import es from "../messages/es/common.json";
 import { prepararCuenta } from "./cuenta";
 
+/** El texto del enlace dentro de la invitación del 404 (`<register>…</register>`). */
+function enlaceRegistro(catalogo: { errors: { pages: { signUpInvite: string } } }) {
+  return /<register>(.*)<\/register>/.exec(catalogo.errors.pages.signUpInvite)?.[1] ?? "";
+}
+
 const viewports = [
   { name: "escritorio", width: 1440, height: 900, movil: false },
   { name: "celular", width: 390, height: 844, movil: true },
@@ -61,9 +66,10 @@ for (const viewport of viewports) {
         "href",
         "/login"
       );
-      await expect(
-        principal.getByRole("link", { name: es.errors.pages.createFreeAccount })
-      ).toHaveAttribute("href", "/register");
+      await expect(principal.getByRole("link", { name: enlaceRegistro(es) })).toHaveAttribute(
+        "href",
+        "/register"
+      );
       await expect(principal.getByRole("link", { name: es.nav.main.search })).toHaveCount(0);
       // Sin sesión no hay barra de pestañas ni enlace a Lists. El footer sí lista
       // «Mis listas» y «Mi perfil», por eso la coincidencia es exacta.

@@ -24,6 +24,7 @@ import { Avatar } from "@/components/Avatar";
 import { useNavigationGuard } from "@/components/NavigationGuard";
 import { AvatarDialog } from "@/components/features/profile/AvatarDialog";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
+import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { currentLocale } from "@/i18n/client";
 import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
 import { translateError } from "@/lib/errors";
@@ -359,18 +360,7 @@ export default function PerfilPage() {
           {t("profile.loading")}
         </p>
       )}
-      {error && (
-        <div role="alert" className="flex flex-col items-start gap-3">
-          <p className="text-fg-2">{error}</p>
-          <button
-            type="button"
-            onClick={() => void recargar()}
-            className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {t("common.actions.retry")}
-          </button>
-        </div>
-      )}
+      {error && <ErrorRetry mensaje={error} onReintentar={() => void recargar()} />}
 
       {vista && perfil && (
         <>

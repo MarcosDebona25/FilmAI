@@ -14,6 +14,8 @@ import { CreditsSection } from "@/components/features/title/CreditsSection";
 import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ReviewsSection } from "@/components/features/title/ReviewsSection";
 import { TitleActions } from "@/components/features/title/TitleActions";
+import { ErrorRetry } from "@/components/ui/ErrorRetry";
+import { StarIcon } from "@/components/ui/StarIcon";
 import { ApiError, apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
@@ -34,8 +36,6 @@ import { useCatalog } from "@/lib/use-catalog";
 import { useDesborde } from "@/lib/use-desborde";
 import { cn } from "@/lib/utils";
 
-const ESTRELLA =
-  "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2";
 // Mismo criterio que el Home (14/10/2026): la letra se achica con el largo.
 const TAMANIO_TITULO = {
   grande: "text-[48px] md:text-[120px]",
@@ -72,7 +72,9 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   // `undefined` = todavía no se sabe; `null` = no calificó.
   const [mia, setMia] = useState<MiCalificacion | null | undefined>(undefined);
   const [listas, setListas] = useState<ListaFicha[] | null>(null);
-  const [nombreLista, setNombreLista] = useState<string | null>(null);
+  const [listaDeOrigen, setListaDeOrigen] = useState<Pick<ListaFicha, "nombre" | "clave"> | null>(
+    null
+  );
   const [modal, setModal] = useState<Modal>(null);
   const [sinopsisCompleta, setSinopsisCompleta] = useState(false);
   const [sinopsisRef, sinopsisDesborda] = useDesborde<HTMLParagraphElement>(
@@ -121,8 +123,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   useEffect(() => {
     if (!conSesion || listaOrigen === null) return;
     let vigente = true;
-    apiFetch<{ nombre: string }>(`/api/lists/${listaOrigen}/`).then(
-      (lista) => vigente && setNombreLista(lista.nombre),
+    apiFetch<Pick<ListaFicha, "nombre" | "clave">>(`/api/lists/${listaOrigen}/`).then(
+      (lista) => vigente && setListaDeOrigen(lista),
       () => undefined
     );
     return () => {
@@ -136,16 +138,12 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         id="contenido"
         className="mx-auto flex max-w-[1360px] flex-col items-start gap-4 px-5 pt-28 pb-16 md:px-10"
       >
-        <p role="alert" className="text-fg-2">
-          {mensajeDeError(detalle.error)}
-        </p>
-        <button
-          type="button"
-          onClick={() => setIntento((anterior) => anterior + 1)}
-          className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          {t("common.actions.retry")}
-        </button>
+        <ErrorRetry
+          mensaje={mensajeDeError(detalle.error)}
+          onReintentar={() => setIntento((anterior) => anterior + 1)}
+          alertaEnTexto
+          className="gap-4"
+        />
       </main>
     );
   }
@@ -162,7 +160,18 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         : origen.tipo === "lista"
           ? [
               { label: t("nav.main.lists"), href: routes.lists },
-              ...(nombreLista ? [{ label: nombreLista, href: routes.list(origen.id) }] : []),
+              ...(listaDeOrigen
+                ? [
+                    {
+                      // Las predeterminadas se nombran por su clave: el nombre
+                      // guardado está en el idioma en que se creó la cuenta.
+                      label: listaDeOrigen.clave
+                        ? t(`enums.defaultList.${listaDeOrigen.clave}`)
+                        : listaDeOrigen.nombre,
+                      href: routes.list(origen.id),
+                    },
+                  ]
+                : []),
             ]
           : [{ label: t("nav.main.home"), href: routes.explore }]),
   ];
@@ -361,13 +370,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                             count: ficha.votos,
                           })}
                         </span>
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          className="size-[15px] fill-primary"
-                        >
-                          <polygon points={ESTRELLA} />
-                        </svg>
+                        <StarIcon className="size-[15px] fill-primary" />
                         <span aria-hidden="true" className="font-semibold text-foreground">
                           {formats.rating(ficha.nota)}
                         </span>

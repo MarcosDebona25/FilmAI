@@ -38,7 +38,10 @@ export interface Title {
 }
 
 /** URL de una imagen de TMDB; solo acepta rutas de TMDB o URLs https de su CDN. */
-export function tmdbImage(path: string | null | undefined, size: "w342" | "w500" | "w1280") {
+export function tmdbImage(
+  path: string | null | undefined,
+  size: "w185" | "w342" | "w500" | "w1280"
+) {
   if (!path) return null;
   if (path.startsWith("/") && !path.startsWith("//"))
     return `https://image.tmdb.org/t/p/${size}${path}`;

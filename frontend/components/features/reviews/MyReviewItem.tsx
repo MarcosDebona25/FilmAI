@@ -7,23 +7,18 @@ import { Ellipsis, Film, PenLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { DialogShell } from "@/components/features/title/DialogShell";
+import { StarIcon } from "@/components/ui/StarIcon";
 import { useFormats } from "@/lib/format";
-import { posterUrl, type MiResena } from "@/lib/reviews";
+import { tmdbImage } from "@/lib/catalog";
+import { type MiResena } from "@/lib/reviews";
 import { routes } from "@/lib/routes";
 import { useDesborde } from "@/lib/use-desborde";
 import { cn } from "@/lib/utils";
 
-const ESTRELLA =
-  "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2";
-
 export type AccionResena = "editar" | "borrarTexto" | "quitar";
 
 function Estrella({ className }: { className: string }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={cn("shrink-0 fill-primary", className)}>
-      <polygon points={ESTRELLA} />
-    </svg>
-  );
+  return <StarIcon className={cn("shrink-0 fill-primary", className)} />;
 }
 
 /**
@@ -50,7 +45,7 @@ export function MyReviewItem({
   const [hoja, setHoja] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const masRef = useRef<HTMLButtonElement>(null);
-  const src = posterUrl(item.poster);
+  const src = tmdbImage(item.poster, "w185");
   const href = routes.title(item.tipo, item.id_tmdb, "reviews");
   const enIngles = item.campos_en_ingles?.includes("titulo") ? "en" : undefined;
 

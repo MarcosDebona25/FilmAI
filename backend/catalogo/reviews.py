@@ -74,22 +74,38 @@ def _calificacion_propia(request, calificacion_id):
     )
 
 
-# Orden de la comunidad (C-07). Los de nota usan una clave única anotada: el
-# cursor de DRF se ubica con el primer campo y desempata con un offset, que se
-# degrada cuando miles de reseñas tienen el mismo 8. `valor * 10^9 + id` ordena
-# igual que (valor, id) y no se repite.
-_ORDENES_COMUNIDAD = {
+# Orden de la comunidad (C-07) y de «Mis reseñas», que siguen el mismo
+# criterio. Los de nota usan una clave única anotada: el cursor de DRF se ubica
+# con el primer campo y desempata con un offset, que se degrada cuando miles de
+# reseñas tienen el mismo 8. `valor * 10^9 + id` ordena igual que (valor, id) y
+# no se repite.
+_ORDENES = {
     "fecha-desc": ("-fecha", "-id"),
     "fecha-asc": ("fecha", "id"),
     "nota-desc": ("-clave_nota",),
     "nota-asc": ("clave_nota",),
 }
-# `Cast` antes de multiplicar: `valor` es un entero de 32 bits en Postgres y
-# 10 * 10^9 se pasa de rango (`ExpressionWrapper` solo declara el tipo final).
-_CLAVE_NOTA = ExpressionWrapper(
-    Cast("calificacion__valor", BigIntegerField()) * 1_000_000_000 + F("id"),
-    output_field=BigIntegerField(),
-)
+
+
+def _clave_nota(campo_valor):
+    """La clave `valor * 10^9 + id` sobre la nota en `campo_valor`.
+
+    `Cast` antes de multiplicar: `valor` es un entero de 32 bits en Postgres y
+    10 * 10^9 se pasa de rango (`ExpressionWrapper` solo declara el tipo final).
+    """
+    return ExpressionWrapper(
+        Cast(campo_valor, BigIntegerField()) * 1_000_000_000 + F("id"),
+        output_field=BigIntegerField(),
+    )
+
+
+def _filtrar_nota(qs, datos, campo):
+    """`nota_min` y `nota_max` (inclusivos) sobre la nota en `campo`."""
+    if "nota_min" in datos:
+        qs = qs.filter(**{f"{campo}__gte": datos["nota_min"]})
+    if "nota_max" in datos:
+        qs = qs.filter(**{f"{campo}__lte": datos["nota_max"]})
+    return qs
 
 
 class CalificacionesView(APIView):
@@ -131,18 +147,17 @@ class CalificacionesView(APIView):
             resenas = resenas.exclude(calificacion__usuario=request.user)
         total_comunidad = resenas.count()
 
-        if "nota_min" in datos:
-            resenas = resenas.filter(calificacion__valor__gte=datos["nota_min"])
-        if "nota_max" in datos:
-            resenas = resenas.filter(calificacion__valor__lte=datos["nota_max"])
-        resenas = resenas.annotate(clave_nota=_CLAVE_NOTA).select_related(
+        resenas = _filtrar_nota(resenas, datos, "calificacion__valor")
+        resenas = resenas.annotate(
+            clave_nota=_clave_nota("calificacion__valor")
+        ).select_related(
             # Sin esto, serializar N reseñas dispara 2N consultas para traer la
             # calificación y el usuario de cada una (el problema N+1).
             "calificacion__usuario"
         )
 
         paginator = self.pagination_class()
-        paginator.ordering = _ORDENES_COMUNIDAD[datos["orden"]]
+        paginator.ordering = _ORDENES[datos["orden"]]
         paginator.total_comunidad = total_comunidad
         pagina = paginator.paginate_queryset(resenas, request, view=self)
         return paginator.get_paginated_response(
@@ -285,7 +300,7 @@ class MisCalificacionesView(APIView):
         propias = _filtrar_propias(propias, datos)
 
         paginator = self.pagination_class()
-        paginator.ordering = _ORDENES_PROPIAS[datos["orden"]]
+        paginator.ordering = _ORDENES[datos["orden"]]
         paginator.total_propias = total_propias
         pagina = paginator.paginate_queryset(propias, request, view=self)
         return paginator.get_paginated_response(
@@ -293,16 +308,6 @@ class MisCalificacionesView(APIView):
                 pagina, many=True, context={"idioma": idioma_efectivo(request)}
             ).data
         )
-
-
-# Mismo criterio que la comunidad (C-07), sobre la calificación: el orden por
-# nota usa una clave única para que el cursor no se pierda entre empates.
-_ORDENES_PROPIAS = {
-    "fecha-desc": ("-fecha", "-id"),
-    "fecha-asc": ("fecha", "id"),
-    "nota-desc": ("-clave_nota",),
-    "nota-asc": ("clave_nota",),
-}
 
 
 def _filtrar_propias(propias, datos):
@@ -324,13 +329,7 @@ def _filtrar_propias(propias, datos):
         propias = propias.filter(resena__isnull=True)
     if "clase" in datos:
         propias = propias.filter(produccion__tipo=tmdb_a_dominio(datos["clase"]))
-    if "nota_min" in datos:
-        propias = propias.filter(valor__gte=datos["nota_min"])
-    if "nota_max" in datos:
-        propias = propias.filter(valor__lte=datos["nota_max"])
-    return propias.annotate(
-        clave_nota=ExpressionWrapper(
-            Cast("valor", BigIntegerField()) * 1_000_000_000 + F("id"),
-            output_field=BigIntegerField(),
-        )
-    )
+    propias = _filtrar_nota(propias, datos, "valor")
+    # Mismo criterio que la comunidad, sobre la calificación: el orden por nota
+    # usa una clave única para que el cursor no se pierda entre empates.
+    return propias.annotate(clave_nota=_clave_nota("valor"))
