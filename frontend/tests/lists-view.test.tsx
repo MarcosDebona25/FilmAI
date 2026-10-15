@@ -237,7 +237,7 @@ describe("Listas: vista general", () => {
     expect(escrituras()).toEqual([
       { path: "/api/lists/order/", method: "PUT", body: { ids: [11, 10, 12] } },
     ]);
-    expect(toast.success).toHaveBeenCalledWith(en.lists.feedback.orderSaved);
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it("deshabilita Move up en la primera personalizada y Move down en la última", async () => {
