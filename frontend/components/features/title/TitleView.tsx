@@ -72,7 +72,9 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   // `undefined` = todavía no se sabe; `null` = no calificó.
   const [mia, setMia] = useState<MiCalificacion | null | undefined>(undefined);
   const [listas, setListas] = useState<ListaFicha[] | null>(null);
-  const [nombreLista, setNombreLista] = useState<string | null>(null);
+  const [listaDeOrigen, setListaDeOrigen] = useState<Pick<ListaFicha, "nombre" | "clave"> | null>(
+    null
+  );
   const [modal, setModal] = useState<Modal>(null);
   const [sinopsisCompleta, setSinopsisCompleta] = useState(false);
   const [sinopsisRef, sinopsisDesborda] = useDesborde<HTMLParagraphElement>(
@@ -121,8 +123,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   useEffect(() => {
     if (!conSesion || listaOrigen === null) return;
     let vigente = true;
-    apiFetch<{ nombre: string }>(`/api/lists/${listaOrigen}/`).then(
-      (lista) => vigente && setNombreLista(lista.nombre),
+    apiFetch<Pick<ListaFicha, "nombre" | "clave">>(`/api/lists/${listaOrigen}/`).then(
+      (lista) => vigente && setListaDeOrigen(lista),
       () => undefined
     );
     return () => {
@@ -162,7 +164,18 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         : origen.tipo === "lista"
           ? [
               { label: t("nav.main.lists"), href: routes.lists },
-              ...(nombreLista ? [{ label: nombreLista, href: routes.list(origen.id) }] : []),
+              ...(listaDeOrigen
+                ? [
+                    {
+                      // Las predeterminadas se nombran por su clave: el nombre
+                      // guardado está en el idioma en que se creó la cuenta.
+                      label: listaDeOrigen.clave
+                        ? t(`enums.defaultList.${listaDeOrigen.clave}`)
+                        : listaDeOrigen.nombre,
+                      href: routes.list(origen.id),
+                    },
+                  ]
+                : []),
             ]
           : [{ label: t("nav.main.home"), href: routes.explore }]),
   ];
