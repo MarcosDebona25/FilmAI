@@ -93,10 +93,13 @@ export function NotFoundScreen() {
         description={t("notFoundSignedOutDescription")}
         footer={
           <p className="text-fg-2 max-md:text-center max-md:text-[15px]">
-            {t("newToFilmAI")}{" "}
-            <Link href={routes.register} className="font-semibold text-foreground">
-              {t("createFreeAccount")}
-            </Link>
+            {t.rich("signUpInvite", {
+              register: (chunks) => (
+                <Link href={routes.register} className="font-semibold text-foreground">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         }
       >
