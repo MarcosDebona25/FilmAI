@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    # Búsquedas sin acentos (`__unaccent`) en «Mis reseñas» (15/10/2026).
+    "django.contrib.postgres",
     # Terceros
     "rest_framework",
     "drf_spectacular",

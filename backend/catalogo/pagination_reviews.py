@@ -28,6 +28,9 @@ class ResenaCursorPagination(CursorPagination):
     # La comunidad de la ficha lo fija con el total sin filtros, para «Showing X
     # of N» (C-07). «Mis reseñas» no lo usa y la respuesta no lo trae.
     total_comunidad = None
+    # «Mis reseñas» lo fija con el total propio sin filtros (15/10/2026), para
+    # distinguir «no calificaste nada» de «nada con estos filtros».
+    total_propias = None
 
     def paginate_queryset(self, queryset, request, view=None):
         """Cuenta el total acá, que es donde se ve el queryset completo.
@@ -57,4 +60,6 @@ class ResenaCursorPagination(CursorPagination):
         }
         if self.total_comunidad is not None:
             cuerpo["total_comunidad"] = self.total_comunidad
+        if self.total_propias is not None:
+            cuerpo["total_propias"] = self.total_propias
         return Response(cuerpo)

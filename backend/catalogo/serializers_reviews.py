@@ -119,6 +119,24 @@ class ComunidadQuerySerializer(ProduccionQuerySerializer):
     nota_max = serializers.IntegerField(min_value=1, max_value=10, required=False)
 
 
+class MisResenasQuerySerializer(serializers.Serializer):
+    """Filtros de «Mis reseñas» (perfil según el canvas, 15/10/2026).
+
+    El tipo va como `clase` y no como `tipo`: en esta misma ruta, `id_tmdb` +
+    `tipo` devuelven la calificación de una ficha.
+    """
+
+    q = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    texto = serializers.ChoiceField(choices=("con", "sin"), required=False)
+    clase = serializers.ChoiceField(choices=("movie", "tv"), required=False)
+    nota_min = serializers.IntegerField(min_value=1, max_value=10, required=False)
+    nota_max = serializers.IntegerField(min_value=1, max_value=10, required=False)
+    orden = serializers.ChoiceField(
+        choices=("fecha-desc", "fecha-asc", "nota-desc", "nota-asc"),
+        default="fecha-desc",
+    )
+
+
 class ResenaComunidadSerializer(serializers.Serializer):
     """Una ReviewCard de «Reseñas de la comunidad» (§5c).
 
