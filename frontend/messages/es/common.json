@@ -586,6 +586,14 @@
       "deniedTitle": "Tu cuenta no tiene acceso",
       "deniedDescription": "Iniciaste sesión como {username}, que no es una cuenta de administrador. Para ver la documentación interna, entrá con una cuenta que tenga ese permiso.",
       "switchAccount": "Cambiar de cuenta"
+    },
+    "completeSignUp": {
+      "badge": "Registro con Google",
+      "title": "Terminá tu registro",
+      "description": "Tomamos tu nombre y tu correo de tu cuenta de Google. Completá el resto y confirmá con Google para crear tu cuenta.",
+      "fixHighlighted": "Corregí el campo marcado y tocá de nuevo el botón de Google.",
+      "genderPlaceholder": "Elegí una opción",
+      "cancel": "Cancelar y volver a iniciar sesión"
     }
   },
   "enums": {
@@ -639,7 +647,13 @@
       "updated": "Perfil actualizado.",
       "passwordChanged": "Contraseña actualizada. Iniciá sesión nuevamente."
     },
-    "loading": "Cargando perfil…"
+    "loading": "Cargando perfil…",
+    "leaveDialog": {
+      "title": "¿Salir sin guardar?",
+      "body": "Los cambios que hiciste en tu perfil no se guardarán.",
+      "keepEditing": "Seguir editando",
+      "leave": "Salir sin guardar"
+    }
   },
   "settings": {
     "appearance": {

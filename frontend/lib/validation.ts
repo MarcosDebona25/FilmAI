@@ -42,6 +42,13 @@ function calcularEdad(fecha: Date): number {
   return hoy.getFullYear() - fecha.getFullYear() - (yaCumplio ? 0 : 1);
 }
 
+/** Fecha máxima para el selector: hoy −13 años (el backend es quien valida). */
+export function maxFechaNacimiento(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 13);
+  return d.toISOString().slice(0, 10);
+}
+
 export function validarFechaNacimiento(valor: string): string | null {
   if (!valor) return "required";
   const fecha = new Date(`${valor}T00:00:00`);

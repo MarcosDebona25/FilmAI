@@ -1,6 +1,6 @@
 # Usar multiidioma en FilmAI
 
-La aplicación admite `en` y `es` sin prefijos de idioma en las rutas. Las pantallas piloto son Preferencias (`/settings`), confirmación (`/confirm-email/[key]`) y restablecimiento (`/reset-password/[uid]/[token]`). Login, registro, perfil y reseñas conservan su copia heredada hasta integrar sus diseños; sus validaciones, formatos y errores ya usan el idioma activo.
+La aplicación admite `en` y `es` sin prefijos de idioma en las rutas. Desde el 15/10/2026 toda la interfaz sigue el canvas y toma su copia del catálogo; la última pantalla heredada fue el alta con Google (`/complete-signup`), junto con el aviso de salir sin guardar (`NavigationGuard`).
 
 ## Agregar texto
 
@@ -8,7 +8,7 @@ Usá una clave que describa la función y una frase completa. La copia aprobada 
 
 En un componente cliente, `useTranslations("settings.language")` entrega una función `t` para pedir claves del namespace. En componentes de servidor usá `getTranslations` de `next-intl/server`. Para cantidades usá una frase ICU con `plural`; para enlaces dentro de una frase, `t.rich`. Los argumentos son valores del dominio, no fragmentos de texto. Los catálogos de correos no llegan al navegador. El texto legal no está en el catálogo: vive en `frontend/content/legal/terms.{en,es}.md`, para que lo revise un abogado, y la página `/terms` lo renderiza en servidor.
 
-No escribas literales visibles en JSX, atributos o toasts fuera de las excepciones de `frontend/scripts/i18n/rules.mjs`. La lista tiene un máximo de 13 archivos y debe reducirse cuando cada diseño se integre. Los componentes de Shadcn son primitivas sin copia de producto; no integran esa lista. `npm run i18n:check` detecta residuos de español fuera de esas excepciones.
+No escribas literales visibles en JSX, atributos o toasts. La lista de excepciones de `frontend/scripts/i18n/rules.mjs` (`legacyFiles`) está vacía y debe seguir así: un archivo nuevo no se agrega ahí, se traduce. Los componentes de Shadcn son primitivas sin copia de producto; no integran esa lista. `npm run i18n:check` detecta residuos de español fuera de esas excepciones.
 
 ## Errores y validaciones
 
