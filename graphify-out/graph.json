@@ -8461,7 +8461,7 @@
       "file_type": "code",
       "norm_label": "accionesde()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L179"
+      "source_location": "L178"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_alsoltar",
@@ -8473,7 +8473,7 @@
       "file_type": "code",
       "norm_label": "alsoltar()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L142"
+      "source_location": "L141"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_crear",
@@ -8485,7 +8485,7 @@
       "file_type": "code",
       "norm_label": "crear()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L149"
+      "source_location": "L148"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_eliminar",
@@ -8497,7 +8497,7 @@
       "file_type": "code",
       "norm_label": "eliminar()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L172"
+      "source_location": "L171"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_movera",
@@ -8521,7 +8521,7 @@
       "file_type": "code",
       "norm_label": "renombrar()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L159"
+      "source_location": "L158"
     },
     {
       "id": "frontend_components_features_lists_listsview_tarjetaordenable",
@@ -102280,7 +102280,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L193",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -102292,7 +102292,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L146",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -102304,7 +102304,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L173",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -102340,7 +102340,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L138",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -104824,7 +104824,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L159",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -104836,7 +104836,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L172",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -104848,7 +104848,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L179",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -159158,7 +159158,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L142",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -159169,7 +159169,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L149",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -212914,5 +212914,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "0d70a7d29f72d508fb4b9d19612996c292e8203f"
+  "built_at_commit": "a2c7514dd0a6f2855d52733d5604f7a57d1aa8a0"
 }

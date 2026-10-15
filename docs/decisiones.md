@@ -4299,3 +4299,10 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Fecha**: 16/10/2026
 - **Descripción**: en Log in, el enlace «Forgot your password?» (EN/ES) estaba a la derecha de la etiqueta en escritorio. Marcos pidió que quede debajo del campo Password, alineado a la derecha, como ya estaba en celular. `PasswordField` renderiza `labelAction` debajo del input en todos los anchos (se quitó el posicionamiento absoluto de `sm:`). El canvas (`Login.dc.html`) se ajustó igual.
 - **Archivos afectados**: `frontend/components/access/fields.tsx`, `docs/decisiones.md`, canvas (`Login.dc.html`).
+
+## 16/10/2026 — Listas: filtros del detalle a ancho de contenido y sin toast al reordenar
+
+- **Fecha**: 16/10/2026
+- **Descripción**: Marcos pidió dos ajustes en Listas. (1) En el detalle de una lista, las cajas Tipo, Nota de TMDB y Orden ocupaban todo el ancho de la fila (`flex-auto`), casi igual que el buscador. Ahora miden lo que su contenido (`flex-none`; el buscador no cambia) y «Clear filters» pasó de la fila del buscador al final de la fila de filtros, junto a lo que limpia. (2) Se eliminó el toast «Orden guardado» (`lists.feedback.orderSaved`, clave retirada del catálogo): el nuevo orden ya se ve en pantalla; el toast de error y la reversión se mantienen.
+- **Observación sobre datos locales**: al revisar por qué una tarjeta de una lista abría otra ficha, se vio que la tarjeta enlaza bien (`/{tipo}/{id_tmdb}`) y que 68 de los 69 ítems en listas de la BD local son producciones sintéticas de `manage.py seed` (títulos de Faker e `id_tmdb` bajos), cuyos ids coinciden con otros títulos reales de TMDB. No es un bug del enlace ni del backend; no ocurre con producciones materializadas desde TMDB.
+- **Archivos afectados**: `frontend/components/features/lists/{ListDetailView,ListsView}.tsx`, `frontend/messages/{en,es}/common.json` (y `.d.json.ts`), `docs/i18n/claves.csv`, `frontend/tests/lists-view.test.tsx`, `frontend/e2e/listas.spec.ts`, `docs/decisiones.md`.
