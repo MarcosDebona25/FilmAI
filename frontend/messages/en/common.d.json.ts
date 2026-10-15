@@ -495,12 +495,18 @@ declare const messages: {
       "openLabel": "Filters and sort{activeCount, plural, =0 {} one {, # active} other {, # active}}",
       "orderPrefix": "Sort: {sortLabel}",
       "removeChipLabel": "Remove filter {filterLabel}",
-      "dialogTitle": "Filters and sort"
+      "dialogTitle": "Filters and sort",
+      "ratingChip": "Rating {rating}"
     },
     "results": {
       "filteredEmpty": "No ratings match these filters.",
       "ratingCount": "{count, plural, one {# rating} other {# ratings}}",
-      "withReviewCount": "{count, plural, one {# with review} other {# with reviews}}"
+      "withReviewCount": "{count, plural, one {# with review} other {# with reviews}}",
+      "empty": "You haven’t rated any movies or TV shows yet.",
+      "emptyAction": "Find something to rate",
+      "loading": "Loading your ratings…",
+      "loadError": "We couldn’t load your ratings. Try again.",
+      "loadMore": "Load more ratings"
     },
     "card": {
       "ratingLabel": "Your rating: {rating} out of 10",
