@@ -423,7 +423,6 @@ declare const messages: {
       "confirmDescription": "This can’t be undone. All items in the list will be lost."
     },
     "feedback": {
-      "orderSaved": "Order saved.",
       "renamed": "List renamed.",
       "created": "List created.",
       "deleted": "List deleted.",

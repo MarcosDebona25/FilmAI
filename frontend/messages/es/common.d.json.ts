@@ -423,7 +423,6 @@ declare const messages: {
       "confirmDescription": "Esta acción no se puede deshacer. Todos los ítems de la lista se perderán."
     },
     "feedback": {
-      "orderSaved": "Orden guardado.",
       "renamed": "Lista renombrada.",
       "created": "Lista creada.",
       "deleted": "Lista eliminada.",

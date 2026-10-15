@@ -131,7 +131,6 @@ export function ListsView() {
       });
       if (id !== pedidoOrden.current) return;
       setListas(actualizadas);
-      toast.success(t("lists.feedback.orderSaved"));
     } catch (motivo) {
       if (id !== pedidoOrden.current) return;
       setListas(previas);

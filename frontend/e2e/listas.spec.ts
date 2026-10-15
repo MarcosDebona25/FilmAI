@@ -340,8 +340,9 @@ for (const viewport of viewports) {
       await expect(page.getByText(otro, { exact: true })).toHaveCount(0);
       await page.getByText(subir, { exact: true }).click();
 
-      await expect(page.getByText(en.lists.feedback.orderSaved)).toBeVisible();
-      expect((await nombres(page)).slice(3)).toEqual(["Clásicos", "Maratón", "Terror"]);
+      await expect
+        .poll(async () => (await nombres(page)).slice(3))
+        .toEqual(["Clásicos", "Maratón", "Terror"]);
       expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
       await page.reload();
       await expect(page.getByRole("heading", { level: 2, name: "Terror" })).toBeVisible();
@@ -393,8 +394,9 @@ test.describe("Listas: arrastrar en escritorio", () => {
     });
     await page.mouse.up();
 
-    await expect(page.getByText(en.lists.feedback.orderSaved)).toBeVisible();
-    expect((await nombres(page)).slice(3)).toEqual(["Clásicos", "Terror", "Maratón"]);
+    await expect
+      .poll(async () => (await nombres(page)).slice(3))
+      .toEqual(["Clásicos", "Terror", "Maratón"]);
     expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
 
     // Arrastrar desde el nombre no reordena: solo la manija.
@@ -424,8 +426,9 @@ test.describe("Listas: arrastrar en escritorio", () => {
     await page.waitForTimeout(250);
     await page.keyboard.press("Space");
 
-    await expect(page.getByText(en.lists.feedback.orderSaved)).toBeVisible();
-    expect((await nombres(page)).slice(3)).toEqual(["Clásicos", "Maratón", "Terror"]);
+    await expect
+      .poll(async () => (await nombres(page)).slice(3))
+      .toEqual(["Clásicos", "Maratón", "Terror"]);
     expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
   });
 });
@@ -483,8 +486,9 @@ test.describe("Listas: arrastrar en celular", () => {
       { esperaInicial: 450 }
     );
 
-    await expect(page.getByText(en.lists.feedback.orderSaved)).toBeVisible();
-    expect((await nombres(page)).slice(3, 6)).toEqual(["Dos", "Tres", "Uno"]);
+    await expect
+      .poll(async () => (await nombres(page)).slice(3, 6))
+      .toEqual(["Dos", "Tres", "Uno"]);
     expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
     await expect(page).toHaveURL(/\/lists$/);
   });
