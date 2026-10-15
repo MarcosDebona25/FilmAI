@@ -1,81 +1,86 @@
 "use client";
-import { routes } from "@/lib/routes";
-import { useTranslations } from "next-intl";
-import enums from "@/i18n/enums.json";
 
 import Link from "next/link";
+import { CircleAlert } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { GoogleButton } from "@/components/GoogleButton";
-import { completarRegistroGoogle, tieneGooglePendiente } from "@/lib/google-auth";
+import { AccessShell } from "@/components/access/AccessShell";
+import { GoogleMark } from "@/components/access/GoogleMark";
+import { AccessLogo } from "@/components/access/Logo";
+import { FieldError, FieldOk, TextField, fieldClass } from "@/components/access/fields";
+import type { AppLocale } from "@/i18n/config";
+import enums from "@/i18n/enums.json";
+import { fieldErrors, translateError, type CodedError } from "@/lib/errors";
+import {
+  completarRegistroGoogle,
+  limpiarGooglePendiente,
+  tieneGooglePendiente,
+} from "@/lib/google-auth";
+import { routes } from "@/lib/routes";
+import { useUsernameAvailability } from "@/lib/use-username-availability";
 import { useValidation } from "@/lib/use-validation";
-
-const inputClass =
-  "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
+import { maxFechaNacimiento } from "@/lib/validation";
 
 type Campo = "nombre_usuario" | "fecha_nacimiento" | "genero";
-type Errores = Partial<Record<Campo, string | null>>;
+const CAMPOS: Campo[] = ["nombre_usuario", "fecha_nacimiento", "genero"];
+const ERROR_DELAY_MS = 600;
 
-/** Fecha máxima para el datepicker: hoy −13 años (enforcement visual; el backend valida). */
-function maxFechaNacimiento(): string {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() - 13);
-  return d.toISOString().slice(0, 10);
-}
-
-function ErrorTexto({ mensaje }: { mensaje?: string | null }) {
-  if (!mensaje) return null;
-  return (
-    <p className="mt-1 text-xs text-destructive" role="alert">
-      {mensaje}
-    </p>
-  );
-}
-
+/**
+ * Alta con Google (canvas «Complete sign-up (Google)», A-06): una cuenta nueva
+ * que tocó «Continue with Google» completa username, nacimiento, género y
+ * términos, y confirma con el botón oficial de Google, inactivo hasta que el
+ * formulario es válido. El id_token es de un solo uso: se pide uno fresco acá.
+ */
 export default function CompletarGooglePage() {
-  const labels = useTranslations("enums.gender");
+  const t = useTranslations("auth.completeSignUp");
+  const signUp = useTranslations("auth.signUp");
+  const common = useTranslations("common");
+  const gender = useTranslations("enums.gender");
   const errors = useTranslations("errors.codes");
-  const auth = useTranslations("auth.signUp");
-  const GENEROS = enums.genderValues.map((value) => ({
-    value,
-    label: labels(value as "masculino"),
-  }));
-
+  const locale = useLocale() as AppLocale;
+  const router = useRouter();
   const { validarFechaNacimiento, validarNombreUsuario } = useValidation();
 
-  const router = useRouter();
   const [form, setForm] = useState<Record<Campo, string>>({
     nombre_usuario: "",
     fecha_nacimiento: "",
     genero: "",
   });
+  const [acepta, setAcepta] = useState(false);
   // «Sucio» = el usuario escribió o eligió algo; foco y blur no muestran errores.
   const [sucios, setSucios] = useState<Partial<Record<Campo, boolean>>>({});
-  const [erroresServidor, setErroresServidor] = useState<Errores>({});
+  // El error del backend se guarda como código y se traduce al renderizar.
+  const [fallo, setFallo] = useState<CodedError | null>(null);
+  const [corregidos, setCorregidos] = useState<Partial<Record<string, boolean>>>({});
   const [diferido, setDiferido] = useState(form);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [acepta, setAcepta] = useState(false);
+  const { estado: usernameEstado, marcarOcupado } = useUsernameAvailability(
+    form.nombre_usuario,
+    !validarNombreUsuario(form.nombre_usuario)
+  );
 
-  // Solo se llega acá tras "Continuar con Google" en login/registro (que marcó
-  // el flujo pendiente). Si no hay marca, no es un registro Google válido.
+  // Solo se llega acá tras «Continue with Google» en login o registro, que
+  // marcan el flujo pendiente. Sin la marca no es un alta con Google válida.
   useEffect(() => {
-    if (!tieneGooglePendiente()) {
-      router.replace(routes.login);
-    }
+    if (!tieneGooglePendiente()) router.replace(routes.login);
   }, [router]);
 
   useEffect(() => {
-    const id = setTimeout(() => setDiferido(form), 600);
+    const id = setTimeout(() => setDiferido(form), ERROR_DELAY_MS);
     return () => clearTimeout(id);
   }, [form]);
 
-  function setField(campo: Campo, valor: string) {
-    setForm((prev) => ({ ...prev, [campo]: valor }));
-    setSucios((prev) => ({ ...prev, [campo]: true }));
-    setErroresServidor((prev) => ({ ...prev, [campo]: undefined }));
-  }
+  // Errores de campo del backend que el usuario todavía no corrigió.
+  const servidor = fallo ? fieldErrors(fallo, locale) : {};
+  for (const campo of Object.keys(corregidos)) delete servidor[campo];
+  const hayErroresDeCampo = Object.keys(servidor).length > 0;
+  const mensajeGeneral =
+    fallo && !hayErroresDeCampo
+      ? translateError(fallo.errors?.find((entry) => !entry.field) ?? fallo, locale)
+      : null;
 
   function validarCampo(campo: Campo, valor: string): string | null {
     if (campo === "nombre_usuario") return validarNombreUsuario(valor);
@@ -83,9 +88,18 @@ export default function CompletarGooglePage() {
     return valor ? null : errors("required");
   }
 
-  /** Error visible: solo si ya lo modificó; el texto espera a una pausa. */
+  function setField(campo: Campo, valor: string) {
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+    setSucios((prev) => ({ ...prev, [campo]: true }));
+    setCorregidos((prev) => ({ ...prev, [campo]: true }));
+  }
+
+  /**
+   * Error visible de un campo: solo si el usuario ya lo modificó. El texto del
+   * username espera a una pausa; la fecha y el género aparecen al instante.
+   */
   function mostrar(campo: Campo): string | undefined {
-    if (erroresServidor[campo]) return erroresServidor[campo] ?? undefined;
+    if (servidor[campo]) return servidor[campo];
     if (!sucios[campo]) return undefined;
     const actual = validarCampo(campo, form[campo]);
     if (!actual) return undefined;
@@ -94,16 +108,15 @@ export default function CompletarGooglePage() {
   }
 
   const formularioValido =
-    acepta && (Object.keys(form) as Campo[]).every((campo) => !validarCampo(campo, form[campo]));
+    acepta &&
+    usernameEstado === "disponible" &&
+    CAMPOS.every((campo) => !validarCampo(campo, form[campo]));
 
   async function onGoogle(idToken: string) {
-    if (loading) return;
-    setError(null);
-
-    // El botón de Google solo está activo con el formulario válido; esto es un
-    // resguardo para no gastar el id_token (de un solo uso) con datos inválidos.
-    if (!formularioValido) return;
-
+    // El botón solo está activo con el formulario válido; esto es un resguardo
+    // para no gastar el id_token (de un solo uso) con datos inválidos.
+    if (loading || !formularioValido) return;
+    setFallo(null);
     setLoading(true);
     try {
       const result = await completarRegistroGoogle(idToken, {
@@ -114,126 +127,180 @@ export default function CompletarGooglePage() {
       });
       if (result.ok) {
         router.push(routes.explore);
-      } else if (result.erroresPorCampo && Object.keys(result.erroresPorCampo).length > 0) {
-        // Errores de campo del backend (p.ej. username ocupado) → inline.
-        setErroresServidor((prev) => ({ ...prev, ...result.erroresPorCampo! }));
-        setError("Corregí los campos marcados y tocá de nuevo el botón de Google.");
-      } else {
-        setError(result.error);
+        return;
       }
+      setCorregidos({});
+      setFallo(result.error);
+      if (result.error.errors?.some((entry) => entry.field === "nombre_usuario")) marcarOcupado();
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8">
-        <h1 className="mb-1 text-2xl font-bold text-foreground">Completá tu cuenta</h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Completá tus datos y confirmá con Google.
-        </p>
+  const usernameError = mostrar("nombre_usuario");
+  const usernameStatus =
+    usernameError || validarNombreUsuario(form.nombre_usuario) ? null : usernameEstado ===
+      "disponible" ? (
+      <FieldOk>{signUp("usernameAvailable")}</FieldOk>
+    ) : usernameEstado === "ocupado" ? (
+      <FieldError>{errors("username_already_used")}</FieldError>
+    ) : null;
+  const terminosError = servidor.acepta_terminos;
+  const activo = formularioValido && !loading;
 
-        <form
-          onSubmit={(e: FormEvent) => e.preventDefault()}
-          noValidate
-          className="flex flex-col gap-4"
-        >
+  return (
+    <AccessShell poster="band">
+      <div className="flex w-full max-w-[480px] flex-col gap-5 lg:gap-[22px]">
+        <div className="hidden lg:block">
+          <AccessLogo className="self-start" />
+        </div>
+        <div className="flex flex-col gap-3.5">
+          <p className="inline-flex h-9 items-center gap-2.5 self-start rounded-full bg-card pr-3.5 pl-1.5 text-sm font-semibold text-muted-foreground shadow-[inset_0_0_0_1px_var(--line)]">
+            <GoogleMark />
+            {t("badge")}
+          </p>
           <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Nombre de usuario</label>
-            <input
-              className={`${inputClass} ${mostrar("nombre_usuario") ? "border-destructive" : ""}`}
-              value={form.nombre_usuario}
-              onChange={(e) => setField("nombre_usuario", e.target.value)}
-              placeholder="5-25 caracteres alfanuméricos"
-              aria-invalid={Boolean(mostrar("nombre_usuario"))}
-              required
-            />
-            <ErrorTexto mensaje={mostrar("nombre_usuario")} />
+            <h1 className="mb-3 font-display text-[48px] leading-[0.95] lg:mb-[15px] lg:text-[60px]">
+              {t("title")}
+            </h1>
+            <p className="text-pretty text-muted-foreground">{t("description")}</p>
           </div>
-          <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Fecha de nacimiento</label>
-            <input
-              className={`${inputClass} ${mostrar("fecha_nacimiento") ? "border-destructive" : ""}`}
+        </div>
+        {hayErroresDeCampo && (
+          <p
+            role="alert"
+            className="flex items-start gap-2.5 rounded-[10px] bg-destructive/12 px-3.5 py-3 text-[15px] leading-[1.45] text-foreground shadow-[inset_0_0_0_1px_var(--destructive)]"
+          >
+            <CircleAlert
+              aria-hidden="true"
+              className="mt-0.5 size-[15px] flex-none text-destructive"
+            />
+            {t("fixHighlighted")}
+          </p>
+        )}
+        <form
+          onSubmit={(event: FormEvent) => event.preventDefault()}
+          noValidate
+          className="flex flex-col gap-5 lg:gap-[22px]"
+        >
+          <TextField
+            label={common("fields.username")}
+            name="nombre_usuario"
+            autoComplete="username"
+            prefix="@"
+            value={form.nombre_usuario}
+            onChange={(e) => setField("nombre_usuario", e.target.value)}
+            error={usernameError}
+            status={usernameStatus}
+            help={signUp("usernameHelp")}
+          />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
+            <TextField
+              label={common("fields.birthDate")}
+              name="fecha_nacimiento"
               type="date"
+              lang={locale}
               max={maxFechaNacimiento()}
               value={form.fecha_nacimiento}
               onChange={(e) => setField("fecha_nacimiento", e.target.value)}
-              aria-invalid={Boolean(mostrar("fecha_nacimiento"))}
-              required
+              error={mostrar("fecha_nacimiento")}
+              help={signUp("minimumAgeHelp")}
             />
-            <p className="mt-1 text-xs text-muted-foreground">Formato: dd/mm/aaaa</p>
-            <ErrorTexto mensaje={mostrar("fecha_nacimiento")} />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Género</label>
-            <select
-              className={`${inputClass} ${mostrar("genero") ? "border-destructive" : ""}`}
-              value={form.genero}
-              onChange={(e) => setField("genero", e.target.value)}
-              aria-invalid={Boolean(mostrar("genero"))}
-              required
-            >
-              <option value="" disabled>
-                Selecciona uno
-              </option>
-              {GENEROS.map((g) => (
-                <option key={g.value} value={g.value}>
-                  {g.label}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="genero" className="text-sm font-semibold">
+                {signUp("genderLabel")}
+              </label>
+              <select
+                id="genero"
+                name="genero"
+                className={fieldClass}
+                value={form.genero}
+                onChange={(e) => setField("genero", e.target.value)}
+                aria-invalid={mostrar("genero") ? true : undefined}
+              >
+                <option value="" disabled>
+                  {t("genderPlaceholder")}
                 </option>
-              ))}
-            </select>
-            <ErrorTexto mensaje={mostrar("genero")} />
+                {enums.genderValues.map((value) => (
+                  <option key={value} value={value}>
+                    {gender(value as "masculino")}
+                  </option>
+                ))}
+              </select>
+              {mostrar("genero") && <FieldError>{mostrar("genero")}</FieldError>}
+            </div>
           </div>
-
-          <div className="flex flex-col gap-1">
-            <div className="flex items-start gap-3">
+          <div className="flex flex-col gap-2">
+            <div
+              className={`flex items-start gap-3 rounded-[10px] px-3.5 py-3 ${terminosError ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : "shadow-[inset_0_0_0_1px_var(--line)]"}`}
+            >
               <input
                 id="terminos"
+                name="acepta_terminos"
                 type="checkbox"
                 checked={acepta}
                 onChange={(e) => {
                   setAcepta(e.target.checked);
+                  setCorregidos((prev) => ({ ...prev, acepta_terminos: true }));
                 }}
-                className="mt-0.5 size-5 flex-none accent-primary"
+                aria-invalid={terminosError ? true : undefined}
+                aria-describedby="terminos-error"
+                className="mt-0.5 size-5 flex-none cursor-pointer accent-primary"
               />
-              <label htmlFor="terminos" className="text-sm text-muted-foreground">
-                {auth.rich("termsAcceptance", {
+              <label
+                htmlFor="terminos"
+                className="flex-1 cursor-pointer text-[15px] leading-[1.45] text-muted-foreground"
+              >
+                {signUp.rich("termsAcceptance", {
                   terms: (chunks) => (
                     <Link
                       href={routes.terms}
                       target="_blank"
                       rel="noopener"
-                      className="font-semibold text-foreground underline"
+                      className="font-semibold text-foreground underline underline-offset-[3px]"
                     >
                       {chunks}
-                      <span className="sr-only"> {auth("termsNewTabHint")}</span>
+                      <span className="sr-only"> {signUp("termsNewTabHint")}</span>
                     </Link>
                   ),
                 })}
               </label>
             </div>
+            <div id="terminos-error">
+              {terminosError && <FieldError>{terminosError}</FieldError>}
+            </div>
           </div>
-
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          )}
-
-          <div className="flex flex-col items-center gap-2">
+          {mensajeGeneral && <FieldError>{mensajeGeneral}</FieldError>}
+          <div className="flex flex-col gap-2.5">
             {/* `inert`: sin el formulario válido el botón de Google no se puede usar. */}
-            <div inert={!formularioValido} className={formularioValido ? "" : "opacity-50"}>
-              <GoogleButton text="signup_with" onSuccess={onGoogle} onError={(m) => setError(m)} />
+            <div
+              data-testid="google-confirm"
+              inert={!activo}
+              className={activo ? undefined : "opacity-40"}
+            >
+              <GoogleButton
+                text="signup_with"
+                theme="outline"
+                fullWidth
+                onSuccess={onGoogle}
+                onError={() => setFallo({ code: "google_authentication_failed" })}
+              />
             </div>
             {!formularioValido && (
-              <p className="text-center text-[13px] text-muted-foreground">
-                {auth("submitPending")}
-              </p>
+              <p className="text-center text-[13px] text-fg-3">{signUp("submitPending")}</p>
             )}
           </div>
         </form>
+        <p className="text-center">
+          <Link
+            href={routes.login}
+            onClick={limpiarGooglePendiente}
+            className="font-semibold text-foreground"
+          >
+            {t("cancel")}
+          </Link>
+        </p>
       </div>
-    </main>
+    </AccessShell>
   );
 }

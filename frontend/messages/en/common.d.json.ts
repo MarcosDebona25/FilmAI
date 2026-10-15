@@ -589,6 +589,14 @@ declare const messages: {
       "deniedTitle": "Your account has no access",
       "deniedDescription": "You’re logged in as {username}, which isn’t an admin account. To view the internal documentation, log in with an account that has that permission.",
       "switchAccount": "Switch account"
+    },
+    "completeSignUp": {
+      "badge": "Signing up with Google",
+      "title": "Finish signing up",
+      "description": "We take your name and email from your Google account. Fill in the rest and confirm with Google to create your account.",
+      "fixHighlighted": "Fix the highlighted field and press the Google button again.",
+      "genderPlaceholder": "Choose an option",
+      "cancel": "Cancel and go back to log in"
     }
   },
   "enums": {
@@ -642,7 +650,13 @@ declare const messages: {
       "updated": "Profile updated.",
       "passwordChanged": "Password updated. Log in again."
     },
-    "loading": "Loading profile…"
+    "loading": "Loading profile…",
+    "leaveDialog": {
+      "title": "Leave without saving?",
+      "body": "The changes you made to your profile won’t be saved.",
+      "keepEditing": "Keep editing",
+      "leave": "Leave without saving"
+    }
   },
   "settings": {
     "appearance": {
