@@ -174,3 +174,4 @@ lists.detail.filtersTitle,,label,,Filtros y orden,Filters and sort,aprobado
 lists.detail.removeChipLabel,,label,,Quitar filtro {filterLabel},Remove filter {filterLabel},aprobado
 lists.overview.loading,,status,,Cargando tus listas…,Loading your lists…,aprobado
 lists.detail.loading,,status,,Cargando la lista…,Loading the list…,aprobado
+auth.session.expired,,feedback,,Tu sesión venció. Iniciá sesión de nuevo.,Your session expired. Log in again.,aprobado
