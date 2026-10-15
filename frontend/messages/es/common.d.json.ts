@@ -449,7 +449,8 @@ declare const messages: {
       "sortPrefix": "Orden: {sortLabel}",
       "resultsAction": "Ver {count, plural, one {# resultado} other {# resultados}}",
       "filtersTitle": "Filtros y orden",
-      "removeChipLabel": "Quitar filtro {filterLabel}"
+      "removeChipLabel": "Quitar filtro {filterLabel}",
+      "loading": "Cargando la lista…"
     },
     "reorder": {
       "instructions": "Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.",
@@ -459,7 +460,8 @@ declare const messages: {
       "cancelled": "Reordenamiento cancelado. {listName} volvió a la posición {position}."
     },
     "overview": {
-      "loadError": "No pudimos cargar tus listas. Probá de nuevo."
+      "loadError": "No pudimos cargar tus listas. Probá de nuevo.",
+      "loading": "Cargando tus listas…"
     }
   },
   "search": {

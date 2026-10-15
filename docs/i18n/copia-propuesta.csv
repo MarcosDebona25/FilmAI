@@ -172,3 +172,5 @@ lists.detail.sortPrefix,,label,,Orden: {sortLabel},Sort: {sortLabel},aprobado
 lists.detail.resultsAction,,label,,"Ver {count, plural, one {# resultado} other {# resultados}}","Show {count, plural, one {# result} other {# results}}",aprobado
 lists.detail.filtersTitle,,label,,Filtros y orden,Filters and sort,aprobado
 lists.detail.removeChipLabel,,label,,Quitar filtro {filterLabel},Remove filter {filterLabel},aprobado
+lists.overview.loading,,status,,Cargando tus listas…,Loading your lists…,aprobado
+lists.detail.loading,,status,,Cargando la lista…,Loading the list…,aprobado
