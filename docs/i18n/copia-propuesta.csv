@@ -153,3 +153,22 @@ profile.leaveDialog.title,,label,,¿Salir sin guardar?,Leave without saving?,apr
 profile.leaveDialog.body,,label,,Los cambios que hiciste en tu perfil no se guardarán.,The changes you made to your profile won’t be saved.,aprobado
 profile.leaveDialog.keepEditing,,label,,Seguir editando,Keep editing,aprobado
 profile.leaveDialog.leave,,label,,Salir sin guardar,Leave without saving,aprobado
+lists.count.tvShows,,label,,"{count, plural, one {# serie} other {# series}}","{count, plural, one {# TV show} other {# TV shows}}",aprobado
+common.lists.moveUp,,label,,Subir,Move up,aprobado
+common.lists.moveDown,,label,,Bajar,Move down,aprobado
+lists.name.placeholder,,label,,Ej.: Maratón de domingo,"E.g., Sunday marathon",aprobado
+lists.name.counter,,label,,{count}/{max},{count}/{max},aprobado
+lists.reorder.instructions,,label,,"Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.","To reorder, press space or enter on the handle, move with the arrow keys, and press space or enter again to drop. Press escape to cancel.",aprobado
+lists.reorder.pickedUp,,label,,"{listName} levantada, posición {position} de {total}.","{listName} picked up, position {position} of {total}.",aprobado
+lists.reorder.movedTo,,label,,{listName} movida a la posición {position} de {total}.,{listName} moved to position {position} of {total}.,aprobado
+lists.reorder.dropped,,label,,{listName} soltada en la posición {position} de {total}.,{listName} dropped at position {position} of {total}.,aprobado
+lists.reorder.cancelled,,label,,Reordenamiento cancelado. {listName} volvió a la posición {position}.,Reorder cancelled. {listName} went back to position {position}.,aprobado
+lists.overview.loadError,,label,,No pudimos cargar tus listas. Probá de nuevo.,We couldn’t load your lists. Try again.,aprobado
+lists.detail.loadError,,label,,No pudimos cargar esta lista. Probá de nuevo.,We couldn’t load this list. Try again.,aprobado
+lists.detail.loadMore,,label,,Cargar más títulos,Load more titles,aprobado
+lists.detail.searchPlaceholder,,label,,Buscar por título,Search by title,aprobado
+lists.detail.displayedCount,,label,,"Mostrando {shownCount} de {totalCount, plural, one {# ítem} other {# ítems}}","Showing {shownCount} of {totalCount, plural, one {# item} other {# items}}",aprobado
+lists.detail.sortPrefix,,label,,Orden: {sortLabel},Sort: {sortLabel},aprobado
+lists.detail.resultsAction,,label,,"Ver {count, plural, one {# resultado} other {# resultados}}","Show {count, plural, one {# result} other {# results}}",aprobado
+lists.detail.filtersTitle,,label,,Filtros y orden,Filters and sort,aprobado
+lists.detail.removeChipLabel,,label,,Quitar filtro {filterLabel},Remove filter {filterLabel},aprobado
