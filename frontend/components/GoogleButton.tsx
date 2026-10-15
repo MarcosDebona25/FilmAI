@@ -95,7 +95,8 @@ export function GoogleButton({
     <div
       ref={containerRef}
       aria-label={auth("continue")}
-      className={fullWidth ? "flex w-full justify-center" : undefined}
+      // El alto reservado (botón `large` de GIS) evita que el contenido salte al dibujarlo.
+      className={fullWidth ? "flex min-h-10 w-full justify-center" : undefined}
     />
   );
 }
