@@ -40,7 +40,9 @@
       "moveRight": "Mover a la derecha",
       "nameLabel": "Nombre de la lista",
       "renameTitle": "Renombrar lista",
-      "delete": "Eliminar lista"
+      "delete": "Eliminar lista",
+      "moveUp": "Subir",
+      "moveDown": "Bajar"
     },
     "actions": {
       "cancel": "Cancelar",
@@ -396,7 +398,8 @@
     "count": {
       "items": "{count, plural, one {# ítem} other {# ítems}}",
       "movies": "{count, plural, one {# película} other {# películas}}",
-      "summary": "{count, plural, one {# lista} other {# listas}} · {defaultCount, plural, one {# predeterminada} other {# predeterminadas}}"
+      "summary": "{count, plural, one {# lista} other {# listas}} · {defaultCount, plural, one {# predeterminada} other {# predeterminadas}}",
+      "tvShows": "{count, plural, one {# serie} other {# series}}"
     },
     "card": {
       "actionsLabel": "Acciones de la lista {listName}",
@@ -408,7 +411,9 @@
     "name": {
       "allowedCharactersHelp": "Solo letras, números y espacios.",
       "requiredError": "El nombre no puede estar vacío.",
-      "invalidCharactersError": "Usá solo letras, números y espacios."
+      "invalidCharactersError": "Usá solo letras, números y espacios.",
+      "placeholder": "Ej.: Maratón de domingo",
+      "counter": "{count}/{max}"
     },
     "delete": {
       "confirmTitle": "¿Eliminar «{listName}»?",
@@ -433,7 +438,27 @@
       "removeItemLabel": "Quitar {title} de {listName}",
       "emptyTitle": "Esta lista todavía está vacía",
       "emptyDescription": "Desde cualquier ficha podés sumar películas y series con «Agregar a lista».",
-      "removeConfirmTitle": "¿Quitar «{title}» de {listName}?"
+      "removeConfirmTitle": "¿Quitar «{title}» de {listName}?",
+      "loadError": "No pudimos cargar esta lista. Probá de nuevo.",
+      "loadMore": "Cargar más títulos",
+      "searchPlaceholder": "Buscar por título",
+      "displayedCount": "Mostrando {shownCount} de {totalCount, plural, one {# ítem} other {# ítems}}",
+      "sortPrefix": "Orden: {sortLabel}",
+      "resultsAction": "Ver {count, plural, one {# resultado} other {# resultados}}",
+      "filtersTitle": "Filtros y orden",
+      "removeChipLabel": "Quitar filtro {filterLabel}",
+      "loading": "Cargando la lista…"
+    },
+    "reorder": {
+      "instructions": "Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.",
+      "pickedUp": "{listName} levantada, posición {position} de {total}.",
+      "movedTo": "{listName} movida a la posición {position} de {total}.",
+      "dropped": "{listName} soltada en la posición {position} de {total}.",
+      "cancelled": "Reordenamiento cancelado. {listName} volvió a la posición {position}."
+    },
+    "overview": {
+      "loadError": "No pudimos cargar tus listas. Probá de nuevo.",
+      "loading": "Cargando tus listas…"
     }
   },
   "search": {
