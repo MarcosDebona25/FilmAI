@@ -99,7 +99,7 @@ for (const viewport of viewports) {
       await expect(
         page.getByRole("heading", { name: es.errors.pages.unexpectedTitle })
       ).toHaveCount(0);
-      await expect(page.getByRole("heading", { name: es.legacy.metadata.myReviews })).toBeVisible();
+      await expect(page.getByRole("heading", { name: es.nav.main.ratingsReviews })).toBeVisible();
     });
 
     test("navegación: enlaces del encabezado en escritorio, barra inferior en celular", async ({

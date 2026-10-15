@@ -495,12 +495,18 @@ declare const messages: {
       "openLabel": "Filtros y orden{activeCount, plural, =0 {} one {, # activo} other {, # activos}}",
       "orderPrefix": "Orden: {sortLabel}",
       "removeChipLabel": "Quitar filtro {filterLabel}",
-      "dialogTitle": "Filtros y orden"
+      "dialogTitle": "Filtros y orden",
+      "ratingChip": "Calificación {rating}"
     },
     "results": {
       "filteredEmpty": "Ninguna calificación coincide con estos filtros.",
       "ratingCount": "{count, plural, one {# calificación} other {# calificaciones}}",
-      "withReviewCount": "{count, plural, one {# con reseña} other {# con reseña}}"
+      "withReviewCount": "{count, plural, one {# con reseña} other {# con reseña}}",
+      "empty": "Todavía no calificaste ninguna película ni serie.",
+      "emptyAction": "Buscar qué calificar",
+      "loading": "Cargando tus calificaciones…",
+      "loadError": "No pudimos cargar tus calificaciones. Intentá de nuevo.",
+      "loadMore": "Cargar más calificaciones"
     },
     "card": {
       "ratingLabel": "Tu calificación: {rating} de 10",

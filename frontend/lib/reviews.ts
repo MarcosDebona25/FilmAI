@@ -1,14 +1,3 @@
-import type { CodedError } from "./errors";
-
-export class ReviewValidationError extends Error implements CodedError {
-  constructor(
-    public code: string,
-    public params = {}
-  ) {
-    super(code);
-  }
-}
-
 export type MiResena = {
   id: number;
   id_tmdb: number;
@@ -20,7 +9,13 @@ export type MiResena = {
   fecha: string;
   texto: string | null;
 };
-export type PaginaResenas = { total: number; next: string | null; results: MiResena[] };
+export type PaginaResenas = {
+  total: number;
+  /** Sin filtros (`reviews/mias/` lo manda siempre que no se pide una ficha). */
+  total_propias?: number;
+  next: string | null;
+  results: MiResena[];
+};
 
 export function rutaPagina(next: string) {
   // Solo reutilizamos el cursor: nunca enviamos cookies a un origen recibido de la API.
@@ -31,17 +26,6 @@ export function combinarResenas(actuales: MiResena[], nuevas: MiResena[]) {
   const items = new Map(actuales.map((item) => [item.id, item]));
   for (const item of nuevas) if (!items.has(item.id)) items.set(item.id, item);
   return [...items.values()];
-}
-export function cambiosResena(item: MiResena, valor: number, texto: string) {
-  const body: { valor?: number; texto?: string } = {};
-  if (!Number.isInteger(valor) || valor < 1 || valor > 10)
-    throw new ReviewValidationError("invalid");
-  if (texto.length > 1000) throw new ReviewValidationError("max_length", { maxLength: 1000 });
-  const limpio = texto.trim();
-  if (item.texto && !limpio) throw new ReviewValidationError("review_update_empty");
-  if (valor !== item.valor) body.valor = valor;
-  if (limpio && limpio !== (item.texto ?? "")) body.texto = limpio;
-  return body;
 }
 
 export function posterUrl(poster: string) {
