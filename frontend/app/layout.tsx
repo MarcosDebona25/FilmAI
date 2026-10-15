@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Big_Shoulders, Hanken_Grotesk } from "next/font/google";
+import { cookies } from "next/headers";
 import { Toaster } from "sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -37,11 +38,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
+  // Sin ninguna de las dos cookies de sesión, el front ni pregunta por el perfil.
+  const almacen = await cookies();
+  const sesionPosible = almacen.has("access") || almacen.has("refresh");
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
       <body className={`${hanken.variable} ${bigShoulders.variable} antialiased`}>
         <NextIntlClientProvider>
-          <AccountProvider>
+          <AccountProvider sesionPosible={sesionPosible}>
             <NavigationGuard>
               <Navbar />
               {children}
