@@ -7,13 +7,8 @@ import { useAccount } from "./AccountProvider";
 import { persistLocale } from "@/i18n/client";
 import { locales, type AppLocale } from "@/i18n/config";
 
-export function LanguageSwitcher({
-  compact = false,
-  account = false,
-}: {
-  compact?: boolean;
-  account?: boolean;
-}) {
+/** Selector EN | ES. El nombre completo del idioma queda como etiqueta accesible. */
+export function LanguageSwitcher({ account = false }: { account?: boolean }) {
   const locale = useLocale();
   const t = useTranslations("settings.language");
   const router = useRouter();
@@ -52,7 +47,7 @@ export function LanguageSwitcher({
     <div>
       <fieldset
         aria-busy={saving}
-        className="inline-flex rounded-full border border-border bg-card p-1"
+        className="inline-flex rounded-full border border-border bg-card p-0.5"
         role="radiogroup"
         aria-label={t("selectLabel")}
       >
@@ -60,7 +55,7 @@ export function LanguageSwitcher({
         {locales.map((language) => (
           <label
             key={language}
-            className={`relative flex min-h-11 touch-manipulation min-w-11 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-medium focus-within:ring-2 focus-within:ring-ring ${locale === language ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"} ${saving ? "cursor-wait opacity-70" : ""}`}
+            className={`relative flex min-h-10 min-w-10 touch-manipulation cursor-pointer items-center justify-center rounded-full px-3 text-sm font-semibold focus-within:ring-2 focus-within:ring-ring ${locale === language ? "bg-selected text-selected-foreground" : "text-foreground hover:bg-muted"} ${saving ? "cursor-wait opacity-70" : ""}`}
           >
             <input
               className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
@@ -76,7 +71,7 @@ export function LanguageSwitcher({
               aria-label={t(language === "en" ? "english" : "spanish")}
             />
             <span className="pointer-events-none" aria-hidden="true" lang={language}>
-              {compact ? language.toUpperCase() : t(language === "en" ? "english" : "spanish")}
+              {language.toUpperCase()}
             </span>
           </label>
         ))}

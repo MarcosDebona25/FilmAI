@@ -74,6 +74,7 @@ class ConfirmarCorreoTests(TestCase):
         "apellido": "Correo",
         "fecha_nacimiento": "1995-05-10",
         "genero": "no_especifica",
+        "acepta_terminos": True,
         "password1": "Password123!",
         "password2": "Password123!",
     }
@@ -630,6 +631,7 @@ class GoogleOAuthTests(TestCase):
                 "nombre_usuario": "usuariogoogle",
                 "fecha_nacimiento": "1995-05-10",
                 "genero": "masculino",
+                "acepta_terminos": True,
             }
         )
         login = self._login_mock()
@@ -812,6 +814,7 @@ class SeguridadCamposAdministradorTests(TestCase):
                 "apellido": "Usuario",
                 "fecha_nacimiento": "2000-01-01",
                 "genero": "no_especifica",
+                "acepta_terminos": True,
                 "password1": "Password123!",
                 "password2": "Password123!",
                 # Intento de escalada de privilegios

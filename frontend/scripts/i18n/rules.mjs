@@ -1,19 +1,5 @@
 // Excepciones temporales: se eliminan al integrar cada diseño definitivo.
-export const legacyFiles = [
-  "app/(public)/page.tsx",
-  "app/(public)/login/page.tsx",
-  "app/(public)/register/page.tsx",
-  "app/complete-signup/page.tsx",
-  "app/profile/page.tsx",
-  "components/Navbar.tsx",
-  "components/AvatarSelector.tsx",
-  "components/GoogleLinkButton.tsx",
-  "components/MisResenas.tsx",
-  "components/NavigationGuard.tsx",
-  "components/ReviewCard.tsx",
-  "components/ReviewModal.tsx",
-  "lib/profile-draft.ts",
-];
+export const legacyFiles = ["app/complete-signup/page.tsx", "components/NavigationGuard.tsx"];
 const visibleAttributes = new Set([
   "aria-label",
   "alt",

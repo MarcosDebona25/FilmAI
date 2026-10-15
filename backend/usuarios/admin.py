@@ -28,7 +28,12 @@ class UsuarioAdmin(BaseUserAdmin):
 
     # --- Campos de solo lectura ---
     # Estos campos pueden consultarse pero no modificarse manualmente
-    readonly_fields = ("fecha_registro", "last_login", "google_id")
+    readonly_fields = (
+        "fecha_registro",
+        "fecha_aceptacion_terminos",
+        "last_login",
+        "google_id",
+    )
 
     # --- Formulario de edición ---
     fieldsets = (
@@ -75,6 +80,7 @@ class UsuarioAdmin(BaseUserAdmin):
             {
                 "fields": (
                     "fecha_registro",
+                    "fecha_aceptacion_terminos",
                     "last_login",
                     "google_id",
                 )

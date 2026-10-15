@@ -4,12 +4,9 @@ import { parse, TYPE, type MessageFormatElement } from "@formatjs/icu-messagefor
 import { describe, expect, it } from "vitest";
 import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
-import legalEn from "@/messages/en/legal.json";
-import legalEs from "@/messages/es/legal.json";
 import codes from "../../contracts/error-codes.json";
 import enums from "../../contracts/enums.json";
 import { translateError, type ErrorParams } from "@/lib/errors";
-import { ADVERTENCIA_BAJA } from "@/lib/profile-draft";
 
 function flatten(messages: Record<string, unknown>, prefix = ""): Record<string, string> {
   return Object.fromEntries(
@@ -38,10 +35,7 @@ function contract(elements: MessageFormatElement[]): string[] {
 }
 
 describe("contrato bilingüe completo", () => {
-  it.each([
-    [en, es],
-    [legalEn, legalEs],
-  ])("compara claves, argumentos, tags y ramas ICU", (english, spanish) => {
+  it.each([[en, es]])("compara claves, argumentos, tags y ramas ICU", (english, spanish) => {
     const a = flatten(english),
       b = flatten(spanish);
     expect(Object.keys(a).sort()).toEqual(Object.keys(b).sort());
@@ -88,7 +82,10 @@ describe("contrato bilingüe completo", () => {
       .slice(1);
     expect(rows).toHaveLength(77);
     for (const row of rows) expect(flatten(es)).toHaveProperty(row.split(",")[0]);
-    expect(es.legacy.settings.deactivateConfirm).toBe(ADVERTENCIA_BAJA);
+    // El texto de la baja aprobado (docs/decisiones.md); Settings lo usa tal cual.
+    expect(es.legacy.settings.deactivateConfirm).toBe(
+      "Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar."
+    );
     expect(es.legacy.confirmation.loading).toBe("Confirmando tu cuenta…");
     expect(es.legacy.reset.passwordHelp).toContain("@#$%&*!");
     expect(en).not.toHaveProperty("emails");

@@ -37,9 +37,6 @@ def enviar_correo(caso, destinatario, contexto, idioma):
         if caso == "contrasena_actualizada"
         else contexto.get("activate_url") or contexto.get("reset_url"),
         "expiry_hours": vigencia_en_horas(caso),
-        "color_secundario": "#a0a0a8"
-        if caso == "restablecer_contrasena"
-        else "#777777",
     }
     prefijo = f"correos/{caso}/{idioma}"
     asunto = " ".join(

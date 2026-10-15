@@ -1,245 +1,286 @@
 import { expect, test, type Page } from "@playwright/test";
 import { prepararCuenta } from "./cuenta";
-const initial = {
-  id: 1,
-  id_tmdb: 10,
-  tipo: "movie",
-  titulo: "Interstellar",
-  poster: "/test-poster.jpg",
-  valor: 8,
-  fecha: "2026-10-03",
-  texto: "Una reseña extensa. ".repeat(40),
+
+type Item = {
+  id: number;
+  id_tmdb: number;
+  tipo: "movie" | "tv";
+  titulo: string;
+  poster: string;
+  valor: number;
+  fecha: string;
+  texto: string | null;
 };
-async function reviews(page: Page, empty = false) {
+
+const INICIALES: Item[] = [
+  {
+    id: 1,
+    id_tmdb: 157336,
+    tipo: "movie",
+    titulo: "Interstellar",
+    poster: "/interstellar.jpg",
+    valor: 9,
+    fecha: "2026-10-03",
+    texto: "Una reseña extensa sobre el viaje y el regreso. ".repeat(12),
+  },
+  {
+    id: 2,
+    id_tmdb: 1433,
+    tipo: "tv",
+    titulo: "American Dad!",
+    poster: "",
+    valor: 7,
+    fecha: "2026-09-28",
+    texto: null,
+  },
+  {
+    id: 3,
+    id_tmdb: 1015,
+    tipo: "movie",
+    titulo: "Alpha",
+    poster: "",
+    valor: 4,
+    fecha: "2026-09-20",
+    texto: "Linda de ver, guion flojo.",
+  },
+];
+
+/**
+ * Backend de `reviews/` en memoria: filtra y ordena como `reviews/mias/`, y
+ * pagina de a `porPagina` con un cursor que es el índice siguiente.
+ */
+async function resenas(page: Page, { porPagina = 20, iniciales = INICIALES } = {}) {
   await prepararCuenta(page);
-  let items = empty ? [] : [{ ...initial }];
-  let fail = false;
-  let calls = 0;
+  let items = structuredClone(iniciales);
+  let fallas = 0;
+  let fallasCursor = 0;
+  const lecturas: URLSearchParams[] = [];
   await page.route("https://image.tmdb.org/**", (route) => route.fulfill({ status: 404 }));
   await page.route("**/api/reviews/**", async (route) => {
-    const request = route.request();
-    calls++;
-    if (fail) {
-      fail = false;
+    const pedido = route.request();
+    const url = new URL(pedido.url());
+    const conCursor = url.searchParams.has("cursor");
+    if (fallas > 0 || (conCursor && fallasCursor > 0)) {
+      if (conCursor && fallasCursor > 0) fallasCursor--;
+      else fallas--;
       await route.fulfill({ status: 500, json: { code: "server_error", params: {}, errors: [] } });
       return;
     }
-    if (request.method() === "GET")
-      await route.fulfill({ json: { total: items.length, next: null, results: items } });
-    else if (request.method() === "PUT") {
-      items[0] = { ...items[0], ...request.postDataJSON() };
-      await route.fulfill({ json: items[0] });
+    const id = Number(/\/reviews\/(\d+)\//.exec(url.pathname)?.[1]);
+    if (pedido.method() === "GET") {
+      const p = url.searchParams;
+      lecturas.push(p);
+      const q = (p.get("q") ?? "").toLowerCase();
+      const orden = p.get("orden") ?? "fecha-desc";
+      const lista = items
+        .filter((item) => !q || item.titulo.toLowerCase().includes(q))
+        .filter((item) => !p.get("texto") || (p.get("texto") === "con") === Boolean(item.texto))
+        .filter((item) => !p.get("clase") || item.tipo === p.get("clase"))
+        .filter((item) => item.valor >= Number(p.get("nota_min") ?? 1))
+        .filter((item) => item.valor <= Number(p.get("nota_max") ?? 10))
+        .sort((a, b) =>
+          orden === "nota-desc"
+            ? b.valor - a.valor
+            : orden === "nota-asc"
+              ? a.valor - b.valor
+              : orden === "fecha-asc"
+                ? a.fecha.localeCompare(b.fecha)
+                : b.fecha.localeCompare(a.fecha)
+        );
+      const desde = Number(p.get("cursor") ?? 0);
+      const siguiente = desde + porPagina < lista.length ? desde + porPagina : null;
+      const next = new URL(url);
+      next.searchParams.set("cursor", String(siguiente));
+      await route.fulfill({
+        json: {
+          total: lista.length,
+          total_propias: items.length,
+          next: siguiente === null ? null : `http://backend:8000${next.pathname}${next.search}`,
+          previous: null,
+          results: lista.slice(desde, desde + porPagina),
+        },
+      });
+    } else if (pedido.method() === "PUT") {
+      items = items.map((item) => (item.id === id ? { ...item, ...pedido.postDataJSON() } : item));
+      await route.fulfill({ json: items.find((item) => item.id === id) });
+    } else if (url.pathname.endsWith("/texto/")) {
+      items = items.map((item) => (item.id === id ? { ...item, texto: null } : item));
+      await route.fulfill({ status: 204 });
     } else {
-      if (request.url().endsWith("/texto/"))
-        items[0] = { ...items[0], texto: null as unknown as string };
-      else items = [];
+      items = items.filter((item) => item.id !== id);
       await route.fulfill({ status: 204 });
     }
   });
   return {
-    fail: () => {
-      fail = true;
+    fallar: (veces = 1) => {
+      fallas = veces;
+    },
+    /** La próxima página pedida con cursor falla. */
+    fallarSiguiente: () => {
+      fallasCursor = 1;
     },
     items: () => items,
-    calls: () => calls,
+    ultimaLectura: () => lecturas.at(-1),
   };
 }
-test("muestra póster de reemplazo, texto expandible y edición precargada", async ({ page }) => {
-  const state = await reviews(page);
-  await page.goto("/my-reviews");
-  await expect(page.getByRole("img", { name: "Sin póster de Interstellar" })).toBeVisible();
-  await expect(page.getByLabel("Calificación: 8 de 10").locator("svg")).toBeVisible();
-  await expect(page.getByLabel("Calificación: 8 de 10").locator("svg")).toHaveCSS(
-    "color",
-    "rgb(245, 197, 24)"
-  );
-  await page.getByRole("button", { name: "Leer más" }).click();
-  await expect(page.getByRole("button", { name: "Leer menos" })).toHaveAttribute(
-    "aria-expanded",
-    "true"
-  );
-  await page.getByRole("button", { name: "Editar", exact: true }).click();
-  const dialog = page.getByRole("dialog", {
-    name: 'Editar calificación y reseña de "Interstellar"',
+
+const sinDesborde = (page: Page) =>
+  page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+
+test.describe("escritorio", () => {
+  test.use({ viewport: { width: 1440, height: 1000 } });
+
+  test("filtra desde la URL y los selectores, y limpia conservando el orden", async ({ page }) => {
+    const estado = await resenas(page);
+    await page.goto("/my-reviews?sort=lowest");
+    const filas = page.getByRole("main").getByRole("article");
+    await expect(filas.getByRole("heading")).toHaveText(["Alpha", "American Dad!", "Interstellar"]);
+    await expect(page.getByRole("link", { name: "Interstellar" })).toHaveAttribute(
+      "href",
+      "/movie/157336?from=reviews"
+    );
+
+    await page.getByRole("combobox", { name: /^Tipo/ }).selectOption("movie");
+    await expect(page).toHaveURL(/\/my-reviews\?type=movie&sort=lowest$/);
+    await expect(filas.getByRole("heading")).toHaveText(["Alpha", "Interstellar"]);
+    await page.getByRole("combobox", { name: /^Calificación/ }).selectOption("lt5");
+    await expect(filas.getByRole("heading")).toHaveText(["Alpha"]);
+    expect(estado.ultimaLectura()?.get("nota_max")).toBe("4");
+
+    await page.getByRole("searchbox", { name: "Buscar por título" }).fill("zzz");
+    await expect(page.getByText("Ninguna calificación coincide con estos filtros.")).toBeVisible();
+    await page.getByRole("button", { name: "Limpiar filtros" }).first().click();
+    await expect(page).toHaveURL(/\/my-reviews\?sort=lowest$/);
+    await expect(filas).toHaveCount(3);
+    await expect(page.getByRole("searchbox", { name: "Buscar por título" })).toHaveValue("");
   });
-  await expect(dialog.getByRole("radio", { name: "8 de 10" })).toBeChecked();
-  await expect(dialog.getByLabel("Reseña (opcional)")).toBeFocused();
-  await expect(dialog.getByRole("radio", { name: "1 de 10" })).not.toBeFocused();
-  await dialog.getByRole("radio", { name: "9 de 10" }).check();
-  await dialog.getByLabel("Reseña (opcional)").fill("Nueva reseña");
-  await dialog.getByRole("button", { name: "Actualizar" }).click();
-  await expect(dialog).not.toBeVisible();
-  await expect(page.getByText("9/10", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Calificación: 9 de 10").locator("svg")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Leer más|Leer menos/ })).toHaveCount(0);
-  expect(state.items()[0].texto).toBe("Nueva reseña");
-});
-test("eliminar texto conserva la nota; quitar calificación elimina la tarjeta", async ({
-  page,
-}) => {
-  const state = await reviews(page);
-  await page.goto("/my-reviews");
-  await page.getByRole("button", { name: "Eliminar reseña", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("Vistas se conservan");
-  await page.getByRole("dialog").getByRole("button", { name: "Cancelar" }).click();
-  expect(state.items()[0].texto).toBeTruthy();
-  await page.getByRole("button", { name: "Eliminar reseña", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Eliminar reseña" }).click();
-  await expect(page.getByRole("note")).toHaveText("Todavía no escribiste una reseña.");
-  await expect(page.getByText("8/10", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Quitar calificación", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("dejará de estar en Vistas");
-  await page.getByRole("dialog").getByRole("button", { name: "Quitar calificación" }).click();
-  await expect(
-    page.getByText("Todavía no calificaste ninguna producción ni escribiste reseñas.")
-  ).toBeVisible();
-  expect(state.items()).toHaveLength(0);
-});
-test("el fallo de escritura conserva datos y permite reintentar", async ({ page }) => {
-  const state = await reviews(page);
-  await page.goto("/my-reviews");
-  await page.getByRole("button", { name: "Quitar calificación" }).click();
-  state.fail();
-  await page.getByRole("dialog").getByRole("button", { name: "Quitar calificación" }).click();
-  await expect(page.getByRole("dialog").getByRole("alert")).toContainText("Tus datos se mantienen");
-  expect(state.items()).toHaveLength(1);
-  await page.getByRole("dialog").getByRole("button", { name: "Quitar calificación" }).click();
-  await expect(page.getByRole("dialog")).not.toBeVisible();
-});
-test("estado vacío permite regresar al perfil", async ({ page }) => {
-  await reviews(page, true);
-  await page.goto("/my-reviews");
-  await page.getByRole("link", { name: "Volver a mi perfil" }).click();
-  await expect(page).toHaveURL(/\/profile$/);
-});
-test("paginación por cursor deduplica y conserva tarjetas ante error", async ({ page }) => {
-  await prepararCuenta(page);
-  let fail = true;
-  await page.route("https://image.tmdb.org/**", (route) => route.fulfill({ status: 404 }));
-  await page.route("**/api/reviews/mias/**", async (route) => {
-    if (new URL(route.request().url()).search) {
-      if (fail) {
-        fail = false;
-        await route.fulfill({
-          status: 500,
-          json: { code: "server_error", params: {}, errors: [] },
-        });
-        return;
-      }
-      await route.fulfill({
-        json: {
-          next: null,
-          results: [
-            initial,
-            { ...initial, id: 2, titulo: "Dark", tipo: "tv", poster: "", texto: null },
-          ],
-          total: 2,
-        },
-      });
-    } else
-      await route.fulfill({
-        json: {
-          next: "http://backend:8000/api/reviews/mias/?cursor=next",
-          results: [initial],
-          total: 2,
-        },
-      });
+
+  test("editar, borrar la reseña y quitar la calificación con los diálogos de la ficha", async ({
+    page,
+  }) => {
+    const estado = await resenas(page);
+    await page.goto("/my-reviews");
+    await page.getByRole("button", { name: "Leer más" }).click();
+    await expect(page.getByRole("button", { name: "Leer menos" })).toHaveAttribute(
+      "aria-expanded",
+      "true"
+    );
+
+    await page.getByRole("button", { name: "Editar", exact: true }).first().click();
+    const editar = page.getByRole("dialog", { name: "Editar calificación" });
+    await expect(editar.getByRole("radio", { name: "9 de 10" })).toBeChecked();
+    await editar.getByRole("radio", { name: "10 de 10" }).click();
+    await editar.getByLabel(/Reseña/).fill("Corta y nueva.");
+    await editar.getByRole("button", { name: "Actualizar" }).click();
+    await expect(editar).toBeHidden();
+    await expect(page.getByLabel("Tu calificación: 10 de 10")).toBeVisible();
+    await expect(page.getByText("Corta y nueva.")).toBeVisible();
+    expect(estado.items()[0]).toMatchObject({ valor: 10, texto: "Corta y nueva." });
+
+    const mas = page.getByRole("button", { name: "Más acciones para Interstellar" });
+    await mas.click();
+    await expect(page.getByRole("menuitem").first()).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("menuitem", { name: "Quitar calificación" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(mas).toBeFocused();
+    await mas.click();
+    await page.getByRole("menuitem", { name: "Eliminar reseña" }).click();
+    await page
+      .getByRole("alertdialog", { name: "¿Eliminar reseña?" })
+      .getByRole("button", { name: "Eliminar reseña" })
+      .click();
+    await expect(
+      page.getByRole("link", { name: "Agregar una reseña a Interstellar" })
+    ).toBeVisible();
+    await expect(mas).toBeFocused();
+
+    for (const titulo of ["Interstellar", "American Dad!", "Alpha"]) {
+      await page.getByRole("button", { name: `Más acciones para ${titulo}` }).click();
+      await page.getByRole("menuitem", { name: "Quitar calificación" }).click();
+      await page
+        .getByRole("alertdialog", { name: "¿Quitar tu calificación?" })
+        .getByRole("button", { name: "Quitar calificación" })
+        .click();
+      await expect(page.getByRole("link", { name: titulo })).toHaveCount(0);
+    }
+    await expect(page.getByText("Todavía no calificaste ninguna película ni serie.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Buscar qué calificar" })).toHaveAttribute(
+      "href",
+      "/search"
+    );
   });
-  await page.goto("/my-reviews");
-  await expect(page.getByRole("main").getByRole("alert")).toContainText("No pudimos cargar");
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await page.getByRole("button", { name: "Reintentar" }).click();
-  await expect(page.getByRole("article")).toHaveCount(2);
-  await expect(page.getByRole("heading", { name: "Dark", exact: true })).toBeVisible();
-});
-test("mobile: la tarjeta no desborda y el diálogo contiene el foco", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await reviews(page);
-  await page.goto("/my-reviews");
-  await page.getByRole("button", { name: "Editar", exact: true }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Actualizar" }).focus();
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("dialog").getByRole("radio", { name: "8 de 10" })).toBeFocused();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true
-  );
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(page.getByRole("button", { name: "Editar", exact: true })).toBeFocused();
+
+  test("un fallo al borrar deja el diálogo abierto con el error", async ({ page }) => {
+    const estado = await resenas(page);
+    await page.goto("/my-reviews");
+    await page.getByRole("button", { name: "Más acciones para Alpha" }).click();
+    await page.getByRole("menuitem", { name: "Quitar calificación" }).click();
+    estado.fallar();
+    const confirmar = page.getByRole("alertdialog", { name: "¿Quitar tu calificación?" });
+    await confirmar.getByRole("button", { name: "Quitar calificación" }).click();
+    await expect(confirmar.getByRole("alert")).toBeVisible();
+    expect(estado.items()).toHaveLength(3);
+    await confirmar.getByRole("button", { name: "Quitar calificación" }).click();
+    await expect(confirmar).toBeHidden();
+    expect(estado.items()).toHaveLength(2);
+  });
+
+  test("pagina por cursor con los filtros y se recupera de un error", async ({ page }) => {
+    const estado = await resenas(page, { porPagina: 1 });
+    estado.fallarSiguiente();
+    await page.goto("/my-reviews?type=movie");
+    const filas = page.getByRole("main").getByRole("article");
+    // La segunda página se pide sola al llegar al final, y falla.
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("No pudimos cargar");
+    await expect(filas).toHaveCount(1);
+    await page.getByRole("button", { name: "Reintentar" }).click();
+    await expect(filas.getByRole("heading")).toHaveText(["Interstellar", "Alpha"]);
+    // El cursor conserva los filtros.
+    expect(estado.ultimaLectura()?.get("clase")).toBe("movie");
+    await expect(page.getByRole("button", { name: "Cargar más calificaciones" })).toHaveCount(0);
+  });
+
+  test("si la primera carga falla, ofrece reintentar", async ({ page }) => {
+    const estado = await resenas(page);
+    estado.fallar();
+    await page.goto("/my-reviews");
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("No pudimos cargar");
+    await page.getByRole("button", { name: "Reintentar" }).click();
+    await expect(page.getByRole("main").getByRole("article")).toHaveCount(3);
+  });
 });
 
-test("póster cargado y composición responsive con texto limitado a 1000 caracteres", async ({
-  page,
-}, testInfo) => {
-  await reviews(page);
-  await page.route("https://image.tmdb.org/**", (route) =>
-    route.fulfill({
-      contentType: "image/png",
-      body: Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
-        "base64"
-      ),
-    })
-  );
-  await page.goto("/my-reviews");
-  const poster = page.getByAltText("Póster de Interstellar");
-  await expect(poster).toBeVisible();
-  expect(await poster.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
-  for (const width of [1440, 390, 1920]) {
-    await page.setViewportSize({ width, height: 900 });
-    const box = await poster.boundingBox();
-    expect(box?.width).toBe(width < 640 ? 56 : 80);
-    expect(box?.height).toBe(width < 640 ? 84 : 120);
-    const card = page.getByRole("article");
-    const cardBox = (await card.boundingBox())!;
-    const dateBox = (await card.locator("time").boundingBox())!;
-    const rating = card.getByLabel("Calificación: 8 de 10");
-    const iconBox = (await rating.locator("svg").boundingBox())!;
-    const ratingBox = (await rating.boundingBox())!;
-    expect(dateBox.x + dateBox.width).toBeCloseTo(cardBox.x + cardBox.width - 21, 0);
-    expect(dateBox.y - cardBox.y).toBeLessThan(32);
-    expect(dateBox.y + dateBox.height).toBeLessThan(iconBox.y);
-    expect(ratingBox.height).toBeLessThan(32);
-    expect(iconBox.x).toBeCloseTo(ratingBox.x, 0);
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
-    ).toBe(true);
-    if (width !== 1920)
-      await page.screenshot({
-        path: testInfo.outputPath(`mis-resenas-${width}.png`),
-        fullPage: true,
-      });
-  }
-  await page.getByRole("button", { name: "Editar", exact: true }).click();
-  const text = page.getByLabel("Reseña (opcional)");
-  await text.fill("a".repeat(1001));
-  await expect(text).toHaveValue("a".repeat(1000));
-  await expect(page.getByText("1000/1000")).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).not.toBeVisible();
-});
-test("carga inicial fallida ofrece reintento y conserva un listado utilizable", async ({
-  page,
-}) => {
-  const state = await reviews(page);
-  state.fail();
-  await page.goto("/my-reviews");
-  await expect(page.getByRole("main").getByRole("alert")).toContainText("No pudimos cargar");
-  await page.getByRole("button", { name: "Reintentar" }).click();
-  await expect(page.getByRole("article")).toHaveCount(1);
-});
+test.describe("celular", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
 
-test("Leer más sigue el recorte real al cambiar el ancho de la tarjeta", async ({ page }) => {
-  const state = await reviews(page);
-  state.items()[0].texto = "Una reseña que se adapta al ancho de pantalla. ".repeat(3);
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/my-reviews");
-  await expect(page.getByRole("article")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Leer más" })).toHaveCount(0);
-  await page.setViewportSize({ width: 390, height: 900 });
-  await expect(page.getByRole("button", { name: "Leer más" })).toBeVisible();
-  await page.getByRole("button", { name: "Leer más" }).click();
-  await expect(page.getByRole("button", { name: "Leer menos" })).toBeVisible();
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await expect(page.getByRole("button", { name: /Leer más|Leer menos/ })).toHaveCount(0);
+  test("filtros en una hoja con chips y acciones en otra, sin desborde", async ({ page }) => {
+    await resenas(page);
+    await page.goto("/my-reviews");
+    await expect(page.getByRole("link", { name: "Perfil" }).first()).toBeVisible();
+    await expect(page.getByRole("main").getByRole("article")).toHaveCount(3);
+    expect(await sinDesborde(page)).toBe(true);
+
+    await page.getByRole("button", { name: "Filtros y orden" }).click();
+    const hoja = page.getByRole("dialog", { name: "Filtros y orden" });
+    await hoja.getByRole("button", { name: "Con reseña" }).click();
+    await hoja.getByRole("radio", { name: "Mayor calificación" }).click();
+    await hoja.getByRole("button", { name: "Ver 2 resultados" }).click();
+    await expect(hoja).toBeHidden();
+    await expect(page).toHaveURL(/review=with&sort=highest/);
+    await expect(page.getByRole("button", { name: "Filtros y orden, 1 activo" })).toBeVisible();
+    await expect(page.getByText("Orden: Mayor calificación")).toBeVisible();
+    await page.getByRole("button", { name: "Quitar filtro Con reseña" }).click();
+    await expect(page.getByRole("main").getByRole("article")).toHaveCount(3);
+
+    await page.getByRole("button", { name: "Acciones para Alpha" }).click();
+    const acciones = page.getByRole("dialog", { name: /Alpha/ });
+    await acciones.getByRole("button", { name: "Editar calificación y reseña" }).click();
+    const editar = page.getByRole("dialog", { name: "Editar calificación" });
+    await expect(editar.getByRole("radio", { name: "4 de 10" })).toBeChecked();
+    expect(await sinDesborde(page)).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(editar).toBeHidden();
+    await expect(page.getByRole("button", { name: "Acciones para Alpha" })).toBeFocused();
+  });
 });

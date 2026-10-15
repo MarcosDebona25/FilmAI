@@ -69,6 +69,28 @@ class ServicioCorreosTests(SimpleTestCase):
         self.assertIn('href="https://filmai.test/login/"', html)
         self.assertIn("Recuperar mi cuenta", html)
 
+    def test_html_sigue_el_diseno_del_canvas(self):
+        """Los cuatro casos comparten marca, titular y colores de los correos del canvas."""
+        for caso in sorted(CASOS):
+            for idioma in ("en", "es"):
+                with self.subTest(caso=caso, idioma=idioma):
+                    enviar_correo(caso, "correo@example.com", self.contexto, idioma)
+                    html = mail.outbox[-1].alternatives[0][0]
+                    self.assertIn("background-color: #15151f", html)
+                    self.assertIn("background-color: #f5c518", html)
+                    self.assertIn("<h1", html)
+                    self.assertIn("FilmAI", html)
+                    self.assertNotIn("#e67e22", html)
+                    enlace = self.contexto["activate_url"]
+                    if caso == "contrasena_actualizada":
+                        # Botón secundario con borde y sin fila de enlace copiable.
+                        self.assertIn("border: 1px solid #84849a", html)
+                        self.assertEqual(html.count("/login/"), 1)
+                    else:
+                        # Botón principal relleno y enlace alternativo visible.
+                        self.assertIn("color: #14110a", html)
+                        self.assertEqual(html.count(enlace), 3)  # botón, href y texto
+
     def test_caso_o_idioma_desconocido_no_envia(self):
         """Entradas internas inválidas se rechazan antes de usar el transporte."""
         with patch("filmai.correos.servicio.send_mail") as envio:

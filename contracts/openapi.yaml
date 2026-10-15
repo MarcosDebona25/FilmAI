@@ -731,6 +731,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/browse/:
+    get:
+      operationId: catalogo_browse_retrieve
+      description: |-
+        Buscar (C-06): texto opcional, tipo y filtros, en una sola respuesta.
+
+        `q` admite cualquier texto: se recorta y se mide después (decisión del
+        14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
+        TMDB para cada combinación lo decide `services/browse.py`.
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/discover/:
     get:
       operationId: catalogo_discover_retrieve
@@ -830,6 +858,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/movie/{id_tmdb}/credits/:
+    get:
+      operationId: catalogo_movie_credits_retrieve
+      description: Directores (en series, los creadores) y reparto con personaje (C-07).
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/now-playing/:
     get:
       operationId: catalogo_now_playing_retrieve
@@ -837,6 +894,36 @@ paths:
       - catalogo
       security:
       - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/recommended/:
+    get:
+      operationId: catalogo_recommended_retrieve
+      description: |-
+        «Recomendado para ti» del Home (C-05), solo con sesión.
+
+        `tipo` es `all` (por defecto), `movie` o `tv`. Responde `{generos, results}`:
+        los nombres de los géneros usados (como mucho 3, en el idioma del pedido) y
+        hasta 15 títulos con la forma de TMDB más `media_type`. Sin calificaciones
+        de 7 o más, las dos listas vienen vacías.
+      tags:
+      - catalogo
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
       responses:
         '200':
           description: No response body
@@ -924,6 +1011,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/tv/{id_tmdb}/credits/:
+    get:
+      operationId: catalogo_tv_credits_retrieve
+      description: Directores (en series, los creadores) y reparto con personaje (C-07).
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/:
     get:
       operationId: lists_retrieve
@@ -972,9 +1088,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/{lista_id}/:
+    get:
+      operationId: lists_retrieve_2
+      description: |-
+        Lee, renombra o elimina una lista propia.
+
+        `GET` sirve a las predeterminadas también: el detalle (L-03) y la miga
+        «Lists > {nombre}» de la ficha (`?from=list-{id}`) lo necesitan para todas.
+      parameters:
+      - in: path
+        name: lista_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
     put:
       operationId: lists_update
-      description: Renombra o elimina una lista personalizada.
+      description: |-
+        Lee, renombra o elimina una lista propia.
+
+        `GET` sirve a las predeterminadas también: el detalle (L-03) y la miga
+        «Lists > {nombre}» de la ficha (`?from=list-{id}`) lo necesitan para todas.
       parameters:
       - in: path
         name: lista_id
@@ -1003,7 +1156,11 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
     delete:
       operationId: lists_destroy
-      description: Renombra o elimina una lista personalizada.
+      description: |-
+        Lee, renombra o elimina una lista propia.
+
+        `GET` sirve a las predeterminadas también: el detalle (L-03) y la miga
+        «Lists > {nombre}» de la ficha (`?from=list-{id}`) lo necesitan para todas.
       parameters:
       - in: path
         name: lista_id
@@ -1127,6 +1284,37 @@ paths:
       - jwtCookieAuth: []
       responses:
         '204':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/lists/order/:
+    put:
+      operationId: lists_order_update
+      description: |-
+        Guarda el orden de las listas personalizadas (L-02).
+
+        Recibe los ids en el orden nuevo y devuelve todas las listas como
+        `GET /api/lists/`. Es tolerante con lo que pudo cambiar en otra pestaña: los
+        ids que ya no existen (o que no son del usuario) se ignoran, y las
+        personalizadas que no vinieron quedan al final en su orden anterior. Así una
+        lista recién creada en otra pestaña no hace fallar el reordenamiento.
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
           description: No response body
         4XX:
           description: Error con el sobre de códigos estables.
@@ -1328,6 +1516,7 @@ paths:
       security:
       - jwtHeaderAuth: []
       - jwtCookieAuth: []
+      - {}
       responses:
         '200':
           description: No response body
@@ -1717,6 +1906,8 @@ components:
           format: date
         genero:
           $ref: '#/components/schemas/GeneroEnum'
+        acepta_terminos:
+          type: boolean
     Idioma704Enum:
       enum:
       - en
@@ -1898,7 +2089,10 @@ components:
           format: date
         genero:
           $ref: '#/components/schemas/GeneroEnum'
+        acepta_terminos:
+          type: boolean
       required:
+      - acepta_terminos
       - apellido
       - correo
       - fecha_nacimiento
@@ -2125,6 +2319,7 @@ components:
           - person_name_invalid
           - required
           - review_update_empty
+          - terms_not_accepted
           - unique
           - username_already_used
           - username_invalid
@@ -2200,6 +2395,7 @@ components:
           - review_update_empty
           - server_error
           - session_revoked
+          - terms_not_accepted
           - throttled
           - unique
           - unsupported_media_type

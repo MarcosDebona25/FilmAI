@@ -97,7 +97,8 @@ declare const messages: {
       "lastName": "Last name",
       "username": "Username",
       "birthDate": "Date of birth",
-      "passwordConfirm": "Confirm password"
+      "passwordConfirm": "Confirm password",
+      "email": "Email"
     },
     "text": {
       "readLess": "Read less",
@@ -128,7 +129,8 @@ declare const messages: {
       "currentAlt": "Your avatar",
       "change": "Change avatar",
       "chooseTitle": "Choose an avatar",
-      "optionsLabel": "Avatars"
+      "optionsLabel": "Avatars",
+      "optionLabel": "Avatar {number}"
     }
   },
   "legacy": {
@@ -237,7 +239,9 @@ declare const messages: {
       "brandLandingLabel": "FilmAI, back to the landing page",
       "backHome": "Back to Home",
       "brandLandingAlt": "FilmAI, go to the landing page",
-      "backLanding": "Back to the landing page"
+      "backLanding": "Back to the landing page",
+      "termsUpdated": "Last updated: {date}",
+      "termsOnPage": "On this page"
     },
     "account": {
       "userMenuLabel": "{name}’s menu",
@@ -301,7 +305,8 @@ declare const messages: {
       "removeOnlyDescription": "Your rating of {title} will be deleted, and {title} will be removed from Watched. The rating can’t be recovered; you can add it back to Watched whenever you want.",
       "edit": "Edit rating",
       "titleLabel": "Rate {title}",
-      "yourRating": "Your rating"
+      "yourRating": "Your rating",
+      "watchedHelpFromWatchlist": "Rating {title} also adds it to Watched and removes it from Watchlist."
     },
     "feedback": {
       "ratingReviewPublished": "Rating and review posted.",
@@ -317,12 +322,15 @@ declare const messages: {
       "watchlistRemoved": "Removed from Watchlist.",
       "watchlistAdded": "Added to Watchlist.",
       "watchedRemoved": "Removed from Watched.",
-      "watchedAdded": "Added to Watched."
+      "watchedAdded": "Added to Watched.",
+      "watchedAddedFromWatchlist": "Added to Watched and removed from Watchlist."
     },
     "metadata": {
       "ratingVotesLabel": "TMDB rating: {rating} out of 10, {count, plural, one {# vote} other {# votes}}",
       "voteCount": "TMDB · {count, plural, one {# vote} other {# votes}}",
-      "genresTitle": "Genres"
+      "genresTitle": "Genres",
+      "seasons": "{count, plural, one {# season} other {# seasons}}",
+      "episodes": "{count, plural, one {# episode} other {# episodes}}"
     },
     "lists": {
       "addTitleLabel": "Add {title} to a list",
@@ -345,7 +353,8 @@ declare const messages: {
     "credits": {
       "heading": "Director and cast",
       "directors": "Director",
-      "cast": "Cast"
+      "cast": "Cast",
+      "creators": "Created by"
     },
     "reviews": {
       "heading": "Reviews",
@@ -353,7 +362,9 @@ declare const messages: {
       "today": "today",
       "filteredEmpty": "No reviews match these filters.",
       "communityCount": "From the community ({count})",
-      "displayedCount": "Showing {shownCount} of {totalCount}"
+      "displayedCount": "Showing {shownCount} of {totalCount}",
+      "loadMore": "Load more reviews",
+      "empty": "No reviews yet. Be the first to write one."
     },
     "review": {
       "placeholder": "What did you think?",
@@ -363,6 +374,12 @@ declare const messages: {
     "watched": {
       "removeConfirmTitle": "Remove from Watched?",
       "remove": "Remove from Watched"
+    },
+    "breadcrumb": {
+      "backTo": "Back to {label}"
+    },
+    "actions": {
+      "signedOutPrompt": "Log in to rate or save"
     }
   },
   "footer": {
@@ -373,7 +390,9 @@ declare const messages: {
       "myLists": "My lists",
       "informationHeading": "Information",
       "copyright": "© {year} FilmAI. All rights reserved.",
-      "descriptionMobile": "Discover, rate, and organize movies and TV shows, with recommendations from an AI assistant."
+      "descriptionMobile": "Discover, rate, and organize movies and TV shows, with recommendations from an AI assistant.",
+      "languageLink": "Language: {language}. Change it in Settings.",
+      "askFilmAI": "Ask FilmAI"
     }
   },
   "lists": {
@@ -431,18 +450,35 @@ declare const messages: {
       "yearLabel": "Year",
       "openLabel": "Filters{activeCount, plural, =0 {} one {, # active} other {, # active}}",
       "apply": "Show results",
-      "activeCount": "{count, plural, one {# active} other {# active}}"
+      "activeCount": "{count, plural, one {# active} other {# active}}",
+      "anyYear": "Any",
+      "tmdbRatingLabel": "TMDB rating",
+      "ratingShort": "{value}+",
+      "ratingShortBelowFive": "<5",
+      "upcoming": "Upcoming",
+      "decade": "{decade}s"
     },
     "results": {
       "count": "{count, plural, one {# result} other {# results}}",
       "queryHint": "for “{query}”",
       "unrated": "No ratings",
       "emptyTitle": "Nothing for “{query}”",
-      "emptyHint": "Check the spelling or try the original title: the catalog comes from TMDB."
+      "emptyHint": "Check the spelling or try the original title: the catalog comes from TMDB.",
+      "emptyFiltersTitle": "Nothing with these filters"
     },
     "pagination": {
       "label": "Results pages",
       "position": "Page {page} of {pageCount}"
+    },
+    "close": {
+      "shortcut": "Esc"
+    },
+    "genres": {
+      "kids": "Kids",
+      "news": "News",
+      "reality": "Reality",
+      "soap": "Soap",
+      "talk": "Talk"
     }
   },
   "reviews": {
@@ -459,12 +495,18 @@ declare const messages: {
       "openLabel": "Filters and sort{activeCount, plural, =0 {} one {, # active} other {, # active}}",
       "orderPrefix": "Sort: {sortLabel}",
       "removeChipLabel": "Remove filter {filterLabel}",
-      "dialogTitle": "Filters and sort"
+      "dialogTitle": "Filters and sort",
+      "ratingChip": "Rating {rating}"
     },
     "results": {
       "filteredEmpty": "No ratings match these filters.",
       "ratingCount": "{count, plural, one {# rating} other {# ratings}}",
-      "withReviewCount": "{count, plural, one {# with review} other {# with reviews}}"
+      "withReviewCount": "{count, plural, one {# with review} other {# with reviews}}",
+      "empty": "You haven’t rated any movies or TV shows yet.",
+      "emptyAction": "Find something to rate",
+      "loading": "Loading your ratings…",
+      "loadError": "We couldn’t load your ratings. Try again.",
+      "loadMore": "Load more ratings"
     },
     "card": {
       "ratingLabel": "Your rating: {rating} out of 10",
@@ -520,7 +562,8 @@ declare const messages: {
       "genderLabel": "Gender",
       "termsAcceptance": "I have read and accept FilmAI’s <terms>Terms and Conditions</terms>.",
       "termsNewTabHint": "(opens in a new tab)",
-      "termsRequiredError": "To create your account you need to accept the Terms and Conditions."
+      "termsRequiredError": "To create your account you need to accept the Terms and Conditions.",
+      "submitPending": "Complete all fields and accept the Terms and Conditions to continue."
     },
     "confirmation": {
       "pageTitle": "Account confirmation",
@@ -581,11 +624,25 @@ declare const messages: {
     "password": {
       "heading": "Change password",
       "logoutWarning": "You’ll be logged out on all devices and will need to log in again.",
-      "requirements": "Between 8 and 20 characters, with at least one uppercase letter, one lowercase letter, one number, and one symbol (@ # $ % & * !)."
+      "requirements": "Between 8 and 20 characters, with at least one uppercase letter, one lowercase letter, one number, and one symbol (@ # $ % & * !).",
+      "currentRequired": "Enter your current password.",
+      "googleDescription": "Your account uses Google and doesn’t have a password yet. You can set one with a link we email you.",
+      "sendLink": "Email me a link",
+      "linkSent": "We emailed you a link to set your password.",
+      "linkError": "We couldn’t send the link. Try again later."
     },
     "account": {
       "heading": "Your account"
-    }
+    },
+    "username": {
+      "checking": "Checking availability…",
+      "taken": "Not available"
+    },
+    "feedback": {
+      "updated": "Profile updated.",
+      "passwordChanged": "Password updated. Log in again."
+    },
+    "loading": "Loading profile…"
   },
   "settings": {
     "appearance": {
@@ -619,7 +676,9 @@ declare const messages: {
       "spanish": "Español",
       "changing": "Changing language…",
       "updated": "Language updated.",
-      "saveError": "We couldn’t save your language. Try again."
+      "saveError": "We couldn’t save your language. Try again.",
+      "interfaceLabel": "Interface language",
+      "interfaceHelp": "Applies instantly and is saved to your account. Also used for the emails we send you."
     }
   },
   "errors": {
@@ -630,7 +689,11 @@ declare const messages: {
       "notFoundTitle": "This page doesn’t exist",
       "unexpectedTitle": "Something went wrong",
       "notFoundDescription": "The page you’re looking for doesn’t exist or was moved. Start from Home or search for what you wanted to watch.",
-      "unexpectedDescription": "An unexpected error occurred. Try again in a few minutes."
+      "unexpectedDescription": "An unexpected error occurred. Try again in a few minutes.",
+      "notFoundCode": "Error 404",
+      "notFoundSignedOutTitle": "We can’t find that page",
+      "notFoundSignedOutDescription": "The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",
+      "signUpInvite": "New to FilmAI? <register>Create a free account</register> to rate films, keep your lists, and get personalized picks from the FilmAI assistant."
     },
     "codes": {
       "validation_error": "Check the information you entered.",
@@ -709,7 +772,8 @@ declare const messages: {
       "logged_out": "You’ve logged out on this device.",
       "unknown": "We couldn’t complete the action. Try again.",
       "throttledWithWait": "There are too many requests. Try again in {retryAfterSeconds, plural, one {# second} other {# seconds}}.",
-      "list_name_reserved": "This name is reserved for a default list."
+      "list_name_reserved": "This name is reserved for a default list.",
+      "terms_not_accepted": "To create your account you need to accept the Terms and Conditions."
     },
     "fields": {
       "correo": {

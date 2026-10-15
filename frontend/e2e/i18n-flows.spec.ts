@@ -19,6 +19,7 @@ for (const locale of ["en", "es"] as const) {
     );
     await page.route("**/api/auth/registration/", async (route) => {
       expect(route.request().headers()["accept-language"]).toBe(locale);
+      expect(route.request().postDataJSON().acepta_terminos).toBe(true);
       await route.fulfill({ status: 201, json: { code: "registration_pending_confirmation" } });
     });
     await page.goto("/register");
@@ -33,16 +34,19 @@ for (const locale of ["en", "es"] as const) {
     }))
       await page.locator(`[name="${name}"]`).fill(value);
     await page.locator('select[name="genero"]').selectOption("no_especifica");
-    await page.getByRole("button", { name: "Crear cuenta", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Revisá tu bandeja de entrada" })).toBeVisible();
+    await page.locator('[name="acepta_terminos"]').check();
+    await page.getByRole("button", { name: messages.nav.account.signUp, exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: messages.auth.confirmation.inboxTitle })
+    ).toBeVisible();
     await page.route("**/api/auth/registration/verify-email/", (route) =>
       route.fulfill({ json: { code: "email_confirmed" } })
     );
     await page.goto("/confirm-email/test-key");
     await expect(
-      page.getByRole("heading", { name: messages.legacy.confirmation.successTitle })
+      page.getByRole("heading", { name: messages.auth.confirmation.successTitle })
     ).toBeVisible();
-    await page.getByRole("link", { name: messages.legacy.confirmation.goToLogin }).click();
+    await page.getByRole("link", { name: messages.nav.account.logIn }).click();
     const account = await prepararCuenta(page, locale);
     await page.route("**/api/auth/login/", async (route) => {
       expect(route.request().headers()["accept-language"]).toBe(locale);
@@ -50,8 +54,8 @@ for (const locale of ["en", "es"] as const) {
     });
     await page.locator('[name="username"]').fill("anaperez");
     await page.locator('[name="password"]').fill("Password123*");
-    await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
-    await expect(page).toHaveURL(baseURL! + "/");
+    await page.getByRole("button", { name: messages.nav.account.logIn, exact: true }).click();
+    await expect(page).toHaveURL(baseURL! + "/home");
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     await page.goto("/settings");
     await expect(
@@ -101,7 +105,7 @@ for (const locale of ["en", "es"] as const) {
     );
     await page.goto("/confirm-email/expired");
     await expect(
-      page.getByRole("heading", { name: messages.legacy.confirmation.expiredTitle })
+      page.getByRole("heading", { name: messages.auth.confirmation.invalidTitle })
     ).toBeVisible();
     await page.route("**/api/auth/password/reset/confirm/", (route) =>
       route.fulfill({ status: 400, json: { code: "link_invalid", params: {}, errors: [] } })
@@ -134,19 +138,22 @@ for (const width of [390, 1280]) {
     await pill.getByRole("radio", { name: "English" }).focus();
     await page.keyboard.press("ArrowRight");
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
-    if (width >= 768)
-      await expect(page.locator("footer").getByRole("radio", { name: "Español" })).toBeChecked();
-    else await expect(page.locator("footer").getByRole("radiogroup")).toHaveCount(0);
+    await expect(pill.getByRole("radio", { name: "Español" })).toBeChecked();
+    // La landing ocupa toda la ventana: sin pie. El pie sin sesión vive en /terms.
+    await expect(page.locator("footer")).toHaveCount(0);
+    await page.goto("/terms");
+    await expect(page.locator("footer").getByRole("radio", { name: "Español" })).toBeChecked();
     await prepararCuenta(page, "en");
     await page.goto("/settings");
     await expect(
-      page.locator("footer").getByRole("link", { name: /Language · English/ })
+      page.locator("footer").getByRole("link", { name: /Language: English/ })
     ).toBeVisible();
     await expect(page.locator("footer").getByRole("radio")).toHaveCount(0);
     await expect(page.locator("footer").getByRole("link", { name: "Sign up" })).toHaveCount(0);
     await page
       .locator("footer")
-      .getByRole("link", { name: /Language · English/ })
+      .getByRole("link", { name: /Language: English/ })
+      .first()
       .click();
     await expect(page).toHaveURL(/\/settings#t-idioma$/);
     await expect(page.locator("#t-idioma")).toBeInViewport();

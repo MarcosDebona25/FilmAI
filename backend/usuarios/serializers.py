@@ -95,6 +95,7 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     apellido = serializers.CharField(max_length=50)
     fecha_nacimiento = serializers.DateField(input_formats=["%Y-%m-%d", "%d/%m/%Y"])
     genero = serializers.ChoiceField(choices=TipoGenero.choices)
+    acepta_terminos = serializers.BooleanField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -118,6 +119,14 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
         if Usuario.objects.filter(nombre_usuario__iexact=value).exists():
             raise serializers.ValidationError(
                 "El nombre de usuario ya está registrado.", code="username_already_used"
+            )
+        return value
+
+    def validate_acepta_terminos(self, value):
+        if value is not True:
+            raise serializers.ValidationError(
+                "Tenés que aceptar los Términos y Condiciones.",
+                code="terms_not_accepted",
             )
         return value
 
@@ -180,6 +189,7 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
         required=False, input_formats=["%Y-%m-%d", "%d/%m/%Y"]
     )
     genero = serializers.ChoiceField(choices=TipoGenero.choices, required=False)
+    acepta_terminos = serializers.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -278,6 +288,15 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
                         faltantes, "Este campo es obligatorio para completar tu cuenta."
                     ),
                     code="required",
+                )
+            if attrs.get("acepta_terminos") is not True:
+                raise serializers.ValidationError(
+                    {
+                        "acepta_terminos": serializers.ErrorDetail(
+                            "Tenés que aceptar los Términos y Condiciones.",
+                            code="terms_not_accepted",
+                        )
+                    }
                 )
 
             # Evita que allauth persista una cuenta con correo duplicado.

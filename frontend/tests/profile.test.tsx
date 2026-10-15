@@ -125,7 +125,8 @@ describe("edición de perfil", () => {
     fireEvent.change(screen.getByLabelText("Nombre de usuario", { exact: true }), {
       target: { value: "disponible" },
     });
-    expect(await screen.findByText("Disponible", { exact: true })).toHaveClass("text-green-700");
+    // Colores del canvas: `ok` (verde) y `destructive` (rojo).
+    expect(await screen.findByText("Disponible", { exact: true })).toHaveClass("text-ok");
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({ disponible: false }),
@@ -134,17 +135,18 @@ describe("edición de perfil", () => {
       target: { value: "ocupado" },
     });
     await waitFor(() =>
-      expect(screen.getByText("No disponible", { exact: true })).toHaveClass("text-red-700")
+      expect(screen.getByText("No disponible", { exact: true })).toHaveClass("text-destructive")
     );
   });
 });
 it("baja de cuenta: conserva cancelación y usa la advertencia aprobada", async () => {
   render(<PreferenciasPage />);
   await userEvent.click(screen.getByRole("button", { name: "Dar de baja cuenta" }));
-  expect(screen.getByRole("dialog")).toHaveTextContent(
+  // `alertdialog`: confirma una acción irreversible, con el foco en Cancelar.
+  expect(screen.getByRole("alertdialog")).toHaveTextContent(
     "Asegurate de querer dar de baja la cuenta antes de continuar."
   );
-  expect(screen.getByRole("dialog")).not.toHaveTextContent("se conservarán");
+  expect(screen.getByRole("alertdialog")).not.toHaveTextContent("se conservarán");
   await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
   expect(apiFetch).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole("button", { name: "Dar de baja cuenta" }));

@@ -91,3 +91,55 @@ errors.fields.apellido.invalid,,field,,Ingresá un apellido válido.,Enter a val
 errors.fields.password.required,,field,,Ingresá tu contraseña.,Enter your password.,aprobado
 emails.confirmation.subject,,email,,[FilmAI] Confirmación de cuenta,[FilmAI] Confirm your account,aprobado
 errors.codes.list_name_reserved,list_name_reserved,error,,Ese nombre está reservado para una lista predeterminada.,This name is reserved for a default list.,aprobado
+errors.codes.terms_not_accepted,terms_not_accepted,error,,Para crear tu cuenta tenés que aceptar los Términos y Condiciones.,To create your account you need to accept the Terms and Conditions.,aprobado
+common.fields.email,,field,,Correo electrónico,Email,aprobado
+nav.main.termsUpdated,,label,date,Última actualización: {date},"Last updated: {date}",aprobado
+nav.main.termsOnPage,,label,,En esta página,On this page,aprobado
+auth.signUp.submitPending,,label,,Completá todos los campos y aceptá los Términos y Condiciones para continuar.,Complete all fields and accept the Terms and Conditions to continue.,aprobado
+errors.pages.notFoundCode,,label,,Error 404,Error 404,aprobado
+errors.pages.notFoundSignedOutTitle,,label,,No encontramos esa página,We can’t find that page,aprobado
+errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.,"The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",aprobado
+errors.pages.signUpInvite,,label,,"¿Primera vez en FilmAI? <register>Creá una cuenta gratis</register> para calificar películas, guardar tus listas y recibir recomendaciones del asistente de FilmAI.","New to FilmAI? <register>Create a free account</register> to rate films, keep your lists, and get personalized picks from the FilmAI assistant.",aprobado
+footer.main.languageLink,,selector,language,"Idioma: {language}. Cambiá el idioma en Preferencias.","Language: {language}. Change it in Settings.",aprobado
+footer.main.askFilmAI,,label,,Preguntale a FilmAI,Ask FilmAI,aprobado
+title.credits.creators,,label,,Creación,Created by,aprobado
+title.metadata.seasons,,label,count,"{count, plural, one {# temporada} other {# temporadas}}","{count, plural, one {# season} other {# seasons}}",aprobado
+title.metadata.episodes,,label,count,"{count, plural, one {# episodio} other {# episodios}}","{count, plural, one {# episode} other {# episodes}}",aprobado
+title.breadcrumb.backTo,,label,label,Volver a {label},Back to {label},aprobado
+title.actions.signedOutPrompt,,label,,Ingresá para calificar o guardar,Log in to rate or save,aprobado
+title.reviews.loadMore,,label,,Cargar más reseñas,Load more reviews,aprobado
+title.reviews.empty,,label,,Todavía no hay reseñas. Escribí la primera.,No reviews yet. Be the first to write one.,aprobado
+title.feedback.watchedAddedFromWatchlist,,feedback,,Agregada a Vistas y quitada de Pendientes.,Added to Watched and removed from Watchlist.,aprobado
+title.rating.watchedHelpFromWatchlist,,label,title,"Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",Rating {title} also adds it to Watched and removes it from Watchlist.,aprobado
+search.filters.anyYear,,label,,Cualquiera,Any,aprobado
+search.results.emptyFiltersTitle,,label,,Nada con estos filtros,Nothing with these filters,aprobado
+search.close.shortcut,,label,,Esc,Esc,aprobado
+search.genres.kids,,label,,Infantil,Kids,aprobado
+search.genres.news,,label,,Noticias,News,aprobado
+search.genres.reality,,label,,Reality,Reality,aprobado
+search.genres.soap,,label,,Telenovelas,Soap,aprobado
+search.genres.talk,,label,,Entrevistas,Talk,aprobado
+search.filters.tmdbRatingLabel,,label,,Calificación de TMDB,TMDB rating,aprobado
+search.filters.ratingShort,,label,value,{value}+,{value}+,aprobado
+search.filters.ratingShortBelowFive,,label,,<5,<5,aprobado
+search.filters.upcoming,,label,,A estrenar,Upcoming,aprobado
+search.filters.decade,,label,decade,Década de {decade},{decade}s,aprobado
+settings.language.interfaceLabel,,label,,Idioma de la interfaz,Interface language,aprobado
+settings.language.interfaceHelp,,label,,Se aplica al instante y se guarda en tu cuenta. También lo usamos para los correos que te mandamos.,Applies instantly and is saved to your account. Also used for the emails we send you.,aprobado
+profile.username.checking,,status,,Comprobando disponibilidad…,Checking availability…,aprobado
+profile.username.taken,,status,,No disponible,Not available,aprobado
+profile.feedback.updated,,feedback,,Perfil actualizado.,Profile updated.,aprobado
+profile.feedback.passwordChanged,,feedback,,Contraseña actualizada. Iniciá sesión nuevamente.,Password updated. Log in again.,aprobado
+profile.password.currentRequired,,error,,Ingresá tu contraseña actual.,Enter your current password.,aprobado
+profile.password.googleDescription,,label,,"Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.",Your account uses Google and doesn’t have a password yet. You can set one with a link we email you.,aprobado
+profile.password.sendLink,,label,,Enviar enlace por correo,Email me a link,aprobado
+profile.password.linkSent,,feedback,,Te enviamos un enlace para establecer tu contraseña.,We emailed you a link to set your password.,aprobado
+profile.password.linkError,,error,,No pudimos enviar el enlace. Intentá más tarde.,We couldn’t send the link. Try again later.,aprobado
+profile.loading,,status,,Cargando perfil…,Loading profile…,aprobado
+common.avatar.optionLabel,,label,number,Avatar {number},Avatar {number},aprobado
+reviews.results.empty,,label,,Todavía no calificaste ninguna película ni serie.,You haven’t rated any movies or TV shows yet.,aprobado
+reviews.results.emptyAction,,label,,Buscar qué calificar,Find something to rate,aprobado
+reviews.results.loading,,status,,Cargando tus calificaciones…,Loading your ratings…,aprobado
+reviews.results.loadError,,error,,No pudimos cargar tus calificaciones. Intentá de nuevo.,We couldn’t load your ratings. Try again.,aprobado
+reviews.results.loadMore,,label,,Cargar más calificaciones,Load more ratings,aprobado
+reviews.filters.ratingChip,,label,rating,Calificación {rating},Rating {rating},aprobado

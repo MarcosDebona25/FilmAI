@@ -234,6 +234,9 @@ CATALOGO.update(
         "minimum_age": DefinicionCodigo(
             "Debés tener al menos 13 años.", {"validacion": 400}, {"minAge": "integer"}
         ),
+        "terms_not_accepted": DefinicionCodigo(
+            "Tenés que aceptar los Términos y Condiciones.", {"validacion": 400}
+        ),
         "avatar_invalid": DefinicionCodigo(
             "El avatar no está disponible.",
             {"validacion": 400},

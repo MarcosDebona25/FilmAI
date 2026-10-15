@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 from catalogo.models import Resena
 from catalogo.services.adapter import dominio_a_tmdb
-from catalogo.services.traducciones import campos_en_ingles, texto_localizado
+from catalogo.services.traducciones import ProduccionLocalizadaMixin
 from filmai.errores.serializadores import FronteraErroresMixin
 
 # El modelo define `max_length=1000` y el rango 1-10 por validadores y
@@ -17,6 +17,8 @@ from filmai.errores.serializadores import FronteraErroresMixin
 # no un IntegrityError de la base.
 _MAX_TEXTO = Resena._meta.get_field("texto").max_length
 _MIN_VALOR, _MAX_VALOR = 1, 10
+# El orden de las dos listas de reseñas: la comunidad (C-07) y «Mis reseñas».
+_ORDENES = ("fecha-desc", "fecha-asc", "nota-desc", "nota-asc")
 
 
 class _CalificacionEntradaBase(FronteraErroresMixin, serializers.Serializer):
@@ -104,6 +106,33 @@ class ProduccionQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     tipo = serializers.ChoiceField(choices=("movie", "tv"))
 
 
+class ComunidadQuerySerializer(ProduccionQuerySerializer):
+    """`?orden=&nota_min=&nota_max=` de las reseñas de la comunidad (C-07).
+
+    Los límites de nota son inclusivos: «9 o más» es `nota_min=9` y «menos de
+    5» es `nota_max=4`.
+    """
+
+    orden = serializers.ChoiceField(choices=_ORDENES, default="fecha-desc")
+    nota_min = serializers.IntegerField(min_value=1, max_value=10, required=False)
+    nota_max = serializers.IntegerField(min_value=1, max_value=10, required=False)
+
+
+class MisResenasQuerySerializer(FronteraErroresMixin, serializers.Serializer):
+    """Filtros de «Mis reseñas» (perfil según el canvas, 15/10/2026).
+
+    El tipo va como `clase` y no como `tipo`: en esta misma ruta, `id_tmdb` +
+    `tipo` devuelven la calificación de una ficha.
+    """
+
+    q = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    texto = serializers.ChoiceField(choices=("con", "sin"), required=False)
+    clase = serializers.ChoiceField(choices=("movie", "tv"), required=False)
+    nota_min = serializers.IntegerField(min_value=1, max_value=10, required=False)
+    nota_max = serializers.IntegerField(min_value=1, max_value=10, required=False)
+    orden = serializers.ChoiceField(choices=_ORDENES, default="fecha-desc")
+
+
 class ResenaComunidadSerializer(serializers.Serializer):
     """Una ReviewCard de «Reseñas de la comunidad» (§5c).
 
@@ -123,7 +152,7 @@ class ResenaComunidadSerializer(serializers.Serializer):
     avatar_id = serializers.IntegerField(source="calificacion.usuario.avatar_id")
 
 
-class MiResenaSerializer(CalificacionSerializer):
+class MiResenaSerializer(ProduccionLocalizadaMixin, CalificacionSerializer):
     """Una ReviewCard de «Mis reseñas» (P-06), que además navega a la ficha.
 
     Extiende la de la ficha con el título y el póster: P-06 muestra una lista de
@@ -133,20 +162,3 @@ class MiResenaSerializer(CalificacionSerializer):
 
     titulo = serializers.SerializerMethodField()
     poster = serializers.SerializerMethodField()
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        idioma = self.context.get("idioma")
-        if idioma and idioma != "en":
-            data["campos_en_ingles"] = campos_en_ingles(instance.produccion, idioma)
-        return data
-
-    def get_titulo(self, calificacion):
-        return texto_localizado(
-            calificacion.produccion, "titulo", self.context.get("idioma")
-        )
-
-    def get_poster(self, calificacion):
-        return texto_localizado(
-            calificacion.produccion, "poster", self.context.get("idioma")
-        )
