@@ -129,7 +129,8 @@ declare const messages: {
       "currentAlt": "Your avatar",
       "change": "Change avatar",
       "chooseTitle": "Choose an avatar",
-      "optionsLabel": "Avatars"
+      "optionsLabel": "Avatars",
+      "optionLabel": "Avatar {number}"
     }
   },
   "legacy": {
@@ -617,11 +618,25 @@ declare const messages: {
     "password": {
       "heading": "Change password",
       "logoutWarning": "You’ll be logged out on all devices and will need to log in again.",
-      "requirements": "Between 8 and 20 characters, with at least one uppercase letter, one lowercase letter, one number, and one symbol (@ # $ % & * !)."
+      "requirements": "Between 8 and 20 characters, with at least one uppercase letter, one lowercase letter, one number, and one symbol (@ # $ % & * !).",
+      "currentRequired": "Enter your current password.",
+      "googleDescription": "Your account uses Google and doesn’t have a password yet. You can set one with a link we email you.",
+      "sendLink": "Email me a link",
+      "linkSent": "We emailed you a link to set your password.",
+      "linkError": "We couldn’t send the link. Try again later."
     },
     "account": {
       "heading": "Your account"
-    }
+    },
+    "username": {
+      "checking": "Checking availability…",
+      "taken": "Not available"
+    },
+    "feedback": {
+      "updated": "Profile updated.",
+      "passwordChanged": "Password updated. Log in again."
+    },
+    "loading": "Loading profile…"
   },
   "settings": {
     "appearance": {

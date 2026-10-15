@@ -35,11 +35,11 @@
 
 ## Phase 3: Profile (PR 4)
 
-- [ ] 3.1 Header, Personal details, Edit details with availability, read-only fields
-- [ ] 3.2 Avatar dialog (sheet on mobile) on `DialogShell`
-- [ ] 3.3 Collapsible password form; reset for accounts without a local password
-- [ ] 3.4 Mobile «Your account» list and logout confirmation
-- [ ] 3.5 Tests, `e2e/perfil.spec.ts` and `e2e/hotfix-perfil.spec.ts`
+- [x] 3.1 Header, Personal details, Edit details with availability, read-only fields
+- [x] 3.2 Avatar dialog (sheet on mobile) on `DialogShell`
+- [x] 3.3 Collapsible password form; reset for accounts without a local password
+- [x] 3.4 Mobile «Your account» list and logout confirmation
+- [x] 3.5 Tests, `e2e/perfil.spec.ts` and `e2e/hotfix-perfil.spec.ts`
 
 ## Phase 4: My reviews (PR 5)
 

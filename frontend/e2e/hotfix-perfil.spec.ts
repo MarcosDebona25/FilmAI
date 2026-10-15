@@ -62,7 +62,8 @@ for (const width of [390, 1440])
     await page.addStyleTag({ content: "body { min-height: 1600px; }" });
     await page.evaluate(() => window.scrollTo(0, 80));
     const bounds = await page.locator("main").boundingBox();
-    const image = page.locator('button[aria-label="Cambiar avatar"] img');
+    // El avatar del encabezado; el botón «Cambiar avatar» va encima, aparte.
+    const image = page.getByRole("main").getByAltText("Tu avatar");
     const original = await image.getAttribute("src");
     const scroll = await page.evaluate(() => scrollY);
     await trigger.click();
@@ -102,17 +103,18 @@ for (const theme of ["oscuro"])
       "color-scheme",
       theme === "oscuro" ? "dark" : "light"
     );
+    // Canvas: «Editar perfil» es secundario y los «Guardar» son de acento; los
+    // de acento comparten colores y todos alcanzan el contraste.
     const edit = await colors(page.getByRole("button", { name: "Editar perfil" }));
     expect(edit.contrast).toBeGreaterThanOrEqual(4.5);
     await page.getByRole("button", { name: "Editar perfil" }).click();
     const saveProfile = await colors(page.getByRole("button", { name: "Guardar cambios" }));
-    expect(saveProfile.color).toBe(edit.color);
-    expect(saveProfile.background).toBe(edit.background);
+    expect(saveProfile.contrast).toBeGreaterThanOrEqual(4.5);
     await page.getByRole("button", { name: "Cambiar avatar" }).click();
     const save = page.getByRole("dialog").getByRole("button", { name: "Guardar", exact: true });
     const saveColors = await colors(save);
-    expect(saveColors.color).toBe(edit.color);
-    expect(saveColors.background).toBe(edit.background);
+    expect(saveColors.color).toBe(saveProfile.color);
+    expect(saveColors.background).toBe(saveProfile.background);
     expect(saveColors.contrast).toBeGreaterThanOrEqual(4.5);
     await save.hover();
     expect((await colors(save)).contrast).toBeGreaterThanOrEqual(4.5);

@@ -129,7 +129,8 @@ declare const messages: {
       "currentAlt": "Tu avatar",
       "change": "Cambiar avatar",
       "chooseTitle": "Elegí un avatar",
-      "optionsLabel": "Avatares"
+      "optionsLabel": "Avatares",
+      "optionLabel": "Avatar {number}"
     }
   },
   "legacy": {
@@ -617,11 +618,25 @@ declare const messages: {
     "password": {
       "heading": "Cambiar contraseña",
       "logoutWarning": "Se cerrarán tus sesiones en todos los dispositivos. Tendrás que iniciar sesión nuevamente.",
-      "requirements": "Entre 8 y 20 caracteres, con al menos una mayúscula, una minúscula, un número y un símbolo (@ # $ % & * !)."
+      "requirements": "Entre 8 y 20 caracteres, con al menos una mayúscula, una minúscula, un número y un símbolo (@ # $ % & * !).",
+      "currentRequired": "Ingresá tu contraseña actual.",
+      "googleDescription": "Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.",
+      "sendLink": "Enviar enlace por correo",
+      "linkSent": "Te enviamos un enlace para establecer tu contraseña.",
+      "linkError": "No pudimos enviar el enlace. Intentá más tarde."
     },
     "account": {
       "heading": "Tu cuenta"
-    }
+    },
+    "username": {
+      "checking": "Comprobando disponibilidad…",
+      "taken": "No disponible"
+    },
+    "feedback": {
+      "updated": "Perfil actualizado.",
+      "passwordChanged": "Contraseña actualizada. Iniciá sesión nuevamente."
+    },
+    "loading": "Cargando perfil…"
   },
   "settings": {
     "appearance": {
