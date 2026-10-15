@@ -63,7 +63,9 @@ vi.mock("@/lib/api", async (importOriginal) => {
       if (path.startsWith("/api/lists/?")) return listas();
       if (path.startsWith("/api/reviews/?"))
         return { total: 0, total_comunidad: 0, next: null, previous: null, results: [] };
-      if (path === "/api/lists/4/") return { id: 4, nombre: "Sci Fi" };
+      if (path === "/api/lists/4/") return { id: 4, nombre: "Sci Fi", clave: null };
+      // Creada con la cuenta en español: el nombre guardado no sirve para la miga.
+      if (path === "/api/lists/1/") return { id: 1, nombre: "Favoritos", clave: "favoritos" };
       if (path === "/api/reviews/" && method === "POST") {
         estado.mia = { id: 9, fecha: "2026-10-14", texto: null, ...(opciones.body as object) };
         return structuredClone(estado.mia);
@@ -187,6 +189,17 @@ describe("ficha con sesión", () => {
     expect(await within(miga).findByRole("link", { name: "Sci Fi" })).toHaveAttribute(
       "href",
       "/lists/4"
+    );
+  });
+
+  it("viniendo de una lista predeterminada, la nombra en el idioma de la interfaz", async () => {
+    estado.params = new URLSearchParams("from=list-1");
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    const miga = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(await within(miga).findByRole("link", { name: "Favorites" })).toHaveAttribute(
+      "href",
+      "/lists/1"
     );
   });
 
