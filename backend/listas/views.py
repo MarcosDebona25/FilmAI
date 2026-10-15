@@ -4,11 +4,16 @@ from collections import defaultdict
 
 from django.db import IntegrityError, transaction
 from django.db.models import (
+    BigIntegerField,
     Case,
+    CharField,
     Count,
     Exists,
+    ExpressionWrapper,
     F,
+    Func,
     IntegerField,
+    Max,
     OuterRef,
     Q,
     Subquery,
@@ -16,14 +21,24 @@ from django.db.models import (
     When,
     Window,
 )
-from django.db.models.functions import RowNumber
+from django.db.models.functions import (
+    Cast,
+    Coalesce,
+    Collate,
+    Concat,
+    Lower,
+    LPad,
+    NullIf,
+    RowNumber,
+)
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from catalogo.models import Calificacion, TipoProduccion
+from catalogo.models import Calificacion, ProduccionTraduccion, TipoProduccion
 from catalogo.services.adapter import tmdb_a_dominio
+from catalogo.services.browse import NOTAS
 from catalogo.services.materialization import materializar
 from catalogo.services.traducciones import texto_localizado
 from filmai.idioma import idioma_efectivo
@@ -39,8 +54,10 @@ from .pagination import ListaItemCursorPagination
 from .serializers import (
     AgregarItemSerializer,
     ListaItemSerializer,
+    ListaItemsQuerySerializer,
     ListaResumenSerializer,
     NombreListaSerializer,
+    OrdenListasSerializer,
     PertenenciaQuerySerializer,
     QuitarItemQuerySerializer,
 )
@@ -73,7 +90,9 @@ def _listas_del_usuario(request, *, pertenencia=None):
             ),
         )
         .annotate(orden_predeterminada=_ORDEN_PREDETERMINADAS)
-        .order_by("orden_predeterminada", "id")
+        # Las predeterminadas, fijas adelante; las personalizadas, en el orden
+        # que eligió el usuario (L-02).
+        .order_by("orden_predeterminada", "orden", "id")
     )
 
     if pertenencia is not None:
@@ -171,10 +190,15 @@ class ListasView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             with transaction.atomic():
+                # La nueva va al final de las personalizadas, como en el canvas.
+                ultima = Lista.objects.filter(
+                    usuario=request.user, tipo=TipoLista.PERSONALIZADA
+                ).aggregate(maximo=Max("orden"))["maximo"]
                 lista = Lista.objects.create(
                     usuario=request.user,
                     nombre=serializer.validated_data["nombre"],
                     tipo=TipoLista.PERSONALIZADA,
+                    orden=(ultima or 0) + 1,
                 )
         except IntegrityError:
             raise NombreListaDuplicado from None
@@ -186,8 +210,59 @@ class ListasView(APIView):
         )
 
 
+def _resumen_de(request, lista_id):
+    """El resumen de una lista propia, con contadores y preview."""
+    _lista_propia(request, lista_id)
+    lista = next(
+        resumen for resumen in _listas_del_usuario(request) if resumen.pk == lista_id
+    )
+    return _resumen_response([lista], idioma=idioma_efectivo(request))[0]
+
+
+class ListasOrdenView(APIView):
+    """Guarda el orden de las listas personalizadas (L-02).
+
+    Recibe los ids en el orden nuevo y devuelve todas las listas como
+    `GET /api/lists/`. Es tolerante con lo que pudo cambiar en otra pestaña: los
+    ids que ya no existen (o que no son del usuario) se ignoran, y las
+    personalizadas que no vinieron quedan al final en su orden anterior. Así una
+    lista recién creada en otra pestaña no hace fallar el reordenamiento.
+    """
+
+    def put(self, request):
+        serializer = OrdenListasSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ids = serializer.validated_data["ids"]
+
+        with transaction.atomic():
+            propias = list(
+                Lista.objects.select_for_update()
+                .filter(usuario=request.user, tipo=TipoLista.PERSONALIZADA)
+                .order_by("orden", "id")
+            )
+            por_id = {lista.pk: lista for lista in propias}
+            pedidas = [por_id[pk] for pk in ids if pk in por_id]
+            resto = [lista for lista in propias if lista.pk not in set(ids)]
+            for posicion, lista in enumerate(pedidas + resto, start=1):
+                lista.orden = posicion
+            Lista.objects.bulk_update(propias, ["orden"])
+
+        return Response(
+            _resumen_response(
+                _listas_del_usuario(request), idioma=idioma_efectivo(request)
+            )
+        )
+
+
 class ListaDetailView(APIView):
-    """Renombra o elimina una lista personalizada."""
+    """Lee, renombra o elimina una lista propia.
+
+    `GET` sirve a las predeterminadas también: el detalle (L-03) y la miga
+    «Lists > {nombre}» de la ficha (`?from=list-{id}`) lo necesitan para todas.
+    """
+
+    def get(self, request, lista_id):
+        return Response(_resumen_de(request, lista_id))
 
     def put(self, request, lista_id):
         lista = _lista_propia(request, lista_id)
@@ -204,20 +279,104 @@ class ListaDetailView(APIView):
         except IntegrityError:
             raise NombreListaDuplicado from None
 
-        lista_actualizada = next(
-            resumen
-            for resumen in _listas_del_usuario(request)
-            if resumen.pk == lista.pk
-        )
-        return Response(
-            _resumen_response([lista_actualizada], idioma=idioma_efectivo(request))[0]
-        )
+        return Response(_resumen_de(request, lista.pk))
 
     def delete(self, request, lista_id):
         lista = _lista_propia(request, lista_id)
         _proteger_lista_predeterminada(lista)
         lista.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class _Unaccent(Func):
+    """`unaccent()` de PostgreSQL (la extensión ya está instalada para `__unaccent`)."""
+
+    function = "UNACCENT"
+    output_field = CharField()
+
+
+# Un cursor necesita un criterio único: la nota y el título se combinan con el
+# id del ítem en una sola clave, como `clave_nota` en «Mis reseñas».
+_ORDENES_ITEMS = {
+    "agregado-desc": ("-fecha_agregado", "-id"),
+    "agregado-asc": ("fecha_agregado", "id"),
+    "titulo-asc": ("clave_titulo",),
+    "nota-desc": ("-clave_nota",),
+    "nota-asc": ("clave_nota",),
+}
+
+_CALIFICADA = Q(produccion__calificacion_promedio__gt=0)
+
+
+def _filtrar_items(items, datos):
+    """Aplica búsqueda, tipo y tramo de nota de TMDB al detalle de una lista."""
+    q = (datos.get("q") or "").strip()
+    if q:
+        # Mismo criterio que «Mis reseñas»: título canónico o traducido, sin
+        # acentos ni mayúsculas, con `Exists` para no repetir ítems.
+        traducido = ProduccionTraduccion.objects.filter(
+            produccion=OuterRef("produccion"), titulo__unaccent__icontains=q
+        )
+        items = items.filter(
+            Q(produccion__titulo__unaccent__icontains=q) | Exists(traducido)
+        )
+    if "clase" in datos:
+        items = items.filter(produccion__tipo=tmdb_a_dominio(datos["clase"]))
+    if "nota" in datos:
+        # Un título sin nota de TMDB no entra en ningún tramo, tampoco en
+        # «Below 5» (decisión del 15/10/2026).
+        minimo, maximo = NOTAS[datos["nota"]]
+        items = items.filter(_CALIFICADA)
+        if minimo is not None:
+            items = items.filter(produccion__calificacion_promedio__gte=minimo)
+        if maximo is not None:
+            items = items.filter(produccion__calificacion_promedio__lte=maximo)
+    return items
+
+
+def _anotar_clave_orden(items, orden, idioma):
+    """Anota la clave única que usa el cursor para ordenar por nota o por título."""
+    if orden.startswith("nota"):
+        # Nota por 1000 (TMDB trae tres decimales) seguida del id del ítem. Sin
+        # nota, el título queda al final en los dos sentidos.
+        sin_nota = -1 if orden == "nota-desc" else 10_001
+        nota = Case(
+            When(
+                _CALIFICADA,
+                then=Cast(
+                    F("produccion__calificacion_promedio") * 1000, BigIntegerField()
+                ),
+            ),
+            default=Value(sin_nota),
+            output_field=BigIntegerField(),
+        )
+        return items.annotate(
+            clave_nota=ExpressionWrapper(
+                nota * 1_000_000_000 + F("id"), output_field=BigIntegerField()
+            )
+        )
+    if orden == "titulo-asc":
+        # Por el título que se ve: el traducido si existe, si no el canónico.
+        # Sin acentos ni mayúsculas y con collation «C», para que el orden de la
+        # base y la comparación del cursor sean el mismo.
+        traduccion = ProduccionTraduccion.objects.filter(
+            produccion=OuterRef("produccion"), idioma=idioma
+        ).values("titulo")[:1]
+        titulo = Coalesce(
+            NullIf(Subquery(traduccion), Value("")), F("produccion__titulo")
+        )
+        return items.annotate(
+            clave_titulo=Collate(
+                Concat(
+                    Lower(_Unaccent(titulo)),
+                    Value(" "),
+                    LPad(Cast("id", CharField()), 12, Value("0")),
+                    output_field=CharField(),
+                ),
+                "C",
+            )
+        )
+    return items
 
 
 class ListaItemsView(APIView):
@@ -227,12 +386,19 @@ class ListaItemsView(APIView):
 
     def get(self, request, lista_id):
         lista = _lista_propia(request, lista_id)
-        items = (
+        query = ListaItemsQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        datos = query.validated_data
+        idioma = idioma_efectivo(request)
+        items = _filtrar_items(
             Tiene.objects.filter(lista=lista)
             .select_related("produccion")
-            .prefetch_related("produccion__traducciones")
+            .prefetch_related("produccion__traducciones"),
+            datos,
         )
         paginator = self.pagination_class()
+        paginator.ordering = _ORDENES_ITEMS[datos["orden"]]
+        items = _anotar_clave_orden(items, datos["orden"], idioma)
         pagina = paginator.paginate_queryset(items, request, view=self)
         return paginator.get_paginated_response(
             ListaItemSerializer(

@@ -1,11 +1,18 @@
 from django.urls import path
 
-from .views import ListaDetailView, ListaItemDetailView, ListaItemsView, ListasView
+from .views import (
+    ListaDetailView,
+    ListaItemDetailView,
+    ListaItemsView,
+    ListasOrdenView,
+    ListasView,
+)
 
 app_name = "listas"
 
 urlpatterns = [
     path("", ListasView.as_view(), name="listas"),
+    path("order/", ListasOrdenView.as_view(), name="listas_orden"),
     path("<int:lista_id>/", ListaDetailView.as_view(), name="lista_detail"),
     path("<int:lista_id>/items/", ListaItemsView.as_view(), name="lista_items"),
     path(
