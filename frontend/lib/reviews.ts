@@ -27,15 +27,3 @@ export function combinarResenas(actuales: MiResena[], nuevas: MiResena[]) {
   for (const item of nuevas) if (!items.has(item.id)) items.set(item.id, item);
   return [...items.values()];
 }
-
-export function posterUrl(poster: string) {
-  if (!poster) return null;
-  if (poster.startsWith("/") && !poster.startsWith("//"))
-    return `https://image.tmdb.org/t/p/w185${poster}`;
-  try {
-    const url = new URL(poster);
-    return url.protocol === "https:" && url.hostname === "image.tmdb.org" ? url.href : null;
-  } catch {
-    return null;
-  }
-}

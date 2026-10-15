@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { ContentType } from "@/components/features/TypeSelector";
+import { StarIcon } from "@/components/ui/StarIcon";
 import type { Title } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
@@ -133,13 +134,7 @@ export function HomeHero({
                       <span className="sr-only">
                         {t("home.hero.tmdbRatingLabel", { rating: formats.rating(titulo.nota) })}
                       </span>
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        className="size-[13px] fill-primary"
-                      >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
+                      <StarIcon className="size-[13px] fill-primary" />
                       <span aria-hidden="true">{formats.rating(titulo.nota)}</span>
                     </span>
                   </>
