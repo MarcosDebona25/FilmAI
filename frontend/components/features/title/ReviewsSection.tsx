@@ -10,14 +10,20 @@ import { useAccount } from "@/components/AccountProvider";
 import { Avatar } from "@/components/Avatar";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
+import { StarIcon } from "@/components/ui/StarIcon";
 import { apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
+import {
+  ETIQUETA_ORDEN,
+  ORDENES,
+  ORDEN_API,
+  parametrosNota,
+  type Orden,
+} from "@/lib/review-filters";
+import { NOTAS, de, etiquetaNota, type Nota } from "@/lib/search";
 import type { MiCalificacion } from "@/lib/title";
 import { useDesborde } from "@/lib/use-desborde";
-
-const ESTRELLA =
-  "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2";
 
 type Resena = {
   nombre_usuario: string;
@@ -33,23 +39,10 @@ type Pagina = {
   results: Resena[];
 };
 
-// Opciones del canvas → parámetros de la API («Below 5» es `nota_max=4`).
-const FILTROS: Record<string, string> = {
-  "0": "",
-  "9+": "&nota_min=9",
-  "8+": "&nota_min=8",
-  "7+": "&nota_min=7",
-  "6+": "&nota_min=6",
-  "5+": "&nota_min=5",
-  m5: "&nota_max=4",
-};
-
 function Nota({ valor }: { valor: number }) {
   return (
     <span className="inline-flex items-center gap-1.5 font-bold tabular-nums">
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-[15px] fill-primary">
-        <polygon points={ESTRELLA} />
-      </svg>
+      <StarIcon className="size-[15px] fill-primary" />
       {valor}
     </span>
   );
@@ -106,14 +99,19 @@ export function ReviewsSection({
   const { perfil, avatares = [] } = useAccount();
   const tituloId = useId();
   const tuyaId = useId();
-  const [orden, setOrden] = useState("fecha-desc");
-  const [nota, setNota] = useState("0");
+  const [orden, setOrden] = useState<Orden>("newest");
+  const [nota, setNota] = useState<Nota | null>(null);
   const [pagina, setPagina] = useState<Pagina | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargandoMas, setCargandoMas] = useState(false);
   const [borrar, setBorrar] = useState(false);
 
-  const consulta = `/api/reviews/?id_tmdb=${idTmdb}&tipo=${tipo}&orden=${orden}${FILTROS[nota]}`;
+  const consulta = `/api/reviews/?${new URLSearchParams({
+    id_tmdb: String(idTmdb),
+    tipo,
+    orden: ORDEN_API[orden],
+    ...(nota && parametrosNota(nota)),
+  })}`;
 
   useEffect(() => {
     let vigente = true;
@@ -158,7 +156,7 @@ export function ReviewsSection({
     .map((parte) => String(parte).padStart(2, "0"))
     .join("-");
   const fecha = (valor: string) => (valor === hoy ? t("title.reviews.today") : formats.date(valor));
-  const filtrando = nota !== "0";
+  const filtrando = nota !== null;
   const avatar = (id: number) => avatares.find((opcion) => opcion.id === id)?.src;
   const pildora =
     "inline-flex h-11 items-center gap-2 rounded-full pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)]";
@@ -227,8 +225,8 @@ export function ReviewsSection({
               <button
                 type="button"
                 onClick={() => {
-                  setNota("0");
-                  setOrden("fecha-desc");
+                  setNota(null);
+                  setOrden("newest");
                 }}
                 className="h-9 cursor-pointer px-1 text-sm font-semibold text-fg-2 underline underline-offset-[3px] hover:text-foreground"
               >
@@ -241,29 +239,28 @@ export function ReviewsSection({
               {t("common.filters.sortLabel")}
               <select
                 value={orden}
-                onChange={(event) => setOrden(event.target.value)}
+                onChange={(event) => setOrden(de(ORDENES, event.target.value) ?? "newest")}
                 className={selector}
               >
-                <option value="fecha-desc">{t("common.sort.newest")}</option>
-                <option value="fecha-asc">{t("common.sort.oldest")}</option>
-                <option value="nota-desc">{t("common.sort.highestRating")}</option>
-                <option value="nota-asc">{t("common.sort.lowestRating")}</option>
+                {ORDENES.map((valor) => (
+                  <option key={valor} value={valor}>
+                    {t(ETIQUETA_ORDEN[valor])}
+                  </option>
+                ))}
               </select>
             </label>
             <label className={pildora}>
               {t("common.rating.label")}
               <select
-                value={nota}
-                onChange={(event) => setNota(event.target.value)}
+                value={nota ?? ""}
+                onChange={(event) => setNota(de(NOTAS, event.target.value))}
                 className={selector}
               >
-                <option value="0">{t("common.filters.anyRating")}</option>
-                <option value="9+">{t("common.filters.ratingAtLeastNine")}</option>
-                <option value="8+">{t("common.filters.ratingAtLeastEight")}</option>
-                <option value="7+">{t("common.filters.ratingAtLeastSeven")}</option>
-                <option value="6+">{t("common.filters.ratingAtLeastSix")}</option>
-                <option value="5+">{t("common.filters.ratingAtLeastFive")}</option>
-                <option value="m5">{t("common.filters.ratingBelowFive")}</option>
+                {[null, ...NOTAS].map((valor) => (
+                  <option key={valor ?? ""} value={valor ?? ""}>
+                    {etiquetaNota(t, valor)}
+                  </option>
+                ))}
               </select>
             </label>
           </div>

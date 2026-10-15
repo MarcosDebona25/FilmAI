@@ -272,10 +272,8 @@ test.describe("ficha en escritorio con sesión", () => {
     const estado = await prepararFicha(page);
     await page.goto("/movie/157336");
 
-    await page
-      .getByRole("combobox", { name: en.common.filters.sortLabel })
-      .selectOption("nota-desc");
-    await page.getByRole("combobox", { name: en.common.rating.label }).selectOption("9+");
+    await page.getByRole("combobox", { name: en.common.filters.sortLabel }).selectOption("highest");
+    await page.getByRole("combobox", { name: en.common.rating.label }).selectOption("9");
     await expect(page.getByRole("heading", { name: "Showing 1 of 3" })).toBeVisible();
     expect(estado.consultas.at(-1)).toContain("orden=nota-desc");
     expect(estado.consultas.at(-1)).toContain("nota_min=9");

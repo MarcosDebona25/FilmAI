@@ -8,13 +8,11 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { ListsMenu } from "@/components/features/title/ListsMenu";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
+import { StarIcon } from "@/components/ui/StarIcon";
 import { ApiError, apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
 import { actualizarLista, conItem, sinItem, type ListaFicha } from "@/lib/title-lists";
 import { cn } from "@/lib/utils";
-
-const ESTRELLA =
-  "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2";
 
 // Toast de cada lista predeterminada al agregar y al quitar.
 const AVISOS = {
@@ -195,13 +193,9 @@ export function TitleActions({
             : "bg-primary text-primary-foreground md:px-[22px]"
         )}
       >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
+        <StarIcon
           className={cn("size-5 md:size-[18px]", miCalificacion ? "fill-primary" : "fill-current")}
-        >
-          <polygon points={ESTRELLA} />
-        </svg>
+        />
         {miCalificacion ? (
           <>
             <span className="md:hidden">{t("title.rating.yourRating")}</span>

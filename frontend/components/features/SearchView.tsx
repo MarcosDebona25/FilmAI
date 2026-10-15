@@ -6,8 +6,9 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { FiltersSheet } from "@/components/features/FiltersSheet";
-import { MediaCard } from "@/components/features/MediaCard";
+import { MediaCard, MediaCardSkeleton } from "@/components/features/MediaCard";
 import { TypeSelector, type ContentType } from "@/components/features/TypeSelector";
+import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { ApiError } from "@/lib/api";
 import { normalizeTitles, type TmdbItem } from "@/lib/catalog";
 import { translateError } from "@/lib/errors";
@@ -352,25 +353,16 @@ export function SearchView() {
       )}
 
       {resultados.status === "error" && resultados.paginas.length === 0 ? (
-        <div className="flex flex-col items-start gap-4 py-16">
-          <p role="alert" className="text-fg-2">
-            {mensaje(resultados.error)}
-          </p>
-          <button
-            type="button"
-            onClick={() => setIntento((anterior) => anterior + 1)}
-            className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {t("common.actions.retry")}
-          </button>
-        </div>
+        <ErrorRetry
+          mensaje={mensaje(resultados.error)}
+          onReintentar={() => setIntento((anterior) => anterior + 1)}
+          alertaEnTexto
+          className="gap-4 py-16"
+        />
       ) : resultados.status === "loading" ? (
         <ul aria-hidden="true" className={GRILLA}>
           {Array.from({ length: 12 }, (_, i) => (
-            <li key={i} className="flex flex-col gap-2.5">
-              <span className="block aspect-[2/3] w-full animate-pulse rounded-lg bg-raised motion-reduce:animate-none" />
-              <span className="h-4 w-3/4 animate-pulse rounded bg-raised motion-reduce:animate-none" />
-            </li>
+            <MediaCardSkeleton key={i} />
           ))}
         </ul>
       ) : titulos.length === 0 ? (
@@ -425,26 +417,17 @@ export function SearchView() {
           {resultados.cargandoMas && (
             <ul aria-hidden="true" className={GRILLA}>
               {Array.from({ length: 6 }, (_, i) => (
-                <li key={i} className="flex flex-col gap-2.5">
-                  <span className="block aspect-[2/3] w-full animate-pulse rounded-lg bg-raised motion-reduce:animate-none" />
-                  <span className="h-4 w-3/4 animate-pulse rounded bg-raised motion-reduce:animate-none" />
-                </li>
+                <MediaCardSkeleton key={i} />
               ))}
             </ul>
           )}
           {resultados.status === "error" && (
-            <div className="flex flex-col items-start gap-4 py-6">
-              <p role="alert" className="text-fg-2">
-                {mensaje(resultados.error)}
-              </p>
-              <button
-                type="button"
-                onClick={() => setIntento((anterior) => anterior + 1)}
-                className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                {t("common.actions.retry")}
-              </button>
-            </div>
+            <ErrorRetry
+              mensaje={mensaje(resultados.error)}
+              onReintentar={() => setIntento((anterior) => anterior + 1)}
+              alertaEnTexto
+              className="gap-4 py-6"
+            />
           )}
           <div ref={centinela} aria-hidden="true" />
         </>

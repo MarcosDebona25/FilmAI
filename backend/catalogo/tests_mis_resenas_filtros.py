@@ -130,6 +130,17 @@ class MisResenasFiltrosTests(TestCase):
                 self.assertEqual(respuesta.status_code, 400)
                 self.assertEqual(respuesta.data["errors"][0]["field"], campo)
 
+    def test_orden_invalido_informa_los_valores_permitidos(self):
+        # Igual que la comunidad (C-07): el frontend arma el mensaje con
+        # `allowedValues`, no con el texto en inglés.
+        respuesta = self.api.get("/api/reviews/mias/", {"orden": "azar"})
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(
+            respuesta.data["errors"][0]["params"],
+            {"allowedValues": ["fecha-desc", "fecha-asc", "nota-desc", "nota-asc"]},
+        )
+
     def test_tipo_solo_sigue_siendo_400(self):
         # Medio filtro de ficha es un error a propósito (C-08): un frontend que
         # olvide `id_tmdb` no puede recibir la lista entera.

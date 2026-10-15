@@ -94,15 +94,17 @@ describe("reseñas de la comunidad", () => {
     await screen.findByText("@lucia.cine");
 
     fireEvent.change(screen.getByRole("combobox", { name: "Sort" }), {
-      target: { value: "nota-asc" },
+      target: { value: "lowest" },
     });
     await waitFor(() => expect(estado.llamadas.at(-1)).toContain("orden=nota-asc"));
-    fireEvent.change(screen.getByRole("combobox", { name: "Rating" }), { target: { value: "9+" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Rating" }), { target: { value: "9" } });
 
     expect(await screen.findByRole("heading", { name: "Showing 1 of 3" })).toBeInTheDocument();
     expect(estado.llamadas.at(-1)).toContain("nota_min=9");
 
-    fireEvent.change(screen.getByRole("combobox", { name: "Rating" }), { target: { value: "m5" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Rating" }), {
+      target: { value: "lt5" },
+    });
     await waitFor(() => expect(estado.llamadas.at(-1)).toContain("nota_max=4"));
 
     fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));

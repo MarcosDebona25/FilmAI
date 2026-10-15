@@ -8,10 +8,10 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAccount } from "@/components/AccountProvider";
+import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { MyReviewItem, type AccionResena } from "@/components/features/reviews/MyReviewItem";
 import {
   ETIQUETA_CLASE,
-  ETIQUETA_ORDEN,
   ETIQUETA_PRESENCIA,
   ReviewFiltersSheet,
 } from "@/components/features/reviews/ReviewFiltersSheet";
@@ -22,7 +22,6 @@ import {
   CLASES,
   FILTROS_VACIOS,
   MAX_TEXTO,
-  ORDENES,
   PRESENCIAS,
   consultaApi,
   filtrosActivos,
@@ -32,6 +31,7 @@ import {
   urlDeFiltros,
   type FiltrosResenas,
 } from "@/lib/my-reviews";
+import { ETIQUETA_ORDEN, ORDENES } from "@/lib/review-filters";
 import { combinarResenas, rutaPagina, type MiResena, type PaginaResenas } from "@/lib/reviews";
 import { routes } from "@/lib/routes";
 import { ETIQUETA_NOTA, NOTAS } from "@/lib/search";
@@ -288,16 +288,7 @@ export function MyReviewsView() {
       </div>
 
       {errorCuenta ? (
-        <div role="alert" className="flex flex-col items-start gap-3">
-          <p className="text-fg-2">{errorCuenta}</p>
-          <button
-            type="button"
-            onClick={() => void recargar()}
-            className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {t("common.actions.retry")}
-          </button>
-        </div>
+        <ErrorRetry mensaje={errorCuenta} onReintentar={() => void recargar()} boton="pildora" />
       ) : (
         <>
           {!sinNada && (
@@ -492,19 +483,12 @@ export function MyReviewsView() {
           )}
 
           {estado === "error" && (
-            <div
-              role="alert"
-              className="flex flex-col items-start gap-3 border-t border-line py-10"
-            >
-              <p className="text-fg-2">{t("reviews.results.loadError")}</p>
-              <button
-                type="button"
-                onClick={() => setIntento((anterior) => anterior + 1)}
-                className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                {t("common.actions.retry")}
-              </button>
-            </div>
+            <ErrorRetry
+              mensaje={t("reviews.results.loadError")}
+              onReintentar={() => setIntento((anterior) => anterior + 1)}
+              boton="pildora"
+              className="border-t border-line py-10"
+            />
           )}
 
           {sinNada && estado === "listo" && (
@@ -547,19 +531,15 @@ export function MyReviewsView() {
                 ))}
               </ol>
               {mas === "error" && (
-                <div role="alert" className="flex flex-col items-start gap-3 pt-6">
-                  <p className="text-fg-2">{t("reviews.results.loadError")}</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMas("quieto");
-                      cargarMas();
-                    }}
-                    className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-                  >
-                    {t("common.actions.retry")}
-                  </button>
-                </div>
+                <ErrorRetry
+                  mensaje={t("reviews.results.loadError")}
+                  onReintentar={() => {
+                    setMas("quieto");
+                    cargarMas();
+                  }}
+                  boton="pildora"
+                  className="pt-6"
+                />
               )}
               {datos.next && mas !== "error" && (
                 <div ref={centinela} className="flex justify-center pt-6">
