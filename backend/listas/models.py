@@ -52,6 +52,13 @@ class Lista(models.Model):
         default=TipoLista.PERSONALIZADA,
     )
     activa = models.BooleanField("activa", default=True)
+    orden = models.PositiveIntegerField(
+        "orden",
+        default=0,
+        help_text="Posición de una lista personalizada en «Lists» (L-02). Las "
+        "predeterminadas van siempre primero en orden fijo y no lo usan; las "
+        "nuevas entran al final. Empates (datos viejos) se desempatan por id.",
+    )
     usuario = models.ForeignKey(
         "usuarios.Usuario",
         on_delete=models.CASCADE,

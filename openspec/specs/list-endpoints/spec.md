@@ -37,6 +37,11 @@ Each list MUST include its ID, name, type, nullable `clave`, `cantidad_items`,
 paths in `preview_posters`.
 Personalized lists MUST expose `clave = null`. Predetermined summaries MUST
 be ordered by `favoritos`, `pendientes`, `vistas`, even after a stored rename.
+Personalized summaries MUST follow them, ordered by `Lista.orden` and then by ID.
+
+`GET /api/lists/{id}/` MUST return the same summary for a single owned list,
+predetermined or personalized (L-03 header and the title page breadcrumb
+`?from=list-{id}`).
 
 When `id_tmdb` and `tipo` (`movie` or `tv`) are supplied together, every list
 MUST also include `contiene` and, when true, `item_id`. Supplying only one of
@@ -48,6 +53,21 @@ those parameters MUST return 400 and the lookup MUST NOT materialize data.
 `PUT /api/lists/{id}/` MUST rename only personalized lists. `DELETE
 /api/lists/{id}/` MUST permanently delete only personalized lists and their
 items.
+
+A new personalized list MUST be placed after the existing ones.
+
+`PUT /api/lists/order/` MUST accept `{"ids": [...]}`, the personalized lists in
+their new order (L-02, decided 15/10/2026), and return all summaries as
+`GET /api/lists/`. IDs that are not one of the user's personalized lists MUST be
+ignored, and personalized lists left out MUST keep their previous relative
+order after the listed ones, so a stale tab cannot fail the request. Repeated
+or non-positive IDs MUST return 400 on field `ids`.
+
+#### Scenario: Reordering with a stale tab
+
+- GIVEN personalized lists A, B, C, and a tab that only knows A and C
+- WHEN it sends `{"ids": [C, A]}`
+- THEN the order is C, A, B and the predetermined lists stay first
 
 Names MUST be unique per user without case sensitivity, be at most 80
 characters, and allow Unicode letters, numbers, and spaces.
@@ -66,7 +86,20 @@ from model values and the backend reservation registry.
 
 `GET /api/lists/{id}/items/` MUST use cursor pagination of 20 items ordered by
 most recent `fecha_agregado` first. Each item MUST include its `item_id`,
-addition date, and the production fields needed by a MediaCard.
+addition date, and the production fields needed by a MediaCard, including the
+TMDB average as `calificacion_promedio` (`null` when TMDB has no rating, which
+it reports as 0). The response MUST include `total`, the count of items that
+pass the filters.
+
+The endpoint MUST accept the L-03 filters, validated with 400 on the offending
+field: `q` (up to 100 characters; matches the canonical or a translated title
+without case or accents), `clase` (`movie` or `tv`), `nota` (the Search
+buckets `9+`…`5+` and `m5`, over the TMDB average) and `orden`
+(`agregado-desc` by default, `agregado-asc`, `titulo-asc`, `nota-desc`,
+`nota-asc`). Rating buckets MUST exclude unrated productions, and rating orders
+MUST place them last in both directions (decided 15/10/2026). `titulo-asc`
+MUST sort by the title shown in the effective language. Every order MUST keep
+the cursor stable across ties.
 
 `POST /api/lists/{id}/items/` MUST accept `(id_tmdb, tipo)`, call
 `materializar()` before creating `Tiene`, and reject an existing relation with
