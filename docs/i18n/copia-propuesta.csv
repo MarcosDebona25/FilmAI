@@ -127,3 +127,14 @@ search.filters.upcoming,,label,,A estrenar,Upcoming,aprobado
 search.filters.decade,,label,decade,Década de {decade},{decade}s,aprobado
 settings.language.interfaceLabel,,label,,Idioma de la interfaz,Interface language,aprobado
 settings.language.interfaceHelp,,label,,Se aplica al instante y se guarda en tu cuenta. También lo usamos para los correos que te mandamos.,Applies instantly and is saved to your account. Also used for the emails we send you.,aprobado
+profile.username.checking,,status,,Comprobando disponibilidad…,Checking availability…,aprobado
+profile.username.taken,,status,,No disponible,Not available,aprobado
+profile.feedback.updated,,feedback,,Perfil actualizado.,Profile updated.,aprobado
+profile.feedback.passwordChanged,,feedback,,Contraseña actualizada. Iniciá sesión nuevamente.,Password updated. Log in again.,aprobado
+profile.password.currentRequired,,error,,Ingresá tu contraseña actual.,Enter your current password.,aprobado
+profile.password.googleDescription,,label,,"Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.",Your account uses Google and doesn’t have a password yet. You can set one with a link we email you.,aprobado
+profile.password.sendLink,,label,,Enviar enlace por correo,Email me a link,aprobado
+profile.password.linkSent,,feedback,,Te enviamos un enlace para establecer tu contraseña.,We emailed you a link to set your password.,aprobado
+profile.password.linkError,,error,,No pudimos enviar el enlace. Intentá más tarde.,We couldn’t send the link. Try again later.,aprobado
+profile.loading,,status,,Cargando perfil…,Loading profile…,aprobado
+common.avatar.optionLabel,,label,number,Avatar {number},Avatar {number},aprobado

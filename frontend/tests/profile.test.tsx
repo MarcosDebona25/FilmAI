@@ -125,7 +125,8 @@ describe("edición de perfil", () => {
     fireEvent.change(screen.getByLabelText("Nombre de usuario", { exact: true }), {
       target: { value: "disponible" },
     });
-    expect(await screen.findByText("Disponible", { exact: true })).toHaveClass("text-green-700");
+    // Colores del canvas: `ok` (verde) y `destructive` (rojo).
+    expect(await screen.findByText("Disponible", { exact: true })).toHaveClass("text-ok");
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({ disponible: false }),
@@ -134,7 +135,7 @@ describe("edición de perfil", () => {
       target: { value: "ocupado" },
     });
     await waitFor(() =>
-      expect(screen.getByText("No disponible", { exact: true })).toHaveClass("text-red-700")
+      expect(screen.getByText("No disponible", { exact: true })).toHaveClass("text-destructive")
     );
   });
 });

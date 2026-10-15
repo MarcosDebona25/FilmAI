@@ -6,14 +6,11 @@ import { prepararCuenta } from "./cuenta";
 test("edita nombre compuesto y avatar; la navbar refleja el cambio", async ({ page }) => {
   const cuenta = await prepararCuenta(page);
   await page.goto("/profile");
-  await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
+  // Canvas: el título de la página es el nombre de la persona.
+  await expect(page.getByRole("heading", { level: 1, name: "Juan Pérez" })).toBeVisible();
   await expect(page.getByText("Pérez", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Editar perfil" }).click();
-  await expect(
-    page
-      .getByText("Solo letras y espacios entre palabras; máximo 50 caracteres.", { exact: false })
-      .first()
-  ).toBeVisible();
+  await expect(page.getByText(es.auth.signUp.nameHelp).first()).toBeVisible();
   await page.getByLabel("Nombre", { exact: true }).fill("  Juan   Carlos  ");
   await page.getByLabel("Apellido", { exact: true }).fill(" De   la Cruz ");
   await page.getByRole("button", { name: "Cambiar avatar" }).click();
@@ -42,7 +39,9 @@ test("enfoca el dato inválido y advierte antes de perder cambios", async ({ pag
   await page.getByLabel("Apellido", { exact: true }).fill("123");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByLabel("Apellido", { exact: true })).toBeFocused();
-  await expect(page.locator("#apellido-error")).toHaveText(es.errors.codes.person_name_invalid);
+  await expect(
+    page.getByRole("alert").filter({ hasText: es.errors.codes.person_name_invalid })
+  ).toBeVisible();
 
   await page.getByRole("banner").getByRole("link", { name: es.nav.main.brandHomeLabel }).click();
   await expect(page.getByRole("dialog", { name: "¿Salir sin guardar?" })).toBeVisible();
@@ -89,7 +88,8 @@ test("confirma navegación a un enlace y atrás/adelante sin perder el destino",
   await page.getByRole("button", { name: "Salir sin guardar" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/home");
 });
-for (const theme of ["oscuro", "claro"])
+// Solo tema oscuro desde el 15/10/2026.
+for (const theme of ["oscuro"])
   test(`disponibilidad verde y roja en tema ${theme}`, async ({ page }) => {
     await prepararCuenta(page);
     await page.route("**/api/preferences/", (route) =>
@@ -101,9 +101,10 @@ for (const theme of ["oscuro", "claro"])
     await page.goto("/profile");
     await page.getByRole("button", { name: "Editar perfil" }).click();
     await page.getByLabel("Nombre de usuario", { exact: true }).fill("disponible");
-    await expect(page.getByText("Disponible", { exact: true })).toHaveClass(/text-green/);
+    // Colores del canvas: `ok` y `destructive`.
+    await expect(page.getByText("Disponible", { exact: true })).toHaveClass(/text-ok/);
     await page.getByLabel("Nombre de usuario", { exact: true }).fill("ocupado");
-    await expect(page.getByText("No disponible", { exact: true })).toHaveClass(/text-red/);
+    await expect(page.getByText("No disponible", { exact: true })).toHaveClass(/text-destructive/);
   });
 
 test("adelante con cambios permite continuar editando o confirmar el destino", async ({ page }) => {
