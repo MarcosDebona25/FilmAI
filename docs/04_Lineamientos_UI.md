@@ -474,7 +474,7 @@ de un componente "Modal" en Figma:
 ## 5e. Sección Listas (CU-009, CU-012)
 
 > Las listas son personales. Las predeterminadas (Favoritos, Pendientes, Vistas) se crean automáticamente al registrarse y no pueden renombrarse, eliminarse ni reordenarse. Se identifican por su clave y la interfaz muestra la etiqueta del idioma activo (Favorites, Watchlist, Watched en inglés); no se puede crear una lista personalizada con esos nombres en ningún idioma.
-> Las listas personalizadas se gestionan con modales dedicados y se reordenan con drag & drop.
+> Las listas personalizadas se gestionan con modales dedicados (en celular, hojas desde abajo) y se reordenan con drag & drop (`@dnd-kit`): en escritorio desde la manija de la tarjeta, en celular con una pulsación larga de ~250 ms; si el dedo se mueve antes, es scroll y no arrastre. También se reordenan desde el menú ⋯ (16/10/2026).
 
 ### Vista General de Listas
 
@@ -520,13 +520,14 @@ de un componente "Modal" en Figma:
 - **Conteo**: dato principal "N ítems"; debajo, desglose "X películas · Y series". La ListCard recibe ambos valores para informar la composición de la lista sin cargar sus ítems completos.
 - **Mini preview**: hasta 5 posters solapados en thumbnail (32×48px). Si la lista tiene menos de 5 items, se muestran los que haya. Si está vacía, se muestra un placeholder gris.
 - **Badge**: "Predeterminada" en listas del sistema. Color gris neutro, esquina superior izquierda.
-- **Menú contextual** (`⋮` vertical, esquina superior derecha): solo en listas personalizadas. Click → dropdown: Renombrar / Eliminar. Visible siempre, no solo en hover.
+- **Manija de arrastre** (seis puntos, solo escritorio): solo en listas personalizadas; también se opera con teclado (Espacio levanta, flechas mueven, Espacio suelta, con anuncios traducidos).
+- **Menú contextual** (`⋯`, esquina superior derecha): solo en listas personalizadas. Escritorio → menú: Renombrar / Mover a la izquierda / Mover a la derecha / Eliminar. Celular → hoja inferior: Renombrar / Subir / Bajar / Eliminar. Visible siempre, no solo en hover.
 - **Comportamiento**: click en la card → navega al detalle de la lista.
 
 #### Orden y reordenamiento
 
 1. **Predeterminadas fijas**: primera fila, orden inmutable: Favoritos → Pendientes → Vistas. No se arrastran ni se mueven. No tienen menú.
-2. **Personalizadas**: ordenadas por fecha de creación (más reciente al final). El usuario puede reordenarlas con **drag & drop**: al arrastrar una card, las demás se desplazan para hacer lugar (animación de transición). El nuevo orden se persiste en BD.
+2. **Personalizadas**: ordenadas por fecha de creación (más reciente al final). El usuario puede reordenarlas con **drag & drop**: al arrastrar una card, las demás se desplazan para hacer lugar (animación de transición). El nuevo orden se persiste en BD (`PUT /api/lists/order/`); si falla, vuelve al orden anterior y avisa. En celular, mantener presionado no abre el menú ni la vista previa del sistema (`-webkit-touch-callout: none`, `user-select: none`, `contextmenu` anulado en pantallas táctiles).
 
 #### Card "Agregar" (esqueleto)
 
@@ -587,13 +588,13 @@ de un componente "Modal" en Figma:
 #### Header de la lista
 
 - **Nombre de la lista**: título de sección (heading).
-- **Menú de acciones** (`⋮` vertical): solo en listas personalizadas. Dropdown: Renombrar / Eliminar.
+- **Menú de acciones** (`⋯`): solo en listas personalizadas. Escritorio: menú; celular: hoja inferior. Renombrar / Eliminar lista.
 - **Listas predeterminadas**: no muestran menú de acciones sobre la lista en sí. Solo se pueden quitar ítems individuales.
 
 #### Grid de items
 
-- **5 columnas desktop → 3 tablet → 2 mobile**.
-- Cada **MediaCard** tiene un botón `✕` en la esquina superior derecha, visible solo en hover. Click → modal de confirmación para quitar el ítem.
+- **Escritorio**: grilla `auto-fill` de tarjetas de al menos 220 px; **celular**: 2 columnas.
+- Cada **MediaCard** tiene un botón `✕` en la esquina superior derecha, visible al hover o al foco en escritorio y siempre en pantallas táctiles. Click → confirmación para quitar el ítem. En «Watched», si el título está calificado, el backend responde 409 (Conflict) y se pide confirmar el borrado de la calificación (y la reseña) antes de reintentar.
 - Click en la card → navega a Ficha de detalle (misma pantalla de la sección 5c). El breadcrumb se extiende a: `Listas > {nombre lista} > {título}`.
 - **Scroll vertical**: sin paginación. Se cargan más resultados a medida que el usuario hace scroll.
 
@@ -1256,7 +1257,7 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 
 - **Modal:** Al abrirse, el foco debe moverse al primer elemento interactivo del modal. Al cerrarse, el foco debe retornar al elemento que lo disparó. La tecla Escape cierra el modal. El contenido detrás del modal debe estar oculto para lectores de pantalla (`aria-hidden`).
 - **Star Widget:** Las estrellas deben ser navegables con teclado (flechas izquierda/derecha para seleccionar, Enter para confirmar). Cada estrella debe tener un `aria-label` con su valor (ej: "4 de 10 estrellas").
-- **Drag & Drop de listas:** El reordenamiento de listas personalizadas debe ofrecer una alternativa accesible sin mouse: botones "Mover arriba" y "Mover abajo" visibles al recibir foco, o menú contextual con opciones "Mover arriba / Mover abajo". El drag & drop sigue siendo la interacción principal para usuarios de mouse/touch.
+- **Drag & Drop de listas:** El reordenamiento de listas personalizadas ofrece alternativas accesibles sin mouse: la manija se opera con teclado (Espacio, flechas, Espacio) y el menú ⋯ ofrece "Mover a la izquierda / derecha" (escritorio) y "Subir / Bajar" (celular). El drag & drop sigue siendo la interacción principal para usuarios de mouse/touch.
 - **Toggle switches:** Deben tener roles ARIA apropiados (`role="switch"`, `aria-checked`).
 - **FAB del chatbot:** Debe ser accesible por teclado y tener un `aria-label="Abrir chatbot de recomendaciones"`.
 - **Toast/Notificaciones:** Deben usar `role="alert"` o `aria-live="polite"` para ser anunciadas por lectores de pantalla.

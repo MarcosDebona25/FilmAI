@@ -22,7 +22,7 @@ export function ConfirmDialog({
   onCancel,
 }: {
   titulo: string;
-  descripcion: ReactNode;
+  descripcion?: ReactNode;
   preview?: string | null;
   confirmar: string;
   onConfirm: () => Promise<void>;
@@ -52,7 +52,7 @@ export function ConfirmDialog({
     <DialogShell
       role="alertdialog"
       labelledBy={tituloId}
-      describedBy={descripcionId}
+      describedBy={descripcion ? descripcionId : undefined}
       onClose={onCancel}
       busy={enviando}
       initialFocus={() => cancelar.current}
@@ -61,9 +61,11 @@ export function ConfirmDialog({
       <h2 id={tituloId} className="font-display text-[30px] leading-none md:text-[34px]">
         {titulo}
       </h2>
-      <p id={descripcionId} className="leading-[1.6] text-pretty">
-        {descripcion}
-      </p>
+      {descripcion && (
+        <p id={descripcionId} className="leading-[1.6] text-pretty">
+          {descripcion}
+        </p>
+      )}
       {preview && (
         <div className="flex flex-col items-start gap-1">
           <blockquote
