@@ -4166,3 +4166,14 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Tests**: `tests_browse.py` reescribe los de texto: siempre 5 páginas con el año, total y páginas de la ventana, «Dune: Part Three» (0 votos, popularidad 32) 5.ª de 100 con el orden exacto de los primeros 5, «Todo» mezclado en orden y de a 40. A la captura `tmdb_buscar.json` se le sumó la popularidad real de cada título, por id, sin cambiar lo demás.
 - **Verificado contra TMDB real**: «the office» → The Office (5579 votos) primero; «it» → It; «avengers» → los cuatro clásicos y Doomsday 5.º.
 - **Archivos afectados**: `backend/catalogo/services/browse.py`, `backend/catalogo/tests_browse.py`, `backend/catalogo/test_datos/tmdb_buscar.json`, doc 04 §5b, spec `tmdb-endpoints`, `docs/decisiones.md`.
+
+## 15/10/2026 — SDD de Perfil, Settings y Mis reseñas según el canvas
+
+- **Fecha**: 15/10/2026
+- **Descripción**: SDD en `openspec/changes/perfil-canvas/` para rehacer `/profile`, `/settings` y `/my-reviews` según el canvas (secciones 9 y 6), más la miga de Términos en escritorio. Estas pantallas eran de Marcos en el reparto del 13/10/2026. El 15/10 las tomó Gonza, porque Marcos no las había empezado (sin ramas ni PRs; lo último suyo, del 12/10, fueron acceso y Términos en celular).
+  1. **Errores encontrados al revisarlas**: Perfil y Mis reseñas mezclan idiomas, porque parte del texto está escrito a mano (AGENTS.md §10); Mis reseñas deja dos tarjetas de carga para siempre, no tiene miga, filtros ni links a la ficha, y usa el modal viejo de calificar.
+  2. **Solo tema oscuro por ahora** (decisión del usuario). El tema claro está roto en toda la app: solo cambian el fondo y el acento, porque los tokens propios (superficies, líneas, textos, velos) existen solo para oscuro. Settings deja de ofrecer el selector y `AccountProvider` aplica oscuro aunque la cuenta tenga «claro» guardado. La preferencia `tema` sigue en la API para cuando se haga la paleta clara del canvas.
+  3. **Se mantiene «Perfil público»** aunque el canvas no lo tiene (decisión del usuario): el día de mañana puede servir para que cada uno decida si sus calificaciones y reseñas son públicas. Como hoy las reseñas de la comunidad ya son públicas en la ficha, conserva el aviso de que se guarda pero todavía no cambia nada.
+  4. **Filtros de Mis reseñas en el backend** (`reviews/mias/`: `q`, `texto`, `clase`, `nota_min`/`nota_max`, `orden`, con `total` y `total_propias`). Con paginación por cursor no se puede filtrar del lado del cliente. El tipo va como `clase`, porque `id_tmdb` + `tipo` ya cambian la respuesta a «la calificación de una ficha».
+- **Entrega**: cinco PRs (SDD, backend, Settings, Perfil, Mis reseñas).
+- **Archivos afectados**: `openspec/changes/perfil-canvas/`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.

@@ -19,8 +19,8 @@ Actualizado el **14/10/2026** en la rama `develop/ui-design`. Fuente de verdad v
 | 13 · Emails | Los 4 correos transaccionales (inglés y español) | ✅ Completa | `backend/templates/correos/` | Revisarlos en un cliente de correo real. |
 | Navegación | Navbar, barra inferior del celular y Footer (con «Ask FilmAI») | ✅ Completa | `components/Navbar.tsx`, `MobileTabs.tsx`, `Footer.tsx` | El enlace Lists lleva a 404 hasta que exista su pantalla; Search existe desde C-06 (14/10/2026). |
 | 9 · Profile and settings | Terms and Conditions | 🟡 Parcial | `/terms` | Celular completo. En escritorio falta la miga de pan Profile › Settings › Terms con sesión. |
-| 9 · Profile and settings | My profile, Settings | 🔁 Rehacer | `/profile`, `/settings` | El código es anterior al canvas y no coincide con los artboards (escritorio y celular). Settings conserva la sección «Language» con el selector EN \| ES. |
-| 6 · Ratings & reviews | Ratings & reviews | 🔁 Rehacer | `/my-reviews` | Mismo caso: rehacer según el artboard. |
+| 9 · Profile and settings | My profile, Settings | 🔁 Rehacer (en curso, Gonza) | `/profile`, `/settings` | El código es anterior al canvas. Lo rehace Gonza desde el 15/10/2026 (`openspec/changes/perfil-canvas/`): solo tema oscuro por ahora, y se mantiene «Perfil público». |
+| 6 · Ratings & reviews | Ratings & reviews | 🔁 Rehacer (en curso, Gonza) | `/my-reviews` | Rehacer según el artboard, con filtros (backend nuevo en `reviews/mias/`) y los diálogos de la ficha (`openspec/changes/perfil-canvas/`). |
 | 3 · Home | Home | ✅ Completa | `/home` (`components/features/HomeView.tsx`) | Nada. «Ask FilmAI» apunta a `/chat`, que responde 404 hasta el chatbot (B-04). |
 | 4 · Title page + rating | Ficha y modal de calificar/reseñar | ✅ Completa | `/movie/[id]`, `/tv/[id]` (`components/features/title/`) | Nada. La miga de pan acepta `?from=search` y `?from=list-{id}` para cuando existan Search y el detalle de listas. |
 | 5 · Search | Search | ✅ Completa | `/search` (`components/features/SearchView.tsx`, `FiltersSheet.tsx`) | Nada. La miga «Search» de la ficha vuelve a la última búsqueda. |
