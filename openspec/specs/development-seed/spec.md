@@ -74,3 +74,21 @@ the requirement keep a null value; the seed MUST NOT invent one for them.
 - WHEN the full seed runs
 - THEN each non-staff user has a non-null `fecha_aceptacion_terminos`
 
+### Requirement: The full seed uses real TMDB productions
+
+The full `seed` MUST build its catalog from TMDB (most voted per genre,
+through `materializar`) so every card matches its real detail page. It MUST NOT
+delete real productions (poster is a TMDB path); it MUST delete only synthetic
+ones. It MUST abort before deleting anything when fewer than 20 real
+productions are available. Activity per account MUST be profile-based: ratings
+close to the TMDB score, reviews in the account's language, rated ⇒ `Vistas`,
+`Favoritos` only with a rating of 9 or more, `Pendientes` without watched
+titles, and two themed custom lists. `seed --sintetico` MUST keep the offline
+Faker behaviour and its catalog protection threshold.
+
+#### Scenario: Seed with TMDB available
+
+- WHEN the full `seed` runs
+- THEN every rated production has a TMDB poster path and is in its user's `Vistas`
+- AND no list item belongs to a synthetic production
+

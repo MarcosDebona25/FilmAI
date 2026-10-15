@@ -43,7 +43,9 @@ declare const messages: {
       "moveRight": "Mover a la derecha",
       "nameLabel": "Nombre de la lista",
       "renameTitle": "Renombrar lista",
-      "delete": "Eliminar lista"
+      "delete": "Eliminar lista",
+      "moveUp": "Subir",
+      "moveDown": "Bajar"
     },
     "actions": {
       "cancel": "Cancelar",
@@ -399,7 +401,8 @@ declare const messages: {
     "count": {
       "items": "{count, plural, one {# ítem} other {# ítems}}",
       "movies": "{count, plural, one {# película} other {# películas}}",
-      "summary": "{count, plural, one {# lista} other {# listas}} · {defaultCount, plural, one {# predeterminada} other {# predeterminadas}}"
+      "summary": "{count, plural, one {# lista} other {# listas}} · {defaultCount, plural, one {# predeterminada} other {# predeterminadas}}",
+      "tvShows": "{count, plural, one {# serie} other {# series}}"
     },
     "card": {
       "actionsLabel": "Acciones de la lista {listName}",
@@ -411,14 +414,15 @@ declare const messages: {
     "name": {
       "allowedCharactersHelp": "Solo letras, números y espacios.",
       "requiredError": "El nombre no puede estar vacío.",
-      "invalidCharactersError": "Usá solo letras, números y espacios."
+      "invalidCharactersError": "Usá solo letras, números y espacios.",
+      "placeholder": "Ej.: Maratón de domingo",
+      "counter": "{count}/{max}"
     },
     "delete": {
       "confirmTitle": "¿Eliminar «{listName}»?",
       "confirmDescription": "Esta acción no se puede deshacer. Todos los ítems de la lista se perderán."
     },
     "feedback": {
-      "orderSaved": "Orden guardado.",
       "renamed": "Lista renombrada.",
       "created": "Lista creada.",
       "deleted": "Lista eliminada.",
@@ -436,7 +440,27 @@ declare const messages: {
       "removeItemLabel": "Quitar {title} de {listName}",
       "emptyTitle": "Esta lista todavía está vacía",
       "emptyDescription": "Desde cualquier ficha podés sumar películas y series con «Agregar a lista».",
-      "removeConfirmTitle": "¿Quitar «{title}» de {listName}?"
+      "removeConfirmTitle": "¿Quitar «{title}» de {listName}?",
+      "loadError": "No pudimos cargar esta lista. Probá de nuevo.",
+      "loadMore": "Cargar más títulos",
+      "searchPlaceholder": "Buscar por título",
+      "displayedCount": "Mostrando {shownCount} de {totalCount, plural, one {# ítem} other {# ítems}}",
+      "sortPrefix": "Orden: {sortLabel}",
+      "resultsAction": "Ver {count, plural, one {# resultado} other {# resultados}}",
+      "filtersTitle": "Filtros y orden",
+      "removeChipLabel": "Quitar filtro {filterLabel}",
+      "loading": "Cargando la lista…"
+    },
+    "reorder": {
+      "instructions": "Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.",
+      "pickedUp": "{listName} levantada, posición {position} de {total}.",
+      "movedTo": "{listName} movida a la posición {position} de {total}.",
+      "dropped": "{listName} soltada en la posición {position} de {total}.",
+      "cancelled": "Reordenamiento cancelado. {listName} volvió a la posición {position}."
+    },
+    "overview": {
+      "loadError": "No pudimos cargar tus listas. Probá de nuevo.",
+      "loading": "Cargando tus listas…"
     }
   },
   "search": {
@@ -589,6 +613,14 @@ declare const messages: {
       "deniedTitle": "Tu cuenta no tiene acceso",
       "deniedDescription": "Iniciaste sesión como {username}, que no es una cuenta de administrador. Para ver la documentación interna, entrá con una cuenta que tenga ese permiso.",
       "switchAccount": "Cambiar de cuenta"
+    },
+    "completeSignUp": {
+      "badge": "Registro con Google",
+      "title": "Terminá tu registro",
+      "description": "Tomamos tu nombre y tu correo de tu cuenta de Google. Completá el resto y confirmá con Google para crear tu cuenta.",
+      "fixHighlighted": "Corregí el campo marcado y tocá de nuevo el botón de Google.",
+      "genderPlaceholder": "Elegí una opción",
+      "cancel": "Cancelar y volver a iniciar sesión"
     }
   },
   "enums": {
@@ -642,7 +674,13 @@ declare const messages: {
       "updated": "Perfil actualizado.",
       "passwordChanged": "Contraseña actualizada. Iniciá sesión nuevamente."
     },
-    "loading": "Cargando perfil…"
+    "loading": "Cargando perfil…",
+    "leaveDialog": {
+      "title": "¿Salir sin guardar?",
+      "body": "Los cambios que hiciste en tu perfil no se guardarán.",
+      "keepEditing": "Seguir editando",
+      "leave": "Salir sin guardar"
+    }
   },
   "settings": {
     "appearance": {

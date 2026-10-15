@@ -227,7 +227,7 @@ export function SearchView() {
             </label>
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute top-4 left-4 size-5 text-fg-3 md:top-[23px] md:left-[22px] md:size-[26px]"
+              className="pointer-events-none absolute top-4 left-4 size-5 text-fg-3 md:top-[18px] md:left-[18px] md:size-[21px]"
             />
             <input
               ref={campo}
@@ -239,14 +239,14 @@ export function SearchView() {
               value={texto}
               onChange={(evento) => setTexto(evento.target.value)}
               placeholder={t("common.search.placeholder")}
-              className="h-[52px] w-full rounded-xl border-0 bg-raised px-12 text-[17px] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-[72px] md:rounded-[14px] md:px-16 md:font-display md:text-[34px] md:font-extrabold [&::-webkit-search-cancel-button]:appearance-none"
+              className="h-[52px] w-full rounded-xl border-0 bg-raised px-12 text-[17px] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-[58px] md:rounded-xl md:px-14 md:font-display md:text-[27px] md:font-extrabold [&::-webkit-search-cancel-button]:appearance-none"
             />
             {texto && (
               <button
                 type="button"
                 onClick={borrarTexto}
                 aria-label={t("search.input.clearLabel")}
-                className="absolute top-1 right-1 grid size-11 cursor-pointer place-items-center rounded-[10px] text-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:top-3.5 md:right-3.5"
+                className="absolute top-1 right-1 grid size-11 cursor-pointer place-items-center rounded-[10px] text-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:top-[7px] md:right-2.5"
               >
                 <X aria-hidden="true" className="size-5" />
               </button>
@@ -340,6 +340,15 @@ export function SearchView() {
                 ))}
               </select>
             </label>
+            {activos > 0 && (
+              <button
+                type="button"
+                onClick={limpiar}
+                className="h-11 cursor-pointer px-1.5 text-sm font-semibold text-fg-2 underline underline-offset-[3px] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                {t("common.filters.clear")}
+              </button>
+            )}
           </div>
         </div>
       </search>

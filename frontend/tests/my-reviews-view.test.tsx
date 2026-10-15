@@ -27,13 +27,16 @@ const AMERICAN_DAD: MiResena = {
 };
 
 const estado = vi.hoisted(() => ({
-  params: new URLSearchParams(),
   pagina: null as null | Record<string, unknown>,
   falla: false,
+  /** Si está, `useSearchParams` queda atrasado respecto de la URL (como en Next al cambiarla). */
+  paramsAtrasados: null as URLSearchParams | null,
   pedidos: [] as { path: string; method: string; body?: unknown }[],
 }));
 
-vi.mock("next/navigation", () => ({ useSearchParams: () => estado.params }));
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => estado.paramsAtrasados ?? new URLSearchParams(window.location.search),
+}));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/components/AccountProvider", () => ({
   useAccount: () => ({ perfil: { pk: 1 }, error: null, recargar: vi.fn() }),
@@ -62,14 +65,18 @@ function pagina(results: MiResena[], extra: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
-  estado.params = new URLSearchParams();
+  estado.paramsAtrasados = null;
+  window.history.replaceState(null, "", "/my-reviews");
   estado.pagina = pagina([INTERSTELLAR, AMERICAN_DAD]);
   estado.falla = false;
   estado.pedidos = [];
   reemplazos = [];
   vi.mocked(toast.success).mockClear();
-  vi.spyOn(window.history, "replaceState").mockImplementation((_, __, url) => {
+  // Registra cada cambio de URL y lo aplica, como lo hace el navegador.
+  const original = window.history.replaceState.bind(window.history);
+  vi.spyOn(window.history, "replaceState").mockImplementation((estado, titulo, url) => {
     reemplazos.push(String(url));
+    original(estado, titulo, url);
   });
 });
 afterEach(() => window.sessionStorage.clear());
@@ -78,7 +85,7 @@ const lecturas = () => estado.pedidos.filter((p) => p.method === "GET").map((p) 
 
 describe("Calificaciones y reseñas", () => {
   it("pide la lista con los filtros de la URL y la muestra según el canvas", async () => {
-    estado.params = new URLSearchParams("type=movie&rating=8&sort=highest");
+    window.history.replaceState(null, "", "/my-reviews?type=movie&rating=8&sort=highest");
     render(<MyReviewsView />);
     expect(screen.getByRole("status", { name: "Cargando tus calificaciones…" })).toBeVisible();
     const titulo = await screen.findByRole("link", { name: "Interstellar" });
@@ -98,7 +105,7 @@ describe("Calificaciones y reseñas", () => {
   });
 
   it("un filtro cambia la URL y conserva los demás", async () => {
-    estado.params = new URLSearchParams("sort=oldest");
+    window.history.replaceState(null, "", "/my-reviews?sort=oldest");
     render(<MyReviewsView />);
     await screen.findByRole("link", { name: "Interstellar" });
     fireEvent.change(screen.getByLabelText("Mostrar"), { target: { value: "without" } });
@@ -134,7 +141,7 @@ describe("Calificaciones y reseñas", () => {
   });
 
   it("sin coincidencias ofrece limpiar los filtros, conservando el orden", async () => {
-    estado.params = new URLSearchParams("q=zzz&review=with&sort=lowest");
+    window.history.replaceState(null, "", "/my-reviews?q=zzz&review=with&sort=lowest");
     estado.pagina = pagina([], { total_propias: 4 });
     render(<MyReviewsView />);
     const aviso = await screen.findByText("Ninguna calificación coincide con estos filtros.");
@@ -142,8 +149,20 @@ describe("Calificaciones y reseñas", () => {
     expect(reemplazos.at(-1)).toBe("/my-reviews?sort=lowest");
   });
 
+  it("limpiar no deja que la espera del texto devuelva los filtros ya quitados", async () => {
+    window.history.replaceState(null, "", "/my-reviews?q=zzz&type=tv&rating=8");
+    // Next tarda en reflejar la URL nueva: lo renderizado sigue con los filtros viejos.
+    estado.paramsAtrasados = new URLSearchParams("q=zzz&type=tv&rating=8");
+    estado.pagina = pagina([], { total_propias: 4 });
+    render(<MyReviewsView />);
+    const aviso = await screen.findByText("Ninguna calificación coincide con estos filtros.");
+    fireEvent.click(within(aviso.parentElement!).getByRole("button", { name: "Limpiar filtros" }));
+    await new Promise((resolver) => setTimeout(resolver, 600));
+    expect(window.location.search).toBe("");
+  });
+
   it("en celular cada filtro es un chip que se puede quitar", async () => {
-    estado.params = new URLSearchParams("review=with&rating=lt5");
+    window.history.replaceState(null, "", "/my-reviews?review=with&rating=lt5");
     render(<MyReviewsView />);
     await screen.findByRole("link", { name: "Interstellar" });
     expect(screen.getByRole("button", { name: "Filtros y orden, 2 activos" })).toBeVisible();

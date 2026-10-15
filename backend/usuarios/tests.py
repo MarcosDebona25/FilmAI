@@ -1179,7 +1179,7 @@ class SeedGuardCatalogoTests(TestCase):
         self._poblar_catalogo(UMBRAL_CATALOGO_PROTEGIDO + 1)
 
         with self.assertRaisesMessage(CommandError, "--borrar-catalogo"):
-            call_command("seed")
+            call_command("seed", "--sintetico")
 
         # No borró nada: ni el catálogo ni lo que cuelga de él.
         self.assertEqual(
@@ -1189,7 +1189,7 @@ class SeedGuardCatalogoTests(TestCase):
     def test_con_el_flag_borra_y_recrea(self):
         self._poblar_catalogo(UMBRAL_CATALOGO_PROTEGIDO + 1)
 
-        call_command("seed", "--borrar-catalogo", verbosity=0)
+        call_command("seed", "--sintetico", "--borrar-catalogo", verbosity=0)
 
         self.assertEqual(ProduccionAudiovisual.objects.count(), CANTIDAD_PRODUCCIONES)
 
@@ -1198,7 +1198,7 @@ class SeedGuardCatalogoTests(TestCase):
         # siempre: el guard no cambia el flujo de desarrollo habitual.
         self._poblar_catalogo(CANTIDAD_PRODUCCIONES)
 
-        call_command("seed", verbosity=0)
+        call_command("seed", "--sintetico", verbosity=0)
 
         self.assertEqual(ProduccionAudiovisual.objects.count(), CANTIDAD_PRODUCCIONES)
 
@@ -1415,7 +1415,7 @@ class SeedConservaStaffTests(TestCase):
         normal = UsuarioFactory()
         self._poblar_catalogo(UMBRAL_CATALOGO_PROTEGIDO + 1)
 
-        call_command("seed", "--borrar-catalogo", verbosity=0)
+        call_command("seed", "--sintetico", "--borrar-catalogo", verbosity=0)
 
         # El superusuario y su EmailAddress sobreviven al reset...
         self.assertTrue(
@@ -1429,7 +1429,7 @@ class SeedConservaStaffTests(TestCase):
         # Por debajo del umbral el flujo completo corre sin flag.
         self._poblar_catalogo(CANTIDAD_PRODUCCIONES)
 
-        call_command("seed", verbosity=0)
+        call_command("seed", "--sintetico", verbosity=0)
 
         self.assertGreater(Calificacion.objects.count(), 0)
         self.assertGreater(Resena.objects.count(), 0)
