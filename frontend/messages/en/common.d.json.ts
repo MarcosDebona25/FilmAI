@@ -449,7 +449,8 @@ declare const messages: {
       "sortPrefix": "Sort: {sortLabel}",
       "resultsAction": "Show {count, plural, one {# result} other {# results}}",
       "filtersTitle": "Filters and sort",
-      "removeChipLabel": "Remove filter {filterLabel}"
+      "removeChipLabel": "Remove filter {filterLabel}",
+      "loading": "Loading the list…"
     },
     "reorder": {
       "instructions": "To reorder, press space or enter on the handle, move with the arrow keys, and press space or enter again to drop. Press escape to cancel.",
@@ -459,7 +460,8 @@ declare const messages: {
       "cancelled": "Reorder cancelled. {listName} went back to position {position}."
     },
     "overview": {
-      "loadError": "We couldn’t load your lists. Try again."
+      "loadError": "We couldn’t load your lists. Try again.",
+      "loading": "Loading your lists…"
     }
   },
   "search": {
