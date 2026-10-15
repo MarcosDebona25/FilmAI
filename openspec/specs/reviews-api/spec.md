@@ -121,6 +121,14 @@ Both query parameters are required; either one missing or malformed MUST answer 
 
 `GET /api/reviews/mias/` MUST return every rating of the authenticated user, newest first, cursor-paginated at 20, each with the production's title, type and poster so the row can navigate to its detail screen.
 
+Since 15/10/2026 (profile per the canvas) the list MUST accept, all optional and combinable: `q` (up to 100 characters, trimmed, matching the canonical title or any translation, case- and accent-insensitive through Postgres `unaccent`), `texto` (`con` | `sin`: with or without review), `clase` (`movie` | `tv`; not `tipo`, which selects the single-rating response), `nota_min` / `nota_max` (1–10, inclusive) and `orden` (`fecha-desc` by default, `fecha-asc`, `nota-desc`, `nota-asc`; the rating sorts use the unique key `valor × 10⁹ + id` so the cursor never repeats or skips ties). Invalid values MUST answer 400 naming the field. The page MUST carry `total` (with the filters) and `total_propias` (without them).
+
+#### Scenario: Accent-insensitive search
+
+- GIVEN the user rated «Amélie»
+- WHEN they ask `reviews/mias/?q=AMELIE`
+- THEN the list holds only «Amélie», with `total` 1 and `total_propias` counting all their ratings
+
 Unlike the community list it MUST include ratings without text — they can be edited from there — and MUST include the user's own moderated reviews: their text must not vanish from their own screens with no explanation available.
 
 #### Scenario: The author still sees their moderated review
