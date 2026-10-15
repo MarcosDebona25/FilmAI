@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +21,7 @@ const KEY = "filmaiHistoryIndex";
 /** Índices en history.state permiten revertir y repetir atrás/adelante sin perder su destino. */
 export function NavigationGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const t = useTranslations("profile.leaveDialog");
   const dirty = useRef(false);
   const pending = useRef<(() => void) | null>(null);
   const [open, setOpen] = useState(false);
@@ -121,11 +123,11 @@ export function NavigationGuard({ children }: { children: ReactNode }) {
     <Context.Provider value={{ setDirty, requestExit }}>
       {children}
       {open && (
-        <Modal title="¿Salir sin guardar?" onClose={close}>
-          <p className="mt-3">Los cambios que hiciste en tu perfil no se guardarán.</p>
+        <Modal title={t("title")} onClose={close}>
+          <p className="mt-3">{t("body")}</p>
           <div className="mt-6 flex flex-wrap justify-end gap-3">
             <Button className="min-h-11" variant="secondary" onClick={close}>
-              Seguir editando
+              {t("keepEditing")}
             </Button>
             <Button
               className="min-h-11"
@@ -137,7 +139,7 @@ export function NavigationGuard({ children }: { children: ReactNode }) {
                 action?.();
               }}
             >
-              Salir sin guardar
+              {t("leave")}
             </Button>
           </div>
         </Modal>
