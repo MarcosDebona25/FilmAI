@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAccount, type Preferencias } from "@/components/AccountProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
+import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/api";
 import { routes } from "@/lib/routes";
@@ -119,18 +120,7 @@ export default function SettingsPage() {
           {legacy("loading")}
         </p>
       )}
-      {error && (
-        <div role="alert" className="flex flex-col items-start gap-3">
-          <p className="text-fg-2">{error}</p>
-          <button
-            type="button"
-            onClick={() => void recargar()}
-            className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {t("common.actions.retry")}
-          </button>
-        </div>
-      )}
+      {error && <ErrorRetry mensaje={error} onReintentar={() => void recargar()} />}
 
       {preferencias && (
         <>

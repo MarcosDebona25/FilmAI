@@ -5,6 +5,7 @@
  */
 
 import type { ContentType } from "@/components/features/TypeSelector";
+import { crearUltimaVista } from "@/lib/last-view";
 import { routes } from "@/lib/routes";
 
 /** Nota en la URL: `9`…`5` es «N o más»; `lt5`, «Menos de 5». */
@@ -44,20 +45,23 @@ export const BUSQUEDA_VACIA: Busqueda = {
   pagina: 1,
 };
 
+/** `valor` si es una de las opciones; si no, `null`. */
+export function de<T extends string>(valores: readonly T[], valor: string | null): T | null {
+  return valores.includes(valor as T) ? (valor as T) : null;
+}
+
 function entero(valor: string | null) {
   const numero = Number(valor);
   return valor && Number.isInteger(numero) && numero > 0 ? numero : null;
 }
 
 export function busquedaDesdeUrl(params: URLSearchParams): Busqueda {
-  const tipo = params.get("type") as ContentType;
-  const nota = params.get("rating") as Nota;
   return {
     q: (params.get("q") ?? "").slice(0, MAX_TEXTO),
-    tipo: TIPOS.includes(tipo) ? tipo : "all",
+    tipo: de(TIPOS, params.get("type")) ?? "all",
     genero: entero(params.get("genre")),
     anio: anioDesdeOpcion(params.get("year") ?? ""),
-    nota: NOTAS.includes(nota) ? nota : null,
+    nota: de(NOTAS, params.get("rating")),
     pagina: entero(params.get("page")) ?? 1,
   };
 }
@@ -139,30 +143,34 @@ export const ETIQUETA_NOTA = {
   lt5: "ratingBelowFive",
 } as const;
 
-const CLAVE_ULTIMA = "filmai:ultima-busqueda";
+/** Lo que usa `etiquetaNota` del `t` de `useTranslations()`. */
+type TraductorNota = {
+  (
+    clave:
+      | "common.filters.anyRating"
+      | `common.filters.${(typeof ETIQUETA_NOTA)[Nota]}`
+      | "search.filters.ratingShortBelowFive"
+  ): string;
+  (clave: "search.filters.ratingShort", valores: { value: string }): string;
+};
 
 /**
- * La miga «Search» de la ficha vuelve a la última búsqueda de esta pestaña
- * (doc 04 §5b). `sessionStorage` puede no estar (modo privado, datos
- * bloqueados): sin él, la miga lleva a `/search` sin parámetros.
+ * Nombre de una nota (`null` es «Cualquiera»). El corto («9+») es el de los
+ * botones de las hojas de filtros, que llevan el largo como `aria-label`.
  */
-export function guardarUltimaBusqueda(url: string) {
-  try {
-    window.sessionStorage.setItem(CLAVE_ULTIMA, url);
-  } catch {
-    // Sin almacenamiento no hay vuelta a la búsqueda; no es un error.
-  }
+export function etiquetaNota(t: TraductorNota, nota: Nota | null, corta = false) {
+  if (nota === null) return t("common.filters.anyRating");
+  if (!corta) return t(`common.filters.${ETIQUETA_NOTA[nota]}`);
+  return nota === "lt5"
+    ? t("search.filters.ratingShortBelowFive")
+    : t("search.filters.ratingShort", { value: nota });
 }
 
-export function ultimaBusqueda() {
-  try {
-    const url = window.sessionStorage.getItem(CLAVE_ULTIMA);
-    // Solo rutas de Buscar: lo guardado no puede llevar a otro lado.
-    return url?.startsWith(`${routes.search}?`) || url === routes.search ? url : routes.search;
-  } catch {
-    return routes.search;
-  }
-}
+/** La miga «Search» de la ficha vuelve a la última búsqueda de esta pestaña (doc 04 §5b). */
+export const { guardar: guardarUltimaBusqueda, leer: ultimaBusqueda } = crearUltimaVista(
+  "filmai:ultima-busqueda",
+  routes.search
+);
 
 const CLAVE_SCROLL = "filmai:scroll-busqueda";
 

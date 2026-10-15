@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { combinarResenas, posterUrl, rutaPagina, type MiResena } from "@/lib/reviews";
+import { tmdbImage } from "@/lib/catalog";
+import { combinarResenas, rutaPagina, type MiResena } from "@/lib/reviews";
 import { tieneCambios } from "@/lib/profile-draft";
 import type { Perfil } from "@/components/AccountProvider";
 const item: MiResena = {
@@ -30,11 +31,11 @@ describe("contratos de edición y paginación", () => {
       [1, 8],
       [2, 8],
     ]));
-  it("admite pósters de TMDB y descarta imágenes ajenas", () => {
-    expect(posterUrl("/p.jpg")).toBe("https://image.tmdb.org/t/p/w185/p.jpg");
-    expect(posterUrl("https://image.tmdb.org/t/p/w185/p.jpg")).toContain("image.tmdb.org");
-    expect(posterUrl("")).toBeNull();
-    expect(posterUrl("https://otro.example/p.jpg")).toBeNull();
+  it("admite pósters de TMDB en w185 y descarta imágenes ajenas", () => {
+    expect(tmdbImage("/p.jpg", "w185")).toBe("https://image.tmdb.org/t/p/w185/p.jpg");
+    expect(tmdbImage("https://image.tmdb.org/t/p/w185/p.jpg", "w185")).toContain("image.tmdb.org");
+    expect(tmdbImage("", "w185")).toBeNull();
+    expect(tmdbImage("https://otro.example/p.jpg", "w185")).toBeNull();
   });
 });
 describe("perfil y advertencias", () => {

@@ -99,8 +99,7 @@ auth.signUp.submitPending,,label,,Completá todos los campos y aceptá los Térm
 errors.pages.notFoundCode,,label,,Error 404,Error 404,aprobado
 errors.pages.notFoundSignedOutTitle,,label,,No encontramos esa página,We can’t find that page,aprobado
 errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.,"The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",aprobado
-errors.pages.newToFilmAI,,label,,¿Primera vez en FilmAI?,New to FilmAI?,aprobado
-errors.pages.createFreeAccount,,label,,Creá una cuenta gratis,Create a free account,aprobado
+errors.pages.signUpInvite,,label,,"¿Primera vez en FilmAI? <register>Creá una cuenta gratis</register> para calificar películas, guardar tus listas y recibir recomendaciones del asistente de FilmAI.","New to FilmAI? <register>Create a free account</register> to rate films, keep your lists, and get personalized picks from the FilmAI assistant.",aprobado
 footer.main.languageLink,,selector,language,"Idioma: {language}. Cambiá el idioma en Preferencias.","Language: {language}. Change it in Settings.",aprobado
 footer.main.askFilmAI,,label,,Preguntale a FilmAI,Ask FilmAI,aprobado
 title.credits.creators,,label,,Creación,Created by,aprobado

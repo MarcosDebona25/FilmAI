@@ -3,7 +3,8 @@
 from rest_framework import serializers
 
 from catalogo.services.adapter import dominio_a_tmdb
-from catalogo.services.traducciones import campos_en_ingles, texto_localizado
+from catalogo.services.browse import NOTAS
+from catalogo.services.traducciones import ProduccionLocalizadaMixin
 from filmai.errores.base import ExcepcionAPI
 from filmai.errores.serializadores import FronteraErroresMixin
 
@@ -70,6 +71,50 @@ class AgregarItemSerializer(PertenenciaQuerySerializer):
     """Payload de alta de un ítem, en el vocabulario público de TMDB."""
 
 
+class OrdenListasSerializer(FronteraErroresMixin, serializers.Serializer):
+    """`PUT /api/lists/order/`: las listas personalizadas en el orden nuevo (L-02).
+
+    Viaja el orden completo y no un «mover una posición»: así el mismo contrato
+    sirve para el arrastre y para «Move left / Move right». Los ids repetidos son
+    un 400 porque no hay forma de saber cuál de las dos posiciones se quiso.
+    """
+
+    ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=True
+    )
+
+    def validate_ids(self, value):
+        if len(set(value)) != len(value):
+            raise serializers.ValidationError(
+                "Un id de lista aparece más de una vez.", code="unique"
+            )
+        return value
+
+
+class ListaItemsQuerySerializer(FronteraErroresMixin, serializers.Serializer):
+    """Filtros y orden del detalle de una lista (L-03, canvas «List detail»).
+
+    Van en el backend porque la paginación es por cursor: filtrar en el cliente
+    solo vería las páginas ya cargadas. Los nombres siguen a «Mis reseñas»
+    (`q`, `clase`, `orden`) y los tramos de nota a Buscar (`nota=9+`…`m5`). La
+    nota es la de TMDB, no la del usuario (decisión del 15/10/2026).
+    """
+
+    q = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    clase = serializers.ChoiceField(choices=("movie", "tv"), required=False)
+    nota = serializers.ChoiceField(choices=tuple(NOTAS), required=False)
+    orden = serializers.ChoiceField(
+        choices=(
+            "agregado-desc",
+            "agregado-asc",
+            "titulo-asc",
+            "nota-desc",
+            "nota-asc",
+        ),
+        default="agregado-desc",
+    )
+
+
 class ListaResumenSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     nombre = serializers.CharField()
@@ -88,7 +133,7 @@ class ListaResumenSerializer(serializers.Serializer):
         return data
 
 
-class ListaItemSerializer(serializers.Serializer):
+class ListaItemSerializer(ProduccionLocalizadaMixin, serializers.Serializer):
     item_id = serializers.IntegerField(source="pk")
     fecha_agregado = serializers.DateTimeField()
     id_tmdb = serializers.IntegerField(source="produccion.id_tmdb")
@@ -96,19 +141,12 @@ class ListaItemSerializer(serializers.Serializer):
     titulo = serializers.SerializerMethodField()
     poster = serializers.SerializerMethodField()
     anio = serializers.SerializerMethodField()
+    # La «★ 8.5» de la tarjeta (canvas «List detail»). `null` si TMDB todavía
+    # no la calificó: TMDB manda 0 sin votos y la UI muestra «Unrated».
+    calificacion_promedio = serializers.SerializerMethodField()
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        idioma = self.context.get("idioma")
-        if idioma and idioma != "en":
-            data["campos_en_ingles"] = campos_en_ingles(instance.produccion, idioma)
-        return data
-
-    def get_titulo(self, item):
-        return texto_localizado(item.produccion, "titulo", self.context.get("idioma"))
-
-    def get_poster(self, item):
-        return texto_localizado(item.produccion, "poster", self.context.get("idioma"))
+    def get_calificacion_promedio(self, item):
+        return item.produccion.calificacion_promedio or None
 
     def get_tipo(self, item):
         return dominio_a_tmdb(item.produccion.tipo)

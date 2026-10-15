@@ -11,6 +11,11 @@ import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
 import { render, screen, waitFor, within } from "./render";
 
+/** El texto del enlace dentro de la invitación del 404 (`<register>…</register>`). */
+function enlaceRegistro(catalogo: { errors: { pages: { signUpInvite: string } } }) {
+  return /<register>(.*)<\/register>/.exec(catalogo.errors.pages.signUpInvite)?.[1] ?? "";
+}
+
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }));
 const path = vi.hoisted(() => ({ current: "/home" }));
 const account = vi.hoisted(() => ({
@@ -91,7 +96,11 @@ describe("pantalla 404", () => {
       "href",
       routes.login
     );
-    expect(screen.getByRole("link", { name: en.errors.pages.createFreeAccount })).toHaveAttribute(
+    // La frase completa del canvas, con la mención del asistente (15/10/2026).
+    expect(screen.getByText(/to rate films, keep your lists/)).toHaveTextContent(
+      en.errors.pages.signUpInvite.replace(/<\/?register>/g, "")
+    );
+    expect(screen.getByRole("link", { name: enlaceRegistro(en) })).toHaveAttribute(
       "href",
       routes.register
     );

@@ -693,8 +693,7 @@ declare const messages: {
       "notFoundCode": "Error 404",
       "notFoundSignedOutTitle": "We can’t find that page",
       "notFoundSignedOutDescription": "The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",
-      "newToFilmAI": "New to FilmAI?",
-      "createFreeAccount": "Create a free account"
+      "signUpInvite": "New to FilmAI? <register>Create a free account</register> to rate films, keep your lists, and get personalized picks from the FilmAI assistant."
     },
     "codes": {
       "validation_error": "Check the information you entered.",

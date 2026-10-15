@@ -5,12 +5,13 @@
  * inglés como `?type=` y `?rating=` de Buscar) y la API (`reviews/mias/`).
  */
 
-import { NOTAS, type Nota } from "@/lib/search";
+import { crearUltimaVista } from "@/lib/last-view";
+import { ORDENES, ORDEN_API, parametrosNota, type Orden } from "@/lib/review-filters";
+import { NOTAS, de, type Nota } from "@/lib/search";
 import { routes } from "@/lib/routes";
 
 export type Presencia = "with" | "without";
 export type Clase = "movie" | "tv";
-export type Orden = "newest" | "oldest" | "highest" | "lowest";
 
 export interface FiltrosResenas {
   q: string;
@@ -25,7 +26,6 @@ export interface FiltrosResenas {
 export const MAX_TEXTO = 100;
 export const PRESENCIAS: Presencia[] = ["with", "without"];
 export const CLASES: Clase[] = ["movie", "tv"];
-export const ORDENES: Orden[] = ["newest", "oldest", "highest", "lowest"];
 
 export const FILTROS_VACIOS: FiltrosResenas = {
   q: "",
@@ -34,17 +34,6 @@ export const FILTROS_VACIOS: FiltrosResenas = {
   nota: null,
   orden: "newest",
 };
-
-const ORDEN_API: Record<Orden, string> = {
-  newest: "fecha-desc",
-  oldest: "fecha-asc",
-  highest: "nota-desc",
-  lowest: "nota-asc",
-};
-
-function de<T extends string>(valores: readonly T[], valor: string | null): T | null {
-  return valores.includes(valor as T) ? (valor as T) : null;
-}
 
 export function filtrosDesdeUrl(params: URLSearchParams): FiltrosResenas {
   return {
@@ -73,9 +62,9 @@ export function consultaApi(filtros: FiltrosResenas) {
   if (q) params.set("q", q);
   if (filtros.resena) params.set("texto", filtros.resena === "with" ? "con" : "sin");
   if (filtros.clase) params.set("clase", filtros.clase);
-  // «N o más» es una nota mínima; «Menos de 5», una máxima de 4 (las notas son enteras).
-  if (filtros.nota === "lt5") params.set("nota_max", "4");
-  else if (filtros.nota) params.set("nota_min", filtros.nota);
+  if (filtros.nota)
+    for (const [clave, valor] of Object.entries(parametrosNota(filtros.nota)))
+      params.set(clave, valor);
   if (filtros.orden !== "newest") params.set("orden", ORDEN_API[filtros.orden]);
   const consulta = params.toString();
   return consulta ? `/api/reviews/mias/?${consulta}` : "/api/reviews/mias/";
@@ -91,29 +80,8 @@ export function hayFiltros(filtros: FiltrosResenas) {
   return filtrosActivos(filtros) > 0 || filtros.q.trim() !== "";
 }
 
-const CLAVE_ULTIMA = "filmai:ultimas-resenas";
-
-/**
- * La miga «Calificaciones y reseñas» de la ficha vuelve a esta lista con sus
- * filtros. Sin `sessionStorage` (modo privado, datos bloqueados) lleva a la
- * lista sin filtros.
- */
-export function guardarUltimasResenas(url: string) {
-  try {
-    window.sessionStorage.setItem(CLAVE_ULTIMA, url);
-  } catch {
-    // Sin almacenamiento no hay vuelta a los filtros; no es un error.
-  }
-}
-
-export function ultimasResenas() {
-  try {
-    const url = window.sessionStorage.getItem(CLAVE_ULTIMA);
-    // Solo rutas de esta pantalla: lo guardado no puede llevar a otro lado.
-    return url?.startsWith(`${routes.myReviews}?`) || url === routes.myReviews
-      ? url
-      : routes.myReviews;
-  } catch {
-    return routes.myReviews;
-  }
-}
+/** La miga «Calificaciones y reseñas» de la ficha vuelve a esta lista con sus filtros. */
+export const { guardar: guardarUltimasResenas, leer: ultimasResenas } = crearUltimaVista(
+  "filmai:ultimas-resenas",
+  routes.myReviews
+);
