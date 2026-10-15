@@ -2,58 +2,58 @@
 
 ## Purpose
 
-Editing the authenticated user's own profile, selecting predefined avatars, confirming account deactivation, and managing their own ratings and reviews in `/my-reviews` (P-06). The reviews screen consumes `reviews-api`.
+The signed-in user's own screens, built from the canvas (15/10/2026): Profile (`/profile`), Settings (`/settings`) and Ratings & reviews (`/my-reviews`). Ratings & reviews consumes `reviews-api`. All visible text comes from the i18n catalog (`i18n-core`).
 
 ## Requirements
 
+### Profile
+
+`/profile` MUST show a header (avatar, name in the display typeface, `@username`, email and sign-up date), «Personal details» as a description list, and «Password» as a collapsible section (`aria-expanded`). «Edit profile» MUST replace Personal details with «Edit details»: first name, last name and username editable; email, birth date and gender read-only with a lock and a hint. Accounts without a local password (Google) MUST be offered an emailed link instead of the password form. On mobile, a «Your account» list MUST link to Ratings & reviews, Settings and Terms, and «Log out» MUST ask for confirmation with the same text as the desktop account menu.
+
 ### Avatar selection
 
-Editing MUST expose a visible keyboard-accessible “Cambiar avatar” overlay. It MUST open a modal containing every active avatar returned by the API. Selecting an avatar MUST only change the temporary selection within the modal. Its “Guardar” button MUST apply the choice to the profile draft and close the selector. Canceling or pressing Escape MUST discard the temporary selection; reopening MUST preselect the current draft avatar. Only saving the profile MUST persist the choice and update the navbar. The selector MUST show “Elegí un avatar” once, preserve page layout and scroll position on opening/closing, and expose a pointer cursor on the clickable overlay.
+While editing, a keyboard-accessible «Change avatar» control MUST open a dialog (a card on desktop, a sheet on mobile) with every active avatar as a radio group, focus starting on the selected one. «Save» MUST apply the choice to the profile draft and close; «Cancel» or Escape MUST discard it. Only saving the profile MUST persist the avatar and update the navbar.
 
 ### Unsaved changes
 
-Canceling or following a same-tab link or browser history traversal with a modified draft MUST open “¿Salir sin guardar?”. Continuing editing MUST preserve all fields and avatar. Confirming MUST discard the draft and complete the requested action. An unchanged or reverted draft MUST not prompt. Reloading or closing the tab MUST use the native browser warning. Modified-click links opening another tab MUST retain their native behavior.
+Canceling or following a same-tab link or browser history traversal with a modified draft MUST open «¿Salir sin guardar?». Continuing editing MUST preserve all fields and avatar. Confirming MUST discard the draft and complete the requested action. An unchanged or reverted draft MUST not prompt. Reloading or closing the tab MUST use the native browser warning.
 
 ### Username availability
 
-Availability checks MUST ignore canceled responses. “Disponible” MUST be green, “No disponible” red, with readable contrast in both themes and a textual live announcement. Errors saving MUST preserve the draft.
+Availability checks MUST ignore canceled responses and announce «Checking», «Available» or «Not available» as text, not only color. Errors saving MUST preserve the draft.
+
+### Settings
+
+`/settings` MUST show the breadcrumb Profile › Settings («‹ Profile» on mobile), Language (EN · ES, at anchor `t-idioma`), Privacy, Notifications as switches (`role="switch"`), Legal and Account. The app is dark only: there is no theme selector, and a saved «light» theme MUST still render dark. The account locale is persisted before the cookie/render change; a failed save preserves the old locale. Footer language links navigate with a real anchor/Link and remain available on mobile.
 
 ### Deactivation warning
 
-The confirmation MUST say: “Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar.” Canceling MUST not call the API. A failed request MUST leave the dialog available to retry and the account active. The existing logical deactivation and internal retention policy remain unchanged.
+The confirmation MUST be an `alertdialog` with focus on Cancel and say: «Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar.» Canceling MUST not call the API. A failed request MUST leave the dialog available to retry and the account active.
 
-### Button consistency
+### Ratings & reviews
 
-Buttons with the same variant MUST share foreground/background tokens across profile, selectors, review dialogs and preferences. Primary, secondary and destructive buttons MUST provide at least 4.5:1 text contrast in light/dark themes, including hover.
+`/my-reviews` MUST show the breadcrumb Profile › Ratings & reviews («‹ Profile» on mobile) and a list where each row has the poster (80 × 120 desktop, 56 × 84 mobile, a same-size placeholder when absent or failed), the title linking to its page with `?from=reviews`, then «★ rating», the type and «Rated on {date}». Ratings MUST read «★ number», never «X/10»; the accessible label says «Your rating: N out of 10». A review MUST be clamped to three lines with «Read more» / «Read less» only when it actually overflows at the current width. A rating without text MUST show a dashed «Add review» link to its title page.
 
-### Own reviews (Mis reseñas)
+#### Filters
 
-`/mis-resenas` MUST display each own rating with a poster, title, type, a yellow (#f5c518) decorative star beside its X/10 value, date and optional text. The star MUST precede the numeric rating on the same line. The date MUST appear separately in the top-right corner of the card, with no overlap at mobile widths. The rating MUST have an accessible label identifying it as a rating. Read-more/read-less controls MUST only appear when the text exceeds three visible lines at the current card width, recalculating after resizing or editing. Text that fits, including exactly three lines, and absent text MUST have no expansion control. An absent review MUST display “Todavía no escribiste una reseña.” as an informative empty state with icon, subtle background, dashed border and italic text, visually distinct from authored content. Poster dimensions MUST be reserved (80 × 120 desktop, 56 × 84 mobile); absent or failed images MUST have an accessible replacement. Titles MUST remain plain text until the detail route exists.
+A title search (applied 350 ms after the last key, up to 100 characters) and four filters MUST live in the URL (`q`, `review=with|without`, `type=movie|tv`, `rating=9…5|lt5`, `sort=newest|oldest|highest|lowest`) and be sent to `reviews/mias/` (`texto`, `clase`, `nota_min`/`nota_max`, `orden`). On desktop they are four labelled selects plus «Clear filters»; on mobile, a «Filters and sort» button with a count of active filters opens a sheet whose choices apply at once and whose main button reads «View N results», and each active filter shows as a removable chip next to «Sort: …». Clearing MUST keep the sort. The title page's «Ratings & reviews» crumb MUST return to the last filtered list of the tab.
 
-The UI MUST progressively load cursor pages and expose a keyboard-accessible load-more button. Duplicate IDs MUST not create duplicate cards. A page failure MUST preserve previously loaded cards and offer retry.
+#### States
 
-The edit dialog MUST be titled `Editar calificación y reseña de "{title}"`. Editing MUST initially focus the review text field without focusing any star, preserve the saved rating, and keep the rating group keyboard-accessible. Editing MUST preload the rating and text, enforce integer 1–10 and at most 1000 text characters, and MUST NOT send empty text to PUT. Text deletion MUST confirm preservation of rating and Vistas, leaving the card without text. Rating deletion MUST confirm the loss of rating, optional text and Vistas membership, removing the card on success only. Its success toast MUST name what was lost: "Calificación y reseña eliminadas." when the rating had text, "Calificación eliminada." otherwise (doc 04 §5d). Dialogs MUST contain keyboard focus, support Escape when idle and restore focus.
+Loading MUST show placeholder rows with a status label. A user with no ratings at all (`total_propias = 0`) MUST see an invitation to search instead of the filters; filters with no matches MUST say so and offer «Clear filters». A failed first load MUST offer retry. Further cursor pages MUST load on reaching the end and through a keyboard-accessible «Load more ratings» button; duplicate IDs MUST not repeat rows, and a page failure MUST keep the loaded rows and offer retry.
 
-#### Scenario: A poster cannot load
+#### Actions
 
-- GIVEN an own rating with an unavailable poster
-- WHEN its card renders
-- THEN a same-size replacement appears without breaking the layout
+On desktop each row has «Edit» and a «More actions» menu (`role="menu"`, arrow keys, Escape returns focus) with «Delete review» (only when there is text) and «Remove rating»; on mobile one button opens a sheet with «Edit rating and review», «Delete review» and «Remove rating». They MUST use the title page's dialogs: the rating dialog preloaded with the rating and text, and confirmations that name what is lost, with the same toasts as the title page. An edited row stays in place even if it no longer matches the filters. Removing a rating MUST remove its row on success only and move focus to the page heading.
 
-#### Scenario: Deleting text from an own card
+#### Scenario: Deleting text from an own row
 
 - WHEN the user confirms text deletion
-- THEN the card keeps its rating and explains that no review text exists
-- AND Vistas membership is unchanged
+- THEN the row keeps its rating and offers «Add review»
+- AND Watched membership is unchanged
 
+#### Scenario: Returning from a title page
 
-### Locale integration
-
-Settings (`/settings`) is bilingual and contains the only signed-in language
-control, between Appearance and Notifications, at anchor `t-idioma`. The account
-locale is persisted before cookie/render change; a failed save preserves the
-old locale. Profile (`/profile`) and reviews (`/my-reviews`) retain legacy copy
-until their designs are implemented, while their validations, formats, errors
-and enum labels use the shared locale helpers. Default-list labels come from
-stable keys, not names stored in the database. Footer language links navigate
-with a real anchor/Link and remain available on mobile.
+- GIVEN the list filtered by «TV shows» and «8 or higher»
+- WHEN the user opens a title and follows the «Ratings & reviews» crumb
+- THEN the same filtered list is shown

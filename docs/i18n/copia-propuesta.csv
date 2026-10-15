@@ -138,3 +138,9 @@ profile.password.linkSent,,feedback,,Te enviamos un enlace para establecer tu co
 profile.password.linkError,,error,,No pudimos enviar el enlace. Intentá más tarde.,We couldn’t send the link. Try again later.,aprobado
 profile.loading,,status,,Cargando perfil…,Loading profile…,aprobado
 common.avatar.optionLabel,,label,number,Avatar {number},Avatar {number},aprobado
+reviews.results.empty,,label,,Todavía no calificaste ninguna película ni serie.,You haven’t rated any movies or TV shows yet.,aprobado
+reviews.results.emptyAction,,label,,Buscar qué calificar,Find something to rate,aprobado
+reviews.results.loading,,status,,Cargando tus calificaciones…,Loading your ratings…,aprobado
+reviews.results.loadError,,error,,No pudimos cargar tus calificaciones. Intentá de nuevo.,We couldn’t load your ratings. Try again.,aprobado
+reviews.results.loadMore,,label,,Cargar más calificaciones,Load more ratings,aprobado
+reviews.filters.ratingChip,,label,rating,Calificación {rating},Rating {rating},aprobado

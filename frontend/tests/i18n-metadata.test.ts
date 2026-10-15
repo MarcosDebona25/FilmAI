@@ -36,6 +36,10 @@ describe("metadatos en los cuatro puntos actuales", () => {
     });
     expect(await profile.generateMetadata()).toEqual({ title: `${messages.profile} | FilmAI` });
     expect(await settings.generateMetadata()).toEqual({ title: `${messages.settings} | FilmAI` });
-    expect(await reviews.generateMetadata()).toEqual({ title: `${messages.myReviews} | FilmAI` });
+    // Como el título de la página (canvas): «Calificaciones y reseñas».
+    const nav = (locale === "es" ? es : en).nav.main;
+    expect(await reviews.generateMetadata()).toEqual({
+      title: `${nav.ratingsReviews} | FilmAI`,
+    });
   });
 });

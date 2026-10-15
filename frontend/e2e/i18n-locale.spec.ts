@@ -41,10 +41,11 @@ for (const locale of ["es", "en"] as const) {
       route.fulfill({ json: { total: 0, next: null, results: [] } })
     );
     const messages = (locale === "es" ? es : en).legacy.metadata;
+    const nav = (locale === "es" ? es : en).nav.main;
     for (const [path, title] of [
       ["/profile", messages.profile],
       ["/settings", messages.settings],
-      ["/my-reviews", messages.myReviews],
+      ["/my-reviews", nav.ratingsReviews],
     ]) {
       await page.goto(path);
       await expect(page).toHaveTitle(`${title} | FilmAI`);

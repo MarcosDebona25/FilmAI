@@ -18,6 +18,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
+import { ultimasResenas } from "@/lib/my-reviews";
 import { routes } from "@/lib/routes";
 import { ultimaBusqueda } from "@/lib/search";
 import {
@@ -106,11 +107,14 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     };
   }, [conSesion, id, tipo]);
 
-  // Viniendo de Buscar, la miga vuelve a esa búsqueda. Se lee en un efecto: el
-  // servidor no tiene `sessionStorage` y el HTML de los dos tiene que coincidir.
+  // Viniendo de Buscar o de Calificaciones y reseñas, la miga vuelve a esa
+  // lista con sus filtros. Se lee en un efecto: el servidor no tiene
+  // `sessionStorage` y el HTML de los dos tiene que coincidir.
   const [vueltaBusqueda, setVueltaBusqueda] = useState<string>(routes.search);
+  const [vueltaResenas, setVueltaResenas] = useState<string>(routes.myReviews);
   useEffect(() => {
     if (origen.tipo === "search") setVueltaBusqueda(ultimaBusqueda());
+    if (origen.tipo === "reviews") setVueltaResenas(ultimasResenas());
   }, [origen.tipo]);
 
   const listaOrigen = origen.tipo === "lista" ? origen.id : null;
@@ -153,7 +157,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
       : origen.tipo === "reviews"
         ? [
             { label: t("nav.main.profileShort"), href: routes.profile },
-            { label: t("nav.main.ratingsReviews"), href: routes.myReviews },
+            { label: t("nav.main.ratingsReviews"), href: vueltaResenas },
           ]
         : origen.tipo === "lista"
           ? [

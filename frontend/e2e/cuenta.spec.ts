@@ -14,7 +14,5 @@ test("el menú admite teclado y Mis reseñas muestra el estado vacío", async ({
   await expect(page.getByRole("menuitem", { name: "Calificaciones y reseñas" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/my-reviews$/);
-  await expect(
-    page.getByText("Todavía no calificaste ninguna producción ni escribiste reseñas.")
-  ).toBeVisible();
+  await expect(page.getByText("Todavía no calificaste ninguna película ni serie.")).toBeVisible();
 });
