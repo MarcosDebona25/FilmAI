@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Big_Shoulders, Hanken_Grotesk } from "next/font/google";
 import { cookies } from "next/headers";
@@ -10,6 +11,7 @@ import { MobileTabs } from "@/components/MobileTabs";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
 import { NavigationGuard } from "@/components/NavigationGuard";
+import { NavigationProgress } from "@/components/NavigationProgress";
 import "./globals.css";
 
 const hanken = Hanken_Grotesk({
@@ -44,6 +46,10 @@ export default async function RootLayout({
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
       <body className={`${hanken.variable} ${bigShoulders.variable} antialiased`}>
+        {/* `useSearchParams` (detecta el fin de la navegación) necesita Suspense. */}
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <NextIntlClientProvider>
           <AccountProvider sesionPosible={sesionPosible}>
             <NavigationGuard>

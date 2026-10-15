@@ -26,7 +26,7 @@ export function CreditsSection({ creditos, tipo }: { creditos: Creditos; tipo: M
   return (
     <section aria-labelledby={tituloId} className="flex flex-col gap-6">
       <h2 id={tituloId} className="font-display text-[34px] leading-none md:text-[44px]">
-        {t("heading")}
+        {hayDirectores ? t("heading") : t("cast")}
       </h2>
       {/* Sin director (muchas series y animes) el reparto ocupa todo el ancho:
           con la columna de 240 px quedaba apretado en esa columna. */}
@@ -46,7 +46,10 @@ export function CreditsSection({ creditos, tipo }: { creditos: Creditos; tipo: M
         )}
         {creditos.reparto.length > 0 && (
           <div className="flex flex-col gap-3">
-            <span className="text-[13px] font-semibold text-fg-3">{t("cast")}</span>
+            {/* Sin director el título ya dice «Reparto». */}
+            {hayDirectores && (
+              <span className="text-[13px] font-semibold text-fg-3">{t("cast")}</span>
+            )}
             <ul
               className={cn(
                 "grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3",

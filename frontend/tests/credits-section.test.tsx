@@ -13,6 +13,7 @@ describe("Dirección y reparto", () => {
     render(<CreditsSection creditos={{ directores: ["Hayao Miyazaki"], reparto }} tipo="movie" />);
     const grilla = screen.getByText("Hayao Miyazaki").closest("div")!.parentElement!;
     expect(grilla.className).toContain("md:grid-cols-[240px_minmax(0,1fr)]");
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Dirección y reparto");
   });
 
   it("sin director, el reparto ocupa todo el ancho", () => {
@@ -22,5 +23,8 @@ describe("Dirección y reparto", () => {
     expect(lista.parentElement!.parentElement!.className).not.toContain("240px");
     expect(lista.className).toContain("xl:grid-cols-4");
     expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    // El título dice lo que hay, sin repetir «Reparto» como etiqueta.
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Reparto");
+    expect(screen.getAllByText("Reparto")).toHaveLength(1);
   });
 });
