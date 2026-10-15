@@ -164,6 +164,8 @@ for (const viewport of viewports) {
     test("cancelar vuelve al login y descarta el alta", async ({ page, baseURL }) => {
       await prepararAlta(page, baseURL!);
       await page.goto("/complete-signup");
+      // Con el botón de Google dibujado, la página ya hidrató y no se mueve.
+      await expect(page.getByTestId("google-confirm").getByRole("button")).toBeVisible();
 
       await page.getByRole("link", { name: en.auth.completeSignUp.cancel }).click();
 
