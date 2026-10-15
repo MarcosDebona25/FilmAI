@@ -141,10 +141,11 @@ describe("edición de perfil", () => {
 it("baja de cuenta: conserva cancelación y usa la advertencia aprobada", async () => {
   render(<PreferenciasPage />);
   await userEvent.click(screen.getByRole("button", { name: "Dar de baja cuenta" }));
-  expect(screen.getByRole("dialog")).toHaveTextContent(
+  // `alertdialog`: confirma una acción irreversible, con el foco en Cancelar.
+  expect(screen.getByRole("alertdialog")).toHaveTextContent(
     "Asegurate de querer dar de baja la cuenta antes de continuar."
   );
-  expect(screen.getByRole("dialog")).not.toHaveTextContent("se conservarán");
+  expect(screen.getByRole("alertdialog")).not.toHaveTextContent("se conservarán");
   await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
   expect(apiFetch).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole("button", { name: "Dar de baja cuenta" }));

@@ -4188,3 +4188,17 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Tests**: `catalogo/tests_mis_resenas_filtros.py` (11): sin filtros con los dos totales, búsqueda con mayúsculas y acentos, título traducido, con y sin reseña, clase, nota, orden por nota y fecha, cursor estable con 25 empates, filtros combinados, valores inválidos y `tipo` solo. Diez fallaban antes; el de `tipo` solo protege lo que ya andaba.
 - **Para el entorno local**: la migración nueva se aplica con `docker compose exec backend python manage.py migrate`.
 - **Archivos afectados**: `backend/catalogo/{reviews,serializers_reviews,pagination_reviews}.py`, `backend/catalogo/migrations/0007_unaccent.py`, `backend/filmai/settings.py`, `backend/catalogo/tests_mis_resenas_filtros.py`, spec `reviews-api`, `openspec/changes/perfil-canvas/tasks.md`, `docs/decisiones.md`.
+
+## 15/10/2026 — Settings según el canvas (perfil, PR 3)
+
+- **Fecha**: 15/10/2026
+- **Descripción**: `/settings` rehecho según «Settings · desktop / mobile», más la miga de Términos en escritorio.
+  1. **Estructura del canvas**: miga Profile › Settings (en celular, «‹ Profile»); Language («Interface language» con EN | ES); Privacy; Notifications; Legal → Términos; Account con «Deactivate account». Títulos en la tipografía de cartel y filas separadas por líneas, como el canvas.
+  2. **Interruptores**: componente nuevo `components/ui/switch.tsx`, un `button` con `role="switch"` y `aria-checked`, nombrado por la etiqueta de su fila (`aria-labelledby`). Reemplaza las casillas de verificación.
+  3. **Solo oscuro**: no hay selector de tema, y `AccountProvider` aplica siempre `dark` (antes una cuenta con «claro» guardado veía la app rota).
+  4. **Textos honestos**: las notificaciones conservan «Preferencia para futuros correos» en lugar del texto del canvas («Every week we email you…»), porque hoy no se manda ningún correo. «Perfil público» conserva el aviso de que todavía no cambia nada.
+  5. **Baja**: usa `ConfirmDialog` de la ficha (`alertdialog`, foco en Cancelar, el error queda a la vista) con el texto aprobado en este registro, que es más largo que el del canvas.
+  6. **Ancla del idioma**: el título de Language conserva el id fijo `t-idioma`, porque el footer con sesión lleva a `/settings#t-idioma` (`routes.language`); lo cazó el e2e de i18n.
+  7. **Términos**: `TermsBackLink` decide los dos lugares según la sesión. En celular, el enlace de siempre. En escritorio, con sesión la miga Profile › Settings › Terms, y sin sesión «Back to the landing page».
+- **Tests**: `switch.test.tsx` (2), `terms-back-link.test.tsx` reescrito para los dos enlaces (jsdom no aplica CSS), la baja en `profile.test.tsx` con `alertdialog`. `e2e/preferencias.spec.ts` reescrito: un «claro» guardado no saca el `dark` y no hay selector; el interruptor guarda y se anuncia; la baja con su texto aprobado. El e2e de i18n pasa con el ancla.
+- **Archivos afectados**: `frontend/app/settings/page.tsx`, `frontend/app/terms/page.tsx`, `frontend/components/{TermsBackLink,AccountProvider}.tsx`, `frontend/components/ui/switch.tsx`, tests y e2e, copia de i18n y mensajes, `openspec/changes/perfil-canvas/tasks.md`, `docs/decisiones.md`.

@@ -125,3 +125,5 @@ search.filters.ratingShort,,label,value,{value}+,{value}+,aprobado
 search.filters.ratingShortBelowFive,,label,,<5,<5,aprobado
 search.filters.upcoming,,label,,A estrenar,Upcoming,aprobado
 search.filters.decade,,label,decade,Década de {decade},{decade}s,aprobado
+settings.language.interfaceLabel,,label,,Idioma de la interfaz,Interface language,aprobado
+settings.language.interfaceHelp,,label,,Se aplica al instante y se guarda en tu cuenta. También lo usamos para los correos que te mandamos.,Applies instantly and is saved to your account. Also used for the emails we send you.,aprobado
