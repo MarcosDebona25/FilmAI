@@ -102808,7 +102808,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/SearchView.tsx",
-      "source_location": "L357",
+      "source_location": "L366",
       "weight": 1.0
     },
     {
@@ -102820,7 +102820,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/SearchView.tsx",
-      "source_location": "L403",
+      "source_location": "L412",
       "weight": 1.0
     },
     {
@@ -212914,5 +212914,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "a2c7514dd0a6f2855d52733d5604f7a57d1aa8a0"
+  "built_at_commit": "9b15f3e1df77ec5c1acab97a7428970fcd43d6aa"
 }
