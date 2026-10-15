@@ -11,7 +11,6 @@ import { render, screen, waitFor, within } from "./render";
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 const estado = vi.hoisted(() => ({
-  params: new URLSearchParams(),
   lista: null as unknown,
   paginas: [] as Record<string, unknown>[],
   propia: null as unknown,
@@ -20,7 +19,7 @@ const estado = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  useSearchParams: () => estado.params,
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => router,
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
@@ -98,7 +97,7 @@ const escrituras = () => estado.pedidos.filter((p) => p.method !== "GET");
 let reemplazos: string[] = [];
 
 beforeEach(() => {
-  estado.params = new URLSearchParams();
+  window.history.replaceState(null, "", "/lists/7");
   estado.lista = lista();
   estado.paginas = [pagina([item(1), item(2), item(3, { tipo: "tv", anio: null })])];
   estado.propia = null;
@@ -107,8 +106,11 @@ beforeEach(() => {
   reemplazos = [];
   router.push.mockClear();
   vi.mocked(toast.success).mockClear();
-  vi.spyOn(window.history, "replaceState").mockImplementation((_, __, url) => {
+  // Registra cada cambio de URL y lo aplica, como lo hace el navegador.
+  const original = window.history.replaceState.bind(window.history);
+  vi.spyOn(window.history, "replaceState").mockImplementation((estado, titulo, url) => {
     reemplazos.push(String(url));
+    original(estado, titulo, url);
   });
 });
 afterEach(() => vi.useRealTimers());
@@ -129,7 +131,7 @@ describe("Detalle de una lista", () => {
   });
 
   it("pide los ítems con los filtros de la URL y los traduce a la API", async () => {
-    estado.params = new URLSearchParams("q=alien&type=tv&rating=lt5&sort=highest");
+    window.history.replaceState(null, "", "/lists/7?q=alien&type=tv&rating=lt5&sort=highest");
     render(<ListDetailView id={7} />, { locale: "en" });
 
     await screen.findByRole("heading", { level: 1, name: "Maratón" });
@@ -148,8 +150,11 @@ describe("Detalle de una lista", () => {
     await user.selectOptions(screen.getByLabelText(en.common.rating.tmdbLabel), "8");
     await user.selectOptions(screen.getByLabelText(en.common.filters.sortLabel), "title");
 
-    // `useSearchParams` está fijo en el test: cada cambio parte de los filtros vacíos.
-    expect(reemplazos).toEqual(["/lists/7?type=tv", "/lists/7?rating=8", "/lists/7?sort=title"]);
+    expect(reemplazos).toEqual([
+      "/lists/7?type=tv",
+      "/lists/7?type=tv&rating=8",
+      "/lists/7?type=tv&rating=8&sort=title",
+    ]);
   });
 
   it("espera 350 ms después de la última tecla para buscar por título", async () => {
@@ -163,7 +168,7 @@ describe("Detalle de una lista", () => {
   });
 
   it("sin coincidencias muestra el aviso y «Clear filters» los quita", async () => {
-    estado.params = new URLSearchParams("type=tv");
+    window.history.replaceState(null, "", "/lists/7?type=tv");
     estado.paginas = [pagina([])];
     const user = userEvent.setup();
     render(<ListDetailView id={7} />, { locale: "en" });
@@ -343,7 +348,7 @@ describe("Detalle de una lista", () => {
   });
 
   it("en celular, la hoja de filtros aplica al momento y cuenta los resultados", async () => {
-    estado.params = new URLSearchParams("type=movie");
+    window.history.replaceState(null, "", "/lists/7?type=movie");
     const user = userEvent.setup();
     render(<ListDetailView id={7} />, { locale: "en" });
     await screen.findByRole("link", { name: /Título 1/ });
