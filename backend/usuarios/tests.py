@@ -1415,7 +1415,7 @@ class SeedConservaStaffTests(TestCase):
         normal = UsuarioFactory()
         self._poblar_catalogo(UMBRAL_CATALOGO_PROTEGIDO + 1)
 
-        call_command("seed", "--borrar-catalogo", verbosity=0)
+        call_command("seed", "--sintetico", "--borrar-catalogo", verbosity=0)
 
         # El superusuario y su EmailAddress sobreviven al reset...
         self.assertTrue(
@@ -1429,7 +1429,7 @@ class SeedConservaStaffTests(TestCase):
         # Por debajo del umbral el flujo completo corre sin flag.
         self._poblar_catalogo(CANTIDAD_PRODUCCIONES)
 
-        call_command("seed", verbosity=0)
+        call_command("seed", "--sintetico", verbosity=0)
 
         self.assertGreater(Calificacion.objects.count(), 0)
         self.assertGreater(Resena.objects.count(), 0)
