@@ -88,7 +88,7 @@ type PasswordFieldProps = Omit<ComponentProps<"input">, "id" | "type"> & {
   id?: string;
   error?: string | null;
   children?: ReactNode;
-  /** Acción junto a la etiqueta (p. ej. «¿Olvidaste tu contraseña?»). */
+  /** Acción debajo del campo, a la derecha (p. ej. «¿Olvidaste tu contraseña?»). */
   labelAction?: ReactNode;
 };
 
@@ -132,11 +132,7 @@ export function PasswordField({
           )}
         </button>
       </div>
-      {labelAction && (
-        <div className="flex justify-end sm:absolute sm:top-0 sm:right-0 sm:-mt-3.5">
-          {labelAction}
-        </div>
-      )}
+      {labelAction && <div className="flex justify-end">{labelAction}</div>}
       <div id={`${fieldId}-info`} className="flex flex-col gap-2">
         {error ? <FieldError>{error}</FieldError> : null}
         {children}

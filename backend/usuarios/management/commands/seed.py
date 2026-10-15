@@ -2,17 +2,23 @@
 Comando de desarrollo: `python manage.py seed`.
 
 Pobla la base de datos con datos de prueba consistentes para desarrollar la UI
-(F-05 del plan de desarrollo). Es **destructivo e idempotente**: borra los datos
-de las apps de negocio y los recrea desde cero en cada ejecución.
+(F-05 del plan de desarrollo). Es **destructivo e idempotente** con las
+cuentas, calificaciones, reseñas, listas y chats: los recrea desde cero.
+
+Por defecto el catálogo es **real**: trae de TMDB los títulos más votados por
+género (`seed_real`) y arma actividad con sentido sobre ellos, así cada
+tarjeta lleva a su ficha verdadera. No borra producciones reales; solo las
+sintéticas de Faker que hubiera. Necesita TMDB configurado y red.
 
 Uso:
-    python manage.py seed
-    python manage.py seed --borrar-catalogo   # si el catálogo supera el umbral
+    python manage.py seed                     # catálogo real desde TMDB
+    python manage.py seed --sintetico         # offline, producciones de Faker
+    python manage.py seed --borrar-catalogo   # con --sintetico, si supera el umbral
     python manage.py seed --solo-resenas      # solo calificaciones y reseñas
 
-Desde C-04c el catálogo puede venir de `seed_catalogo` (horas de llamadas a
-TMDB): por encima de `UMBRAL_CATALOGO_PROTEGIDO` este comando se niega a
-borrarlo salvo que se le pida explícitamente. `--solo-resenas` es la
+Con `--sintetico` el catálogo se recrea de cero: por encima de
+`UMBRAL_CATALOGO_PROTEGIDO` (lo pobló `seed_catalogo`, horas de TMDB) el comando
+se niega a borrarlo salvo `--borrar-catalogo`. `--solo-resenas` es la
 alternativa no destructiva: siembra calificaciones y reseñas sobre el
 catálogo y los usuarios de desarrollo existentes, sin borrar nada.
 """
@@ -40,6 +46,7 @@ from chatbot.models import Chat, Mensaje, TipoAutor
 from listas.factories import ListaFactory
 from listas.models import ClaveLista, Lista, Tiene, TipoLista
 from listas.services import agregar_a_vistas
+from usuarios import seed_real
 from usuarios.factories import UsuarioFactory
 from usuarios.models import EstadoCuenta, Usuario
 from usuarios.provisioning import nombres_listas_predeterminadas
@@ -75,6 +82,14 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
+            "--sintetico",
+            action="store_true",
+            help=(
+                "Usa producciones de Faker en vez de traerlas de TMDB (sin "
+                "red). Sus id_tmdb pueden chocar con títulos reales."
+            ),
+        )
+        parser.add_argument(
             "--solo-resenas",
             action="store_true",
             help=(
@@ -84,12 +99,42 @@ class Command(BaseCommand):
             ),
         )
 
-    @transaction.atomic
     def handle(self, *args, **options):
         if options["solo_resenas"]:
-            self._solo_resenas()
+            with transaction.atomic():
+                self._solo_resenas()
             return
-        self._verificar_catalogo(options["borrar_catalogo"])
+        if options["sintetico"]:
+            with transaction.atomic():
+                self._seed_sintetico(options["borrar_catalogo"])
+            return
+        self._seed_real()
+
+    def _seed_real(self):
+        """Catálogo de TMDB y actividad con sentido (modo por defecto).
+
+        La red va ANTES de la transacción: `materializar` maneja sus propias
+        carreras y no conviene una conexión abierta durante decenas de
+        llamadas. Si TMDB no dejó un pool mínimo se aborta sin borrar nada.
+        """
+        self.stdout.write("Trayendo el catálogo de TMDB…")
+        seed_real.materializar_catalogo(self.stdout)
+        cantidad = seed_real.reales().count()
+        if cantidad < seed_real.MINIMO_REALES:
+            raise CommandError(
+                f"Solo hay {cantidad} producciones reales (mínimo "
+                f"{seed_real.MINIMO_REALES}): revisá TMDB_API_KEY y la red, o "
+                "corré `seed --sintetico` para trabajar sin conexión."
+            )
+        with transaction.atomic():
+            self._limpiar(conservar_reales=True)
+            usuarios = self._crear_usuarios()
+            seed_real.generar_actividad(usuarios)
+            self._crear_chats(usuarios)
+        self._resumen(usuarios)
+
+    def _seed_sintetico(self, borrar_catalogo):
+        self._verificar_catalogo(borrar_catalogo)
         self._limpiar()
         usuarios = self._crear_usuarios()
         producciones = self._crear_producciones()
@@ -157,8 +202,11 @@ class Command(BaseCommand):
                 "que querés, corré `seed --borrar-catalogo`."
             )
 
-    def _limpiar(self):
+    def _limpiar(self, conservar_reales=False):
         """Borra los datos de las apps de negocio, conservando al superusuario.
+
+        Con `conservar_reales` el catálogo de TMDB queda: solo se borran las
+        producciones sintéticas (póster que no es una ruta de TMDB).
 
         El borrado en cascada limpiaría el resto, pero se listan todos los
         modelos explícitamente para que el comando sea legible y no dependa
@@ -174,9 +222,12 @@ class Command(BaseCommand):
             Tiene,
             Chat,
             Lista,
-            ProduccionAudiovisual,
         ):
             modelo.objects.all().delete()
+        if conservar_reales:
+            ProduccionAudiovisual.objects.exclude(poster__startswith="/").delete()
+        else:
+            ProduccionAudiovisual.objects.all().delete()
         EmailAddress.objects.exclude(user__is_staff=True).delete()
         Usuario.objects.exclude(is_staff=True).delete()
 

@@ -297,9 +297,28 @@ describe("Buscar", () => {
     render(<SearchView />, { locale: "en" });
 
     expect(await screen.findByText("Nothing for “dnue”")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    // Hay dos: el de la fila de filtros y el del estado vacío.
+    const botones = screen.getAllByRole("button", { name: "Clear filters" });
+    expect(botones).toHaveLength(2);
+    fireEvent.click(botones[1]);
 
     expect(reemplazos).toEqual(["/search?q=dnue"]);
+  });
+
+  it("«Clear filters» a la derecha de los filtros solo aparece con filtros activos", async () => {
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+    expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  });
+
+  it("«Clear filters» de la fila de filtros quita género, año y nota, y deja el texto", async () => {
+    estado.params = new URLSearchParams("q=dune&genre=18&year=2024&rating=8");
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(reemplazos).toEqual(["/search?q=dune"]);
   });
 
   it("si la API falla avisa y Reintentar vuelve a pedir", async () => {

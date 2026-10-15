@@ -21,7 +21,7 @@ class SemillaIdiomaTests(TestCase):
             "usuario003@filmai.com": "es",
         }
         for _ in range(2):
-            call_command("seed", stdout=StringIO())
+            call_command("seed", sintetico=True, stdout=StringIO())
             self.assertEqual(
                 dict(
                     Usuario.objects.filter(is_staff=False).values_list(
@@ -34,7 +34,7 @@ class SemillaIdiomaTests(TestCase):
             self.assertIsNone(administrador.idioma)
 
     def test_seed_deja_las_cuentas_con_fecha_de_aceptacion_de_terminos(self):
-        call_command("seed", stdout=StringIO())
+        call_command("seed", sintetico=True, stdout=StringIO())
         cuentas = Usuario.objects.filter(is_staff=False)
         self.assertEqual(cuentas.count(), 3)
         self.assertFalse(

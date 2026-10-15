@@ -298,9 +298,11 @@ Para recrear los datos de desarrollo, cuando el integrante decida hacerlo:
 docker compose exec backend python manage.py seed
 ```
 
-> **Advertencia:** `seed` es destructivo para los datos de las aplicaciones de negocio: elimina y recrea usuarios de prueba, catálogo, listas, reseñas, calificaciones y chats. No elimina el superusuario creado por el entrypoint.
+> **Advertencia:** `seed` es destructivo para cuentas, calificaciones, reseñas, listas y chats: los elimina y recrea. No elimina el superusuario creado por el entrypoint.
 >
-> Si el catálogo tiene más de 100 producciones (lo pobló `seed_catalogo`, la sync o la navegación), `seed` **se niega** a borrarlo: son horas de llamadas a TMDB y el borrado se lleva calificaciones, reseñas y listas. Para forzarlo: `python manage.py seed --borrar-catalogo`.
+> Por defecto el catálogo es **real**: trae de TMDB los más votados de 15 géneros (9 de películas, 6 de series, ~60 títulos) y arma sobre ellos calificaciones cercanas a la nota de TMDB, reseñas en el idioma de cada cuenta, Vistas/Favoritos/Pendientes coherentes y dos listas temáticas por cuenta. No borra producciones reales, solo las sintéticas de Faker que hubiera; necesita `TMDB_API_KEY` y red. Con `python manage.py seed --sintetico` trabaja sin conexión con producciones de Faker, pero sus `id_tmdb` pueden chocar con títulos reales y la ficha mostrar otra producción.
+>
+> Con `--sintetico`, si el catálogo tiene más de 100 producciones (lo pobló `seed_catalogo`, la sync o la navegación), `seed` **se niega** a borrarlo: son horas de llamadas a TMDB y el borrado se lleva calificaciones, reseñas y listas. Para forzarlo: `python manage.py seed --sintetico --borrar-catalogo`.
 
 #### Agregar reseñas sin tocar el catálogo (`seed --solo-resenas`)
 

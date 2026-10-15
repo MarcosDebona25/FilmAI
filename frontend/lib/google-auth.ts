@@ -1,6 +1,6 @@
-import { translateError } from "./errors";
+import { translateError, type CodedError } from "./errors";
 import { synchronizeAccountLocale } from "./account-locale";
-import { ApiError, apiFetch, extraerErroresPorCampo } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 
 const CAMPOS_FALTANTES = ["nombre_usuario", "fecha_nacimiento", "genero"];
 
@@ -63,9 +63,12 @@ export async function handleGoogleLogin(idToken: string): Promise<GoogleLoginRes
   }
 }
 
+/**
+ * El error vuelve como código (no como texto) para que la pantalla lo traduzca
+ * al renderizar: el selector EN|ES sigue activo durante el alta.
+ */
 export type CompletarGoogleResult =
-  | { ok: true; usuario?: string }
-  | { ok: false; error: string; erroresPorCampo?: Record<string, string> };
+  { ok: true; usuario?: string } | { ok: false; error: CodedError };
 
 export async function completarRegistroGoogle(
   idToken: string,
@@ -86,12 +89,8 @@ export async function completarRegistroGoogle(
     return { ok: true, usuario: data.user?.nombre_usuario };
   } catch (err) {
     if (err instanceof ApiError) {
-      return {
-        ok: false,
-        error: err.message,
-        erroresPorCampo: extraerErroresPorCampo(err),
-      };
+      return { ok: false, error: { code: err.code, params: err.params, errors: err.errors } };
     }
-    return { ok: false, error: translateError({ code: "unknown" }) };
+    return { ok: false, error: { code: "unknown" } };
   }
 }
