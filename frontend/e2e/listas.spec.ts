@@ -413,9 +413,15 @@ test.describe("Listas: arrastrar en escritorio", () => {
     await page.goto("/lists");
 
     const manija = page.getByRole("button", { name: en.common.lists.reorderLabel }).first();
-    await manija.focus();
-    await page.keyboard.press("Space");
+    // El teclado solo levanta la tarjeta cuando la página ya hidrató: se
+    // reintenta hasta que la manija queda «presionada».
+    await expect(async () => {
+      await manija.focus();
+      await page.keyboard.press("Space");
+      await expect(manija).toHaveAttribute("aria-pressed", "true", { timeout: 1000 });
+    }).toPass({ timeout: 15_000 });
     await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(250);
     await page.keyboard.press("Space");
 
     await expect(page.getByText(en.lists.feedback.orderSaved)).toBeVisible();
