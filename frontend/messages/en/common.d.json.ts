@@ -43,7 +43,9 @@ declare const messages: {
       "moveRight": "Move right",
       "nameLabel": "List name",
       "renameTitle": "Rename list",
-      "delete": "Delete list"
+      "delete": "Delete list",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     },
     "actions": {
       "cancel": "Cancel",
@@ -399,7 +401,8 @@ declare const messages: {
     "count": {
       "items": "{count, plural, one {# item} other {# items}}",
       "movies": "{count, plural, one {# movie} other {# movies}}",
-      "summary": "{count, plural, one {# list} other {# lists}} · {defaultCount, plural, one {# default} other {# defaults}}"
+      "summary": "{count, plural, one {# list} other {# lists}} · {defaultCount, plural, one {# default} other {# defaults}}",
+      "tvShows": "{count, plural, one {# TV show} other {# TV shows}}"
     },
     "card": {
       "actionsLabel": "Actions for the list {listName}",
@@ -411,7 +414,9 @@ declare const messages: {
     "name": {
       "allowedCharactersHelp": "Letters, numbers, and spaces only.",
       "requiredError": "The name can’t be empty.",
-      "invalidCharactersError": "Use only letters, numbers, and spaces."
+      "invalidCharactersError": "Use only letters, numbers, and spaces.",
+      "placeholder": "E.g., Sunday marathon",
+      "counter": "{count}/{max}"
     },
     "delete": {
       "confirmTitle": "Delete “{listName}”?",
@@ -436,7 +441,25 @@ declare const messages: {
       "removeItemLabel": "Remove {title} from {listName}",
       "emptyTitle": "This list is still empty",
       "emptyDescription": "From any title page you can add movies and TV shows with “Add to list”.",
-      "removeConfirmTitle": "Remove “{title}” from {listName}?"
+      "removeConfirmTitle": "Remove “{title}” from {listName}?",
+      "loadError": "We couldn’t load this list. Try again.",
+      "loadMore": "Load more titles",
+      "searchPlaceholder": "Search by title",
+      "displayedCount": "Showing {shownCount} of {totalCount, plural, one {# item} other {# items}}",
+      "sortPrefix": "Sort: {sortLabel}",
+      "resultsAction": "Show {count, plural, one {# result} other {# results}}",
+      "filtersTitle": "Filters and sort",
+      "removeChipLabel": "Remove filter {filterLabel}"
+    },
+    "reorder": {
+      "instructions": "To reorder, press space or enter on the handle, move with the arrow keys, and press space or enter again to drop. Press escape to cancel.",
+      "pickedUp": "{listName} picked up, position {position} of {total}.",
+      "movedTo": "{listName} moved to position {position} of {total}.",
+      "dropped": "{listName} dropped at position {position} of {total}.",
+      "cancelled": "Reorder cancelled. {listName} went back to position {position}."
+    },
+    "overview": {
+      "loadError": "We couldn’t load your lists. Try again."
     }
   },
   "search": {
