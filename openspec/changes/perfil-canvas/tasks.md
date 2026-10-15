@@ -27,11 +27,11 @@
 
 ## Phase 2: Settings (PR 3)
 
-- [ ] 2.1 `Switch` component (`role="switch"`) with tests
-- [ ] 2.2 Settings per the canvas: breadcrumb or back link, Language, Privacy, Notifications, Legal, Account + alert dialog; no theme selector
-- [ ] 2.3 `AccountProvider` keeps the app dark whatever the saved theme
-- [ ] 2.4 Terms: desktop breadcrumb with a session
-- [ ] 2.5 Tests and `e2e/preferencias.spec.ts`
+- [x] 2.1 `Switch` component (`role="switch"`) with tests
+- [x] 2.2 Settings per the canvas: breadcrumb or back link, Language, Privacy, Notifications, Legal, Account + alert dialog; no theme selector
+- [x] 2.3 `AccountProvider` keeps the app dark whatever the saved theme
+- [x] 2.4 Terms: desktop breadcrumb with a session
+- [x] 2.5 Tests and `e2e/preferencias.spec.ts`
 
 ## Phase 3: Profile (PR 4)
 

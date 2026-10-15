@@ -51,9 +51,15 @@ type AccountContextValue = {
 
 const AccountContext = createContext<AccountContextValue | null>(null);
 
-function aplicarTema(tema: Preferencias["tema"]) {
-  document.documentElement.classList.toggle("dark", tema === "oscuro");
-  document.documentElement.style.colorScheme = tema === "oscuro" ? "dark" : "light";
+/**
+ * Solo tema oscuro por ahora (15/10/2026): los tokens propios de la app
+ * (superficies, líneas, textos, velos) existen solo para oscuro, y con «claro»
+ * la interfaz se rompía. La preferencia `tema` se sigue guardando en la API
+ * para cuando exista la paleta clara del canvas; hasta entonces se ignora.
+ */
+function aplicarTema() {
+  document.documentElement.classList.add("dark");
+  document.documentElement.style.colorScheme = "dark";
 }
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
@@ -69,7 +75,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     setPerfil(null);
     setPreferencias(null);
     setAvatares([]);
-    aplicarTema("oscuro");
+    aplicarTema();
   }, []);
 
   const recargar = useCallback(async () => {
@@ -85,7 +91,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       ]);
       setAvatares(catalogo);
       setPreferencias(ajustes);
-      aplicarTema(ajustes.tema);
+      aplicarTema();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         limpiar();
@@ -133,17 +139,17 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     }
     const optimista = { ...anterior, [campo]: valor };
     setPreferencias(optimista);
-    if (campo === "tema") aplicarTema(valor as Preferencias["tema"]);
+    if (campo === "tema") aplicarTema();
     try {
       const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
         method: "PUT",
         body: { [campo]: valor },
       });
       setPreferencias(confirmada);
-      aplicarTema(confirmada.tema);
+      aplicarTema();
     } catch (err) {
       setPreferencias(anterior);
-      aplicarTema(anterior.tema);
+      aplicarTema();
       throw err;
     }
   }

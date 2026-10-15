@@ -655,7 +655,9 @@ declare const messages: {
       "spanish": "Español",
       "changing": "Changing language…",
       "updated": "Language updated.",
-      "saveError": "We couldn’t save your language. Try again."
+      "saveError": "We couldn’t save your language. Try again.",
+      "interfaceLabel": "Interface language",
+      "interfaceHelp": "Applies instantly and is saved to your account. Also used for the emails we send you."
     }
   },
   "errors": {
