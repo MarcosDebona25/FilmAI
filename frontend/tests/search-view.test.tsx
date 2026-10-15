@@ -216,6 +216,9 @@ describe("Buscar", () => {
     window.history.pushState(null, "", "/search?q=dune");
     render(<SearchView />, { locale: "en" });
     await screen.findByText("Dune: Part Two");
+    // El observador se registra un instante después de pintar la grilla: en un
+    // CI lento el texto ya está y el observador todavía no.
+    await waitFor(() => expect(observadores).toHaveLength(1));
 
     act(() => observadores[0].acercar());
 
@@ -229,6 +232,7 @@ describe("Buscar", () => {
     window.history.pushState(null, "", "/search?q=dune");
     render(<SearchView />, { locale: "en" });
     await screen.findByText("Dune: Part Two");
+    await waitFor(() => expect(observadores).toHaveLength(1));
 
     window.history.pushState(null, "", "/search?q=dune&rating=8");
     act(() => observadores[0].acercar());
