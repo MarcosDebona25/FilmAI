@@ -143,3 +143,13 @@ reviews.results.loading,,status,,Cargando tus calificaciones…,Loading your rat
 reviews.results.loadError,,error,,No pudimos cargar tus calificaciones. Intentá de nuevo.,We couldn’t load your ratings. Try again.,aprobado
 reviews.results.loadMore,,label,,Cargar más calificaciones,Load more ratings,aprobado
 reviews.filters.ratingChip,,label,rating,Calificación {rating},Rating {rating},aprobado
+auth.completeSignUp.badge,,label,,Registro con Google,Signing up with Google,aprobado
+auth.completeSignUp.title,,label,,Terminá tu registro,Finish signing up,aprobado
+auth.completeSignUp.description,,label,,Tomamos tu nombre y tu correo de tu cuenta de Google. Completá el resto y confirmá con Google para crear tu cuenta.,We take your name and email from your Google account. Fill in the rest and confirm with Google to create your account.,aprobado
+auth.completeSignUp.fixHighlighted,,error,,Corregí el campo marcado y tocá de nuevo el botón de Google.,Fix the highlighted field and press the Google button again.,aprobado
+auth.completeSignUp.genderPlaceholder,,label,,Elegí una opción,Choose an option,aprobado
+auth.completeSignUp.cancel,,label,,Cancelar y volver a iniciar sesión,Cancel and go back to log in,aprobado
+profile.leaveDialog.title,,label,,¿Salir sin guardar?,Leave without saving?,aprobado
+profile.leaveDialog.body,,label,,Los cambios que hiciste en tu perfil no se guardarán.,The changes you made to your profile won’t be saved.,aprobado
+profile.leaveDialog.keepEditing,,label,,Seguir editando,Keep editing,aprobado
+profile.leaveDialog.leave,,label,,Salir sin guardar,Leave without saving,aprobado

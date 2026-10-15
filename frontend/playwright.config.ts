@@ -17,6 +17,8 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_API_URL: "http://127.0.0.1:3100",
       NEXT_DIST_DIR: ".next-e2e",
+      // Muestra el botón de Google; los specs que lo usan reemplazan el SDK.
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "e2e.apps.googleusercontent.com",
     },
   },
 });

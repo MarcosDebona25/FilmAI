@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Check, Circle } from "lucide-react";
 
 import { AccessShell } from "@/components/access/AccessShell";
 import { ConfirmationSent } from "@/components/access/ConfirmationSent";
+import { GoogleMark } from "@/components/access/GoogleMark";
 import { AccessLogo } from "@/components/access/Logo";
 import {
   FieldError,
@@ -18,14 +19,15 @@ import {
 } from "@/components/access/fields";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/access/styles";
 import enums from "@/i18n/enums.json";
-import { currentLocale } from "@/i18n/client";
-import { ApiError, apiFetch, apiUrl, extraerErroresPorCampo } from "@/lib/api";
+import { ApiError, apiFetch, extraerErroresPorCampo } from "@/lib/api";
 import { translateError } from "@/lib/errors";
 import { marcarGooglePendiente } from "@/lib/google-auth";
 import { savePendingEmail } from "@/lib/pending-email";
 import { passwordRules } from "@/lib/password-rules";
 import { routes } from "@/lib/routes";
+import { useUsernameAvailability } from "@/lib/use-username-availability";
 import { useValidation } from "@/lib/use-validation";
+import { maxFechaNacimiento } from "@/lib/validation";
 
 type Campo =
   | "nombre"
@@ -41,13 +43,6 @@ type Campo =
 type Errores = Partial<Record<Campo, string>>;
 
 const ERROR_DELAY_MS = 600;
-
-/** Fecha máxima para el selector: hoy −13 años (el backend es quien valida). */
-function maxFechaNacimiento(): string {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() - 13);
-  return d.toISOString().slice(0, 10);
-}
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
@@ -83,13 +78,13 @@ export default function RegisterPage() {
   // Copia con retardo: el error de un campo de texto aparece cuando el usuario
   // hace una pausa, no en cada pulsación.
   const [diferido, setDiferido] = useState(form);
-  const [usernameEstado, setUsernameEstado] = useState<
-    "idle" | "checking" | "disponible" | "ocupado"
-  >("idle");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [enviadoA, setEnviadoA] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const { estado: usernameEstado, marcarOcupado } = useUsernameAvailability(
+    form.nombre_usuario,
+    !validarNombreUsuario(form.nombre_usuario)
+  );
 
   const validadores: Record<
     Exclude<Campo, "acepta_terminos">,
@@ -137,39 +132,6 @@ export default function RegisterPage() {
     return validadores[campo](diferido[campo], diferido) ? actual : undefined;
   }
 
-  // Disponibilidad del nombre de usuario en vivo, con debounce.
-  useEffect(() => {
-    const valor = form.nombre_usuario.trim();
-    clearTimeout(debounceRef.current);
-    if (!valor || validarNombreUsuario(valor)) {
-      setUsernameEstado("idle");
-      return;
-    }
-    setUsernameEstado("checking");
-    const controller = new AbortController();
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          apiUrl(`/api/auth/username-available/?username=${encodeURIComponent(valor)}`),
-          { signal: controller.signal, headers: { "Accept-Language": currentLocale() } }
-        );
-        if (!res.ok) {
-          // Un error (p. ej. 429 (Too Many Requests)) no significa «ocupado».
-          setUsernameEstado("idle");
-          return;
-        }
-        const data: { disponible?: boolean } = await res.json();
-        setUsernameEstado(data.disponible ? "disponible" : "ocupado");
-      } catch {
-        if (!controller.signal.aborted) setUsernameEstado("idle");
-      }
-    }, 400);
-    return () => {
-      clearTimeout(debounceRef.current);
-      controller.abort();
-    };
-  }, [form.nombre_usuario, validarNombreUsuario]);
-
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -203,7 +165,7 @@ export default function RegisterPage() {
         }
         if (Object.keys(mapeados).length > 0) {
           setErroresServidor((prev) => ({ ...prev, ...mapeados }));
-          if ("nombre_usuario" in mapeados) setUsernameEstado("ocupado");
+          if ("nombre_usuario" in mapeados) marcarOcupado();
         } else {
           setError(err.message);
         }
@@ -255,26 +217,7 @@ export default function RegisterPage() {
           <p className="text-muted-foreground">{t("signUp.description")}</p>
         </div>
         <button type="button" onClick={onGoogle} className={secondaryButtonClass}>
-          <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-white">
-            <svg className="size-4" viewBox="0 0 48 48">
-              <path
-                fill="#EA4335"
-                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-              />
-              <path
-                fill="#4285F4"
-                d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-              />
-              <path
-                fill="#34A853"
-                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-              />
-            </svg>
-          </span>
+          <GoogleMark />
           {t("google.continue")}
         </button>
         <div aria-hidden="true" className="flex items-center gap-3.5 text-sm text-fg-3">

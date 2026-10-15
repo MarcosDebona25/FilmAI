@@ -16,19 +16,29 @@ type GoogleButtonProps = {
   onError?: (message: string) => void;
   /** Texto del botón oficial de Google (GIS). El default es "continue_with". */
   text?: "signin_with" | "signup_with" | "continue_with";
+  /** Tema de GIS: `outline` es el botón blanco del alta con Google. */
+  theme?: "filled_black" | "outline";
+  /** Ocupa el ancho del contenedor (GIS acepta hasta 400 px). */
+  fullWidth?: boolean;
 };
 
 type GoogleCredentialResponse = {
   credential?: string;
 };
 
-export function GoogleButton({ onSuccess, onError, text = "continue_with" }: GoogleButtonProps) {
+export function GoogleButton({
+  onSuccess,
+  onError,
+  text = "continue_with",
+  theme = "filled_black",
+  fullWidth = false,
+}: GoogleButtonProps) {
   const locale = useLocale();
   const t = useTranslations("errors.codes");
   const auth = useTranslations("auth.google");
   const containerRef = useRef<HTMLDivElement>(null);
-  const callbacksRef = useRef({ onSuccess, onError, text, locale });
-  callbacksRef.current = { onSuccess, onError, text, locale };
+  const callbacksRef = useRef({ onSuccess, onError, text, locale, theme, fullWidth });
+  callbacksRef.current = { onSuccess, onError, text, locale, theme, fullWidth };
 
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -50,12 +60,13 @@ export function GoogleButton({ onSuccess, onError, text = "continue_with" }: Goo
           }
         },
       });
+      const opciones = callbacksRef.current;
       window.google?.accounts?.id?.renderButton(container, {
-        locale: callbacksRef.current.locale,
-        theme: "filled_black",
+        locale: opciones.locale,
+        theme: opciones.theme,
         size: "large",
-        width: 320,
-        text: callbacksRef.current.text,
+        width: opciones.fullWidth ? Math.min(400, container.clientWidth || 320) : 320,
+        text: opciones.text,
       });
     }
 
@@ -80,5 +91,11 @@ export function GoogleButton({ onSuccess, onError, text = "continue_with" }: Goo
     return null;
   }
 
-  return <div ref={containerRef} aria-label={auth("continue")} />;
+  return (
+    <div
+      ref={containerRef}
+      aria-label={auth("continue")}
+      className={fullWidth ? "flex w-full justify-center" : undefined}
+    />
+  );
 }
