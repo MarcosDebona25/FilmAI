@@ -86,8 +86,11 @@ export function ListDetailView({ id }: { id: number }) {
   const activos = filtrosActivos(filtros);
   const filtrando = hayFiltros(filtros);
 
+  // Parte de la URL de ahora y no de lo renderizado: la espera del texto y un
+  // «limpiar» pueden cruzarse antes de que `useSearchParams` se entere.
   function cambiar(cambios: Partial<FiltrosLista>) {
-    window.history.replaceState(null, "", urlDeFiltros(id, { ...filtros, ...cambios }));
+    const actuales = filtrosDesdeUrl(new URLSearchParams(window.location.search));
+    window.history.replaceState(null, "", urlDeFiltros(id, { ...actuales, ...cambios }));
   }
 
   function limpiar() {
