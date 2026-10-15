@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792078454.962094,
-    "seen": 1792078471.2846534,
-    "ast_hash": "6525fa2449e5a81fe1a9ce77f94aec6f",
+    "mtime": 1792080464.7916262,
+    "seen": 1792080477.6986058,
+    "ast_hash": "d452322fcd6d4f3a1008a17fc129fdb2",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2382,8 +2382,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1792078424.5436325,
-    "seen": 1792078471.2775142,
+    "mtime": 1792080435.3386083,
+    "seen": 1792080477.691175,
     "ast_hash": "3713bec81ec1e61b04f31891f631c940",
     "semantic_hash": ""
   },
@@ -2412,8 +2412,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1792078424.5479658,
-    "seen": 1792078471.2775183,
+    "mtime": 1792080435.3386083,
+    "seen": 1792080477.6912258,
     "ast_hash": "a49728671e9a935d0187bf92a26341e2",
     "semantic_hash": ""
   },
@@ -3078,9 +3078,9 @@
     "semantic_hash": ""
   },
   "frontend/components/access/fields.tsx": {
-    "mtime": 1792064834.8645997,
-    "seen": 1792070186.1321683,
-    "ast_hash": "6752e0c035254de4308fcf8d2ebeb62c",
+    "mtime": 1792080463.0561194,
+    "seen": 1792080477.6873572,
+    "ast_hash": "d9984d246685114d60d6e89caa1c4db3",
     "semantic_hash": ""
   },
   "frontend/e2e/acceso.spec.ts": {
@@ -3612,8 +3612,8 @@
     "semantic_hash": ""
   },
   "frontend/components/features/reviews/MyReviewsView.tsx": {
-    "mtime": 1792078293.468722,
-    "seen": 1792078471.274775,
+    "mtime": 1792079354.0324192,
+    "seen": 1792080477.6882744,
     "ast_hash": "9d95fe2af4d9f50a1722c1273352be18",
     "semantic_hash": ""
   },
@@ -3630,8 +3630,8 @@
     "semantic_hash": ""
   },
   "frontend/tests/my-reviews-view.test.tsx": {
-    "mtime": 1792078286.8614154,
-    "seen": 1792078471.278847,
+    "mtime": 1792079354.0330844,
+    "seen": 1792080477.6926641,
     "ast_hash": "49aa70b31ce0b5aba625019213fe12fa",
     "semantic_hash": ""
   },
@@ -3768,9 +3768,9 @@
     "semantic_hash": ""
   },
   "frontend/e2e/listas.spec.ts": {
-    "mtime": 1792077985.1401908,
-    "seen": 1792078471.275914,
-    "ast_hash": "23cb3d6e9d5f5ce3fbb4973ae99ec814",
+    "mtime": 1792079354.0327775,
+    "seen": 1792080477.6896005,
+    "ast_hash": "ca7892e1e37a805b861fd9627c955a55",
     "semantic_hash": ""
   },
   "frontend/lib/list-sensors.ts": {
