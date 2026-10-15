@@ -1,5 +1,5 @@
 // Excepciones temporales: se eliminan al integrar cada diseño definitivo.
-export const legacyFiles = ["app/complete-signup/page.tsx", "components/NavigationGuard.tsx"];
+export const legacyFiles = [];
 const visibleAttributes = new Set([
   "aria-label",
   "alt",

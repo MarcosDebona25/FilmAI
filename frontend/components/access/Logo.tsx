@@ -33,16 +33,26 @@ export function TicketMark({
 }
 
 /** Marca de las pantallas de acceso: lleva siempre a la landing. */
-export function AccessLogo({ className = "" }: { className?: string }) {
+export function AccessLogo({
+  className = "",
+  compact = false,
+}: {
+  className?: string;
+  /** Versión chica, sobre la franja de pósters del celular. */
+  compact?: boolean;
+}) {
   const t = useTranslations("nav.main");
   return (
     <Link
       href={routes.home}
       aria-label={t("brandLandingLabel")}
-      className={`flex items-center gap-2.5 text-foreground no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${className}`}
+      className={`flex items-center ${compact ? "gap-2" : "gap-2.5"} text-foreground no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${className}`}
     >
-      <TicketMark />
-      <span translate="no" className="font-display text-[30px] leading-none tracking-[0.05em]">
+      {compact ? <TicketMark width={28} height={21} /> : <TicketMark />}
+      <span
+        translate="no"
+        className={`font-display leading-none tracking-[0.05em] ${compact ? "text-[26px]" : "text-[30px]"}`}
+      >
         FilmAI
       </span>
     </Link>
