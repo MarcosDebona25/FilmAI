@@ -10,7 +10,10 @@ from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_to
 from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
-from catalogo.services.materialization import materializar_en_segundo_plano
+from catalogo.services.materialization import (
+    materializar_en_segundo_plano,
+    materializar_listado_en_segundo_plano,
+)
 from catalogo.services.recomendado import recomendar
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.validacion import ErrorValidacion
@@ -90,6 +93,20 @@ def _materializar_sin_interrumpir(id_tmdb, tipo_tmdb):
         )
 
 
+def _materializar_listado_sin_interrumpir(data, tipo_tmdb=None):
+    """Encola lo que muestra un listado (C-04a) sin afectar la respuesta.
+
+    Misma política que la ficha: el listado es passthrough de TMDB y se tiene
+    que ver aunque la base o el broker fallen.
+    """
+    try:
+        materializar_listado_en_segundo_plano(
+            (data or {}).get("results", []), tipo_tmdb
+        )
+    except Exception:
+        logger.exception("No se pudo encolar la materialización del listado")
+
+
 class CatalogoBaseView(APIView):
     authentication_classes: ClassVar = []
     permission_classes: ClassVar = [AllowAny]
@@ -106,10 +123,15 @@ class CatalogoBaseView(APIView):
 class TrendingView(CatalogoBaseView):
     def get(self, request):
         service = self._service(request)
+        media_type = request.query_params.get("media_type", "all")
         data = service.get_trending(
-            request.query_params.get("media_type", "all"),
+            media_type,
             request.query_params.get("time_window", "week"),
             self._page(request),
+        )
+        # En «all» cada ítem trae su `media_type`.
+        _materializar_listado_sin_interrumpir(
+            data, media_type if media_type in ("movie", "tv") else None
         )
         return Response(data)
 
@@ -117,6 +139,7 @@ class TrendingView(CatalogoBaseView):
 class NowPlayingView(CatalogoBaseView):
     def get(self, request):
         data = self._service(request).get_now_playing(self._page(request))
+        _materializar_listado_sin_interrumpir(data, "movie")
         return Response(data)
 
 
@@ -135,6 +158,7 @@ class DiscoverView(CatalogoBaseView):
         data = self._service(request).discover(
             tipo, genero, anio, min_rating, self._page(request), min_votos=min_votos
         )
+        _materializar_listado_sin_interrumpir(data, tipo)
         return Response(data)
 
 
@@ -145,6 +169,7 @@ class SearchView(CatalogoBaseView):
             raise _error_param("query", "This parameter is required.", "required")
         tipo = _validate_tipo(request.query_params.get("tipo"))
         data = self._service(request).search(query, tipo, self._page(request))
+        _materializar_listado_sin_interrumpir(data, tipo)
         return Response(data)
 
 
@@ -192,6 +217,8 @@ class BrowseView(CatalogoBaseView):
             a_estrenar=self._a_estrenar(params.get("a_estrenar")),
             decada=self._decada(params.get("decada")),
         )
+        # Cada ítem de Buscar trae su `media_type`.
+        _materializar_listado_sin_interrumpir(datos)
         return Response(datos)
 
     def _decada(self, valor):
