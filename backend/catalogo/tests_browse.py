@@ -78,6 +78,11 @@ class BrowseBase(SimpleTestCase):
         parche = patch("catalogo.views.get_catalog_service", return_value=self.tmdb)
         parche.start()
         self.addCleanup(parche.stop)
+        # Buscar encola lo que muestra (C-04a); eso consulta la base y estos
+        # tests no tienen. Tiene su cobertura en `test_materializar_listados`.
+        listado = patch("catalogo.views.materializar_listado_en_segundo_plano")
+        listado.start()
+        self.addCleanup(listado.stop)
         self.api = APIClient()
 
     def buscar(self, **params):
