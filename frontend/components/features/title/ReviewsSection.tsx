@@ -65,7 +65,7 @@ function Texto({ texto }: { texto: string }) {
           type="button"
           aria-expanded={abierto}
           onClick={() => setAbierto(!abierto)}
-          className="cursor-pointer self-start text-sm font-semibold text-fg-2 hover:text-foreground"
+          className="h-11 cursor-pointer self-start text-sm font-semibold text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-9"
         >
           {abierto ? t("readLess") : t("readMore")}
         </button>
@@ -159,9 +159,10 @@ export function ReviewsSection({
   const filtrando = nota !== null;
   const avatar = (id: number) => avatares.find((opcion) => opcion.id === id)?.src;
   const pildora =
-    "inline-flex h-11 items-center gap-2 rounded-full pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)]";
+    "inline-flex h-12 items-center gap-2 rounded-full pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)] md:h-11";
+  // En celular, 44 px de alto y 16 px de letra (con menos, iOS hace zoom al tocarlo).
   const selector =
-    "h-9 cursor-pointer rounded-full border-0 bg-raised-2 px-2.5 text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring";
+    "h-11 cursor-pointer rounded-full border-0 bg-raised-2 px-2.5 text-base font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-9 md:text-sm";
 
   return (
     <section aria-labelledby={tituloId} className="flex max-w-[880px] flex-col gap-8">
@@ -188,7 +189,7 @@ export function ReviewsSection({
               <button
                 type="button"
                 onClick={onEditar}
-                className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-fg-2 md:h-10 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
               >
                 <Pencil aria-hidden="true" className="size-4" />
                 {t("common.actions.edit")}
@@ -196,7 +197,7 @@ export function ReviewsSection({
               <button
                 type="button"
                 onClick={() => setBorrar(true)}
-                className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-destructive focus-visible:outline-2 focus-visible:outline-ring"
+                className="inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-destructive md:h-10 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 <Trash2 aria-hidden="true" className="size-4" />
                 {t("common.review.delete")}
@@ -228,7 +229,7 @@ export function ReviewsSection({
                   setNota(null);
                   setOrden("newest");
                 }}
-                className="h-9 cursor-pointer px-1 text-sm font-semibold text-fg-2 underline underline-offset-[3px] hover:text-foreground"
+                className="h-11 cursor-pointer px-1 text-sm font-semibold text-fg-2 underline md:h-9 underline-offset-[3px] hover:text-foreground"
               >
                 {t("common.filters.clear")}
               </button>

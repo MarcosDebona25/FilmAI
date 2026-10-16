@@ -27,9 +27,10 @@ export function AccessShell({
   const t = useTranslations("auth.landing");
   return (
     <div className="relative min-h-screen bg-background tracking-normal text-foreground">
-      <div className="absolute top-4 right-4 z-20 lg:top-6 lg:right-8">
+      {/* Landmarks: todo el contenido queda en `header`, `aside` o `main`. */}
+      <header className="absolute top-4 right-4 z-20 lg:top-6 lg:right-8">
         <LanguageSwitcher />
-      </div>
+      </header>
       <div
         className={`grid min-h-screen ${
           poster === "side"
@@ -39,7 +40,7 @@ export function AccessShell({
               : "grid-cols-1 lg:grid-cols-[5fr_6fr]"
         }`}
       >
-        <div
+        <aside
           className={`relative overflow-hidden ${
             poster === "side"
               ? "hidden lg:block"
@@ -74,7 +75,7 @@ export function AccessShell({
               className="absolute inset-0 bg-linear-to-r from-[rgb(var(--scrim)/0.1)] via-[rgb(var(--scrim)/0.3)] to-[rgb(var(--scrim))] max-lg:bg-[rgb(var(--scrim)/0.82)] max-lg:bg-none"
             />
           )}
-        </div>
+        </aside>
         <main
           className={`relative z-10 flex justify-center lg:items-center lg:p-12 ${
             poster === "band" ? "px-5 pt-5 pb-10" : "items-center px-5 pt-[104px] pb-10"

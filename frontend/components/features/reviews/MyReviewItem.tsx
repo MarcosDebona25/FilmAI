@@ -107,7 +107,7 @@ export function MyReviewItem({
     "h-[52px] cursor-pointer rounded-[10px] px-3 text-left text-base focus-visible:outline-2 focus-visible:outline-ring";
 
   return (
-    <li className="relative grid grid-cols-[56px_minmax(0,1fr)_40px] gap-3.5 border-t border-line py-5 md:grid-cols-[80px_minmax(0,1fr)_auto] md:gap-6 md:py-7">
+    <li className="relative grid grid-cols-[56px_minmax(0,1fr)_44px] gap-3.5 border-t border-line py-5 md:grid-cols-[80px_minmax(0,1fr)_auto] md:gap-6 md:py-7">
       <div className="relative h-[84px] w-14 overflow-hidden rounded-md bg-raised-2 md:h-[120px] md:w-20 md:rounded-lg">
         {src && !posterFallido ? (
           <Image
@@ -168,7 +168,7 @@ export function MyReviewItem({
                 type="button"
                 aria-expanded={desplegado}
                 onClick={() => setDesplegado(!desplegado)}
-                className="h-9 cursor-pointer self-start px-1 text-sm font-semibold text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="h-11 cursor-pointer self-start px-1 text-sm font-semibold text-fg-2 md:h-9 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {desplegado ? t("common.text.readLess") : t("common.text.readMore")}
               </button>
@@ -243,7 +243,7 @@ export function MyReviewItem({
         aria-label={t("reviews.card.actionsLabel", { title: item.titulo })}
         aria-haspopup="dialog"
         onClick={() => setHoja(true)}
-        className="grid h-11 w-10 cursor-pointer place-items-center text-fg-2 focus-visible:outline-2 focus-visible:outline-ring md:hidden"
+        className="grid size-11 cursor-pointer place-items-center text-fg-2 focus-visible:outline-2 focus-visible:outline-ring md:hidden"
       >
         <Ellipsis aria-hidden="true" className="size-5" />
       </button>
