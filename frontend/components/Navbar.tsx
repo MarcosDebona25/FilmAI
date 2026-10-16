@@ -16,7 +16,7 @@ const NAV_LINKS = [
 ] as const;
 
 const authLinkClass =
-  "inline-flex h-11 items-center rounded-[10px] px-4 text-[15px] font-semibold no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+  "inline-flex h-11 items-center rounded-[10px] px-3 text-[15px] font-semibold md:px-4 no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 /** Encabezado del sitio: marca, navegación principal (escritorio) y cuenta. */
 export function Navbar() {
@@ -44,7 +44,7 @@ export function Navbar() {
       >
         {t("main.skipToContent")}
       </a>
-      <div className="mx-auto flex h-[60px] max-w-[1360px] items-center gap-10 pr-3 pl-5 md:h-auto md:px-10 md:py-5">
+      <div className="mx-auto flex h-[60px] max-w-[1360px] items-center gap-4 pr-3 pl-5 md:gap-10 md:h-auto md:px-10 md:py-5">
         <Link
           href={routes.explore}
           aria-label={t("main.brandHomeLabel")}

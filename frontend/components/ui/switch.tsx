@@ -18,6 +18,8 @@ export function Switch({
   labelledBy: string;
   disabled?: boolean;
 }) {
+  // El botón mide 44 px de alto (área táctil, doc 05 Q-04); la pista visible
+  // es la de 52 × 32 del canvas. La perilla se mueve con `transform`.
   return (
     <button
       type="button"
@@ -26,18 +28,22 @@ export function Switch({
       aria-labelledby={labelledBy}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={cn(
-        "relative h-8 w-[52px] shrink-0 cursor-pointer rounded-full transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none",
-        checked ? "bg-selected" : "bg-raised-2"
-      )}
+      className="group flex h-11 w-[52px] shrink-0 cursor-pointer items-center focus-visible:outline-none disabled:cursor-wait disabled:opacity-60"
     >
       <span
         aria-hidden="true"
         className={cn(
-          "absolute top-1 size-6 rounded-full transition-[left] duration-150 motion-reduce:transition-none",
-          checked ? "left-6 bg-selected-foreground" : "left-1 bg-fg-3"
+          "relative h-8 w-full rounded-full transition-colors duration-150 group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none",
+          checked ? "bg-selected" : "bg-raised-2"
         )}
-      />
+      >
+        <span
+          className={cn(
+            "absolute top-1 left-1 size-6 rounded-full transition-transform duration-150 motion-reduce:transition-none",
+            checked ? "translate-x-5 bg-selected-foreground" : "bg-fg-3"
+          )}
+        />
+      </span>
     </button>
   );
 }

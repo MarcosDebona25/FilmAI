@@ -48,7 +48,7 @@ export function TypeSelector({
             aria-pressed={active}
             onClick={() => onChange(option.id)}
             className={cn(
-              "h-10 cursor-pointer rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+              "h-11 cursor-pointer rounded-full transition-colors md:h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               compact ? "px-0 text-sm md:px-[18px] md:text-[15px]" : "px-[18px] text-[15px]",
               active
                 ? "bg-selected font-semibold text-selected-foreground"

@@ -339,8 +339,10 @@ export default function RegisterPage() {
             error={mostrar("password2")}
           />
           <div className="flex flex-col gap-2">
-            <div
-              className={`flex items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--line)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
+            {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}
+            <label
+              htmlFor="terminos"
+              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--line)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
             >
               <input
                 id="terminos"
@@ -355,10 +357,7 @@ export default function RegisterPage() {
                 aria-describedby="terminos-error"
                 className="mt-0.5 size-5 flex-none cursor-pointer accent-primary"
               />
-              <label
-                htmlFor="terminos"
-                className="flex-1 cursor-pointer text-[15px] leading-[1.45] text-muted-foreground"
-              >
+              <span className="flex-1 text-[15px] leading-[1.45] text-muted-foreground">
                 {t.rich("signUp.termsAcceptance", {
                   terms: (chunks) => (
                     <Link
@@ -372,8 +371,8 @@ export default function RegisterPage() {
                     </Link>
                   ),
                 })}
-              </label>
-            </div>
+              </span>
+            </label>
             <div id="terminos-error">
               {mostrar("acepta_terminos") && <FieldError>{mostrar("acepta_terminos")}</FieldError>}
             </div>
