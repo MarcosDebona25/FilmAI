@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 
 import { apiFetch } from "@/lib/api";
 
@@ -12,8 +13,14 @@ export type Pedido<T> =
 /**
  * Respuestas públicas del catálogo ya recibidas en esta visita. Volver a una
  * opción del selector no repite el pedido; lo que falló no se guarda.
+ *
+ * La clave lleva el idioma (`es|/api/…`): la API traduce títulos y géneros
+ * según `Accept-Language`, y el idioma puede cambiar sin recargar la página
+ * (el de la cuenta al iniciar sesión, o el selector). Sin él, una fila quedaba
+ * con los títulos del idioma anterior (16/10/2026).
  */
 const cache = new Map<string, unknown>();
+const claveCache = (idioma: string, path: string) => `${idioma}|${path}`;
 
 export function limpiarCacheCatalogo() {
   cache.clear();
@@ -26,16 +33,19 @@ export function limpiarCacheCatalogo() {
  * califique después).
  */
 export function useCatalog<T>(path: string | null, intento = 0, cachear = true): Pedido<T> {
-  const clave = path === null ? null : `${path}#${intento}`;
+  const idioma = useLocale();
+  const clave = path === null ? null : `${claveCache(idioma, path)}#${intento}`;
   const [resultados, setResultados] = useState<Record<string, { data?: T; error?: unknown }>>({});
-  const guardado = cachear && path !== null && cache.has(path);
+  const enCache = path === null ? null : claveCache(idioma, path);
+  const guardado = cachear && enCache !== null && cache.has(enCache);
 
   useEffect(() => {
-    if (path === null || clave === null || (cachear && cache.has(path))) return;
+    if (path === null || clave === null || enCache === null || (cachear && cache.has(enCache)))
+      return;
     let vigente = true;
     apiFetch<T>(path).then(
       (data) => {
-        if (cachear) cache.set(path, data);
+        if (cachear) cache.set(enCache, data);
         if (vigente) setResultados((anteriores) => ({ ...anteriores, [clave]: { data } }));
       },
       (error: unknown) => {
@@ -45,10 +55,10 @@ export function useCatalog<T>(path: string | null, intento = 0, cachear = true):
     return () => {
       vigente = false;
     };
-  }, [path, clave, cachear]);
+  }, [path, clave, enCache, cachear]);
 
   if (path === null || clave === null) return { status: "idle", data: null, error: null };
-  if (guardado) return { status: "ok", data: cache.get(path) as T, error: null };
+  if (guardado) return { status: "ok", data: cache.get(enCache) as T, error: null };
   const resultado = resultados[clave];
   if (!resultado) return { status: "loading", data: null, error: null };
   return resultado.error !== undefined
@@ -72,17 +82,18 @@ export type Paginas<T> = {
  * que ya se había cargado, y el navegador puede devolver el scroll a su lugar.
  */
 export function useCatalogPaginas<T>(paths: string[], intento = 0): Paginas<T> {
-  const clave = `${paths.join("|")}#${intento}`;
+  const idioma = useLocale();
+  const clave = `${idioma}|${paths.join("|")}#${intento}`;
   const [, setLlegadas] = useState(0);
   const [fallo, setFallo] = useState<{ clave: string; error: unknown } | null>(null);
 
   useEffect(() => {
     let vigente = true;
     for (const path of paths) {
-      if (cache.has(path)) continue;
+      if (cache.has(claveCache(idioma, path))) continue;
       apiFetch(path).then(
         (data) => {
-          cache.set(path, data);
+          cache.set(claveCache(idioma, path), data);
           if (vigente) setLlegadas((anterior) => anterior + 1);
         },
         (error: unknown) => {
@@ -93,14 +104,14 @@ export function useCatalogPaginas<T>(paths: string[], intento = 0): Paginas<T> {
     return () => {
       vigente = false;
     };
-    // `clave` resume `paths` e `intento`.
+    // `clave` resume el idioma, `paths` e `intento`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clave]);
 
   const llegadas: T[] = [];
   for (const path of paths) {
-    if (!cache.has(path)) break;
-    llegadas.push(cache.get(path) as T);
+    if (!cache.has(claveCache(idioma, path))) break;
+    llegadas.push(cache.get(claveCache(idioma, path)) as T);
   }
   const error = fallo?.clave === clave ? fallo.error : null;
   return {
