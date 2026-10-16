@@ -621,6 +621,9 @@ declare const messages: {
       "fixHighlighted": "Fix the highlighted field and press the Google button again.",
       "genderPlaceholder": "Choose an option",
       "cancel": "Cancel and go back to log in"
+    },
+    "session": {
+      "expired": "Your session expired. Log in again."
     }
   },
   "enums": {

@@ -132,6 +132,13 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     };
   }, [conSesion, listaOrigen]);
 
+  // La pestaña dice qué ficha es. El servidor no puede pedir el nombre (en
+  // Docker no llega al backend), así que se pone cuando llega la ficha.
+  const nombreFicha = detalle.data ? normalizarFicha(detalle.data, tipo).titulo : null;
+  useEffect(() => {
+    if (nombreFicha) document.title = `${nombreFicha} | FilmAI`;
+  }, [nombreFicha]);
+
   if (detalle.status === "error") {
     return (
       <main
@@ -273,7 +280,10 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
             <ol className="flex items-center gap-2">
               {miga.map((tramo) => (
                 <li key={tramo.href} className="flex items-center gap-2">
-                  <Link href={tramo.href} className="text-fg-2 hover:text-foreground">
+                  <Link
+                    href={tramo.href}
+                    className="inline-flex min-h-6 items-center text-fg-2 hover:text-foreground"
+                  >
                     {tramo.label}
                   </Link>
                   <span aria-hidden="true">›</span>
