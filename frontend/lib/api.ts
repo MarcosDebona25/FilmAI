@@ -84,6 +84,46 @@ interface ApiOptions {
   body?: unknown;
 }
 
+// ---------------------------------------------------------------------------
+// Renovación de la sesión (16/10/2026). La cookie `access` dura 8 horas y la
+// `refresh`, 7 días. Cuando un pedido vuelve 401, se pide un `access` nuevo a
+// `POST /api/auth/token/refresh/` (el backend lee la cookie `refresh`) y se
+// repite el pedido una vez. Si tampoco así hay sesión, se avisa con el evento
+// `SESION_VENCIDA` y `AccountProvider` decide si mostrar el aviso.
+// ---------------------------------------------------------------------------
+
+/** Evento de `window` cuando un 401 no se pudo resolver renovando la sesión. */
+export const SESION_VENCIDA = "filmai:sesion-vencida";
+
+let renovacion: Promise<boolean> | null = null;
+
+/**
+ * Pide un `access` nuevo con la cookie `refresh`. Varios 401 a la vez
+ * comparten un único pedido: el backend rota la `refresh` (y anula la
+ * anterior), así que un segundo pedido con la vieja fallaría.
+ */
+export function renovarSesion(): Promise<boolean> {
+  if (!renovacion) {
+    renovacion = (async () => {
+      const csrf = await getCsrfToken().catch(() => null);
+      const res = await fetch(apiUrl("/api/auth/token/refresh/"), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Accept-Language": currentLocale(),
+          ...(csrf ? { "X-CSRFToken": csrf } : {}),
+        },
+      });
+      return res.ok;
+    })()
+      .catch(() => false)
+      .finally(() => {
+        renovacion = null;
+      });
+  }
+  return renovacion;
+}
+
 export async function apiFetch<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
   const { method = "GET", body } = options;
 
@@ -98,12 +138,25 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
     if (csrf) headers["X-CSRFToken"] = csrf;
   }
 
-  const res = await fetch(apiUrl(path), {
-    method,
-    headers,
-    credentials: "include",
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const enviar = () =>
+    fetch(apiUrl(path), {
+      method,
+      headers,
+      credentials: "include",
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+
+  let res = await enviar();
+  // Las rutas de `auth/` (login, logout, la renovación misma) contestan 401
+  // por sus propios motivos: renovar ahí no tiene sentido.
+  if (res.status === 401 && !path.startsWith("/api/auth/")) {
+    // Se repite aunque la renovación falle: otra pestaña pudo haber renovado
+    // las cookies (compartidas) mientras tanto.
+    await renovarSesion();
+    res = await enviar();
+    if (res.status === 401 && typeof window !== "undefined")
+      window.dispatchEvent(new Event(SESION_VENCIDA));
+  }
 
   if (res.status === 204) return undefined as T;
 

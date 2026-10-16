@@ -2,13 +2,15 @@
 import { routes } from "@/lib/routes";
 
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { persistLocale } from "@/i18n/client";
 import type { AppLocale } from "@/i18n/config";
 import { translateError } from "@/lib/errors";
-import { protectedRoutes } from "@/lib/routes";
-import { ApiError, apiFetch } from "@/lib/api";
+import { isAccessPath, protectedRoutes } from "@/lib/routes";
+import { ApiError, SESION_VENCIDA, apiFetch } from "@/lib/api";
 
 export type Perfil = {
   pk: number;
@@ -62,9 +64,27 @@ function aplicarTema() {
   document.documentElement.style.colorScheme = "dark";
 }
 
-export function AccountProvider({ children }: { children: React.ReactNode }) {
+export function AccountProvider({
+  children,
+  sesionPosible = true,
+}: {
+  children: React.ReactNode;
+  /**
+   * Lo calcula el layout en el servidor: ¿llegó alguna de las cookies
+   * `access` o `refresh`? Sin ninguna no hay sesión posible y no se pide el
+   * perfil (ese pedido solo contestaría 401).
+   */
+  sesionPosible?: boolean;
+}) {
+  const t = useTranslations("auth.session");
   const pathname = usePathname();
   const router = useRouter();
+  // Sin cookies no se pregunta por el perfil. Se vuelve a preguntar después
+  // de pasar por una pantalla de acceso (ahí se puede iniciar sesión, y el
+  // alta con Google no llama a `recargar()`).
+  const sinCookies = useRef(!sesionPosible);
+  // ¿Hubo una sesión? Distingue «se te venció» de «nunca entraste».
+  const huboSesion = useRef(sesionPosible);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [avatares, setAvatares] = useState<AvatarOption[]>([]);
   const [preferencias, setPreferencias] = useState<Preferencias | null>(null);
@@ -72,6 +92,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const limpiar = useCallback(() => {
+    // Logout, baja o sesión vencida: el backend ya borró las cookies.
+    sinCookies.current = true;
+    huboSesion.current = false;
     setPerfil(null);
     setPreferencias(null);
     setAvatares([]);
@@ -83,6 +106,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const nuevoPerfil = await apiFetch<Perfil>("/api/profile/");
+      sinCookies.current = false;
+      huboSesion.current = true;
       setPerfil(nuevoPerfil);
       if (nuevoPerfil.idioma && persistLocale(nuevoPerfil.idioma)) router.refresh();
       const [catalogo, ajustes] = await Promise.all([
@@ -107,16 +132,32 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   }, [limpiar, pathname, router]);
 
   useEffect(() => {
+    if (isAccessPath(pathname)) sinCookies.current = false;
     if (
       ([routes.login, routes.register, routes.completeSignup] as readonly string[]).includes(
         pathname
-      )
+      ) ||
+      sinCookies.current
     ) {
       setCargando(false);
       return;
     }
     void recargar();
   }, [pathname, recargar]);
+
+  // Un 401 que ni renovando se resolvió (`apiFetch`): si había sesión, venció
+  // (pasaron los 7 días de la cookie `refresh`, o se cerró en otro lado).
+  useEffect(() => {
+    function alVencer() {
+      if (!huboSesion.current) return;
+      toast.info(t("expired"));
+      limpiar();
+      if (protectedRoutes.some((ruta) => pathname.startsWith(ruta)))
+        router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    }
+    window.addEventListener(SESION_VENCIDA, alVencer);
+    return () => window.removeEventListener(SESION_VENCIDA, alVencer);
+  }, [limpiar, pathname, router, t]);
 
   async function actualizarPreferencia<K extends keyof Preferencias>(
     campo: K,

@@ -106,6 +106,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0d0d14;
   --foreground: #ededf2;
   --card: #15151f;
@@ -162,5 +163,18 @@
   }
   html {
     scrollbar-gutter: stable;
+  }
+  /* Sin la espera del doble toque (zoom) en los controles táctiles. */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  [role="button"],
+  [role="switch"],
+  [role="radio"],
+  [role="menuitem"] {
+    touch-action: manipulation;
   }
 }

@@ -68,7 +68,7 @@ export function SegmentedPills<T extends string>({
             aria-pressed={activa}
             onClick={() => onCambiar(opcion)}
             className={cn(
-              "h-10 cursor-pointer rounded-full px-1.5 text-sm whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+              "h-11 cursor-pointer rounded-full px-1.5 text-sm whitespace-nowrap md:h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               activa
                 ? "bg-selected font-semibold text-selected-foreground"
                 : "font-medium text-fg-2"
