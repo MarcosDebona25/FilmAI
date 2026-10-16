@@ -102,7 +102,21 @@ export function HomeView() {
   );
   const fallidos = pedidos.filter((pedido) => pedido.status === "error");
   const todoFalla = pedidos.length > 0 && fallidos.length === pedidos.length;
-  const avisoParcial = fallidos.length > 0 && !todoFalla ? mensaje(fallidos[0].error) : null;
+  // El aviso de «algo no cargó» espera a que terminen todos los pedidos: si no,
+  // cuando fallan todos salía primero el toast y después el mismo error en la
+  // página (Q-03, 16/10/2026).
+  const terminados = pedidos.every((pedido) => pedido.status !== "loading");
+  const avisoParcial =
+    terminados && fallidos.length > 0 && !todoFalla ? mensaje(fallidos[0].error) : null;
+  // Todas las filas llegaron bien pero sin títulos: sin esto la página quedaba
+  // en blanco, sin explicación ni salida.
+  const todoVacio =
+    terminados &&
+    fallidos.length === 0 &&
+    pedidos.length > 0 &&
+    titulosTendencia.length === 0 &&
+    novedades.length === 0 &&
+    recomendados.length === 0;
 
   useEffect(() => {
     if (avisoParcial) toast.error(avisoParcial, { id: "home-carga" });
@@ -159,6 +173,18 @@ export function HomeView() {
           >
             {tc("actions.retry")}
           </button>
+        </div>
+      ) : todoVacio ? (
+        <div className="mx-auto flex max-w-[1360px] flex-col items-start gap-4 px-5 py-16 md:px-10">
+          <p role="status" className="max-w-[60ch] text-fg-2">
+            {t("rows.emptyDescription")}
+          </p>
+          <Link
+            href={routes.search}
+            className="inline-flex h-12 items-center rounded-lg bg-raised-2 px-[22px] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            {tc("actions.explore")}
+          </Link>
         </div>
       ) : (
         <div className="mx-auto flex max-w-[1360px] flex-col gap-11 pt-7 pb-12 md:gap-20 md:px-10 md:pt-10 md:pb-20">
