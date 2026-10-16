@@ -880,6 +880,11 @@ class EndpointIntegrationTest(SimpleTestCase):
         parche = patch("catalogo.views.materializar_en_segundo_plano")
         parche.start()
         self.addCleanup(parche.stop)
+        # Lo mismo con lo que encolan los listados (C-04a, 16/10/2026): tiene su
+        # cobertura en `test_materializar_listados`.
+        listado = patch("catalogo.views.materializar_listado_en_segundo_plano")
+        listado.start()
+        self.addCleanup(listado.stop)
 
     def _make_service(self, body=None):
         body = body or {"results": [{"id": 550, "title": "Fight Club"}]}
