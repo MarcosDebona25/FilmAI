@@ -154,14 +154,14 @@ export function ListsMenu({
                   setCreando(false);
                   setError(null);
                 }}
-                className="h-10 cursor-pointer rounded-lg px-3 text-fg-2 hover:text-foreground"
+                className="h-11 cursor-pointer rounded-lg px-3 text-fg-2 hover:text-foreground md:h-10"
               >
                 {t("common.actions.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={enviando}
-                className="h-10 cursor-pointer rounded-lg bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-60"
+                className="h-11 cursor-pointer rounded-lg bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-60 md:h-10"
               >
                 {t("title.lists.createAndAdd")}
               </button>
