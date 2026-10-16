@@ -85,17 +85,19 @@ export function NavigationProgress() {
       className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-[3px]"
     >
       <div
-        className="h-full bg-primary shadow-[0_0_8px_var(--primary)] motion-reduce:transition-none"
+        className="h-full origin-left bg-primary shadow-[0_0_8px_var(--primary)] motion-reduce:transition-none"
         style={{
-          width: estado === "quieta" ? "0%" : estado === "cargando" ? "85%" : "100%",
+          // Se escala en vez de cambiar el ancho: `transform` no recalcula el
+          // layout y la animación va más fluida.
+          transform: `scaleX(${estado === "quieta" ? 0 : estado === "cargando" ? 0.85 : 1})`,
           opacity: estado === "terminando" ? 0 : 1,
           // Avanza rápido al principio y se frena cerca del final (nunca llega
           // sola al 100 %); al terminar completa y se desvanece.
           transition:
             estado === "cargando"
-              ? "width 8s cubic-bezier(0.1, 0.7, 0.3, 1)"
+              ? "transform 8s cubic-bezier(0.1, 0.7, 0.3, 1)"
               : estado === "terminando"
-                ? "width 150ms ease-out, opacity 250ms ease 150ms"
+                ? "transform 150ms ease-out, opacity 250ms ease 150ms"
                 : "none",
         }}
       />

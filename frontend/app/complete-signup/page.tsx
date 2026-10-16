@@ -231,8 +231,10 @@ export default function CompletarGooglePage() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <div
-              className={`flex items-start gap-3 rounded-[10px] px-3.5 py-3 ${terminosError ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : "shadow-[inset_0_0_0_1px_var(--line)]"}`}
+            {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}
+            <label
+              htmlFor="terminos"
+              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 ${terminosError ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : "shadow-[inset_0_0_0_1px_var(--line)]"}`}
             >
               <input
                 id="terminos"
@@ -247,10 +249,7 @@ export default function CompletarGooglePage() {
                 aria-describedby="terminos-error"
                 className="mt-0.5 size-5 flex-none cursor-pointer accent-primary"
               />
-              <label
-                htmlFor="terminos"
-                className="flex-1 cursor-pointer text-[15px] leading-[1.45] text-muted-foreground"
-              >
+              <span className="flex-1 text-[15px] leading-[1.45] text-muted-foreground">
                 {signUp.rich("termsAcceptance", {
                   terms: (chunks) => (
                     <Link
@@ -264,8 +263,8 @@ export default function CompletarGooglePage() {
                     </Link>
                   ),
                 })}
-              </label>
-            </div>
+              </span>
+            </label>
             <div id="terminos-error">
               {terminosError && <FieldError>{terminosError}</FieldError>}
             </div>

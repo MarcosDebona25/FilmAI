@@ -377,7 +377,7 @@ export default function PerfilPage() {
                     onClick={() => setSelectorAbierto(true)}
                     aria-haspopup="dialog"
                     aria-label={t("common.avatar.change")}
-                    className="absolute -right-1 -bottom-1 grid size-10 cursor-pointer place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_3px_var(--background)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:inset-0 md:size-auto md:flex md:flex-col md:gap-1 md:bg-black/55 md:text-sm md:font-semibold md:text-white md:shadow-none"
+                    className="absolute -right-1 -bottom-1 grid size-11 cursor-pointer place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_3px_var(--background)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:inset-0 md:size-auto md:flex md:flex-col md:gap-1 md:bg-black/55 md:text-sm md:font-semibold md:text-white md:shadow-none"
                   >
                     <Camera aria-hidden="true" className="size-5" />
                     <span aria-hidden="true" className="hidden md:inline">

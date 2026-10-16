@@ -107,6 +107,8 @@ describe("ficha sin sesión", () => {
     render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("Interstellar");
+    // La pestaña dice qué ficha es (Q-01, 16/10/2026).
+    expect(document.title).toBe("Interstellar | FilmAI");
     expect(
       screen.getByText("Mankind was born on Earth. It was never meant to die here.")
     ).toBeInTheDocument();
