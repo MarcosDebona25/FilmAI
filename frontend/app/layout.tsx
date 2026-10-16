@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Big_Shoulders, Hanken_Grotesk } from "next/font/google";
 import { cookies } from "next/headers";
 import { Toaster } from "sonner";
@@ -24,6 +24,11 @@ const bigShoulders = Big_Shoulders({
   subsets: ["latin"],
   weight: ["800"],
 });
+
+// La app es solo oscura (15/10/2026): se declara desde el servidor para que los
+// controles nativos y el scroll no se pinten claros antes de que cargue JS, y
+// la barra del navegador en celular tome el fondo de la app.
+export const viewport: Viewport = { themeColor: "#0d0d14", colorScheme: "dark" };
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("legacy.metadata");

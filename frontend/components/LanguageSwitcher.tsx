@@ -55,7 +55,7 @@ export function LanguageSwitcher({ account = false }: { account?: boolean }) {
         {locales.map((language) => (
           <label
             key={language}
-            className={`relative flex min-h-10 min-w-10 touch-manipulation cursor-pointer items-center justify-center rounded-full px-3 text-sm font-semibold focus-within:ring-2 focus-within:ring-ring ${locale === language ? "bg-selected text-selected-foreground" : "text-foreground hover:bg-muted"} ${saving ? "cursor-wait opacity-70" : ""}`}
+            className={`relative flex min-h-11 min-w-11 touch-manipulation md:min-h-10 md:min-w-10 cursor-pointer items-center justify-center rounded-full px-3 text-sm font-semibold focus-within:ring-2 focus-within:ring-ring ${locale === language ? "bg-selected text-selected-foreground" : "text-foreground hover:bg-muted"} ${saving ? "cursor-wait opacity-70" : ""}`}
           >
             <input
               className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"

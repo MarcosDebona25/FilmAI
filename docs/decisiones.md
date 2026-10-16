@@ -3718,7 +3718,7 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   5. **Celular**: barra inferior `MobileTabs` (Home, Search, Lists, Profile) solo con sesión. Hasta integrar Perfil móvil (sección 9, donde el canvas ubica «Log out»), el avatar del encabezado abre el mismo menú en celular para no perder el cierre de sesión.
   6. **Tema**: solo oscuro; todo usa tokens semánticos (`bg-raised`, `text-fg-2`, `border-line`…), de modo que el tema claro se activa sin tocar estos componentes.
 - **Motivo**: cerrar la sección 11 del canvas y retirar `Navbar` de las excepciones del linter i18n.
-- **Archivos afectados**: `frontend/components/{Navbar,AccountMenu,MobileTabs}.tsx`, `frontend/components/errors/ErrorScreens.tsx`, `frontend/app/{not-found,error,layout}.tsx`, `frontend/app/(public)/page.tsx`, `frontend/lib/routes.ts`, `frontend/scripts/i18n/rules.mjs`, `docs/i18n/copia-propuesta.csv`, catálogos generados, tests `tests/errors-and-account-menu.test.tsx`, `e2e/errores-menu.spec.ts` y ajustes en `e2e/cuenta.spec.ts` y `e2e/perfil.spec.ts`.
+- **Archivos afectados**: `frontend/components/{Navbar,AccountMenu,MobileTabs}.tsx`, `frontend/app/not-found.tsx`, `frontend/app/{not-found,error,layout}.tsx`, `frontend/app/(public)/page.tsx`, `frontend/lib/routes.ts`, `frontend/scripts/i18n/rules.mjs`, `docs/i18n/copia-propuesta.csv`, catálogos generados, tests `tests/errors-and-account-menu.test.tsx`, `e2e/errores-menu.spec.ts` y ajustes en `e2e/cuenta.spec.ts` y `e2e/perfil.spec.ts`.
 
 ---
 
@@ -3744,7 +3744,7 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Fecha**: 12/10/2026
 - **Descripción**: `NotFoundScreen` tiene dos variantes aprobadas en el canvas. **Con sesión**: «This page doesn’t exist», Back to Home y Search. **Sin sesión**: «We can’t find that page», Back to Home, Log in y «New to FilmAI? Create a free account». Mientras se resuelve la sesión se muestra la variante con sesión, que no pide cuenta.
 - **Encabezado**: sin sesión desaparece el enlace a Lists, como en la propuesta; la barra inferior móvil ya solo existía con sesión.
-- **Archivos afectados**: `frontend/components/errors/ErrorScreens.tsx`, `frontend/components/Navbar.tsx`, `docs/i18n/copia-propuesta.csv` (4 claves `errors.pages.*`), catálogos generados, `tests/errors-and-account-menu.test.tsx` y `e2e/errores-menu.spec.ts`.
+- **Archivos afectados**: `frontend/app/not-found.tsx`, `frontend/components/Navbar.tsx`, `docs/i18n/copia-propuesta.csv` (4 claves `errors.pages.*`), catálogos generados, `tests/errors-and-account-menu.test.tsx` y `e2e/errores-menu.spec.ts`.
 
 ---
 
@@ -4238,7 +4238,7 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 
 - **Fecha**: 15/10/2026
 - **Descripción**: el 404 sin sesión cortaba la invitación en «Create a free account»; el canvas seguía con «…to rate films and keep your lists.». Marcos pidió la frase completa y sumar el asistente: «New to FilmAI? Create a free account to rate films, keep your lists, and get personalized picks from the FilmAI assistant.» / «¿Primera vez en FilmAI? Creá una cuenta gratis para calificar películas, guardar tus listas y recibir recomendaciones del asistente de FilmAI.». Va como una sola clave con `t.rich` (`errors.pages.signUpInvite`, el enlace en `<register>`), en lugar de dos fragmentos concatenados que impedían ordenar la frase en cada idioma; se retiran `newToFilmAI` y `createFreeAccount`. El canvas («404 and error», escritorio y celular) se actualizó igual.
-- **Archivos afectados**: `docs/i18n/copia-propuesta.csv`, `frontend/messages/{en,es}/common.json` (y sus `.d.json.ts`), `frontend/components/errors/ErrorScreens.tsx`, `frontend/tests/errors-and-account-menu.test.tsx`, `frontend/e2e/errores-menu.spec.ts`, `docs/decisiones.md`.
+- **Archivos afectados**: `docs/i18n/copia-propuesta.csv`, `frontend/messages/{en,es}/common.json` (y sus `.d.json.ts`), `frontend/app/not-found.tsx`, `frontend/tests/errors-and-account-menu.test.tsx`, `frontend/e2e/errores-menu.spec.ts`, `docs/decisiones.md`.
 
 ## 15/10/2026 — Canvas: el código como fuente de verdad en Home, Ficha y Search; propuesta de alta con Google
 
@@ -4336,6 +4336,25 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Descartado**: guardar el token en `localStorage` y mandarlo como `Authorization: Bearer` (sugerencia del asistente de Chrome por el encabezado `WWW-Authenticate: Bearer` que DRF pone en cualquier 401). Las cookies httpOnly no son legibles desde JavaScript; en `localStorage` un XSS podría robar el token.
 - **Tests**: `api-session.test.ts` (renueva y repite con CSRF, una sola renovación para varios 401, evento si no se puede, `auth/` no renueva), `session-account.test.tsx` (sin cookies no pide el perfil, aviso y login al vencer, sin aviso a quien nunca entró) y dos recorridos en `e2e/cuenta.spec.ts` (solo `refresh` renueva y no saca; vencida del todo lleva al login con el aviso).
 - **Archivos afectados**: `frontend/lib/api.ts`, `frontend/components/AccountProvider.tsx`, `frontend/app/layout.tsx`, `frontend/middleware.ts`, mensajes y copia de i18n, tests y e2e, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 16/10/2026 — Revisión de calidad: accesibilidad y responsive (Q-01, Q-04)
+
+- **Fecha**: 16/10/2026
+- **Descripción**: auditoría de la app real con sesión y sin ella, en 375, 768 y 1440 px: axe-core (WCAG 2.1 AA y buenas prácticas), desbordes, tamaño de objetivos táctiles, letra de los campos y foco visible con Tab, sobre 15 pantallas y 4 diálogos abiertos. Contraste: sin problemas. Se corrigió:
+  1. **Desbordes**: los filtros del detalle de lista a 768 px (la fila ahora pasa a la línea siguiente; los filtros conservan su ancho de contenido) y los botones «Iniciar sesión / Registrarse» del encabezado a 375 px (menos separación y relleno en celular).
+  2. **Objetivos táctiles de 44 px en celular** (decisión del usuario: se sigue el doc 05 Q-04 y no los 40 px del canvas, solo en celular; en escritorio quedan como el canvas): opciones de las hojas de filtros, selector de tipo, selector de idioma, interruptor de Settings (el botón mide 44 de alto y la pista sigue siendo de 52 × 32), selects y botones de la reseña propia en la ficha, «Leer más», «Cambiar avatar», acciones de Mis reseñas y botones del menú de listas de la ficha.
+  3. **Letra de 16 px en los campos en celular**: los selects de reseñas de la ficha (14 px) y los buscadores de Mis reseñas y del detalle de lista (15 px). Con menos, iOS hace zoom al tocarlos.
+  4. **Títulos de pestaña**: login y registro con sus metadatos; la ficha pone el nombre de la película o serie cuando llega (el servidor de Next no puede pedirlo: en Docker no llega al backend); el 404 lo exporta en `not-found.tsx` (ponerlo desde el componente no sirve: Next 15 transmite los metadatos después de hidratar y lo pisa). La landing sigue diciendo «FilmAI».
+  5. **Tema oscuro desde el servidor**: `viewport` del layout con `colorScheme: "dark"` y `themeColor` (#0d0d14), y `color-scheme: dark` en `.dark`. Antes se aplicaba con JavaScript y el primer pintado de los controles nativos era claro.
+  6. **Animaciones con `transform`**: la barra de navegación (antes `width`) y la perilla del interruptor (antes `left`).
+  7. **Casilla de términos sin zonas muertas** (registro y alta con Google): todo el recuadro es la etiqueta.
+  8. **`touch-action: manipulation`** global en los controles.
+  9. **Landmarks en las pantallas de acceso**: el selector de idioma va en un `header` y el collage en un `aside`.
+  10. **Miga de la ficha** con al menos 24 px de alto.
+- **Verificación**: la misma auditoría después de los cambios: axe de 9 avisos a 0, desbordes de 2 a 0, objetivos de menos de 44 px en celular de 106 a 0, campos de menos de 16 px en celular de 7 a 0, y títulos correctos en todas las pantallas.
+- **Falsos positivos descartados**: el foco de las tarjetas de películas y de listas se dibuja en el póster o en un pseudo-elemento; se verificó con capturas.
+- **Fuera de alcance**: prueba con lector de pantalla real (NVDA/VoiceOver), forzar errores de API para Q-03 y el chatbot (no existe todavía).
+- **Archivos afectados**: `frontend/app/{layout.tsx,globals.css}`, `frontend/app/(public)/{login,register}/`, `frontend/app/complete-signup/page.tsx`, `frontend/app/profile/page.tsx`, `frontend/components/{Navbar,LanguageSwitcher,NavigationProgress}.tsx`, `frontend/components/access/AccessShell.tsx`, `frontend/app/not-found.tsx`, `frontend/components/ui/switch.tsx`, `frontend/components/features/{TypeSelector.tsx,filters/SheetParts.tsx,lists/ListDetailView.tsx,reviews/,title/}`, `frontend/tests/title-view.test.tsx`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
 
 ## 16/10/2026 — Fix: la caché del catálogo guarda por idioma
 
