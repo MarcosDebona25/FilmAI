@@ -77,6 +77,16 @@ class MaterializarListadoTests(TestCase):
 
         self.assertEqual(self.encolados(), [(550, "movie"), (1396, "tv")])
 
+    def test_si_no_se_pudo_encolar_el_proximo_listado_lo_reintenta(self):
+        # La marca de 10 minutos no puede quedar puesta si la tarea no salió.
+        self.tarea.delay.side_effect = [RuntimeError("broker caído"), None]
+
+        with self.assertRaises(RuntimeError):
+            materializar_listado_en_segundo_plano([{"id": 550}], "movie")
+        materializar_listado_en_segundo_plano([{"id": 550}], "movie")
+
+        self.assertEqual(self.encolados(), [(550, "movie"), (550, "movie")])
+
     def test_un_listado_vacio_o_raro_no_encola_nada(self):
         materializar_listado_en_segundo_plano(None)
         materializar_listado_en_segundo_plano([{"id": "x", "media_type": "movie"}])

@@ -48,6 +48,9 @@ RESPALDO_TTL = 30 * 24 * 3600
 # La lista de cambios la usa la sync nocturna: con datos viejos refrescaría
 # mal sin enterarse. Ahí conviene que el fallo se vea.
 SIN_RESPALDO = frozenset({"changes"})
+# Con TMDB caído, cada pedido que sale del respaldo dejaría un aviso: uno por
+# endpoint cada 5 minutos alcanza para enterarse sin llenar el log.
+AVISO_RESPALDO_SEGUNDOS = 5 * 60
 
 # Bounded timeouts so a hung Redis fails fast and the cache degrades to TMDB
 # instead of blocking the request indefinitely.
@@ -135,7 +138,7 @@ class TMDBClientCache:
             datos = json.loads(raw) if raw is not None else None
         except (redis.RedisError, TypeError, ValueError):
             return None
-        if datos is not None:
+        if datos is not None and self._toca_avisar(endpoint):
             logger.warning(
                 "TMDB no disponible (%s: %s); se sirve el respaldo de %s",
                 type(error).__name__,
@@ -143,6 +146,20 @@ class TMDBClientCache:
                 endpoint,
             )
         return datos
+
+    def _toca_avisar(self, endpoint):
+        """¿Ya pasaron 5 minutos desde el último aviso de respaldo de este endpoint?"""
+        try:
+            return bool(
+                self.redis.set(
+                    f"tmdb:respaldo-aviso:{endpoint}",
+                    1,
+                    nx=True,
+                    ex=AVISO_RESPALDO_SEGUNDOS,
+                )
+            )
+        except redis.RedisError:
+            return True
 
     def get_trending(self, media_type="all", time_window="week", page=1):
         params = {

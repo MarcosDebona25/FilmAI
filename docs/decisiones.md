@@ -4364,6 +4364,7 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   2. Vale para `useCatalog` y `useCatalogPaginas` (Home, Buscar y ficha).
 - **Tests**: `use-catalog-paginas.test.tsx` suma dos casos (cambio de idioma en `useCatalog` y en las páginas de Buscar); fallan con la caché anterior. Verificado en la app: Home en español → selector a inglés → «Animals».
 - **Archivos afectados**: `frontend/lib/use-catalog.ts`, `frontend/tests/use-catalog-paginas.test.tsx`, `docs/decisiones.md`.
+
 ## 16/10/2026 — Respaldo cuando TMDB no responde y materialización de los listados (CU-008 2.A, CU-019 4.A, C-04a)
 
 - **Fecha**: 16/10/2026
@@ -4388,3 +4389,14 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Pendiente sin corregir**: la copia de los errores mezcla «Intentá» y «Probá», y varios dicen solo «Ocurrió un error» sin decir qué no cargó.
 - **Tests**: `api-session.test.ts` (sin red), `session-account.test.tsx` (mensaje de la cuenta), `reviews-section.test.tsx` (reintentar), `title-view.test.tsx` (listas que no cargan) y `home-page.test.tsx` (todo vacío; un solo error cuando todo falla). Cada uno falla con el código anterior.
 - **Archivos afectados**: `frontend/lib/api.ts`, `frontend/components/AccountProvider.tsx`, `frontend/components/features/HomeView.tsx`, `frontend/components/features/title/{ReviewsSection,TitleView}.tsx`, mensajes y copia de i18n, tests, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 16/10/2026 — Ajustes de la revisión del PR #111
+
+- **Fecha**: 16/10/2026
+- **Descripción**: cuatro detalles menores que salieron al revisar el PR #111 (respaldo de TMDB, listados y Q-03):
+  1. **La marca de 10 minutos no bloquea un reintento**: `materializar_listado_en_segundo_plano` borra la marca de `cache.add` si `delay()` falla (broker caído). Antes ese título no se volvía a encolar hasta que vencía la ventana.
+  2. **Un aviso de respaldo cada 5 minutos por endpoint**: con TMDB caído, cada pedido servido desde el respaldo dejaba un warning. `TMDBClientCache` marca `tmdb:respaldo-aviso:<endpoint>` con `SET NX` por 5 minutos y solo avisa si la marca es nueva; si Redis falla al marcar, avisa igual.
+  3. **Ficha**: la carga inicial de las listas del usuario también limpia `errorListas` al responder bien (antes solo lo hacía `recargarListas`), así que el aviso de una ficha anterior no queda colgado.
+  4. Línea en blanco que faltaba antes de la entrada del respaldo en este archivo.
+- **Tests**: `test_respaldo_tmdb.py` (un solo aviso en tres pedidos seguidos con TMDB caído), `test_materializar_listados.py` (si encolar falla, el siguiente listado lo vuelve a encolar) y `title-view.test.tsx` (al pasar a otra ficha cuyas listas cargan, el aviso desaparece; falla con el código anterior).
+- **Archivos afectados**: `backend/catalogo/cache.py`, `backend/catalogo/services/materialization.py`, `backend/catalogo/{test_respaldo_tmdb.py,test_materializar_listados.py}`, `frontend/components/features/title/TitleView.tsx`, `frontend/tests/title-view.test.tsx`, `docs/decisiones.md`.

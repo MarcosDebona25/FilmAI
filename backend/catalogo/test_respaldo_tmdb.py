@@ -64,6 +64,19 @@ class RespaldoTMDBTest(SimpleTestCase):
 
         self.assertEqual(self.cache.get_trending(), TENDENCIAS)
 
+    def test_con_tmdb_caido_avisa_una_vez_cada_5_minutos(self):
+        # Cada pedido sale del respaldo, pero el log no se llena de avisos.
+        self.cache.get_trending()
+        self.falla = lambda request: httpx.Response(503, json={})
+
+        with self.assertLogs("catalogo.cache", level="WARNING") as logs:
+            for _ in range(3):
+                self._vencer_la_copia_normal()
+                self.assertEqual(self.cache.get_trending(), TENDENCIAS)
+
+        self.assertEqual(len(logs.records), 1)
+        self.assertGreater(self.redis.ttl("tmdb:respaldo-aviso:trending"), 0)
+
     def test_sin_copia_guardada_el_error_sigue_su_camino(self):
         # CU-019 4.A.2: si tampoco hay respaldo, se notifica el error.
         self.falla = lambda request: httpx.Response(500, json={})
