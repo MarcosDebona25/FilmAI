@@ -111,7 +111,11 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
       }
     );
     apiFetch<ListaFicha[]>(`/api/lists/?id_tmdb=${id}&tipo=${tipo}`).then(
-      (datos) => vigente && setListas(datos),
+      (datos) => {
+        if (!vigente) return;
+        setListas(datos);
+        setErrorListas(false);
+      },
       () => {
         if (!vigente) return;
         setListas([]);

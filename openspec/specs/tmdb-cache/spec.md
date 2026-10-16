@@ -43,7 +43,7 @@ The system SHALL bypass the cache and call TMDB directly when Redis is unavailab
 
 ### Requirement: Fallback copy when TMDB is unavailable
 
-Every successful response (except `changes`, used by the nightly sync) MUST also be stored under `tmdb:respaldo:<endpoint>:<hash>` with a 30-day TTL (CU-008 2.A, CU-019 4.A, 16/10/2026). When TMDB raises a server error, a transport error (including timeouts), a rate limit or exhausts its retries, the cache MUST return that copy and log a warning. A not-found or bad-request error MUST still propagate, and without a copy (or without Redis) the original error MUST propagate.
+Every successful response (except `changes`, used by the nightly sync) MUST also be stored under `tmdb:respaldo:<endpoint>:<hash>` with a 30-day TTL (CU-008 2.A, CU-019 4.A, 16/10/2026). When TMDB raises a server error, a transport error (including timeouts), a rate limit or exhausts its retries, the cache MUST return that copy and log a warning, at most once per endpoint every 5 minutes (a `tmdb:respaldo-aviso:<endpoint>` marker set with `NX`). A not-found or bad-request error MUST still propagate, and without a copy (or without Redis) the original error MUST propagate.
 
 #### Scenario: TMDB down after the normal TTL expired
 

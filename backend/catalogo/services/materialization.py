@@ -125,10 +125,16 @@ def materializar_listado_en_segundo_plano(items, tipo_tmdb=None):
     for id_tmdb, tipo in sorted(candidatos):
         if (id_tmdb, tmdb_a_dominio(tipo)) in frescas:
             continue
-        if cache.add(
-            f"materializar:{tipo}:{id_tmdb}", 1, timeout=_VENTANA_ENCOLADO_SEGUNDOS
-        ):
+        marca = f"materializar:{tipo}:{id_tmdb}"
+        if not cache.add(marca, 1, timeout=_VENTANA_ENCOLADO_SEGUNDOS):
+            continue
+        try:
             materializar_produccion.delay(id_tmdb, tipo)
+        except Exception:
+            # Si no se pudo encolar, la marca no puede bloquear el próximo
+            # intento durante 10 minutos: se borra y el error sigue su camino.
+            cache.delete(marca)
+            raise
 
 
 def _buscar_produccion(id_tmdb, tipo):

@@ -231,6 +231,18 @@ describe("ficha con sesión", () => {
     expect(screen.queryByText("We couldn’t load your lists. Try again.")).not.toBeInTheDocument();
   });
 
+  it("si las listas cargan en otra ficha, el aviso de la anterior se va", async () => {
+    // Misma instancia con otro título: el error de la ficha anterior no queda colgado.
+    estado.fallasListas = 1;
+    const { rerender } = render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+    expect(await screen.findByText("We couldn’t load your lists. Try again.")).toBeInTheDocument();
+
+    rerender(<TitleView tipo="tv" id={1396} />);
+
+    expect(await screen.findByRole("button", { name: "Watched" })).toBeInTheDocument();
+    expect(screen.queryByText("We couldn’t load your lists. Try again.")).not.toBeInTheDocument();
+  });
+
   it("calificar publica la nota, avisa y recarga las listas", async () => {
     render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
 
