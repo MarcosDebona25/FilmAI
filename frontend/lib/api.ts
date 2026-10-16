@@ -138,12 +138,18 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
     if (csrf) headers["X-CSRFToken"] = csrf;
   }
 
+  // Si el pedido ni siquiera llega (sin conexión, servidor apagado, CORS),
+  // `fetch` rechaza con un error del navegador («Failed to fetch» en inglés).
+  // Se convierte en un error con código propio para que la pantalla muestre un
+  // mensaje entendible y traducido (Q-03, 16/10/2026).
   const enviar = () =>
     fetch(apiUrl(path), {
       method,
       headers,
       credentials: "include",
       body: body !== undefined ? JSON.stringify(body) : undefined,
+    }).catch(() => {
+      throw new ApiError(0, { code: "network_error" });
     });
 
   let res = await enviar();

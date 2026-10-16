@@ -67,3 +67,20 @@ describe("apiFetch renueva la sesión", () => {
     expect(pedidos).toEqual(["/api/auth/login/"]);
   });
 });
+
+describe("apiFetch sin conexión", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("convierte el fallo del navegador en un error entendible", async () => {
+    // Sin red, `fetch` rechaza con «Failed to fetch» en inglés, y ese texto
+    // llegaba tal cual a la pantalla (Q-03, 16/10/2026).
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    const error = await apiFetch("/api/catalogo/trending/").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 0, code: "network_error" });
+    expect((error as ApiError).message).not.toContain("Failed to fetch");
+    expect((error as ApiError).message).toMatch(/conectarnos|connect/);
+  });
+});
