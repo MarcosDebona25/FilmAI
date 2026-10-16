@@ -277,7 +277,8 @@ declare const messages: {
       "recommendationReasonTv": "Based on your high ratings in {genres}",
       "tvPremieresTitle": "TV shows released in {year}",
       "trendingDescription": "Most viewed on TMDB in the last seven days",
-      "newReleasesTitle": "New releases"
+      "newReleasesTitle": "New releases",
+      "emptyDescription": "There’s nothing to show right now. Try again later or search for something specific."
     },
     "recommendation": {
       "promptTitle": "What are we watching tonight?"
@@ -814,7 +815,8 @@ declare const messages: {
       "unknown": "We couldn’t complete the action. Try again.",
       "throttledWithWait": "There are too many requests. Try again in {retryAfterSeconds, plural, one {# second} other {# seconds}}.",
       "list_name_reserved": "This name is reserved for a default list.",
-      "terms_not_accepted": "To create your account you need to accept the Terms and Conditions."
+      "terms_not_accepted": "To create your account you need to accept the Terms and Conditions.",
+      "network_error": "We couldn’t connect. Check your connection and try again."
     },
     "fields": {
       "correo": {

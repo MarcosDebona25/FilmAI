@@ -9,6 +9,10 @@ const estado = vi.hoisted(() => ({
   perfil: null as null | Record<string, unknown>,
   params: new URLSearchParams(),
   fallan: [] as string[],
+  /** Prefijos que tardan un poco más en responder (o en fallar). */
+  lentas: [] as string[],
+  /** Todas las filas responden bien pero sin títulos. */
+  vacias: false,
   llamadas: [] as string[],
 }));
 const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
@@ -51,6 +55,10 @@ vi.mock("@/lib/api", async (importOriginal) => {
     ...real,
     apiFetch: vi.fn(async (path: string) => {
       estado.llamadas.push(path);
+      if (estado.lentas.some((prefijo) => path.startsWith(prefijo)))
+        await new Promise((resolver) => setTimeout(resolver, 60));
+      if (estado.vacias && !path.startsWith("/api/catalogo/genres/"))
+        return { results: [], generos: [] };
       if (estado.fallan.some((prefijo) => path.startsWith(prefijo)))
         throw new real.ApiError(502, { code: "upstream_error", params: {}, errors: [] });
       const respuesta = respuestas.find(([prefijo]) => path.startsWith(prefijo));
@@ -64,6 +72,8 @@ beforeEach(() => {
   estado.perfil = null;
   estado.params = new URLSearchParams();
   estado.fallan = [];
+  estado.lentas = [];
+  estado.vacias = false;
   estado.llamadas = [];
   limpiarCacheCatalogo();
 });
@@ -163,6 +173,32 @@ describe("selector de tipo", () => {
 });
 
 describe("todo falla", () => {
+  it("si fallan todas las filas, el error se ve una sola vez", async () => {
+    // Q-03: Trending falla más tarde que las demás. Antes, mientras esperaba,
+    // salía el toast de «algo no cargó» y después el mismo error en la página.
+    estado.fallan = ["/api/catalogo/"];
+    estado.lentas = ["/api/catalogo/trending/"];
+    render(<HomeView />, { locale: "en" });
+
+    expect(
+      await screen.findByText("The catalog couldn’t respond. Try again later.")
+    ).toBeInTheDocument();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("si todas las filas llegan vacías, lo dice y ofrece explorar", async () => {
+    // Antes la página quedaba en blanco, sin explicación ni salida.
+    estado.vacias = true;
+    render(<HomeView />, { locale: "en" });
+
+    expect(
+      await screen.findByText(
+        "There’s nothing to show right now. Try again later or search for something specific."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/search");
+  });
+
   it("muestra el error con Reintentar y vuelve a pedir", async () => {
     estado.fallan = ["/api/catalogo/"];
     render(<HomeView />, { locale: "en" });

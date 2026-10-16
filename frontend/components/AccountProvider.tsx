@@ -124,7 +124,9 @@ export function AccountProvider({
           router.replace(`/login?next=${encodeURIComponent(pathname)}`);
         }
       } else {
-        setError(translateError({ code: "unknown" }));
+        // El mensaje del propio error: «Ocurrió un error…» o «No pudimos
+        // conectarnos…», en vez del genérico «No pudimos completar la acción».
+        setError(err instanceof ApiError ? err.message : translateError({ code: "unknown" }));
       }
     } finally {
       setCargando(false);

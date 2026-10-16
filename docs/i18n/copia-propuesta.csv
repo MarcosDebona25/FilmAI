@@ -175,3 +175,5 @@ lists.detail.removeChipLabel,,label,,Quitar filtro {filterLabel},Remove filter {
 lists.overview.loading,,status,,Cargando tus listas…,Loading your lists…,aprobado
 lists.detail.loading,,status,,Cargando la lista…,Loading the list…,aprobado
 auth.session.expired,,feedback,,Tu sesión venció. Iniciá sesión de nuevo.,Your session expired. Log in again.,aprobado
+errors.codes.network_error,network_error,error,,No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.,We couldn’t connect. Check your connection and try again.,aprobado
+home.rows.emptyDescription,,label,,No hay títulos para mostrar en este momento. Probá de nuevo más tarde o buscá algo puntual.,There’s nothing to show right now. Try again later or search for something specific.,aprobado
