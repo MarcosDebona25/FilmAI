@@ -15,6 +15,8 @@ const estado = vi.hoisted(() => ({
   perfil: null as null | Record<string, unknown>,
   llamadas: [] as string[],
   vacia: false,
+  /** Cuántos pedidos de la lista fallan antes de responder bien. */
+  fallas: 0,
 }));
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
@@ -28,6 +30,10 @@ vi.mock("@/lib/api", async (importOriginal) => {
     apiFetch: vi.fn(async (path: string, opciones: { method?: string } = {}) => {
       estado.llamadas.push(`${opciones.method ?? "GET"} ${path}`);
       if (opciones.method === "DELETE") return undefined;
+      if (estado.fallas > 0) {
+        estado.fallas--;
+        throw new real.ApiError(500, { code: "server_error", params: {}, errors: [] });
+      }
       const query = new URL(path, "http://filmai.local").searchParams;
       if (estado.vacia)
         return { total: 0, total_comunidad: 0, next: null, previous: null, results: [] };
@@ -64,6 +70,7 @@ beforeEach(() => {
   estado.perfil = null;
   estado.llamadas = [];
   estado.vacia = false;
+  estado.fallas = 0;
 });
 afterEach(() => {
   vi.clearAllMocks();
@@ -133,6 +140,21 @@ describe("reseñas de la comunidad", () => {
 
     await screen.findByText(LARGA);
     expect(screen.queryByRole("button", { name: "Read more" })).toBeNull();
+  });
+
+  it("si la lista falla, avisa y «Try again» la vuelve a pedir", async () => {
+    // Q-03: todo error de carga se puede reintentar (antes era solo un texto).
+    estado.fallas = 1;
+    render(<ReviewsSection {...props} />, { locale: "en" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong. Try again later."
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(await screen.findByText("@lucia.cine")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(estado.llamadas.filter((l) => l.startsWith("GET /api/reviews/?"))).toHaveLength(2);
   });
 
   it("sin reseñas lo dice", async () => {

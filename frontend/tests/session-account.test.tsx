@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 
 import { AccountProvider, useAccount } from "@/components/AccountProvider";
-import { SESION_VENCIDA, apiFetch } from "@/lib/api";
+import { ApiError, SESION_VENCIDA, apiFetch } from "@/lib/api";
+import { translateError } from "@/lib/errors";
 import { render, screen, waitFor } from "./render";
 
 const nav = vi.hoisted(() => ({
@@ -25,6 +26,30 @@ function Probe() {
     <output data-testid="cuenta">{cargando ? "cargando" : (perfil?.nombre ?? "sin sesión")}</output>
   );
 }
+
+function ProbeError() {
+  const { error } = useAccount();
+  return <output data-testid="error">{error ?? "sin error"}</output>;
+}
+
+describe("AccountProvider cuando la cuenta no carga", () => {
+  it("muestra el mensaje del error y no el genérico de «la acción»", async () => {
+    // Q-03: antes cualquier falla decía «No pudimos completar la acción».
+    nav.pathname = "/profile";
+    vi.mocked(apiFetch).mockRejectedValue(
+      new ApiError(500, { code: "server_error", params: {}, errors: [] })
+    );
+    render(
+      <AccountProvider>
+        <ProbeError />
+      </AccountProvider>
+    );
+
+    // El mensaje sale del propio error (servidor), no del código «unknown».
+    expect(await screen.findByText(translateError({ code: "server_error" }))).toBeVisible();
+    expect(screen.queryByText(translateError({ code: "unknown" }))).not.toBeInTheDocument();
+  });
+});
 
 describe("AccountProvider y el vencimiento", () => {
   beforeEach(() => {

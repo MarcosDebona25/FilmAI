@@ -82,9 +82,19 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     detalle.data?.overview ?? ""
   );
 
+  // Sin las listas no hay Favorita, Vista ni Pendiente: si no cargan, se avisa
+  // con «Reintentar» en vez de que los botones desaparezcan sin explicación (Q-03).
+  const [errorListas, setErrorListas] = useState(false);
   const recargarListas = useCallback(() => {
-    return apiFetch<ListaFicha[]>(`/api/lists/?id_tmdb=${id}&tipo=${tipo}`).then(setListas, () =>
-      setListas([])
+    return apiFetch<ListaFicha[]>(`/api/lists/?id_tmdb=${id}&tipo=${tipo}`).then(
+      (datos) => {
+        setListas(datos);
+        setErrorListas(false);
+      },
+      () => {
+        setListas([]);
+        setErrorListas(true);
+      }
     );
   }, [id, tipo]);
 
@@ -102,7 +112,11 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     );
     apiFetch<ListaFicha[]>(`/api/lists/?id_tmdb=${id}&tipo=${tipo}`).then(
       (datos) => vigente && setListas(datos),
-      () => vigente && setListas([])
+      () => {
+        if (!vigente) return;
+        setListas([]);
+        setErrorListas(true);
+      }
     );
     return () => {
       vigente = false;
@@ -416,16 +430,27 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 </span>
               </div>
             ) : conSesion && listas && ficha ? (
-              <TitleActions
-                titulo={ficha.titulo}
-                idTmdb={id}
-                tipo={tipo}
-                listas={listas}
-                onListasChange={setListas}
-                miCalificacion={mia ?? null}
-                onRate={() => setModal("calificar")}
-                onCalificacionBorrada={() => setMia(null)}
-              />
+              <div className="flex flex-col gap-3">
+                <TitleActions
+                  titulo={ficha.titulo}
+                  idTmdb={id}
+                  tipo={tipo}
+                  listas={listas}
+                  onListasChange={setListas}
+                  miCalificacion={mia ?? null}
+                  onRate={() => setModal("calificar")}
+                  onCalificacionBorrada={() => setMia(null)}
+                />
+                {errorListas && (
+                  <ErrorRetry
+                    mensaje={t("lists.overview.loadError")}
+                    onReintentar={() => void recargarListas()}
+                    boton="pildora"
+                    alertaEnTexto
+                    className="text-sm"
+                  />
+                )}
+              </div>
             ) : (
               <Link
                 href={`${routes.login}?next=${encodeURIComponent(pathname)}`}
