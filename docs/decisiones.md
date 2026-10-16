@@ -4355,3 +4355,12 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Falsos positivos descartados**: el foco de las tarjetas de películas y de listas se dibuja en el póster o en un pseudo-elemento; se verificó con capturas.
 - **Fuera de alcance**: prueba con lector de pantalla real (NVDA/VoiceOver), forzar errores de API para Q-03 y el chatbot (no existe todavía).
 - **Archivos afectados**: `frontend/app/{layout.tsx,globals.css}`, `frontend/app/(public)/{login,register}/`, `frontend/app/complete-signup/page.tsx`, `frontend/app/profile/page.tsx`, `frontend/components/{Navbar,LanguageSwitcher,NavigationProgress}.tsx`, `frontend/components/access/AccessShell.tsx`, `frontend/app/not-found.tsx`, `frontend/components/ui/switch.tsx`, `frontend/components/features/{TypeSelector.tsx,filters/SheetParts.tsx,lists/ListDetailView.tsx,reviews/,title/}`, `frontend/tests/title-view.test.tsx`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 16/10/2026 — Fix: la caché del catálogo guarda por idioma
+
+- **Fecha**: 16/10/2026
+- **Descripción**: en el Home con la interfaz en inglés, la fila de tendencias mostraba títulos en español («Animales», «Madre siniestra») y la de recomendados, en inglés. La API traduce bien según `Accept-Language`; el problema era la caché de `lib/use-catalog.ts`, que guardaba las respuestas por ruta sin el idioma. Cuando el idioma cambia sin recargar la página (el de la cuenta al iniciar sesión, o el selector: `persistLocale` + `router.refresh`), las filas cacheadas seguían con el idioma anterior; Recomendado no se cachea y por eso salía bien.
+  1. La clave de la caché es `idioma|ruta`, con el idioma de `useLocale()` de next-intl. Al cambiar de idioma se vuelve a pedir; al volver al anterior se usa lo guardado.
+  2. Vale para `useCatalog` y `useCatalogPaginas` (Home, Buscar y ficha).
+- **Tests**: `use-catalog-paginas.test.tsx` suma dos casos (cambio de idioma en `useCatalog` y en las páginas de Buscar); fallan con la caché anterior. Verificado en la app: Home en español → selector a inglés → «Animals».
+- **Archivos afectados**: `frontend/lib/use-catalog.ts`, `frontend/tests/use-catalog-paginas.test.tsx`, `docs/decisiones.md`.
