@@ -4336,3 +4336,12 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Descartado**: guardar el token en `localStorage` y mandarlo como `Authorization: Bearer` (sugerencia del asistente de Chrome por el encabezado `WWW-Authenticate: Bearer` que DRF pone en cualquier 401). Las cookies httpOnly no son legibles desde JavaScript; en `localStorage` un XSS podría robar el token.
 - **Tests**: `api-session.test.ts` (renueva y repite con CSRF, una sola renovación para varios 401, evento si no se puede, `auth/` no renueva), `session-account.test.tsx` (sin cookies no pide el perfil, aviso y login al vencer, sin aviso a quien nunca entró) y dos recorridos en `e2e/cuenta.spec.ts` (solo `refresh` renueva y no saca; vencida del todo lleva al login con el aviso).
 - **Archivos afectados**: `frontend/lib/api.ts`, `frontend/components/AccountProvider.tsx`, `frontend/app/layout.tsx`, `frontend/middleware.ts`, mensajes y copia de i18n, tests y e2e, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 16/10/2026 — Fix: la caché del catálogo guarda por idioma
+
+- **Fecha**: 16/10/2026
+- **Descripción**: en el Home con la interfaz en inglés, la fila de tendencias mostraba títulos en español («Animales», «Madre siniestra») y la de recomendados, en inglés. La API traduce bien según `Accept-Language`; el problema era la caché de `lib/use-catalog.ts`, que guardaba las respuestas por ruta sin el idioma. Cuando el idioma cambia sin recargar la página (el de la cuenta al iniciar sesión, o el selector: `persistLocale` + `router.refresh`), las filas cacheadas seguían con el idioma anterior; Recomendado no se cachea y por eso salía bien.
+  1. La clave de la caché es `idioma|ruta`, con el idioma de `useLocale()` de next-intl. Al cambiar de idioma se vuelve a pedir; al volver al anterior se usa lo guardado.
+  2. Vale para `useCatalog` y `useCatalogPaginas` (Home, Buscar y ficha).
+- **Tests**: `use-catalog-paginas.test.tsx` suma dos casos (cambio de idioma en `useCatalog` y en las páginas de Buscar); fallan con la caché anterior. Verificado en la app: Home en español → selector a inglés → «Animals».
+- **Archivos afectados**: `frontend/lib/use-catalog.ts`, `frontend/tests/use-catalog-paginas.test.tsx`, `docs/decisiones.md`.

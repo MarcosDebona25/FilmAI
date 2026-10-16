@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
+import { NextIntlClientProvider } from "next-intl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { limpiarCacheCatalogo, useCatalog, useCatalogPaginas } from "@/lib/use-catalog";
-import { renderHook, waitFor } from "./render";
+import { renderHook as renderHookBase, waitFor } from "./render";
 
 const api = vi.hoisted(() => ({ fetch: vi.fn() }));
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -9,7 +11,20 @@ vi.mock("@/lib/api", async (importOriginal) => {
   return { ...real, apiFetch: api.fetch };
 });
 
+/** Los hooks leen el idioma de next-intl (la caché es por idioma). */
+const idioma = { actual: "es" as "es" | "en" };
+function ConIdioma({ children }: { children: ReactNode }) {
+  return (
+    <NextIntlClientProvider locale={idioma.actual} messages={{}}>
+      {children}
+    </NextIntlClientProvider>
+  );
+}
+const renderHook: typeof renderHookBase = (hook, opciones) =>
+  renderHookBase(hook, { wrapper: ConIdioma, ...opciones });
+
 afterEach(() => {
+  idioma.actual = "es";
   api.fetch.mockReset();
   limpiarCacheCatalogo();
 });
@@ -54,5 +69,35 @@ describe("useCatalogPaginas", () => {
 
     await waitFor(() => expect(result.current.paginas).toEqual(["ok"]));
     expect(result.current.status).toBe("ok");
+  });
+});
+
+describe("caché por idioma", () => {
+  it("al cambiar de idioma vuelve a pedir, y al volver usa lo guardado", async () => {
+    // La API traduce según Accept-Language: «Animales» en es, «Animals» en en.
+    api.fetch.mockImplementation(() =>
+      Promise.resolve(idioma.actual === "es" ? "Animales" : "Animals")
+    );
+    const { result, rerender } = renderHook(() => useCatalog<string>("/trending"));
+    await waitFor(() => expect(result.current.data).toBe("Animales"));
+
+    idioma.actual = "en";
+    rerender();
+    await waitFor(() => expect(result.current.data).toBe("Animals"));
+
+    idioma.actual = "es";
+    rerender();
+    await waitFor(() => expect(result.current.data).toBe("Animales"));
+    expect(api.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("las páginas de Buscar también se guardan por idioma", async () => {
+    api.fetch.mockImplementation((path: string) => Promise.resolve(`${idioma.actual} ${path}`));
+    const { result, rerender } = renderHook(() => useCatalogPaginas<string>(["/p?page=1"]));
+    await waitFor(() => expect(result.current.paginas).toEqual(["es /p?page=1"]));
+
+    idioma.actual = "en";
+    rerender();
+    await waitFor(() => expect(result.current.paginas).toEqual(["en /p?page=1"]));
   });
 });
