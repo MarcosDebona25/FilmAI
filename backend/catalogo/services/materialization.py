@@ -15,6 +15,7 @@ import logging
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
@@ -40,6 +41,11 @@ _MAX_REPARTO = 10
 # garantiza que nada quede sin refrescar para siempre si esa lista se pierde.
 # Es una estimación de bajo riesgo: equivocarse cuesta unos refrescos de más.
 _DIAS_RED_DE_SEGURIDAD = 90
+
+# Un título de un listado se encola como mucho una vez en esta ventana. El
+# Home lo abren muchas personas y cada visita trae los mismos 20: sin esto,
+# con TMDB caído la cola se llenaría de tareas repetidas que fallan.
+_VENTANA_ENCOLADO_SEGUNDOS = 10 * 60
 
 
 def materializar(id_tmdb, tipo_tmdb, forzar=False):
@@ -85,6 +91,50 @@ def materializar_en_segundo_plano(id_tmdb, tipo_tmdb):
     if produccion is not None and not _necesita_enriquecimiento(produccion):
         return
     materializar_produccion.delay(id_tmdb, tipo_tmdb)
+
+
+def materializar_listado_en_segundo_plano(items, tipo_tmdb=None):
+    """Encola la materialización de lo que muestra un listado (C-04a, 16/10/2026).
+
+    Docs 02 y 03: lo que exponen tendencias, estrenos, discover y Buscar queda
+    en nuestro catálogo, no solo lo que se abre en la ficha. Así crece el
+    espacio de búsqueda del chatbot sin esperar a la sync nocturna.
+
+    `tipo_tmdb` es el tipo del listado; en los que mezclan (tendencias de
+    «Todo», Buscar con «Todo») lo dice cada ítem en `media_type`, y las
+    personas se descartan. Una sola consulta separa lo que ya está fresco; lo
+    demás va a Celery, cada título como mucho una vez cada 10 minutos. Las
+    llamadas a TMDB de la tarea pasan por la caché de Redis: repetirla cuesta
+    poco.
+    """
+    candidatos = set()
+    for item in items or []:
+        tipo = item.get("media_type") or tipo_tmdb
+        id_tmdb = item.get("id")
+        if tipo in ("movie", "tv") and isinstance(id_tmdb, int):
+            candidatos.add((id_tmdb, tipo))
+    if not candidatos:
+        return
+
+    frescas = set(
+        ProduccionAudiovisual.objects.filter(
+            id_tmdb__in={id_tmdb for id_tmdb, _ in candidatos},
+            fecha_enriquecimiento__gte=_umbral_de_frescura(),
+        ).values_list("id_tmdb", "tipo")
+    )
+    for id_tmdb, tipo in sorted(candidatos):
+        if (id_tmdb, tmdb_a_dominio(tipo)) in frescas:
+            continue
+        marca = f"materializar:{tipo}:{id_tmdb}"
+        if not cache.add(marca, 1, timeout=_VENTANA_ENCOLADO_SEGUNDOS):
+            continue
+        try:
+            materializar_produccion.delay(id_tmdb, tipo)
+        except Exception:
+            # Si no se pudo encolar, la marca no puede bloquear el próximo
+            # intento durante 10 minutos: se borra y el error sigue su camino.
+            cache.delete(marca)
+            raise
 
 
 def _buscar_produccion(id_tmdb, tipo):

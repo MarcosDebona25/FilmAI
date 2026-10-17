@@ -4364,3 +4364,40 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   2. Vale para `useCatalog` y `useCatalogPaginas` (Home, Buscar y ficha).
 - **Tests**: `use-catalog-paginas.test.tsx` suma dos casos (cambio de idioma en `useCatalog` y en las páginas de Buscar); fallan con la caché anterior. Verificado en la app: Home en español → selector a inglés → «Animals».
 - **Archivos afectados**: `frontend/lib/use-catalog.ts`, `frontend/tests/use-catalog-paginas.test.tsx`, `docs/decisiones.md`.
+
+## 16/10/2026 — Respaldo cuando TMDB no responde y materialización de los listados (CU-008 2.A, CU-019 4.A, C-04a)
+
+- **Fecha**: 16/10/2026
+- **Descripción**:
+  1. **Respaldo en Redis** (decisión del usuario, frente a armar las respuestas desde Postgres). Cada respuesta de TMDB se guarda además bajo `tmdb:respaldo:…` por 30 días. Si TMDB no está disponible —error de servidor, conexión rechazada o tiempo agotado, límite de pedidos o reintentos agotados— `TMDBClientCache` sirve esa copia y deja un aviso en el log. Un 404 o un 400 no usan el respaldo (dicen algo cierto del pedido), y sin copia el error sigue como antes (CU-019 4.A.2). La lista de cambios de la sync nocturna no tiene respaldo: ahí el fallo tiene que verse. Cubre todo lo que ya se pidió alguna vez (Home, Buscar, ficha, reparto, géneros); lo que nunca se consultó sigue dando error. Redis guarda sus datos en el volumen `redisdata`, así que el respaldo sobrevive a un reinicio.
+  2. **Los listados materializan lo que muestran** (decisión del usuario: se cumple lo que dicen docs 02 y 03 en vez de cambiarlos). `trending`, `now-playing`, `discover`, `search` y `browse` encolan en Celery lo que no está fresco en la base, con una sola consulta por listado. Cada título se encola como mucho una vez cada 10 minutos (`cache.add`): el Home lo abren muchas personas y, con TMDB caído, la cola se llenaría de tareas repetidas que fallan. Las llamadas de la tarea pasan por la caché, así que repetirla cuesta poco. Si encolar falla, el listado se responde igual.
+- **Verificado en la app**: abrir tendencias, estrenos y una búsqueda llevó el catálogo de 281 a 326 producciones; con un cliente apuntando a un puerto cerrado y la copia normal vencida, las tendencias salieron del respaldo.
+- **Tests**: `catalogo/test_respaldo_tmdb.py` (6: error de servidor, sin conexión, sin copia, 404, TTL de 30 días, la lista de cambios sin respaldo) y `catalogo/test_materializar_listados.py` (9: tipos y personas, tipo del listado, frescura por id y tipo, vencidas y sin enriquecer, una vez cada 10 minutos, listados vacíos, y las vistas: tendencias, discover y un fallo al encolar). Los tests sin base de datos de los listados (`tests_browse.py`, `EndpointIntegrationTest`) parchean el encolado, como ya hacían con la ficha.
+- **Archivos afectados**: `backend/catalogo/{cache.py,views.py}`, `backend/catalogo/services/materialization.py`, `backend/catalogo/{test_respaldo_tmdb.py,test_materializar_listados.py,tests.py,tests_browse.py}`, specs `tmdb-cache` y `catalog-materialization`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 16/10/2026 — Q-03: estados de carga, vacío, error y aviso tras acciones
+
+- **Fecha**: 16/10/2026
+- **Descripción**: revisión de Q-03 (doc 05) sobre la app real con la cuenta de prueba: 46 escenarios en 8 pantallas (Home, Buscar, ficha, Listas, detalle de lista, Mis reseñas, Perfil y Settings) más 5 chequeos puntuales. Las fallas se provocaron interceptando en el navegador los pedidos a la API: error 500 (o el 502 que manda el backend cuando TMDB falla), sin red (pedido cortado), lento (3,5 s) y vacío; las acciones exitosas fueron al backend real y se deshicieron. Funcionaba bien la mayoría: siluetas de carga sin «no hay nada» antes de tiempo, vacíos con salida (Buscar, Mis reseñas, listas), errores con «Reintentar» que vuelven a pedir, acciones fallidas que conservan lo escrito y no marcan nada como guardado, y avisos tras cada acción. Se corrigió:
+  1. **Sin red se veía «Failed to fetch»** (en la ficha y en los avisos de cualquier acción) o el genérico «No pudimos completar la acción». `apiFetch` convierte el rechazo de `fetch` en un `ApiError` con el código propio del front `network_error`: «No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.» (como `unknown`, no está en el contrato del backend).
+  2. **Reseñas de la comunidad**: si fallaban, el error no tenía «Reintentar»; ahora usa `ErrorRetry` y vuelve a pedir.
+  3. **Ficha**: si fallaban las listas del usuario, Favorita, Vista y Pendiente desaparecían sin aviso. Ahora se avisa con «Reintentar».
+  4. **Home con todo vacío** quedaba en blanco: ahora lo dice y ofrece explorar.
+  5. **Home con todo caído** mostraba el mismo error dos veces (el aviso de «algo no cargó» salía antes de que terminaran los pedidos): el aviso espera a que terminen.
+  6. **Perfil y Settings** que no cargan decían «No pudimos completar la acción»: `AccountProvider` usa el mensaje del propio error (servidor o conexión).
+- **Se deja como está, a propósito**: el reparto que no carga se omite (es secundario y no rompe la ficha); el interruptor de Settings no muestra aviso al guardar (el propio interruptor es la confirmación; al fallar avisa y vuelve atrás).
+- **Pendiente sin corregir**: la copia de los errores mezcla «Intentá» y «Probá», y varios dicen solo «Ocurrió un error» sin decir qué no cargó.
+- **Tests**: `api-session.test.ts` (sin red), `session-account.test.tsx` (mensaje de la cuenta), `reviews-section.test.tsx` (reintentar), `title-view.test.tsx` (listas que no cargan) y `home-page.test.tsx` (todo vacío; un solo error cuando todo falla). Cada uno falla con el código anterior.
+- **Archivos afectados**: `frontend/lib/api.ts`, `frontend/components/AccountProvider.tsx`, `frontend/components/features/HomeView.tsx`, `frontend/components/features/title/{ReviewsSection,TitleView}.tsx`, mensajes y copia de i18n, tests, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 16/10/2026 — Ajustes de la revisión del PR #111
+
+- **Fecha**: 16/10/2026
+- **Descripción**: cuatro detalles menores que salieron al revisar el PR #111 (respaldo de TMDB, listados y Q-03):
+  1. **La marca de 10 minutos no bloquea un reintento**: `materializar_listado_en_segundo_plano` borra la marca de `cache.add` si `delay()` falla (broker caído). Antes ese título no se volvía a encolar hasta que vencía la ventana.
+  2. **Un aviso de respaldo cada 5 minutos por endpoint**: con TMDB caído, cada pedido servido desde el respaldo dejaba un warning. `TMDBClientCache` marca `tmdb:respaldo-aviso:<endpoint>` con `SET NX` por 5 minutos y solo avisa si la marca es nueva; si Redis falla al marcar, avisa igual.
+  3. **Ficha**: la carga inicial de las listas del usuario también limpia `errorListas` al responder bien (antes solo lo hacía `recargarListas`), así que el aviso de una ficha anterior no queda colgado.
+  4. Línea en blanco que faltaba antes de la entrada del respaldo en este archivo.
+  5. **Test inestable en CI**: `title-view.test.tsx` leía `document.title` apenas aparecía el encabezado, pero el título se asigna en un efecto posterior; falló una vez en CI. Ahora lo espera con `waitFor`.
+- **Tests**: `test_respaldo_tmdb.py` (un solo aviso en tres pedidos seguidos con TMDB caído), `test_materializar_listados.py` (si encolar falla, el siguiente listado lo vuelve a encolar) y `title-view.test.tsx` (al pasar a otra ficha cuyas listas cargan, el aviso desaparece; falla con el código anterior).
+- **Archivos afectados**: `backend/catalogo/cache.py`, `backend/catalogo/services/materialization.py`, `backend/catalogo/{test_respaldo_tmdb.py,test_materializar_listados.py}`, `frontend/components/features/title/TitleView.tsx`, `frontend/tests/title-view.test.tsx`, `docs/decisiones.md`.

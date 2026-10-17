@@ -10,6 +10,7 @@ import { useAccount } from "@/components/AccountProvider";
 import { Avatar } from "@/components/Avatar";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
+import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
@@ -103,6 +104,8 @@ export function ReviewsSection({
   const [nota, setNota] = useState<Nota | null>(null);
   const [pagina, setPagina] = useState<Pagina | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Otro intento vuelve a pedir la lista (Q-03: todo error de carga se puede reintentar).
+  const [intento, setIntento] = useState(0);
   const [cargandoMas, setCargandoMas] = useState(false);
   const [borrar, setBorrar] = useState(false);
 
@@ -126,7 +129,7 @@ export function ReviewsSection({
     return () => {
       vigente = false;
     };
-  }, [consulta]);
+  }, [consulta, intento]);
 
   async function cargarMas() {
     if (!pagina?.next || cargandoMas) return;
@@ -268,9 +271,15 @@ export function ReviewsSection({
         </div>
 
         {error && (
-          <p role="alert" className="py-6 text-fg-2">
-            {error}
-          </p>
+          <ErrorRetry
+            mensaje={error}
+            onReintentar={() => {
+              setError(null);
+              setIntento((anterior) => anterior + 1);
+            }}
+            boton="pildora"
+            className="py-6"
+          />
         )}
         {!pagina &&
           !error &&
