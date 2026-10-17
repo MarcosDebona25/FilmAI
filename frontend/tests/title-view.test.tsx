@@ -11,6 +11,8 @@ const estado = vi.hoisted(() => ({
   mia: null as null | Record<string, unknown>,
   fallaDetalle: false,
   detalleColgado: false,
+  /** Cuántos pedidos de las listas del usuario fallan antes de responder bien. */
+  fallasListas: 0,
   llamadas: [] as { path: string; method: string; body?: unknown }[],
 }));
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -60,7 +62,13 @@ vi.mock("@/lib/api", async (importOriginal) => {
           throw new real.ApiError(404, { code: "not_found", params: {}, errors: [] });
         return structuredClone(estado.mia);
       }
-      if (path.startsWith("/api/lists/?")) return listas();
+      if (path.startsWith("/api/lists/?")) {
+        if (estado.fallasListas > 0) {
+          estado.fallasListas--;
+          throw new real.ApiError(500, { code: "server_error", params: {}, errors: [] });
+        }
+        return listas();
+      }
       if (path.startsWith("/api/reviews/?"))
         return { total: 0, total_comunidad: 0, next: null, previous: null, results: [] };
       if (path === "/api/lists/4/") return { id: 4, nombre: "Sci Fi", clave: null };
@@ -94,6 +102,7 @@ beforeEach(() => {
   estado.mia = null;
   estado.fallaDetalle = false;
   estado.detalleColgado = false;
+  estado.fallasListas = 0;
   estado.llamadas = [];
   limpiarCacheCatalogo();
 });
@@ -108,7 +117,8 @@ describe("ficha sin sesión", () => {
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("Interstellar");
     // La pestaña dice qué ficha es (Q-01, 16/10/2026).
-    expect(document.title).toBe("Interstellar | FilmAI");
+    // Se asigna en un efecto, después del encabezado: hay que esperarlo.
+    await waitFor(() => expect(document.title).toBe("Interstellar | FilmAI"));
     expect(
       screen.getByText("Mankind was born on Earth. It was never meant to die here.")
     ).toBeInTheDocument();
@@ -203,6 +213,35 @@ describe("ficha con sesión", () => {
       "href",
       "/lists/1"
     );
+  });
+
+  it("si las listas no cargan, lo avisa y «Try again» trae los botones de las listas", async () => {
+    // Q-03: antes los tres botones desaparecían sin explicación.
+    estado.fallasListas = 1;
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    expect(await screen.findByText("We couldn’t load your lists. Try again.")).toHaveAttribute(
+      "role",
+      "alert"
+    );
+    expect(screen.queryByRole("button", { name: "Watched" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    // Los datos de prueba solo traen Vistas (y una personalizada).
+    expect(await screen.findByRole("button", { name: "Watched" })).toBeInTheDocument();
+    expect(screen.queryByText("We couldn’t load your lists. Try again.")).not.toBeInTheDocument();
+  });
+
+  it("si las listas cargan en otra ficha, el aviso de la anterior se va", async () => {
+    // Misma instancia con otro título: el error de la ficha anterior no queda colgado.
+    estado.fallasListas = 1;
+    const { rerender } = render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+    expect(await screen.findByText("We couldn’t load your lists. Try again.")).toBeInTheDocument();
+
+    rerender(<TitleView tipo="tv" id={1396} />);
+
+    expect(await screen.findByRole("button", { name: "Watched" })).toBeInTheDocument();
+    expect(screen.queryByText("We couldn’t load your lists. Try again.")).not.toBeInTheDocument();
   });
 
   it("calificar publica la nota, avisa y recarga las listas", async () => {

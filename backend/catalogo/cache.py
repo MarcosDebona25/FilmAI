@@ -1,8 +1,13 @@
 import json
+import logging
 from hashlib import sha256
 
 import redis
 from django.conf import settings
+
+from catalogo.exceptions import TMDBBadRequest, TMDBError, TMDBNotFound
+
+logger = logging.getLogger(__name__)
 
 ENDPOINTS_LOCALIZADOS = frozenset(
     {
@@ -35,6 +40,18 @@ ENDPOINT_TTLS = {
     "genres": 30 * 24 * 3600,
 }
 
+# Respaldo para cuando TMDB no responde (CU-008 2.A, CU-019 4.A, 16/10/2026):
+# cada respuesta se guarda también con una vida mucho más larga que su TTL.
+# Si TMDB está caído, devuelve error de servidor, se pasa del tiempo o limita
+# los pedidos, se sirve esa copia —«la última disponible»— en vez de un 502.
+RESPALDO_TTL = 30 * 24 * 3600
+# La lista de cambios la usa la sync nocturna: con datos viejos refrescaría
+# mal sin enterarse. Ahí conviene que el fallo se vea.
+SIN_RESPALDO = frozenset({"changes"})
+# Con TMDB caído, cada pedido que sale del respaldo dejaría un aviso: uno por
+# endpoint cada 5 minutos alcanza para enterarse sin llenar el log.
+AVISO_RESPALDO_SEGUNDOS = 5 * 60
+
 # Bounded timeouts so a hung Redis fails fast and the cache degrades to TMDB
 # instead of blocking the request indefinitely.
 REDIS_SOCKET_CONNECT_TIMEOUT = 2
@@ -45,6 +62,21 @@ def _build_key(endpoint, params):
     canonical = json.dumps(params, sort_keys=True, default=str)
     params_hash = sha256(canonical.encode()).hexdigest()[:16]
     return f"tmdb:{endpoint}:{params_hash}"
+
+
+def _clave_respaldo(clave):
+    return clave.replace("tmdb:", "tmdb:respaldo:", 1)
+
+
+def _tmdb_no_disponible(error):
+    """¿El fallo es de TMDB y no de lo que se pidió?
+
+    Un 404 o un 400 dicen algo cierto sobre el pedido (no existe, no es
+    válido): servir una copia vieja los escondería.
+    """
+    return isinstance(error, TMDBError) and not isinstance(
+        error, (TMDBNotFound, TMDBBadRequest)
+    )
 
 
 class TMDBClientCache:
@@ -76,13 +108,58 @@ class TMDBClientCache:
             except (TypeError, ValueError):
                 pass
 
-        result = producer()
+        try:
+            result = producer()
+        except TMDBError as error:
+            respaldo = self._respaldo(endpoint, key, error, redis_available)
+            if respaldo is None:
+                raise
+            return respaldo
         if redis_available:
             try:
-                self.redis.set(key, json.dumps(result), ex=ENDPOINT_TTLS[endpoint])
+                serializado = json.dumps(result)
+                self.redis.set(key, serializado, ex=ENDPOINT_TTLS[endpoint])
+                if endpoint not in SIN_RESPALDO:
+                    self.redis.set(_clave_respaldo(key), serializado, ex=RESPALDO_TTL)
             except redis.RedisError:
                 pass
         return result
+
+    def _respaldo(self, endpoint, key, error, redis_available):
+        """La última respuesta guardada, si TMDB no está disponible; si no, None."""
+        if (
+            not redis_available
+            or endpoint in SIN_RESPALDO
+            or not _tmdb_no_disponible(error)
+        ):
+            return None
+        try:
+            raw = self.redis.get(_clave_respaldo(key))
+            datos = json.loads(raw) if raw is not None else None
+        except (redis.RedisError, TypeError, ValueError):
+            return None
+        if datos is not None and self._toca_avisar(endpoint):
+            logger.warning(
+                "TMDB no disponible (%s: %s); se sirve el respaldo de %s",
+                type(error).__name__,
+                error,
+                endpoint,
+            )
+        return datos
+
+    def _toca_avisar(self, endpoint):
+        """¿Ya pasaron 5 minutos desde el último aviso de respaldo de este endpoint?"""
+        try:
+            return bool(
+                self.redis.set(
+                    f"tmdb:respaldo-aviso:{endpoint}",
+                    1,
+                    nx=True,
+                    ex=AVISO_RESPALDO_SEGUNDOS,
+                )
+            )
+        except redis.RedisError:
+            return True
 
     def get_trending(self, media_type="all", time_window="week", page=1):
         params = {

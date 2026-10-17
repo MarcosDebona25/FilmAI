@@ -133,6 +133,21 @@ Detail views MUST NOT enrich inside the request (14/10/2026: it added up to a se
 - WHEN its detail is opened again
 - THEN nothing is enqueued
 
+### Requirement: Listings materialize what they show
+
+Since 16/10/2026 (docs 02 and 03), `trending`, `now-playing`, `discover`, `search` and `browse` MUST call `materializar_listado_en_segundo_plano(results, tipo_tmdb)` after building their response. It takes the type from each item's `media_type` when present (mixed listings) or from the listing, ignores people and malformed items, filters the fresh rows with a single query, and enqueues `materializar_produccion` for the rest. The same title MUST be enqueued at most once per 10 minutes (an atomic `cache.add` marker), so repeated visits to the same listing do not flood the queue while TMDB is slow or down. If enqueuing fails, the marker MUST be removed so the next listing retries. A failure while enqueuing MUST NOT alter the listing response.
+
+#### Scenario: Home trending
+
+- GIVEN `trending/all` returns a movie, a TV show and a person
+- WHEN the view is handled
+- THEN the movie and the TV show are enqueued with their own type and the person is ignored
+
+#### Scenario: Repeated visits
+
+- GIVEN the same listing is requested five times within 10 minutes
+- THEN each title not yet fresh is enqueued once
+
 ### Requirement: Failure isolation
 
 `materializar()` MUST propagate its errors so that each caller can choose its own failure policy. Detail views MUST NOT let a materialization failure (including a broker that cannot enqueue) alter their response: the body stays the raw TMDB passthrough defined by C-03, and the failure is logged.

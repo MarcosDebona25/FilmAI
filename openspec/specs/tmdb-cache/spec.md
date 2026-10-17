@@ -41,6 +41,22 @@ The system SHALL bypass the cache and call TMDB directly when Redis is unavailab
 - AND the TMDB client is invoked directly
 - AND the request succeeds without raising a Redis-related error
 
+### Requirement: Fallback copy when TMDB is unavailable
+
+Every successful response (except `changes`, used by the nightly sync) MUST also be stored under `tmdb:respaldo:<endpoint>:<hash>` with a 30-day TTL (CU-008 2.A, CU-019 4.A, 16/10/2026). When TMDB raises a server error, a transport error (including timeouts), a rate limit or exhausts its retries, the cache MUST return that copy and log a warning, at most once per endpoint every 5 minutes (a `tmdb:respaldo-aviso:<endpoint>` marker set with `NX`). A not-found or bad-request error MUST still propagate, and without a copy (or without Redis) the original error MUST propagate.
+
+#### Scenario: TMDB down after the normal TTL expired
+
+- GIVEN a trending response was cached and its 6-hour copy expired
+- WHEN TMDB refuses the connection
+- THEN the last stored copy is returned instead of an error
+
+#### Scenario: Not found is not hidden
+
+- GIVEN a stored copy of a movie detail
+- WHEN TMDB answers 404 for it
+- THEN the 404 propagates
+
 ### Requirement: Per-endpoint TTL
 
 The system SHALL apply a TTL per endpoint group: lists (trending, now_playing, discover) 6 hours; search 1 hour; details (movie_detail, tv_detail, keywords) 24 hours.
