@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { useAccount } from "@/components/AccountProvider";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
+import { WatchProviders } from "@/components/features/title/WatchProviders";
 import { CreditsSection } from "@/components/features/title/CreditsSection";
 import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ReviewsSection } from "@/components/features/title/ReviewsSection";
@@ -18,7 +19,7 @@ import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { ApiError, apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
-import { useFormats } from "@/lib/format";
+import { regionDelNavegador, useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
 import { ultimasResenas } from "@/lib/my-reviews";
 import { routes } from "@/lib/routes";
@@ -29,6 +30,7 @@ import {
   planEdicion,
   type Creditos,
   type MiCalificacion,
+  type Plataformas,
   type TmdbDetalle,
 } from "@/lib/title";
 import type { ListaFicha } from "@/lib/title-lists";
@@ -42,10 +44,8 @@ const TAMANIO_TITULO = {
   mediano: "text-[40px] md:text-[88px]",
   chico: "text-[32px] md:text-[64px]",
 } as const;
-// Esqueleto de carga: late salvo con movimiento reducido.
-const PULSO = "animate-pulse motion-reduce:animate-none";
 // `raised-2`: los bloques van sobre la franja de fondo, que ya es `raised`.
-const ESQUELETO = `${PULSO} rounded bg-raised-2`;
+const ESQUELETO = "rounded bg-raised-2";
 const VELO_CELULAR =
   "linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.2) 60%), linear-gradient(180deg, rgb(var(--scrim) / 0.85) 0%, rgb(var(--scrim) / 0) 30%)";
 const VELO_ESCRITORIO =
@@ -68,6 +68,15 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const [intento, setIntento] = useState(0);
   const detalle = useCatalog<TmdbDetalle>(`/api/catalogo/${tipo}/${id}/`, intento);
   const creditos = useCatalog<Creditos>(`/api/catalogo/${tipo}/${id}/credits/`, intento);
+  // Dónde verla: el país de la cuenta; sin sesión, la región del navegador (se
+  // lee tras montar para no desfasar la hidratación). Sin ninguno, no se pide.
+  const [regionNavegador, setRegionNavegador] = useState<string | null>(null);
+  useEffect(() => setRegionNavegador(regionDelNavegador()), []);
+  const pais = cargando ? null : (perfil?.pais ?? regionNavegador);
+  const plataformas = useCatalog<Plataformas>(
+    pais ? `/api/catalogo/${tipo}/${id}/providers/?pais=${pais}` : null,
+    intento
+  );
 
   // `undefined` = todavía no se sabe; `null` = no calificó.
   const [mia, setMia] = useState<MiCalificacion | null | undefined>(undefined);
@@ -268,7 +277,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
             className="object-cover object-[50%_30%]"
           />
         ) : (
-          <div className={cn("absolute inset-0 bg-raised", !ficha && PULSO)} />
+          <div className="absolute inset-0 bg-raised" />
         )}
         <div
           aria-hidden="true"
@@ -320,7 +329,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
           <div
             className={cn(
               "relative aspect-[2/3] overflow-hidden rounded-[10px] bg-raised shadow-[0_14px_34px_rgb(0_0_0/0.5)] md:row-span-2 md:rounded-xl md:shadow-[0_24px_60px_rgb(0_0_0/0.5)]",
-              !ficha && cn(PULSO, "bg-raised-2")
+              !ficha && "bg-raised-2"
             )}
           >
             {ficha?.poster && (
@@ -493,6 +502,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 ))}
               </ul>
             )}
+            {ficha && <WatchProviders pedido={plataformas} pais={pais} />}
             {ficha?.sinopsis && (
               <div className="flex flex-col gap-2 md:max-w-[720px]">
                 <h2 className="text-[13px] font-semibold text-fg-3">

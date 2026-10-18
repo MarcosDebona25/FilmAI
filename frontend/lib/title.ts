@@ -46,6 +46,24 @@ export interface Creditos {
   reparto: { nombre: string; personaje: string }[];
 }
 
+export interface Plataforma {
+  id: number;
+  nombre: string;
+  /** Ruta de TMDB (`/abc.jpg`); se sirve con `tmdbImage(logo, "w92")`. */
+  logo: string | null;
+}
+
+/** `GET /api/catalogo/{tipo}/{id}/providers/?pais=AR`: dónde verla en un país. */
+export interface Plataformas {
+  pais: string;
+  /** Página de TMDB con los enlaces reales (JustWatch); `null` si el país no tiene datos. */
+  enlace: string | null;
+  suscripcion: Plataforma[];
+  gratis: Plataforma[];
+  alquiler: Plataforma[];
+  compra: Plataforma[];
+}
+
 /** La calificación propia (`GET /api/reviews/mias/?id_tmdb=&tipo=`, C-08). */
 export interface MiCalificacion {
   id: number;
