@@ -73,7 +73,7 @@ describe("AccountProvider y el vencimiento", () => {
   it("si la sesión vence, avisa el motivo y lleva al login", async () => {
     vi.mocked(apiFetch).mockImplementation(async (path) => {
       if (path === "/api/profile/") return { pk: 1, nombre: "Juan" };
-      return path === "/api/avatars/" ? [] : { tema: "oscuro" };
+      return path === "/api/avatars/" ? [] : {};
     });
     render(
       <AccountProvider>

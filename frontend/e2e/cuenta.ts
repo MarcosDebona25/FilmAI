@@ -7,6 +7,7 @@ const initialProfile = {
   nombre: "Juan",
   apellido: "Pérez",
   nombre_usuario: "juanperez",
+  pais: "AR",
   correo: "juan@example.com",
   fecha_nacimiento: "1992-04-10",
   genero: "masculino",
@@ -19,7 +20,6 @@ export async function prepararCuenta(page: Page, idioma: AppLocale | null = null
   let perfil = { ...initialProfile, idioma };
   let preferencias = {
     idioma,
-    tema: "oscuro",
     perfil_publico: true,
     notif_recomendaciones: true,
     notif_resenas: true,

@@ -18,6 +18,11 @@
         "field": "genero",
         "code": "required",
         "params": {}
+      },
+      {
+        "field": "pais",
+        "code": "required",
+        "params": {}
       }
     ]
   }

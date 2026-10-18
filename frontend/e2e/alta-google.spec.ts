@@ -55,6 +55,7 @@ async function prepararAlta(page: Page, baseURL: string, { pendiente = true } = 
 async function completar(page: Page, copy: typeof en | typeof es) {
   await page.getByLabel(copy.common.fields.username).fill("juanperez");
   await expect(page.getByText(copy.auth.signUp.usernameAvailable)).toBeVisible();
+  await page.getByLabel(copy.common.fields.country).selectOption("AR");
   await page.getByLabel(copy.common.fields.birthDate).fill("1992-04-10");
   await page.getByLabel(copy.auth.signUp.genderLabel).selectOption("masculino");
   await page.getByRole("checkbox").check();
@@ -111,6 +112,7 @@ for (const viewport of viewports) {
       expect(cuerpo).toEqual({
         id_token: "token-e2e",
         nombre_usuario: "juanperez",
+        pais: "AR",
         fecha_nacimiento: "1992-04-10",
         genero: "masculino",
         acepta_terminos: true,

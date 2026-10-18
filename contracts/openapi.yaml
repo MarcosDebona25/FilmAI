@@ -1906,6 +1906,9 @@ components:
           format: date
         genero:
           $ref: '#/components/schemas/GeneroEnum'
+        pais:
+          type: string
+          maxLength: 2
         acepta_terminos:
           type: boolean
     Idioma704Enum:
@@ -2008,8 +2011,6 @@ components:
       description: Adjunta metadata después de que Serializer.is_valid reconstruye
         errores.
       properties:
-        tema:
-          $ref: '#/components/schemas/TemaEnum'
         idioma:
           $ref: '#/components/schemas/Idioma704Enum'
         perfil_publico:
@@ -2029,8 +2030,6 @@ components:
       description: Las cuentas anteriores pueden leerse con idioma nulo, sin permitir
         borrarlo.
       properties:
-        tema:
-          $ref: '#/components/schemas/TemaEnum'
         idioma:
           readOnly: true
           nullable: true
@@ -2089,6 +2088,9 @@ components:
           format: date
         genero:
           $ref: '#/components/schemas/GeneroEnum'
+        pais:
+          type: string
+          maxLength: 2
         acepta_terminos:
           type: boolean
       required:
@@ -2099,6 +2101,7 @@ components:
       - genero
       - nombre
       - nombre_usuario
+      - pais
       - password1
       - password2
     ResendEmailVerification:
@@ -2117,14 +2120,6 @@ components:
           readOnly: true
       required:
       - detail
-    TemaEnum:
-      enum:
-      - oscuro
-      - claro
-      type: string
-      description: |-
-        * `oscuro` - Oscuro
-        * `claro` - Claro
     TokenVerify:
       type: object
       properties:
@@ -2239,6 +2234,11 @@ components:
           - $ref: '#/components/schemas/GeneroEnum'
           readOnly: true
           title: Género
+        pais:
+          type: string
+          title: País
+          description: Código ISO 3166-1 alfa-2 (lista en contracts/enums.json)
+          maxLength: 2
         avatar_id:
           type: integer
           maximum: 32767
@@ -2274,6 +2274,7 @@ components:
       - idioma
       - nombre
       - nombre_usuario
+      - pais
       - pk
       - tiene_contrasena_local
     ErrorEntry:
@@ -2289,6 +2290,7 @@ components:
           - avatar_invalid
           - birth_date_in_future
           - blank
+          - country_invalid
           - current_password_incorrect
           - email_already_used
           - email_or_username_already_used
@@ -2346,6 +2348,7 @@ components:
           - avatar_invalid
           - birth_date_in_future
           - blank
+          - country_invalid
           - current_password_incorrect
           - default_list_protected
           - documentation_staff_required

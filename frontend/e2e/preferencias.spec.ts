@@ -2,13 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { prepararCuenta } from "./cuenta";
 
-test("solo tema oscuro: sin selector, y un «claro» guardado no rompe la app", async ({ page }) => {
-  const cuenta = await prepararCuenta(page);
-  // Una cuenta que guardó «claro» antes del 15/10/2026.
-  await page.route("**/api/preferences/", async (route) => {
-    if (route.request().method() !== "GET") return route.fallback();
-    await route.fulfill({ json: { ...cuenta.getPreferencias(), tema: "claro" } });
-  });
+test("la app es solo oscura: sin selector de tema", async ({ page }) => {
+  await prepararCuenta(page);
   await page.goto("/settings");
 
   await expect(page.getByRole("heading", { name: "Preferencias", level: 1 })).toBeVisible();

@@ -34,16 +34,16 @@ class ErroresGoogleTests(TestCase):
         )
 
     def test_campos_faltantes_conservan_mensajes_y_rutas(self):
-        """Los tres campos del perfil faltante se mantienen separados."""
+        """Los cuatro campos del perfil faltante se mantienen separados."""
         response = self.google("faltantes")
         self.assertEqual(response.status_code, 400)
-        for campo in ("nombre_usuario", "fecha_nacimiento", "genero"):
+        for campo in ("nombre_usuario", "fecha_nacimiento", "genero", "pais"):
             self.assertIn(campo, {entry["field"] for entry in response.data["errors"]})
         self.assertEqual(
             response.data["errors"],
             [
                 {"field": campo, "code": "required", "params": {}}
-                for campo in ("nombre_usuario", "fecha_nacimiento", "genero")
+                for campo in ("nombre_usuario", "fecha_nacimiento", "genero", "pais")
             ],
         )
 

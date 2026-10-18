@@ -197,7 +197,7 @@ class UsuarioAdminTests(TestCase):
             "genero": self.usuario.genero,
             "avatar_id": self.usuario.avatar_id,
             "estado": EstadoCuenta.BAJA,
-            "tema": self.usuario.tema,
+            "pais": self.usuario.pais,
             "perfil_publico": "on",
             "notif_recomendaciones": "on",
             "notif_resenas": "on",

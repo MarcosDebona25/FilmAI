@@ -242,6 +242,10 @@ CATALOGO.update(
             {"validacion": 400},
             {"allowedIds": "integer[]"},
         ),
+        "country_invalid": DefinicionCodigo(
+            "El país falta o no es un código ISO 3166-1 alfa-2 válido.",
+            {"validacion": 400},
+        ),
         "local_password_unavailable": DefinicionCodigo(
             "La cuenta no tiene contraseña local.", {"validacion": 400}
         ),

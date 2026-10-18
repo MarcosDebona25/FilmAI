@@ -106,6 +106,9 @@ for (const viewport of viewports) {
       await page.locator('[name="apellido"]').fill("Pérez");
       await page.locator('[name="nombre_usuario"]').fill("juanperez");
       await expect(page.getByText(en.auth.signUp.usernameAvailable)).toBeVisible();
+      // Arranca vacío, aunque el navegador tenga región.
+      await expect(page.locator('select[name="pais"]')).toHaveValue("");
+      await page.locator('select[name="pais"]').selectOption("AR");
       await page.locator('[name="correo"]').fill("juan@example.com");
       await page.locator('[name="fecha_nacimiento"]').fill("1992-04-10");
       await page.locator('select[name="genero"]').selectOption("masculino");
@@ -127,7 +130,11 @@ for (const viewport of viewports) {
       await expect(
         page.getByRole("heading", { name: en.auth.confirmation.inboxTitle })
       ).toBeVisible();
-      expect(payload).toMatchObject({ correo: "juan@example.com", acepta_terminos: true });
+      expect(payload).toMatchObject({
+        correo: "juan@example.com",
+        pais: "AR",
+        acepta_terminos: true,
+      });
       await expect(page.getByText(/Request another in 1:0\d/)).toBeVisible();
       await expect(page.getByRole("button", { name: en.common.email.resendLink })).toHaveAttribute(
         "aria-disabled",

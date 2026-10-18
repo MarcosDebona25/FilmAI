@@ -46,6 +46,7 @@ errors.codes.username_invalid,username_invalid,error,"minLength,maxLength",Usá 
 errors.codes.username_not_allowed,username_not_allowed,error,,No podés usar ese nombre de usuario. Elegí otro.,You can’t use that username. Choose another one.,aprobado
 errors.codes.person_name_invalid,person_name_invalid,error,,Usá solo letras y espacios para tu nombre o apellido.,Use only letters and spaces for your first or last name.,aprobado
 errors.codes.birth_date_in_future,birth_date_in_future,error,,La fecha de nacimiento no puede estar en el futuro.,Your date of birth can’t be in the future.,aprobado
+errors.codes.country_invalid,country_invalid,error,,Elegí un país de la lista.,Choose a country from the list.,aprobado
 errors.codes.minimum_age,minimum_age,error,minAge,"Tenés que tener al menos {minAge, plural, one {# año} other {# años}} para crear una cuenta.","You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.",aprobado
 errors.codes.avatar_invalid,avatar_invalid,error,,Elegí uno de los avatares disponibles.,Choose one of the available avatars.,aprobado
 errors.codes.local_password_unavailable,local_password_unavailable,error,,Tu cuenta no tiene contraseña local. Podés crear una con «¿Olvidaste tu contraseña?».,Your account doesn’t have a local password. You can create one with “Forgot your password?”.,aprobado
@@ -177,3 +178,19 @@ lists.detail.loading,,status,,Cargando la lista…,Loading the list…,aprobado
 auth.session.expired,,feedback,,Tu sesión venció. Iniciá sesión de nuevo.,Your session expired. Log in again.,aprobado
 errors.codes.network_error,network_error,error,,No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.,We couldn’t connect. Check your connection and try again.,aprobado
 home.rows.emptyDescription,,label,,No hay títulos para mostrar en este momento. Probá de nuevo más tarde o buscá algo puntual.,There’s nothing to show right now. Try again later or search for something specific.,aprobado
+common.fields.country,,field,,País,Country,aprobado
+common.country.placeholder,,label,,Elegí tu país,Choose your country,aprobado
+common.country.required,,error,,Elegí un país para continuar.,Choose a country to continue.,aprobado
+title.providers.lead,,label,,Ver o alquilar,Stream or rent,aprobado
+title.providers.options,,label,"count,country","{count, plural, one {# opción} other {# opciones}} en {country}","{count, plural, one {# option} other {# options}} in {country}",aprobado
+title.providers.panelTitle,,label,,Dónde ver,Where to watch,aprobado
+title.providers.groups.stream,,label,,Streaming,Stream,aprobado
+title.providers.groups.free,,label,,Gratis,Free,aprobado
+title.providers.groups.rent,,label,,Alquiler,Rent,aprobado
+title.providers.groups.buy,,label,,Compra,Buy,aprobado
+title.providers.unavailable,,status,country,"Todavía no está disponible para ver, alquilar ni comprar en {country}.","Not available to stream, rent or buy in {country} yet.",aprobado
+title.providers.loading,,status,,Cargando plataformas…,Loading streaming options…,aprobado
+title.providers.seeAll,,label,,Ver todas las opciones en TMDB,See all options on TMDB,aprobado
+title.providers.newTabHint,,label,,(se abre en otra pestaña),(opens in a new tab),aprobado
+title.providers.attribution,,label,,Datos de <link>JustWatch</link>,Data by <link>JustWatch</link>,aprobado
+common.media.addedOnLabel,,label,date,Agregada a esta lista el {date},Added to this list on {date},aprobado

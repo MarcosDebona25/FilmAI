@@ -4,7 +4,8 @@ import factory
 from django.utils import timezone
 
 from .avatares import AVATAR_IDS_VALIDOS
-from .models import EstadoCuenta, Tema, TipoGenero, Usuario
+from .models import EstadoCuenta, TipoGenero, Usuario
+from .paises import pais_por_indice
 
 
 class UsuarioFactory(factory.django.DjangoModelFactory):
@@ -23,7 +24,8 @@ class UsuarioFactory(factory.django.DjangoModelFactory):
     avatar_id = factory.Faker(
         "random_element", elements=tuple(sorted(AVATAR_IDS_VALIDOS))
     )
-    tema = Tema.OSCURO
+    # Misma rotación que la migración y el seed: determinista y variada.
+    pais = factory.Sequence(pais_por_indice)
     # Toda cuenta nueva acepta los términos al registrarse; el seed hereda esto.
     fecha_aceptacion_terminos = factory.LazyFunction(timezone.now)
 

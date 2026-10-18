@@ -47,6 +47,7 @@ class UsuarioAdmin(BaseUserAdmin):
                     "apellido",
                     "fecha_nacimiento",
                     "genero",
+                    "pais",
                     "avatar_id",
                 )
             },
@@ -67,7 +68,6 @@ class UsuarioAdmin(BaseUserAdmin):
             "Preferencias",
             {
                 "fields": (
-                    "tema",
                     "perfil_publico",
                     "notif_recomendaciones",
                     "notif_resenas",
@@ -101,6 +101,7 @@ class UsuarioAdmin(BaseUserAdmin):
                     "apellido",
                     "fecha_nacimiento",
                     "genero",
+                    "pais",
                     "password1",
                     "password2",
                 ),

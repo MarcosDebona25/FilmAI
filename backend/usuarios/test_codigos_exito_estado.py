@@ -115,6 +115,7 @@ class CodigosDeExitoTests(TestCase):
                 "apellido": "Pérez",
                 "fecha_nacimiento": "1990-01-01",
                 "genero": "no_especifica",
+                "pais": "AR",
                 "acepta_terminos": True,
                 "password1": "NuevaClave456!",
                 "password2": "NuevaClave456!",
