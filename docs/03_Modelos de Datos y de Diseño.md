@@ -26,7 +26,7 @@
 
 #### 2.1 Modelo 1: Gráfico
 
-> **Nota:** El Diagrama de Clases debe regenerarse desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases") para reflejar los cambios acordados.
+> **Nota:** El Diagrama de Clases se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases"). El JSON se actualizó el 18/10/2026 con `Usuario.pais`, `Lista.orden` y `ProduccionAudiovisual.fechaEnriquecimiento`, y sin `Usuario.tema`. El repositorio no incluye un script ni un renderizador: la imagen se vuelve a generar con la herramienta de diagramas que lee ese formato, y hasta entonces el JSON es la fuente de verdad.
 
 #### 2.2 Modelo 1: Descripción y justificación de elementos más importantes
 
@@ -61,7 +61,7 @@ El desarrollo se fundamenta en una arquitectura MVC (Model-View-Controller) apoy
 - **Repositorio Externo (API TMDB):** Se utilizará para realizar consultas complejas de búsqueda, filtrado y obtención de detalles respecto al catálogo global de peliculas y series.
 - **Repositorio Local (base de datos propia):** Se usará para la persistencia del dominio: Usuarios, Reseñas, Calificaciones, Chats (y Mensajes), Listas y el catálogo materializado `ProduccionAudiovisual` (corpus de búsqueda semántica).
 
-**Catálogo materializado global y progresivo (08/09/2026):** las películas y series se materializan en la base de datos local en cuanto el catálogo las expone, se consulta su detalle o un usuario interactúa con ellas. La materialización NO depende de que una producción pertenezca a una lista o tenga calificación: `ProduccionAudiovisual` es un catálogo global compartido por todos los usuarios, no un catálogo personal. Este corpus materializado es el espacio de búsqueda de `buscar_semantico` (pgvector); los datos personales (calificaciones, listas, historial) se usan vía SQL para personalizar y reordenar resultados, nunca para acotar qué es buscable. El poblamiento combina: (1) seed inicial global (populares, tendencias, novedades y muestra diversa por género/año/tipo) para evitar cold start; (2) materialización de lo expuesto por discovery en vivo; (3) incorporación progresiva de la cola larga. No se sincroniza todo TMDB de entrada.
+**Catálogo materializado global y progresivo (08/09/2026):** las películas y series se materializan en la base de datos local al abrir su ficha (en el momento), cuando un usuario interactúa con ellas y, en segundo plano (Celery), las que muestran los listados del catálogo (tendencias, estrenos, discover, búsqueda y Buscar; C-04a, parcial: lo que el catálogo muestra, no todo TMDB). La materialización NO depende de que una producción pertenezca a una lista o tenga calificación: `ProduccionAudiovisual` es un catálogo global compartido por todos los usuarios, no un catálogo personal. Este corpus materializado es el espacio de búsqueda de `buscar_semantico` (pgvector); los datos personales (calificaciones, listas, historial) se usan vía SQL para personalizar y reordenar resultados, nunca para acotar qué es buscable. El poblamiento combina: (1) seed inicial global (populares, tendencias, novedades y muestra diversa por género/año/tipo) para evitar cold start; (2) materialización de lo expuesto por discovery en vivo; (3) incorporación progresiva de la cola larga. No se sincroniza todo TMDB de entrada.
 
 **Sincronización con TMDB:** La actualización del catálogo se realiza mediante tareas Celery (beat diario a las 3 AM, ejecutadas por workers) en horario de baja actividad. Este proceso sincroniza los metadatos completos (título, póster, sinopsis, reparto, directores, géneros, calificación promedio, duración, temporadas y episodios) de las producciones populares, en tendencia y novedades desde TMDB hacia la tabla ProduccionAudiovisual, y encola la generación de embeddings de las producciones nuevas o modificadas. La sincronización respeta los límites de uso de la API de TMDB y utiliza mecanismos de caché para evitar solicitudes duplicadas (CU-021). Es un mecanismo de mantenimiento/seed, no un prerrequisito del discovery, que se sirve en vivo desde TMDB con caché Redis (decisión 25/08/2026).
 
@@ -75,7 +75,7 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 #### 3.1 Modelo 2: Gráfico
 
-> **Nota:** El Diagrama de Tablas debe regenerarse desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas") para reflejar los cambios acordados.
+> **Nota:** El Diagrama de Tablas se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas"), actualizado el 18/10/2026 con `pais` y sin `tema` en `Usuario`, `orden` en `Lista` y `fechaEnriquecimiento` en `ProduccionAudiovisual`. Ver la nota del Modelo 1 sobre la regeneración de la imagen.
 
 #### 3.2 Modelo 2: Descripción y justificación de elementos más importantes
 
@@ -86,6 +86,8 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 - **Usuario - Calificación:** En Calificación se incluye como FK el idUsuario. Esto modela una relación 1 a N donde un usuario puede hacer varias calificaciones, pero cada calificación pertenece a un único usuario. De esta forma, cualquier calificación siempre va a estar asociada a un usuario válido.
 
 - **Usuario - Lista:** La tabla Lista tiene una FK idUsuario, lo que indica que cada lista le pertenece al usuario que la creó. Un usuario puede tener varias listas (tanto las predeterminadas como las personalizadas).
+
+- **Orden de listas personalizadas (16/10/2026, `listas.0007_lista_orden`):** `Lista.orden` (INTEGER positivo, NOT NULL, DEFAULT 0) fija la posición de cada lista personalizada en «Lists». Las predeterminadas van siempre primero en un orden fijo y no lo usan; las nuevas entran al final y los empates de datos viejos se desempatan por id. La migración numeró las listas existentes por id. Lo escribe `PUT /api/lists/order/`.
 
 - **Identidad de listas predeterminadas (08/10/2026, OT-40 y OT-42):** `Lista.clave`
   (VARCHAR(25), NULLABLE) admite `favoritos`, `pendientes` y `vistas`. La
@@ -112,7 +114,7 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 - **Calificación - Produccion Audiovisual:** Toda calificación debe estar asociada a una producción mediante la FK idProduccion. Esto permite que una producción tenga muchas calificaciones, pero cada calificación corresponde a una única producción.
 
-- **Produccion Audiovisual (entidad base):** Esta tabla reúne todos los datos sincronizados desde TMDB (título, póster, géneros, reparto, duración, temporadas, etc.). Desde acá se relacionan tanto las calificaciones como los ítems que aparecen en las distintas listas. Es la versión canónica, en inglés (de ella sale el corpus de embeddings).
+- **Produccion Audiovisual (entidad base):** Esta tabla reúne todos los datos sincronizados desde TMDB (título, póster, géneros, reparto, duración, temporadas, etc.). Desde acá se relacionan tanto las calificaciones como los ítems que aparecen en las distintas listas. Es la versión canónica, en inglés (de ella sale el corpus de embeddings). `fecha_enriquecimiento` (DATETIME, NULLABLE) registra cuándo se trajo por última vez el detalle completo de TMDB (detalle, créditos y keywords); nulo significa que la fila nunca se enriqueció, por ejemplo porque nació de un listado, que trae título pero no géneros, reparto ni keywords. La sincronización diaria (C-04b) refresca lo que TMDB reporta como cambiado y esta fecha es además la red de seguridad si esa lista se pierde.
 
 - **Produccion Audiovisual - Produccion Traduccion (08/10/2026, OT-62):** una producción puede tener cero o una traducción por idioma no canónico (`ProduccionTraduccion`: título, sinopsis y póster en ese idioma). La FK `produccion` elimina en cascada y la restricción `uq_traduccion_produccion_idioma` impide repetir (producción, idioma). Un campo vacío significa que TMDB no tiene esa traducción y quien lee usa el canónico.
 
@@ -134,10 +136,11 @@ reutilice con otra imagen. Hoy hay 26 imágenes seleccionables. El mosaico PNG d
 superior es una lámina de origen, no una opción del selector. El catálogo generado
 se usa para validar la API y exponer las opciones al frontend.
 
-- `tema` (VARCHAR(10), NOT NULL, DEFAULT 'oscuro'): Preferencia de tema de la interfaz. Valores posibles: 'oscuro', 'claro'.
+- `pais` (VARCHAR(2), NOT NULL; 18/10/2026, migración `usuarios.0010_usuario_pais`): país de la cuenta como código ISO 3166-1 alfa-2. La lista permitida son los 249 códigos de `paisCodes` en `contracts/enums.json` (hardcodeada, compartida con el frontend) y la API la valida con el código `country_invalid`. Es obligatorio y sin valor por defecto: el registro, el alta con Google y el perfil exigen que el usuario elija. Las cuentas existentes recibieron un valor por rotación determinista `[AR, BR, US, ES, GB, PT, CN, MX][id % 8]` (CN a propósito: TMDB casi no tiene plataformas allí y ejercita el estado «no disponible»). Se usa para mostrar las plataformas disponibles en la ficha; ese uso debe listarse en los Términos y Condiciones (pendiente, ver `docs/decisiones.md`).
+- **`tema` eliminado (18/10/2026, migración `usuarios.0009_remove_usuario_tema`):** la interfaz es solo oscura como identidad de la marca, así que el campo, su opción en la API de Preferencias y la sección «Apariencia» ya no existen. Se descartó el tema claro.
 - `idioma` (VARCHAR(2), NULLABLE): idioma de la aplicación. Valores posibles: 'en', 'es'. Ver la sección «Idioma de aplicación».
 - `fechaAceptacionTerminos` (TIMESTAMP, NULLABLE; 12/10/2026): momento en que la cuenta aceptó los Términos y Condiciones al registrarse. El registro local y el de Google lo exigen y lo fijan con la hora del servidor. Las cuentas anteriores quedan en nulo; el seed y las factories lo completan.
-- `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si las reseñas y listas del usuario son visibles para otros usuarios.
+- `perfilPublico` (BOOLEAN, NOT NULL, DEFAULT TRUE): reservado para controlar la visibilidad del perfil. **Hoy se guarda sin efecto** (mejora futura, 18/10/2026): las reseñas son públicas desde el 14/10/2026 y las listas son siempre privadas, así que apagar el switch no cambia nada. La pantalla de Preferencias lo avisa.
 - `notifRecomendaciones` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre recomendaciones semanales.
 - `notifReseñas` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico cuando alguien reseña contenido en sus listas.
 - `notifNovedades` (BOOLEAN, NOT NULL, DEFAULT TRUE): Indica si el usuario desea recibir notificaciones por correo electrónico sobre novedades de FilmAI.
@@ -212,3 +215,7 @@ o renombrar una personalizada con cualquiera de esas etiquetas, sin
 distinguir mayúsculas, con `list_name_reserved` y HTTP 409. Los nombres
 personalizados ya almacenados se devuelven sin traducción ni cambios
 automáticos. Género conserva `masculino`, `femenino` y `no_especifica`.
+
+### Plataformas por país (18/10/2026)
+
+Las plataformas donde ver una producción (`watch/providers` de TMDB, datos de JustWatch) **no tienen tabla**: viven solo en Redis, por título (una respuesta de TMDB trae todos los países), con vigencia de 12 horas y una copia de respaldo de 7 días. El endpoint `GET /api/catalogo/{movie,tv}/{id}/providers/?pais=XX` filtra por el `pais` que manda el cliente (el de `Usuario.pais` o, sin sesión, la región del navegador) y agrupa en suscripción, gratis (TMDB `free` y `ads`), alquiler y compra. Ver `docs/06_TMDB_API_Referencia.md`.

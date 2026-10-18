@@ -12,7 +12,8 @@
   parámetro `api_key` (v3). La API key vive en las variables de entorno del
   backend (`.env`).
 - **Caché (C-02)**: TTL por endpoint — trending 6h, discover 6h, detalle 24h,
-  search 1h. Key pattern `tmdb:{endpoint}:{params_hash}`.
+  search 1h, plataformas (`watch_providers`) 12h. Key pattern
+  `tmdb:{endpoint}:{params_hash}`.
 - **Rate limiting**: respetar límites, reintentos con backoff, timeout 5s
   (C-01). Consultas de detalle cacheadas para no duplicar llamadas (RNF #8).
 - **Referencia oficial**: https://developer.themoviedb.org/reference
@@ -196,7 +197,7 @@
 | GET    | `/movie/{movie_id}/similar`            | **Películas similares** (herramienta `similares_a`).          |
 | GET    | `/movie/{movie_id}/translations`       | Traducciones.                                                 |
 | GET    | `/movie/{movie_id}/videos`             | Videos (trailers).                                            |
-| GET    | `/movie/{movie_id}/watch/providers`    | Proveedores de streaming.                                     |
+| GET    | `/movie/{movie_id}/watch/providers`    | Proveedores de streaming. **Usado** en la ficha (ver abajo).  |
 | POST   | `/movie/{movie_id}/rating`             | Calificar (vía TMDB).                                         |
 | DELETE | `/movie/{movie_id}/rating`             | Quitar calificación.                                          |
 | GET    | `/movie/now_playing`                   | En cartelera.                                                 |
@@ -278,7 +279,7 @@
 | GET    | `/tv/{series_id}/similar`               | **Series similares** (herramienta `similares_a`).            |
 | GET    | `/tv/{series_id}/translations`          | Traducciones.                                                |
 | GET    | `/tv/{series_id}/videos`                | Videos.                                                      |
-| GET    | `/tv/{series_id}/watch/providers`       | Proveedores de streaming.                                    |
+| GET    | `/tv/{series_id}/watch/providers`       | Proveedores de streaming. **Usado** en la ficha (ver abajo). |
 | POST   | `/tv/{series_id}/rating`                | Calificar (vía TMDB).                                        |
 | DELETE | `/tv/{series_id}/rating`                | Quitar calificación.                                         |
 | GET    | `/tv/airing_today`                      | Al aire hoy.                                                 |
@@ -325,6 +326,14 @@
 | GET    | `/watch/providers/regions` | Regiones disponibles.                 |
 | GET    | `/watch/providers/movie`   | Proveedores de streaming (películas). |
 | GET    | `/watch/providers/tv`      | Proveedores de streaming (series).    |
+
+### Uso en FilmAI: «Dónde verla» (18/10/2026)
+
+- **Pedido.** `TMDBClient.get_watch_providers(id, tipo)` llama a `/{movie|tv}/{id}/watch/providers`. La respuesta trae todos los países en `results` (`results.AR`, `results.US`…); cada país tiene `link` y las listas `flatrate`, `free`, `ads`, `rent` y `buy`, con `provider_id`, `provider_name`, `logo_path` y `display_priority`. No se manda `language`: no se localiza.
+- **Datos de JustWatch.** TMDB obtiene estos datos de JustWatch, y su uso obliga a **atribuirlo**: el panel de la ficha muestra «Data by JustWatch» con un enlace a `https://www.justwatch.com`. TMDB no da enlaces directos a cada plataforma: solo el `link` a su propia página, que FilmAI ofrece como «See all options on TMDB». Por eso los logos no son enlaces.
+- **Endpoint propio.** `GET /api/catalogo/{movie,tv}/{id_tmdb}/providers/?pais=XX` (público; el país lo manda el cliente) devuelve `{pais, enlace, suscripcion, gratis, alquiler, compra}`. Cada grupo es una lista de `{id, nombre, logo}` ordenada por `display_priority` y sin repetidos; `gratis` une `free` y `ads`; `enlace` es `null` si el país no tiene plataformas. `pais` debe ser un código de `paisCodes` (`contracts/enums.json`); si falta o no está en la lista, responde 400 (Bad Request) con `country_invalid` y no llama a TMDB.
+- **Caché.** Por título (una respuesta sirve a todos los países), TTL 12 h y copia de respaldo de 7 días (`RESPALDO_TTLS`; el resto usa 30). No se guarda en PostgreSQL.
+- **Logos.** Se piden a `https://image.tmdb.org/t/p/w92{logo_path}`; sin logo, la interfaz muestra la inicial del nombre.
 
 ---
 
