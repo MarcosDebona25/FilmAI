@@ -88,7 +88,7 @@ export function MediaRow({
         {loading
           ? Array.from({ length: SKELETONS }, (_, index) => (
               <li key={index} data-skeleton aria-hidden="true" className="shrink-0">
-                <span className="block aspect-[2/3] w-[132px] animate-pulse rounded-lg bg-raised motion-reduce:animate-none md:w-[176px]" />
+                <span className="block aspect-[2/3] w-[132px] rounded-lg bg-raised md:w-[176px]" />
                 <span className="mt-3 block h-3.5 w-3/4 rounded bg-raised" />
                 <span className="mt-1.5 block h-3 w-1/2 rounded bg-raised" />
               </li>

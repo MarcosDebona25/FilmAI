@@ -130,6 +130,13 @@ describe("Detalle de una lista", () => {
     expect(lecturas()).toEqual(["/api/lists/7/items/"]);
   });
 
+  it("cada tarjeta muestra la fecha en que se agregó, en el formato del idioma", async () => {
+    estado.paginas = [pagina([item(1, { fecha_agregado: "2026-10-18T12:00:00Z" })])];
+    render(<ListDetailView id={7} />, { locale: "es" });
+
+    expect(await screen.findByText("Agregada a esta lista el 18/10/2026")).toBeInTheDocument();
+  });
+
   it("pide los ítems con los filtros de la URL y los traduce a la API", async () => {
     window.history.replaceState(null, "", "/lists/7?q=alien&type=tv&rating=lt5&sort=highest");
     render(<ListDetailView id={7} />, { locale: "en" });

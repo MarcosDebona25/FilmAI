@@ -475,11 +475,11 @@ export function MyReviewsView() {
                   key={fila}
                   className="grid grid-cols-[56px_minmax(0,1fr)] gap-3.5 border-t border-line py-5 md:grid-cols-[80px_minmax(0,1fr)] md:gap-6 md:py-7"
                 >
-                  <div className="h-[84px] rounded-md bg-raised-2 motion-safe:animate-pulse md:h-[120px]" />
+                  <div className="h-[84px] rounded-md bg-raised-2 md:h-[120px]" />
                   <div className="flex flex-col gap-3">
-                    <div className="h-6 w-1/2 rounded bg-raised-2 motion-safe:animate-pulse" />
-                    <div className="h-4 w-1/3 rounded bg-raised-2 motion-safe:animate-pulse" />
-                    <div className="h-12 rounded bg-raised-2 motion-safe:animate-pulse" />
+                    <div className="h-6 w-1/2 rounded bg-raised-2" />
+                    <div className="h-4 w-1/3 rounded bg-raised-2" />
+                    <div className="h-12 rounded bg-raised-2" />
                   </div>
                 </div>
               ))}
