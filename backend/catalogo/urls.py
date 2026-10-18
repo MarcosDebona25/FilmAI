@@ -8,6 +8,7 @@ from catalogo.views import (
     KeywordsView,
     MovieDetailView,
     NowPlayingView,
+    ProvidersView,
     RecommendedView,
     SearchView,
     TrendingView,
@@ -35,6 +36,16 @@ urlpatterns = [
         name="movie_credits",
     ),
     path("tv/<id_tmdb>/credits/", CreditsView.as_view(tipo="tv"), name="tv_credits"),
+    path(
+        "movie/<id_tmdb>/providers/",
+        ProvidersView.as_view(tipo="movie"),
+        name="movie_providers",
+    ),
+    path(
+        "tv/<id_tmdb>/providers/",
+        ProvidersView.as_view(tipo="tv"),
+        name="tv_providers",
+    ),
     path("genres/", GenresView.as_view(), name="genres"),
     path("keywords/", KeywordsView.as_view(), name="keywords"),
 ]

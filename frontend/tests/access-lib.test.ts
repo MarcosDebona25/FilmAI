@@ -48,10 +48,10 @@ describe("rutas de acceso", () => {
 describe("términos y condiciones en Markdown", () => {
   it("interpreta cabecera, secciones, párrafos y listas", () => {
     const doc = parseLegalMarkdown(
-      "---\nupdated: 2026-10-07\n---\n# Título\n\nIntro.\n\n## 1. Uno\n\nTexto uno.\n\n- a\n- b\n\n## 2. Dos\n\nTexto dos.\n"
+      "---\nupdated: 2026-10-18\n---\n# Título\n\nIntro.\n\n## 1. Uno\n\nTexto uno.\n\n- a\n- b\n\n## 2. Dos\n\nTexto dos.\n"
     );
     expect(doc.title).toBe("Título");
-    expect(doc.updated).toBe("2026-10-07");
+    expect(doc.updated).toBe("2026-10-18");
     expect(doc.intro).toEqual([{ type: "p", text: "Intro." }]);
     expect(doc.sections.map((s) => s.heading)).toEqual(["1. Uno", "2. Dos"]);
     expect(doc.sections[0].blocks).toEqual([

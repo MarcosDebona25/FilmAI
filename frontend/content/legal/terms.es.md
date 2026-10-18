@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-07
+updated: 2026-10-18
 ---
 
 # Términos y Condiciones
@@ -47,7 +47,7 @@ El asistente de FilmAI genera recomendaciones a partir de tus calificaciones y d
 
 ## 7. Contenido de terceros
 
-Los datos y las imágenes de películas y series son provistos por TMDB. FilmAI es un proyecto independiente y no está afiliado ni respaldado por TMDB. No nos hacemos responsables de errores u omisiones en esa información.
+Los datos y las imágenes de películas y series son provistos por TMDB. FilmAI es un proyecto independiente y no está afiliado ni respaldado por TMDB. No nos hacemos responsables de errores u omisiones en esa información. La disponibilidad en plataformas de streaming («Dónde verla») es provista por JustWatch a través de TMDB y puede cambiar sin aviso.
 
 ## 8. Propiedad intelectual
 
@@ -55,7 +55,7 @@ La marca FilmAI, su diseño y su código pertenecen a sus creadores. Los póster
 
 ## 9. Datos personales
 
-Tratamos tus datos personales solo para brindar el servicio: administrar tu cuenta, mostrar tu actividad pública y generar recomendaciones. Tu correo, tu fecha de nacimiento y tu género no se muestran a otras personas. Podés solicitar el acceso, la corrección o la eliminación de tus datos escribiéndonos.
+Tratamos tus datos personales solo para brindar el servicio: administrar tu cuenta, mostrar tu actividad pública y generar recomendaciones. Te pedimos tu país para mostrarte en qué plataformas de streaming está disponible un título donde vivís; no lo usamos para nada más. Tu correo, tu fecha de nacimiento, tu género y tu país no se muestran a otras personas. Podés solicitar el acceso, la corrección o la eliminación de tus datos escribiéndonos.
 
 ## 10. Limitación de responsabilidad
 
