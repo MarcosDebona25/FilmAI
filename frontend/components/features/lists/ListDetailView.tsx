@@ -524,8 +524,8 @@ export function ListDetailView({ id }: { id: number }) {
             >
               {[0, 1, 2, 3].map((indice) => (
                 <li key={indice} className="flex flex-col gap-2.5">
-                  <span className="block aspect-[2/3] w-full rounded-lg bg-raised motion-safe:animate-pulse" />
-                  <span className="h-4 w-3/4 rounded bg-raised motion-safe:animate-pulse" />
+                  <span className="block aspect-[2/3] w-full rounded-lg bg-raised" />
+                  <span className="h-4 w-3/4 rounded bg-raised" />
                 </li>
               ))}
             </ul>
@@ -581,6 +581,7 @@ export function ListDetailView({ id }: { id: number }) {
                       showType
                       showUnrated
                       fluid
+                      addedAt={item.fecha_agregado}
                       from={`list-${id}`}
                     />
                     <button
