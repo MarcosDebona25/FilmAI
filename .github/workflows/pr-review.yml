@@ -1,0 +1,66 @@
+# =============================================================================
+# FilmAI — Revisión automática de PRs (PR-Agent + DeepSeek)
+# =============================================================================
+# Publica un resumen de revisión y sugerencias en línea en cada PR. Es un
+# complemento informativo: NO aprueba, NO mergea y NO pushea. El gate real
+# sigue siendo ci.yml.
+#
+# Qué se cambia dónde:
+#   - Modelo, endpoint y límites de tokens: bloque `env` de este archivo.
+#   - Qué revisar y cómo: `.pr_agent.toml` (raíz del repo).
+# Secret requerido: DEEPSEEK_API_KEY (Settings > Secrets and variables >
+# Actions). Detalle en docs/decisiones.md (18/10/2026).
+# =============================================================================
+
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+    branches: ["**"]
+
+# Un push nuevo cancela la revisión anterior del mismo PR.
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    name: Revisión con PR-Agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # - Sin drafts (ready_for_review lo dispara al marcarlo listo).
+    # - Sin bots (evita bucles con commits/comentarios automáticos).
+    # - Sin forks: GitHub no les pasa secrets en `pull_request`, y usar
+    #   `pull_request_target` expondría el secret a código no confiable.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.sender.type != 'Bot' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      # Imagen fijada por versión: la acción no hace checkout del repo, solo
+      # lee el diff por la API de GitHub. Para actualizar, cambiar el tag.
+      - name: PR-Agent
+        uses: docker://pragent/pr-agent:0.48.0-github_action
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Proveedor: API de DeepSeek (compatible con OpenAI). `deepseek-flash`
+          # es el alias vigente de V4.1 Flash. El prefijo `openai/` hace que
+          # LiteLLM use la ruta compatible.
+          OPENAI__KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI__API_BASE: https://api.deepseek.com
+          CONFIG.MODEL: openai/deepseek-flash
+          CONFIG.FALLBACK_MODELS: '["openai/deepseek-flash"]'
+          CONFIG.CUSTOM_MODEL_MAX_TOKENS: "150000"
+          CONFIG.MAX_MODEL_TOKENS: "150000"
+          CONFIG.AI_TIMEOUT: "180"
+          # Solo review + sugerencias en línea; sin describe (menos costo/ruido).
+          github_action_config.auto_review: "true"
+          github_action_config.auto_improve: "true"
+          github_action_config.auto_describe: "false"
+          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "synchronize"]'
