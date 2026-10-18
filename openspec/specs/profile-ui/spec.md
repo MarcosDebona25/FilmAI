@@ -8,7 +8,7 @@ The signed-in user's own screens, built from the canvas (15/10/2026): Profile (`
 
 ### Profile
 
-`/profile` MUST show a header (avatar, name in the display typeface, `@username`, email and sign-up date), «Personal details» as a description list, and «Password» as a collapsible section (`aria-expanded`). «Edit profile» MUST replace Personal details with «Edit details»: first name, last name and username editable; email, birth date and gender read-only with a lock and a hint. Accounts without a local password (Google) MUST be offered an emailed link instead of the password form. On mobile, a «Your account» list MUST link to Ratings & reviews, Settings and Terms, and «Log out» MUST ask for confirmation with the same text as the desktop account menu.
+`/profile` MUST show a header (avatar, name in the display typeface, `@username`, email and sign-up date), «Personal details» as a description list, and «Password» as a collapsible section (`aria-expanded`). «Edit profile» MUST replace Personal details with «Edit details»: first name, last name, username and country editable (`pais`, an ISO 3166-1 alpha-2 code from `contracts/enums.json`; sign-up, Google completion and profile all require it); email, birth date and gender read-only with a lock and a hint. Accounts without a local password (Google) MUST be offered an emailed link instead of the password form. On mobile, a «Your account» list MUST link to Ratings & reviews, Settings and Terms, and «Log out» MUST ask for confirmation with the same text as the desktop account menu.
 
 ### Avatar selection
 
@@ -24,7 +24,7 @@ Availability checks MUST ignore canceled responses and announce «Checking», «
 
 ### Settings
 
-`/settings` MUST show the breadcrumb Profile › Settings («‹ Profile» on mobile), Language (EN · ES, at anchor `t-idioma`), Privacy, Notifications as switches (`role="switch"`), Legal and Account. The app is dark only: there is no theme selector, and a saved «light» theme MUST still render dark. The account locale is persisted before the cookie/render change; a failed save preserves the old locale. Footer language links navigate with a real anchor/Link and remain available on mobile.
+`/settings` MUST show the breadcrumb Profile › Settings («‹ Profile» on mobile), Language (EN · ES, at anchor `t-idioma`), Privacy, Notifications as switches (`role="switch"`), Legal and Account. The app is dark only: there is no theme selector and the account has no theme field (`Usuario.tema` and its API field were removed). The account locale is persisted before the cookie/render change; a failed save preserves the old locale. Footer language links navigate with a real anchor/Link and remain available on mobile.
 
 ### Deactivation warning
 

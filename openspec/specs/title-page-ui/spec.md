@@ -17,7 +17,7 @@ The title page of a movie or TV show (C-07), with the rating dialog (C-08's fron
 
 ### Requirement: Title data
 
-The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded only when it overflows). While the detail loads, the page MUST show a skeleton with the shape of the backdrop, poster, title, data, actions, genres, synopsis and three reviews. «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10.
+The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded only when it overflows). While the detail loads, the page MUST show a static skeleton (no pulse or shimmer animation, 18/10/2026) with the shape of the backdrop, poster, title, data, actions, genres, synopsis and three reviews. «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10.
 
 #### Scenario: A show
 
@@ -38,6 +38,27 @@ Without a session the actions MUST be replaced by «Log in to rate or save», li
 - GIVEN a rated title in Watched
 - WHEN the user turns Watched off and confirms
 - THEN the rating and review are deleted, Watched is off and the button reads «Rate» again
+
+### Requirement: Where to watch
+
+Below the genres the page MUST show, once the detail is loaded, the streaming availability in the viewer's country (added 18/10/2026; it consumes `GET /api/catalogo/{movie,tv}/{id}/providers/?pais=XX` from `tmdb-endpoints`). The country MUST be the account's `pais`; without a session, the browser's region if it is in `paisCodes`; with neither, the section MUST NOT be requested or shown. A failed request MUST also hide it, because it is not critical content. While it loads it MUST show a static placeholder with `role="status"`.
+
+With providers, the page MUST show a button line «Stream or rent» + up to four logos + «N options in {country}» (plural-aware, country name in the active language) that opens a panel («Where to watch», `role="dialog"`, closed with Escape or an outside click, `aria-expanded` on the button) with the non-empty groups Stream, Free, Rent and Buy. Logos MUST NOT be links: TMDB gives no per-platform URLs, so the panel has a single «See all options on TMDB» link (new tab) when `enlace` is present. A logo missing from TMDB MUST be replaced by the platform's initial. The panel MUST carry the JustWatch attribution «Data by JustWatch», linking to justwatch.com; this attribution is a condition of TMDB's data and MUST NOT be removed. With no providers for the country it MUST say «Not available to stream, rent or buy in {country} yet.»
+
+#### Scenario: Account country
+
+- GIVEN a signed-in user whose `pais` is `AR` opens `/movie/157336`
+- THEN the page requests `providers/?pais=AR` and shows «Stream or rent … N options in Argentina»
+
+#### Scenario: No country
+
+- GIVEN a visitor whose browser region is not in `paisCodes`
+- THEN no providers request is made and the section is absent
+
+#### Scenario: Country without data
+
+- GIVEN TMDB lists no providers for the viewer's country
+- THEN the section reads «Not available to stream, rent or buy in {country} yet.»
 
 ### Requirement: Rating dialog
 

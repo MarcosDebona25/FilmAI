@@ -150,7 +150,7 @@ FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños
 
 | Contexto                                            | Control                                                                                                                                                          |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Con sesión**                                      | Solo en Preferencias, sección «Language» (entre Apariencia y Notificaciones): segmentado `EN` / `ES`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
+| **Con sesión**                                      | Solo en Preferencias, sección «Language» (la primera de la pantalla, antes de Privacidad): segmentado `EN` / `ES`. Se aplica tras confirmar el guardado en la cuenta; un fallo conserva el idioma anterior.  |
 | **Footer con sesión**                               | Muestra el idioma actual y enlaza a Preferencias. Escritorio: ítem con globo en la columna Information. Móvil: fila «Language · English ›». No cambia el idioma. |
 | **Sin sesión: Landing, inicio de sesión, registro** | Pastilla `EN` / `ES` arriba a la derecha (escritorio y móvil). Solo escribe la cookie del idioma.                                                                |
 | **Footer sin sesión (escritorio)**                  | El mismo selector `EN` / `ES`.                                                                                              |
@@ -292,6 +292,7 @@ area dentro del shell (navbar + FAB se mantienen). La navegación hacia atrás e
 - Las reseñas de la comunidad son públicas (se leen sin sesión) y tienen orden (más nuevas, más viejas, mejor y peor calificadas) y filtro por nota (9 o más … menos de 5), con «Load more».
 - Las acciones de listas (Favorite, Watched, Watchlist y «Add to list» con creación de lista en el lugar) se construyen en C-07; L-04 queda cubierta ahí.
 - Sin sesión, las acciones se reemplazan por «Log in to rate or save», que vuelve a la misma ficha después de ingresar.
+- **«Dónde verla» (18/10/2026).** Bajo los géneros, una línea «Stream or rent [logos] N options in {país}» (en español, «Ver o alquilar … N opciones en {país}») abre un panel «Where to watch» con los grupos Stream, Free, Rent y Buy. Los logos (hasta cuatro en la línea) **no son enlaces** —TMDB no da enlaces por plataforma—; el panel suma un solo enlace «See all options on TMDB» y la **atribución obligatoria** «Data by JustWatch» (enlace a justwatch.com). Se cierra con Escape o al hacer clic fuera. Sin logo, se muestra la inicial del nombre. El país es el de la cuenta; sin sesión, la región del navegador si está en la lista. Sin país, con error del pedido o sin soporte, la sección no aparece (no es contenido crítico). Si TMDB no tiene plataformas para ese país: «Not available to stream, rent or buy in {país} yet.». Mientras carga, un esqueleto estático con `role="status"`. Datos: `GET /api/catalogo/{movie,tv}/{id}/providers/?pais=XX` (doc 06).
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -355,6 +356,7 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | Bloque                | Datos                                                                                                                                                                                                                                                                                                                                                                                                                               | Fuente                                          |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | **Hero**              | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`2h 49m` en inglés o `2 h 49 min` en español para pelis, o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips                                                                                                                                                                       | `ProduccionAudiovisual` + TMDB                  |
+| **Dónde verla** | Línea con logos y cantidad de opciones en el país, más panel con los grupos Stream / Free / Rent / Buy, enlace a TMDB y atribución a JustWatch. Va entre los géneros y la sinopsis. | `GET /api/catalogo/{tipo}/{id}/providers/?pais=XX` (Redis, TTL 12 h) |
 | **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015; si ya calificaste muestra la nota —`⭐ 9/10`— y abre el modal en modo Editar, con la opción "Quitar calificación"), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario)                                            | `Lista`                                         |
 | **Sinopsis**          | Card dentro del info-col (columna derecha), debajo de los botones de acción. Texto completo colapsable con "[leer más ▾]" si excede 300 caracteres.                                                                                                                                                                                                                                                                                 | `ProduccionAudiovisual.sinopsis`                |
 | **CastCard**          | Card full-width debajo del Hero: Director (nombre) + Cast (lista de actores). Colapsable con "[mostrar más ▾]" si hay más de 10 actores. **Sin fotos**.                                                                                                                                                                                                                                                                             | `ProduccionAudiovisual.reparto` + `.directores` |
@@ -392,7 +394,7 @@ Los botones de acción directa son visibles solo para usuarios autenticados. Par
 
 | Estado         | Qué se muestra                                                                                  |
 | -------------- | ----------------------------------------------------------------------------------------------- |
-| Loading        | Skeleton del Hero (fondo, póster, título, datos, botones, géneros y sinopsis) + skeleton de 3 ReviewCards. Con sesión no aparece "Inicia sesión para calificar o guardar" mientras carga. |
+| Loading        | Skeleton **estático** (sin pulso ni brillo, 18/10/2026) del Hero (fondo, póster, título, datos, botones, géneros y sinopsis) + skeleton de 3 ReviewCards. Con sesión no aparece "Inicia sesión para calificar o guardar" mientras carga. |
 | Éxito          | Contenido completo como se describe arriba.                                                     |
 | No autenticado | Contenido visible, acciones directas reemplazadas por "Inicia sesión para calificar o guardar". |
 | Error TMDB     | Toast "No se pudo cargar la información. Intente nuevamente." + botón Reintentar.               |
@@ -596,6 +598,7 @@ de un componente "Modal" en Figma:
 - **Escritorio**: grilla `auto-fill` de tarjetas de al menos 220 px; **celular**: 2 columnas.
 - Cada **MediaCard** tiene un botón `✕` en la esquina superior derecha, visible al hover o al foco en escritorio y siempre en pantallas táctiles. Click → confirmación para quitar el ítem. En «Watched», si el título está calificado, el backend responde 409 (Conflict) y se pide confirmar el borrado de la calificación (y la reseña) antes de reintentar.
 - Click en la card → navega a Ficha de detalle (misma pantalla de la sección 5c). El breadcrumb se extiende a: `Listas > {nombre lista} > {título}`.
+- **Fecha de agregado** (CU-009, 18/10/2026): cada MediaCard del detalle muestra, de forma discreta bajo los datos, el ícono de «agregar a lista» y la fecha (tooltip y lectores de pantalla: «Agregada a esta lista el {fecha}»; en inglés, «Added to this list on {fecha}») con un formato numérico compacto según el idioma (`18/10/2026` en español, `10/18/2026` en inglés). Las tarjetas de Home y Buscar no la llevan.
 - **Scroll vertical**: sin paginación. Se cargan más resultados a medida que el usuario hace scroll.
 
 #### Estados
@@ -728,6 +731,10 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 │  ┌──────────────────────────────────┐    │
 │  └──────────────────────────────────┘    │
 │    De 5 a 25 caracteres alfanuméricos   │
+│  País                                    │
+│  ┌──────────────────────────────────┐    │
+│  │ Elegí tu país               ▾    │    │
+│  └──────────────────────────────────┘    │
 │  Email                                   │
 │  ┌──────────────────────────────────┐    │
 │  └──────────────────────────────────┘    │
@@ -769,6 +776,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 | Nombre               | Solo letras, máx 50 caracteres. Obligatorio.                                                    |
 | Apellido             | Solo letras, máx 50 caracteres. Obligatorio.                                                    |
 | Nombre de usuario    | Alfanumérico, 5–25 caracteres, único. Validación inline de disponibilidad.                      |
+| País                 | Dropdown nativo con los 249 países de ISO 3166-1 (lista fija `paisCodes` de `contracts/enums.json`), nombres en el idioma activo y ordenados en él. Obligatorio y **sin preselección** (18/10/2026): arranca en «Elegí tu país» y el usuario tiene que elegir. Error: «Elegí un país para continuar.» |
 | Email                | Formato válido usuario@dominio.com. Obligatorio.                                                |
 | Fecha de nacimiento  | Selector de fecha nativo (`type="date"`), no futura, ≥13 años.                                  |
 | Género               | Dropdown: Masculino / Femenino / No especificar.                                                |
@@ -780,7 +788,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 - Botón "Continuar con Google" inicia el flujo OAuth. El alta con Google también exige aceptar los Términos y Condiciones: la casilla está en la pantalla intermedia (`/complete-signup`).
 - Si la cuenta de Google ya está asociada → inicia sesión directamente.
-- Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, fecha de nacimiento, género) en una pantalla intermedia.
+- Si no → completa nombre, apellido y email desde Google; el usuario debe completar los campos faltantes (nombre de usuario, país, fecha de nacimiento, género) en una pantalla intermedia.
 - El usuario nuevo creado con Google queda en estado **activa** directamente (Google ya verificó el correo; no requiere confirmación por email).
 - El alta con Google omite la contraseña local. Luego puede establecerse mediante
   recuperación por correo; la misma cuenta conservará ambos métodos de acceso.
@@ -831,7 +839,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 ### Implementación (12/10/2026)
 
 - Las cuatro pantallas (Landing, Login, Registro y Confirmación) siguen el canvas «FilmAI — Sistema y catálogo», sección «Access», en escritorio y celular: collage de pósters a la izquierda (detrás del contenido en celular), formulario a la derecha y selector `EN | ES` arriba a la derecha. No llevan barra de navegación ni pie.
-- Tema: solo oscuro por ahora. Los tokens del canvas (`--raised`, `--raised-2`, `--line`, `--fg-2`, `--fg-3`, `--ok`, `--on-accent`) viven en `app/globals.css` y quedan preparados para el tema claro cuando exista Apariencia en Preferencias.
+- Tema: solo oscuro, como identidad de la marca (18/10/2026; el tema claro se descartó). Los tokens del canvas (`--raised`, `--raised-2`, `--line`, `--fg-2`, `--fg-3`, `--ok`, `--on-accent`) viven en `app/globals.css`.
 - Tipografía: Big Shoulders (títulos, `font-display`) y Hanken Grotesk (texto).
 - Términos: `/terms` es una versión mínima que renderiza `frontend/content/legal/terms.{en,es}.md`; se refina con el punto 9 (con/sin sesión, escritorio/celular).
 
@@ -839,7 +847,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ## 5g. Perfil (CU-005, CU-006) — Edición inline
 
-> Una sola pantalla con dos modos: visualización y edición. Al clickear "Editar perfil" los campos pasan a inputs. El email es siempre solo lectura.
+> Una sola pantalla con dos modos: visualización y edición. Al clickear "Editar perfil", «Datos personales» se reemplaza por el formulario «Edit details» (18/10/2026: no es edición inline campo por campo). El email es siempre solo lectura. El perfil no muestra reseñas recientes: se llega a ellas desde «Mis reseñas».
 
 **Nombre visible (26/09/2026):** mostrar nombre y apellido juntos en la cabecera
 y también como datos separados. Fecha de nacimiento y género se muestran en solo
@@ -903,6 +911,11 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 │  └──────────────────────────────────┘    │
 │    Disponible                           │
 │                                          │
+│  País                                    │
+│  ┌──────────────────────────────────┐    │
+│  │ Argentina                   ▾    │    │
+│  └──────────────────────────────────┘    │
+│                                          │
 │  Email                                   │
 │  marco@email.com                         │
 │  ───────────────────────────────────     │
@@ -927,11 +940,12 @@ una contraseña actual inexistente. Esto conserva el acceso con Google.
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Nombre**              | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **Apellido**            | Letras y espacios entre palabras, máximo 50 caracteres. Obligatorio. Se quitan espacios sobrantes al guardar.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **Email**               | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **País** | Dropdown con la misma lista fija y los mismos nombres que en el registro (18/10/2026). Obligatorio; se puede cambiar. Se muestra también en «Datos personales». Define las plataformas que se muestran en la ficha. |
+| **Email** | Solo lectura. Cambiarlo requiere re-verificación (fuera de scope). Fecha de nacimiento y género también son de solo lectura, con candado y una pista. |
 | **Cambiar contraseña**  | Sección colapsable con link "¿Cambiar contraseña?". Se expande solo si el usuario clickea. Si no se toca, no se valida ni se envía.                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Validación @usuario** | Feedback inline: "Disponible" (verde) / "No disponible" (rojo).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **Cancelar**            | Revierte a modo visualización sin guardar.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **Guardar**             | Actualiza nombre, apellido, usuario y avatar. La contraseña se confirma y guarda por separado; tras cambiarla vuelve al login.                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Guardar** | Actualiza nombre, apellido, usuario, país y avatar. La contraseña se confirma y guarda por separado; tras cambiarla vuelve al login.                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **Avatar**              | Al editar, capa visible «Cambiar avatar» sobre la imagen. Click o Enter → modal con todos los avatares predefinidos; la selección es temporal hasta pulsar «Guardar» dentro del modal. «Cancelar» o Escape la descartan; al reabrir se marca el avatar del borrador. «Guardar cambios» del perfil persiste el avatar. El título «Elegí un avatar» aparece una vez, el cursor indica click y abrir/cerrar no desplaza la página. La cantidad de opciones proviene del catálogo disponible, sin fijarla en 20. No se permite subir una foto propia. |
 | **Breadcrumb**          | Perfil                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
@@ -1007,8 +1021,8 @@ Cancelar o navegar mediante enlaces o historial con cambios pendientes abre «¿
 | Elemento                | Comportamiento                                                                                                        |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | **Póster**              | Miniatura de 80 × 120 px en escritorio y 56 × 84 px en móvil. Si falta o falla, reemplazo del mismo tamaño con ícono. |
-| **Título + badge**      | Título y tipo (Película/Serie). Sin enlace hasta implementar la ficha C-07.                                           |
-| **Rating**              | Una estrella amarilla (`#f5c518`) decorativa seguida de `X/10`, con etiqueta accesible «Calificación: X de 10».       |
+| **Título + badge** | Título (enlaza a la ficha con `?from=reviews`) y tipo (Película/Serie). |
+| **Rating** | «★ 9»: estrella amarilla (`#f5c518`) decorativa seguida del número, nunca `X/10`; etiqueta accesible «Tu calificación: 9 de 10». |
 | **Fecha**               | Fecha de publicación en la esquina superior derecha, separada de estrella y nota.                                     |
 | **Texto**               | Truncado a 3 líneas. «Leer más/Leer menos» solo aparece si excede ese límite al ancho actual.                         |
 | **✏️ Editar**           | Abre «Editar calificación y reseña de "{título}"», con el foco inicial en el campo de reseña.                         |
@@ -1018,8 +1032,8 @@ Cancelar o navegar mediante enlaces o historial con cambios pendientes abre «¿
 - **Orden**: más reciente primero.
 - **Carga progresiva** por cursor de 20 elementos, sin números de página; botón accesible «Cargar más». Errores de páginas posteriores conservan las tarjetas cargadas.
 - En escritorio, el texto queda a la derecha del póster; en móvil ocupa todo el ancho debajo de los metadatos. Acciones al pie.
-- Sin texto: «Todavía no escribiste una reseña.»; se puede agregar desde Editar. Vaciar texto existente no lo borra mediante PUT: usar Eliminar reseña.
-- Buscar y la ficha siguen pendientes; esta entrega no ofrece enlaces a destinos inexistentes.
+- Sin texto: se puede agregar la reseña desde Editar o con «Add review». Vaciar texto existente no lo borra mediante PUT: usar Eliminar reseña.
+- **Filtros (15/10/2026):** búsqueda por título y cuatro filtros (reseña con/sin, tipo, nota, orden) en la URL, resueltos en `GET /api/reviews/mias/`; hoja de filtros en celular. Una calificación sin texto ofrece «Add review» hacia la ficha.
 
 ### Estados
 
@@ -1027,17 +1041,17 @@ Cancelar o navegar mediante enlaces o historial con cambios pendientes abre «¿
 | ------- | ------------------------------------------------------------------------------------------------- |
 | Loading | Skeleton de ReviewCards.                                                                          |
 | Normal  | Listado cronológico.                                                                              |
-| Empty   | «Todavía no calificaste ninguna producción ni escribiste reseñas.» + enlace «Volver a mi perfil». |
+| Empty | Sin ninguna calificación: invitación a buscar títulos (sin filtros). Filtros sin resultados: aviso + «Limpiar filtros». |
 | Error   | Mensaje + botón Reintentar.                                                                       |
 
 ---
 
 ## 5j. Preferencias
 
-> Se accede desde el dropdown del avatar. Configuración de cuenta y apariencia.
+> Se accede desde el dropdown del avatar. Configuración de cuenta.
 
-**Alcance actual (26/09/2026):** el tema se aplica de inmediato y se guarda en
-la cuenta. Privacidad y notificaciones se pueden configurar y persistir, pero
+**Alcance actual (18/10/2026):** no hay selector de tema: la app es solo oscura
+y la cuenta no tiene campo `tema`. Privacidad y notificaciones se pueden configurar y persistir, pero
 la pantalla avisa claramente que todavía no afectan la visibilidad de
 reseñas/listas ni generan correos; esas integraciones pertenecen a módulos
 posteriores. Los controles muestran los valores reales devueltos por la API.
@@ -1047,13 +1061,6 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 │  [FilmAI]  Inicio  Buscar  Listas  [A]    │
 ├──────────────────────────────────────────┤
 │  Preferencias                            │
-│                                          │
-│  ──── Apariencia ────                    │
-│                                          │
-│  Tema                                    │
-│  ┌──────────────────────────────────┐    │
-│  │ ● Oscuro    ○ Claro              │    │
-│  └──────────────────────────────────┘    │
 │                                          │
 │  ──── Idioma ────                        │
 │                                          │
@@ -1088,9 +1095,8 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 | Sección            | Controles                           | Descripción                                                                                                                                                                                                                                                                 |
 | ------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Apariencia**     | Toggle Oscuro / Claro               | Cambio inmediato de tema. Default: Oscuro.                                                                                                                                                                                                                                  |
 | **Idioma**         | Segmentado EN / ES                 | Cambio inmediato, se guarda en la cuenta y define también el idioma de los correos. Con sesión es el único lugar donde se cambia. Default: el del navegador (inglés si no hay otro).                                                                                        |
-| **Privacidad**     | Switch on/off para "Perfil público" | Cuando está apagado, tus reseñas no aparecen en las fichas de detalle ni tus listas son visibles para otros.                                                                                                                                                                |
+| **Privacidad**     | Switch on/off para "Perfil público" | Se guarda, pero **todavía no tiene efecto** (mejora futura, 18/10/2026): las reseñas son públicas y las listas, privadas, y la pantalla lo avisa. |
 | **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                                                                                          |
 | **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar." Botones Cancelar / Dar de baja. |
 
@@ -1115,7 +1121,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 - **Text input**: con/sin ícono, estados: default, focus, error, disabled.
 - **Password input**: con toggle mostrar/ocultar (ícono ojo).
 - **Search input**: con ícono de lupa, disabled hasta que se ingrese texto.
-- **Select/Dropdown**: género, filtros.
+- **Select/Dropdown**: género, país (`CountrySelect`, `<select>` nativo compartido por registro, alta con Google y perfil), filtros.
 - **Datepicker**: fecha de nacimiento en registro.
 
 ### 6.3 Navegación
@@ -1126,7 +1132,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 ### 6.4 Cards
 
-- **MediaCard**: poster (2:3), título, año, rating TMDB. Hover: escala 1.02 + sombra.
+- **MediaCard**: poster (2:3), título, año, rating TMDB. Hover: escala 1.02 + sombra. En el detalle de una lista suma, de forma discreta, el ícono de «agregar a lista» y la fecha (tooltip: «Agregada a esta lista el {fecha}»; en inglés, «Added to this list on»), con fecha numérica compacta según el idioma: `18/10/2026` en español, `10/18/2026` en inglés (18/10/2026).
 - **ListCard**: nombre, cantidad de items, mini preview de hasta 5 posters.
 - **ReviewCard**: avatar, @usuario, rating (formato `X/10`, sin estrellas), fecha, texto, acciones (editar/eliminar).
 - **CastCard**: para reparto y equipo (director + actores). Sin fotos. Colapsable si hay más de N elementos.
@@ -1135,7 +1141,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 - **Rating stars**: widget interactivo 1-10 estrellas (solo en modal de calificar). Valores enteros. Fuera del modal se muestra formato `X/10`; Mis reseñas lo acompaña con una estrella decorativa.
 - **Spinner/Loader**: indicador de carga genérico.
-- **Skeleton**: placeholder rectangular animado para carga de contenido.
+- **Skeleton**: placeholder rectangular **estático** para carga de contenido (sin pulso ni brillo; el movimiento se eliminó el 18/10/2026).
 - **Toast/Notificación**: mensaje de éxito/error, posicionado top-right o bottom-center.
 - **Progress bar**: indicador durante procesamiento del chatbot.
 
@@ -1170,7 +1176,9 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 ### 7.1 Tema
 
-- **Modo oscuro como default** (cine/entretenimiento), con opción de modo claro.
+- **Solo modo oscuro** (cine/entretenimiento), como identidad de la marca. El modo claro se descartó el 18/10/2026.
+- **Favicon (18/10/2026)**: la «F» dorada (`#f5c518`) sobre fondo oscuro (`#0c0c14`) con esquinas redondeadas, en `frontend/public/favicon.svg` (un `rect` de fondo y un `path` para la letra) y `favicon.jpeg` para el ícono de Apple. Reemplaza el ícono de icons8 (`icons8-movies-32.png`, eliminado).
+- **Movimiento de carga**: los esqueletos son estáticos; no hay pulso ni brillo (`animate-pulse`/shimmer eliminados el 18/10/2026).
 - Fondo: `#121212` o `#1a1a2e`.
 - Acento: dorado/ámbar `#f5c518` o naranja `#e67e22`.
 
@@ -1245,7 +1253,7 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 
 ### 11.1 Requisitos generales
 
-- **Contraste de color:** Relación mínima de 4.5:1 para texto normal y 3:1 para texto grande (≥18px o ≥14px negrita) contra el fondo. Verificar los colores del tema oscuro (`#e0e0e0` sobre `#0d0d14`) y del tema claro.
+- **Contraste de color:** Relación mínima de 4.5:1 para texto normal y 3:1 para texto grande (≥18px o ≥14px negrita) contra el fondo. Verificar los colores del tema oscuro (`#e0e0e0` sobre `#0d0d14`).
 - **Navegación por teclado:** Todos los elementos interactivos deben ser accesibles y operables mediante teclado (Tab, Shift+Tab, Enter, Escape, flechas). El orden de foco debe seguir una secuencia lógica.
 - **Foco visible:** Todos los elementos interactivos deben mostrar un indicador de foco visible (anillo de 2px en color de acento) al recibir el foco del teclado.
 - **Etiquetas y textos alternativos:** Todos los campos de formulario deben tener `<label>` asociado. Las imágenes informativas (posters, avatares) deben tener texto alternativo (`alt`). Las imágenes decorativas deben tener `alt=""`.
