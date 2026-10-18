@@ -38,7 +38,9 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - La única fuente de skills del proyecto es `.agents/skills/`. Antes de iniciar
   una implementación, Codex, OpenCode y Antigravity CLI deben revisar la skill
   aplicable allí. No crear ni copiar skills en directorios específicos de un
-  harness, como `.opencode/skills/`.
+  harness, como `.opencode/skills/`. `.claude/skills` es la excepción aparente:
+  es un enlace simbólico versionado a `../.agents/skills` (así Claude Code ve las
+  mismas skills en Linux, macOS y WSL); no se edita nada a través de él.
  - Skills disponibles:
    - **conventional-commits**: redactar mensajes de commit convencionales.
    - **explicar-al-implementar**: explicar conceptos, arquitectura y tests mientras se construye (siempre activa; el equipo está aprendiendo los frameworks del stack).
@@ -76,6 +78,7 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - **`docs/`**: Documentación de dominio (requerimientos, modelos de datos, UI, decisiones de diseño, plan de desarrollo). Es la fuente de verdad del proyecto.
 - **`openspec/specs/`**: Especificaciones canónicas de cada módulo (qué hace, requisitos, escenarios). Son útiles como referencia rápida.
 - **`openspec/changes/`**: Solo contiene cambios activos en progreso. Los cambios completados se archivan (se eliminan) porque la información de decisiones ya está registrada en `docs/decisiones.md`.
+- **`traducciones/`**: Textos de la interfaz en inglés y español (`claves.csv`, `claves-extra.csv`), la guía de multiidioma (`guia.md`) y los correos de ejemplo para revisión. Son datos que el build y los tests leen, no documentación académica (ver sección 10).
 - **`graphify-out/`**: Grafo de conocimiento del código (ver sección 7).
 
 ## Contexto técnico

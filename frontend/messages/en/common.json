@@ -1,6 +1,39 @@
 {
+  "nav": {
+    "main": {
+      "brandHomeLabel": "FilmAI, go to Home",
+      "mainLabel": "Main",
+      "home": "Home",
+      "search": "Search",
+      "lists": "Lists",
+      "profileShort": "Profile",
+      "skipToContent": "Skip to content",
+      "profile": "My profile",
+      "ratingsReviews": "Ratings & reviews",
+      "settings": "Settings",
+      "terms": "Terms and Conditions",
+      "breadcrumbLabel": "Breadcrumb",
+      "brandLandingLabel": "FilmAI, back to the landing page",
+      "backHome": "Back to Home",
+      "brandLandingAlt": "FilmAI, go to the landing page",
+      "backLanding": "Back to the landing page",
+      "termsUpdated": "Last updated: {date}",
+      "termsOnPage": "On this page"
+    },
+    "account": {
+      "userMenuLabel": "{name}’s menu",
+      "optionsLabel": "User options",
+      "logOut": "Log out",
+      "logIn": "Log in",
+      "signUp": "Sign up",
+      "deactivateTitle": "Deactivate account",
+      "deactivateConfirmTitle": "Deactivate your account?",
+      "deactivate": "Deactivate",
+      "logoutConfirmTitle": "Log out of FilmAI?",
+      "logoutConfirmDescription": "You’ll be logged out of FilmAI on this device."
+    }
+  },
   "common": {
-    "brand": "FilmAI",
     "content": {
       "typeLabel": "Content type",
       "all": "All",
@@ -19,11 +52,6 @@
       "watchlist": "Watchlist",
       "noPoster": "No poster",
       "addedOnLabel": "Added to this list on {date}"
-    },
-    "carousel": {
-      "seeMore": "See more",
-      "previous": "Previous",
-      "next": "Next"
     },
     "rating": {
       "rate": "Rate",
@@ -69,9 +97,6 @@
     "search": {
       "placeholder": "Search movies and TV shows"
     },
-    "feedback": {
-      "dismissLabel": "Dismiss notice"
-    },
     "filters": {
       "clear": "Clear filters",
       "sortLabel": "Sort",
@@ -109,10 +134,6 @@
       "showLess": "Show less",
       "showMore": "Show {count} more"
     },
-    "pagination": {
-      "previous": "Previous",
-      "next": "Next"
-    },
     "password": {
       "showLabel": "Show password",
       "currentLabel": "Current password",
@@ -138,131 +159,6 @@
       "required": "Choose a country to continue."
     }
   },
-  "legacy": {
-    "metadata": {
-      "myReviews": "My reviews",
-      "description": "A movie review platform with smart recommendations.",
-      "profile": "My profile",
-      "settings": "Settings"
-    },
-    "settings": {
-      "heading": "Settings",
-      "appearance": "Appearance",
-      "theme": "Theme",
-      "dark": "Dark",
-      "light": "Light",
-      "notifications": "Notifications",
-      "weeklyLabel": "Weekly recommendations",
-      "reviewsLabel": "Reviews on your lists",
-      "newsLabel": "FilmAI news",
-      "account": "Account",
-      "deactivateWarning": "Deactivating your account is irreversible. You won’t be able to log in again or reactivate it.",
-      "deactivateTitle": "Deactivate your account?",
-      "cancel": "Cancel",
-      "deactivate": "Deactivate",
-      "retry": "Try again",
-      "breadcrumb": "Breadcrumb",
-      "publicProfile": "Public profile",
-      "publicProfileHelp": "Visibility preference for future public views.",
-      "weeklyHelp": "Preference for future recommendation emails.",
-      "reviewsHelp": "Preference for future review notifications.",
-      "newsHelp": "Preference for future news emails.",
-      "saveError": "We couldn’t save your preference. Try again.",
-      "deactivated": "Your account has been deactivated.",
-      "deactivateError": "We couldn’t deactivate your account. It is still active; try again.",
-      "loading": "Loading settings…",
-      "themeLegend": "Interface theme",
-      "privacy": "Privacy",
-      "futureFeatures": "These preferences are saved, but they do not yet change the visibility of reviews or lists or enable emails.",
-      "deactivateAccount": "Deactivate account",
-      "deactivating": "Deactivating…",
-      "deactivateConfirm": "This action is irreversible. All your sessions will be closed and you won’t be able to log in again or reactivate your account. Make sure you want to deactivate your account before continuing."
-    },
-    "confirmation": {
-      "successTitle": "Account confirmed",
-      "backToLogin": "Back to log in",
-      "loading": "Confirming your account…",
-      "successDescription": "Your account is now active. You can log in.",
-      "goToLogin": "Go to log in",
-      "alreadyTitle": "Account already confirmed",
-      "alreadyDescription": "This address was already confirmed. You can log in directly.",
-      "expiredTitle": "The link has expired",
-      "expiredDescription": "Confirmation links are valid for 24 hours. You can request a new one from the registration screen using the \"Resend email\" button.",
-      "backToRegister": "Back to registration",
-      "errorTitle": "Couldn’t confirm your account",
-      "errorDescription": "The link is invalid."
-    },
-    "reset": {
-      "backToLogin": "Back to log in",
-      "confirmLabel": "Confirm password",
-      "saveError": "Couldn’t update your password. Try again.",
-      "successTitle": "Password updated",
-      "successDescription": "Your password has been reset. You can now log in with your new password.",
-      "goToLogin": "Go to log in",
-      "invalidTitle": "The link is invalid",
-      "invalidDescription": "Reset links are valid for 1 hour or until they are used. You can request a new one from \"Forgot your password?\" on the login screen.",
-      "title": "Create a new password",
-      "description": "Choose a new password for your account.",
-      "passwordLabel": "New password",
-      "togglePassword": "Show or hide password",
-      "passwordHelp": "8 to 20 characters, with an uppercase letter, a lowercase letter, a number and a special character (@#$%&*!).",
-      "toggleConfirmation": "Show or hide confirmation",
-      "saving": "Saving…",
-      "save": "Update password"
-    },
-    "validation": {
-      "required": "Required field.",
-      "maxNameLength": "Maximum 50 characters.",
-      "personName": "Letters and spaces between words only.",
-      "username": "Alphanumeric, 5 to 25 characters.",
-      "email": "Invalid email format.",
-      "date": "Invalid date.",
-      "futureDate": "The date cannot be in the future.",
-      "minimumAge": "You must be at least 13 years old.",
-      "passwordLength": "Must contain between 8 and 20 characters.",
-      "passwordUpper": "Must include at least one uppercase letter.",
-      "passwordLower": "Must include at least one lowercase letter.",
-      "passwordDigit": "Must include at least one number.",
-      "passwordSpecial": "Must include a special character (@#$%&*!).",
-      "passwordMismatch": "Passwords don’t match."
-    }
-  },
-  "nav": {
-    "main": {
-      "brandHomeLabel": "FilmAI, go to Home",
-      "mainLabel": "Main",
-      "home": "Home",
-      "search": "Search",
-      "lists": "Lists",
-      "profileShort": "Profile",
-      "skipToContent": "Skip to content",
-      "profile": "My profile",
-      "ratingsReviews": "Ratings & reviews",
-      "settings": "Settings",
-      "terms": "Terms and Conditions",
-      "breadcrumbLabel": "Breadcrumb",
-      "brandLandingLabel": "FilmAI, back to the landing page",
-      "backHome": "Back to Home",
-      "brandLandingAlt": "FilmAI, go to the landing page",
-      "backLanding": "Back to the landing page",
-      "termsUpdated": "Last updated: {date}",
-      "termsOnPage": "On this page"
-    },
-    "account": {
-      "userMenuLabel": "{name}’s menu",
-      "optionsLabel": "User options",
-      "logOut": "Log out",
-      "logIn": "Log in",
-      "signUp": "Sign up",
-      "profileLabel": "Your profile",
-      "deactivateTitle": "Deactivate account",
-      "deactivateConfirmTitle": "Deactivate your account?",
-      "deactivate": "Deactivate",
-      "menuTitle": "Account menu",
-      "logoutConfirmTitle": "Log out of FilmAI?",
-      "logoutConfirmDescription": "You’ll be logged out of FilmAI on this device."
-    }
-  },
   "home": {
     "hero": {
       "trendingRank": "#{rank} trending",
@@ -272,7 +168,6 @@
     "rows": {
       "trendingTitle": "Trending this week",
       "recommendedTitle": "Recommended for you",
-      "communityReviewsTitle": "Community reviews",
       "recommendationReasonCombined": "Based on your high ratings in {genres}",
       "newReleasesDescription": "Movies in theaters and TV shows released this year",
       "recommendationReasonMovies": "Based on your high ratings in {genres}",
@@ -282,12 +177,6 @@
       "trendingDescription": "Most viewed on TMDB in the last seven days",
       "newReleasesTitle": "New releases",
       "emptyDescription": "There’s nothing to show right now. Try again later or search for something specific."
-    },
-    "recommendation": {
-      "promptTitle": "What are we watching tonight?"
-    },
-    "rating": {
-      "watchedHint": "Rating {title} also adds it to Watched. You can write a review now or later, from its page or from Ratings & reviews."
     },
     "carousel": {
       "previousRowLabel": "Previous in {rowTitle}",
@@ -350,8 +239,7 @@
       "nameDuplicateError": "You already have a list with that name.",
       "createdAddedFeedback": "You created “{listName}” and added {title}.",
       "removedFeedback": "You removed {title} from “{listName}”.",
-      "addedFeedback": "You added {title} to “{listName}”.",
-      "membershipCount": "In {count, plural, one {# list} other {# lists}}"
+      "addedFeedback": "You added {title} to “{listName}”."
     },
     "synopsis": {
       "heading": "Synopsis"
@@ -494,7 +382,6 @@
       "yearLabel": "Year",
       "openLabel": "Filters{activeCount, plural, =0 {} one {, # active} other {, # active}}",
       "apply": "Show results",
-      "activeCount": "{count, plural, one {# active} other {# active}}",
       "anyYear": "Any",
       "tmdbRatingLabel": "TMDB rating",
       "ratingShort": "{value}+",
@@ -509,10 +396,6 @@
       "emptyTitle": "Nothing for “{query}”",
       "emptyHint": "Check the spelling or try the original title: the catalog comes from TMDB.",
       "emptyFiltersTitle": "Nothing with these filters"
-    },
-    "pagination": {
-      "label": "Results pages",
-      "position": "Page {page} of {pageCount}"
     },
     "close": {
       "shortcut": "Esc"
@@ -544,8 +427,6 @@
     },
     "results": {
       "filteredEmpty": "No ratings match these filters.",
-      "ratingCount": "{count, plural, one {# rating} other {# ratings}}",
-      "withReviewCount": "{count, plural, one {# with review} other {# with reviews}}",
       "empty": "You haven’t rated any movies or TV shows yet.",
       "emptyAction": "Find something to rate",
       "loading": "Loading your ratings…",
@@ -585,7 +466,6 @@
       "forgot": "Forgot your password?",
       "ruleSatisfiedLabel": "(met)",
       "ruleMissingLabel": "(missing)",
-      "confirmMismatch": "Passwords don’t match.",
       "lengthRule": "Between 8 and 20 characters",
       "caseRule": "Uppercase and lowercase letters",
       "numberRule": "One number",
@@ -606,7 +486,6 @@
       "genderLabel": "Gender",
       "termsAcceptance": "I have read and accept FilmAI’s <terms>Terms and Conditions</terms>.",
       "termsNewTabHint": "(opens in a new tab)",
-      "termsRequiredError": "To create your account you need to accept the Terms and Conditions.",
       "submitPending": "Complete all fields and accept the Terms and Conditions to continue."
     },
     "confirmation": {
@@ -619,20 +498,8 @@
       "successTitle": "Account confirmed",
       "successDescription": "You can now log in with your email or username.",
       "invalidTitle": "This link no longer works",
-      "invalidDescription": "It expired or was already used. Request a new one and check your inbox."
-    },
-    "adminAccess": {
-      "pageTitle": "Admin access",
-      "documentationTitle": "Internal documentation",
-      "loginDescription": "Internal documentation is only for the FilmAI team. Log in with an admin account to continue.",
-      "includedResources": "Includes",
-      "invalidCredentials": "Incorrect admin credentials.",
-      "logIn": "Log in as admin",
-      "publicPrompt": "Not part of the team?",
-      "backToApp": "Back to FilmAI",
-      "deniedTitle": "Your account has no access",
-      "deniedDescription": "You’re logged in as {username}, which isn’t an admin account. To view the internal documentation, log in with an account that has that permission.",
-      "switchAccount": "Switch account"
+      "invalidDescription": "It expired or was already used. Request a new one and check your inbox.",
+      "loading": "Confirming your account…"
     },
     "completeSignUp": {
       "badge": "Signing up with Google",
@@ -644,6 +511,19 @@
     },
     "session": {
       "expired": "Your session expired. Log in again."
+    },
+    "newPassword": {
+      "title": "Create a new password",
+      "description": "Choose a new password for your account.",
+      "passwordHelp": "8 to 20 characters, with an uppercase letter, a lowercase letter, a number and a special character (@#$%&*!).",
+      "togglePasswordLabel": "Show or hide password",
+      "toggleConfirmationLabel": "Show or hide confirmation",
+      "save": "Update password",
+      "successTitle": "Password updated",
+      "successDescription": "Your password has been reset. You can now log in with your new password.",
+      "goToLogin": "Go to log in",
+      "invalidTitle": "The link is invalid",
+      "invalidDescription": "Reset links are valid for 1 hour or until they are used. You can request a new one from “Forgot your password?” on the login screen."
     }
   },
   "enums": {
@@ -673,7 +553,6 @@
     "personal": {
       "heading": "Personal details",
       "edit": "Edit details",
-      "readOnlyFieldHint": "This field is read-only and can’t be edited.",
       "readOnlyFieldsHint": "These fields are read-only and can’t be edited."
     },
     "password": {
@@ -706,19 +585,14 @@
     }
   },
   "settings": {
-    "appearance": {
-      "heading": "Appearance",
-      "themeLabel": "Theme",
-      "themeHelp": "Applies instantly and is saved to your account."
-    },
     "notifications": {
       "heading": "Notifications",
       "weeklyLabel": "Weekly recommendations",
-      "weeklyHelp": "Every week we email you suggestions based on what you’ve rated.",
+      "weeklyHelp": "Preference for future recommendation emails.",
       "reviewsLabel": "Reviews on your lists",
-      "reviewsHelp": "We let you know when there are new reviews of titles on your lists.",
+      "reviewsHelp": "Preference for future review notifications.",
       "newsLabel": "FilmAI news",
-      "newsHelp": "We email you about what’s new in FilmAI and new features."
+      "newsHelp": "Preference for future news emails."
     },
     "legal": {
       "heading": "Legal",
@@ -727,7 +601,9 @@
     "account": {
       "heading": "Account",
       "deactivateWarning": "Deactivating your account is irreversible. You won’t be able to log in again or reactivate it.",
-      "deactivateConfirmDescription": "This action is irreversible. All your sessions will be closed and you won’t be able to log in again or reactivate your account."
+      "deactivateConfirmDescription": "This action is irreversible. All your sessions will be closed and you won’t be able to log in again or reactivate your account. Make sure you want to deactivate your account before continuing.",
+      "deactivateError": "We couldn’t deactivate your account. It is still active; try again.",
+      "deactivated": "Your account has been deactivated."
     },
     "language": {
       "label": "Language",
@@ -736,15 +612,23 @@
       "english": "English",
       "spanish": "Español",
       "changing": "Changing language…",
-      "updated": "Language updated.",
       "saveError": "We couldn’t save your language. Try again.",
       "interfaceLabel": "Interface language",
       "interfaceHelp": "Applies instantly and is saved to your account. Also used for the emails we send you."
+    },
+    "loading": "Loading settings…",
+    "privacy": {
+      "heading": "Privacy",
+      "futureNotice": "These preferences are saved, but they do not yet change the visibility of reviews or lists or enable emails.",
+      "publicProfileLabel": "Public profile",
+      "publicProfileHelp": "Visibility preference for future public views."
+    },
+    "feedback": {
+      "saveError": "We couldn’t save your preference. Try again."
     }
   },
   "errors": {
     "pages": {
-      "errorTitle": "Error page",
       "ticketIllustrationAlt": "A movie ticket torn in half",
       "serverTitle": "Server error",
       "notFoundTitle": "This page doesn’t exist",

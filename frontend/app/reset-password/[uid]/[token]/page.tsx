@@ -33,7 +33,8 @@ function decodificarParametro(valor?: string): string | undefined {
 type Estado = "formulario" | "ok" | "enlace_invalido";
 
 export default function RestablecerContrasenaPage() {
-  const t = useTranslations("legacy.reset");
+  const t = useTranslations("auth.newPassword");
+  const common = useTranslations("common");
 
   const locale = useLocale();
 
@@ -135,7 +136,7 @@ export default function RestablecerContrasenaPage() {
           <h1 className="mb-3 text-2xl font-bold text-foreground">{t("invalidTitle")}</h1>
           <p className="mb-6 text-sm text-foreground/75">{t("invalidDescription")}</p>
           <Link href={routes.login} className="text-primary hover:underline">
-            {t("backToLogin")}
+            {common("passwordReset.backToLogin")}
           </Link>
         </div>
       </main>
@@ -152,7 +153,7 @@ export default function RestablecerContrasenaPage() {
         <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
           <div>
             <label htmlFor="nueva-password" className="mb-1 block text-sm text-foreground/75">
-              {t("passwordLabel")}
+              {common("password.newLabel")}
             </label>
             <div className="relative">
               <input
@@ -173,7 +174,7 @@ export default function RestablecerContrasenaPage() {
                 type="button"
                 onClick={() => setMostrarPassword((v) => !v)}
                 className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground/75 focus-visible:outline-2 focus-visible:outline-ring"
-                aria-label={t("togglePassword")}
+                aria-label={t("togglePasswordLabel")}
               >
                 {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -188,7 +189,7 @@ export default function RestablecerContrasenaPage() {
 
           <div>
             <label htmlFor="confirmar-password" className="mb-1 block text-sm text-foreground/75">
-              {t("confirmLabel")}
+              {common("fields.passwordConfirm")}
             </label>
             <div className="relative">
               <input
@@ -211,7 +212,7 @@ export default function RestablecerContrasenaPage() {
                 type="button"
                 onClick={() => setMostrarConfirmacion((v) => !v)}
                 className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground/75 focus-visible:outline-2 focus-visible:outline-ring"
-                aria-label={t("toggleConfirmation")}
+                aria-label={t("toggleConfirmationLabel")}
               >
                 {mostrarConfirmacion ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>

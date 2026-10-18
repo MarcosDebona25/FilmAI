@@ -62,14 +62,14 @@ for (const locale of ["en", "es"] as const) {
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     await page.goto("/settings");
     await expect(
-      page.getByRole("heading", { name: messages.legacy.settings.heading, exact: true })
+      page.getByRole("heading", { name: messages.nav.main.settings, exact: true })
     ).toBeVisible();
     const next = locale === "en" ? "es" : "en";
     const nextMessages = next === "en" ? en : es;
     await page.getByRole("radio", { name: next === "en" ? "English" : "Español" }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", next);
     await expect(
-      page.getByRole("heading", { name: nextMessages.legacy.settings.heading, exact: true })
+      page.getByRole("heading", { name: nextMessages.nav.main.settings, exact: true })
     ).toBeVisible();
     expect(account.getPreferencias().idioma).toBe(next);
     expect(
@@ -85,14 +85,16 @@ for (const locale of ["en", "es"] as const) {
     });
     await page.goto("/reset-password/uid/token");
     await page
-      .getByLabel(nextMessages.legacy.reset.passwordLabel, { exact: true })
+      .getByLabel(nextMessages.common.password.newLabel, { exact: true })
       .fill("Password123*");
     await page
-      .getByLabel(nextMessages.legacy.reset.confirmLabel, { exact: true })
+      .getByLabel(nextMessages.common.fields.passwordConfirm, { exact: true })
       .fill("Password123*");
-    await page.getByRole("button", { name: nextMessages.legacy.reset.save, exact: true }).click();
+    await page
+      .getByRole("button", { name: nextMessages.auth.newPassword.save, exact: true })
+      .click();
     await expect(
-      page.getByRole("heading", { name: nextMessages.legacy.reset.successTitle })
+      page.getByRole("heading", { name: nextMessages.auth.newPassword.successTitle })
     ).toBeVisible();
   });
   test(`destinos de correo recuperan errores tipados en ${locale}`, async ({ page, baseURL }) => {
@@ -114,13 +116,13 @@ for (const locale of ["en", "es"] as const) {
       route.fulfill({ status: 400, json: { code: "link_invalid", params: {}, errors: [] } })
     );
     await page.goto("/reset-password/uid/invalid");
+    await page.getByLabel(messages.common.password.newLabel, { exact: true }).fill("Password123!");
     await page
-      .getByLabel(messages.legacy.reset.passwordLabel, { exact: true })
+      .getByLabel(messages.common.fields.passwordConfirm, { exact: true })
       .fill("Password123!");
-    await page.getByLabel(messages.legacy.reset.confirmLabel, { exact: true }).fill("Password123!");
-    await page.getByRole("button", { name: messages.legacy.reset.save, exact: true }).click();
+    await page.getByRole("button", { name: messages.auth.newPassword.save, exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: messages.legacy.reset.invalidTitle })
+      page.getByRole("heading", { name: messages.auth.newPassword.invalidTitle })
     ).toBeVisible();
   });
 }

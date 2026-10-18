@@ -89,7 +89,7 @@ class ContratoEnumsTests(SimpleTestCase):
             self.assertEqual(json.loads(salida.read_text()), esperado)
 
     def test_reservas_coinciden_con_las_etiquetas_editoriales_aprobadas(self):
-        archivo = Path(settings.BASE_DIR).parent / "docs" / "i18n" / "claves.csv"
+        archivo = Path(settings.BASE_DIR).parent / "traducciones" / "claves.csv"
         with archivo.open(newline="") as filas:
             etiquetas = {
                 fila["clave"]: fila
@@ -109,9 +109,7 @@ class ContratoEnumsTests(SimpleTestCase):
         definicion = obtener_codigo("list_name_reserved")
         self.assertEqual(definicion.contextos, {"listas": 409})
         self.assertEqual(definicion.parametros, {})
-        archivo = (
-            Path(settings.BASE_DIR).parent / "docs" / "i18n" / "copia-propuesta.csv"
-        )
+        archivo = Path(settings.BASE_DIR).parent / "traducciones" / "claves-extra.csv"
         with archivo.open(newline="") as filas:
             fila = next(
                 fila
@@ -119,7 +117,5 @@ class ContratoEnumsTests(SimpleTestCase):
                 if fila["codigo"] == "list_name_reserved"
             )
         self.assertEqual(fila["estado"], "aprobado")
-        self.assertEqual(fila["es_propuesto"], definicion.mensaje)
-        self.assertEqual(
-            fila["en_propuesto"], "This name is reserved for a default list."
-        )
+        self.assertEqual(fila["es"], definicion.mensaje)
+        self.assertEqual(fila["en"], "This name is reserved for a default list.")

@@ -40,11 +40,12 @@ for (const locale of ["es", "en"] as const) {
     await page.route("**/api/reviews/mias/**", (route) =>
       route.fulfill({ json: { total: 0, next: null, results: [] } })
     );
-    const messages = (locale === "es" ? es : en).legacy.metadata;
-    const nav = (locale === "es" ? es : en).nav.main;
+    const catalog = locale === "es" ? es : en;
+    const nav = catalog.nav.main;
+    const description = catalog.auth.landing.description;
     for (const [path, title] of [
-      ["/profile", messages.profile],
-      ["/settings", messages.settings],
+      ["/profile", nav.profile],
+      ["/settings", nav.settings],
       ["/my-reviews", nav.ratingsReviews],
     ]) {
       await page.goto(path);
@@ -52,7 +53,7 @@ for (const locale of ["es", "en"] as const) {
       await expect(page.locator("html")).toHaveAttribute("lang", locale);
       await expect(page.locator('meta[name="description"]')).toHaveAttribute(
         "content",
-        messages.description
+        description
       );
     }
   });

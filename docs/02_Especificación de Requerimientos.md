@@ -318,7 +318,7 @@ formulario y confirmación porque usa otra operación de API.
 | Flujo Principal                                                                                                         | Flujo Alternativo                                                                                                             |
 | :---------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
 | 1. extend(CU-005).                                                                                                      | —                                                                                                                             |
-| 2. El usuario accede a "Preferencias" desde el menú desplegable del avatar y selecciona la opción "Dar de baja cuenta". | —                                                                                                                             |
+| 2. El usuario accede a "Preferencias" desde el menú desplegable del avatar y selecciona la opción "Dar de baja la cuenta". | —                                                                                                                             |
 | 3. El sistema solicita confirmación para la baja de la cuenta.                                                          | —                                                                                                                             |
 | 4. El usuario confirma la baja de la cuenta apretando el botón "Confirmar".                                             | 4.A. El usuario cancela la operación de baja.<br>4.A.1 Se retorna al paso 1, manteniendo al usuario en la sección del perfil. |
 | 5. El sistema cambia el estado de la cuenta a `baja`, conserva sus datos y relaciones y notifica la baja exitosa.       | —                                                                                                                             |
@@ -781,7 +781,7 @@ El perfil permite elegir avatar mediante modal desde una capa visible al editar.
 
 ### Multiidioma (08/10/2026)
 
-FilmAI es nativa en inglés y admite español. Las reglas acordadas (decisiones en `docs/decisiones.md`; uso en `docs/i18n/guia.md`) son:
+FilmAI es nativa en inglés y admite español. Las reglas acordadas (decisiones en `docs/decisiones.md`; uso en `traducciones/guia.md`) son:
 
 - **Resolución del idioma.** Con sesión, la cuenta es la fuente de verdad; la cookie `filmai_locale` es su espejo para renderizar. Sin sesión se usa la cookie. El backend resuelve, en este orden: idioma guardado en la cuenta, encabezado `Accept-Language` y, por último, inglés. Al iniciar sesión gana el idioma guardado.
 - **Selector.** Con sesión, solo en Preferencias; el pie de página con sesión muestra el idioma actual y enlaza a Preferencias. Sin sesión, una pastilla `EN | ES` en landing, inicio de sesión y registro, y el selector en el pie de página de escritorio (ubicaciones en doc 04, sección 4.1).
@@ -791,8 +791,8 @@ FilmAI es nativa en inglés y admite español. Las reglas acordadas (decisiones 
 - **Listas por defecto y género.** Se identifican por valores estables (`Lista.clave`; género `masculino`, `femenino`, `no_especifica`) y la interfaz muestra la etiqueta del idioma activo.
 - **Formatos.** Inglés con `en-US` (`8.5`, `41,355`, `Sep 28, 2026`, `2h 49m`) y español con `es-AR` (`8,5`, `41.355`, `28 sept 2026`, `2 h 49 min`), siempre con `Intl`.
 - **Rutas visibles en inglés** (implementadas en el frontend): `/profile`, `/settings`, `/my-reviews`, `/lists`, `/confirm-email/[key]`, `/reset-password/[uid]/[token]` y `/complete-signup`; `/login` y `/register` no cambian.
-- **Español.** Voseo en toda la copia. Los textos de los casos de uso de este documento se citan en español como referencia; el texto vigente de cada idioma vive en los catálogos (`docs/i18n/`) y en los diseños.
-- **Estado.** Backend (idioma por cuenta, errores por código, listas por clave, correos y TMDB por idioma) integrado en `develop`. Frontend: toda la interfaz con diseño nuevo es multiidioma y `legacyFiles` quedó vacía el 15/10/2026 (`complete-signup` y `NavigationGuard` ya se migraron); queda por traducir el chatbot, que todavía no existe (`docs/i18n/guia.md`). El país de la cuenta (18/10/2026) llegó con sus textos en ambos idiomas y los nombres de país salen de `Intl.DisplayNames` en el idioma activo.
+- **Español.** Voseo en toda la copia. Los textos de los casos de uso de este documento se citan en español como referencia; el texto vigente de cada idioma vive en los catálogos (`traducciones/`) y en los diseños.
+- **Estado.** Backend (idioma por cuenta, errores por código, listas por clave, correos y TMDB por idioma) integrado en `develop`. Frontend: toda la interfaz con diseño nuevo es multiidioma y `legacyFiles` quedó vacía el 15/10/2026 (`complete-signup` y `NavigationGuard` ya se migraron); queda por traducir el chatbot, que todavía no existe (`traducciones/guia.md`). El país de la cuenta (18/10/2026) llegó con sus textos en ambos idiomas y los nombres de país salen de `Intl.DisplayNames` en el idioma activo.
 
 ### Perfil: país y plataformas (18/10/2026)
 
