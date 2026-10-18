@@ -54,9 +54,10 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - `graphify update .` es incremental: solo re-extrae los archivos nuevos/modificados y no requiere LLM cuando los cambios son solo de código.
 - `graphify-out/` se versiona en git (salvo `cache/`, `.graphify_python`, `.graphify_root` y los backups automáticos, que están en `.gitignore`).
 
-## 8. Revisión de pull requests: no hay
+## 8. Revisión de pull requests
 
-- **No se usan herramientas de review automático en los pull requests**. Tanto AI Review como CodeRabbit fueron desactivados el 18/09/2026.
+- **Revisión automática (reinstaurada el 18/10/2026)**: `.github/workflows/pr-review.yml` corre PR-Agent con DeepSeek V4.1 Flash vía la API de DeepSeek y comenta en cada PR. Es informativa, no bloquea ni aprueba; configuración en `.pr_agent.toml`. Lo que sigue describe las herramientas anteriores, desactivadas el 18/09/2026:
+- **Herramientas anteriores**: tanto AI Review como CodeRabbit fueron desactivados el 18/09/2026.
 - **AI Review**: Workflow eliminado (`.github/workflows/ai-review.yml`). Generaba un 93% de falsos positivos (comentarios que no detectaban bugs reales ni sugerían mejoras válidas). Los comentarios no tenían contexto del proyecto (convenciones de idioma, valores de configuración, arquitectura).
 - **CodeRabbit**: App de GitHub desinstalada. La prueba gratuita expiró y no se renovó.
 - **Desde el 21/09/2026 tampoco hay revisión humana de PRs** (acordado entre
