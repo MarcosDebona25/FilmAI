@@ -120,7 +120,7 @@ test("botones consistentes y contraste al menos 4.5", async ({ page }) => {
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await page.goto("/settings");
   await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
-  const deactivate = page.getByRole("button", { name: "Dar de baja cuenta" });
+  const deactivate = page.getByRole("button", { name: "Dar de baja la cuenta" });
   const danger = await colors(deactivate);
   expect(danger.contrast).toBeGreaterThanOrEqual(4.5);
   await deactivate.hover();

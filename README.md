@@ -367,4 +367,4 @@ Referencia de verificación: [WebAIM WCAG 2 Checklist](https://webaim.org/standa
 
 ### Multiidioma
 
-Preferencias, confirmación de correo y restablecimiento funcionan en inglés y español. Las otras pantallas conservan su copia heredada hasta integrar sus diseños. Consultá [la guía](docs/i18n/guia.md) para textos, errores, formatos, selectores y verificaciones. El estado de aceptación está en [siguientes pasos](docs/siguientes-pasos-multiidioma.md).
+Toda la interfaz funciona en inglés y español (el chatbot, que todavía no existe, queda pendiente). Los textos viven en [traducciones/](traducciones/); consultá [la guía](traducciones/guia.md) para textos, errores, formatos, selectores y verificaciones.

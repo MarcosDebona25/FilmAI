@@ -27,14 +27,14 @@ next-intl 4.14.9 provides the message-key and ICU-argument types through its
 experimental declaration generator; the generated declaration is versioned
 so a clean checkout can run TypeScript before the build.
 
-OT-70's transitional `legacy` catalog contains the current Spanish copy for
-settings, email confirmation, password reset and pure validation. Its 77
-messages have matching English keys. The user approved 53 missing English
-translations and the temporary `Mis reseñas` / `My reviews` title on 08/10/2026;
-the other English messages reuse approved curated copy. The versioned OT-70
-CSV records the source and approval of each message. It is separate from
-OT-13's immutable approval record. OT-76 changes confirmation to voseo and fixes the password-help character list;
-OT-77 seeds the complete approved design catalogs reproducibly.
+OT-70 introduced a transitional `legacy` catalog for settings, email
+confirmation, password reset and pure validation. It was removed on 18/10/2026:
+the messages those screens render now have their own keys (`settings.*`,
+`auth.confirmation.loading`, `auth.newPassword.*`) in
+`traducciones/claves-extra.csv`, reusing existing keys where the approved text
+was identical, and the unused ones were deleted. The approved voseo and the
+password-help character list are written in the CSV itself, not patched by the
+generator. OT-77 seeds the complete approved design catalogs reproducibly.
 
 The four existing metadata entry points resolve descriptions and page titles
 through `generateMetadata`; branding and icons remain identical. Unit renders
@@ -182,7 +182,7 @@ traditional/Google accounts and known ES/EN development accounts. Existing
 Google accounts and the reviews-only seed retain their saved language.
 
 OT-70 is locally implemented in three units based on OT-40's final head.
-Request configuration, 77 approved transitional messages, four localized
+Request configuration, the approved transitional messages, four localized
 metadata entry points and the Spanish test provider are implemented; their
 publication CI and integration remain pending. The backend passes 546 tests
 and frontend passes 73 unit tests, build, types, lint and format. The unchanged

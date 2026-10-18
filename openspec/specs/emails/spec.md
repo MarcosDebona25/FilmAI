@@ -156,7 +156,7 @@ languages; review in a real mail client is still pending.
 Links MUST NOT force the recipient's language on the receiving browser: use
 that device's cookie, then browser preference, then English (confirmed by the
 user on 08/10/2026). The pilot routes support both locales. HTML previews and
-EML files for all eight variants live under `docs/i18n/revision-correos/`; no
+EML files for all eight variants live under `traducciones/revision-correos/`; no
 external mail was sent to create them. Do not equate browser rendering with
 verification in Gmail/Outlook/another real email client.
 

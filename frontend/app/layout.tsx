@@ -31,7 +31,7 @@ const bigShoulders = Big_Shoulders({
 export const viewport: Viewport = { themeColor: "#0d0d14", colorScheme: "dark" };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("legacy.metadata");
+  const t = await getTranslations("auth.landing");
   return {
     title: "FilmAI",
     description: t("description"),

@@ -4,7 +4,7 @@ La aplicación admite `en` y `es` sin prefijos de idioma en las rutas. Desde el 
 
 ## Agregar texto
 
-Usá una clave que describa la función y una frase completa. La copia aprobada vive en `claves.csv` y `copia-propuesta.csv` (ver «Fuentes de la copia»). `npm run i18n:generate` produce `messages/{en,es}/common.json` y la copia de `contracts/enums.json` dentro del frontend. `legacy.*` conserva la copia de las pantallas existentes, con voseo en confirmación y el `*` de la ayuda de contraseña corregidos. El generador parte de los CSV, nunca de los catálogos existentes. Después, ejecutá `npm run format`.
+Usá una clave que describa la función y una frase completa. La copia aprobada vive en `claves.csv` y `claves-extra.csv` (ver «Fuentes de la copia»). `npm run i18n:generate` produce `messages/{en,es}/common.json` y la copia de `contracts/enums.json` dentro del frontend. El generador parte de los CSV, nunca de los catálogos existentes. Después, ejecutá `npm run format`.
 
 En un componente cliente, `useTranslations("settings.language")` entrega una función `t` para pedir claves del namespace. En componentes de servidor usá `getTranslations` de `next-intl/server`. Para cantidades usá una frase ICU con `plural`; para enlaces dentro de una frase, `t.rich`. Los argumentos son valores del dominio, no fragmentos de texto. Los catálogos de correos no llegan al navegador. El texto legal no está en el catálogo: vive en `frontend/content/legal/terms.{en,es}.md`, para que lo revise un abogado, y la página `/terms` lo renderiza en servidor.
 
@@ -52,7 +52,7 @@ El botón de Google recibe `locale` y la carga inicial del SDK usa `hl`, según 
 
 ## Fuentes de la copia
 
-`claves.csv` tiene una fila por texto del diseño (634) y es la fuente de los catálogos. `copia-propuesta.csv` suma los textos que el diseño no traía (errores, selector, nombres reservados). `ot70-catalogo-transitorio.csv` guarda la copia `legacy.*` de las pantallas heredadas y se reduce al integrar cada diseño.
+`claves.csv` tiene una fila por texto del diseño (595) y es la fuente de los catálogos. `claves-extra.csv` suma los textos que el diseño no traía: errores, selector de idioma, nombres reservados y las pantallas de Preferencias, confirmación de correo y nueva contraseña. Las dos se leen igual; la diferencia es el origen. Si un texto nuevo ya existe en cualquiera de las dos, reutilizá su clave en lugar de crear otra.
 
 | Columna                       | Qué contiene                                                         |
 | ----------------------------- | -------------------------------------------------------------------- |
@@ -64,7 +64,9 @@ El botón de Google recibe `locale` y la carga inicial del SDK usa `hl`, según 
 | `grupo`                       | IDs de los fragmentos que forman una sola frase                      |
 | `observaciones`               | Motivo del cambio y datos variables                                  |
 
-Se siembran las filas `ok` (408) y `fragmento` (43). Quedan fuera `muestra` (61, datos de ejemplo), `diseño` (101, mesas y documentación del canvas) y `chatbot` (21, módulo todavía sin implementar). Una clave repetida solo es válida si sus dos mensajes curados son idénticos. Las claves de pantallas todavía no construidas son propuestas: se confirman al implementar cada diseño.
+`claves-extra.csv` usa otras columnas: `clave`, `codigo` (código de error de la API, si corresponde), `tipo` (label, error, success, status…), `parametros_icu`, `es`, `en` y `estado`. Todas sus filas se siembran.
+
+Se siembran las filas `ok` (376) y `fragmento` (35). Quedan fuera `muestra` (61, datos de ejemplo), `diseño` (101, mesas y documentación del canvas) y `chatbot` (22, módulo todavía sin implementar). Una clave repetida solo es válida si sus dos mensajes curados son idénticos. Las claves de pantallas todavía no construidas son propuestas: se confirman al implementar cada diseño.
 
 ## Glosario
 
@@ -100,10 +102,10 @@ Genre y Gender usan claves distintas aunque coincidan en español. Rating y Revi
 - Las producciones del `seed` son datos inventados sin traducción: sus títulos salen en inglés con `lang="en"` aunque la interfaz esté en español. Es el respaldo previsto.
 - Las cuentas del `seed` tienen idioma guardado (`usuario001` y `003` en `es`, `usuario002` en `en`), así que al iniciar sesión manda la cuenta y no el navegador.
 - El `.env` de desarrollo usa Resend: registrarse o pedir un restablecimiento envía correos reales.
-- Retirá el archivo de `legacyFiles` en `frontend/scripts/i18n/rules.mjs` y su copia `legacy.*` al integrar el diseño.
+- Agregá los textos que el diseño no trae a `claves-extra.csv`, nunca como literales en el componente, y corré `npm run i18n:generate`.
 
 ## Pendiente
 
 Falta abrir los ocho EML de `revision-correos/` en un cliente de correo real y registrar cliente, versión y resultado. No bloquea las interfaces.
 
-El chatbot (B-02–B-06) no está implementado. Sus reglas de idioma quedaron resueltas en `docs/decisiones.md`, entrada «Chatbot: idioma, tarjetas, errores y límites» del 09/10/2026. Sigue pendiente curar y aprobar las 21 filas `chatbot` de `claves.csv` y agregar las de cancelación y errores.
+El chatbot (B-02–B-06) no está implementado. Sus reglas de idioma quedaron resueltas en `docs/decisiones.md`, entrada «Chatbot: idioma, tarjetas, errores y límites» del 09/10/2026. Sigue pendiente curar y aprobar las 22 filas `chatbot` de `claves.csv` y agregar las de cancelación y errores.

@@ -1,4 +1,4 @@
-clave,codigo,tipo,parametros_icu,es_propuesto,en_propuesto,estado
+clave,codigo,tipo,parametros_icu,es,en,estado
 errors.codes.validation_error,validation_error,error,,Revisá los datos ingresados.,Check the information you entered.,aprobado
 errors.codes.not_authenticated,not_authenticated,error,,Iniciá sesión para continuar.,Log in to continue.,aprobado
 errors.codes.invalid_credentials,invalid_credentials,error,,Los datos de acceso no son válidos. Revisalos e intentá de nuevo.,The sign-in details are invalid. Check them and try again.,aprobado
@@ -82,7 +82,6 @@ settings.language.description,,selector,,Elegí el idioma de FilmAI.,Choose the 
 settings.language.english,,selector,,English,English,aprobado
 settings.language.spanish,,selector,,Español,Español,aprobado
 settings.language.changing,,selector,,Cambiando idioma…,Changing language…,aprobado
-settings.language.updated,,selector,,Idioma actualizado.,Language updated.,aprobado
 settings.language.saveError,,selector,,No pudimos guardar el idioma. Intentá de nuevo.,We couldn’t save your language. Try again.,aprobado
 errors.fields.correo.invalid,,field,,Ingresá un correo válido.,Enter a valid email address.,aprobado
 errors.fields.email.invalid,,field,,Ingresá un correo válido.,Enter a valid email address.,aprobado
@@ -94,14 +93,14 @@ emails.confirmation.subject,,email,,[FilmAI] Confirmación de cuenta,[FilmAI] Co
 errors.codes.list_name_reserved,list_name_reserved,error,,Ese nombre está reservado para una lista predeterminada.,This name is reserved for a default list.,aprobado
 errors.codes.terms_not_accepted,terms_not_accepted,error,,Para crear tu cuenta tenés que aceptar los Términos y Condiciones.,To create your account you need to accept the Terms and Conditions.,aprobado
 common.fields.email,,field,,Correo electrónico,Email,aprobado
-nav.main.termsUpdated,,label,date,Última actualización: {date},"Last updated: {date}",aprobado
+nav.main.termsUpdated,,label,date,Última actualización: {date},Last updated: {date},aprobado
 nav.main.termsOnPage,,label,,En esta página,On this page,aprobado
 auth.signUp.submitPending,,label,,Completá todos los campos y aceptá los Términos y Condiciones para continuar.,Complete all fields and accept the Terms and Conditions to continue.,aprobado
 errors.pages.notFoundCode,,label,,Error 404,Error 404,aprobado
 errors.pages.notFoundSignedOutTitle,,label,,No encontramos esa página,We can’t find that page,aprobado
 errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.,"The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",aprobado
 errors.pages.signUpInvite,,label,,"¿Primera vez en FilmAI? <register>Creá una cuenta gratis</register> para calificar películas, guardar tus listas y recibir recomendaciones del asistente de FilmAI.","New to FilmAI? <register>Create a free account</register> to rate films, keep your lists, and get personalized picks from the FilmAI assistant.",aprobado
-footer.main.languageLink,,selector,language,"Idioma: {language}. Cambiá el idioma en Preferencias.","Language: {language}. Change it in Settings.",aprobado
+footer.main.languageLink,,selector,language,Idioma: {language}. Cambiá el idioma en Preferencias.,Language: {language}. Change it in Settings.,aprobado
 footer.main.askFilmAI,,label,,Preguntale a FilmAI,Ask FilmAI,aprobado
 title.credits.creators,,label,,Creación,Created by,aprobado
 title.metadata.seasons,,label,count,"{count, plural, one {# temporada} other {# temporadas}}","{count, plural, one {# season} other {# seasons}}",aprobado
@@ -132,7 +131,7 @@ profile.username.taken,,status,,No disponible,Not available,aprobado
 profile.feedback.updated,,feedback,,Perfil actualizado.,Profile updated.,aprobado
 profile.feedback.passwordChanged,,feedback,,Contraseña actualizada. Iniciá sesión nuevamente.,Password updated. Log in again.,aprobado
 profile.password.currentRequired,,error,,Ingresá tu contraseña actual.,Enter your current password.,aprobado
-profile.password.googleDescription,,label,,"Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.",Your account uses Google and doesn’t have a password yet. You can set one with a link we email you.,aprobado
+profile.password.googleDescription,,label,,Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.,Your account uses Google and doesn’t have a password yet. You can set one with a link we email you.,aprobado
 profile.password.sendLink,,label,,Enviar enlace por correo,Email me a link,aprobado
 profile.password.linkSent,,feedback,,Te enviamos un enlace para establecer tu contraseña.,We emailed you a link to set your password.,aprobado
 profile.password.linkError,,error,,No pudimos enviar el enlace. Intentá más tarde.,We couldn’t send the link. Try again later.,aprobado
@@ -194,3 +193,23 @@ title.providers.seeAll,,label,,Ver todas las opciones en TMDB,See all options on
 title.providers.newTabHint,,label,,(se abre en otra pestaña),(opens in a new tab),aprobado
 title.providers.attribution,,label,,Datos de <link>JustWatch</link>,Data by <link>JustWatch</link>,aprobado
 common.media.addedOnLabel,,label,date,Agregada a esta lista el {date},Added to this list on {date},aprobado
+settings.loading,,status,,Cargando preferencias…,Loading settings…,aprobado
+settings.privacy.heading,,label,,Privacidad,Privacy,aprobado
+settings.privacy.futureNotice,,label,,"Estas preferencias se guardan, pero todavía no cambian la visibilidad de reseñas o listas ni activan correos.","These preferences are saved, but they do not yet change the visibility of reviews or lists or enable emails.",aprobado
+settings.privacy.publicProfileLabel,,label,,Perfil público,Public profile,aprobado
+settings.privacy.publicProfileHelp,,label,,Preferencia de visibilidad para futuras vistas públicas.,Visibility preference for future public views.,aprobado
+settings.feedback.saveError,,feedback,,No pudimos guardar la preferencia. Intentá de nuevo.,We couldn’t save your preference. Try again.,aprobado
+settings.account.deactivateError,,feedback,,No pudimos dar de baja tu cuenta. Sigue activa; intentá de nuevo.,We couldn’t deactivate your account. It is still active; try again.,aprobado
+settings.account.deactivated,,success,,Tu cuenta fue dada de baja.,Your account has been deactivated.,aprobado
+auth.confirmation.loading,,status,,Confirmando tu cuenta…,Confirming your account…,aprobado
+auth.newPassword.title,,label,,Crear nueva contraseña,Create a new password,aprobado
+auth.newPassword.description,,label,,Elegí una contraseña nueva para tu cuenta.,Choose a new password for your account.,aprobado
+auth.newPassword.passwordHelp,,label,,"De 8 a 20 caracteres, con mayúscula, minúscula, número y carácter especial (@#$%&*!).","8 to 20 characters, with an uppercase letter, a lowercase letter, a number and a special character (@#$%&*!).",aprobado
+auth.newPassword.togglePasswordLabel,,label,,Mostrar u ocultar contraseña,Show or hide password,aprobado
+auth.newPassword.toggleConfirmationLabel,,label,,Mostrar u ocultar confirmación,Show or hide confirmation,aprobado
+auth.newPassword.save,,label,,Actualizar contraseña,Update password,aprobado
+auth.newPassword.successTitle,,success,,Contraseña actualizada,Password updated,aprobado
+auth.newPassword.successDescription,,success,,Tu contraseña fue restablecida. Ya podés iniciar sesión con tu nueva contraseña.,Your password has been reset. You can now log in with your new password.,aprobado
+auth.newPassword.goToLogin,,label,,Ir a iniciar sesión,Go to log in,aprobado
+auth.newPassword.invalidTitle,,error,,El enlace no es válido,The link is invalid,aprobado
+auth.newPassword.invalidDescription,,error,,Los enlaces de restablecimiento son válidos durante 1 hora o hasta que se usen. Podés pedir uno nuevo desde «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión.,Reset links are valid for 1 hour or until they are used. You can request a new one from “Forgot your password?” on the login screen.,aprobado

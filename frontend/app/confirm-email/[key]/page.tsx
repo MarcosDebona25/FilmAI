@@ -113,7 +113,6 @@ function ExpiredLink() {
 
 export default function ConfirmarCorreoPage() {
   const t = useTranslations("auth.confirmation");
-  const legacy = useTranslations("legacy.confirmation");
   const nav = useTranslations("nav.account");
   const params = useParams<{ key: string }>();
   const [estado, setEstado] = useState<Estado>("cargando");
@@ -149,7 +148,7 @@ export default function ConfirmarCorreoPage() {
     <AccessShell>
       {estado === "cargando" && (
         <p role="status" className="text-muted-foreground">
-          {legacy("loading")}
+          {t("loading")}
         </p>
       )}
       {estado === "ok" && (
