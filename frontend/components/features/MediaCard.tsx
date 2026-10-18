@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ListPlus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -22,6 +23,7 @@ export function MediaCard({
   from,
   fluid = false,
   showUnrated = false,
+  addedAt,
 }: {
   title: Title;
   showType: boolean;
@@ -31,6 +33,8 @@ export function MediaCard({
   fluid?: boolean;
   /** «No ratings» cuando TMDB no tiene nota (canvas de Search). */
   showUnrated?: boolean;
+  /** Fecha (ISO) en que se agregó a una lista (CU-009); línea discreta bajo el título. */
+  addedAt?: string;
 }) {
   const t = useTranslations("common");
   const ts = useTranslations("search.results");
@@ -95,6 +99,19 @@ export function MediaCard({
             <span className="whitespace-nowrap">{ts("unrated")}</span>
           )}
         </span>
+        {addedAt && (
+          <time
+            dateTime={addedAt}
+            title={t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
+            className="inline-flex items-center gap-1 text-[11px] text-fg-3 tabular-nums"
+          >
+            <ListPlus className="size-[11px]" aria-hidden="true" />
+            <span className="sr-only">
+              {t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
+            </span>
+            <span aria-hidden="true">{formats.dateShort(addedAt)}</span>
+          </time>
+        )}
       </span>
     </Link>
   );
@@ -104,8 +121,8 @@ export function MediaCard({
 export function MediaCardSkeleton() {
   return (
     <li className="flex flex-col gap-2.5">
-      <span className="block aspect-[2/3] w-full animate-pulse rounded-lg bg-raised motion-reduce:animate-none" />
-      <span className="h-4 w-3/4 animate-pulse rounded bg-raised motion-reduce:animate-none" />
+      <span className="block aspect-[2/3] w-full rounded-lg bg-raised" />
+      <span className="h-4 w-3/4 rounded bg-raised" />
     </li>
   );
 }

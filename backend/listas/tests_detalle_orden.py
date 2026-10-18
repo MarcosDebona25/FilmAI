@@ -127,6 +127,17 @@ class ItemsDeListaTests(_ConUsuario):
         self.assertIsNone(notas["Brand New"])
         self.assertIsNone(notas["No Data"])
 
+    def test_cada_item_trae_la_fecha_en_que_se_agrego_a_la_lista(self):
+        fechas = {
+            item["titulo"]: item["fecha_agregado"] for item in self.pedir()["results"]
+        }
+
+        # CU-009: la UI la muestra discreta en cada tarjeta del detalle.
+        self.assertEqual(
+            datetime.fromisoformat(fechas["Amélie"]), _BASE + timedelta(days=1)
+        )
+        self.assertEqual(len(set(fechas.values())), 6)
+
     def test_la_busqueda_ignora_mayusculas_y_acentos_y_mira_traducciones(self):
         self.assertEqual(self.titulos(self.pedir(q="  AMELIE ")), ["Amélie"])
         ProduccionTraduccion.objects.create(

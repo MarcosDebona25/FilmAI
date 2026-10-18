@@ -289,11 +289,11 @@ export function ReviewsSection({
               aria-hidden="true"
               className="grid grid-cols-[40px_minmax(0,1fr)] gap-4 border-t border-line py-[22px]"
             >
-              <span className="size-10 animate-pulse rounded-full bg-raised motion-reduce:animate-none" />
+              <span className="size-10 rounded-full bg-raised" />
               <span className="flex flex-col gap-2.5 pt-1">
-                <span className="h-4 w-48 animate-pulse rounded bg-raised motion-reduce:animate-none" />
-                <span className="h-4 w-full animate-pulse rounded bg-raised motion-reduce:animate-none" />
-                <span className="h-4 w-2/3 animate-pulse rounded bg-raised motion-reduce:animate-none" />
+                <span className="h-4 w-48 rounded bg-raised" />
+                <span className="h-4 w-full rounded bg-raised" />
+                <span className="h-4 w-2/3 rounded bg-raised" />
               </span>
             </div>
           ))}

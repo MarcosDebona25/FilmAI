@@ -291,10 +291,7 @@ export function ListsView() {
           className="grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fill,minmax(min(380px,100%),1fr))] md:gap-5"
         >
           {[0, 1, 2].map((indice) => (
-            <li
-              key={indice}
-              className="h-[188px] rounded-2xl bg-raised motion-safe:animate-pulse md:h-[236px]"
-            />
+            <li key={indice} className="h-[188px] rounded-2xl bg-raised md:h-[236px]" />
           ))}
         </ul>
       ) : (
