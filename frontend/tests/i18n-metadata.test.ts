@@ -32,7 +32,7 @@ describe("metadatos en los cuatro puntos actuales", () => {
     expect(await root.generateMetadata()).toEqual({
       title: "FilmAI",
       description: messages.description,
-      icons: { icon: "/icons8-movies-32.png" },
+      icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }], apple: "/favicon.jpeg" },
     });
     expect(await profile.generateMetadata()).toEqual({ title: `${messages.profile} | FilmAI` });
     expect(await settings.generateMetadata()).toEqual({ title: `${messages.settings} | FilmAI` });
