@@ -5,6 +5,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 18/10/2026 — Primera auditoría de seguridad (run-1): estado y pendientes
+
+- **Fecha**: 18/10/2026
+- **Descripción**: se corrió la primera auditoría `standard` de `security-audit` sobre el commit `f7bbb6b`. Fue una pasada parcial de solo lectura de código: no hubo sandbox, así que no se ejecutó nada del proyecto y por regla de la skill no hay hallazgos `confirmed` ni severidades. Resultado: 35 unidades cubiertas, 12 candidatos, 11 pistas en `needs_validation` y 1 descartada. Los validadores de la skill pasan y la corrida quedó `complete` en procedimiento, no en evidencia de ejecución. No se cambió código del proyecto.
+- **Informes**: están en `security-audit/run-1/` (`REPORT.md`, `NEEDS-VALIDATION.md`, `findings.json`, `coverage-ledger.json`). Siguen ignorados por git a propósito, porque describen problemas sin arreglar; viven solo en la máquina de Marcos y no se pueden recuperar desde el repositorio. Si se pierde esa carpeta, hay que repetir la auditoría.
+- **Pendiente**: armar un sandbox Docker (red aislada, código montado de solo lectura, entorno vacío, límites de memoria, CPU y tiempo, sin `.env` real ni servicios externos) y validar cada pista con un test local sobre datos ficticios, para confirmarla o descartarla. Con eso se arma la lista final de arreglos priorizada.
+- **Después**: cada arreglo sale como tarea aparte, con su test y su entrada en este archivo. El resumen para el equipo se comparte por el chat o por el PR del arreglo, no con detalles en docs versionados.
+- **Archivos afectados**: `docs/decisiones.md`.
+
+---
+
 ## 18/10/2026 — Skill security-audit de Cloudflare
 
 - **Fecha**: 18/10/2026
