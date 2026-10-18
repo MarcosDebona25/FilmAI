@@ -16,36 +16,15 @@ def put(messages, key, value):
 
 
 def catalogs(locale):
-    messages = {"common": {"brand": "FilmAI"}}
-    for row in csv.DictReader(
-        (ROOT / "docs/i18n/ot70-catalogo-transitorio.csv").open()
-    ):
-        put(messages, row["clave"], row["es_actual"] if locale == "es" else row["en"])
-    for row in csv.DictReader((ROOT / "docs/i18n/claves.csv").open()):
+    messages = {}
+    for row in csv.DictReader((ROOT / "traducciones/claves.csv").open()):
         if row["estado"] in ("ok", "fragmento"):
             put(messages, row["clave"], row[f"{locale}_curado"])
-    for row in csv.DictReader((ROOT / "docs/i18n/copia-propuesta.csv").open()):
-        put(messages, row["clave"], row[f"{locale}_propuesto"])
+    for row in csv.DictReader((ROOT / "traducciones/claves-extra.csv").open()):
+        put(messages, row["clave"], row[locale])
     messages.pop("emails", None)
     # El texto legal vive en `frontend/content/legal/*.md` (revisión jurídica).
     messages.pop("legal", None)
-    messages["legacy"]["reset"]["passwordHelp"] = messages["legacy"]["reset"][
-        "passwordHelp"
-    ].replace("@#$%&!", "@#$%&*!")
-    if locale == "es":
-        confirmation = messages["legacy"]["confirmation"]
-        for key, value in confirmation.items():
-            for old, new in [
-                ("Confirmando su cuenta", "Confirmando tu cuenta"),
-                (
-                    "Su cuenta quedó activa. Ya puede",
-                    "Tu cuenta quedó activa. Ya podés",
-                ),
-                ("Puede iniciar", "Podés iniciar"),
-                ("Puede pedir", "Podés pedir"),
-            ]:
-                value = value.replace(old, new)
-            confirmation[key] = value
     return {"common.json": messages}
 
 

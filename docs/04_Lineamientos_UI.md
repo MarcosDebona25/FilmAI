@@ -146,7 +146,7 @@ Todas las pantallas autenticadas comparten:
 
 ### 4.1 Idioma y selector de idioma
 
-FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños de Claude Design están en inglés; el español sale de `docs/i18n/claves.csv`, que conserva la tabla de equivalencias original en sus columnas `es_original` y `en_original`. Los formatos siguen al idioma vía Intl (inglés: `8.5`, `41,355`, `Sep 28, 2026`; español: `8,5`, `41.355`, `28 sept 2026`).
+FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños de Claude Design están en inglés; el español sale de `traducciones/claves.csv`, que conserva la tabla de equivalencias original en sus columnas `es_original` y `en_original`. Los formatos siguen al idioma vía Intl (inglés: `8.5`, `41,355`, `Sep 28, 2026`; español: `8,5`, `41.355`, `28 sept 2026`).
 
 | Contexto                                            | Control                                                                                                                                                          |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1086,7 +1086,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 │                                          │
 │  ──── Cuenta ────                        │
 │                                          │
-│  [Dar de baja cuenta]                    │
+│  [Dar de baja la cuenta]                │
 │                                          │
 └──────────────────────────────────────────┘
 ```
@@ -1098,7 +1098,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 | **Idioma**         | Segmentado EN / ES                 | Cambio inmediato, se guarda en la cuenta y define también el idioma de los correos. Con sesión es el único lugar donde se cambia. Default: el del navegador (inglés si no hay otro).                                                                                        |
 | **Privacidad**     | Switch on/off para "Perfil público" | Se guarda, pero **todavía no tiene efecto** (mejora futura, 18/10/2026): las reseñas son públicas y las listas, privadas, y la pantalla lo avisa. |
 | **Notificaciones** | 3 switches independientes           | Recomendaciones semanales (email con sugerencias), Reseñas en tus listas (email cuando alguien reseña algo tuyo), Novedades de FilmAI (changelog).                                                                                                                          |
-| **Cuenta**         | Botón danger "Dar de baja cuenta"   | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar." Botones Cancelar / Dar de baja. |
+| **Cuenta**         | Botón danger "Dar de baja la cuenta" | Abre modal de confirmación: "¿Dar de baja tu cuenta? Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar." Botones Cancelar / Dar de baja. |
 
 ### Breadcrumb
 

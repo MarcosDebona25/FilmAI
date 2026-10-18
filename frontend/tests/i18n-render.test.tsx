@@ -4,14 +4,14 @@ import { render, screen } from "./render";
 
 function LocaleProbe() {
   const locale = useLocale();
-  const t = useTranslations("legacy.metadata");
-  return <p lang={locale}>{t("myReviews")}</p>;
+  const t = useTranslations("nav.main");
+  return <p lang={locale}>{t("profile")}</p>;
 }
 
 describe("render con el proveedor real", () => {
   it("usa español por defecto sin cambiar los selectores heredados", () => {
     render(<LocaleProbe />);
-    expect(screen.getByText("Mis reseñas")).toHaveAttribute("lang", "es");
+    expect(screen.getByText("Mi perfil")).toHaveAttribute("lang", "es");
   });
 
   it("permite probar inglés y mantiene el envoltorio particular", () => {
@@ -19,8 +19,8 @@ describe("render con el proveedor real", () => {
       locale: "en",
       wrapper: ({ children }) => <section aria-label="Prueba">{children}</section>,
     });
-    expect(screen.getByRole("region", { name: "Prueba" })).toHaveTextContent("My reviews");
+    expect(screen.getByRole("region", { name: "Prueba" })).toHaveTextContent("My profile");
     view.rerender(<LocaleProbe />);
-    expect(screen.getByText("My reviews")).toHaveAttribute("lang", "en");
+    expect(screen.getByText("My profile")).toHaveAttribute("lang", "en");
   });
 });

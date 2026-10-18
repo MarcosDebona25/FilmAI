@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { parse, TYPE, type MessageFormatElement } from "@formatjs/icu-messageformat-parser";
 import { describe, expect, it } from "vitest";
 import en from "@/messages/en/common.json";
@@ -72,22 +70,16 @@ describe("contrato bilingüe completo", () => {
     }
   });
 
-  it("conserva la copia transitoria aprobada y corrige voseo y ayuda de contraseña", () => {
-    const rows = readFileSync(
-      resolve(process.cwd(), "../docs/i18n/ot70-catalogo-transitorio.csv"),
-      "utf8"
-    )
-      .trim()
-      .split("\n")
-      .slice(1);
-    expect(rows).toHaveLength(77);
-    for (const row of rows) expect(flatten(es)).toHaveProperty(row.split(",")[0]);
+  it("conserva la copia aprobada de las pantallas con voseo y la ayuda de contraseña corregida", () => {
     // El texto de la baja aprobado (docs/decisiones.md); Settings lo usa tal cual.
-    expect(es.legacy.settings.deactivateConfirm).toBe(
+    expect(es.settings.account.deactivateConfirmDescription).toBe(
       "Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar."
     );
-    expect(es.legacy.confirmation.loading).toBe("Confirmando tu cuenta…");
-    expect(es.legacy.reset.passwordHelp).toContain("@#$%&*!");
+    expect(es.auth.confirmation.loading).toBe("Confirmando tu cuenta…");
+    expect(es.auth.newPassword.passwordHelp).toContain("@#$%&*!");
+    expect(en.auth.newPassword.passwordHelp).toContain("@#$%&*!");
+    // Ninguna copia en español usa «usted» ni deja el voseo a medias.
+    expect(JSON.stringify(es)).not.toMatch(/Puede (iniciar|pedir)|Su cuenta|Confirmando su/);
     expect(en).not.toHaveProperty("emails");
     expect(en).not.toHaveProperty("legal");
   });

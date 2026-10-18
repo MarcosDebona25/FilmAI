@@ -11,7 +11,7 @@ vi.mock("next/font/google", () => ({
 }));
 vi.mock("next-intl/server", () => ({
   getLocale: async () => state.locale,
-  getTranslations: async (namespace: "legacy.metadata") =>
+  getTranslations: async (namespace: "auth.landing" | "nav.main") =>
     createTranslator({
       locale: state.locale,
       messages: state.locale === "es" ? es : en,
@@ -22,7 +22,12 @@ vi.mock("next-intl/server", () => ({
 describe("metadatos en los cuatro puntos actuales", () => {
   it.each(["es", "en"] as const)("resuelve títulos y descripción en %s", async (locale) => {
     state.locale = locale;
-    const messages = (locale === "es" ? es : en).legacy.metadata;
+    const catalog = locale === "es" ? es : en;
+    const messages = {
+      description: catalog.auth.landing.description,
+      profile: catalog.nav.main.profile,
+      settings: catalog.nav.main.settings,
+    };
     const [root, profile, settings, reviews] = await Promise.all([
       import("@/app/layout"),
       import("@/app/profile/layout"),
@@ -37,9 +42,8 @@ describe("metadatos en los cuatro puntos actuales", () => {
     expect(await profile.generateMetadata()).toEqual({ title: `${messages.profile} | FilmAI` });
     expect(await settings.generateMetadata()).toEqual({ title: `${messages.settings} | FilmAI` });
     // Como el título de la página (canvas): «Calificaciones y reseñas».
-    const nav = (locale === "es" ? es : en).nav.main;
     expect(await reviews.generateMetadata()).toEqual({
-      title: `${nav.ratingsReviews} | FilmAI`,
+      title: `${catalog.nav.main.ratingsReviews} | FilmAI`,
     });
   });
 });
