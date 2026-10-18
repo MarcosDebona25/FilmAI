@@ -35,7 +35,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "FilmAI",
     description: t("description"),
-    icons: { icon: "/icons8-movies-32.png" },
+    icons: {
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+      apple: "/favicon.jpeg",
+    },
   };
 }
 
