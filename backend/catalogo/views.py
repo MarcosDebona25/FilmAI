@@ -14,9 +14,11 @@ from catalogo.services.materialization import (
     materializar_en_segundo_plano,
     materializar_listado_en_segundo_plano,
 )
+from catalogo.services.plataformas import plataformas
 from catalogo.services.recomendado import recomendar
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.validacion import ErrorValidacion
+from usuarios.paises import es_pais_valido
 
 logger = logging.getLogger(__name__)
 
@@ -273,6 +275,27 @@ class CreditsView(CatalogoBaseView):
     def get(self, request, id_tmdb):
         id_tmdb = _int_param(id_tmdb, "id_tmdb")
         return Response(creditos(self._service(request), self.tipo, id_tmdb))
+
+
+class ProvidersView(CatalogoBaseView):
+    """Plataformas donde ver la producción en `?pais=XX` (ISO 3166-1 alfa-2).
+
+    El país lo manda el cliente y no sale de la sesión: el endpoint sigue
+    siendo público y cacheable, como el resto del catálogo.
+    """
+
+    tipo = None  # "movie" o "tv", lo fija la ruta
+
+    def get(self, request, id_tmdb):
+        id_tmdb = _int_param(id_tmdb, "id_tmdb")
+        pais = request.query_params.get("pais")
+        if not es_pais_valido(pais):
+            raise _error_param(
+                "pais",
+                "Must be a valid ISO 3166-1 alpha-2 country code.",
+                "country_invalid",
+            )
+        return Response(plataformas(self._service(request), self.tipo, id_tmdb, pais))
 
 
 class GenresView(CatalogoBaseView):

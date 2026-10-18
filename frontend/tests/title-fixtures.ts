@@ -53,3 +53,24 @@ export const CREDITOS_BREAKING_BAD = {
     { nombre: "Aaron Paul", personaje: "Jesse Pinkman" },
   ],
 };
+
+// Forma de `GET /api/catalogo/{tipo}/{id}/providers/?pais=AR` (logos reales de TMDB).
+export const PLATAFORMAS_AR = {
+  pais: "AR",
+  enlace: "https://www.themoviedb.org/movie/157336-interstellar/watch?locale=AR",
+  suscripcion: [
+    { id: 8, nombre: "Netflix", logo: "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg" },
+    { id: 119, nombre: "Amazon Prime Video", logo: "/emthp39XA2YScoYL1p0sdbAH2WA.jpg" },
+  ],
+  gratis: [],
+  alquiler: [{ id: 2, nombre: "Apple TV", logo: "/9ghgSC0MA082EL6HLCW3GalykFD.jpg" }],
+  compra: [{ id: 8, nombre: "Netflix", logo: "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg" }],
+};
+export const PLATAFORMAS_CN = {
+  pais: "CN",
+  enlace: null,
+  suscripcion: [],
+  gratis: [],
+  alquiler: [],
+  compra: [],
+};
