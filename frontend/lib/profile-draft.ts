@@ -1,6 +1,9 @@
 import type { Perfil } from "@/components/AccountProvider";
 
-export type Borrador = Pick<Perfil, "nombre" | "apellido" | "nombre_usuario" | "avatar_id">;
+export type Borrador = Pick<
+  Perfil,
+  "nombre" | "apellido" | "nombre_usuario" | "pais" | "avatar_id"
+>;
 export function tieneCambios(borrador: Borrador | null, perfil: Perfil | null) {
   return Boolean(
     borrador &&

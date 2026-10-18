@@ -59,6 +59,13 @@
       },
       "params": {}
     },
+    "country_invalid": {
+      "category": "error",
+      "contexts": {
+        "validacion": 400
+      },
+      "params": {}
+    },
     "csrf_ready": {
       "category": "success",
       "contexts": {

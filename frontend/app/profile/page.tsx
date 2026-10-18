@@ -20,6 +20,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAccount, type Perfil } from "@/components/AccountProvider";
+import { CountrySelect } from "@/components/CountrySelect";
 import { Avatar } from "@/components/Avatar";
 import { useNavigationGuard } from "@/components/NavigationGuard";
 import { AvatarDialog } from "@/components/features/profile/AvatarDialog";
@@ -136,6 +137,7 @@ export default function PerfilPage() {
       nombre: perfil.nombre,
       apellido: perfil.apellido,
       nombre_usuario: perfil.nombre_usuario,
+      pais: perfil.pais,
       avatar_id: perfil.avatar_id,
     });
     setErrores({});
@@ -166,6 +168,7 @@ export default function PerfilPage() {
       apellido: normalizarNombre(borrador.apellido),
     };
     const nuevosErrores = {
+      pais: limpio.pais ? "" : t("common.country.required"),
       nombre: validarNombre(limpio.nombre) ?? "",
       apellido: validarApellido(limpio.apellido) ?? "",
       nombre_usuario:
@@ -174,7 +177,7 @@ export default function PerfilPage() {
     };
     if (Object.values(nuevosErrores).some(Boolean)) {
       setErrores(nuevosErrores);
-      const primerCampo = (Object.keys(nuevosErrores) as Campo[]).find(
+      const primerCampo = (["nombre", "apellido", "nombre_usuario"] as Campo[]).find(
         (campo) => nuevosErrores[campo]
       );
       if (primerCampo) campoRefs.current[primerCampo]?.focus();
@@ -431,6 +434,7 @@ export default function PerfilPage() {
                     [t("common.fields.lastName"), perfil.apellido],
                     [t("common.fields.birthDate"), fechaVisible(perfil.fecha_nacimiento)],
                     [t("auth.signUp.genderLabel"), generoVisible(perfil.genero)],
+                    [t("common.fields.country"), formats.country(perfil.pais)],
                   ] as const
                 ).map(([etiqueta, valor]) => (
                   <div
@@ -468,12 +472,25 @@ export default function PerfilPage() {
                     "family-name"
                   )}
                 </div>
-                {campoEditable(
-                  "nombre_usuario",
-                  t("common.fields.username"),
-                  t("auth.signUp.usernameHelp"),
-                  "username"
-                )}
+                <div className="grid items-start gap-5 md:grid-cols-2">
+                  {campoEditable(
+                    "nombre_usuario",
+                    t("common.fields.username"),
+                    t("auth.signUp.usernameHelp"),
+                    "username"
+                  )}
+                  <CountrySelect
+                    id={`${ids}-pais`}
+                    value={borrador.pais}
+                    onChange={(pais) => {
+                      setBorrador((actual) => (actual ? { ...actual, pais } : actual));
+                      setErrores((actual) => ({ ...actual, pais: "" }));
+                    }}
+                    error={errores.pais}
+                    className="gap-1.5"
+                    selectClassName={CAMPO}
+                  />
+                </div>
                 <div className="flex flex-col gap-3">
                   <p
                     id={`${ids}-lectura`}

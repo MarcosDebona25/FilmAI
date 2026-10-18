@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Check, Circle } from "lucide-react";
 
 import { AccessShell } from "@/components/access/AccessShell";
+import { CountrySelect } from "@/components/CountrySelect";
 import { ConfirmationSent } from "@/components/access/ConfirmationSent";
 import { GoogleMark } from "@/components/access/GoogleMark";
 import { AccessLogo } from "@/components/access/Logo";
@@ -33,6 +34,7 @@ type Campo =
   | "nombre"
   | "apellido"
   | "nombre_usuario"
+  | "pais"
   | "correo"
   | "fecha_nacimiento"
   | "genero"
@@ -65,6 +67,7 @@ export default function RegisterPage() {
     nombre: "",
     apellido: "",
     nombre_usuario: "",
+    pais: "",
     correo: "",
     fecha_nacimiento: "",
     genero: "",
@@ -93,6 +96,7 @@ export default function RegisterPage() {
     nombre: (v) => validarNombre(v),
     apellido: (v) => validarApellido(v),
     nombre_usuario: (v) => validarNombreUsuario(v),
+    pais: (v) => (v ? null : common("country.required")),
     correo: (v) => validarCorreo(v),
     fecha_nacimiento: (v) => validarFechaNacimiento(v),
     genero: (v) => (v ? null : errors("required")),
@@ -145,6 +149,7 @@ export default function RegisterPage() {
         body: {
           correo: form.correo,
           nombre_usuario: form.nombre_usuario,
+          pais: form.pais,
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
           fecha_nacimiento: form.fecha_nacimiento,
@@ -248,17 +253,25 @@ export default function RegisterPage() {
               help={t("signUp.nameHelp")}
             />
           </div>
-          <TextField
-            label={common("fields.username")}
-            name="nombre_usuario"
-            autoComplete="username"
-            prefix="@"
-            value={form.nombre_usuario}
-            onChange={(e) => setField("nombre_usuario", e.target.value)}
-            error={usernameError}
-            status={usernameStatus}
-            help={t("signUp.usernameHelp")}
-          />
+          <div className="grid grid-cols-1 gap-[22px] sm:grid-cols-2 sm:gap-4">
+            <TextField
+              label={common("fields.username")}
+              name="nombre_usuario"
+              autoComplete="username"
+              prefix="@"
+              value={form.nombre_usuario}
+              onChange={(e) => setField("nombre_usuario", e.target.value)}
+              error={usernameError}
+              status={usernameStatus}
+              help={t("signUp.usernameHelp")}
+            />
+            <CountrySelect
+              value={form.pais}
+              onChange={(code) => setField("pais", code)}
+              onBlur={() => setSucios((prev) => ({ ...prev, pais: true }))}
+              error={mostrar("pais", true)}
+            />
+          </div>
           <TextField
             label={common("fields.email")}
             name="correo"

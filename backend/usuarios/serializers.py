@@ -39,13 +39,23 @@ from .exceptions import (
     cuenta_inactiva_login,
 )
 from .models import EstadoCuenta, TipoGenero, Usuario
+from .paises import es_pais_valido
 from .passwords import guardar_contrasena
 from .validators import MINIMUM_AGE, USERNAME_REGEX, validar_nombre_persona
 
 logger = logging.getLogger(__name__)
 
 # Campos que Google no provee y debe completar un usuario nuevo
-CAMPOS_FALTANTES_GOOGLE = ("nombre_usuario", "fecha_nacimiento", "genero")
+CAMPOS_FALTANTES_GOOGLE = ("nombre_usuario", "fecha_nacimiento", "genero", "pais")
+
+
+def validar_pais(value):
+    """El país debe ser un código ISO 3166-1 alfa-2 de la lista del contrato."""
+    if not es_pais_valido(value):
+        raise serializers.ValidationError(
+            "Elegí un país de la lista.", code="country_invalid"
+        )
+    return value
 
 
 class LoginSerializer(BaseLoginSerializer):
@@ -95,6 +105,7 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     apellido = serializers.CharField(max_length=50)
     fecha_nacimiento = serializers.DateField(input_formats=["%Y-%m-%d", "%d/%m/%Y"])
     genero = serializers.ChoiceField(choices=TipoGenero.choices)
+    pais = serializers.CharField(max_length=2)
     acepta_terminos = serializers.BooleanField()
 
     def __init__(self, *args, **kwargs):
@@ -139,6 +150,9 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     def validate_apellido(self, value):
         return self.validate_nombre(value)
 
+    def validate_pais(self, value):
+        return validar_pais(value)
+
     def validate_fecha_nacimiento(self, value):
         hoy = date.today()
         if value > hoy:
@@ -176,6 +190,7 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
             "apellido": self.validated_data.get("apellido", ""),
             "fecha_nacimiento": self.validated_data.get("fecha_nacimiento"),
             "genero": self.validated_data.get("genero", TipoGenero.NO_ESPECIFICA),
+            "pais": self.validated_data.get("pais", ""),
             "password1": self.validated_data.get("password1", ""),
             "password2": self.validated_data.get("password2", ""),
         }
@@ -189,6 +204,7 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
         required=False, input_formats=["%Y-%m-%d", "%d/%m/%Y"]
     )
     genero = serializers.ChoiceField(choices=TipoGenero.choices, required=False)
+    pais = serializers.CharField(max_length=2, required=False)
     acepta_terminos = serializers.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
@@ -212,6 +228,9 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
                 "El nombre de usuario ya está registrado.", code="username_already_used"
             )
         return value
+
+    def validate_pais(self, value):
+        return validar_pais(value)
 
     def validate_fecha_nacimiento(self, value):
         hoy = date.today()
@@ -480,6 +499,7 @@ class UsuarioPerfilSerializer(FronteraUsuarioMixin, serializers.ModelSerializer)
             "apellido",
             "fecha_nacimiento",
             "genero",
+            "pais",
             "avatar_id",
             "estado",
             "fecha_registro",
@@ -516,6 +536,9 @@ class UsuarioPerfilSerializer(FronteraUsuarioMixin, serializers.ModelSerializer)
 
     def validate_apellido(self, value):
         return self.validate_nombre(value)
+
+    def validate_pais(self, value):
+        return validar_pais(value)
 
     def update(self, instance, validated_data):
         for campo, valor in validated_data.items():

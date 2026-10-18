@@ -20,7 +20,8 @@ declare const messages: {
       "favorite": "Favorita",
       "watched": "Vista",
       "watchlist": "Pendiente",
-      "noPoster": "Sin póster"
+      "noPoster": "Sin póster",
+      "addedOnLabel": "Agregada a esta lista el {date}"
     },
     "carousel": {
       "seeMore": "Ver más",
@@ -100,7 +101,8 @@ declare const messages: {
       "username": "Nombre de usuario",
       "birthDate": "Fecha de nacimiento",
       "passwordConfirm": "Confirmar contraseña",
-      "email": "Correo electrónico"
+      "email": "Correo electrónico",
+      "country": "País"
     },
     "text": {
       "readLess": "Leer menos",
@@ -133,6 +135,10 @@ declare const messages: {
       "chooseTitle": "Elegí un avatar",
       "optionsLabel": "Avatares",
       "optionLabel": "Avatar {number}"
+    },
+    "country": {
+      "placeholder": "Elegí tu país",
+      "required": "Elegí un país para continuar."
     }
   },
   "legacy": {
@@ -383,6 +389,22 @@ declare const messages: {
     },
     "actions": {
       "signedOutPrompt": "Ingresá para calificar o guardar"
+    },
+    "providers": {
+      "lead": "Ver o alquilar",
+      "options": "{count, plural, one {# opción} other {# opciones}} en {country}",
+      "panelTitle": "Dónde ver",
+      "groups": {
+        "stream": "Streaming",
+        "free": "Gratis",
+        "rent": "Alquiler",
+        "buy": "Compra"
+      },
+      "unavailable": "Todavía no está disponible para ver, alquilar ni comprar en {country}.",
+      "loading": "Cargando plataformas…",
+      "seeAll": "Ver todas las opciones en TMDB",
+      "newTabHint": "(se abre en otra pestaña)",
+      "attribution": "Datos de <link>JustWatch</link>"
     }
   },
   "footer": {
@@ -785,6 +807,7 @@ declare const messages: {
       "username_not_allowed": "No podés usar ese nombre de usuario. Elegí otro.",
       "person_name_invalid": "Usá solo letras y espacios para tu nombre o apellido.",
       "birth_date_in_future": "La fecha de nacimiento no puede estar en el futuro.",
+      "country_invalid": "Elegí un país de la lista.",
       "minimum_age": "Tenés que tener al menos {minAge, plural, one {# año} other {# años}} para crear una cuenta.",
       "avatar_invalid": "Elegí uno de los avatares disponibles.",
       "local_password_unavailable": "Tu cuenta no tiene contraseña local. Podés crear una con «¿Olvidaste tu contraseña?».",

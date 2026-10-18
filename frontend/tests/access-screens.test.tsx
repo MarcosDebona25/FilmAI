@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
 import { ApiError, apiFetch } from "@/lib/api";
-import { render, screen, waitFor } from "./render";
+import { render, screen, waitFor, within } from "./render";
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }));
 const params = vi.hoisted(() => ({ key: "clave%3Aabc" }));
@@ -51,6 +51,7 @@ async function fillRegister(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.firstName), "Juan");
   await user.type(screen.getByLabelText(en.common.fields.lastName), "Pérez");
   await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
+  await user.selectOptions(screen.getByLabelText(en.common.fields.country), "AR");
   await user.type(screen.getByLabelText(en.common.fields.email), "juan@example.com");
   await user.type(screen.getByLabelText(en.common.fields.birthDate), "1992-04-10");
   await user.selectOptions(screen.getByLabelText(en.auth.signUp.genderLabel), "masculino");
@@ -73,6 +74,27 @@ describe("registro", () => {
     await user.tab();
     expect(screen.queryAllByRole("alert")).toHaveLength(0);
     expect(screen.getByRole("button", { name: en.nav.account.signUp })).toBeDisabled();
+  });
+
+  it("el país arranca vacío aunque el navegador tenga región, ordenado por nombre y con error si queda vacío", async () => {
+    vi.spyOn(navigator, "language", "get").mockReturnValue("es-AR");
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "es" });
+    const pais = screen.getByLabelText(es.common.fields.country);
+    expect(pais).toHaveValue("");
+    expect(screen.getByRole("option", { name: es.common.country.placeholder })).toBeDisabled();
+    const nombres = within(pais)
+      .getAllByRole("option")
+      .slice(1)
+      .map((option) => option.textContent!);
+    expect(nombres).toHaveLength(249);
+    expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, "es-AR")));
+    expect(screen.getByRole("option", { name: "Argentina" })).toHaveValue("AR");
+    await user.click(pais);
+    await user.tab();
+    expect(await screen.findByText(es.common.country.required)).toBeInTheDocument();
+    await user.selectOptions(pais, "BR");
+    expect(screen.queryByText(es.common.country.required)).not.toBeInTheDocument();
   });
 
   it("el error de un campo aparece al escribir un valor inválido y se va al corregirlo", async () => {
@@ -156,6 +178,7 @@ describe("registro", () => {
     expect((options as { body: Record<string, unknown> }).body).toMatchObject({
       correo: "juan@example.com",
       nombre_usuario: "juanperez",
+      pais: "AR",
       acepta_terminos: true,
     });
     expect(
@@ -178,6 +201,7 @@ describe("registro", () => {
     await user.type(screen.getByLabelText(es.common.fields.firstName), "Juan");
     await user.type(screen.getByLabelText(es.common.fields.lastName), "Pérez");
     await user.type(screen.getByLabelText(es.common.fields.username), "juanperez");
+    await user.selectOptions(screen.getByLabelText(es.common.fields.country), "AR");
     await user.type(screen.getByLabelText(es.common.fields.email), "juan@example.com");
     await user.type(screen.getByLabelText(es.common.fields.birthDate), "1992-04-10");
     await user.selectOptions(screen.getByLabelText(es.auth.signUp.genderLabel), "masculino");

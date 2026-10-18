@@ -111,7 +111,6 @@ class PerfilTests(TestCase):
                 "user_permissions": [1],
                 "fecha_nacimiento": "2020-01-01",
                 "genero": "masculino",
-                "tema": "claro",
                 "perfil_publico": False,
             },
             content_type="application/json",

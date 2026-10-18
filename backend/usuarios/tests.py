@@ -74,6 +74,7 @@ class ConfirmarCorreoTests(TestCase):
         "apellido": "Correo",
         "fecha_nacimiento": "1995-05-10",
         "genero": "no_especifica",
+        "pais": "AR",
         "acepta_terminos": True,
         "password1": "Password123!",
         "password2": "Password123!",
@@ -397,6 +398,7 @@ class GoogleOAuthTests(TestCase):
             "nombre_usuario": "usuariogoogle",
             "fecha_nacimiento": "1995-05-10",
             "genero": "masculino",
+            "pais": "AR",
         }
 
         usuario = Usuario(correo="google@filmai.com")
@@ -498,6 +500,7 @@ class GoogleOAuthTests(TestCase):
             "nombre_usuario": "usuariogoogle",
             "fecha_nacimiento": "1995-05-10",
             "genero": "no_especifica",
+            "pais": "AR",
         }
         serializer, django_request = self._serializer_google(extra=extra)
         login = self._login_mock(is_existing=False)
@@ -526,6 +529,7 @@ class GoogleOAuthTests(TestCase):
                 "nombre_usuario": "usuariogoogle",
                 "fecha_nacimiento": date(1995, 5, 10),
                 "genero": "no_especifica",
+                "pais": "AR",
             },
         )
         self.assertIs(attrs["user"], login.account.user)
@@ -631,6 +635,7 @@ class GoogleOAuthTests(TestCase):
                 "nombre_usuario": "usuariogoogle",
                 "fecha_nacimiento": "1995-05-10",
                 "genero": "masculino",
+                "pais": "AR",
                 "acepta_terminos": True,
             }
         )
@@ -814,6 +819,7 @@ class SeguridadCamposAdministradorTests(TestCase):
                 "apellido": "Usuario",
                 "fecha_nacimiento": "2000-01-01",
                 "genero": "no_especifica",
+                "pais": "AR",
                 "acepta_terminos": True,
                 "password1": "Password123!",
                 "password2": "Password123!",

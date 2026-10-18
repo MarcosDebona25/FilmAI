@@ -22,13 +22,6 @@ class TipoGenero(models.TextChoices):
     NO_ESPECIFICA = "no_especifica", "No especifica"
 
 
-class Tema(models.TextChoices):
-    """Preferencia de tema de la interfaz (doc 03: 'oscuro' | 'claro')."""
-
-    OSCURO = "oscuro", "Oscuro"
-    CLARO = "claro", "Claro"
-
-
 class UsuarioManager(BaseUserManager):
     """Manager que usa `correo` como identificador de autenticación.
 
@@ -92,6 +85,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     apellido = models.CharField("apellido", max_length=50)
     fecha_nacimiento = models.DateField("fecha de nacimiento")
     genero = models.CharField("género", max_length=25, choices=TipoGenero.choices)
+    pais = models.CharField(
+        "país",
+        max_length=2,
+        help_text="Código ISO 3166-1 alfa-2 (lista en contracts/enums.json)",
+    )
     estado = models.CharField(
         "estado de cuenta",
         max_length=25,
@@ -112,12 +110,6 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         "id de avatar",
         default=1,
         help_text="Identificador dentro del conjunto de  avatares",
-    )
-    tema = models.CharField(
-        "tema",
-        max_length=10,
-        choices=Tema.choices,
-        default=Tema.OSCURO,
     )
     idioma = models.CharField(
         "idioma",
@@ -157,6 +149,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         "apellido",
         "fecha_nacimiento",
         "genero",
+        "pais",
     ]
 
     class Meta:
