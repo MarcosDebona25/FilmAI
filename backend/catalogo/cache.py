@@ -32,6 +32,10 @@ ENDPOINT_TTLS = {
     # El reparto de una producción ya estrenada casi no cambia: mismo TTL
     # largo que el detalle y las keywords.
     "credits": 24 * 3600,
+    # Disponibilidad en plataformas (JustWatch vía TMDB): son contratos que
+    # cambian seguido, así que el TTL es corto. Se cachea por título y no por
+    # país: la respuesta trae todos los países y un llamado sirve a todos.
+    "watch_providers": 12 * 3600,
     # La lista de cambios rueda a diario, así que 24 h sería demasiado; 6 h
     # alcanza para que una sync reintentada no vuelva a bajar ~100 páginas.
     "changes": 6 * 3600,
@@ -47,6 +51,7 @@ ENDPOINT_TTLS = {
 RESPALDO_TTL = 30 * 24 * 3600
 # La lista de cambios la usa la sync nocturna: con datos viejos refrescaría
 # mal sin enterarse. Ahí conviene que el fallo se vea.
+RESPALDO_TTLS = {"watch_providers": 7 * 24 * 3600}
 SIN_RESPALDO = frozenset({"changes"})
 # Con TMDB caído, cada pedido que sale del respaldo dejaría un aviso: uno por
 # endpoint cada 5 minutos alcanza para enterarse sin llenar el log.
@@ -120,7 +125,11 @@ class TMDBClientCache:
                 serializado = json.dumps(result)
                 self.redis.set(key, serializado, ex=ENDPOINT_TTLS[endpoint])
                 if endpoint not in SIN_RESPALDO:
-                    self.redis.set(_clave_respaldo(key), serializado, ex=RESPALDO_TTL)
+                    self.redis.set(
+                        _clave_respaldo(key),
+                        serializado,
+                        ex=RESPALDO_TTLS.get(endpoint, RESPALDO_TTL),
+                    )
             except redis.RedisError:
                 pass
         return result
@@ -271,6 +280,14 @@ class TMDBClientCache:
         params = {"id_tmdb": id_tmdb, "tipo": tipo}
         return self._cached_call(
             "credits", params, lambda: self.client.get_credits(id_tmdb, tipo)
+        )
+
+    def get_watch_providers(self, id_tmdb, tipo):
+        params = {"id_tmdb": id_tmdb, "tipo": tipo}
+        return self._cached_call(
+            "watch_providers",
+            params,
+            lambda: self.client.get_watch_providers(id_tmdb, tipo),
         )
 
     def get_changes(self, tipo, page=1):

@@ -10,6 +10,8 @@ const estado = vi.hoisted(() => ({
   path: "/movie/157336",
   mia: null as null | Record<string, unknown>,
   fallaDetalle: false,
+  /** Respuesta de `providers/`: `"error"` simula TMDB caído. */
+  plataformas: "AR" as "AR" | "CN" | "error",
   detalleColgado: false,
   /** Cuántos pedidos de las listas del usuario fallan antes de responder bien. */
   fallasListas: 0,
@@ -54,6 +56,13 @@ vi.mock("@/lib/api", async (importOriginal) => {
       }
       if (path === "/api/catalogo/movie/157336/credits/")
         return structuredClone(datos.CREDITOS_INTERSTELLAR);
+      if (path.startsWith("/api/catalogo/movie/157336/providers/")) {
+        if (estado.plataformas === "error")
+          throw new real.ApiError(502, { code: "upstream_error", params: {}, errors: [] });
+        return structuredClone(
+          estado.plataformas === "AR" ? datos.PLATAFORMAS_AR : datos.PLATAFORMAS_CN
+        );
+      }
       if (path === "/api/catalogo/tv/1396/") return structuredClone(datos.BREAKING_BAD);
       if (path === "/api/catalogo/tv/1396/credits/")
         return structuredClone(datos.CREDITOS_BREAKING_BAD);
@@ -101,6 +110,7 @@ beforeEach(() => {
   estado.path = "/movie/157336";
   estado.mia = null;
   estado.fallaDetalle = false;
+  estado.plataformas = "AR";
   estado.detalleColgado = false;
   estado.fallasListas = 0;
   estado.llamadas = [];
@@ -110,6 +120,55 @@ afterEach(() => vi.clearAllMocks());
 
 const pedidas = (prefijo: string, method = "GET") =>
   estado.llamadas.filter((l) => l.path.startsWith(prefijo) && l.method === method);
+
+describe("plataformas en la ficha", () => {
+  const PERFIL = { pk: 1, nombre: "Juan", apellido: "Pérez", pais: "AR" };
+
+  it("con sesión pide el país de la cuenta y la línea queda bajo los géneros", async () => {
+    estado.perfil = PERFIL;
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    const linea = await screen.findByRole("button", { name: /Stream or rent/ });
+    expect(linea).toHaveTextContent("3 options in Argentina");
+    expect(estado.llamadas.map((l) => l.path)).toContain(
+      "/api/catalogo/movie/157336/providers/?pais=AR"
+    );
+    const generos = screen.getByRole("list", { name: "Genres" });
+    expect(generos.compareDocumentPosition(linea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("sin sesión usa la región del navegador", async () => {
+    vi.spyOn(navigator, "languages", "get").mockReturnValue(["es-AR", "es"]);
+    render(<TitleView tipo="movie" id={157336} />, { locale: "es" });
+
+    expect(await screen.findByRole("button", { name: /Ver o alquilar/ })).toHaveTextContent(
+      "3 opciones en Argentina"
+    );
+    expect(estado.llamadas.map((l) => l.path)).toContain(
+      "/api/catalogo/movie/157336/providers/?pais=AR"
+    );
+  });
+
+  it("sin cuenta ni región del navegador no pide nada ni muestra la sección", async () => {
+    vi.spyOn(navigator, "languages", "get").mockReturnValue(["es"]);
+    vi.spyOn(navigator, "language", "get").mockReturnValue("es");
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    await screen.findByRole("heading", { level: 1, name: "Interstellar" });
+    expect(pedidas("/api/catalogo/movie/157336/providers/")).toHaveLength(0);
+    expect(screen.queryByText("Stream or rent")).not.toBeInTheDocument();
+  });
+
+  it("si TMDB falla la sección no aparece", async () => {
+    estado.perfil = PERFIL;
+    estado.plataformas = "error";
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    await screen.findByRole("heading", { level: 1, name: "Interstellar" });
+    await waitFor(() => expect(pedidas("/api/catalogo/movie/157336/providers/")).toHaveLength(1));
+    expect(screen.queryByText("Stream or rent")).not.toBeInTheDocument();
+  });
+});
 
 describe("ficha sin sesión", () => {
   it("muestra los datos, la miga, los créditos y la invitación a ingresar", async () => {

@@ -2,7 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 import type { ListaFicha } from "../lib/title-lists";
 import en from "../messages/en/common.json";
-import { CREDITOS_INTERSTELLAR, INTERSTELLAR } from "../tests/title-fixtures";
+import {
+  CREDITOS_INTERSTELLAR,
+  INTERSTELLAR,
+  PLATAFORMAS_AR,
+  PLATAFORMAS_CN,
+} from "../tests/title-fixtures";
 import { prepararCuenta } from "./cuenta";
 
 const viewports = [
@@ -64,10 +69,26 @@ async function prepararFicha(page: Page) {
       },
     ] as ListaFicha[],
     consultas: [] as string[],
+    /** Simula TMDB caído en `providers/`; si no, responde según `?pais=`. */
+    plataformasCaidas: false,
   };
   await page.route("**/api/catalogo/**", (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/credits/")) return route.fulfill({ json: CREDITOS_INTERSTELLAR });
+    if (path.endsWith("/providers/")) {
+      if (estado.plataformasCaidas)
+        return route.fulfill({
+          status: 502,
+          json: { code: "upstream_error", params: {}, errors: [] },
+        });
+      const pais = new URL(route.request().url()).searchParams.get("pais");
+      return route.fulfill({
+        json:
+          pais === "AR" || pais === "US"
+            ? { ...PLATAFORMAS_AR, pais }
+            : { ...PLATAFORMAS_CN, pais },
+      });
+    }
     return route.fulfill({ json: INTERSTELLAR });
   });
   await page.route("https://image.tmdb.org/**", (route) =>
@@ -187,6 +208,81 @@ for (const viewport of viewports) {
         page.getByRole("link", { name: en.title.actions.signedOutPrompt })
       ).toHaveAttribute("href", "/login?next=%2Fmovie%2F157336");
       await sinDesborde(page);
+    });
+
+    test("dónde verla: línea bajo los géneros y panel con grupos, TMDB y JustWatch", async ({
+      page,
+    }) => {
+      await prepararCuenta(page);
+      await prepararFicha(page);
+      await page.goto("/movie/157336");
+
+      const linea = page.getByRole("button", { name: /Stream or rent/ });
+      await expect(linea).toContainText("3 options in Argentina");
+      await expect(linea).toHaveAttribute("aria-expanded", "false");
+      const generos = await page.getByRole("list", { name: "Genres" }).boundingBox();
+      const lineaCaja = await linea.boundingBox();
+      expect(lineaCaja!.y).toBeGreaterThan(generos!.y + generos!.height - 1);
+      await sinDesborde(page);
+
+      await linea.click();
+      const panel = page.getByRole("dialog", { name: "Where to watch" });
+      await expect(panel.getByRole("heading", { name: "Stream" })).toBeVisible();
+      await expect(panel.getByRole("heading", { name: "Free" })).toHaveCount(0);
+      await expect(panel.getByAltText("Netflix").first()).toHaveAttribute("title", "Netflix");
+      await expect(panel.getByRole("link", { name: /See all options on TMDB/ })).toHaveAttribute(
+        "href",
+        PLATAFORMAS_AR.enlace
+      );
+      await expect(panel.getByRole("link", { name: "JustWatch" })).toHaveAttribute(
+        "href",
+        "https://www.justwatch.com"
+      );
+      await sinDesborde(page);
+      await page.keyboard.press("Escape");
+      await expect(panel).toHaveCount(0);
+    });
+
+    test("dónde verla: país sin disponibilidad", async ({ page }) => {
+      await prepararCuenta(page);
+      await page.route("**/api/profile/", (route) =>
+        route.fulfill({
+          json: {
+            pk: 1,
+            nombre: "Li",
+            apellido: "Wei",
+            nombre_usuario: "liwei",
+            pais: "CN",
+            idioma: "en",
+          },
+        })
+      );
+      await prepararFicha(page);
+      await page.goto("/movie/157336");
+
+      await expect(
+        page.getByText("Not available to stream, rent or buy in China yet.")
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: /Stream or rent/ })).toHaveCount(0);
+    });
+
+    test("dónde verla: sin sesión usa la región del navegador y si TMDB cae se oculta", async ({
+      page,
+    }) => {
+      await page.route("**/api/profile/", (route) =>
+        route.fulfill({ status: 401, json: { code: "not_authenticated", params: {}, errors: [] } })
+      );
+      const estado = await prepararFicha(page);
+      await page.goto("/movie/157336");
+      // `locale: en-US` -> región US.
+      await expect(page.getByRole("button", { name: /Stream or rent/ })).toContainText(
+        "United States"
+      );
+
+      estado.plataformasCaidas = true;
+      await page.goto("/movie/157336?otra=1");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Interstellar");
+      await expect(page.getByText("Stream or rent")).toHaveCount(0);
     });
 
     test("calificar con reseña, borrar el texto y conservar la nota", async ({ page }) => {

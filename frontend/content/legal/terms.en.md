@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-07
+updated: 2026-10-18
 ---
 
 # Terms and Conditions
@@ -47,7 +47,7 @@ The FilmAI assistant generates recommendations from your ratings and the availab
 
 ## 7. Third-party content
 
-Data and images of movies and TV shows are provided by TMDB. FilmAI is an independent project and is not affiliated with or endorsed by TMDB. We are not responsible for errors or omissions in that information.
+Data and images of movies and TV shows are provided by TMDB. FilmAI is an independent project and is not affiliated with or endorsed by TMDB. We are not responsible for errors or omissions in that information. Streaming availability ("Where to watch") is provided by JustWatch through TMDB and may change without notice.
 
 ## 8. Intellectual property
 
@@ -55,7 +55,7 @@ The FilmAI brand, its design, and its code belong to its creators. The posters, 
 
 ## 9. Personal data
 
-We process your personal data only to provide the service: managing your account, showing your public activity, and generating recommendations. Your email, date of birth, and gender are not shown to other people. You can request access to, correction of, or deletion of your data by writing to us.
+We process your personal data only to provide the service: managing your account, showing your public activity, and generating recommendations. We ask for your country to show which streaming services offer a title where you live; we do not use it for anything else. Your email, date of birth, gender, and country are not shown to other people. You can request access to, correction of, or deletion of your data by writing to us.
 
 ## 10. Limitation of liability
 
