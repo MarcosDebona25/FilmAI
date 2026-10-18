@@ -67,7 +67,7 @@ export function HomeHero({
       */}
       {cargando ? (
         <div className="relative min-h-[560px] flex-1 md:static md:min-h-0">
-          <div className="absolute inset-0 animate-pulse bg-raised motion-reduce:animate-none" />
+          <div className="absolute inset-0 bg-raised" />
         </div>
       ) : (
         titulo?.backdrop && (
