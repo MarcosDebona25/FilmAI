@@ -52,6 +52,7 @@ function confirmacion() {
 
 async function completar(user: Usuario, copy: typeof en | typeof es = en) {
   await user.type(screen.getByLabelText(copy.common.fields.username), "juanperez");
+  await user.selectOptions(screen.getByLabelText(copy.common.fields.country), "AR");
   await user.type(screen.getByLabelText(copy.common.fields.birthDate), "1992-04-10");
   await user.selectOptions(screen.getByLabelText(copy.auth.signUp.genderLabel), "masculino");
   await user.click(screen.getByRole("checkbox"));
@@ -111,6 +112,22 @@ describe("alta con Google", () => {
     expect(screen.getByText(en.auth.signUp.submitPending)).toBeInTheDocument();
   });
 
+  it("el país arranca vacío, sin elegir por el navegador, y es obligatorio", async () => {
+    vi.spyOn(navigator, "language", "get").mockReturnValue("es-AR");
+    const user = userEvent.setup();
+    render(<CompletarGooglePage />, { locale: "en" });
+    const pais = screen.getByLabelText(en.common.fields.country);
+
+    expect(pais).toHaveValue("");
+    expect(screen.getByRole("option", { name: en.common.country.placeholder })).toBeDisabled();
+    await user.click(pais);
+    await user.tab();
+    expect(await screen.findByText(en.common.country.required)).toBeInTheDocument();
+    expect(pais).toHaveAttribute("aria-invalid", "true");
+    await user.selectOptions(pais, "AR");
+    expect(screen.queryByText(en.common.country.required)).not.toBeInTheDocument();
+  });
+
   it("con los datos válidos, el username disponible y los términos se activa", async () => {
     const user = userEvent.setup();
     render(<CompletarGooglePage />, { locale: "en" });
@@ -130,6 +147,7 @@ describe("alta con Google", () => {
     render(<CompletarGooglePage />, { locale: "en" });
 
     await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
+    await user.selectOptions(screen.getByLabelText(en.common.fields.country), "AR");
     await user.type(screen.getByLabelText(en.common.fields.birthDate), "1992-04-10");
     await user.selectOptions(screen.getByLabelText(en.auth.signUp.genderLabel), "masculino");
     await user.click(screen.getByRole("checkbox"));
@@ -152,6 +170,7 @@ describe("alta con Google", () => {
       body: {
         id_token: "token-fresco",
         nombre_usuario: "juanperez",
+        pais: "AR",
         fecha_nacimiento: "1992-04-10",
         genero: "masculino",
         acepta_terminos: true,

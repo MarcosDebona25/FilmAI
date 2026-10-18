@@ -2,7 +2,7 @@ import { translateError, type CodedError } from "./errors";
 import { synchronizeAccountLocale } from "./account-locale";
 import { ApiError, apiFetch } from "@/lib/api";
 
-const CAMPOS_FALTANTES = ["nombre_usuario", "fecha_nacimiento", "genero"];
+const CAMPOS_FALTANTES = ["nombre_usuario", "pais", "fecha_nacimiento", "genero"];
 
 // Marca el flujo de registro con Google pendiente (protege /complete-signup).
 // NO se guarda el id_token: es de un solo uso (anti-replay de allauth) y en la
@@ -74,6 +74,7 @@ export async function completarRegistroGoogle(
   idToken: string,
   campos: {
     nombre_usuario: string;
+    pais: string;
     fecha_nacimiento: string;
     genero: string;
     acepta_terminos: boolean;

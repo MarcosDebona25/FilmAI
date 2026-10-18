@@ -19,7 +19,7 @@ type Interruptor = "perfil_publico" | "notif_recomendaciones" | "notif_resenas" 
 
 /**
  * Settings según el canvas («Settings · desktop / mobile»). Sin selector de
- * tema: por ahora la app es solo oscura (15/10/2026). «Perfil público» queda
+ * tema: la app es solo oscura. «Perfil público» queda
  * aunque el canvas no lo tiene, por decisión del usuario, con el aviso de que
  * todavía no cambia nada.
  */

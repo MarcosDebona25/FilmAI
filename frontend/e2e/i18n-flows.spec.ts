@@ -23,6 +23,8 @@ for (const locale of ["en", "es"] as const) {
       await route.fulfill({ status: 201, json: { code: "registration_pending_confirmation" } });
     });
     await page.goto("/register");
+    // Rellenar antes de hidratar pierde el primer campo (dev server en frío).
+    await page.waitForLoadState("networkidle");
     for (const [name, value] of Object.entries({
       nombre: "Ana",
       apellido: "Pérez",
@@ -33,6 +35,7 @@ for (const locale of ["en", "es"] as const) {
       password2: "Password123*",
     }))
       await page.locator(`[name="${name}"]`).fill(value);
+    await page.locator('select[name="pais"]').selectOption("BR");
     await page.locator('select[name="genero"]').selectOption("no_especifica");
     await page.locator('[name="acepta_terminos"]').check();
     await page.getByRole("button", { name: messages.nav.account.signUp, exact: true }).click();

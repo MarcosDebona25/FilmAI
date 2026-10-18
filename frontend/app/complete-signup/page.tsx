@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
+import { CountrySelect } from "@/components/CountrySelect";
 import { GoogleButton } from "@/components/GoogleButton";
 import { AccessShell } from "@/components/access/AccessShell";
 import { GoogleMark } from "@/components/access/GoogleMark";
@@ -24,8 +25,8 @@ import { useUsernameAvailability } from "@/lib/use-username-availability";
 import { useValidation } from "@/lib/use-validation";
 import { maxFechaNacimiento } from "@/lib/validation";
 
-type Campo = "nombre_usuario" | "fecha_nacimiento" | "genero";
-const CAMPOS: Campo[] = ["nombre_usuario", "fecha_nacimiento", "genero"];
+type Campo = "nombre_usuario" | "pais" | "fecha_nacimiento" | "genero";
+const CAMPOS: Campo[] = ["nombre_usuario", "pais", "fecha_nacimiento", "genero"];
 const ERROR_DELAY_MS = 600;
 
 /**
@@ -46,6 +47,7 @@ export default function CompletarGooglePage() {
 
   const [form, setForm] = useState<Record<Campo, string>>({
     nombre_usuario: "",
+    pais: "",
     fecha_nacimiento: "",
     genero: "",
   });
@@ -85,6 +87,7 @@ export default function CompletarGooglePage() {
   function validarCampo(campo: Campo, valor: string): string | null {
     if (campo === "nombre_usuario") return validarNombreUsuario(valor);
     if (campo === "fecha_nacimiento") return validarFechaNacimiento(valor);
+    if (campo === "pais") return valor ? null : common("country.required");
     return valor ? null : errors("required");
   }
 
@@ -121,6 +124,7 @@ export default function CompletarGooglePage() {
     try {
       const result = await completarRegistroGoogle(idToken, {
         nombre_usuario: form.nombre_usuario,
+        pais: form.pais,
         fecha_nacimiento: form.fecha_nacimiento,
         genero: form.genero,
         acepta_terminos: true,
@@ -183,17 +187,25 @@ export default function CompletarGooglePage() {
           noValidate
           className="flex flex-col gap-5 lg:gap-[22px]"
         >
-          <TextField
-            label={common("fields.username")}
-            name="nombre_usuario"
-            autoComplete="username"
-            prefix="@"
-            value={form.nombre_usuario}
-            onChange={(e) => setField("nombre_usuario", e.target.value)}
-            error={usernameError}
-            status={usernameStatus}
-            help={signUp("usernameHelp")}
-          />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
+            <TextField
+              label={common("fields.username")}
+              name="nombre_usuario"
+              autoComplete="username"
+              prefix="@"
+              value={form.nombre_usuario}
+              onChange={(e) => setField("nombre_usuario", e.target.value)}
+              error={usernameError}
+              status={usernameStatus}
+              help={signUp("usernameHelp")}
+            />
+            <CountrySelect
+              value={form.pais}
+              onChange={(code) => setField("pais", code)}
+              onBlur={() => setSucios((prev) => ({ ...prev, pais: true }))}
+              error={mostrar("pais")}
+            />
+          </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
             <TextField
               label={common("fields.birthDate")}

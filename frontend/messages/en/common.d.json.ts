@@ -20,7 +20,8 @@ declare const messages: {
       "favorite": "Favorite",
       "watched": "Watched",
       "watchlist": "Watchlist",
-      "noPoster": "No poster"
+      "noPoster": "No poster",
+      "addedOnLabel": "Added to this list on {date}"
     },
     "carousel": {
       "seeMore": "See more",
@@ -100,7 +101,8 @@ declare const messages: {
       "username": "Username",
       "birthDate": "Date of birth",
       "passwordConfirm": "Confirm password",
-      "email": "Email"
+      "email": "Email",
+      "country": "Country"
     },
     "text": {
       "readLess": "Read less",
@@ -133,6 +135,10 @@ declare const messages: {
       "chooseTitle": "Choose an avatar",
       "optionsLabel": "Avatars",
       "optionLabel": "Avatar {number}"
+    },
+    "country": {
+      "placeholder": "Choose your country",
+      "required": "Choose a country to continue."
     }
   },
   "legacy": {
@@ -383,6 +389,22 @@ declare const messages: {
     },
     "actions": {
       "signedOutPrompt": "Log in to rate or save"
+    },
+    "providers": {
+      "lead": "Stream or rent",
+      "options": "{count, plural, one {# option} other {# options}} in {country}",
+      "panelTitle": "Where to watch",
+      "groups": {
+        "stream": "Stream",
+        "free": "Free",
+        "rent": "Rent",
+        "buy": "Buy"
+      },
+      "unavailable": "Not available to stream, rent or buy in {country} yet.",
+      "loading": "Loading streaming options…",
+      "seeAll": "See all options on TMDB",
+      "newTabHint": "(opens in a new tab)",
+      "attribution": "Data by <link>JustWatch</link>"
     }
   },
   "footer": {
@@ -785,6 +807,7 @@ declare const messages: {
       "username_not_allowed": "You can’t use that username. Choose another one.",
       "person_name_invalid": "Use only letters and spaces for your first or last name.",
       "birth_date_in_future": "Your date of birth can’t be in the future.",
+      "country_invalid": "Choose a country from the list.",
       "minimum_age": "You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.",
       "avatar_invalid": "Choose one of the available avatars.",
       "local_password_unavailable": "Your account doesn’t have a local password. You can create one with “Forgot your password?”.",

@@ -18,7 +18,7 @@ class PreferenciasIdiomaTests(TestCase):
         self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
 
     def test_cambio_de_idioma_persiste_y_conserva_otras_preferencias(self):
-        """Elegir ES/EN no cambia tema ni preferencias omitidas."""
+        """Elegir ES/EN no cambia las demás preferencias omitidas."""
         for idioma in ("es", "en"):
             with self.subTest(idioma=idioma):
                 response = self.client.put(
@@ -30,7 +30,7 @@ class PreferenciasIdiomaTests(TestCase):
                 self.usuario.refresh_from_db()
                 self.assertEqual(self.usuario.idioma, idioma)
                 self.assertEqual(response.json()["idioma"], idioma)
-                self.assertEqual(response.json()["tema"], "oscuro")
+                self.assertEqual(response.json()["perfil_publico"], True)
                 self.assertEqual(
                     self.client.get("/api/preferences/").json()["idioma"], idioma
                 )
@@ -81,6 +81,7 @@ class RegistroIdiomaTests(TestCase):
                     "apellido": "Nueva",
                     "fecha_nacimiento": "1990-01-01",
                     "genero": "no_especifica",
+                    "pais": "AR",
                     "acepta_terminos": True,
                     "password1": "Password123!",
                     "password2": "Password123!",
@@ -116,6 +117,7 @@ class RegistroIdiomaTests(TestCase):
                     "nombre_usuario": f"googleidioma{indice}",
                     "fecha_nacimiento": "1990-01-01",
                     "genero": "no_especifica",
+                    "pais": "AR",
                 }
                 login = SocialLogin(
                     user=Usuario(correo=correo),

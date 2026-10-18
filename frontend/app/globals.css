@@ -69,44 +69,10 @@
    - Texto:        #ededf2, secundario #a6a6b8 (canvas de diseño, 12/10/2026)
    - Peligro:      #f2483b  (--danger)
    ============================================================================= */
+/* Solo tema oscuro (18/10/2026): la paleta clara se descartó. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #e67e22;
-  --primary-foreground: #121212;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --destructive: #dc2626;
-  --destructive-button: #b91c1c;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #f5c518;
-  --chart-1: #f5c518;
-  --chart-2: #e67e22;
-  --chart-3: #e74c3c;
-  --chart-4: #2ecc71;
-  --chart-5: #3498db;
-  --radius: 0.625rem;
-  --sidebar: #fafafa;
-  --sidebar-foreground: #171717;
-  --sidebar-primary: #e67e22;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: #f5c518;
-}
-
-.dark {
   color-scheme: dark;
+  --radius: 0.625rem;
   --background: #0d0d14;
   --foreground: #ededf2;
   --card: #15151f;

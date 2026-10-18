@@ -32,6 +32,18 @@ test("edita nombre compuesto y avatar; la navbar refleja el cambio", async ({ pa
   ).toBeVisible();
 });
 
+test("muestra el país en Datos personales y se edita en Editar perfil", async ({ page }) => {
+  const cuenta = await prepararCuenta(page);
+  await page.goto("/profile");
+  await expect(page.getByText("Argentina", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Editar perfil" }).click();
+  await expect(page.getByLabel("País")).toHaveValue("AR");
+  await page.getByLabel("País").selectOption("CN");
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page.getByText("China", { exact: true })).toBeVisible();
+  expect(cuenta.getPerfil()).toMatchObject({ pais: "CN" });
+});
+
 test("enfoca el dato inválido y advierte antes de perder cambios", async ({ page }) => {
   await prepararCuenta(page);
   await page.goto("/profile");
@@ -88,24 +100,22 @@ test("confirma navegación a un enlace y atrás/adelante sin perder el destino",
   await page.getByRole("button", { name: "Salir sin guardar" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/home");
 });
-// Solo tema oscuro desde el 15/10/2026.
-for (const theme of ["oscuro"])
-  test(`disponibilidad verde y roja en tema ${theme}`, async ({ page }) => {
-    await prepararCuenta(page);
-    await page.route("**/api/preferences/", (route) =>
-      route.fulfill({ json: { tema: theme, perfil_publico: true } })
-    );
-    await page.route("**/api/auth/username-available/**", (route) =>
-      route.fulfill({ json: { disponible: !route.request().url().includes("ocupado") } })
-    );
-    await page.goto("/profile");
-    await page.getByRole("button", { name: "Editar perfil" }).click();
-    await page.getByLabel("Nombre de usuario", { exact: true }).fill("disponible");
-    // Colores del canvas: `ok` y `destructive`.
-    await expect(page.getByText("Disponible", { exact: true })).toHaveClass(/text-ok/);
-    await page.getByLabel("Nombre de usuario", { exact: true }).fill("ocupado");
-    await expect(page.getByText("No disponible", { exact: true })).toHaveClass(/text-destructive/);
-  });
+test("disponibilidad verde y roja", async ({ page }) => {
+  await prepararCuenta(page);
+  await page.route("**/api/preferences/", (route) =>
+    route.fulfill({ json: { perfil_publico: true } })
+  );
+  await page.route("**/api/auth/username-available/**", (route) =>
+    route.fulfill({ json: { disponible: !route.request().url().includes("ocupado") } })
+  );
+  await page.goto("/profile");
+  await page.getByRole("button", { name: "Editar perfil" }).click();
+  await page.getByLabel("Nombre de usuario", { exact: true }).fill("disponible");
+  // Colores del canvas: `ok` y `destructive`.
+  await expect(page.getByText("Disponible", { exact: true })).toHaveClass(/text-ok/);
+  await page.getByLabel("Nombre de usuario", { exact: true }).fill("ocupado");
+  await expect(page.getByText("No disponible", { exact: true })).toHaveClass(/text-destructive/);
+});
 
 test("adelante con cambios permite continuar editando o confirmar el destino", async ({ page }) => {
   await prepararCuenta(page);

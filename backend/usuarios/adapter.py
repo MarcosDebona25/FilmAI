@@ -29,6 +29,7 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
 
         user.fecha_nacimiento = data.get("fecha_nacimiento")
         user.genero = data.get("genero", TipoGenero.NO_ESPECIFICA)
+        user.pais = data.get("pais", "")
         user.idioma = idioma_efectivo(request, user)
         user.fecha_aceptacion_terminos = timezone.now()
 
@@ -116,6 +117,7 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
         user.fecha_nacimiento = parse_date(fecha) if isinstance(fecha, str) else fecha
 
         user.genero = extra.get("genero") or TipoGenero.NO_ESPECIFICA
+        user.pais = extra.get("pais") or ""
         user.fecha_aceptacion_terminos = timezone.now()
 
         return user

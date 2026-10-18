@@ -18,6 +18,7 @@ export type Perfil = {
   nombre: string;
   apellido: string;
   nombre_usuario: string;
+  pais: string;
   correo: string;
   fecha_nacimiento: string;
   genero: string;
@@ -29,7 +30,6 @@ export type Perfil = {
 export type AvatarOption = { id: number; src: string };
 export type Preferencias = {
   idioma: AppLocale | null;
-  tema: "oscuro" | "claro";
   perfil_publico: boolean;
   notif_recomendaciones: boolean;
   notif_resenas: boolean;
@@ -52,17 +52,6 @@ type AccountContextValue = {
 };
 
 const AccountContext = createContext<AccountContextValue | null>(null);
-
-/**
- * Solo tema oscuro por ahora (15/10/2026): los tokens propios de la app
- * (superficies, líneas, textos, velos) existen solo para oscuro, y con «claro»
- * la interfaz se rompía. La preferencia `tema` se sigue guardando en la API
- * para cuando exista la paleta clara del canvas; hasta entonces se ignora.
- */
-function aplicarTema() {
-  document.documentElement.classList.add("dark");
-  document.documentElement.style.colorScheme = "dark";
-}
 
 export function AccountProvider({
   children,
@@ -98,7 +87,6 @@ export function AccountProvider({
     setPerfil(null);
     setPreferencias(null);
     setAvatares([]);
-    aplicarTema();
   }, []);
 
   const recargar = useCallback(async () => {
@@ -116,7 +104,6 @@ export function AccountProvider({
       ]);
       setAvatares(catalogo);
       setPreferencias(ajustes);
-      aplicarTema();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         limpiar();
@@ -182,17 +169,14 @@ export function AccountProvider({
     }
     const optimista = { ...anterior, [campo]: valor };
     setPreferencias(optimista);
-    if (campo === "tema") aplicarTema();
     try {
       const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
         method: "PUT",
         body: { [campo]: valor },
       });
       setPreferencias(confirmada);
-      aplicarTema();
     } catch (err) {
       setPreferencias(anterior);
-      aplicarTema();
       throw err;
     }
   }

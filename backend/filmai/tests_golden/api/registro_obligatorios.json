@@ -45,6 +45,11 @@
         "params": {}
       },
       {
+        "field": "pais",
+        "code": "required",
+        "params": {}
+      },
+      {
         "field": "acepta_terminos",
         "code": "required",
         "params": {}
