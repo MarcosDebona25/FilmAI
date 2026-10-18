@@ -34,7 +34,7 @@ test("baja: advertencia aprobada, cancelar y confirmar", async ({ page }) => {
     await route.fulfill({ status: 200, json: { code: "account_deactivated_successfully" } });
   });
   await page.goto("/settings");
-  await page.getByRole("button", { name: "Dar de baja cuenta" }).click();
+  await page.getByRole("button", { name: "Dar de baja la cuenta" }).click();
   const confirmacion = page.getByRole("alertdialog");
   await expect(confirmacion).toContainText("Esta acción es irreversible.");
   await expect(confirmacion).toContainText(
@@ -43,7 +43,7 @@ test("baja: advertencia aprobada, cancelar y confirmar", async ({ page }) => {
   await expect(confirmacion).not.toContainText("se conservarán");
   await confirmacion.getByRole("button", { name: "Cancelar", exact: true }).click();
   expect(calls).toBe(0);
-  await page.getByRole("button", { name: "Dar de baja cuenta" }).click();
+  await page.getByRole("button", { name: "Dar de baja la cuenta" }).click();
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Dar de baja", exact: true })

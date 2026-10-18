@@ -1,6 +1,39 @@
 {
+  "nav": {
+    "main": {
+      "brandHomeLabel": "FilmAI, ir al inicio",
+      "mainLabel": "Principal",
+      "home": "Inicio",
+      "search": "Buscar",
+      "lists": "Listas",
+      "profileShort": "Perfil",
+      "skipToContent": "Saltar al contenido",
+      "profile": "Mi perfil",
+      "ratingsReviews": "Calificaciones y reseñas",
+      "settings": "Preferencias",
+      "terms": "Términos y condiciones",
+      "breadcrumbLabel": "Ruta",
+      "brandLandingLabel": "FilmAI, volver a la portada",
+      "backHome": "Volver al inicio",
+      "brandLandingAlt": "FilmAI, ir a la portada",
+      "backLanding": "Volver a la portada",
+      "termsUpdated": "Última actualización: {date}",
+      "termsOnPage": "En esta página"
+    },
+    "account": {
+      "userMenuLabel": "Menú de {name}",
+      "optionsLabel": "Opciones de usuario",
+      "logOut": "Cerrar sesión",
+      "logIn": "Ingresar",
+      "signUp": "Registrarse",
+      "deactivateTitle": "Dar de baja la cuenta",
+      "deactivateConfirmTitle": "¿Dar de baja tu cuenta?",
+      "deactivate": "Dar de baja",
+      "logoutConfirmTitle": "¿Querés cerrar sesión?",
+      "logoutConfirmDescription": "Vas a salir de FilmAI en este dispositivo."
+    }
+  },
   "common": {
-    "brand": "FilmAI",
     "content": {
       "typeLabel": "Tipo de contenido",
       "all": "Todo",
@@ -19,11 +52,6 @@
       "watchlist": "Pendiente",
       "noPoster": "Sin póster",
       "addedOnLabel": "Agregada a esta lista el {date}"
-    },
-    "carousel": {
-      "seeMore": "Ver más",
-      "previous": "Anteriores",
-      "next": "Siguientes"
     },
     "rating": {
       "rate": "Calificar",
@@ -69,9 +97,6 @@
     "search": {
       "placeholder": "Buscar películas y series"
     },
-    "feedback": {
-      "dismissLabel": "Cerrar aviso"
-    },
     "filters": {
       "clear": "Limpiar filtros",
       "sortLabel": "Ordenar",
@@ -109,10 +134,6 @@
       "showLess": "Mostrar menos",
       "showMore": "Mostrar {count} más"
     },
-    "pagination": {
-      "previous": "Anterior",
-      "next": "Siguiente"
-    },
     "password": {
       "showLabel": "Mostrar contraseña",
       "currentLabel": "Contraseña actual",
@@ -138,131 +159,6 @@
       "required": "Elegí un país para continuar."
     }
   },
-  "legacy": {
-    "metadata": {
-      "myReviews": "Mis reseñas",
-      "description": "Plataforma de reseñas cinematográficas con recomendaciones inteligentes.",
-      "profile": "Mi perfil",
-      "settings": "Preferencias"
-    },
-    "settings": {
-      "heading": "Preferencias",
-      "appearance": "Apariencia",
-      "theme": "Tema",
-      "dark": "Oscuro",
-      "light": "Claro",
-      "notifications": "Notificaciones",
-      "weeklyLabel": "Recomendaciones semanales",
-      "reviewsLabel": "Reseñas en tus listas",
-      "newsLabel": "Novedades de FilmAI",
-      "account": "Cuenta",
-      "deactivateWarning": "La baja de la cuenta es irreversible. No podrás volver a iniciar sesión ni reactivarla.",
-      "deactivateTitle": "¿Dar de baja tu cuenta?",
-      "cancel": "Cancelar",
-      "deactivate": "Dar de baja",
-      "retry": "Reintentar",
-      "breadcrumb": "Ruta de navegación",
-      "publicProfile": "Perfil público",
-      "publicProfileHelp": "Preferencia de visibilidad para futuras vistas públicas.",
-      "weeklyHelp": "Preferencia para futuros correos de sugerencias.",
-      "reviewsHelp": "Preferencia para futuros avisos sobre reseñas.",
-      "newsHelp": "Preferencia para futuros correos de novedades.",
-      "saveError": "No pudimos guardar la preferencia. Intentá de nuevo.",
-      "deactivated": "Tu cuenta fue dada de baja.",
-      "deactivateError": "No pudimos dar de baja tu cuenta. Sigue activa; intentá de nuevo.",
-      "loading": "Cargando preferencias…",
-      "themeLegend": "Tema de la interfaz",
-      "privacy": "Privacidad",
-      "futureFeatures": "Estas preferencias se guardan, pero todavía no cambian la visibilidad de reseñas o listas ni activan correos.",
-      "deactivateAccount": "Dar de baja cuenta",
-      "deactivating": "Dando de baja…",
-      "deactivateConfirm": "Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar."
-    },
-    "confirmation": {
-      "successTitle": "Cuenta confirmada",
-      "backToLogin": "Volver a iniciar sesión",
-      "loading": "Confirmando tu cuenta…",
-      "successDescription": "Tu cuenta quedó activa. Ya podés iniciar sesión.",
-      "goToLogin": "Ir a iniciar sesión",
-      "alreadyTitle": "Cuenta ya confirmada",
-      "alreadyDescription": "Esta dirección ya estaba confirmada. Podés iniciar sesión directamente.",
-      "expiredTitle": "El enlace expiró",
-      "expiredDescription": "Los enlaces de confirmación son válidos durante 24 horas. Podés pedir uno nuevo desde la pantalla de registro con el botón \"Reenviar correo\".",
-      "backToRegister": "Volver al registro",
-      "errorTitle": "No se pudo confirmar",
-      "errorDescription": "El enlace es inválido."
-    },
-    "reset": {
-      "backToLogin": "Volver a iniciar sesión",
-      "confirmLabel": "Confirmar contraseña",
-      "saveError": "No se pudo actualizar la contraseña. Intentá de nuevo.",
-      "successTitle": "Contraseña actualizada",
-      "successDescription": "Tu contraseña fue restablecida. Ya podés iniciar sesión con tu nueva contraseña.",
-      "goToLogin": "Ir a iniciar sesión",
-      "invalidTitle": "El enlace no es válido",
-      "invalidDescription": "Los enlaces de restablecimiento son válidos durante 1 hora o hasta que se usen. Podés pedir uno nuevo desde \"¿Olvidaste tu contraseña?\" en la pantalla de inicio de sesión.",
-      "title": "Crear nueva contraseña",
-      "description": "Elegí una contraseña nueva para tu cuenta.",
-      "passwordLabel": "Nueva contraseña",
-      "togglePassword": "Mostrar u ocultar contraseña",
-      "passwordHelp": "De 8 a 20 caracteres, con mayúscula, minúscula, número y carácter especial (@#$%&*!).",
-      "toggleConfirmation": "Mostrar u ocultar confirmación",
-      "saving": "Guardando…",
-      "save": "Actualizar contraseña"
-    },
-    "validation": {
-      "required": "Campo obligatorio.",
-      "maxNameLength": "Máximo 50 caracteres.",
-      "personName": "Solo letras y espacios entre palabras.",
-      "username": "Alfanumérico, de 5 a 25 caracteres.",
-      "email": "Formato de correo inválido.",
-      "date": "Fecha inválida.",
-      "futureDate": "No puede ser una fecha futura.",
-      "minimumAge": "Debés tener al menos 13 años.",
-      "passwordLength": "Debe tener entre 8 y 20 caracteres.",
-      "passwordUpper": "Debe tener al menos una mayúscula.",
-      "passwordLower": "Debe tener al menos una minúscula.",
-      "passwordDigit": "Debe tener al menos un número.",
-      "passwordSpecial": "Debe tener un carácter especial (@#$%&*!).",
-      "passwordMismatch": "Las contraseñas no coinciden."
-    }
-  },
-  "nav": {
-    "main": {
-      "brandHomeLabel": "FilmAI, ir al inicio",
-      "mainLabel": "Principal",
-      "home": "Inicio",
-      "search": "Buscar",
-      "lists": "Listas",
-      "profileShort": "Perfil",
-      "skipToContent": "Saltar al contenido",
-      "profile": "Mi perfil",
-      "ratingsReviews": "Calificaciones y reseñas",
-      "settings": "Preferencias",
-      "terms": "Términos y condiciones",
-      "breadcrumbLabel": "Ruta",
-      "brandLandingLabel": "FilmAI, volver a la portada",
-      "backHome": "Volver al inicio",
-      "brandLandingAlt": "FilmAI, ir a la portada",
-      "backLanding": "Volver a la portada",
-      "termsUpdated": "Última actualización: {date}",
-      "termsOnPage": "En esta página"
-    },
-    "account": {
-      "userMenuLabel": "Menú de {name}",
-      "optionsLabel": "Opciones de usuario",
-      "logOut": "Cerrar sesión",
-      "logIn": "Ingresar",
-      "signUp": "Registrarse",
-      "profileLabel": "Tu perfil",
-      "deactivateTitle": "Dar de baja la cuenta",
-      "deactivateConfirmTitle": "¿Dar de baja tu cuenta?",
-      "deactivate": "Dar de baja",
-      "menuTitle": "Menú de la cuenta",
-      "logoutConfirmTitle": "¿Querés cerrar sesión?",
-      "logoutConfirmDescription": "Vas a salir de FilmAI en este dispositivo."
-    }
-  },
   "home": {
     "hero": {
       "trendingRank": "N.º {rank} en tendencias",
@@ -272,7 +168,6 @@
     "rows": {
       "trendingTitle": "Tendencias de la semana",
       "recommendedTitle": "Recomendado para vos",
-      "communityReviewsTitle": "Reseñas de la comunidad",
       "recommendationReasonCombined": "Por tus notas altas en {genres}",
       "newReleasesDescription": "Películas en cines y series estrenadas este año",
       "recommendationReasonMovies": "Por tus notas altas en {genres}",
@@ -282,12 +177,6 @@
       "trendingDescription": "Lo más visto en TMDB estos siete días",
       "newReleasesTitle": "Novedades",
       "emptyDescription": "No hay títulos para mostrar en este momento. Probá de nuevo más tarde o buscá algo puntual."
-    },
-    "recommendation": {
-      "promptTitle": "¿Qué vemos esta noche?"
-    },
-    "rating": {
-      "watchedHint": "Al calificarla, {title} también se agrega a Vistas. Podés escribir una reseña ahora o más tarde, desde la ficha o desde Calificaciones y reseñas."
     },
     "carousel": {
       "previousRowLabel": "Anteriores en {rowTitle}",
@@ -350,8 +239,7 @@
       "nameDuplicateError": "Ya tenés una lista con ese nombre.",
       "createdAddedFeedback": "Creaste «{listName}» y agregaste {title}.",
       "removedFeedback": "Quitaste {title} de «{listName}».",
-      "addedFeedback": "Agregaste {title} a «{listName}».",
-      "membershipCount": "En {count, plural, one {# lista} other {# listas}}"
+      "addedFeedback": "Agregaste {title} a «{listName}»."
     },
     "synopsis": {
       "heading": "Sinopsis"
@@ -494,7 +382,6 @@
       "yearLabel": "Año",
       "openLabel": "Filtros{activeCount, plural, =0 {} one {, # activo} other {, # activos}}",
       "apply": "Ver resultados",
-      "activeCount": "{count, plural, one {# activo} other {# activos}}",
       "anyYear": "Cualquiera",
       "tmdbRatingLabel": "Calificación de TMDB",
       "ratingShort": "{value}+",
@@ -509,10 +396,6 @@
       "emptyTitle": "Nada para «{query}»",
       "emptyHint": "Revisá cómo está escrito o probá con el título original: el catálogo viene de TMDB y muchas veces está en inglés.",
       "emptyFiltersTitle": "Nada con estos filtros"
-    },
-    "pagination": {
-      "label": "Páginas de resultados",
-      "position": "Página {page} de {pageCount}"
     },
     "close": {
       "shortcut": "Esc"
@@ -544,8 +427,6 @@
     },
     "results": {
       "filteredEmpty": "Ninguna calificación coincide con estos filtros.",
-      "ratingCount": "{count, plural, one {# calificación} other {# calificaciones}}",
-      "withReviewCount": "{count, plural, one {# con reseña} other {# con reseña}}",
       "empty": "Todavía no calificaste ninguna película ni serie.",
       "emptyAction": "Buscar qué calificar",
       "loading": "Cargando tus calificaciones…",
@@ -585,7 +466,6 @@
       "forgot": "¿Olvidaste tu contraseña?",
       "ruleSatisfiedLabel": "(cumplida)",
       "ruleMissingLabel": "(falta)",
-      "confirmMismatch": "Las contraseñas no coinciden.",
       "lengthRule": "Entre 8 y 20 caracteres",
       "caseRule": "Una mayúscula y una minúscula",
       "numberRule": "Un número",
@@ -606,7 +486,6 @@
       "genderLabel": "Género",
       "termsAcceptance": "Leí y acepto los <terms>Términos y condiciones</terms> de FilmAI.",
       "termsNewTabHint": "(se abre en otra pestaña)",
-      "termsRequiredError": "Para crear la cuenta tenés que aceptar los Términos y condiciones.",
       "submitPending": "Completá todos los campos y aceptá los Términos y Condiciones para continuar."
     },
     "confirmation": {
@@ -619,20 +498,8 @@
       "successTitle": "Cuenta confirmada",
       "successDescription": "Ya podés entrar con tu email o tu nombre de usuario.",
       "invalidTitle": "Este enlace ya no sirve",
-      "invalidDescription": "Venció o ya se usó. Pedí uno nuevo y revisá tu bandeja de entrada."
-    },
-    "adminAccess": {
-      "pageTitle": "Acceso de administrador",
-      "documentationTitle": "Documentación interna",
-      "loginDescription": "La documentación interna es solo para el equipo de FilmAI. Iniciá sesión con una cuenta de administrador para continuar.",
-      "includedResources": "Incluye",
-      "invalidCredentials": "Credenciales de administrador incorrectas.",
-      "logIn": "Iniciar sesión como administrador",
-      "publicPrompt": "¿No sos parte del equipo?",
-      "backToApp": "Volver a FilmAI",
-      "deniedTitle": "Tu cuenta no tiene acceso",
-      "deniedDescription": "Iniciaste sesión como {username}, que no es una cuenta de administrador. Para ver la documentación interna, entrá con una cuenta que tenga ese permiso.",
-      "switchAccount": "Cambiar de cuenta"
+      "invalidDescription": "Venció o ya se usó. Pedí uno nuevo y revisá tu bandeja de entrada.",
+      "loading": "Confirmando tu cuenta…"
     },
     "completeSignUp": {
       "badge": "Registro con Google",
@@ -644,6 +511,19 @@
     },
     "session": {
       "expired": "Tu sesión venció. Iniciá sesión de nuevo."
+    },
+    "newPassword": {
+      "title": "Crear nueva contraseña",
+      "description": "Elegí una contraseña nueva para tu cuenta.",
+      "passwordHelp": "De 8 a 20 caracteres, con mayúscula, minúscula, número y carácter especial (@#$%&*!).",
+      "togglePasswordLabel": "Mostrar u ocultar contraseña",
+      "toggleConfirmationLabel": "Mostrar u ocultar confirmación",
+      "save": "Actualizar contraseña",
+      "successTitle": "Contraseña actualizada",
+      "successDescription": "Tu contraseña fue restablecida. Ya podés iniciar sesión con tu nueva contraseña.",
+      "goToLogin": "Ir a iniciar sesión",
+      "invalidTitle": "El enlace no es válido",
+      "invalidDescription": "Los enlaces de restablecimiento son válidos durante 1 hora o hasta que se usen. Podés pedir uno nuevo desde «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión."
     }
   },
   "enums": {
@@ -673,7 +553,6 @@
     "personal": {
       "heading": "Datos personales",
       "edit": "Editar datos",
-      "readOnlyFieldHint": "Este dato es de solo lectura y no se puede editar.",
       "readOnlyFieldsHint": "Estos datos son de solo lectura y no se pueden editar."
     },
     "password": {
@@ -706,19 +585,14 @@
     }
   },
   "settings": {
-    "appearance": {
-      "heading": "Apariencia",
-      "themeLabel": "Tema",
-      "themeHelp": "Se aplica al instante y se guarda en tu cuenta."
-    },
     "notifications": {
       "heading": "Notificaciones",
       "weeklyLabel": "Recomendaciones semanales",
-      "weeklyHelp": "Cada semana te enviamos por email sugerencias según lo que calificaste.",
+      "weeklyHelp": "Preferencia para futuros correos de sugerencias.",
       "reviewsLabel": "Reseñas en tus listas",
-      "reviewsHelp": "Te avisamos cuando hay reseñas nuevas de títulos que tenés en tus listas.",
+      "reviewsHelp": "Preferencia para futuros avisos sobre reseñas.",
       "newsLabel": "Novedades de FilmAI",
-      "newsHelp": "Te enviamos por email las novedades y funciones nuevas de FilmAI."
+      "newsHelp": "Preferencia para futuros correos de novedades."
     },
     "legal": {
       "heading": "Información legal",
@@ -727,7 +601,9 @@
     "account": {
       "heading": "Cuenta",
       "deactivateWarning": "La baja de la cuenta es irreversible. No podrás volver a iniciar sesión ni reactivarla.",
-      "deactivateConfirmDescription": "Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta."
+      "deactivateConfirmDescription": "Esta acción es irreversible. Se cerrarán todas tus sesiones y no podrás volver a iniciar sesión ni reactivar tu cuenta. Asegurate de querer dar de baja la cuenta antes de continuar.",
+      "deactivateError": "No pudimos dar de baja tu cuenta. Sigue activa; intentá de nuevo.",
+      "deactivated": "Tu cuenta fue dada de baja."
     },
     "language": {
       "label": "Idioma",
@@ -736,15 +612,23 @@
       "english": "English",
       "spanish": "Español",
       "changing": "Cambiando idioma…",
-      "updated": "Idioma actualizado.",
       "saveError": "No pudimos guardar el idioma. Intentá de nuevo.",
       "interfaceLabel": "Idioma de la interfaz",
       "interfaceHelp": "Se aplica al instante y se guarda en tu cuenta. También lo usamos para los correos que te mandamos."
+    },
+    "loading": "Cargando preferencias…",
+    "privacy": {
+      "heading": "Privacidad",
+      "futureNotice": "Estas preferencias se guardan, pero todavía no cambian la visibilidad de reseñas o listas ni activan correos.",
+      "publicProfileLabel": "Perfil público",
+      "publicProfileHelp": "Preferencia de visibilidad para futuras vistas públicas."
+    },
+    "feedback": {
+      "saveError": "No pudimos guardar la preferencia. Intentá de nuevo."
     }
   },
   "errors": {
     "pages": {
-      "errorTitle": "Página de error",
       "ticketIllustrationAlt": "Una entrada de cine cortada al medio",
       "serverTitle": "Error del servidor",
       "notFoundTitle": "Esta página no existe",

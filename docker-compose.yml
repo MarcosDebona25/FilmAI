@@ -68,7 +68,7 @@ services:
       # resuelven estos archivos como BASE_DIR.parent (la raíz del repo). Sin
       # estos montajes, dentro del contenedor esa raíz es `/` y no existen.
       - ./contracts:/contracts
-      - ./docs/i18n:/docs/i18n:ro
+      - ./traducciones:/traducciones:ro
     depends_on:
       db:
         condition: service_healthy # no arranca hasta que PostgreSQL responda

@@ -25,7 +25,6 @@ type Interruptor = "perfil_publico" | "notif_recomendaciones" | "notif_resenas" 
  */
 export default function SettingsPage() {
   const t = useTranslations();
-  const legacy = useTranslations("legacy.settings");
   const router = useRouter();
   const { preferencias, cargando, error, recargar, actualizarPreferencia, limpiar } = useAccount();
   const [guardando, setGuardando] = useState<Interruptor | null>(null);
@@ -37,7 +36,7 @@ export default function SettingsPage() {
     try {
       await actualizarPreferencia(campo, valor as Preferencias[typeof campo]);
     } catch {
-      toast.error(legacy("saveError"));
+      toast.error(t("settings.feedback.saveError"));
     } finally {
       setGuardando(null);
     }
@@ -48,10 +47,10 @@ export default function SettingsPage() {
       await apiFetch("/api/account/deactivate/", { method: "POST" });
     } catch {
       // `ConfirmDialog` muestra el mensaje del error que se lanza.
-      throw new Error(legacy("deactivateError"));
+      throw new Error(t("settings.account.deactivateError"));
     }
     limpiar();
-    toast.success(legacy("deactivated"));
+    toast.success(t("settings.account.deactivated"));
     router.replace(routes.home);
   }
 
@@ -117,7 +116,7 @@ export default function SettingsPage() {
 
       {cargando && !preferencias && (
         <p role="status" className="text-fg-2">
-          {legacy("loading")}
+          {t("settings.loading")}
         </p>
       )}
       {error && <ErrorRetry mensaje={error} onReintentar={() => void recargar()} />}
@@ -140,13 +139,17 @@ export default function SettingsPage() {
 
           <section aria-labelledby={`${idioma}-privacidad`} className="flex flex-col gap-2">
             <h2 id={`${idioma}-privacidad`} className={`${titulo2} mb-1.5 md:mb-2`}>
-              {legacy("privacy")}
+              {t("settings.privacy.heading")}
             </h2>
             <p role="note" className="mb-2 text-sm text-fg-2">
-              {legacy("futureFeatures")}
+              {t("settings.privacy.futureNotice")}
             </p>
             <div className="border-b border-line">
-              {fila("perfil_publico", legacy("publicProfile"), legacy("publicProfileHelp"))}
+              {fila(
+                "perfil_publico",
+                t("settings.privacy.publicProfileLabel"),
+                t("settings.privacy.publicProfileHelp")
+              )}
             </div>
           </section>
 
@@ -159,14 +162,18 @@ export default function SettingsPage() {
               {fila(
                 "notif_recomendaciones",
                 t("settings.notifications.weeklyLabel"),
-                legacy("weeklyHelp")
+                t("settings.notifications.weeklyHelp")
               )}
               {fila(
                 "notif_resenas",
                 t("settings.notifications.reviewsLabel"),
-                legacy("reviewsHelp")
+                t("settings.notifications.reviewsHelp")
               )}
-              {fila("notif_novedades", t("settings.notifications.newsLabel"), legacy("newsHelp"))}
+              {fila(
+                "notif_novedades",
+                t("settings.notifications.newsLabel"),
+                t("settings.notifications.newsHelp")
+              )}
             </div>
           </section>
 
@@ -198,7 +205,7 @@ export default function SettingsPage() {
               onClick={() => setConfirmarBaja(true)}
               className="h-[52px] cursor-pointer rounded-[10px] px-[18px] font-semibold text-destructive shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:self-start"
             >
-              {legacy("deactivateAccount")}
+              {t("nav.account.deactivateTitle")}
             </button>
           </section>
         </>
@@ -206,10 +213,10 @@ export default function SettingsPage() {
 
       {confirmarBaja && (
         <ConfirmDialog
-          titulo={legacy("deactivateTitle")}
+          titulo={t("nav.account.deactivateConfirmTitle")}
           // El texto aprobado (docs/decisiones.md), más largo que el del canvas.
-          descripcion={legacy("deactivateConfirm")}
-          confirmar={legacy("deactivate")}
+          descripcion={t("settings.account.deactivateConfirmDescription")}
+          confirmar={t("nav.account.deactivate")}
           onConfirm={desactivarCuenta}
           onCancel={() => setConfirmarBaja(false)}
         />
