@@ -59,7 +59,7 @@ Every successful response (except `changes`, used by the nightly sync) MUST also
 
 ### Requirement: Per-endpoint TTL
 
-The system SHALL apply a TTL per endpoint group: lists (trending, now_playing, discover) 6 hours; search 1 hour; details (movie_detail, tv_detail, keywords) 24 hours.
+The system SHALL apply a TTL per endpoint group: lists (trending, now_playing, discover) 6 hours; search 1 hour; details (movie_detail, tv_detail, keywords) 24 hours; `watch_providers` 12 hours. `watch_providers` is cached per title (not per country, one TMDB response holds every country), is not localized, and its fallback copy lasts 7 days (`RESPALDO_TTLS`) instead of 30; after that the TMDB error propagates.
 
 #### Scenario: TTL applied per endpoint group
 

@@ -4226,12 +4226,28 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Miga de la ficha**: con el `GET` funcionando, la miga que viene de una lista predeterminada mostraba el nombre guardado («Favoritos», en el idioma de alta de la cuenta). Ahora las predeterminadas se nombran por su `clave` con `enums.defaultList.*`; las personalizadas, por su nombre. Test en `title-view.test.tsx`.
 - **Archivos afectados**: `backend/listas/{models,views,serializers,pagination,urls}.py`, `backend/listas/migrations/0007_lista_orden.py`, `backend/listas/tests_detalle_orden.py`, `contracts/openapi.yaml` (regenerado), `openspec/specs/list-endpoints/spec.md`, `frontend/components/features/title/TitleView.tsx`, `frontend/tests/title-view.test.tsx`, `docs/decisiones.md`.
 
-## 15/10/2026 — Pendiente para pair programming: alinear los docs 02 y 03 con el código
+## 15/10/2026 — Pendiente para pair programming: alinear los docs 02 y 03 con el código (resuelto el 18/10/2026)
 
 - **Fecha**: 15/10/2026
-- **Descripción**: el análisis del 15/10 encontró que los docs 02 y 03 quedaron atrás del código. Marcos decidió **no corregirlos solo**: se revisan con Gonza en pair programming. Al empezar esa sesión, un agente tiene que avisarlo y partir de esta lista.
+- **Descripción**: el análisis del 15/10 encontró que los docs 02 y 03 quedaron atrás del código. Marcos decidió **no corregirlos solo**: se revisan con Gonza en pair programming. **Estado (18/10/2026): resuelta** con las decisiones de Marcos y Gonza de esa fecha; cada punto de la lista tiene abajo su resolución, y el detalle está en la entrada «18/10/2026 — Docs 02 y 03 alineados con el código». Los cambios que sumó la funcionalidad nueva del 18/10 (país, plataformas, tema) se revisan con Gonza.
   - **Doc 02**: CU-010 y el RF de búsqueda hablan de «panel» y «grid paginada» (hoy es la página `/search` con scroll infinito; solo se actualizaron el paso 2 y parte de las observaciones). CU-008: filtro «calificación mínima 0–10» (hoy tramos 9+…5+ y <5; año con «Upcoming» y décadas). CU-008 2.A y CU-019 4.A: respaldo al catálogo local si TMDB cae (no implementado: 502 (Bad Gateway)). CU-008 y doc 03: «se materializa todo lo que muestra el catálogo» (hoy solo la ficha; C-04a 🟡). CU-021: avisar al administrador si la sincronización falla entera (no implementado). CU-005 y CU-015: «reseñas recientes» en el perfil (ni el código ni el canvas las muestran). CU-006: «edición inline» y «confirmación de cancelación» (hoy formulario «Edit details», contraseña aparte y aviso al salir). CU-009: el detalle de lista muestra «fecha de agregado» (el canvas muestra tipo, año y nota de TMDB). CU-012: falta reordenar listas. Sección «Gestión de reseñas propias desde perfil» (03/10): nota «X/10», títulos sin enlace, vacío que vuelve al perfil, sin filtros. «Multiidioma › Estado»: solo quedan `complete-signup` y `NavigationGuard` en español.
   - **Doc 03**: `perfilPublico` describe visibilidad de reseñas y listas (las reseñas son públicas desde el 14/10 y el switch no cambia nada). `tema` claro/oscuro (la app es solo oscura). Falta `fecha_enriquecimiento` en el doc y en el JSON. Falta `Lista.orden` (entrada anterior). Los diagramas siguen pendientes de regenerarse desde el JSON.
+  - **Resolución punto por punto (18/10/2026)**:
+    - **CU-010 y RF de búsqueda**: la doc pasa a describir la página `/search` con scroll infinito (al código). _Resuelto._
+    - **CU-008, filtros**: se documentan los tramos de nota (9 o más … 5 o más, menos de 5) y el año con «A estrenar» y décadas (al código). _Resuelto._
+    - **CU-008 2.A y CU-019 4.A, respaldo local**: el doc describe el respaldo de Redis (real); el de la base de datos queda como **mejora futura** (entrada del 18/10/2026 sobre el respaldo). _Resuelto._
+    - **Materialización (CU-008 y doc 03)**: la doc dice lo que hace el código (ficha en el momento y listados en segundo plano; C-04a parcial). _Resuelto._
+    - **CU-021, aviso al administrador si la sync falla**: **mejora futura**; hoy queda en el log. _Resuelto (como mejora futura)._
+    - **CU-005 y CU-015, «reseñas recientes»**: se quitan del perfil y se remite a `/my-reviews`. _Resuelto._
+    - **CU-006**: se documenta el formulario «Edit details», la contraseña aparte y el aviso al salir, y se suma el país editable. _Resuelto._
+    - **CU-009, fecha de agregado**: se **implementa** en el código (MediaCard del detalle de lista, formato numérico compacto según el idioma) y la doc lo describe. _Resuelto._
+    - **CU-012, reordenar listas**: la doc lo suma (al código). _Resuelto._
+    - **«Gestión de reseñas propias desde perfil»**: se reescribe con «★ nota», títulos que enlazan a la ficha, filtros en la URL y vacío que invita a buscar (al código). _Resuelto._
+    - **«Multiidioma › Estado»**: `complete-signup` y `NavigationGuard` ya están migrados; solo falta el chatbot (al código). _Resuelto._
+    - **Doc 03, `perfilPublico`**: se aclara que hoy se guarda sin efecto y que las reseñas son públicas; el efecto real es **mejora futura**. _Resuelto._
+    - **Doc 03, `tema`**: se elimina `Usuario.tema` (modelo, API, doc y JSON); la app es solo oscura. _Resuelto._
+    - **Doc 03, `fecha_enriquecimiento` y `Lista.orden`**: agregados al doc y al JSON. _Resuelto._
+    - **Doc 03, diagramas**: el JSON se actualizó (con `pais`, `Lista.orden` y `fecha_enriquecimiento`, sin `tema`). El repositorio **no tiene un script ni un renderizador** del JSON; la imagen se regenera con la herramienta de diagramas que lee ese formato. _JSON resuelto; imagen pendiente de la herramienta._
 - **Archivos afectados**: `docs/decisiones.md`.
 
 ## 15/10/2026 — 404 sin sesión: frase completa con la mención del asistente
@@ -4401,3 +4417,100 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
   5. **Test inestable en CI**: `title-view.test.tsx` leía `document.title` apenas aparecía el encabezado, pero el título se asigna en un efecto posterior; falló una vez en CI. Ahora lo espera con `waitFor`.
 - **Tests**: `test_respaldo_tmdb.py` (un solo aviso en tres pedidos seguidos con TMDB caído), `test_materializar_listados.py` (si encolar falla, el siguiente listado lo vuelve a encolar) y `title-view.test.tsx` (al pasar a otra ficha cuyas listas cargan, el aviso desaparece; falla con el código anterior).
 - **Archivos afectados**: `backend/catalogo/cache.py`, `backend/catalogo/services/materialization.py`, `backend/catalogo/{test_respaldo_tmdb.py,test_materializar_listados.py}`, `frontend/components/features/title/TitleView.tsx`, `frontend/tests/title-view.test.tsx`, `docs/decisiones.md`.
+
+## 18/10/2026 — Respaldo local del catálogo si TMDB cae: mejora futura (a discutir con Gonza)
+
+- **Fecha**: 18/10/2026
+- **Cuestión**: CU-008 2.A y CU-019 4.A prometen que, si no hay conexión con TMDB, «el sistema recupera el catálogo almacenado localmente». Hoy eso se cumple solo en parte.
+- **Estado actual**:
+  - **Redis** (`TMDBClientCache`, `backend/catalogo/cache.py`): guarda la última respuesta de cada consulta 30 días (`RESPALDO_TTL`; 7 días para `watch_providers`) y la sirve si TMDB falla (error de servidor, límite de uso o transporte), con un aviso en el log cada 5 minutos como máximo. Cubre solo consultas ya hechas, con los mismos parámetros (página, filtros e idioma van en la clave).
+  - **PostgreSQL** (`Produccion`): guarda las producciones materializadas (seed, fichas abiertas, listados encolados), pero Home, Buscar y los filtros no la leen. Con TMDB caído, una consulta nueva responde 502 (Bad Gateway) aunque el título esté en la base.
+- **Problema**: un respaldo desde la BD no garantiza completitud.
+  1. Cobertura parcial: solo están las producciones materializadas, no el catálogo de TMDB. El usuario no distingue un listado parcial del completo.
+  2. Faltan datos para filtrar y ordenar: el modelo no guarda la nota de TMDB, los votos ni la popularidad. Sin eso no se resuelven los tramos de calificación, la popularidad ni las tendencias de Home.
+  3. La relevancia de la búsqueda por nombre de TMDB no se replica con `icontains`.
+  4. Datos de hasta un día de antigüedad (sync diaria C-04b).
+  5. Trending, «en cartelera» y «a estrenar» dependen de rankings de TMDB.
+- **A considerar al decidirlo**: columnas nuevas y migración (nota, votos, popularidad) con relleno de lo ya guardado; un servicio que traduzca filtros y orden a consultas; caer a la BD ante `TMDBError` y marcar la respuesta con `origen: "local"`; aviso en la UI («Mostrando resultados guardados») y diseño en el canvas; tests de cada filtro. Estimación: un PR mediano (2 a 3 días). Si se implementa, conviene limitarlo a Buscar con texto y a la ficha, sin prometer el catálogo completo.
+- **Decisión (18/10/2026, Marcos)**: por ahora, **mejora futura**. El doc 02 describe el respaldo de Redis (real) y marca el de la BD como mejora futura. Queda para un análisis exhaustivo con Gonza.
+- **Archivos afectados**: `docs/decisiones.md` (y el doc 02, CU-008 y CU-019, al resolver las inconsistencias).
+
+## 18/10/2026 — Docs 02 y 03 alineados con el código (CU-005, 006, 008, 009, 010, 012, 015, 019, 021)
+
+- **Fecha**: 18/10/2026
+- **Descripción**: Marcos y Gonza resolvieron la lista de inconsistencias de la entrada del 15/10/2026 («Pendiente para pair programming»). Criterio general: **los docs se corrigen para decir lo que hace el código**, salvo lo indicado.
+  1. **Doc 02, CU-008 y CU-010**: la búsqueda es la página `/search` con scroll infinito (ya no «panel» ni «grid paginada»). Los filtros documentados son el tipo, el género, la nota de TMDB por tramos (9 o más … 5 o más, menos de 5, con al menos 50 votos) y el año con «A estrenar», años sueltos hasta 1990 y décadas.
+  2. **Doc 02, CU-008 2.A y CU-019 4.A**: describen el respaldo de Redis (30 días; 7 para las plataformas) y marcan el respaldo desde la base de datos como mejora futura, según la entrada del 18/10/2026 sobre el respaldo local (no se duplica acá).
+  3. **Materialización (doc 02 CU-008 y doc 03)**: la ficha materializa en el momento y los listados lo hacen en segundo plano (Celery); C-04a queda parcial, sin prometer todo TMDB.
+  4. **CU-021**: avisar al administrador si la sincronización falla entera es **mejora futura**; hoy queda en el log.
+  5. **CU-005 y CU-015**: se quitan las «reseñas recientes» del perfil y se remite a `/my-reviews`.
+  6. **CU-006**: se documenta el formulario «Edit details», la contraseña por separado, el aviso al salir con cambios sin guardar y el país editable.
+  7. **CU-009**: se **implementó** la fecha de agregado, discreta, en la MediaCard de cada producción dentro del detalle de una lista, con formato numérico compacto según el idioma (`18/10/2026` en español, `10/18/2026` en inglés) y la etiqueta «Agregada el» / «Added on» (`common.media.addedOnLabel`). El doc lo describe así.
+  8. **CU-012**: se documenta el reordenamiento de listas personalizadas (`Lista.orden`, `PUT /api/lists/order/`).
+  9. **«Gestión de reseñas propias desde perfil» y doc 04, sección 5i**: se reescriben con lo que hace `/my-reviews` (nota «★ 9», títulos que enlazan a la ficha, filtros en la URL, vacío que invita a buscar).
+  10. **«Multiidioma › Estado»**: `legacyFiles` quedó vacía el 15/10/2026; falta solo el chatbot.
+  11. **Doc 03**: `perfilPublico` se aclara como «se guarda sin efecto; las reseñas son públicas» (efecto real: mejora futura). `fecha_enriquecimiento` y `Lista.orden` se agregan al texto y al JSON. `tema` se elimina (ver entrada «Tema claro descartado»). Se suma `pais` (ver entrada del país).
+  12. **Diagramas del doc 03**: se regeneró el **JSON** (`pais`, `Lista.orden`, `fechaEnriquecimiento`; sin `tema`). El repositorio no incluye un script ni un renderizador de ese JSON (el formato es el de la herramienta de diagramas externa que lo produjo), así que la **imagen no se pudo regenerar** desde acá; el doc 03 lo anota y el JSON es la fuente de verdad hasta entonces.
+- **Revisión con Gonza**: los cambios a los docs 02 y 03 por la funcionalidad nueva de este día (país, plataformas, tema eliminado) **se revisan con Gonza**; los demás ya salieron de la decisión conjunta.
+- **Archivos afectados**: `docs/02_Especificación de Requerimientos.md`, `docs/03_Modelos de Datos y de Diseño.md`, `docs/03_DiagramaClases_DiagramaTablas.json`, `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+## 18/10/2026 — País de la cuenta (`Usuario.pais`)
+
+- **Fecha**: 18/10/2026
+- **Descripción**: la cuenta guarda el país para mostrar en la ficha las plataformas disponibles allí.
+  1. **Lista**: ISO 3166-1 alfa-2, **hardcodeada** en `contracts/enums.json` (`paisCodes`, 249 códigos), que lee el backend (`usuarios/paises.py`) y copia el frontend (`frontend/i18n/enums.json`). No hay tabla de países. Los nombres salen de `Intl.DisplayNames` en el idioma activo.
+  2. **Campo**: `Usuario.pais` (VARCHAR(2), obligatorio, sin valor por defecto). Obligatorio en el registro, el alta con Google (`/complete-signup`, `CAMPOS_FALTANTES_GOOGLE`) y el perfil. **Sin preselección**: el selector arranca en «Elegí tu país» y no adivina por el navegador. En el registro va junto al nombre de usuario.
+  3. **Migraciones**: `0009_remove_usuario_tema` y `0010_usuario_pais`. La segunda agrega la columna nula, asigna a las cuentas existentes un país por rotación determinista `[AR, BR, US, ES, GB, PT, CN, MX][id % 8]` (CN a propósito: TMDB casi no tiene plataformas allí y ejercita el estado «no disponible») y la vuelve obligatoria. Las factories y el seed usan la misma rotación.
+  4. **Error**: `country_invalid` (400 (Bad Request)) cuando el país falta o no está en la lista, en el registro, el alta con Google, el perfil y el endpoint de plataformas; si falta en el registro, `required`.
+  5. **Docs**: doc 02 (RF de alta y perfil, CU-001, CU-005, CU-006), doc 03 (`Usuario.pais` y JSON), doc 04 (registro, perfil, 6.2), doc 05 (A-01, A-05, A-06, P-01, P-02), spec `error-contract`.
+- **Revisión con Gonza**: los cambios a los docs 02 y 03 se revisan con él.
+- **Archivos afectados**: `backend/usuarios/{models.py,serializers.py,paises.py,adapter.py,admin.py,factories.py}`, `backend/usuarios/migrations/{0009_remove_usuario_tema.py,0010_usuario_pais.py}`, `contracts/{enums.json,error-codes.json,openapi.yaml}`, `frontend/components/CountrySelect.tsx`, `frontend/app/{(public)/register,complete-signup,profile}/page.tsx`, `docs/i18n/copia-propuesta.csv`, los docs 02 a 05 y `openspec/specs/error-contract/spec.md`.
+
+## 18/10/2026 — Plataformas donde ver una producción (watch providers) y atribución a JustWatch
+
+- **Fecha**: 18/10/2026
+- **Descripción**:
+  1. **Endpoint**: `GET /api/catalogo/{movie,tv}/{id_tmdb}/providers/?pais=XX`, público. El país lo manda el cliente (no sale de la sesión) para que siga siendo cacheable. Responde `{pais, enlace, suscripcion, gratis, alquiler, compra}`; `gratis` une `free` y `ads` de TMDB. Sin `pais` válido: 400 (Bad Request) `country_invalid`, sin llamar a TMDB.
+  2. **Solo en Redis**: no hay tabla. Se cachea por título (una respuesta de TMDB trae todos los países) con TTL de 12 horas y respaldo de 7 días (`RESPALDO_TTLS`, en vez de los 30 del resto).
+  3. **Ficha**: bajo los géneros, la línea «Stream or rent [logos] N options in {país}» (en español, «Ver o alquilar … N opciones en {país}») abre un panel con Stream, Free, Rent y Buy. **Los logos no son enlaces** (TMDB no da enlaces por plataforma): hay un solo enlace «See all options on TMDB». Con sesión se usa el país de la cuenta; sin sesión, la región del navegador si está en la lista; sin ninguno, la sección no aparece. Si no hay datos: «Not available to stream, rent or buy in {país} yet.».
+  4. **Atribución obligatoria**: los datos son de JustWatch y TMDB exige citarlos; el panel muestra «Data by JustWatch» con enlace a justwatch.com. No debe quitarse.
+  5. **Docs**: doc 02 (RF nuevo, CU-008), doc 03, doc 04 (5c), doc 05 (C-09), doc 06 (sección «Uso en FilmAI: Dónde verla») y los specs `title-page-ui`, `tmdb-endpoints` y `tmdb-cache`.
+- **Archivos afectados**: `backend/catalogo/{cache.py,client.py,urls.py,views.py,services/plataformas.py,tests_plataformas.py}`, `backend/filmai/errores/catalogo.py`, `frontend/components/features/title/{WatchProviders.tsx,TitleView.tsx}`, `docs/i18n/copia-propuesta.csv` (`title.providers.*`), los docs 02 a 06 y los specs `title-page-ui`, `tmdb-endpoints`, `tmdb-cache`.
+
+## 18/10/2026 — Pendiente: sumar el uso del país a los Términos y Condiciones
+
+- **Fecha**: 18/10/2026
+- **Descripción**: el país de la cuenta se usa para mostrar las plataformas disponibles en la ficha (el backend pide a TMDB los datos de todos los países y filtra por el país del usuario; el país no se envía a TMDB). Ese uso **debe quedar listado en los Términos y Condiciones**, y hoy **no lo está**: la sección 9 («Datos personales» / «Personal data») enumera correo, fecha de nacimiento y género, y la sección 7 («Contenido de terceros») nombra a TMDB pero no a JustWatch. Falta sumar el país a la sección 9 y, conviene, la atribución a JustWatch a la sección 7, en español e inglés.
+- **Dónde está el texto**: en el código, `frontend/content/legal/terms.es.md` y `terms.en.md` (versionados para que los revise un abogado; se muestran en `/terms`); en los docs solo se lo referencia (doc 02, CU-001, «Términos y Condiciones (12/10/2026)»; doc 04, sección 5f «Implementación»). Al editarlo, pasar el cambio por el abogado y revisar si hay que volver a pedir la aceptación.
+- **Estado**: pendiente. No se tocó el texto legal en este cambio (alcance solo documentación).
+- **Archivos afectados**: `docs/decisiones.md` (a futuro, `frontend/content/legal/terms.{es,en}.md`).
+
+## 18/10/2026 — Tema claro descartado: la app es solo oscura y se elimina `Usuario.tema`
+
+- **Fecha**: 18/10/2026
+- **Descripción**: el tema oscuro es parte de la identidad de FilmAI, así que se descartó el tema claro (antes quedaba como opción futura «Apariencia»). Se eliminó `Usuario.tema` del modelo (migración `0009_remove_usuario_tema`), de la API de Preferencias y del contrato, y de la doc: doc 03 (texto y JSON), doc 04 (Preferencias sin «Apariencia», 7.1, contraste), doc 05 (P-03, P-04), `PRODUCT.md` y el spec `profile-ui` (no hay selector ni campo). Una cuenta con tema guardado simplemente pierde el dato.
+- **Archivos afectados**: `backend/usuarios/{models.py,cuenta.py,serializers.py}`, `backend/usuarios/migrations/0009_remove_usuario_tema.py`, `contracts/openapi.yaml`, `frontend/app/settings/page.tsx`, `docs/03_*`, `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`, `PRODUCT.md`, `openspec/specs/profile-ui/spec.md`.
+
+## 18/10/2026 — Esqueletos de carga estáticos (sin shimmer ni `animate-pulse`)
+
+- **Fecha**: 18/10/2026
+- **Descripción**: los esqueletos de carga ya no pulsan ni brillan: se quitó `animate-pulse` (y la constante `PULSO`) de Home, MediaCard, filas, Listas, detalle de lista, Mis reseñas y la ficha. Quedan como bloques de color fijo. Doc 04 (ficha, 6.5 y 7.1), doc 05 (Q-03) y el spec `title-page-ui` lo reflejan. Además, la barra dorada de navegación (`NavigationProgress`) perdió el resplandor (`box-shadow`): queda una línea lisa de 3 px (18/10/2026, `frontend/components/NavigationProgress.tsx`).
+- **Archivos afectados**: `frontend/components/features/{HomeHero,MediaCard,MediaRow}.tsx`, `frontend/components/features/lists/{ListDetailView,ListsView}.tsx`, `frontend/components/features/reviews/MyReviewsView.tsx`, `frontend/components/features/title/{ReviewsSection,TitleView}.tsx`, `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`, `openspec/specs/title-page-ui/spec.md`.
+
+## 18/10/2026 — Favicon dorado propio (reemplaza icons8)
+
+- **Fecha**: 18/10/2026
+- **Descripción**: el favicon pasa a ser la «F» dorada (`#f5c518`) sobre fondo oscuro, en `frontend/public/favicon.svg` (un `rect` de fondo con esquinas redondeadas y un `path` con la letra) y `frontend/public/favicon.jpeg` para el ícono de Apple. Se declara en `app/layout.tsx` (`icons.icon` y `icons.apple`) y reemplaza `icons8-movies-32.png`, que se eliminó. `PRODUCT.md` y el doc 04 (7.1) lo reflejan.
+- **Archivos afectados**: `frontend/public/{favicon.svg,favicon.jpeg}`, `frontend/public/icons8-movies-32.png` (eliminado), `frontend/app/layout.tsx`, `PRODUCT.md`, `docs/04_Lineamientos_UI.md`.
+
+## 18/10/2026 — Se elimina la carpeta `odd/tasks`
+
+- **Fecha**: 18/10/2026
+- **Descripción**: la carpeta `odd/tasks/` (con `modulo-6-resenas-admin.md`) estaba expirada y se eliminó. Ningún doc ni spec la referencia; las tareas vigentes están en el doc 05.
+- **Archivos afectados**: `odd/tasks/modulo-6-resenas-admin.md` (eliminado).
+
+## 18/10/2026 — Fecha de agregado en las listas: ícono de «agregar a lista» y fecha
+
+- **Fecha**: 18/10/2026
+- **Descripción**: la fecha sola no dejaba claro que era la de agregado a la lista. Se compararon cuatro opciones en el canvas (ícono de reloj, prefijo «Added», ícono de «agregar a lista» y fecha relativa) y Marcos eligió el **ícono de «agregar a lista» seguido de la fecha** numérica compacta (`18/10/2026` en español, `10/18/2026` en inglés). El ícono es `ListPlus` de lucide y la etiqueta, para el tooltip y los lectores de pantalla, es «Agregada a esta lista el {fecha}» / «Added to this list on {date}» (`common.media.addedOnLabel`). Se borraron las otras propuestas del canvas y el control `fecha` de «List detail».
+- **Archivos afectados**: `frontend/components/features/MediaCard.tsx`, `docs/i18n/copia-propuesta.csv`, `frontend/messages/`, `frontend/tests/{media-card,list-detail-view}.test.tsx`, docs 02 (CU-009) y 04, canvas («List detail», escritorio y celular).

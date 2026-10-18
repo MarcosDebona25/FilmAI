@@ -30,10 +30,10 @@ Proyecto académico (Seminario Integrador, UTN-FRSF) de dos personas, que se pre
 
 ## Brand Commitments
 
-- Nombre FilmAI. Oscuro por defecto, claro opcional (switch en Preferencias).
+- Nombre FilmAI. Solo oscuro, como identidad de la marca (18/10/2026: se descartó el tema claro y se eliminó el switch).
 - Acento dorado `#f5c518`, ligado a calificar (estrellas).
 - Evolución del estilo existente, no reemplazo (decisión del 03/10/2026).
-- Wordmark y favicon propios, en reemplazo del ícono de icons8.
+- Wordmark y favicon propios (la «F» dorada sobre fondo oscuro, `frontend/public/favicon.svg`), en reemplazo del ícono de icons8.
 - Voz: rioplatense, directa, sin exageraciones.
 
 ## Evidence on Hand
@@ -50,4 +50,4 @@ Proyecto académico (Seminario Integrador, UTN-FRSF) de dos personas, que se pre
 
 ## Accessibility & Inclusion
 
-WCAG AA: contraste de 4,5:1 o más en los dos temas, uso completo con teclado, foco visible y respeto de `prefers-reduced-motion`.
+WCAG AA: contraste de 4,5:1 o más en el tema oscuro, uso completo con teclado, foco visible y respeto de `prefers-reduced-motion`.
