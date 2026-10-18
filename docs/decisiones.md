@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 18/10/2026 — Skill security-audit de Cloudflare
+
+- **Fecha**: 18/10/2026
+- **Descripción**: se instaló `security-audit` (https://github.com/cloudflare/security-audit-skill, licencia MIT, commit `c1c8a8c`) con `npx skills add cloudflare/security-audit-skill --skill security-audit --agent codex --copy`, que deja una copia en `.agents/skills/security-audit/` y la registra en `skills-lock.json`. Antes de instalarla se leyeron sus archivos completos: son guías en markdown, un JSON Schema y dos validadores en Node sin dependencias ni acceso a red. La copia instalada es idéntica a la revisada y no se edita; las adaptaciones al proyecto viven en `AGENTS.md`. Tiene dos modos: guía (preguntas de seguridad puntuales) y auditoría completa de 6 fases con perfiles `quick`, `standard` y `deep`; esta última solo corre a pedido explícito. La skill no modifica el código auditado: los arreglos se deciden y se hacen aparte, con su test y su entrada acá.
+- **Informes**: se escriben en `security-audit/run-<N>/`, ignorado por git. Describen vulnerabilidades todavía sin arreglar, así que no se commitean; el resumen que se comparte con el equipo sale por el chat o por el PR del fix.
+- **Archivos afectados**: `.agents/skills/security-audit/`, `skills-lock.json`, `.gitignore`, `AGENTS.md` y `docs/decisiones.md`.
+
+---
+
 ## 03/10/2026 — Nota identificable y lectura condicional de reseñas
 
 - **Fecha**: 03/10/2026

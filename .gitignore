@@ -48,6 +48,10 @@ Thumbs.db
 # CLAUDE.md local (solo apunta a AGENTS.md, no se versiona)
 /CLAUDE.md
 
+# --- Auditorías de seguridad (skill security-audit) ---
+# Informes con vulnerabilidades sin arreglar: nunca se versionan.
+/security-audit/
+
 # --- Graphify ---
 graphify-out/cache/
 graphify-out/.graphify_python
