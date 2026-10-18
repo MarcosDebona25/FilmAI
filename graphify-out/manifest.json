@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792349348.4748662,
-    "seen": 1792349366.7924855,
-    "ast_hash": "926cbe752da51ac8c9e3c320e21cf6db",
+    "mtime": 1792356191.7205863,
+    "seen": 1792356220.559278,
+    "ast_hash": "ae0577e7aac323a36d5ec53c6fb8ea48",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4077,6 +4077,12 @@
     "mtime": 1792345794.9074183,
     "seen": 1792345839.4988532,
     "ast_hash": "2b7484c839443219cffcd2d84b0d486d",
+    "semantic_hash": ""
+  },
+  "docs/auditoria-seguridad-resumen.md": {
+    "mtime": 1792356191.6869316,
+    "seen": 1792356220.5592752,
+    "ast_hash": "e77a5bbdc7dd32cd0ca967c63ea8afe6",
     "semantic_hash": ""
   }
 }
