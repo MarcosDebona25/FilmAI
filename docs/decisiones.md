@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 18/10/2026 — Auditoría de seguridad (run-2): validación en sandbox y lista de fixes
+
+- **Fecha**: 18/10/2026
+- **Descripción**: se validó por ejecución, en un sandbox Docker aislado (red interna sin internet, repo en solo lectura, TMDB simulado, datos ficticios), las 11 pistas `needs_validation` de run-1. Cada una la reprodujo un validador y la repitió un verificador independiente: las 11 quedaron **confirmadas** (6 de severidad media y 5 baja; ninguna alta ni crítica). Las cabeceras anti-framing siguen rechazadas. La probabilidad real depende de factores de despliegue que el repo no muestra (proxy, límites de Resend y TMDB, acceso a logs, exposición de Redis).
+- **Decisión**: no se corrige nada en esta tarea. Cada fix va como tarea aparte con test de regresión y su entrada aquí. Orden sugerido: Redis, identidad del cliente y límites de tasa, cambios chicos (`next`, log), catálogo, admin, y al final lo que requiere decidir con el equipo (pre-secuestro y moderación de reseñas). Hay una discrepancia de severidad en el admin y en Redis (el verificador opinó alta); se mantiene media por la baja probabilidad.
+- **Qué se sube y qué no**: se sube solo `docs/auditoria-seguridad-resumen.md` (títulos, módulos, estado y prioridad, sin pasos de explotación) a la rama `security/audit`, sin PR, para que no corran PR-Agent ni DeepSeek sobre el contenido. Los informes completos (`security-audit/run-1/` y `run-2/`, incluida `FIX-LIST.md`) siguen locales e ignorados por git.
+- **Archivos afectados**: `docs/auditoria-seguridad-resumen.md` (nuevo), `docs/decisiones.md`.
+
+---
+
 ## 18/10/2026 — Primera auditoría de seguridad (run-1): estado y pendientes
 
 - **Fecha**: 18/10/2026
