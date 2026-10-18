@@ -13,6 +13,7 @@ const { account, router } = vi.hoisted(() => ({
       nombre: "Juan",
       apellido: "Pérez",
       nombre_usuario: "juanperez",
+      pais: "AR",
       avatar_id: 1,
       correo: "juan@example.com",
       fecha_nacimiento: "1992-04-10",
@@ -24,7 +25,7 @@ const { account, router } = vi.hoisted(() => ({
       { id: 1, src: "/one.png" },
       { id: 2, src: "/two.png" },
     ],
-    preferencias: { tema: "oscuro", perfil_publico: true },
+    preferencias: { perfil_publico: true },
     cargando: false,
     error: null,
     recargar: vi.fn(),
@@ -79,6 +80,35 @@ describe("edición de perfil", () => {
       "/api/profile/",
       expect.objectContaining({ body: expect.objectContaining({ avatar_id: 2 }) })
     );
+  });
+  it("muestra el país en Datos personales y lo edita en el borrador", async () => {
+    vi.mocked(apiFetch).mockResolvedValue({ ...account.perfil, pais: "BR" });
+    render(
+      <NavigationGuard>
+        <PerfilPage />
+      </NavigationGuard>
+    );
+    expect(screen.getByText("Argentina")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
+    const pais = screen.getByLabelText("País");
+    expect(pais).toHaveValue("AR");
+    await userEvent.selectOptions(pais, "BR");
+    await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/profile/",
+      expect.objectContaining({ body: expect.objectContaining({ pais: "BR" }) })
+    );
+  });
+  it("cambiar solo el país cuenta como cambio sin guardar", async () => {
+    render(
+      <NavigationGuard>
+        <PerfilPage />
+      </NavigationGuard>
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
+    await userEvent.selectOptions(screen.getByLabelText("País"), "BR");
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.getByRole("button", { name: "Seguir editando" })).toBeVisible();
   });
   it("cancelar sin cambios es inmediato; con cambios requiere confirmación", async () => {
     render(

@@ -28,7 +28,6 @@ class PreferenciasTests(TestCase):
     def test_get_defaults_y_put_parcial_conservan_campos_omitidos(self):
         """Los defaults se devuelven y cada preferencia es independiente."""
         esperado = {
-            "tema": "oscuro",
             "idioma": None,
             "perfil_publico": True,
             "notif_recomendaciones": True,
@@ -37,7 +36,6 @@ class PreferenciasTests(TestCase):
         }
         self.assertEqual(self.client.get("/api/preferences/").json(), esperado)
         for campo, valor in (
-            ("tema", "claro"),
             ("perfil_publico", False),
             ("notif_recomendaciones", False),
             ("notif_resenas", False),
@@ -84,20 +82,18 @@ class PreferenciasTests(TestCase):
                 "password": "OtraClave123!",
                 "is_staff": True,
                 "is_superuser": True,
-                "tema": "claro",
             },
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
-        antes["tema"] = "claro"
         self.assertEqual(Usuario.objects.values().get(pk=self.usuario.pk), antes)
         otro.refresh_from_db()
-        self.assertEqual(otro.tema, "oscuro")
+        self.assertEqual(otro.perfil_publico, True)
 
     def test_valores_invalidos_rechazan_todo_el_cambio(self):
-        """Tema desconocido y booleanos inválidos no dejan actualizaciones parciales."""
+        """Idioma desconocido y booleanos inválidos no dejan actualizaciones parciales."""
         for campo, valor in (
-            ("tema", "automatico"),
+            ("idioma", "fr"),
             ("perfil_publico", "quizas"),
             ("notif_resenas", None),
             ("notif_novedades", []),
@@ -121,7 +117,9 @@ class PreferenciasTests(TestCase):
         cliente.cookies["access"] = str(self.refresh.access_token)
         self.assertEqual(
             cliente.put(
-                "/api/preferences/", {"tema": "claro"}, content_type="application/json"
+                "/api/preferences/",
+                {"perfil_publico": False},
+                content_type="application/json",
             ).status_code,
             403,
         )
@@ -129,7 +127,7 @@ class PreferenciasTests(TestCase):
         self.assertEqual(
             cliente.put(
                 "/api/preferences/",
-                {"tema": "claro"},
+                {"perfil_publico": False},
                 content_type="application/json",
                 HTTP_X_CSRFTOKEN=cliente.cookies["csrftoken"].value,
             ).status_code,

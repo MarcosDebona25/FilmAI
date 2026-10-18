@@ -95,7 +95,7 @@ describe.each(["en", "es"] as const)("capas compartidas %s", (locale) => {
       );
     vi.stubGlobal("fetch", fetch);
     await expect(
-      apiFetch("/api/preferences/", { method: "PUT", body: { tema: "claro" } })
+      apiFetch("/api/preferences/", { method: "PUT", body: { perfil_publico: false } })
     ).rejects.toMatchObject({
       code: "permission_denied",
       message: t("errors.codes.permission_denied"),

@@ -90,58 +90,49 @@ for (const width of [390, 1440])
     expect(state.getPerfil().avatar_id).toBe(2);
   });
 
-// Solo tema oscuro desde el 15/10/2026: un «claro» guardado igual se ve oscuro
-// (lo cubre e2e/preferencias.spec.ts).
-for (const theme of ["oscuro"])
-  test(`botones consistentes y contraste al menos 4.5 en tema ${theme}`, async ({ page }) => {
-    await prepararCuenta(page);
-    await page.route("**/api/preferences/", (route) =>
-      route.fulfill({ json: { tema: theme, perfil_publico: true } })
-    );
-    await page.goto("/profile");
-    await expect(page.locator("html")).toHaveCSS(
-      "color-scheme",
-      theme === "oscuro" ? "dark" : "light"
-    );
-    // Canvas: «Editar perfil» es secundario y los «Guardar» son de acento; los
-    // de acento comparten colores y todos alcanzan el contraste.
-    const edit = await colors(page.getByRole("button", { name: "Editar perfil" }));
-    expect(edit.contrast).toBeGreaterThanOrEqual(4.5);
-    await page.getByRole("button", { name: "Editar perfil" }).click();
-    const saveProfile = await colors(page.getByRole("button", { name: "Guardar cambios" }));
-    expect(saveProfile.contrast).toBeGreaterThanOrEqual(4.5);
-    await page.getByRole("button", { name: "Cambiar avatar" }).click();
-    const save = page.getByRole("dialog").getByRole("button", { name: "Guardar", exact: true });
-    const saveColors = await colors(save);
-    expect(saveColors.color).toBe(saveProfile.color);
-    expect(saveColors.background).toBe(saveProfile.background);
-    expect(saveColors.contrast).toBeGreaterThanOrEqual(4.5);
-    await save.hover();
-    expect((await colors(save)).contrast).toBeGreaterThanOrEqual(4.5);
-    const cancel = page.getByRole("dialog").getByRole("button", { name: "Cancelar" });
-    expect((await colors(cancel)).contrast).toBeGreaterThanOrEqual(4.5);
-    await cancel.hover();
-    expect((await colors(cancel)).contrast).toBeGreaterThanOrEqual(4.5);
-    await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Cancelar", exact: true }).click();
-    await page.goto("/settings");
-    await expect(page.locator("html")).toHaveCSS(
-      "color-scheme",
-      theme === "oscuro" ? "dark" : "light"
-    );
-    const deactivate = page.getByRole("button", { name: "Dar de baja cuenta" });
-    const danger = await colors(deactivate);
-    expect(danger.contrast).toBeGreaterThanOrEqual(4.5);
-    await deactivate.hover();
-    expect((await colors(deactivate)).contrast).toBeGreaterThanOrEqual(4.5);
-    await deactivate.click();
-    // Canvas: el botón de la página es un contorno rojo y el de confirmar, rojo
-    // lleno, dentro de un `alertdialog`. Ya no comparten colores; los dos
-    // tienen que alcanzar el contraste.
-    const confirm = page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Dar de baja", exact: true });
-    await page.mouse.move(0, 0);
-    const confirmColors = await colors(confirm);
-    expect(confirmColors.contrast).toBeGreaterThanOrEqual(4.5);
-  });
+test("botones consistentes y contraste al menos 4.5", async ({ page }) => {
+  await prepararCuenta(page);
+  await page.route("**/api/preferences/", (route) =>
+    route.fulfill({ json: { perfil_publico: true } })
+  );
+  await page.goto("/profile");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
+  // Canvas: «Editar perfil» es secundario y los «Guardar» son de acento; los
+  // de acento comparten colores y todos alcanzan el contraste.
+  const edit = await colors(page.getByRole("button", { name: "Editar perfil" }));
+  expect(edit.contrast).toBeGreaterThanOrEqual(4.5);
+  await page.getByRole("button", { name: "Editar perfil" }).click();
+  const saveProfile = await colors(page.getByRole("button", { name: "Guardar cambios" }));
+  expect(saveProfile.contrast).toBeGreaterThanOrEqual(4.5);
+  await page.getByRole("button", { name: "Cambiar avatar" }).click();
+  const save = page.getByRole("dialog").getByRole("button", { name: "Guardar", exact: true });
+  const saveColors = await colors(save);
+  expect(saveColors.color).toBe(saveProfile.color);
+  expect(saveColors.background).toBe(saveProfile.background);
+  expect(saveColors.contrast).toBeGreaterThanOrEqual(4.5);
+  await save.hover();
+  expect((await colors(save)).contrast).toBeGreaterThanOrEqual(4.5);
+  const cancel = page.getByRole("dialog").getByRole("button", { name: "Cancelar" });
+  expect((await colors(cancel)).contrast).toBeGreaterThanOrEqual(4.5);
+  await cancel.hover();
+  expect((await colors(cancel)).contrast).toBeGreaterThanOrEqual(4.5);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+  await page.goto("/settings");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
+  const deactivate = page.getByRole("button", { name: "Dar de baja cuenta" });
+  const danger = await colors(deactivate);
+  expect(danger.contrast).toBeGreaterThanOrEqual(4.5);
+  await deactivate.hover();
+  expect((await colors(deactivate)).contrast).toBeGreaterThanOrEqual(4.5);
+  await deactivate.click();
+  // Canvas: el botón de la página es un contorno rojo y el de confirmar, rojo
+  // lleno, dentro de un `alertdialog`. Ya no comparten colores; los dos
+  // tienen que alcanzar el contraste.
+  const confirm = page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Dar de baja", exact: true });
+  await page.mouse.move(0, 0);
+  const confirmColors = await colors(confirm);
+  expect(confirmColors.contrast).toBeGreaterThanOrEqual(4.5);
+});

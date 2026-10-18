@@ -27,7 +27,6 @@ class PreferenciasSerializer(FronteraErroresMixin, serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = (
-            "tema",
             "idioma",
             "perfil_publico",
             "notif_recomendaciones",

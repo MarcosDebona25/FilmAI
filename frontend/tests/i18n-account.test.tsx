@@ -25,14 +25,14 @@ function Probe() {
 }
 function setup(
   idioma: "en" | "es" | null,
-  save: () => Promise<unknown> = async () => ({ idioma: "en", tema: "oscuro" })
+  save: () => Promise<unknown> = async () => ({ idioma: "en" })
 ) {
   document.documentElement.lang = "es";
   document.cookie = `${localeCookie}=es`;
   vi.mocked(apiFetch).mockImplementation(async (path, options) => {
     if (options?.method === "PUT") return save();
     if (path === "/api/profile/") return { pk: 1, idioma };
-    if (path === "/api/preferences/") return { idioma, tema: "oscuro" };
+    if (path === "/api/preferences/") return { idioma };
     return [];
   });
   render(
@@ -73,7 +73,7 @@ describe("sincronización de cuenta y selector", () => {
     expect(document.cookie).toContain(`${localeCookie}=es`);
     expect(screen.getByRole("radio", { name: "Español" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "English" })).toBeDisabled();
-    await act(async () => complete({ idioma: "en", tema: "oscuro" }));
+    await act(async () => complete({ idioma: "en" }));
     expect(document.cookie).toContain(`${localeCookie}=en`);
     expect(screen.getByTestId("account")).toHaveTextContent("en:en");
     expect(apiFetch).toHaveBeenCalledWith("/api/preferences/", {

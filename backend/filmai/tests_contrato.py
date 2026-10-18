@@ -86,6 +86,7 @@ class ContratoErroresAPITests(TestCase):
             "apellido": "Perez",
             "fecha_nacimiento": "1990-01-01",
             "genero": "no_especifica",
+            "pais": "AR",
             "acepta_terminos": True,
             "password1": "Password123!",
             "password2": "Password123!",
@@ -168,6 +169,7 @@ class ContratoErroresAPITests(TestCase):
             "nombre_usuario": "nuevogoogle",
             "fecha_nacimiento": "1990-01-01",
             "genero": "no_especifica",
+            "pais": "AR",
             "acepta_terminos": caso != "sin_terminos",
         }
         if caso == "adapter":
@@ -338,6 +340,7 @@ for campo, valores in {
         ("formato", "mal"),
     ],
     "genero": [("invalido", "otro")],
+    "pais": [("invalido", "ZZ")],
     "password1": [
         ("largo", "Aa1!"),
         ("mayuscula", "password1!"),
