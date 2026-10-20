@@ -16,7 +16,7 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 
 | # | Módulo | Hallazgo | Estado | Severidad | Prioridad |
 |---|---|---|---|---|---|
-| F1 | infra / settings | Redis sin contraseña y publicado, con caché que deserializa pickle | Confirmado | Media | 1 |
+| ~~F1~~ | ~~infra / settings~~ | ~~Redis sin contraseña y publicado, con caché que deserializa pickle~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
 | F2a | usuarios | Login sin límite de intentos | Confirmado | Media | 1 |
 | F2b | usuarios | Reenvío de confirmación y registro sin límite (correo masivo) | Confirmado | Media | 1 |
 | F3 | catálogo / settings | Límite del catálogo eludible con `X-Forwarded-For`, con amplificación a TMDB y Redis | Confirmado | Media | 1 |
@@ -39,3 +39,9 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 6. F4 y F10, después de decidir el comportamiento con el equipo.
 
 Cada fix va como tarea aparte, con su test de regresión y su entrada en `docs/decisiones.md`.
+
+## Registro de correcciones
+
+Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué se hizo; el detalle técnico vive en `docs/decisiones.md` y no incluye credenciales.
+
+- **20/10/2026, F1 (Redis):** Redis exige contraseña y su puerto solo se publica en la propia máquina. En producción la aplicación se niega a arrancar si alguna de las tres URLs de Redis no trae contraseña, y la caché de Django dejó de usar un formato que puede ejecutar código al leerse. Se agregaron tests de configuración y de serializador; la suite completa pasa. Quien tenga un `.env` local debe definir `REDIS_PASSWORD` (ver `.env.example`).

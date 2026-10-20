@@ -180,9 +180,9 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1792086444.3144393,
-    "seen": 1792345839.4983232,
-    "ast_hash": "5763a620870cc3ddac7e7cd668b603b1",
+    "mtime": 1792503931.67084,
+    "seen": 1792504300.288467,
+    "ast_hash": "93762eaa59a078fee6e805f3368a8dae",
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
@@ -540,9 +540,9 @@
     "semantic_hash": "a75dafcaf8ed3c4cda22045b57a9902d"
   },
   "docker-compose.yml": {
-    "mtime": 1792343466.7920883,
-    "seen": 1792345839.4988976,
-    "ast_hash": "0b05e4720311713d7d14f9d06a70bfbf",
+    "mtime": 1792503931.6748824,
+    "seen": 1792504300.3154733,
+    "ast_hash": "3d64f901735eb41f5029712f79da89c0",
     "semantic_hash": ""
   },
   "docs/01_Presentaci\u00f3n Idea-Proyecto.docx.md": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792356191.7205863,
-    "seen": 1792356220.559278,
-    "ast_hash": "ae0577e7aac323a36d5ec53c6fb8ea48",
+    "mtime": 1792504281.784544,
+    "seen": 1792504300.3157644,
+    "ast_hash": "68b4bf5074195cbe30fdcf9e252ce069",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1792343466.8448882,
-    "seen": 1792345839.49869,
+    "mtime": 1792503957.4157522,
+    "seen": 1792504300.3063698,
     "ast_hash": "57e7f09b8bdbf7709e37caeda327fe0c",
     "semantic_hash": ""
   },
@@ -2400,8 +2400,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1792343466.8522427,
-    "seen": 1792345839.498692,
+    "mtime": 1792503957.4157522,
+    "seen": 1792504300.306423,
     "ast_hash": "f4f7ee8cfd6ef320d4a55f4b84b3ffa8",
     "semantic_hash": ""
   },
@@ -4080,9 +4080,21 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1792356191.6869316,
-    "seen": 1792356220.5592752,
-    "ast_hash": "e77a5bbdc7dd32cd0ca967c63ea8afe6",
+    "mtime": 1792504281.7807286,
+    "seen": 1792504300.315763,
+    "ast_hash": "38cddcc588860246e92697beee26a9a0",
+    "semantic_hash": ""
+  },
+  "backend/filmai/cache.py": {
+    "mtime": 1792503921.9110317,
+    "seen": 1792504300.2874644,
+    "ast_hash": "7ddccea64f07c461e7c3cf644e456b51",
+    "semantic_hash": ""
+  },
+  "backend/filmai/test_seguridad_redis.py": {
+    "mtime": 1792504255.2958643,
+    "seen": 1792504300.2888048,
+    "ast_hash": "09fb4b0760d8c056dd4783cc560af52f",
     "semantic_hash": ""
   }
 }
