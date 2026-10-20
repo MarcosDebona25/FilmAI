@@ -461,6 +461,9 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
+    # Tolerancia ante saltos del reloj (WSL2 o servidores no sincronizados): sin
+    # ella, un token recién emitido se rechaza si el reloj retrocede un instante.
+    "LEEWAY": timedelta(seconds=10),
     # También rechaza los JWT anteriores al despliegue que no traen este claim.
     "CHECK_REVOKE_TOKEN": True,
 }
