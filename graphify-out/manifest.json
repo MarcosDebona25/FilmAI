@@ -84,8 +84,8 @@
     "semantic_hash": ""
   },
   "backend/catalogo/views.py": {
-    "mtime": 1792295175.940748,
-    "seen": 1792345839.498279,
+    "mtime": 1792509781.9343128,
+    "seen": 1792509894.1599758,
     "ast_hash": "4d4e29b106187b9f06f10ff2bf06097f",
     "semantic_hash": ""
   },
@@ -180,9 +180,9 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1792503931.67084,
-    "seen": 1792504300.288467,
-    "ast_hash": "93762eaa59a078fee6e805f3368a8dae",
+    "mtime": 1792509798.0302317,
+    "seen": 1792509894.1624827,
+    "ast_hash": "1087a7e39981ba24d3460b3f68f34582",
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
@@ -192,8 +192,8 @@
     "semantic_hash": ""
   },
   "backend/filmai/urls.py": {
-    "mtime": 1792086444.3239522,
-    "seen": 1792345839.4984424,
+    "mtime": 1792509781.9356532,
+    "seen": 1792509894.1733453,
     "ast_hash": "69b3e7223b5b58854c3fc88f3a3283fd",
     "semantic_hash": ""
   },
@@ -288,8 +288,8 @@
     "semantic_hash": ""
   },
   "backend/usuarios/admin.py": {
-    "mtime": 1792295175.9580822,
-    "seen": 1792345839.4984815,
+    "mtime": 1792509781.9356532,
+    "seen": 1792509894.1767488,
     "ast_hash": "159b47649ecbd3cf19d827605c208955",
     "semantic_hash": ""
   },
@@ -396,8 +396,8 @@
     "semantic_hash": ""
   },
   "backend/usuarios/views.py": {
-    "mtime": 1791583476.7636607,
-    "seen": 1792345839.4985354,
+    "mtime": 1792509781.9411929,
+    "seen": 1792509894.180202,
     "ast_hash": "6abd80279804546115f4e06c54a760a3",
     "semantic_hash": ""
   },
@@ -408,8 +408,8 @@
     "semantic_hash": ""
   },
   "frontend/app/(public)/login/page.tsx": {
-    "mtime": 1792086444.3557265,
-    "seen": 1792345839.498541,
+    "mtime": 1792509781.9559767,
+    "seen": 1792509894.1804335,
     "ast_hash": "570f1144990a05ccfa6eacec1af04cee",
     "semantic_hash": ""
   },
@@ -540,9 +540,9 @@
     "semantic_hash": "a75dafcaf8ed3c4cda22045b57a9902d"
   },
   "docker-compose.yml": {
-    "mtime": 1792503931.6748824,
-    "seen": 1792504300.3154733,
-    "ast_hash": "3d64f901735eb41f5029712f79da89c0",
+    "mtime": 1792509789.6881182,
+    "seen": 1792509894.2023335,
+    "ast_hash": "af11ac0a331d612e05b40da315b25136",
     "semantic_hash": ""
   },
   "docs/01_Presentaci\u00f3n Idea-Proyecto.docx.md": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792504281.784544,
-    "seen": 1792504300.3157644,
-    "ast_hash": "68b4bf5074195cbe30fdcf9e252ce069",
+    "mtime": 1792509813.3866205,
+    "seen": 1792509894.2027273,
+    "ast_hash": "5f899b16d04e35b678b727d9a7c2c8ec",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -1182,8 +1182,8 @@
     "semantic_hash": ""
   },
   "backend/usuarios/throttles.py": {
-    "mtime": 1789238232.528239,
-    "seen": 1792345839.4985335,
+    "mtime": 1792509781.9356532,
+    "seen": 1792509894.1801565,
     "ast_hash": "80ed6bd45cea757ed2c1c0eeed02a6b4",
     "semantic_hash": "80ed6bd45cea757ed2c1c0eeed02a6b4"
   },
@@ -2664,8 +2664,8 @@
     "semantic_hash": ""
   },
   "backend/filmai/pruebas.py": {
-    "mtime": 1791583476.5898948,
-    "seen": 1792345839.4983222,
+    "mtime": 1792509781.9356532,
+    "seen": 1792509894.1624775,
     "ast_hash": "ba9a77736220be5c01dc6ec5aefb2ad7",
     "semantic_hash": ""
   },
@@ -2682,8 +2682,8 @@
     "semantic_hash": ""
   },
   "contracts/error-codes.json": {
-    "mtime": 1792295176.0014176,
-    "seen": 1792345839.4985375,
+    "mtime": 1792504863.2870743,
+    "seen": 1792509894.1802466,
     "ast_hash": "a095d342c61f515309128e8ac5435baf",
     "semantic_hash": ""
   },
@@ -3084,8 +3084,8 @@
     "semantic_hash": ""
   },
   "frontend/tests/access-screens.test.tsx": {
-    "mtime": 1792295176.083755,
-    "seen": 1792345839.4987044,
+    "mtime": 1792509781.9593372,
+    "seen": 1792509894.1896586,
     "ast_hash": "95187cca97d128e97271f9f04f6850b2",
     "semantic_hash": ""
   },
@@ -4080,8 +4080,8 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1792504281.7807286,
-    "seen": 1792504300.315763,
+    "mtime": 1792509781.9439385,
+    "seen": 1792509894.2027254,
     "ast_hash": "38cddcc588860246e92697beee26a9a0",
     "semantic_hash": ""
   },
@@ -4092,9 +4092,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/test_seguridad_redis.py": {
-    "mtime": 1792504255.2958643,
-    "seen": 1792504300.2888048,
-    "ast_hash": "09fb4b0760d8c056dd4783cc560af52f",
+    "mtime": 1792509854.0353684,
+    "seen": 1792509894.1630023,
+    "ast_hash": "e65d85d9fcf75c66e298eff69ddda7fe",
     "semantic_hash": ""
   }
 }

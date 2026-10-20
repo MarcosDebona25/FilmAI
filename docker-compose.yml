@@ -40,7 +40,13 @@ services:
     # `docker ps`). `:?` aborta `docker compose up` si falta REDIS_PASSWORD.
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?definí REDIS_PASSWORD en .env}
-    command: ["sh", "-c", 'exec redis-server --requirepass "$$REDIS_PASSWORD"']
+    # Pasa por `docker-entrypoint.sh`: la imagen solo baja de root al usuario
+    # `redis` cuando su primer argumento es `redis-server`; con `sh -c` a secas
+    # el servidor correría como root.
+    command:
+      - sh
+      - -c
+      - 'exec docker-entrypoint.sh redis-server --requirepass "$$REDIS_PASSWORD"'
     # Solo loopback: otras máquinas de la red no llegan a Redis. Los demás
     # servicios lo alcanzan por la red interna de Docker (host `redis`).
     ports:
