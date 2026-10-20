@@ -5,6 +5,13 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 20/10/2026 — JWT con 10 segundos de tolerancia de reloj (test intermitente)
+
+- **Fecha**: 20/10/2026
+- **Descripción**: la suite completa fallaba al azar (3 de 6 corridas) en `usuarios.test_perfil` y `usuarios.test_cuenta` con 401 (Unauthorized) `invalid_token`. Se reprodujo con carga de CPU y la causa real fue `ImmatureSignatureError ("The token is not yet valid (iat)")`: el reloj del sistema (WSL2) retrocedió unos 2 segundos, así que un token recién emitido quedaba "en el futuro" y PyJWT lo rechazaba, porque simplejwt no tenía tolerancia (`LEEWAY` 0). Pasa lo mismo en producción si el reloj del servidor se corrige hacia atrás o si varias instancias no están sincronizadas.
+- **Cambio**: `SIMPLE_JWT["LEEWAY"] = timedelta(seconds=10)`. Diez segundos sobre un access de 8 horas no debilitan el vencimiento; la revocación (claim de hash de contraseña y blacklist) no depende del reloj. Con el cambio, 12 corridas bajo carga sin fallos (antes 3 de 10).
+- **Archivos**: `backend/filmai/settings.py`, `backend/usuarios/test_reloj_jwt.py` (nuevo: token emitido 3 s adelantado se acepta; 60 s adelantado se rechaza con `invalid_token`).
+
 ## 20/10/2026 — Auditoría F4: las cuentas pendientes vencen y dejan de reservar el correo
 
 - **Fecha**: 20/10/2026
