@@ -312,7 +312,9 @@ if not DEBUG:
         if not urlsplit(_url).password:
             raise ImproperlyConfigured(
                 f"{_nombre} debe incluir la contraseña de Redis en producción "
-                "(DEBUG=False). Definí REDIS_PASSWORD."
+                "(DEBUG=False). Definí REDIS_PASSWORD y borrá esa variable del "
+                "entorno para que se arme sola, o escribí la URL completa con la "
+                "contraseña (redis://:<password>@redis:6379/N)."
             )
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
