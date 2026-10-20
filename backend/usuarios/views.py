@@ -247,7 +247,9 @@ class ConfirmarCorreoView(APIView):
 
     def post(self, request):
         key = str(request.data.get("key", ""))
-        logger.info("ConfirmarCorreo: key recibida (len=%d): %r", len(key), key)
+        # La clave es un secreto de un solo uso: nunca va al log, ni entera ni en
+        # pedazos. Alcanza con el largo para diagnosticar.
+        logger.info("ConfirmarCorreo: key recibida (len=%d)", len(key))
         ttl_segundos = (
             allauth_account_settings.EMAIL_CONFIRMATION_EXPIRE_DAYS * 24 * 3600
         )
@@ -262,9 +264,8 @@ class ConfirmarCorreoView(APIView):
             logger.info("ConfirmarCorreo: key expirada")
             return _error_enlace("link_expired")
         except (signing.BadSignature, ValueError, TypeError) as exc:
-            logger.warning(
-                "ConfirmarCorreo: key inválida — %s: %s", type(exc).__name__, exc
-            )
+            # Sin `exc`: el mensaje de BadSignature repite la firma recibida.
+            logger.warning("ConfirmarCorreo: key inválida — %s", type(exc).__name__)
             return _error_enlace("link_invalid")
 
         email_address = (
