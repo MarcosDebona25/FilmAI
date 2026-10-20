@@ -392,6 +392,12 @@ CELERY_BEAT_SCHEDULE = {
         "task": "catalogo.backfill_embeddings",
         "schedule": crontab(hour=4, minute=0),
     },
+    # Cuentas que nunca confirmaron el correo (F4 de la auditoría): se borran
+    # pasado el plazo del enlace. No depende de las otras dos tareas.
+    "limpiar-pendientes-vencidas": {
+        "task": "usuarios.limpiar_pendientes_vencidas",
+        "schedule": crontab(hour=5, minute=0),
+    },
 }
 
 # --- django-allauth ---

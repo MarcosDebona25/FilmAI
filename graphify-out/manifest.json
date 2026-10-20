@@ -180,9 +180,9 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1792510623.069218,
-    "seen": 1792511074.1379335,
-    "ast_hash": "3333496f3c3178f30dc788ef07d12951",
+    "mtime": 1792512992.2174697,
+    "seen": 1792513418.667567,
+    "ast_hash": "445c1879421d04feb28bbdd8d554fdd4",
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/serializers.py": {
-    "mtime": 1792295175.9754162,
-    "seen": 1792345839.498515,
-    "ast_hash": "1e7eb3bafe82eabbb43687f3f93e878b",
+    "mtime": 1792512997.5728204,
+    "seen": 1792513418.677046,
+    "ast_hash": "13d6e7f025c7c4fc5e2f91715f7a0179",
     "semantic_hash": ""
   },
   "backend/usuarios/signals.py": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/views.py": {
-    "mtime": 1792510499.187671,
-    "seen": 1792511074.1482806,
-    "ast_hash": "ec56459b45872af4ff6576f49efa514d",
+    "mtime": 1792513002.7228453,
+    "seen": 1792513418.6779644,
+    "ast_hash": "4f40cb5685ee9a1094a22be052f3dd55",
     "semantic_hash": ""
   },
   "docs/03_DiagramaClases_DiagramaTablas.json": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792510730.5736296,
-    "seen": 1792511074.1633964,
-    "ast_hash": "7e1874901670cafa13e0133ffc296c79",
+    "mtime": 1792513086.8524182,
+    "seen": 1792513418.6939838,
+    "ast_hash": "c89a11ded11d3cd172843c1c889309da",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2370,20 +2370,20 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1792510623.079726,
-    "seen": 1792511074.1542883,
+    "mtime": 1792513064.9342842,
+    "seen": 1792513418.6844096,
     "ast_hash": "2491b335a158d93e2b6004b7463cb801",
     "semantic_hash": ""
   },
   "frontend/messages/en/common.json": {
-    "mtime": 1792510623.0755532,
-    "seen": 1792511074.1542912,
+    "mtime": 1792513064.8964145,
+    "seen": 1792513418.684412,
     "ast_hash": "ab16e027d31bc3225a9e57164f3124c0",
     "semantic_hash": ""
   },
   "frontend/messages/es/common.json": {
-    "mtime": 1792510623.0766675,
-    "seen": 1792511074.1542952,
+    "mtime": 1792513064.897919,
+    "seen": 1792513418.684416,
     "ast_hash": "00d8d6b316e92b4b1456fd5bd2a819ec",
     "semantic_hash": ""
   },
@@ -2400,8 +2400,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1792510623.081364,
-    "seen": 1792511074.1542935,
+    "mtime": 1792513064.9342842,
+    "seen": 1792513418.6844144,
     "ast_hash": "7b33bb000b7c3141a7af9587d38540e0",
     "semantic_hash": ""
   },
@@ -2934,8 +2934,8 @@
     "semantic_hash": ""
   },
   "frontend/i18n/enums.json": {
-    "mtime": 1792509973.1959832,
-    "seen": 1792511074.1528888,
+    "mtime": 1792513086.8170354,
+    "seen": 1792513418.682929,
     "ast_hash": "8d63e433a68082c5423214e5ff1e2d1c",
     "semantic_hash": ""
   },
@@ -4080,9 +4080,9 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1792510730.5754154,
-    "seen": 1792511074.1633942,
-    "ast_hash": "e170170d18f24a20f4d0b2d4dac1871e",
+    "mtime": 1792513086.8541577,
+    "seen": 1792513418.6939816,
+    "ast_hash": "d54b4ca7a77e252efb26b2f5df44704a",
     "semantic_hash": ""
   },
   "backend/filmai/cache.py": {
@@ -4143,6 +4143,24 @@
     "mtime": 1792510623.07693,
     "seen": 1792511074.155158,
     "ast_hash": "620cd023d72a86dc96c1a134bff8fd7b",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/pendientes.py": {
+    "mtime": 1792513050.2690644,
+    "seen": 1792513418.6769154,
+    "ast_hash": "d2e56359abed6c5fd1afb526914c7b77",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/tasks.py": {
+    "mtime": 1792512985.8181622,
+    "seen": 1792513418.6770918,
+    "ast_hash": "dbcbafd61185bf081b0ba2108176332c",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/test_seguridad_pendientes.py": {
+    "mtime": 1792513087.1014605,
+    "seen": 1792513418.6777925,
+    "ast_hash": "8c7d0847740f4c890c3a7bbd72ac7d83",
     "semantic_hash": ""
   }
 }
