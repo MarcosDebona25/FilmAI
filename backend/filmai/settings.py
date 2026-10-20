@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import quote, urlsplit
 
 from celery.schedules import crontab
 from decouple import config
@@ -268,7 +269,17 @@ LOGGING = {
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
 
 # Redis en producción comparte caché y rate limits entre workers.
-REDIS_URL = config("REDIS_URL", default="redis://redis:6379/0")
+# Redis exige contraseña (`requirepass` en docker-compose.yml). Si solo se define
+# `REDIS_PASSWORD`, las tres URLs se arman solas; cada una se puede sobrescribir.
+REDIS_PASSWORD = config("REDIS_PASSWORD", default="")
+
+
+def _redis_url(db):
+    acceso = f":{quote(REDIS_PASSWORD, safe='')}@" if REDIS_PASSWORD else ""
+    return f"redis://{acceso}redis:6379/{db}"
+
+
+REDIS_URL = config("REDIS_URL", default=_redis_url(0))
 if DEBUG:
     CACHES = {
         "default": {
@@ -280,6 +291,8 @@ else:
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
             "LOCATION": REDIS_URL,
+            # JSON en vez del pickle por defecto: ver filmai/cache.py.
+            "OPTIONS": {"serializer": "filmai.cache.JSONRedisSerializer"},
         }
     }
 
@@ -287,8 +300,22 @@ else:
 # Redis cumple doble rol: caché (DB 0, `REDIS_URL`) y cola de tareas. Se usan
 # DBs lógicas distintas para que las claves de Celery no se mezclen con las
 # `tmdb:*` del caché ni las borre un flush del otro rol.
-CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/1")
-CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://redis:6379/2")
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default=_redis_url(1))
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default=_redis_url(2))
+if not DEBUG:
+    # Falla al arrancar en vez de operar con un Redis abierto.
+    for _nombre, _url in (
+        ("REDIS_URL", REDIS_URL),
+        ("CELERY_BROKER_URL", CELERY_BROKER_URL),
+        ("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND),
+    ):
+        if not urlsplit(_url).password:
+            raise ImproperlyConfigured(
+                f"{_nombre} debe incluir la contraseña de Redis en producción "
+                "(DEBUG=False). Definí REDIS_PASSWORD y borrá esa variable del "
+                "entorno para que se arme sola, o escribí la URL completa con la "
+                "contraseña (redis://:<password>@redis:6379/N)."
+            )
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]

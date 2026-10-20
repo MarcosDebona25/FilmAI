@@ -5,6 +5,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 20/10/2026 — Auditoría F1: Redis con contraseña, solo loopback y caché sin pickle
+
+- **Fecha**: 20/10/2026
+- **Descripción**: se corrigió el hallazgo F1 de la auditoría (Redis sin contraseña, publicado en todas las interfaces, con una caché de Django que deserializaba pickle). Tres capas: (A) el puerto 6379 se publica solo en `127.0.0.1`; (B) Redis arranca con `requirepass` y el compose aborta si falta `REDIS_PASSWORD`; (C) la caché de Django usa `filmai.cache.JSONRedisSerializer` en lugar del pickle por defecto. `settings.py` arma las tres URLs (caché, broker y resultados de Celery) con la contraseña a partir de `REDIS_PASSWORD` y, con `DEBUG=False`, lanza `ImproperlyConfigured` si alguna llega sin contraseña, igual que ya hace con `EMAIL_BACKEND`.
+- **Decisiones**: la contraseña va por variable de entorno del contenedor y no en la línea de comandos, para que no se vea en `docker ps`. Los enteros se guardan crudos porque `cache.incr` (contadores de throttle) usa `INCR` de Redis. Un valor de caché que no es JSON válido se descarta y se registra un aviso, nunca se interpreta; una clave vieja en formato pickle devuelve `None` hasta que vence su TTL (minutos o un día). El caché de TMDB (`catalogo/cache.py`) ya usaba JSON y toma la URL con contraseña de `settings.REDIS_URL`, sin cambios.
+- **Pendiente a nivel despliegue**: política `maxmemory` de Redis (se hace con F3, usando `volatile-lru` porque la cola de Celery comparte instancia y no debe ser desalojada).
+- **Archivos afectados**: `docker-compose.yml`, `.env.example`, `backend/filmai/settings.py`, `backend/filmai/cache.py` (nuevo), `backend/filmai/test_seguridad_redis.py` (nuevo), `docs/auditoria-seguridad-resumen.md`. **Quien tenga un `.env` anterior (por ejemplo Gonza) debe: agregar `REDIS_PASSWORD`, borrar `REDIS_URL`, `CELERY_BROKER_URL` y `CELERY_RESULT_BACKEND` si no llevan contraseña (con `DEBUG=True` no hay aviso al arrancar y Celery falla con `NOAUTH` al ejecutar una tarea) y recrear los contenedores con `docker compose up -d --force-recreate`.** El detalle está también en `.env.example`.
+- **Correcciones tras la revisión de PR-Agent**: `redis-server` se invoca vía `docker-entrypoint.sh` para conservar la baja de root al usuario `redis` (con `sh -c` a secas corría como root); `REDIS_PASSWORD` va vacía en `.env.example` porque un valor de ejemplo no vacío anula el `:?` del compose; el mensaje de `ImproperlyConfigured` explica los dos remedios; y hay un test de ida y vuelta por `RedisCache` con un cliente en memoria.
+
+---
+
 ## 18/10/2026 — Auditoría de seguridad (run-2): validación en sandbox y lista de fixes
 
 - **Fecha**: 18/10/2026
