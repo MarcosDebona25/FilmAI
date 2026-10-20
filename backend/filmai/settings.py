@@ -174,7 +174,25 @@ REST_FRAMEWORK = {
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
+        # Login: 10 intentos por minuto por cuenta (frena el adivinado de
+        # contraseñas desde cualquier IP) y 30 por IP (frena probar muchas
+        # cuentas). Los límites por IP asumen una IP real: ver NUM_PROXIES.
+        "login_cuenta": "10/min",
+        "login_ip": "30/min",
+        # Registro y reenvío disparan correos (cuota de Resend y reputación del
+        # dominio): tope por correo destino y por IP, más un enfriamiento.
+        "registro_correo": "5/hour",
+        "registro_ip": "10/hour",
+        "reenvio_correo": "3/hour",
+        "reenvio_enfriamiento": "1/min",
+        "reenvio_ip": "10/hour",
     },
+    # Cantidad de proxies de confianza delante de Django. Con 0 se usa la IP de
+    # la conexión y se ignora `X-Forwarded-For`, que cualquier cliente puede
+    # falsear. Con N, DRF toma la N-ésima IP desde la derecha de ese header
+    # (la que añadió el proxy propio). Hoy no hay despliegue: dejarlo en 0 hasta
+    # saber la topología real (docs/decisiones.md, 20/10/2026).
+    "NUM_PROXIES": config("NUM_PROXIES", default=0, cast=int),
 }
 
 # Valida el sobre de errores en toda respuesta de la suite (OT-34).

@@ -141,3 +141,8 @@ class ComposeRedisTests(SimpleTestCase):
     def test_la_contrasena_es_obligatoria_y_no_va_en_la_linea_de_comandos(self):
         self.assertIn(":?", self.redis["environment"]["REDIS_PASSWORD"])
         self.assertNotIn("${REDIS_PASSWORD", " ".join(self.redis["command"]))
+
+    def test_redis_tiene_tope_de_memoria_que_no_desaloja_la_cola_de_celery(self):
+        comando = " ".join(self.redis["command"])
+        self.assertIn("--maxmemory ", comando)
+        self.assertIn("--maxmemory-policy volatile-lru", comando)
