@@ -131,13 +131,26 @@ class UsuarioAdmin(BaseUserAdmin):
             return campos
         return (*campos, *CAMPOS_DE_PRIVILEGIO)
 
-    def has_change_permission(self, request, obj=None):
-        if not super().has_change_permission(request, obj):
-            return False
+    def _puede_actuar_sobre(self, request, obj):
+        """Regla por objeto, común a editar y borrar.
+
+        Nadie sin ser superusuario toca a un superusuario ni a otro staff (cuya
+        contraseña o cuya baja le cambiaría los permisos al sistema); sí a sí
+        mismo y a usuarios comunes. Sin objeto (listado, acciones masivas) no se
+        decide acá: Django vuelve a preguntar por cada fila.
+        """
         if request.user.is_superuser or obj is None:
             return True
-        # Nadie sin ser superusuario toca a un superusuario ni a otro staff
-        # (cuya contraseña le daría sus permisos); sí a sí mismo y a usuarios comunes.
         if obj.is_superuser:
             return False
         return obj.pk == request.user.pk or not obj.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) and self._puede_actuar_sobre(
+            request, obj
+        )
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) and self._puede_actuar_sobre(
+            request, obj
+        )
