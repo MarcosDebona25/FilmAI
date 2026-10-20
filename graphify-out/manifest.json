@@ -180,9 +180,9 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1792510623.069218,
-    "seen": 1792511074.1379335,
-    "ast_hash": "3333496f3c3178f30dc788ef07d12951",
+    "mtime": 1792512992.2174697,
+    "seen": 1792513418.667567,
+    "ast_hash": "445c1879421d04feb28bbdd8d554fdd4",
     "semantic_hash": ""
   },
   "backend/filmai/tests.py": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/serializers.py": {
-    "mtime": 1792295175.9754162,
-    "seen": 1792345839.498515,
-    "ast_hash": "1e7eb3bafe82eabbb43687f3f93e878b",
+    "mtime": 1792512997.5728204,
+    "seen": 1792513418.677046,
+    "ast_hash": "13d6e7f025c7c4fc5e2f91715f7a0179",
     "semantic_hash": ""
   },
   "backend/usuarios/signals.py": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/views.py": {
-    "mtime": 1792510499.187671,
-    "seen": 1792511074.1482806,
-    "ast_hash": "ec56459b45872af4ff6576f49efa514d",
+    "mtime": 1792513002.7228453,
+    "seen": 1792513418.6779644,
+    "ast_hash": "4f40cb5685ee9a1094a22be052f3dd55",
     "semantic_hash": ""
   },
   "docs/03_DiagramaClases_DiagramaTablas.json": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792510730.5736296,
-    "seen": 1792511074.1633964,
-    "ast_hash": "7e1874901670cafa13e0133ffc296c79",
+    "mtime": 1792515533.1865554,
+    "seen": 1792516467.7035522,
+    "ast_hash": "9376ac959a7e8d5435229abddb3feca5",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -1638,26 +1638,26 @@
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/confirmacion_registro.json": {
-    "mtime": 1792086444.322764,
-    "seen": 1792345839.498435,
-    "ast_hash": "98521d921ea16c913d00118f5d5547a7",
+    "mtime": 1792514150.5029104,
+    "seen": 1792514557.991929,
+    "ast_hash": "8465b84748a96a4fb62c63cdb30dd30c",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/contrasena_actualizada.json": {
-    "mtime": 1792086444.3230805,
-    "seen": 1792345839.4984372,
+    "mtime": 1792514151.2502537,
+    "seen": 1792514557.991932,
     "ast_hash": "0084a1d50960e1e0e3b5bdf9be3f0b16",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/reenvio_confirmacion.json": {
-    "mtime": 1792086444.3234053,
-    "seen": 1792345839.4984393,
+    "mtime": 1792514151.5220528,
+    "seen": 1792514557.9919345,
     "ast_hash": "43b0eea37d615214072937077ea46ff0",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/restablecimiento.json": {
-    "mtime": 1792086444.3236907,
-    "seen": 1792345839.4984415,
+    "mtime": 1792514151.804406,
+    "seen": 1792514557.9919374,
     "ast_hash": "101ab847ebae636eb502e646e09920c7",
     "semantic_hash": ""
   },
@@ -2370,20 +2370,20 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1792510623.079726,
-    "seen": 1792511074.1542883,
+    "mtime": 1792513064.9342842,
+    "seen": 1792513418.6844096,
     "ast_hash": "2491b335a158d93e2b6004b7463cb801",
     "semantic_hash": ""
   },
   "frontend/messages/en/common.json": {
-    "mtime": 1792510623.0755532,
-    "seen": 1792511074.1542912,
+    "mtime": 1792513064.8964145,
+    "seen": 1792513418.684412,
     "ast_hash": "ab16e027d31bc3225a9e57164f3124c0",
     "semantic_hash": ""
   },
   "frontend/messages/es/common.json": {
-    "mtime": 1792510623.0766675,
-    "seen": 1792511074.1542952,
+    "mtime": 1792513064.897919,
+    "seen": 1792513418.684416,
     "ast_hash": "00d8d6b316e92b4b1456fd5bd2a819ec",
     "semantic_hash": ""
   },
@@ -2400,8 +2400,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1792510623.081364,
-    "seen": 1792511074.1542935,
+    "mtime": 1792513064.9342842,
+    "seen": 1792513418.6844144,
     "ast_hash": "7b33bb000b7c3141a7af9587d38540e0",
     "semantic_hash": ""
   },
@@ -2568,15 +2568,15 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/es/message.html": {
-    "mtime": 1792086444.3316,
-    "seen": 1792345839.498879,
-    "ast_hash": "0cae1766e3eeed60a6564bf99a85d21a",
+    "mtime": 1792514089.625023,
+    "seen": 1792514558.0101843,
+    "ast_hash": "5d44b466c3a59727ac8c244d1ff59d9a",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/es/message.txt": {
-    "mtime": 1791583476.715278,
-    "seen": 1792345839.49888,
-    "ast_hash": "fd90bbfdafb7b0ddd595ccf907d0faa5",
+    "mtime": 1792514089.6238015,
+    "seen": 1792514558.0101855,
+    "ast_hash": "6c79432028d7c50d90c695f93005ed1c",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/es/subject.txt": {
@@ -2748,26 +2748,26 @@
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/confirmacion_registro.en.json": {
-    "mtime": 1792086444.322549,
-    "seen": 1792345839.498434,
-    "ast_hash": "b1b7104273cef4f525dc1292c146d22c",
+    "mtime": 1792514148.7027724,
+    "seen": 1792514557.9919262,
+    "ast_hash": "322c9110de02c6278a6b298454d96ba8",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/contrasena_actualizada.en.json": {
-    "mtime": 1792086444.3229358,
-    "seen": 1792345839.4984362,
+    "mtime": 1792514149.612334,
+    "seen": 1792514557.9919305,
     "ast_hash": "4b2dc80c48fe97a5d13d4c0d0c2cbfba",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/reenvio_confirmacion.en.json": {
-    "mtime": 1792086444.3232112,
-    "seen": 1792345839.4984384,
+    "mtime": 1792514149.91679,
+    "seen": 1792514557.991933,
     "ast_hash": "9f088ee73522256075795856f0eb85db",
     "semantic_hash": ""
   },
   "backend/filmai/tests_golden/correos/restablecimiento.en.json": {
-    "mtime": 1792086444.3235266,
-    "seen": 1792345839.4984405,
+    "mtime": 1792514150.195619,
+    "seen": 1792514557.991936,
     "ast_hash": "9fe566166a6be1d9eb42da3f03d8e4db",
     "semantic_hash": ""
   },
@@ -2802,15 +2802,15 @@
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/en/message.html": {
-    "mtime": 1792086444.331361,
-    "seen": 1792345839.4988754,
-    "ast_hash": "a716c9753ebcc36dfd0b372eca761cb1",
+    "mtime": 1792514089.6257038,
+    "seen": 1792514558.010121,
+    "ast_hash": "3c8b3b2fe2018a7f9262e86e4370af17",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/en/message.txt": {
-    "mtime": 1791583476.7124343,
-    "seen": 1792345839.4988766,
-    "ast_hash": "4ddccd2925bb74e398604f99312c69c1",
+    "mtime": 1792514089.6254346,
+    "seen": 1792514558.0101233,
+    "ast_hash": "70c0bb55cd73546d86ae731fc5822863",
     "semantic_hash": ""
   },
   "backend/templates/correos/confirmacion_registro/en/subject.txt": {
@@ -2934,8 +2934,8 @@
     "semantic_hash": ""
   },
   "frontend/i18n/enums.json": {
-    "mtime": 1792509973.1959832,
-    "seen": 1792511074.1528888,
+    "mtime": 1792513086.8170354,
+    "seen": 1792513418.682929,
     "ast_hash": "8d63e433a68082c5423214e5ff1e2d1c",
     "semantic_hash": ""
   },
@@ -3948,9 +3948,9 @@
     "semantic_hash": ""
   },
   "traducciones/revision-correos/index.html": {
-    "mtime": 1792343466.8338041,
-    "seen": 1792345839.4989374,
-    "ast_hash": "97e6caa5654d09a10fa8aa5d2f3eee68",
+    "mtime": 1792514155.7280543,
+    "seen": 1792514558.0126567,
+    "ast_hash": "0c2c883fc6a05e039336a34999d2c115",
     "semantic_hash": ""
   },
   ".agents/skills/security-audit/report-schema.json": {
@@ -4080,9 +4080,9 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1792510730.5754154,
-    "seen": 1792511074.1633942,
-    "ast_hash": "e170170d18f24a20f4d0b2d4dac1871e",
+    "mtime": 1792514171.3088722,
+    "seen": 1792514558.01136,
+    "ast_hash": "4c72496799ea2af09fdd83fb750f8e73",
     "semantic_hash": ""
   },
   "backend/filmai/cache.py": {
@@ -4143,6 +4143,24 @@
     "mtime": 1792510623.07693,
     "seen": 1792511074.155158,
     "ast_hash": "620cd023d72a86dc96c1a134bff8fd7b",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/pendientes.py": {
+    "mtime": 1792514143.0973108,
+    "seen": 1792514557.9950156,
+    "ast_hash": "1328435f3ec5c0a4ddaa5ff3156e64aa",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/tasks.py": {
+    "mtime": 1792512985.8181622,
+    "seen": 1792513418.6770918,
+    "ast_hash": "dbcbafd61185bf081b0ba2108176332c",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/test_seguridad_pendientes.py": {
+    "mtime": 1792515513.2447774,
+    "seen": 1792516467.6840556,
+    "ast_hash": "e2f7077215cd986f6f26bfa190a628f6",
     "semantic_hash": ""
   }
 }

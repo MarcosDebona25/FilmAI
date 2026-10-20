@@ -43,6 +43,7 @@ from filmai.errores.sobre import (
 )
 
 from .models import Usuario
+from .pendientes import pendientes_vencidas
 from .serializers import (
     EnlaceRestablecimientoInvalido,
     GoogleSocialLoginSerializer,
@@ -223,10 +224,13 @@ class UsernameDisponibleView(APIView):
         username = request.query_params.get("username", "")
         if not USERNAME_REGEX.fullmatch(username):
             return Response({"disponible": False})
-        disponible = not Usuario.objects.filter(
-            nombre_usuario__iexact=username
-        ).exists()
-        return Response({"disponible": disponible})
+        # Una pendiente vencida ya no reserva el nombre (F4); el GET no borra.
+        ocupado = (
+            Usuario.objects.filter(nombre_usuario__iexact=username)
+            .exclude(pk__in=pendientes_vencidas().values("pk"))
+            .exists()
+        )
+        return Response({"disponible": not ocupado})
 
 
 class ConfirmarCorreoView(APIView):
