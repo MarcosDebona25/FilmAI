@@ -22,6 +22,7 @@ print(json.dumps({
     "broker": s.CELERY_BROKER_URL,
     "result": s.CELERY_RESULT_BACKEND,
     "caches": s.CACHES,
+    "num_proxies": s.REST_FRAMEWORK["NUM_PROXIES"],
 }))
 """
 
@@ -34,6 +35,7 @@ def importar_settings(**entorno):
     env = {
         **os.environ,
         "DEBUG": "False",
+        "NUM_PROXIES": "0",
         "EMAIL_BACKEND": "django.core.mail.backends.locmem.EmailBackend",
         "REDIS_URL": CON_CLAVE.format(db=0),
         "CELERY_BROKER_URL": CON_CLAVE.format(db=1),

@@ -76,6 +76,8 @@ errors.codes.confirmation_email_sent,confirmation_email_sent,success,,"Si tu cue
 errors.codes.logged_out,logged_out,success,,Cerraste sesión en este dispositivo.,You’ve logged out on this device.,aprobado
 errors.codes.unknown,,fallback,,No pudimos completar la acción. Intentá de nuevo.,We couldn’t complete the action. Try again.,aprobado
 errors.codes.throttledWithWait,,variant,retryAfterSeconds,"Hay demasiadas solicitudes. Intentá de nuevo en {retryAfterSeconds, plural, one {# segundo} other {# segundos}}.","There are too many requests. Try again in {retryAfterSeconds, plural, one {# second} other {# seconds}}.",aprobado
+errors.codes.throttledWithWaitMinutes,,variant,minutes,"Hay demasiadas solicitudes. Intentá de nuevo en {minutes, plural, one {# minuto} other {# minutos}}.","There are too many requests. Try again in {minutes, plural, one {# minute} other {# minutes}}.",aprobado
+errors.codes.throttledWithWaitHours,,variant,hours,"Hay demasiadas solicitudes. Intentá de nuevo en {hours, plural, one {# hora} other {# horas}}.","There are too many requests. Try again in {hours, plural, one {# hour} other {# hours}}.",aprobado
 settings.language.label,,selector,,Idioma,Language,aprobado
 settings.language.selectLabel,,selector,,Elegí el idioma,Choose your language,aprobado
 settings.language.description,,selector,,Elegí el idioma de FilmAI.,Choose the language for FilmAI.,aprobado
