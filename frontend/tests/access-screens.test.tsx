@@ -8,10 +8,11 @@ import { render, screen, waitFor, within } from "./render";
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }));
 const params = vi.hoisted(() => ({ key: "clave%3Aabc" }));
+const consulta = vi.hoisted(() => ({ texto: "" }));
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
   usePathname: () => "/register",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(consulta.texto),
   useParams: () => params,
 }));
 vi.mock("next/image", () => ({
@@ -33,6 +34,7 @@ import LoginPage from "@/app/(public)/login/page";
 import ConfirmPage from "@/app/confirm-email/[key]/page";
 
 beforeEach(() => {
+  consulta.texto = "";
   sessionStorage.clear();
   vi.mocked(apiFetch).mockResolvedValue({});
   vi.stubGlobal(
@@ -260,6 +262,24 @@ describe("login", () => {
     await user.type(screen.getByLabelText(en.auth.password.label, { selector: "input" }), "mala");
     await user.click(screen.getByRole("button", { name: en.nav.account.logIn }));
     expect(await screen.findByText(en.auth.login.invalidCredentials)).toBeInTheDocument();
+  });
+
+  it.each([
+    ["/profile?tab=1#x", "/profile?tab=1#x"],
+    ["//evil.example", "/home"],
+    ["/\\evil.example", "/home"],
+    ["https://evil.example", "/home"],
+  ])("tras el login, next=%s lleva a %s", async (next, esperado) => {
+    consulta.texto = `next=${encodeURIComponent(next)}`;
+    const user = userEvent.setup();
+    render(<LoginPage />, { locale: "en" });
+    await user.type(screen.getByLabelText(en.auth.login.identifierLabel), "juan");
+    await user.type(
+      screen.getByLabelText(en.auth.password.label, { selector: "input" }),
+      "Popcorn24!"
+    );
+    await user.click(screen.getByRole("button", { name: en.nav.account.logIn }));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith(esperado));
   });
 
   it("recuperar contraseña abre el diálogo y confirma sin revelar la cuenta", async () => {

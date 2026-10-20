@@ -8,7 +8,7 @@ Confirmá tu cuenta abriendo este enlace:
 
 Este enlace es válido durante {{ expiry_hours }} hora{{ expiry_hours|pluralize }}. Si se venció, podés pedir otro desde la pantalla de registro con «Reenviar enlace».
 
-Si no creaste esta cuenta, ignorá este mensaje.
+Si no creaste esta cuenta, no abras este enlace: alguien pudo haber usado tu correo, y la cuenta se elimina sola si no se confirma.
 
 El equipo de FilmAI
 

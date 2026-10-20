@@ -17,6 +17,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { translateError } from "@/lib/errors";
 import { handleGoogleLogin } from "@/lib/google-auth";
 import { routes } from "@/lib/routes";
+import { destinoSeguro } from "@/lib/safe-next";
 import { useValidation } from "@/lib/use-validation";
 
 function Divider({ children }: { children: string }) {
@@ -135,10 +136,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
-  const destination = (() => {
-    const next = searchParams.get("next");
-    return next && next.startsWith("/") ? next : routes.explore;
-  })();
+  const destination = destinoSeguro(searchParams.get("next"), routes.explore);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

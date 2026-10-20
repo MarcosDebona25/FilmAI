@@ -6,8 +6,10 @@ provocó falla en el punto exacto.
 """
 
 import json
+import unittest
 
 from django.conf import settings
+from django.core.cache import cache
 from django.test import Client
 from django.test.runner import DiscoverRunner
 
@@ -34,7 +36,26 @@ def _validar(self, **request):
     return response
 
 
+class ResultadoConCacheLimpia(unittest.TextTestResult):
+    """Vacía la caché antes de cada test.
+
+    Los límites de tasa (login, registro, catálogo) cuentan por IP y, en los
+    tests, todos los pedidos vienen de la misma. Sin esto el contador de un test
+    se arrastra al siguiente y los tests se rompen según el orden en que corran.
+    """
+
+    def startTest(self, test):
+        cache.clear()
+        super().startTest(test)
+
+
 class EjecutorConSobre(DiscoverRunner):
+    def get_resultclass(self):
+        base = super().get_resultclass()
+        if base is None:
+            return ResultadoConCacheLimpia
+        return type("ResultadoConCacheLimpia", (ResultadoConCacheLimpia, base), {})
+
     def setup_test_environment(self, **kwargs):
         super().setup_test_environment(**kwargs)
         settings.FILMAI_SOBRE_ESTRICTO = True
