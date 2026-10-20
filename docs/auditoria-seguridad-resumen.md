@@ -20,7 +20,7 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 | ~~F2a~~ | ~~usuarios~~ | ~~Login sin límite de intentos~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
 | ~~F2b~~ | ~~usuarios~~ | ~~Reenvío de confirmación y registro sin límite (correo masivo)~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
 | ~~F3~~ | ~~catálogo / settings~~ | ~~Límite del catálogo eludible con `X-Forwarded-For`, con amplificación a TMDB y Redis~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
-| F4 | usuarios | Cuenta pendiente sin vencimiento reserva el correo (pre-secuestro) | Confirmado | Media | 2 |
+| ~~F4~~ | ~~usuarios~~ | ~~Cuenta pendiente sin vencimiento reserva el correo (pre-secuestro)~~ | **Resuelto** (20/10/2026); riesgo residual y mejora para el despliegue en `docs/decisiones.md` | ~~Media~~ | ~~2~~ |
 | ~~F5~~ | ~~usuarios (admin)~~ | ~~Staff con permiso parcial puede escalar privilegios~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~2~~ |
 | F6 | catálogo | Parámetros de trending sin validar (rutas hacia otros endpoints de TMDB) | Confirmado | Baja | 3 |
 | F7 | catálogo | Alta de reseñas con ids inexistentes o enormes: filas vacías y 500 (Internal Server Error) | Confirmado | Baja | 3 |
@@ -36,7 +36,7 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 3. F9 y F8, que son cambios chicos.
 4. F6 y F7 (catálogo).
 5. F5 (admin).
-6. F4 y F10, después de decidir el comportamiento con el equipo.
+6. F4 (resuelto) y F10, después de decidir el comportamiento con el equipo.
 
 Cada fix va como tarea aparte, con su test de regresión y su entrada en `docs/decisiones.md`.
 
@@ -48,3 +48,4 @@ Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué 
 - **20/10/2026, F2 y F3 (límites de tasa):** el login, el registro y el reenvío de la confirmación tienen límites por cuenta o correo y por IP, y el reenvío suma un enfriamiento entre envíos al mismo correo. Los límites por IP ya no se pueden eludir falseando un encabezado: la cantidad de proxies de confianza es configurable (por defecto 0, a confirmar al desplegar). El catálogo rechaza páginas fuera del rango de TMDB, y Redis tiene un tope de memoria que no desaloja la cola de tareas. Quedan fuera de este grupo, y siguen abiertos, el tope de llamadas a TMDB por pedido y el control de los demás parámetros del catálogo (F6 y F7). Tests nuevos para cada límite; la suite completa pasa.
 - **20/10/2026, F8 y F9 (log y redirección):** el log de la confirmación de correo ya no incluye la clave del enlace, ni entera ni en partes; conserva el largo para diagnosticar. La redirección posterior al login solo acepta destinos del mismo sitio, comprobado con el mismo análisis de URL que hace el navegador. Tests nuevos de backend y de frontend (incluida la página de login); las suites completas pasan.
 - **20/10/2026, F5 (administración):** un usuario de staff con permiso solo para editar usuarios ya no puede concederse privilegios, ver ni modificar superusuarios, ni cambiar la contraseña ni borrar a otro staff. Sigue pudiendo editar a los usuarios comunes, y el superusuario conserva el control total. Tests nuevos para ambos lados; la suite completa pasa.
+- **20/10/2026, F4 (cuentas pendientes):** una cuenta sin confirmar el correo deja de reservar el correo y el nombre de usuario pasado el plazo del enlace, y una tarea diaria las elimina. El correo de confirmación del registro ahora avisa que no hay que abrir el enlace si no se pidió la cuenta. Queda como mejora recomendada antes del despliegue que la contraseña se elija al confirmar el correo; está descrita en `docs/decisiones.md`.
