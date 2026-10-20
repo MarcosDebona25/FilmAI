@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792514171.307281,
-    "seen": 1792514558.0113618,
-    "ast_hash": "e995b7ebd6eb2afc16656604eb9adfb6",
+    "mtime": 1792515533.1865554,
+    "seen": 1792516467.7035522,
+    "ast_hash": "9376ac959a7e8d5435229abddb3feca5",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4158,9 +4158,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/test_seguridad_pendientes.py": {
-    "mtime": 1792514515.8993077,
-    "seen": 1792514557.996,
-    "ast_hash": "7b31a5709f1e1ccb395045accd6647fb",
+    "mtime": 1792515513.2447774,
+    "seen": 1792516467.6840556,
+    "ast_hash": "e2f7077215cd986f6f26bfa190a628f6",
     "semantic_hash": ""
   }
 }
