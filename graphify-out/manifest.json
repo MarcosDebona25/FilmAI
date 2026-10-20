@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/admin.py": {
-    "mtime": 1792295175.9580822,
-    "seen": 1792345839.4984815,
-    "ast_hash": "159b47649ecbd3cf19d827605c208955",
+    "mtime": 1792506515.7782035,
+    "seen": 1792506994.2150612,
+    "ast_hash": "0a7752bd62a9c1f81937e6281a6adb62",
     "semantic_hash": ""
   },
   "backend/usuarios/apps.py": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792506074.7654216,
-    "seen": 1792506089.9013126,
-    "ast_hash": "5354b1f2fb634dab653de01f38230393",
+    "mtime": 1792506978.7242482,
+    "seen": 1792506994.2330117,
+    "ast_hash": "6a59be406dec2d833cb0a2acf654be02",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4080,9 +4080,9 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1792506074.7590437,
-    "seen": 1792506089.901311,
-    "ast_hash": "aed8162c2525406d9c93bdacc5f9a377",
+    "mtime": 1792506978.7198772,
+    "seen": 1792506994.2330098,
+    "ast_hash": "c9c507c4b7dd1d1955aa63915be29a17",
     "semantic_hash": ""
   },
   "backend/filmai/cache.py": {
@@ -4125,6 +4125,12 @@
     "mtime": 1792505698.0638192,
     "seen": 1792506089.8943958,
     "ast_hash": "cec70a0e61519ec647f977932a527e6e",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/test_seguridad_admin.py": {
+    "mtime": 1792506177.5981889,
+    "seen": 1792506994.217332,
+    "ast_hash": "b7b9f71d48e4dbd9af8d77aa28b9b4cc",
     "semantic_hash": ""
   }
 }

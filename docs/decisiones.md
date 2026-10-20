@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 20/10/2026 — Auditoría F5: límites del admin para staff con permisos parciales
+
+- **Fecha**: 20/10/2026
+- **Descripción**: `UsuarioAdmin` heredaba de `UserAdmin` de Django, que trata el permiso `change_usuario` como administración total: un staff que solo tuviera ese permiso podía marcarse `is_superuser`, darse permisos o grupos, editar a un superusuario y fijar su contraseña. Ahora, para quien no es superusuario: (1) `get_queryset` oculta a los superusuarios; (2) `get_readonly_fields` deja `is_superuser`, `is_staff`, `groups` y `user_permissions` en solo lectura; (3) `has_change_permission` niega editar a un superusuario o a otro staff (la vista de contraseña de Django usa ese permiso, así que también queda bloqueada con 403 (Forbidden)). Puede editar a usuarios comunes y a sí mismo. El superusuario no cambia.
+- **Decisiones**: se bloquea también la edición de otro staff, no solo de superusuarios, porque fijar su contraseña daría los permisos de esa cuenta (escalada lateral). Los usuarios de staff siguen viéndose entre sí en el listado, en solo lectura. Hoy no hay grupos ni staff con ese permiso en el repo, por eso la probabilidad real es baja; el arreglo evita que el día que se conceda sea una escalada. Quien necesite que un staff administre a otro staff debe ser superusuario.
+- **Archivos afectados**: `backend/usuarios/admin.py`, `backend/usuarios/test_seguridad_admin.py` (nuevo), `docs/auditoria-seguridad-resumen.md`.
+
+---
+
 ## 20/10/2026 — Auditoría F8 y F9: clave de confirmación fuera del log y destino seguro tras el login
 
 - **Fecha**: 20/10/2026
