@@ -9,7 +9,9 @@ import json
 import os
 import subprocess
 import sys
+from typing import ClassVar
 
+from django.core.cache.backends.redis import RedisCache
 from django.test import SimpleTestCase
 
 SCRIPT = """
@@ -119,6 +121,65 @@ class JSONRedisSerializerTests(SimpleTestCase):
         self.assertEqual(ejecutado, [])
 
 
+class RedisFalso:
+    """Cliente mínimo en memoria con la interfaz de `redis.Redis` que usa Django."""
+
+    almacen: ClassVar[dict] = {}
+
+    def __init__(self, connection_pool=None):
+        pass
+
+    def set(self, clave, valor, ex=None):
+        self.almacen[clave] = valor if isinstance(valor, int) else bytes(valor)
+        return True
+
+    def get(self, clave):
+        valor = self.almacen.get(clave)
+        return str(valor).encode() if isinstance(valor, int) else valor
+
+    def exists(self, clave):
+        return int(clave in self.almacen)
+
+    def incr(self, clave, delta=1):
+        self.almacen[clave] = int(self.almacen.get(clave, 0)) + delta
+        return self.almacen[clave]
+
+
+class RedisCacheConSerializadorTests(SimpleTestCase):
+    """Prueba el contrato real: `RedisCache` + el serializador de `settings`."""
+
+    def setUp(self):
+        from django.conf import settings
+
+        RedisFalso.almacen = {}
+        self.cache = RedisCache(
+            "redis://:clave-de-prueba@redis:6379/0",
+            {"OPTIONS": {"serializer": "filmai.cache.JSONRedisSerializer"}},
+        )
+        self.cache._cache._client = RedisFalso
+        self.settings_serializer = settings.CACHES["default"].get("OPTIONS", {})
+
+    def test_el_backend_carga_el_serializador_json(self):
+        from filmai.cache import JSONRedisSerializer
+
+        self.assertIsInstance(self.cache._cache._serializer, JSONRedisSerializer)
+
+    def test_ida_y_vuelta_por_el_backend(self):
+        self.cache.set("tmdb:x", {"titulo": "Heat", "ids": [1, 2]})
+        self.assertEqual(self.cache.get("tmdb:x"), {"titulo": "Heat", "ids": [1, 2]})
+
+    def test_los_contadores_de_throttle_siguen_funcionando(self):
+        self.cache.set("throttle:x", 1)
+        self.assertEqual(self.cache.incr("throttle:x"), 2)
+
+    def test_un_pickle_ajeno_en_redis_se_lee_como_ausente(self):
+        import pickle
+
+        RedisFalso.almacen[self.cache.make_key("tmdb:malo")] = pickle.dumps({"a": 1})
+        with self.assertLogs("filmai.cache", level="WARNING"):
+            self.assertIsNone(self.cache.get("tmdb:malo"))
+
+
 class ComposeRedisTests(SimpleTestCase):
     """Lee el compose real (montado como BASE_DIR.parent, igual que `contracts`)."""
 
@@ -137,6 +198,12 @@ class ComposeRedisTests(SimpleTestCase):
 
     def test_redis_arranca_con_requirepass(self):
         self.assertIn("--requirepass", " ".join(self.redis["command"]))
+
+    def test_redis_conserva_la_baja_de_privilegios_de_la_imagen(self):
+        """Sin pasar por el entrypoint, `redis-server` correría como root."""
+        self.assertIn(
+            "docker-entrypoint.sh redis-server", " ".join(self.redis["command"])
+        )
 
     def test_la_contrasena_es_obligatoria_y_no_va_en_la_linea_de_comandos(self):
         self.assertIn(":?", self.redis["environment"]["REDIS_PASSWORD"])
