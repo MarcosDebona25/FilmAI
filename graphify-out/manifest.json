@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "backend/usuarios/views.py": {
-    "mtime": 1792505199.818854,
-    "seen": 1792505581.2776055,
-    "ast_hash": "21374273faedffef1a159667dcfc9581",
+    "mtime": 1792505760.8912742,
+    "seen": 1792506089.8857648,
+    "ast_hash": "ec56459b45872af4ff6576f49efa514d",
     "semantic_hash": ""
   },
   "docs/03_DiagramaClases_DiagramaTablas.json": {
@@ -408,9 +408,9 @@
     "semantic_hash": ""
   },
   "frontend/app/(public)/login/page.tsx": {
-    "mtime": 1792086444.3557265,
-    "seen": 1792345839.498541,
-    "ast_hash": "570f1144990a05ccfa6eacec1af04cee",
+    "mtime": 1792505637.9712121,
+    "seen": 1792506089.885949,
+    "ast_hash": "12d711e9467155c6bae8eccdaf7a1ddb",
     "semantic_hash": ""
   },
   "frontend/app/(public)/page.tsx": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792505562.8634415,
-    "seen": 1792505581.293601,
-    "ast_hash": "10b7e60add83e41e9e4431b10ba9fa26",
+    "mtime": 1792506074.7654216,
+    "seen": 1792506089.9013126,
+    "ast_hash": "5354b1f2fb634dab653de01f38230393",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -3084,9 +3084,9 @@
     "semantic_hash": ""
   },
   "frontend/tests/access-screens.test.tsx": {
-    "mtime": 1792295176.083755,
-    "seen": 1792345839.4987044,
-    "ast_hash": "95187cca97d128e97271f9f04f6850b2",
+    "mtime": 1792505698.0601723,
+    "seen": 1792506089.8926516,
+    "ast_hash": "e60b2c30915a990ade6efb7ccf4e3200",
     "semantic_hash": ""
   },
   "frontend/content/legal/terms.en.md": {
@@ -4080,9 +4080,9 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1792505562.8582873,
-    "seen": 1792505581.2935996,
-    "ast_hash": "ad743a977e9f801bb767dc3c590af92a",
+    "mtime": 1792506074.7590437,
+    "seen": 1792506089.901311,
+    "ast_hash": "aed8162c2525406d9c93bdacc5f9a377",
     "semantic_hash": ""
   },
   "backend/filmai/cache.py": {
@@ -4107,6 +4107,24 @@
     "mtime": 1792504546.3837364,
     "seen": 1792505581.2774997,
     "ast_hash": "5f259c92bbba7e0d3b0194ae0450d3cb",
+    "semantic_hash": ""
+  },
+  "backend/usuarios/test_seguridad_logs.py": {
+    "mtime": 1792505748.2452803,
+    "seen": 1792506089.885591,
+    "ast_hash": "fbdede41924f422bbba7388b07c78009",
+    "semantic_hash": ""
+  },
+  "frontend/lib/safe-next.ts": {
+    "mtime": 1792505626.0963805,
+    "seen": 1792506089.8916464,
+    "ast_hash": "fb629b92736e31441f1435ed56ad7c68",
+    "semantic_hash": ""
+  },
+  "frontend/tests/safe-next.test.ts": {
+    "mtime": 1792505698.0638192,
+    "seen": 1792506089.8943958,
+    "ast_hash": "cec70a0e61519ec647f977932a527e6e",
     "semantic_hash": ""
   }
 }

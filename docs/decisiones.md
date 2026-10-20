@@ -5,6 +5,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 20/10/2026 — Auditoría F8 y F9: clave de confirmación fuera del log y destino seguro tras el login
+
+- **Fecha**: 20/10/2026
+- **Descripción**: se corrigieron dos hallazgos de severidad baja.
+  - **F8**: `ConfirmarCorreoView` escribía la clave del enlace de confirmación en el log (nivel INFO) y, para claves inválidas, el mensaje de `BadSignature`, que repite la firma recibida. Ahora registra solo el largo y el tipo de error. La clave ya filtrada a logs viejos vence a las 24 horas (`ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1`), así que no hace falta rotar nada.
+  - **F9**: `/login?next=…` aceptaba cualquier valor que empezara con `/`, incluidos `//host` y `/\host`, que el navegador trata como otro sitio. La nueva función `destinoSeguro` (`frontend/lib/safe-next.ts`) resuelve `next` con `new URL()` contra un origen ficticio, igual que el navegador (descarta tabulaciones y saltos de línea, convierte `\` en `/`), y solo acepta el resultado si el origen no cambia; devuelve `pathname + search + hash`. También rechaza resultados que empiezan con `//` (caso `/..//host`).
+- **Decisiones**: se usa el parser de URL en vez de una lista de patrones prohibidos, porque la lista siempre deja pasar alguna variante. El origen ficticio evita depender de `window` (la página también se renderiza en el servidor). Queda sin probar en un navegador real el salto de redirección (los tests cubren la función y la página de login con `next` hostil).
+- **Archivos afectados**: `backend/usuarios/views.py`, `backend/usuarios/test_seguridad_logs.py` (nuevo), `frontend/lib/safe-next.ts` (nuevo), `frontend/app/(public)/login/page.tsx`, `frontend/tests/safe-next.test.ts` (nuevo), `frontend/tests/access-screens.test.tsx`, `docs/auditoria-seguridad-resumen.md`.
+
+---
+
 ## 20/10/2026 — Auditoría F2 y F3: límites de tasa por cuenta e IP, `NUM_PROXIES` y tope de página
 
 - **Fecha**: 20/10/2026

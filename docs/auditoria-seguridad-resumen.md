@@ -24,8 +24,8 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 | F5 | usuarios (admin) | Staff con permiso parcial puede escalar privilegios | Confirmado | Media | 2 |
 | F6 | catálogo | Parámetros de trending sin validar (rutas hacia otros endpoints de TMDB) | Confirmado | Baja | 3 |
 | F7 | catálogo | Alta de reseñas con ids inexistentes o enormes: filas vacías y 500 (Internal Server Error) | Confirmado | Baja | 3 |
-| F8 | usuarios | Clave de confirmación de correo escrita en el log | Confirmado | Baja | 3 |
-| F9 | frontend | Redirección abierta posterior al login (`next`) | Confirmado | Baja | 3 |
+| ~~F8~~ | ~~usuarios~~ | ~~Clave de confirmación de correo escrita en el log~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
+| ~~F9~~ | ~~frontend~~ | ~~Redirección abierta posterior al login (`next`)~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
 | F10 | catálogo | Moderación de reseñas reversible por el autor | Confirmado | Baja | 4 (decisión de producto) |
 | — | frontend | Sin cabeceras anti-framing | Rechazado | — | Endurecimiento opcional |
 
@@ -46,3 +46,4 @@ Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué 
 
 - **20/10/2026, F1 (Redis):** Redis exige contraseña y su puerto solo se publica en la propia máquina. En producción la aplicación se niega a arrancar si alguna de las tres URLs de Redis no trae contraseña, y la caché de Django dejó de usar un formato que puede ejecutar código al leerse. Se agregaron tests de configuración y de serializador; la suite completa pasa. Quien tenga un `.env` local debe definir `REDIS_PASSWORD` (ver `.env.example`).
 - **20/10/2026, F2 y F3 (límites de tasa):** el login, el registro y el reenvío de la confirmación tienen límites por cuenta o correo y por IP, y el reenvío suma un enfriamiento entre envíos al mismo correo. Los límites por IP ya no se pueden eludir falseando un encabezado: la cantidad de proxies de confianza es configurable (por defecto 0, a confirmar al desplegar). El catálogo rechaza páginas fuera del rango de TMDB, y Redis tiene un tope de memoria que no desaloja la cola de tareas. Quedan fuera de este grupo, y siguen abiertos, el tope de llamadas a TMDB por pedido y el control de los demás parámetros del catálogo (F6 y F7). Tests nuevos para cada límite; la suite completa pasa.
+- **20/10/2026, F8 y F9 (log y redirección):** el log de la confirmación de correo ya no incluye la clave del enlace, ni entera ni en partes; conserva el largo para diagnosticar. La redirección posterior al login solo acepta destinos del mismo sitio, comprobado con el mismo análisis de URL que hace el navegador. Tests nuevos de backend y de frontend (incluida la página de login); las suites completas pasan.
