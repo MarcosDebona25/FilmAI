@@ -7,14 +7,15 @@ del enlace de confirmación; dentro del plazo el registro se sigue rechazando
 (reemplazarla permitiría quitarle a la víctima un registro legítimo).
 """
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from allauth.account.models import EmailAddress
 from django.core import mail
 from django.core.cache import cache
 from django.test import TestCase, override_settings
-from django.utils import timezone
 from rest_framework.test import APIClient
+
+from filmai import tests_contrato
 
 from .factories import UsuarioFactory
 from .models import EstadoCuenta, Usuario
@@ -48,7 +49,7 @@ def pendiente(dias, **campos):
         user=usuario, email=usuario.correo, primary=True, verified=False
     )
     Usuario.objects.filter(pk=usuario.pk).update(
-        fecha_registro=timezone.localdate() - timedelta(days=dias)
+        fecha_registro=date.today() - timedelta(days=dias)
     )
     return usuario
 
@@ -77,7 +78,7 @@ class PlazoTests(TestCase):
         activa = UsuarioFactory()
         baja = UsuarioFactory(estado=EstadoCuenta.BAJA)
         Usuario.objects.filter(pk__in=[activa.pk, baja.pk]).update(
-            fecha_registro=timezone.localdate() - timedelta(days=400)
+            fecha_registro=date.today() - timedelta(days=400)
         )
         self.assertEqual(liberar_pendientes_vencidas(), 0)
         self.assertEqual(Usuario.objects.filter(pk__in=[activa.pk, baja.pk]).count(), 2)
@@ -159,7 +160,7 @@ class RegistroSobrePendienteTests(TestCase):
     def test_una_cuenta_activa_sigue_reservando_el_correo_aunque_sea_vieja(self):
         activa = UsuarioFactory(correo="ana@example.com", nombre_usuario="activa123")
         Usuario.objects.filter(pk=activa.pk).update(
-            fecha_registro=timezone.localdate() - timedelta(days=400)
+            fecha_registro=date.today() - timedelta(days=400)
         )
         respuesta = self.registrar()
         self.assertEqual(respuesta.status_code, 400)
@@ -182,3 +183,71 @@ class UsernameDisponibleTests(TestCase):
         vieja = pendiente(2, nombre_usuario="reservado1")
         self.assertTrue(self.disponible("reservado1"))
         self.assertTrue(Usuario.objects.filter(pk=vieja.pk).exists())
+
+
+class AltaConGoogleSobrePendienteTests(TestCase):
+    """El alta con Google comprueba el correo igual que el registro."""
+
+    google = tests_contrato.ContratoErroresAPITests.google
+
+    serializar = tests_contrato.ContratoErroresAPITests.serializar
+
+    def serializar_tolerante(self, serializer):
+        """Valida y devuelve el sobre de error si lo hay, o `None` si pasó."""
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as exc:
+            return tests_contrato.filmai_exception_handler(exc, {})
+        return None
+
+    def test_sobre_una_pendiente_vigente_se_rechaza_sin_tocarla(self):
+        self.usuario = pendiente(1, correo="ana@example.com")
+        antes = self.usuario.password
+        respuesta = self.google("correo")
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data["errors"][0]["code"], "email_already_used")
+        self.usuario.refresh_from_db()
+        self.assertEqual(self.usuario.password, antes)
+
+    def test_sobre_una_pendiente_vencida_la_libera_y_no_rechaza_por_el_correo(self):
+        self.usuario = pendiente(2, correo="ana@example.com")
+        self.serializar = self.serializar_tolerante
+        resultado = self.google("correo")
+        self.assertFalse(Usuario.objects.filter(pk=self.usuario.pk).exists())
+        codigos = [e["code"] for e in getattr(resultado, "data", {}).get("errors", [])]
+        self.assertNotIn("email_already_used", codigos)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class ReenvioNoRenuevaElPlazoTests(TestCase):
+    """Reenviar el enlace no alarga la vida de la cuenta (si no, F4 no cerraría)."""
+
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    def reenviar(self, correo):
+        return APIClient().post(
+            "/api/auth/registration/resend-email/", {"email": correo}, format="json"
+        )
+
+    def test_reenviar_a_una_pendiente_vigente_manda_el_correo_pero_no_cambia_la_fecha(
+        self,
+    ):
+        vigente = pendiente(1, correo="ana@example.com")
+        self.assertEqual(self.reenviar("ana@example.com").status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        vigente.refresh_from_db()
+        self.assertEqual(vigente.fecha_registro, date.today() - timedelta(days=1))
+
+    def test_pasado_el_corte_la_cuenta_se_borra_aunque_se_haya_reenviado_antes(self):
+        vigente = pendiente(1, correo="ana@example.com")
+        self.reenviar("ana@example.com")
+        Usuario.objects.filter(pk=vigente.pk).update(
+            fecha_registro=date.today() - timedelta(days=2)
+        )
+        self.assertEqual(liberar_pendientes_vencidas(), 1)
+        mail.outbox.clear()
+        cache.clear()  # el enfriamiento de 1 minuto entre reenvíos no es lo que se prueba
+        self.assertEqual(self.reenviar("ana@example.com").status_code, 200)
+        self.assertEqual(len(mail.outbox), 0)

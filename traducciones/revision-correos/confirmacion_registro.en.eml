@@ -22,7 +22,7 @@ http://localhost:3000/confirm-email/revision/
 
 This link is valid for 24 hours. If it has expired, you can request another from the sign-up screen with “Resend link”.
 
-If you didn’t create this account, ignore this message.
+If you didn’t create this account, don’t open this link: someone may have used your email address, and the account is deleted automatically if it isn’t confirmed.
 
 The FilmAI team
 
@@ -143,7 +143,7 @@ Content-Transfer-Encoding: 8bit
               >
                 This link is valid for 24 hours. If it has expired, you can request another from the sign-up screen with “Resend link”.
                 <br /><br />
-                If you didn’t create this account, ignore this message.
+                If you didn’t create this account, don’t click the button: someone may have used your email address, and the account is deleted automatically if it isn’t confirmed.
               </td>
             </tr>
             <tr>
