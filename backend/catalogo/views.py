@@ -34,6 +34,9 @@ def _error_param(name, mensaje, codigo, parametros=None):
     )
 
 
+PAGINA_MAXIMA = 500
+
+
 def _int_param(value, name, *, default=_MISSING):
     if value in (None, ""):
         if default is not _MISSING:
@@ -119,7 +122,17 @@ class CatalogoBaseView(APIView):
         return servicio_localizado(idioma_tmdb(request), get_catalog_service)
 
     def _page(self, request):
-        return _int_param(request.query_params.get("page"), "page", default=1)
+        page = _int_param(request.query_params.get("page"), "page", default=1)
+        # TMDB no sirve páginas más allá de 500; sin tope, cada `page` distinto
+        # sería otra clave de caché y otra llamada a TMDB.
+        if page > PAGINA_MAXIMA:
+            raise _error_param(
+                "page",
+                f"Ensure this value is less than or equal to {PAGINA_MAXIMA}.",
+                "max_value",
+                {"maxValue": PAGINA_MAXIMA},
+            )
+        return page
 
 
 class TrendingView(CatalogoBaseView):
@@ -201,13 +214,6 @@ class BrowseView(CatalogoBaseView):
         if nota is not None:
             self._opcion(nota, "nota", list(NOTAS))
         page = self._page(request)
-        if page > 500:
-            raise _error_param(
-                "page",
-                "Ensure this value is less than or equal to 500.",
-                "max_value",
-                {"maxValue": 500},
-            )
         datos = explorar(
             self._service(request),
             q=q,

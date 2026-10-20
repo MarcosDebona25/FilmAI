@@ -17,9 +17,9 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 | # | Módulo | Hallazgo | Estado | Severidad | Prioridad |
 |---|---|---|---|---|---|
 | ~~F1~~ | ~~infra / settings~~ | ~~Redis sin contraseña y publicado, con caché que deserializa pickle~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
-| F2a | usuarios | Login sin límite de intentos | Confirmado | Media | 1 |
-| F2b | usuarios | Reenvío de confirmación y registro sin límite (correo masivo) | Confirmado | Media | 1 |
-| F3 | catálogo / settings | Límite del catálogo eludible con `X-Forwarded-For`, con amplificación a TMDB y Redis | Confirmado | Media | 1 |
+| ~~F2a~~ | ~~usuarios~~ | ~~Login sin límite de intentos~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
+| ~~F2b~~ | ~~usuarios~~ | ~~Reenvío de confirmación y registro sin límite (correo masivo)~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
+| ~~F3~~ | ~~catálogo / settings~~ | ~~Límite del catálogo eludible con `X-Forwarded-For`, con amplificación a TMDB y Redis~~ | **Resuelto** (20/10/2026) | ~~Media~~ | ~~1~~ |
 | F4 | usuarios | Cuenta pendiente sin vencimiento reserva el correo (pre-secuestro) | Confirmado | Media | 2 |
 | F5 | usuarios (admin) | Staff con permiso parcial puede escalar privilegios | Confirmado | Media | 2 |
 | F6 | catálogo | Parámetros de trending sin validar (rutas hacia otros endpoints de TMDB) | Confirmado | Baja | 3 |
@@ -45,3 +45,4 @@ Cada fix va como tarea aparte, con su test de regresión y su entrada en `docs/d
 Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué se hizo; el detalle técnico vive en `docs/decisiones.md` y no incluye credenciales.
 
 - **20/10/2026, F1 (Redis):** Redis exige contraseña y su puerto solo se publica en la propia máquina. En producción la aplicación se niega a arrancar si alguna de las tres URLs de Redis no trae contraseña, y la caché de Django dejó de usar un formato que puede ejecutar código al leerse. Se agregaron tests de configuración y de serializador; la suite completa pasa. Quien tenga un `.env` local debe definir `REDIS_PASSWORD` (ver `.env.example`).
+- **20/10/2026, F2 y F3 (límites de tasa):** el login, el registro y el reenvío de la confirmación tienen límites por cuenta o correo y por IP, y el reenvío suma un enfriamiento entre envíos al mismo correo. Los límites por IP ya no se pueden eludir falseando un encabezado: la cantidad de proxies de confianza es configurable (por defecto 0, a confirmar al desplegar). El catálogo rechaza páginas fuera del rango de TMDB, y Redis tiene un tope de memoria que no desaloja la cola de tareas. Quedan fuera de este grupo, y siguen abiertos, el tope de llamadas a TMDB por pedido y el control de los demás parámetros del catálogo (F6 y F7). Tests nuevos para cada límite; la suite completa pasa.

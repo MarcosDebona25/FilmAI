@@ -49,7 +49,17 @@ from .serializers import (
     RecuperarContrasenaSerializer,
     RestablecerContrasenaSerializer,
 )
-from .throttles import EmailRateThrottle, EmailThrottleStatusMixin
+from .throttles import (
+    EmailRateThrottle,
+    EmailThrottleStatusMixin,
+    LoginCuentaThrottle,
+    LoginIPThrottle,
+    ReenvioCorreoThrottle,
+    ReenvioEnfriamientoThrottle,
+    ReenvioIPThrottle,
+    RegistroCorreoThrottle,
+    RegistroIPThrottle,
+)
 from .validators import USERNAME_REGEX
 
 logger = logging.getLogger(__name__)
@@ -95,6 +105,8 @@ class LoginView(BaseLoginView):
     """
 
     authentication_classes = (LenientJWTCookieAuthentication,)
+    # Cuenta e IP: ver docs/decisiones.md (20/10/2026, auditoría F2).
+    throttle_classes: ClassVar[list] = [LoginCuentaThrottle, LoginIPThrottle]
 
 
 def _error_enlace(codigo):
@@ -137,6 +149,8 @@ class RegisterView(BaseRegisterView):
     (URL que no montamos), rompiendo el registro.
     """
 
+    throttle_classes: ClassVar[list] = [RegistroCorreoThrottle, RegistroIPThrottle]
+
     def perform_create(self, serializer):
         user = serializer.save(self.request)
         # `setup_user_email` (dentro de serializer.save) creó el EmailAddress
@@ -150,6 +164,17 @@ class RegisterView(BaseRegisterView):
         if email_address:
             email_address.send_confirmation(self.request._request, signup=True)
         return user
+
+
+# Límites del reenvío de confirmación: enfriamiento de 1 minuto, tope por correo
+# destino y tope por IP. Se aplican con `as_view(throttle_classes=...)` sobre la
+# vista de dj-rest-auth en `filmai/urls.py`: una subclase cambiaría el esquema
+# OpenAPI versionado (`contracts/openapi.yaml`).
+THROTTLES_REENVIO = [
+    ReenvioEnfriamientoThrottle,
+    ReenvioCorreoThrottle,
+    ReenvioIPThrottle,
+]
 
 
 class GoogleLogin(SocialLoginView):

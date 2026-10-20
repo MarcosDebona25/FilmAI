@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 20/10/2026 — Auditoría F2 y F3: límites de tasa por cuenta e IP, `NUM_PROXIES` y tope de página
+
+- **Fecha**: 20/10/2026
+- **Descripción**: se corrigieron los hallazgos F2 (login, registro y reenvío de confirmación sin límite) y F3 (límite del catálogo eludible con `X-Forwarded-For`).
+  - **F3**: `REST_FRAMEWORK["NUM_PROXIES"]` se lee de la variable `NUM_PROXIES` (por defecto 0). Con 0 DRF usa la IP de la conexión e ignora `X-Forwarded-For`; con N toma la N-ésima IP desde la derecha, la que añade el proxy propio. El catálogo rechaza `page` mayor que 500 (el máximo que sirve TMDB) con 400 (Bad Request) y `max_value`, ahora en `CatalogoBaseView._page` para todas las vistas. Redis arranca con `maxmemory 256mb` y `volatile-lru`: solo desaloja claves con vencimiento (caché de TMDB y contadores), nunca la cola de Celery.
+  - **F2**: nuevas clases en `usuarios/throttles.py`. Login: 10 por minuto por cuenta (correo o nombre de usuario, normalizado y guardado como hash) y 30 por minuto por IP. Registro: 5 por hora por correo y 10 por hora por IP. Reenvío: 1 por minuto por correo (enfriamiento), 3 por hora por correo y 10 por hora por IP. Superado el límite responde 429 (Too Many Requests) con el código existente `throttled` y `Retry-After`; no se creó un código nuevo, así que no cambian `contracts/` ni `traducciones/`.
+- **Decisiones**: el límite por cuenta cuenta todos los intentos, no solo los fallidos (más simple y no revela si la contraseña era correcta); con la cuenta bloqueada tampoco pasa la contraseña correcta, a cambio de que alguien pueda bloquear 1 minuto a otra persona (el costo es menor que permitir adivinar contraseñas). Sin identidad en el cuerpo del pedido solo aplica el límite por IP. El reenvío aplica sus límites con `as_view(throttle_classes=...)` y no con una subclase, porque una subclase cambiaba `contracts/openapi.yaml`. Los tests comparten IP y los contadores se arrastraban entre ellos: el ejecutor de pruebas (`filmai/pruebas.py`) vacía la caché antes de cada test.
+- **Pendiente**: confirmar la topología al desplegar (si hay proxy, definir `NUM_PROXIES`); el tope de llamadas a TMDB por pedido (browse hace hasta 10) y la validación de los demás parámetros del catálogo quedan para F6 y F7; los límites de Resend y del proxy no están en el repo.
+- **Archivos afectados**: `backend/filmai/settings.py`, `backend/filmai/urls.py`, `backend/filmai/pruebas.py`, `backend/usuarios/throttles.py`, `backend/usuarios/views.py`, `backend/catalogo/views.py`, `docker-compose.yml`, `backend/usuarios/test_seguridad_throttles.py`, `backend/catalogo/test_seguridad_throttle.py`, `backend/filmai/test_seguridad_redis.py`, `docs/auditoria-seguridad-resumen.md`.
+
+---
+
 ## 20/10/2026 — Auditoría F1: Redis con contraseña, solo loopback y caché sin pickle
 
 - **Fecha**: 20/10/2026
