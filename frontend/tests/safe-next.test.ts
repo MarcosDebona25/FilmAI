@@ -26,6 +26,43 @@ describe("destinoSeguro (parámetro next del login)", () => {
     expect(destinoSeguro(next, POR_DEFECTO)).toBe(POR_DEFECTO);
   });
 
+  it.each([
+    ["retorno de carro entre barras", "/\r/evil.example"],
+    ["tabulación y barra invertida", "/\t\\evil.example"],
+    ["espacio antes del host", "/ /evil.example"],
+    ["usuario y arroba", "/@evil.example"],
+    ["dos puntos como esquema", "/:evil.example"],
+    ["barra invertida doble al inicio", "\\\\evil.example"],
+    ["barra invertida inicial", "\\evil.example"],
+  ])("también rechaza o neutraliza %s", (_nombre, next) => {
+    const destino = destinoSeguro(next, POR_DEFECTO);
+    expect(new URL(destino, "https://filmai.invalid").origin).toBe("https://filmai.invalid");
+    expect(destino.startsWith("//")).toBe(false);
+  });
+
+  it("conserva rutas propias codificadas, que no cambian de sitio", () => {
+    expect(destinoSeguro("/search?q=a%2Fb", POR_DEFECTO)).toBe("/search?q=a%2Fb");
+    expect(destinoSeguro("/%2F/x", POR_DEFECTO)).toBe("/%2F/x");
+  });
+
+  it("ninguna combinación de caracteres delicados escapa del origen", () => {
+    const piezas = ["/", "\\", "\t", "\n", "\r", " ", ".", "a", "%2F", "%5C", ":", "@"];
+    let revisadas = 0;
+    const probar = (resto: string, profundidad: number) => {
+      const next = `/${resto}`;
+      const destino = destinoSeguro(next, POR_DEFECTO);
+      const url = new URL(destino, "https://filmai.invalid");
+      expect(url.origin, JSON.stringify(next)).toBe("https://filmai.invalid");
+      expect(destino.startsWith("//"), JSON.stringify(next)).toBe(false);
+      expect(destino.startsWith("/\\"), JSON.stringify(next)).toBe(false);
+      revisadas++;
+      if (profundidad === 0) return;
+      for (const pieza of piezas) probar(resto + pieza, profundidad - 1);
+    };
+    probar("", 4);
+    expect(revisadas).toBeGreaterThan(20000);
+  });
+
   it("usa la ruta por defecto sin next", () => {
     expect(destinoSeguro(null, POR_DEFECTO)).toBe(POR_DEFECTO);
     expect(destinoSeguro("", POR_DEFECTO)).toBe(POR_DEFECTO);

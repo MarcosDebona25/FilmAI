@@ -42,6 +42,30 @@ describe("origenDesde", () => {
     expect(origenDesde(null)).toEqual({ tipo: "home" });
   });
 
+  it("un from hostil nunca produce un destino fuera del sitio (F9)", () => {
+    const hostiles = [
+      "https://evil.example",
+      "//evil.example",
+      "/\\evil.example",
+      "javascript:alert(1)",
+      "list-1/../../evil",
+      "list-12\n",
+      "list-12 ",
+      "LIST-12",
+      "search/../x",
+      "list-",
+    ];
+    for (const from of hostiles) {
+      expect(origenDesde(from), from).toEqual({ tipo: "home" });
+    }
+  });
+
+  it("el id de lista sale de dígitos: la miga solo enlaza a /lists/<número>", () => {
+    const origen = origenDesde("list-007");
+    expect(origen).toEqual({ tipo: "lista", id: 7 });
+    expect(routes.list(7)).toBe("/lists/7");
+  });
+
   it("la tarjeta puede sumar el origen a la ruta de la ficha", () => {
     expect(routes.title("movie", 157336, "home")).toBe("/movie/157336?from=home");
   });
