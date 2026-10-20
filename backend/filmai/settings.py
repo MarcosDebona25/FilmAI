@@ -161,6 +161,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "usuarios.Usuario"
 
 # Django REST Framework
+# Sin valor por defecto en producción (en desarrollo es 0): un 0 olvidado detrás
+# de un proxy hace que los límites por IP bloqueen a todos los usuarios juntos
+# (ver REST_FRAMEWORK).
+_num_proxies = config("NUM_PROXIES", default="").strip()
+if not _num_proxies:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "Definí NUM_PROXIES en el entorno (DEBUG=False): la cantidad de "
+            "proxies de confianza delante de Django (0 si no hay ninguno, 1 con "
+            "un solo balanceador o nginx). Ver el comentario en REST_FRAMEWORK."
+        )
+    _num_proxies = "0"
+NUM_PROXIES = int(_num_proxies)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
@@ -174,7 +188,36 @@ REST_FRAMEWORK = {
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
+        # Login: 10 intentos por minuto por cuenta (frena el adivinado de
+        # contraseñas desde cualquier IP) y 30 por IP (frena probar muchas
+        # cuentas). Los límites por IP asumen una IP real: ver NUM_PROXIES.
+        "login_cuenta": "10/min",
+        "login_ip": "30/min",
+        # Registro y reenvío disparan correos (cuota de Resend y reputación del
+        # dominio): tope por correo destino y por IP, más un enfriamiento.
+        "registro_correo": "5/hour",
+        "registro_ip": "10/hour",
+        "reenvio_correo": "3/hour",
+        "reenvio_enfriamiento": "1/min",
+        "reenvio_ip": "10/hour",
     },
+    # Cantidad de proxies de confianza delante de Django (nginx, balanceador de
+    # la nube, Cloudflare...). DRF usa este número para saber qué IP de
+    # `X-Forwarded-For` es la del cliente real:
+    #   - 0: se usa la IP de la conexión y se ignora el header, que cualquier
+    #     cliente puede falsear. Correcto SIN proxy delante (desarrollo).
+    #   - N: se toma la N-ésima IP desde la derecha, la que añadió tu propio proxy.
+    # QUÉ PASA SI SE EQUIVOCA: con un proxy delante y NUM_PROXIES=0, Django ve
+    # SIEMPRE la IP del proxy, así que todos los usuarios comparten un único
+    # contador y los límites por IP (login_ip, registro_ip, reenvio_ip,
+    # catálogo) bloquean a todos a la vez al llegar al tope. Al revés (N mayor
+    # que los proxies reales), el cliente falsea el header y esquiva el límite.
+    # QUÉ HACER AL DESPLEGAR: contar los proxies de la cadena (un solo balanceador
+    # o nginx = 1), confirmar que ese proxy SOBRESCRIBE `X-Forwarded-For` en vez
+    # de agregarle a lo que manda el cliente, y fijar NUM_PROXIES en el entorno.
+    # Con DEBUG=False es obligatorio definirlo: el arranque falla si falta
+    # (ver el chequeo justo arriba). Ver docs/decisiones.md, 20/10/2026.
+    "NUM_PROXIES": NUM_PROXIES,
 }
 
 # Valida el sobre de errores en toda respuesta de la suite (OT-34).
@@ -348,6 +391,12 @@ CELERY_BEAT_SCHEDULE = {
     "backfill-embeddings": {
         "task": "catalogo.backfill_embeddings",
         "schedule": crontab(hour=4, minute=0),
+    },
+    # Cuentas que nunca confirmaron el correo (F4 de la auditoría): se borran
+    # pasado el plazo del enlace. No depende de las otras dos tareas.
+    "limpiar-pendientes-vencidas": {
+        "task": "usuarios.limpiar_pendientes_vencidas",
+        "schedule": crontab(hour=5, minute=0),
     },
 }
 

@@ -22,7 +22,7 @@ http://localhost:3000/confirm-email/revision/
 
 Este enlace es válido durante 24 horas. Si se venció, podés pedir otro desde la pantalla de registro con «Reenviar enlace».
 
-Si no creaste esta cuenta, ignorá este mensaje.
+Si no creaste esta cuenta, no abras este enlace: alguien pudo haber usado tu correo, y la cuenta se elimina sola si no se confirma.
 
 El equipo de FilmAI
 
@@ -143,7 +143,7 @@ Content-Transfer-Encoding: 8bit
               >
                 Este enlace es válido durante 24 horas. Si se venció, podés pedir otro desde la pantalla de registro con «Reenviar enlace».
                 <br /><br />
-                Si no creaste esta cuenta, ignorá este mensaje.
+                Si no creaste esta cuenta, no hagas clic en el botón: alguien pudo haber usado tu correo, y la cuenta se elimina sola si no se confirma.
               </td>
             </tr>
             <tr>
