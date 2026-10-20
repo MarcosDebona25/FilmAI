@@ -161,6 +161,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "usuarios.Usuario"
 
 # Django REST Framework
+# Sin valor por defecto en producción (en desarrollo es 0): un 0 olvidado detrás
+# de un proxy hace que los límites por IP bloqueen a todos los usuarios juntos
+# (ver REST_FRAMEWORK).
+_num_proxies = config("NUM_PROXIES", default="").strip()
+if not _num_proxies:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "Definí NUM_PROXIES en el entorno (DEBUG=False): la cantidad de "
+            "proxies de confianza delante de Django (0 si no hay ninguno, 1 con "
+            "un solo balanceador o nginx). Ver el comentario en REST_FRAMEWORK."
+        )
+    _num_proxies = "0"
+NUM_PROXIES = int(_num_proxies)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
@@ -187,12 +201,23 @@ REST_FRAMEWORK = {
         "reenvio_enfriamiento": "1/min",
         "reenvio_ip": "10/hour",
     },
-    # Cantidad de proxies de confianza delante de Django. Con 0 se usa la IP de
-    # la conexión y se ignora `X-Forwarded-For`, que cualquier cliente puede
-    # falsear. Con N, DRF toma la N-ésima IP desde la derecha de ese header
-    # (la que añadió el proxy propio). Hoy no hay despliegue: dejarlo en 0 hasta
-    # saber la topología real (docs/decisiones.md, 20/10/2026).
-    "NUM_PROXIES": config("NUM_PROXIES", default=0, cast=int),
+    # Cantidad de proxies de confianza delante de Django (nginx, balanceador de
+    # la nube, Cloudflare...). DRF usa este número para saber qué IP de
+    # `X-Forwarded-For` es la del cliente real:
+    #   - 0: se usa la IP de la conexión y se ignora el header, que cualquier
+    #     cliente puede falsear. Correcto SIN proxy delante (desarrollo).
+    #   - N: se toma la N-ésima IP desde la derecha, la que añadió tu propio proxy.
+    # QUÉ PASA SI SE EQUIVOCA: con un proxy delante y NUM_PROXIES=0, Django ve
+    # SIEMPRE la IP del proxy, así que todos los usuarios comparten un único
+    # contador y los límites por IP (login_ip, registro_ip, reenvio_ip,
+    # catálogo) bloquean a todos a la vez al llegar al tope. Al revés (N mayor
+    # que los proxies reales), el cliente falsea el header y esquiva el límite.
+    # QUÉ HACER AL DESPLEGAR: contar los proxies de la cadena (un solo balanceador
+    # o nginx = 1), confirmar que ese proxy SOBRESCRIBE `X-Forwarded-For` en vez
+    # de agregarle a lo que manda el cliente, y fijar NUM_PROXIES en el entorno.
+    # Con DEBUG=False es obligatorio definirlo: el arranque falla si falta
+    # (ver el chequeo justo arriba). Ver docs/decisiones.md, 20/10/2026.
+    "NUM_PROXIES": NUM_PROXIES,
 }
 
 # Valida el sobre de errores en toda respuesta de la suite (OT-34).

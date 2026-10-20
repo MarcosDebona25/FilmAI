@@ -721,6 +721,8 @@ declare const messages: {
       "logged_out": "Cerraste sesión en este dispositivo.",
       "unknown": "No pudimos completar la acción. Intentá de nuevo.",
       "throttledWithWait": "Hay demasiadas solicitudes. Intentá de nuevo en {retryAfterSeconds, plural, one {# segundo} other {# segundos}}.",
+      "throttledWithWaitMinutes": "Hay demasiadas solicitudes. Intentá de nuevo en {minutes, plural, one {# minuto} other {# minutos}}.",
+      "throttledWithWaitHours": "Hay demasiadas solicitudes. Intentá de nuevo en {hours, plural, one {# hora} other {# horas}}.",
       "list_name_reserved": "Ese nombre está reservado para una lista predeterminada.",
       "terms_not_accepted": "Para crear tu cuenta tenés que aceptar los Términos y Condiciones.",
       "network_error": "No pudimos conectarnos. Revisá tu conexión e intentá de nuevo."

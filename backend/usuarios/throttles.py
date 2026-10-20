@@ -119,7 +119,10 @@ class PorCuentaThrottle(SimpleRateThrottle):
         cuerpo = _cuerpo(request)
         for campo in self.campos:
             valor = cuerpo.get(campo)
-            if isinstance(valor, str) and valor.strip():
+            # Cualquier escalar cuenta (un `username` numérico en JSON no debe
+            # esquivar el límite); listas y objetos nunca serán una cuenta
+            # válida y los cubre el límite por IP.
+            if isinstance(valor, (str, int, float)) and str(valor).strip():
                 return self.cache_format % {
                     "scope": self.scope,
                     "ident": self.identidad_de(valor),

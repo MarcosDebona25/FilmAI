@@ -71,6 +71,27 @@ class LoginThrottleTests(ThrottleBase):
         cuerpo = {"username": usuario.nombre_usuario, "password": "mala"}
         self.assertEqual(self.rafaga(LOGIN, [cuerpo] * 11)[-1], 429)
 
+    def test_un_nombre_de_usuario_numerico_en_json_tambien_se_limita(self):
+        """Un `username` enviado como número no debe esquivar el límite."""
+        cuerpo = {"username": 12345678, "password": "mala"}
+        estados = self.rafaga(LOGIN, [cuerpo] * 12)
+        self.assertEqual(estados[:10], [400] * 10)
+        self.assertEqual(estados[10:], [429, 429])
+
+    def test_numero_y_texto_comparten_el_mismo_contador(self):
+        cuerpos = [{"username": 777, "password": "mala"}] * 6 + [
+            {"username": "777", "password": "mala"}
+        ] * 5
+        self.assertEqual(self.rafaga(LOGIN, cuerpos)[-1], 429)
+
+    def test_listas_y_objetos_como_identidad_no_rompen_ni_se_cuentan_por_cuenta(self):
+        for valor in ([1, 2], {"a": 1}, True, None):
+            with self.subTest(valor=valor):
+                respuesta = self.client.post(
+                    LOGIN, {"username": valor, "password": "mala"}, format="json"
+                )
+                self.assertEqual(respuesta.status_code, 400)
+
     def test_un_atacante_que_prueba_muchas_cuentas_desde_una_ip_termina_en_429(self):
         cuerpos = [
             {"email": f"victima{i}@example.com", "password": "x"} for i in range(35)

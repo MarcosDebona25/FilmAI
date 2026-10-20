@@ -721,6 +721,8 @@ declare const messages: {
       "logged_out": "You’ve logged out on this device.",
       "unknown": "We couldn’t complete the action. Try again.",
       "throttledWithWait": "There are too many requests. Try again in {retryAfterSeconds, plural, one {# second} other {# seconds}}.",
+      "throttledWithWaitMinutes": "There are too many requests. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+      "throttledWithWaitHours": "There are too many requests. Try again in {hours, plural, one {# hour} other {# hours}}.",
       "list_name_reserved": "This name is reserved for a default list.",
       "terms_not_accepted": "To create your account you need to accept the Terms and Conditions.",
       "network_error": "We couldn’t connect. Check your connection and try again."
