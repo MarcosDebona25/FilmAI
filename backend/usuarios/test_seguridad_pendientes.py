@@ -251,3 +251,76 @@ class ReenvioNoRenuevaElPlazoTests(TestCase):
         cache.clear()  # el enfriamiento de 1 minuto entre reenvíos no es lo que se prueba
         self.assertEqual(self.reenviar("ana@example.com").status_code, 200)
         self.assertEqual(len(mail.outbox), 0)
+
+
+class AltaCompletaConGoogleSobrePendienteVencidaTests(TestCase):
+    """Recorre el guardado real (allauth sin simular) tras liberar la pendiente.
+
+    El login de Google trae un usuario nuevo sin guardar; borrar la pendiente
+    vencida con el mismo correo no debe dejarlo apuntando a una fila inexistente.
+    """
+
+    def alta(self, correo):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from allauth.core.context import request_context
+        from allauth.socialaccount.adapter import get_adapter as adapter_social
+        from allauth.socialaccount.models import SocialAccount, SocialLogin
+        from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+        from django.contrib.auth.models import AnonymousUser
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.sessions.backends.db import SessionStore
+        from rest_framework.test import APIRequestFactory
+
+        from .serializers import GoogleSocialLoginSerializer
+
+        request = APIRequestFactory().post("/api/auth/google/", {}, format="json")
+        request.session = SessionStore()
+        request.user = AnonymousUser()
+        request._messages = FallbackStorage(request)
+        datos = {
+            "id_token": "token-de-prueba",
+            "nombre_usuario": "nuevogoogle",
+            "fecha_nacimiento": "1990-01-01",
+            "genero": "no_especifica",
+            "pais": "AR",
+            "acepta_terminos": True,
+        }
+        login = SocialLogin(
+            user=Usuario(correo=correo),
+            account=SocialAccount(provider="google", uid="alta-completa"),
+            email_addresses=[EmailAddress(email=correo, verified=True, primary=True)],
+            provider=adapter_social(request).get_provider(request, provider="google"),
+        )
+
+        def armar_login(*args, **kwargs):
+            """Como `get_social_login`: `validate` ya cargó `google_extra`."""
+            login.user = adapter_social(request).populate_user(
+                request, login, {"email": correo}
+            )
+            return login
+
+        serializer = GoogleSocialLoginSerializer(
+            data=datos,
+            context={
+                "request": request,
+                "view": SimpleNamespace(adapter_class=GoogleOAuth2Adapter),
+            },
+        )
+        # allauth lee el request actual de un contexto que el middleware abre.
+        with (
+            request_context(request),
+            patch.object(serializer, "get_social_login", side_effect=armar_login),
+        ):
+            serializer.is_valid(raise_exception=True)
+        return serializer.validated_data["user"]
+
+    def test_la_cuenta_nueva_reemplaza_a_la_pendiente_vencida(self):
+        vieja = pendiente(2, correo="ana@example.com", nombre_usuario="otro12345")
+        usuario = self.alta("ana@example.com")
+        self.assertFalse(Usuario.objects.filter(pk=vieja.pk).exists())
+        self.assertNotEqual(usuario.pk, vieja.pk)
+        self.assertEqual(usuario.estado, EstadoCuenta.ACTIVA)
+        self.assertEqual(Usuario.objects.filter(correo="ana@example.com").count(), 1)
+        self.assertTrue(usuario.socialaccount_set.filter(uid="alta-completa").exists())
