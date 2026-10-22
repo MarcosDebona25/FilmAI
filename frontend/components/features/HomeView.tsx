@@ -43,8 +43,12 @@ export function HomeView() {
   const tn = useTranslations("nav.account");
   const tf = useTranslations("footer.main");
   const tipo = tipoDesdeUrl(useSearchParams().get("type"));
-  const { perfil, cargando } = useAccount();
+  const { perfil, cargando, sesionPosible } = useAccount();
   const conSesion = !cargando && perfil !== null;
+  // Con cookies de sesión, la fila de Recomendado se reserva (en esqueleto)
+  // mientras llega la cuenta: si apareciera después, empujaría hacia abajo las
+  // filas ya dibujadas (CLS de ~0,07 en el Inicio, medido el 22/10/2026).
+  const filaRecomendado = conSesion || (cargando && sesionPosible);
   const formats = useFormats();
   const [intento, setIntento] = useState(0);
   const anio = new Date().getFullYear();
@@ -188,7 +192,7 @@ export function HomeView() {
         </div>
       ) : (
         <div className="mx-auto flex max-w-[1360px] flex-col gap-11 pt-7 pb-12 md:gap-20 md:px-10 md:pt-10 md:pb-20">
-          {conSesion && (
+          {filaRecomendado && (
             <MediaRow
               title={t("rows.recommendedTitle")}
               description={
@@ -199,7 +203,7 @@ export function HomeView() {
               items={recomendados}
               showType={tipo === "all"}
               from="home"
-              loading={recomendado.status === "loading"}
+              loading={!conSesion || recomendado.status === "loading"}
             />
           )}
           <MediaRow
@@ -249,8 +253,10 @@ export function HomeView() {
       )}
       {conSesion && (
         // Provisorio: el chatbot (B-04) todavía no existe y `/chat` responde 404 (Not Found).
+        // Sin prefetch hasta entonces: cada página pedía ese 404 de fondo.
         <Link
           href={routes.askFilmAI}
+          prefetch={false}
           className="fixed right-4 bottom-[92px] z-30 grid size-14 place-items-center rounded-full bg-primary font-semibold text-primary-foreground no-underline shadow-[0_10px_24px_rgb(0_0_0/0.4)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:right-8 md:bottom-8 md:inline-flex md:w-auto md:gap-2.5 md:pr-[22px] md:pl-[18px]"
         >
           <MessageCircle aria-hidden="true" className="size-6" />

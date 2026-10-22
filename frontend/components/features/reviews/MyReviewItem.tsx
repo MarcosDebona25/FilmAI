@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { DialogShell } from "@/components/features/title/DialogShell";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { useFormats } from "@/lib/format";
-import { tmdbImage } from "@/lib/catalog";
+import { tmdbImage, tmdbLoader } from "@/lib/catalog";
 import { type MiResena } from "@/lib/reviews";
 import { routes } from "@/lib/routes";
 import { useDesborde } from "@/lib/use-desborde";
@@ -111,7 +111,7 @@ export function MyReviewItem({
       <div className="relative h-[84px] w-14 overflow-hidden rounded-md bg-raised-2 md:h-[120px] md:w-20 md:rounded-lg">
         {src && !posterFallido ? (
           <Image
-            unoptimized
+            loader={tmdbLoader}
             src={src}
             alt=""
             fill

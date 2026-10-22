@@ -10,7 +10,10 @@ _catalogo = json.loads(
 AVATARES = {
     item["id"]: {
         "id": item["id"],
-        "src": f"/avatars/recortados/{quote(item['filename'])}",
+        # Los paréntesis quedan sin escapar: `next start` no encuentra el archivo
+        # público si llegan como %28/%29 y el optimizador de imágenes responde
+        # 400 (Bad Request), así que el avatar no se veía (22/10/2026).
+        "src": f"/avatars/recortados/{quote(item['filename'], safe='()')}",
     }
     for item in _catalogo
     if item.get("active", True)

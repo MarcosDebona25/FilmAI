@@ -2,13 +2,14 @@
 
 import type { ReactNode } from "react";
 import Image from "next/image";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { ContentType } from "@/components/features/TypeSelector";
 import { StarIcon } from "@/components/ui/StarIcon";
-import type { Title } from "@/lib/catalog";
+import { tmdbLoader, type Title } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
 import { routes } from "@/lib/routes";
@@ -74,8 +75,11 @@ export function HomeHero({
           <div className="relative flex min-h-[560px] flex-1 flex-col justify-end md:static md:min-h-0 md:pt-12">
             <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
               <Image
-                unoptimized
+                loader={tmdbLoader}
+                // `priority` solo precarga y quita el lazy; sin `fetchPriority` el
+                // navegador pedía esta imagen (el LCP) con prioridad baja.
                 priority
+                fetchPriority="high"
                 fill
                 sizes="100vw"
                 src={titulo.backdrop}

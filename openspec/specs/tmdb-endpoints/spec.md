@@ -227,3 +227,18 @@ inglés los nombres vacíos.
 - GIVEN no text and no filters
 - WHEN `browse/?tipo=tv` is requested
 - THEN `discover/tv` is called with `vote_count.gte=50` and `without_genres=10763,10767`
+
+### Requirement: Browser caching and compression (22/10/2026)
+
+Every `200 (OK)` response of a public catalog view (`CatalogoBaseView`) MUST carry `Cache-Control: public, max-age=300` and MUST vary on `Accept-Language` (the only input besides the URL). Error responses MUST NOT carry `Cache-Control`. These views MUST compress the body with gzip when the client accepts it; compression stays scoped to them (no global `GZipMiddleware`) because they hold no cookies or CSRF tokens. `recommended/` is per user and is not covered.
+
+#### Scenario: A listing can be reused by the browser
+
+- GIVEN a `200 (OK)` from `discover/` requested with `Accept-Language: es` and `Accept-Encoding: gzip`
+- THEN the response has `Cache-Control: public, max-age=300`, `Vary` includes `Accept-Language`
+- AND the body is gzip-compressed
+
+#### Scenario: An error is not cached
+
+- GIVEN `discover/?tipo=book`
+- THEN the response is `400 (Bad Request)` without `Cache-Control`

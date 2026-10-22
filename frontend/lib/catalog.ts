@@ -53,6 +53,32 @@ export function tmdbImage(
   }
 }
 
+/**
+ * Anchos que sirve el CDN de TMDB. Los backdrops tienen su propia escala (la
+ * app siempre los pide en w1280); el resto usa la de pósters.
+ */
+const ANCHOS_POSTER = [92, 154, 185, 342, 500, 780];
+const ANCHOS_BACKDROP = [300, 780, 1280];
+
+/**
+ * `loader` de `next/image` para el CDN de TMDB: con él, `<Image>` arma un
+ * `srcset` y el navegador baja el ancho que necesita según `sizes`, sin pasar
+ * por el optimizador de Next (TMDB ya sirve cada ancho). El tamaño de la URL
+ * (`tmdbImage(…, "w342")`) es el tope: nunca baja más que antes, solo menos
+ * donde la imagen se ve chica (22/10/2026).
+ */
+export function tmdbLoader({ src, width }: { src: string; width: number }) {
+  const partes = /^(https:\/\/image\.tmdb\.org\/t\/p\/)w(\d+)(\/.+)$/.exec(src);
+  if (!partes) return src;
+  const tope = Number(partes[2]);
+  const anchos = tope === 1280 ? ANCHOS_BACKDROP : ANCHOS_POSTER;
+  // Un 10 % menos no se nota y evita saltar al ancho siguiente: un celular
+  // con densidad 2 pide 828 px y TMDB tiene 780 o 1280.
+  const minimo = width * 0.9;
+  const ancho = anchos.find((candidato) => candidato >= minimo && candidato <= tope) ?? tope;
+  return `${partes[1]}w${ancho}${partes[3]}`;
+}
+
 function anio(fecha: string | undefined) {
   const valor = Number.parseInt(fecha?.slice(0, 4) ?? "", 10);
   return Number.isFinite(valor) ? valor : null;

@@ -59,7 +59,18 @@ export function MediaRow({
           <h2 id={headingId} className="font-display text-[30px] leading-none md:text-[40px]">
             {title}
           </h2>
-          {description && <p className="text-[13px] text-fg-3 md:text-sm">{description}</p>}
+          {description ? (
+            <p className="text-[13px] text-fg-3 md:text-sm">{description}</p>
+          ) : (
+            // Mientras carga, la descripción que todavía no llegó (la de
+            // Recomendado depende de la respuesta) ocupa su renglón: si no,
+            // al llegar corre las tarjetas y todo lo de abajo.
+            loading && (
+              <p aria-hidden="true" className="invisible text-[13px] md:text-sm">
+                {"\u00a0"}
+              </p>
+            )
+          )}
         </div>
         <div className="hidden gap-2 md:flex">
           <button

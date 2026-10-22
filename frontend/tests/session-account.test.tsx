@@ -51,6 +51,34 @@ describe("AccountProvider cuando la cuenta no carga", () => {
   });
 });
 
+describe("AccountProvider al navegar", () => {
+  it("con el perfil cargado, cambiar de ruta no lo vuelve a pedir", async () => {
+    // Antes cada navegación repetía perfil, avatares y preferencias (22/10/2026).
+    nav.pathname = "/home";
+    vi.mocked(apiFetch).mockReset();
+    vi.mocked(apiFetch).mockImplementation(async (path) => {
+      if (path === "/api/profile/") return { pk: 1, nombre: "Juan" };
+      return path === "/api/avatars/" ? [] : {};
+    });
+    const { rerender } = render(
+      <AccountProvider>
+        <Probe />
+      </AccountProvider>
+    );
+    expect(await screen.findByText("Juan")).toBeVisible();
+    expect(apiFetch).toHaveBeenCalledTimes(3);
+
+    nav.pathname = "/lists";
+    rerender(
+      <AccountProvider>
+        <Probe />
+      </AccountProvider>
+    );
+    expect(screen.getByText("Juan")).toBeVisible();
+    expect(apiFetch).toHaveBeenCalledTimes(3);
+  });
+});
+
 describe("AccountProvider y el vencimiento", () => {
   beforeEach(() => {
     nav.pathname = "/profile";

@@ -304,7 +304,6 @@ export function ReviewsSection({
           >
             {avatar(resena.avatar_id) ? (
               <Image
-                unoptimized
                 src={avatar(resena.avatar_id)!}
                 alt=""
                 width={40}

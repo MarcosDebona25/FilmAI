@@ -70,7 +70,7 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href={routes.askFilmAI} className={linkClass}>
+                  <Link href={routes.askFilmAI} prefetch={false} className={linkClass}>
                     {t("askFilmAI")}
                   </Link>
                 </li>
@@ -146,7 +146,7 @@ export function Footer() {
             </Link>
           </li>
           <li className="border-b border-line">
-            <Link href={routes.askFilmAI} className={rowClass}>
+            <Link href={routes.askFilmAI} prefetch={false} className={rowClass}>
               {t("askFilmAI")}
               <ChevronRight aria-hidden="true" className="size-4" />
             </Link>

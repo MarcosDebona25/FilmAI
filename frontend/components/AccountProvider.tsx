@@ -2,7 +2,15 @@
 import { routes } from "@/lib/routes";
 
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -41,6 +49,8 @@ type AccountContextValue = {
   avatares: AvatarOption[];
   preferencias: Preferencias | null;
   cargando: boolean;
+  /** Llegó alguna cookie de sesión al cargar la página (lo decide el servidor). */
+  sesionPosible: boolean;
   error: string | null;
   actualizarPerfil: (perfil: Perfil) => void;
   actualizarPreferencia: <K extends keyof Preferencias>(
@@ -74,6 +84,16 @@ export function AccountProvider({
   const sinCookies = useRef(!sesionPosible);
   // ¿Hubo una sesión? Distingue «se te venció» de «nunca entraste».
   const huboSesion = useRef(sesionPosible);
+  // ¿Ya llegó el perfil? Con él cargado, navegar no lo vuelve a pedir: antes
+  // cada cambio de ruta repetía perfil, avatares y preferencias y volvía a
+  // renderizar todo lo que usa la cuenta (medición del 22/10/2026).
+  const perfilCargado = useRef(false);
+  // `recargar` lee la ruta de acá y no de una dependencia: así no cambia en
+  // cada navegación, y el valor del contexto tampoco.
+  const rutaActual = useRef(pathname);
+  useEffect(() => {
+    rutaActual.current = pathname;
+  }, [pathname]);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [avatares, setAvatares] = useState<AvatarOption[]>([]);
   const [preferencias, setPreferencias] = useState<Preferencias | null>(null);
@@ -84,6 +104,7 @@ export function AccountProvider({
     // Logout, baja o sesión vencida: el backend ya borró las cookies.
     sinCookies.current = true;
     huboSesion.current = false;
+    perfilCargado.current = false;
     setPerfil(null);
     setPreferencias(null);
     setAvatares([]);
@@ -96,6 +117,7 @@ export function AccountProvider({
       const nuevoPerfil = await apiFetch<Perfil>("/api/profile/");
       sinCookies.current = false;
       huboSesion.current = true;
+      perfilCargado.current = true;
       setPerfil(nuevoPerfil);
       if (nuevoPerfil.idioma && persistLocale(nuevoPerfil.idioma)) router.refresh();
       const [catalogo, ajustes] = await Promise.all([
@@ -107,8 +129,9 @@ export function AccountProvider({
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         limpiar();
-        if (protectedRoutes.some((ruta) => pathname.startsWith(ruta))) {
-          router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+        const ruta = rutaActual.current;
+        if (protectedRoutes.some((protegida) => ruta.startsWith(protegida))) {
+          router.replace(`/login?next=${encodeURIComponent(ruta)}`);
         }
       } else {
         // El mensaje del propio error: «Ocurrió un error…» o «No pudimos
@@ -118,7 +141,7 @@ export function AccountProvider({
     } finally {
       setCargando(false);
     }
-  }, [limpiar, pathname, router]);
+  }, [limpiar, router]);
 
   useEffect(() => {
     if (isAccessPath(pathname)) sinCookies.current = false;
@@ -126,7 +149,8 @@ export function AccountProvider({
       ([routes.login, routes.register, routes.completeSignup] as readonly string[]).includes(
         pathname
       ) ||
-      sinCookies.current
+      sinCookies.current ||
+      perfilCargado.current
     ) {
       setCargando(false);
       return;
@@ -148,56 +172,69 @@ export function AccountProvider({
     return () => window.removeEventListener(SESION_VENCIDA, alVencer);
   }, [limpiar, pathname, router, t]);
 
-  async function actualizarPreferencia<K extends keyof Preferencias>(
-    campo: K,
-    valor: Preferencias[K]
-  ) {
-    if (!preferencias) return;
-    const anterior = preferencias;
-    if (campo === "idioma") {
-      const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
-        method: "PUT",
-        body: { idioma: valor },
-      });
-      setPreferencias(confirmada);
-      setPerfil((current) => (current ? { ...current, idioma: confirmada.idioma } : current));
-      if (confirmada.idioma) {
-        persistLocale(confirmada.idioma);
-        router.refresh();
+  const actualizarPreferencia = useCallback(
+    async function <K extends keyof Preferencias>(campo: K, valor: Preferencias[K]) {
+      if (!preferencias) return;
+      const anterior = preferencias;
+      if (campo === "idioma") {
+        const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
+          method: "PUT",
+          body: { idioma: valor },
+        });
+        setPreferencias(confirmada);
+        setPerfil((current) => (current ? { ...current, idioma: confirmada.idioma } : current));
+        if (confirmada.idioma) {
+          persistLocale(confirmada.idioma);
+          router.refresh();
+        }
+        return;
       }
-      return;
-    }
-    const optimista = { ...anterior, [campo]: valor };
-    setPreferencias(optimista);
-    try {
-      const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
-        method: "PUT",
-        body: { [campo]: valor },
-      });
-      setPreferencias(confirmada);
-    } catch (err) {
-      setPreferencias(anterior);
-      throw err;
-    }
-  }
-
-  return (
-    <AccountContext.Provider
-      value={{
-        perfil,
-        avatares,
-        preferencias,
-        cargando,
-        error,
-        actualizarPerfil: setPerfil,
-        actualizarPreferencia,
-        recargar,
-        limpiar,
-      }}
-    >
-      {children}
-    </AccountContext.Provider>
+      const optimista = { ...anterior, [campo]: valor };
+      setPreferencias(optimista);
+      try {
+        const confirmada = await apiFetch<Preferencias>("/api/preferences/", {
+          method: "PUT",
+          body: { [campo]: valor },
+        });
+        setPreferencias(confirmada);
+      } catch (err) {
+        setPreferencias(anterior);
+        throw err;
+      }
+    },
+    [preferencias, router]
   );
+
+  // El mismo objeto mientras nada cambie: si no, cada render del proveedor
+  // (uno por navegación, por `usePathname`) re-renderiza a todos los que usan
+  // `useAccount()`.
+  const valor = useMemo(
+    () => ({
+      perfil,
+      avatares,
+      preferencias,
+      cargando,
+      sesionPosible,
+      error,
+      actualizarPerfil: setPerfil,
+      actualizarPreferencia,
+      recargar,
+      limpiar,
+    }),
+    [
+      perfil,
+      avatares,
+      preferencias,
+      cargando,
+      sesionPosible,
+      error,
+      actualizarPreferencia,
+      recargar,
+      limpiar,
+    ]
+  );
+
+  return <AccountContext.Provider value={valor}>{children}</AccountContext.Provider>;
 }
 
 export function useAccount() {
