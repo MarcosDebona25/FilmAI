@@ -101,6 +101,8 @@ describe("Listas: vista general", () => {
     render(<ListsView />, { locale: "en" });
 
     expect(await screen.findByRole("heading", { level: 1, name: "Lists" })).toBeInTheDocument();
+    // La grilla (con dnd-kit) llega en un chunk aparte.
+    await screen.findByText("Maratón");
     expect(screen.getByText("6 lists · 3 defaults")).toBeInTheDocument();
     expect(nombres()).toEqual([
       "Favorites",
@@ -123,6 +125,7 @@ describe("Listas: vista general", () => {
     render(<ListsView />, { locale: "es" });
 
     await screen.findByRole("heading", { level: 1, name: es.nav.main.lists });
+    await screen.findByText("Maratón");
     expect(nombres().slice(0, 3)).toEqual([
       es.enums.defaultList.favoritos,
       es.enums.defaultList.pendientes,

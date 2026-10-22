@@ -362,11 +362,14 @@ for (const viewport of viewports) {
       await page.reload();
 
       await expect(page.getByRole("heading", { level: 1, name: es.nav.main.lists })).toBeVisible();
-      expect((await nombres(page)).slice(0, 3)).toEqual([
-        es.enums.defaultList.favoritos,
-        es.enums.defaultList.pendientes,
-        es.enums.defaultList.vistas,
-      ]);
+      // La grilla (con dnd-kit) llega en un chunk aparte: se espera a que aparezca.
+      await expect
+        .poll(async () => (await nombres(page)).slice(0, 3))
+        .toEqual([
+          es.enums.defaultList.favoritos,
+          es.enums.defaultList.pendientes,
+          es.enums.defaultList.vistas,
+        ]);
       await expect(page.getByText("6 listas · 3 predeterminadas")).toBeVisible();
       await sinDesborde(page);
     });
