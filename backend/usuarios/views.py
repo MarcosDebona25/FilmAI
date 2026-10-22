@@ -43,13 +43,24 @@ from filmai.errores.sobre import (
 )
 
 from .models import Usuario
+from .pendientes import pendientes_vencidas
 from .serializers import (
     EnlaceRestablecimientoInvalido,
     GoogleSocialLoginSerializer,
     RecuperarContrasenaSerializer,
     RestablecerContrasenaSerializer,
 )
-from .throttles import EmailRateThrottle, EmailThrottleStatusMixin
+from .throttles import (
+    EmailRateThrottle,
+    EmailThrottleStatusMixin,
+    LoginCuentaThrottle,
+    LoginIPThrottle,
+    ReenvioCorreoThrottle,
+    ReenvioEnfriamientoThrottle,
+    ReenvioIPThrottle,
+    RegistroCorreoThrottle,
+    RegistroIPThrottle,
+)
 from .validators import USERNAME_REGEX
 
 logger = logging.getLogger(__name__)
@@ -95,6 +106,8 @@ class LoginView(BaseLoginView):
     """
 
     authentication_classes = (LenientJWTCookieAuthentication,)
+    # Cuenta e IP: ver docs/decisiones.md (20/10/2026, auditoría F2).
+    throttle_classes: ClassVar[list] = [LoginCuentaThrottle, LoginIPThrottle]
 
 
 def _error_enlace(codigo):
@@ -137,6 +150,8 @@ class RegisterView(BaseRegisterView):
     (URL que no montamos), rompiendo el registro.
     """
 
+    throttle_classes: ClassVar[list] = [RegistroCorreoThrottle, RegistroIPThrottle]
+
     def perform_create(self, serializer):
         user = serializer.save(self.request)
         # `setup_user_email` (dentro de serializer.save) creó el EmailAddress
@@ -150,6 +165,17 @@ class RegisterView(BaseRegisterView):
         if email_address:
             email_address.send_confirmation(self.request._request, signup=True)
         return user
+
+
+# Límites del reenvío de confirmación: enfriamiento de 1 minuto, tope por correo
+# destino y tope por IP. Se aplican con `as_view(throttle_classes=...)` sobre la
+# vista de dj-rest-auth en `filmai/urls.py`: una subclase cambiaría el esquema
+# OpenAPI versionado (`contracts/openapi.yaml`).
+THROTTLES_REENVIO = [
+    ReenvioEnfriamientoThrottle,
+    ReenvioCorreoThrottle,
+    ReenvioIPThrottle,
+]
 
 
 class GoogleLogin(SocialLoginView):
@@ -198,10 +224,13 @@ class UsernameDisponibleView(APIView):
         username = request.query_params.get("username", "")
         if not USERNAME_REGEX.fullmatch(username):
             return Response({"disponible": False})
-        disponible = not Usuario.objects.filter(
-            nombre_usuario__iexact=username
-        ).exists()
-        return Response({"disponible": disponible})
+        # Una pendiente vencida ya no reserva el nombre (F4); el GET no borra.
+        ocupado = (
+            Usuario.objects.filter(nombre_usuario__iexact=username)
+            .exclude(pk__in=pendientes_vencidas().values("pk"))
+            .exists()
+        )
+        return Response({"disponible": not ocupado})
 
 
 class ConfirmarCorreoView(APIView):
@@ -222,7 +251,9 @@ class ConfirmarCorreoView(APIView):
 
     def post(self, request):
         key = str(request.data.get("key", ""))
-        logger.info("ConfirmarCorreo: key recibida (len=%d): %r", len(key), key)
+        # La clave es un secreto de un solo uso: nunca va al log, ni entera ni en
+        # pedazos. Alcanza con el largo para diagnosticar.
+        logger.info("ConfirmarCorreo: key recibida (len=%d)", len(key))
         ttl_segundos = (
             allauth_account_settings.EMAIL_CONFIRMATION_EXPIRE_DAYS * 24 * 3600
         )
@@ -237,9 +268,8 @@ class ConfirmarCorreoView(APIView):
             logger.info("ConfirmarCorreo: key expirada")
             return _error_enlace("link_expired")
         except (signing.BadSignature, ValueError, TypeError) as exc:
-            logger.warning(
-                "ConfirmarCorreo: key inválida — %s: %s", type(exc).__name__, exc
-            )
+            # Sin `exc`: el mensaje de BadSignature repite la firma recibida.
+            logger.warning("ConfirmarCorreo: key inválida — %s", type(exc).__name__)
             return _error_enlace("link_invalid")
 
         email_address = (

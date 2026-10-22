@@ -36,14 +36,30 @@ services:
     image: redis:7-alpine
     container_name: filmai_redis
     restart: unless-stopped
+    # La contraseña llega por entorno (no en la línea de comandos, que se ve en
+    # `docker ps`). `:?` aborta `docker compose up` si falta REDIS_PASSWORD.
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?definí REDIS_PASSWORD en .env}
+    # Pasa por `docker-entrypoint.sh`: la imagen solo baja de root al usuario
+    # `redis` cuando su primer argumento es `redis-server`; con `sh -c` a secas
+    # el servidor correría como root.
+    # `volatile-lru`: al llegar al tope solo desaloja claves con vencimiento (la
+    # caché de TMDB y los contadores de throttle). La cola de Celery, que comparte
+    # esta instancia, no vence y no se toca.
+    command:
+      - sh
+      - -c
+      - 'exec docker-entrypoint.sh redis-server --requirepass "$$REDIS_PASSWORD" --maxmemory 256mb --maxmemory-policy volatile-lru'
+    # Solo loopback: otras máquinas de la red no llegan a Redis. Los demás
+    # servicios lo alcanzan por la red interna de Docker (host `redis`).
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redisdata:/data
     networks:
       - filmai_network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -69,6 +85,8 @@ services:
       # estos montajes, dentro del contenedor esa raíz es `/` y no existen.
       - ./contracts:/contracts
       - ./traducciones:/traducciones:ro
+      # Los tests de seguridad (F1) leen el compose como BASE_DIR.parent.
+      - ./docker-compose.yml:/docker-compose.yml:ro
     depends_on:
       db:
         condition: service_healthy # no arranca hasta que PostgreSQL responda

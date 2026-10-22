@@ -5,6 +5,8 @@ Proporcionan límites de solicitudes basados en criterios específicos del domin
 (ej: email) en lugar del default de DRF que usa IP.
 """
 
+import hashlib
+
 from rest_framework.throttling import SimpleRateThrottle
 
 
@@ -77,3 +79,86 @@ class EmailThrottleStatusMixin:
                 response.data["intentos_restantes"] = remaining
 
         return response
+
+
+def _cuerpo(request):
+    datos = request.data
+    return datos if hasattr(datos, "get") else {}
+
+
+class PorIPThrottle(SimpleRateThrottle):
+    """Límite por IP del cliente (respeta `NUM_PROXIES`, ver settings.py)."""
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {
+            "scope": self.scope,
+            "ident": self.get_ident(request),
+        }
+
+
+class PorCuentaThrottle(SimpleRateThrottle):
+    """Límite por cuenta o correo, sin importar desde qué IP llegue el pedido.
+
+    Defiende contra quien prueba contraseñas (o dispara correos) rotando de IP.
+    La identidad se normaliza (minúsculas, sin espacios) y se guarda como hash:
+    así `Ana@x.com` y `ana@x.com` comparten contador y la clave de caché no
+    lleva datos personales ni caracteres raros.
+
+    Sin identidad en el pedido (cuerpo vacío o sin los campos esperados) no hay
+    nada que limitar por cuenta: ese pedido lo cubre el límite por IP.
+    """
+
+    campos: tuple = ()
+
+    @staticmethod
+    def identidad_de(valor):
+        normalizado = str(valor).strip().lower()
+        return hashlib.sha256(normalizado.encode()).hexdigest()[:32]
+
+    def get_cache_key(self, request, view):
+        cuerpo = _cuerpo(request)
+        for campo in self.campos:
+            valor = cuerpo.get(campo)
+            # Cualquier escalar cuenta (un `username` numérico en JSON no debe
+            # esquivar el límite); listas y objetos nunca serán una cuenta
+            # válida y los cubre el límite por IP.
+            if isinstance(valor, (str, int, float)) and str(valor).strip():
+                return self.cache_format % {
+                    "scope": self.scope,
+                    "ident": self.identidad_de(valor),
+                }
+        return None
+
+
+class LoginCuentaThrottle(PorCuentaThrottle):
+    scope = "login_cuenta"
+    campos = ("email", "username")
+
+
+class LoginIPThrottle(PorIPThrottle):
+    scope = "login_ip"
+
+
+class RegistroCorreoThrottle(PorCuentaThrottle):
+    scope = "registro_correo"
+    campos = ("correo", "email")
+
+
+class RegistroIPThrottle(PorIPThrottle):
+    scope = "registro_ip"
+
+
+class ReenvioCorreoThrottle(PorCuentaThrottle):
+    scope = "reenvio_correo"
+    campos = ("email", "correo")
+
+
+class ReenvioEnfriamientoThrottle(PorCuentaThrottle):
+    """Una confirmación por minuto al mismo correo (enfriamiento)."""
+
+    scope = "reenvio_enfriamiento"
+    campos = ("email", "correo")
+
+
+class ReenvioIPThrottle(PorIPThrottle):
+    scope = "reenvio_ip"
