@@ -94,6 +94,12 @@ class PerfilTests(TestCase):
             400,
         )
 
+    def test_la_ruta_del_avatar_no_escapa_los_parentesis(self):
+        """`next start` sirve «avatar%20(26).png» pero no «avatar%20%2826%29.png»."""
+        opciones = self.client.get("/api/avatars/").json()
+        src = next(item["src"] for item in opciones if item["id"] == 26)
+        self.assertEqual(src, "/avatars/recortados/avatar%20(26).png")
+
     def test_campos_manipulados_no_modifican_identidad_permisos_ni_preferencias(self):
         """La lista de campos permitidos impide escalada y escritura entre módulos."""
         antes = Usuario.objects.values().get(pk=self.usuario.pk)
