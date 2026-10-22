@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeTitle, normalizeTitles, tmdbImage } from "@/lib/catalog";
+import { normalizeTitle, normalizeTitles, tmdbImage, tmdbLoader } from "@/lib/catalog";
 import { routes } from "@/lib/routes";
 import { insidious, persona, reacher } from "./catalog-fixtures";
 
@@ -80,5 +80,35 @@ describe("routes.title", () => {
   it("lleva a la ficha de película o de serie", () => {
     expect(routes.title("movie", 1291595)).toBe("/movie/1291595");
     expect(routes.title("tv", 108978)).toBe("/tv/108978");
+  });
+});
+
+describe("tmdbLoader", () => {
+  const poster = "https://image.tmdb.org/t/p/w342/abc.jpg";
+  const backdrop = "https://image.tmdb.org/t/p/w1280/fondo.jpg";
+
+  it("elige el ancho de TMDB más chico que alcanza", () => {
+    expect(tmdbLoader({ src: poster, width: 64 })).toBe("https://image.tmdb.org/t/p/w92/abc.jpg");
+    expect(tmdbLoader({ src: poster, width: 180 })).toBe("https://image.tmdb.org/t/p/w185/abc.jpg");
+    expect(tmdbLoader({ src: backdrop, width: 640 })).toBe(
+      "https://image.tmdb.org/t/p/w780/fondo.jpg"
+    );
+  });
+
+  it("acepta un ancho hasta 10 % menor antes de saltar al siguiente", () => {
+    // Celular con densidad 2: Next pide 828 px; 780 alcanza y pesa la mitad que 1280.
+    expect(tmdbLoader({ src: backdrop, width: 828 })).toBe(
+      "https://image.tmdb.org/t/p/w780/fondo.jpg"
+    );
+  });
+
+  it("nunca pasa del ancho que pidió la URL", () => {
+    // Antes de este loader se bajaba siempre ese ancho: no puede pesar más.
+    expect(tmdbLoader({ src: poster, width: 1080 })).toBe(poster);
+    expect(tmdbLoader({ src: backdrop, width: 3840 })).toBe(backdrop);
+  });
+
+  it("deja igual lo que no es del CDN de TMDB", () => {
+    expect(tmdbLoader({ src: "/avatars/a.png", width: 96 })).toBe("/avatars/a.png");
   });
 });

@@ -54,6 +54,7 @@ export function AccessShell({
             alt={poster === "background" ? "" : t("posterCollageAlt")}
             fill
             priority
+            fetchPriority="high"
             sizes="(max-width: 1023px) 100vw, 45vw"
             className={`object-cover ${poster === "band" ? "object-[50%_20%] lg:object-center" : ""}`}
           />

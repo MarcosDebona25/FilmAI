@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { ListPlus } from "lucide-react";
 import Image from "next/image";
+
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { StarIcon } from "@/components/ui/StarIcon";
-import type { Title } from "@/lib/catalog";
+import { tmdbLoader, type Title } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -57,7 +58,7 @@ export function MediaCard({
       <span className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-raised transition-[transform,box-shadow] duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgb(0_0_0/0.45)] group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
         {poster ? (
           <Image
-            unoptimized
+            loader={tmdbLoader}
             src={poster}
             alt={t("media.posterAlt", { title: title.titulo })}
             fill

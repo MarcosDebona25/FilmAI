@@ -1,6 +1,9 @@
 import logging
 from typing import ClassVar
 
+from django.utils.cache import patch_cache_control, patch_vary_headers
+from django.utils.decorators import method_decorator
+from django.views.decorators.gzip import gzip_page
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -112,6 +115,17 @@ def _materializar_listado_sin_interrumpir(data, tipo_tmdb=None):
         logger.exception("No se pudo encolar la materialización del listado")
 
 
+# Cuánto puede reusar el navegador una respuesta del catálogo sin volver a
+# pedirla. Corto a propósito: el TTL de Redis (`catalogo/cache.py`) ya evita
+# llamar a TMDB; esto solo ahorra el viaje al backend al volver a una pantalla
+# o recargar (22/10/2026).
+CACHE_NAVEGADOR_SEGUNDOS = 5 * 60
+
+
+# Comprimido solo acá y no con `GZipMiddleware` global: el catálogo es público y
+# no lleva secretos (sin cookies ni CSRF en la respuesta), así que no queda
+# expuesto a BREACH. Un listado de 13 kB baja a ~5 kB.
+@method_decorator(gzip_page, name="dispatch")
 class CatalogoBaseView(APIView):
     authentication_classes: ClassVar = []
     permission_classes: ClassVar = [AllowAny]
@@ -120,6 +134,20 @@ class CatalogoBaseView(APIView):
 
     def _service(self, request):
         return servicio_localizado(idioma_tmdb(request), get_catalog_service)
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        """Las respuestas 200 (OK) se pueden cachear en el navegador.
+
+        Son públicas (sin autenticación, `authentication_classes = []`) y solo
+        cambian con el idioma, que sale de `Accept-Language`: por eso el `Vary`.
+        Los errores no se cachean, así un 503 (Service Unavailable) de TMDB no
+        queda pegado.
+        """
+        response = super().finalize_response(request, response, *args, **kwargs)
+        if response.status_code == 200:
+            patch_cache_control(response, public=True, max_age=CACHE_NAVEGADOR_SEGUNDOS)
+            patch_vary_headers(response, ["Accept-Language"])
+        return response
 
     def _page(self, request):
         page = _int_param(request.query_params.get("page"), "page", default=1)

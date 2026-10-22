@@ -7,7 +7,7 @@ import { Clock, Eye, GripVertical, Heart } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ListActionsMenu, type AccionLista } from "@/components/features/lists/ListActionsMenu";
-import { tmdbImage } from "@/lib/catalog";
+import { tmdbImage, tmdbLoader } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { esPredeterminada, type ClaveLista, type ResumenLista } from "@/lib/lists";
 import { routes } from "@/lib/routes";
@@ -35,7 +35,7 @@ function Poster({ ruta, className }: { ruta: string; className: string }) {
   return (
     <span className={cn(className, "relative block overflow-hidden bg-raised-2")}>
       <Image
-        unoptimized
+        loader={tmdbLoader}
         src={url}
         alt=""
         fill

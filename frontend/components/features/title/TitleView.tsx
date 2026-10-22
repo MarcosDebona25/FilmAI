@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -18,7 +19,7 @@ import { TitleActions } from "@/components/features/title/TitleActions";
 import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { ApiError, apiFetch } from "@/lib/api";
-import type { MediaType } from "@/lib/catalog";
+import { tmdbLoader, type MediaType } from "@/lib/catalog";
 import { regionDelNavegador, useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
 import { ultimasResenas } from "@/lib/my-reviews";
@@ -268,8 +269,9 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
       <div className="relative h-[280px] overflow-hidden md:h-[620px]">
         {ficha?.backdrop ? (
           <Image
-            unoptimized
+            loader={tmdbLoader}
             priority
+            fetchPriority="high"
             fill
             sizes="100vw"
             src={ficha.backdrop}
@@ -334,7 +336,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
           >
             {ficha?.poster && (
               <Image
-                unoptimized
+                loader={tmdbLoader}
                 fill
                 sizes="(min-width: 768px) 300px, 116px"
                 src={ficha.poster}
