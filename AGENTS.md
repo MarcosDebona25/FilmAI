@@ -47,6 +47,11 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
    - **humanizer**: eliminar señales de escritura generada por IA en textos.
    - **impeccable**: diseño, rediseño y auditoría de interfaces frontend.
    - **vercel-quality**: checklist de calidad post-implementación para frontend.
+   - **security-audit**: guía y auditoría de seguridad (skill de Cloudflare,
+     sin modificar). Responde preguntas puntuales de seguridad; el flujo completo
+     de 6 fases corre solo si se pide explícitamente. Los informes van a
+     `security-audit/run-<N>/` (ignorado por git, nunca se commitea) y la skill
+     no modifica código: cada fix se hace como tarea aparte.
  - Usar la skill correspondiente cuando la tarea lo requiera.
 
 ## 7. Uso y mantenimiento del grafo de conocimiento (graphify)

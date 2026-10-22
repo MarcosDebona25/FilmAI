@@ -22,6 +22,7 @@ from usuarios.authentication import RefreshSesionView
 from usuarios.cuenta import DesactivarCuentaView, PreferenciasView
 from usuarios.perfil import AvataresView, CambiarContrasenaView, PerfilView
 from usuarios.views import (
+    THROTTLES_REENVIO,
     ConfirmarCorreoView,
     CSRFTokenView,
     GoogleLogin,
@@ -149,7 +150,8 @@ urlpatterns = [
     path(
         "api/auth/registration/resend-email/",
         con_codigo_exito(
-            ResendEmailVerificationView.as_view(), "confirmation_email_sent"
+            ResendEmailVerificationView.as_view(throttle_classes=THROTTLES_REENVIO),
+            "confirmation_email_sent",
         ),
         name="rest_resend_email",
     ),

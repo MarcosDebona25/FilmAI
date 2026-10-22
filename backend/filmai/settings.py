@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import quote, urlsplit
 
 from celery.schedules import crontab
 from decouple import config
@@ -160,6 +161,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "usuarios.Usuario"
 
 # Django REST Framework
+# Sin valor por defecto en producción (en desarrollo es 0): un 0 olvidado detrás
+# de un proxy hace que los límites por IP bloqueen a todos los usuarios juntos
+# (ver REST_FRAMEWORK).
+_num_proxies = config("NUM_PROXIES", default="").strip()
+if not _num_proxies:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "Definí NUM_PROXIES en el entorno (DEBUG=False): la cantidad de "
+            "proxies de confianza delante de Django (0 si no hay ninguno, 1 con "
+            "un solo balanceador o nginx). Ver el comentario en REST_FRAMEWORK."
+        )
+    _num_proxies = "0"
+NUM_PROXIES = int(_num_proxies)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
@@ -173,7 +188,36 @@ REST_FRAMEWORK = {
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
+        # Login: 10 intentos por minuto por cuenta (frena el adivinado de
+        # contraseñas desde cualquier IP) y 30 por IP (frena probar muchas
+        # cuentas). Los límites por IP asumen una IP real: ver NUM_PROXIES.
+        "login_cuenta": "10/min",
+        "login_ip": "30/min",
+        # Registro y reenvío disparan correos (cuota de Resend y reputación del
+        # dominio): tope por correo destino y por IP, más un enfriamiento.
+        "registro_correo": "5/hour",
+        "registro_ip": "10/hour",
+        "reenvio_correo": "3/hour",
+        "reenvio_enfriamiento": "1/min",
+        "reenvio_ip": "10/hour",
     },
+    # Cantidad de proxies de confianza delante de Django (nginx, balanceador de
+    # la nube, Cloudflare...). DRF usa este número para saber qué IP de
+    # `X-Forwarded-For` es la del cliente real:
+    #   - 0: se usa la IP de la conexión y se ignora el header, que cualquier
+    #     cliente puede falsear. Correcto SIN proxy delante (desarrollo).
+    #   - N: se toma la N-ésima IP desde la derecha, la que añadió tu propio proxy.
+    # QUÉ PASA SI SE EQUIVOCA: con un proxy delante y NUM_PROXIES=0, Django ve
+    # SIEMPRE la IP del proxy, así que todos los usuarios comparten un único
+    # contador y los límites por IP (login_ip, registro_ip, reenvio_ip,
+    # catálogo) bloquean a todos a la vez al llegar al tope. Al revés (N mayor
+    # que los proxies reales), el cliente falsea el header y esquiva el límite.
+    # QUÉ HACER AL DESPLEGAR: contar los proxies de la cadena (un solo balanceador
+    # o nginx = 1), confirmar que ese proxy SOBRESCRIBE `X-Forwarded-For` en vez
+    # de agregarle a lo que manda el cliente, y fijar NUM_PROXIES en el entorno.
+    # Con DEBUG=False es obligatorio definirlo: el arranque falla si falta
+    # (ver el chequeo justo arriba). Ver docs/decisiones.md, 20/10/2026.
+    "NUM_PROXIES": NUM_PROXIES,
 }
 
 # Valida el sobre de errores en toda respuesta de la suite (OT-34).
@@ -268,7 +312,17 @@ LOGGING = {
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
 
 # Redis en producción comparte caché y rate limits entre workers.
-REDIS_URL = config("REDIS_URL", default="redis://redis:6379/0")
+# Redis exige contraseña (`requirepass` en docker-compose.yml). Si solo se define
+# `REDIS_PASSWORD`, las tres URLs se arman solas; cada una se puede sobrescribir.
+REDIS_PASSWORD = config("REDIS_PASSWORD", default="")
+
+
+def _redis_url(db):
+    acceso = f":{quote(REDIS_PASSWORD, safe='')}@" if REDIS_PASSWORD else ""
+    return f"redis://{acceso}redis:6379/{db}"
+
+
+REDIS_URL = config("REDIS_URL", default=_redis_url(0))
 if DEBUG:
     CACHES = {
         "default": {
@@ -280,6 +334,8 @@ else:
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
             "LOCATION": REDIS_URL,
+            # JSON en vez del pickle por defecto: ver filmai/cache.py.
+            "OPTIONS": {"serializer": "filmai.cache.JSONRedisSerializer"},
         }
     }
 
@@ -287,8 +343,22 @@ else:
 # Redis cumple doble rol: caché (DB 0, `REDIS_URL`) y cola de tareas. Se usan
 # DBs lógicas distintas para que las claves de Celery no se mezclen con las
 # `tmdb:*` del caché ni las borre un flush del otro rol.
-CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/1")
-CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://redis:6379/2")
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default=_redis_url(1))
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default=_redis_url(2))
+if not DEBUG:
+    # Falla al arrancar en vez de operar con un Redis abierto.
+    for _nombre, _url in (
+        ("REDIS_URL", REDIS_URL),
+        ("CELERY_BROKER_URL", CELERY_BROKER_URL),
+        ("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND),
+    ):
+        if not urlsplit(_url).password:
+            raise ImproperlyConfigured(
+                f"{_nombre} debe incluir la contraseña de Redis en producción "
+                "(DEBUG=False). Definí REDIS_PASSWORD y borrá esa variable del "
+                "entorno para que se arme sola, o escribí la URL completa con la "
+                "contraseña (redis://:<password>@redis:6379/N)."
+            )
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
@@ -321,6 +391,12 @@ CELERY_BEAT_SCHEDULE = {
     "backfill-embeddings": {
         "task": "catalogo.backfill_embeddings",
         "schedule": crontab(hour=4, minute=0),
+    },
+    # Cuentas que nunca confirmaron el correo (F4 de la auditoría): se borran
+    # pasado el plazo del enlace. No depende de las otras dos tareas.
+    "limpiar-pendientes-vencidas": {
+        "task": "usuarios.limpiar_pendientes_vencidas",
+        "schedule": crontab(hour=5, minute=0),
     },
 }
 
@@ -385,6 +461,9 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
+    # Tolerancia ante saltos del reloj (WSL2 o servidores no sincronizados): sin
+    # ella, un token recién emitido se rechaza si el reloj retrocede un instante.
+    "LEEWAY": timedelta(seconds=10),
     # También rechaza los JWT anteriores al despliegue que no traen este claim.
     "CHECK_REVOKE_TOKEN": True,
 }
