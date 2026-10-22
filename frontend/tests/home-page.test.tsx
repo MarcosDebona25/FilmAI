@@ -7,6 +7,8 @@ import { fireEvent, render, screen, waitFor, within } from "./render";
 
 const estado = vi.hoisted(() => ({
   perfil: null as null | Record<string, unknown>,
+  cargando: false,
+  sesionPosible: false,
   params: new URLSearchParams(),
   fallan: [] as string[],
   /** Prefijos que tardan un poco más en responder (o en fallar). */
@@ -24,7 +26,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => estado.params,
 }));
 vi.mock("@/components/AccountProvider", () => ({
-  useAccount: () => ({ perfil: estado.perfil, cargando: false }),
+  useAccount: () => ({
+    perfil: estado.perfil,
+    cargando: estado.cargando,
+    sesionPosible: estado.sesionPosible,
+  }),
 }));
 vi.mock("sonner", () => ({ toast }));
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -70,6 +76,8 @@ vi.mock("@/lib/api", async (importOriginal) => {
 
 beforeEach(() => {
   estado.perfil = null;
+  estado.cargando = false;
+  estado.sesionPosible = false;
   estado.params = new URLSearchParams();
   estado.fallan = [];
   estado.lentas = [];
@@ -141,6 +149,30 @@ describe("Home con sesión", () => {
       )
     );
     expect(toast.error).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Home mientras llega la cuenta", () => {
+  // Si Recomendado apareciera recién con la cuenta, empujaría hacia abajo las
+  // filas ya dibujadas (el salto de layout medido el 22/10/2026).
+  it("con cookies de sesión, Recomendado ya ocupa su lugar en esqueleto", async () => {
+    estado.cargando = true;
+    estado.sesionPosible = true;
+    render(<HomeView />, { locale: "en" });
+
+    const recomendado = await fila("Recommended for you");
+    expect(recomendado).toHaveAttribute("aria-busy", "true");
+    expect(recomendado.querySelectorAll("[data-skeleton]").length).toBeGreaterThan(0);
+    // Sin cuenta todavía no se pide: el esqueleto solo reserva el lugar.
+    expect(estado.llamadas.some((path) => path.includes("recommended"))).toBe(false);
+  });
+
+  it("sin cookies de sesión no reserva la fila", async () => {
+    estado.cargando = true;
+    render(<HomeView />, { locale: "en" });
+
+    expect(await fila("Trending this week")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Recommended for you" })).toBeNull();
   });
 });
 

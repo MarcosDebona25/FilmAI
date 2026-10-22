@@ -43,8 +43,12 @@ export function HomeView() {
   const tn = useTranslations("nav.account");
   const tf = useTranslations("footer.main");
   const tipo = tipoDesdeUrl(useSearchParams().get("type"));
-  const { perfil, cargando } = useAccount();
+  const { perfil, cargando, sesionPosible } = useAccount();
   const conSesion = !cargando && perfil !== null;
+  // Con cookies de sesión, la fila de Recomendado se reserva (en esqueleto)
+  // mientras llega la cuenta: si apareciera después, empujaría hacia abajo las
+  // filas ya dibujadas (CLS de ~0,07 en el Inicio, medido el 22/10/2026).
+  const filaRecomendado = conSesion || (cargando && sesionPosible);
   const formats = useFormats();
   const [intento, setIntento] = useState(0);
   const anio = new Date().getFullYear();
@@ -188,7 +192,7 @@ export function HomeView() {
         </div>
       ) : (
         <div className="mx-auto flex max-w-[1360px] flex-col gap-11 pt-7 pb-12 md:gap-20 md:px-10 md:pt-10 md:pb-20">
-          {conSesion && (
+          {filaRecomendado && (
             <MediaRow
               title={t("rows.recommendedTitle")}
               description={
@@ -199,7 +203,7 @@ export function HomeView() {
               items={recomendados}
               showType={tipo === "all"}
               from="home"
-              loading={recomendado.status === "loading"}
+              loading={!conSesion || recomendado.status === "loading"}
             />
           )}
           <MediaRow

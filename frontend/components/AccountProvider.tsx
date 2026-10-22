@@ -49,6 +49,8 @@ type AccountContextValue = {
   avatares: AvatarOption[];
   preferencias: Preferencias | null;
   cargando: boolean;
+  /** Llegó alguna cookie de sesión al cargar la página (lo decide el servidor). */
+  sesionPosible: boolean;
   error: string | null;
   actualizarPerfil: (perfil: Perfil) => void;
   actualizarPreferencia: <K extends keyof Preferencias>(
@@ -212,13 +214,24 @@ export function AccountProvider({
       avatares,
       preferencias,
       cargando,
+      sesionPosible,
       error,
       actualizarPerfil: setPerfil,
       actualizarPreferencia,
       recargar,
       limpiar,
     }),
-    [perfil, avatares, preferencias, cargando, error, actualizarPreferencia, recargar, limpiar]
+    [
+      perfil,
+      avatares,
+      preferencias,
+      cargando,
+      sesionPosible,
+      error,
+      actualizarPreferencia,
+      recargar,
+      limpiar,
+    ]
   );
 
   return <AccountContext.Provider value={valor}>{children}</AccountContext.Provider>;
