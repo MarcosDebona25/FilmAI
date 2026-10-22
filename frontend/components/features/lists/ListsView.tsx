@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAccount } from "@/components/AccountProvider";
+import { cargarGrilla, grillaCargada } from "@/components/features/lists/ListsGridPreload";
 import { ListsGridSkeleton } from "@/components/features/lists/ListsGridSkeleton";
 import type { AccionLista } from "@/components/features/lists/ListActionsMenu";
 import { ListNameDialog } from "@/components/features/lists/ListNameDialog";
@@ -26,15 +26,6 @@ type Dialogo =
   | { tipo: "renombrar"; lista: ResumenLista }
   | { tipo: "eliminar"; lista: ResumenLista };
 
-// El arrastre (dnd-kit) llega en un chunk aparte. `ListsView` lo pide al
-// montarse, en paralelo con `/api/lists/`; si las listas llegan antes, se ve
-// el mismo esqueleto que durante su carga.
-const cargarGrilla = () => import("@/components/features/lists/SortableListsGrid");
-const SortableListsGrid = dynamic(() => cargarGrilla().then((m) => m.SortableListsGrid), {
-  ssr: false,
-  loading: () => <ListsGridSkeleton />,
-});
-
 /**
  * «Lists» según el canvas (L-02). Las tres predeterminadas van fijas arriba;
  * las personalizadas se crean, renombran, eliminan y reordenan. Reordenar se
@@ -50,9 +41,20 @@ export function ListsView() {
   const [dialogo, setDialogo] = useState<Dialogo | null>(null);
   const pedidoOrden = useRef(0);
 
+  // El arrastre (dnd-kit) llega en un chunk aparte. `ListsGridPreload` suele
+  // haberlo bajado ya; si no, se pide acá, en paralelo con `/api/lists/`, y
+  // mientras falta se ve el mismo esqueleto que durante la carga.
+  const [Grilla, setGrilla] = useState(grillaCargada);
   useEffect(() => {
-    void cargarGrilla();
-  }, []);
+    if (Grilla) return;
+    let vigente = true;
+    cargarGrilla()
+      .then((componente) => vigente && setGrilla(() => componente))
+      .catch(() => vigente && setFallo(true));
+    return () => {
+      vigente = false;
+    };
+  }, [Grilla, intento]);
 
   useEffect(() => {
     if (!perfil?.pk) return;
@@ -192,11 +194,11 @@ export function ListsView() {
           onReintentar={() => setIntento((anterior) => anterior + 1)}
           boton="pildora"
         />
-      ) : cargando ? (
+      ) : cargando || !Grilla ? (
         <ListsGridSkeleton etiqueta={t("lists.overview.loading")} />
       ) : (
         listas && (
-          <SortableListsGrid
+          <Grilla
             fijas={fijas}
             propias={propias}
             accionesDe={accionesDe}

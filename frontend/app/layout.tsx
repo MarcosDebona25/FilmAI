@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { MobileTabs } from "@/components/MobileTabs";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
+import { ListsGridPreload } from "@/components/features/lists/ListsGridPreload";
 import { NavigationGuard } from "@/components/NavigationGuard";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import "./globals.css";
@@ -65,6 +66,7 @@ export default async function RootLayout({
               {children}
               <Footer />
               <MobileTabs />
+              <ListsGridPreload />
             </NavigationGuard>
           </AccountProvider>
           <Toaster position="top-center" />
