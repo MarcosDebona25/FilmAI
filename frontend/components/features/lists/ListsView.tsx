@@ -1,43 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useEffect } from "react";
-import {
-  DndContext,
-  KeyboardSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type Announcements,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  rectSortingStrategy,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAccount } from "@/components/AccountProvider";
+import { ListsGridSkeleton } from "@/components/features/lists/ListsGridSkeleton";
 import type { AccionLista } from "@/components/features/lists/ListActionsMenu";
-import { ListCard, useNombreLista } from "@/components/features/lists/ListCard";
 import { ListNameDialog } from "@/components/features/lists/ListNameDialog";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { apiFetch } from "@/lib/api";
-import { useFormats } from "@/lib/format";
-import {
-  DISTANCIA_MANIJA_PX,
-  ESPERA_ARRASTRE_MS,
-  ManijaSensor,
-  PulsacionLargaSensor,
-  TOLERANCIA_ARRASTRE_PX,
-} from "@/lib/list-sensors";
 import {
   aplicarOrden,
   esPredeterminada,
@@ -51,31 +26,14 @@ type Dialogo =
   | { tipo: "renombrar"; lista: ResumenLista }
   | { tipo: "eliminar"; lista: ResumenLista };
 
-function TarjetaOrdenable({ lista, acciones }: { lista: ResumenLista; acciones: AccionLista[] }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: lista.id });
-  return (
-    <ListCard
-      lista={lista}
-      acciones={acciones}
-      arrastre={{
-        refNodo: setNodeRef,
-        refManija: setActivatorNodeRef,
-        atributos: attributes,
-        escuchas: listeners,
-        estilo: { transform: CSS.Transform.toString(transform), transition },
-        arrastrando: isDragging,
-      }}
-    />
-  );
-}
+// El arrastre (dnd-kit) llega en un chunk aparte. `ListsView` lo pide al
+// montarse, en paralelo con `/api/lists/`; si las listas llegan antes, se ve
+// el mismo esqueleto que durante su carga.
+const cargarGrilla = () => import("@/components/features/lists/SortableListsGrid");
+const SortableListsGrid = dynamic(() => cargarGrilla().then((m) => m.SortableListsGrid), {
+  ssr: false,
+  loading: () => <ListsGridSkeleton />,
+});
 
 /**
  * «Lists» según el canvas (L-02). Las tres predeterminadas van fijas arriba;
@@ -86,13 +44,15 @@ function TarjetaOrdenable({ lista, acciones }: { lista: ResumenLista; acciones: 
 export function ListsView() {
   const t = useTranslations();
   const { perfil, error: errorCuenta, recargar } = useAccount();
-  const nombreDe = useNombreLista();
-  const formats = useFormats();
   const [listas, setListas] = useState<ResumenLista[] | null>(null);
   const [fallo, setFallo] = useState(false);
   const [intento, setIntento] = useState(0);
   const [dialogo, setDialogo] = useState<Dialogo | null>(null);
   const pedidoOrden = useRef(0);
+
+  useEffect(() => {
+    void cargarGrilla();
+  }, []);
 
   useEffect(() => {
     if (!perfil?.pk) return;
@@ -106,14 +66,6 @@ export function ListsView() {
       vigente = false;
     };
   }, [perfil?.pk, intento]);
-
-  const sensores = useSensors(
-    useSensor(ManijaSensor, { activationConstraint: { distance: DISTANCIA_MANIJA_PX } }),
-    useSensor(PulsacionLargaSensor, {
-      activationConstraint: { delay: ESPERA_ARRASTRE_MS, tolerance: TOLERANCIA_ARRASTRE_PX },
-    }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
 
   const propias = listas ? personalizadas(listas) : [];
   const fijas = listas ? listas.filter(esPredeterminada) : [];
@@ -136,13 +88,6 @@ export function ListsView() {
       setListas(previas);
       toast.error(mensajeDeError(motivo));
     }
-  }
-
-  function alSoltar({ active, over }: DragEndEvent) {
-    if (!over || active.id === over.id) return;
-    const desde = propias.findIndex((lista) => lista.id === active.id);
-    const hacia = propias.findIndex((lista) => lista.id === over.id);
-    if (desde >= 0 && hacia >= 0) void moverA(desde, hacia);
   }
 
   async function crear(nombre: string) {
@@ -221,43 +166,6 @@ export function ListsView() {
     ];
   }
 
-  const anuncios: Announcements = {
-    onDragStart({ active }) {
-      const indice = propias.findIndex((lista) => lista.id === active.id);
-      return t("lists.reorder.pickedUp", {
-        listName: indice >= 0 ? nombreDe(propias[indice]) : "",
-        position: formats.number(indice + 1),
-        total: formats.number(propias.length),
-      });
-    },
-    onDragOver({ active, over }) {
-      if (!over) return undefined;
-      const indice = propias.findIndex((lista) => lista.id === over.id);
-      const propia = propias.find((lista) => lista.id === active.id);
-      return t("lists.reorder.movedTo", {
-        listName: propia ? nombreDe(propia) : "",
-        position: formats.number(indice + 1),
-        total: formats.number(propias.length),
-      });
-    },
-    onDragEnd({ active, over }) {
-      const propia = propias.find((lista) => lista.id === active.id);
-      const indice = propias.findIndex((lista) => lista.id === (over ?? active).id);
-      return t("lists.reorder.dropped", {
-        listName: propia ? nombreDe(propia) : "",
-        position: formats.number(indice + 1),
-        total: formats.number(propias.length),
-      });
-    },
-    onDragCancel({ active }) {
-      const indice = propias.findIndex((lista) => lista.id === active.id);
-      return t("lists.reorder.cancelled", {
-        listName: indice >= 0 ? nombreDe(propias[indice]) : "",
-        position: formats.number(indice + 1),
-      });
-    },
-  };
-
   const cargando = listas === null && !fallo && !errorCuenta;
 
   return (
@@ -285,54 +193,16 @@ export function ListsView() {
           boton="pildora"
         />
       ) : cargando ? (
-        <ul
-          role="status"
-          aria-label={t("lists.overview.loading")}
-          className="grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fill,minmax(min(380px,100%),1fr))] md:gap-5"
-        >
-          {[0, 1, 2].map((indice) => (
-            <li key={indice} className="h-[188px] rounded-2xl bg-raised md:h-[236px]" />
-          ))}
-        </ul>
+        <ListsGridSkeleton etiqueta={t("lists.overview.loading")} />
       ) : (
         listas && (
-          <DndContext
-            sensors={sensores}
-            collisionDetection={closestCenter}
-            onDragEnd={alSoltar}
-            accessibility={{
-              announcements: anuncios,
-              screenReaderInstructions: { draggable: t("lists.reorder.instructions") },
-            }}
-          >
-            <SortableContext
-              items={propias.map((lista) => lista.id)}
-              strategy={rectSortingStrategy}
-            >
-              <ul className="grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fill,minmax(min(380px,100%),1fr))] md:gap-5">
-                {fijas.map((lista) => (
-                  <ListCard key={lista.id} lista={lista} />
-                ))}
-                {propias.map((lista, indice) => (
-                  <TarjetaOrdenable
-                    key={lista.id}
-                    lista={lista}
-                    acciones={accionesDe(lista, indice)}
-                  />
-                ))}
-                <li className="list-none">
-                  <button
-                    type="button"
-                    onClick={() => setDialogo({ tipo: "crear" })}
-                    className="flex h-16 w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl border border-dashed border-line font-semibold text-fg-2 hover:border-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-full md:min-h-[236px] md:flex-col"
-                  >
-                    <Plus aria-hidden="true" className="size-6 text-primary" />
-                    {t("lists.create.title")}
-                  </button>
-                </li>
-              </ul>
-            </SortableContext>
-          </DndContext>
+          <SortableListsGrid
+            fijas={fijas}
+            propias={propias}
+            accionesDe={accionesDe}
+            onMover={(desde, hacia) => void moverA(desde, hacia)}
+            onCrear={() => setDialogo({ tipo: "crear" })}
+          />
         )
       )}
 
