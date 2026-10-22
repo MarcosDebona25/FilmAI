@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 22/10/2026 — Pendientes de seguridad y rendimiento: quién los toma
+
+- **Fecha**: 22/10/2026
+- **Descripción**: al integrar en `main` y `develop` la auditoría de seguridad (`security/audit`) y las mejoras de rendimiento (`polish-performance`), quedaron abiertos estos puntos. Ninguno se aplicó en esa integración.
+- **Para Gonza**:
+  - **F6** (seguridad, catálogo): validar los parámetros de `trending`, que hoy pueden llevar el pedido a otros endpoints de TMDB, y poner un tope a las llamadas a TMDB por pedido (quedó fuera de F2/F3).
+  - **F7** (seguridad, catálogo): el alta de reseñas acepta `id_tmdb` inexistentes o enormes y deja filas vacías o responde 500 (Internal Server Error).
+  - **F10** (seguridad, catálogo): el autor puede revertir la moderación de su reseña. Antes del código, decidir en equipo cómo tiene que funcionar.
+  - **Hero del Inicio desde el servidor** (rendimiento): hoy el LCP del Inicio espera a que el navegador pida `trending`; renderizar el hero en el servidor lo adelantaría.
+  - **Borrar lo que no se usa en `frontend/public/`** (rendimiento): `avatars/Gemini_Generated_Image_p6bcr2p6bcr2p6bc.png` (6,9 MB, la imagen de la que se recortaron los avatares), `collage-posters/Opcion 2.jpg` y `Opcion 3.jpg` (el acceso usa `Opcion 1.jpg`), y `file.svg`, `globe.svg` y `window.svg` de la plantilla de Next. Confirmar con una búsqueda que nadie los referencia antes de borrarlos.
+- **Al desplegar**: volver a evaluar la mejora de **F4** (elegir la contraseña al confirmar el correo, descrita en la entrada de F4 del 20/10/2026), Sentry y `NUM_PROXIES` según el proxy real.
+
 ## 22/10/2026 — Fluidez: medición en celular con CPU 4x y tres arreglos
 
 - **Fecha**: 22/10/2026
