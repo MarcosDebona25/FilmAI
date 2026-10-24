@@ -29,12 +29,21 @@ class TMDBTransportError(TMDBError):
     """The request could not reach TMDB or its response could not be read."""
 
 
+class TMDBPresupuestoAgotado(TMDBError):
+    """El pedido superó el tope de llamadas a TMDB (auditoría F6).
+
+    Hereda de `TMDBError` a propósito: la caché de Redis lo trata como «TMDB no
+    disponible» y sirve la copia de respaldo si la tiene, sin otra llamada.
+    """
+
+
 TMDB_STATUS_CODES = {
     TMDBNotFound: 404,
     TMDBBadRequest: 400,
     TMDBRateLimited: 429,
     TMDBServerError: 502,
     TMDBTransportError: 503,
+    TMDBPresupuestoAgotado: 503,
 }
 
 

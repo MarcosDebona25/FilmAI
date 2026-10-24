@@ -80,6 +80,13 @@ The system MUST forward each query/path parameter to the matching cache-method a
 - WHEN the endpoint handles it
 - THEN `get_trending("tv", "day", page=...)` is invoked
 
+#### Scenario: Trending params are closed lists (security audit F6, 24/10/2026)
+
+- GIVEN `media_type` outside `all`, `movie`, `tv` (for example `person` or `../movie/550`) or `time_window` outside `day`, `week`
+- WHEN the endpoint handles it
+- THEN HTTP 400 (Bad Request) with `invalid_choice` and `allowedValues` is returned without calling TMDB
+- AND the reason: both values go into TMDB's path (`/trending/{media_type}/{time_window}`), so free text could reach other TMDB endpoints
+
 #### Scenario: Detail path params
 
 - GIVEN `/api/catalogo/movie/550/`, `/api/catalogo/tv/550/`, or `/api/catalogo/keywords/` with `id_tmdb=550&tipo=movie`
@@ -103,6 +110,7 @@ The system MUST map `TMDBError` subclasses to HTTP statuses via a DRF exception 
 | `TMDBRateLimited` | 429 |
 | `TMDBServerError` | 502 or 503 |
 | `TMDBTransportError` | 502 or 503 |
+| `TMDBPresupuestoAgotado` | 503 (`upstream_unavailable`) |
 
 #### Scenario: Not found
 
@@ -127,6 +135,37 @@ The system MUST map `TMDBError` subclasses to HTTP statuses via a DRF exception 
 - GIVEN the cache method raises `TMDBServerError` or `TMDBTransportError`
 - WHEN the endpoint handles it
 - THEN the status is 502 or 503 (exact split resolved in design)
+
+### Requirement: TMDB call caps (security audit F6, 24/10/2026)
+
+Every catalog view (and «Recomendado») MUST count the HTTP calls it makes to TMDB, retries and calls from Buscar's worker threads included. Answers served from the Redis cache cost nothing. Outside an HTTP request (Celery, the daily sync, the seed) there is no cap.
+
+- **Per request**: past 30 calls (`MAX_LLAMADAS_POR_PEDIDO`), the client raises `TMDBPresupuestoAgotado`. The cache treats it as «TMDB unavailable» and serves the backup copy when it has one; otherwise the answer is 503 (Service Unavailable) with `upstream_unavailable`. The legitimate maximum is Buscar with text in «Todo» in Spanish: 20 calls.
+- **Per IP**: each call increments, at the moment it is made, an atomic counter per IP and per clock minute (`TMDB_LLAMADAS_POR_IP_POR_MINUTO`, 300), so parallel requests cannot slip past it. The call that exceeds it answers 429 (Too Many Requests) with `throttled` and `Retry-After` (seconds until the minute ends). The existing limit of 60 requests per minute (`catalogo`) stays.
+
+#### Scenario: A request that exceeds the per-request cap
+
+- GIVEN a view whose calls to TMDB exceed 30 in one request
+- WHEN the 31st call is about to go out
+- THEN it is not sent and the answer is 503 with `upstream_unavailable`
+
+#### Scenario: The per-IP limit counts calls, not requests
+
+- GIVEN a limit of 10 calls per minute and requests that make 4 calls each
+- WHEN the same IP sends four requests
+- THEN the first two are answered and the third stops at its 11th call with 429 and `Retry-After`
+
+#### Scenario: Parallel requests do not slip past the per-IP limit
+
+- GIVEN a limit of 10 calls per minute
+- WHEN ten requests of 4 calls each run at the same time from one IP
+- THEN exactly 10 calls reach TMDB
+
+#### Scenario: Cached answers are free
+
+- GIVEN the same listing requested 15 times
+- WHEN only the first one reaches TMDB
+- THEN only one call is charged and none of the requests is throttled
 
 ### Requirement: Public access
 
