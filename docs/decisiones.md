@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 24/10/2026 — El Hero del Inicio llega en el HTML del servidor
+
+- **Fecha**: 24/10/2026
+- **Descripción**: uno de los pendientes de rendimiento del 22/10/2026. Antes, el HTML del Inicio no traía el Hero: el navegador bajaba el JavaScript, recién ahí pedía tendencias y recién ahí pedía la imagen de fondo, que es el LCP. Ahora `app/home/page.tsx` (Server Component) pide al backend lo que el Hero necesita (tendencias de «Todo» y, con Películas o Series, las de ese tipo, más las dos listas de géneros), en el idioma de la página, y se lo pasa a `HomeView` como `inicial`. `useCatalog` acepta esa respuesta inicial: con ella no repite el pedido y el dato está desde el primer render.
+- **Cómo llega el servidor al backend**: dentro de Docker, `localhost` es el propio contenedor del frontend, así que el servidor usa `API_URL_INTERNA` (`http://backend:8000`, en `docker-compose.yml`). Sin esa variable no se pide nada en el servidor y todo sigue como antes. Así corren el CI y los tests de Playwright, que simulan la API en el navegador.
+- **Decisiones**:
+  - Nunca rompe la página: un error o una espera de más de 500 ms devuelve `null` y el navegador pide el dato por su cuenta (`lib/catalogo-servidor.ts`). La espera es corta porque el HTML entero espera ese pedido (lo señaló PR-Agent en #130). Pasa solo cuando Next no tiene ninguna copia, por ejemplo al arrancar el servidor: con una copia vencida, la caché de datos de Next sirve la vieja y la renueva por detrás. Mejora posible: hacer *streaming* del Hero (pasarle a `HomeView` la promesa dentro del `Suspense`), así el resto de la página no espera nunca.
+  - Las respuestas quedan 5 minutos en la caché de datos de Next (`revalidate`), igual que en el navegador: el Inicio no espera al backend en cada visita.
+  - Los datos del servidor se usan solo si son del idioma que se está mirando: el idioma puede cambiar sin recargar.
+  - Servidor y navegador piden las mismas rutas (`rutasDelHero` en `lib/home.ts`), que además son la clave de la caché de `useCatalog`.
+- **Verificación**: con Docker, el HTML de `/home` trae el `<h1>` con el título de tendencias, el `<link rel="preload" as="image">` del backdrop y el título en español si la página está en español. Una segunda visita respondió en 0,38 s en modo desarrollo. No se midió el LCP con un build de producción.
+- **Archivos afectados**: `frontend/app/home/page.tsx`, `frontend/components/features/HomeView.tsx`, `frontend/lib/use-catalog.ts`, `frontend/lib/home.ts`, `frontend/lib/catalogo-servidor.ts` (nuevo), `frontend/tests/catalogo-servidor.test.ts` (nuevo), `frontend/tests/home-page.test.tsx`, `docker-compose.yml`, `openspec/specs/home-ui/spec.md`.
+
+---
+
 ## 24/10/2026 — Auditoría F6: `trending` validado y topes de llamadas a TMDB
 
 - **Fecha**: 24/10/2026

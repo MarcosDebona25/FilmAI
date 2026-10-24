@@ -4,6 +4,8 @@ import { HomeView } from "@/components/features/HomeView";
 import type { TmdbItem } from "@/lib/catalog";
 import { limpiarCacheCatalogo } from "@/lib/use-catalog";
 import { fireEvent, render, screen, waitFor, within } from "./render";
+import { rutasHeroPara } from "@/lib/home";
+import { fall2, generosPeliculas, generosSeries, insidious, reacher } from "./catalog-fixtures";
 
 const estado = vi.hoisted(() => ({
   perfil: null as null | Record<string, unknown>,
@@ -242,5 +244,68 @@ describe("todo falla", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
 
     expect(await fila("Trending this week")).toBeInTheDocument();
+  });
+});
+
+describe("Home con el Hero pedido por el servidor (24/10/2026)", () => {
+  const delServidor = {
+    "/api/catalogo/trending/?media_type=all": { results: [insidious, reacher] },
+    "/api/catalogo/genres/?tipo=movie": { genres: generosPeliculas },
+    "/api/catalogo/genres/?tipo=tv": { genres: generosSeries },
+  };
+
+  it("el Hero está desde el primer render y no se vuelve a pedir", () => {
+    render(<HomeView inicial={{ idioma: "en", datos: delServidor }} />, { locale: "en" });
+
+    // `getBy` y no `findBy`: tiene que estar ya, sin esperar a ningún pedido.
+    const hero = screen.getByRole("heading", { level: 1 });
+    expect(hero).toHaveTextContent("Insidious: Out of the Further");
+    expect(
+      within(hero.closest("section") as HTMLElement).getByText("Horror, Thriller")
+    ).toBeInTheDocument();
+    expect(
+      estado.llamadas.filter((path) => path.includes("trending") || path.includes("genres"))
+    ).toEqual([]);
+    // Las demás filas se siguen pidiendo desde el navegador.
+    expect(estado.llamadas).toContain("/api/catalogo/now-playing/");
+  });
+
+  it("las rutas que pide el servidor son las mismas que busca HomeView", () => {
+    // El contrato del que depende todo: si las dos listas se separan, el servidor
+    // pediría datos que el navegador descarta y el Hero volvería a esperar.
+    const respuestas: Record<string, unknown> = {
+      "/api/catalogo/trending/?media_type=all": { results: [insidious, reacher] },
+      "/api/catalogo/trending/?media_type=movie": { results: [insidious, fall2] },
+      "/api/catalogo/genres/?tipo=movie": { genres: generosPeliculas },
+      "/api/catalogo/genres/?tipo=tv": { genres: generosSeries },
+    };
+    estado.params = new URLSearchParams("type=movie");
+    const datos = Object.fromEntries(
+      rutasHeroPara("movie").map((ruta) => [ruta, respuestas[ruta]])
+    );
+
+    render(<HomeView inicial={{ idioma: "en", datos }} />, { locale: "en" });
+
+    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+    expect(
+      estado.llamadas.filter((path) => path.includes("trending") || path.includes("genres"))
+    ).toEqual([]);
+  });
+
+  it("si lo que trajo el servidor es de otro idioma, se pide de nuevo", async () => {
+    render(<HomeView inicial={{ idioma: "es", datos: delServidor }} />, { locale: "en" });
+
+    expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(
+      "Insidious: Out of the Further"
+    );
+    expect(estado.llamadas).toContain("/api/catalogo/trending/?media_type=all");
+  });
+
+  it("sin datos del servidor se comporta como antes", async () => {
+    render(<HomeView inicial={{ idioma: "en", datos: {} }} />, { locale: "en" });
+
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
+    expect(estado.llamadas).toContain("/api/catalogo/trending/?media_type=all");
   });
 });

@@ -27,6 +27,23 @@ With All, the Hero MUST be the first trending title with a backdrop, labeled «#
 - WHEN the user switches from All to Movies
 - THEN the Movies Hero is the next movie with a backdrop
 
+### Requirement: The Hero comes in the server HTML (24/10/2026)
+
+The page (`app/home/page.tsx`, a Server Component) MUST request what the Hero needs (trending of All and, with Movies or TV shows, of that type, plus both genre lists) from the backend before sending the HTML, in the page language, and hand it to `HomeView`. The HTML then carries the Hero title and the preload of its backdrop (the LCP), instead of waiting for the browser to request trending. The server reaches the backend through `API_URL_INTERNA` (`http://backend:8000` in Docker); without it nothing is requested on the server. The answers stay 5 minutes in Next's data cache. Any failure or a wait longer than 500 ms falls back to the browser requesting them, as before (the whole HTML waits for this request, but only when Next has no copy at all: a stale copy is served while it is renewed in the background). Data in another language than the one being viewed is ignored.
+
+#### Scenario: Hero without a client request
+
+- GIVEN the server got trending and genres
+- WHEN `HomeView` renders for the first time
+- THEN the Hero is there and the browser does not request trending or genres again
+- AND the other rows are still requested by the browser
+
+#### Scenario: Backend unavailable from the server
+
+- GIVEN the server request fails or times out
+- WHEN the page is sent
+- THEN `HomeView` requests the Hero data from the browser, as before
+
 ### Requirement: Rows and their sources
 
 | Row                        | All                                                                       | Movies                      | TV shows                                    |

@@ -134,6 +134,9 @@ services:
       # Next.js expone a la app solo las variables prefijadas NEXT_PUBLIC_*.
       # Se reutiliza el mismo client_id de Google del .env global.
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      # Para los pedidos que hace el servidor de Next (el Hero del Inicio): dentro
+      # de este contenedor `localhost` es el frontend, el backend está en `backend`.
+      API_URL_INTERNA: http://backend:8000
     volumes:
       - ./frontend:/app # monta TODO el código → hot-reload real
       - /app/node_modules # volumen anónimo: no pisar node_modules del contenedor
