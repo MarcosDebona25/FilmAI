@@ -49,8 +49,14 @@ An `IntegrityError` that does not come from this race — the row still not bein
 #### Scenario: Unrelated integrity error is not swallowed
 
 - GIVEN an `IntegrityError` unrelated to the race
-- WHEN the row is still absent after the failure
+- WHEN the row is still absent after the failure, and again after one retry
 - THEN the error propagates to the caller
+
+#### Scenario: The winner's row was discarded before the loser found it
+
+- GIVEN the insert collides with a row that another request then deletes (TMDB answered 404, security audit F7)
+- WHEN the loser looks for the winner's row and finds none
+- THEN the insert is retried once instead of answering 500 (Internal Server Error)
 
 ### Requirement: TMDB enrichment
 

@@ -166,7 +166,7 @@ def _buscar_produccion(id_tmdb, tipo):
     return ProduccionAudiovisual.objects.filter(id_tmdb=id_tmdb, tipo=tipo).first()
 
 
-def _obtener_o_crear(id_tmdb, tipo):
+def _obtener_o_crear(id_tmdb, tipo, *, reintento=False):
     """`(fila, creada)`: la fila de la producción, creándola vacía si no existe.
 
     Dos requests simultáneos sobre la misma producción pueden ver ambos que no
@@ -191,7 +191,12 @@ def _obtener_o_crear(id_tmdb, tipo):
     except IntegrityError:
         ganadora = _buscar_produccion(id_tmdb, tipo)
         if ganadora is None:
-            # La fila sigue sin aparecer: el error no venía de la carrera.
+            if not reintento:
+                # La ganadora pudo borrarse entre el choque y esta consulta: otro
+                # pedido la creó para un id que TMDB no conoce y la descartó
+                # (F7). Un solo reintento cubre esa carrera.
+                return _obtener_o_crear(id_tmdb, tipo, reintento=True)
+            # Dos choques seguidos sin fila: el error no venía de la carrera.
             # Disfrazarlo de "ya existía" escondería un bug real.
             raise
         logger.info("materializar: otro request creó (%s, %s) primero", id_tmdb, tipo)
