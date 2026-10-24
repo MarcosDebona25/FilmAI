@@ -540,9 +540,9 @@
     "semantic_hash": "a75dafcaf8ed3c4cda22045b57a9902d"
   },
   "docker-compose.yml": {
-    "mtime": 1792874322.4013388,
-    "seen": 1792874709.2170355,
-    "ast_hash": "d6d8b9a95406dfb767b7100608c873f1",
+    "mtime": 1792875190.2896576,
+    "seen": 1792875201.3799713,
+    "ast_hash": "5f4b64ea83083b3ed1d4c214078510cf",
     "semantic_hash": ""
   },
   "docs/01_Presentaci\u00f3n Idea-Proyecto.docx.md": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792874684.9235768,
-    "seen": 1792874709.2170465,
-    "ast_hash": "b6fdbc68b33970349d4149c69c390c8b",
+    "mtime": 1792875191.2033827,
+    "seen": 1792875201.3802307,
+    "ast_hash": "ffb932b0fae4bcc152913876e0a652a0",
     "semantic_hash": ""
   },
   "frontend/README.md": {

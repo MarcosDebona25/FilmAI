@@ -8,10 +8,12 @@
 #
 # Memoria (24/10/2026, ver docs/decisiones.md): cada servicio tiene un techo
 # (`mem_limit`) y no usa swap (`memswap_limit` igual al techo). Si uno lo supera,
-# el kernel mata ese contenedor y queda `Exited (137)` en `docker compose ps`,
-# en vez de llenar la memoria de WSL y colgarlo entero. No hay `restart`: nada
-# arranca solo al iniciar Docker y un contenedor caído no entra en un ciclo de
-# reinicios; se vuelve a levantar a mano.
+# el kernel mata el proceso más grande de ese contenedor, en vez de llenar la
+# memoria de WSL y colgarlo entero. Si era el proceso principal, el contenedor
+# queda `Exited (137)` en `docker compose ps`; si era un hijo (Celery,
+# Postgres), el padre lo reemplaza. No hay `restart`: nada arranca solo al
+# iniciar Docker y un contenedor caído no entra en un ciclo de reinicios; se
+# vuelve a levantar a mano.
 
 services:
   # 1. PostgreSQL 16 — la base de datos relacional
@@ -162,9 +164,12 @@ services:
     # `--concurrency=2`: sin él, Celery arranca un proceso por núcleo (12 en una
     # máquina de 12 hilos), cada uno con Django entero cargado. En desarrollo dos
     # alcanzan para la cola de materializaciones y embeddings.
+    # `--max-memory-per-child` (en KB): un hijo que termina una tarea por encima
+    # de 300 MB se recicla antes de acercarse al techo del contenedor. Padre
+    # (~150 MB) + 2 hijos de 300 MB quedan por debajo de 1g.
     command: >
       watchmedo auto-restart --directory=/app --pattern=*.py --recursive --
-      celery -A filmai worker -l info --concurrency=2
+      celery -A filmai worker -l info --concurrency=2 --max-memory-per-child=300000
     env_file:
       - .env
     environment:
