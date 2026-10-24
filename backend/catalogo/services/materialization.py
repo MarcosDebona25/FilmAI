@@ -69,7 +69,9 @@ def materializar(id_tmdb, tipo_tmdb, forzar=False):
         try:
             _enriquecer(produccion, id_tmdb, tipo_tmdb)
         except TMDBNotFound:
-            if creada:
+            # También el cascarón que dejó un fallo transitorio anterior: sin
+            # título y sin enriquecer, no puede tener calificaciones ni listas.
+            if creada or not produccion.titulo:
                 _descartar_cascaron(produccion)
             raise
 
@@ -78,15 +80,16 @@ def materializar(id_tmdb, tipo_tmdb, forzar=False):
 
 
 def _descartar_cascaron(produccion):
-    """Borra la fila recién creada para un id que TMDB no conoce (auditoría F7).
+    """Borra la fila vacía de un id que TMDB no conoce (auditoría F7).
 
     Sin esto, calificar o agregar a una lista un id inexistente respondía 404
-    (Not Found) pero dejaba una fila vacía por cada id probado. Solo se borra
-    la fila que creó esta misma llamada: una que ya existía puede tener
-    calificaciones y listas colgando (CASCADE). El filtro por
-    `fecha_enriquecimiento` cubre la carrera con otro pedido que sí la haya
-    enriquecido mientras tanto. Ante un fallo transitorio (TMDB caído) la fila
-    se conserva: el id puede existir y la próxima visita la vuelve a encolar.
+    (Not Found) pero dejaba una fila vacía por cada id probado. Se borra la
+    fila que creó esta misma llamada o un cascarón sin título que dejó un fallo
+    anterior; nunca una fila con datos, que puede tener calificaciones y listas
+    colgando (CASCADE). El filtro por `fecha_enriquecimiento` cubre la carrera
+    con otro pedido que sí la haya enriquecido mientras tanto. Ante un fallo
+    transitorio (TMDB caído) la fila se conserva: el id puede existir y la
+    próxima visita la vuelve a encolar.
     """
     ProduccionAudiovisual.objects.filter(
         pk=produccion.pk, fecha_enriquecimiento__isnull=True

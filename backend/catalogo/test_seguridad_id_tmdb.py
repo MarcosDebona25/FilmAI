@@ -45,6 +45,20 @@ class MaterializarIdInexistenteTests(_ParchesDeMaterializacion, TestCase):
 
         self.assertFalse(ProduccionAudiovisual.objects.exists())
 
+    def test_el_cascaron_de_un_fallo_anterior_se_borra_si_tmdb_dice_404(self):
+        # Un fallo transitorio deja la fila vacía para reintentar (test de abajo).
+        # Si después TMDB responde que el id no existe, ya no hay qué reintentar:
+        # sin esto, la fila quedaba para siempre (sugerencia de PR-Agent, #128).
+        ProduccionAudiovisual.objects.create(
+            id_tmdb=999_999_999, tipo=TipoProduccion.PELICULA, titulo=""
+        )
+        self.servicio.get_movie_detail.side_effect = TMDBNotFound("HTTP 404")
+
+        with self.assertRaises(TMDBNotFound):
+            materializar(999_999_999, "movie")
+
+        self.assertFalse(ProduccionAudiovisual.objects.exists())
+
     def test_una_fila_que_ya_existia_no_se_borra(self):
         # La sync diaria (C-04b) refresca con `forzar=True`. Si TMDB dio de baja
         # un título que ya teníamos, la fila puede tener calificaciones y listas

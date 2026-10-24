@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792876698.275474,
-    "seen": 1792876725.1876652,
-    "ast_hash": "7e7766f617bb8250b85cb55bca4e140b",
+    "mtime": 1792877540.1700506,
+    "seen": 1792877551.9436898,
+    "ast_hash": "e45af58890f97cdddd054d47187214cf",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -1242,9 +1242,9 @@
     "semantic_hash": "869cef97b06b19924c1b0df3a51c74a3"
   },
   "backend/catalogo/services/materialization.py": {
-    "mtime": 1792876093.9167001,
-    "seen": 1792876725.163052,
-    "ast_hash": "f00e40d283dfbe6b461ec3d8f5cccd44",
+    "mtime": 1792877274.5353572,
+    "seen": 1792877551.9211302,
+    "ast_hash": "2a1cc0e51c7ef60e826d8d7c66633783",
     "semantic_hash": ""
   },
   "backend/catalogo/services/tmdb.py": {
@@ -1278,9 +1278,9 @@
     "semantic_hash": "8c801ec00523df7e3104a06dd42f2221"
   },
   "openspec/specs/catalog-materialization/spec.md": {
-    "mtime": 1792875786.8642511,
-    "seen": 1792876725.1881673,
-    "ast_hash": "d04661e704651b794665e5e08fefe804",
+    "mtime": 1792877540.170897,
+    "seen": 1792877551.943997,
+    "ast_hash": "a9c7cf540c2078e7c764af32435ef2ef",
     "semantic_hash": ""
   },
   "openspec/specs/embedding-infrastructure/spec.md": {
@@ -4350,9 +4350,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/test_seguridad_id_tmdb.py": {
-    "mtime": 1792876040.6272478,
-    "seen": 1792876725.163699,
-    "ast_hash": "abf76a7949f733d4122d4b4e997c4de1",
+    "mtime": 1792877221.659036,
+    "seen": 1792877551.9216902,
+    "ast_hash": "ddf6e5e9f94e3d767defca28f6571cf7",
     "semantic_hash": ""
   },
   "backend/listas/test_seguridad_id_tmdb.py": {
