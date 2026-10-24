@@ -3,6 +3,15 @@
 #   docker compose up           → levantar sin rebuild
 #   docker compose down         → frenar y limpiar contenedores
 #   docker compose down -v      ↑ + borrar volúmenes (BD y Redis se pierden)
+#   docker compose run --rm backend python manage.py test
+#                               → tests: levanta solo db y redis (sin frontend ni Celery)
+#
+# Memoria (24/10/2026, ver docs/decisiones.md): cada servicio tiene un techo
+# (`mem_limit`) y no usa swap (`memswap_limit` igual al techo). Si uno lo supera,
+# el kernel mata ese contenedor y queda `Exited (137)` en `docker compose ps`,
+# en vez de llenar la memoria de WSL y colgarlo entero. No hay `restart`: nada
+# arranca solo al iniciar Docker y un contenedor caído no entra en un ciclo de
+# reinicios; se vuelve a levantar a mano.
 
 services:
   # 1. PostgreSQL 16 — la base de datos relacional
@@ -14,7 +23,8 @@ services:
   db:
     image: pgvector/pgvector:pg16
     container_name: filmai_db
-    restart: unless-stopped
+    mem_limit: 512m
+    memswap_limit: 512m
     ports:
       - "5432:5432" # expuesto para conectar desde el host (DBeaver, etc.)
     environment:
@@ -35,7 +45,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: filmai_redis
-    restart: unless-stopped
+    # El doble del `--maxmemory` de abajo: Redis ocupa algo más que sus datos y,
+    # al guardar el snapshot en disco, se copia a sí mismo (fork). Con el techo
+    # igual a `maxmemory`, el contenedor moriría antes de que Redis desaloje.
+    mem_limit: 512m
+    memswap_limit: 512m
     # La contraseña llega por entorno (no en la línea de comandos, que se ve en
     # `docker ps`). `:?` aborta `docker compose up` si falta REDIS_PASSWORD.
     environment:
@@ -70,7 +84,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: filmai_backend
-    restart: unless-stopped
+    # El runserver son dos procesos (el que vigila los archivos y el servidor), y
+    # los tests (`exec` o `run`) corren en este mismo contenedor.
+    mem_limit: 1536m
+    memswap_limit: 1536m
     # Corre como tu usuario del host (UID 1000) en vez de root.
     # Así los archivos generados (startproject, startapp, pycache) quedan con tu dueño y podés editarlos sin sudo. ${UID:-1000} = usa $UID si existe, si no, asume 1000 (el UID estándar del primer usuario en Ubuntu).
     user: "${UID:-1000}:${GID:-1000}"
@@ -101,7 +118,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: filmai_frontend
-    restart: unless-stopped
+    # `next dev --turbopack` compila cada página la primera vez que se pide y
+    # guarda lo compilado en memoria: es el servicio que más crece.
+    mem_limit: 2g
+    memswap_limit: 2g
     # Misma razón que en backend: que los archivos generados queden con tu dueño.
     user: "${UID:-1000}:${GID:-1000}"
     ports:
@@ -136,11 +156,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: filmai_celery_worker
-    restart: unless-stopped
+    mem_limit: 1g
+    memswap_limit: 1g
     user: "${UID:-1000}:${GID:-1000}"
+    # `--concurrency=2`: sin él, Celery arranca un proceso por núcleo (12 en una
+    # máquina de 12 hilos), cada uno con Django entero cargado. En desarrollo dos
+    # alcanzan para la cola de materializaciones y embeddings.
     command: >
       watchmedo auto-restart --directory=/app --pattern=*.py --recursive --
-      celery -A filmai worker -l info
+      celery -A filmai worker -l info --concurrency=2
     env_file:
       - .env
     environment:
@@ -177,7 +201,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: filmai_celery_beat
-    restart: unless-stopped
+    # Un solo proceso de Django que no ejecuta tareas, solo las encola.
+    mem_limit: 256m
+    memswap_limit: 256m
     user: "${UID:-1000}:${GID:-1000}"
     command: celery -A filmai beat -l info --schedule=/tmp/celerybeat-schedule
     env_file:
