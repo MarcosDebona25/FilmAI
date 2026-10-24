@@ -33,6 +33,10 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
 TMDB_API_KEY = config("TMDB_API_KEY", default="")
 TMDB_API_BASE_URL = config("TMDB_API_BASE_URL", default="https://api.themoviedb.org/3")
 TMDB_TIMEOUT = config("TMDB_TIMEOUT", default=5, cast=float)
+# Llamadas reales a TMDB por IP y por minuto, no pedidos (auditoría F6): Buscar
+# con un texto nuevo cuesta hasta 20 y lo que sale de la caché no cuenta. Ver
+# `catalogo/presupuesto.py`.
+TMDB_LLAMADAS_POR_IP_POR_MINUTO = 300
 
 
 # Application definition
