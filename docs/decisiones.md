@@ -5,6 +5,22 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 24/10/2026 — Auditoría F7: `id_tmdb` inexistente o fuera de rango
+
+- **Fecha**: 24/10/2026
+- **Descripción**: se corrigió el hallazgo F7 (severidad baja). El alta de reseñas tenía dos fallas, y el alta de ítems de listas las mismas, porque las dos pasan por `materializar()` con el mismo payload:
+  - **Id que TMDB no conoce**: la respuesta ya era 404 (Not Found) con `upstream_not_found`, pero `materializar()` crea la fila vacía antes de pedirle el detalle a TMDB, así que cada id probado dejaba una `ProduccionAudiovisual` sin título. Ahora `_obtener_o_crear` devuelve `(fila, creada)` y, si TMDB responde 404, `_descartar_cascaron` borra la fila que creó esa misma llamada, o el cascarón sin título que haya dejado un fallo transitorio anterior (sugerencia de PR-Agent en #128).
+  - **Id fuera de rango**: `id_tmdb` es un `integer` de Postgres (máximo 2147483647). Un id mayor pasaba la validación y el INSERT respondía 500 (Internal Server Error). La constante `ID_TMDB_MAXIMO` (`catalogo/models.py`) pone `max_value` en los serializers de reseñas y listas (alta y lecturas) y en las vistas del catálogo que reciben `id_tmdb`; ahora responde 400 (Bad Request) con `max_value` y `maxValue`, sin llamar a TMDB.
+- **Decisiones**:
+  - Nunca se borra una fila con datos: puede tener calificaciones y listas colgando (CASCADE), por ejemplo si TMDB da de baja un título que la sync refresca. Un cascarón sin título y sin enriquecer no puede tenerlas, porque calificaciones e ítems se crean solo después de enriquecer. El borrado filtra además por `fecha_enriquecimiento IS NULL`, por si otro pedido la enriqueció en paralelo, y por `titulo = ''` como defensa explícita (sugerencia de PR-Agent en #128).
+  - Ante un fallo transitorio (TMDB caído) la fila nueva se conserva, como hasta ahora: el id puede existir y la próxima visita a la ficha la vuelve a encolar.
+  - El borrado abre una carrera: el pedido que perdió el INSERT busca la fila ganadora y, si el otro ya la descartó, no la encuentra. Antes eso era siempre un error ajeno a la carrera y se propagaba como 500 (Internal Server Error); ahora hay **un solo** reintento del alta. Dos choques seguidos sin fila se siguen propagando: un reintento sin límite escondería un error real (sugerencia de PR-Agent en #128, acotada a un reintento).
+  - El 404 se mantiene en lugar de un 400 sobre el campo: el código `upstream_not_found` ya existe y el frontend lo traduce, así que no cambian `contracts/` ni `traducciones/`.
+  - Las vistas del catálogo también validan el máximo aunque no escriben: un id más grande da 404 seguro en TMDB y así no se gasta la llamada. `_page` pasó a usar el mismo parámetro `maximo` de `_int_param`, con la misma respuesta de antes.
+- **Archivos afectados**: `backend/catalogo/models.py`, `backend/catalogo/services/materialization.py`, `backend/catalogo/serializers_reviews.py`, `backend/catalogo/views.py`, `backend/listas/serializers.py`, `backend/catalogo/test_seguridad_id_tmdb.py` (nuevo), `backend/listas/test_seguridad_id_tmdb.py` (nuevo), `openspec/specs/reviews-api/spec.md`, `openspec/specs/catalog-materialization/spec.md`, `docs/auditoria-seguridad-resumen.md`.
+
+---
+
 ## 24/10/2026 — Docker de desarrollo: techo de memoria por servicio y sin reinicio automático
 
 - **Fecha**: 24/10/2026

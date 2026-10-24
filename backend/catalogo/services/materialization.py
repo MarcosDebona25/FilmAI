@@ -19,7 +19,7 @@ from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from catalogo.exceptions import TMDBError
+from catalogo.exceptions import TMDBError, TMDBNotFound
 from catalogo.models import (
     ProduccionAudiovisual,
     ProduccionEmbedding,
@@ -63,13 +63,39 @@ def materializar(id_tmdb, tipo_tmdb, forzar=False):
     tener que borrar `fecha_enriquecimiento` para provocar el refresco.
     """
     tipo = tmdb_a_dominio(tipo_tmdb)
-    produccion = _obtener_o_crear(id_tmdb, tipo)
+    produccion, creada = _obtener_o_crear(id_tmdb, tipo)
 
     if forzar or _necesita_enriquecimiento(produccion):
-        _enriquecer(produccion, id_tmdb, tipo_tmdb)
+        try:
+            _enriquecer(produccion, id_tmdb, tipo_tmdb)
+        except TMDBNotFound:
+            # También el cascarón que dejó un fallo transitorio anterior: sin
+            # título y sin enriquecer, no puede tener calificaciones ni listas.
+            if creada or not produccion.titulo:
+                _descartar_cascaron(produccion)
+            raise
 
     _encolar_embedding(produccion)
     return produccion
+
+
+def _descartar_cascaron(produccion):
+    """Borra la fila vacía de un id que TMDB no conoce (auditoría F7).
+
+    Sin esto, calificar o agregar a una lista un id inexistente respondía 404
+    (Not Found) pero dejaba una fila vacía por cada id probado. Se borra la
+    fila que creó esta misma llamada o un cascarón sin título que dejó un fallo
+    anterior; nunca una fila con datos, que puede tener calificaciones y listas
+    colgando (CASCADE). El filtro por `fecha_enriquecimiento` cubre la carrera
+    con otro pedido que sí la haya enriquecido mientras tanto. Ante un fallo
+    transitorio (TMDB caído) la fila se conserva: el id puede existir y la
+    próxima visita la vuelve a encolar.
+    """
+    # `titulo=""` es una defensa explícita: hoy el título y la fecha se guardan
+    # en el mismo save(), pero el borrado no tiene que depender de eso.
+    ProduccionAudiovisual.objects.filter(
+        pk=produccion.pk, fecha_enriquecimiento__isnull=True, titulo=""
+    ).delete()
 
 
 def materializar_en_segundo_plano(id_tmdb, tipo_tmdb):
@@ -142,8 +168,8 @@ def _buscar_produccion(id_tmdb, tipo):
     return ProduccionAudiovisual.objects.filter(id_tmdb=id_tmdb, tipo=tipo).first()
 
 
-def _obtener_o_crear(id_tmdb, tipo):
-    """Devuelve la fila de la producción, creándola vacía si todavía no existe.
+def _obtener_o_crear(id_tmdb, tipo, *, reintento=False):
+    """`(fila, creada)`: la fila de la producción, creándola vacía si no existe.
 
     Dos requests simultáneos sobre la misma producción pueden ver ambos que no
     existe y ambos intentar el INSERT: `uq_produccion_tmdb_tipo` deja pasar uno
@@ -156,21 +182,27 @@ def _obtener_o_crear(id_tmdb, tipo):
     """
     existente = _buscar_produccion(id_tmdb, tipo)
     if existente is not None:
-        return existente
+        return existente, False
 
     try:
         with transaction.atomic():
-            return ProduccionAudiovisual.objects.create(
+            nueva = ProduccionAudiovisual.objects.create(
                 id_tmdb=id_tmdb, tipo=tipo, titulo=""
             )
+            return nueva, True
     except IntegrityError:
         ganadora = _buscar_produccion(id_tmdb, tipo)
         if ganadora is None:
-            # La fila sigue sin aparecer: el error no venía de la carrera.
+            if not reintento:
+                # La ganadora pudo borrarse entre el choque y esta consulta: otro
+                # pedido la creó para un id que TMDB no conoce y la descartó
+                # (F7). Un solo reintento cubre esa carrera.
+                return _obtener_o_crear(id_tmdb, tipo, reintento=True)
+            # Dos choques seguidos sin fila: el error no venía de la carrera.
             # Disfrazarlo de "ya existía" escondería un bug real.
             raise
         logger.info("materializar: otro request creó (%s, %s) primero", id_tmdb, tipo)
-        return ganadora
+        return ganadora, False
 
 
 def _necesita_enriquecimiento(produccion):
