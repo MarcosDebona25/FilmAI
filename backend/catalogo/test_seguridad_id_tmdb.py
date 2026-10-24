@@ -14,6 +14,7 @@ Los tests de integración usan `materializar()` real con TMDB falso, igual que
 
 from unittest.mock import patch
 
+from django.db import IntegrityError
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -58,6 +59,28 @@ class MaterializarIdInexistenteTests(_ParchesDeMaterializacion, TestCase):
             materializar(999_999_999, "movie")
 
         self.assertFalse(ProduccionAudiovisual.objects.exists())
+
+    def test_si_la_ganadora_de_la_carrera_ya_se_borro_se_reintenta_el_alta(self):
+        # Dos pedidos por el mismo id: este choca con la fila del otro, y el otro
+        # la borra (TMDB le dijo 404) antes de que este la encuentre. Sin
+        # reintento, el IntegrityError llegaba como 500 (sugerencia de PR-Agent).
+        crear = ProduccionAudiovisual.objects.create
+        intentos = []
+
+        def crear_con_choque(**campos):
+            intentos.append(campos)
+            if len(intentos) == 1:
+                raise IntegrityError("uq_produccion_tmdb_tipo")
+            return crear(**campos)
+
+        with patch.object(
+            ProduccionAudiovisual.objects, "create", side_effect=crear_con_choque
+        ):
+            produccion = materializar(550, "movie")
+
+        self.assertEqual(len(intentos), 2)
+        self.assertEqual(produccion.titulo, "Fight Club")
+        self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
 
     def test_una_fila_que_ya_existia_no_se_borra(self):
         # La sync diaria (C-04b) refresca con `forzar=True`. Si TMDB dio de baja
