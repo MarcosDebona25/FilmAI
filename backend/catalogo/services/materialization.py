@@ -91,8 +91,10 @@ def _descartar_cascaron(produccion):
     transitorio (TMDB caído) la fila se conserva: el id puede existir y la
     próxima visita la vuelve a encolar.
     """
+    # `titulo=""` es una defensa explícita: hoy el título y la fecha se guardan
+    # en el mismo save(), pero el borrado no tiene que depender de eso.
     ProduccionAudiovisual.objects.filter(
-        pk=produccion.pk, fecha_enriquecimiento__isnull=True
+        pk=produccion.pk, fecha_enriquecimiento__isnull=True, titulo=""
     ).delete()
 
 

@@ -30,14 +30,14 @@
     "semantic_hash": ""
   },
   "backend/catalogo/client.py": {
-    "mtime": 1792878105.2753687,
-    "seen": 1792878447.6852791,
+    "mtime": 1792879085.0755968,
+    "seen": 1792879417.8609886,
     "ast_hash": "169f397be30036b4b15058ddd6a733f1",
     "semantic_hash": ""
   },
   "backend/catalogo/exceptions.py": {
-    "mtime": 1792878105.2873688,
-    "seen": 1792878447.685281,
+    "mtime": 1792879085.0755968,
+    "seen": 1792879417.8609905,
     "ast_hash": "399e2f15cba11a71557d7fd30bc0f11a",
     "semantic_hash": ""
   },
@@ -78,14 +78,14 @@
     "semantic_hash": ""
   },
   "backend/catalogo/tests.py": {
-    "mtime": 1792878176.4807894,
-    "seen": 1792878447.6867774,
+    "mtime": 1792878473.8924465,
+    "seen": 1792879417.8624132,
     "ast_hash": "12e734221136d6cc3abeead7801d0e10",
     "semantic_hash": ""
   },
   "backend/catalogo/views.py": {
-    "mtime": 1792878105.2904434,
-    "seen": 1792878447.6870224,
+    "mtime": 1792879085.0761592,
+    "seen": 1792879417.8626442,
     "ast_hash": "eb30bb68adfa3f8fdd1d5cc05e637552",
     "semantic_hash": ""
   },
@@ -180,8 +180,8 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1792878105.300148,
-    "seen": 1792878447.6884284,
+    "mtime": 1792879085.076583,
+    "seen": 1792879417.8638592,
     "ast_hash": "8d3aef194c27a28fc0fccaef8aa3aa10",
     "semantic_hash": ""
   },
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1792878435.1273189,
-    "seen": 1792878447.7110858,
-    "ast_hash": "19946fa85182f003f11da053bee36a50",
+    "mtime": 1792879390.982837,
+    "seen": 1792879417.883051,
+    "ast_hash": "0249fe76e6bed731afbb23d437329977",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -1164,8 +1164,8 @@
     "semantic_hash": "5e57ca9b9bcee5cb8e1aa9f65609a33a"
   },
   "backend/filmai/exceptions.py": {
-    "mtime": 1792878105.2993689,
-    "seen": 1792878447.6881685,
+    "mtime": 1792879085.0763762,
+    "seen": 1792879417.8636327,
     "ast_hash": "670500c8dde3448253a3b385f8bb88ea",
     "semantic_hash": ""
   },
@@ -1242,9 +1242,9 @@
     "semantic_hash": "869cef97b06b19924c1b0df3a51c74a3"
   },
   "backend/catalogo/services/materialization.py": {
-    "mtime": 1792878175.5588078,
-    "seen": 1792878447.6861353,
-    "ast_hash": "74286fbcec110ae886aa15942e911f21",
+    "mtime": 1792879141.9786499,
+    "seen": 1792879417.8618078,
+    "ast_hash": "fdde43de7d89923ed547f0db0f2a9e04",
     "semantic_hash": ""
   },
   "backend/catalogo/services/tmdb.py": {
@@ -1278,8 +1278,8 @@
     "semantic_hash": "8c801ec00523df7e3104a06dd42f2221"
   },
   "openspec/specs/catalog-materialization/spec.md": {
-    "mtime": 1792878435.124674,
-    "seen": 1792878447.711342,
+    "mtime": 1792878473.9189725,
+    "seen": 1792879417.883347,
     "ast_hash": "2ebdf35a5751250c95c46d63b34a802e",
     "semantic_hash": ""
   },
@@ -1290,8 +1290,8 @@
     "semantic_hash": "5e3cb3748e2efb42920ad061bb8d8394"
   },
   "openspec/specs/tmdb-endpoints/spec.md": {
-    "mtime": 1792869126.5238023,
-    "seen": 1792874709.2170713,
+    "mtime": 1792879085.0793722,
+    "seen": 1792879417.8840113,
     "ast_hash": "76ce6dd5e8dc04cfb7261489a0123012",
     "semantic_hash": ""
   },
@@ -3468,8 +3468,8 @@
     "semantic_hash": ""
   },
   "backend/catalogo/services/browse.py": {
-    "mtime": 1792878105.290264,
-    "seen": 1792878447.685988,
+    "mtime": 1792879085.0759835,
+    "seen": 1792879417.861666,
     "ast_hash": "feab2f9bd312e313c9130807df41e980",
     "semantic_hash": ""
   },
@@ -4080,8 +4080,8 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1792875786.8552518,
-    "seen": 1792876725.187662,
+    "mtime": 1792879085.076583,
+    "seen": 1792879417.8830492,
     "ast_hash": "ebe7e30d5a31b82d34872f25104fbe61",
     "semantic_hash": ""
   },
@@ -4350,9 +4350,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/test_seguridad_id_tmdb.py": {
-    "mtime": 1792878129.0975213,
-    "seen": 1792878447.6867073,
-    "ast_hash": "562a9b66ae03e517c9ca6d3067b6f151",
+    "mtime": 1792879098.4154835,
+    "seen": 1792879417.8623455,
+    "ast_hash": "065d47bd303295b6884895a7effec7b6",
     "semantic_hash": ""
   },
   "backend/listas/test_seguridad_id_tmdb.py": {
