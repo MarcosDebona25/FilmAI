@@ -49,8 +49,14 @@ An `IntegrityError` that does not come from this race — the row still not bein
 #### Scenario: Unrelated integrity error is not swallowed
 
 - GIVEN an `IntegrityError` unrelated to the race
-- WHEN the row is still absent after the failure
+- WHEN the row is still absent after the failure, and again after one retry
 - THEN the error propagates to the caller
+
+#### Scenario: The winner's row was discarded before the loser found it
+
+- GIVEN the insert collides with a row that another request then deletes (TMDB answered 404, security audit F7)
+- WHEN the loser looks for the winner's row and finds none
+- THEN the insert is retried once instead of answering 500 (Internal Server Error)
 
 ### Requirement: TMDB enrichment
 
@@ -158,6 +164,16 @@ Since 16/10/2026 (docs 02 and 03), `trending`, `now-playing`, `discover`, `searc
 - WHEN `GET /api/catalogo/movie/{id}/` is handled
 - THEN the response is still 200 with the unchanged TMDB body
 - AND the failure is recorded in the logs
+
+#### Scenario: An id TMDB does not know leaves no row
+
+- GIVEN no row exists for the id and TMDB answers 404 (Not Found) for its detail
+- WHEN `materializar()` runs
+- THEN it raises `TMDBNotFound`
+- AND the empty row it created is deleted (security audit F7, 24/10/2026)
+- AND an empty, never-enriched row left by an earlier transient failure is deleted too
+- AND a row with data is never deleted, since ratings and lists may hang from it
+- AND a transient failure (TMDB down) keeps the new row, to be enriched on a later visit
 
 ### Requirement: Enrichment is recorded, not inferred
 

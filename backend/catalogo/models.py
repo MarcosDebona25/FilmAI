@@ -20,6 +20,11 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from pgvector.django import HnswIndex, VectorField
 
+# Máximo de `id_tmdb`: es un `integer` de Postgres. Las entradas que reciben un
+# id lo validan con este tope; sin él, un id más grande pasaba la validación y
+# el INSERT respondía 500 (Internal Server Error) (auditoría F7, 24/10/2026).
+ID_TMDB_MAXIMO = 2_147_483_647
+
 
 class TipoProduccion(models.TextChoices):
     """Tipo de producción audiovisual (doc 03: 'Pelicula' | 'Serie')."""

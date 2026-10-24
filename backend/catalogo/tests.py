@@ -2098,11 +2098,13 @@ class MaterializacionCarreraTests(MaterializacionBase):
 
     def test_un_integrityerror_ajeno_a_la_carrera_se_propaga(self):
         # Si tras la colisión la fila sigue sin aparecer, el error no venía de
-        # la carrera y disfrazarlo de "ya existía" ocultaría un bug real.
+        # la carrera y disfrazarlo de "ya existía" ocultaría un bug real. Desde
+        # F7 hay un reintento (la ganadora pudo borrarse): son dos colisiones,
+        # cada una con su búsqueda antes y después.
         with (
             patch(
                 "catalogo.services.materialization._buscar_produccion",
-                side_effect=[None, None],
+                side_effect=[None, None, None, None],
             ),
             patch.object(
                 ProduccionAudiovisual.objects,
