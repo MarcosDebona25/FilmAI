@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 
+from catalogo.models import ID_TMDB_MAXIMO
 from catalogo.services.adapter import dominio_a_tmdb
 from catalogo.services.browse import NOTAS
 from catalogo.services.traducciones import ProduccionLocalizadaMixin
@@ -63,7 +64,7 @@ class NombreListaSerializer(FronteraErroresMixin, serializers.Serializer):
 class PertenenciaQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     """Valida la producción cuya pertenencia a listas se quiere consultar."""
 
-    id_tmdb = serializers.IntegerField(min_value=1)
+    id_tmdb = serializers.IntegerField(min_value=1, max_value=ID_TMDB_MAXIMO)
     tipo = serializers.ChoiceField(choices=("movie", "tv"))
 
 
