@@ -85,11 +85,21 @@ def registrar_llamada():
 def _cobrar_a_la_ip(ident):
     ahora = time.time()
     clave = f"tmdb_llamadas:{ident}:{int(ahora // VENTANA_IP_SEGUNDOS)}"
-    # `add` crea la clave solo si no existe (atómico); `incr` suma en el lugar.
-    cache.add(clave, 0, timeout=VENTANA_IP_SEGUNDOS * 2)
-    if cache.incr(clave) > settings.TMDB_LLAMADAS_POR_IP_POR_MINUTO:
+    if _sumar(clave) > settings.TMDB_LLAMADAS_POR_IP_POR_MINUTO:
         resto = VENTANA_IP_SEGUNDOS - ahora % VENTANA_IP_SEGUNDOS
         raise Throttled(wait=math.ceil(resto))
+
+
+def _sumar(clave):
+    """`incr` atómico; si la clave no existe (primera llamada del minuto, o Redis
+    la desalojó), se siembra en 1. `add` solo crea si no existe: si otro pedido
+    la sembró justo antes, se vuelve a sumar (sugerencia de PR-Agent en #129)."""
+    try:
+        return cache.incr(clave)
+    except ValueError:
+        if cache.add(clave, 1, timeout=VENTANA_IP_SEGUNDOS * 2):
+            return 1
+        return cache.incr(clave)
 
 
 def con_contexto(funcion):
