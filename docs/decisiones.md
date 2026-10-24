@@ -5,6 +5,24 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 24/10/2026 — Auditoría F6: `trending` validado y topes de llamadas a TMDB
+
+- **Fecha**: 24/10/2026
+- **Descripción**: se corrigió el hallazgo F6 (severidad baja) y el pendiente de F2/F3 sobre el tope de llamadas a TMDB por pedido. Tres cambios:
+  - **`trending` con listas cerradas**: `media_type` (`all`, `movie`, `tv`) y `time_window` (`day`, `week`) iban sin validar al path de TMDB (`/trending/{media_type}/{time_window}`), así que `media_type=../movie/550` llevaba el pedido a otro endpoint. Ahora un valor fuera de la lista responde 400 (Bad Request) con `invalid_choice` sin llamar a TMDB. `person` existe en TMDB, pero FilmAI no muestra personas. `_opcion` pasó a nivel de módulo para que la usen Buscar y tendencias.
+  - **Tope por pedido** (`catalogo/presupuesto.py`): cada vista abre un contador (`contar_llamadas`, en una `ContextVar`) y el cliente llama a `registrar_llamada()` antes de cada pedido HTTP, reintentos incluidos. Pasadas 30 (`MAX_LLAMADAS_POR_PEDIDO`) lanza `TMDBPresupuestoAgotado`, que responde 503 (Service Unavailable) con el código existente `upstream_unavailable`. Antes, Buscar con texto en «Todo» podía encadenar 20 llamadas con 3 reintentos cada una: hasta 80.
+  - **Límite por IP que cuenta llamadas** (`TMDB_LLAMADAS_POR_IP_POR_MINUTO`, 300): cada llamada suma, en el momento, en un contador atómico por IP y por minuto de reloj (`cache.add` + `cache.incr`, que en Redis es `INCR`). La llamada que pasa el límite corta con 429 (Too Many Requests), `throttled` y `Retry-After` (los segundos que faltan para que termine el minuto). Lo que sale de la caché de Redis no llama al cliente y no cuesta nada. El límite de 60 pedidos por minuto (`catalogo`) sigue igual.
+- **Decisiones** (elegido por el usuario el 24/10/2026: los dos topes, no uno solo):
+  - El tope por pedido sale del máximo legítimo: Buscar con texto en «Todo» y en español son 20 llamadas (10 páginas y su respaldo en inglés). 30 deja lugar a algún reintento.
+  - `TMDBPresupuestoAgotado` hereda de `TMDBError`: la caché lo trata como «TMDB no disponible» y sirve la copia de respaldo si la tiene, sin otra llamada.
+  - Los hilos de `ThreadPoolExecutor` no heredan las `ContextVar`. Buscar envuelve sus funciones con `con_contexto`, que corre cada una en una copia del contexto del pedido (todas comparten el mismo contador). Sin eso, las llamadas de Buscar no se contaban.
+  - La primera versión cobraba el pedido al terminar, con un throttle de DRF. PR-Agent señaló en #129 que así pedidos en paralelo pasaban todos la revisión de entrada con el contador en cero: 60 pedidos simultáneos con textos nuevos sumaban unas 1200 llamadas. Contar cada llamada en el momento, de forma atómica, lo cierra; hay un test con 10 pedidos en paralelo. La ventana es fija (por minuto de reloj): en el borde entre dos minutos pueden juntarse hasta 600, el compromiso de un contador simple.
+  - Fuera de un pedido HTTP no hay tope: Celery, la sync diaria y el seed hacen miles de llamadas y no deben cortarse.
+  - No cambian `contracts/` ni `traducciones/`: los dos códigos ya existían y el frontend los traduce.
+- **Archivos afectados**: `backend/catalogo/presupuesto.py` (nuevo), `backend/catalogo/client.py`, `backend/catalogo/services/browse.py`, `backend/catalogo/views.py`, `backend/catalogo/exceptions.py`, `backend/filmai/exceptions.py`, `backend/filmai/settings.py`, `backend/catalogo/test_seguridad_topes_tmdb.py` (nuevo), `openspec/specs/tmdb-endpoints/spec.md`, `docs/auditoria-seguridad-resumen.md`.
+
+---
+
 ## 24/10/2026 — Auditoría F7: `id_tmdb` inexistente o fuera de rango
 
 - **Fecha**: 24/10/2026
