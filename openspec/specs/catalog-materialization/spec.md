@@ -165,7 +165,8 @@ Since 16/10/2026 (docs 02 and 03), `trending`, `now-playing`, `discover`, `searc
 - WHEN `materializar()` runs
 - THEN it raises `TMDBNotFound`
 - AND the empty row it created is deleted (security audit F7, 24/10/2026)
-- AND a row that existed before the call is never deleted, since ratings and lists may hang from it
+- AND an empty, never-enriched row left by an earlier transient failure is deleted too
+- AND a row with data is never deleted, since ratings and lists may hang from it
 - AND a transient failure (TMDB down) keeps the new row, to be enriched on a later visit
 
 ### Requirement: Enrichment is recorded, not inferred
