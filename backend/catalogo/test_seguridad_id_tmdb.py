@@ -22,7 +22,7 @@ from catalogo.exceptions import TMDBNotFound, TMDBServerError
 from catalogo.factories import ProduccionAudiovisualFactory
 from catalogo.models import Calificacion, ProduccionAudiovisual, TipoProduccion
 from catalogo.serializers_reviews import CrearCalificacionSerializer
-from catalogo.services.materialization import materializar
+from catalogo.services.materialization import _descartar_cascaron, materializar
 from catalogo.tests import _ParchesDeMaterializacion
 from usuarios.factories import UsuarioFactory
 
@@ -81,6 +81,18 @@ class MaterializarIdInexistenteTests(_ParchesDeMaterializacion, TestCase):
         self.assertEqual(len(intentos), 2)
         self.assertEqual(produccion.titulo, "Fight Club")
         self.assertEqual(ProduccionAudiovisual.objects.count(), 1)
+
+    def test_el_descarte_nunca_borra_una_fila_con_titulo(self):
+        # Defensa explícita: hoy título y `fecha_enriquecimiento` se guardan en
+        # el mismo save(), pero el borrado no depende de eso (sugerencia de
+        # PR-Agent en #128). Una fila con datos puede tener calificaciones.
+        fila = ProduccionAudiovisual.objects.create(
+            id_tmdb=550, tipo=TipoProduccion.PELICULA, titulo="Fight Club"
+        )
+
+        _descartar_cascaron(fila)
+
+        self.assertTrue(ProduccionAudiovisual.objects.filter(pk=fila.pk).exists())
 
     def test_una_fila_que_ya_existia_no_se_borra(self):
         # La sync diaria (C-04b) refresca con `forzar=True`. Si TMDB dio de baja
