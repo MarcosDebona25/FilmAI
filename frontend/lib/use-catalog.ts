@@ -31,17 +31,32 @@ export function limpiarCacheCatalogo() {
  * no pide nada. `intento` distinto vuelve a pedir lo que falló. Con
  * `cachear: false` siempre pide (Recomendado depende de lo que el usuario
  * califique después).
+ *
+ * `inicial` es la respuesta que ya trajo el servidor de Next (el Hero del
+ * Inicio, 24/10/2026): con ella no se pide nada y el dato está desde el primer
+ * render. Quien la pasa se asegura de que sea del idioma actual.
  */
-export function useCatalog<T>(path: string | null, intento = 0, cachear = true): Pedido<T> {
+export function useCatalog<T>(
+  path: string | null,
+  intento = 0,
+  cachear = true,
+  inicial?: T
+): Pedido<T> {
   const idioma = useLocale();
   const clave = path === null ? null : `${claveCache(idioma, path)}#${intento}`;
   const [resultados, setResultados] = useState<Record<string, { data?: T; error?: unknown }>>({});
   const enCache = path === null ? null : claveCache(idioma, path);
   const guardado = cachear && enCache !== null && cache.has(enCache);
+  const conInicial = inicial !== undefined && path !== null;
 
   useEffect(() => {
     if (path === null || clave === null || enCache === null || (cachear && cache.has(enCache)))
       return;
+    if (conInicial) {
+      // Queda en la caché de la visita, como si la hubiera pedido el navegador.
+      if (cachear) cache.set(enCache, inicial);
+      return;
+    }
     let vigente = true;
     apiFetch<T>(path).then(
       (data) => {
@@ -55,10 +70,11 @@ export function useCatalog<T>(path: string | null, intento = 0, cachear = true):
     return () => {
       vigente = false;
     };
-  }, [path, clave, enCache, cachear]);
+  }, [path, clave, enCache, cachear, conInicial, inicial]);
 
   if (path === null || clave === null) return { status: "idle", data: null, error: null };
   if (guardado) return { status: "ok", data: cache.get(enCache) as T, error: null };
+  if (conInicial) return { status: "ok", data: inicial, error: null };
   const resultado = resultados[clave];
   if (!resultado) return { status: "loading", data: null, error: null };
   return resultado.error !== undefined

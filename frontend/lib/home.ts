@@ -3,6 +3,26 @@ import type { ContentType } from "@/components/features/TypeSelector";
 import type { Title } from "@/lib/catalog";
 
 /**
+ * Lo que necesita el Hero: tendencias y los nombres de los géneros. Lo pide el
+ * servidor de Next antes de mandar el HTML y, si no pudo, el navegador. Las dos
+ * partes usan estas rutas, que también son la clave de la caché de `useCatalog`.
+ */
+export const rutasDelHero = {
+  tendencias: (tipo: ContentType) => `/api/catalogo/trending/?media_type=${tipo}`,
+  generos: (tipo: "movie" | "tv") => `/api/catalogo/genres/?tipo=${tipo}`,
+};
+
+/** Respuestas que trajo el servidor, por ruta, y el idioma en que las pidió. */
+export type DatosDelHero = { idioma: string; datos: Record<string, unknown> };
+
+/** Las rutas del Hero para una opción del selector. */
+export function rutasHeroPara(tipo: ContentType): string[] {
+  const tendencias = [rutasDelHero.tendencias("all")];
+  if (tipo !== "all") tendencias.push(rutasDelHero.tendencias(tipo));
+  return [...tendencias, rutasDelHero.generos("movie"), rutasDelHero.generos("tv")];
+}
+
+/**
  * Regla del Hero (pedida el 03/10/2026): el primer título con imagen de fondo.
  * En Movies o TV shows se saltea el Hero de All, así cada opción del selector
  * muestra uno distinto. `puesto` es su posición real en tendencias.
