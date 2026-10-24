@@ -24,6 +24,8 @@ from math import ceil
 
 from django.utils import timezone
 
+from catalogo.presupuesto import con_contexto
+
 POR_PAGINA = 20
 # «Los primeros 100» (decisión del usuario, 14/10/2026): 5 páginas de TMDB.
 PAGINAS_VENTANA = 5
@@ -115,11 +117,13 @@ def explorar(
         with ThreadPoolExecutor(max_workers=2) as hilos:
             lados = list(
                 hilos.map(
-                    lambda t: _lado(
-                        servicio,
-                        t,
-                        genero=_genero_para(t, genero),
-                        **_sin_genero(filtros),
+                    con_contexto(
+                        lambda t: _lado(
+                            servicio,
+                            t,
+                            genero=_genero_para(t, genero),
+                            **_sin_genero(filtros),
+                        )
                     ),
                     tipos,
                 )
@@ -183,7 +187,7 @@ def _con_texto(servicio, tipos, *, q, genero, anio, nota, page, desde, hasta, **
 
     # Los dos tipos a la vez: cada uno pide hasta 5 páginas.
     with ThreadPoolExecutor(max_workers=len(tipos)) as hilos:
-        listas = list(hilos.map(coincidencias, tipos))
+        listas = list(hilos.map(con_contexto(coincidencias), tipos))
     # `sorted` es estable: en un empate queda el orden de relevancia de TMDB.
     todos = sorted(
         (item for lista in listas for item in lista), key=_puntaje, reverse=True
@@ -249,7 +253,8 @@ def _ventana(servicio, tipo, *, q, genero, anio, nota, desde=None, hasta=None):
     with ThreadPoolExecutor(max_workers=PAGINAS_VENTANA - 1) as hilos:
         resto = list(
             hilos.map(
-                lambda n: servicio.search(q, tipo, n, anio=anio), range(2, ultima + 1)
+                con_contexto(lambda n: servicio.search(q, tipo, n, anio=anio)),
+                range(2, ultima + 1),
             )
         )
     items = [

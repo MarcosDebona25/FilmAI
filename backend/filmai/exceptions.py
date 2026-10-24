@@ -22,6 +22,7 @@ from catalogo.exceptions import (
     TMDBBadRequest,
     TMDBError,
     TMDBNotFound,
+    TMDBPresupuestoAgotado,
     TMDBRateLimited,
     TMDBServerError,
     TMDBTransportError,
@@ -64,6 +65,8 @@ _CODIGOS_TMDB = {
     TMDBRateLimited: "throttled",
     TMDBServerError: "upstream_error",
     TMDBTransportError: "upstream_unavailable",
+    # Para quien llama es lo mismo: TMDB no está disponible para este pedido.
+    TMDBPresupuestoAgotado: "upstream_unavailable",
 }
 
 

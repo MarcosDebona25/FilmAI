@@ -6,10 +6,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.gzip import gzip_page
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.throttling import BaseThrottle, ScopedRateThrottle
 from rest_framework.views import APIView
 
 from catalogo.models import ID_TMDB_MAXIMO
+from catalogo.presupuesto import contar_llamadas
 from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_todo
 from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
@@ -97,6 +98,17 @@ def _validate_tipo(value):
     return value
 
 
+def _opcion(valor, nombre, permitidos):
+    if valor not in permitidos:
+        raise _error_param(
+            nombre,
+            f"Must be one of: {', '.join(permitidos)}.",
+            "invalid_choice",
+            {"allowedValues": permitidos},
+        )
+    return valor
+
+
 def _materializar_sin_interrumpir(id_tmdb, tipo_tmdb):
     """Encola la materialización sin que un fallo afecte ni demore la respuesta.
 
@@ -136,11 +148,23 @@ def _materializar_listado_sin_interrumpir(data, tipo_tmdb=None):
 CACHE_NAVEGADOR_SEGUNDOS = 5 * 60
 
 
+# Los dos topes de llamadas a TMDB de la auditoría F6 (24/10/2026): `dispatch`
+# abre el contador del pedido con la IP del cliente (la misma que usan los
+# throttles de DRF, con `NUM_PROXIES`). Cada llamada a TMDB cuenta en el momento
+# para el tope del pedido (503) y para el de la IP (429): ver `presupuesto.py`.
+# Va en comentario y no en docstring: drf-spectacular usa el docstring heredado
+# como descripción pública de cada endpoint del catálogo.
+class _TopesTMDBMixin:
+    def dispatch(self, request, *args, **kwargs):
+        with contar_llamadas(ident=BaseThrottle().get_ident(request)):
+            return super().dispatch(request, *args, **kwargs)
+
+
 # Comprimido solo acá y no con `GZipMiddleware` global: el catálogo es público y
 # no lleva secretos (sin cookies ni CSRF en la respuesta), así que no queda
 # expuesto a BREACH. Un listado de 13 kB baja a ~5 kB.
 @method_decorator(gzip_page, name="dispatch")
-class CatalogoBaseView(APIView):
+class CatalogoBaseView(_TopesTMDBMixin, APIView):
     authentication_classes: ClassVar = []
     permission_classes: ClassVar = [AllowAny]
     throttle_classes: ClassVar = [ScopedRateThrottle]
@@ -172,14 +196,22 @@ class CatalogoBaseView(APIView):
 
 
 class TrendingView(CatalogoBaseView):
+    # Los dos parámetros van al path de TMDB (`/trending/{media_type}/{time_window}`):
+    # sin validarlos, `media_type=../movie/550` llevaba el pedido a otro endpoint
+    # (auditoría F6). `person` también existe en TMDB, pero FilmAI no muestra personas.
+    media_types: ClassVar = ["all", "movie", "tv"]
+    time_windows: ClassVar = ["day", "week"]
+
     def get(self, request):
-        service = self._service(request)
-        media_type = request.query_params.get("media_type", "all")
-        data = service.get_trending(
-            media_type,
-            request.query_params.get("time_window", "week"),
-            self._page(request),
+        params = request.query_params
+        media_type = _opcion(
+            params.get("media_type", "all"), "media_type", self.media_types
         )
+        time_window = _opcion(
+            params.get("time_window", "week"), "time_window", self.time_windows
+        )
+        page = self._page(request)
+        data = self._service(request).get_trending(media_type, time_window, page)
         # En «all» cada ítem trae su `media_type`.
         _materializar_listado_sin_interrumpir(
             data, media_type if media_type in ("movie", "tv") else None
@@ -245,10 +277,10 @@ class BrowseView(CatalogoBaseView):
                 "max_length",
                 {"maxLength": self.MAX_TEXTO},
             )
-        tipo = self._opcion(params.get("tipo", "all"), "tipo", self.tipos)
+        tipo = _opcion(params.get("tipo", "all"), "tipo", self.tipos)
         nota = params.get("nota") or None
         if nota is not None:
-            self._opcion(nota, "nota", list(NOTAS))
+            _opcion(nota, "nota", list(NOTAS))
         page = self._page(request)
         datos = explorar(
             self._service(request),
@@ -272,25 +304,14 @@ class BrowseView(CatalogoBaseView):
             return None
         permitidas = [str(d) for d in range(1900, anio_actual() // 10 * 10 + 1, 10)]
         # `allowedValues` es una lista de textos en el contrato de errores.
-        self._opcion(str(decada), "decada", permitidas)
+        _opcion(str(decada), "decada", permitidas)
         return decada
 
     def _a_estrenar(self, valor):
         """«A estrenar» del selector de año: `true` o nada."""
         if valor in (None, ""):
             return False
-        return self._opcion(valor, "a_estrenar", ["true"]) == "true"
-
-    @staticmethod
-    def _opcion(valor, nombre, permitidos):
-        if valor not in permitidos:
-            raise _error_param(
-                nombre,
-                f"Must be one of: {', '.join(permitidos)}.",
-                "invalid_choice",
-                {"allowedValues": permitidos},
-            )
-        return valor
+        return _opcion(valor, "a_estrenar", ["true"]) == "true"
 
 
 class MovieDetailView(CatalogoBaseView):
@@ -386,7 +407,7 @@ class KeywordsView(CatalogoBaseView):
         return Response(data)
 
 
-class RecommendedView(APIView):
+class RecommendedView(_TopesTMDBMixin, APIView):
     """«Recomendado para ti» del Home (C-05), solo con sesión.
 
     `tipo` es `all` (por defecto), `movie` o `tv`. Responde `{generos, results}`:

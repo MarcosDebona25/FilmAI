@@ -11,6 +11,7 @@ from catalogo.exceptions import (
     TMDBServerError,
     TMDBTransportError,
 )
+from catalogo.presupuesto import registrar_llamada
 
 MAX_RETRIES = 3
 BASE_BACKOFF = 1.0
@@ -58,6 +59,9 @@ class TMDBClient:
     def _request(self, path, params):
         request_params = {**params, "api_key": self.api_key}
         for attempt in range(MAX_RETRIES + 1):
+            # Cada intento cuenta para el tope del pedido, reintentos incluidos
+            # (auditoría F6). Fuera de un pedido HTTP no hay tope.
+            registrar_llamada()
             try:
                 response = self._client.get(path, params=request_params)
             except httpx.TransportError as error:
