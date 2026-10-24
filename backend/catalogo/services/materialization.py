@@ -19,7 +19,7 @@ from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from catalogo.exceptions import TMDBError
+from catalogo.exceptions import TMDBError, TMDBNotFound
 from catalogo.models import (
     ProduccionAudiovisual,
     ProduccionEmbedding,
@@ -63,13 +63,34 @@ def materializar(id_tmdb, tipo_tmdb, forzar=False):
     tener que borrar `fecha_enriquecimiento` para provocar el refresco.
     """
     tipo = tmdb_a_dominio(tipo_tmdb)
-    produccion = _obtener_o_crear(id_tmdb, tipo)
+    produccion, creada = _obtener_o_crear(id_tmdb, tipo)
 
     if forzar or _necesita_enriquecimiento(produccion):
-        _enriquecer(produccion, id_tmdb, tipo_tmdb)
+        try:
+            _enriquecer(produccion, id_tmdb, tipo_tmdb)
+        except TMDBNotFound:
+            if creada:
+                _descartar_cascaron(produccion)
+            raise
 
     _encolar_embedding(produccion)
     return produccion
+
+
+def _descartar_cascaron(produccion):
+    """Borra la fila recién creada para un id que TMDB no conoce (auditoría F7).
+
+    Sin esto, calificar o agregar a una lista un id inexistente respondía 404
+    (Not Found) pero dejaba una fila vacía por cada id probado. Solo se borra
+    la fila que creó esta misma llamada: una que ya existía puede tener
+    calificaciones y listas colgando (CASCADE). El filtro por
+    `fecha_enriquecimiento` cubre la carrera con otro pedido que sí la haya
+    enriquecido mientras tanto. Ante un fallo transitorio (TMDB caído) la fila
+    se conserva: el id puede existir y la próxima visita la vuelve a encolar.
+    """
+    ProduccionAudiovisual.objects.filter(
+        pk=produccion.pk, fecha_enriquecimiento__isnull=True
+    ).delete()
 
 
 def materializar_en_segundo_plano(id_tmdb, tipo_tmdb):
@@ -143,7 +164,7 @@ def _buscar_produccion(id_tmdb, tipo):
 
 
 def _obtener_o_crear(id_tmdb, tipo):
-    """Devuelve la fila de la producción, creándola vacía si todavía no existe.
+    """`(fila, creada)`: la fila de la producción, creándola vacía si no existe.
 
     Dos requests simultáneos sobre la misma producción pueden ver ambos que no
     existe y ambos intentar el INSERT: `uq_produccion_tmdb_tipo` deja pasar uno
@@ -156,13 +177,14 @@ def _obtener_o_crear(id_tmdb, tipo):
     """
     existente = _buscar_produccion(id_tmdb, tipo)
     if existente is not None:
-        return existente
+        return existente, False
 
     try:
         with transaction.atomic():
-            return ProduccionAudiovisual.objects.create(
+            nueva = ProduccionAudiovisual.objects.create(
                 id_tmdb=id_tmdb, tipo=tipo, titulo=""
             )
+            return nueva, True
     except IntegrityError:
         ganadora = _buscar_produccion(id_tmdb, tipo)
         if ganadora is None:
@@ -170,7 +192,7 @@ def _obtener_o_crear(id_tmdb, tipo):
             # Disfrazarlo de "ya existía" escondería un bug real.
             raise
         logger.info("materializar: otro request creó (%s, %s) primero", id_tmdb, tipo)
-        return ganadora
+        return ganadora, False
 
 
 def _necesita_enriquecimiento(produccion):

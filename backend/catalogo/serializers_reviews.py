@@ -6,7 +6,7 @@ passthrough y devuelve el JSON de TMDB tal cual), así que este es el primero.
 
 from rest_framework import serializers
 
-from catalogo.models import Resena
+from catalogo.models import ID_TMDB_MAXIMO, Resena
 from catalogo.services.adapter import dominio_a_tmdb
 from catalogo.services.traducciones import ProduccionLocalizadaMixin
 from filmai.errores.serializadores import FronteraErroresMixin
@@ -35,7 +35,7 @@ class _CalificacionEntradaBase(FronteraErroresMixin, serializers.Serializer):
 class CrearCalificacionSerializer(_CalificacionEntradaBase):
     """`POST /api/reviews/`: qué producción, qué nota y, si hay, qué texto."""
 
-    id_tmdb = serializers.IntegerField(min_value=1)
+    id_tmdb = serializers.IntegerField(min_value=1, max_value=ID_TMDB_MAXIMO)
     # Vocabulario público de TMDB, igual que en C-03 y L-01; la traducción al
     # dominio la hace `materializar()`.
     tipo = serializers.ChoiceField(choices=("movie", "tv"))
@@ -102,7 +102,7 @@ class ProduccionQuerySerializer(FronteraErroresMixin, serializers.Serializer):
     Mismo enfoque que `PertenenciaQuerySerializer` en L-01.
     """
 
-    id_tmdb = serializers.IntegerField(min_value=1)
+    id_tmdb = serializers.IntegerField(min_value=1, max_value=ID_TMDB_MAXIMO)
     tipo = serializers.ChoiceField(choices=("movie", "tv"))
 
 

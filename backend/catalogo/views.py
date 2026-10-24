@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from catalogo.models import ID_TMDB_MAXIMO
 from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_todo
 from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
@@ -40,7 +41,7 @@ def _error_param(name, mensaje, codigo, parametros=None):
 PAGINA_MAXIMA = 500
 
 
-def _int_param(value, name, *, default=_MISSING):
+def _int_param(value, name, *, default=_MISSING, maximo=None):
     if value in (None, ""):
         if default is not _MISSING:
             return default
@@ -55,7 +56,20 @@ def _int_param(value, name, *, default=_MISSING):
         raise _error_param(
             name, "Must be a positive integer.", "min_value", {"minValue": 1}
         )
+    if maximo is not None and result > maximo:
+        raise _error_param(
+            name,
+            f"Ensure this value is less than or equal to {maximo}.",
+            "max_value",
+            {"maxValue": maximo},
+        )
     return result
+
+
+def _id_tmdb(value):
+    # Más allá del máximo de la columna, TMDB responde 404 (Not Found) seguro:
+    # se corta acá, sin gastar la llamada (auditoría F7).
+    return _int_param(value, "id_tmdb", maximo=ID_TMDB_MAXIMO)
 
 
 def _float_param(value, name, *, default=None):
@@ -150,17 +164,11 @@ class CatalogoBaseView(APIView):
         return response
 
     def _page(self, request):
-        page = _int_param(request.query_params.get("page"), "page", default=1)
         # TMDB no sirve páginas más allá de 500; sin tope, cada `page` distinto
         # sería otra clave de caché y otra llamada a TMDB.
-        if page > PAGINA_MAXIMA:
-            raise _error_param(
-                "page",
-                f"Ensure this value is less than or equal to {PAGINA_MAXIMA}.",
-                "max_value",
-                {"maxValue": PAGINA_MAXIMA},
-            )
-        return page
+        return _int_param(
+            request.query_params.get("page"), "page", default=1, maximo=PAGINA_MAXIMA
+        )
 
 
 class TrendingView(CatalogoBaseView):
@@ -287,7 +295,7 @@ class BrowseView(CatalogoBaseView):
 
 class MovieDetailView(CatalogoBaseView):
     def get(self, request, id_tmdb):
-        id_tmdb = _int_param(id_tmdb, "id_tmdb")
+        id_tmdb = _id_tmdb(id_tmdb)
         data = self._service(request).get_movie_detail(id_tmdb)
         _materializar_sin_interrumpir(id_tmdb, "movie")
         return Response(data)
@@ -295,7 +303,7 @@ class MovieDetailView(CatalogoBaseView):
 
 class TVDetailView(CatalogoBaseView):
     def get(self, request, id_tmdb):
-        id_tmdb = _int_param(id_tmdb, "id_tmdb")
+        id_tmdb = _id_tmdb(id_tmdb)
         data = self._service(request).get_tv_detail(id_tmdb)
         _materializar_sin_interrumpir(id_tmdb, "tv")
         return Response(data)
@@ -307,7 +315,7 @@ class CreditsView(CatalogoBaseView):
     tipo = None  # "movie" o "tv", lo fija la ruta
 
     def get(self, request, id_tmdb):
-        id_tmdb = _int_param(id_tmdb, "id_tmdb")
+        id_tmdb = _id_tmdb(id_tmdb)
         return Response(creditos(self._service(request), self.tipo, id_tmdb))
 
 
@@ -321,7 +329,7 @@ class ProvidersView(CatalogoBaseView):
     tipo = None  # "movie" o "tv", lo fija la ruta
 
     def get(self, request, id_tmdb):
-        id_tmdb = _int_param(id_tmdb, "id_tmdb")
+        id_tmdb = _id_tmdb(id_tmdb)
         pais = request.query_params.get("pais")
         if not es_pais_valido(pais):
             raise _error_param(
@@ -372,7 +380,7 @@ def _generos_localizados(tipo, idioma):
 
 class KeywordsView(CatalogoBaseView):
     def get(self, request):
-        id_tmdb = _int_param(request.query_params.get("id_tmdb"), "id_tmdb")
+        id_tmdb = _id_tmdb(request.query_params.get("id_tmdb"))
         tipo = _validate_tipo(request.query_params.get("tipo"))
         data = get_catalog_service().get_keywords(id_tmdb, tipo)
         return Response(data)

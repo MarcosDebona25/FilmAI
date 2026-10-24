@@ -159,6 +159,15 @@ Since 16/10/2026 (docs 02 and 03), `trending`, `now-playing`, `discover`, `searc
 - THEN the response is still 200 with the unchanged TMDB body
 - AND the failure is recorded in the logs
 
+#### Scenario: An id TMDB does not know leaves no row
+
+- GIVEN no row exists for the id and TMDB answers 404 (Not Found) for its detail
+- WHEN `materializar()` runs
+- THEN it raises `TMDBNotFound`
+- AND the empty row it created is deleted (security audit F7, 24/10/2026)
+- AND a row that existed before the call is never deleted, since ratings and lists may hang from it
+- AND a transient failure (TMDB down) keeps the new row, to be enriched on a later visit
+
 ### Requirement: Enrichment is recorded, not inferred
 
 The system MUST record on each row when it last pulled the full TMDB detail, in `ProduccionAudiovisual.fecha_enriquecimiento`. A row whose value is `NULL` MUST be treated as never enriched and MUST be enriched on the next materialization, regardless of which other fields it holds.

@@ -47,6 +47,20 @@ Validation MUST happen before materialization: an out-of-range rating must not c
 - THEN the response is 400 naming the field
 - AND no TMDB request is issued
 
+#### Scenario: An `id_tmdb` beyond the column range
+
+- GIVEN a payload whose `id_tmdb` is greater than 2147483647 (the maximum of a Postgres `integer`)
+- WHEN it is posted, or used as a read filter
+- THEN the response is 400 (Bad Request) with `max_value` on `id_tmdb`
+- AND no TMDB request is issued (security audit F7, 24/10/2026)
+
+#### Scenario: An `id_tmdb` that TMDB does not know
+
+- GIVEN TMDB answers 404 (Not Found) for the posted `id_tmdb`
+- WHEN it is posted
+- THEN the response is 404 (Not Found) with `upstream_not_found`
+- AND neither a rating nor a production row is left in the database
+
 ### Requirement: Deleting the text and deleting the rating are different operations
 
 `DELETE /api/reviews/{id}/texto/` MUST delete the text and **keep** the rating. `DELETE /api/reviews/{id}/` MUST delete the rating, and its text with it.
