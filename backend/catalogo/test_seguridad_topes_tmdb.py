@@ -214,6 +214,13 @@ class LimitePorIPTests(TestCase):
         with contar_llamadas(ident="198.51.100.2"):
             registrar_llamada()
 
+    def test_si_el_contador_desaparece_se_vuelve_a_sembrar(self):
+        # Redis puede desalojar la clave a mitad de minuto: no tiene que dar 500.
+        with contar_llamadas(ident="203.0.113.7"):
+            registrar_llamada()
+            cache.clear()
+            registrar_llamada()
+
     def test_lo_que_sale_de_la_cache_no_cuenta(self):
         llamadas_http = []
 
