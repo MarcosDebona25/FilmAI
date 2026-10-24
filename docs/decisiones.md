@@ -5,6 +5,23 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 24/10/2026 — Docker de desarrollo: techo de memoria por servicio y sin reinicio automático
+
+- **Fecha**: 24/10/2026
+- **Descripción**: WSL se colgó tres veces seguidas en la máquina de Gonza (7,7 GB de RAM para WSL y 2 GB de swap). El registro del kernel del último cuelgue muestra unos 7,2 GB de memoria de procesos y el swap lleno, sin que el kernel matara ningún proceso: el sistema se queda trabado moviendo páginas entre la RAM y el swap. Pasó con los seis contenedores arriba, VS Code y corridas de tests. Tres cambios en `docker-compose.yml`:
+  - **Celery con `--concurrency=2` y `--max-memory-per-child=300000`**. Sin la primera opción, Celery arranca un proceso hijo por núcleo, y en una máquina de 12 hilos eran 13 procesos con Django entero cargado. Desde el 16/10/2026 (#109) esos procesos trabajan de verdad (cada listado encola lo que muestra), así que además crecen. La segunda (en KB) recicla un hijo que termina una tarea por encima de 300 MB antes de que se acerque al techo del contenedor (sugerencia de PR-Agent en #127).
+  - **`mem_limit` y `memswap_limit` por servicio** (backend 1536m, frontend 2g, celery-worker 1g, celery-beat 256m, db 512m, redis 512m). `mem_limit` es el techo de la cgroup del contenedor: si lo supera, el kernel mata el proceso más grande de ese contenedor y no se traba todo WSL. Si era el principal, el contenedor queda `Exited (137)`; si era un hijo (Celery, Postgres), el padre lo reemplaza y el fallo solo se ve en los logs. `memswap_limit` igual al techo impide que el contenedor use swap; sin él, Docker le permite usar tanto swap como RAM, y llenar el swap es justo lo que cuelga WSL.
+  - **Sin `restart: unless-stopped`**. Con esa política, iniciar Docker levantaba los seis servicios a la vez, y un contenedor que terminara por memoria se reiniciaría en ciclo. Ahora nada arranca solo, y uno caído queda detenido en `docker compose ps` hasta levantarlo a mano.
+- **Decisiones**:
+  - Redis lleva 512m y no 256m: ya tiene `--maxmemory 256mb` (F3) y ocupa algo más que sus datos; además, al guardar el snapshot en disco hace un fork. Con el techo igual a `maxmemory`, el contenedor moriría antes de que Redis desaloje claves.
+  - El frontend también lleva techo: `next dev --turbopack` es el servicio que más crece.
+  - Los valores son un punto de partida para desarrollo; se ajustan midiendo con `docker stats`.
+  - Para los tests no hacen falta el frontend ni Celery (las tareas están reemplazadas por mocks y los tests solo usan Postgres y Redis): `docker compose run --rm backend python manage.py test` levanta solo `db` y `redis`, corre en un contenedor de un solo uso y lo borra al terminar.
+- **Para quien ya tenga los contenedores creados**: la política `restart` queda guardada en cada contenedor, así que hay que recrearlos una vez (`docker compose down` y después `docker compose up -d`). Los datos viven en los volúmenes y no se pierden.
+- **Archivos afectados**: `docker-compose.yml`, `docs/decisiones.md`.
+
+---
+
 ## 22/10/2026 — Pendientes de seguridad y rendimiento: quién los toma
 
 - **Fecha**: 22/10/2026
