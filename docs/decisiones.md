@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Skills `cerrar-tramo` y `comparar-opciones`
+
+- **Fecha**: 26/10/2026
+- **Descripción**: dos skills nuevas en `.agents/skills/` para lo que se venía haciendo a mano:
+  - **`cerrar-tramo`** (adaptada de la de otro proyecto de Gonza): los chequeos de `ci.yml` en local, agentes de revisión en paralelo con cada hallazgo verificado antes de tocarlo, `decisiones.md` y graphify al día, commit, y cómo mergear una pila de PRs (cambiar la base antes de borrar la rama y empujar para que corra el CI). Se invoca solo a mano (`/cerrar-tramo`).
+  - **`comparar-opciones`**: las decisiones del equipo como cuadro comparativo (qué hace, a favor, en contra, costo), la recomendada primera, y la pregunta con opciones interactivas.
+- **Archivos afectados**: `.agents/skills/cerrar-tramo/SKILL.md`, `.agents/skills/comparar-opciones/SKILL.md` (nuevos).
+
+---
+
 ## 26/10/2026 — Dependencias al día: Next 15.5.28 y Django 5.2 LTS
 
 - **Fecha**: 26/10/2026
