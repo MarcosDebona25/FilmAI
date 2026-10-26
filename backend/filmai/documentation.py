@@ -119,6 +119,12 @@ def _ip(request):
     return BaseThrottle().get_ident(request)
 
 
+def _contar_intento(clave):
+    """Suma un intento y devuelve el total, de forma atómica."""
+    cache.add(clave, 0, VENTANA_SEGUNDOS)
+    return cache.incr(clave)
+
+
 def _clave_intentos(request):
     return f"docs-login:{_ip(request)}"
 
@@ -223,7 +229,9 @@ def ingresar_a_documentacion(request):
     """
     destino = _destino_seguro(request, request.POST.get("next", ""))
     clave = _clave_intentos(request)
-    if cache.get(clave, 0) >= INTENTOS_MAXIMOS:
+    # Contar antes de autenticar, como en el admin: ver `con_limite_de_intentos`.
+    intentos = _contar_intento(clave)
+    if intentos > INTENTOS_MAXIMOS:
         respuesta = _respuesta_acceso(
             request,
             estado="iniciar_sesion",
@@ -248,13 +256,11 @@ def ingresar_a_documentacion(request):
             if candidato is None:
                 # Iguala el costo de hashear para no revelar si la cuenta existe.
                 Usuario().set_password(password)
-            cache.add(clave, 0, VENTANA_SEGUNDOS)
-            fallidos = cache.incr(clave)
             respuesta = _respuesta_acceso(
                 request,
                 estado="iniciar_sesion",
                 error="invalid_credentials",
-                restantes=max(INTENTOS_MAXIMOS - fallidos, 0),
+                restantes=max(INTENTOS_MAXIMOS - intentos, 0),
                 ruta=destino,
                 status=403,
             )
@@ -278,17 +284,21 @@ def con_limite_de_intentos(vista):
         if request.method != "POST":
             return vista(request, *args, **kwargs)
         clave = f"admin-login:{_ip(request)}"
-        if cache.get(clave, 0) >= INTENTOS_MAXIMOS:
+        # Se cuenta ANTES de probar la contraseña: `incr` es atómico, así que de
+        # una ráfaga en paralelo solo las primeras 10 llegan a autenticar.
+        # Consultar primero y contar después dejaba pasar a todas (revisión del
+        # 26/10/2026). Un ingreso borra el contador.
+        if _contar_intento(clave) > INTENTOS_MAXIMOS:
             texto = TEXTOS[idioma_efectivo(request)]["too_many_attempts"]
-            return HttpResponse(
+            bloqueada = HttpResponse(
                 texto, status=429, content_type="text/plain; charset=utf-8"
             )
+            bloqueada["Retry-After"] = str(VENTANA_SEGUNDOS)
+            patch_cache_control(bloqueada, private=True, no_store=True)
+            return bloqueada
         respuesta = vista(request, *args, **kwargs)
         if respuesta.status_code == 302:
             cache.delete(clave)
-        else:
-            cache.add(clave, 0, VENTANA_SEGUNDOS)
-            cache.incr(clave)
         return respuesta
 
     return limitada
