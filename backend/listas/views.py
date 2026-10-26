@@ -159,6 +159,12 @@ def _resumen_response(listas, *, incluir_pertenencia=False, idioma=None):
     ).data
 
 
+def _techo_de_items():
+    return ExcepcionAPI(
+        "list_items_limit_reached", parametros={"maxItems": MAX_ITEMS_POR_LISTA}
+    )
+
+
 def _lista_propia(request, lista_id):
     return get_object_or_404(
         Lista.objects.filter(usuario=request.user, activa=True), pk=lista_id
@@ -443,18 +449,27 @@ class ListaItemsView(TopesTMDBMixin, APIView):
         lista = _lista_propia(request, lista_id)
         serializer = AgregarItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if (
-            lista.tipo == TipoLista.PERSONALIZADA
-            and lista.items.count() >= MAX_ITEMS_POR_LISTA
-        ):
-            raise ExcepcionAPI(
-                "list_items_limit_reached", parametros={"maxItems": MAX_ITEMS_POR_LISTA}
-            )
-        produccion = materializar(
-            serializer.validated_data["id_tmdb"], serializer.validated_data["tipo"]
-        )
+        id_tmdb = serializer.validated_data["id_tmdb"]
+        tipo = serializer.validated_data["tipo"]
+        con_techo = lista.tipo == TipoLista.PERSONALIZADA
+        # Antes de materializar, para no gastar llamadas a TMDB. Un título que
+        # ya está es un duplicado aunque la lista esté llena (PR-Agent, #135):
+        # un doble clic no tiene que decir «la lista está llena».
+        if con_techo and lista.items.count() >= MAX_ITEMS_POR_LISTA:
+            if lista.items.filter(
+                produccion__id_tmdb=id_tmdb, produccion__tipo=tmdb_a_dominio(tipo)
+            ).exists():
+                raise ItemDuplicado
+            raise _techo_de_items()
+        produccion = materializar(id_tmdb, tipo)
         try:
             with transaction.atomic():
+                if con_techo:
+                    # Se vuelve a contar con la lista bloqueada: dos altas en
+                    # paralelo con 999 ítems pasaban las dos el chequeo de arriba.
+                    Lista.objects.select_for_update().get(pk=lista.pk)
+                    if lista.items.count() >= MAX_ITEMS_POR_LISTA:
+                        raise _techo_de_items()
                 item = Tiene.objects.create(lista=lista, produccion=produccion)
                 # Lo que ya viste deja de estar pendiente (14/10/2026). En el
                 # mismo atomic: si el alta falla, «Pendientes» queda intacta.

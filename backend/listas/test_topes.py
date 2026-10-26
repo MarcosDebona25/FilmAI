@@ -13,6 +13,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 
 from catalogo.factories import ProduccionAudiovisualFactory
+from catalogo.models import TipoProduccion
 from filmai.throttles import EscrituraThrottle
 from listas.factories import ListaFactory
 from listas.models import Tiene
@@ -59,7 +60,12 @@ class TechoDeListasTests(_ConUsuario):
 @patch("listas.views.materializar")
 class TechoDeItemsTests(_ConUsuario):
     def _producciones(self, cantidad):
-        return [ProduccionAudiovisualFactory(id_tmdb=900 + i) for i in range(cantidad)]
+        # Películas: las altas mandan `tipo=movie`, y el duplicado se busca por
+        # id y tipo.
+        return [
+            ProduccionAudiovisualFactory(id_tmdb=900 + i, tipo=TipoProduccion.PELICULA)
+            for i in range(cantidad)
+        ]
 
     def test_una_lista_personalizada_llena_rechaza_otro_titulo(self, materializar):
         lista = ListaFactory(usuario=self.usuario, nombre="Para ver")
@@ -78,6 +84,45 @@ class TechoDeItemsTests(_ConUsuario):
         self.assertEqual(respuesta.data["code"], "list_items_limit_reached")
         self.assertEqual(respuesta.data["params"], {"maxItems": 2})
         materializar.assert_not_called()
+
+    def test_un_titulo_que_ya_esta_es_duplicado_aunque_este_llena(self, materializar):
+        lista = ListaFactory(usuario=self.usuario, nombre="Para ver")
+        a, b = self._producciones(2)
+        Tiene.objects.create(lista=lista, produccion=a)
+        Tiene.objects.create(lista=lista, produccion=b)
+
+        respuesta = self.cliente.post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": a.id_tmdb, "tipo": "movie"},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "list_item_duplicated")
+        materializar.assert_not_called()
+
+    def test_vuelve_a_contar_si_otra_alta_la_lleno_mientras_tanto(self, materializar):
+        # Dos altas en paralelo con un lugar libre: las dos pasan el primer
+        # chequeo, y la otra termina mientras esta materializa.
+        lista = ListaFactory(usuario=self.usuario, nombre="Para ver")
+        a, b, c = self._producciones(3)
+        Tiene.objects.create(lista=lista, produccion=a)
+
+        def la_otra_alta_termina(*_):
+            Tiene.objects.create(lista=lista, produccion=b)
+            return c
+
+        materializar.side_effect = la_otra_alta_termina
+
+        respuesta = self.cliente.post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": c.id_tmdb, "tipo": "movie"},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "list_items_limit_reached")
+        self.assertEqual(lista.items.count(), 2)
 
     def test_vistas_no_tiene_techo(self, materializar):
         vistas = self.usuario.listas.get(nombre="Vistas")
