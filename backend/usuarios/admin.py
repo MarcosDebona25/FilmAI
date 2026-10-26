@@ -154,3 +154,72 @@ class UsuarioAdmin(BaseUserAdmin):
         return super().has_delete_permission(request, obj) and self._puede_actuar_sobre(
             request, obj
         )
+
+
+# --- Modelos de terceros: solo superusuarios (revisión de seguridad, 26/10/2026) ---
+#
+# Los límites de staff parcial de F5 cubren a `Usuario`, pero allauth, simplejwt y
+# `Group` vienen con su admin original:
+# - `SocialAccount` deja editar `user` y `uid`: con ese permiso, un staff vinculaba
+#   su propio Google a un superusuario y entraba como él.
+# - `OutstandingToken` muestra el refresh JWT entero: copiándolo se obtiene una
+#   sesión de cualquier usuario.
+# - `Group` permite armarse un grupo con todos los permisos.
+# Se importan sus admins primero, para que ya estén registrados (el orden de
+# carga sigue `INSTALLED_APPS`, y `usuarios` va antes que ellos).
+import allauth.account.admin  # noqa: E402
+import allauth.socialaccount.admin  # noqa: E402, F401
+import django.contrib.auth.admin  # noqa: E402, F401
+import rest_framework_simplejwt.token_blacklist.admin  # noqa: E402, F401
+from allauth.account.models import EmailAddress  # noqa: E402
+from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken  # noqa: E402
+from django.contrib.auth.models import Group  # noqa: E402
+from rest_framework_simplejwt.token_blacklist.models import (  # noqa: E402
+    BlacklistedToken,
+    OutstandingToken,
+)
+
+MODELOS_SOLO_SUPERUSUARIO = (
+    SocialAccount,
+    SocialApp,
+    SocialToken,
+    EmailAddress,
+    OutstandingToken,
+    BlacklistedToken,
+    Group,
+)
+
+
+def _solo_para_superusuarios(clase_admin):
+    """La misma clase de admin, visible y editable solo por superusuarios."""
+
+    class SoloSuperusuarios(clase_admin):
+        def has_module_permission(self, request):
+            return request.user.is_superuser
+
+        def has_view_permission(self, request, obj=None):
+            return request.user.is_superuser
+
+        def has_add_permission(self, request, *args, **kwargs):
+            return request.user.is_superuser and super().has_add_permission(
+                request, *args, **kwargs
+            )
+
+        def has_change_permission(self, request, obj=None):
+            return request.user.is_superuser and super().has_change_permission(
+                request, obj
+            )
+
+        def has_delete_permission(self, request, obj=None):
+            return request.user.is_superuser and super().has_delete_permission(
+                request, obj
+            )
+
+    SoloSuperusuarios.__name__ = f"SoloSuperusuarios{clase_admin.__name__}"
+    return SoloSuperusuarios
+
+
+for _modelo in MODELOS_SOLO_SUPERUSUARIO:
+    _original = type(admin.site._registry[_modelo])
+    admin.site.unregister(_modelo)
+    admin.site.register(_modelo, _solo_para_superusuarios(_original))

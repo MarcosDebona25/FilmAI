@@ -33,6 +33,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
@@ -105,6 +106,11 @@ class LoginView(BaseLoginView):
     re-seed o de que la cuenta fue eliminada).
     """
 
+    # Solo JSON: con formularios, otro sitio podía mandar un POST que no pide
+    # preflight de CORS y dejar al navegador logueado en la cuenta del
+    # atacante (login CSRF, revisión del 26/10/2026).
+    parser_classes: ClassVar[list] = [JSONParser]
+
     authentication_classes = (LenientJWTCookieAuthentication,)
     # Cuenta e IP: ver docs/decisiones.md (20/10/2026, auditoría F2).
     throttle_classes: ClassVar[list] = [LoginCuentaThrottle, LoginIPThrottle]
@@ -150,6 +156,11 @@ class RegisterView(BaseRegisterView):
     (URL que no montamos), rompiendo el registro.
     """
 
+    # Solo JSON: con formularios, otro sitio podía mandar un POST que no pide
+    # preflight de CORS y dejar al navegador logueado en la cuenta del
+    # atacante (login CSRF, revisión del 26/10/2026).
+    parser_classes: ClassVar[list] = [JSONParser]
+
     throttle_classes: ClassVar[list] = [RegistroCorreoThrottle, RegistroIPThrottle]
 
     def perform_create(self, serializer):
@@ -180,6 +191,14 @@ THROTTLES_REENVIO = [
 
 class GoogleLogin(SocialLoginView):
     """Login/registro con Google OAuth 2.0 (Google Identity Services)."""
+
+    # Solo JSON: con formularios, otro sitio podía mandar un POST que no pide
+    # preflight de CORS y dejar al navegador logueado en la cuenta del
+    # atacante (login CSRF, revisión del 26/10/2026).
+    parser_classes: ClassVar[list] = [JSONParser]
+    # Cada pedido verifica una firma y puede crear una cuenta: mismo límite por IP
+    # que el login (26/10/2026).
+    throttle_classes: ClassVar[list] = [LoginIPThrottle]
 
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
@@ -296,6 +315,11 @@ class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
     e informa cuántos intentos restantes le quedan al usuario.
     """
 
+    # Solo JSON: con formularios, otro sitio podía mandar un POST que no pide
+    # preflight de CORS y dejar al navegador logueado en la cuenta del
+    # atacante (login CSRF, revisión del 26/10/2026).
+    parser_classes: ClassVar[list] = [JSONParser]
+
     permission_classes: ClassVar[list] = [permissions.AllowAny]
     authentication_classes = (LenientJWTCookieAuthentication,)
     throttle_classes: ClassVar[list] = [EmailRateThrottle]
@@ -326,6 +350,11 @@ class RestablecerContrasenaView(APIView):
     contraseñas del CU-001. Enlace inválido o vencido →
     `400 {"codigo": "invalido"}`; contraseña inválida → errores de campo.
     """
+
+    # Solo JSON: con formularios, otro sitio podía mandar un POST que no pide
+    # preflight de CORS y dejar al navegador logueado en la cuenta del
+    # atacante (login CSRF, revisión del 26/10/2026).
+    parser_classes: ClassVar[list] = [JSONParser]
 
     permission_classes: ClassVar[list] = [permissions.AllowAny]
     authentication_classes = (LenientJWTCookieAuthentication,)

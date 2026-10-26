@@ -131,8 +131,32 @@ class PorCuentaThrottle(SimpleRateThrottle):
 
 
 class LoginCuentaThrottle(PorCuentaThrottle):
+    """Un solo contador por cuenta, se la nombre por correo o por usuario.
+
+    Con la identidad textual, la misma cuenta se probaba 10 veces por `email` y
+    otras 10 por `username` (revisión del 26/10/2026). Si el valor corresponde a
+    una cuenta, la clave es su `pk`; si no, el hash de siempre.
+    """
+
     scope = "login_cuenta"
     campos = ("email", "username")
+    _filtros = (("email", "correo__iexact"), ("username", "nombre_usuario__iexact"))
+
+    def get_cache_key(self, request, view):
+        from .models import Usuario
+
+        cuerpo = _cuerpo(request)
+        for campo, filtro in self._filtros:
+            valor = cuerpo.get(campo)
+            if isinstance(valor, str) and valor.strip():
+                pk = (
+                    Usuario.objects.filter(**{filtro: valor.strip()})
+                    .values_list("pk", flat=True)
+                    .first()
+                )
+                if pk is not None:
+                    return self.cache_format % {"scope": self.scope, "ident": f"u{pk}"}
+        return super().get_cache_key(request, view)
 
 
 class LoginIPThrottle(PorIPThrottle):

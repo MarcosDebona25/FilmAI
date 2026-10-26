@@ -309,7 +309,8 @@ LOGGING = {
         },
         "usuarios": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            # DEBUG solo en desarrollo (26/10/2026).
+            "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
     },
@@ -453,6 +454,10 @@ REST_AUTH = {
     "REGISTER_SERIALIZER": "usuarios.serializers.RegisterSerializer",
     "LOGIN_SERIALIZER": "usuarios.serializers.LoginSerializer",
     "USER_DETAILS_SERIALIZER": "usuarios.serializers.UsuarioDetallesSerializer",
+    # La API usa solo JWT: sin esto, cada login de la app abría además una sesión
+    # de Django, que vale para `/admin/` (revisión de seguridad, 26/10/2026). El
+    # admin y la documentación tienen su propio login.
+    "SESSION_LOGIN": False,
 }
 
 _JWT_ACCESS_MINUTES = (
