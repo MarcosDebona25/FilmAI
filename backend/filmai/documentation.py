@@ -293,6 +293,8 @@ def con_limite_de_intentos(vista):
             bloqueada = HttpResponse(
                 texto, status=429, content_type="text/plain; charset=utf-8"
             )
+            # Cota superior: la ventana corre desde el primer fallo, así que
+            # el bloqueo real puede terminar antes.
             bloqueada["Retry-After"] = str(VENTANA_SEGUNDOS)
             patch_cache_control(bloqueada, private=True, no_store=True)
             return bloqueada

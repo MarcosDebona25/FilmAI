@@ -72,6 +72,22 @@ class LimiteLoginAdminTests(TestCase):
         self.assertEqual(respuesta["Retry-After"], "3600")
         self.assertIn("no-store", respuesta["Cache-Control"])
 
+    def test_un_post_sin_token_csrf_no_cuenta(self):
+        # PR-Agent (#133) temía que un sitio ajeno agotara el contador de una IP
+        # con POST falsos. El middleware de CSRF los corta con 403 antes de
+        # llegar a la vista, así que no suman.
+        sin_csrf = Client(enforce_csrf_checks=True)
+        for _ in range(15):
+            respuesta = sin_csrf.post(
+                LOGIN_ADMIN,
+                {"username": self.staff.correo, "password": "incorrecta"},
+                REMOTE_ADDR="203.0.113.7",
+            )
+            self.assertEqual(respuesta.status_code, 403)
+
+        self.assertIsNone(cache.get("admin-login:203.0.113.7"))
+        self.assertEqual(self._intentar("Password123!").status_code, 302)
+
     def test_el_bloqueo_es_por_ip(self):
         for _ in range(10):
             self._intentar("incorrecta")
