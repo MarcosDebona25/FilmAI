@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { MessageCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAccount } from "@/components/AccountProvider";
@@ -15,7 +15,7 @@ import { ApiError } from "@/lib/api";
 import { normalizeTitles, type TmdbItem } from "@/lib/catalog";
 import { translateError } from "@/lib/errors";
 import { useFormats } from "@/lib/format";
-import { alternar, elegirHero, tipoDesdeUrl } from "@/lib/home";
+import { alternar, elegirHero, rutasDelHero, tipoDesdeUrl, type DatosDelHero } from "@/lib/home";
 import { routes } from "@/lib/routes";
 import { useCatalog, type Pedido } from "@/lib/use-catalog";
 
@@ -36,8 +36,12 @@ function mensaje(error: unknown) {
  * Home de descubrimiento (C-05). Cada fila pide sus datos por separado: si una
  * falla, se oculta y un único aviso lo cuenta; si fallan todas, hay un mensaje
  * con «Reintentar». El selector vive en la URL (`?type=movie|tv`).
+ *
+ * `inicial` trae lo que el Hero necesita, ya pedido por el servidor de Next
+ * (`app/home/page.tsx`): así el Hero llega en el HTML y no espera a que el
+ * navegador pida tendencias. Si es de otro idioma, o no vino, se pide acá.
  */
-export function HomeView() {
+export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
   const t = useTranslations("home");
   const tc = useTranslations("common");
   const tn = useTranslations("nav.account");
@@ -53,11 +57,25 @@ export function HomeView() {
   const [intento, setIntento] = useState(0);
   const anio = new Date().getFullYear();
   const invitacionId = useId();
+  const locale = useLocale();
+  const delServidor = <T,>(path: string | null) =>
+    path !== null && inicial?.idioma === locale
+      ? (inicial.datos[path] as T | undefined)
+      : undefined;
 
-  const tendenciasAll = useCatalog<Lista>("/api/catalogo/trending/?media_type=all", intento);
+  const rutaTendenciasAll = rutasDelHero.tendencias("all");
+  const rutaTendenciasTipo = tipo === "all" ? null : rutasDelHero.tendencias(tipo);
+  const tendenciasAll = useCatalog<Lista>(
+    rutaTendenciasAll,
+    intento,
+    true,
+    delServidor<Lista>(rutaTendenciasAll)
+  );
   const tendenciasTipo = useCatalog<Lista>(
-    tipo === "all" ? null : `/api/catalogo/trending/?media_type=${tipo}`,
-    intento
+    rutaTendenciasTipo,
+    intento,
+    true,
+    delServidor<Lista>(rutaTendenciasTipo)
   );
   const enCines = useCatalog<Lista>(tipo === "tv" ? null : "/api/catalogo/now-playing/", intento);
   const seriesDelAnio = useCatalog<Lista>(
@@ -71,8 +89,18 @@ export function HomeView() {
     intento,
     false
   );
-  const generosPeliculas = useCatalog<Generos>("/api/catalogo/genres/?tipo=movie", intento);
-  const generosSeries = useCatalog<Generos>("/api/catalogo/genres/?tipo=tv", intento);
+  const generosPeliculas = useCatalog<Generos>(
+    rutasDelHero.generos("movie"),
+    intento,
+    true,
+    delServidor<Generos>(rutasDelHero.generos("movie"))
+  );
+  const generosSeries = useCatalog<Generos>(
+    rutasDelHero.generos("tv"),
+    intento,
+    true,
+    delServidor<Generos>(rutasDelHero.generos("tv"))
+  );
 
   const tendencias = tipo === "all" ? tendenciasAll : tendenciasTipo;
   const titulosTendencia = normalizeTitles(
