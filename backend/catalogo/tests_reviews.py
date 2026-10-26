@@ -27,6 +27,7 @@ from catalogo.tests import _ParchesDeMaterializacion
 from listas.factories import ListaFactory
 from listas.models import Tiene
 from usuarios.factories import UsuarioFactory
+from usuarios.models import EstadoCuenta
 
 _RESENA = "Ridley Scott construye un futuro húmedo y usado."
 
@@ -834,6 +835,29 @@ class ResenasDeLaComunidadTests(_BaseLectura):
         self.assertEqual(fila["valor"], 10)
         self.assertEqual(fila["texto"], "Un clásico.")
         self.assertIn("fecha", fila)
+
+    def test_la_resena_de_una_cuenta_dada_de_baja_sale_anonima(self):
+        # Decisión del 26/10/2026: el contenido queda, la identidad no. El dato
+        # no sale de la API: no depende de que el frontend lo oculte.
+        ido = UsuarioFactory(nombre_usuario="seFue", avatar_id=5)
+        ido.estado = EstadoCuenta.BAJA
+        ido.save(update_fields=["estado"])
+        self._resena(usuario=ido, valor=9, texto="Gran película.")
+        activo = UsuarioFactory(nombre_usuario="marcos", avatar_id=7)
+        self._resena(usuario=activo, valor=6)
+
+        respuesta = self.cliente.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        filas = {fila["texto"]: fila for fila in respuesta.data["results"]}
+        anonima = filas["Gran película."]
+        self.assertIsNone(anonima["nombre_usuario"])
+        self.assertIsNone(anonima["avatar_id"])
+        self.assertTrue(anonima["autor_dado_de_baja"])
+        self.assertEqual(anonima["valor"], 9)
+        self.assertNotIn("seFue", str(respuesta.content))
+        normal = filas[_RESENA]
+        self.assertEqual(normal["nombre_usuario"], "marcos")
+        self.assertFalse(normal["autor_dado_de_baja"])
 
     def test_informa_el_total_para_el_encabezado(self):
         # El encabezado dice «Reseñas de la comunidad (N)», y la paginación por

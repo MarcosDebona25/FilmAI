@@ -261,7 +261,8 @@ declare const messages: {
       "communityCount": "De la comunidad ({count})",
       "displayedCount": "Mostrando {shownCount} de {totalCount}",
       "loadMore": "Cargar más reseñas",
-      "empty": "Todavía no hay reseñas. Escribí la primera."
+      "empty": "Todavía no hay reseñas. Escribí la primera.",
+      "deletedAuthor": "Usuario dado de baja"
     },
     "review": {
       "placeholder": "¿Qué te pareció?",

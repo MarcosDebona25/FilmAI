@@ -261,7 +261,8 @@ declare const messages: {
       "communityCount": "From the community ({count})",
       "displayedCount": "Showing {shownCount} of {totalCount}",
       "loadMore": "Load more reviews",
-      "empty": "No reviews yet. Be the first to write one."
+      "empty": "No reviews yet. Be the first to write one.",
+      "deletedAuthor": "Deleted account"
     },
     "review": {
       "placeholder": "What did you think?",
