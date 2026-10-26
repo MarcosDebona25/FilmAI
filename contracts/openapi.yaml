@@ -95,9 +95,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-  /api/auth/login/:
+  /api/auth/login:
     post:
       operationId: auth_login_create
+      description: |-
+        Login que usa ``LenientJWTCookieAuthentication``.
+
+        Evita 401 cuando el browser manda una cookie JWT vieja (p.ej. después de
+        re-seed o de que la cuenta fue eliminada).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create_2
       description: |-
         Login que usa ``LenientJWTCookieAuthentication``.
 
@@ -249,7 +292,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-  /api/auth/password/reset/:
+  /api/auth/password/reset:
     post:
       operationId: auth_password_reset_create
       description: |-
@@ -277,9 +320,65 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-  /api/auth/password/reset/confirm/:
+  /api/auth/password/reset/:
+    post:
+      operationId: auth_password_reset_create_2
+      description: |-
+        POST `/api/auth/password/reset/` — solicitud de restablecimiento.
+
+        CU-020: responde siempre con el mismo mensaje genérico, exista o no el
+        correo. Aplica rate limit de 5 solicitudes por día por email (no por IP),
+        e informa cuántos intentos restantes le quedan al usuario.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/auth/password/reset/confirm:
     post:
       operationId: auth_password_reset_confirm_create
+      description: |-
+        POST `/api/auth/password/reset/confirm/` — nueva contraseña.
+
+        Valida el enlace firmado (`uid`/`token`, válido 1 hora) y la política de
+        contraseñas del CU-001. Enlace inválido o vencido →
+        `400 {"codigo": "invalido"}`; contraseña inválida → errores de campo.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/auth/password/reset/confirm/:
+    post:
+      operationId: auth_password_reset_confirm_create_2
       description: |-
         POST `/api/auth/password/reset/confirm/` — nueva contraseña.
 
