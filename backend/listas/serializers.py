@@ -10,7 +10,7 @@ from filmai.errores.base import ExcepcionAPI
 from filmai.errores.serializadores import FronteraErroresMixin
 
 from .identidades import es_nombre_reservado
-from .models import Lista
+from .models import MAX_LISTAS_PERSONALIZADAS, Lista
 
 _MAX_NOMBRE = 80
 
@@ -80,8 +80,11 @@ class OrdenListasSerializer(FronteraErroresMixin, serializers.Serializer):
     un 400 porque no hay forma de saber cuál de las dos posiciones se quiso.
     """
 
+    # No puede haber más ids que listas personalizadas posibles.
     ids = serializers.ListField(
-        child=serializers.IntegerField(min_value=1), allow_empty=True
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=True,
+        max_length=MAX_LISTAS_PERSONALIZADAS,
     )
 
     def validate_ids(self, value):

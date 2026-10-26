@@ -176,6 +176,24 @@
       },
       "params": {}
     },
+    "list_items_limit_reached": {
+      "category": "error",
+      "contexts": {
+        "listas": 409
+      },
+      "params": {
+        "maxItems": "number"
+      }
+    },
+    "list_limit_reached": {
+      "category": "error",
+      "contexts": {
+        "listas": 409
+      },
+      "params": {
+        "maxLists": "number"
+      }
+    },
     "list_name_duplicated": {
       "category": "error",
       "contexts": {

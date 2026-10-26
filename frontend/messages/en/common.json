@@ -667,6 +667,8 @@
       "already_confirmed": "This link can no longer be used to confirm the account.",
       "list_name_duplicated": "You already have a list with that name.",
       "list_item_duplicated": "This movie or TV show is already in the list.",
+      "list_limit_reached": "You reached the maximum of {maxLists, number} lists. Delete one to create another.",
+      "list_items_limit_reached": "This list reached the maximum of {maxItems, number} titles.",
       "default_list_protected": "Default lists can’t be renamed or deleted.",
       "rating_blocks_removal_from_watched": "To remove it from Watched, first delete your rating.",
       "rating_duplicated": "You’ve already rated this movie or TV show.",

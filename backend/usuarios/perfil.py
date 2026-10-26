@@ -17,6 +17,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from filmai.errores.serializadores import FronteraErroresMixin
 from filmai.errores.sobre import agregar_codigo_exito
 from filmai.errores.validacion import ErrorValidacion
+from filmai.throttles import EscrituraThrottle
 
 from .avatares import AVATARES
 from .exceptions import NombreUsuarioOcupado
@@ -40,6 +41,8 @@ def cerrar_sesion(request, mensaje, codigo):
 
 
 class PerfilView(GenericAPIView):
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
     serializer_class = UsuarioPerfilSerializer
     permission_classes: ClassVar[list] = [permissions.IsAuthenticated]
 
