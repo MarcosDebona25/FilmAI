@@ -199,6 +199,8 @@ REST_FRAMEWORK = {
         # cuentas). Los límites por IP asumen una IP real: ver NUM_PROXIES.
         "login_cuenta": "10/min",
         "login_ip": "30/min",
+        # Google, con la misma tasa pero contador propio (26/10/2026).
+        "google_ip": "30/min",
         # Registro y reenvío disparan correos (cuota de Resend y reputación del
         # dominio): tope por correo destino y por IP, más un enfriamiento.
         "registro_correo": "5/hour",

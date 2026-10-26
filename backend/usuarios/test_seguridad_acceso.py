@@ -162,3 +162,40 @@ class GoogleCorreoVerificadoTests(TestCase):
 
         self.assertIn(respuesta.status_code, (200, 201), respuesta.content)
         self.assertTrue(Usuario.objects.filter(correo="nueva@example.com").exists())
+
+
+class GoogleContadorPropioTests(TestCase):
+    """Google y el login con contraseña no comparten el contador por IP."""
+
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    def test_agotar_el_login_no_bloquea_google(self):
+        from rest_framework.throttling import SimpleRateThrottle
+
+        usuario = UsuarioFactory()
+        with patch.dict(SimpleRateThrottle.THROTTLE_RATES, {"login_ip": "2/min"}):
+            cliente = Client()
+            estados = [
+                cliente.post(
+                    "/api/auth/login/",
+                    {"email": usuario.correo, "password": "mala"},
+                    content_type="application/json",
+                ).status_code
+                for _ in range(3)
+            ]
+            with patch(
+                "allauth.socialaccount.providers.google.views._verify_and_decode",
+                return_value={
+                    "sub": "x",
+                    "email": "g@example.com",
+                    "email_verified": True,
+                },
+            ):
+                google = cliente.post(
+                    "/api/auth/google/", PAYLOAD_GOOGLE, content_type="application/json"
+                )
+
+        self.assertEqual(estados[2], 429)
+        self.assertNotEqual(google.status_code, 429)

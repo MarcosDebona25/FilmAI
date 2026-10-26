@@ -54,6 +54,7 @@ from .serializers import (
 from .throttles import (
     EmailRateThrottle,
     EmailThrottleStatusMixin,
+    GoogleIPThrottle,
     LoginCuentaThrottle,
     LoginIPThrottle,
     ReenvioCorreoThrottle,
@@ -198,7 +199,7 @@ class GoogleLogin(SocialLoginView):
     parser_classes: ClassVar[list] = [JSONParser]
     # Cada pedido verifica una firma y puede crear una cuenta: mismo límite por IP
     # que el login (26/10/2026).
-    throttle_classes: ClassVar[list] = [LoginIPThrottle]
+    throttle_classes: ClassVar[list] = [GoogleIPThrottle]
 
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client

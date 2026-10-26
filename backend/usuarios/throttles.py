@@ -163,6 +163,14 @@ class LoginIPThrottle(PorIPThrottle):
     scope = "login_ip"
 
 
+class GoogleIPThrottle(PorIPThrottle):
+    """La misma tasa que el login, con contador propio (sugerencia de PR-Agent en
+    #136): compartido, una ráfaga de logins con contraseña bloqueaba Google en esa
+    IP, y al revés."""
+
+    scope = "google_ip"
+
+
 class RegistroCorreoThrottle(PorCuentaThrottle):
     scope = "registro_correo"
     campos = ("correo", "email")
