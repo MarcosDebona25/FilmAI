@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Límite de intentos en `/admin/login/` y cómo se cumple el cifrado del correo
+
+- **Fecha**: 26/10/2026
+- **Descripción**: dos hallazgos de la revisión de seguridad del 24/10/2026, decididos por el usuario.
+  - **`/admin/login/` sin límite**: Django no limita ese formulario. `con_limite_de_intentos` (`filmai/documentation.py`) envuelve `admin.site.login` con el mismo bloqueo que el login de la documentación: 10 fallos por IP bloquean 60 minutos con 429 (Too Many Requests). Un POST que vuelve a mostrar el formulario (200) cuenta como fallo; uno que redirige (302), como ingreso, y reinicia el contador. Se monta en `admin/login/` antes de `admin.site.urls`.
+  - **IP de los dos bloqueos**: pasan a usar `BaseThrottle().get_ident()`, que respeta `NUM_PROXIES`, en lugar de `REMOTE_ADDR`. Detrás de un proxy, 10 fallos de cualquiera bloqueaban a todo el staff.
+  - **Correo «cifrado»**: el CU-001 decía «El correo se almacena cifrado» y el código lo guarda en texto plano. Se decidió **no** cifrarlo como columna: el login, la unicidad y los límites de intentos lo buscan por valor, y cifrarlo exige una columna de hash aparte y manejo de claves. RNF #2 pide cifrado en reposo «a nivel de base de datos» y RNF #12 incluye los correos: los dos se cumplen con el cifrado en reposo de la base entera, que es una tarea del **despliegue** (en desarrollo no lo hay). Se corrigió el texto del CU-001.
+- **Decisión del usuario**: el admin además no debería quedar expuesto en internet; restringirlo (proxy o lista de IPs) queda para el despliegue, y el límite es la defensa mientras tanto.
+- **Archivos afectados**: `backend/filmai/documentation.py`, `backend/filmai/urls.py`, `backend/filmai/test_seguridad_admin_login.py` (nuevo), `docs/02_Especificación de Requerimientos.md`.
+
+---
+
 ## 26/10/2026 — Rutas de acceso sin barra final esquivaban los límites de F2 (F11)
 
 - **Fecha**: 26/10/2026
