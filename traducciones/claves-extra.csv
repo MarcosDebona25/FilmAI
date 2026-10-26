@@ -24,6 +24,8 @@ errors.codes.link_invalid,link_invalid,error,,Este enlace no es válido o venci�
 errors.codes.already_confirmed,already_confirmed,error,,Este enlace ya no puede usarse para confirmar la cuenta.,This link can no longer be used to confirm the account.,aprobado
 errors.codes.list_name_duplicated,list_name_duplicated,error,,Ya tenés una lista con ese nombre.,You already have a list with that name.,aprobado
 errors.codes.list_item_duplicated,list_item_duplicated,error,,Esta película o serie ya está en la lista.,This movie or TV show is already in the list.,aprobado
+errors.codes.list_limit_reached,list_limit_reached,error,maxLists,"Llegaste al máximo de {maxLists, number} listas. Eliminá alguna para crear otra.","You reached the maximum of {maxLists, number} lists. Delete one to create another.",aprobado
+errors.codes.list_items_limit_reached,list_items_limit_reached,error,maxItems,"Esta lista llegó al máximo de {maxItems, number} títulos.","This list reached the maximum of {maxItems, number} titles.",aprobado
 errors.codes.default_list_protected,default_list_protected,error,,Las listas predeterminadas no se pueden renombrar ni eliminar.,Default lists can’t be renamed or deleted.,aprobado
 errors.codes.rating_blocks_removal_from_watched,rating_blocks_removal_from_watched,error,,"Para quitarla de Vistas, primero eliminá tu calificación.","To remove it from Watched, first delete your rating.",aprobado
 errors.codes.rating_duplicated,rating_duplicated,error,,Ya calificaste esta película o serie.,You’ve already rated this movie or TV show.,aprobado

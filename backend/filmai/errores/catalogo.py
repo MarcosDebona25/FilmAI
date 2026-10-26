@@ -117,6 +117,17 @@ CATALOGO = {
     "list_item_duplicated": DefinicionCodigo(
         "La producción ya pertenece a esta lista.", {"listas": 409}
     ),
+    # Techos de cantidad (decisión del 26/10/2026, revisión de seguridad).
+    "list_limit_reached": DefinicionCodigo(
+        "Llegaste al máximo de listas personalizadas.",
+        {"listas": 409},
+        {"maxLists": "number"},
+    ),
+    "list_items_limit_reached": DefinicionCodigo(
+        "La lista llegó al máximo de títulos.",
+        {"listas": 409},
+        {"maxItems": "number"},
+    ),
     "default_list_protected": DefinicionCodigo(
         "Las listas predeterminadas no se pueden modificar ni eliminar.",
         {"listas": 409},

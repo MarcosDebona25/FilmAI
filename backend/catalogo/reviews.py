@@ -25,6 +25,8 @@ no rige: se puede marcar como vista sin calificar. Las escrituras en `Tiene`
 pasan por `listas/services.py`, porque la tabla es de ese módulo.
 """
 
+from typing import ClassVar
+
 from django.db import IntegrityError, transaction
 from django.db.models import BigIntegerField, Exists, ExpressionWrapper, F, OuterRef, Q
 from django.db.models.functions import Cast
@@ -50,6 +52,7 @@ from catalogo.serializers_reviews import (
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.materialization import materializar
 from filmai.idioma import idioma_efectivo
+from filmai.throttles import EscrituraThrottle
 from listas.services import agregar_a_vistas, quitar_de_vistas
 
 
@@ -110,6 +113,9 @@ def _filtrar_nota(qs, datos, campo):
 
 class CalificacionesView(APIView):
     """Reseñas de la comunidad sobre una producción, y alta de la propia."""
+
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     pagination_class = ResenaCursorPagination
 
@@ -199,6 +205,9 @@ class CalificacionesView(APIView):
 class CalificacionDetailView(APIView):
     """Actualiza o elimina una calificación propia."""
 
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
+
     def put(self, request, calificacion_id):
         calificacion = _calificacion_propia(request, calificacion_id)
         entrada = ActualizarCalificacionSerializer(data=request.data)
@@ -241,6 +250,9 @@ class CalificacionDetailView(APIView):
 
 class ResenaTextoView(APIView):
     """Borra el texto de una calificación propia, conservando la nota."""
+
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     def delete(self, request, calificacion_id):
         calificacion = _calificacion_propia(request, calificacion_id)

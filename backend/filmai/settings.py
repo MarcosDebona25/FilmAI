@@ -192,6 +192,8 @@ REST_FRAMEWORK = {
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
+        # Escrituras de reseñas, listas y perfil, por usuario (26/10/2026).
+        "escritura": "60/min",
         # Login: 10 intentos por minuto por cuenta (frena el adivinado de
         # contraseñas desde cualquier IP) y 30 por IP (frena probar muchas
         # cuentas). Los límites por IP asumen una IP real: ver NUM_PROXIES.

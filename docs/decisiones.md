@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Topes de escritura: tasa común por usuario y techos de cantidad
+
+- **Fecha**: 26/10/2026
+- **Descripción**: hallazgo de la revisión de seguridad del 24/10/2026: las escrituras autenticadas no tenían límite. El usuario eligió, entre cuatro opciones (tasa común, tasa más techos, tasa por acción, nada), **tasa común más techos**:
+  - `EscrituraThrottle` (`filmai/throttles.py`, scope `escritura`, 60 por minuto por usuario) en reseñas (alta, edición, borrados), listas (alta, renombre, borrado, ítems, reordenar) y perfil. Las lecturas no cuentan y el contador lo comparten todos esos endpoints. Pasado el límite: 429 (Too Many Requests) con `throttled`.
+  - Techo de **100 listas personalizadas** por usuario (`list_limit_reached`, con `maxLists`) y de **1000 ítems por lista personalizada** (`list_items_limit_reached`, con `maxItems`), los dos 409 (Conflict) y en `listas/models.py`. El de ítems corta antes de materializar: no gasta llamadas a TMDB.
+  - `PUT /api/lists/order/` rechaza más de 100 ids (`max_length`) y arma el conjunto de ids una sola vez (antes era cuadrático).
+- **Decisiones**:
+  - El techo de ítems **no** rige en las predeterminadas (Favoritos, Pendientes, Vistas): calificar agrega a «Vistas» (regla del 30/09/2026), y con un techo calificar dejaría de funcionar a los 1000 títulos. La tasa común igual frena el abuso.
+  - El conteo de listas se hace antes de crear y no con un bloqueo: dos altas simultáneas pueden pasar el techo por una. Se aceptó.
+  - Los dos códigos son nuevos: `contracts/error-codes.json`, `contracts/openapi.yaml` (enumeración de códigos), `traducciones/claves-extra.csv` y `messages/` (con sus `.d.json.ts`) se regeneraron.
+- **Archivos afectados**: `backend/filmai/throttles.py` (nuevo), `backend/filmai/settings.py`, `backend/filmai/errores/catalogo.py`, `backend/listas/models.py`, `backend/listas/views.py`, `backend/listas/serializers.py`, `backend/catalogo/reviews.py`, `backend/usuarios/perfil.py`, `backend/listas/test_topes.py` (nuevo), `contracts/`, `traducciones/claves-extra.csv`, `frontend/messages/`, `openspec/specs/list-endpoints/spec.md`.
+
+---
+
 ## 26/10/2026 — Las reseñas de cuentas dadas de baja se muestran anónimas
 
 - **Fecha**: 26/10/2026

@@ -17,6 +17,13 @@ lo que impide que una misma producción se repita dentro de una lista.
 from django.db import models
 from django.db.models.functions import Lower
 
+# Techos de cantidad (decisión del 26/10/2026): sin ellos, una cuenta podía crear
+# listas e ítems sin límite y reordenar tenía costo cuadrático. El de ítems rige
+# solo en las personalizadas: «Vistas» crece sola al calificar (regla del
+# 30/09/2026) y con un techo calificar dejaría de funcionar.
+MAX_LISTAS_PERSONALIZADAS = 100
+MAX_ITEMS_POR_LISTA = 1000
+
 
 class TipoLista(models.TextChoices):
     """Tipo de lista (doc 03: 'Predeterminada' | 'Personalizada')."""
