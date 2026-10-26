@@ -299,9 +299,12 @@ export function ReviewsSection({
               </span>
             </div>
           ))}
-        {pagina?.results.map((resena) => (
+        {pagina?.results.map((resena, indice) => (
           <article
-            key={`${resena.nombre_usuario ?? "baja"}-${resena.fecha}-${resena.texto.slice(0, 20)}`}
+            // La posición y no un id: la API no manda el id de reseñas ajenas a
+            // propósito, y esta lista solo crece agregando páginas al final. Con
+            // el nombre, dos reseñas anónimas del mismo día chocaban.
+            key={`${indice}-${resena.fecha}`}
             className="grid grid-cols-[40px_minmax(0,1fr)] gap-4 border-t border-line py-[22px]"
           >
             {resena.avatar_id !== null && avatar(resena.avatar_id) ? (
