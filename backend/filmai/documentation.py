@@ -6,13 +6,14 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.core.cache import cache
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.cache import patch_cache_control, patch_vary_headers
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
+from rest_framework.throttling import BaseThrottle
 
 from usuarios.models import Usuario
 
@@ -112,7 +113,16 @@ TEXTOS = {
 
 
 def _ip(request):
-    return request.META.get("REMOTE_ADDR", "")
+    # La misma identidad que los throttles de DRF: respeta `NUM_PROXIES`. Con
+    # `REMOTE_ADDR` a secas, detrás de un proxy todos compartían su IP y 10
+    # fallos de cualquiera bloqueaban a todo el staff (revisión del 24/10/2026).
+    return BaseThrottle().get_ident(request)
+
+
+def _contar_intento(clave):
+    """Suma un intento y devuelve el total, de forma atómica."""
+    cache.add(clave, 0, VENTANA_SEGUNDOS)
+    return cache.incr(clave)
 
 
 def _clave_intentos(request):
@@ -219,7 +229,9 @@ def ingresar_a_documentacion(request):
     """
     destino = _destino_seguro(request, request.POST.get("next", ""))
     clave = _clave_intentos(request)
-    if cache.get(clave, 0) >= INTENTOS_MAXIMOS:
+    # Contar antes de autenticar, como en el admin: ver `con_limite_de_intentos`.
+    intentos = _contar_intento(clave)
+    if intentos > INTENTOS_MAXIMOS:
         respuesta = _respuesta_acceso(
             request,
             estado="iniciar_sesion",
@@ -244,13 +256,11 @@ def ingresar_a_documentacion(request):
             if candidato is None:
                 # Iguala el costo de hashear para no revelar si la cuenta existe.
                 Usuario().set_password(password)
-            cache.add(clave, 0, VENTANA_SEGUNDOS)
-            fallidos = cache.incr(clave)
             respuesta = _respuesta_acceso(
                 request,
                 estado="iniciar_sesion",
                 error="invalid_credentials",
-                restantes=max(INTENTOS_MAXIMOS - fallidos, 0),
+                restantes=max(INTENTOS_MAXIMOS - intentos, 0),
                 ruta=destino,
                 status=403,
             )
@@ -258,3 +268,37 @@ def ingresar_a_documentacion(request):
     patch_cache_control(respuesta, private=True, no_store=True)
     patch_vary_headers(respuesta, ("Accept-Language", "Cookie"))
     return respuesta
+
+
+def con_limite_de_intentos(vista):
+    """El mismo bloqueo por IP, para el login de Django Admin.
+
+    Django no limita ese formulario (revisión de seguridad del 24/10/2026). La
+    vista original decide si las credenciales sirven: un POST que vuelve a
+    mostrar el formulario (200) es un fallo; uno que redirige (302), un ingreso.
+    Mostrar el formulario no cuenta.
+    """
+
+    @wraps(vista)
+    def limitada(request, *args, **kwargs):
+        if request.method != "POST":
+            return vista(request, *args, **kwargs)
+        clave = f"admin-login:{_ip(request)}"
+        # Se cuenta ANTES de probar la contraseña: `incr` es atómico, así que de
+        # una ráfaga en paralelo solo las primeras 10 llegan a autenticar.
+        # Consultar primero y contar después dejaba pasar a todas (revisión del
+        # 26/10/2026). Un ingreso borra el contador.
+        if _contar_intento(clave) > INTENTOS_MAXIMOS:
+            texto = TEXTOS[idioma_efectivo(request)]["too_many_attempts"]
+            bloqueada = HttpResponse(
+                texto, status=429, content_type="text/plain; charset=utf-8"
+            )
+            bloqueada["Retry-After"] = str(VENTANA_SEGUNDOS)
+            patch_cache_control(bloqueada, private=True, no_store=True)
+            return bloqueada
+        respuesta = vista(request, *args, **kwargs)
+        if respuesta.status_code == 302:
+            cache.delete(clave)
+        return respuesta
+
+    return limitada
