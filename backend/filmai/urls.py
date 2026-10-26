@@ -15,6 +15,7 @@ from catalogo.reviews import (
     ResenaTextoView,
 )
 from filmai.documentation import (
+    con_limite_de_intentos,
     documentacion_para_staff,
     ingresar_a_documentacion,
 )
@@ -38,6 +39,13 @@ handler404 = "filmai.views.custom_404"
 handler500 = "filmai.views.custom_500"
 
 urlpatterns = [
+    # Antes que `admin.site.urls`, así `/admin/login/` pasa por el bloqueo de
+    # intentos (revisión de seguridad del 24/10/2026).
+    path(
+        "admin/login/",
+        con_limite_de_intentos(admin.site.login),
+        name="admin_login_limitado",
+    ),
     path("admin/", admin.site.urls),
     path(
         "api/schema/",
