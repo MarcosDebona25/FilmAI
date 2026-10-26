@@ -5,6 +5,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Las reseñas de cuentas dadas de baja se muestran anónimas
+
+- **Fecha**: 26/10/2026
+- **Descripción**: hallazgo de la revisión de seguridad del 24/10/2026. Las reseñas de una cuenta dada de baja seguían públicas con su nombre de usuario y su avatar. El usuario eligió **anonimizarlas** entre tres opciones (dejarlas, anonimizarlas, ocultarlas): el contenido queda y la identidad no. `ResenaComunidadSerializer` devuelve `nombre_usuario` y `avatar_id` en `null` y `autor_dado_de_baja: true` cuando `estado = baja`. La ficha muestra «Usuario dado de baja» (clave `title.reviews.deletedAuthor`) con el avatar genérico.
+- **Decisiones**:
+  - La identidad no sale de la API: no depende de que el frontend la oculte.
+  - Se descartó ocultarlas porque se pierde contenido y cambian los conteos de golpe, y dejarlas porque choca con el derecho a la supresión de la Ley 25.326. CU-007 dice que los datos se conservan: se siguen conservando, solo cambia lo que se muestra.
+  - El estado viaja en la fila del usuario, que ya se trae con `select_related`: no suma consultas (`filmai/test_consultas.py`).
+  - `messages/*/common.d.json.ts` (los tipos que genera el plugin de next-intl) se regeneró con el mismo formato: sin correr `next dev` o `next build` quedaba sin la clave nueva y `tsc` fallaba.
+- **Archivos afectados**: `backend/catalogo/serializers_reviews.py`, `backend/catalogo/tests_reviews.py`, `backend/filmai/tests_estado_cuenta.py` (el test de caracterización pasa a exigir el anonimato), `frontend/components/features/title/ReviewsSection.tsx`, `frontend/tests/reviews-section.test.tsx`, `traducciones/claves-extra.csv`, `frontend/messages/`, `openspec/specs/reviews-api/spec.md`.
+
+---
+
 ## 26/10/2026 — Límite de intentos en `/admin/login/` y cómo se cumple el cifrado del correo
 
 - **Fecha**: 26/10/2026

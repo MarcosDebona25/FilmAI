@@ -9,12 +9,23 @@ const COMUNIDAD = [
   { nombre_usuario: "lucia.cine", avatar_id: 3, valor: 10, fecha: "2026-09-28", texto: LARGA },
   { nombre_usuario: "mfernandez", avatar_id: 5, valor: 8, fecha: "2026-09-21", texto: "Great." },
   { nombre_usuario: "nico", avatar_id: 7, valor: 4, fecha: "2026-09-10", texto: "Too long." },
-];
+].map((resena) => ({ ...resena, autor_dado_de_baja: false }));
+/** Así llega la reseña de una cuenta dada de baja (decisión del 26/10/2026). */
+const DE_BAJA = {
+  nombre_usuario: null,
+  avatar_id: null,
+  autor_dado_de_baja: true,
+  valor: 9,
+  fecha: "2026-09-30",
+  texto: "Still my favourite.",
+};
 
 const estado = vi.hoisted(() => ({
   perfil: null as null | Record<string, unknown>,
   llamadas: [] as string[],
   vacia: false,
+  /** La primera reseña es de una cuenta dada de baja. */
+  conBaja: false,
   /** Cuántos pedidos de la lista fallan antes de responder bien. */
   fallas: 0,
 }));
@@ -37,12 +48,15 @@ vi.mock("@/lib/api", async (importOriginal) => {
       const query = new URL(path, "http://filmai.local").searchParams;
       if (estado.vacia)
         return { total: 0, total_comunidad: 0, next: null, previous: null, results: [] };
-      let items = [...COMUNIDAD];
+      let items: Record<string, unknown>[] = estado.conBaja
+        ? [DE_BAJA, ...COMUNIDAD]
+        : [...COMUNIDAD];
       if (query.get("nota_min"))
-        items = items.filter((r) => r.valor >= Number(query.get("nota_min")));
+        items = items.filter((r) => Number(r.valor) >= Number(query.get("nota_min")));
       if (query.get("nota_max"))
-        items = items.filter((r) => r.valor <= Number(query.get("nota_max")));
-      if (query.get("orden") === "nota-asc") items.sort((a, b) => a.valor - b.valor);
+        items = items.filter((r) => Number(r.valor) <= Number(query.get("nota_max")));
+      if (query.get("orden") === "nota-asc")
+        items.sort((a, b) => Number(a.valor) - Number(b.valor));
       // Primera página de 2 y un cursor para la segunda, como el backend.
       const cursor = query.get("cursor");
       const pagina = cursor ? items.slice(2) : items.slice(0, 2);
@@ -70,6 +84,7 @@ beforeEach(() => {
   estado.perfil = null;
   estado.llamadas = [];
   estado.vacia = false;
+  estado.conBaja = false;
   estado.fallas = 0;
 });
 afterEach(() => {
@@ -201,5 +216,19 @@ describe("tu reseña", () => {
 
     await screen.findByText("@lucia.cine");
     expect(screen.queryByRole("article", { name: "Your review" })).toBeNull();
+  });
+});
+
+describe("reseñas de cuentas dadas de baja (26/10/2026)", () => {
+  it("se muestran sin identidad, con «Usuario dado de baja»", async () => {
+    estado.conBaja = true;
+    render(<ReviewsSection {...props} />, { locale: "es" });
+
+    const texto = await screen.findByText("Still my favourite.");
+    const tarjeta = texto.closest("article") as HTMLElement;
+    expect(within(tarjeta).getByText("Usuario dado de baja")).toBeInTheDocument();
+    expect(within(tarjeta).queryByText(/^@/)).toBeNull();
+    // Las demás siguen con su nombre.
+    expect(screen.getByText("@lucia.cine")).toBeInTheDocument();
   });
 });

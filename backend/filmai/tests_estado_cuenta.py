@@ -52,7 +52,11 @@ class EstadoCuentaCaracterizacionTests(TestCase):
                     self.assertNotIn(mensaje, str(respuesta.json()))
 
     def test_resena_y_calificacion_siguen_publicas_tras_baja(self):
-        """La baja real conserva datos y la comunidad aún ve texto, nota y autor."""
+        """La baja conserva los datos: la comunidad ve texto y nota, sin el autor.
+
+        Hasta el 26/10/2026 también se veía el nombre de usuario; desde entonces
+        la reseña sale anónima (decisión registrada en docs/decisiones.md).
+        """
         resena = ResenaFactory(texto="Reseña pública de referencia")
         usuario = resena.calificacion.usuario
         produccion = resena.calificacion.produccion
@@ -74,4 +78,5 @@ class EstadoCuentaCaracterizacionTests(TestCase):
         publicado = respuesta.json()["results"][0]
         self.assertEqual(publicado["texto"], resena.texto)
         self.assertEqual(publicado["valor"], resena.calificacion.valor)
-        self.assertEqual(publicado["nombre_usuario"], usuario.nombre_usuario)
+        self.assertIsNone(publicado["nombre_usuario"])
+        self.assertTrue(publicado["autor_dado_de_baja"])
