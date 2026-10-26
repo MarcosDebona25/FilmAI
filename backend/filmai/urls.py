@@ -127,6 +127,21 @@ urlpatterns = [
         name="rest_password_reset_confirm",
     ),
     path("api/auth/login/", LoginView.as_view(), name="rest_login"),
+    # Las mismas tres sin barra final. `dj_rest_auth.urls` las registra con `/?`,
+    # y sin estas líneas un POST sin barra llegaba a la vista original, sin los
+    # límites de F2 (login) ni la respuesta genérica (reset). Igual que
+    # `password/change` y `token/refresh` más arriba (auditoría 24/10/2026).
+    path("api/auth/login", LoginView.as_view(), name="rest_login_no_slash"),
+    path(
+        "api/auth/password/reset",
+        RecuperarContrasenaView.as_view(),
+        name="rest_password_reset_no_slash",
+    ),
+    path(
+        "api/auth/password/reset/confirm",
+        RestablecerContrasenaView.as_view(),
+        name="rest_password_reset_confirm_no_slash",
+    ),
     path(
         "api/auth/logout/",
         con_codigo_exito(LogoutView.as_view(), "logged_out"),
