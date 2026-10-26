@@ -27,8 +27,10 @@ import type { MiCalificacion } from "@/lib/title";
 import { useDesborde } from "@/lib/use-desborde";
 
 type Resena = {
-  nombre_usuario: string;
-  avatar_id: number;
+  /** `null` si la cuenta se dio de baja: la API no manda la identidad (26/10/2026). */
+  nombre_usuario: string | null;
+  avatar_id: number | null;
+  autor_dado_de_baja: boolean;
   valor: number;
   fecha: string;
   texto: string;
@@ -299,10 +301,10 @@ export function ReviewsSection({
           ))}
         {pagina?.results.map((resena) => (
           <article
-            key={`${resena.nombre_usuario}-${resena.fecha}`}
+            key={`${resena.nombre_usuario ?? "baja"}-${resena.fecha}-${resena.texto.slice(0, 20)}`}
             className="grid grid-cols-[40px_minmax(0,1fr)] gap-4 border-t border-line py-[22px]"
           >
-            {avatar(resena.avatar_id) ? (
+            {resena.avatar_id !== null && avatar(resena.avatar_id) ? (
               <Image
                 src={avatar(resena.avatar_id)!}
                 alt=""
@@ -315,12 +317,18 @@ export function ReviewsSection({
                 aria-hidden="true"
                 className="grid size-10 place-items-center rounded-full bg-raised-2 font-semibold text-fg-2 uppercase"
               >
-                {resena.nombre_usuario.charAt(0)}
+                {resena.nombre_usuario?.charAt(0) ?? "?"}
               </span>
             )}
             <div className="flex min-w-0 flex-col gap-1.5">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
-                <span className="font-semibold">@{resena.nombre_usuario}</span>
+                {resena.autor_dado_de_baja || resena.nombre_usuario === null ? (
+                  <span className="font-semibold text-fg-2 italic">
+                    {t("title.reviews.deletedAuthor")}
+                  </span>
+                ) : (
+                  <span className="font-semibold">@{resena.nombre_usuario}</span>
+                )}
                 <Nota valor={resena.valor} />
                 <span className="text-sm text-fg-3">{fecha(resena.fecha)}</span>
               </div>

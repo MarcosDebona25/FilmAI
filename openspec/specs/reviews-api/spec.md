@@ -125,6 +125,14 @@ Both query parameters are required; either one missing or malformed MUST answer 
 - WHEN the list is followed page by page with `orden=nota-desc`
 - THEN the 30 reviews arrive once each, the 9s first
 
+#### Scenario: A deactivated author's review is anonymous (26/10/2026)
+
+- GIVEN a review whose author's account was deactivated (`estado = baja`)
+- WHEN the community reviews of that production are read
+- THEN the review is listed with its rating, date and text
+- AND `nombre_usuario` and `avatar_id` are `null` and `autor_dado_de_baja` is `true`
+- AND the frontend shows «Usuario dado de baja» / «Deleted account» instead of the username
+
 #### Scenario: A moderated review is hidden
 
 - GIVEN a review with `activa = False`
