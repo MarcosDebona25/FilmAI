@@ -6,11 +6,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.gzip import gzip_page
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import BaseThrottle, ScopedRateThrottle
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from catalogo.models import ID_TMDB_MAXIMO
-from catalogo.presupuesto import contar_llamadas
+from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_todo
 from catalogo.services.creditos import creditos
 from catalogo.services.fallback import servicio_localizado
@@ -148,23 +148,11 @@ def _materializar_listado_sin_interrumpir(data, tipo_tmdb=None):
 CACHE_NAVEGADOR_SEGUNDOS = 5 * 60
 
 
-# Los dos topes de llamadas a TMDB de la auditoría F6 (24/10/2026): `dispatch`
-# abre el contador del pedido con la IP del cliente (la misma que usan los
-# throttles de DRF, con `NUM_PROXIES`). Cada llamada a TMDB cuenta en el momento
-# para el tope del pedido (503) y para el de la IP (429): ver `presupuesto.py`.
-# Va en comentario y no en docstring: drf-spectacular usa el docstring heredado
-# como descripción pública de cada endpoint del catálogo.
-class _TopesTMDBMixin:
-    def dispatch(self, request, *args, **kwargs):
-        with contar_llamadas(ident=BaseThrottle().get_ident(request)):
-            return super().dispatch(request, *args, **kwargs)
-
-
 # Comprimido solo acá y no con `GZipMiddleware` global: el catálogo es público y
 # no lleva secretos (sin cookies ni CSRF en la respuesta), así que no queda
 # expuesto a BREACH. Un listado de 13 kB baja a ~5 kB.
 @method_decorator(gzip_page, name="dispatch")
-class CatalogoBaseView(_TopesTMDBMixin, APIView):
+class CatalogoBaseView(TopesTMDBMixin, APIView):
     authentication_classes: ClassVar = []
     permission_classes: ClassVar = [AllowAny]
     throttle_classes: ClassVar = [ScopedRateThrottle]
@@ -407,7 +395,7 @@ class KeywordsView(CatalogoBaseView):
         return Response(data)
 
 
-class RecommendedView(_TopesTMDBMixin, APIView):
+class RecommendedView(TopesTMDBMixin, APIView):
     """«Recomendado para ti» del Home (C-05), solo con sesión.
 
     `tipo` es `all` (por defecto), `movie` o `tv`. Responde `{generos, results}`:

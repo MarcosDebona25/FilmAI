@@ -10,6 +10,7 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.test import TestCase
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import AccessToken
 
 from catalogo.factories import ProduccionAudiovisualFactory
 from filmai.throttles import EscrituraThrottle
@@ -153,3 +154,50 @@ class LimiteDeEscriturasTests(_ConUsuario):
         respuesta = otro.post("/api/lists/", {"nombre": "Mía"}, format="json")
 
         self.assertEqual(respuesta.status_code, 201)
+
+    def test_cubre_las_demas_escrituras(self):
+        # Si alguien saca la línea de una vista, este test lo nota.
+        from catalogo.reviews import (
+            CalificacionDetailView,
+            CalificacionesView,
+            ResenaTextoView,
+        )
+        from listas.views import (
+            ListaDetailView,
+            ListaItemDetailView,
+            ListaItemsView,
+            ListasOrdenView,
+            ListasView,
+        )
+        from usuarios.cuenta import PreferenciasView
+        from usuarios.perfil import PerfilView
+
+        for vista in (
+            CalificacionesView,
+            CalificacionDetailView,
+            ResenaTextoView,
+            ListasView,
+            ListasOrdenView,
+            ListaDetailView,
+            ListaItemsView,
+            ListaItemDetailView,
+            PerfilView,
+            PreferenciasView,
+        ):
+            with self.subTest(vista=vista.__name__):
+                self.assertIn(EscrituraThrottle, vista.throttle_classes)
+
+    def test_el_perfil_tambien_frena(self):
+        # El perfil revalida el JWT dentro de la transacción: hace falta un token
+        # real, no `force_authenticate` (con él los PUT daban 500).
+        self.cliente.force_authenticate(None)
+        self.cliente.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(self.usuario)}"
+        )
+        estados = [
+            # El límite se revisa antes de validar: el cuerpo no importa.
+            self.cliente.put("/api/profile/", {}, format="json").status_code
+            for n in range(4)
+        ]
+
+        self.assertEqual(estados, [200, 200, 200, 429])

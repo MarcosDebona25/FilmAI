@@ -38,6 +38,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from catalogo.models import Calificacion, ProduccionTraduccion, TipoProduccion
+from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.browse import NOTAS
 from catalogo.services.materialization import materializar
@@ -408,7 +409,7 @@ def _anotar_clave_orden(items, orden, idioma):
     return items
 
 
-class ListaItemsView(APIView):
+class ListaItemsView(TopesTMDBMixin, APIView):
     """Pagina o agrega producciones a una lista propia."""
 
     # Límite común de escrituras (26/10/2026); las lecturas no cuentan.

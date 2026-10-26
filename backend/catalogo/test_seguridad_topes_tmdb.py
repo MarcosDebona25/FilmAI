@@ -243,6 +243,56 @@ class LimitePorIPTests(TestCase):
         self.assertNotIn(429, estados)
 
     def test_recomendado_tambien_tiene_los_topes(self):
-        from catalogo.views import RecommendedView, _TopesTMDBMixin
+        from catalogo.presupuesto import TopesTMDBMixin
+        from catalogo.views import RecommendedView
 
-        self.assertTrue(issubclass(RecommendedView, _TopesTMDBMixin))
+        self.assertTrue(issubclass(RecommendedView, TopesTMDBMixin))
+
+
+class EscriturasQueMaterializanTests(TestCase):
+    """Calificar y agregar a una lista materializan en el mismo pedido (26/10/2026).
+
+    Una producción nueva cuesta ~4 llamadas a TMDB (detalle, créditos, keywords y
+    traducción): sin el contador, quedaban fuera de los dos topes.
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+        from usuarios.factories import UsuarioFactory
+
+        self.usuario = UsuarioFactory()
+        self.cliente = APIClient()
+        self.cliente.force_authenticate(self.usuario)
+
+    def _materializar_que_pasa_el_tope(self, *args, **kwargs):
+        for _ in range(MAX_LLAMADAS_POR_PEDIDO + 1):
+            registrar_llamada()
+
+    def test_calificar_cuenta_las_llamadas_de_la_materializacion(self):
+        with patch(
+            "catalogo.reviews.materializar",
+            side_effect=self._materializar_que_pasa_el_tope,
+        ):
+            respuesta = self.cliente.post(
+                "/api/reviews/",
+                {"id_tmdb": 550, "tipo": "movie", "valor": 8},
+                format="json",
+            )
+
+        self.assertEqual(respuesta.status_code, 503)
+
+    def test_agregar_a_una_lista_cuenta_las_llamadas(self):
+        from listas.factories import ListaFactory
+
+        lista = ListaFactory(usuario=self.usuario, nombre="Para ver")
+        with patch(
+            "listas.views.materializar", side_effect=self._materializar_que_pasa_el_tope
+        ):
+            respuesta = self.cliente.post(
+                f"/api/lists/{lista.pk}/items/",
+                {"id_tmdb": 550, "tipo": "movie"},
+                format="json",
+            )
+
+        self.assertEqual(respuesta.status_code, 503)
