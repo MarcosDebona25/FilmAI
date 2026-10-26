@@ -289,7 +289,11 @@ class AltaCompletaConGoogleSobrePendienteVencidaTests(TestCase):
         }
         login = SocialLogin(
             user=Usuario(correo=correo),
-            account=SocialAccount(provider="google", uid="alta-completa"),
+            account=SocialAccount(
+                provider="google",
+                uid="alta-completa",
+                extra_data={"email_verified": True},
+            ),
             email_addresses=[EmailAddress(email=correo, verified=True, primary=True)],
             provider=adapter_social(request).get_provider(request, provider="google"),
         )

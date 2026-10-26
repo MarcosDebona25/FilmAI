@@ -68,10 +68,10 @@ class ResendBackend(BaseEmailBackend):
         bcc = list(message.bcc)
 
         if test_recipient:
+            # La cantidad y no las direcciones: los logs no llevan correos.
             logger.info(
-                "RESEND_TEST_RECIPIENT activo: redirigiendo email para %s hacia %s",
-                ", ".join(to + cc + bcc),
-                test_recipient,
+                "RESEND_TEST_RECIPIENT activo: %d destinatario(s) redirigidos",
+                len(to + cc + bcc),
             )
             to = [test_recipient]
             cc = []

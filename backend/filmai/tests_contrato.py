@@ -185,7 +185,12 @@ class ContratoErroresAPITests(TestCase):
         if caso == "baja":
             SocialAccount.objects.create(user=usuario, provider="google", uid="sub")
         login = Mock()
-        login.account = SimpleNamespace(provider="google", uid="sub", user=usuario)
+        login.account = SimpleNamespace(
+            provider="google",
+            uid="sub",
+            user=usuario,
+            extra_data={"email_verified": True},
+        )
         login.user = SimpleNamespace(correo="google-sin-registrar@filmai.com")
         login.is_existing = caso == "baja_final"
         if caso == "correo":
