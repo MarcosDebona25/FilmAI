@@ -10,6 +10,7 @@ from catalogo.models import ID_TMDB_MAXIMO, Resena
 from catalogo.services.adapter import dominio_a_tmdb
 from catalogo.services.traducciones import ProduccionLocalizadaMixin
 from filmai.errores.serializadores import FronteraErroresMixin
+from usuarios.models import EstadoCuenta
 
 # El modelo define `max_length=1000` y el rango 1-10 por validadores y
 # CheckConstraint. Acá se repiten como límites del serializer para que el error
@@ -148,8 +149,23 @@ class ResenaComunidadSerializer(serializers.Serializer):
     valor = serializers.IntegerField(source="calificacion.valor")
     texto = serializers.CharField()
     fecha = serializers.DateField()
-    nombre_usuario = serializers.CharField(source="calificacion.usuario.nombre_usuario")
-    avatar_id = serializers.IntegerField(source="calificacion.usuario.avatar_id")
+    # De una cuenta dada de baja quedan el texto y la nota, no la identidad
+    # (decisión del 26/10/2026): los dos campos van en `null` y el frontend
+    # muestra «Usuario dado de baja».
+    nombre_usuario = serializers.SerializerMethodField()
+    avatar_id = serializers.SerializerMethodField()
+    autor_dado_de_baja = serializers.SerializerMethodField()
+
+    def get_autor_dado_de_baja(self, resena) -> bool:
+        return resena.calificacion.usuario.estado == EstadoCuenta.BAJA
+
+    def get_nombre_usuario(self, resena) -> str | None:
+        usuario = resena.calificacion.usuario
+        return None if self.get_autor_dado_de_baja(resena) else usuario.nombre_usuario
+
+    def get_avatar_id(self, resena) -> int | None:
+        usuario = resena.calificacion.usuario
+        return None if self.get_autor_dado_de_baja(resena) else usuario.avatar_id
 
 
 class MiResenaSerializer(ProduccionLocalizadaMixin, CalificacionSerializer):
