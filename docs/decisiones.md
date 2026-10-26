@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 24/10/2026 — Limpieza de `frontend/public/`
+
+- **Fecha**: 24/10/2026
+- **Descripción**: se borraron seis archivos que nadie referencia, uno de los pendientes de rendimiento del 22/10/2026: `avatars/Gemini_Generated_Image_p6bcr2p6bcr2p6bc.png` (6,9 MB, la imagen de la que se recortaron los avatares), `collage-posters/Opcion 2.jpg` y `Opcion 3.jpg` (alternativas del collage que no se eligieron) y `file.svg`, `globe.svg` y `window.svg` (de la plantilla de `create-next-app`). Son unos 7,3 MB menos en el repositorio y en la imagen del frontend.
+- **Cómo se verificó que no se usan**: `git grep` de cada nombre en todo el repositorio, también con los espacios codificados como `%20`; solo aparecen en esta entrada y en la del 22/10. Los avatares del selector salen de `backend/usuarios/avatares.py`, que arma las rutas solo con `avatars/recortados/`. La pantalla de acceso (`AccessShell.tsx`) y los tests de Playwright usan solo `Opcion 1.jpg`.
+- **Archivos afectados**: los seis de `frontend/public/`, `docs/decisiones.md` y `graphify-out/`.
+
+---
+
 ## 24/10/2026 — El Hero del Inicio llega en el HTML del servidor
 
 - **Fecha**: 24/10/2026
