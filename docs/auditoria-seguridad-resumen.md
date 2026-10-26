@@ -27,6 +27,7 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 | ~~F8~~ | ~~usuarios~~ | ~~Clave de confirmación de correo escrita en el log~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
 | ~~F9~~ | ~~frontend~~ | ~~Redirección abierta posterior al login (`next`)~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
 | F10 | catálogo | Moderación de reseñas reversible por el autor | Confirmado | Baja | 4 (decisión de producto) |
+| ~~F11~~ | ~~usuarios~~ | ~~Login y reset de contraseña sin barra final esquivan los límites de F2~~ | **Resuelto** (26/10/2026) | ~~Media~~ | ~~1~~ |
 | — | frontend | Sin cabeceras anti-framing | Rechazado | — | Endurecimiento opcional |
 
 ## Orden sugerido
@@ -51,3 +52,4 @@ Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué 
 - **20/10/2026, F4 (cuentas pendientes):** una cuenta sin confirmar el correo deja de reservar el correo y el nombre de usuario pasado el plazo del enlace, y una tarea diaria las elimina. El correo de confirmación del registro ahora avisa que no hay que abrir el enlace si no se pidió la cuenta. Queda como mejora recomendada antes del despliegue que la contraseña se elija al confirmar el correo; está descrita en `docs/decisiones.md`.
 - **24/10/2026, F7 (ids de producciones):** calificar o agregar a una lista una producción que TMDB no conoce ya no deja una fila vacía en la base, y un id más grande de lo que admite la columna responde un error de validación en lugar de un error interno. Las lecturas y las vistas del catálogo validan el mismo rango. Tests nuevos en reseñas, listas y materialización; la suite completa pasa.
 - **24/10/2026, F6 (tendencias y llamadas a TMDB):** las tendencias solo aceptan los tipos y períodos que muestra la aplicación, así que ya no se puede llevar el pedido a otros endpoints de TMDB. Además, cada pedido tiene un tope de llamadas a TMDB (reintentos incluidos) y cada IP un límite por minuto que cuenta llamadas reales, no pedidos: lo que sale de la caché no cuenta. Tests nuevos de validación, de los dos topes y de los hilos de Buscar; la suite completa pasa.
+- **26/10/2026, F11 (rutas sin barra final):** el inicio de sesión y la recuperación de contraseña también limitaban los intentos solo si se llamaban con la barra final; sin ella se llegaba a la vista original, sin límite. Ahora las dos variantes llevan los mismos límites. Test nuevo; la suite completa pasa.

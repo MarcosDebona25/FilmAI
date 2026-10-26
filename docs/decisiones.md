@@ -5,6 +5,36 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Rutas de acceso sin barra final esquivaban los límites de F2 (F11)
+
+- **Fecha**: 26/10/2026
+- **Descripción**: la revisión de seguridad con subagentes (24/10/2026) encontró que `POST /api/auth/login` y `POST /api/auth/password/reset`, **sin barra final**, caían en las vistas originales de dj-rest-auth (`login/?$` y `password/reset/?$`): sin `LoginCuentaThrottle` ni `LoginIPThrottle`, y el reset sin el límite de 5 por día ni la respuesta genérica. Se confirmó con `resolve()`: `/api/auth/login` → `dj_rest_auth.views.LoginView`, sin throttles. Era una regresión de F2: cualquiera podía probar contraseñas sin tope saltándose la barra. Se agregan las variantes sin barra de `login`, `password/reset` y `password/reset/confirm` hacia las vistas propias, igual que ya se había hecho con `password/change` y `token/refresh`.
+- **Decisiones**: se registran las rutas a mano y no se deja de incluir `dj_rest_auth.urls`, para no tocar el resto de sus rutas (logout, user). Las tres rutas nuevas aparecen en `contracts/openapi.yaml` como las dos que ya existían sin barra. El test (`usuarios/test_seguridad_rutas_sin_barra.py`) resuelve cada ruta con y sin barra a la misma vista propia y comprueba el 429 (Too Many Requests) del login sin barra.
+- **Archivos afectados**: `backend/filmai/urls.py`, `backend/usuarios/test_seguridad_rutas_sin_barra.py` (nuevo), `contracts/openapi.yaml`, `docs/auditoria-seguridad-resumen.md`.
+
+---
+
+## 26/10/2026 — Revisión con tres subagentes (seguridad, accesibilidad, calidad): pendientes
+
+- **Fecha**: 26/10/2026
+- **Descripción**: el 24/10/2026 se lanzaron tres revisiones de solo lectura sobre `main` con los PRs #129 a #131 integrados. Lo único que se arregló solo fue F11 (entrada de arriba). El resto queda **sin aplicar**, con evidencia de archivo y línea en los informes; esta lista es el índice.
+- **Seguridad** (sin IDOR ni fugas de datos personales):
+  - `/admin/login/` sin límite de intentos. **Decidir** si `/admin/` se expone públicamente; si sí, contador como el de la documentación (`filmai/documentation.py`).
+  - La API key de TMDB va en la query string y `httpx` la escribe en el log INFO del worker (`catalogo/client.py:60`): subir `httpx` a WARNING en `LOGGING` o usar el token v4 en el encabezado.
+  - Reset de contraseña sin límite por IP, y `{"email": 5}` da 500 (`usuarios/throttles.py:32`).
+  - El bloqueo de login de la documentación usa `REMOTE_ADDR` e ignora `NUM_PROXIES` (`filmai/documentation.py:114`).
+  - Al desplegar: `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, HSTS y `SECURE_PROXY_SSL_HEADER`.
+  - Postgres publicado en todas las interfaces (`docker-compose.yml`, `"5432:5432"`): pasar a `127.0.0.1`, como Redis.
+  - Escrituras autenticadas (reseñas, listas, perfil) sin límite de tasa; `ids` de reordenar listas sin `max_length` y con costo cuadrático. **Decidir** los topes.
+  - **Decidir**: las reseñas de cuentas dadas de baja siguen públicas con su nombre de usuario; y el doc 02 dice que el correo «se almacena cifrado» y se guarda en texto plano.
+  - `entrypoint.sh` arma código Python con `DJANGO_SUPERUSER_PASSWORD` dentro: una comilla simple lo rompe (lo controla quien opera el servidor).
+- **Accesibilidad** (alta): la barra inferior y el botón flotante del celular tapan el foco (WCAG 2.4.11, falta `scroll-padding`); Escape en Buscar navega fuera de la página al cerrar el menú de cuenta (`SearchView.tsx:119`). **Media**: regiones `role="status"` que se montan con el texto ya puesto (no se anuncian), foco que se pierde al desaparecer el control, dos diálogos que no son `<dialog>` (hoja «Agregar a lista», confirmación de cerrar sesión), borde de campos con contraste 1,2:1, registro con botón deshabilitado y sin `required`, nombre accesible que no contiene el texto visible, notas sin «de 10», Inicio sin h1 si el hero no tiene imagen.
+- **Calidad**: **alta**, la sync diaria se cae entera si falla un listado de descubrimiento (`catalogo/tasks.py:254`); **media**, campos de TMDB sin recortar a los `max_length` del modelo (500 posible), backfill de embeddings que no avanza porque `.update()` no toca `auto_now`, relleno de traducciones que se traba con las mismas filas, y reseñas por fecha que pueden repetir un ítem entre páginas. Siete divergencias entre docs 02/03 y el código (por ejemplo el correo «cifrado»).
+- **Decisión de proceso**: no se arregla nada de esto sin acordarlo; los de severidad alta y los de bajo riesgo (sync, recorte de campos, `auto_now`, h1, `scroll-padding`) son buenos candidatos para el próximo tramo.
+- **Archivos afectados**: `docs/decisiones.md`.
+
+---
+
 ## 24/10/2026 — Limpieza de `frontend/public/`
 
 - **Fecha**: 24/10/2026
