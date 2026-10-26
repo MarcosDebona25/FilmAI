@@ -39,6 +39,7 @@ from rest_framework.views import APIView
 from catalogo.exceptions import CalificacionDuplicada
 from catalogo.models import Calificacion, ProduccionTraduccion, Resena
 from catalogo.pagination_reviews import ResenaCursorPagination
+from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.serializers_reviews import (
     ActualizarCalificacionSerializer,
     CalificacionSerializer,
@@ -111,7 +112,7 @@ def _filtrar_nota(qs, datos, campo):
     return qs
 
 
-class CalificacionesView(APIView):
+class CalificacionesView(TopesTMDBMixin, APIView):
     """Reseñas de la comunidad sobre una producción, y alta de la propia."""
 
     # Límite común de escrituras (26/10/2026); las lecturas no cuentan.

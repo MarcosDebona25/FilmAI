@@ -5,6 +5,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Ajustes tras la segunda revisión con subagentes (#133 a #135)
+
+- **Fecha**: 26/10/2026
+- **Descripción**: una segunda ronda de tres revisores de solo lectura revisó los PRs abiertos, lo mergeado entre el 24 y el 26/10 y la seguridad que la primera no cubrió. Ajustes sin decisión, verificados antes de aplicarlos:
+  - **Carrera en los bloqueos del admin y de la documentación** (#133): se consultaba el contador, se autenticaba y recién después se sumaba, así que una ráfaga en paralelo probaba más de 10 contraseñas. Ahora `_contar_intento` suma primero (`incr`, atómico) y un ingreso borra la clave. El 429 del admin lleva `Retry-After` y `no-store`. El test de reinicio no probaba el reinicio (pasaba sin `cache.delete`); se corrigió y hay uno que comprueba que el intento ya está contado mientras la vista autentica.
+  - **Clave de React de las reseñas anónimas** (#134): usaba el nombre, y dos reseñas anónimas del mismo día chocaban. Ahora usa la posición y la fecha (la API no manda el id de reseñas ajenas a propósito).
+  - **Calificar y agregar a una lista dentro de los topes de TMDB** (#135): materializan una producción nueva en el mismo pedido (~4 llamadas) y quedaban fuera del tope por pedido y del de la IP. `TopesTMDBMixin` pasó a `catalogo/presupuesto.py` y lo usan también `CalificacionesView` y `ListaItemsView`.
+  - **`PUT /api/preferences/`** suma `EscrituraThrottle`. Un test recorre todas las vistas de escritura y exige el límite en cada una.
+- **Verificado y documentado sin cambio**: con watchdog 6.0, `watchmedo auto-restart` relanza Celery cuando termina, así que un worker matado por memoria vuelve a arrancar dentro del contenedor (no es un ciclo de reinicios del contenedor; el techo igual protege a WSL). Queda como decisión pendiente, igual que el resto de lo que pide decisión (duración del access token, tope por IP frente al NAT, enumeración por tiempo en el reset, CSP y costo de Buscar).
+- **Archivos afectados**: `backend/filmai/documentation.py`, `backend/filmai/test_seguridad_admin_login.py`, `frontend/components/features/title/ReviewsSection.tsx`, `backend/catalogo/presupuesto.py`, `backend/catalogo/views.py`, `backend/catalogo/reviews.py`, `backend/listas/views.py`, `backend/usuarios/cuenta.py`, `backend/catalogo/test_seguridad_topes_tmdb.py`, `backend/listas/test_topes.py`.
+
+---
+
 ## 26/10/2026 — Topes de escritura: tasa común por usuario y techos de cantidad
 
 - **Fecha**: 26/10/2026

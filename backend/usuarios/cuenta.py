@@ -14,6 +14,7 @@ from rest_framework_simplejwt.token_blacklist.models import (
 )
 
 from filmai.errores.serializadores import FronteraErroresMixin
+from filmai.throttles import EscrituraThrottle
 
 from .models import EstadoCuenta, Usuario
 from .perfil import bloquear_usuario, cerrar_sesion
@@ -52,6 +53,8 @@ class PreferenciasLecturaSerializer(PreferenciasSerializer):
 class PreferenciasView(GenericAPIView):
     serializer_class = PreferenciasSerializer
     permission_classes: ClassVar[list] = [permissions.IsAuthenticated]
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     @extend_schema(responses=PreferenciasLecturaSerializer)
     def get(self, request):

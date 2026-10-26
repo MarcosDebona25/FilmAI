@@ -29,6 +29,7 @@ from contextlib import contextmanager
 from django.conf import settings
 from django.core.cache import cache
 from rest_framework.exceptions import Throttled
+from rest_framework.throttling import BaseThrottle
 
 from catalogo.exceptions import TMDBPresupuestoAgotado
 
@@ -100,6 +101,19 @@ def _sumar(clave):
         if cache.add(clave, 1, timeout=VENTANA_IP_SEGUNDOS * 2):
             return 1
         return cache.incr(clave)
+
+
+# Va en comentario y no en docstring: drf-spectacular usa el docstring heredado
+# como descripción pública de cada endpoint que lo hereda.
+#
+# `dispatch` abre el contador del pedido con la IP del cliente (la misma que usan
+# los throttles de DRF, con `NUM_PROXIES`). Lo usan las vistas del catálogo y,
+# desde el 26/10/2026, también calificar y agregar a una lista: materializan una
+# producción nueva en el mismo pedido (~4 llamadas) y quedaban fuera de los topes.
+class TopesTMDBMixin:
+    def dispatch(self, request, *args, **kwargs):
+        with contar_llamadas(ident=BaseThrottle().get_ident(request)):
+            return super().dispatch(request, *args, **kwargs)
 
 
 def con_contexto(funcion):
