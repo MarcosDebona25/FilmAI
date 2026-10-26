@@ -6,13 +6,14 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.core.cache import cache
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.cache import patch_cache_control, patch_vary_headers
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
+from rest_framework.throttling import BaseThrottle
 
 from usuarios.models import Usuario
 
@@ -112,7 +113,10 @@ TEXTOS = {
 
 
 def _ip(request):
-    return request.META.get("REMOTE_ADDR", "")
+    # La misma identidad que los throttles de DRF: respeta `NUM_PROXIES`. Con
+    # `REMOTE_ADDR` a secas, detrás de un proxy todos compartían su IP y 10
+    # fallos de cualquiera bloqueaban a todo el staff (revisión del 24/10/2026).
+    return BaseThrottle().get_ident(request)
 
 
 def _clave_intentos(request):
@@ -258,3 +262,33 @@ def ingresar_a_documentacion(request):
     patch_cache_control(respuesta, private=True, no_store=True)
     patch_vary_headers(respuesta, ("Accept-Language", "Cookie"))
     return respuesta
+
+
+def con_limite_de_intentos(vista):
+    """El mismo bloqueo por IP, para el login de Django Admin.
+
+    Django no limita ese formulario (revisión de seguridad del 24/10/2026). La
+    vista original decide si las credenciales sirven: un POST que vuelve a
+    mostrar el formulario (200) es un fallo; uno que redirige (302), un ingreso.
+    Mostrar el formulario no cuenta.
+    """
+
+    @wraps(vista)
+    def limitada(request, *args, **kwargs):
+        if request.method != "POST":
+            return vista(request, *args, **kwargs)
+        clave = f"admin-login:{_ip(request)}"
+        if cache.get(clave, 0) >= INTENTOS_MAXIMOS:
+            texto = TEXTOS[idioma_efectivo(request)]["too_many_attempts"]
+            return HttpResponse(
+                texto, status=429, content_type="text/plain; charset=utf-8"
+            )
+        respuesta = vista(request, *args, **kwargs)
+        if respuesta.status_code == 302:
+            cache.delete(clave)
+        else:
+            cache.add(clave, 0, VENTANA_SEGUNDOS)
+            cache.incr(clave)
+        return respuesta
+
+    return limitada
