@@ -5,6 +5,33 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Dependencias al día: Next 15.5.28 y Django 5.2 LTS
+
+- **Fecha**: 26/10/2026
+- **Descripción**: subida de versiones por seguridad, sin cambios de código de la app:
+  - **Next.js 15.5.28** (y `eslint-config-next` igual): corrige GHSA-2464-fhr4-w9xw, una ejecución remota de código en el optimizador de imágenes con SVG (crítica). Se quedó en la serie 15 para no mezclar el salto a Next 16 con un parche de seguridad. Pasaron `tsc`, lint, los 436 tests de Vitest y `next build`.
+  - **Django 5.2 LTS** (5.2.18): la 5.1 no recibe parches de seguridad desde 12/2025. Con ella suben **DRF 3.16** (la primera con soporte oficial de 5.2), **django-cors-headers 4.9** y **django-allauth 65.19.7** (parches de la serie 65.19, pin exacto porque `ConfirmarCorreoView` usa una API interna). La suite completa del backend (1038 tests) pasa sin cambios.
+  - De los avisos que citó la revisión, dos identificadores GHSA no existen; se verificó cada uno antes de actuar.
+- **Archivos afectados**: `backend/requirements.txt`, `frontend/package.json`, `frontend/package-lock.json`.
+
+---
+
+## 26/10/2026 — Comentarios de PR-Agent sobre #133 a #136
+
+- **Fecha**: 26/10/2026
+- **Descripción**: cada comentario se verificó contra el código antes de tocar nada. En #133 (bloqueo del admin), uno de tres era válido y menor:
+  - **IP falsificable con `X-Forwarded-For`**: falso positivo. `NUM_PROXIES` es 0 en desarrollo (DRF usa `REMOTE_ADDR`) y obligatorio en producción.
+  - **POST de otro sitio que agota el contador**: falso positivo. El middleware de CSRF corta con 403 antes de la vista; queda un test que lo prueba.
+  - **`Retry-After: 3600`**: es una cota superior, porque la ventana corre desde el primer fallo. Se documenta en el código.
+  - **#134, clave `title.reviews.deletedAuthor` faltante**: falso positivo; los catálogos y el CSV están en el PR (el diff que recibió venía recortado por graphify).
+  - **#134, clave de React por posición**: riesgo bajo y aceptado; la API no manda el id de reseñas ajenas a propósito.
+  - **#135, duplicado con la lista llena y carrera en el techo de ítems**: válidos; arreglados en #135 (ver «Topes de escritura»).
+  - **#135, el techo de listas cuenta las inactivas**: falso positivo; borrar una lista la elimina (`lista.delete()`) y la app nunca marca una lista como inactiva.
+  - **#136, `EmailConfirmation` en el admin**: falso positivo; ese modelo no está registrado en el admin (allauth registra solo `EmailAddress`).
+- **Archivos afectados**: `backend/filmai/documentation.py`, `backend/filmai/test_seguridad_admin_login.py`.
+
+---
+
 ## 26/10/2026 — Acceso endurecido tras la segunda revisión de seguridad
 
 - **Fecha**: 26/10/2026
