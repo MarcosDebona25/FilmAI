@@ -474,6 +474,8 @@ class GoogleOAuthTests(TestCase):
                 provider=provider,
                 uid=uid,
                 user=user,
+                # Lo que firma Google en el id_token (se exige desde el 26/10/2026).
+                extra_data={"email_verified": True},
             ),
         )
 

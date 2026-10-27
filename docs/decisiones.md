@@ -5,6 +5,24 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Acceso endurecido tras la segunda revisión de seguridad
+
+- **Fecha**: 26/10/2026
+- **Descripción**: hallazgos sin decisión de la segunda pasada de seguridad, cada uno verificado antes de tocarlo:
+  - **Escalada por el admin (media)**: F5 limitaba solo a `Usuario`. `SocialAccount` (allauth) dejaba editar `user` y `uid`, así que un staff podía vincular su Google a un superusuario y entrar como él. `OutstandingToken` (simplejwt) mostraba el refresh JWT entero. `Group` permitía armarse un grupo con todos los permisos. Esos 7 modelos (los cuatro de allauth, los dos de simplejwt y `Group`) quedan solo para superusuarios (`usuarios/admin.py`, con la misma clase de admin original).
+  - **`SESSION_LOGIN: False`**: el login de la app abría además una sesión de Django, válida en `/admin/`. La API usa solo JWT.
+  - **Google exige el correo verificado** en una cuenta nueva, mirando el claim firmado del token (`extra_data["email_verified"]`). `login.email_addresses` no sirve: con `VERIFIED_EMAIL: True`, allauth marca todo correo de Google como verificado. Las cuentas existentes no cambian.
+  - **Solo JSON** en login, registro, Google, reset, confirmación del reset y reenvío: con formularios, otro sitio podía dejar al navegador logueado en la cuenta del atacante (*login CSRF*). Un formulario responde 415 (Unsupported Media Type). El contrato OpenAPI deja de ofrecer `x-www-form-urlencoded` y `multipart` en esas rutas.
+  - **Un contador por cuenta en el login**: si el correo o el usuario corresponden a una cuenta, la clave es su `pk`. Antes, la misma cuenta se probaba 10 veces por correo y 10 por usuario.
+  - **Google con límite por IP** (`GoogleIPThrottle`, scope `google_ip`, 30 por minuto como el login, pero con contador propio): cada pedido verifica una firma y puede crear una cuenta. Compartir el contador con el login hacía que una ráfaga de logins con contraseña bloqueara Google en esa IP (lo señaló PR-Agent en #136).
+  - **Logout sin barra** con su código `logged_out`, como con barra.
+  - **Correos fuera de los logs** (se registra el `pk` o la cantidad) y el logger `usuarios` en DEBUG solo con `DEBUG=True`.
+  - **Cabeceras básicas** en el frontend (`next.config.ts`): `X-Content-Type-Options: nosniff` y `Referrer-Policy: strict-origin-when-cross-origin`, y `no-referrer` en `/reset-password` y `/confirm-email`, que llevan un token en la ruta. La CSP queda para decidir.
+- **Tests existentes ajustados**: los dobles de login de Google (`usuarios/tests.py`, `filmai/tests_contrato.py`, `usuarios/test_seguridad_pendientes.py`) no traían `email_verified`, que Google siempre manda; se les agregó.
+- **Archivos afectados**: `backend/usuarios/admin.py`, `backend/usuarios/views.py`, `backend/usuarios/serializers.py`, `backend/usuarios/throttles.py`, `backend/filmai/urls.py`, `backend/filmai/settings.py`, `backend/filmai/email_backends.py`, `backend/usuarios/test_seguridad_acceso.py` (nuevo), los tres tests de Google, `contracts/openapi.yaml`, `frontend/next.config.ts`.
+
+---
+
 ## 26/10/2026 — Ajustes tras la segunda revisión con subagentes (#133 a #135)
 
 - **Fecha**: 26/10/2026

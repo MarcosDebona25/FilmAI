@@ -300,6 +300,17 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
             raise CuentaInactiva(cuenta_existente.user, "Tu cuenta no está activa.")
 
         if not es_existente:
+            # Una cuenta nueva nace ACTIVA sin confirmar el correo por nuestra
+            # cuenta: tiene que venir verificado por Google (26/10/2026). Se mira
+            # el claim firmado del token y no `login.email_addresses`, porque
+            # `VERIFIED_EMAIL: True` (settings) hace que allauth marque todo
+            # correo de Google como verificado.
+            datos_google = getattr(login.account, "extra_data", None) or {}
+            if datos_google.get("email_verified") is not True:
+                raise serializers.ValidationError(
+                    "No se pudo autenticar con Google.",
+                    code="google_authentication_failed",
+                )
             # Google no provee estos campos obligatorios del perfil FilmAI.
             faltantes = [
                 campo for campo in CAMPOS_FALTANTES_GOOGLE if not attrs.get(campo)
@@ -430,8 +441,9 @@ class RecuperarContrasenaSerializer(FronteraErroresMixin, serializers.Serializer
             )
         except Exception:
             # Mantiene la misma respuesta para no revelar la existencia de la cuenta.
+            # El pk y no el correo: los logs no llevan datos personales.
             logger.exception(
-                "Error enviando email de restablecimiento para %s", usuario.correo
+                "Error enviando email de restablecimiento (usuario %s)", usuario.pk
             )
             return None
         return usuario
