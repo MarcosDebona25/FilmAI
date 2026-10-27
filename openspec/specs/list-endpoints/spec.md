@@ -133,6 +133,22 @@ MUST NOT put it back in `Pendientes`. Other users' lists are never touched.
 - WHEN they rate it
 - THEN it stays in `Pendientes`
 
+### Write limits and quantity caps (26/10/2026)
+
+Every write of reviews, lists and profile MUST share one per-user rate limit (`EscrituraThrottle`, scope `escritura`, 60 per minute); reads (`GET`, `HEAD`, `OPTIONS`) do not count. Past it the answer is 429 (Too Many Requests) with `throttled`. A user MUST NOT own more than 100 custom lists (`MAX_LISTAS_PERSONALIZADAS`): the next creation answers 409 with `list_limit_reached` and `maxLists`. A custom list MUST NOT hold more than 1000 items (`MAX_ITEMS_POR_LISTA`): the next addition answers 409 with `list_items_limit_reached` and `maxItems`, before materializing anything. Default lists have no item cap, because `Vistas` grows when the user rates. `PUT /api/lists/order/` rejects more than 100 ids with 400 `max_length`.
+
+#### Scenario: Creating one list too many
+
+- GIVEN a user with 100 custom lists
+- WHEN they create another
+- THEN the answer is 409 with `list_limit_reached` and `maxLists` = 100
+
+#### Scenario: Rating keeps working with a large «Vistas»
+
+- GIVEN a `Vistas` list with more than 1000 items
+- WHEN the user adds or rates another title
+- THEN the item is added
+
 ### Errors and ownership
 
 All endpoints MUST require authentication. A list or item belonging to another
@@ -140,4 +156,4 @@ user MUST appear as 404. Business conflicts MUST expose a stable `code` and the 
 
 ### Definitive error contract
 
-OT-83 removes public `codigo`, `detail` and root field keys. Use `list_name_duplicated`, `list_name_reserved`, `list_item_duplicated`, `default_list_protected` and `rating_blocks_removal_from_watched`, with the common error envelope. Request fields and enum values retain their spelling. Frontend labels for default lists use the exported stable keys.
+OT-83 removes public `codigo`, `detail` and root field keys. Use `list_name_duplicated`, `list_name_reserved`, `list_item_duplicated`, `list_limit_reached`, `list_items_limit_reached`, `default_list_protected` and `rating_blocks_removal_from_watched`, with the common error envelope. Request fields and enum values retain their spelling. Frontend labels for default lists use the exported stable keys.

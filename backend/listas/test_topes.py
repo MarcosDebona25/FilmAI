@@ -1,0 +1,248 @@
+"""Topes de escritura (decisión del 26/10/2026, revisión de seguridad del 24/10).
+
+Tres cosas: el límite común de escrituras por usuario (60 por minuto, compartido
+por reseñas, listas y perfil), el techo de listas personalizadas y el de ítems
+por lista personalizada. «Vistas» no tiene techo: crece sola al calificar.
+"""
+
+from unittest.mock import patch
+
+from django.core.cache import cache
+from django.test import TestCase
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import AccessToken
+
+from catalogo.factories import ProduccionAudiovisualFactory
+from catalogo.models import TipoProduccion
+from filmai.throttles import EscrituraThrottle
+from listas.factories import ListaFactory
+from listas.models import Tiene
+from usuarios.factories import UsuarioFactory
+
+
+class _ConUsuario(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+        self.usuario = UsuarioFactory()
+        self.cliente = APIClient()
+        self.cliente.force_authenticate(self.usuario)
+
+
+class TechoDeListasTests(_ConUsuario):
+    @patch("listas.views.MAX_LISTAS_PERSONALIZADAS", 3)
+    def test_pasado_el_techo_crear_otra_es_409_con_el_maximo(self):
+        for numero in range(3):
+            ListaFactory(usuario=self.usuario, nombre=f"Lista {numero}")
+
+        respuesta = self.cliente.post(
+            "/api/lists/", {"nombre": "Una más"}, format="json"
+        )
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "list_limit_reached")
+        self.assertEqual(respuesta.data["params"], {"maxLists": 3})
+
+    @patch("listas.views.MAX_LISTAS_PERSONALIZADAS", 3)
+    def test_las_predeterminadas_no_cuentan(self):
+        # Favoritos, Pendientes y Vistas las crea la señal de alta del usuario.
+        for numero in range(2):
+            ListaFactory(usuario=self.usuario, nombre=f"Lista {numero}")
+
+        respuesta = self.cliente.post(
+            "/api/lists/", {"nombre": "Tercera"}, format="json"
+        )
+
+        self.assertEqual(respuesta.status_code, 201)
+
+
+@patch("listas.views.MAX_ITEMS_POR_LISTA", 2)
+@patch("listas.views.materializar")
+class TechoDeItemsTests(_ConUsuario):
+    def _producciones(self, cantidad):
+        # Películas: las altas mandan `tipo=movie`, y el duplicado se busca por
+        # id y tipo.
+        return [
+            ProduccionAudiovisualFactory(id_tmdb=900 + i, tipo=TipoProduccion.PELICULA)
+            for i in range(cantidad)
+        ]
+
+    def test_una_lista_personalizada_llena_rechaza_otro_titulo(self, materializar):
+        lista = ListaFactory(usuario=self.usuario, nombre="Para ver")
+        a, b, c = self._producciones(3)
+        Tiene.objects.create(lista=lista, produccion=a)
+        Tiene.objects.create(lista=lista, produccion=b)
+        materializar.return_value = c
+
+        respuesta = self.cliente.post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": c.id_tmdb, "tipo": "movie"},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "list_items_limit_reached")
+        self.assertEqual(respuesta.data["params"], {"maxItems": 2})
+        materializar.assert_not_called()
+
+    def test_un_titulo_que_ya_esta_es_duplicado_aunque_este_llena(self, materializar):
+        lista = ListaFactory(usuario=self.usuario, nombre="Para ver")
+        a, b = self._producciones(2)
+        Tiene.objects.create(lista=lista, produccion=a)
+        Tiene.objects.create(lista=lista, produccion=b)
+
+        respuesta = self.cliente.post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": a.id_tmdb, "tipo": "movie"},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "list_item_duplicated")
+        materializar.assert_not_called()
+
+    def test_vuelve_a_contar_si_otra_alta_la_lleno_mientras_tanto(self, materializar):
+        # Dos altas en paralelo con un lugar libre: las dos pasan el primer
+        # chequeo, y la otra termina mientras esta materializa.
+        lista = ListaFactory(usuario=self.usuario, nombre="Para ver")
+        a, b, c = self._producciones(3)
+        Tiene.objects.create(lista=lista, produccion=a)
+
+        def la_otra_alta_termina(*_):
+            Tiene.objects.create(lista=lista, produccion=b)
+            return c
+
+        materializar.side_effect = la_otra_alta_termina
+
+        respuesta = self.cliente.post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": c.id_tmdb, "tipo": "movie"},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "list_items_limit_reached")
+        self.assertEqual(lista.items.count(), 2)
+
+    def test_vistas_no_tiene_techo(self, materializar):
+        vistas = self.usuario.listas.get(nombre="Vistas")
+        a, b, c = self._producciones(3)
+        Tiene.objects.create(lista=vistas, produccion=a)
+        Tiene.objects.create(lista=vistas, produccion=b)
+        materializar.return_value = c
+
+        respuesta = self.cliente.post(
+            f"/api/lists/{vistas.pk}/items/",
+            {"id_tmdb": c.id_tmdb, "tipo": "movie"},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 201)
+
+
+class ReordenarTests(_ConUsuario):
+    def test_mas_ids_que_listas_posibles_es_400(self):
+        respuesta = self.cliente.put(
+            "/api/lists/order/", {"ids": list(range(1, 102))}, format="json"
+        )
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn(
+            ("ids", "max_length"),
+            {(error["field"], error["code"]) for error in respuesta.data["errors"]},
+        )
+
+
+@patch.dict(EscrituraThrottle.THROTTLE_RATES, {"escritura": "3/min"})
+class LimiteDeEscriturasTests(_ConUsuario):
+    def test_pasado_el_limite_las_escrituras_dan_429(self):
+        estados = [
+            self.cliente.post(
+                "/api/lists/", {"nombre": f"Lista {numero}"}, format="json"
+            ).status_code
+            for numero in range(4)
+        ]
+
+        self.assertEqual(estados, [201, 201, 201, 429])
+
+    def test_el_limite_es_comun_a_listas_y_resenas(self):
+        for numero in range(3):
+            self.cliente.post(
+                "/api/lists/", {"nombre": f"Lista {numero}"}, format="json"
+            )
+
+        respuesta = self.cliente.post(
+            "/api/reviews/",
+            {"id_tmdb": 550, "tipo": "movie", "valor": 8},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 429)
+        self.assertEqual(respuesta.data["code"], "throttled")
+
+    def test_las_lecturas_no_cuentan(self):
+        for _ in range(10):
+            self.cliente.get("/api/lists/")
+
+        respuesta = self.cliente.post("/api/lists/", {"nombre": "Nueva"}, format="json")
+
+        self.assertEqual(respuesta.status_code, 201)
+
+    def test_cada_usuario_tiene_su_contador(self):
+        for numero in range(3):
+            self.cliente.post(
+                "/api/lists/", {"nombre": f"Lista {numero}"}, format="json"
+            )
+        otro = APIClient()
+        otro.force_authenticate(UsuarioFactory())
+
+        respuesta = otro.post("/api/lists/", {"nombre": "Mía"}, format="json")
+
+        self.assertEqual(respuesta.status_code, 201)
+
+    def test_cubre_las_demas_escrituras(self):
+        # Si alguien saca la línea de una vista, este test lo nota.
+        from catalogo.reviews import (
+            CalificacionDetailView,
+            CalificacionesView,
+            ResenaTextoView,
+        )
+        from listas.views import (
+            ListaDetailView,
+            ListaItemDetailView,
+            ListaItemsView,
+            ListasOrdenView,
+            ListasView,
+        )
+        from usuarios.cuenta import PreferenciasView
+        from usuarios.perfil import PerfilView
+
+        for vista in (
+            CalificacionesView,
+            CalificacionDetailView,
+            ResenaTextoView,
+            ListasView,
+            ListasOrdenView,
+            ListaDetailView,
+            ListaItemsView,
+            ListaItemDetailView,
+            PerfilView,
+            PreferenciasView,
+        ):
+            with self.subTest(vista=vista.__name__):
+                self.assertIn(EscrituraThrottle, vista.throttle_classes)
+
+    def test_el_perfil_tambien_frena(self):
+        # El perfil revalida el JWT dentro de la transacción: hace falta un token
+        # real, no `force_authenticate` (con él los PUT daban 500).
+        self.cliente.force_authenticate(None)
+        self.cliente.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(self.usuario)}"
+        )
+        estados = [
+            # El límite se revisa antes de validar: el cuerpo no importa.
+            self.cliente.put("/api/profile/", {}, format="json").status_code
+            for n in range(4)
+        ]
+
+        self.assertEqual(estados, [200, 200, 200, 429])

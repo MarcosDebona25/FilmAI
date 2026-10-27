@@ -670,6 +670,8 @@ declare const messages: {
       "already_confirmed": "Este enlace ya no puede usarse para confirmar la cuenta.",
       "list_name_duplicated": "Ya tenés una lista con ese nombre.",
       "list_item_duplicated": "Esta película o serie ya está en la lista.",
+      "list_limit_reached": "Llegaste al máximo de {maxLists, number} listas. Eliminá alguna para crear otra.",
+      "list_items_limit_reached": "Esta lista llegó al máximo de {maxItems, number} títulos.",
       "default_list_protected": "Las listas predeterminadas no se pueden renombrar ni eliminar.",
       "rating_blocks_removal_from_watched": "Para quitarla de Vistas, primero eliminá tu calificación.",
       "rating_duplicated": "Ya calificaste esta película o serie.",
