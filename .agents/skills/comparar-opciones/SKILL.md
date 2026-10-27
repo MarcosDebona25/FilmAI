@@ -31,7 +31,7 @@ Si son varias decisiones a la vez, un cuadro por cada una, numeradas, y al final
 
 ## 3. La pregunta
 
-Después de los cuadros, preguntar con `AskUserQuestion` (no como una lista en el texto): una pregunta por decisión, hasta 4 por llamada, la recomendada primera y con "(Recommended)" en la etiqueta. Si hay más de 4, preguntar las más importantes y dejar el resto con la recomendada como opción por defecto, avisándolo.
+Después de los cuadros, preguntar con la herramienta de preguntas con opciones del harness (en Claude Code, `AskUserQuestion`), no como una lista en el texto. Si el harness no tiene una, preguntar en texto con las opciones numeradas. Una pregunta por decisión, hasta 4 por llamada, la recomendada primera y con «(recomendada)» en la etiqueta. Si hay más de 4, preguntar las más importantes y dejar el resto con la recomendada como opción por defecto, avisándolo.
 
 ## 4. Después de elegir
 

@@ -40,7 +40,7 @@ npm run build
 - Si cambió vistas o serializers: regenerar `contracts/openapi.yaml` y `error-codes.json` y revisar el diff.
 - Si tocó perfil, reseñas o listas: `npm run test:e2e -- --workers=1` con la app levantada.
 - La suite del backend tarda unos 9 minutos. Correrla en segundo plano y no cambiar de rama mientras corre: el contenedor monta `./backend`.
-- No levantar Docker sin el OK del usuario (memoria de WSL).
+- Si Docker está apagado, pedirle al usuario que lo encienda (memoria de WSL). Con Docker encendido, `run --rm` se puede usar sin preguntar; `docker compose up` y `build` de la app, no.
 
 ## 3. Revisión con agentes en paralelo
 
@@ -87,7 +87,7 @@ Con los informes:
 - Push y PR solo con el OK del usuario. El PR va contra `main` (o contra la rama de abajo si está apilado).
 - El CI corre en PRs a `main`, `develop` y `feat/**`: un PR apilado sobre una rama `fix/…` no lo dispara hasta que su base pase a `main`. Al cambiar la base hace falta un push nuevo (por ejemplo, rebasear sobre `origin/main`).
 - PR-Agent es informativo: leer sus comentarios, verificar cada uno como en el paso 3 y anotar los falsos positivos. El que bloquea es `ci.yml`.
-- Se mergea con el CI en verde: `gh pr merge N --merge --delete-branch`. En una pila, cambiar antes la base del PR de arriba a `main` (`gh pr edit N --base main`), así no se cierra al borrar la rama.
+- Se mergea con el CI en verde y con el OK explícito del usuario para ese PR: `gh pr merge N --merge --delete-branch`. En una pila, cambiar antes la base del PR de arriba a `main` (`gh pr edit N --base main`), así no se cierra al borrar la rama.
 
 ## 7. Qué decirle al usuario
 
