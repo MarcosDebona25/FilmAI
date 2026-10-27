@@ -5,6 +5,36 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 26/10/2026 — Ajustes tras la segunda revisión con subagentes (#133 a #135)
+
+- **Fecha**: 26/10/2026
+- **Descripción**: una segunda ronda de tres revisores de solo lectura revisó los PRs abiertos, lo mergeado entre el 24 y el 26/10 y la seguridad que la primera no cubrió. Ajustes sin decisión, verificados antes de aplicarlos:
+  - **Carrera en los bloqueos del admin y de la documentación** (#133): se consultaba el contador, se autenticaba y recién después se sumaba, así que una ráfaga en paralelo probaba más de 10 contraseñas. Ahora `_contar_intento` suma primero (`incr`, atómico) y un ingreso borra la clave. El 429 del admin lleva `Retry-After` y `no-store`. El test de reinicio no probaba el reinicio (pasaba sin `cache.delete`); se corrigió y hay uno que comprueba que el intento ya está contado mientras la vista autentica.
+  - **Clave de React de las reseñas anónimas** (#134): usaba el nombre, y dos reseñas anónimas del mismo día chocaban. Ahora usa la posición y la fecha (la API no manda el id de reseñas ajenas a propósito).
+  - **Calificar y agregar a una lista dentro de los topes de TMDB** (#135): materializan una producción nueva en el mismo pedido (~4 llamadas) y quedaban fuera del tope por pedido y del de la IP. `TopesTMDBMixin` pasó a `catalogo/presupuesto.py` y lo usan también `CalificacionesView` y `ListaItemsView`.
+  - **`PUT /api/preferences/`** suma `EscrituraThrottle`. Un test recorre todas las vistas de escritura y exige el límite en cada una.
+- **Verificado y documentado sin cambio**: con watchdog 6.0, `watchmedo auto-restart` relanza Celery cuando termina, así que un worker matado por memoria vuelve a arrancar dentro del contenedor (no es un ciclo de reinicios del contenedor; el techo igual protege a WSL). Queda como decisión pendiente, igual que el resto de lo que pide decisión (duración del access token, tope por IP frente al NAT, enumeración por tiempo en el reset, CSP y costo de Buscar).
+- **Archivos afectados**: `backend/filmai/documentation.py`, `backend/filmai/test_seguridad_admin_login.py`, `frontend/components/features/title/ReviewsSection.tsx`, `backend/catalogo/presupuesto.py`, `backend/catalogo/views.py`, `backend/catalogo/reviews.py`, `backend/listas/views.py`, `backend/usuarios/cuenta.py`, `backend/catalogo/test_seguridad_topes_tmdb.py`, `backend/listas/test_topes.py`.
+
+---
+
+## 26/10/2026 — Topes de escritura: tasa común por usuario y techos de cantidad
+
+- **Fecha**: 26/10/2026
+- **Descripción**: hallazgo de la revisión de seguridad del 24/10/2026: las escrituras autenticadas no tenían límite. El usuario eligió, entre cuatro opciones (tasa común, tasa más techos, tasa por acción, nada), **tasa común más techos**:
+  - `EscrituraThrottle` (`filmai/throttles.py`, scope `escritura`, 60 por minuto por usuario) en reseñas (alta, edición, borrados), listas (alta, renombre, borrado, ítems, reordenar) y perfil. Las lecturas no cuentan y el contador lo comparten todos esos endpoints. Pasado el límite: 429 (Too Many Requests) con `throttled`.
+  - Techo de **100 listas personalizadas** por usuario (`list_limit_reached`, con `maxLists`) y de **1000 ítems por lista personalizada** (`list_items_limit_reached`, con `maxItems`), los dos 409 (Conflict) y en `listas/models.py`. El de ítems corta antes de materializar: no gasta llamadas a TMDB.
+  - `PUT /api/lists/order/` rechaza más de 100 ids (`max_length`) y arma el conjunto de ids una sola vez (antes era cuadrático).
+- **Decisiones**:
+  - El techo de ítems **no** rige en las predeterminadas (Favoritos, Pendientes, Vistas): calificar agrega a «Vistas» (regla del 30/09/2026), y con un techo calificar dejaría de funcionar a los 1000 títulos. La tasa común igual frena el abuso.
+  - **Ajustes tras PR-Agent (#135)**: con la lista llena, un título que ya está responde `list_item_duplicated` y no «lista llena» (un doble clic no es un intento de pasar el techo). Y el techo se vuelve a contar dentro de la transacción con la lista bloqueada (`select_for_update`): dos altas en paralelo con un lugar libre pasaban las dos.
+  - **Pendiente de decidir**: PR-Agent señaló que la razón de la excepción vale solo para «Vistas»; Favoritos y Pendientes se pueden llenar sin techo (la tasa de 60/min es el único freno). Recomendación: techo también en esas dos.
+  - El conteo de listas se hace antes de crear y no con un bloqueo: dos altas simultáneas pueden pasar el techo por una. Se aceptó.
+  - Los dos códigos son nuevos: `contracts/error-codes.json`, `contracts/openapi.yaml` (enumeración de códigos), `traducciones/claves-extra.csv` y `messages/` (con sus `.d.json.ts`) se regeneraron.
+- **Archivos afectados**: `backend/filmai/throttles.py` (nuevo), `backend/filmai/settings.py`, `backend/filmai/errores/catalogo.py`, `backend/listas/models.py`, `backend/listas/views.py`, `backend/listas/serializers.py`, `backend/catalogo/reviews.py`, `backend/usuarios/perfil.py`, `backend/listas/test_topes.py` (nuevo), `contracts/`, `traducciones/claves-extra.csv`, `frontend/messages/`, `openspec/specs/list-endpoints/spec.md`.
+
+---
+
 ## 26/10/2026 — Las reseñas de cuentas dadas de baja se muestran anónimas
 
 - **Fecha**: 26/10/2026

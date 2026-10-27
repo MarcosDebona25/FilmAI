@@ -1,6 +1,7 @@
 """Endpoints autenticados para gestionar listas e ítems del usuario."""
 
 from collections import defaultdict
+from typing import ClassVar
 
 from django.db import IntegrityError, transaction
 from django.db.models import (
@@ -37,11 +38,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from catalogo.models import Calificacion, ProduccionTraduccion, TipoProduccion
+from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.browse import NOTAS
 from catalogo.services.materialization import materializar
 from catalogo.services.traducciones import texto_localizado
+from filmai.errores.base import ExcepcionAPI
 from filmai.idioma import idioma_efectivo
+from filmai.throttles import EscrituraThrottle
 
 from .exceptions import (
     CalificacionImpideQuitarDeVistas,
@@ -49,7 +53,14 @@ from .exceptions import (
     ListaPredeterminadaProtegida,
     NombreListaDuplicado,
 )
-from .models import ClaveLista, Lista, Tiene, TipoLista
+from .models import (
+    MAX_ITEMS_POR_LISTA,
+    MAX_LISTAS_PERSONALIZADAS,
+    ClaveLista,
+    Lista,
+    Tiene,
+    TipoLista,
+)
 from .pagination import ListaItemCursorPagination
 from .serializers import (
     AgregarItemSerializer,
@@ -148,6 +159,12 @@ def _resumen_response(listas, *, incluir_pertenencia=False, idioma=None):
     ).data
 
 
+def _techo_de_items():
+    return ExcepcionAPI(
+        "list_items_limit_reached", parametros={"maxItems": MAX_ITEMS_POR_LISTA}
+    )
+
+
 def _lista_propia(request, lista_id):
     return get_object_or_404(
         Lista.objects.filter(usuario=request.user, activa=True), pk=lista_id
@@ -161,6 +178,9 @@ def _proteger_lista_predeterminada(lista):
 
 class ListasView(APIView):
     """Lista y crea listas del usuario autenticado."""
+
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     def get(self, request):
         parametros = request.query_params
@@ -188,6 +208,13 @@ class ListasView(APIView):
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
+        personalizadas = Lista.objects.filter(
+            usuario=request.user, tipo=TipoLista.PERSONALIZADA
+        ).count()
+        if personalizadas >= MAX_LISTAS_PERSONALIZADAS:
+            raise ExcepcionAPI(
+                "list_limit_reached", parametros={"maxLists": MAX_LISTAS_PERSONALIZADAS}
+            )
         try:
             with transaction.atomic():
                 # La nueva va al final de las personalizadas, como en el canvas.
@@ -229,6 +256,9 @@ class ListasOrdenView(APIView):
     lista recién creada en otra pestaña no hace fallar el reordenamiento.
     """
 
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
+
     def put(self, request):
         serializer = OrdenListasSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -242,7 +272,10 @@ class ListasOrdenView(APIView):
             )
             por_id = {lista.pk: lista for lista in propias}
             pedidas = [por_id[pk] for pk in ids if pk in por_id]
-            resto = [lista for lista in propias if lista.pk not in set(ids)]
+            # Un solo `set`: armarlo dentro de la comprensión lo recalculaba por
+            # cada lista (costo cuadrático, revisión del 24/10/2026).
+            pedidos = set(ids)
+            resto = [lista for lista in propias if lista.pk not in pedidos]
             for posicion, lista in enumerate(pedidas + resto, start=1):
                 lista.orden = posicion
             Lista.objects.bulk_update(propias, ["orden"])
@@ -260,6 +293,9 @@ class ListaDetailView(APIView):
     `GET` sirve a las predeterminadas también: el detalle (L-03) y la miga
     «Lists > {nombre}» de la ficha (`?from=list-{id}`) lo necesitan para todas.
     """
+
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     def get(self, request, lista_id):
         return Response(_resumen_de(request, lista_id))
@@ -379,8 +415,11 @@ def _anotar_clave_orden(items, orden, idioma):
     return items
 
 
-class ListaItemsView(APIView):
+class ListaItemsView(TopesTMDBMixin, APIView):
     """Pagina o agrega producciones a una lista propia."""
+
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     pagination_class = ListaItemCursorPagination
 
@@ -410,11 +449,27 @@ class ListaItemsView(APIView):
         lista = _lista_propia(request, lista_id)
         serializer = AgregarItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        produccion = materializar(
-            serializer.validated_data["id_tmdb"], serializer.validated_data["tipo"]
-        )
+        id_tmdb = serializer.validated_data["id_tmdb"]
+        tipo = serializer.validated_data["tipo"]
+        con_techo = lista.tipo == TipoLista.PERSONALIZADA
+        # Antes de materializar, para no gastar llamadas a TMDB. Un título que
+        # ya está es un duplicado aunque la lista esté llena (PR-Agent, #135):
+        # un doble clic no tiene que decir «la lista está llena».
+        if con_techo and lista.items.count() >= MAX_ITEMS_POR_LISTA:
+            if lista.items.filter(
+                produccion__id_tmdb=id_tmdb, produccion__tipo=tmdb_a_dominio(tipo)
+            ).exists():
+                raise ItemDuplicado
+            raise _techo_de_items()
+        produccion = materializar(id_tmdb, tipo)
         try:
             with transaction.atomic():
+                if con_techo:
+                    # Se vuelve a contar con la lista bloqueada: dos altas en
+                    # paralelo con 999 ítems pasaban las dos el chequeo de arriba.
+                    Lista.objects.select_for_update().get(pk=lista.pk)
+                    if lista.items.count() >= MAX_ITEMS_POR_LISTA:
+                        raise _techo_de_items()
                 item = Tiene.objects.create(lista=lista, produccion=produccion)
                 # Lo que ya viste deja de estar pendiente (14/10/2026). En el
                 # mismo atomic: si el alta falla, «Pendientes» queda intacta.
@@ -435,6 +490,9 @@ class ListaItemsView(APIView):
 
 class ListaItemDetailView(APIView):
     """Quita un ítem de una lista propia."""
+
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     def delete(self, request, lista_id, item_id):
         """Quita el ítem, y con `?borrar_calificacion=true` también la calificación.

@@ -2527,6 +2527,8 @@ components:
           - link_expired
           - link_invalid
           - list_item_duplicated
+          - list_items_limit_reached
+          - list_limit_reached
           - list_name_duplicated
           - list_name_invalid_characters
           - list_name_missing_alphanumeric
