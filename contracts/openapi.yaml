@@ -68,12 +68,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GoogleSocialLogin'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/GoogleSocialLogin'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/GoogleSocialLogin'
       security:
       - {}
       responses:
@@ -108,12 +102,6 @@ paths:
       requestBody:
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/Login'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Login'
-          multipart/form-data:
             schema:
               $ref: '#/components/schemas/Login'
         required: true
@@ -153,12 +141,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Login'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Login'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Login'
         required: true
       security:
       - {}
@@ -181,9 +163,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-  /api/auth/logout/:
+  /api/auth/logout:
     post:
       operationId: auth_logout_create
+      description: |-
+        Calls Django logout method and delete the Token object
+        assigned to the current User object.
+
+        Accepts/Returns nothing.
+      tags:
+      - auth
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create_2
       description: |-
         Calls Django logout method and delete the Token object
         assigned to the current User object.
@@ -423,12 +438,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Register'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Register'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Register'
         required: true
       security:
       - jwtHeaderAuth: []
@@ -465,12 +474,6 @@ paths:
       requestBody:
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/ResendEmailVerification'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ResendEmailVerification'
-          multipart/form-data:
             schema:
               $ref: '#/components/schemas/ResendEmailVerification'
         required: true

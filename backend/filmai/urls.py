@@ -6,6 +6,7 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAdminUser
 
 from catalogo.reviews import (
@@ -155,6 +156,13 @@ urlpatterns = [
         con_codigo_exito(LogoutView.as_view(), "logged_out"),
         name="rest_logout",
     ),
+    # Sin barra, para que responda igual (con `logged_out`) en vez de caer en la
+    # vista original de dj-rest-auth (revisión del 26/10/2026).
+    path(
+        "api/auth/logout",
+        con_codigo_exito(LogoutView.as_view(), "logged_out"),
+        name="rest_logout_no_slash",
+    ),
     path("api/auth/", include("dj_rest_auth.urls")),
     path(
         "api/auth/registration/",
@@ -173,7 +181,9 @@ urlpatterns = [
     path(
         "api/auth/registration/resend-email/",
         con_codigo_exito(
-            ResendEmailVerificationView.as_view(throttle_classes=THROTTLES_REENVIO),
+            ResendEmailVerificationView.as_view(
+                throttle_classes=THROTTLES_REENVIO, parser_classes=[JSONParser]
+            ),
             "confirmation_email_sent",
         ),
         name="rest_resend_email",

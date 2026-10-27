@@ -199,6 +199,8 @@ REST_FRAMEWORK = {
         # cuentas). Los límites por IP asumen una IP real: ver NUM_PROXIES.
         "login_cuenta": "10/min",
         "login_ip": "30/min",
+        # Google, con la misma tasa pero contador propio (26/10/2026).
+        "google_ip": "30/min",
         # Registro y reenvío disparan correos (cuota de Resend y reputación del
         # dominio): tope por correo destino y por IP, más un enfriamiento.
         "registro_correo": "5/hour",
@@ -309,7 +311,8 @@ LOGGING = {
         },
         "usuarios": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            # DEBUG solo en desarrollo (26/10/2026).
+            "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
     },
@@ -453,6 +456,10 @@ REST_AUTH = {
     "REGISTER_SERIALIZER": "usuarios.serializers.RegisterSerializer",
     "LOGIN_SERIALIZER": "usuarios.serializers.LoginSerializer",
     "USER_DETAILS_SERIALIZER": "usuarios.serializers.UsuarioDetallesSerializer",
+    # La API usa solo JWT: sin esto, cada login de la app abría además una sesión
+    # de Django, que vale para `/admin/` (revisión de seguridad, 26/10/2026). El
+    # admin y la documentación tienen su propio login.
+    "SESSION_LOGIN": False,
 }
 
 _JWT_ACCESS_MINUTES = (
