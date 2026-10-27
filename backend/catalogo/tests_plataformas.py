@@ -9,13 +9,14 @@ from unittest.mock import patch
 
 import fakeredis
 import httpx
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 
 from catalogo.cache import RESPALDO_TTLS, TMDBClientCache
 from catalogo.client import TMDBClient
 from catalogo.exceptions import TMDBServerError
 from catalogo.services.plataformas import plataformas
+from usuarios.factories import UsuarioFactory
 
 NETFLIX = {
     "logo_path": "/netflix.jpg",
@@ -124,20 +125,32 @@ class ServicioPlataformasTests(SimpleTestCase):
         self.assertEqual(datos["suscripcion"], [])
 
 
-class ProvidersViewTests(SimpleTestCase):
-    def _get(self, url, servicio=None):
+class ProvidersViewTests(TestCase):
+    """Con sesión y el país del perfil (decisión del 27/10/2026, issue #124)."""
+
+    def _get(self, url, usuario=None, servicio=None):
         servicio = servicio or ServicioFalso()
+        cliente = APIClient()
+        if usuario is not None:
+            cliente.force_authenticate(usuario)
         with patch(
             "catalogo.views.get_catalog_service",
             side_effect=lambda idioma=None: servicio,
         ):
-            return APIClient().get(url), servicio
+            return cliente.get(url), servicio
 
-    def test_pelicula_y_serie_son_publicas_y_usan_su_tipo(self):
+    def test_sin_sesion_responde_401_sin_llamar_a_tmdb(self):
+        respuesta, servicio = self._get("/api/catalogo/movie/157336/providers/")
+
+        self.assertEqual(respuesta.status_code, 401)
+        self.assertEqual(servicio.pedidos, [])
+
+    def test_pelicula_y_serie_usan_su_tipo_y_el_pais_del_perfil(self):
+        usuario = UsuarioFactory(pais="AR")
         for tipo in ("movie", "tv"):
             with self.subTest(tipo=tipo):
                 respuesta, servicio = self._get(
-                    f"/api/catalogo/{tipo}/157336/providers/?pais=AR"
+                    f"/api/catalogo/{tipo}/157336/providers/", usuario
                 )
 
                 self.assertEqual(respuesta.status_code, 200)
@@ -145,22 +158,30 @@ class ProvidersViewTests(SimpleTestCase):
                 self.assertEqual(respuesta.json()["pais"], "AR")
                 self.assertEqual(respuesta.json()["suscripcion"][0]["id"], 8)
 
-    def test_sin_pais_o_con_pais_invalido_responde_400_con_su_codigo(self):
-        for query in ("", "?pais=", "?pais=ZZ", "?pais=ar", "?pais=ARG"):
-            with self.subTest(query=query):
-                respuesta, servicio = self._get(
-                    f"/api/catalogo/movie/157336/providers/{query}"
-                )
+    def test_el_pais_de_la_url_se_ignora(self):
+        respuesta, _ = self._get(
+            "/api/catalogo/movie/157336/providers/?pais=BR", UsuarioFactory(pais="AR")
+        )
 
-                self.assertEqual(respuesta.status_code, 400)
-                self.assertEqual(
-                    respuesta.json()["errors"],
-                    [{"field": "pais", "code": "country_invalid", "params": {}}],
-                )
-                self.assertEqual(servicio.pedidos, [])
+        self.assertEqual(respuesta.json()["pais"], "AR")
+
+    def test_un_perfil_con_pais_invalido_responde_400_con_su_codigo(self):
+        # El modelo no lo valida en la base: una cuenta vieja podría tenerlo así.
+        respuesta, servicio = self._get(
+            "/api/catalogo/movie/157336/providers/", UsuarioFactory(pais="ZZ")
+        )
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(
+            respuesta.json()["errors"],
+            [{"field": "pais", "code": "country_invalid", "params": {}}],
+        )
+        self.assertEqual(servicio.pedidos, [])
 
     def test_id_invalido_responde_400(self):
-        respuesta, _ = self._get("/api/catalogo/movie/abc/providers/?pais=AR")
+        respuesta, _ = self._get(
+            "/api/catalogo/movie/abc/providers/", UsuarioFactory(pais="AR")
+        )
 
         self.assertEqual(respuesta.status_code, 400)
 

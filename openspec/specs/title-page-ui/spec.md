@@ -41,19 +41,19 @@ Without a session the actions MUST be replaced by «Log in to rate or save», li
 
 ### Requirement: Where to watch
 
-Below the genres the page MUST show, once the detail is loaded, the streaming availability in the viewer's country (added 18/10/2026; it consumes `GET /api/catalogo/{movie,tv}/{id}/providers/?pais=XX` from `tmdb-endpoints`). The country MUST be the account's `pais`; without a session, the browser's region if it is in `paisCodes`; with neither, the section MUST NOT be requested or shown. A failed request MUST also hide it, because it is not critical content. While it loads it MUST show a static placeholder with `role="status"`.
+Below the genres the page MUST show, once the detail is loaded, the streaming availability in the viewer's country (added 18/10/2026; it consumes `GET /api/catalogo/{movie,tv}/{id}/providers/` from `tmdb-endpoints`). Only with a session, in the account's `pais` (27/10/2026, issue #124). Without a session it MUST NOT be requested; in its place the page MUST show the link «Log in to see where to watch it in your country» to `/login?next=<current path>`. A failed request MUST also hide it, because it is not critical content. While it loads it MUST show a static placeholder with `role="status"`.
 
 With providers, the page MUST show a button line «Stream or rent» + up to four logos + «N options in {country}» (plural-aware, country name in the active language) that opens a panel («Where to watch», `role="dialog"`, closed with Escape or an outside click, `aria-expanded` on the button) with the non-empty groups Stream, Free, Rent and Buy. Logos MUST NOT be links: TMDB gives no per-platform URLs, so the panel has a single «See all options on TMDB» link (new tab) when `enlace` is present. A logo missing from TMDB MUST be replaced by the platform's initial. The panel MUST carry the JustWatch attribution «Data by JustWatch», linking to justwatch.com; this attribution is a condition of TMDB's data and MUST NOT be removed. With no providers for the country it MUST say «Not available to stream, rent or buy in {country} yet.»
 
 #### Scenario: Account country
 
 - GIVEN a signed-in user whose `pais` is `AR` opens `/movie/157336`
-- THEN the page requests `providers/?pais=AR` and shows «Stream or rent … N options in Argentina»
+- THEN the page requests `providers/` and shows «Stream or rent … N options in Argentina»
 
-#### Scenario: No country
+#### Scenario: Without a session
 
-- GIVEN a visitor whose browser region is not in `paisCodes`
-- THEN no providers request is made and the section is absent
+- GIVEN a visitor without a session, whatever the browser region
+- THEN no providers request is made and the page shows the link to log in
 
 #### Scenario: Country without data
 

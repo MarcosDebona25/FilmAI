@@ -69,8 +69,11 @@ async function prepararFicha(page: Page) {
       },
     ] as ListaFicha[],
     consultas: [] as string[],
-    /** Simula TMDB caído en `providers/`; si no, responde según `?pais=`. */
+    /** Simula TMDB caído en `providers/`. */
     plataformasCaidas: false,
+    /** El país del perfil: el backend lo toma de la cuenta, no de la URL. */
+    pais: "AR",
+    pedidosPlataformas: 0,
   };
   await page.route("**/api/catalogo/**", (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -81,7 +84,8 @@ async function prepararFicha(page: Page) {
           status: 502,
           json: { code: "upstream_error", params: {}, errors: [] },
         });
-      const pais = new URL(route.request().url()).searchParams.get("pais");
+      estado.pedidosPlataformas += 1;
+      const pais = estado.pais;
       return route.fulfill({
         json:
           pais === "AR" || pais === "US"
@@ -257,7 +261,8 @@ for (const viewport of viewports) {
           },
         })
       );
-      await prepararFicha(page);
+      const estado = await prepararFicha(page);
+      estado.pais = "CN";
       await page.goto("/movie/157336");
 
       await expect(
@@ -266,21 +271,28 @@ for (const viewport of viewports) {
       await expect(page.getByRole("button", { name: /Stream or rent/ })).toHaveCount(0);
     });
 
-    test("dónde verla: sin sesión usa la región del navegador y si TMDB cae se oculta", async ({
-      page,
-    }) => {
+    test("dónde verla: sin sesión invita a ingresar y no pide plataformas", async ({ page }) => {
       await page.route("**/api/profile/", (route) =>
         route.fulfill({ status: 401, json: { code: "not_authenticated", params: {}, errors: [] } })
       );
       const estado = await prepararFicha(page);
       await page.goto("/movie/157336");
-      // `locale: en-US` -> región US.
-      await expect(page.getByRole("button", { name: /Stream or rent/ })).toContainText(
-        "United States"
-      );
 
+      // Issue #124: sin cuenta no hay un país confiable (`locale: en-US` daba EE. UU.).
+      await expect(page.getByRole("link", { name: en.title.providers.signedOut })).toHaveAttribute(
+        "href",
+        "/login?next=%2Fmovie%2F157336"
+      );
+      await expect(page.getByText("Stream or rent")).toHaveCount(0);
+      expect(estado.pedidosPlataformas).toBe(0);
+    });
+
+    test("dónde verla: si TMDB cae se oculta", async ({ page }) => {
+      await prepararCuenta(page);
+      const estado = await prepararFicha(page);
       estado.plataformasCaidas = true;
-      await page.goto("/movie/157336?otra=1");
+      await page.goto("/movie/157336");
+
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Interstellar");
       await expect(page.getByText("Stream or rent")).toHaveCount(0);
     });

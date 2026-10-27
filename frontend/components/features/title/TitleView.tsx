@@ -20,7 +20,7 @@ import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { ApiError, apiFetch } from "@/lib/api";
 import { tmdbLoader, type MediaType } from "@/lib/catalog";
-import { regionDelNavegador, useFormats } from "@/lib/format";
+import { useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
 import { ultimasResenas } from "@/lib/my-reviews";
 import { routes } from "@/lib/routes";
@@ -69,14 +69,14 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const [intento, setIntento] = useState(0);
   const detalle = useCatalog<TmdbDetalle>(`/api/catalogo/${tipo}/${id}/`, intento);
   const creditos = useCatalog<Creditos>(`/api/catalogo/${tipo}/${id}/credits/`, intento);
-  // Dónde verla: el país de la cuenta; sin sesión, la región del navegador (se
-  // lee tras montar para no desfasar la hidratación). Sin ninguno, no se pide.
-  const [regionNavegador, setRegionNavegador] = useState<string | null>(null);
-  useEffect(() => setRegionNavegador(regionDelNavegador()), []);
-  const pais = cargando ? null : (perfil?.pais ?? regionNavegador);
+  // Dónde verla: solo con sesión y en el país del perfil, que el backend toma
+  // de la cuenta (27/10/2026, issue #124). Sin caché de la visita: el país
+  // cambia si se edita el perfil o entra otra cuenta.
+  const pais = conSesion ? (perfil?.pais ?? null) : null;
   const plataformas = useCatalog<Plataformas>(
-    pais ? `/api/catalogo/${tipo}/${id}/providers/?pais=${pais}` : null,
-    intento
+    conSesion ? `/api/catalogo/${tipo}/${id}/providers/` : null,
+    intento,
+    false
   );
 
   // `undefined` = todavía no se sabe; `null` = no calificó.
@@ -504,7 +504,17 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 ))}
               </ul>
             )}
-            {ficha && <WatchProviders pedido={plataformas} pais={pais} />}
+            {ficha && conSesion && <WatchProviders pedido={plataformas} pais={pais} />}
+            {ficha && !cargando && !conSesion && (
+              <p className="text-sm text-fg-2">
+                <Link
+                  href={`${routes.login}?next=${encodeURIComponent(pathname)}`}
+                  className="font-semibold text-fg underline underline-offset-4"
+                >
+                  {t("title.providers.signedOut")}
+                </Link>
+              </p>
+            )}
             {ficha?.sinopsis && (
               <div className="flex flex-col gap-2 md:max-w-[720px]">
                 <h2 className="text-[13px] font-semibold text-fg-3">

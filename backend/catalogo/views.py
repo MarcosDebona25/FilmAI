@@ -328,25 +328,31 @@ class CreditsView(CatalogoBaseView):
         return Response(creditos(self._service(request), self.tipo, id_tmdb))
 
 
-class ProvidersView(CatalogoBaseView):
-    """Plataformas donde ver la producción en `?pais=XX` (ISO 3166-1 alfa-2).
+class ProvidersView(TopesTMDBMixin, APIView):
+    """Plataformas donde ver la producción en el país del perfil, solo con sesión.
 
-    El país lo manda el cliente y no sale de la sesión: el endpoint sigue
-    siendo público y cacheable, como el resto del catálogo.
+    Sin sesión no había un país confiable: se adivinaba por el navegador y
+    caía en EE. UU. (issue #124). Desde el 27/10/2026 el endpoint pide sesión
+    y el país sale del perfil; un `?pais=` en la URL se ignora.
     """
 
+    # Como `RecommendedView`: no hereda de `CatalogoBaseView`, que es pública y
+    # cacheable por cualquiera. Sin sesión, DRF responde 401 antes de `get`.
+    throttle_classes: ClassVar = [ScopedRateThrottle]
+    throttle_scope = "catalogo"
     tipo = None  # "movie" o "tv", lo fija la ruta
 
     def get(self, request, id_tmdb):
         id_tmdb = _id_tmdb(id_tmdb)
-        pais = request.query_params.get("pais")
+        pais = request.user.pais
         if not es_pais_valido(pais):
             raise _error_param(
                 "pais",
                 "Must be a valid ISO 3166-1 alpha-2 country code.",
                 "country_invalid",
             )
-        return Response(plataformas(self._service(request), self.tipo, id_tmdb, pais))
+        servicio = servicio_localizado(idioma_tmdb(request), get_catalog_service)
+        return Response(plataformas(servicio, self.tipo, id_tmdb, pais))
 
 
 class GenresView(CatalogoBaseView):
