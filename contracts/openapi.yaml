@@ -993,10 +993,11 @@ paths:
     get:
       operationId: catalogo_movie_providers_retrieve
       description: |-
-        Plataformas donde ver la producción en `?pais=XX` (ISO 3166-1 alfa-2).
+        Plataformas donde ver la producción en el país del perfil, solo con sesión.
 
-        El país lo manda el cliente y no sale de la sesión: el endpoint sigue
-        siendo público y cacheable, como el resto del catálogo.
+        Sin sesión no había un país confiable: se adivinaba por el navegador y
+        caía en EE. UU. (issue #124). Desde el 27/10/2026 el endpoint pide sesión
+        y el país sale del perfil; un `?pais=` en la URL se ignora.
       parameters:
       - in: path
         name: id_tmdb
@@ -1006,7 +1007,8 @@ paths:
       tags:
       - catalogo
       security:
-      - {}
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
       responses:
         '200':
           description: No response body
@@ -1179,10 +1181,11 @@ paths:
     get:
       operationId: catalogo_tv_providers_retrieve
       description: |-
-        Plataformas donde ver la producción en `?pais=XX` (ISO 3166-1 alfa-2).
+        Plataformas donde ver la producción en el país del perfil, solo con sesión.
 
-        El país lo manda el cliente y no sale de la sesión: el endpoint sigue
-        siendo público y cacheable, como el resto del catálogo.
+        Sin sesión no había un país confiable: se adivinaba por el navegador y
+        caía en EE. UU. (issue #124). Desde el 27/10/2026 el endpoint pide sesión
+        y el país sale del perfil; un `?pais=` en la URL se ignora.
       parameters:
       - in: path
         name: id_tmdb
@@ -1192,7 +1195,8 @@ paths:
       tags:
       - catalogo
       security:
-      - {}
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
       responses:
         '200':
           description: No response body

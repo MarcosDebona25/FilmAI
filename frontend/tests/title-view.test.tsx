@@ -130,31 +130,19 @@ describe("plataformas en la ficha", () => {
 
     const linea = await screen.findByRole("button", { name: /Stream or rent/ });
     expect(linea).toHaveTextContent("3 options in Argentina");
-    expect(estado.llamadas.map((l) => l.path)).toContain(
-      "/api/catalogo/movie/157336/providers/?pais=AR"
-    );
+    // El país lo pone el backend desde la cuenta (issue #124): no va en la URL.
+    expect(estado.llamadas.map((l) => l.path)).toContain("/api/catalogo/movie/157336/providers/");
     const generos = screen.getByRole("list", { name: "Genres" });
     expect(generos.compareDocumentPosition(linea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("sin sesión usa la región del navegador", async () => {
+  it("sin sesión no pide nada e invita a ingresar, aunque el navegador tenga región", async () => {
     vi.spyOn(navigator, "languages", "get").mockReturnValue(["es-AR", "es"]);
-    render(<TitleView tipo="movie" id={157336} />, { locale: "es" });
-
-    expect(await screen.findByRole("button", { name: /Ver o alquilar/ })).toHaveTextContent(
-      "3 opciones en Argentina"
-    );
-    expect(estado.llamadas.map((l) => l.path)).toContain(
-      "/api/catalogo/movie/157336/providers/?pais=AR"
-    );
-  });
-
-  it("sin cuenta ni región del navegador no pide nada ni muestra la sección", async () => {
-    vi.spyOn(navigator, "languages", "get").mockReturnValue(["es"]);
-    vi.spyOn(navigator, "language", "get").mockReturnValue("es");
     render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
 
-    await screen.findByRole("heading", { level: 1, name: "Interstellar" });
+    expect(
+      await screen.findByRole("link", { name: "Log in to see where to watch it in your country" })
+    ).toHaveAttribute("href", "/login?next=%2Fmovie%2F157336");
     expect(pedidas("/api/catalogo/movie/157336/providers/")).toHaveLength(0);
     expect(screen.queryByText("Stream or rent")).not.toBeInTheDocument();
   });
