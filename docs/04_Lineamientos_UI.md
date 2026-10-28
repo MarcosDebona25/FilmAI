@@ -1,6 +1,6 @@
 # FilmAI — Lineamientos de Diseño de Interfaces
 
-> Documento de trabajo para guiar el diseño en Figma. Se actualiza incrementalmente.
+> Documento de trabajo con los lineamientos de interfaz del proyecto. Se actualiza incrementalmente.
 
 ---
 
@@ -465,8 +465,8 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 ### Modales como componentes
 
-Los tres modales comparten estructura base (overlay + caja centrada). Se definen como variants
-de un componente "Modal" en Figma:
+Los tres modales comparten estructura base (overlay + caja centrada). Se definen como variantes
+de un componente «Modal»:
 
 - **ModalForm**: título + campos + Cancelar/Acción (Publicar y Editar).
 - **ModalConfirm**: título + mensaje + Cancelar/Confirmar (Eliminar). Botón Confirmar en rojo (danger).
@@ -1214,16 +1214,11 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 ---
 
-## 9. Recomendaciones para Figma
+## 9. Recomendaciones de diseño
 
-1. Crear un **Design System file** separado con componentes, estilos de color y tipografía.
-2. **Auto layout** en todos los componentes para iteración rápida.
-3. **Variants** con propiedad "State" (default, hover, focus, disabled, error, loading, empty).
-4. Priorizar diseño por sprints:
-   - **Sprint 1**: Login, Registro, Home, Buscar (página `/search`). ← **Implementados** (Home y Buscar desde el 13 y 14/10/2026)
-   - **Sprint 2**: Ficha de detalle, Modales de reseña, Listas.
-   - **Sprint 3**: Perfil, Modificar perfil, Pantallas de error/estado vacío, Confirmación de cuenta.
-5. Prototipar flujos críticos:
+1. Mantener un sistema de diseño con componentes reutilizables, tokens de color y tipografía, sin duplicar estilos en las pantallas.
+2. Cubrir en cada componente los estados default, hover, focus, disabled, error, loading y empty.
+3. Validar los flujos críticos de punta a punta antes de darlos por terminados:
    - Registro completo (registro → email → confirmación → login → home).
    - Publicar reseña (catálogo → detalle → modal → calificar → publicar → ver en perfil).
    - Chatbot (FAB → escribir → enviar → loading → respuesta / cancelar).
