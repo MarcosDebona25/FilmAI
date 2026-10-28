@@ -58,9 +58,11 @@ Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué 
 
 La revisión con subagentes del 24/10/2026 dejó hallazgos sin aplicar además de F11 (resuelto). Siguen abiertos en el código:
 
-- **Media:** el reset de contraseña no tiene límite por IP y `{"email": 5}` responde 500 (Internal Server Error).
-- **Baja:** la clave de TMDB va en la URL y `httpx` la registra en INFO; Postgres se publica en todas las interfaces; `entrypoint.sh` arma código Python con la contraseña del superusuario adentro.
+- **Media:** el reset de contraseña no tiene límite por IP y un cuerpo inválido responde 500 (Internal Server Error).
+- **Baja:** la clave de TMDB queda registrada en el log; Postgres se publica en todas las interfaces; `entrypoint.sh` maneja la contraseña del superusuario en el comando.
 - **Al desplegar:** cookies seguras, HSTS y cabecera de proxy de Django; `NUM_PROXIES`; restringir `/admin/`; CSP (que además cubre el rechazo de las cabeceras anti-framing); cifrado en reposo de la base; Sentry.
 - **Decisiones abiertas:** techo de ítems en Favoritos y Pendientes, duración del access token (8 h), tope por IP detrás de NAT y enumeración por tiempo en el reset.
+
+Todavía no hay un despliegue público; los puntos «al desplegar» se cierran antes de publicar la instancia. El detalle técnico y la reproducción están en los informes locales (`security-audit/`, ignorado por git) y en `docs/decisiones.md`; acá queda solo el estado, como en el resto del archivo.
 
 Resueltos desde esa revisión: `/admin/login/` con límite, topes de escritura, reseñas de cuentas dadas de baja anónimas, escalada por el admin y Google con correo verificado. El detalle está en `docs/decisiones.md`.
