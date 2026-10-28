@@ -197,6 +197,7 @@ title.providers.loading,,status,,Cargando plataformas…,Loading streaming optio
 title.providers.seeAll,,label,,Ver todas las opciones en TMDB,See all options on TMDB,aprobado
 title.providers.newTabHint,,label,,(se abre en otra pestaña),(opens in a new tab),aprobado
 title.providers.attribution,,label,,Datos de <link>JustWatch</link>,Data by <link>JustWatch</link>,aprobado
+title.providers.signedOut,,label,,Iniciá sesión para ver dónde verla en tu país,Log in to see where to watch it in your country,aprobado
 common.media.addedOnLabel,,label,date,Agregada a esta lista el {date},Added to this list on {date},aprobado
 settings.loading,,status,,Cargando preferencias…,Loading settings…,aprobado
 settings.privacy.heading,,label,,Privacidad,Privacy,aprobado

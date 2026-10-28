@@ -293,7 +293,8 @@ declare const messages: {
       "loading": "Cargando plataformas…",
       "seeAll": "Ver todas las opciones en TMDB",
       "newTabHint": "(se abre en otra pestaña)",
-      "attribution": "Datos de <link>JustWatch</link>"
+      "attribution": "Datos de <link>JustWatch</link>",
+      "signedOut": "Iniciá sesión para ver dónde verla en tu país"
     }
   },
   "footer": {

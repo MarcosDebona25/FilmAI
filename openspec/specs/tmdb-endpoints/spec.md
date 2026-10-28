@@ -20,28 +20,33 @@ The system MUST expose read-only `GET` endpoints, each delegating to a `TMDBClie
 | `GET /api/catalogo/tv/{id_tmdb}/` | `get_tv_detail` |
 | `GET /api/catalogo/keywords/` | `get_keywords` |
 | `GET /api/catalogo/{movie,tv}/{id_tmdb}/credits/` | `get_credits` (and `get_tv_detail` for shows) |
-| `GET /api/catalogo/{movie,tv}/{id_tmdb}/providers/?pais=XX` | `get_watch_providers` |
+| `GET /api/catalogo/{movie,tv}/{id_tmdb}/providers/` (session) | `get_watch_providers` |
 
 The credits endpoint (C-07) is the only one that reshapes TMDB's JSON: `{"directores": [...], "reparto": [{"nombre", "personaje"}]}`, at most 50 cast members in TMDB's order. For movies the directors are the crew with `job == "Director"`; for shows, the detail's `created_by`, because TMDB has no series-level director.
 
-The providers endpoint is public and reshapes TMDB's `watch/providers` into `{"pais", "enlace", "suscripcion", "gratis", "alquiler", "compra"}`. Each group is a list of `{"id", "nombre", "logo"}` (`logo` is TMDB's `logo_path`), sorted by `display_priority` and without repeats; `gratis` joins TMDB's `free` and `ads`. `enlace` is TMDB's `link` for the country, or `null` when the country has no providers. `pais` MUST be an ISO 3166-1 alpha-2 code from `contracts/enums.json` (`paisCodes`); if it is missing or not in the list the endpoint MUST answer 400 (Bad Request) with the code `country_invalid` and not call TMDB. The country is sent by the client (not read from the session) so the endpoint stays public and cacheable.
+The providers endpoint requires a session (since 27/10/2026, issue #124: without one there was no reliable country) and reshapes TMDB's `watch/providers` into `{"pais", "enlace", "suscripcion", "gratis", "alquiler", "compra"}`. Each group is a list of `{"id", "nombre", "logo"}` (`logo` is TMDB's `logo_path`), sorted by `display_priority` and without repeats; `gratis` joins TMDB's `free` and `ads`. `enlace` is TMDB's `link` for the country, or `null` when the country has no providers. The country MUST be the signed-in user's `pais`; a `?pais=` in the URL MUST be ignored. Without a session the endpoint MUST answer 401 (Unauthorized) and not call TMDB. If the profile's `pais` is not in `paisCodes` (`contracts/enums.json`) it MUST answer 400 (Bad Request) with the code `country_invalid` and not call TMDB.
 
 #### Scenario: Providers for a country
 
 - GIVEN TMDB lists Netflix as `flatrate` and Tubi as `free` and `ads` for AR
-- WHEN `GET /api/catalogo/movie/157336/providers/?pais=AR` is called
+- WHEN a user whose `pais` is `AR` calls `GET /api/catalogo/movie/157336/providers/`
 - THEN `suscripcion` has Netflix and `gratis` has Tubi once
 
 #### Scenario: Country without data
 
-- GIVEN TMDB has no entry for the requested country
-- WHEN the providers endpoint is called with it
+- GIVEN TMDB has no entry for the user's country
+- WHEN the providers endpoint is called
 - THEN the four groups are empty and `enlace` is `null`
 
-#### Scenario: Missing or invalid country
+#### Scenario: Invalid profile country
 
-- WHEN `pais` is absent or not in `paisCodes`
+- WHEN the user's `pais` is not in `paisCodes`
 - THEN the response is 400 (Bad Request) with `country_invalid` on `pais`
+
+#### Scenario: Without a session
+
+- WHEN the providers endpoint is called without a session
+- THEN the response is 401 (Unauthorized) and TMDB is not called
 
 #### Scenario: Raw JSON passthrough
 

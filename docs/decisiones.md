@@ -5,6 +5,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 27/10/2026 — «Dónde verla» solo con sesión (issue #124)
+
+- **Fecha**: 27/10/2026
+- **Descripción**: sin sesión, el país de las plataformas salía de la región del navegador y en la práctica caía en EE. UU. Decisión de Gonza: en vez de adivinarlo, la sección pide iniciar sesión.
+  - **Backend**: `ProvidersView` deja de ser pública (como `RecommendedView`: autenticación y permiso por defecto, 401 sin sesión, sin caché pública del navegador) y toma el país de `request.user.pais`; un `?pais=` en la URL se ignora. Un perfil con país inválido sigue dando 400 `country_invalid`.
+  - **Frontend**: sin sesión, la ficha no pide plataformas y muestra «Iniciá sesión para ver dónde verla en tu país» con el enlace al ingreso (`title.providers.signedOut`). Con sesión no usa la caché de la visita: el país cambia si se edita el perfil o entra otra cuenta (el backend igual cachea TMDB 12 h).
+  - Opciones descartadas: ocultar la sección sin decir nada (el visitante no sabe que existe) y cerrar solo el frontend (la API seguiría respondiendo con cualquier país).
+  - `regionDelNavegador` (`lib/format.ts`) queda sin uso en la app; se conserva con su test por si el registro lo usa para preseleccionar el país.
+  - Queda abierto del mismo issue lo que agregó Marcos: alternativas de diseño para la caja de plataformas.
+- **Archivos afectados**: `backend/catalogo/views.py`, `backend/catalogo/tests_plataformas.py`, `backend/catalogo/test_seguridad_id_tmdb.py`, `contracts/openapi.yaml`, `frontend/components/features/title/TitleView.tsx`, `frontend/tests/title-view.test.tsx`, `frontend/e2e/ficha.spec.ts`, `traducciones/claves-extra.csv`, `frontend/messages/`, docs 02, 03 y 05, `openspec/specs/{tmdb-endpoints,title-page-ui,error-contract}/spec.md`.
+
+---
+
 ## 26/10/2026 — Skills `cerrar-tramo` y `comparar-opciones`
 
 - **Fecha**: 26/10/2026
