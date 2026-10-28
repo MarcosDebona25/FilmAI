@@ -5,6 +5,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — README del frontend y e2e de cambio de idioma estables
+
+- **Fecha**: 28/10/2026
+- **Descripción**:
+  - **`frontend/README.md`** (Q-05 del doc 05): era el texto de `create-next-app`. Ahora cubre arranque con `docker compose`, scripts, tests (Vitest y Playwright, con la API simulada), multiidioma y convenciones. El doc 05 pasa a decir que falta solo la verificación documentada de una instalación limpia.
+  - **Cambio de idioma en los e2e**: la entrada anterior dejó abiertos los pasos de cambio de idioma por ser sensibles a la carga. Un clic o una tecla antes de que la página hidrate no hace nada y el test falla de forma intermitente. En `i18n-flows.spec.ts` se envolvieron en `expect(...).toPass()` con aserciones internas de timeout corto (2 s) y 15 s en total: el radio de `/settings` en el flujo de registro, la flecha del selector del pie sin sesión (si el idioma ya cambió no se repite, porque otra flecha lo devolvería), el enlace «Language» del pie con sesión y el clic del test «fallo de guardado».
+- **Archivos afectados**: `frontend/README.md`, `frontend/e2e/i18n-flows.spec.ts`, `docs/05_Plan_de_Desarrollo.md`.
+- **Verificación**: `i18n-flows.spec.ts` completo, 5 vueltas con 2 workers: 35/35 (4,9 min). Prettier e `i18n:check` sin errores.
+
+---
+
 ## 28/10/2026 — Dos tests e2e inestables más: idioma de la cuenta en `listas` y registro en `acceso`
 
 - **Fecha**: 28/10/2026
