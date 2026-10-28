@@ -158,6 +158,9 @@ export function SearchView() {
   // página y la siguiente, un título puede venir dos veces.
   const titulos = normalizeTitles(resultados.paginas.flatMap((pagina) => pagina.results));
   const hayMas = primera !== undefined && cargadas < Math.min(primera.total_pages, MAX_PAGINAS);
+  const mostrandoResultados =
+    resultados.status !== "loading" &&
+    !(resultados.status === "error" && resultados.paginas.length === 0);
   const puedeSeguir =
     resultados.status === "ok" &&
     !resultados.cargandoMas &&
@@ -361,6 +364,39 @@ export function SearchView() {
         />
       )}
 
+      {/* El contenedor vive siempre; el aviso se agrega después y se anuncia (un
+          `role="status"` que nace con el texto no siempre se lee). Vacío sale del
+          flujo con `empty:sr-only` para no sumar un hueco al flex. */}
+      <div role="status" className="empty:sr-only">
+        {mostrandoResultados && titulos.length === 0 && (
+          <div className="flex max-w-[640px] flex-col items-start gap-3 pt-12 pb-20 md:gap-3.5 md:pt-24 md:pb-[120px]">
+            <p className="font-display text-[44px] leading-[0.95] break-words md:text-[64px]">
+              {q
+                ? t("search.results.emptyTitle", { query: q })
+                : t("search.results.emptyFiltersTitle")}
+            </p>
+            <p className="text-pretty text-fg-2 md:text-[17px]">{t("search.results.emptyHint")}</p>
+            {conCriterio && (
+              <button
+                type="button"
+                onClick={limpiar}
+                className="mt-2 inline-flex h-12 cursor-pointer items-center rounded-[10px] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                {activos > 0 ? t("common.filters.clear") : t("search.input.clearLabel")}
+              </button>
+            )}
+          </div>
+        )}
+        {mostrandoResultados && titulos.length > 0 && conCriterio && primera && (
+          <p className="text-sm text-fg-2 md:text-[15px]">
+            <span className="font-semibold text-foreground">
+              {t("search.results.count", { count: primera.total_results })}
+            </span>
+            {q && ` ${t("search.results.queryHint", { query: q })}`}
+          </p>
+        )}
+      </div>
+
       {resultados.status === "error" && resultados.paginas.length === 0 ? (
         <ErrorRetry
           mensaje={mensaje(resultados.error)}
@@ -374,37 +410,8 @@ export function SearchView() {
             <MediaCardSkeleton key={i} />
           ))}
         </ul>
-      ) : titulos.length === 0 ? (
-        <div
-          role="status"
-          className="flex max-w-[640px] flex-col items-start gap-3 pt-12 pb-20 md:gap-3.5 md:pt-24 md:pb-[120px]"
-        >
-          <p className="font-display text-[44px] leading-[0.95] break-words md:text-[64px]">
-            {q
-              ? t("search.results.emptyTitle", { query: q })
-              : t("search.results.emptyFiltersTitle")}
-          </p>
-          <p className="text-pretty text-fg-2 md:text-[17px]">{t("search.results.emptyHint")}</p>
-          {conCriterio && (
-            <button
-              type="button"
-              onClick={limpiar}
-              className="mt-2 inline-flex h-12 cursor-pointer items-center rounded-[10px] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              {activos > 0 ? t("common.filters.clear") : t("search.input.clearLabel")}
-            </button>
-          )}
-        </div>
-      ) : (
+      ) : titulos.length === 0 ? null : (
         <>
-          {conCriterio && primera && (
-            <p role="status" className="text-sm text-fg-2 md:text-[15px]">
-              <span className="font-semibold text-foreground">
-                {t("search.results.count", { count: primera.total_results })}
-              </span>
-              {q && ` ${t("search.results.queryHint", { query: q })}`}
-            </p>
-          )}
           <ul
             aria-busy={resultados.cargandoMas}
             className={GRILLA}

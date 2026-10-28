@@ -266,6 +266,10 @@ export default function PerfilPage() {
   // Un campo del formulario de edición, con su ayuda y su error.
   function campoEditable(campo: Campo, etiqueta: string, ayuda: string, autoComplete: string) {
     const id = `${ids}-${campo}`;
+    const mostrarEstado =
+      campo === "nombre_usuario" &&
+      borrador?.nombre_usuario !== perfil?.nombre_usuario &&
+      !errores[campo];
     return (
       <div key={campo} className="flex flex-col gap-1.5">
         <label htmlFor={id} className={ETIQUETA}>
@@ -296,31 +300,34 @@ export default function PerfilPage() {
             className={cn(CAMPO, campo === "nombre_usuario" && "pl-9")}
           />
         </div>
-        {campo === "nombre_usuario" &&
-          borrador?.nombre_usuario !== perfil?.nombre_usuario &&
-          !errores[campo] && (
-            <p
-              id={`${id}-estado`}
-              aria-live="polite"
-              className={cn(
-                "flex items-center gap-1.5 text-[13px] font-semibold",
-                disponibilidad === "available"
-                  ? "text-ok"
-                  : disponibilidad === "taken"
-                    ? "text-destructive"
-                    : "font-normal text-fg-3"
-              )}
-            >
-              {disponibilidad === "available" && <Check aria-hidden="true" className="size-4" />}
-              {disponibilidad === "checking"
+        {campo === "nombre_usuario" && (
+          // Montada desde el inicio: el estado se agrega después y se anuncia.
+          <p
+            id={`${id}-estado`}
+            aria-live="polite"
+            className={cn(
+              "flex items-center gap-1.5 text-[13px] font-semibold",
+              disponibilidad === "available"
+                ? "text-ok"
+                : disponibilidad === "taken"
+                  ? "text-destructive"
+                  : "font-normal text-fg-3"
+            )}
+          >
+            {mostrarEstado && disponibilidad === "available" && (
+              <Check aria-hidden="true" className="size-4" />
+            )}
+            {!mostrarEstado
+              ? ""
+              : disponibilidad === "checking"
                 ? t("profile.username.checking")
                 : disponibilidad === "available"
                   ? t("auth.signUp.usernameAvailable")
                   : disponibilidad === "taken"
                     ? t("profile.username.taken")
                     : ""}
-            </p>
-          )}
+          </p>
+        )}
         <p id={`${id}-ayuda`} className={AYUDA}>
           {ayuda}
         </p>

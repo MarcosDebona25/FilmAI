@@ -78,6 +78,25 @@ describe("registro", () => {
     expect(screen.getByRole("button", { name: en.nav.account.signUp })).toBeDisabled();
   });
 
+  it("marca todos los campos como obligatorios aunque el botón siga deshabilitado", () => {
+    render(<RegisterPage />, { locale: "en" });
+    const campos = [
+      en.common.fields.firstName,
+      en.common.fields.lastName,
+      en.common.fields.username,
+      en.common.fields.country,
+      en.common.fields.email,
+      en.common.fields.birthDate,
+      en.auth.signUp.genderLabel,
+      en.auth.password.label,
+      en.common.fields.passwordConfirm,
+    ];
+    for (const etiqueta of campos)
+      expect(screen.getByLabelText(etiqueta, { selector: "input, select" })).toBeRequired();
+    expect(screen.getByRole("checkbox")).toBeRequired();
+    expect(screen.getByRole("button", { name: en.nav.account.signUp })).toBeDisabled();
+  });
+
   it("el país arranca vacío aunque el navegador tenga región, ordenado por nombre y con error si queda vacío", async () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("es-AR");
     const user = userEvent.setup();

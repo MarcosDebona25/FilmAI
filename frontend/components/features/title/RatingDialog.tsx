@@ -12,10 +12,12 @@ import { translateError } from "@/lib/errors";
 const MAX_TEXTO = 1000;
 
 function Nota({ valor }: { valor: number }) {
+  const t = useTranslations("common.rating");
   return (
     <span className="inline-flex items-center gap-1 tabular-nums">
       <StarIcon className="size-3.5 fill-primary" />
-      {valor}
+      <span className="sr-only">{t("starValueLabel", { rating: String(valor) })}</span>
+      <span aria-hidden="true">{valor}</span>
     </span>
   );
 }

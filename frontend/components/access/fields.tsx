@@ -31,11 +31,7 @@ export function FieldHelp({ id, children }: { id?: string; children: ReactNode }
 
 export function FieldOk({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <p
-      id={id}
-      aria-live="polite"
-      className="flex items-center gap-1.5 text-[13px] font-semibold text-ok"
-    >
+    <p id={id} className="flex items-center gap-1.5 text-[13px] font-semibold text-ok">
       <Check aria-hidden="true" className="size-[15px] flex-none" strokeWidth={2.5} />
       {children}
     </p>
@@ -74,7 +70,13 @@ export function TextField({ label, id, help, error, status, prefix, ...input }: 
           {...input}
         />
       </div>
-      <div id={describedBy} className="flex flex-col gap-2">
+      {/* Con `status`, el contenedor es la región viva: existe desde el inicio y el
+          estado se agrega después (un `aria-live` que nace con texto no se anuncia). */}
+      <div
+        id={describedBy}
+        aria-live={status === undefined ? undefined : "polite"}
+        className="flex flex-col gap-2"
+      >
         {error ? <FieldError>{error}</FieldError> : (status ?? null)}
         {!error && !status && help ? <FieldHelp>{help}</FieldHelp> : null}
         {!error && status && help ? <FieldHelp>{help}</FieldHelp> : null}

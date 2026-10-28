@@ -92,7 +92,8 @@ describe("Calificaciones y reseñas", () => {
     expect(lecturas()).toEqual(["/api/reviews/mias/?clase=movie&nota_min=8&orden=nota-desc"]);
     // El título lleva a la ficha y su miga vuelve acá.
     expect(titulo).toHaveAttribute("href", "/movie/157336?from=reviews");
-    expect(screen.getByLabelText("Tu calificación: 9 de 10")).toHaveTextContent("9");
+    // El nombre accesible dice «de 10»; el número suelto queda oculto al lector.
+    expect(screen.getByText("Tu calificación: 9 de 10")).toHaveClass("sr-only");
     expect(screen.getByText("La vi con mi papá.")).toBeVisible();
     // Sin texto, «Agregar reseña» lleva a la ficha.
     expect(
