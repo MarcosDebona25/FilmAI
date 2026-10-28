@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — XSS: revisión, enlace de TMDB validado y dos pendientes (CSP y chatbot)
+
+- **Fecha**: 28/10/2026
+- **Descripción**: revisión de las vías de XSS a pedido de Gonza.
+  - **Lo que ya protege**: React escapa todo lo que muestra y no hay `dangerouslySetInnerHTML` ni librerías de Markdown/HTML; las plantillas de Django (correos, documentación) escapan y ninguna usa `|safe` ni `autoescape off`; `?next=` del login pasa por `destinoSeguro` (`lib/safe-next.ts`), que solo acepta el mismo origen; las cookies del JWT son `HttpOnly` (un XSS no podría robar el token, aunque sí actuar como el usuario).
+  - **Arreglado**: el `link` de `watch/providers` de TMDB iba tal cual al `href` de «See all options on TMDB». Un `javascript:` se habría ejecutado al hacer clic. Ahora `catalogo/services/plataformas.py` lo acepta solo si empieza con `https://`; si no, `enlace` va en `null` y las plataformas se siguen mostrando.
+  - **Pendiente: CSP (Content-Security-Policy)**, para antes del despliegue. Hoy no hay una segunda barrera si algo se cuela. Para decidir entonces (con la skill `comparar-opciones`): CSP con *nonce* desde el middleware de Next (fuerza el render dinámico) frente a una política estática con `'unsafe-inline'` para estilos; incluir `frame-ancestors 'none'`. Probar antes en modo `Content-Security-Policy-Report-Only`.
+  - **Pendiente: el chatbot**, cuando se implemente. Lo que responde el modelo es texto que un tercero puede manipular (inyección de prompt a través de sinopsis, reseñas o el propio mensaje). Reglas: mostrarlo como texto o, si lleva Markdown, con un renderizador que no acepte HTML crudo y con sanitizado (`rehype-sanitize` o DOMPurify); los enlaces solo `https://` y, si son internos, armados por el frontend a partir de ids (las tarjetas), nunca URLs que escriba el modelo; nada de `dangerouslySetInnerHTML`. Agregar tests con respuestas maliciosas (`<script>`, `<img onerror>`, `javascript:`).
+- **Archivos afectados**: `backend/catalogo/services/plataformas.py`, `backend/catalogo/tests_plataformas.py`, `openspec/specs/tmdb-endpoints/spec.md`.
+
+---
+
 ## 27/10/2026 — «Dónde verla» solo con sesión (issue #124)
 
 - **Fecha**: 27/10/2026
