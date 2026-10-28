@@ -53,11 +53,12 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 - WHEN request A finally ends and runs its release
 - THEN B's lock is still in place and a third message gets 409
 
-#### Scenario: A hung tool does not outlive the turn
+#### Scenario: A slow turn does not outlive its budget
 
-- GIVEN Ollama stops answering during `buscar_semantico`
+- GIVEN tools and model calls that together keep the turn running (for example, a fake tool that sleeps past the budget)
 - WHEN the turn reaches `LLM_TIMEOUT_SECONDS`
 - THEN the stream ends with `error` and the lock is released
+- AND a hung Ollama is not this case: it fails in 3 s and returns to the model as `tool_failed` (see «Ollama down during a turn»)
 
 ### Requirement: The answer streams as server-sent events
 
