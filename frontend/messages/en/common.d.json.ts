@@ -95,7 +95,8 @@ declare const messages: {
       "publish": "Post",
       "delete": "Delete review",
       "label": "Review",
-      "add": "Add review"
+      "add": "Add review",
+      "moderatedNotice": "This review was moderated, so you can’t edit or delete its text."
     },
     "search": {
       "placeholder": "Search movies and TV shows"
@@ -676,6 +677,7 @@ declare const messages: {
       "default_list_protected": "Default lists can’t be renamed or deleted.",
       "rating_blocks_removal_from_watched": "To remove it from Watched, first delete your rating.",
       "rating_duplicated": "You’ve already rated this movie or TV show.",
+      "review_moderated": "This review was moderated, so you can’t edit or delete its text.",
       "username_already_used": "That username is already in use.",
       "required": "Complete this field.",
       "blank": "This field can’t be empty.",

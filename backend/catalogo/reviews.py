@@ -36,7 +36,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from catalogo.exceptions import CalificacionDuplicada
+from catalogo.exceptions import CalificacionDuplicada, ResenaModerada
 from catalogo.models import Calificacion, ProduccionTraduccion, Resena
 from catalogo.pagination_reviews import ResenaCursorPagination
 from catalogo.presupuesto import TopesTMDBMixin
@@ -215,6 +215,11 @@ class CalificacionDetailView(APIView):
         entrada.is_valid(raise_exception=True)
         datos = entrada.validated_data
 
+        # Moderada, solo la nota se puede cambiar. Se rechaza antes de escribir
+        # nada: un PUT con las dos cosas no deja la nota a medias.
+        if "texto" in datos and calificacion.moderada:
+            raise ResenaModerada
+
         with transaction.atomic():
             if "valor" in datos:
                 calificacion.valor = datos["valor"]
@@ -257,6 +262,11 @@ class ResenaTextoView(APIView):
 
     def delete(self, request, calificacion_id):
         calificacion = _calificacion_propia(request, calificacion_id)
+        # Borrar el texto moderado dejaría escribir uno nuevo, que nace
+        # visible: sería levantar la moderación (F10). Para quitarlo, se borra
+        # la calificación entera.
+        if calificacion.moderada:
+            raise ResenaModerada
         # Idempotente: borrar el texto de una calificación que no lo tiene no
         # es un error que describa ningún problema, y así el frontend puede
         # reintentar sin interpretar un 404 ambiguo (¿no existe la calificación

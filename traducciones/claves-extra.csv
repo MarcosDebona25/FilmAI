@@ -29,6 +29,7 @@ errors.codes.list_items_limit_reached,list_items_limit_reached,error,maxItems,"E
 errors.codes.default_list_protected,default_list_protected,error,,Las listas predeterminadas no se pueden renombrar ni eliminar.,Default lists can’t be renamed or deleted.,aprobado
 errors.codes.rating_blocks_removal_from_watched,rating_blocks_removal_from_watched,error,,"Para quitarla de Vistas, primero eliminá tu calificación.","To remove it from Watched, first delete your rating.",aprobado
 errors.codes.rating_duplicated,rating_duplicated,error,,Ya calificaste esta película o serie.,You’ve already rated this movie or TV show.,aprobado
+errors.codes.review_moderated,review_moderated,error,,"Esta reseña fue moderada, así que no podés editar ni borrar su texto.","This review was moderated, so you can’t edit or delete its text.",aprobado
 errors.codes.username_already_used,username_already_used,error,,Ese nombre de usuario ya está en uso.,That username is already in use.,aprobado
 errors.codes.required,required,error,,Completá este campo.,Complete this field.,aprobado
 errors.codes.blank,blank,error,,Este campo no puede quedar vacío.,This field can’t be empty.,aprobado
@@ -219,3 +220,4 @@ auth.newPassword.successDescription,,success,,Tu contraseña fue restablecida. Y
 auth.newPassword.goToLogin,,label,,Ir a iniciar sesión,Go to log in,aprobado
 auth.newPassword.invalidTitle,,error,,El enlace no es válido,The link is invalid,aprobado
 auth.newPassword.invalidDescription,,error,,Los enlaces de restablecimiento son válidos durante 1 hora o hasta que se usen. Podés pedir uno nuevo desde «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión.,Reset links are valid for 1 hour or until they are used. You can request a new one from “Forgot your password?” on the login screen.,aprobado
+common.review.moderatedNotice,,label,,"Esta reseña fue moderada, así que no podés editar ni borrar su texto.","This review was moderated, so you can’t edit or delete its text.",aprobado

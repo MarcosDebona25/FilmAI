@@ -123,6 +123,7 @@ exact existing messages and aliases; these tables define public semantics.
 | `default_list_protected`             | 409                                   | Cannot rename/delete default list.                       |
 | `rating_blocks_removal_from_watched` | 409                                   | Remove rating first.                               |
 | `rating_duplicated`                  | 409                                   | Existing rating.                                                 |
+| `review_moderated`                   | 409                                   | The text of a moderated review cannot be edited or deleted.      |
 | `username_already_used`              | 400 validation / 409 profile conflict | Username already registered; profile conflict has empty errors.                                           |
 
 #### Validation leaf codes

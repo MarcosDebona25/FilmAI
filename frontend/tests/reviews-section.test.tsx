@@ -183,7 +183,13 @@ describe("reseñas de la comunidad", () => {
 });
 
 describe("tu reseña", () => {
-  const mia = { id: 9, valor: 9, texto: "La vi tres veces.", fecha: "2026-10-01" };
+  const mia = {
+    id: 9,
+    valor: 9,
+    texto: "La vi tres veces.",
+    fecha: "2026-10-01",
+    moderada: false,
+  };
 
   it("aparece arriba con Editar y Borrar, y borrar deja la nota", async () => {
     estado.perfil = { nombre: "Juan", apellido: "Pérez", avatar_id: 1 };
@@ -208,6 +214,21 @@ describe("tu reseña", () => {
     await waitFor(() => expect(onTextoBorrado).toHaveBeenCalled());
     expect(estado.llamadas).toContain("DELETE /api/reviews/9/texto/");
     expect(toast.success).toHaveBeenCalledWith("Review deleted.");
+  });
+
+  it("moderada: Borrar queda inerte y se explica por qué", async () => {
+    estado.perfil = { nombre: "Juan", apellido: "Pérez", avatar_id: 1 };
+    render(<ReviewsSection {...props} mia={{ ...mia, moderada: true }} />, { locale: "en" });
+
+    const tuya = screen.getByRole("article", { name: "Your review" });
+    expect(
+      within(tuya).getByText("This review was moderated, so you can’t edit or delete its text.")
+    ).toBeVisible();
+    const borrar = within(tuya).getByRole("button", { name: "Delete review" });
+    expect(borrar).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(borrar);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(estado.llamadas).not.toContain("DELETE /api/reviews/9/texto/");
   });
 
   it("sin texto no hay tarjeta propia", async () => {

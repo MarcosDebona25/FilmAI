@@ -95,7 +95,8 @@ declare const messages: {
       "publish": "Publicar",
       "delete": "Eliminar reseña",
       "label": "Reseña",
-      "add": "Agregar reseña"
+      "add": "Agregar reseña",
+      "moderatedNotice": "Esta reseña fue moderada, así que no podés editar ni borrar su texto."
     },
     "search": {
       "placeholder": "Buscar películas y series"
@@ -354,7 +355,7 @@ declare const messages: {
       "emptyTitle": "Esta lista todavía está vacía",
       "emptyDescription": "Desde cualquier ficha podés sumar películas y series con «Agregar a lista».",
       "removeConfirmTitle": "¿Quitar «{title}» de {listName}?",
-      "loadError": "No pudimos cargar esta lista. Probá de nuevo.",
+      "loadError": "No pudimos cargar esta lista. Intentá de nuevo.",
       "loadMore": "Cargar más títulos",
       "searchPlaceholder": "Buscar por título",
       "displayedCount": "Mostrando {shownCount} de {totalCount, plural, one {# ítem} other {# ítems}}",
@@ -372,7 +373,7 @@ declare const messages: {
       "cancelled": "Reordenamiento cancelado. {listName} volvió a la posición {position}."
     },
     "overview": {
-      "loadError": "No pudimos cargar tus listas. Probá de nuevo.",
+      "loadError": "No pudimos cargar tus listas. Intentá de nuevo.",
       "loading": "Cargando tus listas…"
     }
   },
@@ -568,7 +569,7 @@ declare const messages: {
       "googleDescription": "Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.",
       "sendLink": "Enviar enlace por correo",
       "linkSent": "Te enviamos un enlace para establecer tu contraseña.",
-      "linkError": "No pudimos enviar el enlace. Intentá más tarde."
+      "linkError": "No pudimos enviar el enlace. Intentá de nuevo más tarde."
     },
     "account": {
       "heading": "Tu cuenta"
@@ -676,6 +677,7 @@ declare const messages: {
       "default_list_protected": "Las listas predeterminadas no se pueden renombrar ni eliminar.",
       "rating_blocks_removal_from_watched": "Para quitarla de Vistas, primero eliminá tu calificación.",
       "rating_duplicated": "Ya calificaste esta película o serie.",
+      "review_moderated": "Esta reseña fue moderada, así que no podés editar ni borrar su texto.",
       "username_already_used": "Ese nombre de usuario ya está en uso.",
       "required": "Completá este campo.",
       "blank": "Este campo no puede quedar vacío.",
