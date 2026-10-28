@@ -437,6 +437,124 @@ class EliminarCalificacionTests(_BaseResenas):
         )
 
 
+class ResenaModeradaTests(_BaseResenas):
+    """Una reseña moderada (`activa=False`) no deja escribir un texto nuevo (F10).
+
+    Sin esto, el autor borraba el texto, escribía otro y la fila nueva nacía
+    `activa=True`: la moderación se levantaba sola.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.calificacion = self._calificacion_existente(valor=9, texto=_RESENA)
+        Resena.objects.filter(calificacion=self.calificacion).update(activa=False)
+
+    def _put(self, cuerpo):
+        return self.cliente.put(
+            f"/api/reviews/{self.calificacion.pk}/", cuerpo, format="json"
+        )
+
+    def _texto(self):
+        return Resena.objects.get(calificacion=self.calificacion).texto
+
+    def test_editar_el_texto_es_409_y_no_cambia_nada(self):
+        respuesta = self._put({"texto": "Texto nuevo."})
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "review_moderated")
+        self.assertEqual(self._texto(), _RESENA)
+
+    def test_borrar_el_texto_es_409_y_la_resena_sigue_ahi(self):
+        respuesta = self.cliente.delete(f"/api/reviews/{self.calificacion.pk}/texto/")
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.assertEqual(respuesta.data["code"], "review_moderated")
+        resena = Resena.objects.get(calificacion=self.calificacion)
+        self.assertFalse(resena.activa)
+
+    def test_un_put_con_nota_y_texto_no_guarda_ni_la_nota(self):
+        respuesta = self._put({"valor": 3, "texto": "Texto nuevo."})
+
+        self.assertEqual(respuesta.status_code, 409)
+        self.calificacion.refresh_from_db()
+        self.assertEqual(self.calificacion.valor, 9)
+        self.assertEqual(self._texto(), _RESENA)
+
+    def test_cambiar_solo_la_nota_sigue_funcionando(self):
+        respuesta = self._put({"valor": 4})
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.data["moderada"])
+        self.calificacion.refresh_from_db()
+        self.assertEqual(self.calificacion.valor, 4)
+        self.assertFalse(Resena.objects.get(calificacion=self.calificacion).activa)
+
+    def test_quitar_la_calificacion_entera_sigue_permitido(self):
+        # CU-015 pide eliminar «permanentemente»: moderar no lo impide.
+        respuesta = self.cliente.delete(f"/api/reviews/{self.calificacion.pk}/")
+
+        self.assertEqual(respuesta.status_code, 204)
+        self.assertFalse(Calificacion.objects.filter(pk=self.calificacion.pk).exists())
+        self.assertFalse(Resena.objects.exists())
+
+    def test_reactivada_vuelve_el_control_normal(self):
+        Resena.objects.filter(calificacion=self.calificacion).update(activa=True)
+
+        editada = self._put({"texto": "Texto nuevo."})
+        self.assertEqual(editada.status_code, 200)
+        self.assertFalse(editada.data["moderada"])
+        self.assertEqual(self._texto(), "Texto nuevo.")
+
+        borrada = self.cliente.delete(f"/api/reviews/{self.calificacion.pk}/texto/")
+        self.assertEqual(borrada.status_code, 204)
+        self.assertFalse(Resena.objects.exists())
+
+    def test_una_calificacion_sin_texto_no_cuenta_como_moderada(self):
+        sin_texto = Calificacion.objects.create(
+            usuario=UsuarioFactory(),
+            produccion=ProduccionAudiovisualFactory(id_tmdb=551),
+            valor=5,
+        )
+        self.assertFalse(sin_texto.moderada)
+
+    def test_la_comunidad_sigue_sin_verla(self):
+        otro = APIClient()
+        otro.force_authenticate(UsuarioFactory())
+
+        respuesta = otro.get("/api/reviews/?id_tmdb=550&tipo=movie")
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data["results"], [])
+
+    def test_mis_resenas_la_marca_como_moderada(self):
+        propia = self.cliente.get("/api/reviews/mias/?id_tmdb=550&tipo=movie")
+        self.assertEqual(propia.status_code, 200)
+        self.assertTrue(propia.data["moderada"])
+
+        lista = self.cliente.get("/api/reviews/mias/")
+        self.assertTrue(lista.data["results"][0]["moderada"])
+
+    def test_una_resena_activa_no_viene_marcada(self):
+        Resena.objects.filter(calificacion=self.calificacion).update(activa=True)
+
+        respuesta = self.cliente.get("/api/reviews/mias/?id_tmdb=550&tipo=movie")
+
+        self.assertFalse(respuesta.data["moderada"])
+
+    def test_la_de_otro_usuario_sigue_siendo_404(self):
+        # Moderada o no, para quien no es su dueño no existe.
+        ajeno = APIClient()
+        ajeno.force_authenticate(UsuarioFactory())
+
+        put = ajeno.put(
+            f"/api/reviews/{self.calificacion.pk}/", {"texto": "x"}, format="json"
+        )
+        borrado = ajeno.delete(f"/api/reviews/{self.calificacion.pk}/texto/")
+
+        self.assertEqual(put.status_code, 404)
+        self.assertEqual(borrado.status_code, 404)
+
+
 class PropiedadYAutenticacionTests(_BaseResenas):
     """Nadie toca la calificación de otro, y los anónimos no entran."""
 

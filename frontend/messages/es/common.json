@@ -92,7 +92,8 @@
       "publish": "Publicar",
       "delete": "Eliminar reseña",
       "label": "Reseña",
-      "add": "Agregar reseña"
+      "add": "Agregar reseña",
+      "moderatedNotice": "Esta reseña fue moderada, así que no podés editar ni borrar su texto."
     },
     "search": {
       "placeholder": "Buscar películas y series"
@@ -673,6 +674,7 @@
       "default_list_protected": "Las listas predeterminadas no se pueden renombrar ni eliminar.",
       "rating_blocks_removal_from_watched": "Para quitarla de Vistas, primero eliminá tu calificación.",
       "rating_duplicated": "Ya calificaste esta película o serie.",
+      "review_moderated": "Esta reseña fue moderada, así que no podés editar ni borrar su texto.",
       "username_already_used": "Ese nombre de usuario ya está en uso.",
       "required": "Completá este campo.",
       "blank": "Este campo no puede quedar vacío.",

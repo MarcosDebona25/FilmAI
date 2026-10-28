@@ -104,3 +104,54 @@ describe("RatingDialog al editar", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+describe("RatingDialog con la reseña moderada", () => {
+  const inicial = { valor: 9, texto: "La vi tres veces.", moderada: true };
+
+  it("deja el texto de solo lectura y explica por qué", () => {
+    render(<RatingDialog {...base} enVistas inicial={inicial} onSubmit={vi.fn()} />, {
+      locale: "es",
+    });
+
+    const texto = screen.getByRole("textbox", { name: /Reseña/ });
+    expect(texto).toHaveAttribute("readonly");
+    expect(texto).toHaveValue("La vi tres veces.");
+    const aviso = screen.getByText(
+      "Esta reseña fue moderada, así que no podés editar ni borrar su texto."
+    );
+    expect(texto).toHaveAccessibleDescription(aviso.textContent ?? "");
+    expect(screen.queryByText(/\/1000/)).toBeNull();
+  });
+
+  it("la nota se puede cambiar y el texto viaja tal cual estaba", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<RatingDialog {...base} enVistas inicial={inicial} onSubmit={onSubmit} />, {
+      locale: "es",
+    });
+
+    fireEvent.change(screen.getByRole("textbox", { name: /Reseña/ }), {
+      target: { value: "Intento de cambio." },
+    });
+    fireEvent.click(screen.getByRole("radio", { name: "5 de 10" }));
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar" }));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({ valor: 5, texto: "La vi tres veces." })
+    );
+  });
+
+  it("sin moderar, el texto sigue siendo editable", () => {
+    render(
+      <RatingDialog
+        {...base}
+        enVistas
+        inicial={{ ...inicial, moderada: false }}
+        onSubmit={vi.fn()}
+      />,
+      { locale: "es" }
+    );
+
+    expect(screen.getByRole("textbox", { name: /Reseña/ })).not.toHaveAttribute("readonly");
+    expect(screen.queryByText(/fue moderada/)).toBeNull();
+  });
+});

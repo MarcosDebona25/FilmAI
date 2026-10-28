@@ -27,8 +27,11 @@ services:
     container_name: filmai_db
     mem_limit: 512m
     memswap_limit: 512m
+    # Solo loopback: se conecta desde la propia máquina (DBeaver, psql), pero
+    # no desde otra máquina o VM de la red. Los demás servicios lo alcanzan por
+    # la red interna de Docker (host `db`).
     ports:
-      - "5432:5432" # expuesto para conectar desde el host (DBeaver, etc.)
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}

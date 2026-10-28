@@ -189,6 +189,9 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña (legacy)
         "recuperar_contrasena_email": "5/day",  # 5 solicitudes de recuperación por día por email (no por IP)
+        # Tope por IP para el mismo pedido: el de arriba cuenta por correo y no
+        # frena a quien prueba muchos correos distintos (28/10/2026).
+        "recuperar_contrasena_ip": "10/hour",
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
@@ -309,6 +312,10 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        # httpx registra en INFO cada URL pedida, y la de TMDB lleva la clave en
+        # la query (`api_key=`): con WARNING no queda en ningún log (28/10/2026).
+        "httpx": {"level": "WARNING"},
+        "httpcore": {"level": "WARNING"},
         "usuarios": {
             "handlers": ["console"],
             # DEBUG solo en desarrollo (26/10/2026).
