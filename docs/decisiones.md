@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Doc 04 sin Figma, estado en un solo lugar y resumen de auditoría solo con estado
+
+- **Fecha**: 28/10/2026
+- **Descripción**: a raíz de la revisión de PR-Agent del #145 se corrigieron dos inconsistencias documentales.
+  - **Doc 04 §9**: el equipo no usa Figma, así que la sección dejó de llamarse «Recomendaciones para Figma» y de nombrar archivos de diseño, auto layout y variants. También se quitó la lista de sprints con la marca «Implementados» del Sprint 1: duplicaba el estado y ya estaba incompleta, porque el Sprint 2 (ficha, modal de reseñas y listas) y el Sprint 3 (perfil, errores y confirmación) están implementados según `docs/05_Plan_de_Desarrollo.md` y el §10 del mismo doc 04. El estado queda solo en el §10 y en el doc 05.
+  - **Alternativas descartadas**: marcar los tres sprints como implementados (el estado seguiría duplicado en dos secciones y volvería a envejecer) y borrar la sección 9 (rompe la numeración y las referencias al §10 que ya usan otros documentos).
+  - **Resumen de auditoría**: la sección de abiertos del 24/10 quedó con severidad y estado, sin el detalle de explotación (payload, archivo y línea, formato de log). Es lo que el propio archivo declara («solo títulos, módulos, estado y prioridad») y lo que pide AGENTS.md §9: el detalle y la reproducción viven en `security-audit/` (ignorado por git) y en este registro. El repositorio es público, pero todavía no hay despliegue; los puntos «al desplegar» se cierran antes de publicar la instancia.
+- **Archivos afectados**: `docs/04_Lineamientos_UI.md`, `docs/auditoria-seguridad-resumen.md`, `docs/decisiones.md`.
+
 ## 28/10/2026 — Inventario de pendientes contrastado con el código y docs al día
 
 - **Fecha**: 28/10/2026
