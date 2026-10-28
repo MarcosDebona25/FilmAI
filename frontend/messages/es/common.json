@@ -176,7 +176,7 @@
       "tvPremieresTitle": "Series que se estrenaron en {year}",
       "trendingDescription": "Lo más visto en TMDB estos siete días",
       "newReleasesTitle": "Novedades",
-      "emptyDescription": "No hay títulos para mostrar en este momento. Probá de nuevo más tarde o buscá algo puntual."
+      "emptyDescription": "No hay títulos para mostrar en este momento. Intentá de nuevo más tarde o buscá algo puntual."
     },
     "carousel": {
       "previousRowLabel": "Anteriores en {rowTitle}",
@@ -351,7 +351,7 @@
       "emptyTitle": "Esta lista todavía está vacía",
       "emptyDescription": "Desde cualquier ficha podés sumar películas y series con «Agregar a lista».",
       "removeConfirmTitle": "¿Quitar «{title}» de {listName}?",
-      "loadError": "No pudimos cargar esta lista. Probá de nuevo.",
+      "loadError": "No pudimos cargar esta lista. Intentá de nuevo.",
       "loadMore": "Cargar más títulos",
       "searchPlaceholder": "Buscar por título",
       "displayedCount": "Mostrando {shownCount} de {totalCount, plural, one {# ítem} other {# ítems}}",
@@ -369,7 +369,7 @@
       "cancelled": "Reordenamiento cancelado. {listName} volvió a la posición {position}."
     },
     "overview": {
-      "loadError": "No pudimos cargar tus listas. Probá de nuevo.",
+      "loadError": "No pudimos cargar tus listas. Intentá de nuevo.",
       "loading": "Cargando tus listas…"
     }
   },
@@ -565,7 +565,7 @@
       "googleDescription": "Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.",
       "sendLink": "Enviar enlace por correo",
       "linkSent": "Te enviamos un enlace para establecer tu contraseña.",
-      "linkError": "No pudimos enviar el enlace. Intentá más tarde."
+      "linkError": "No pudimos enviar el enlace. Intentá de nuevo más tarde."
     },
     "account": {
       "heading": "Tu cuenta"
