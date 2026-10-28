@@ -131,7 +131,9 @@
 - [ ] 5.3 Error codes `chat_request_in_progress`, `chat_unavailable` in the
       catalog; front translations; contract tests green
 - [ ] 5.4 RED `chatbot/tests_sse.py` (`AsyncClient`): 401, 403 CSRF as JSON,
-      400 length, 409 lock, 429 with `retry_after_seconds`
+      403 `account_deactivated` with a live cookie, 400 length, 409 lock, 429
+      with `retry_after_seconds`; a disconnect during the save keeps the lock
+      until the save ends
 - [ ] 5.5 RED: a full turn yields the event sequence and stores the pair on
       `fin`; provider failure yields `error` and stores nothing
 - [ ] 5.6 RED: through `get_asgi_application()` with a fake ASGI `receive`
