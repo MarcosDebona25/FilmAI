@@ -189,3 +189,83 @@ class CorreoThrottleTests(ThrottleBase):
     def test_sin_pasarse_del_limite_el_flujo_normal_sigue_andando(self):
         self.pendiente()
         self.assertEqual(Usuario.objects.filter(correo="nueva@example.com").count(), 1)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class ResetContrasenaThrottleTests(ThrottleBase):
+    """Reset de contraseña: cuerpo inválido sin 500 (Internal Server Error) y tope por IP.
+
+    Antes, `{"email": 5}` rompía el throttle (`.strip()` sobre un entero) y el
+    pedido no tenía límite por IP: se podían pedir correos de reset a miles de
+    cuentas distintas, cada una con su propio contador por correo.
+    """
+
+    RUTAS = ("/api/auth/password/reset/", "/api/auth/password/reset")
+
+    def test_un_correo_que_no_es_texto_responde_400_y_nunca_500(self):
+        for ruta in self.RUTAS:
+            for valor in (5, None, ["a"], {"a": 1}, True, 1.5):
+                with self.subTest(ruta=ruta, valor=valor):
+                    cache.clear()
+                    respuesta = self.client.post(ruta, {"email": valor}, format="json")
+                    self.assertEqual(respuesta.status_code, 400)
+                    self.assertEqual(respuesta.json()["code"], "validation_error")
+
+    def test_un_cuerpo_que_no_es_un_objeto_responde_400_y_nunca_500(self):
+        for ruta in self.RUTAS:
+            for cuerpo in (["a@b.com"], "a@b.com", 5, None):
+                with self.subTest(ruta=ruta, cuerpo=cuerpo):
+                    cache.clear()
+                    respuesta = self.client.post(ruta, cuerpo, format="json")
+                    self.assertEqual(respuesta.status_code, 400)
+
+    def test_los_pedidos_invalidos_caen_al_limite_por_ip(self):
+        estados = self.rafaga(self.RUTAS[0], [{"email": 5}] * 7)
+        self.assertEqual(estados[:5], [400] * 5)
+        self.assertEqual(estados[5:], [429, 429])
+
+    def test_la_ip_n_mas_uno_recibe_429_aunque_cambie_el_correo(self):
+        for ruta in self.RUTAS:
+            cache.clear()
+            with self.subTest(ruta=ruta):
+                cuerpos = [{"email": f"victima{i}@example.com"} for i in range(12)]
+                estados = self.rafaga(ruta, cuerpos)
+                self.assertEqual(estados[:10], [200] * 10)
+                self.assertEqual(estados[10:], [429, 429])
+
+    def test_el_limite_por_ip_no_depende_del_x_forwarded_for(self):
+        estados = [
+            self.client.post(
+                self.RUTAS[0],
+                {"email": f"victima{i}@example.com"},
+                format="json",
+                HTTP_X_FORWARDED_FOR=f"10.2.{i}.1",
+            ).status_code
+            for i in range(12)
+        ]
+        self.assertEqual(estados[-1], 429)
+
+    def test_el_limite_por_correo_sigue_vigente(self):
+        for ruta in self.RUTAS:
+            cache.clear()
+            with self.subTest(ruta=ruta):
+                estados = self.rafaga(ruta, [{"email": "mismo@example.com"}] * 7)
+                self.assertEqual(estados[:5], [200] * 5)
+                self.assertEqual(estados[5:], [429, 429])
+
+    def test_el_429_por_ip_usa_el_sobre_estandar(self):
+        self.rafaga(
+            self.RUTAS[0], [{"email": f"victima{i}@example.com"} for i in range(10)]
+        )
+        respuesta = self.client.post(
+            self.RUTAS[0], {"email": "otra@example.com"}, format="json"
+        )
+        self.assertEqual(respuesta.status_code, 429)
+        self.assertEqual(respuesta.json()["code"], "throttled")
+
+    def test_el_mensaje_de_intentos_restantes_sigue_en_la_respuesta(self):
+        respuesta = self.client.post(
+            self.RUTAS[0], {"email": "ana@example.com"}, format="json"
+        )
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.json()["intentos_restantes"], 4)
