@@ -3,6 +3,7 @@
 from io import StringIO
 from unittest.mock import Mock, patch
 
+from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
@@ -61,6 +62,9 @@ class ServiciosPorIdioma:
 
 class ConServiciosPorIdioma(TestCase):
     def setUp(self):
+        # El cursor del relleno vive en la caché: que no pase de un test a otro.
+        cache.clear()
+        self.addCleanup(cache.clear)
         self.fabrica = ServiciosPorIdioma()
         parche = patch(
             "catalogo.services.materialization.get_catalog_service",
@@ -163,6 +167,32 @@ class RellenoDeTraduccionesTests(ConServiciosPorIdioma):
         self.assertEqual((resultado["procesadas"], resultado["fallidas"]), (1, 1))
         self.assertTrue(buena.traducciones.exists())
         self.assertEqual(list(pendientes()), [mala])
+
+    def test_las_filas_que_fallan_no_ocupan_siempre_el_limite(self):
+        # Con un tope por corrida, las que fallan no pueden quedarse primeras
+        # y dejar sin pasar a las demás noche tras noche.
+        malas = [self._enriquecida(), self._enriquecida()]
+        buena = self._enriquecida()
+        for mala in malas:
+            self.fabrica.falla.add(("en-US", mala.id_tmdb))
+
+        primera = rellenar(limite=2)
+        self.assertEqual((primera["procesadas"], primera["fallidas"]), (0, 2))
+        segunda = rellenar(limite=2)
+
+        self.assertEqual(segunda["procesadas"], 1)
+        self.assertTrue(buena.traducciones.exists())
+
+    def test_el_cursor_vuelve_al_principio_al_agotar_los_pendientes(self):
+        mala = self._enriquecida()
+        self.fabrica.falla.add(("en-US", mala.id_tmdb))
+
+        rellenar(limite=5)
+        # Ya no queda nada por delante del cursor: la corrida siguiente
+        # reintenta la que falló en vez de quedarse sin trabajo.
+        resultado = rellenar(limite=5)
+
+        self.assertEqual(resultado["fallidas"], 1)
 
     def test_limite_y_comando(self):
         for _ in range(3):
