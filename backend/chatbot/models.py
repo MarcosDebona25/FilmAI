@@ -70,8 +70,8 @@ class Mensaje(models.Model):
     texto = models.TextField(
         "texto",
         help_text=(
-            "El diagrama de tablas indica VARCHAR(250), pero una respuesta del LLM "
-            "puede superar ese límite; se usa TextField para no truncar contenido."
+            "TEXT, como indica el diagrama de tablas (doc 03): una respuesta del "
+            "LLM puede superar los 250 caracteres que tenía antes."
         ),
     )
     autor = models.CharField("autor", max_length=25, choices=TipoAutor.choices)
