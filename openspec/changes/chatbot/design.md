@@ -75,7 +75,7 @@ sequenceDiagram
     end
     O-->>F: event: tarjetas [≤ 3 validated cards]
     O->>DB: save user message + answer together (atomic)
-    O-->>F: event: fin {id_usuario, id_respuesta}
+    O-->>F: event: fin {id, id_pregunta}
     Note over F,V: Cancel = the browser aborts the fetch. Django sees the<br/>disconnect, cancels the generator, nothing is saved.
 ```
 
@@ -137,7 +137,7 @@ its own message, adding a code is additive.
 | `daphne` in `INSTALLED_APPS` for development; uvicorn in production | `channels` | `daphne` replaces `runserver` with an ASGI one and nothing else. No websockets are needed: SSE is plain HTTP. |
 | Lock "one in flight" = `cache.add(f"chat:{id}:en_curso", 1, timeout=30)`, released in `finally` | A DB row lock | `cache.add` is atomic in Redis, and the 30 s expiry frees the lock if the process dies. In development the cache is `LocMemCache`, per process — correct with a single dev server. |
 | Hourly limit = a fixed-window counter in the cache (`incr`), like `presupuesto.py` | DRF `UserRateThrottle` | The view is not DRF. Same mechanism already used and tested for TMDB. Counts only messages that passed validation. |
-| Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: `CancelledError` unwinds the loop before the save, so CU-014 «nothing persisted» holds by construction. A test with `AsyncClient` pins it. |
+| Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: a cancel before the save unwinds the loop and nothing is persisted. A test with `AsyncClient` pins it. **The window after the save**: the pair is committed just before `fin` is written, so a cancel in that instant leaves it saved while the panel shows «Solicitud cancelada». That is CU-014's failure postcondition («la cancelación no se procesa a tiempo») and was accepted on 08/10: the answer appears in the history the next time it loads. Rule for the front: once `fin` arrived, the cancel came too late and the answer is shown. |
 | Save user message and answer **together**, after the last token | Save the question on arrival | A failed or cancelled turn leaves no orphan question (08/10/2026). The front keeps the draft to retry. |
 | Tool results drop «Vistas» **and** `mostrar_tarjetas` validates | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
 | `mostrar_tarjetas` keeps only ids returned by a tool in this turn, cuts to 3 | Trust the model's ids | Anchoring: no invented titles reach a card. Invalid ids are dropped silently (09/10). |

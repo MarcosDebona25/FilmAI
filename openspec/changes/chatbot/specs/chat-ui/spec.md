@@ -34,6 +34,20 @@ While an answer streams the panel MUST show the status from `estado` codes, appe
 - AND the partial answer is removed and «Solicitud cancelada» is shown
 - AND the question stays in the input to retry
 
+#### Scenario: Cancel arrives after `fin`
+
+- GIVEN the `fin` event was already received
+- WHEN the user presses «Cancelar» in the same instant
+- THEN the cancel is ignored and the answer is shown as saved
+
+#### Scenario: `error` after some text
+
+- GIVEN several `texto` deltas were shown
+- WHEN an `error` event with `code: "chat_unavailable"` arrives
+- THEN the partial answer is removed (it was not saved)
+- AND the message for that code is shown, translated with the error catalog
+- AND the question stays in the input to retry
+
 #### Scenario: Stream ends without `fin`
 
 - GIVEN the connection drops mid-answer

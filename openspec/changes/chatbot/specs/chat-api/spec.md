@@ -49,7 +49,7 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 
 ### Requirement: The answer streams as server-sent events
 
-A valid `POST` MUST answer 200 with `Content-Type: text/event-stream` and a sequence of events named `estado`, `texto`, `tarjetas`, `fin` or `error`, each with one line of JSON as `data`. The stream MUST end with exactly one of `fin` or `error`. `estado` and `error` MUST carry codes, never text. The full contract is in `contracts/sse-chat.md`.
+A valid `POST` MUST answer 200 with `Content-Type: text/event-stream` and a sequence of events named `estado`, `texto`, `tarjetas`, `fin` or `error`, each with one line of JSON as `data`. The stream MUST end with exactly one of `fin` or `error`. `estado` and `error` MUST carry codes, never text. `fin` MUST carry `{"id": <answer pk>, "id_pregunta": <user message pk>}`; `error` MUST carry the error envelope `{code, params, errors}`. The full contract is in `contracts/sse-chat.md`.
 
 #### Scenario: A turn that uses a tool
 
@@ -76,6 +76,13 @@ The user message and the bot answer MUST be saved in one transaction only after 
 - THEN the server stops the turn
 - AND no `Mensaje` row is created for either side
 - AND the lock is released
+
+#### Scenario: Cancelled right after the save (CU-014, failure postcondition)
+
+- GIVEN the pair was committed and `fin` is about to be written
+- WHEN the client closes the connection in that instant
+- THEN the pair stays stored
+- AND it is returned by the history the next time it is read
 
 #### Scenario: Failure while saving
 
