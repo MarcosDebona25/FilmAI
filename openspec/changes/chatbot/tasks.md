@@ -60,8 +60,10 @@
       records the returned ids in the turn context
 - [ ] 2.4 RED: `mostrar_tarjetas` drops unseen ids, «Vistas» and duplicates,
       keeps 3, and returns the card dicts in the turn language
-- [ ] 2.5 RED: `mis_listas` reads only the context user's lists; a custom list
-      of another user is not found
+- [ ] 2.5 RED: `mis_listas` reads only the context user's lists; without
+      arguments it returns `{id, nombre}`; a custom list is read by `id`; the
+      `id` of another user's list is not found; a list named with the user's
+      name comes back anonymized
 - [ ] 2.6 RED: a tool that raises returns `{"error": "tool_failed"}`; the TMDB
       budget error too
 - [ ] 2.7 GREEN: `chatbot/tools/` (registry, schemas, functions), reusing
@@ -95,7 +97,10 @@
 - [ ] 3.7 RED: two tools of the same turn, each through the bridge, add to the
       **same** TMDB budget counter (the total accumulates; the 31st call fails)
 - [ ] 3.8 GREEN: `prompts.py`, `orquestador.py`, `ProveedorOpenAICompatible`
-      (`openai` dependency; thinking off by default; `max_tokens` 800)
+      (`openai` dependency; thinking off by default; `max_tokens` 800); every
+      tool result goes through `anonimizar` before the provider
+- [ ] 3.8b RED/GREEN: with `LLM_THINKING=true`, a tool round echoes
+      `reasoning_content` in the assistant message (needed for 8.2)
 - [ ] 3.9 `manage.py chatear` (interactive, prints events); try it against
       DeepSeek with the `.env` key
 
