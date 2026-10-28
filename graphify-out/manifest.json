@@ -552,9 +552,9 @@
     "semantic_hash": ""
   },
   "docs/02_Especificaci\u00f3n de Requerimientos.md": {
-    "mtime": 1793155302.5056114,
-    "seen": 1793157067.8563251,
-    "ast_hash": "d73e553b38f2b1bc12fd950872eaa887",
+    "mtime": 1793193688.3849037,
+    "seen": 1793193733.2176576,
+    "ast_hash": "3a1213c1dae4504558ce0ec5e3cbf9eb",
     "semantic_hash": ""
   },
   "docs/03_DiagramaCU.md": {
@@ -564,21 +564,21 @@
     "semantic_hash": "560779b55988641fd021de6ae9ce003f"
   },
   "docs/03_Modelos de Datos y de Dise\u00f1o.md": {
-    "mtime": 1793155302.5056114,
-    "seen": 1793157067.8563626,
-    "ast_hash": "fbe01d44f7a7399fe30df8d8df9b73b3",
+    "mtime": 1793193688.3865714,
+    "seen": 1793193733.217696,
+    "ast_hash": "a798f9eee21a8173f6c36ddb7dc21d3d",
     "semantic_hash": ""
   },
   "docs/04_Lineamientos_UI.md": {
-    "mtime": 1792343466.7977984,
-    "seen": 1793153740.1622922,
-    "ast_hash": "4c8ed4b2745a1a62b58bad410d30f613",
+    "mtime": 1793193688.3986506,
+    "seen": 1793193733.2176974,
+    "ast_hash": "9f1b6609579d87a86f6dcd50a75992bc",
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1793155302.5096214,
-    "seen": 1793157067.8563983,
-    "ast_hash": "4e55a6a947ae678c16433f70995e2741",
+    "mtime": 1793193688.4006855,
+    "seen": 1793193733.2176986,
+    "ast_hash": "2b46de34c57c1b6da6d6251eac97de60",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793157043.462979,
-    "seen": 1793157067.856459,
-    "ast_hash": "3cd56c8e63c511503e6c0604106f06e6",
+    "mtime": 1793193702.5721862,
+    "seen": 1793193733.2177372,
+    "ast_hash": "9bda7fd6f51a4a321948df2573f346d1",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -3018,8 +3018,8 @@
     "semantic_hash": ""
   },
   "frontend/e2e/acceso.spec.ts": {
-    "mtime": 1793156331.0076644,
-    "seen": 1793157067.847059,
+    "mtime": 1793157582.3857687,
+    "seen": 1793193733.20709,
     "ast_hash": "4e2f710642b61291c60f8566e7c7a4ec",
     "semantic_hash": ""
   },
@@ -3702,8 +3702,8 @@
     "semantic_hash": ""
   },
   "frontend/e2e/listas.spec.ts": {
-    "mtime": 1793155890.6988525,
-    "seen": 1793157067.8474903,
+    "mtime": 1793157582.3862164,
+    "seen": 1793193733.2075138,
     "ast_hash": "c2ab3de43451c9c99893eceb5ab37781",
     "semantic_hash": ""
   },
@@ -4044,9 +4044,9 @@
     "semantic_hash": ""
   },
   "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1793155302.5096214,
-    "seen": 1793157067.8564355,
-    "ast_hash": "65f639c879a482142d0bfe34bada5673",
+    "mtime": 1793193702.559807,
+    "seen": 1793193733.217736,
+    "ast_hash": "9fdf1329fb52da4c78718204c0d36e30",
     "semantic_hash": ""
   },
   "backend/filmai/cache.py": {
