@@ -297,6 +297,15 @@ class Calificacion(models.Model):
     def __str__(self):
         return f"{self.usuario} → {self.produccion} ({self.valor}/10)"
 
+    @property
+    def moderada(self):
+        """Si su reseña fue desactivada por un administrador (AD-01').
+
+        Una calificación sin texto no tiene nada que moderar, así que no cuenta.
+        """
+        resena = getattr(self, "resena", None)
+        return resena is not None and not resena.activa
+
 
 class Resena(models.Model):
     """Texto opcional asociado a una calificación (composición 1:1, CU-015)."""

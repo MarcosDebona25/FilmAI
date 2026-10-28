@@ -82,6 +82,9 @@ class CalificacionSerializer(serializers.Serializer):
     valor = serializers.IntegerField()
     fecha = serializers.DateField()
     texto = serializers.SerializerMethodField()
+    # Con `true`, el texto no se puede editar ni borrar (409 `review_moderated`):
+    # el frontend lo usa para bloquear esos controles y explicar por qué.
+    moderada = serializers.BooleanField(read_only=True)
     id_tmdb = serializers.IntegerField(source="produccion.id_tmdb")
     tipo = serializers.SerializerMethodField()
 

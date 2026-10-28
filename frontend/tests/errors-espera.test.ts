@@ -49,3 +49,14 @@ describe("translateError con 429 (Too Many Requests)", () => {
     );
   });
 });
+
+describe("translateError con review_moderated (409 Conflict)", () => {
+  it("se traduce por código en ambos idiomas", () => {
+    expect(translateError({ code: "review_moderated" }, "es")).toBe(
+      "Esta reseña fue moderada, así que no podés editar ni borrar su texto."
+    );
+    expect(translateError({ code: "review_moderated" }, "en")).toBe(
+      "This review was moderated, so you can’t edit or delete its text."
+    );
+  });
+});

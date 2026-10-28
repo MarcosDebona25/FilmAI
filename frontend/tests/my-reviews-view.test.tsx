@@ -14,6 +14,7 @@ const INTERSTELLAR: MiResena = {
   valor: 9,
   fecha: "2026-10-03",
   texto: "La vi con mi papá.",
+  moderada: false,
 };
 const AMERICAN_DAD: MiResena = {
   id: 2,
@@ -24,6 +25,7 @@ const AMERICAN_DAD: MiResena = {
   valor: 7,
   fecha: "2026-09-28",
   texto: null,
+  moderada: false,
 };
 
 const estado = vi.hoisted(() => ({
@@ -251,6 +253,49 @@ describe("Calificaciones y reseñas", () => {
         screen.getByRole("heading", { level: 1, name: "Calificaciones y reseñas" })
       ).toHaveFocus()
     );
+  });
+
+  it("moderada: explica por qué no se borra el texto y el menú no lo borra", async () => {
+    estado.pagina = pagina([{ ...INTERSTELLAR, moderada: true }, AMERICAN_DAD]);
+    render(<MyReviewsView />);
+    await screen.findByRole("link", { name: "Interstellar" });
+    expect(
+      screen.getByText("Esta reseña fue moderada, así que no podés editar ni borrar su texto.")
+    ).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Más acciones para Interstellar" }));
+    const borrar = screen.getByRole("menuitem", { name: "Eliminar reseña" });
+    expect(borrar).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(borrar);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+
+    // Quitar la calificación entera sigue disponible.
+    expect(screen.getByRole("menuitem", { name: "Quitar calificación" })).not.toHaveAttribute(
+      "aria-disabled"
+    );
+  });
+
+  it("moderada: editar abre el diálogo con el texto de solo lectura", async () => {
+    estado.pagina = pagina([{ ...INTERSTELLAR, moderada: true }]);
+    render(<MyReviewsView />);
+    await screen.findByRole("link", { name: "Interstellar" });
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+
+    const dialogo = screen.getByRole("dialog", { name: "Editar calificación" });
+    expect(within(dialogo).getByLabelText(/Reseña/)).toHaveAttribute("readonly");
+  });
+
+  it("moderada: en celular la hoja no borra el texto", async () => {
+    estado.pagina = pagina([{ ...INTERSTELLAR, moderada: true }]);
+    render(<MyReviewsView />);
+    await screen.findByRole("link", { name: "Interstellar" });
+    fireEvent.click(screen.getByRole("button", { name: "Acciones para Interstellar" }));
+    const hoja = screen.getByRole("dialog", { name: /Interstellar/ });
+
+    const borrar = within(hoja).getByRole("button", { name: "Eliminar reseña" });
+    expect(borrar).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(borrar);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
   it("en celular las tres acciones están en una hoja", async () => {

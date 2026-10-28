@@ -34,7 +34,7 @@ from rest_framework.exceptions import (
 from rest_framework.test import APIClient, APIRequestFactory
 
 from catalogo.client import TMDBClient
-from catalogo.exceptions import CalificacionDuplicada
+from catalogo.exceptions import CalificacionDuplicada, ResenaModerada
 from catalogo.serializers_reviews import ActualizarCalificacionSerializer
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.sobre import RESERVADOS
@@ -303,6 +303,7 @@ for nombre, exc in [
     ("lista_protegida", ListaPredeterminadaProtegida()),
     ("calificacion_bloquea_quitar", CalificacionImpideQuitarDeVistas()),
     ("calificacion_duplicada", CalificacionDuplicada()),
+    ("resena_moderada", ResenaModerada()),
 ]:
     caso(
         nombre,

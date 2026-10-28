@@ -140,6 +140,10 @@ CATALOGO = {
         "Ya calificaste esta producción. Editá tu calificación.",
         {"calificaciones": 409},
     ),
+    "review_moderated": DefinicionCodigo(
+        "Esta reseña fue moderada: no se puede editar ni borrar su texto.",
+        {"calificaciones": 409},
+    ),
     "username_already_used": DefinicionCodigo(
         "El nombre de usuario ya está registrado.", {"validacion": 400, "perfil": 409}
     ),
