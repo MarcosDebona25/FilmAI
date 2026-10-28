@@ -27,6 +27,9 @@ class ReglaTests(SimpleTestCase):
             "Admin2026",
             "Adm1n",
             "4dm1n",
+            "1admin",
+            "a1dmin",
+            "2026staff",
             "r00t",
             "Administrator",
             "superadmin",
@@ -54,6 +57,8 @@ class ReglaTests(SimpleTestCase):
             "sistemas",
             "laura",
             "lucas1995",
+            "r2d2fan",
+            "cine2024",
         ):
             with self.subTest(nombre=nombre):
                 self.assertFalse(es_nombre_usuario_reservado(nombre))
