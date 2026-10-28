@@ -38,6 +38,28 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **`rellenar()` de traducciones se trababa en las filas que fallan.** Arrancaba siempre de `pk` 0 y `pendientes()` sigue incluyendo las filas que fallan, así que ocupaban el límite todas las noches. Con `limite` (la sync nocturna) ahora guarda un cursor (el `pk` de la última fila intentada) en la caché de Django, retoma desde ahí y, al agotar los pendientes, vuelve al principio recorriendo solo hasta el punto de partida (no reintenta en la misma corrida lo ya intentado). Sin `limite` (el comando `rellenar_traducciones`) recorre todo desde 0, como antes. Se eligió caché y no una columna nueva para no tocar el modelo ni agregar una migración; si la caché falla o se vacía, el cursor vuelve a 0 y el comportamiento es el anterior. La forma del resultado de `rellenar()` no cambia.
 - **Archivos afectados**: `backend/catalogo/tasks.py`, `backend/catalogo/services/materialization.py`, `backend/catalogo/services/traducciones.py`, `backend/catalogo/tests.py`, `backend/catalogo/test_traducciones.py`, `docs/decisiones.md`.
 
+---
+
+## 28/10/2026 — Copia en español: «Intentá de nuevo» como única fórmula de reintento
+
+- **Fecha**: 28/10/2026
+- **Descripción**: el español mezclaba «Probá de nuevo», «Intentá más tarde» e «Intentá de nuevo». El usuario aprobó el voseo con «Intentá de nuevo» como fórmula única. Cambian 3 claves de `traducciones/claves-extra.csv`: `lists.overview.loadError`, `lists.detail.loadError` y `profile.password.linkError` («Intentá de nuevo más tarde»). `home.rows.emptyDescription` queda en «Probá de nuevo más tarde»: no es un error, es un estado vacío. El inglés no cambia. «Ocurrió un error» queda como está: no tiene otra fórmula con la que chocar. «Reintentar» (botón) tampoco.
+- **Archivos afectados**: `traducciones/claves-extra.csv`, `frontend/messages/es/common.json` (generado).
+- **Verificación**: `npm run i18n:generate` e `i18n:check` sin errores.
+
+---
+
+## 28/10/2026 — README del frontend y e2e de cambio de idioma estables
+
+- **Fecha**: 28/10/2026
+- **Descripción**:
+  - **`frontend/README.md`** (Q-05 del doc 05): era el texto de `create-next-app`. Ahora cubre arranque con `docker compose`, scripts, tests (Vitest y Playwright, con la API simulada), multiidioma y convenciones. El doc 05 pasa a decir que falta solo la verificación documentada de una instalación limpia.
+  - **Cambio de idioma en los e2e**: la entrada anterior dejó abiertos los pasos de cambio de idioma por ser sensibles a la carga. Un clic o una tecla antes de que la página hidrate no hace nada y el test falla de forma intermitente. En `i18n-flows.spec.ts` se envolvieron en `expect(...).toPass()` con aserciones internas de timeout corto (2 s) y 15 s en total: el radio de `/settings` en el flujo de registro, la flecha del selector del pie sin sesión (si el idioma ya cambió no se repite, porque otra flecha lo devolvería), el enlace «Language» del pie con sesión y el clic del test «fallo de guardado».
+- **Archivos afectados**: `frontend/README.md`, `frontend/e2e/i18n-flows.spec.ts`, `docs/05_Plan_de_Desarrollo.md`.
+- **Verificación**: `i18n-flows.spec.ts` completo, 5 vueltas con 2 workers: 35/35 (4,9 min). Prettier e `i18n:check` sin errores.
+
+---
+
 ## 28/10/2026 — Dos tests e2e inestables más: idioma de la cuenta en `listas` y registro en `acceso`
 
 - **Fecha**: 28/10/2026
@@ -5003,3 +5025,11 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Skills para Claude Code**: `.claude/skills` pasa a ser un enlace simbólico versionado a `../.agents/skills` (antes estaba en `.gitignore`), porque el equipo trabaja en Linux/WSL. `skills-lock.json` se queda en la raíz: la herramienta `npx skills` lo busca ahí.
 - **Archivos afectados**: `traducciones/` (movida desde `docs/i18n/`), `frontend/scripts/i18n/generate.py`, `frontend/app/{layout.tsx,profile/layout.tsx,settings/layout.tsx,settings/page.tsx,confirm-email/[key]/page.tsx,reset-password/[uid]/[token]/page.tsx}`, `frontend/messages/`, `frontend/i18n/enums.json` (solo formato), `frontend/tests/{i18n-catalogs,i18n-metadata,i18n-render,profile}.test.*`, `frontend/e2e/{i18n-flows,i18n-locale,preferencias,hotfix-perfil}.spec.ts`, `backend/listas/test_reservados.py`, `docker-compose.yml`, `.gitignore`, `.claude/skills`, `AGENTS.md`, `README.md`, docs 02 y 04, specs `i18n-core` y `emails`.
 - **Verificación**: Vitest 375 tests, Django 873 tests, Ruff, ESLint, Prettier, `generate.py --check`, `npm run i18n:check` y `next build` sin errores. Playwright: de 4 specs afectadas, 16 recorridos pasaron y 3 de `i18n-flows` fallaron una vez con los 4 specs en paralelo (timeouts por compilación bajo demanda) y pasaron al repetirlos de a uno.
+
+## 28/10/2026 — Buscar: medición de la latencia (sin arreglo)
+
+- **Fecha**: 28/10/2026
+- **Descripción**: se midió con `curl` contra el backend local (una máquina, TMDB real). Con la caché de Redis en frío, `browse/` tarda entre 200 y 655 ms y `search/` entre 220 y 580 ms; repetido, ambos bajan a 18-25 ms. Las páginas nuevas de `browse/` (2 y 3) tardaron 216 y 298 ms. El máximo medido fue 655 ms, no los ~900 ms del 22/10. La variación entre 250 y 900 ms se explica por el acierto o fallo de la caché y por la latencia de TMDB en el fallo, no por el render ni por la base. No se cambió código. Se evaluaron subir el TTL (global por endpoint, no ayuda a la búsqueda por texto), precalentar las combinaciones comunes (hay que cubrir los dos idiomas y la sync diaria no alcanza con un TTL de 6 h), servir lo vencido y refrescar en segundo plano (la que más toca `cache.py`) y no hacer nada. **Se decidió no hacer nada por ahora**: queda pendiente de un análisis con métricas de uso real (duración de `browse/` y acierto o fallo de caché) antes de elegir.
+- **Archivos afectados**: ninguno de código.
+
+---

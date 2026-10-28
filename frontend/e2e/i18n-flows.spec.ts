@@ -83,8 +83,11 @@ for (const locale of ["en", "es"] as const) {
     ).toBeVisible();
     const next = locale === "en" ? "es" : "en";
     const nextMessages = next === "en" ? en : es;
-    await page.getByRole("radio", { name: next === "en" ? "English" : "Español" }).click();
-    await expect(page.locator("html")).toHaveAttribute("lang", next);
+    // Un clic antes de hidratar no hace nada: se repite hasta ver el cambio.
+    await expect(async () => {
+      await page.getByRole("radio", { name: next === "en" ? "English" : "Español" }).click();
+      await expect(page.locator("html")).toHaveAttribute("lang", next, { timeout: 2_000 });
+    }).toPass({ timeout: 15_000 });
     await expect(
       page.getByRole("heading", { name: nextMessages.nav.main.settings, exact: true })
     ).toBeVisible();
@@ -157,9 +160,15 @@ for (const width of [390, 1280]) {
     await page.goto("/");
     const pill = page.getByRole("radiogroup").first();
     await expect(pill.getByRole("radio", { name: "English" })).toBeChecked();
-    await pill.getByRole("radio", { name: "English" }).focus();
-    await page.keyboard.press("ArrowRight");
-    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    // Una tecla antes de hidratar se pierde. Si el idioma ya cambió no se
+    // repite: otra flecha lo devolvería a `en`.
+    await expect(async () => {
+      if ((await page.locator("html").getAttribute("lang")) !== "es") {
+        await pill.getByRole("radio", { name: "English" }).focus();
+        await page.keyboard.press("ArrowRight");
+      }
+      await expect(page.locator("html")).toHaveAttribute("lang", "es", { timeout: 2_000 });
+    }).toPass({ timeout: 15_000 });
     await expect(pill.getByRole("radio", { name: "Español" })).toBeChecked();
     // La landing ocupa toda la ventana: sin pie. El pie sin sesión vive en /terms.
     await expect(page.locator("footer")).toHaveCount(0);
@@ -172,12 +181,14 @@ for (const width of [390, 1280]) {
     ).toBeVisible();
     await expect(page.locator("footer").getByRole("radio")).toHaveCount(0);
     await expect(page.locator("footer").getByRole("link", { name: "Sign up" })).toHaveCount(0);
-    await page
-      .locator("footer")
-      .getByRole("link", { name: /Language: English/ })
-      .first()
-      .click();
-    await expect(page).toHaveURL(/\/settings#t-idioma$/);
+    await expect(async () => {
+      await page
+        .locator("footer")
+        .getByRole("link", { name: /Language: English/ })
+        .first()
+        .click();
+      await expect(page).toHaveURL(/\/settings#t-idioma$/, { timeout: 2_000 });
+    }).toPass({ timeout: 15_000 });
     await expect(page.locator("#t-idioma")).toBeInViewport();
     await page.screenshot({ path: `/tmp/filmai-settings-${width}.png`, fullPage: true });
     expect(
@@ -195,10 +206,13 @@ test("fallo de guardado deja cuenta y cookie intactas", async ({ page }) => {
       ? route.fulfill({ status: 500, json: { code: "server_error", params: {}, errors: [] } })
       : route.fallback()
   );
-  await page.getByRole("main").getByRole("radio", { name: "English" }).click();
-  await expect(page.getByRole("main").getByRole("alert")).toContainText(
-    es.settings.language.saveError
-  );
+  await expect(async () => {
+    await page.getByRole("main").getByRole("radio", { name: "English" }).click();
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
+      es.settings.language.saveError,
+      { timeout: 2_000 }
+    );
+  }).toPass({ timeout: 15_000 });
   await expect(page.locator("html")).toHaveAttribute("lang", "es");
   await expect(page.getByRole("radio", { name: "Español" })).toBeChecked();
 });
