@@ -62,6 +62,7 @@ from .throttles import (
     ReenvioIPThrottle,
     RegistroCorreoThrottle,
     RegistroIPThrottle,
+    ResetIPThrottle,
 )
 from .validators import USERNAME_REGEX, es_nombre_usuario_reservado
 
@@ -316,8 +317,8 @@ class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
     """POST `/api/auth/password/reset/` — solicitud de restablecimiento.
 
     CU-020: responde siempre con el mismo mensaje genérico, exista o no el
-    correo. Aplica rate limit de 5 solicitudes por día por email (no por IP),
-    e informa cuántos intentos restantes le quedan al usuario.
+    correo. Aplica rate limit de 5 solicitudes por día por email y de 10 por
+    hora por IP, e informa cuántos intentos restantes le quedan al usuario.
     """
 
     # Solo JSON: con formularios, otro sitio podía mandar un POST que no pide
@@ -327,7 +328,7 @@ class RecuperarContrasenaView(EmailThrottleStatusMixin, APIView):
 
     permission_classes: ClassVar[list] = [permissions.AllowAny]
     authentication_classes = (LenientJWTCookieAuthentication,)
-    throttle_classes: ClassVar[list] = [EmailRateThrottle]
+    throttle_classes: ClassVar[list] = [EmailRateThrottle, ResetIPThrottle]
 
     def post(self, request):
         serializer = RecuperarContrasenaSerializer(

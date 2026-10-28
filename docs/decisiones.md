@@ -19,6 +19,54 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Verificación manual** (sin tocar los contenedores `filmai_*` ni el compose): se corrió el `entrypoint.sh` nuevo en un contenedor descartable (`docker run --rm`) contra la base de prueba `sec_c`, con la contraseña `Ab'c"d$HOME)e\`id\`;x`. Creó el superusuario, `check_password` con esa misma contraseña dio verdadero y, al muestrear `/proc/*/cmdline` durante toda la corrida (7503 muestras), la contraseña no apareció ni una vez; el mismo muestreo sí la ve (126 veces) cuando se la pasa como argumento. El `entrypoint.sh` anterior con esa contraseña falla con `SyntaxError: unterminated string literal`.
 - **Archivos afectados**: `docker-compose.yml`, `README.md`, `backend/entrypoint.sh`, `backend/filmai/test_seguridad_infra.py`, `docs/decisiones.md`.
 - **Tests** (`backend/filmai/test_seguridad_infra.py`): `ComposePostgresTests` lee el compose real (montado como `BASE_DIR.parent`, igual que el test de Redis) y exige que todo puerto de `db` empiece con `127.0.0.1:` y que `127.0.0.1:5432:5432` siga publicado para el host. `EntrypointSuperusuarioTests` lee el script y falla si vuelve a aparecer `${DJANGO_SUPERUSER_` (o `$DJANGO_SUPERUSER_`) dentro del texto, si Python deja de leer las tres variables de `os.environ`, si el heredoc pierde las comillas (`<<'PY'`) o si vuelve `manage.py shell -c`.
+---
+
+## 28/10/2026 — Reset de contraseña sin 500 ni abuso por IP, y clave de TMDB fuera de los logs
+
+- **Fecha**: 28/10/2026
+- **Descripción**: dos hallazgos de la auditoría de seguridad que quedaron abiertos (resumen en `docs/auditoria-seguridad-resumen.md`), cada uno en su commit.
+
+### S1 — Reset de contraseña (severidad media)
+
+- **Problema**: `POST /api/auth/password/reset/` tenía dos fallas.
+  - El límite por correo (`EmailRateThrottle`) y el mixin que informa los intentos restantes hacían `.strip()` sobre `request.data.get("email", "")`. Si el cliente mandaba `{"email": 5}` (o `null`, una lista, un objeto), el valor no era un texto y la vista respondía 500 (Internal Server Error) antes de llegar al serializer. Un cuerpo JSON que fuera una lista suelta fallaba igual, porque no tiene `.get`. Cualquiera podía provocar 500 (Internal Server Error) a voluntad, con ruido en los logs y, en producción, en el monitoreo de errores.
+  - No había ningún límite por IP. El único tope era por correo (5 por día), y cada correo distinto tiene su propio contador: desde una sola IP se podía pedir el reset de miles de cuentas distintas, y cada pedido a una cuenta real manda un correo (cuota de Resend y reputación del dominio). Los demás pedidos que mandan correo (registro, reenvío) ya tenían tope por IP desde F2; este era el único sin él.
+- **Decisión**:
+  - Helper `_correo(request)` en `usuarios/throttles.py`, apoyado en el `_cuerpo()` que ya existía: devuelve el correo normalizado (sin espacios, en minúsculas) solo si el valor es un texto, y `""` en cualquier otro caso. Lo usan `EmailRateThrottle.get_cache_key` y `EmailThrottleStatusMixin.finalize_response`. Un pedido sin correo textual usa la IP como identidad (comportamiento que el throttle ya tenía para el cuerpo vacío) y el serializer responde 400 (Bad Request) `validation_error`.
+  - `ResetIPThrottle(PorIPThrottle)`, scope nuevo `recuperar_contrasena_ip` con tasa `10/hour` en `DEFAULT_THROTTLE_RATES`, agregado a `RecuperarContrasenaView.throttle_classes` junto al de correo. Se eligió 10 por hora por IP, la misma tasa que `registro_ip` y `reenvio_ip` (los otros pedidos que disparan correos).
+  - La variante sin barra final (`/api/auth/password/reset`) está montada en `filmai/urls.py` con la misma clase de vista, así que hereda ambos límites sin tocar las URLs. Un test lo comprueba para las dos rutas (lección de F11, donde la ruta sin barra esquivaba los límites).
+- **Alternativas descartadas**:
+  - Capturar la excepción en el throttle y devolver 400 (Bad Request) desde ahí: el throttle no debería validar el cuerpo, y el serializer ya produce el error con el formato estándar.
+  - Convertir el valor a texto con `str()` (como hace `PorCuentaThrottle`): un `5` pasaría a contar como correo `"5"`. Aquí el valor tiene que ser un correo, no cualquier escalar; si no es texto, no hay cuenta que limitar.
+  - Una tasa más baja (por ejemplo 3 por hora): un NAT compartido (oficina, universidad) llegaría al tope con uso legítimo. Las tasas de la familia ya están en 10.
+- **Quién decidió**: Marcos, 28/10/2026.
+- **Riesgo residual y qué revisar al desplegar**:
+  - El límite por IP depende de `NUM_PROXIES`. Con el valor equivocado detrás de un proxy, todos los usuarios comparten un contador (bloqueo general al décimo pedido de la hora) o el cliente falsea `X-Forwarded-For` y lo esquiva. Es el mismo pendiente que ya existe para login, registro y reenvío: se resuelve una sola vez al desplegar.
+  - Los pedidos con cuerpo inválido, al no tener correo textual, usan la IP también en el contador por correo (5 por día): una IP que mande basura 5 veces queda bloqueada un día en ese scope. Es más estricto que el resto y aceptable, porque un cliente legítimo no manda eso.
+  - Fuera de alcance, sigue abierto: la enumeración de cuentas por tiempo de respuesta (el pedido a una cuenta real demora más que a una inexistente porque manda el correo).
+- **Archivos**: `backend/usuarios/throttles.py`, `backend/usuarios/views.py`, `backend/filmai/settings.py`, `backend/usuarios/test_seguridad_throttles.py`, `contracts/openapi.yaml` (regenerado: solo cambia la descripción del endpoint, que ahora menciona el límite por IP).
+- **Tests** (`ResetContrasenaThrottleTests`): `{"email": 5}`, `null`, lista, objeto, booleano y decimal responden 400 (Bad Request) `validation_error` y nunca 500 (Internal Server Error); un cuerpo que no es un objeto (lista, texto, número, `null`) también; los pedidos inválidos caen al límite por IP y llegan a 429 (Too Many Requests); el pedido 11 de la IP recibe 429 (Too Many Requests) aunque cambie el correo, y rotar `X-Forwarded-For` no lo evita (con `NUM_PROXIES=0`); el límite por correo (5 por día) sigue vigente; el 429 (Too Many Requests) usa el sobre estándar (`code: throttled`); `intentos_restantes` sigue en la respuesta. Todo con y sin barra final. Sin el arreglo fallan 23 de las comprobaciones.
+
+### S2 — Clave de TMDB en los logs (severidad baja)
+
+- **Problema**: TMDB v3 recibe la clave en la query (`?api_key=...`). httpx registra cada pedido en INFO con la URL completa (`HTTP Request: GET https://api.themoviedb.org/3/...?api_key=...`). Con el logger raíz en INFO (un worker de Celery con `-l info`, que es el que corre la sync nocturna, o cualquier configuración que lo suba) la clave quedaba en cada línea de log. Además, ante un fallo de red el mensaje de la excepción de httpx puede incluir la URL, y `TMDBClient._request` lo copiaba tal cual en `TMDBTransportError(str(error))` y encadenaba la causa original (`from error`), por lo que `logger.exception` imprimía la clave en el traceback. Los logs suelen viajar a herramientas de terceros; quien los leyera podía gastar la cuota de la clave o agotarla.
+- **Decisión**:
+  - En `LOGGING` (`settings.py`), los loggers `httpx` y `httpcore` quedan en WARNING: no registran los pedidos exitosos, pero sí los avisos reales.
+  - Helper `_redactar_clave(texto, clave="")` en `catalogo/client.py`: reemplaza el valor de `api_key=` (sin distinguir mayúsculas) por `***` y, si se le pasa la clave, también cualquier aparición suelta de ella. `_request` lo aplica al mensaje de `TMDBTransportError`.
+  - El error de transporte se levanta con `from None` en lugar de `from error`: la causa original lleva la URL con la clave y saldría en el traceback. Se pierde la excepción original en la cadena, pero el mensaje redactado conserva el motivo del fallo (timeout, conexión rechazada, DNS).
+  - No hay logs propios en `client.py`, así que no hay más que redactar ahí.
+- **Alternativas descartadas**:
+  - Pasar la clave en `Authorization: Bearer`: sacaría la clave de la URL, pero exige el token v4 de lectura y el proyecto usa la clave v3. Cambiar de credencial es otra decisión (y otra configuración en cada entorno).
+  - Un filtro de logging que redacte `api_key` en todos los registros: cubre más, pero agrega una pieza global que hay que acordarse de enganchar en cada handler y en Celery, que configura sus propios loggers. Con WARNING la clave no se emite.
+  - Mantener `from error` y confiar en que nadie imprima la cadena: `logger.exception` ya lo hace en `catalogo/views.py`.
+- **Quién decidió**: Marcos, 28/10/2026.
+- **Riesgo residual y qué revisar al desplegar**:
+  - Una excepción de httpx que no sea de transporte (por ejemplo `InvalidURL` o `TooManyRedirects`) no pasa por el helper; hoy `_request` no las captura y no hay forma conocida de que lleven la clave, pero si se agrega un `except` nuevo hay que redactar su mensaje.
+  - La clave sigue viajando en la URL hacia TMDB (HTTPS) y puede quedar en los registros de acceso de un proxy intermedio o del propio TMDB. Quien despliegue debe confirmar que el proxy de salida no registra las query strings.
+  - Si la clave estuvo en logs antes de este cambio, hay que rotarla en TMDB al desplegar.
+  - Sentry u otro monitoreo (pendiente del despliegue): configurar que no capture las URL de httpx (breadcrumbs) o aplicar el mismo recorte.
+- **Archivos**: `backend/catalogo/client.py`, `backend/filmai/settings.py`, `backend/catalogo/test_seguridad_clave_en_logs.py`.
+- **Tests**: con transporte simulado (`httpx.MockTransport`) y la clave en el pedido: con el logger raíz subido a INFO, `httpx` y `httpcore` no emiten INFO y un pedido exitoso no deja la clave en ningún registro; un `ConnectError` y un `ReadTimeout` cuyo mensaje trae la URL dan un `TMDBTransportError` sin la clave en el mensaje ni en el traceback completo, incluida la salida de `logger.exception` capturada con `assertLogs`; el helper tapa `api_key` en cualquier posición de la query, conserva el resto del texto y no toca los textos sin clave. Sin el arreglo fallan 5 de las comprobaciones.
 
 ---
 
