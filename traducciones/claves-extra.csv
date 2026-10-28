@@ -181,7 +181,7 @@ lists.overview.loading,,status,,Cargando tus listas…,Loading your lists…,apr
 lists.detail.loading,,status,,Cargando la lista…,Loading the list…,aprobado
 auth.session.expired,,feedback,,Tu sesión venció. Iniciá sesión de nuevo.,Your session expired. Log in again.,aprobado
 errors.codes.network_error,network_error,error,,No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.,We couldn’t connect. Check your connection and try again.,aprobado
-home.rows.emptyDescription,,label,,No hay títulos para mostrar en este momento. Intentá de nuevo más tarde o buscá algo puntual.,There’s nothing to show right now. Try again later or search for something specific.,aprobado
+home.rows.emptyDescription,,label,,No hay títulos para mostrar en este momento. Probá de nuevo más tarde o buscá algo puntual.,There’s nothing to show right now. Try again later or search for something specific.,aprobado
 common.fields.country,,field,,País,Country,aprobado
 common.country.placeholder,,label,,Elegí tu país,Choose your country,aprobado
 common.country.required,,error,,Elegí un país para continuar.,Choose a country to continue.,aprobado
