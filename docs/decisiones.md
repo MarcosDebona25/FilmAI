@@ -8,7 +8,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 ## 28/10/2026 — Copia en español: «Intentá de nuevo» como única fórmula de reintento
 
 - **Fecha**: 28/10/2026
-- **Descripción**: el español mezclaba «Probá de nuevo», «Intentá más tarde» e «Intentá de nuevo». El usuario aprobó el voseo con «Intentá de nuevo» como fórmula única. Cambian 4 claves de `traducciones/claves-extra.csv`: `lists.overview.loadError`, `lists.detail.loadError`, `home.rows.emptyDescription` («Intentá de nuevo más tarde o buscá algo puntual») y `profile.password.linkError` («Intentá de nuevo más tarde»). El inglés no cambia. «Ocurrió un error» queda como está: no tiene otra fórmula con la que chocar. «Reintentar» (botón) tampoco.
+- **Descripción**: el español mezclaba «Probá de nuevo», «Intentá más tarde» e «Intentá de nuevo». El usuario aprobó el voseo con «Intentá de nuevo» como fórmula única. Cambian 3 claves de `traducciones/claves-extra.csv`: `lists.overview.loadError`, `lists.detail.loadError` y `profile.password.linkError` («Intentá de nuevo más tarde»). `home.rows.emptyDescription` queda en «Probá de nuevo más tarde»: no es un error, es un estado vacío. El inglés no cambia. «Ocurrió un error» queda como está: no tiene otra fórmula con la que chocar. «Reintentar» (botón) tampoco.
 - **Archivos afectados**: `traducciones/claves-extra.csv`, `frontend/messages/es/common.json` (generado).
 - **Verificación**: `npm run i18n:generate` e `i18n:check` sin errores.
 
