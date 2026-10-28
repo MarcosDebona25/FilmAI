@@ -102,10 +102,20 @@ for (const viewport of viewports) {
       await expect(
         page.getByRole("heading", { name: en.nav.account.signUp, level: 1 })
       ).toBeVisible();
-      await page.locator('[name="nombre"]').fill("Juan");
-      await page.locator('[name="apellido"]').fill("Pérez");
-      await page.locator('[name="nombre_usuario"]').fill("juanperez");
-      await expect(page.getByText(en.auth.signUp.usernameAvailable)).toBeVisible();
+      // El título se ve antes de hidratar y lo escrito entonces se pierde: se
+      // repone hasta ver «Disponible», que solo llega con la página hidratada.
+      const nombres = { nombre: "Juan", apellido: "Pérez", nombre_usuario: "juanperez" };
+      await expect(async () => {
+        for (const [name, value] of Object.entries(nombres)) {
+          const campo = page.locator(`[name="${name}"]`);
+          if ((await campo.inputValue()) !== value) await campo.fill(value);
+        }
+        await expect(page.getByText(en.auth.signUp.usernameAvailable)).toBeVisible({
+          timeout: 2_000,
+        });
+        for (const [name, value] of Object.entries(nombres))
+          await expect(page.locator(`[name="${name}"]`)).toHaveValue(value, { timeout: 1_000 });
+      }).toPass({ timeout: 20_000 });
       // Arranca vacío, aunque el navegador tenga región.
       await expect(page.locator('select[name="pais"]')).toHaveValue("");
       await page.locator('select[name="pais"]').selectOption("AR");
@@ -150,9 +160,15 @@ for (const viewport of viewports) {
         route.fulfill({ json: { disponible: false, motivo: "reservado" } })
       );
       await page.goto("/register");
-      await page.locator('[name="nombre_usuario"]').fill("Adm1n");
-
-      await expect(page.getByText(en.errors.codes.username_not_allowed)).toBeVisible();
+      // Un valor escrito antes de hidratar se pierde: se reescribe hasta que
+      // aparezca el aviso, que solo llega con la página ya hidratada.
+      const campo = page.locator('[name="nombre_usuario"]');
+      await expect(async () => {
+        if ((await campo.inputValue()) !== "Adm1n") await campo.fill("Adm1n");
+        await expect(page.getByText(en.errors.codes.username_not_allowed)).toBeVisible({
+          timeout: 2_000,
+        });
+      }).toPass({ timeout: 20_000 });
       await expect(page.getByText(en.errors.codes.username_already_used)).toHaveCount(0);
     });
 

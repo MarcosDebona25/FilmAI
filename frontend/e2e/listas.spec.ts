@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 import en from "../messages/en/common.json";
 import es from "../messages/es/common.json";
+import type { AppLocale } from "@/i18n/config";
+
 import { prepararCuenta } from "./cuenta";
 
 const viewports = [
@@ -91,9 +93,14 @@ const resumen = (lista: Lista) => ({
 /** Backend de `lists/` en memoria, con lo justo para las pantallas de Listas. */
 async function backend(
   page: Page,
-  { listas = listasIniciales(), porPagina = 20, calificados = [] as number[] } = {}
+  {
+    listas = listasIniciales(),
+    porPagina = 20,
+    calificados = [] as number[],
+    idioma = "en" as AppLocale | null,
+  } = {}
 ) {
-  await prepararCuenta(page, "en");
+  await prepararCuenta(page, idioma);
   const estado = { listas: structuredClone(listas), escrituras: [] as string[] };
   await page.route("https://image.tmdb.org/**", (route) => route.fulfill({ status: 404 }));
   await page.route("**/api/reviews/mias/**", (route) => {
@@ -352,7 +359,14 @@ for (const viewport of viewports) {
     test("cambia de idioma sin perder la lista y nombra las predeterminadas por su clave", async ({
       page,
     }) => {
-      await backend(page);
+      // Con idioma guardado en la cuenta, la app lo vuelve a imponer al cargar
+      // el perfil y pisa la cookie: el cambio solo por cookie es de una cuenta
+      // sin idioma guardado. Como el navegador del test es es-AR, se arranca en
+      // inglés con la cookie.
+      await backend(page, { idioma: null });
+      await page
+        .context()
+        .addCookies([{ name: "filmai_locale", value: "en", url: "http://127.0.0.1:3100" }]);
       await page.goto("/lists");
       await expect(page.getByRole("heading", { level: 1, name: en.nav.main.lists })).toBeVisible();
 
