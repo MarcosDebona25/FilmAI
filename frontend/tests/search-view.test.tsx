@@ -128,7 +128,8 @@ describe("Buscar", () => {
 
     expect(await screen.findByText("Dune: Part Two")).toBeInTheDocument();
     expect(pedidosDeBusqueda()).toEqual(["/api/catalogo/browse/?tipo=all&page=1"]);
-    expect(screen.queryByRole("status")).toBeNull();
+    // La región viva existe, pero vacía: no hay contador.
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
 
   it("con texto muestra el contador y cada tarjeta lleva a la ficha desde Search", async () => {

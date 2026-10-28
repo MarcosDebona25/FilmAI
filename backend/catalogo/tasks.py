@@ -10,6 +10,7 @@ import logging
 
 from celery import shared_task
 from django.conf import settings
+from django.utils import timezone
 
 from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEmbedding
 from catalogo.services.adapter import tmdb_a_dominio
@@ -105,8 +106,10 @@ def generar_embedding(produccion_id):
             "generar_embedding: el proveedor falló para produccion_id=%s",
             produccion_id,
         )
+        # `.update()` no dispara `auto_now`: la fecha se renueva a mano para que
+        # la fila pase al final del orden del backfill y rote (ver abajo).
         ProduccionEmbedding.objects.filter(produccion_id=produccion_id).update(
-            estado=EstadoEmbedding.FAILED
+            estado=EstadoEmbedding.FAILED, fecha_actualizacion=timezone.now()
         )
         return
 
@@ -115,6 +118,7 @@ def generar_embedding(produccion_id):
         estado=EstadoEmbedding.READY,
         source_hash=source_hash,
         model_version=MODEL_VERSION,
+        fecha_actualizacion=timezone.now(),
     )
 
 
@@ -252,7 +256,15 @@ def sync_catalogo_diaria():
 
     # --- Pasada 2: descubrimiento ----------------------------------------
     for nombre, pedir, tipo_fijo in _FUENTES:
-        for item in pedir(servicio).get("results") or []:
+        # Un listado que TMDB no devuelve (timeout, 5xx) no puede tumbar los
+        # otros tres ni la pasada de traducciones: se registra y se sigue.
+        try:
+            items = pedir(servicio).get("results") or []
+        except Exception:
+            logger.exception("sync_catalogo_diaria: falló el listado %s", nombre)
+            estadisticas["errores"] += 1
+            continue
+        for item in items:
             id_tmdb = item.get("id")
             tipo_tmdb = tipo_fijo or item.get("media_type")
             try:
@@ -327,9 +339,11 @@ def backfill_embeddings(limite=None):
     segunda fuente de verdad para la idempotencia.
 
     Ambos recorridos van por `fecha_actualizacion` ascendente: la más vieja
-    primero. Como el campo es `auto_now`, procesar una fila la manda al final
-    de la fila, y así ninguna queda sin revisarse nunca por quedar siempre
-    detrás del tope.
+    primero. `auto_now` NO sirve acá: solo actúa en `save()`, y todas las
+    escrituras de esta tarea y de `generar_embedding` son `.update()`. Por eso
+    la fecha se renueva explícitamente al reencolar y al terminar (`ready` o
+    `failed`); así procesar una fila la manda al final del orden y ninguna
+    queda sin revisarse nunca por estar siempre delante del tope.
 
     Si el proveedor falla al regenerar un `ready` desactualizado, la fila
     queda en `failed` conservando el vector viejo: deja de usarse en la
@@ -350,6 +364,12 @@ def backfill_embeddings(limite=None):
         ProduccionEmbedding.objects.filter(estado__in=_RECLAMABLES)
         .order_by("fecha_actualizacion")
         .values_list("produccion_id", flat=True)[:limite]
+    )
+    # Renovar la fecha al reencolar: así, si hay más filas sin completar que el
+    # tope, la corrida siguiente toma las que quedaron afuera aunque estas
+    # vuelvan a fallar (o el worker no llegue a procesarlas).
+    ProduccionEmbedding.objects.filter(produccion_id__in=sin_completar).update(
+        fecha_actualizacion=timezone.now()
     )
     for produccion_id in sin_completar:
         generar_embedding.delay(produccion_id)
@@ -379,7 +399,7 @@ def backfill_embeddings(limite=None):
         # Antes de encolar, además, para que si el proceso muere en el medio la
         # fila quede reclamable por la próxima corrida.
         ProduccionEmbedding.objects.filter(pk=embedding.pk).update(
-            estado=EstadoEmbedding.PENDING
+            estado=EstadoEmbedding.PENDING, fecha_actualizacion=timezone.now()
         )
         generar_embedding.delay(embedding.produccion_id)
         estadisticas["desactualizados"] += 1

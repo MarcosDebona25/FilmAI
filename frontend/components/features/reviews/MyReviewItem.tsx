@@ -140,12 +140,12 @@ export function MyReviewItem({
           </Link>
         </h2>
         <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-fg-3 md:gap-x-3 md:text-sm">
-          <span
-            aria-label={t("reviews.card.ratingLabel", { rating: String(item.valor) })}
-            className="inline-flex items-center gap-1 text-sm font-bold text-foreground tabular-nums md:gap-1.5 md:text-[15px]"
-          >
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground tabular-nums md:gap-1.5 md:text-[15px]">
+            <span className="sr-only">
+              {t("reviews.card.ratingLabel", { rating: String(item.valor) })}
+            </span>
             <Estrella className="size-[13px] md:size-[15px]" />
-            {item.valor}
+            <span aria-hidden="true">{item.valor}</span>
           </span>
           <span aria-hidden="true">·</span>
           <span>{t(item.tipo === "movie" ? "common.content.movie" : "common.content.tvShow")}</span>
@@ -256,12 +256,12 @@ export function MyReviewItem({
             >
               <span lang={enIngles}>{item.titulo}</span>
               <span aria-hidden="true">·</span>
-              <span
-                aria-label={t("reviews.card.ratingLabel", { rating: String(item.valor) })}
-                className="inline-flex items-center gap-1 font-bold text-foreground tabular-nums"
-              >
+              <span className="inline-flex items-center gap-1 font-bold text-foreground tabular-nums">
+                <span className="sr-only">
+                  {t("reviews.card.ratingLabel", { rating: String(item.valor) })}
+                </span>
                 <Estrella className="size-3" />
-                {item.valor}
+                <span aria-hidden="true">{item.valor}</span>
               </span>
             </h2>
             <button

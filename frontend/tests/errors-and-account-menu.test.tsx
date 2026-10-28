@@ -9,7 +9,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { routes } from "@/lib/routes";
 import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
-import { render, screen, waitFor, within } from "./render";
+import { fireEvent, render, screen, waitFor, within } from "./render";
 
 /** El texto del enlace dentro de la invitación del 404 (`<register>…</register>`). */
 function enlaceRegistro(catalogo: { errors: { pages: { signUpInvite: string } } }) {
@@ -188,6 +188,18 @@ describe("menú de la cuenta", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(button).toHaveFocus();
+  });
+
+  it("la confirmación es un <dialog> nativo y Escape (cancel) la cierra devolviendo el foco", async () => {
+    const user = userEvent.setup();
+    render(<AccountMenu />);
+    await user.click(screen.getByRole("button", { name: label }));
+    await user.click(screen.getByRole("menuitem", { name: es.nav.account.logOut }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog.tagName).toBe("DIALOG");
+    fireEvent(dialog, new Event("cancel", { cancelable: true }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: label })).toHaveFocus();
   });
 
   it("cerrar sesión pide confirmación y Cancelar conserva la sesión", async () => {

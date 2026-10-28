@@ -26,6 +26,40 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Sin verificar**: `makemigrations --check` (sin Docker en esa sesión). `git status` limpio y los modelos coinciden con las últimas migraciones.
 - **Archivos afectados**: `docs/02_Especificación de Requerimientos.md`, `docs/03_Modelos de Datos y de Diseño.md`, `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/auditoria-seguridad-resumen.md`, `docs/decisiones.md`.
 
+---
+
+## 28/10/2026 — Calidad del backend del catálogo: sync, longitudes, rotación de embeddings y traducciones
+
+- **Fecha**: 28/10/2026
+- **Descripción**: cuatro bugs de la sync nocturna y sus tareas auxiliares, cada uno reproducido primero con un test.
+  - **Un listado de descubrimiento caído tumbaba la sync entera.** `pedir(servicio)` estaba fuera del `try`, así que un timeout o un 500 (Internal Server Error) de TMDB en un solo listado cortaba los demás y la pasada de traducciones. Ahora cada listado se pide dentro de su propio `try/except`: se registra con `logger.exception`, suma 1 a `errores` y sigue con el siguiente listado y con el paso 3.
+  - **Los campos de TMDB no se recortaban a la columna.** Solo se recortaban las traducciones. Un título, nombre o keyword más largo que el `max_length` hacía fallar el `save()` con `DataError` y se perdía el enriquecimiento completo. `_enriquecer` pasa ahora el mapeo por `_recortar()`, que lee los límites del modelo (`CharField.max_length` y el de `base_field` de los arreglos), de modo que si cambia una columna el recorte la sigue. Se decidió recortar y no descartar la ficha. También se recorta el póster de la traducción (250), que tenía el mismo riesgo.
+  - **El backfill de embeddings no rotaba.** Ordena por `fecha_actualizacion`, pero `auto_now` solo actúa en `save()` y todas las escrituras de `generar_embedding` y del backfill son `.update()`. Las filas `failed` quedaban siempre primeras y, con más fallidas que el tope, las demás nunca se tocaban. Ahora la fecha se renueva explícitamente al reencolar (`pending`/`failed` y `ready` desactualizados), al fallar y al terminar en `ready`. Reencolar ya la renueva, así que la rotación no depende de que el worker llegue a procesar la fila. Se corrigió el docstring de `backfill_embeddings`, que afirmaba que `auto_now` hacía esto.
+  - **`rellenar()` de traducciones se trababa en las filas que fallan.** Arrancaba siempre de `pk` 0 y `pendientes()` sigue incluyendo las filas que fallan, así que ocupaban el límite todas las noches. Con `limite` (la sync nocturna) ahora guarda un cursor (el `pk` de la última fila intentada) en la caché de Django, retoma desde ahí y, al agotar los pendientes, vuelve al principio recorriendo solo hasta el punto de partida (no reintenta en la misma corrida lo ya intentado). Sin `limite` (el comando `rellenar_traducciones`) recorre todo desde 0, como antes. Se eligió caché y no una columna nueva para no tocar el modelo ni agregar una migración; si la caché falla o se vacía, el cursor vuelve a 0 y el comportamiento es el anterior. La forma del resultado de `rellenar()` no cambia.
+- **Archivos afectados**: `backend/catalogo/tasks.py`, `backend/catalogo/services/materialization.py`, `backend/catalogo/services/traducciones.py`, `backend/catalogo/tests.py`, `backend/catalogo/test_traducciones.py`, `docs/decisiones.md`.
+
+---
+
+## 28/10/2026 — Copia en español: «Intentá de nuevo» como única fórmula de reintento
+
+- **Fecha**: 28/10/2026
+- **Descripción**: el español mezclaba «Probá de nuevo», «Intentá más tarde» e «Intentá de nuevo». El usuario aprobó el voseo con «Intentá de nuevo» como fórmula única. Cambian 3 claves de `traducciones/claves-extra.csv`: `lists.overview.loadError`, `lists.detail.loadError` y `profile.password.linkError` («Intentá de nuevo más tarde»). `home.rows.emptyDescription` queda en «Probá de nuevo más tarde»: no es un error, es un estado vacío. El inglés no cambia. «Ocurrió un error» queda como está: no tiene otra fórmula con la que chocar. «Reintentar» (botón) tampoco.
+- **Archivos afectados**: `traducciones/claves-extra.csv`, `frontend/messages/es/common.json` (generado).
+- **Verificación**: `npm run i18n:generate` e `i18n:check` sin errores.
+
+---
+
+## 28/10/2026 — README del frontend y e2e de cambio de idioma estables
+
+- **Fecha**: 28/10/2026
+- **Descripción**:
+  - **`frontend/README.md`** (Q-05 del doc 05): era el texto de `create-next-app`. Ahora cubre arranque con `docker compose`, scripts, tests (Vitest y Playwright, con la API simulada), multiidioma y convenciones. El doc 05 pasa a decir que falta solo la verificación documentada de una instalación limpia.
+  - **Cambio de idioma en los e2e**: la entrada anterior dejó abiertos los pasos de cambio de idioma por ser sensibles a la carga. Un clic o una tecla antes de que la página hidrate no hace nada y el test falla de forma intermitente. En `i18n-flows.spec.ts` se envolvieron en `expect(...).toPass()` con aserciones internas de timeout corto (2 s) y 15 s en total: el radio de `/settings` en el flujo de registro, la flecha del selector del pie sin sesión (si el idioma ya cambió no se repite, porque otra flecha lo devolvería), el enlace «Language» del pie con sesión y el clic del test «fallo de guardado».
+- **Archivos afectados**: `frontend/README.md`, `frontend/e2e/i18n-flows.spec.ts`, `docs/05_Plan_de_Desarrollo.md`.
+- **Verificación**: `i18n-flows.spec.ts` completo, 5 vueltas con 2 workers: 35/35 (4,9 min). Prettier e `i18n:check` sin errores.
+
+---
+
 ## 28/10/2026 — Dos tests e2e inestables más: idioma de la cuenta en `listas` y registro en `acceso`
 
 - **Fecha**: 28/10/2026
@@ -1328,7 +1362,7 @@ reading from request's data stream`. En un view de DRF, `self.request.data`
   - `backend/usuarios/models.py`, `factories.py`,
     `management/commands/seed.py`
   - `frontend/Dockerfile`, `frontend/app/layout.tsx`,
-    `frontend/app/globals.css`, `frontend/app/(public)/page.tsx`
+    `frontend/app/globals.css`, `frontend/e2e/{a11y-axe,mis-resenas}.spec.ts`, `frontend/tests/field-border-contrast.test.ts`, `frontend/app/(public)/page.tsx`
   - `docs/decisiones.md`, `docs/01_Presentación...`, `docs/03_Modelos...`,
     `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`,
     `docs/06_TMDB_API_Referencia.md`
@@ -4991,3 +5025,27 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Skills para Claude Code**: `.claude/skills` pasa a ser un enlace simbólico versionado a `../.agents/skills` (antes estaba en `.gitignore`), porque el equipo trabaja en Linux/WSL. `skills-lock.json` se queda en la raíz: la herramienta `npx skills` lo busca ahí.
 - **Archivos afectados**: `traducciones/` (movida desde `docs/i18n/`), `frontend/scripts/i18n/generate.py`, `frontend/app/{layout.tsx,profile/layout.tsx,settings/layout.tsx,settings/page.tsx,confirm-email/[key]/page.tsx,reset-password/[uid]/[token]/page.tsx}`, `frontend/messages/`, `frontend/i18n/enums.json` (solo formato), `frontend/tests/{i18n-catalogs,i18n-metadata,i18n-render,profile}.test.*`, `frontend/e2e/{i18n-flows,i18n-locale,preferencias,hotfix-perfil}.spec.ts`, `backend/listas/test_reservados.py`, `docker-compose.yml`, `.gitignore`, `.claude/skills`, `AGENTS.md`, `README.md`, docs 02 y 04, specs `i18n-core` y `emails`.
 - **Verificación**: Vitest 375 tests, Django 873 tests, Ruff, ESLint, Prettier, `generate.py --check`, `npm run i18n:check` y `next build` sin errores. Playwright: de 4 specs afectadas, 16 recorridos pasaron y 3 de `i18n-flows` fallaron una vez con los 4 specs en paralelo (timeouts por compilación bajo demanda) y pasaron al repetirlos de a uno.
+
+## 28/10/2026 — Buscar: medición de la latencia (sin arreglo)
+
+- **Fecha**: 28/10/2026
+- **Descripción**: se midió con `curl` contra el backend local (una máquina, TMDB real). Con la caché de Redis en frío, `browse/` tarda entre 200 y 655 ms y `search/` entre 220 y 580 ms; repetido, ambos bajan a 18-25 ms. Las páginas nuevas de `browse/` (2 y 3) tardaron 216 y 298 ms. El máximo medido fue 655 ms, no los ~900 ms del 22/10. La variación entre 250 y 900 ms se explica por el acierto o fallo de la caché y por la latencia de TMDB en el fallo, no por el render ni por la base. No se cambió código. Se evaluaron subir el TTL (global por endpoint, no ayuda a la búsqueda por texto), precalentar las combinaciones comunes (hay que cubrir los dos idiomas y la sync diaria no alcanza con un TTL de 6 h), servir lo vencido y refrescar en segundo plano (la que más toca `cache.py`) y no hacer nada. **Se decidió no hacer nada por ahora**: queda pendiente de un análisis con métricas de uso real (duración de `browse/` y acierto o fallo de caché) antes de elegir.
+- **Archivos afectados**: ninguno de código.
+
+---
+
+---
+
+## 28/10/2026 — Accesibilidad (WCAG 2.1 AA): foco, h1, diálogos nativos, regiones vivas y notas
+
+- **Fecha**: 28/10/2026
+- **Descripción**: frente B de accesibilidad (Q-01). Cada hallazgo se verificó en el código antes de tocarlo.
+  - **Foco bajo la barra (2.4.11)**: `html` recibe `scroll-padding-bottom: 164px` por debajo de 768 px. Cubre la barra `MobileTabs` (76 px) y el botón flotante del Inicio (92 px de margen + 56 px de alto), así el control enfocado con Tab no queda tapado.
+  - **`<h1>` del Inicio**: el único `<h1>` salía de la imagen del Hero. Mientras carga, sin destacado o sin `backdrop`, `HomeHero` pinta un `<h1 class="sr-only">` con `nav.main.home`. Antes, sin título, la `<section>` apuntaba con `aria-labelledby` a un id inexistente; ahora siempre apunta a `hero-titulo`.
+  - **`<dialog>` nativo**: la confirmación de cerrar sesión de `AccountMenu` pasa a `DialogShell` (el mismo de las fichas): `showModal()` deja inerte el fondo, Escape llega como `cancel` y el foco vuelve al botón del menú. Se pierde el cierre por clic en el fondo, que `DialogShell` no ofrece para los `alertdialog`. `ListsMenu` pasa a `<dialog>` modal: como un modal vive en la capa superior, su posición en escritorio se calcula desde el contenedor del botón (`--menu-x`/`--menu-y`); en celular sigue siendo una hoja inferior. El clic en el fondo (o fuera del recuadro) lo cierra. El menú de la cuenta (`role="menu"`) no es un diálogo y no cambia. `SearchView` ya ignoraba Escape si hay un `dialog[open]`, así que no hizo falta tocarlo.
+  - **Registro**: todos los campos llevan `required` (equivale a `aria-required`), aunque el botón siga deshabilitado hasta que el formulario sea válido. `CountrySelect` acepta la prop `required`. El formulario conserva `noValidate`, así que el navegador no muestra sus propios globos.
+  - **Regiones vivas**: un `role="status"` o `aria-live` que se monta con el texto ya puesto no siempre se anuncia. Ahora el contenedor existe desde el inicio (con `empty:sr-only` para que vacío no sume un hueco al flex) y el aviso se agrega después: contador y vacío de `SearchView`, avisos de filtros de `ListDetailView`, `MyReviewsView` y `ReviewsSection`, conteo de reseñas, confirmación de «enlace enviado» (`login`), cuenta regresiva de reenvío (`ConfirmationSent`), `FieldOk` (el contenedor de `TextField` es el que anuncia) y la disponibilidad de usuario del Perfil. El vacío de `HomeView` es contenido de página y pierde el rol. Quedan sin cambio los «cargando» que son contenido inicial de la página (`confirm-email`, Perfil, Preferencias) y el de `WatchProviders`.
+  - **Notas «de 10»**: la nota suelta (`7`) no decía su escala. `Nota` de `ReviewsSection` y de `RatingDialog` agregan texto oculto con `common.rating.starValueLabel` («7 de 10»); `MyReviewItem` cambia un `aria-label` sobre un `<span>` (ignorado en elementos genéricos) por texto oculto con `reviews.card.ratingLabel`. No hay textos nuevos: se reutilizan claves existentes.
+- **Borde de los campos (decidido por Marcos, 28/10/2026)**: el borde de los campos (`#262636`) daba cerca de 1,3:1. Se sube a >= 3:1 (WCAG 1.4.11) solo en campos de formulario, con un token propio `--field-border: #6b6b85` (`border-field-border` en Tailwind). `--border`, `--input` y `--line` no cambian, así que tarjetas, separadores y demás bordes quedan igual. Contraste calculado (WCAG): 3,75:1 sobre `--background` (`#0d0d14`), 3,51:1 sobre `--card` (`#15151f`) y 3,22:1 sobre `--raised-2` (`#1d1d2a`). Lo usan: `fieldClass` (`TextField`, `PasswordField`, `CountrySelect`, selector de género), los campos del Perfil, los buscadores de `SearchView`, `MyReviewsView` y `ListDetailView`, los selectores de `FiltersSheet` y de `ReviewsSection`, el `textarea` de `RatingDialog`, los campos de `ListsMenu` y `ListNameDialog`, el recuadro de los términos (registro y alta con Google) y el campo de la nueva contraseña. `tests/field-border-contrast.test.ts` fija el cálculo.
+- **Verificación**: Vitest 442 tests, `tsc`, ESLint, Prettier e `i18n:check` limpios. Playwright con el backend levantado: `home`, `buscar`, `ficha`, `acceso` (39 pasan); `listas`, `cuenta`, `perfil`, `mis-resenas`, `errores-menu`, `preferencias`, `hotfix-perfil` (59 de 60; la que falló buscaba la nota por `aria-label` y se ajustó a `getByText`, con el spec repetido en verde). Nuevo `e2e/a11y-axe.spec.ts`: axe-core (WCAG 2.0/2.1 A y AA) sin infracciones en Inicio, Registro, Buscar y Perfil, en escritorio y celular.
+- **Archivos afectados**: `frontend/app/globals.css`, `frontend/app/(public)/{login,register}/page.tsx`, `frontend/app/profile/page.tsx`, `frontend/components/{AccountMenu,CountrySelect}.tsx`, `frontend/components/access/{ConfirmationSent,fields}.tsx`, `frontend/components/features/{HomeHero,HomeView,SearchView}.tsx`, `frontend/components/features/lists/ListDetailView.tsx`, `frontend/components/features/reviews/{MyReviewItem,MyReviewsView}.tsx`, `frontend/components/features/title/{ListsMenu,RatingDialog,ReviewsSection}.tsx` y los tests de Vitest correspondientes.

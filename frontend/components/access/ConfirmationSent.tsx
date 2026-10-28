@@ -74,14 +74,10 @@ export function ConfirmationSent({ email }: { email: string }) {
         >
           {common("email.resendLink")}
         </button>
-        {waiting && (
-          <span
-            aria-live="polite"
-            className="text-sm text-fg-3 [font-variant-numeric:tabular-nums]"
-          >
-            {t("resendCountdown", { remainingTime: formatCountdown(remaining) })}
-          </span>
-        )}
+        {/* Montado siempre: el texto aparece después y el lector de pantalla lo anuncia. */}
+        <span aria-live="polite" className="text-sm text-fg-3 [font-variant-numeric:tabular-nums]">
+          {waiting ? t("resendCountdown", { remainingTime: formatCountdown(remaining) }) : ""}
+        </span>
       </div>
       {error && <FieldError>{error}</FieldError>}
       <p className="w-full border-t border-border pt-[22px] text-muted-foreground">

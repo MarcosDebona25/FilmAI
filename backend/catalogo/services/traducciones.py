@@ -1,6 +1,9 @@
 """Lectura por idioma y relleno de las traducciones guardadas."""
 
+import logging
+
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Count, Q
 
 from catalogo.exceptions import TMDBError
@@ -8,6 +11,11 @@ from catalogo.models import ProduccionAudiovisual
 from catalogo.services import materialization
 from catalogo.services.adapter import dominio_a_tmdb
 from catalogo.services.materialization import guardar_traducciones, idiomas_traducidos
+
+logger = logging.getLogger(__name__)
+
+# Dónde quedó la última corrida acotada (pk de la última fila intentada).
+_CLAVE_CURSOR = "catalogo:traducciones:cursor"
 
 
 def texto_localizado(produccion, campo, idioma):
@@ -79,14 +87,49 @@ def pendientes():
     )
 
 
+def _leer_cursor():
+    try:
+        return int(cache.get(_CLAVE_CURSOR) or 0)
+    except Exception:
+        # La caché es una comodidad: sin ella se arranca desde el principio.
+        logger.warning("rellenar: no se pudo leer el cursor", exc_info=True)
+        return 0
+
+
+def _guardar_cursor(valor):
+    try:
+        cache.set(_CLAVE_CURSOR, valor, None)
+    except Exception:
+        logger.warning("rellenar: no se pudo guardar el cursor", exc_info=True)
+
+
 def rellenar(limite=None, lote=200):
-    """Procesa por lotes; cada ítem falla solo, sin cortar el resto."""
+    """Procesa por lotes; cada ítem falla solo, sin cortar el resto.
+
+    Con `limite` (la sync nocturna) la corrida retoma donde terminó la anterior
+    —un cursor por `pk` guardado en la caché— y al agotar los pendientes vuelve
+    al principio. Sin eso, las filas que fallan seguirían siendo siempre las
+    primeras de `pendientes()` y ocuparían el límite todas las noches, dejando
+    sin traducir a las demás. Sin `limite` (el comando manual) se recorre todo
+    desde `pk` 0.
+    """
     procesadas = fallidas = 0
-    ultimo = 0
+    acotada = limite is not None
+    ultimo = inicio = _leer_cursor() if acotada else 0
+    # Tras volver al principio solo se recorre hasta el punto de partida, para
+    # no reintentar en la misma corrida lo que ya se intentó.
+    tope = None
     while limite is None or procesadas + fallidas < limite:
         tamanio = lote if limite is None else min(lote, limite - procesadas - fallidas)
-        filas = list(pendientes().filter(pk__gt=ultimo)[:tamanio])
+        consulta = pendientes().filter(pk__gt=ultimo)
+        if tope is not None:
+            consulta = consulta.filter(pk__lte=tope)
+        filas = list(consulta[:tamanio])
         if not filas:
+            if inicio > 0 and tope is None:
+                tope, ultimo = inicio, 0
+                continue
+            ultimo = 0
             break
         for produccion in filas:
             ultimo = produccion.pk
@@ -111,6 +154,8 @@ def rellenar(limite=None, lote=200):
                 procesadas += 1
             except TMDBError:
                 fallidas += 1
+    if acotada:
+        _guardar_cursor(ultimo)
     return {
         "procesadas": procesadas,
         "fallidas": fallidas,

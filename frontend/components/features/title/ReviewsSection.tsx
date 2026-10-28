@@ -43,10 +43,12 @@ type Pagina = {
 };
 
 function Nota({ valor }: { valor: number }) {
+  const t = useTranslations("common.rating");
   return (
     <span className="inline-flex items-center gap-1.5 font-bold tabular-nums">
       <StarIcon className="size-[15px] fill-primary" />
-      {valor}
+      <span className="sr-only">{t("starValueLabel", { rating: String(valor) })}</span>
+      <span aria-hidden="true">{valor}</span>
     </span>
   );
 }
@@ -164,10 +166,21 @@ export function ReviewsSection({
   const filtrando = nota !== null;
   const avatar = (id: number) => avatares.find((opcion) => opcion.id === id)?.src;
   const pildora =
-    "inline-flex h-12 items-center gap-2 rounded-full pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)] md:h-11";
+    "inline-flex h-12 items-center gap-2 rounded-full pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--field-border)] md:h-11";
   // En celular, 44 px de alto y 16 px de letra (con menos, iOS hace zoom al tocarlo).
   const selector =
     "h-11 cursor-pointer rounded-full border-0 bg-raised-2 px-2.5 text-base font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-9 md:text-sm";
+
+  const conteo = pagina
+    ? filtrando
+      ? t("title.reviews.displayedCount", {
+          shownCount: formats.number(pagina.total),
+          totalCount: formats.number(pagina.total_comunidad),
+        })
+      : t("title.reviews.communityCount", { count: formats.number(pagina.total_comunidad) })
+    : "";
+  const sinCoincidencias =
+    pagina !== null && pagina.total_comunidad > 0 && pagina.results.length === 0;
 
   return (
     <section aria-labelledby={tituloId} className="flex max-w-[880px] flex-col gap-8">
@@ -215,18 +228,10 @@ export function ReviewsSection({
       <div className="flex flex-col">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-3">
           <div className="flex items-center gap-3.5">
-            {pagina && (
-              <h3 aria-live="polite" className="text-fg-2 tabular-nums">
-                {filtrando
-                  ? t("title.reviews.displayedCount", {
-                      shownCount: formats.number(pagina.total),
-                      totalCount: formats.number(pagina.total_comunidad),
-                    })
-                  : t("title.reviews.communityCount", {
-                      count: formats.number(pagina.total_comunidad),
-                    })}
-              </h3>
-            )}
+            {/* El contenedor vive siempre; el conteo se agrega después y se anuncia. */}
+            <div aria-live="polite" className="empty:sr-only">
+              {pagina && <h3 className="text-fg-2 tabular-nums">{conteo}</h3>}
+            </div>
             {filtrando && (
               <button
                 type="button"
@@ -342,14 +347,13 @@ export function ReviewsSection({
         {pagina && pagina.total_comunidad === 0 && (
           <p className="border-t border-line py-6 text-fg-2">{t("title.reviews.empty")}</p>
         )}
-        {pagina && pagina.total_comunidad > 0 && pagina.results.length === 0 && (
-          <div
-            role="status"
-            className="flex flex-col items-start gap-2 border-t border-line py-6 text-fg-2"
-          >
-            <p>{t("title.reviews.filteredEmpty")}</p>
-          </div>
-        )}
+        <div role="status" className="empty:sr-only">
+          {sinCoincidencias && (
+            <div className="flex flex-col items-start gap-2 border-t border-line py-6 text-fg-2">
+              <p>{t("title.reviews.filteredEmpty")}</p>
+            </div>
+          )}
+        </div>
         {pagina?.next && (
           <button
             type="button"

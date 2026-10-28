@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useId, useState, type ComponentProps, type ReactNode } from "react";
 
 export const fieldClass =
-  "h-[52px] w-full rounded-[10px] border-0 bg-card px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
+  "h-[52px] w-full rounded-[10px] border-0 bg-card px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
 
 export function FieldError({ id, children }: { id?: string; children: ReactNode }) {
   if (!children) return null;
@@ -31,11 +31,7 @@ export function FieldHelp({ id, children }: { id?: string; children: ReactNode }
 
 export function FieldOk({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <p
-      id={id}
-      aria-live="polite"
-      className="flex items-center gap-1.5 text-[13px] font-semibold text-ok"
-    >
+    <p id={id} className="flex items-center gap-1.5 text-[13px] font-semibold text-ok">
       <Check aria-hidden="true" className="size-[15px] flex-none" strokeWidth={2.5} />
       {children}
     </p>
@@ -74,7 +70,13 @@ export function TextField({ label, id, help, error, status, prefix, ...input }: 
           {...input}
         />
       </div>
-      <div id={describedBy} className="flex flex-col gap-2">
+      {/* Con `status`, el contenedor es la región viva: existe desde el inicio y el
+          estado se agrega después (un `aria-live` que nace con texto no se anuncia). */}
+      <div
+        id={describedBy}
+        aria-live={status === undefined ? undefined : "polite"}
+        className="flex flex-col gap-2"
+      >
         {error ? <FieldError>{error}</FieldError> : (status ?? null)}
         {!error && !status && help ? <FieldHelp>{help}</FieldHelp> : null}
         {!error && status && help ? <FieldHelp>{help}</FieldHelp> : null}

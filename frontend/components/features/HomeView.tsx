@@ -208,9 +208,7 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
         </div>
       ) : todoVacio ? (
         <div className="mx-auto flex max-w-[1360px] flex-col items-start gap-4 px-5 py-16 md:px-10">
-          <p role="status" className="max-w-[60ch] text-fg-2">
-            {t("rows.emptyDescription")}
-          </p>
+          <p className="max-w-[60ch] text-fg-2">{t("rows.emptyDescription")}</p>
           <Link
             href={routes.search}
             className="inline-flex h-12 items-center rounded-lg bg-raised-2 px-[22px] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"

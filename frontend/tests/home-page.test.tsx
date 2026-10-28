@@ -98,8 +98,10 @@ describe("Home sin sesión", () => {
   it("muestra el Hero, Trending, New releases y la invitación a registrarse", async () => {
     render(<HomeView />, { locale: "en" });
 
-    const hero = await screen.findByRole("heading", { level: 1 });
-    expect(hero).toHaveTextContent("Insidious: Out of the Further");
+    const hero = await screen.findByRole("heading", {
+      level: 1,
+      name: "Insidious: Out of the Further",
+    });
     const seccionHero = hero.closest("section") as HTMLElement;
     expect(within(seccionHero).getByText("#1 trending")).toBeInTheDocument();
     expect(within(seccionHero).getByText("Horror, Thriller")).toBeInTheDocument();
@@ -183,9 +185,8 @@ describe("selector de tipo", () => {
     estado.params = new URLSearchParams("type=movie");
     render(<HomeView />, { locale: "en" });
 
-    const hero = await screen.findByRole("heading", { level: 1 });
     // Insidious es el Hero de All, así que Movies muestra el siguiente.
-    expect(hero).toHaveTextContent("Fall 2: Deadpoint");
+    const hero = await screen.findByRole("heading", { level: 1, name: "Fall 2: Deadpoint" });
     expect(
       within(hero.closest("section") as HTMLElement).getByText("Featured this week")
     ).toBeInTheDocument();
@@ -295,17 +296,20 @@ describe("Home con el Hero pedido por el servidor (24/10/2026)", () => {
   it("si lo que trajo el servidor es de otro idioma, se pide de nuevo", async () => {
     render(<HomeView inicial={{ idioma: "es", datos: delServidor }} />, { locale: "en" });
 
-    expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(
-      "Insidious: Out of the Further"
-    );
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Insidious: Out of the Further" })
+    ).toBeInTheDocument();
     expect(estado.llamadas).toContain("/api/catalogo/trending/?media_type=all");
   });
 
   it("sin datos del servidor se comporta como antes", async () => {
     render(<HomeView inicial={{ idioma: "en", datos: {} }} />, { locale: "en" });
 
-    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
-    expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
+    // Mientras carga no hay título del Hero, pero el Inicio nunca queda sin `<h1>`.
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Home");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Insidious: Out of the Further" })
+    ).toBeInTheDocument();
     expect(estado.llamadas).toContain("/api/catalogo/trending/?media_type=all");
   });
 });

@@ -139,7 +139,7 @@ profile.password.currentRequired,,error,,Ingresá tu contraseña actual.,Enter y
 profile.password.googleDescription,,label,,Tu cuenta usa Google y todavía no tiene contraseña local. Podés establecerla con un enlace enviado a tu correo.,Your account uses Google and doesn’t have a password yet. You can set one with a link we email you.,aprobado
 profile.password.sendLink,,label,,Enviar enlace por correo,Email me a link,aprobado
 profile.password.linkSent,,feedback,,Te enviamos un enlace para establecer tu contraseña.,We emailed you a link to set your password.,aprobado
-profile.password.linkError,,error,,No pudimos enviar el enlace. Intentá más tarde.,We couldn’t send the link. Try again later.,aprobado
+profile.password.linkError,,error,,No pudimos enviar el enlace. Intentá de nuevo más tarde.,We couldn’t send the link. Try again later.,aprobado
 profile.loading,,status,,Cargando perfil…,Loading profile…,aprobado
 common.avatar.optionLabel,,label,number,Avatar {number},Avatar {number},aprobado
 reviews.results.empty,,label,,Todavía no calificaste ninguna película ni serie.,You haven’t rated any movies or TV shows yet.,aprobado
@@ -168,8 +168,8 @@ lists.reorder.pickedUp,,label,,"{listName} levantada, posición {position} de {t
 lists.reorder.movedTo,,label,,{listName} movida a la posición {position} de {total}.,{listName} moved to position {position} of {total}.,aprobado
 lists.reorder.dropped,,label,,{listName} soltada en la posición {position} de {total}.,{listName} dropped at position {position} of {total}.,aprobado
 lists.reorder.cancelled,,label,,Reordenamiento cancelado. {listName} volvió a la posición {position}.,Reorder cancelled. {listName} went back to position {position}.,aprobado
-lists.overview.loadError,,label,,No pudimos cargar tus listas. Probá de nuevo.,We couldn’t load your lists. Try again.,aprobado
-lists.detail.loadError,,label,,No pudimos cargar esta lista. Probá de nuevo.,We couldn’t load this list. Try again.,aprobado
+lists.overview.loadError,,label,,No pudimos cargar tus listas. Intentá de nuevo.,We couldn’t load your lists. Try again.,aprobado
+lists.detail.loadError,,label,,No pudimos cargar esta lista. Intentá de nuevo.,We couldn’t load this list. Try again.,aprobado
 lists.detail.loadMore,,label,,Cargar más títulos,Load more titles,aprobado
 lists.detail.searchPlaceholder,,label,,Buscar por título,Search by title,aprobado
 lists.detail.displayedCount,,label,,"Mostrando {shownCount} de {totalCount, plural, one {# ítem} other {# ítems}}","Showing {shownCount} of {totalCount, plural, one {# item} other {# items}}",aprobado
