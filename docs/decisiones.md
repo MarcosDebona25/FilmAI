@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Registro de `i18n-flows` estable y resultados de Playwright en el CI
+
+- **Fecha**: 28/10/2026
+- **Descripción**: en el PR #142, `e2e/i18n-flows.spec.ts` (variante `es`) falló una vez por timeout: el botón «Registrarse» siguió deshabilitado 60 s porque el formulario nunca quedó válido. El commit anterior, con el mismo frontend, había pasado, y el CI de `main` sobre el merge también: era un test inestable, no una regresión. El test llenaba los campos después de `networkidle`, que no garantiza que la página haya hidratado, y un campo llenado antes de hidratar se pierde.
+  - **Test**: ahora llena los campos dentro de un `expect(...).toPass()` que repone los que se perdieron y espera «Disponible» (solo aparece con la página hidratada y el nombre ya consultado). Después comprueba que el botón esté habilitado antes del clic, así un fallo dice qué faltó en vez de agotar el tiempo en el clic. Es el mismo patrón que ya usaba `acceso.spec.ts`.
+  - **CI**: el job de Playwright sube `frontend/test-results/` (trace, captura y `error-context.md`) como artefacto cuando falla, con 7 días de retención. En #142 no había trace para ver qué campo quedó inválido.
+- **Archivos afectados**: `frontend/e2e/i18n-flows.spec.ts`, `.github/workflows/ci.yml`.
+- **Verificación**: `i18n-flows` repetido 5 veces con 2 workers (como el runner de GitHub): 35 de 35. La suite e2e completa con 2 workers: 119 pasan y 7 se saltean. Con 6 workers en local fallan algunos pasos de cambio de idioma por el timeout de 5 s de `expect`, también con el spec de `main`; la parte del registro modificada pasó en todas las corridas.
+- **Queda abierto**: esos pasos de cambio de idioma (`/settings` y el selector del pie) son sensibles a la carga; si aparecen en el CI, conviene revisarlos aparte.
+
 ## 28/10/2026 — Nombres de usuario reservados (issue #137)
 
 - **Fecha**: 28/10/2026

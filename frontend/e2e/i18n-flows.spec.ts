@@ -23,9 +23,8 @@ for (const locale of ["en", "es"] as const) {
       await route.fulfill({ status: 201, json: { code: "registration_pending_confirmation" } });
     });
     await page.goto("/register");
-    // Rellenar antes de hidratar pierde el primer campo (dev server en frío).
     await page.waitForLoadState("networkidle");
-    for (const [name, value] of Object.entries({
+    const campos = {
       nombre: "Ana",
       apellido: "Pérez",
       nombre_usuario: "anaperez",
@@ -33,12 +32,28 @@ for (const locale of ["en", "es"] as const) {
       fecha_nacimiento: "1990-01-01",
       password1: "Password123*",
       password2: "Password123*",
-    }))
-      await page.locator(`[name="${name}"]`).fill(value);
+    };
+    // Rellenar antes de hidratar pierde campos (dev server en frío), y
+    // `networkidle` no alcanza para evitarlo. «Disponible» solo aparece con la
+    // página hidratada: se reintenta hasta verlo, reponiendo lo que se perdió.
+    await expect(async () => {
+      for (const [name, value] of Object.entries(campos)) {
+        const campo = page.locator(`[name="${name}"]`);
+        if ((await campo.inputValue()) !== value) await campo.fill(value);
+      }
+      await expect(
+        page.getByText(messages.auth.signUp.usernameAvailable, { exact: true })
+      ).toBeVisible({ timeout: 2_000 });
+      for (const [name, value] of Object.entries(campos))
+        await expect(page.locator(`[name="${name}"]`)).toHaveValue(value, { timeout: 0 });
+    }).toPass({ timeout: 20_000 });
     await page.locator('select[name="pais"]').selectOption("BR");
     await page.locator('select[name="genero"]').selectOption("no_especifica");
     await page.locator('[name="acepta_terminos"]').check();
-    await page.getByRole("button", { name: messages.nav.account.signUp, exact: true }).click();
+    const submit = page.getByRole("button", { name: messages.nav.account.signUp, exact: true });
+    // Si algo quedó inválido, que falle acá y no por timeout en el clic.
+    await expect(submit).toBeEnabled();
+    await submit.click();
     await expect(
       page.getByRole("heading", { name: messages.auth.confirmation.inboxTitle })
     ).toBeVisible();
