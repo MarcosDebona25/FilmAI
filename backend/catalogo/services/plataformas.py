@@ -25,8 +25,20 @@ def plataformas(servicio, tipo, id_tmdb, pais):
         respuesta[categoria] = items
     # Sin ninguna plataforma el enlace no lleva a nada útil.
     if hay_datos:
-        respuesta["enlace"] = del_pais.get("link") or None
+        respuesta["enlace"] = _enlace_seguro(del_pais.get("link"))
     return respuesta
+
+
+def _enlace_seguro(link):
+    """El `link` de TMDB solo si es `https://`; si no, `None`.
+
+    El frontend lo pone tal cual en un `href`. Un `javascript:…` se ejecutaría
+    al hacer clic (XSS), así que no se confía en el dato de afuera aunque venga
+    de TMDB (revisión del 28/10/2026).
+    """
+    if isinstance(link, str) and link.lower().startswith("https://"):
+        return link
+    return None
 
 
 def _agrupar(del_pais, claves):
