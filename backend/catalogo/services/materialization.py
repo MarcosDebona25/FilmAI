@@ -265,7 +265,8 @@ def _enriquecer(produccion, id_tmdb, tipo_tmdb):
     credits = servicio.get_credits(id_tmdb, tipo_tmdb)
     keywords = servicio.get_keywords(id_tmdb, tipo_tmdb)
 
-    for campo, valor in _mapear(detalle, credits, keywords, tipo_tmdb).items():
+    valores = _recortar(_mapear(detalle, credits, keywords, tipo_tmdb))
+    for campo, valor in valores.items():
         setattr(produccion, campo, valor)
     # En el mismo save() que los datos: si la escritura falla, tampoco queda
     # anotado que se enriqueció.
@@ -322,9 +323,30 @@ def guardar_traducciones(produccion, id_tmdb, tipo_tmdb):
             defaults={
                 "titulo": titulo[:100],
                 "sinopsis": (detalle.get("overview") or "")[:2000],
-                "poster": detalle.get("poster_path") or "",
+                "poster": (detalle.get("poster_path") or "")[:250],
             },
         )
+
+
+def _recortar(valores):
+    """Recorta cada texto de TMDB al `max_length` de su columna.
+
+    Los límites se leen del modelo, no se repiten acá: si cambia un
+    `max_length`, esto lo sigue solo. Sin recorte, un título o un nombre más
+    largo que la columna haría fallar el `save()` con `DataError` y se perdería
+    todo el enriquecimiento de la producción.
+    """
+    recortados = dict(valores)
+    for campo, valor in valores.items():
+        columna = ProduccionAudiovisual._meta.get_field(campo)
+        if isinstance(valor, str) and columna.max_length:
+            recortados[campo] = valor[: columna.max_length]
+        elif isinstance(valor, list) and getattr(
+            getattr(columna, "base_field", None), "max_length", None
+        ):
+            tope = columna.base_field.max_length
+            recortados[campo] = [x[:tope] if isinstance(x, str) else x for x in valor]
+    return recortados
 
 
 def _mapear(detalle, credits, keywords, tipo_tmdb):
