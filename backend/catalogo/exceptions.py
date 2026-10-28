@@ -71,3 +71,17 @@ class CalificacionDuplicada(APIException):
         "codigo": default_code,
         "detail": "Ya calificaste esta producción. Editá tu calificación.",
     }
+
+
+class ResenaModerada(APIException):
+    """El texto de una reseña moderada no se edita ni se borra (F10, auditoría).
+
+    Un administrador la ocultó (`activa=False`, AD-01'). Si su autor pudiera
+    borrar el texto y escribir otro, la fila nueva nacería `activa=True` y la
+    moderación se levantaría sola. La nota sigue siendo editable, y quitar la
+    calificación entera también (CU-015 pide eliminar permanentemente).
+    """
+
+    status_code = 409
+    default_code = "review_moderated"
+    default_detail = "Esta reseña fue moderada: no se puede editar ni borrar su texto."

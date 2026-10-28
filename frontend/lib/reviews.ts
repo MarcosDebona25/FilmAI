@@ -8,6 +8,8 @@ export type MiResena = {
   valor: number;
   fecha: string;
   texto: string | null;
+  /** Un administrador la ocultó: su texto no se puede editar ni borrar (F10). */
+  moderada: boolean;
 };
 export type PaginaResenas = {
   total: number;

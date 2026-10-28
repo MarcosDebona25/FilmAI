@@ -2569,6 +2569,7 @@ components:
           - rating_blocks_removal_from_watched
           - rating_duplicated
           - required
+          - review_moderated
           - review_update_empty
           - server_error
           - session_revoked
