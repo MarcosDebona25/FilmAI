@@ -5,6 +5,35 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — F10: el texto de una reseña moderada no se puede editar ni borrar
+
+- **Fecha**: 28/10/2026
+- **Descripción**: cierra el hallazgo F10 de la auditoría de seguridad (`docs/auditoria-seguridad-resumen.md`).
+  - **Problema**: un administrador puede moderar una reseña desde el Admin (`Resena.activa = False`, acción «Desactivar reseñas»). La comunidad deja de verla; solo su autor la sigue viendo. Pero el autor podía llamar `DELETE /api/reviews/{id}/texto/` (borra la fila `Resena`, la nota se conserva) y después `PUT /api/reviews/{id}/` con un texto nuevo, que crea una `Resena` con `activa=True` (el valor por defecto del modelo). En dos pedidos, el autor volvía a publicar texto en la comunidad sin que ningún administrador lo revisara: la moderación se levantaba sola. Hacía falta una sesión propia y nada más; el límite de escrituras (60 por minuto) no lo impedía.
+  - **Decisión**: mientras la reseña de una calificación esté moderada, su texto queda bloqueado para el autor.
+    - `PUT /api/reviews/{id}/` con `texto` responde 409 (Conflict) con el código nuevo `review_moderated`, y no cambia nada: si el mismo pedido trae también `valor`, tampoco se guarda la nota (se rechaza antes de escribir).
+    - `DELETE /api/reviews/{id}/texto/` responde 409 (Conflict) con `review_moderated`.
+    - `PUT` con solo `valor` sigue funcionando (200 (OK)).
+    - `DELETE /api/reviews/{id}/` (quitar la calificación entera) no cambia y responde 204 (No Content): CU-015 pide eliminar «permanentemente», y la fila moderada cae con la calificación.
+    - Si un administrador la reactiva (`activa=True`), vuelve el control normal.
+    - `CalificacionSerializer` expone `moderada` (booleano; `true` solo si la calificación tiene una reseña con `activa=False`). Lo calcula la propiedad `Calificacion.moderada`, la misma que usan las vistas. Sin migración.
+    - Frontend: el diálogo de editar deja la nota editable y el texto de solo lectura (`readOnly`, sin contador) con el aviso «Esta reseña fue moderada, así que no podés editar ni borrar su texto.»; en «Mis reseñas» (menú de escritorio y hoja de celular) y en «Tu reseña» de la ficha, borrar el texto queda con `aria-disabled` y el aviso a la vista. Si igual llega `review_moderated`, el error se traduce por código (`errors.codes.review_moderated`).
+  - **Alternativas descartadas**:
+    - *Que el texto nuevo nazca moderado* (heredar `activa=False` al recrear la fila): el autor seguiría pudiendo cambiar lo que ve en su propia pantalla, sin que nadie lo revise, y «moderada» dejaría de decir qué texto hay detrás.
+    - *Que el texto nuevo quede pendiente de revisión*: exige un estado nuevo, una cola en el Admin y una migración; es producto nuevo, no un cierre de F10.
+    - *Permitir editar el texto pero conservar `activa=False`*: el autor podría escribir lo que quiera sabiendo que nadie lo ve, y el administrador no se enteraría del cambio de contenido.
+    - *Recordar la moderación por (usuario, producción) en un modelo aparte*: es la única forma de cerrar el caso residual de abajo, pero pide un modelo y una migración; se dejó fuera de este cambio.
+  - **Quién decidió**: Marcos, el 28/10/2026 (la entrada de Gonza del 22/10 dejaba abierta la decisión de producto).
+  - **Riesgo residual (aceptado) y qué revisar al desplegar**: quitar la calificación entera y volver a calificar crea filas nuevas sin marca, y esa reseña nace visible. Así el autor sigue pudiendo reemplazar un texto moderado, con un paso más (borrar la calificación, que además la saca de «Vistas», y volver a calificar). Mitigaciones: el administrador puede volver a moderarla (acción `desactivar_resenas`) y el límite de 60 escrituras por minuto por usuario acota la repetición. Se revisa al desplegar: mirar si hay reincidencia en las reseñas moderadas; si la hay, pasar a la alternativa del modelo aparte. Tampoco se toca `Calificacion.activa`: la API siempre escribe `True` y las lecturas la filtran, sin cambios.
+  - **Carrera**: si un administrador modera justo entre la comprobación y la escritura, el pedido ya en curso puede completarse una vez; el siguiente ya queda bloqueado. No se agregó bloqueo de fila: el costo no se justifica para un administrador actuando en el mismo instante.
+- **Archivos afectados**: `backend/catalogo/exceptions.py` (`ResenaModerada`), `backend/catalogo/models.py` (`Calificacion.moderada`), `backend/catalogo/reviews.py`, `backend/catalogo/serializers_reviews.py`, `backend/filmai/errores/catalogo.py` (código `review_moderated`, 409 (Conflict), contexto `calificaciones`), `contracts/error-codes.json`, `contracts/openapi.yaml` (solo el enumerado de códigos; las vistas no tienen esquema propio), `traducciones/claves-extra.csv`, `frontend/messages/{en,es}/common.json` y `common.d.json.ts`, `frontend/lib/reviews.ts`, `frontend/lib/title.ts`, `frontend/components/features/title/RatingDialog.tsx`, `frontend/components/features/title/ReviewsSection.tsx`, `frontend/components/features/title/TitleView.tsx`, `frontend/components/features/reviews/MyReviewItem.tsx`, `frontend/components/features/reviews/MyReviewsView.tsx`, `openspec/specs/reviews-api/spec.md`, `openspec/specs/error-contract/spec.md`, `docs/02_Especificación de Requerimientos.md` (CU-015), `docs/04_Lineamientos_UI.md` (§5d), `docs/decisiones.md`.
+- **Tests**:
+  - Backend, `backend/catalogo/tests_reviews.py` (`ResenaModeradaTests`): `PUT` con texto y `DELETE .../texto/` sobre una moderada responden 409 (Conflict) con `review_moderated` y no cambian nada; un `PUT` con nota y texto no guarda ni la nota; `PUT` solo con `valor` responde 200 (OK) con `moderada: true`; quitar la calificación responde 204 (No Content); reactivada, editar y borrar el texto vuelven a funcionar; una calificación sin texto no cuenta como moderada; la comunidad sigue sin ver la moderada; «Mis reseñas» la marca `moderada` y una activa no; un usuario ajeno recibe 404 (Not Found) igual que antes.
+  - Backend, contrato: el caso `resena_moderada` del manejador de errores (`filmai/tests_contrato.py` y su JSON de referencia) y el contrato de códigos exportado.
+  - Frontend (Vitest): el diálogo deja el texto de solo lectura con el aviso asociado y manda el texto original al guardar la nota (y sin moderar sigue editable); `MyReviewItem` (menú y hoja de celular) y «Tu reseña» deshabilitan borrar el texto, muestran el aviso y no abren la confirmación; `translateError` traduce `review_moderated` en ambos idiomas. E2E de Playwright (`mis-resenas` y `ficha`) sin cambios y en verde.
+
+---
+
 ## 28/10/2026 — Doc 04 sin Figma, estado en un solo lugar y resumen de auditoría solo con estado
 
 - **Fecha**: 28/10/2026

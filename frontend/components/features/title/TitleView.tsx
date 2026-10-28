@@ -565,7 +565,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
           titulo={ficha.titulo}
           enVistas={enVistas}
           enPendientes={enPendientes}
-          inicial={mia ? { valor: mia.valor, texto: mia.texto } : undefined}
+          inicial={mia ? { valor: mia.valor, texto: mia.texto, moderada: mia.moderada } : undefined}
           onSubmit={guardar}
           onRemoveRating={() => setModal("quitar")}
           onClose={() => setModal(null)}

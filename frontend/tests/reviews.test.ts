@@ -12,6 +12,7 @@ const item: MiResena = {
   valor: 8,
   fecha: "2026-10-03",
   texto: "Muy buena",
+  moderada: false,
 };
 describe("contratos de edición y paginación", () => {
   it("reutiliza solo el cursor en nuestra ruta de API", () =>

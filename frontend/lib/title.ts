@@ -70,6 +70,8 @@ export interface MiCalificacion {
   valor: number;
   texto: string | null;
   fecha: string;
+  /** Un administrador la ocultó: su texto no se puede editar ni borrar (F10). */
+  moderada: boolean;
 }
 
 export function normalizarFicha(raw: TmdbDetalle, tipo: MediaType): Ficha {

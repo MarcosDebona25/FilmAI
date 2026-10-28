@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import Image from "next/image";
-import { Pencil, Trash2 } from "lucide-react";
+import { Lock, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -104,6 +104,7 @@ export function ReviewsSection({
   const { perfil, avatares = [] } = useAccount();
   const tituloId = useId();
   const tuyaId = useId();
+  const moderadaId = useId();
   const [orden, setOrden] = useState<Orden>("newest");
   const [nota, setNota] = useState<Nota | null>(null);
   const [pagina, setPagina] = useState<Pagina | null>(null);
@@ -203,6 +204,12 @@ export function ReviewsSection({
               <span className="text-sm text-fg-3">{fecha(mia.fecha)}</span>
             </div>
             <Texto texto={mia.texto} />
+            {mia.moderada && (
+              <p id={moderadaId} className="flex items-start gap-1.5 text-sm text-fg-3">
+                <Lock aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+                {t("common.review.moderatedNotice")}
+              </p>
+            )}
             <div className="flex gap-2">
               <button
                 type="button"
@@ -214,8 +221,10 @@ export function ReviewsSection({
               </button>
               <button
                 type="button"
-                onClick={() => setBorrar(true)}
-                className="inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-destructive md:h-10 focus-visible:outline-2 focus-visible:outline-ring"
+                aria-disabled={mia.moderada || undefined}
+                aria-describedby={mia.moderada ? moderadaId : undefined}
+                onClick={() => !mia.moderada && setBorrar(true)}
+                className={`inline-flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-destructive md:h-10 focus-visible:outline-2 focus-visible:outline-ring ${mia.moderada ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}
               >
                 <Trash2 aria-hidden="true" className="size-4" />
                 {t("common.review.delete")}
