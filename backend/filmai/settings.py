@@ -312,6 +312,10 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        # httpx registra en INFO cada URL pedida, y la de TMDB lleva la clave en
+        # la query (`api_key=`): con WARNING no queda en ningún log (28/10/2026).
+        "httpx": {"level": "WARNING"},
+        "httpcore": {"level": "WARNING"},
         "usuarios": {
             "handlers": ["console"],
             # DEBUG solo en desarrollo (26/10/2026).

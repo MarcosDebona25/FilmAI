@@ -1,3 +1,4 @@
+import re
 import time
 
 import httpx
@@ -28,6 +29,18 @@ _DISCOVER_DATE_PARAM = {
     "movie": "primary_release_date",
     "tv": "first_air_date",
 }
+# La clave de TMDB (v3) viaja en la query (`?api_key=...`), así que cualquier
+# texto que lleve la URL de un pedido —el mensaje de un error de httpx, el
+# registro de un logger— la arrastra. `_redactar_clave` la tapa antes de que el
+# texto salga de este módulo. No se pasa a `Authorization: Bearer` porque eso
+# exige el token v4 y el proyecto usa la clave v3.
+_CLAVE_EN_URL = re.compile(r"(api_key=)[^&\s\"']*", re.IGNORECASE)
+
+
+def _redactar_clave(texto, clave=""):
+    """Reemplaza el valor de `api_key=` en `texto` (y la clave suelta, si se la pasa)."""
+    texto = _CLAVE_EN_URL.sub(r"\1***", texto)
+    return texto.replace(clave, "***") if clave else texto
 
 
 class TMDBClient:
@@ -68,7 +81,11 @@ class TMDBClient:
                 if attempt < MAX_RETRIES:
                     time.sleep(self._backoff(attempt))
                     continue
-                raise TMDBTransportError(str(error)) from error
+                # `from None`: la causa original lleva la URL con la clave y
+                # saldría en el traceback de `logger.exception`.
+                raise TMDBTransportError(
+                    _redactar_clave(str(error), self.api_key)
+                ) from None
 
             if 200 <= response.status_code < 300:
                 try:
