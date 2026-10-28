@@ -242,7 +242,7 @@ export function SearchView() {
               value={texto}
               onChange={(evento) => setTexto(evento.target.value)}
               placeholder={t("common.search.placeholder")}
-              className="h-[52px] w-full rounded-xl border-0 bg-raised px-12 text-[17px] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-[58px] md:rounded-xl md:px-14 md:font-display md:text-[27px] md:font-extrabold [&::-webkit-search-cancel-button]:appearance-none"
+              className="h-[52px] w-full rounded-xl border-0 bg-raised px-12 text-[17px] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-[58px] md:rounded-xl md:px-14 md:font-display md:text-[27px] md:font-extrabold [&::-webkit-search-cancel-button]:appearance-none"
             />
             {texto && (
               <button

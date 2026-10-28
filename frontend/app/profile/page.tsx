@@ -40,7 +40,7 @@ type Campo = "nombre" | "apellido" | "nombre_usuario";
 type Disponibilidad = "idle" | "checking" | "available" | "taken";
 
 const CAMPO =
-  "h-[52px] w-full rounded-[10px] border-0 bg-raised px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
+  "h-[52px] w-full rounded-[10px] border-0 bg-raised px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
 const ETIQUETA = "text-sm font-semibold";
 const AYUDA = "text-[13px] text-fg-3";
 const TITULO_2 = "font-display text-[30px] leading-none md:text-[36px]";

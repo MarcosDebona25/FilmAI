@@ -148,7 +148,7 @@ export function RatingDialog({
           onChange={(event) => setTexto(event.target.value)}
           placeholder={t("title.review.placeholder")}
           disabled={enviando}
-          className="w-full resize-y rounded-lg bg-background px-4 py-3.5 text-base leading-[1.55] shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring"
+          className="w-full resize-y rounded-lg bg-background px-4 py-3.5 text-base leading-[1.55] shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring"
         />
         <span className="self-end text-[13px] text-fg-3 tabular-nums">
           {texto.length}/{MAX_TEXTO}

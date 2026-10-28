@@ -156,7 +156,7 @@ export function ListsMenu({
             placeholder={t("title.lists.nameExamplePlaceholder")}
             aria-invalid={error ? true : undefined}
             disabled={enviando}
-            className="h-11 rounded-lg bg-background px-3 shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring"
+            className="h-11 rounded-lg bg-background px-3 shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring"
           />
           {error && (
             <p role="alert" className="text-sm text-destructive">
