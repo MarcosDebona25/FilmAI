@@ -26,7 +26,7 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 | ~~F7~~ | ~~catálogo~~ | ~~Alta de reseñas con ids inexistentes o enormes: filas vacías y 500 (Internal Server Error)~~ | **Resuelto** (24/10/2026) | ~~Baja~~ | ~~3~~ |
 | ~~F8~~ | ~~usuarios~~ | ~~Clave de confirmación de correo escrita en el log~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
 | ~~F9~~ | ~~frontend~~ | ~~Redirección abierta posterior al login (`next`)~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
-| F10 | catálogo | Moderación de reseñas reversible por el autor | Confirmado | Baja | 4 (decisión de producto) |
+| F10 | catálogo | Moderación de reseñas reversible por el autor | **Pendiente** (verificado en el código el 28/10/2026; falta la decisión de producto, a cargo de Gonza) | Baja | 4 (decisión de producto) |
 | ~~F11~~ | ~~usuarios~~ | ~~Login y reset de contraseña sin barra final esquivan los límites de F2~~ | **Resuelto** (26/10/2026) | ~~Media~~ | ~~1~~ |
 | — | frontend | Sin cabeceras anti-framing | Rechazado | — | Endurecimiento opcional |
 
@@ -53,3 +53,14 @@ Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué 
 - **24/10/2026, F7 (ids de producciones):** calificar o agregar a una lista una producción que TMDB no conoce ya no deja una fila vacía en la base, y un id más grande de lo que admite la columna responde un error de validación en lugar de un error interno. Las lecturas y las vistas del catálogo validan el mismo rango. Tests nuevos en reseñas, listas y materialización; la suite completa pasa.
 - **24/10/2026, F6 (tendencias y llamadas a TMDB):** las tendencias solo aceptan los tipos y períodos que muestra la aplicación, así que ya no se puede llevar el pedido a otros endpoints de TMDB. Además, cada pedido tiene un tope de llamadas a TMDB (reintentos incluidos) y cada IP un límite por minuto que cuenta llamadas reales, no pedidos: lo que sale de la caché no cuenta. Tests nuevos de validación, de los dos topes y de los hilos de Buscar; la suite completa pasa.
 - **26/10/2026, F11 (rutas sin barra final):** el inicio de sesión y la recuperación de contraseña también limitaban los intentos solo si se llamaban con la barra final; sin ella se llegaba a la vista original, sin límite. Ahora las dos variantes llevan los mismos límites. Test nuevo; la suite completa pasa.
+
+## Abiertos de la revisión del 24/10/2026 (verificados el 28/10/2026)
+
+La revisión con subagentes del 24/10/2026 dejó hallazgos sin aplicar además de F11 (resuelto). Siguen abiertos en el código:
+
+- **Media:** el reset de contraseña no tiene límite por IP y `{"email": 5}` responde 500 (Internal Server Error).
+- **Baja:** la clave de TMDB va en la URL y `httpx` la registra en INFO; Postgres se publica en todas las interfaces; `entrypoint.sh` arma código Python con la contraseña del superusuario adentro.
+- **Al desplegar:** cookies seguras, HSTS y cabecera de proxy de Django; `NUM_PROXIES`; restringir `/admin/`; CSP (que además cubre el rechazo de las cabeceras anti-framing); cifrado en reposo de la base; Sentry.
+- **Decisiones abiertas:** techo de ítems en Favoritos y Pendientes, duración del access token (8 h), tope por IP detrás de NAT y enumeración por tiempo en el reset.
+
+Resueltos desde esa revisión: `/admin/login/` con límite, topes de escritura, reseñas de cuentas dadas de baja anónimas, escalada por el admin y Google con correo verificado. El detalle está en `docs/decisiones.md`.

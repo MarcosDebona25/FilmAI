@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Inventario de pendientes contrastado con el código y docs al día
+
+- **Fecha**: 28/10/2026
+- **Descripción**: Marcos pidió saber qué está pendiente de verdad y qué solo quedó sin marcar. Se leyeron los docs 01 a 05, este registro entero, los specs, el README, las issues y PRs (sin abiertos) y se verificó cada punto en el código. No se corrigió código.
+  - **F10 es un pendiente real**: `PUT /api/reviews/{id}/` conserva `activa=False`, pero el autor puede borrar el texto (`DELETE .../texto/`) y volver a escribirlo; la `Resena` nueva nace con `activa=True`. Falta la decisión de producto (Gonza, entrada del 22/10).
+  - **Ya resueltos aunque figuraban pendientes**: el país y JustWatch en los Términos (`984fbe2`), el orden estable de reseñas entre páginas (`pagination_reviews.py`), la salida con Escape en Buscar cuando hay un `<dialog>` abierto, y la lista del 26/10 en lo que cubrieron las entradas posteriores.
+  - **Pendientes reales**, en orden de peso: el chatbot completo (B-02 a B-05, CU-013, CU-014, CU-018) y B-06 (`generar_vector()` sigue lanzando `NotImplementedError`); la sync diaria que se cae entera si falla un listado (`catalogo/tasks.py:254`); el reset de contraseña sin límite por IP y con 500 ante `{"email": 5}`; clave de TMDB en el log; Postgres publicado en todas las interfaces; `entrypoint.sh`; backfill de embeddings y relleno de traducciones que no rotan; accesibilidad (`scroll-padding`, `h1` del Inicio, dos diálogos que no son `<dialog>`, contraste del borde de campos); `frontend/README.md` sin escribir; y lo que es del despliegue (cookies seguras, HSTS, `NUM_PROXIES`, CSP, cifrado en reposo, Sentry).
+  - **Docs corregidos**: 02 (plataformas solo con sesión; país ya en los Términos), 03 (ídem), 04 (Home y Buscar ya implementados, Buscar como página, «Edit details» en lugar de edición inline), 05 (C-09 y fila de Navegación) y el resumen de auditoría (F10 pendiente y abiertos del 24/10).
+  - **Por confirmar**: `frontend/app/terms/page.tsx:15` dice que el escritorio de `/terms` sigue sin rehacerse, mientras el doc 05 lo da por completo. No se tocó ninguno de los dos.
+  - **Sin verificar**: `makemigrations --check` (sin Docker en esa sesión). `git status` limpio y los modelos coinciden con las últimas migraciones.
+- **Archivos afectados**: `docs/02_Especificación de Requerimientos.md`, `docs/03_Modelos de Datos y de Diseño.md`, `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/auditoria-seguridad-resumen.md`, `docs/decisiones.md`.
+
 ## 28/10/2026 — Dos tests e2e inestables más: idioma de la cuenta en `listas` y registro en `acceso`
 
 - **Fecha**: 28/10/2026

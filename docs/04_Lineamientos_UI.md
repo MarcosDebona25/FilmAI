@@ -79,7 +79,7 @@ App Autenticada
 - Mientras el bot responde no se envía otro mensaje: se puede escribir el borrador y el botón de enviar pasa a ser «Cancelar».
 - Una respuesta muestra como máximo 3 tarjetas de títulos, con el idioma de la interfaz; el texto de la respuesta sigue el idioma en que escribió el usuario (decisión del 09/10/2026).
 
-### 3.2 Home: Solo Descubrimiento + Búsqueda como Panel Overlay
+### 3.2 Home: Solo Descubrimiento + Búsqueda como página
 
 **Decisión**: Home es exclusivamente una página de descubrimiento pasivo con filas de contenido
 (Recomendado, Tendencias, Novedades). El catálogo completo para exploración activa se accede
@@ -845,7 +845,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ---
 
-## 5g. Perfil (CU-005, CU-006) — Edición inline
+## 5g. Perfil (CU-005, CU-006) — Edición con formulario «Edit details»
 
 > Una sola pantalla con dos modos: visualización y edición. Al clickear "Editar perfil", «Datos personales» se reemplaza por el formulario «Edit details» (18/10/2026: no es edición inline campo por campo). El email es siempre solo lectura. El perfil no muestra reseñas recientes: se llega a ellas desde «Mis reseñas».
 
@@ -1220,7 +1220,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 2. **Auto layout** en todos los componentes para iteración rápida.
 3. **Variants** con propiedad "State" (default, hover, focus, disabled, error, loading, empty).
 4. Priorizar diseño por sprints:
-   - **Sprint 1**: Login, Registro, Home, Buscar (panel overlay). ← **Login y Registro implementados; Home y Buscar diseñados pero aún no implementados en el frontend** (08/09/2026)
+   - **Sprint 1**: Login, Registro, Home, Buscar (página `/search`). ← **Implementados** (Home y Buscar desde el 13 y 14/10/2026)
    - **Sprint 2**: Ficha de detalle, Modales de reseña, Listas.
    - **Sprint 3**: Perfil, Modificar perfil, Pantallas de error/estado vacío, Confirmación de cuenta.
 5. Prototipar flujos críticos:
@@ -1232,7 +1232,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 ## 10. Pantallas Definidas
 
-> Estado al 08/09/2026: la marca `[x]` indica que la pantalla está **definida/diseñada** en este documento, no necesariamente implementada. Implementadas hoy: Login, Registro, confirmación/restablecimiento y completado de Google. El resto (Home, Buscar, Detalle, Listas, Perfil, Mis reseñas, Preferencias, errores) queda como diseño aprobado para implementar según `docs/05_Plan_de_Desarrollo.md`.
+> Estado al 28/10/2026: la marca `[x]` indica que la pantalla está **definida/diseñada** en este documento. Todas están implementadas salvo el chatbot (sección 6.6), que sigue pendiente; el estado por pantalla está en `docs/05_Plan_de_Desarrollo.md`.
 
 - [x] Home — Sección 5
 - [x] Buscar (página `/search`) — Sección 5b
@@ -1240,7 +1240,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 - [x] Modales de reseña — Sección 5d
 - [x] Listas — Sección 5e
 - [x] Login / Registro / Confirmación de cuenta — Sección 5f
-- [x] Perfil (edición inline) — Sección 5g
+- [x] Perfil (formulario «Edit details») — Sección 5g
 - [x] Pantallas de error (404, error genérico) — Sección 5h
 - [x] Mis reseñas — Sección 5i
 - [x] Preferencias — Sección 5j
