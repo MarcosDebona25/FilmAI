@@ -1278,6 +1278,22 @@ class GenerarEmbeddingTaskTests(TestCase):
             ProduccionAudiovisual.objects.filter(pk=self.produccion.pk).exists()
         )
 
+    @patch("catalogo.tasks.generar_vector", side_effect=RuntimeError("Ollama caído"))
+    def test_el_fallo_renueva_la_fecha_para_que_la_fila_rote(self, generar):
+        # `.update()` no dispara `auto_now`: sin renovar la fecha a mano, una
+        # fila que falla se queda primera en el orden del backfill para siempre.
+        embedding = ProduccionEmbedding.objects.create(produccion=self.produccion)
+        vieja = timezone.now() - timedelta(days=3)
+        ProduccionEmbedding.objects.filter(pk=embedding.pk).update(
+            fecha_actualizacion=vieja
+        )
+
+        generar_embedding(self.produccion.id)
+
+        embedding.refresh_from_db()
+        self.assertEqual(embedding.estado, EstadoEmbedding.FAILED)
+        self.assertGreater(embedding.fecha_actualizacion, vieja)
+
     def test_con_el_stub_real_queda_failed(self):
         # Sin mocks: hoy `generar_vector` lanza NotImplementedError (B-06).
         ProduccionEmbedding.objects.create(produccion=self.produccion)
@@ -1459,6 +1475,26 @@ class BackfillEmbeddingsTests(TestCase):
             {viejo.produccion_id, medio.produccion_id},
         )
         self.assertEqual(estadisticas["reencolados"], 2)
+
+    def test_las_filas_fallidas_rotan_entre_corridas(self):
+        # Con más fallidas que el tope, la corrida siguiente tiene que tomar las
+        # que quedaron afuera y no repetir siempre las mismas dos.
+        viejas = []
+        for n, dias in ((1, 4), (2, 3), (3, 2)):
+            embedding = self._embedding(n, EstadoEmbedding.FAILED)
+            ProduccionEmbedding.objects.filter(pk=embedding.pk).update(
+                fecha_actualizacion=timezone.now() - timedelta(days=dias)
+            )
+            viejas.append(embedding.produccion_id)
+
+        backfill_embeddings(limite=2)
+        self.assertEqual(self._ids_encolados(), set(viejas[:2]))
+
+        self.tarea.delay.reset_mock()
+        backfill_embeddings(limite=2)
+        # La tercera (la más vieja que quedaba) entra, y completa con una de las
+        # ya reintentadas.
+        self.assertIn(viejas[2], self._ids_encolados())
 
     def test_si_no_hay_nada_no_hace_nada(self):
         # Caso borde: si no hay pending, failed, ni ready desactualizados, el
@@ -1913,6 +1949,49 @@ class MaterializacionTiposDeCampoTests(MaterializacionBase):
         produccion = materializar(550, "movie")
 
         self.assertIsNone(produccion.fecha_lanzamiento)
+
+
+class MaterializacionLongitudTests(MaterializacionBase):
+    """Los textos de TMDB se recortan al `max_length` del modelo.
+
+    Postgres rechaza un VARCHAR(n) más largo con `DataError`, y ese error
+    descartaría el enriquecimiento entero de la producción. Se recorta en
+    vez de fallar: perder el final de un título es mejor que perder la ficha.
+    """
+
+    def test_recorta_cada_campo_de_texto_y_cada_elemento_de_los_arreglos(self):
+        self.servicio.get_movie_detail.return_value = {
+            **_DETALLE_MOVIE,
+            "title": "T" * 150,
+            "poster_path": "/" + "p" * 300,
+            "overview": "s" * 2500,
+            "status": "e" * 40,
+            "genres": [{"id": 18, "name": "g" * 80}],
+        }
+        self.servicio.get_credits.side_effect = lambda id_tmdb, tipo: {
+            "cast": [{"name": "a" * 130}],
+            "crew": [{"job": "Director", "name": "d" * 130}],
+        }
+        self.servicio.get_keywords.side_effect = lambda id_tmdb, tipo: {
+            "keywords": [{"name": "k" * 70}]
+        }
+
+        produccion = materializar(550, "movie")
+
+        self.assertEqual(len(produccion.titulo), 100)
+        self.assertEqual(len(produccion.poster), 250)
+        self.assertEqual(len(produccion.sinopsis), 2000)
+        self.assertEqual(len(produccion.estatus), 25)
+        self.assertEqual([len(x) for x in produccion.generos], [50])
+        self.assertEqual([len(x) for x in produccion.reparto], [100])
+        self.assertEqual([len(x) for x in produccion.directores], [100])
+        self.assertEqual([len(x) for x in produccion.keywords], [50])
+
+    def test_un_valor_que_cabe_no_se_toca(self):
+        produccion = materializar(550, "movie")
+
+        self.assertEqual(produccion.titulo, "Fight Club")
+        self.assertEqual(produccion.estatus, "Released")
 
 
 class MaterializacionSerieTests(MaterializacionBase):
@@ -2431,6 +2510,31 @@ class SyncCatalogoTests(TestCase):
         # call_count refleja todos los intentos (incluido el que falló).
         self.assertEqual(self.materializar.call_count, 5)
         self.assertEqual(estadisticas["errores"], 1)
+
+    def test_un_listado_de_descubrimiento_que_falla_no_aborta_la_corrida(self):
+        # Si TMDB falla al pedir UN listado (timeout, 5xx), el resto de los
+        # listados y la pasada de traducciones tienen que correr igual.
+        self.servicio.get_trending.side_effect = TMDBServerError("TMDB returned 500")
+
+        with self.assertLogs("catalogo.tasks", "ERROR"):
+            estadisticas = sync_catalogo_diaria()
+
+        # Trending se perdió (550, 1396, person); los otros tres listados siguen.
+        self.assertEqual(self.materializar.call_count, 3)
+        self.assertEqual(estadisticas["nuevas"], 3)
+        self.assertEqual(estadisticas["errores"], 1)
+
+    def test_si_falla_un_listado_igual_corre_el_relleno_de_traducciones(self):
+        self.servicio.get_now_playing.side_effect = TMDBServerError("TMDB returned 500")
+
+        with (
+            patch("catalogo.services.traducciones.rellenar") as rellenar,
+            self.assertLogs("catalogo.tasks", "ERROR"),
+        ):
+            rellenar.return_value = {"procesadas": 0, "fallidas": 0, "pendientes": 0}
+            sync_catalogo_diaria()
+
+        rellenar.assert_called_once()
 
     def test_las_estadisticas_distinguen_nuevas_de_ya_existentes(self):
         # Fight Club ya estaba en la base; los otros cuatro son nuevos.

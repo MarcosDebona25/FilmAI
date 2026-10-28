@@ -95,7 +95,7 @@ export function ListNameDialog({
               setNombre(event.target.value);
               setError(null);
             }}
-            className="h-12 rounded-lg bg-background px-3.5 text-base text-foreground shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]"
+            className="h-12 rounded-lg bg-background px-3.5 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]"
           />
           <div className="flex justify-between gap-3 text-[13px] text-fg-3">
             <span id={ayudaId}>{t("lists.name.allowedCharactersHelp")}</span>

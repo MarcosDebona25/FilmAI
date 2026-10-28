@@ -16,7 +16,7 @@ import { validationError } from "@/lib/validation-error";
 import { translateError, type CodedError } from "@/lib/errors";
 
 const inputClass =
-  "w-full rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
+  "w-full rounded-lg border border-field-border bg-background px-3 py-2 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
 class EnlaceInvalido extends Error {}
 
