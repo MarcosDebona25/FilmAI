@@ -5,14 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import { currentLocale } from "@/i18n/client";
 import { apiUrl } from "@/lib/api";
 
-export type UsernameAvailability = "idle" | "checking" | "disponible" | "ocupado";
+export type UsernameAvailability = "idle" | "checking" | "disponible" | "ocupado" | "reservado";
 
 /**
  * Disponibilidad del nombre de usuario en vivo, con debounce (registro y alta
  * con Google). Solo consulta cuando el valor pasa la validación local; un
  * error de red o un 429 (Too Many Requests) vuelve a «idle», nunca a «ocupado».
  * `marcarOcupado` deja el estado en «ocupado» cuando el backend lo rechaza al
- * enviar el formulario.
+ * enviar el formulario. «reservado» es un nombre que se confunde con una cuenta
+ * del equipo (issue #137): se muestra el mismo error que al enviarlo.
  */
 export function useUsernameAvailability(valor: string, valido: boolean) {
   const [estado, setEstado] = useState<UsernameAvailability>("idle");
@@ -37,8 +38,10 @@ export function useUsernameAvailability(valor: string, valido: boolean) {
           setEstado("idle");
           return;
         }
-        const data: { disponible?: boolean } = await res.json();
-        setEstado(data.disponible ? "disponible" : "ocupado");
+        const data: { disponible?: boolean; motivo?: string } = await res.json();
+        setEstado(
+          data.disponible ? "disponible" : data.motivo === "reservado" ? "reservado" : "ocupado"
+        );
       } catch {
         if (!controller.signal.aborted) setEstado("idle");
       }
