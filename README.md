@@ -231,6 +231,8 @@ docker compose down         # detener (conserva la base de datos y Redis)
 | PostgreSQL              | `localhost:5432` (db `filmai_dev`) |
 | Redis                   | `localhost:6379`                   |
 
+PostgreSQL y Redis solo escuchan en `127.0.0.1`: se conectan desde tu propia máquina (DBeaver, `psql`), pero no desde otra máquina ni desde una VM de la red.
+
 ### Comandos útiles
 
 ```bash
