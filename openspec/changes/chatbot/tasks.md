@@ -89,7 +89,8 @@
 - [ ] 3.5 RED: 5th tool round → error; timeout → error; provider exception →
       error; tool exception → turn continues
 - [ ] 3.6 RED: the messages sent to the provider contain the anonymized
-      profile, ≤ 10 history messages with the cards line, `ya_recomendados`,
+      profile, ≤ 10 history messages with the cards line, `ya_recomendados`
+      rendered as titles and years (no bare ids),
       the anonymized current message, and no name/email/username
 - [ ] 3.7 RED: two tools of the same turn, each through the bridge, add to the
       **same** TMDB budget counter (the total accumulates; the 31st call fails)
@@ -103,8 +104,9 @@
 - [ ] 4.1 Migration: `Mensaje.tarjetas` (`JSONField`, default list); update
       `Chat.contexto` help text (it still describes the discarded precomputed
       profile)
-- [ ] 4.2 RED: `guardar_turno()` saves both messages atomically, appends to
-      `ya_recomendados` (cap 30), and leaves nothing when it fails
+- [ ] 4.2 RED: `guardar_turno()` saves both messages atomically, appends the
+      cards to `ya_recomendados` as `{id_tmdb, tipo, titulo, anio}` (cap 30),
+      and leaves nothing when it fails
 - [ ] 4.3 RED `chatbot/tests_historial.py`: `GET /api/chat/messages/`
       newest first, cursor of 20, own messages only, cards as stored, 401
       without session
@@ -128,7 +130,9 @@
       lock; a save failure sends `error` and no `tarjetas`
 - [ ] 5.6b RED: lock with a per-request token — an expired request's late
       release leaves the next request's lock; a fake tool that sleeps past
-      the budget hits the 25 s turn timeout and the lock is released
+      the budget hits the 25 s turn timeout and the lock is released; a save
+      still running when the budget expires is not interrupted and ends in
+      `fin`
 - [ ] 5.7 GREEN: `views.py :: enviar_mensaje`, lock, hourly counter,
       `idioma_efectivo` once, `contar_llamadas` for the turn
 - [ ] 5.8 `contracts/sse-chat.md`; OpenAPI entry for the `POST` with its
