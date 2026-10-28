@@ -5,6 +5,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Nombres de usuario reservados (issue #137)
+
+- **Fecha**: 28/10/2026
+- **Descripción**: el registro, el alta con Google y el cambio de nombre en el perfil rechazan nombres que se confunden con una cuenta del equipo. Los permisos siguen dependiendo de `is_staff`/`is_superuser`, nunca del nombre: esto solo evita la suplantación.
+  - **Regla** (`usuarios/validators.py`, `es_nombre_usuario_reservado`): se compara en minúsculas, sin los dígitos del final («admin2026»), sin ningún dígito («1admin», sugerencia de PR-Agent) y leyendo los números como letras («Adm1n», «r00t»), y también sin un prefijo o sufijo decorativo («theadmin», «soporteoficial», «adminteam»). Una lista se compara entera (`admin`, `root`, `staff`, `soporte`, `support`, `sistema`, `noreply`…) y otra se busca dentro del nombre (`filmai`, `administr`, `superadmin`, `moderador`…). «admin» no se busca adentro porque dejaría afuera a «badminton».
+  - **Error**: `username_not_allowed` (400), que ya estaba en el catálogo y traducido («No podés usar ese nombre de usuario. Elegí otro.»). No dice que el nombre está reservado ni muestra la lista; el contrato no cambia.
+  - **Chequeo en vivo**: `GET /api/auth/username-available/` responde `{"disponible": false, "motivo": "reservado"}` y el formulario muestra el mismo error que al enviarlo, en vez de «ya está en uso».
+  - **Cuentas existentes**: quien ya tenía un nombre así lo conserva; guardar el perfil sin cambiarlo no falla. El superusuario que crea `entrypoint.sh` no pasa por esta validación (se crea directo en la base).
+  - Límite aceptado: una lista no cubre toda variante posible; se suman nombres a medida que aparezcan.
+- **Archivos afectados**: `backend/usuarios/validators.py`, `backend/usuarios/serializers.py`, `backend/usuarios/views.py`, `backend/usuarios/test_nombres_reservados.py` (nuevo), `frontend/lib/use-username-availability.ts`, `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `frontend/e2e/acceso.spec.ts`, doc 02, `openspec/specs/error-contract/spec.md`.
+
+---
+
 ## 28/10/2026 — XSS: revisión, enlace de TMDB validado y dos pendientes (CSP y chatbot)
 
 - **Fecha**: 28/10/2026

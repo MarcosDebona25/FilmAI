@@ -143,6 +143,19 @@ for (const viewport of viewports) {
       await sinDesborde(page);
     });
 
+    test("registro: un nombre reservado avisa al escribirlo", async ({ page, baseURL }) => {
+      await prepararIdioma(page, baseURL!, "en");
+      // Se registra después que la de `prepararIdioma`, así que gana (issue #137).
+      await page.route("**/api/auth/username-available/**", (route) =>
+        route.fulfill({ json: { disponible: false, motivo: "reservado" } })
+      );
+      await page.goto("/register");
+      await page.locator('[name="nombre_usuario"]').fill("Adm1n");
+
+      await expect(page.getByText(en.errors.codes.username_not_allowed)).toBeVisible();
+      await expect(page.getByText(en.errors.codes.username_already_used)).toHaveCount(0);
+    });
+
     test("registro: el enlace de términos abre /terms en otra pestaña", async ({
       page,
       baseURL,

@@ -20,6 +20,89 @@ USERNAME_REGEX = re.compile(
 )
 
 
+# Nombres de usuario que se confunden con una cuenta del sistema o del equipo
+# (issue #137, 28/10/2026). Los permisos dependen de `is_staff`/`is_superuser`,
+# nunca del nombre: esto solo evita la suplantación. Se comparan en minúsculas,
+# sin los dígitos del final y con los números leídos como letras («Adm1n»,
+# «r00t», «admin2026»).
+NOMBRES_USUARIO_RESERVADOS = frozenset(
+    {
+        "admin",
+        "administrador",
+        "administradora",
+        "administrator",
+        "ayuda",
+        "helpdesk",
+        "hostmaster",
+        "noreply",
+        "noresponder",
+        "oficial",
+        "official",
+        "postmaster",
+        "root",
+        "security",
+        "seguridad",
+        "sistema",
+        "soporte",
+        "staff",
+        "support",
+        "system",
+        "webmaster",
+    }
+)
+# Estos se rechazan también dentro de otro nombre («FilmAIoficial»,
+# «superadmin»). «admin» no va acá: dejaría afuera a «badminton».
+FRAGMENTOS_USUARIO_RESERVADOS = (
+    "administr",
+    "filmai",
+    "moderador",
+    "moderator",
+    "superadmin",
+    "superuser",
+    "sysadmin",
+)
+# Lo que se le suele agregar a un nombre para que parezca oficial
+# («theadmin», «soporteoficial», «adminteam»).
+_PREFIJOS_DECORATIVOS = ("the", "real", "soy", "el", "la", "im", "iam")
+_SUFIJOS_DECORATIVOS = ("oficial", "official", "team", "equipo", "real", "hq")
+_DIGITOS_COMO_LETRAS = (
+    str.maketrans("0134578", "oieastb"),
+    str.maketrans("0134578", "oleastb"),
+)
+
+
+def es_nombre_usuario_reservado(valor):
+    """`True` si `valor` es, o imita, un nombre reservado."""
+    minusculas = valor.lower()
+    sin_digitos_finales = re.sub(r"\d+$", "", minusculas) or minusculas
+    # Y sin ningún dígito: «1admin» o «a1dmin» (PR-Agent en #142).
+    sin_digitos = re.sub(r"\d", "", minusculas) or minusculas
+    lecturas = {
+        texto.translate(tabla)
+        for texto in (minusculas, sin_digitos_finales, sin_digitos)
+        for tabla in _DIGITOS_COMO_LETRAS
+    }
+    lecturas |= {_sin_decorado(lectura) for lectura in lecturas}
+    return any(
+        lectura in NOMBRES_USUARIO_RESERVADOS
+        or any(fragmento in lectura for fragmento in FRAGMENTOS_USUARIO_RESERVADOS)
+        for lectura in lecturas
+    )
+
+
+def _sin_decorado(texto):
+    """Quita un prefijo y un sufijo decorativos, si los tiene."""
+    for prefijo in _PREFIJOS_DECORATIVOS:
+        if texto.startswith(prefijo) and len(texto) > len(prefijo):
+            texto = texto[len(prefijo) :]
+            break
+    for sufijo in _SUFIJOS_DECORATIVOS:
+        if texto.endswith(sufijo) and len(texto) > len(sufijo):
+            texto = texto[: -len(sufijo)]
+            break
+    return texto
+
+
 def normalizar_nombre(valor):
     """Quita espacios sobrantes y conserva uno entre partes del nombre."""
     return " ".join(valor.split())

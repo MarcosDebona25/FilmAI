@@ -209,6 +209,8 @@ export default function RegisterPage() {
       <FieldOk id="usuario-estado">{t("signUp.usernameAvailable")}</FieldOk>
     ) : usernameEstado === "ocupado" ? (
       <FieldError>{errors("username_already_used")}</FieldError>
+    ) : usernameEstado === "reservado" ? (
+      <FieldError>{errors("username_not_allowed")}</FieldError>
     ) : null;
 
   return (
