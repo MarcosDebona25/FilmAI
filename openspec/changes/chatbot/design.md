@@ -164,7 +164,7 @@ synopsis cut at 300 characters, at most 10 items, «Vistas» removed.
 | `detalle` | `id_tmdb`, `tipo` | `get_movie_detail` / `get_tv_detail` (exist) |
 | `buscar_semantico` | `consulta`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
 | `mis_listas` | `lista` (`vistas`, `pendientes`, `favoritos`, or a custom list name) | SQL scoped to `ctx.usuario`. The model never passes a user id. |
-| `mostrar_tarjetas` | `tarjetas[{id_tmdb, tipo}]` | Validation only; emits the `tarjetas` event |
+| `mostrar_tarjetas` | `tarjetas[{id_tmdb, tipo}]` | Validation only: accumulates valid cards in the turn context (a second call adds, up to 3). The orchestrator emits **one** `tarjetas` event after the loop, just before `fin`, so cards never arrive before the final text nor belong to a turn that ends in `error`. |
 
 TMDB tools go through `servicio_localizado(idioma, get_catalog_service)`:
 cache, per-language cache keys and English fallback, as the catalog does. The
@@ -206,9 +206,13 @@ Favoritos: Interstellar, Arrival                                            ← 
 
 `anonimizar(texto, usuario)` replaces the user's `nombre`, `apellido`,
 `correo` and `nombre_usuario` (case- and accent-insensitive, whole words) with
-`[usuario]` in everything outbound: the profile, the review excerpts and the
-history. The model receives no name at all (28/10/2026); the greeting with the
-name is drawn by the front.
+`[usuario]` in everything outbound: the profile, the review excerpts, the
+history **and the current message**. Any other email address in the current
+message or the history becomes `[correo]`. The original text is what gets
+stored and shown; only the copy sent to the provider is anonymized. The model
+receives no name at all (28/10/2026); the greeting with the name is drawn by
+the front. Other personal data a user volunteers (a phone, an address) cannot
+be detected reliably; the panel's footer asks not to share personal data.
 
 ## The prompt
 
@@ -246,8 +250,11 @@ A style block per language (es/en) is a small dict, not two prompts.
   500, counter, Enter sends, Shift+Enter breaks line), local welcome with the
   user's first name and the three suggestion chips of the canvas.
 - Markdown: `react-markdown` (no `rehype-raw`, so raw HTML is never rendered) +
-  `rehype-sanitize`; links rendered as plain text. Tests feed `<script>`,
-  `<img onerror>` and `javascript:` (28/10/2026).
+  `rehype-sanitize`, with `a` and `img` mapped to plain text: a Markdown image
+  from the model would make the browser request a URL chosen through prompt
+  injection (IP and data leak). Tests feed `<script>`, `<img onerror>`,
+  `javascript:` (28/10/2026) and `![x](https://atacante.example/pixel)`, and
+  assert no `img` element and no request.
 - Cancel: the send button becomes «Cancelar» while streaming; aborting shows
   «Solicitud cancelada» and keeps the draft (CU-014). If the answer arrives at
   the same instant, the front discards it (CU-014 2.A).

