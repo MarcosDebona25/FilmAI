@@ -139,7 +139,8 @@
 - [ ] 6.4 GREEN: `lib/chat.ts`, `ChatProvider`, `ChatFab`, `ChatPanel`,
       `ChatBubble`, `ChatTarjetas`, `ChatInput` following the canvas
 - [ ] 6.5 RED/GREEN: cancel keeps the draft and shows «Solicitud cancelada»;
-      answer at the same instant discarded
+      a cancel after `fin` is ignored; an `error` after some deltas removes
+      the partial answer, shows the translated code and keeps the draft
 - [ ] 6.6 Explain: reading a stream in the browser, `AbortController`, why
       the provider sits in the layout
 
