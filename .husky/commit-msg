@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+# =============================================================================
+# FilmAI — commit-msg hook
+# =============================================================================
+# Quita la atribución a IA (Co-Authored-By de Claude/Anthropic, Claude-Session,
+# "Generated with Claude Code") del mensaje, la agregue el agente que sea.
+
+sed -i -E \
+  -e '/^Co-Authored-By:.*(Claude|anthropic\.com)/Id' \
+  -e '/^Claude-Session:/Id' \
+  -e '/Generated with \[Claude Code\]\(/Id' \
+  "$1"
+
+# Saca las líneas en blanco que quedaron colgando al final.
+sed -i -e ':a' -e '/^\n*$/{$d;N;ba' -e '}' "$1"
