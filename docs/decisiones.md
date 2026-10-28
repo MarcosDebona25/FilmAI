@@ -5,6 +5,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Tanda de seguridad baja y media: índice y decisiones de la integración
+
+- **Fecha**: 28/10/2026
+- **Descripción**: Marcos pidió cerrar los hallazgos de severidad baja y media que seguían abiertos (reset de contraseña, clave de TMDB en el log, Postgres publicado, `entrypoint.sh`) e incluir F10, que estaba asignado a Gonza como decisión de producto. Se trabajó en tres ramas paralelas, cada una con su worktree, y se integraron en `security/baja-media` con merge commit en el orden S3+S4, S1+S2, F10. Cada frente tiene su entrada con problema, decisión, alternativas descartadas, riesgo residual y qué revisar al desplegar; esta es el índice.
+  - **S1, reset de contraseña** (entrada «Reset de contraseña sin 500 ni abuso por IP, y clave de TMDB fuera de los logs»): correo no textual → 400 (Bad Request); tope por IP de 10 por hora.
+  - **S2, clave de TMDB en el log** (misma entrada): `httpx` y `httpcore` en WARNING y clave tapada en los errores de transporte. No se pasó a `Authorization: Bearer` porque exige el token v4.
+  - **S3 y S4, Postgres y `entrypoint.sh`** (entrada «Postgres solo en loopback y `entrypoint.sh` sin interpolar…»): `127.0.0.1:5432` y contraseña leída de `os.environ`. **Efecto a tener en cuenta:** si falta alguna variable `DJANGO_SUPERUSER_*`, el backend ahora no arranca (antes interpolaba vacío), y quien se conecte a Postgres desde otra máquina o VM deja de poder.
+  - **F10, reseñas moderadas** (entrada «F10: el texto de una reseña moderada no se puede editar ni borrar»): decisión de Marcos de **bloquear el texto nuevo** (409 (Conflict) `review_moderated`); cambiar la nota sigue permitido y un admin que reactiva la reseña devuelve el control. Entre las opciones evaluadas estaban guardar la moderación en la calificación (con migración), re-moderar al editar (exige un circuito de revisión que hoy no existe) y dejarlo como estaba.
+- **Riesgo residual aceptado por Marcos (28/10/2026), a revisar al desplegar y no antes**: quitar la calificación entera y volver a calificar crea filas nuevas sin la marca de moderación, y esa reseña nace visible. Se dejó permitido porque CU-015 pide eliminar «permanentemente». Cerrarlo exige recordar la moderación por usuario y producción en un modelo aparte (migración). Mitigaciones actuales: el admin puede volver a moderar (acción «Desactivar reseñas») y el límite de escrituras por usuario. Quedó anotado en «Al desplegar» de `docs/auditoria-seguridad-resumen.md`.
+- **Fuera de alcance, sin cambios**: lo «al desplegar» (cookies seguras, HSTS, `NUM_PROXIES`, `/admin/`, CSP, cifrado en reposo, Sentry) y las decisiones abiertas (techo de ítems en Favoritos y Pendientes, duración del access token, tope por IP detrás de NAT, enumeración por tiempo en el reset). Los pedidos de reset con cuerpo inválido comparten el contador por correo usando la IP como identidad (5 por día): una IP que mande basura cinco veces queda bloqueada un día en ese scope; se acepta.
+- **Archivos afectados**: `docs/auditoria-seguridad-resumen.md` (F10 resuelto, registro de correcciones y abiertos) y las entradas de cada frente.
+
+---
+
 ## 28/10/2026 — Postgres solo en loopback y `entrypoint.sh` sin interpolar la contraseña del superusuario (S3 y S4)
 
 - **Fecha**: 28/10/2026
