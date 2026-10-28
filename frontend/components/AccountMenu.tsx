@@ -9,8 +9,8 @@ import { toast } from "sonner";
 
 import { useAccount } from "@/components/AccountProvider";
 import { Avatar } from "@/components/Avatar";
+import { DialogShell } from "@/components/features/title/DialogShell";
 import { ApiError, apiFetch } from "@/lib/api";
-import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 import { translateError } from "@/lib/errors";
 import { routes } from "@/lib/routes";
 
@@ -30,7 +30,6 @@ export function AccountMenu() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const firstItemRef = useRef<HTMLAnchorElement>(null);
   const cancelarRef = useRef<HTMLButtonElement>(null);
-  const logoutDialogRef = useRef<HTMLDivElement>(null);
 
   function cerrarLogout() {
     setConfirmarLogout(false);
@@ -74,17 +73,6 @@ export function AccountMenu() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [menuAbierto]);
-
-  useEffect(() => {
-    if (!confirmarLogout) return;
-    cancelarRef.current?.focus();
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") cerrarLogout();
-      mantenerFocoEnDialogo(e, logoutDialogRef.current);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [confirmarLogout]);
 
   if (!perfil) return null;
 
@@ -181,50 +169,44 @@ export function AccountMenu() {
       </div>
 
       {confirmarLogout && (
-        <div
-          ref={logoutDialogRef}
-          className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !saliendo) cerrarLogout();
-          }}
+        <DialogShell
+          role="alertdialog"
+          labelledBy="titulo-cerrar-sesion"
+          describedBy="descripcion-cerrar-sesion"
+          onClose={cerrarLogout}
+          busy={saliendo}
+          initialFocus={() => cancelarRef.current}
+          ancho="md:w-[min(420px,calc(100%-2rem))]"
         >
-          <div
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="titulo-cerrar-sesion"
-            aria-describedby="descripcion-cerrar-sesion"
-            className="flex w-full max-w-[420px] flex-col gap-3.5 rounded-2xl bg-raised p-[26px] shadow-[0_30px_80px_rgb(0_0_0/0.5)]"
+          <h2
+            id="titulo-cerrar-sesion"
+            className="font-display text-[34px] leading-none text-foreground"
           >
-            <h2
-              id="titulo-cerrar-sesion"
-              className="font-display text-[34px] leading-none text-foreground"
+            {t("account.logoutConfirmTitle")}
+          </h2>
+          <p id="descripcion-cerrar-sesion" className="text-fg-2">
+            {t("account.logoutConfirmDescription")}
+          </p>
+          <div className="mt-1.5 flex justify-end gap-2.5">
+            <button
+              ref={cancelarRef}
+              type="button"
+              onClick={cerrarLogout}
+              disabled={saliendo}
+              className="h-12 cursor-pointer rounded-[10px] px-4 font-medium text-fg-2 hover:text-foreground disabled:cursor-wait"
             >
-              {t("account.logoutConfirmTitle")}
-            </h2>
-            <p id="descripcion-cerrar-sesion" className="text-fg-2">
-              {t("account.logoutConfirmDescription")}
-            </p>
-            <div className="mt-1.5 flex justify-end gap-2.5">
-              <button
-                ref={cancelarRef}
-                type="button"
-                onClick={cerrarLogout}
-                disabled={saliendo}
-                className="h-12 cursor-pointer rounded-[10px] px-4 font-medium text-fg-2 hover:text-foreground disabled:cursor-wait"
-              >
-                {common("cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={logout}
-                disabled={saliendo}
-                className="h-12 cursor-pointer rounded-[10px] bg-raised-2 px-5 font-semibold text-foreground hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
-              >
-                {t("account.logOut")}
-              </button>
-            </div>
+              {common("cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              disabled={saliendo}
+              className="h-12 cursor-pointer rounded-[10px] bg-raised-2 px-5 font-semibold text-foreground hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
+            >
+              {t("account.logOut")}
+            </button>
           </div>
-        </div>
+        </DialogShell>
       )}
     </>
   );

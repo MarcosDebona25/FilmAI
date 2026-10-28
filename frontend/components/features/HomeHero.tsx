@@ -50,12 +50,20 @@ export function HomeHero({
   const formats = useFormats();
   const titulo = hero?.titulo ?? null;
   const conImagen = cargando || titulo !== null;
+  // El `<h1>` visible es el título del Hero y solo existe con imagen. Sin ella
+  // (cargando, sin destacado o sin fondo) el Inicio no puede quedarse sin `<h1>`.
+  const sinTituloVisible = cargando || !titulo?.backdrop;
 
   return (
     <section
-      aria-labelledby={titulo ? "hero-titulo" : undefined}
+      aria-labelledby="hero-titulo"
       className={cn("relative flex flex-col", conImagen && "md:min-h-[720px] md:overflow-hidden")}
     >
+      {sinTituloVisible && (
+        <h1 id="hero-titulo" className="sr-only">
+          {t("nav.main.home")}
+        </h1>
+      )}
       <div className="relative z-10 px-5 pt-1 pb-4 md:mx-auto md:w-full md:max-w-[1360px] md:px-10 md:pt-[88px] md:pb-0">
         {selector}
       </div>

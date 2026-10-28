@@ -130,6 +130,14 @@
   html {
     scrollbar-gutter: stable;
   }
+  /* WCAG 2.4.11: al llegar con Tab, el control enfocado no queda bajo la barra
+     inferior fija (76 px, MobileTabs) ni bajo el botón flotante del Inicio
+     (92 px de margen + 56 px de alto). Solo en celular: en escritorio no hay barra. */
+  @media (width < 48rem) {
+    html {
+      scroll-padding-bottom: 164px;
+    }
+  }
   /* Sin la espera del doble toque (zoom) en los controles táctiles. */
   a,
   button,
