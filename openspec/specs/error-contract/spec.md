@@ -150,7 +150,7 @@ exact existing messages and aliases; these tables define public semantics.
 | `minimum_age`                    | Under the required age; `minAge: 13`.                                                                                    |
 | `terms_not_accepted`             | The sign-up (local or Google) was sent without accepting the Terms and Conditions; field `acepta_terminos`.              |
 | `avatar_invalid` | Avatar not in the active registry; `allowedIds: integer[]`. |
-| `country_invalid` | Country missing or not an ISO 3166-1 alpha-2 code of `paisCodes` (`contracts/enums.json`); sign-up, Google completion, profile and the providers endpoint (`pais`). 400 (Bad Request). |
+| `country_invalid` | Country missing or not an ISO 3166-1 alpha-2 code of `paisCodes` (`contracts/enums.json`); sign-up, Google completion, profile, and the providers endpoint when the profile's `pais` is invalid. 400 (Bad Request). |
 | `local_password_unavailable`     | Google-only account cannot change a local password.                                                                      |
 | `current_password_incorrect`     | Wrong old password.                                                                                                      |
 | `passwords_do_not_match`         | Confirmation differs; field is `password2` or null according to the actual validator.                                    |

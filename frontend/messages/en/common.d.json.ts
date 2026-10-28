@@ -293,7 +293,8 @@ declare const messages: {
       "loading": "Loading streaming options…",
       "seeAll": "See all options on TMDB",
       "newTabHint": "(opens in a new tab)",
-      "attribution": "Data by <link>JustWatch</link>"
+      "attribution": "Data by <link>JustWatch</link>",
+      "signedOut": "Log in to see where to watch it in your country"
     }
   },
   "footer": {

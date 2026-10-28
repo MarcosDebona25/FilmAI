@@ -199,6 +199,8 @@ class CatalogoIdFueraDeRangoTests(TestCase):
 
     def setUp(self):
         self.cliente = APIClient()
+        # Con sesión: las plataformas la piden (27/10/2026); el resto la ignora.
+        self.cliente.force_authenticate(UsuarioFactory(pais="AR"))
         # Un error explícito y no un Mock suelto: si la vista llegara a TMDB, DRF
         # intentaría serializar el Mock que devuelve, y cada atributo que consulta
         # es otro Mock. En el RED del 24/10/2026 eso agotó el 1,5 GB del contenedor.
@@ -215,7 +217,7 @@ class CatalogoIdFueraDeRangoTests(TestCase):
             f"/api/catalogo/movie/{fuera}/",
             f"/api/catalogo/tv/{fuera}/",
             f"/api/catalogo/movie/{fuera}/credits/",
-            f"/api/catalogo/tv/{fuera}/providers/?pais=AR",
+            f"/api/catalogo/tv/{fuera}/providers/",
             f"/api/catalogo/keywords/?id_tmdb={fuera}&tipo=movie",
         ):
             with self.subTest(url=url):
