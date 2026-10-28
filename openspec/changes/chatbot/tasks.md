@@ -67,7 +67,8 @@
 - [ ] 2.8 RED `chatbot/tests_contexto.py`: liked/disliked/watched/favorites
       with their caps and excerpt length; a changed rating moves sections
 - [ ] 2.9 RED: `anonimizar` replaces name, last name, email and username,
-      case- and accent-insensitive, whole words only
+      case- and accent-insensitive, whole words only, and any email address
+      with `[correo]`
 - [ ] 2.10 GREEN: `contexto.py`, `anonimizar.py`
 
 ## Phase 3: Provider and orchestrator (PR 3) — first async code
@@ -80,14 +81,16 @@
 - [ ] 3.3 RED `chatbot/tests_orquestador.py` with `ProveedorFalso`: plain
       answer → `texto…`, `tarjetas []`, `fin`-ready result
 - [ ] 3.4 RED: tool round → `estado searching`, tool executed in the bridge,
-      result fed back, answer streamed, cards validated
+      result fed back, answer streamed, cards validated; `mostrar_tarjetas`
+      called in a middle round still yields one `tarjetas` after the last
+      `texto`, and none when the turn ends in error
 - [ ] 3.5 RED: 5th tool round → error; timeout → error; provider exception →
       error; tool exception → turn continues
 - [ ] 3.6 RED: the messages sent to the provider contain the anonymized
       profile, ≤ 10 history messages with the cards line, `ya_recomendados`,
-      and no name/email/username
-- [ ] 3.7 RED: the TMDB budget `ContextVar` is visible inside a tool run
-      through the bridge
+      the anonymized current message, and no name/email/username
+- [ ] 3.7 RED: two tools of the same turn, each through the bridge, add to the
+      **same** TMDB budget counter (the total accumulates; the 31st call fails)
 - [ ] 3.8 GREEN: `prompts.py`, `orquestador.py`, `ProveedorOpenAICompatible`
       (`openai` dependency; thinking off by default; `max_tokens` 800)
 - [ ] 3.9 `manage.py chatear` (interactive, prints events); try it against
@@ -135,7 +138,8 @@
 - [ ] 6.2 RED Vitest `lib/chat.ts`: frames split across chunks, unknown events
       ignored, missing `fin` → network error, pre-stream 409/429 → `ApiError`
 - [ ] 6.3 RED: Markdown renderer neutralizes `<script>`, `<img onerror>`,
-      `javascript:` links
+      `javascript:` links and Markdown images (`![x](https://…)` → text, no
+      `img`)
 - [ ] 6.4 GREEN: `lib/chat.ts`, `ChatProvider`, `ChatFab`, `ChatPanel`,
       `ChatBubble`, `ChatTarjetas`, `ChatInput` following the canvas
 - [ ] 6.5 RED/GREEN: cancel keeps the draft and shows «Solicitud cancelada»;

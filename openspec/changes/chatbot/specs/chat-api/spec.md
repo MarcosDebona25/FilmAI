@@ -92,7 +92,7 @@ The user message and the bot answer MUST be saved in one transaction only after 
 
 ### Requirement: Cards come only from this turn's tools and never from «Vistas»
 
-`mostrar_tarjetas` MUST keep only `(id_tmdb, tipo)` pairs returned by a tool earlier in the same turn, drop those in the user's «Vistas», drop duplicates, and keep at most 3. Dropped cards MUST NOT raise an error. Every search tool MUST remove «Vistas» from its results before the model sees them.
+`mostrar_tarjetas` MUST keep only `(id_tmdb, tipo)` pairs returned by a tool earlier in the same turn, drop those in the user's «Vistas», drop duplicates, and keep at most 3 across all its calls in the turn. Dropped cards MUST NOT raise an error. The `tarjetas` event MUST be emitted exactly once per successful turn, after the last `texto` and before `fin`, and never in a turn that ends in `error`. Every search tool MUST remove «Vistas» from its results before the model sees them.
 
 #### Scenario: Invented id
 
@@ -108,13 +108,20 @@ The user message and the bot answer MUST be saved in one transaction only after 
 
 ### Requirement: Nothing that identifies the user reaches the provider
 
-The profile, the review excerpts and the history MUST NOT contain the user's first name, last name, email or username; any occurrence MUST be replaced before sending (RNF #3, CU-018). The model MUST NOT be able to address data of another user: `mis_listas` MUST take no user argument and read only the authenticated user's lists.
+The profile, the review excerpts, the history and the current message MUST NOT contain the user's first name, last name, email or username, nor any email address; any occurrence MUST be replaced in the copy sent to the provider (RNF #3, CU-018). The stored and displayed text MUST remain the original. The model MUST NOT be able to address data of another user: `mis_listas` MUST take no user argument and read only the authenticated user's lists.
 
 #### Scenario: Name inside a review
 
 - GIVEN the user, Juan Pérez (`@juanp`), wrote a review saying «Juan aprueba»
 - WHEN the profile is built
 - THEN the excerpt sent to the provider reads «[usuario] aprueba»
+
+#### Scenario: Personal data in the current message
+
+- GIVEN the user Juan Pérez writes «soy Juan, mi correo es juan@example.com, recomendame algo»
+- WHEN the message is sent to the provider
+- THEN the provider receives «soy [usuario], mi correo es [correo], recomendame algo»
+- AND the stored user message keeps the original text
 
 ### Requirement: The profile is fresh on every message
 
