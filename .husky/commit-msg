@@ -9,7 +9,7 @@
 sed -i -E \
   -e '/^Co-Authored-By:.*(Claude|anthropic\.com)/Id' \
   -e '/^Claude-Session:/Id' \
-  -e '/Generated with \[?Claude Code/Id' \
+  -e '/Generated with \[Claude Code\]\(/Id' \
   "$1"
 
 # Saca las líneas en blanco que quedaron colgando al final.
