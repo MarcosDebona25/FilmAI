@@ -377,7 +377,7 @@ export function ListDetailView({ id }: { id: number }) {
                     maxLength={MAX_TEXTO}
                     onChange={(evento) => setTexto(evento.target.value)}
                     placeholder={t("lists.detail.searchPlaceholder")}
-                    className="h-12 w-full rounded-full border-0 bg-raised px-11 text-base font-medium md:text-[15px] text-foreground shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden"
+                    className="h-12 w-full rounded-full border-0 bg-raised px-11 text-base font-medium md:text-[15px] text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden"
                   />
                   {texto && (
                     <button

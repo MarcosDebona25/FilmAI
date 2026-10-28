@@ -366,7 +366,7 @@ export default function RegisterPage() {
             {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}
             <label
               htmlFor="terminos"
-              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--line)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
+              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--field-border)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
             >
               <input
                 id="terminos"

@@ -166,7 +166,7 @@ export function ReviewsSection({
   const filtrando = nota !== null;
   const avatar = (id: number) => avatares.find((opcion) => opcion.id === id)?.src;
   const pildora =
-    "inline-flex h-12 items-center gap-2 rounded-full pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)] md:h-11";
+    "inline-flex h-12 items-center gap-2 rounded-full pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--field-border)] md:h-11";
   // En celular, 44 px de alto y 16 px de letra (con menos, iOS hace zoom al tocarlo).
   const selector =
     "h-11 cursor-pointer rounded-full border-0 bg-raised-2 px-2.5 text-base font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-9 md:text-sm";
