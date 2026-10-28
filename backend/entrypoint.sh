@@ -33,12 +33,19 @@ echo "⏳ Aplicando migraciones..."
 python manage.py migrate --noinput
 
 echo "⏳ Creando superuser si no existe..."
-python manage.py shell -c "
+# El Python va en un heredoc entrecomillado (<<'PY'): el shell no interpola
+# nada dentro. Los datos del superusuario los lee Python de `os.environ`; así
+# una comilla en la contraseña no rompe el script ni se ejecuta como código, y
+# la contraseña no aparece en la lista de procesos (`ps`).
+python manage.py shell <<'PY'
+import os
+
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
-username = '${DJANGO_SUPERUSER_USERNAME}'
-email = '${DJANGO_SUPERUSER_EMAIL}'
-password = '${DJANGO_SUPERUSER_PASSWORD}'
+username = os.environ["DJANGO_SUPERUSER_USERNAME"]
+email = os.environ["DJANGO_SUPERUSER_EMAIL"]
+password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
 if not User.objects.filter(correo=email).exists():
     User.objects.create_superuser(
         correo=email,
@@ -52,7 +59,7 @@ if not User.objects.filter(correo=email).exists():
     print(f'Superuser {email} creado.')
 else:
     print(f'Superuser {email} ya existe.')
-"
+PY
 
 # `exec "$@"` ejecuta el comando del servicio (CMD del Dockerfile para el
 # backend: runserver; `command:` del compose para el celery-worker).
