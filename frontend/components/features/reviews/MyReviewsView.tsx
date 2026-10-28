@@ -581,7 +581,11 @@ export function MyReviewsView() {
         <RatingDialog
           titulo={accion.item.titulo}
           enVistas
-          inicial={{ valor: accion.item.valor, texto: accion.item.texto }}
+          inicial={{
+            valor: accion.item.valor,
+            texto: accion.item.texto,
+            moderada: accion.item.moderada,
+          }}
           onSubmit={(cambios) => guardar(accion.item, cambios)}
           onRemoveRating={() => setAccion({ item: accion.item, tipo: "quitar" })}
           onClose={() => setAccion(null)}

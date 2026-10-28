@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Ellipsis, Film, PenLine } from "lucide-react";
+import { Ellipsis, Film, Lock, PenLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { DialogShell } from "@/components/features/title/DialogShell";
@@ -38,6 +38,8 @@ export function MyReviewItem({
   const formats = useFormats();
   const tituloId = useId();
   const hojaTitulo = useId();
+  const avisoId = useId();
+  const hojaAvisoId = useId();
   const [desplegado, setDesplegado] = useState(false);
   const [textoRef, desborda] = useDesborde<HTMLParagraphElement>(desplegado, item.texto ?? "");
   const [posterFallido, setPosterFallido] = useState(false);
@@ -88,7 +90,12 @@ export function MyReviewItem({
     };
   }, [menu]);
 
+  // Moderada: el texto no se puede borrar (409 `review_moderated`). El ítem
+  // queda a la vista pero inerte, y el aviso explica por qué.
+  const moderada = item.moderada;
+
   function elegirDelMenu(accion: AccionResena) {
+    if (accion === "borrarTexto" && moderada) return;
     // El foco vuelve al botón antes de abrir el diálogo: al cerrarse, el
     // diálogo lo devuelve ahí (el ítem del menú ya no existe).
     masRef.current?.focus();
@@ -97,6 +104,7 @@ export function MyReviewItem({
   }
 
   function elegirDeLaHoja(accion: AccionResena) {
+    if (accion === "borrarTexto" && moderada) return;
     setHoja(false);
     onAccion(accion);
   }
@@ -163,6 +171,12 @@ export function MyReviewItem({
             >
               {item.texto}
             </p>
+            {moderada && (
+              <p id={avisoId} className="flex items-start gap-1.5 text-[13px] text-fg-3 md:text-sm">
+                <Lock aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+                {t("common.review.moderatedNotice")}
+              </p>
+            )}
             {(desborda || desplegado) && (
               <button
                 type="button"
@@ -219,8 +233,14 @@ export function MyReviewItem({
               type="button"
               role="menuitem"
               tabIndex={-1}
+              aria-disabled={moderada || undefined}
+              aria-describedby={moderada ? avisoId : undefined}
               onClick={() => elegirDelMenu("borrarTexto")}
-              className={cn(itemMenu, "font-medium text-foreground")}
+              className={cn(
+                itemMenu,
+                "font-medium text-foreground",
+                moderada && "cursor-not-allowed opacity-40"
+              )}
             >
               {t("common.review.delete")}
             </button>
@@ -264,6 +284,11 @@ export function MyReviewItem({
                 <span aria-hidden="true">{item.valor}</span>
               </span>
             </h2>
+            {moderada && (
+              <p id={hojaAvisoId} className="mx-3 mb-1.5 text-[13px] text-fg-3">
+                {t("common.review.moderatedNotice")}
+              </p>
+            )}
             <button
               type="button"
               onClick={() => elegirDeLaHoja("editar")}
@@ -274,8 +299,14 @@ export function MyReviewItem({
             {item.texto && (
               <button
                 type="button"
+                aria-disabled={moderada || undefined}
+                aria-describedby={moderada ? hojaAvisoId : undefined}
                 onClick={() => elegirDeLaHoja("borrarTexto")}
-                className={cn(itemHoja, "font-medium text-foreground")}
+                className={cn(
+                  itemHoja,
+                  "font-medium text-foreground",
+                  moderada && "cursor-not-allowed opacity-40"
+                )}
               >
                 {t("common.review.delete")}
               </button>

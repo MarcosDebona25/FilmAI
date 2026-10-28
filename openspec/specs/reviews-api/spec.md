@@ -82,6 +82,61 @@ Deletion by the user MUST be physical. `activa` means one thing only — moderat
 - WHEN the rating is deleted
 - THEN both rows are gone from the database
 
+### Requirement: A moderated review's text is locked (28/10/2026, security audit F10)
+
+A review is moderated when its row has `activa = False` (an administrator hid it, AD-01'). While it is, its author MUST NOT be able to edit or delete its text: deleting it and writing another would create a row born `activa = True` and lift the moderation without any administrator involved.
+
+- `PUT /api/reviews/{id}/` with `texto` MUST answer 409 (Conflict) with `code: "review_moderated"`, and MUST change nothing, not even a `valor` sent in the same request.
+- `DELETE /api/reviews/{id}/texto/` MUST answer 409 (Conflict) with `code: "review_moderated"`.
+- `PUT /api/reviews/{id}/` with only `valor` MUST keep working.
+- `DELETE /api/reviews/{id}/` MUST keep working: CU-015 asks for permanent deletion, and removing the rating takes the moderated row with it.
+- When an administrator reactivates the review (`activa = True`) the normal rules apply again.
+
+Every response that serializes a rating (`POST`, `PUT`, `GET /api/reviews/mias/` in both shapes) MUST include `moderada` (boolean, `true` only when the rating has a review with `activa = False`), so the frontend knows when to lock the text controls and explain why. A rating without text is never `moderada`.
+
+The residual risk is accepted: removing the rating and rating again creates new rows with no mark, and that review is born visible. Closing it would mean remembering the moderation per (user, production) in a model of its own, with a migration. The administrator can moderate it again (`desactivar_resenas`) and the shared write throttle limits the repetition.
+
+#### Scenario: Editing the text of a moderated review
+
+- GIVEN a rating whose review has `activa = False`
+- WHEN its author sends `PUT` with `texto`
+- THEN the response is 409 (Conflict) with `code: "review_moderated"`
+- AND the stored text and `activa` are unchanged
+
+#### Scenario: Deleting the text of a moderated review
+
+- GIVEN a rating whose review has `activa = False`
+- WHEN its author calls `DELETE /api/reviews/{id}/texto/`
+- THEN the response is 409 (Conflict) with `code: "review_moderated"`
+- AND the review row is still there, still `activa = False`
+
+#### Scenario: A rating and a text in the same request
+
+- GIVEN a rating of 9 whose review is moderated
+- WHEN its author sends `PUT` with `valor: 3` and a `texto`
+- THEN the response is 409 (Conflict)
+- AND the rating still reads 9
+
+#### Scenario: Changing only the rating of a moderated review
+
+- GIVEN a rating whose review is moderated
+- WHEN its author sends `PUT` with only `valor`
+- THEN the response is 200 (OK) with `moderada: true`
+- AND the review is still moderated
+
+#### Scenario: Removing a moderated rating
+
+- GIVEN a rating whose review is moderated
+- WHEN its author calls `DELETE /api/reviews/{id}/`
+- THEN the response is 204 (No Content)
+- AND both rows are gone
+
+#### Scenario: An administrator reactivates the review
+
+- GIVEN a rating whose review was moderated and is now `activa = True`
+- WHEN its author edits or deletes the text
+- THEN the operation succeeds as it does for any other review
+
 ### Requirement: Ownership is invisible
 
 Every endpoint MUST require authentication. A rating belonging to another user MUST answer 404 on update and on both deletes — never 403, which would confirm that the row exists. The same policy as `list-endpoints`.
@@ -268,4 +323,4 @@ username to other users, as established by the current account lifecycle.
 
 ### Definitive error contract
 
-Errors expose only `code`, `params`, `errors` and conditional development `debug`. Previous `codigo`, `detail` and root field keys are removed. Rating duplication uses `rating_duplicated`; removal from the watched list uses `rating_blocks_removal_from_watched`. The frontend displays localized messages and marks fallback English titles with `lang="en"`.
+Errors expose only `code`, `params`, `errors` and conditional development `debug`. Previous `codigo`, `detail` and root field keys are removed. Rating duplication uses `rating_duplicated`; removal from the watched list uses `rating_blocks_removal_from_watched`; touching the text of a moderated review uses `review_moderated`. The frontend displays localized messages and marks fallback English titles with `lang="en"`.

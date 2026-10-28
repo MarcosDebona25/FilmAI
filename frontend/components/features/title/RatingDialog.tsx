@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Eye, X } from "lucide-react";
+import { Eye, Lock, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { DialogShell } from "@/components/features/title/DialogShell";
@@ -32,6 +32,9 @@ export function mensajeDeError(error: unknown) {
  * Calificar o editar (doc 04 §5d, canvas). No llama a la API: avisa con
  * `onSubmit` y la ficha decide qué pedir y qué toast mostrar. Si `onSubmit`
  * falla, el error queda a la vista y el diálogo sigue abierto.
+ *
+ * Si la reseña está moderada (`inicial.moderada`), la nota se puede cambiar pero
+ * el texto queda de solo lectura: la API responde 409 (Conflict) si se intenta.
  */
 export function RatingDialog({
   titulo,
@@ -46,13 +49,14 @@ export function RatingDialog({
   enVistas: boolean;
   /** En Watchlist: calificar también la saca de ahí (regla del 14/10/2026). */
   enPendientes?: boolean;
-  inicial?: { valor: number; texto: string | null };
+  inicial?: { valor: number; texto: string | null; moderada?: boolean };
   onSubmit: (datos: { valor: number; texto: string }) => Promise<void>;
   onRemoveRating?: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations();
   const editando = inicial !== undefined;
+  const moderada = inicial?.moderada === true;
   const [valor, setValor] = useState(inicial?.valor ?? 0);
   const [preview, setPreview] = useState(0);
   const [texto, setTexto] = useState(inicial?.texto ?? "");
@@ -61,6 +65,7 @@ export function RatingDialog({
   const tituloId = useId();
   const notaId = useId();
   const textoId = useId();
+  const avisoId = useId();
   const vista = preview || valor;
 
   async function publicar() {
@@ -68,7 +73,7 @@ export function RatingDialog({
     setEnviando(true);
     setError(null);
     try {
-      await onSubmit({ valor, texto: texto.trim() });
+      await onSubmit({ valor, texto: moderada ? (inicial.texto ?? "") : texto.trim() });
     } catch (motivo) {
       setError(mensajeDeError(motivo));
       setEnviando(false);
@@ -148,11 +153,20 @@ export function RatingDialog({
           onChange={(event) => setTexto(event.target.value)}
           placeholder={t("title.review.placeholder")}
           disabled={enviando}
-          className="w-full resize-y rounded-lg bg-background px-4 py-3.5 text-base leading-[1.55] shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring"
+          readOnly={moderada}
+          aria-describedby={moderada ? avisoId : undefined}
+          className="w-full resize-y rounded-lg bg-background px-4 py-3.5 text-base leading-[1.55] shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 read-only:cursor-not-allowed read-only:opacity-60 focus-visible:outline-2 focus-visible:outline-ring"
         />
-        <span className="self-end text-[13px] text-fg-3 tabular-nums">
-          {texto.length}/{MAX_TEXTO}
-        </span>
+        {moderada ? (
+          <p id={avisoId} className="flex items-start gap-2 text-sm text-fg-2">
+            <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {t("common.review.moderatedNotice")}
+          </p>
+        ) : (
+          <span className="self-end text-[13px] text-fg-3 tabular-nums">
+            {texto.length}/{MAX_TEXTO}
+          </span>
+        )}
       </div>
 
       {error && (

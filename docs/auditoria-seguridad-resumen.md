@@ -26,7 +26,7 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 | ~~F7~~ | ~~catálogo~~ | ~~Alta de reseñas con ids inexistentes o enormes: filas vacías y 500 (Internal Server Error)~~ | **Resuelto** (24/10/2026) | ~~Baja~~ | ~~3~~ |
 | ~~F8~~ | ~~usuarios~~ | ~~Clave de confirmación de correo escrita en el log~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
 | ~~F9~~ | ~~frontend~~ | ~~Redirección abierta posterior al login (`next`)~~ | **Resuelto** (20/10/2026) | ~~Baja~~ | ~~3~~ |
-| F10 | catálogo | Moderación de reseñas reversible por el autor | **Pendiente** (verificado en el código el 28/10/2026; falta la decisión de producto, a cargo de Gonza) | Baja | 4 (decisión de producto) |
+| ~~F10~~ | ~~catálogo~~ | ~~Moderación de reseñas reversible por el autor~~ | **Resuelto** (28/10/2026): el texto de una reseña moderada ya no se puede editar ni borrar (409 (Conflict)). Riesgo residual: quitar la calificación y volver a calificar; se revisa al desplegar | ~~Baja~~ | ~~4~~ |
 | ~~F11~~ | ~~usuarios~~ | ~~Login y reset de contraseña sin barra final esquivan los límites de F2~~ | **Resuelto** (26/10/2026) | ~~Media~~ | ~~1~~ |
 | — | frontend | Sin cabeceras anti-framing | Rechazado | — | Endurecimiento opcional |
 
@@ -37,7 +37,7 @@ Resumen para el equipo de la auditoría `standard` de `security-audit` (commit `
 3. F9 y F8, que son cambios chicos.
 4. F6 y F7 (catálogo).
 5. F5 (admin).
-6. F4 (resuelto) y F10, después de decidir el comportamiento con el equipo.
+6. F4 y F10 (resueltos).
 
 Cada fix va como tarea aparte, con su test de regresión y su entrada en `docs/decisiones.md`.
 
@@ -54,13 +54,20 @@ Rama `security/fixes`, un PR por grupo hacia `security/audit`. Solo resume qué 
 - **24/10/2026, F6 (tendencias y llamadas a TMDB):** las tendencias solo aceptan los tipos y períodos que muestra la aplicación, así que ya no se puede llevar el pedido a otros endpoints de TMDB. Además, cada pedido tiene un tope de llamadas a TMDB (reintentos incluidos) y cada IP un límite por minuto que cuenta llamadas reales, no pedidos: lo que sale de la caché no cuenta. Tests nuevos de validación, de los dos topes y de los hilos de Buscar; la suite completa pasa.
 - **26/10/2026, F11 (rutas sin barra final):** el inicio de sesión y la recuperación de contraseña también limitaban los intentos solo si se llamaban con la barra final; sin ella se llegaba a la vista original, sin límite. Ahora las dos variantes llevan los mismos límites. Test nuevo; la suite completa pasa.
 
+- **28/10/2026, reset, log de TMDB, Postgres, entrypoint y F10 (tanda baja y media):**
+  - **Reset de contraseña:** un correo que no es texto (`{"email": 5}`) responde 400 (Bad Request) en lugar de 500 (Internal Server Error), y el pedido tiene un tope de 10 por hora por IP además del de 5 por día por correo.
+  - **Clave de TMDB:** deja de aparecer en los logs de `httpx` y en los mensajes de error de transporte.
+  - **Postgres:** se publica solo en `127.0.0.1`, como Redis.
+  - **`entrypoint.sh`:** ya no pega la contraseña del superusuario dentro del código Python; la lee del entorno.
+  - **F10:** el autor de una reseña moderada ya no puede editar ni borrar su texto (409 (Conflict), código `review_moderated`); sí puede cambiar la nota. Si un admin la reactiva, vuelve el control normal.
+  - Tests nuevos en cada caso; la suite completa pasa. El detalle y las alternativas descartadas están en `docs/decisiones.md`.
+
 ## Abiertos de la revisión del 24/10/2026 (verificados el 28/10/2026)
 
-La revisión con subagentes del 24/10/2026 dejó hallazgos sin aplicar además de F11 (resuelto). Siguen abiertos en el código:
+La revisión con subagentes del 24/10/2026 dejó hallazgos sin aplicar además de F11 (resuelto). Tras la tanda del 28/10/2026 queda abierto, en el código:
 
-- **Media:** el reset de contraseña no tiene límite por IP y un cuerpo inválido responde 500 (Internal Server Error).
-- **Baja:** la clave de TMDB queda registrada en el log; Postgres se publica en todas las interfaces; `entrypoint.sh` maneja la contraseña del superusuario en el comando.
-- **Al desplegar:** cookies seguras, HSTS y cabecera de proxy de Django; `NUM_PROXIES`; restringir `/admin/`; CSP (que además cubre el rechazo de las cabeceras anti-framing); cifrado en reposo de la base; Sentry.
+- **Media y baja:** ninguno; el reset de contraseña, la clave de TMDB en el log, Postgres publicado y `entrypoint.sh` se resolvieron el 28/10/2026 (ver el registro de correcciones).
+- **Al desplegar:** revisar el hueco residual de F10 (quitar la calificación y volver a calificar crea una reseña nueva sin la marca de moderación; cerrarlo exige recordar la moderación por usuario y producción); rotar la clave de TMDB si alguna vez llegó a logs reales; cookies seguras, HSTS y cabecera de proxy de Django; `NUM_PROXIES`; restringir `/admin/`; CSP (que además cubre el rechazo de las cabeceras anti-framing); cifrado en reposo de la base; Sentry.
 - **Decisiones abiertas:** techo de ítems en Favoritos y Pendientes, duración del access token (8 h), tope por IP detrás de NAT y enumeración por tiempo en el reset.
 
 Todavía no hay un despliegue público; los puntos «al desplegar» se cierran antes de publicar la instancia. El detalle técnico y la reproducción están en los informes locales (`security-audit/`, ignorado por git) y en `docs/decisiones.md`; acá queda solo el estado, como en el resto del archivo.
