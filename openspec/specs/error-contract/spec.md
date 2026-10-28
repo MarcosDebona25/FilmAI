@@ -144,7 +144,7 @@ exact existing messages and aliases; these tables define public semantics.
 | `email_already_used`             | Registered email, including Google duplicate email before persistence.                                                   |
 | `email_or_username_already_used` | Integrity race during social signup; no guessed field.                                                                   |
 | `username_invalid`               | Alphanumeric 5–25; `minLength: 5`, `maxLength: 25`.                                                                      |
-| `username_not_allowed`           | allauth's blacklisted username; do not publish the blacklist.                                                            |
+| `username_not_allowed`           | Reserved username (admin-like, `usuarios/validators.py`, issue #137) or allauth's blacklist; do not publish the list.     |
 | `person_name_invalid`            | Letters/spaces only; `maxLength: 50`.                                                                                    |
 | `birth_date_in_future`           | Future birth date.                                                                                                       |
 | `minimum_age`                    | Under the required age; `minAge: 13`.                                                                                    |

@@ -63,7 +63,7 @@ from .throttles import (
     RegistroCorreoThrottle,
     RegistroIPThrottle,
 )
-from .validators import USERNAME_REGEX
+from .validators import USERNAME_REGEX, es_nombre_usuario_reservado
 
 logger = logging.getLogger(__name__)
 
@@ -244,6 +244,10 @@ class UsernameDisponibleView(APIView):
         username = request.query_params.get("username", "")
         if not USERNAME_REGEX.fullmatch(username):
             return Response({"disponible": False})
+        # Un nombre reservado (issue #137) no está disponible, y el motivo deja
+        # que el formulario muestre el mismo error que al enviarlo.
+        if es_nombre_usuario_reservado(username):
+            return Response({"disponible": False, "motivo": "reservado"})
         # Una pendiente vencida ya no reserva el nombre (F4); el GET no borra.
         ocupado = (
             Usuario.objects.filter(nombre_usuario__iexact=username)

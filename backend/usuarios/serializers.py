@@ -42,7 +42,12 @@ from .models import EstadoCuenta, TipoGenero, Usuario
 from .paises import es_pais_valido
 from .passwords import guardar_contrasena
 from .pendientes import liberar_pendientes_vencidas
-from .validators import MINIMUM_AGE, USERNAME_REGEX, validar_nombre_persona
+from .validators import (
+    MINIMUM_AGE,
+    USERNAME_REGEX,
+    es_nombre_usuario_reservado,
+    validar_nombre_persona,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +102,17 @@ class LoginSerializer(BaseLoginSerializer):
         return None
 
 
+def _rechazar_reservado(nombre_usuario):
+    """Nombres que se confunden con una cuenta del equipo (issue #137).
+
+    El mensaje no dice que el nombre está reservado ni muestra la lista.
+    """
+    if es_nombre_usuario_reservado(nombre_usuario):
+        raise serializers.ValidationError(
+            "El nombre de usuario no está permitido.", code="username_not_allowed"
+        )
+
+
 class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     """Registro tradicional (CU-001) con los campos del modelo `Usuario`."""
 
@@ -129,6 +145,7 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
             raise serializers.ValidationError(
                 "Alfanumérico, 5-25 caracteres.", code="username_invalid"
             )
+        _rechazar_reservado(value)
         liberar_pendientes_vencidas(nombre_usuario=value)
         if Usuario.objects.filter(nombre_usuario__iexact=value).exists():
             raise serializers.ValidationError(
@@ -226,6 +243,7 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
             raise serializers.ValidationError(
                 "Alfanumérico, 5-25 caracteres.", code="username_invalid"
             )
+        _rechazar_reservado(value)
         if Usuario.objects.filter(nombre_usuario__iexact=value).exists():
             raise serializers.ValidationError(
                 "El nombre de usuario ya está registrado.", code="username_already_used"
@@ -537,6 +555,9 @@ class UsuarioPerfilSerializer(FronteraUsuarioMixin, serializers.ModelSerializer)
         return usuario.has_usable_password()
 
     def validate_nombre_usuario(self, value):
+        # Quien ya lo tenía antes de la regla (28/10/2026) puede conservarlo.
+        if value.lower() != self.instance.nombre_usuario.lower():
+            _rechazar_reservado(value)
         if (
             Usuario.objects.filter(nombre_usuario__iexact=value)
             .exclude(pk=self.instance.pk)
