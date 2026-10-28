@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793153720.454795,
-    "seen": 1793153740.1622958,
-    "ast_hash": "bd47e0829df598b54c5b73a0f348b564",
+    "mtime": 1793154065.111967,
+    "seen": 1793154415.0689483,
+    "ast_hash": "11acd65be2a385a610f9443a7cb88da8",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2334,8 +2334,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1793153547.4468725,
-    "seen": 1793153740.1621134,
+    "mtime": 1793154213.3463154,
+    "seen": 1793154415.0590036,
     "ast_hash": "4c8518ba2ecc081ef78e150c3e92e8ad",
     "semantic_hash": ""
   },
@@ -2364,8 +2364,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1793153547.4509075,
-    "seen": 1793153740.1621158,
+    "mtime": 1793154213.3503604,
+    "seen": 1793154415.0590577,
     "ast_hash": "ad3e077f4d0303052a82c39719d37965",
     "semantic_hash": ""
   },
@@ -2886,9 +2886,9 @@
     "semantic_hash": ""
   },
   "frontend/e2e/i18n-flows.spec.ts": {
-    "mtime": 1793152831.8882673,
-    "seen": 1793153740.1620684,
-    "ast_hash": "e93ec8f8efe0215edd96a097a7e63190",
+    "mtime": 1793154054.5733235,
+    "seen": 1793154415.0573015,
+    "ast_hash": "c36a8860abc41b588ea399996b88f7e8",
     "semantic_hash": ""
   },
   "frontend/i18n/client.ts": {
@@ -4251,6 +4251,18 @@
     "mtime": 1793151817.9624245,
     "seen": 1793153740.1619525,
     "ast_hash": "7bf2dab5b1fcb03859386902218aae53",
+    "semantic_hash": ""
+  },
+  ".claude/settings.json": {
+    "mtime": 1793153975.380484,
+    "seen": 1793154415.0338476,
+    "ast_hash": "e0168b42001902b0ce3bea44318efee4",
+    "semantic_hash": ""
+  },
+  ".husky/commit-msg": {
+    "mtime": 1793154093.2728803,
+    "seen": 1793154415.0338902,
+    "ast_hash": "b411ac1ba407484991b372d275b7cb49",
     "semantic_hash": ""
   }
 }
