@@ -114,6 +114,17 @@ jobs:
       - name: Recorridos de perfil
         run: npm run test:e2e
 
+      # Solo si falla: trace, captura y error-context de cada test caído, para
+      # ver qué pasó sin tener que reproducirlo (Playwright los deja en
+      # `test-results/` con `trace: "retain-on-failure"`).
+      - name: Subir los resultados de Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: frontend/test-results/
+          retention-days: 7
+
   # --------------------------------------------------------------------------
   # Backend: Ruff + Tests (Django)
   # --------------------------------------------------------------------------
