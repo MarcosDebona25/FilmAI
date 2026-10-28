@@ -18,6 +18,7 @@ type Props = {
   id?: string;
   name?: string;
   autoFocus?: boolean;
+  required?: boolean;
   className?: string;
   selectClassName?: string;
   labelClassName?: string;
@@ -37,6 +38,7 @@ export function CountrySelect({
   id,
   name = "pais",
   autoFocus,
+  required,
   className,
   selectClassName,
   labelClassName,
@@ -57,6 +59,7 @@ export function CountrySelect({
         name={name}
         autoComplete="country"
         autoFocus={autoFocus}
+        required={required}
         className={cn(fieldClass, selectClassName)}
         value={value}
         onChange={(event) => onChange(event.target.value)}

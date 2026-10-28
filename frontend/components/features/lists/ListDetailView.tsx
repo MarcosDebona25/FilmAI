@@ -505,14 +505,17 @@ export function ListDetailView({ id }: { id: number }) {
                 ))}
               </div>
 
-              {filtrando && datos && lista && (
-                <p role="status" className="text-sm text-fg-3">
-                  {t("lists.detail.displayedCount", {
-                    shownCount: formats.number(datos.total),
-                    totalCount: lista.cantidad_items,
-                  })}
-                </p>
-              )}
+              {/* El contenedor vive siempre; el aviso se agrega después y se anuncia. */}
+              <div role="status" className="empty:sr-only">
+                {filtrando && datos && lista && (
+                  <p className="text-sm text-fg-3">
+                    {t("lists.detail.displayedCount", {
+                      shownCount: formats.number(datos.total),
+                      totalCount: lista.cantidad_items,
+                    })}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -555,21 +558,20 @@ export function ListDetailView({ id }: { id: number }) {
             </div>
           )}
 
-          {sinCoincidencias && estado === "listo" && (
-            <div
-              role="status"
-              className="flex flex-col items-start gap-3 border-t border-line py-10"
-            >
-              <p className="text-fg-2">{t("lists.detail.filteredEmpty")}</p>
-              <button
-                type="button"
-                onClick={limpiar}
-                className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                {t("common.filters.clear")}
-              </button>
-            </div>
-          )}
+          <div role="status" className="empty:sr-only">
+            {sinCoincidencias && estado === "listo" && (
+              <div className="flex flex-col items-start gap-3 border-t border-line py-10">
+                <p className="text-fg-2">{t("lists.detail.filteredEmpty")}</p>
+                <button
+                  type="button"
+                  onClick={limpiar}
+                  className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  {t("common.filters.clear")}
+                </button>
+              </div>
+            )}
+          </div>
 
           {datos && datos.items.length > 0 && estado !== "error" && nombre && (
             <div aria-busy={estado === "cargando"} className="flex flex-col">

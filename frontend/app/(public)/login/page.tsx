@@ -63,11 +63,14 @@ function ResetPasswordDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title={t("title")} onClose={onClose} busy={loading} initialFocusRef={emailRef}>
+      {/* El contenedor vive siempre; el aviso se agrega después y se anuncia. */}
+      <div role="status" className={sentTo ? "mt-3" : undefined}>
+        {sentTo && (
+          <p className="text-muted-foreground">{t("sentDescription", { email: sentTo })}</p>
+        )}
+      </div>
       {sentTo ? (
-        <div className="mt-3 flex flex-col gap-5">
-          <p role="status" className="text-muted-foreground">
-            {t("sentDescription", { email: sentTo })}
-          </p>
+        <div className="mt-5 flex flex-col gap-5">
           <button type="button" onClick={onClose} className={primaryButtonClass}>
             {common("passwordReset.backToLogin")}
           </button>

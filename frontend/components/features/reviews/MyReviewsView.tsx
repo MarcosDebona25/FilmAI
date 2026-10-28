@@ -507,21 +507,21 @@ export function MyReviewsView() {
             </div>
           )}
 
-          {sinCoincidencias && estado !== "error" && (
-            <div
-              role="status"
-              className="flex flex-col items-start gap-3 border-t border-line py-10"
-            >
-              <p className="text-fg-2">{t("reviews.results.filteredEmpty")}</p>
-              <button
-                type="button"
-                onClick={limpiar}
-                className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                {t("common.filters.clear")}
-              </button>
-            </div>
-          )}
+          {/* El contenedor vive siempre; el aviso se agrega después y se anuncia. */}
+          <div role="status" className="empty:sr-only">
+            {sinCoincidencias && estado !== "error" && (
+              <div className="flex flex-col items-start gap-3 border-t border-line py-10">
+                <p className="text-fg-2">{t("reviews.results.filteredEmpty")}</p>
+                <button
+                  type="button"
+                  onClick={limpiar}
+                  className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  {t("common.filters.clear")}
+                </button>
+              </div>
+            )}
+          </div>
 
           {datos && datos.items.length > 0 && estado !== "error" && (
             <div aria-busy={estado === "cargando"} className="flex flex-col">
