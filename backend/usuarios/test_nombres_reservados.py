@@ -173,7 +173,8 @@ class PerfilTests(TestCase):
 
 class DisponibilidadTests(TestCase):
     def test_un_reservado_no_esta_disponible_y_dice_por_que(self):
-        respuesta = Client().get("/api/auth/username-available/", {"username": "r00t"})
+        # Cinco caracteres o más: «r00t» ya no pasa el largo mínimo, sin llegar a la regla.
+        respuesta = Client().get("/api/auth/username-available/", {"username": "Adm1n"})
 
         self.assertEqual(respuesta.json(), {"disponible": False, "motivo": "reservado"})
 
