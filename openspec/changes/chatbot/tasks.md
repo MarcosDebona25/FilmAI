@@ -123,16 +123,21 @@
 - [ ] 5.1 Explain: WSGI vs ASGI, what `daphne` changes in `runserver`,
       `StreamingHttpResponse` with an async iterator, SSE framing, how a
       disconnect becomes a cancellation
-- [ ] 5.2 `daphne` in `INSTALLED_APPS` (first), `ASGI_APPLICATION`; run the
-      full suite under it
+- [ ] 5.2 `daphne` in `INSTALLED_APPS` (first), `ASGI_APPLICATION`. The test
+      runner does not start a server and the Playwright job mocks the API,
+      so add `filmai/test_asgi.py`: through `get_asgi_application()`, a
+      public DRF read and an authenticated DRF write with CSRF answer as
+      under WSGI. Manual: `runserver` shows daphne, local e2e stays green
 - [ ] 5.3 Error codes `chat_request_in_progress`, `chat_unavailable` in the
       catalog; front translations; contract tests green
 - [ ] 5.4 RED `chatbot/tests_sse.py` (`AsyncClient`): 401, 403 CSRF as JSON,
       400 length, 409 lock, 429 with `retry_after_seconds`
 - [ ] 5.5 RED: a full turn yields the event sequence and stores the pair on
       `fin`; provider failure yields `error` and stores nothing
-- [ ] 5.6 RED: closing the response mid-stream stores nothing and frees the
-      lock; a save failure sends `error` and no `tarjetas`
+- [ ] 5.6 RED: through `get_asgi_application()` with a fake ASGI `receive`
+      that sends `http.disconnect` mid-stream (the `AsyncClient` does not
+      simulate a disconnect): nothing is stored and the lock is freed; a save
+      failure sends `error` and no `tarjetas`
 - [ ] 5.6b RED: lock with a per-request token — an expired request's late
       release leaves the next request's lock; a fake tool that sleeps past
       the budget hits the 25 s turn timeout and the lock is released; a save

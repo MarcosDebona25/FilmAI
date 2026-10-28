@@ -44,7 +44,7 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 #### Scenario: Lock released after a crash
 
 - GIVEN a request that died without releasing the lock
-- WHEN 60 seconds have passed
+- WHEN `LLM_TIMEOUT_SECONDS` + 35 seconds have passed (60 with the default)
 - THEN a new message is accepted
 
 #### Scenario: A late release does not free someone else's lock
