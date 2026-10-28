@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Calidad del backend del catálogo: sync, longitudes, rotación de embeddings y traducciones
+
+- **Fecha**: 28/10/2026
+- **Descripción**: cuatro bugs de la sync nocturna y sus tareas auxiliares, cada uno reproducido primero con un test.
+  - **Un listado de descubrimiento caído tumbaba la sync entera.** `pedir(servicio)` estaba fuera del `try`, así que un timeout o un 500 (Internal Server Error) de TMDB en un solo listado cortaba los demás y la pasada de traducciones. Ahora cada listado se pide dentro de su propio `try/except`: se registra con `logger.exception`, suma 1 a `errores` y sigue con el siguiente listado y con el paso 3.
+  - **Los campos de TMDB no se recortaban a la columna.** Solo se recortaban las traducciones. Un título, nombre o keyword más largo que el `max_length` hacía fallar el `save()` con `DataError` y se perdía el enriquecimiento completo. `_enriquecer` pasa ahora el mapeo por `_recortar()`, que lee los límites del modelo (`CharField.max_length` y el de `base_field` de los arreglos), de modo que si cambia una columna el recorte la sigue. Se decidió recortar y no descartar la ficha. También se recorta el póster de la traducción (250), que tenía el mismo riesgo.
+  - **El backfill de embeddings no rotaba.** Ordena por `fecha_actualizacion`, pero `auto_now` solo actúa en `save()` y todas las escrituras de `generar_embedding` y del backfill son `.update()`. Las filas `failed` quedaban siempre primeras y, con más fallidas que el tope, las demás nunca se tocaban. Ahora la fecha se renueva explícitamente al reencolar (`pending`/`failed` y `ready` desactualizados), al fallar y al terminar en `ready`. Reencolar ya la renueva, así que la rotación no depende de que el worker llegue a procesar la fila. Se corrigió el docstring de `backfill_embeddings`, que afirmaba que `auto_now` hacía esto.
+  - **`rellenar()` de traducciones se trababa en las filas que fallan.** Arrancaba siempre de `pk` 0 y `pendientes()` sigue incluyendo las filas que fallan, así que ocupaban el límite todas las noches. Con `limite` (la sync nocturna) ahora guarda un cursor (el `pk` de la última fila intentada) en la caché de Django, retoma desde ahí y, al agotar los pendientes, vuelve al principio recorriendo solo hasta el punto de partida (no reintenta en la misma corrida lo ya intentado). Sin `limite` (el comando `rellenar_traducciones`) recorre todo desde 0, como antes. Se eligió caché y no una columna nueva para no tocar el modelo ni agregar una migración; si la caché falla o se vacía, el cursor vuelve a 0 y el comportamiento es el anterior. La forma del resultado de `rellenar()` no cambia.
+- **Archivos afectados**: `backend/catalogo/tasks.py`, `backend/catalogo/services/materialization.py`, `backend/catalogo/services/traducciones.py`, `backend/catalogo/tests.py`, `backend/catalogo/test_traducciones.py`, `docs/decisiones.md`.
+
 ## 28/10/2026 — Dos tests e2e inestables más: idioma de la cuenta en `listas` y registro en `acceso`
 
 - **Fecha**: 28/10/2026
