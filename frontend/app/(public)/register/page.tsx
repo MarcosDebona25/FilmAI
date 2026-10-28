@@ -237,6 +237,7 @@ export default function RegisterPage() {
             <TextField
               label={common("fields.firstName")}
               name="nombre"
+              required
               autoComplete="given-name"
               maxLength={50}
               value={form.nombre}
@@ -247,6 +248,7 @@ export default function RegisterPage() {
             <TextField
               label={common("fields.lastName")}
               name="apellido"
+              required
               autoComplete="family-name"
               maxLength={50}
               value={form.apellido}
@@ -259,6 +261,7 @@ export default function RegisterPage() {
             <TextField
               label={common("fields.username")}
               name="nombre_usuario"
+              required
               autoComplete="username"
               prefix="@"
               value={form.nombre_usuario}
@@ -272,11 +275,13 @@ export default function RegisterPage() {
               onChange={(code) => setField("pais", code)}
               onBlur={() => setSucios((prev) => ({ ...prev, pais: true }))}
               error={mostrar("pais", true)}
+              required
             />
           </div>
           <TextField
             label={common("fields.email")}
             name="correo"
+            required
             type="email"
             autoComplete="email"
             value={form.correo}
@@ -287,6 +292,7 @@ export default function RegisterPage() {
             <TextField
               label={common("fields.birthDate")}
               name="fecha_nacimiento"
+              required
               type="date"
               max={maxFechaNacimiento()}
               value={form.fecha_nacimiento}
@@ -301,6 +307,7 @@ export default function RegisterPage() {
               <select
                 id="genero"
                 name="genero"
+                required
                 className={fieldClass}
                 value={form.genero}
                 onChange={(e) => setField("genero", e.target.value)}
@@ -319,6 +326,7 @@ export default function RegisterPage() {
           <PasswordField
             label={t("password.label")}
             name="password1"
+            required
             autoComplete="new-password"
             value={form.password1}
             onChange={(e) => setField("password1", e.target.value)}
@@ -348,6 +356,7 @@ export default function RegisterPage() {
           <PasswordField
             label={common("fields.passwordConfirm")}
             name="password2"
+            required
             autoComplete="new-password"
             value={form.password2}
             onChange={(e) => setField("password2", e.target.value)}
@@ -357,11 +366,12 @@ export default function RegisterPage() {
             {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}
             <label
               htmlFor="terminos"
-              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--line)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
+              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--field-border)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
             >
               <input
                 id="terminos"
                 name="acepta_terminos"
+                required
                 type="checkbox"
                 checked={acepta}
                 onChange={(e) => {

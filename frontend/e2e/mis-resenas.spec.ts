@@ -173,7 +173,7 @@ test.describe("escritorio", () => {
     await editar.getByLabel(/Reseña/).fill("Corta y nueva.");
     await editar.getByRole("button", { name: "Actualizar" }).click();
     await expect(editar).toBeHidden();
-    await expect(page.getByLabel("Tu calificación: 10 de 10")).toBeVisible();
+    await expect(page.getByText("Tu calificación: 10 de 10")).toBeVisible();
     await expect(page.getByText("Corta y nueva.")).toBeVisible();
     expect(estado.items()[0]).toMatchObject({ valor: 10, texto: "Corta y nueva." });
 

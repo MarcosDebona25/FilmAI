@@ -278,11 +278,26 @@ describe("menú «Add to list»", () => {
     });
   });
 
+  it("es un <dialog> modal: el clic en el fondo lo cierra y el clic adentro no", () => {
+    renderizar();
+    abrir();
+    const menu = screen.getByRole("dialog");
+    expect(menu.tagName).toBe("DIALOG");
+
+    fireEvent.click(menu.querySelector("p") as HTMLElement);
+    expect(screen.queryByRole("dialog")).not.toBeNull();
+
+    // jsdom no calcula cajas: el clic cae fuera del rectángulo (0,0,0,0) del diálogo.
+    fireEvent.click(menu, { clientX: 500, clientY: 500 });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
   it("Escape lo cierra y devuelve el foco al botón", () => {
     renderizar();
     abrir();
 
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    // Escape en un `<dialog>` modal dispara `cancel`, no un `keydown` que podamos atender.
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
 
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByRole("button", { name: "Add Interstellar to a list" })).toHaveFocus();
