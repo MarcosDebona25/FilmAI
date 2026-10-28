@@ -97,6 +97,12 @@ The user message and the bot answer MUST be saved in one transaction only after 
 - THEN the pair stays stored
 - AND it is returned by the history the next time it is read
 
+#### Scenario: The turn budget expires during the save
+
+- GIVEN the save started at second 24.9 and commits at second 25.3
+- WHEN the turn budget of 25 s is reached during the save
+- THEN the save is not interrupted and the stream ends with `fin`, not `error`
+
 #### Scenario: Failure while saving
 
 - GIVEN the database rejects the save
