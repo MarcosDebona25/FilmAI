@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Sin atribución a IA en los commits
+
+- **Fecha**: 28/10/2026
+- **Descripción**: los commits y PRs del proyecto no llevan atribución a IA, la agregue el agente que sea. Dos capas:
+  - **Claude Code**: `.claude/settings.json` (versionado, a diferencia de `settings.local.json`) deja vacía `attribution.commit` y `attribution.pr`, así las sesiones del proyecto, locales o en la nube, no agregan nada.
+  - **Hook `commit-msg` de husky**: para los demás agentes, `.husky/commit-msg` borra del mensaje las líneas `Co-Authored-By` de Claude/Anthropic, `Claude-Session:` y el pie con el enlace a Claude Code, y después quita las líneas en blanco que quedan al final. La primera versión borraba cualquier línea que nombrara la frase del pie: así se perdieron el título de un commit y el final del cuerpo de otro. Ahora la regex exige el enlace en markdown (`Generated with [Claude Code](`), que solo aparece en el pie.
+- **Archivos afectados**: `.claude/settings.json`, `.husky/commit-msg`.
+- **Verificación**: los commits de esta rama pasaron por el hook nuevo y conservan título y cuerpo completos; el pre-commit (Ruff, ESLint, Prettier) pasa.
+
 ## 28/10/2026 — Registro de `i18n-flows` estable y resultados de Playwright en el CI
 
 - **Fecha**: 28/10/2026
