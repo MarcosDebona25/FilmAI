@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Dos tests e2e inestables más: idioma de la cuenta en `listas` y registro en `acceso`
+
+- **Fecha**: 28/10/2026
+- **Descripción**: después del #143 fallaron en el CI dos tests que no tocaba ese cambio, en commits cuyo código pasó en otra corrida. Los artefactos `playwright-test-results` (nuevos desde el #143) permitieron ver la página al fallar.
+  - **`listas.spec.ts`, «cambia de idioma sin perder la lista…»** (falló en el push a `develop`): el test cambiaba la cookie `filmai_locale` a `es` con una cuenta que tenía guardado `en`. Al cargar el perfil, `AccountProvider` vuelve a imponer el idioma de la cuenta (`persistLocale` + `router.refresh()`), así que la página pasaba a inglés poco después. El test pasaba solo si llegaba a verificar antes del refresco. No es un bug de la app: con sesión manda el idioma guardado. El test ahora usa una cuenta sin idioma (`backend(page, { idioma: null })`, opción nueva del helper, por defecto `en`) y fija `en` con la cookie antes de cargar, porque el navegador de Playwright es `es-AR`.
+  - **`acceso.spec.ts`, registro** (dos tests): lo escrito antes de que la página hidrate se pierde, igual que en `i18n-flows`. El título visible no garantiza la hidratación. «Un nombre reservado avisa al escribirlo» falló en el CI con el campo vacío; «términos obligatorios, reglas y confirmación» falló en local con el botón deshabilitado. Los dos llenan ahora dentro de `expect(...).toPass()`, reponiendo lo perdido hasta ver el aviso del nombre, que solo aparece con la página hidratada. Las aserciones internas tienen timeout corto, no 0.
+- **Archivos afectados**: `frontend/e2e/listas.spec.ts`, `frontend/e2e/acceso.spec.ts`.
+- **Verificación**: los dos tests del CI, 5 veces cada uno con 2 workers: 20/20. `listas` y `acceso` completos, 3 vueltas con 2 workers: 117/117. Suite e2e completa con 2 workers: 126/126. ESLint, Prettier y `tsc` sin errores.
+
 ## 28/10/2026 — Sin atribución a IA en los commits
 
 - **Fecha**: 28/10/2026
