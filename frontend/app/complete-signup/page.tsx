@@ -148,6 +148,8 @@ export default function CompletarGooglePage() {
       <FieldOk>{signUp("usernameAvailable")}</FieldOk>
     ) : usernameEstado === "ocupado" ? (
       <FieldError>{errors("username_already_used")}</FieldError>
+    ) : usernameEstado === "reservado" ? (
+      <FieldError>{errors("username_not_allowed")}</FieldError>
     ) : null;
   const terminosError = servidor.acepta_terminos;
   const activo = formularioValido && !loading;
