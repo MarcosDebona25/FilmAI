@@ -75,9 +75,11 @@ def es_nombre_usuario_reservado(valor):
     """`True` si `valor` es, o imita, un nombre reservado."""
     minusculas = valor.lower()
     sin_digitos_finales = re.sub(r"\d+$", "", minusculas) or minusculas
+    # Y sin ningún dígito: «1admin» o «a1dmin» (PR-Agent en #142).
+    sin_digitos = re.sub(r"\d", "", minusculas) or minusculas
     lecturas = {
         texto.translate(tabla)
-        for texto in (minusculas, sin_digitos_finales)
+        for texto in (minusculas, sin_digitos_finales, sin_digitos)
         for tabla in _DIGITOS_COMO_LETRAS
     }
     lecturas |= {_sin_decorado(lectura) for lectura in lecturas}
