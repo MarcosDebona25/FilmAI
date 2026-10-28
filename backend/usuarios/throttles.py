@@ -10,6 +10,22 @@ import hashlib
 from rest_framework.throttling import SimpleRateThrottle
 
 
+def _cuerpo(request):
+    datos = request.data
+    return datos if hasattr(datos, "get") else {}
+
+
+def _correo(request):
+    """Correo normalizado del cuerpo, o "" si falta o no es un texto.
+
+    Un `{"email": 5}` o un `null` no son un correo: devolver "" los manda al
+    límite por IP y el serializer responde 400 (Bad Request), en vez de romper
+    con `.strip()` sobre un entero (500, Internal Server Error).
+    """
+    valor = _cuerpo(request).get("email")
+    return valor.strip().lower() if isinstance(valor, str) else ""
+
+
 class EmailRateThrottle(SimpleRateThrottle):
     """
     Throttle basado en email para recuperación de contraseña.
@@ -29,7 +45,7 @@ class EmailRateThrottle(SimpleRateThrottle):
         Si el email no está presente o no es válido, usa la IP como fallback
         para mantener protección básica contra abuso.
         """
-        email = request.data.get("email", "").strip().lower()
+        email = _correo(request)
 
         if email:
             # Throttle por email
@@ -55,7 +71,7 @@ class EmailThrottleStatusMixin:
 
         # Solo agregar información si la respuesta es exitosa
         if response.status_code == 200:
-            email = request.data.get("email", "").strip().lower()
+            email = _correo(request)
             if email:
                 # Calcular intentos restantes
                 throttle = EmailRateThrottle()
@@ -79,11 +95,6 @@ class EmailThrottleStatusMixin:
                 response.data["intentos_restantes"] = remaining
 
         return response
-
-
-def _cuerpo(request):
-    datos = request.data
-    return datos if hasattr(datos, "get") else {}
 
 
 class PorIPThrottle(SimpleRateThrottle):
@@ -194,3 +205,11 @@ class ReenvioEnfriamientoThrottle(PorCuentaThrottle):
 
 class ReenvioIPThrottle(PorIPThrottle):
     scope = "reenvio_ip"
+
+
+class ResetIPThrottle(PorIPThrottle):
+    """Tope por IP para pedir el reset: el límite por correo no frena a quien
+    prueba muchos correos distintos (cada uno con su propio contador) y cada
+    pedido a una cuenta real dispara un correo."""
+
+    scope = "recuperar_contrasena_ip"
