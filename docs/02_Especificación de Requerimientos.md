@@ -54,7 +54,7 @@ Desde el punto de vista técnico, se garantiza el cifrado de la información, la
 - Cuando el usuario publique o modifique una reseña, el sistema deberá almacenar la reseña y actualizar las reseñas en la sección "Mis reseñas".
 - Cuando el usuario elimine una reseña, esta deberá ser eliminada de la sección "Mis reseñas".
 - Cuando el usuario cree su cuenta, el sistema deberá mandar un correo de confirmación.
-- Cuando el usuario abra la ficha de una película o serie, el sistema deberá mostrar en qué plataformas puede verla, alquilarla o comprarla en su país (el de su cuenta; sin sesión, la región del navegador), con atribución a JustWatch, y mostrar que no está disponible si TMDB no tiene datos para ese país (18/10/2026).
+- Cuando el usuario abra la ficha de una película o serie, el sistema deberá mostrar en qué plataformas puede verla, alquilarla o comprarla en su país (el de su cuenta; hace falta iniciar sesión, desde el 27/10/2026), con atribución a JustWatch, y mostrar que no está disponible si TMDB no tiene datos para ese país (18/10/2026).
 - El sistema deberá estar disponible en inglés (idioma por defecto) y en español.
 - El sistema deberá permitir al usuario elegir el idioma: sin sesión, desde las pantallas públicas (landing, inicio de sesión, registro y pie de página); con sesión, desde Preferencias. La elección con sesión se guarda en la cuenta.
 - Cuando el usuario cree su cuenta (registro local o con Google), el sistema deberá guardar el idioma activo en ese momento.
@@ -798,6 +798,6 @@ FilmAI es nativa en inglés y admite español. Las reglas acordadas (decisiones 
 ### Perfil: país y plataformas (18/10/2026)
 
 - **País de la cuenta.** `Usuario.pais` guarda un código ISO 3166-1 alfa-2 de la lista fija `paisCodes` (249) de `contracts/enums.json`, que comparten backend y frontend. Es obligatorio en el registro, en el alta con Google y en el perfil, sin preselección. Un valor inválido da `country_invalid` (400 (Bad Request)). Detalle en CU-001, CU-005 y CU-006.
-- **Plataformas en la ficha.** El país sirve para mostrar dónde ver, alquilar o comprar una producción (CU-008, «Dónde verla»). Los datos vienen de TMDB y son de JustWatch, cuya atribución es obligatoria. Solo se guardan en Redis (12 horas; respaldo de 7 días). El uso del país con esta finalidad debe quedar listado en los Términos y Condiciones (`frontend/content/legal/terms.{en,es}.md`); **pendiente de sumarlo al texto**.
+- **Plataformas en la ficha.** El país sirve para mostrar dónde ver, alquilar o comprar una producción (CU-008, «Dónde verla»). Los datos vienen de TMDB y son de JustWatch, cuya atribución es obligatoria. Solo se guardan en Redis (12 horas; respaldo de 7 días). El uso del país con esta finalidad debe quedar listado en los Términos y Condiciones (`frontend/content/legal/terms.{en,es}.md`); ya figura en la sección «Datos personales» de los Términos, junto con la atribución a JustWatch (18/10/2026).
 - **Tema.** La interfaz es solo oscura, como parte de la identidad de FilmAI (18/10/2026). Se descartó el tema claro y se eliminó `Usuario.tema` del modelo y de la API (migración `0009_remove_usuario_tema`); Preferencias no tiene selector de apariencia.
 - **Estados de carga.** Los esqueletos son estáticos: sin animación de pulso ni brillo.
