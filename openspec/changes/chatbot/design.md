@@ -206,11 +206,11 @@ No le gustó (nota ≤ 4): Transformers (2), …                                
 Favoritos: Interstellar, Arrival                                            ← up to 10
 ```
 
-`anonimizar(texto, usuario)` replaces the user's `nombre`, `apellido`,
-`correo` and `nombre_usuario` (case- and accent-insensitive, whole words) with
-`[usuario]` in everything outbound: the profile, the review excerpts, the
-history **and the current message**. Every email address, the user's own
-included, becomes `[correo]`; name, last name and username become `[usuario]`. The original text is what gets
+`anonimizar(texto, usuario)` replaces the user's `nombre`, `apellido` and
+`nombre_usuario` (case- and accent-insensitive, whole words) with `[usuario]`,
+and **every email address, the user's own included,** with `[correo]`, in
+everything outbound: the profile, the review excerpts, the history **and the
+current message**. The original text is what gets
 stored and shown; only the copy sent to the provider is anonymized. The model
 receives no name at all (28/10/2026); the greeting with the name is drawn by
 the front. Other personal data a user volunteers (a phone, an address) cannot
@@ -258,8 +258,10 @@ A style block per language (es/en) is a small dict, not two prompts.
   `javascript:` (28/10/2026) and `![x](https://atacante.example/pixel)`, and
   assert no `img` element and no request.
 - Cancel: the send button becomes «Cancelar» while streaming; aborting shows
-  «Solicitud cancelada» and keeps the draft (CU-014). If the answer arrives at
-  the same instant, the front discards it (CU-014 2.A).
+  «Solicitud cancelada» and keeps the draft (CU-014). Against `fin`, whichever
+  the panel processes first wins: a cancel processed before `fin` discards the
+  answer (CU-014 2.A); after `fin` the button is «Enviar» again (see the
+  cancel row in Architecture Decisions).
 - Without session the FAB is visible and disabled, `aria-label` from doc 04.
 - Accessibility: the panel is a `<dialog>`-like region with focus trap and
   Escape; new bot text announced through an `aria-live="polite"` region once

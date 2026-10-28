@@ -29,8 +29,9 @@
 - [ ] 1.1 RED `catalogo/tests_semantica.py`: `generar_vector` sends model
       `bge-m3`, `keep_alive` and the text to `OLLAMA_URL/api/embed`, and returns
       the vector (`httpx.MockTransport`)
-- [ ] 1.2 RED: 3 connection failures → `EmbeddingProviderError`; a 768-float
-      vector → `EmbeddingProviderError`
+- [ ] 1.2 RED: backfill budget — 3 connection failures → 3 attempts and
+      `EmbeddingProviderError`; chat budget — a hang → one attempt, 3 s, and
+      `EmbeddingProviderError`; a 768-float vector → `EmbeddingProviderError`
 - [ ] 1.3 GREEN: `generar_vector` with `httpx`; backfill budget 10 s and 2
       retries, chat-query budget 3 s and no retry;
       `MODEL_VERSION = "bge-m3"`; `OLLAMA_URL` in settings
@@ -126,8 +127,8 @@
 - [ ] 5.6 RED: closing the response mid-stream stores nothing and frees the
       lock; a save failure sends `error` and no `tarjetas`
 - [ ] 5.6b RED: lock with a per-request token — an expired request's late
-      release leaves the next request's lock; a slow tool hits the 25 s turn
-      timeout and the lock is released
+      release leaves the next request's lock; a fake tool that sleeps past
+      the budget hits the 25 s turn timeout and the lock is released
 - [ ] 5.7 GREEN: `views.py :: enviar_mensaje`, lock, hourly counter,
       `idioma_efectivo` once, `contar_llamadas` for the turn
 - [ ] 5.8 `contracts/sse-chat.md`; OpenAPI entry for the `POST` with its

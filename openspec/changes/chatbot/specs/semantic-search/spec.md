@@ -8,7 +8,7 @@ Conceptual search over the local catalog («algo melancólico sobre viajes en el
 
 ### Requirement: Real vectors from Ollama
 
-`generar_vector(texto)` MUST call Ollama's `/api/embed` at `OLLAMA_URL` with model `bge-m3` and return a list of 1024 floats. It MUST retry transient failures (connection errors, timeouts, 5xx) up to 2 times and then raise `EmbeddingProviderError`. `MODEL_VERSION` MUST be `"bge-m3"`, so every vector produced by the stub is considered stale.
+`generar_vector(texto, *, timeout, reintentos)` MUST call Ollama's `/api/embed` at `OLLAMA_URL` with model `bge-m3` and return a list of 1024 floats. It MUST retry transient failures (connection errors, timeouts, 5xx) up to `reintentos` times and then raise `EmbeddingProviderError`. The backfill MUST use 10 s and 2 retries; a chat query (`buscar_semantico`) MUST use 3 s and no retry, so a hung Ollama costs a chat turn at most 3 s. `MODEL_VERSION` MUST be `"bge-m3"`, so every vector produced by the stub is considered stale.
 
 #### Scenario: Successful embedding
 
@@ -17,12 +17,18 @@ Conceptual search over the local catalog («algo melancólico sobre viajes en el
 - THEN it returns that vector
 - AND the request asked for model `bge-m3` with a `keep_alive`
 
-#### Scenario: Ollama down
+#### Scenario: Ollama down during the backfill
 
 - GIVEN Ollama refuses the connection three times
-- WHEN `generar_vector` runs
-- THEN it raises `EmbeddingProviderError`
+- WHEN the backfill calls `generar_vector`
+- THEN it tried three times and raises `EmbeddingProviderError`
 - AND the embedding row is marked `failed`, as the backfill already handles
+
+#### Scenario: Ollama hung during a chat query
+
+- GIVEN Ollama accepts the connection and never answers
+- WHEN `buscar_semantico` embeds the query
+- THEN it gives up after 3 s, without retrying, and raises `EmbeddingProviderError`
 
 #### Scenario: Unexpected dimension
 
