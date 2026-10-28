@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — Doc 03 al día: Usuario–Chat, mockups, `Mensaje.texto` y `Mensaje.tarjetas` en los diagramas
+
+- **Fecha**: 28/10/2026
+- **Descripción**: Marcos pidió cerrar los pendientes de documentación del inventario del 28/10/2026.
+  - **Usuario–Chat:** el doc 03 decía «un usuario puede tener varios chats» en dos lugares y, en otro, que el MVP tiene uno solo. Ahora las dos descripciones de la relación dicen lo mismo: el modelo es 1..* (clases) y 1:N (tablas), y el MVP lo limita a uno con la restricción de unicidad sobre `Chat.usuario` (B-01). No cambia el código ni el diagrama.
+  - **Nota de mockups:** decía que las maquetas estaban «previstas para la entrega final». Se reescribió: la validación del modelo se hizo durante la implementación, con las pantallas del doc 04, y ahí se ajustó (`pais`, `orden`, `fechaEnriquecimiento`, sinopsis de 2000 caracteres, `tarjetas`).
+  - **`Mensaje.texto`:** el `help_text` del modelo todavía citaba VARCHAR(250) como lo que indica el diagrama, cuando el doc 03 ya dice TEXT. Se corrigió el texto. Cambiar un `help_text` genera una migración (`chatbot/0004_mensaje_texto_ayuda`) sin efecto en la base: solo actualiza el estado de Django. `makemigrations --check` queda sin cambios pendientes en todo el proyecto.
+  - **Diagramas:** `03_DiagramaClases_DiagramaTablas.json` suma `tarjetas` a `Mensaje` (clases: `List<Map> [0..3]`; tablas: `JSONB`), que el doc 03 ya describía y le faltaba al gráfico. La imagen no se puede regenerar desde el repositorio (no hay renderizador): hay que volver a exportarla con la herramienta de diagramas que lee ese JSON. Las notas del doc 03 lo dicen.
+  - **`frontend/messages/*/common.d.json.ts`:** no estaban desfasados. Next-intl los regenera al correr `next dev`; se corrió y quedaron idénticos a lo versionado (la edición a mano del frente de F10 coincidía con el generador). Se retira el pendiente.
+  - **Sin cambios de comportamiento.** `Mensaje.tarjetas` sigue sin migración: llega con el chatbot.
+- **Archivos afectados**: `docs/03_Modelos de Datos y de Diseño.md`, `docs/03_DiagramaClases_DiagramaTablas.json`, `backend/chatbot/models.py`, `backend/chatbot/migrations/0004_mensaje_texto_ayuda.py`, `docs/decisiones.md`.
+- **Tests**: la suite del backend completa y `makemigrations --check`.
+
+---
+
 ## 28/10/2026 — Tanda de seguridad baja y media: índice y decisiones de la integración
 
 - **Fecha**: 28/10/2026

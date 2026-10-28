@@ -26,7 +26,7 @@
 
 #### 2.1 Modelo 1: Gráfico
 
-> **Nota:** El Diagrama de Clases se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases"). El JSON se actualizó el 18/10/2026 con `Usuario.pais`, `Lista.orden` y `ProduccionAudiovisual.fechaEnriquecimiento`, y sin `Usuario.tema`. El repositorio no incluye un script ni un renderizador: la imagen se vuelve a generar con la herramienta de diagramas que lee ese formato, y hasta entonces el JSON es la fuente de verdad.
+> **Nota:** El Diagrama de Clases se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases"). El JSON se actualizó el 18/10/2026 con `Usuario.pais`, `Lista.orden` y `ProduccionAudiovisual.fechaEnriquecimiento`, y sin `Usuario.tema`; el 28/10/2026 se sumó `Mensaje.tarjetas` (diagrama de tablas: `tarjetas JSONB`), todavía sin migración. El repositorio no incluye un script ni un renderizador: la imagen se vuelve a generar con la herramienta de diagramas que lee ese formato, y hasta entonces el JSON es la fuente de verdad.
 
 #### 2.2 Modelo 1: Descripción y justificación de elementos más importantes
 
@@ -34,7 +34,7 @@
 
 - **Usuario (entidad unificada):** Las entidades Persona, Usuario y Administrador se unificaron en una única entidad `Usuario`, que es el modelo de usuario de Django (`AUTH_USER_MODEL`). El rol administrador se gestiona a través del Django Admin nativo (flags `is_staff`/`is_superuser`) y no mediante una entidad separada. Ver `docs/decisiones.md`.
 
-- **Usuario - Chat:** La cardinalidad se justifica en que un usuario pueda realizar consultas en diversos chats, permitiendo separar temas de conversación. Esta funcionalidad está sujeta a viabilidad y análisis del alcance del proyecto.
+- **Usuario - Chat:** La cardinalidad del modelo es 1..* porque un usuario podría realizar consultas en diversos chats, separando temas de conversación. En el MVP se implementa un único chat por usuario (restricción de unicidad sobre `Chat.usuario`, B-01); los chats múltiples son una mejora futura (ver «Chats múltiples» más abajo).
 
 - **Chat - Mensaje:** La cardinalidad establecida indica que un chat puede existir con o sin mensajes (B-01: al crear la cuenta se genera automáticamente un chat por defecto con `contexto` inicial; implementado en `usuarios/signals.py`). Los mensajes se van persistiendo conforme el usuario y el chatbot intercambian respuestas. La relación se modela como composición porque un mensaje no puede existir sin un chat asociado sobre el cual fue enviado. (Actualizado 08/09/2026: el texto anterior describía persistencia del chat "al primer mensaje"; la implementación acordada crea el chat al registrar el usuario.)
 
@@ -52,7 +52,7 @@
 
 **Observaciones:**
 
-Se considera que hubiera sido conveniente para la especificación de los métodos haber realizado mockups (maquetas) con el objetivo de prever y evaluar de forma anticipada el ciclo de las relaciones y cómo estas pueden modificar los atributos internos de las entidades. Por cuestiones de tiempo no fue posible realizarlo, aunque está previsto para la entrega final. Además, esto hubiera permitido analizar al detalle los atributos de las entidades en sí y agregar o eliminar según cada caso (por ejemplo, en la clase Producción Audiovisual).
+La especificación de los métodos se pensó originalmente para validarse con mockups (maquetas) que permitieran evaluar de forma anticipada el ciclo de las relaciones y cómo estas pueden modificar los atributos internos de las entidades. Esa validación terminó haciéndose durante la implementación: las pantallas se diseñaron y construyeron después (ver el documento 04) y, al hacerlo, el modelo se ajustó donde hizo falta (por ejemplo, `pais` y sin `tema` en Usuario, `orden` en Lista, `fechaEnriquecimiento` y la sinopsis de 2000 caracteres en Producción Audiovisual, `tarjetas` en Mensaje). Los cambios están anotados en la sección de cambios al modelo y en `docs/decisiones.md`.
 
 Se descartó la herencia entre Producción Audiovisual, Película y Serie porque no existe comportamiento diferenciado que justifique la creación de subclases. Además, los IDs de TMDB no garantizan unicidad entre películas y series, lo que volvería más complejo el manejo de claves y referencias. Debido a esto, se unificaron ambos tipos en una única entidad con un atributo "tipo" que permite un diseño más simple.
 
@@ -65,7 +65,7 @@ El desarrollo se fundamenta en una arquitectura MVC (Model-View-Controller) apoy
 
 **Sincronización con TMDB:** La actualización del catálogo se realiza mediante tareas Celery (beat diario a las 3 AM, ejecutadas por workers) en horario de baja actividad. Este proceso sincroniza los metadatos completos (título, póster, sinopsis, reparto, directores, géneros, calificación promedio, duración, temporadas y episodios) de las producciones populares, en tendencia y novedades desde TMDB hacia la tabla ProduccionAudiovisual, y encola la generación de embeddings de las producciones nuevas o modificadas. La sincronización respeta los límites de uso de la API de TMDB y utiliza mecanismos de caché para evitar solicitudes duplicadas (CU-021). Es un mecanismo de mantenimiento/seed, no un prerrequisito del discovery, que se sirve en vivo desde TMDB con caché Redis (decisión 25/08/2026).
 
-**Chats múltiples:** El modelo de clases contempla la posibilidad de chats múltiples por usuario (1..*), pero en la versión inicial (MVP) solo se implementa un chat por usuario, garantizado por una restricción de unicidad sobre `Chat.usuario`. La funcionalidad de chats múltiples queda documentada como mejora futura y requerirá reemplazar esa restricción mediante una migración.
+**Chats múltiples:** El modelo de clases contempla la posibilidad de chats múltiples por usuario (1..* en el diagrama de clases, 1:N en el de tablas), pero en la versión inicial (MVP) solo se implementa un chat por usuario, garantizado por una restricción de unicidad sobre `Chat.usuario`. La funcionalidad de chats múltiples queda documentada como mejora futura y requerirá reemplazar esa restricción mediante una migración.
 
 En la entidad Mensaje, el atributo autor permite distinguir si el mensaje proviene del usuario o del chatbot, sin necesidad de crear una segunda entidad para manejar los roles dentro del chat.
 
@@ -75,7 +75,7 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 #### 3.1 Modelo 2: Gráfico
 
-> **Nota:** El Diagrama de Tablas se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas"), actualizado el 18/10/2026 con `pais` y sin `tema` en `Usuario`, `orden` en `Lista` y `fechaEnriquecimiento` en `ProduccionAudiovisual`. Ver la nota del Modelo 1 sobre la regeneración de la imagen.
+> **Nota:** El Diagrama de Tablas se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas"), actualizado el 18/10/2026 con `pais` y sin `tema` en `Usuario`, `orden` en `Lista` y `fechaEnriquecimiento` en `ProduccionAudiovisual`, y desde el 28/10/2026 `tarjetas` en `Mensaje`. Ver la nota del Modelo 1 sobre la regeneración de la imagen.
 
 #### 3.2 Modelo 2: Descripción y justificación de elementos más importantes
 
@@ -106,7 +106,7 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
   una clave nula durante la transición. Nombres reservados y su contrato
   exportado se completan en la segunda entrega de OT-41.
 
-- **Usuario - Chat:** Chat también tiene una FK idUsuario, lo que muestra que cada chat es creado por un usuario en particular. Un usuario puede tener varios chats distintos.
+- **Usuario - Chat:** Chat también tiene una FK idUsuario, lo que muestra que cada chat es creado por un usuario en particular. El modelo permite varios chats por usuario (1:N); en el MVP la restricción de unicidad sobre `Chat.usuario` deja uno solo (ver «Chats múltiples»).
 
 - **Chat - Mensaje:** Mensaje contiene una FK idChat, de modo que todos los mensajes pertenecen a un chat específico. Un chat puede tener muchos mensajes, pero cada mensaje se guarda siempre dentro de un único chat.
 

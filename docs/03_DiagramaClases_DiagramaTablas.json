@@ -46,7 +46,7 @@
           "id": "cls-mensaje",
           "type": "node",
           "parent": "1",
-          "label": "Mensaje\n+ idMensaje: Integer\n+ texto: String\n+ autor: TipoAutor\n+ fechaHora: DateTime\n+ esDelUsuario(): Bool"
+          "label": "Mensaje\n+ idMensaje: Integer\n+ texto: String\n+ tarjetas: List<Map> [0..3]\n+ autor: TipoAutor\n+ fechaHora: DateTime\n+ esDelUsuario(): Bool"
         },
         {
           "id": "enum-estado",
@@ -287,7 +287,7 @@
           "id": "tbl-mensaje",
           "type": "node",
           "parent": "1",
-          "label": "Mensaje\nPK  idMensaje INTEGER\n    texto TEXT\n    autor VARCHAR(25)\n    fechaHora TIMESTAMP\nFK  idChat INTEGER"
+          "label": "Mensaje\nPK  idMensaje INTEGER\n    texto TEXT\n    tarjetas JSONB\n    autor VARCHAR(25)\n    fechaHora TIMESTAMP\nFK  idChat INTEGER"
         },
         {
           "id": "tbl-embedding",
