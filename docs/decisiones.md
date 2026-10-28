@@ -4990,3 +4990,11 @@ Insumos: `filmai/idioma.py` (`idioma_efectivo`), `catalogo/services/idioma_tmdb.
 - **Skills para Claude Code**: `.claude/skills` pasa a ser un enlace simbólico versionado a `../.agents/skills` (antes estaba en `.gitignore`), porque el equipo trabaja en Linux/WSL. `skills-lock.json` se queda en la raíz: la herramienta `npx skills` lo busca ahí.
 - **Archivos afectados**: `traducciones/` (movida desde `docs/i18n/`), `frontend/scripts/i18n/generate.py`, `frontend/app/{layout.tsx,profile/layout.tsx,settings/layout.tsx,settings/page.tsx,confirm-email/[key]/page.tsx,reset-password/[uid]/[token]/page.tsx}`, `frontend/messages/`, `frontend/i18n/enums.json` (solo formato), `frontend/tests/{i18n-catalogs,i18n-metadata,i18n-render,profile}.test.*`, `frontend/e2e/{i18n-flows,i18n-locale,preferencias,hotfix-perfil}.spec.ts`, `backend/listas/test_reservados.py`, `docker-compose.yml`, `.gitignore`, `.claude/skills`, `AGENTS.md`, `README.md`, docs 02 y 04, specs `i18n-core` y `emails`.
 - **Verificación**: Vitest 375 tests, Django 873 tests, Ruff, ESLint, Prettier, `generate.py --check`, `npm run i18n:check` y `next build` sin errores. Playwright: de 4 specs afectadas, 16 recorridos pasaron y 3 de `i18n-flows` fallaron una vez con los 4 specs en paralelo (timeouts por compilación bajo demanda) y pasaron al repetirlos de a uno.
+
+## 28/10/2026 — Buscar: medición de la latencia (sin arreglo)
+
+- **Fecha**: 28/10/2026
+- **Descripción**: se midió con `curl` contra el backend local (una máquina, TMDB real). Con la caché de Redis en frío, `browse/` tarda entre 200 y 655 ms y `search/` entre 220 y 580 ms; repetido, ambos bajan a 18-25 ms. Las páginas nuevas de `browse/` (2 y 3) tardaron 216 y 298 ms. El máximo medido fue 655 ms, no los ~900 ms del 22/10. La variación entre 250 y 900 ms se explica por el acierto o fallo de la caché y por la latencia de TMDB en el fallo, no por el render ni por la base. No se cambió código; si se quiere bajar el fallo, las opciones son precalentar `browse/` en la sync nocturna o subir el TTL de la caché. Pendiente decidir si hace falta.
+- **Archivos afectados**: ninguno de código.
+
+---
