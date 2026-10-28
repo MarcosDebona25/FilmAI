@@ -36,6 +36,8 @@ for (const locale of ["en", "es"] as const) {
     // Rellenar antes de hidratar pierde campos (dev server en frío), y
     // `networkidle` no alcanza para evitarlo. «Disponible» solo aparece con la
     // página hidratada: se reintenta hasta verlo, reponiendo lo que se perdió.
+    // Las aserciones de adentro llevan timeout corto: `timeout: 0` en Playwright
+    // es «sin límite», y una espera sin límite impide que `toPass` reintente.
     await expect(async () => {
       for (const [name, value] of Object.entries(campos)) {
         const campo = page.locator(`[name="${name}"]`);
@@ -45,7 +47,7 @@ for (const locale of ["en", "es"] as const) {
         page.getByText(messages.auth.signUp.usernameAvailable, { exact: true })
       ).toBeVisible({ timeout: 2_000 });
       for (const [name, value] of Object.entries(campos))
-        await expect(page.locator(`[name="${name}"]`)).toHaveValue(value, { timeout: 0 });
+        await expect(page.locator(`[name="${name}"]`)).toHaveValue(value, { timeout: 1_000 });
     }).toPass({ timeout: 20_000 });
     await page.locator('select[name="pais"]').selectOption("BR");
     await page.locator('select[name="genero"]').selectOption("no_especifica");
