@@ -17,6 +17,13 @@ Both `POST` and `GET /api/chat/messages/` MUST require a session. Without one th
 - THEN the response is 401 with `code: "not_authenticated"`
 - AND nothing is streamed or stored
 
+#### Scenario: Deactivated account with a live cookie
+
+- GIVEN an account that was deactivated while its JWT cookie is still valid
+- WHEN it POSTs a message
+- THEN the response is 403 with `code: "account_deactivated"`, as in the rest of the API
+- AND nothing is streamed or stored
+
 #### Scenario: Missing CSRF header
 
 - GIVEN a valid session cookie and no `X-CSRFToken`
@@ -50,6 +57,7 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 #### Scenario: A late release does not free someone else's lock
 
 - GIVEN request A's lock expired and request B now holds it
+- (and, symmetrically, a disconnect during A's save does not free A's lock until that save finished)
 - WHEN request A finally ends and runs its release
 - THEN B's lock is still in place and a third message gets 409
 
