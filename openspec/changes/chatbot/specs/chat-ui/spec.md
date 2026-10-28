@@ -24,7 +24,7 @@ The chat state MUST live in a provider in the root layout so it survives navigat
 
 ### Requirement: Streaming answer with cancel
 
-While an answer streams the panel MUST show the status from `estado` codes, append `texto` deltas in order, render `tarjetas` when they arrive, and turn the send button into «Cancelar». The input MUST stay editable as a draft but MUST NOT send. Cancelling MUST abort the request, show «Solicitud cancelada» and re-enable sending; an answer completing at the same instant MUST be discarded (CU-014 2.A).
+While an answer streams the panel MUST show the status from `estado` codes, append `texto` deltas in order, render `tarjetas` when they arrive, and turn the send button into «Cancelar». The input MUST stay editable as a draft but MUST NOT send. Cancelling MUST abort the request, show «Solicitud cancelada» and re-enable sending. The panel MUST arbitrate by the order in which it processes events: a cancel processed before `fin` MUST discard the answer even if it was complete (CU-014 2.A); after `fin` is processed the turn is over and the button MUST be «Enviar» again. A discarded answer that the server had already saved MAY reappear in the history (CU-014, failure postcondition).
 
 #### Scenario: Cancel
 
@@ -34,11 +34,18 @@ While an answer streams the panel MUST show the status from `estado` codes, appe
 - AND the partial answer is removed and «Solicitud cancelada» is shown
 - AND the question stays in the input to retry
 
-#### Scenario: Cancel arrives after `fin`
+#### Scenario: Cancel processed before `fin` (CU-014 2.A)
 
-- GIVEN the `fin` event was already received
-- WHEN the user presses «Cancelar» in the same instant
-- THEN the cancel is ignored and the answer is shown as saved
+- GIVEN the last `texto` arrived and `fin` is in flight
+- WHEN the panel processes the click on «Cancelar» first
+- THEN the answer is discarded and «Solicitud cancelada» is shown
+- AND if the server had saved it, it appears in the history the next time it loads
+
+#### Scenario: `fin` processed first
+
+- GIVEN the panel processed `fin`
+- WHEN the user's click lands an instant later
+- THEN the button already reads «Enviar», nothing is cancelled and the answer stays
 
 #### Scenario: `error` after some text
 

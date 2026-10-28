@@ -73,10 +73,10 @@ sequenceDiagram
             O-->>F: event: texto {delta}
         end
     end
+    O->>DB: save user message + answer + cards together (atomic)
     O-->>F: event: tarjetas [≤ 3 validated cards]
-    O->>DB: save user message + answer together (atomic)
     O-->>F: event: fin {id, id_pregunta}
-    Note over F,V: Cancel = the browser aborts the fetch. Django sees the<br/>disconnect, cancels the generator, nothing is saved.
+    Note over F,V: Cancel = the browser aborts the fetch. Django sees the<br/>disconnect, cancels the generator; before the save, nothing is stored.
 ```
 
 ## The SSE contract
@@ -96,7 +96,7 @@ data: <one line of JSON>
 |---|---|---|
 | `estado` | `{"code": "searching"}` | A tool starts running. The front translates the code («Buscando en el catálogo…»). |
 | `texto` | `{"delta": "..."}` | A piece of the answer. The front appends deltas in order. |
-| `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio"}]}` | Once, just before `fin`, possibly empty. `tipo` is `movie` or `tv`, as in the reviews API. |
+| `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio"}]}` | Once, **after the save** and just before `fin`, possibly empty. `tipo` is `movie` or `tv`, as in the reviews API. A save failure yields `error` with no cards ever sent. |
 | `fin` | `{"id": <answer pk>, "id_pregunta": <user message pk>}` | The pair was saved. The only success terminator. |
 | `error` | `{"code", "params", "errors"}` | Terminal. Nothing was saved. |
 
@@ -135,9 +135,9 @@ its own message, adding a code is additive.
 | A plain async Django view for the `POST` | DRF | DRF views are sync; streaming from them pins a thread for the whole answer. The `GET` stays DRF. |
 | Auth with `JWTCookieAuthentication` and the CSRF check DRF uses (`CSRFCheck`), called from the async view through the bridge | Rely on `CsrfViewMiddleware` | The middleware works, but its failure is Django's HTML 403 page. Running the same check by hand gives the `permission_denied` envelope like every other endpoint. The view is `csrf_exempt` for that reason only. |
 | `daphne` in `INSTALLED_APPS` for development; uvicorn in production | `channels` | `daphne` replaces `runserver` with an ASGI one and nothing else. No websockets are needed: SSE is plain HTTP. |
-| Lock "one in flight" = `cache.add(f"chat:{id}:en_curso", 1, timeout=30)`, released in `finally` | A DB row lock | `cache.add` is atomic in Redis, and the 30 s expiry frees the lock if the process dies. In development the cache is `LocMemCache`, per process — correct with a single dev server. |
+| Lock "one in flight" = `cache.add(f"chat:{id}:en_curso", <random token>, timeout=60)`, released in `finally` **only if the stored value is still this request's token** | A DB row lock; a fixed value released unconditionally | `cache.add` is atomic in Redis, and the expiry frees the lock if the process dies. The whole turn runs inside `asyncio.timeout(LLM_TIMEOUT_SECONDS)` (25 s, wall clock, tools included), so a live turn always ends well before the 60 s expiry; the token keeps a late `finally` from deleting a lock that already belongs to another request. In development the cache is `LocMemCache`, per process — correct with a single dev server. |
 | Hourly limit = a fixed-window counter in the cache (`incr`), like `presupuesto.py` | DRF `UserRateThrottle` | The view is not DRF. Same mechanism already used and tested for TMDB. Counts only messages that passed validation. |
-| Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: a cancel before the save unwinds the loop and nothing is persisted. A test with `AsyncClient` pins it. **The window after the save**: the pair is committed just before `fin` is written, so a cancel in that instant leaves it saved while the panel shows «Solicitud cancelada». That is CU-014's failure postcondition («la cancelación no se procesa a tiempo») and was accepted on 08/10: the answer appears in the history the next time it loads. Rule for the front: once `fin` arrived, the cancel came too late and the answer is shown. |
+| Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: a cancel before the save unwinds the loop and nothing is persisted. A test with `AsyncClient` pins it. **The window after the save**: the pair is committed just before `fin` is written, so a cancel in that instant leaves it saved while the panel shows «Solicitud cancelada». That is CU-014's failure postcondition («la cancelación no se procesa a tiempo») and was accepted on 08/10: the answer appears in the history the next time it loads. Rule for the front: whichever the panel processes first wins. A click on «Cancelar» processed before `fin` aborts and discards the answer (CU-014 2.A); once `fin` is processed the turn is over and the button is «Enviar» again, so there is nothing left to cancel. |
 | Save user message and answer **together**, after the last token | Save the question on arrival | A failed or cancelled turn leaves no orphan question (08/10/2026). The front keeps the draft to retry. |
 | Tool results drop «Vistas» **and** `mostrar_tarjetas` validates | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
 | `mostrar_tarjetas` keeps only ids returned by a tool in this turn, cuts to 3 | Trust the model's ids | Anchoring: no invented titles reach a card. Invalid ids are dropped silently (09/10). |
@@ -177,8 +177,10 @@ A tool exception never ends the turn: the model receives
 ## Semantic search (B-06)
 
 - `generar_vector(texto)` → `httpx.post(f"{OLLAMA_URL}/api/embed", json={"model":
-  "bge-m3", "input": texto, "keep_alive": "30m"})`, timeout 10 s, 2 retries,
-  raises `EmbeddingProviderError` (exists). `MODEL_VERSION = "bge-m3"`: every
+  "bge-m3", "input": texto, "keep_alive": "30m"})`, raises
+  `EmbeddingProviderError` (exists). Two budgets: the backfill uses 10 s and 2
+  retries; a chat query uses 3 s and no retry (warm queries take ~60 ms, a cold
+  load ~1.9 s), so a hung Ollama costs the turn at most 3 s. `MODEL_VERSION = "bge-m3"`: every
   stub-era row becomes stale and the backfill regenerates it.
 - `buscar_semantico(consulta, filtros)` → embed the query, cosine distance over
   `estado = ready` with the HNSW index, overfetch 50, apply the SQL filters,
@@ -207,8 +209,8 @@ Favoritos: Interstellar, Arrival                                            ← 
 `anonimizar(texto, usuario)` replaces the user's `nombre`, `apellido`,
 `correo` and `nombre_usuario` (case- and accent-insensitive, whole words) with
 `[usuario]` in everything outbound: the profile, the review excerpts, the
-history **and the current message**. Any other email address in the current
-message or the history becomes `[correo]`. The original text is what gets
+history **and the current message**. Every email address, the user's own
+included, becomes `[correo]`; name, last name and username become `[usuario]`. The original text is what gets
 stored and shown; only the copy sent to the provider is anonymized. The model
 receives no name at all (28/10/2026); the greeting with the name is drawn by
 the front. Other personal data a user volunteers (a phone, an address) cannot
