@@ -31,7 +31,8 @@
       the vector (`httpx.MockTransport`)
 - [ ] 1.2 RED: 3 connection failures → `EmbeddingProviderError`; a 768-float
       vector → `EmbeddingProviderError`
-- [ ] 1.3 GREEN: `generar_vector` with `httpx`, 10 s timeout, 2 retries;
+- [ ] 1.3 GREEN: `generar_vector` with `httpx`; backfill budget 10 s and 2
+      retries, chat-query budget 3 s and no retry;
       `MODEL_VERSION = "bge-m3"`; `OLLAMA_URL` in settings
 - [ ] 1.4 RED: `buscar_semantico` returns the nearest `ready` rows in order,
       skips `pending`/`failed`, applies each filter, honours `excluir`, caps
@@ -66,9 +67,9 @@
       `servicio_localizado`, `vistos()` and the TMDB budget
 - [ ] 2.8 RED `chatbot/tests_contexto.py`: liked/disliked/watched/favorites
       with their caps and excerpt length; a changed rating moves sections
-- [ ] 2.9 RED: `anonimizar` replaces name, last name, email and username,
-      case- and accent-insensitive, whole words only, and any email address
-      with `[correo]`
+- [ ] 2.9 RED: `anonimizar` replaces name, last name and username with
+      `[usuario]` (case- and accent-insensitive, whole words only) and every
+      email address, the user's own included, with `[correo]`
 - [ ] 2.10 GREEN: `contexto.py`, `anonimizar.py`
 
 ## Phase 3: Provider and orchestrator (PR 3) — first async code
@@ -123,7 +124,10 @@
 - [ ] 5.5 RED: a full turn yields the event sequence and stores the pair on
       `fin`; provider failure yields `error` and stores nothing
 - [ ] 5.6 RED: closing the response mid-stream stores nothing and frees the
-      lock
+      lock; a save failure sends `error` and no `tarjetas`
+- [ ] 5.6b RED: lock with a per-request token — an expired request's late
+      release leaves the next request's lock; a slow tool hits the 25 s turn
+      timeout and the lock is released
 - [ ] 5.7 GREEN: `views.py :: enviar_mensaje`, lock, hourly counter,
       `idioma_efectivo` once, `contar_llamadas` for the turn
 - [ ] 5.8 `contracts/sse-chat.md`; OpenAPI entry for the `POST` with its
@@ -143,7 +147,8 @@
 - [ ] 6.4 GREEN: `lib/chat.ts`, `ChatProvider`, `ChatFab`, `ChatPanel`,
       `ChatBubble`, `ChatTarjetas`, `ChatInput` following the canvas
 - [ ] 6.5 RED/GREEN: cancel keeps the draft and shows «Solicitud cancelada»;
-      a cancel after `fin` is ignored; an `error` after some deltas removes
+      both orders of «Cancelar» vs `fin` (whichever is processed first
+      wins); an `error` after some deltas removes
       the partial answer, shows the translated code and keeps the draft
 - [ ] 6.6 Explain: reading a stream in the browser, `AbortController`, why
       the provider sits in the layout

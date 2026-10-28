@@ -44,8 +44,20 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 #### Scenario: Lock released after a crash
 
 - GIVEN a request that died without releasing the lock
-- WHEN 30 seconds have passed
+- WHEN 60 seconds have passed
 - THEN a new message is accepted
+
+#### Scenario: A late release does not free someone else's lock
+
+- GIVEN request A's lock expired and request B now holds it
+- WHEN request A finally ends and runs its release
+- THEN B's lock is still in place and a third message gets 409
+
+#### Scenario: A hung tool does not outlive the turn
+
+- GIVEN Ollama stops answering during `buscar_semantico`
+- WHEN the turn reaches `LLM_TIMEOUT_SECONDS`
+- THEN the stream ends with `error` and the lock is released
 
 ### Requirement: The answer streams as server-sent events
 
@@ -92,7 +104,7 @@ The user message and the bot answer MUST be saved in one transaction only after 
 
 ### Requirement: Cards come only from this turn's tools and never from «Vistas»
 
-`mostrar_tarjetas` MUST keep only `(id_tmdb, tipo)` pairs returned by a tool earlier in the same turn, drop those in the user's «Vistas», drop duplicates, and keep at most 3 across all its calls in the turn. Dropped cards MUST NOT raise an error. The `tarjetas` event MUST be emitted exactly once per successful turn, after the last `texto` and before `fin`, and never in a turn that ends in `error`. Every search tool MUST remove «Vistas» from its results before the model sees them.
+`mostrar_tarjetas` MUST keep only `(id_tmdb, tipo)` pairs returned by a tool earlier in the same turn, drop those in the user's «Vistas», drop duplicates, and keep at most 3 across all its calls in the turn. Dropped cards MUST NOT raise an error. The `tarjetas` event MUST be emitted exactly once per successful turn, after the last `texto` and after the save, immediately before `fin`, and never in a turn that ends in `error` (a failed save included). Every search tool MUST remove «Vistas» from its results before the model sees them.
 
 #### Scenario: Invented id
 
@@ -120,7 +132,7 @@ The profile, the review excerpts, the history and the current message MUST NOT c
 
 - GIVEN the user Juan Pérez writes «soy Juan, mi correo es juan@example.com, recomendame algo»
 - WHEN the message is sent to the provider
-- THEN the provider receives «soy [usuario], mi correo es [correo], recomendame algo»
+- THEN the provider receives «soy [usuario], mi correo es [correo], recomendame algo» (every email address, the user's own included, becomes `[correo]`)
 - AND the stored user message keeps the original text
 
 ### Requirement: The profile is fresh on every message
