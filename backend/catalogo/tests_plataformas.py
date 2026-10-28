@@ -118,6 +118,26 @@ class ServicioPlataformasTests(SimpleTestCase):
             plataformas(ServicioFalso(), "movie", 157336, "ES"), {**vacio, "pais": "ES"}
         )
 
+    def test_un_enlace_que_no_es_https_se_descarta(self):
+        # El enlace termina en un `href`: `javascript:` sería un XSS al hacer clic.
+        for link in (
+            "javascript:alert(document.cookie)",
+            " JavaScript:alert(1)",
+            "data:text/html,<script>alert(1)</script>",
+            "http://www.themoviedb.org/movie/157336/watch",
+            "//evil.example/watch",
+            42,
+        ):
+            with self.subTest(link=link):
+                respuesta = copy.deepcopy(RESPUESTA_TMDB)
+                respuesta["results"]["AR"]["link"] = link
+
+                datos = plataformas(ServicioFalso(respuesta), "movie", 157336, "AR")
+
+                self.assertIsNone(datos["enlace"])
+                # Las plataformas se siguen mostrando: solo se pierde el enlace.
+                self.assertEqual(datos["suscripcion"][0]["id"], 8)
+
     def test_respuesta_sin_results_no_falla(self):
         datos = plataformas(ServicioFalso({"id": 1}), "tv", 1, "AR")
 
