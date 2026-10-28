@@ -80,7 +80,7 @@ A valid `POST` MUST answer 200 with `Content-Type: text/event-stream` and a sequ
 
 ### Requirement: The question and the answer are stored together, at the end
 
-The user message and the bot answer MUST be saved in one transaction only after the last token, immediately before `fin`. A turn that fails, times out or is cancelled MUST leave no rows. `Mensaje.tarjetas` MUST store the cards exactly as streamed.
+The user message and the bot answer MUST be saved in one transaction only after the last token, immediately before `fin`. A turn that fails, times out or is cancelled **before the save starts** MUST leave no rows; once the save started, the transaction decides (see «Cancelled right after the save» and «The turn budget expires during the save»). `Mensaje.tarjetas` MUST store the cards exactly as streamed.
 
 #### Scenario: Cancelled mid-answer (CU-014)
 
@@ -127,7 +127,7 @@ The user message and the bot answer MUST be saved in one transaction only after 
 
 ### Requirement: Nothing that identifies the user reaches the provider
 
-The profile, the review excerpts, the history and the current message MUST NOT contain the user's first name, last name, email or username, nor any email address; any occurrence MUST be replaced in the copy sent to the provider (RNF #3, CU-018). The stored and displayed text MUST remain the original. The model MUST NOT be able to address data of another user: `mis_listas` MUST take no user argument and read only the authenticated user's lists.
+The profile, the review excerpts, the history, the current message and every tool result MUST NOT contain the user's first name, last name, email or username, nor any email address; any occurrence MUST be replaced in the copy sent to the provider (RNF #3, CU-018). The stored and displayed text MUST remain the original. The model MUST NOT be able to address data of another user: `mis_listas` MUST take no user argument, read only the authenticated user's lists, and address custom lists by `id`, not by name.
 
 #### Scenario: Name inside a review
 

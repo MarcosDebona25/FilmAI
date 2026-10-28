@@ -149,7 +149,7 @@ its own message, adding a code is additive.
 | Cards stored as shown, in the turn language, no FK | A `Tarjeta` model | 09/10/2026: history returns them as they were; no `materializar()` per card inside the RNF #6 budget. |
 | History sent to the model = last 10 messages, text only, cards appended as a line «[Tarjetas: Moon (2009), …]» | Send tool transcripts | Tool calls are not persisted; the line tells the model what it already showed. `Chat.contexto.ya_recomendados` keeps the last 30 cards as `{id_tmdb, tipo, titulo, anio}` and the system prompt renders them as titles («Ya recomendados: Moon (2009), …»): bare TMDB ids would mean nothing to the model. |
 | Profile by SQL on every message | Precompute into `Chat.contexto` | 08/10/2026. |
-| `deepseek-flash`, thinking **off** (`{"thinking": {"type": "disabled"}}`), `max_tokens` 800 | Thinking on | 28/10 test: 2.2 s to first text vs 2.8 s, and thinking + tools demands echoing `reasoning_content` every round. `LLM_THINKING` in `.env` turns it on for the golden-set comparison. |
+| `deepseek-flash`, thinking **off** (`{"thinking": {"type": "disabled"}}`), `max_tokens` 800 | Thinking on | 28/10 test: 2.2 s to first text vs 2.8 s, and thinking + tools demands echoing `reasoning_content` every round. `LLM_THINKING` in `.env` turns it on for the golden-set comparison; with it on, the provider echoes each round's `reasoning_content` back in the assistant message (DeepSeek answers 400 otherwise). |
 | Ollama `keep_alive: "30m"` on every call | Default 5 min / forever | Cold load measured at ~1.9 s; 30 min covers a session without pinning 1.24 GB forever. |
 
 ## Tools
@@ -168,7 +168,7 @@ synopsis cut at 300 characters, at most 10 items, «Vistas» removed.
 | `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then `discover` with `with_people` |
 | `detalle` | `id_tmdb`, `tipo` | `get_movie_detail` / `get_tv_detail` (exist) |
 | `buscar_semantico` | `consulta`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
-| `mis_listas` | `lista` (`vistas`, `pendientes`, `favoritos`, or a custom list name) | SQL scoped to `ctx.usuario`. The model never passes a user id. |
+| `mis_listas` | `lista?` (`vistas`, `pendientes`, `favoritos`, or the `id` of a custom list) | SQL scoped to `ctx.usuario`. The model never passes a user id. Without `lista` it returns the user's lists as `{id, nombre}`; the model then asks by `id`, never by name (the name the model sees is anonymized, so a lookup by name would fail). |
 | `mostrar_tarjetas` | `tarjetas[{id_tmdb, tipo}]` | Validation only: accumulates valid cards in the turn context (a second call adds, up to 3). The orchestrator emits **one** `tarjetas` event after the loop, just before `fin`, so cards never arrive before the final text nor belong to a turn that ends in `error`. |
 
 TMDB tools go through `servicio_localizado(idioma, get_catalog_service)`:
@@ -214,8 +214,9 @@ Favoritos: Interstellar, Arrival                                            ← 
 `anonimizar(texto, usuario)` replaces the user's `nombre`, `apellido` and
 `nombre_usuario` (case- and accent-insensitive, whole words) with `[usuario]`,
 and **every email address, the user's own included,** with `[correo]`, in
-everything outbound: the profile, the review excerpts, the history **and the
-current message**. The original text is what gets
+everything outbound: the profile, the review excerpts, the history, the
+current message **and every tool result** (a custom list called «Cumple de
+Juan Pérez» reaches the model as «Cumple de [usuario]»). The original text is what gets
 stored and shown; only the copy sent to the provider is anonymized. The model
 receives no name at all (28/10/2026); the greeting with the name is drawn by
 the front. Other personal data a user volunteers (a phone, an address) cannot
