@@ -1,7 +1,7 @@
 # Graph Report - FilmAI  (2026-10-31)
 
 ## Corpus Check
-- 658 files · ~679,501 words
+- 658 files · ~679,981 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `466cd70a`
+- Built from commit: `4a11f7bc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -869,7 +869,7 @@ Nodes (17): F-01: Docker + docker-compose, F-02: Scaffold Django + DRF, F-05: Se
 
 ### Community 172 - "Requirements"
 Cohesion: 0.05
-Nodes (37): chat-api Specification, Purpose, Requirement: Bounded turn, Requirement: Cards come only from this turn's tools and never from «Vistas», Requirement: History, Requirement: Language of the turn and of the prose, Requirement: Nothing that identifies the user reaches the provider, Requirement: Only an authenticated, active user chats (+29 more)
+Nodes (37): chat-api Specification, Purpose, Requirement: Bounded turn, Requirement: Cards come only from this turn's tools and never from «Vistas», Requirement: History, Requirement: Language of the turn and of the prose, Requirement: No full name, username or email reaches the provider, Requirement: Only an authenticated, active user chats (+29 more)
 
 ### Community 173 - "FilmAI (idea-proyecto)"
 Cohesion: 0.50
@@ -1369,9 +1369,9 @@ Nodes (3): AD-01': Configurar Django Admin, Módulo 6 — Admin nativo de Django
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AppConfig` connect `AppConfig` to `format.ts`?**
-  _High betweenness centrality (0.201) - this node is a cross-community bridge._
+  _High betweenness centrality (0.199) - this node is a cross-community bridge._
 - **Why does `AppLocale` connect `format.ts` to `@playwright/test`, `AppConfig`, `listas.spec.ts`, `AccountProvider.tsx`, `vitest`, `apiFetch`?**
-  _High betweenness centrality (0.180) - this node is a cross-community bridge._
+  _High betweenness centrality (0.178) - this node is a cross-community bridge._
 - **Are the 94 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 94 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 55 inferred relationships involving `Usuario` (e.g. with `UsuarioAdminTests` and `_buscar_usuario()`) actually correct?**

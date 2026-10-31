@@ -224,8 +224,9 @@ because Mark must be able to ask for a Mark Ruffalo film. In both scopes
 **every email address, the user's own included,** becomes `[correo]`. Catalog
 results from TMDB are not the user's data and are not anonymized: «[usuario]
 Scorsese» would only corrupt them. The original text is what gets
-stored and shown; only the copy sent to the provider is anonymized. The model
-receives no name at all (28/10/2026); the greeting with the name is drawn by
+stored and shown; only the copy sent to the provider is anonymized. The app
+never hands the model the user's name: the only way one reaches it is a loose
+name the user wrote; the greeting with the name is drawn by
 the front. Other personal data a user volunteers (a phone, an address) cannot
 be detected reliably; the panel's footer asks not to share personal data.
 

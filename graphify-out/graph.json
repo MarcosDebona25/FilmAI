@@ -48874,14 +48874,14 @@
       "source_location": "L171"
     },
     {
-      "id": "openspec_changes_chatbot_specs_chat_api_spec_requirement_nothing_that_identifies_the_user_reaches_the_provider",
-      "label": "Requirement: Nothing that identifies the user reaches the provider",
+      "id": "openspec_changes_chatbot_specs_chat_api_spec_requirement_no_full_name_username_or_email_reaches_the_provider",
+      "label": "Requirement: No full name, username or email reaches the provider",
       "_origin": "ast",
       "community": 172,
       "community_name": "Requirements",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "requirement: nothing that identifies the user reaches the provider",
+      "norm_label": "requirement: no full name, username or email reaches the provider",
       "source_file": "openspec/changes/chatbot/specs/chat-api/spec.md",
       "source_location": "L137"
     },
@@ -57521,7 +57521,7 @@
       "node_kind": "heading",
       "norm_label": "configuration",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L283"
+      "source_location": "L284"
     },
     {
       "id": "openspec_changes_chatbot_design_design_recommendation_chatbot_module_5",
@@ -57557,7 +57557,7 @@
       "node_kind": "heading",
       "norm_label": "frontend (b-04)",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L250"
+      "source_location": "L251"
     },
     {
       "id": "openspec_changes_chatbot_design_personal_context_and_anonymization_b_05",
@@ -57605,7 +57605,7 @@
       "node_kind": "heading",
       "norm_label": "testing strategy",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L292"
+      "source_location": "L293"
     },
     {
       "id": "openspec_changes_chatbot_design_the_one_async_rule",
@@ -57629,7 +57629,7 @@
       "node_kind": "heading",
       "norm_label": "the prompt",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L232"
+      "source_location": "L233"
     },
     {
       "id": "openspec_changes_chatbot_design_the_sse_contract",
@@ -200886,7 +200886,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L232",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -200897,7 +200897,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L250",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -200908,7 +200908,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L283",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -200919,7 +200919,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L292",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -201143,7 +201143,7 @@
       "weight": 1.0
     },
     {
-      "source": "openspec_changes_chatbot_specs_chat_api_spec_requirement_nothing_that_identifies_the_user_reaches_the_provider",
+      "source": "openspec_changes_chatbot_specs_chat_api_spec_requirement_no_full_name_username_or_email_reaches_the_provider",
       "target": "openspec_changes_chatbot_specs_chat_api_spec_scenario_name_inside_a_review",
       "relation": "contains",
       "_origin": "ast",
@@ -201154,7 +201154,7 @@
       "weight": 1.0
     },
     {
-      "source": "openspec_changes_chatbot_specs_chat_api_spec_requirement_nothing_that_identifies_the_user_reaches_the_provider",
+      "source": "openspec_changes_chatbot_specs_chat_api_spec_requirement_no_full_name_username_or_email_reaches_the_provider",
       "target": "openspec_changes_chatbot_specs_chat_api_spec_scenario_personal_data_in_the_current_message",
       "relation": "contains",
       "_origin": "ast",
@@ -201165,7 +201165,7 @@
       "weight": 1.0
     },
     {
-      "source": "openspec_changes_chatbot_specs_chat_api_spec_requirement_nothing_that_identifies_the_user_reaches_the_provider",
+      "source": "openspec_changes_chatbot_specs_chat_api_spec_requirement_no_full_name_username_or_email_reaches_the_provider",
       "target": "openspec_changes_chatbot_specs_chat_api_spec_scenario_a_person_who_shares_the_user_s_first_name",
       "relation": "contains",
       "_origin": "ast",
@@ -201353,7 +201353,7 @@
     },
     {
       "source": "openspec_changes_chatbot_specs_chat_api_spec_requirements",
-      "target": "openspec_changes_chatbot_specs_chat_api_spec_requirement_nothing_that_identifies_the_user_reaches_the_provider",
+      "target": "openspec_changes_chatbot_specs_chat_api_spec_requirement_no_full_name_username_or_email_reaches_the_provider",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -258969,5 +258969,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "466cd70af8280e67b708ec890b7a86a7cefe4a50"
+  "built_at_commit": "4a11f7bccfcf8679827fc34ba1703f083af9ecbd"
 }
