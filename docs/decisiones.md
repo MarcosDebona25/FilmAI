@@ -5,6 +5,108 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 28/10/2026 — SDD del chatbot (`openspec/changes/chatbot/`)
+
+- **Fecha**: 28/10/2026
+- **Descripción**: se abrió el SDD del Módulo 5 (B-02 a B-06, CU-013, CU-014, CU-018) con propuesta, diseño, tres specs (`semantic-search`, `chat-api`, `chat-ui`) y tareas en 8 PRs, uno por vez desde `main`. Junta lo decidido el 18/08, el 08/10, el 09/10 y el 28/10, y suma estas decisiones de diseño:
+  1. **Un solo error visible durante el stream** (elegido por Gonza): `chat_unavailable`, con el mensaje del CU-013 5.A, para DeepSeek caído, cuota, tiempo agotado, tope de vueltas o fallo al guardar. La causa va al log. Antes de abrir el stream se usan los códigos que ya existen (`not_authenticated`, `permission_denied`, `account_deactivated`, `validation_error`, `throttled`), más uno nuevo, `chat_request_in_progress` (409 (Conflict)). Cierra el punto 5 de lo abierto el 09/10.
+  2. **CSRF y autenticación en la vista async**: la vista es `csrf_exempt` y corre a mano el mismo chequeo que usa DRF (`CSRFCheck`) y `JWTCookieAuthentication`, para que un rechazo salga con el sobre de errores (`permission_denied`) y no con la página HTML de Django. El navegador le habla directo a Django (sin proxy de Next), así que nada frena el stream. Cierra el punto 2.
+  3. **ASGI**: `daphne` en `INSTALLED_APPS` para desarrollo (cambia solo `runserver`); uvicorn para producción. Sin `channels`: SSE es HTTP común. Cierra el punto 1.
+  4. **Una sola solicitud en curso**: `cache.add` con un token propio de cada solicitud y vencimiento de 60 s; se libera en `finally` solo si el token sigue siendo el suyo. El turno entero (tools incluidas) corre dentro de un tiempo máximo de 25 s. Límite por hora: contador por ventana fija en la caché, como `catalogo/presupuesto.py`. Cierra el punto 4.
+  5. **Contrato SSE**: en la spec `chat-api` y en `contracts/sse-chat.md`, referenciado desde el `POST` en `contracts/openapi.yaml`. Cierra el punto 3.
+  6. **Puente async único**: el orquestador llama al código sync (ORM, TMDB, Ollama) por un solo helper con `sync_to_async`. `asgiref` copia las variables de contexto al hilo, así que el presupuesto de llamadas a TMDB por pedido (F6) rige también dentro de las tools.
+  7. **Historial hacia el modelo**: los últimos 10 mensajes, solo texto, con las tarjetas mostradas como una línea («[Tarjetas: Moon (2009), …]»); `ya_recomendados` guarda las últimas 30 tarjetas (id, tipo, título y año) y el *prompt* las muestra como títulos.
+  8. **Ollama**: `keep_alive` de 30 minutos en cada llamada; perfiles opcionales del compose `ollama-windows` (el puente) y `ollama` (contenedor con `mem_limit: 2g`).
+  9. **Enlaces en las respuestas**: Markdown con `react-markdown` sin HTML crudo y `rehype-sanitize`; los enlaces que escriba el modelo se muestran como texto, sin ser clickeables. Solo las tarjetas enlazan, armadas por el frontend (`?from=chat`).
+- **Descartado**: un código por causa de error (cinco textos en dos idiomas que no cambian lo que hace el usuario); depender de `CsrfViewMiddleware` (su rechazo es HTML); un endpoint de cancelación (Django cancela la vista al desconectarse el cliente).
+- **PR-Agent (#149)**: tres observaciones, las tres ciertas y corregidas en el SDD. (1) Cancelar en el instante entre el guardado y `fin` deja el par guardado: es la postcondición de fracaso del CU-014, ya aceptada el 08/10; ahora el diseño y las specs lo dicen, y si `fin` ya llegó el front ignora la cancelación. (2) Faltaba qué hace el panel ante el evento `error`: saca la respuesta parcial (no se guardó), muestra el mensaje del código y conserva la pregunta. (3) El diagrama y la tabla daban dos formas distintas de `fin`; queda `{id, id_pregunta}`, fijado también en la spec `chat-api`.
+- **PR-Agent, segunda pasada (#149)**: cuatro observaciones; tres ciertas y corregidas, una falsa.
+  - **Imágenes en Markdown** (cierta): `react-markdown` convierte `![x](https://…)` en `<img>` y `rehype-sanitize` lo deja pasar con `https`; una inyección de prompt podía hacer que el panel pidiera una URL ajena (fuga de IP y datos). Imágenes y enlaces del modelo se muestran como texto; test con una imagen externa.
+  - **Mensaje actual sin anonimizar** (cierta): se anonimizaban el perfil y el historial, no el mensaje que se envía. Ahora también, y cualquier correo pasa a `[correo]`; se guarda y muestra el texto original.
+  - **Evento `tarjetas`** (cierta): el diseño decía en un lugar que lo emitía la tool y en otro que salía una vez al final. `mostrar_tarjetas` solo valida y acumula; el orquestador emite uno solo antes de `fin`, y ninguno si el turno termina en error.
+  - **Contador de TMDB perdido en el hilo** (falso positivo): la `ContextVar` de `catalogo/presupuesto.py` guarda un objeto `Contador` mutable con lock, no un número; la copia del contexto apunta al mismo objeto y las sumas se acumulan. Igual el test 3.7 pasa a verificar la acumulación entre dos tools.
+- **PR-Agent, tercera pasada (#149)**: cuatro observaciones, las cuatro ciertas y corregidas.
+  - **Placeholder del correo**: el diseño mandaba el correo propio a `[usuario]` y la spec a `[correo]`. Queda: todo correo, el propio incluido, es `[correo]`; nombre, apellido y usuario son `[usuario]`.
+  - **Tarjetas antes del guardado**: si el guardado fallaba, el panel ya había recibido tarjetas de una respuesta que no existe. Ahora se guarda primero y recién después salen `tarjetas` y `fin`.
+  - **Cancelar contra `fin`**: el requisito (descartar, CU-014 2.A) y el escenario de la primera pasada (ignorar la cancelación) se contradecían. Gana el que el panel procesa primero: un clic en «Cancelar» antes de `fin` descarta, aunque el servidor ya haya guardado (reaparece en el historial, postcondición de fracaso del CU-014); después de `fin` el botón ya es «Enviar».
+  - **Candado vencido**: con 30 s de vencimiento y tools sin tope de tiempo, un turno largo podía perder el candado y su `finally` borrar el de otra solicitud. Ahora el turno completo tiene un máximo de 25 s, el candado vence a los 60 s y solo lo libera la solicitud que lo tomó (token). Además, en el chat la consulta a Ollama tiene 3 s y sin reintentos (el backfill conserva 10 s y 2 reintentos).
+- **PR-Agent, cuarta pasada (#149)**: cuatro observaciones ciertas, todas restos de la pasada anterior sin alinear: la sección del frontend del diseño conservaba «si llega en el mismo instante, se descarta»; la primera línea del anonimizador mandaba el correo propio a `[usuario]`; la spec de búsqueda semántica exigía 2 reintentos sin distinguir backfill y chat (ahora `generar_vector` recibe tiempo y reintentos: 10 s y 2 en el backfill, 3 s y 0 en el chat); y el escenario de la tool colgada usaba Ollama, que ahora falla a los 3 s y vuelve al modelo como `tool_failed` (el escenario pasa a una tool falsa más lenta que el presupuesto del turno).
+- **PR-Agent, quinta pasada (#149)**: tres observaciones; dos ciertas y una falsa en lo principal.
+  - **Timeout durante el guardado** (cierta): cancelar la espera no frena el hilo, así que el par podía guardarse y el panel recibir `error`, y el reintento duplicaba el turno. El guardado corre después del bloque con tiempo máximo, protegido con `asyncio.shield`: una vez que empieza, la transacción decide (`fin` si guarda, `error` solo si falla).
+  - **`ya_recomendados` con ids sueltos** (cierta): el modelo no puede asociar `603` a un título. Se guardan `{id_tmdb, tipo, titulo, anio}` y el *prompt* los muestra como títulos con año.
+  - **Un único hilo para todo el backend** (falso positivo en lo principal): Django 5.2 abre un `ThreadSensitiveContext` por pedido (`django/core/handlers/asgi.py`, verificado en la imagen del backend con Django 5.2.18 y asgiref 3.13.0), así que cada pedido tiene su hilo y las tools de un usuario no hacen esperar a otro. Lo cierto es menor: si vence el turno con una tool corriendo, su hilo sigue hasta el timeout propio de esa tool, sin guardar nada. Quedó documentado en el diseño.
+- **PR-Agent, sexta pasada (#149)**: cuatro observaciones; tres ciertas y una falsa.
+  - **Nombres de listas personalizadas** (cierta): los resultados de las tools no pasaban por el anonimizador, así que una lista «Cumple de Juan Pérez» llegaba entera. Ahora todo resultado de tool se anonimiza, y `mis_listas` lista `{id, nombre}` y lee las personalizadas por `id` (por nombre fallaría, porque el modelo ve el nombre anonimizado).
+  - **Thinking con tools en el set dorado** (cierta): con thinking encendido hay que devolver `reasoning_content` en cada vuelta; se suma la tarea 3.8b para poder hacer la comparación de la fase 8.
+  - **«Cancelado ⇒ sin filas» sin matiz** (cierta): el requisito pasa a decir «antes de que empiece el guardado», en línea con los escenarios de excepción.
+  - **Versión de Django** (falso positivo): el backend corre Django 5.2 (`requirements.txt` pide `>=5.2,<5.3`; la imagen tiene 5.2.18). La confusión venía de `AGENTS.md` y `openspec/config.yaml`, que seguían diciendo 5.1; se corrigieron, junto con la línea de `config.yaml` que decía que el frontend no tenía tests (usa Vitest y Playwright).
+- **PR-Agent, séptima pasada (#149)**: dos observaciones ciertas. El vencimiento del candado era fijo (60 s) y el tiempo del turno se configura en `.env`: ahora vence a `LLM_TIMEOUT_SECONDS` + 35 s. Y «la suite corre bajo ASGI» era falso: `manage.py test` no levanta servidor y el `AsyncClient` no simula una desconexión. El test de cancelación usa `get_asgi_application()` con un `http.disconnect` real, y `filmai/test_asgi.py` pasa endpoints DRF existentes (una lectura pública y una escritura con CSRF) por la aplicación ASGI. El job de Playwright no sirve para esto: simula la API y no levanta backend. Queda además la prueba manual con `runserver` (daphne) y `curl -N`.
+- **PR-Agent, octava pasada (#149)**: tres observaciones ciertas, de implementación. El candado se libera dentro del mismo bloque protegido que el guardado (una desconexión durante el guardado ya no deja entrar un reintento antes de tiempo); el límite de 500 caracteres deja de ser configurable por `.env` (es contrato con el `maxLength` del panel y la spec); y se agregan el escenario y el test de una cuenta desactivada con la cookie todavía vigente (`account_deactivated`).
+- **Criterio para cerrar la revisión**: tras ocho pasadas, las observaciones de PR-Agent pasaron del diseño a detalles de implementación. Se mergea con el CI en verde; lo que traigan pasadas posteriores se suma a las tareas del PR del chatbot que corresponda.
+- **Revisión**: Marcos estuvo en la sesión (pair) y está de acuerdo con el SDD. La copia del chatbot se revisa con él en la fase 7 de las tareas, como pide la entrada del 09/10.
+- **Archivos afectados**: `openspec/changes/chatbot/` (`proposal.md`, `design.md`, `tasks.md`, `specs/semantic-search/spec.md`, `specs/chat-api/spec.md`, `specs/chat-ui/spec.md`), `docs/decisiones.md`.
+
+---
+
+## 28/10/2026 — B-06: medición de bge-m3 y Ollama de Windows en desarrollo
+
+- **Fecha**: 28/10/2026
+- **Descripción**: se midió bge-m3 en el Ollama para Windows de Gonza (0.40.12, solo CPU), con un script fuera del repo:
+  - **RAM con el modelo cargado**: 1,24 GB.
+  - **Consulta en caliente** (20 preguntas de chat): 62 ms de mediana, 88 ms de máximo. Frente a los ~3,2 s de DeepSeek es despreciable.
+  - **Arranque en frío** (modelo descargado de memoria): ~1,9 s. La primera carga tras la descarga del modelo tardó 50 s; no se repitió. Ollama descarga el modelo a los 5 minutos sin uso, así que conviene pedirle que lo mantenga cargado (`keep_alive`).
+  - **Fichas del backfill**: 230 ms por ficha (2.000 ≈ 8 min; 10.000 ≈ 38 min).
+  - **Calidad** (consulta en español contra 8 fichas en inglés): 3 de 4 con la esperada primera. «Algo liviano para ver con chicos» puso *About Time* (0,47) sobre *Paddington 2* (0,44): lo corrigen los filtros (género, nota) que ya estaban previstos.
+  1. **Desarrollo con Ollama de Windows**: Gonza y Marcos tienen 16 GB de RAM, así que los dos corren Ollama para Windows (`ollama pull bge-m3`) en lugar de un contenedor dentro de WSL. La memoria del modelo sale de Windows y no del límite de WSL (ver «Docker local y memoria de WSL», 24/10).
+  2. **Puente desde los contenedores**: el Ollama de Windows solo atiende en `127.0.0.1`; desde WSL se alcanza por la red espejada (`networkingMode=mirrored`), pero desde un contenedor no (`host.docker.internal` rechaza la conexión). Se probó un servicio `alpine/socat` con `network_mode: host` que escucha en la IP del puente de Docker (`172.17.0.1:11435`) y reenvía a `127.0.0.1:11434`; un contenedor llegó a Ollama por `host.docker.internal:11435`. En el compose irá con un perfil de desarrollo; el backend y el worker leen `OLLAMA_URL`.
+  3. **Producción**: Ollama en su propio contenedor, como estaba planeado.
+- **Descartado**: Ollama dentro de Docker en desarrollo (1,24 GB más en WSL, que ya se colgó por memoria); Ollama de Windows en `0.0.0.0` (queda expuesto a toda la red local sin autenticación).
+- **Confirmado** (28/10/2026, en pair con Marcos): su máquina también usa WSL con `networkingMode=mirrored`, así que el puente sirve igual para los dos.
+- **Archivos afectados**: `docs/decisiones.md`.
+
+---
+
+## 28/10/2026 — Chatbot: prueba de latencia contra DeepSeek, modelo y filtro de Vistas en las tools
+
+- **Fecha**: 28/10/2026
+- **Descripción**: con la key de DeepSeek cargada en el `.env` local se hizo la prueba de latencia del paso 0 del plan (script fuera del repo, 3 corridas por configuración, *prompt* de sistema con un perfil de ejemplo y el resultado de la tool simulado). El caso «con tool» son dos llamadas al modelo: la que pide la tool y la que escribe la respuesta. Medianas:
+
+  | Configuración | Simple: primer texto / total | Con tool: primer texto / total (peor) |
+  |---|---|---|
+  | `deepseek-flash` sin thinking | 1,10 s / 1,79 s | 2,22 s / 3,24 s (3,74 s) |
+  | `deepseek-flash` thinking `low` | 2,61 s / 3,39 s | 3,08 s / 4,12 s (4,34 s) |
+  | `deepseek-flash` thinking `high` | 1,93 s / 3,19 s | 2,80 s / 3,90 s (4,34 s) |
+  | `deepseek-v4-pro` sin thinking | 1,40 s / 3,38 s | 2,88 s / 4,85 s (5,03 s) |
+
+  Todas las corridas pidieron la tool con argumentos correctos y ninguna necesitó una tercera vuelta. Falta sumar el tiempo real de TMDB y Ollama. El costo total no llegó a un centavo.
+  1. **Modelo**: `deepseek-flash` (DeepSeek V4.1 Flash) con **thinking apagado** (`"thinking": {"type": "disabled"}`). La API lo trae encendido por defecto (esfuerzo `high`), así que hay que apagarlo explícitamente. Queda configurable por `.env` (`LLM_MODEL` y una variable de thinking) y se compara con el set de preguntas de prueba del cierre (paso 7). Con thinking encendido y tools, la API exige devolver `reasoning_content` en cada vuelta (si no, responde 400).
+  2. **Filtro de Vistas también en las tools**: en la prueba, Flash sin thinking y Pro recomendaron una producción que el perfil marcaba como vista. Además del filtro de `mostrar_tarjetas`, cada tool de búsqueda descarta lo que está en «Vistas» antes de devolverle resultados al modelo: lo que no ve, no lo nombra en el texto.
+  3. **Tono**: una respuesta usó «se va al carajo». El *prompt* pide un registro coloquial sin malas palabras.
+- **Descartado**: Flash con thinking `high` (≈1 s más hasta el primer texto y manejo de `reasoning_content`); Pro sin thinking (peor caso de 5,03 s y más caro).
+- **Archivos afectados**: `docs/decisiones.md`.
+
+---
+
+## 28/10/2026 — Chatbot: búsqueda semántica, datos personales, sin página `/chat` y SDD con openspec
+
+- **Fecha**: 28/10/2026
+- **Descripción**: Gonza retomó el chatbot y revisó cuatro puntos de la arquitectura del 08/10 y 09/10/2026, que sigue vigente en todo lo demás.
+  1. **Búsqueda semántica (B-06)**: se mantiene BGE-M3 en Ollama + pgvector, **con una medición previa**: antes de programar, se levanta solo el servicio `ollama` con tope de memoria y se miden la RAM y los milisegundos por consulta. El modelo ocupa ~1,1–1,2 GB y el WSL de desarrollo tiene 7,7 GB (se colgó tres veces el 24/10). Ollama descarga el modelo tras 5 minutos sin uso, así que la primera consulta posterior paga la carga; se define en la medición si se lo mantiene cargado. **Plan B** si no entra: embeddings por API (Gemini `gemini-embedding-001`); pgvector, `ProduccionEmbedding` y el backfill quedan igual, solo cambia quién calcula el vector (probablemente con migración de 1024 a 768 dimensiones). DeepSeek no ofrece embeddings.
+  2. **Latencia (RNF #6)**: el costo dominante son las llamadas al LLM (al menos dos por respuesta con tools), no la búsqueda vectorial. La prueba contra DeepSeek se hizo ese mismo día (ver «Prueba de latencia contra DeepSeek, modelo y filtro de Vistas en las tools»).
+  3. **Datos personales**: el LLM no recibe nada que identifique al usuario: ni nombre, ni apellido, ni correo, ni nombre de usuario (se confirma la entrada del 08/10). El saludo con el nombre («¡Hola, Juan!») lo arma el frontend sin pasar por el modelo. La política de privacidad de DeepSeek indica que los datos se procesan y guardan en China y lista el entrenamiento de modelos entre sus usos, sin aclarar el caso de la API.
+  4. **Sin página `/chat`**: el chatbot es solo flotante (FAB + panel). Cuando exista el panel, «Ask FilmAI» del Home y del footer lo abren en lugar de navegar; se retira `routes.askFilmAI = "/chat"`. Cierra el pendiente de la entrada «Enlace «Ask FilmAI» en el footer (provisorio)» del 12/10/2026.
+  5. **Proceso**: el chatbot se desarrolla con SDD en `openspec/changes/chatbot/`, como C-05 a C-07; ahí se versiona el contrato de eventos SSE, que drf-spectacular no incluye en `contracts/openapi.yaml`. Los arreglos chicos siguen yendo directo.
+- **Descartado**:
+  - Embeddings por API desde el inicio: otra key, latencia de red, límite del plan gratis (1.000 pedidos por día) y el texto del usuario va a Google; queda como plan B.
+  - Sin búsqueda semántica en el MVP: las consultas conceptuales salen peor y la infraestructura de B-06 quedaría sin uso.
+  - Mandar el nombre de pila: contradice el CU-018.
+  - Mandar el nombre de usuario: suele identificar igual.
+  - Un marcador `{nombre}` que reemplaza el servidor: complica el streaming.
+  - Organic-Driven Development (ODD, gentle-ai): el chatbot sería igual una tarea «grande» con su documento, y adoptar gentle-ai es un cambio de proceso para el equipo que se charla aparte. Un documento único sin openspec deja el contrato SSE fuera de las specs vivas.
+- **Archivos afectados**: `docs/decisiones.md`.
+
+---
+
 ## 28/10/2026 — Doc 03 al día: Usuario–Chat, mockups, `Mensaje.texto` y `Mensaje.tarjetas` en los diagramas
 
 - **Fecha**: 28/10/2026
