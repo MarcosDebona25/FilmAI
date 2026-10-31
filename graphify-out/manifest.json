@@ -552,9 +552,9 @@
     "semantic_hash": ""
   },
   "docs/02_Especificaci\u00f3n de Requerimientos.md": {
-    "mtime": 1793406102.1777616,
-    "seen": 1793406114.689739,
-    "ast_hash": "c3737e4c0a21336aeb8a07af60b6ccda",
+    "mtime": 1793406644.0761197,
+    "seen": 1793406659.9631872,
+    "ast_hash": "681c5c8e900788f3df9c0172f579da5e",
     "semantic_hash": ""
   },
   "docs/03_DiagramaCU.md": {
@@ -4302,21 +4302,21 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/design.md": {
-    "mtime": 1793406059.298945,
-    "seen": 1793406078.3017218,
-    "ast_hash": "4635bed7fb331245d53177b04ae7eab1",
+    "mtime": 1793406644.07444,
+    "seen": 1793406659.9635897,
+    "ast_hash": "33cc9dc86c984a6e925635f7358ebf79",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/proposal.md": {
-    "mtime": 1793405254.3549702,
-    "seen": 1793405280.742254,
-    "ast_hash": "771b45154aa18d35ec6d65a4c2296b15",
+    "mtime": 1793406644.074714,
+    "seen": 1793406659.963591,
+    "ast_hash": "35cc725dd6b9aed457250c765eec53a7",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/specs/chat-api/spec.md": {
-    "mtime": 1793406059.2999222,
-    "seen": 1793406078.3017707,
-    "ast_hash": "e79ad7f75fa6681058f3e1bb534f5a10",
+    "mtime": 1793406644.0746114,
+    "seen": 1793406659.9635932,
+    "ast_hash": "a416ff03d1b22d7dea93678cd35f2365",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/specs/chat-ui/spec.md": {

@@ -31,7 +31,7 @@ contract and a task list.
 | 08/10/2026 | Chatbot architecture | DeepSeek through an OpenAI-compatible adapter, SSE over ASGI, text + cards, per-message SQL profile, limits |
 | 09/10/2026 | Language, cards, errors, limits | Turn language vs. prose language, 3 cards, error codes, no queue, `/api/chat/messages/` |
 | 28/10/2026 | Security: XSS | Untrusted model output: sanitized Markdown, links built from ids |
-| 28/10/2026 | Semantic search, personal data, `/chat`, SDD | Ollama measured first; nothing personal to the LLM; no `/chat` page |
+| 28/10/2026 | Semantic search, personal data, `/chat`, SDD | Ollama measured first; nothing personal to the LLM (narrowed on 31/10/2026: a loose name the user writes stays); no `/chat` page |
 | 28/10/2026 | Latency test against DeepSeek | `deepseek-flash` with thinking off; tools drop «Vistas» before the model sees them |
 | 28/10/2026 | bge-m3 measurement | Windows Ollama in development, reached through a `socat` bridge |
 
