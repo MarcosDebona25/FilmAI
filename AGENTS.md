@@ -88,7 +88,7 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 
 ## Contexto técnico
 
-- **Backend**: Django 5.1 + Django REST Framework, PostgreSQL 16, Redis, Celery (todo en Docker, `docker compose`).
+- **Backend**: Django 5.2 LTS + Django REST Framework, PostgreSQL 16, Redis, Celery (todo en Docker, `docker compose`).
 - **Frontend**: Next.js + Tailwind + Shadcn.
 - **Modelo de usuario**: `usuarios.Usuario` como `AUTH_USER_MODEL` (detalles en `docs/decisiones.md`).
 
