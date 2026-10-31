@@ -217,7 +217,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 | Estado                    | Comportamiento                                                                                 |
 | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| No autenticado            | Hero + Tendencias + Novedades + invitación a registrarse. Sin FAB.                             |
+| No autenticado            | Hero + Tendencias + Novedades + invitación a registrarse. FAB inactivo.                        |
 | Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti".                                              |
 | Autenticado con historial | Las 3 filas completas.                                                                         |
 | Loading                   | Skeleton cards (4-5 placeholders) por fila.                                                    |
