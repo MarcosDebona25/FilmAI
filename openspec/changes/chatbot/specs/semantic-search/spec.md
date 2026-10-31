@@ -38,7 +38,7 @@ Conceptual search over the local catalog («algo melancólico sobre viajes en el
 
 ### Requirement: Query by meaning with filters after retrieval
 
-`buscar_semantico(consulta, *, tipo=None, anio_desde=None, anio_hasta=None, nota_minima=None, duracion_max=None, excluir=())` MUST embed the query, rank `ready` embeddings by cosine distance, take the 50 nearest, apply the filters in SQL, drop the `(id_tmdb, tipo)` pairs in `excluir`, and return at most 10 productions in ranking order. Quantitative fields MUST NOT be part of the embedded text (18/08/2026).
+`buscar_semantico(consulta, *, generos=None, tipo=None, anio_desde=None, anio_hasta=None, nota_minima=None, duracion_max=None, excluir=())` MUST embed the query, rank `ready` embeddings by cosine distance, take the 50 nearest, apply the filters in SQL, drop the `(id_tmdb, tipo)` pairs in `excluir`, and return at most 10 productions in ranking order. Quantitative fields MUST NOT be part of the embedded text (18/08/2026).
 
 #### Scenario: Filters after the vector
 

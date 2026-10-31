@@ -60,7 +60,7 @@ sequenceDiagram
     participant DB as Postgres
 
     F->>V: POST /api/chat/messages/ {texto} + cookies + X-CSRFToken
-    V->>V: auth, CSRF, length ≤ 500, 20/h, lock "one in flight"
+    V->>V: auth, CSRF, length ≤ 500, lock "one in flight", 20/h
     alt rejected
         V-->>F: 401/403/400/409/429 + {code, params, errors}
     end
@@ -140,9 +140,9 @@ its own message, adding a code is additive.
 | A plain async Django view for the `POST` | DRF | DRF views are sync; streaming from them pins a thread for the whole answer. The `GET` stays DRF. |
 | Auth with `JWTCookieAuthentication` and the CSRF check DRF uses (`CSRFCheck`), called from the async view through the bridge | Rely on `CsrfViewMiddleware` | The middleware works, but its failure is Django's HTML 403 page. Running the same check by hand gives the `permission_denied` envelope like every other endpoint. The view is `csrf_exempt` for that reason only. |
 | `daphne` in `INSTALLED_APPS` for development; uvicorn in production | `channels` | `daphne` replaces `runserver` with an ASGI one and nothing else. No websockets are needed: SSE is plain HTTP. |
-| Lock "one in flight" = `cache.add(f"chat:{id}:en_curso", <random token>, timeout=LLM_TIMEOUT_SECONDS + 35)` (60 s with the default 25 s; derived, so raising the turn budget in `.env` can never let the lock expire mid-turn), released in `finally` **only if the stored value is still this request's token** | A DB row lock; a fixed value released unconditionally | `cache.add` is atomic in Redis, and the expiry frees the lock if the process dies. The model-and-tools loop runs inside `asyncio.timeout(LLM_TIMEOUT_SECONDS)` (25 s, wall clock, tools included); the save **and the lock release** run **after** that block, together inside one `asyncio.shield`, so the lock is never freed while a save is still writing (a disconnect during the save cannot let a retry in early), and once the save starts the transaction decides the outcome (`fin` if it commits, `error` only if it fails) and a timeout can never report `error` for a pair that was stored. The 35 s margin covers the save and the release, so a live turn always ends before the expiry; the token keeps a late `finally` from deleting a lock that already belongs to another request. In development the cache is `LocMemCache`, per process — correct with a single dev server. |
-| Hourly limit = a fixed-window counter in the cache (`incr`), like `presupuesto.py` | DRF `UserRateThrottle` | The view is not DRF. Same mechanism already used and tested for TMDB. Counts only messages that passed validation. |
-| Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: a cancel before the save unwinds the loop and nothing is persisted. A test with `AsyncClient` pins it. **The window after the save**: the pair is committed just before `fin` is written, so a cancel in that instant leaves it saved while the panel shows «Solicitud cancelada». That is CU-014's failure postcondition («la cancelación no se procesa a tiempo») and was accepted on 08/10: the answer appears in the history the next time it loads. Rule for the front: whichever the panel processes first wins. A click on «Cancelar» processed before `fin` aborts and discards the answer (CU-014 2.A); once `fin` is processed the turn is over and the button is «Enviar» again, so there is nothing left to cancel. |
+| Lock "one in flight" = `cache.add(f"chat:{id}:en_curso", <random token>, timeout=LLM_TIMEOUT_SECONDS + 35)` (60 s with the default 25 s; derived, so raising the turn budget in `.env` can never let the lock expire mid-turn), released in `finally` **only if the stored value is still this request's token** | A DB row lock; a fixed value released unconditionally | `cache.add` is atomic in Redis, and the expiry frees the lock if the process dies. The model-and-tools loop runs inside `asyncio.timeout(LLM_TIMEOUT_SECONDS)` (25 s, wall clock, tools included); the save **and the lock release** run **after** that block, together inside one `asyncio.shield` and as **one call through the bridge** (after a disconnect Django closes the request's thread context, so a second hop would land on a thread nothing manages), so the lock is never freed while a save is still writing (a disconnect during the save cannot let a retry in early), and once the save starts the transaction decides the outcome (`fin` if it commits, `error` only if it fails) and a timeout can never report `error` for a pair that was stored. The 35 s margin covers the save and the release, so a live turn always ends before the expiry; the token keeps a late `finally` from deleting a lock that already belongs to another request. In development the cache is `LocMemCache`, per process — correct with a single dev server. |
+| Hourly limit = a fixed-window counter in the cache (`incr`), like `presupuesto.py` | DRF `UserRateThrottle` | The view is not DRF. Same mechanism already used and tested for TMDB. Counts only messages that passed validation and took the lock, so a 409 (Conflict) spends no quota; a 429 (Too Many Requests) releases the lock. |
+| Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: a cancel before the save unwinds the loop and nothing is persisted. A test through `get_asgi_application()` with a real `http.disconnect` pins it (`AsyncClient` cannot simulate one). **The window after the save**: the pair is committed just before `fin` is written, so a cancel in that instant leaves it saved while the panel shows «Solicitud cancelada». That is CU-014's failure postcondition («la cancelación no se procesa a tiempo») and was accepted on 08/10: the answer appears in the history the next time it loads. Rule for the front: whichever the panel processes first wins. A click on «Cancelar» processed before `fin` aborts and discards the answer (CU-014 2.A); once `fin` is processed the turn is over and the button is «Enviar» again, so there is nothing left to cancel. |
 | Save user message and answer **together**, after the last token | Save the question on arrival | A failed or cancelled turn leaves no orphan question (08/10/2026). The front keeps the draft to retry. |
 | Tool results drop «Vistas» **and** `mostrar_tarjetas` validates | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
 | `mostrar_tarjetas` keeps only ids returned by a tool in this turn, cuts to 3 | Trust the model's ids | Anchoring: no invented titles reach a card. Invalid ids are dropped silently (09/10). |
@@ -167,13 +167,15 @@ synopsis cut at 300 characters, at most 10 items, «Vistas» removed.
 | `similares_a` | `id_tmdb`, `tipo` | **new** `get_similar` → `/movie/{id}/similar`, `/tv/{id}/similar` |
 | `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then `discover` with `with_people` |
 | `detalle` | `id_tmdb`, `tipo` | `get_movie_detail` / `get_tv_detail` (exist) |
-| `buscar_semantico` | `consulta`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
+| `buscar_semantico` | `consulta`, `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
 | `mis_listas` | `lista?` (`vistas`, `pendientes`, `favoritos`, or the `id` of a custom list) | SQL scoped to `ctx.usuario`. The model never passes a user id. Without `lista` it returns the user's lists as `{id, nombre}`; the model then asks by `id`, never by name (the name the model sees is anonymized, so a lookup by name would fail). |
 | `mostrar_tarjetas` | `tarjetas[{id_tmdb, tipo}]` | Validation only: accumulates valid cards in the turn context (a second call adds, up to 3). The orchestrator emits **one** `tarjetas` event after the loop, just before `fin`, so cards never arrive before the final text nor belong to a turn that ends in `error`. |
 
 TMDB tools go through `servicio_localizado(idioma, get_catalog_service)`:
 cache, per-language cache keys and English fallback, as the catalog does. The
-view opens `contar_llamadas()` for the turn, so the TMDB budget applies; a
+stream generator opens `contar_llamadas()` for the turn, inside its own body:
+a `with` around the view's `return` would close before the first event, leaving
+the tools without a budget. A
 budget error is a tool error the model reads.
 
 A tool exception never ends the turn: the model receives
@@ -211,12 +213,17 @@ No le gustó (nota ≤ 4): Transformers (2), …                                
 Favoritos: Interstellar, Arrival                                            ← up to 10
 ```
 
-`anonimizar(texto, usuario)` replaces the user's `nombre`, `apellido` and
-`nombre_usuario` (case- and accent-insensitive, whole words) with `[usuario]`,
-and **every email address, the user's own included,** with `[correo]`, in
-everything outbound: the profile, the review excerpts, the history, the
-current message **and every tool result** (a custom list called «Cumple de
-Juan Pérez» reaches the model as «Cumple de [usuario]»). The original text is what gets
+`anonimizar(texto, usuario)` works case- and accent-insensitively, on whole
+words, with two scopes (31/10/2026). What is about the user (the profile, the
+review excerpts and `mis_listas`) is strict: `nombre`, `apellido` and
+`nombre_usuario` become `[usuario]` (a custom list called «Cumple de Juan
+Pérez» reaches the model as «Cumple de [usuario]»). The conversation (the
+current message and the history) replaces `nombre` and `apellido` only when
+they appear **together**, plus `nombre_usuario`: a loose first name stays,
+because Mark must be able to ask for a Mark Ruffalo film. In both scopes
+**every email address, the user's own included,** becomes `[correo]`. Catalog
+results from TMDB are not the user's data and are not anonymized: «[usuario]
+Scorsese» would only corrupt them. The original text is what gets
 stored and shown; only the copy sent to the provider is anonymized. The model
 receives no name at all (28/10/2026); the greeting with the name is drawn by
 the front. Other personal data a user volunteers (a phone, an address) cannot
