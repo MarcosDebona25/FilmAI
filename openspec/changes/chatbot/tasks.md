@@ -75,7 +75,8 @@
 - [ ] 2.9 RED: `anonimizar`, case- and accent-insensitive, whole words only.
       Strict scope: name, last name and username → `[usuario]`. Conversation
       scope: name and last name together and username → `[usuario]`, a loose
-      name stays («Mark Ruffalo» for the user Mark Debona). Both: every email
+      name stays («Mark Ruffalo» for the user Mark Debona, also with username
+      `mark`). Both: every email
       address, the user's own included, → `[correo]`
 - [ ] 2.10 GREEN: `contexto.py`, `anonimizar.py`
 

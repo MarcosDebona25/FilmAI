@@ -136,7 +136,7 @@ The user message and the bot answer MUST be saved in one transaction only after 
 
 ### Requirement: No full name, username or email reaches the provider
 
-The profile, the review excerpts and `mis_listas` results MUST NOT contain the user's first name, last name or username. The current message and the history MUST NOT contain the user's first and last name together, nor the username; a loose first or last name MUST stay, so a person with that name can be searched (31/10/2026). No text sent to the provider MAY contain an email address. Catalog results from TMDB MUST NOT be anonymized. Replacements apply only to the copy sent to the provider (RNF #3, CU-018). The stored and displayed text MUST remain the original. The model MUST NOT be able to address data of another user: `mis_listas` MUST take no user argument, read only the authenticated user's lists, and address custom lists by `id`, not by name.
+The profile, the review excerpts and `mis_listas` results MUST NOT contain the user's first name, last name or username. The current message and the history MUST NOT contain the user's first and last name together, nor the username; a loose first or last name MUST stay, so a person with that name can be searched, and this wins when the username equals that name (31/10/2026). No text sent to the provider MAY contain an email address. Catalog results from TMDB MUST NOT be anonymized. Replacements apply only to the copy sent to the provider (RNF #3, CU-018). The stored and displayed text MUST remain the original. The model MUST NOT be able to address data of another user: `mis_listas` MUST take no user argument, read only the authenticated user's lists, and address custom lists by `id`, not by name.
 
 #### Scenario: Name inside a review
 
@@ -153,7 +153,7 @@ The profile, the review excerpts and `mis_listas` results MUST NOT contain the u
 
 #### Scenario: A person who shares the user's first name
 
-- GIVEN the user Mark Debona writes «algo con Mark Ruffalo»
+- GIVEN the user Mark Debona, with username `mark`, writes «algo con Mark Ruffalo»
 - WHEN the message is sent to the provider
 - THEN the provider receives it unchanged and `buscar_por_persona` can find the actor
 - AND a TMDB result that mentions «Mark» reaches the model unchanged
