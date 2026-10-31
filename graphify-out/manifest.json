@@ -552,9 +552,9 @@
     "semantic_hash": ""
   },
   "docs/02_Especificaci\u00f3n de Requerimientos.md": {
-    "mtime": 1793202207.456098,
-    "seen": 1793405280.742241,
-    "ast_hash": "cd9187e490e5db8cc11993949b3e1b8e",
+    "mtime": 1793406102.1777616,
+    "seen": 1793406114.689739,
+    "ast_hash": "c3737e4c0a21336aeb8a07af60b6ccda",
     "semantic_hash": ""
   },
   "docs/03_DiagramaCU.md": {
@@ -570,15 +570,15 @@
     "semantic_hash": ""
   },
   "docs/04_Lineamientos_UI.md": {
-    "mtime": 1793202207.456098,
-    "seen": 1793405280.7422447,
-    "ast_hash": "a4d152e84a8b41bba9043b592b4982de",
+    "mtime": 1793406059.304576,
+    "seen": 1793406078.301507,
+    "ast_hash": "59e28db100704f0dda09a67e8cbb65df",
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1793405253.7617025,
-    "seen": 1793405280.7422454,
-    "ast_hash": "525da2c79c634743a6c01c3196c386c0",
+    "mtime": 1793406059.3074617,
+    "seen": 1793406078.3015094,
+    "ast_hash": "e95f50bfa03704d90ba42885b83832af",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793405263.65566,
-    "seen": 1793405280.7422485,
-    "ast_hash": "668600c5d1cd3e7d4ab26b29707d139a",
+    "mtime": 1793406102.1827035,
+    "seen": 1793406114.6899664,
+    "ast_hash": "a3c1b8fe979b1803192a3ba1118c50a6",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4302,9 +4302,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/design.md": {
-    "mtime": 1793405254.3546994,
-    "seen": 1793405280.7422528,
-    "ast_hash": "26e0bb7c4b222f87471d96421b74411e",
+    "mtime": 1793406059.298945,
+    "seen": 1793406078.3017218,
+    "ast_hash": "4635bed7fb331245d53177b04ae7eab1",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/proposal.md": {
@@ -4314,9 +4314,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/specs/chat-api/spec.md": {
-    "mtime": 1793405254.3563282,
-    "seen": 1793405280.7422552,
-    "ast_hash": "58ff9617adf15f51138ef5b72245595d",
+    "mtime": 1793406059.2999222,
+    "seen": 1793406078.3017707,
+    "ast_hash": "e79ad7f75fa6681058f3e1bb534f5a10",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/specs/chat-ui/spec.md": {
@@ -4326,15 +4326,15 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/specs/semantic-search/spec.md": {
-    "mtime": 1793405254.3563282,
-    "seen": 1793405280.742257,
-    "ast_hash": "9bf46d4e460e5cf92bffda368f5963be",
+    "mtime": 1793406059.3005311,
+    "seen": 1793406078.301829,
+    "ast_hash": "81c182fdb127a64424e28443d215289a",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/tasks.md": {
-    "mtime": 1793405254.3563282,
-    "seen": 1793405280.742258,
-    "ast_hash": "9ebdceef7bd9512bbdb4bfa629950b7e",
+    "mtime": 1793406059.3011825,
+    "seen": 1793406078.3018308,
+    "ast_hash": "0de0fbd2b62c842f727f3d3c36b60b0a",
     "semantic_hash": ""
   }
 }

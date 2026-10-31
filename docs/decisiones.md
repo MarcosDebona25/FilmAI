@@ -5,6 +5,22 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 31/10/2026 — Correcciones al SDD del chatbot tras evaluar #149 y #150
+
+- **Fecha**: 31/10/2026
+- **Descripción**: al evaluar los PRs contra el código salieron puntos que PR-Agent no había marcado. Se corrigen antes del PR 1 del chatbot.
+  1. **Anonimizador (cambia el punto 3 del 28/10, a pedido de Marcos)**: reemplazar un nombre suelto rompía consultas legítimas: Mark no podía pedir una película de Mark Ruffalo, porque salía «[usuario] Ruffalo». Ahora hay dos alcances. Lo que habla del usuario (perfil, extractos de reseñas y `mis_listas`) sigue estricto. En la conversación (mensaje actual e historial) se reemplazan nombre y apellido solo si van juntos, y el nombre de usuario; un nombre suelto se conserva. Todo correo sigue pasando a `[correo]`. Los resultados de TMDB dejan de anonimizarse: no son datos del usuario. Queda aceptado que un nombre suelto escrito por el usuario llegue a DeepSeek.
+  2. **Filtro por género**: el escenario de *Paddington 2* y la medición del 28/10 contaban con él, pero `buscar_semantico` no lo recibía. Se suma `generos` a la firma, a la tool y a B-06 en el doc 05.
+  3. **Candado antes del límite por hora**: un 409 (Conflict) gastaba cupo. Ahora se toma primero el candado, y un 429 (Too Many Requests) lo libera.
+  4. **Pruebas de desconexión**: la fila de cancelación y la tarea 5.4 pedían `AsyncClient`, que no simula una desconexión. Pasan al arnés ASGI de la tarea 5.6. Era la observación que PR-Agent había dejado abierta.
+  5. **`contar_llamadas`**: se abre dentro del generador del stream. Un `with` alrededor del `return` de la vista se cerraría antes del primer evento y dejaría las tools sin tope de TMDB.
+  6. **Guardado y candado en una sola llamada al puente**: tras una desconexión, Django cierra el contexto de hilos del pedido (`ThreadSensitiveContext`) y una segunda llamada caería en un hilo que nadie administra.
+  7. **Q-09 en las tareas**: se suma a la fase 1 (tarea 1.7b), porque el doc 05 lo ata a B-06 y no figuraba.
+  8. **Doc 04**: los estados del Home decían «Sin FAB» y §3.1 lo pide inactivo; queda inactivo, como en el doc 05 y la spec.
+- **Archivos afectados**: `openspec/changes/chatbot/` (`design.md`, `tasks.md`, `specs/chat-api/spec.md`, `specs/semantic-search/spec.md`), `docs/02_Especificación de Requerimientos.md`, `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+---
+
 ## 30/10/2026 — Dos pendientes de asincronía: correos por Celery y vencimiento de `processing`
 
 - **Fecha**: 30/10/2026
