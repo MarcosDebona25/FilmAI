@@ -5,6 +5,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 30/10/2026 — Dos pendientes de asincronía: correos por Celery y vencimiento de `processing`
+
+- **Fecha**: 30/10/2026
+- **Descripción**: al repasar el uso de colas del proyecto (sin el chatbot) se anotaron dos puntos débiles como tareas del Módulo 7 del doc 05:
+  - **Q-08, correos fuera del pedido.** `enviar_correo()` llama a Resend dentro del pedido HTTP. Pasa a una tarea de Celery encolada con `transaction.on_commit()` y con reintentos con espera creciente. A diferencia de los embeddings, un correo fallido no tiene un backfill nocturno que lo recupere, así que el reintento tiene que estar en la tarea misma.
+  - **Q-09, vencimiento del reclamo de embeddings.** Es la «limitación conocida» que ya documentaba el docstring de `backfill_embeddings`: una fila que queda en `processing` porque el worker murió no la reclama nadie. Se resuelve con un vencimiento sobre `fecha_actualizacion`. Se deja para B-06, porque el plazo depende de cuánto tarde el proveedor real.
+  - **Lo que no se anota**: reintentos con *backoff* en `generar_embedding` y `materializar_produccion`. Las dos tareas no lanzan a propósito y ya tienen quien las rescate (el backfill nocturno y la próxima visita a la ficha). Agregar reintentos sería un segundo mecanismo para lo mismo.
+- **Archivos afectados**: `docs/05_Plan_de_Desarrollo.md`, `docs/decisiones.md`.
+
+---
+
 ## 28/10/2026 — SDD del chatbot (`openspec/changes/chatbot/`)
 
 - **Fecha**: 28/10/2026
