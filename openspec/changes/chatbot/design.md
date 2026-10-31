@@ -220,7 +220,9 @@ review excerpts and `mis_listas`) is strict: `nombre`, `apellido` and
 Pérez» reaches the model as «Cumple de [usuario]»). The conversation (the
 current message and the history) replaces `nombre` and `apellido` only when
 they appear **together**, plus `nombre_usuario`: a loose first name stays,
-because Mark must be able to ask for a Mark Ruffalo film. In both scopes
+because Mark must be able to ask for a Mark Ruffalo film. A `nombre_usuario`
+equal to the user's own first or last name counts as a loose name and stays
+too. In both scopes
 **every email address, the user's own included,** becomes `[correo]`. Catalog
 results from TMDB are not the user's data and are not anonymized: «[usuario]
 Scorsese» would only corrupt them. The original text is what gets

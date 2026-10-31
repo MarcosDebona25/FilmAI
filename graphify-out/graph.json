@@ -57521,7 +57521,7 @@
       "node_kind": "heading",
       "norm_label": "configuration",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L284"
+      "source_location": "L286"
     },
     {
       "id": "openspec_changes_chatbot_design_design_recommendation_chatbot_module_5",
@@ -57557,7 +57557,7 @@
       "node_kind": "heading",
       "norm_label": "frontend (b-04)",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L251"
+      "source_location": "L253"
     },
     {
       "id": "openspec_changes_chatbot_design_personal_context_and_anonymization_b_05",
@@ -57605,7 +57605,7 @@
       "node_kind": "heading",
       "norm_label": "testing strategy",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L293"
+      "source_location": "L295"
     },
     {
       "id": "openspec_changes_chatbot_design_the_one_async_rule",
@@ -57629,7 +57629,7 @@
       "node_kind": "heading",
       "norm_label": "the prompt",
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L233"
+      "source_location": "L235"
     },
     {
       "id": "openspec_changes_chatbot_design_the_sse_contract",
@@ -58872,7 +58872,7 @@
       "node_kind": "heading",
       "norm_label": "phase 3: provider and orchestrator (pr 3) \u2014 first async code",
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L82"
+      "source_location": "L83"
     },
     {
       "id": "openspec_changes_chatbot_tasks_phase_4_persistence_and_history_pr_4",
@@ -58884,7 +58884,7 @@
       "node_kind": "heading",
       "norm_label": "phase 4: persistence and history (pr 4)",
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L111"
+      "source_location": "L112"
     },
     {
       "id": "openspec_changes_chatbot_tasks_phase_5_asgi_and_the_sse_endpoint_pr_5",
@@ -58896,7 +58896,7 @@
       "node_kind": "heading",
       "norm_label": "phase 5: asgi and the sse endpoint (pr 5)",
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L125"
+      "source_location": "L126"
     },
     {
       "id": "openspec_changes_chatbot_tasks_phase_6_the_panel_pr_6",
@@ -58908,7 +58908,7 @@
       "node_kind": "heading",
       "norm_label": "phase 6: the panel (pr 6)",
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L159"
+      "source_location": "L160"
     },
     {
       "id": "openspec_changes_chatbot_tasks_phase_7_history_badge_links_copy_pr_7",
@@ -58920,7 +58920,7 @@
       "node_kind": "heading",
       "norm_label": "phase 7: history, badge, links, copy (pr 7)",
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L177"
+      "source_location": "L178"
     },
     {
       "id": "openspec_changes_chatbot_tasks_phase_8_closing_pr_8",
@@ -58932,7 +58932,7 @@
       "node_kind": "heading",
       "norm_label": "phase 8: closing (pr 8)",
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L190"
+      "source_location": "L191"
     },
     {
       "id": "openspec_changes_chatbot_tasks_review_workload_forecast",
@@ -200886,7 +200886,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L233",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -200897,7 +200897,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L251",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -200908,7 +200908,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L284",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -200919,7 +200919,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/design.md",
-      "source_location": "L293",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -201876,7 +201876,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L111",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -201887,7 +201887,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L125",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -201898,7 +201898,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L159",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -201909,7 +201909,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L177",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -201920,7 +201920,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L190",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -201964,7 +201964,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "openspec/changes/chatbot/tasks.md",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -258969,5 +258969,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "4a11f7bccfcf8679827fc34ba1703f083af9ecbd"
+  "built_at_commit": "d549d153844a775118d51413daa1b9c751115531"
 }
