@@ -46,6 +46,8 @@
       `extra_hosts` on backend and worker; `.env.example` `OLLAMA_URL`
 - [ ] 1.7 Manual: both developers bring up the bridge and run the backfill;
       record counts and time in `docs/decisiones.md`
+- [ ] 1.7b Q-09 (doc 05): RED/GREEN expiry of the `processing` claim, with the
+      deadline taken from the real times of 1.7
 - [ ] 1.8 Explain: what an embedding is, cosine distance, why filters run after
       the vector, how the bridge works
 
@@ -70,9 +72,12 @@
       `servicio_localizado`, `vistos()` and the TMDB budget
 - [ ] 2.8 RED `chatbot/tests_contexto.py`: liked/disliked/watched/favorites
       with their caps and excerpt length; a changed rating moves sections
-- [ ] 2.9 RED: `anonimizar` replaces name, last name and username with
-      `[usuario]` (case- and accent-insensitive, whole words only) and every
-      email address, the user's own included, with `[correo]`
+- [ ] 2.9 RED: `anonimizar`, case- and accent-insensitive, whole words only.
+      Strict scope: name, last name and username → `[usuario]`. Conversation
+      scope: name and last name together and username → `[usuario]`, a loose
+      name stays («Mark Ruffalo» for the user Mark Debona, also with username
+      `mark`). Both: every email
+      address, the user's own included, → `[correo]`
 - [ ] 2.10 GREEN: `contexto.py`, `anonimizar.py`
 
 ## Phase 3: Provider and orchestrator (PR 3) — first async code
@@ -93,12 +98,12 @@
 - [ ] 3.6 RED: the messages sent to the provider contain the anonymized
       profile, ≤ 10 history messages with the cards line, `ya_recomendados`
       rendered as titles and years (no bare ids),
-      the anonymized current message, and no name/email/username
+      the anonymized current message, and no full name/email/username
 - [ ] 3.7 RED: two tools of the same turn, each through the bridge, add to the
       **same** TMDB budget counter (the total accumulates; the 31st call fails)
 - [ ] 3.8 GREEN: `prompts.py`, `orquestador.py`, `ProveedorOpenAICompatible`
-      (`openai` dependency; thinking off by default; `max_tokens` 800); every
-      tool result goes through `anonimizar` before the provider
+      (`openai` dependency; thinking off by default; `max_tokens` 800);
+      `mis_listas` results go through `anonimizar`, TMDB results do not
 - [ ] 3.8b RED/GREEN: with `LLM_THINKING=true`, a tool round echoes
       `reasoning_content` in the assistant message (needed for 8.2)
 - [ ] 3.9 `manage.py chatear` (interactive, prints events); try it against
@@ -132,13 +137,13 @@
       catalog; front translations; contract tests green
 - [ ] 5.4 RED `chatbot/tests_sse.py` (`AsyncClient`): 401, 403 CSRF as JSON,
       403 `account_deactivated` with a live cookie, 400 length, 409 lock, 429
-      with `retry_after_seconds`; a disconnect during the save keeps the lock
-      until the save ends
+      with `retry_after_seconds`; a 409 does not move the hourly counter
 - [ ] 5.5 RED: a full turn yields the event sequence and stores the pair on
       `fin`; provider failure yields `error` and stores nothing
 - [ ] 5.6 RED: through `get_asgi_application()` with a fake ASGI `receive`
       that sends `http.disconnect` mid-stream (the `AsyncClient` does not
-      simulate a disconnect): nothing is stored and the lock is freed; a save
+      simulate a disconnect): nothing is stored and the lock is freed; a
+      disconnect during the save keeps the lock until the save ends; a save
       failure sends `error` and no `tarjetas`
 - [ ] 5.6b RED: lock with a per-request token — an expired request's late
       release leaves the next request's lock; a fake tool that sleeps past
@@ -146,7 +151,7 @@
       still running when the budget expires is not interrupted and ends in
       `fin`
 - [ ] 5.7 GREEN: `views.py :: enviar_mensaje`, lock, hourly counter,
-      `idioma_efectivo` once, `contar_llamadas` for the turn
+      `idioma_efectivo` once, `contar_llamadas` inside the stream generator
 - [ ] 5.8 `contracts/sse-chat.md`; OpenAPI entry for the `POST` with its
       pre-stream responses
 - [ ] 5.9 Manual: `curl -N` against the dev server shows events arriving one
