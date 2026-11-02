@@ -5,6 +5,14 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 02/11/2026 — Historia reescrita: solo Marcos y Gonza como contributors
+
+- **Fecha**: 02/11/2026
+- **Descripción**: en la barra lateral de GitHub figuraban `Copilot`, `github-actions[bot]` y `claude`. Copilot era autor de 6 commits (2 del PR #1, de Marcos, y 4 del PR #8, de Gonza). `github-actions[bot]` era coautor de 9 commits «Apply suggestion from @github-actions[bot]», creados al aceptar sugerencias del viejo AI Review con el botón de GitHub. De Claude no quedaba nada en la historia: era caché de GitHub. Se reescribió la historia de las 5 ramas con `git filter-repo`: los commits de Copilot pasaron a Marcos o a Gonza según de quién era el PR, y se borraron las líneas `Co-authored-by` de bots e IA. Se comprobó que el contenido de cada rama quedó idéntico (mismo árbol) y se hizo force-push de las 5 ramas el 02/11/2026. Hay un backup local de la historia vieja (`git clone --mirror`) en la máquina de Marcos. Para que no vuelva a pasar, `.husky/commit-msg` también borra los coautores `Copilot` y `github-actions`, y AGENTS.md §8 prohíbe aceptar sugerencias de bots con el botón. Las páginas de los PR viejos siguen mostrando los commits originales, pero no cuentan como contributors. Si la caché de GitHub no se actualiza en unos días, se pide a GitHub Support que la refresque.
+- **Archivos afectados**: `.husky/commit-msg`, `AGENTS.md`, `docs/decisiones.md`.
+
+---
+
 ## 31/10/2026 — Correcciones al SDD del chatbot tras evaluar #149 y #150
 
 - **Fecha**: 31/10/2026
