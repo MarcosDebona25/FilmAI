@@ -3,11 +3,13 @@
 # =============================================================================
 # FilmAI — commit-msg hook
 # =============================================================================
-# Quita la atribución a IA (Co-Authored-By de Claude/Anthropic, Claude-Session,
-# "Generated with Claude Code") del mensaje, la agregue el agente que sea.
+# Quita la atribución a IA y a bots (Co-Authored-By de Claude/Anthropic,
+# Copilot y github-actions[bot], Claude-Session, "Generated with Claude Code")
+# del mensaje, la agregue el agente que sea. GitHub cuenta a los coautores como
+# contributors del repo, y en el repo solo figuran Marcos y Gonza.
 
 sed -i -E \
-  -e '/^Co-Authored-By:.*(Claude|anthropic\.com)/Id' \
+  -e '/^Co-Authored-By:.*(Claude|anthropic\.com|Copilot|github-actions)/Id' \
   -e '/^Claude-Session:/Id' \
   -e '/Generated with \[Claude Code\]\(/Id' \
   "$1"

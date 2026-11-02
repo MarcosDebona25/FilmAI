@@ -67,6 +67,12 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 - **Herramientas anteriores**: tanto AI Review como CodeRabbit fueron desactivados el 18/09/2026.
 - **AI Review**: Workflow eliminado (`.github/workflows/ai-review.yml`). Generaba un 93% de falsos positivos (comentarios que no detectaban bugs reales ni sugerían mejoras válidas). Los comentarios no tenían contexto del proyecto (convenciones de idioma, valores de configuración, arquitectura).
 - **CodeRabbit**: App de GitHub desinstalada. La prueba gratuita expiró y no se renovó.
+- **Contributors (02/11/2026)**: en el repo solo figuran Marcos y Gonza. No usar
+  el botón «Commit suggestion» sobre comentarios de bots (PR-Agent comenta como
+  `github-actions[bot]`): el commit que crea GitHub suma al bot como coautor y
+  vuelve a aparecer como contributor. Esos cambios se aplican a mano. Tampoco se
+  le asignan issues ni PRs al agente de Copilot. `.husky/commit-msg` borra esos
+  coautores en los commits locales, pero no corre en los que se crean en la web.
 - **Desde el 21/09/2026 tampoco hay revisión humana de PRs** (acordado entre
   Gonza y Marcos). Cada uno mergea su propio trabajo a `main` en cuanto el CI
   está verde, con `merge commit` (no squash, así un PR apilado no necesita
