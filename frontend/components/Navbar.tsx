@@ -78,7 +78,11 @@ export function Navbar() {
             <AccountMenu />
           ) : (
             <>
-              <Link href={routes.login} className={`${authLinkClass} text-foreground`}>
+              {/* En celular, Log in vive en la barra inferior (MobileTabs). */}
+              <Link
+                href={routes.login}
+                className={`${authLinkClass} text-foreground max-md:hidden`}
+              >
                 {t("account.logIn")}
               </Link>
               <Link

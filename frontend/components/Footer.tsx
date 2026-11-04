@@ -172,12 +172,7 @@ export function Footer() {
                   <ChevronRight aria-hidden="true" className="size-4" />
                 </Link>
               </li>
-              <li className="border-b border-line">
-                <Link href={routes.login} className={rowClass}>
-                  {account("logIn")}
-                  <ChevronRight aria-hidden="true" className="size-4" />
-                </Link>
-              </li>
+              {/* Log in no va acá: en celular está en la barra inferior. */}
               <li className="py-3">
                 <LanguageSwitcher />
               </li>
