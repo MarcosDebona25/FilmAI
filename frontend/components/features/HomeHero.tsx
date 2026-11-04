@@ -64,7 +64,7 @@ export function HomeHero({
           {t("nav.main.home")}
         </h1>
       )}
-      <div className="relative z-10 px-5 pt-1 pb-4 md:mx-auto md:w-full md:max-w-[85rem] md:px-10 md:pt-[5.5rem] md:pb-0">
+      <div className="relative page-container w-full z-10 pt-1 pb-4 md:pt-[5.5rem] md:pb-0">
         {selector}
       </div>
       {/*
@@ -100,7 +100,7 @@ export function HomeHero({
                 style={{ background: VELO_ESCRITORIO }}
               />
             </div>
-            <div className="relative flex flex-col gap-3 px-5 pb-7 md:mx-auto md:w-full md:max-w-[85rem] md:gap-[1.125rem] md:px-10 md:pb-[4.5rem]">
+            <div className="relative page-container w-full flex flex-col gap-3 pb-7 md:gap-[1.125rem] md:pb-[4.5rem]">
               <p className="flex gap-2 text-sm text-fg-2 md:gap-2.5 md:text-[0.9375rem]">
                 <span className="font-semibold text-primary">
                   {tipo === "all"

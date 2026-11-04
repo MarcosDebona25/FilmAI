@@ -216,7 +216,7 @@ export function SearchView() {
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[85rem] flex-col gap-4 px-5 pt-5 pb-[7.5rem] md:gap-7 md:px-10 md:pt-6 md:pb-20"
+      className="page-container flex flex-col gap-4 pt-5 pb-[7.5rem] md:gap-7 md:pt-6 md:pb-20"
     >
       <h1 className="mb-[0.9375rem] font-display text-[2.75rem] leading-none md:sr-only">
         {t("nav.main.search")}

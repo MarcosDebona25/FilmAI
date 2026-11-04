@@ -284,7 +284,7 @@ export function ListDetailView({ id }: { id: number }) {
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[85rem] flex-col gap-5 px-5 pt-4 pb-[7.5rem] md:gap-10 md:px-10 md:pt-12 md:pb-24"
+      className="page-container flex flex-col gap-5 pt-4 pb-[7.5rem] md:gap-10 md:pt-12 md:pb-24"
     >
       <div className="flex flex-col gap-2.5 md:gap-3.5">
         <Link

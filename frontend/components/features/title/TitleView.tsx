@@ -169,10 +169,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
 
   if (detalle.status === "error") {
     return (
-      <main
-        id="contenido"
-        className="mx-auto flex max-w-[85rem] flex-col items-start gap-4 px-5 pt-28 pb-16 md:px-10"
-      >
+      <main id="contenido" className="page-container flex flex-col items-start gap-4 pt-28 pb-16">
         <ErrorRetry
           mensaje={mensajeDeError(detalle.error)}
           onReintentar={() => setIntento((anterior) => anterior + 1)}
@@ -293,7 +290,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         />
         {/* Arriba a la izquierda, debajo de la barra, sobre una píldora con velo:
             encima del fondo, el texto suelto se perdía en las imágenes claras. */}
-        <div className="relative mx-auto max-w-[85rem] px-4 pt-[3.75rem] md:px-10 md:pt-[6.25rem]">
+        <div className="relative page-container max-md:px-4 pt-[3.75rem] md:pt-[6.25rem]">
           <Link
             href={volver.href}
             aria-label={t("title.breadcrumb.backTo", { label: volver.label })}
@@ -326,7 +323,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         </div>
       </div>
 
-      <div className="relative mx-auto -mt-24 flex max-w-[85rem] flex-col gap-16 px-5 md:-mt-[23.75rem] md:gap-24 md:px-10">
+      <div className="relative page-container -mt-24 flex flex-col gap-16 md:-mt-[23.75rem] md:gap-24">
         <div className="grid grid-cols-[7.25rem_minmax(0,1fr)] items-end gap-x-4 gap-y-6 md:grid-cols-[18.75rem_minmax(0,1fr)] md:items-start md:gap-x-14">
           <div
             className={cn(

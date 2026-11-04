@@ -57,7 +57,7 @@ function ErrorLayout({
   return (
     <main
       id="contenido"
-      className="mx-auto flex w-full max-w-[85rem] flex-col gap-3.5 px-5 pt-10 pb-[7.5rem] md:flex-row md:flex-wrap md:items-center md:justify-center md:gap-x-24 md:gap-y-12 md:px-10 md:pt-24"
+      className="page-container flex w-full flex-col gap-3.5 pt-10 pb-[7.5rem] md:flex-row md:flex-wrap md:items-center md:justify-center md:gap-x-24 md:gap-y-12 md:pt-24"
     >
       <TornTicket label={t("ticketIllustrationAlt")} />
       <div className="flex max-w-[40rem] flex-col gap-3.5 max-md:mt-7 md:flex-[1_1_32.5rem] md:gap-4">

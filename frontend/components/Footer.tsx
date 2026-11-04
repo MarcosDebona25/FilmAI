@@ -35,7 +35,7 @@ export function Footer() {
 
   return (
     <footer className="mt-10 border-t border-line">
-      <div className="mx-auto flex max-w-[85rem] flex-col gap-6 px-5 pt-9 pb-5 md:gap-12 md:px-10 md:pt-14 md:pb-10">
+      <div className="page-container flex flex-col gap-6 pt-9 pb-5 md:gap-12 md:pt-14 md:pb-10">
         <div className="flex flex-wrap justify-between gap-x-16 gap-y-10">
           <div className="flex max-w-[31.5625rem] flex-1 basis-80 flex-col gap-3 md:gap-4">
             <Link

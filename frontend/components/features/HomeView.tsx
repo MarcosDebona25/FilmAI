@@ -194,7 +194,7 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
         }
       />
       {todoFalla ? (
-        <div className="mx-auto flex max-w-[85rem] flex-col items-start gap-4 px-5 py-16 md:px-10">
+        <div className="page-container flex flex-col items-start gap-4 py-16">
           <p role="alert" className="text-fg-2">
             {mensaje(fallidos[0].error)}
           </p>
@@ -207,7 +207,7 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
           </button>
         </div>
       ) : todoVacio ? (
-        <div className="mx-auto flex max-w-[85rem] flex-col items-start gap-4 px-5 py-16 md:px-10">
+        <div className="page-container flex flex-col items-start gap-4 py-16">
           <p className="max-w-[60ch] text-fg-2">{t("rows.emptyDescription")}</p>
           <Link
             href={routes.search}
@@ -217,7 +217,7 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
           </Link>
         </div>
       ) : (
-        <div className="mx-auto flex max-w-[85rem] flex-col gap-11 pt-7 pb-12 md:gap-20 md:px-10 md:pt-10 md:pb-20">
+        <div className="page-container max-md:px-0 flex flex-col gap-11 pt-7 pb-12 md:gap-20 md:pt-10 md:pb-20">
           {filaRecomendado && (
             <MediaRow
               title={t("rows.recommendedTitle")}

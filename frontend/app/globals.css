@@ -134,6 +134,17 @@
   }
   html {
     scrollbar-gutter: stable;
+    /* En % y no en px: respeta el tamaño de letra que eligió el usuario. */
+    font-size: 100%;
+  }
+  /* Desde 1440 px todo (en rem) crece con la pantalla: ×1 a 1440, ≈×1,13 a 1920
+     (18,1 px) y tope ×1,3 desde 2560 (20,8 px). Por debajo, la raíz queda en
+     16 px y el diseño no cambia. Los breakpoints van en px: los `rem` de una
+     media query usan el tamaño inicial, no el de la raíz. */
+  @media (width >= 1440px) {
+    html {
+      font-size: clamp(100%, calc(60% + 0.4444vw), 130%);
+    }
   }
   /* WCAG 2.4.11: al llegar con Tab, el control enfocado no queda bajo la barra
      inferior fija (76 px, MobileTabs) ni bajo el botón flotante del Inicio
@@ -155,5 +166,23 @@
   [role="radio"],
   [role="menuitem"] {
     touch-action: manipulation;
+  }
+}
+
+/* Contenedor único de las páginas (barra, cuerpo y pie): centrado, con tope de
+   ancho y margen lateral. Por debajo de 1440 px es el de siempre (1360 px,
+   20/40 px); desde ahí el tope pasa a 90rem y el margen crece con la pantalla
+   (3vw, entre 2,5 y 4 rem). Un padding distinto en celular se agrega con
+   `max-md:` (por ejemplo `max-md:pr-3`). */
+@utility page-container {
+  margin-inline: auto;
+  max-width: 85rem;
+  padding-inline: 1.25rem;
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+  @media (width >= 1440px) {
+    max-width: 90rem;
+    padding-inline: clamp(2.5rem, 3vw, 4rem);
   }
 }
