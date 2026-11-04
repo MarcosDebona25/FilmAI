@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ORIGIN } from "./origen";
 
 import { prepararCuenta } from "./cuenta";
 
@@ -22,9 +23,7 @@ test.describe("sesión", () => {
     await prepararCuenta(page);
     // Solo queda la cookie `refresh`: el `access` de 8 horas ya venció.
     await page.context().clearCookies({ name: "access" });
-    await page
-      .context()
-      .addCookies([{ name: "refresh", value: "valida", url: "http://127.0.0.1:3100" }]);
+    await page.context().addCookies([{ name: "refresh", value: "valida", url: ORIGIN }]);
     let renovada = false;
     await page.route("**/api/auth/token/refresh/", async (route) => {
       renovada = true;

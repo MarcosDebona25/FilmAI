@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ORIGIN } from "./origen";
 
 import { prepararCuenta } from "./cuenta";
 
@@ -48,6 +49,6 @@ test("baja: advertencia aprobada, cancelar y confirmar", async ({ page }) => {
     .getByRole("alertdialog")
     .getByRole("button", { name: "Dar de baja", exact: true })
     .click();
-  await expect(page).toHaveURL("http://127.0.0.1:3100/");
+  await expect(page).toHaveURL(`${ORIGIN}/`);
   expect(calls).toBe(1);
 });

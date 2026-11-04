@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ORIGIN } from "./origen";
 
 import es from "../messages/es/common.json";
 import { prepararCuenta } from "./cuenta";
@@ -98,7 +99,7 @@ test("confirma navegación a un enlace y atrás/adelante sin perder el destino",
   await page.getByLabel("Nombre", { exact: true }).fill("Otro");
   await page.getByRole("banner").getByRole("link", { name: es.nav.main.brandHomeLabel }).click();
   await page.getByRole("button", { name: "Salir sin guardar" }).click();
-  await expect(page).toHaveURL("http://127.0.0.1:3100/home");
+  await expect(page).toHaveURL(`${ORIGIN}/home`);
 });
 test("disponibilidad verde y roja", async ({ page }) => {
   await prepararCuenta(page);
