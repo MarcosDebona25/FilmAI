@@ -454,5 +454,6 @@ export function SearchView() {
   );
 }
 
+/** Desde md, las mismas columnas que las filas del Home (`--cols`, globals.css). */
 const GRILLA =
-  "grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(10.5rem,100%),1fr))] md:gap-x-5 md:gap-y-8";
+  "grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-5 md:gap-y-8";

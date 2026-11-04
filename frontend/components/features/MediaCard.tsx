@@ -14,6 +14,14 @@ import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
 /**
+ * Ancho de la tarjeta desde `md` (fila o grilla con `--cols` columnas, margen
+ * del contenedor y gap de 20 px), para que el navegador baje el póster justo.
+ * Desde 1440 px la raíz crece y la tarjeta llega a ~224 px.
+ */
+const SIZES_ESCRITORIO =
+  "(min-width: 1440px) 224px, (min-width: 1280px) calc(16.67vw - 30px), (min-width: 1024px) calc(20vw - 32px), (min-width: 768px) calc(25vw - 35px)";
+
+/**
  * Tarjeta de un título: póster 2:3, nombre y una línea con tipo, año y nota de
  * TMDB. Lleva a la ficha (C-07). La usan las filas del Home y, después, Search
  * y el detalle de listas (L-03).
@@ -30,7 +38,7 @@ export function MediaCard({
   showType: boolean;
   /** Origen para la miga de pan de la ficha (`home`, `search`, `list-{id}`…). */
   from?: string;
-  /** En una grilla (Search, L-03) ocupa su columna en vez de 132/176 px. */
+  /** En una grilla (Search, L-03) ocupa su columna también en celular (fila: 132 px). */
   fluid?: boolean;
   /** «No ratings» cuando TMDB no tiene nota (canvas de Search). */
   showUnrated?: boolean;
@@ -52,7 +60,7 @@ export function MediaCard({
       href={routes.title(title.tipo, title.id, from)}
       className={cn(
         "group relative flex flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:gap-3",
-        fluid ? "w-full" : "w-[8.25rem] md:w-[11rem]"
+        fluid ? "w-full" : "w-[8.25rem] md:w-full"
       )}
     >
       <span className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-raised transition-[transform,box-shadow] duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgb(0_0_0/0.45)] group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
@@ -62,7 +70,7 @@ export function MediaCard({
             src={poster}
             alt={t("media.posterAlt", { title: title.titulo })}
             fill
-            sizes={fluid ? "(min-width: 768px) 220px, 50vw" : "(min-width: 768px) 176px, 132px"}
+            sizes={fluid ? `${SIZES_ESCRITORIO}, 50vw` : `${SIZES_ESCRITORIO}, 132px`}
             className="object-cover"
             onError={() => setFailed(poster)}
           />

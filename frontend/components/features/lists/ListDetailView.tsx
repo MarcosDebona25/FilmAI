@@ -523,7 +523,7 @@ export function ListDetailView({ id }: { id: number }) {
             <ul
               role="status"
               aria-label={t("lists.detail.loading")}
-              className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(13.75rem,100%),1fr))] md:gap-x-6 md:gap-y-9"
+              className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-6 md:gap-y-9"
             >
               {[0, 1, 2, 3].map((indice) => (
                 <li key={indice} className="flex flex-col gap-2.5">
@@ -575,7 +575,7 @@ export function ListDetailView({ id }: { id: number }) {
 
           {datos && datos.items.length > 0 && estado !== "error" && nombre && (
             <div aria-busy={estado === "cargando"} className="flex flex-col">
-              <ul className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(13.75rem,100%),1fr))] md:gap-x-6 md:gap-y-9">
+              <ul className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-6 md:gap-y-9">
                 {datos.items.map((item) => (
                   <li key={item.item_id} className="group/item relative list-none">
                     <MediaCard

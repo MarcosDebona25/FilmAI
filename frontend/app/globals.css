@@ -136,6 +136,25 @@
     scrollbar-gutter: stable;
     /* En % y no en px: respeta el tamaño de letra que eligió el usuario. */
     font-size: 100%;
+    /* Tarjetas por página en las filas del Home y columnas de las grillas de
+       pósters (Buscar, detalle de lista). En celular la fila sigue con swipe y
+       tarjetas de 132 px, y las grillas en 2 columnas. */
+    --cols: 2;
+  }
+  @media (width >= 48rem) {
+    html {
+      --cols: 4;
+    }
+  }
+  @media (width >= 64rem) {
+    html {
+      --cols: 5;
+    }
+  }
+  @media (width >= 80rem) {
+    html {
+      --cols: 6;
+    }
   }
   /* Desde 1440 px todo (en rem) crece con la pantalla: ×1 a 1440, ≈×1,13 a 1920
      (18,1 px) y tope ×1,3 desde 2560 (20,8 px). Por debajo, la raíz queda en
@@ -144,6 +163,7 @@
   @media (width >= 1440px) {
     html {
       font-size: clamp(100%, calc(60% + 0.4444vw), 130%);
+      --cols: 7;
     }
   }
   /* WCAG 2.4.11: al llegar con Tab, el control enfocado no queda bajo la barra
