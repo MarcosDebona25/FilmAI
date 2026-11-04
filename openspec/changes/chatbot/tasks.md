@@ -103,42 +103,42 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ## Phase 0: Contract (PR 0) — together
 
-- [ ] 0.1 Explain: async generator, why the last item is a `Resultado`
+- [x] 0.1 Explain: async generator, why the last item is a `Resultado`
       (an async generator cannot `return` a value), `Protocol`, why a fake
       lets both fronts work in parallel
-- [ ] 0.2 `chatbot/eventos.py`: `Estado`, `Texto`, `Tarjeta`, `Resultado`,
+- [x] 0.2 `chatbot/eventos.py`: `Estado`, `Texto`, `Tarjeta`, `Resultado`,
       `ErrorDelTurno`, `Responder` protocol `(chat, texto, idioma)`
-- [ ] 0.3 `chatbot/orquestador_falso.py`: `OrquestadorFalso(guion, demora,
+- [x] 0.3 `chatbot/orquestador_falso.py`: `OrquestadorFalso(guion, demora,
       falla_en)` and `GUION_BASICO`
-- [ ] 0.4 `chatbot/tests_contrato.py`: order and single final `Resultado`,
+- [x] 0.4 `chatbot/tests_contrato.py`: order and single final `Resultado`,
       scripted failure, cancellation during a delay, recorded calls, card shape
 
 
 ## Phase 1: Semantic search (PR 1)
 
-- [ ] 1.1 RED `catalogo/tests_semantica.py`: `generar_vector` sends model
+- [x] 1.1 RED `catalogo/tests_semantica.py`: `generar_vector` sends model
       `bge-m3`, `keep_alive` and the text to `OLLAMA_URL/api/embed`, and returns
       the vector (`httpx.MockTransport`)
-- [ ] 1.2 RED: backfill budget — 3 connection failures → 3 attempts and
+- [x] 1.2 RED: backfill budget — 3 connection failures → 3 attempts and
       `EmbeddingProviderError`; chat budget — a hang → one attempt, 3 s, and
       `EmbeddingProviderError`; a 768-float vector → `EmbeddingProviderError`
-- [ ] 1.3 GREEN: `generar_vector` with `httpx`; backfill budget 10 s and 2
+- [x] 1.3 GREEN: `generar_vector` with `httpx`; backfill budget 10 s and 2
       retries, chat-query budget 3 s and no retry;
       `MODEL_VERSION = "bge-m3"`; `OLLAMA_URL` in settings
-- [ ] 1.4 RED: `buscar_semantico` returns the nearest `ready` rows in order,
+- [x] 1.4 RED: `buscar_semantico` returns the nearest `ready` rows in order,
       skips `pending`/`failed`, applies each filter, honours `excluir`, caps
       at 10 (vectors built by hand in the test DB, query vector faked)
-- [ ] 1.5 GREEN: `catalogo/services/semantica.py` with pgvector's
+- [x] 1.5 GREEN: `catalogo/services/semantica.py` with pgvector's
       `CosineDistance`, overfetch 50
-- [ ] 1.6 `docker-compose.yml`: profile `ollama-windows` (`ollama-puente`,
+- [x] 1.6 `docker-compose.yml`: profile `ollama-windows` (`ollama-puente`,
       `alpine/socat` pinned, `network_mode: host`, bind `172.17.0.1:11435`),
       profile `ollama` (pinned `ollama/ollama`, `mem_limit: 2g`, volume);
       `extra_hosts` on backend and worker; `.env.example` `OLLAMA_URL`
 - [ ] 1.7 Manual: both developers bring up the bridge and run the backfill;
       record counts and time in `docs/decisiones.md`
-- [ ] 1.7b Q-09 (doc 05): RED/GREEN expiry of the `processing` claim, with the
+- [x] 1.7b Q-09 (doc 05): RED/GREEN expiry of the `processing` claim, with the
       deadline taken from the real times of 1.7
-- [ ] 1.8 Explain: what an embedding is, cosine distance, why filters run after
+- [x] 1.8 Explain: what an embedding is, cosine distance, why filters run after
       the vector, how the bridge works
 
 ## Phase 2: Tools, profile, anonymizer (PR 2)

@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 04/11/2026 — B-06 y Q-09: vectores reales, búsqueda semántica y vencimiento de `processing`
+
+- **Fecha**: 04/11/2026
+- **Descripción**: primer PR del Motor del chatbot (fase 1 del SDD). `generar_vector` llama a Ollama (`bge-m3`) y `buscar_semantico` consulta pgvector. Lo que se decidió al implementar y no estaba en el SDD:
+  - **`hnsw.ef_search = 100`**: por defecto el índice HNSW mira 40 candidatos, así que pedir 50 devolvía 40 o menos sin avisar, y solo cuando Postgres usa el índice. Se fija con `SET LOCAL` para no afectar a otras consultas de la misma conexión. Un test fuerza el índice; sin esta línea, falla.
+  - **Filtros**: `generos` usa los nombres en inglés de `ProduccionAudiovisual.generos` y alcanza con que coincida uno. `tipo` y `excluir` usan el tipo de TMDB (`movie`, `tv`), como `vistos()` y las tarjetas. Un título sin el dato que pide un filtro queda afuera (por ejemplo, una serie sin `duracion`).
+  - **Reintentos sin pausa**: el SDD no pide esperar entre intentos; el backfill corre de noche y una fila que falla la retoma la corrida siguiente.
+  - **Q-09**: un reclamo en `processing` vence a los 5 minutos. El peor caso de una tarea son 3 intentos de 10 s, y la fecha se renueva al reclamar, así que la espera en la cola no cuenta. El backfill devuelve las vencidas a `pending` antes de reencolar: si solo renovara la fecha, `generar_embedding` vería un reclamo reciente y no las tomaría.
+  - **Compose**: perfiles `ollama-windows` (`alpine/socat:1.8.0.3`) y `ollama` (`ollama/ollama:0.40.14`); ninguno arranca por defecto.
+- **Medición real (Gonza, 04/11/2026)**: 402 de 402 producciones en `ready` en 223 s (554 ms por ficha, sin Celery y con Windows casi sin memoria libre). Consultas de `buscar_semantico`: 80 a 125 ms. Con el modelo cargado, un vector tarda unos 60 ms; la carga en frío tardó 21,7 s con 730 MB libres en Windows, contra los 1,9 s medidos el 28/10. En ese caso el presupuesto de 3 s del chat vence y la tool devuelve `tool_failed`: es el comportamiento acordado, y `keep_alive` lo limita a la primera consulta tras 30 minutos sin uso. Falta la corrida de Marcos (tarea 1.7).
+- **Archivos afectados**: `backend/catalogo/services/{embeddings,semantica}.py`, `backend/catalogo/tasks.py`, `backend/catalogo/tests.py`, `backend/catalogo/tests_semantica.py` (nuevo), `backend/filmai/settings.py`, `docker-compose.yml`, `.env.example`, `docs/05_Plan_de_Desarrollo.md`, `openspec/changes/chatbot/`.
+
 ## 04/11/2026 — Ancho en pantallas grandes: contenedor único, escala desde 1440 px, filas con tarjetas enteras y tamaños en rem
 
 - **Fecha**: 04/11/2026
