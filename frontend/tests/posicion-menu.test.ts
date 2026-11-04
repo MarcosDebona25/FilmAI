@@ -39,22 +39,6 @@ describe("posicionarMenu", () => {
     expect(y).toBe(16);
   });
 
-  it("si el botón salió por arriba, el panel queda en el borde superior", () => {
-    const ancla = { left: 100, top: -300, bottom: -250 };
-
-    const { y } = posicionarMenu({ ancla, ancho: 340, alto: 320, ventana });
-
-    expect(y).toBe(16);
-  });
-
-  it("si el botón salió por abajo, el panel queda en el borde inferior", () => {
-    const ancla = { left: 100, top: 900, bottom: 950 };
-
-    const { y } = posicionarMenu({ ancla, ancho: 340, alto: 320, ventana });
-
-    expect(y).toBe(464);
-  });
-
   it("no deja que el panel se salga por la derecha", () => {
     const ancla = { left: 1100, top: 200, bottom: 250 };
 

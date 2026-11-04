@@ -26,11 +26,9 @@ export function posicionarMenu({
   const haciaArriba = alto > lugarAbajo && lugarArriba > lugarAbajo;
 
   const altoMaximo = Math.max(haciaArriba ? lugarArriba : lugarAbajo, ALTO_MINIMO);
-  const altoVisible = Math.min(alto, altoMaximo);
-  const pegado = haciaArriba ? ancla.top - SEPARACION - altoVisible : ancla.bottom + SEPARACION;
-  // Si la página se desplaza y el botón sale de la ventana, el panel se queda en
-  // el borde: desaparecer con él dejaría el fondo inerte y nada a la vista.
-  const y = Math.max(MARGEN, Math.min(pegado, ventana.alto - MARGEN - altoVisible));
+  const y = haciaArriba
+    ? ancla.top - SEPARACION - Math.min(alto, altoMaximo)
+    : ancla.bottom + SEPARACION;
   const x = Math.max(MARGEN, Math.min(ancla.left, ventana.ancho - ancho - MARGEN));
 
   return { x, y, altoMaximo };
