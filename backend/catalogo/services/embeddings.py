@@ -83,11 +83,12 @@ def _extraer_vector(respuesta):
         raise EmbeddingProviderError(f"Ollama respondió {respuesta.status_code}")
     try:
         vector = respuesta.json()["embeddings"][0]
+        dimensiones = len(vector)
     except (ValueError, KeyError, IndexError, TypeError) as error:
         raise EmbeddingProviderError("Ollama respondió sin un vector") from error
-    if len(vector) != _DIMENSIONES:
+    if dimensiones != _DIMENSIONES:
         raise EmbeddingProviderError(
-            f"Ollama devolvió {len(vector)} dimensiones, no {_DIMENSIONES}"
+            f"Ollama devolvió {dimensiones} dimensiones, no {_DIMENSIONES}"
         )
     return vector
 
@@ -97,7 +98,7 @@ def generar_vector(texto, *, timeout=10, reintentos=2, transport=None):
 
     Reintenta solo lo pasajero (conexión, timeout y errores 5xx). Un 4xx o una
     respuesta inválida no se arreglan insistiendo, así que fallan enseguida.
-    Cualquier fallo termina en `EmbeddingProviderError`.
+    Cualquier fallo de Ollama o de la red termina en `EmbeddingProviderError`.
 
     `transport` existe para los tests: reemplaza la red por una respuesta falsa.
     """

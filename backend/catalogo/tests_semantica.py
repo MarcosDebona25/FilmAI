@@ -111,6 +111,12 @@ class GenerarVectorTests(SimpleTestCase):
         with self.assertRaises(EmbeddingProviderError):
             self.llamar(lambda request: httpx.Response(200, json={"embeddings": []}))
 
+    def test_un_vector_nulo_no_se_acepta(self):
+        with self.assertRaises(EmbeddingProviderError):
+            self.llamar(
+                lambda request: httpx.Response(200, json={"embeddings": [None]})
+            )
+
     def test_una_respuesta_que_no_es_json_no_se_acepta(self):
         with self.assertRaises(EmbeddingProviderError):
             self.llamar(lambda request: httpx.Response(200, text="<html>"))
