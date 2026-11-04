@@ -564,9 +564,9 @@
     "semantic_hash": ""
   },
   "docs/04_Lineamientos_UI.md": {
-    "mtime": 1793813364.1811996,
-    "seen": 1793814227.538459,
-    "ast_hash": "01defc9d74dd0a2d9e894c2351861c0e",
+    "mtime": 1793815793.4578478,
+    "seen": 1793816081.7988691,
+    "ast_hash": "88ff3fba9ef95f35985d87fff2da406b",
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793813364.1761189,
-    "seen": 1793814227.5384662,
-    "ast_hash": "3d9d8794cf62f9cc529d3a7e5231d3b5",
+    "mtime": 1793815793.4496713,
+    "seen": 1793816081.7991698,
+    "ast_hash": "2041fcd0ed63911718fe9b78d269dea5",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1793814072.1667402,
-    "seen": 1793814227.5381064,
+    "mtime": 1793815932.912983,
+    "seen": 1793816081.7756314,
     "ast_hash": "b6dfa5c8462e15a4f8cb9911eb4d6b66",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1793814072.1706254,
-    "seen": 1793814227.5381103,
+    "mtime": 1793815932.912983,
+    "seen": 1793816081.775754,
     "ast_hash": "72b243bc33ffe31055f1a78635beb353",
     "semantic_hash": ""
   },
@@ -3450,9 +3450,9 @@
     "semantic_hash": ""
   },
   "frontend/components/features/SearchView.tsx": {
-    "mtime": 1793813141.656352,
-    "seen": 1793814227.537893,
-    "ast_hash": "d9e39eff8e8581bd63fe582bb74735ef",
+    "mtime": 1793815711.3705738,
+    "seen": 1793816081.7644856,
+    "ast_hash": "e3ef4a5e7a69948a588401c63bd6848f",
     "semantic_hash": ""
   },
   "frontend/lib/search.ts": {
@@ -3660,9 +3660,9 @@
     "semantic_hash": ""
   },
   "frontend/components/features/lists/ListActionsMenu.tsx": {
-    "mtime": 1793813141.6644635,
-    "seen": 1793814227.537899,
-    "ast_hash": "2545cf95eb889b4b77da66d282974146",
+    "mtime": 1793815711.3708096,
+    "seen": 1793816081.7647789,
+    "ast_hash": "1fe7ca1d0a47b9bd812aba809804d5f7",
     "semantic_hash": ""
   },
   "frontend/components/features/lists/ListCard.tsx": {
