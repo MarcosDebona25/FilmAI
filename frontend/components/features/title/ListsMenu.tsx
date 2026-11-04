@@ -1,19 +1,39 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { Check, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 import { ApiError, extraerErroresPorCampo } from "@/lib/api";
+import { posicionarMenu } from "@/lib/posicion-menu";
 import type { ListaFicha } from "@/lib/title-lists";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
 
 /**
  * Menú «Add to list» (canvas): las listas propias con su casilla, y crear una
- * nueva en el lugar. En escritorio es un panel bajo el botón; en celular, una
- * hoja desde abajo con fondo oscuro. Es un `<dialog>` modal nativo: el fondo queda inerte, Escape y el clic afuera lo cierran.
+ * nueva en el lugar. En escritorio es un panel pegado al botón, que se abre
+ * hacia donde haya lugar y lo sigue si la página se desplaza; en celular, una
+ * hoja desde abajo con fondo oscuro y la página quieta. Es un `<dialog>` modal
+ * nativo: el fondo queda inerte, Escape y el clic afuera lo cierran.
  */
+function ubicar(dialogo: HTMLDialogElement) {
+  // El diálogo modal vive en la capa superior, fuera del flujo: su posición se
+  // calcula a mano desde el contenedor del botón. `scrollHeight` da el alto
+  // completo del contenido aunque hoy esté recortado por el alto máximo.
+  const ancla = dialogo.parentElement?.getBoundingClientRect();
+  if (!ancla) return;
+  const { x, y, altoMaximo } = posicionarMenu({
+    ancla,
+    ancho: dialogo.offsetWidth,
+    alto: dialogo.scrollHeight,
+    ventana: { ancho: window.innerWidth, alto: window.innerHeight },
+  });
+  dialogo.style.setProperty("--menu-x", `${x}px`);
+  dialogo.style.setProperty("--menu-y", `${y}px`);
+  dialogo.style.setProperty("--menu-max", `${altoMaximo}px`);
+}
+
 export function ListsMenu({
   titulo,
   listas,
@@ -41,22 +61,29 @@ export function ListsMenu({
   useEffect(() => {
     const dialogo = ref.current;
     if (!dialogo) return;
-    // En escritorio el panel cuelga del botón: como el diálogo modal vive en la
-    // capa superior (fuera del flujo), su posición se calcula desde el contenedor.
-    const ancla = dialogo.parentElement?.getBoundingClientRect();
-    if (ancla) {
-      dialogo.style.setProperty("--menu-x", `${ancla.left}px`);
-      dialogo.style.setProperty("--menu-y", `${ancla.top + 56}px`);
-    }
     dialogo.showModal();
+    ubicar(dialogo);
     dialogo.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
+
+    const seguirAlBoton = () => ubicar(dialogo);
+    window.addEventListener("scroll", seguirAlBoton, { passive: true });
+    window.addEventListener("resize", seguirAlBoton);
     const desborde = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (!window.matchMedia?.("(min-width: 48rem)").matches) {
+      document.body.style.overflow = "hidden";
+    }
     return () => {
       dialogo.close();
+      window.removeEventListener("scroll", seguirAlBoton);
+      window.removeEventListener("resize", seguirAlBoton);
       document.body.style.overflow = desborde;
     };
   }, []);
+
+  // El formulario de lista nueva y sus errores cambian el alto del panel.
+  useLayoutEffect(() => {
+    if (ref.current?.open) ubicar(ref.current);
+  }, [creando, error, listas.length]);
 
   async function crear(event: FormEvent) {
     event.preventDefault();
@@ -105,7 +132,7 @@ export function ListsMenu({
         const { clientX: x, clientY: y } = event;
         if (x < caja.left || x > caja.right || y < caja.top || y > caja.bottom) onClose();
       }}
-      className="fixed inset-x-0 top-auto bottom-0 m-0 max-h-[80dvh] w-full max-w-none flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-t-[1.25rem] border-0 bg-raised px-3 pt-2.5 pb-6 text-foreground shadow-[0_-10px_40px_rgb(0_0_0/0.4)] backdrop:bg-black/55 open:flex md:inset-x-auto md:top-[var(--menu-y)] md:bottom-auto md:left-[var(--menu-x)] md:w-[21.25rem] md:rounded-[0.875rem] md:p-2 md:shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)] md:backdrop:bg-transparent"
+      className="fixed inset-x-0 top-auto bottom-0 m-0 max-h-[80dvh] w-full max-w-none flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-t-[1.25rem] border-0 bg-raised px-3 pt-2.5 pb-6 text-foreground shadow-[0_-10px_40px_rgb(0_0_0/0.4)] backdrop:bg-black/55 open:flex md:inset-x-auto md:top-[var(--menu-y)] md:bottom-auto md:left-[var(--menu-x)] md:max-h-[var(--menu-max)] md:w-[21.25rem] md:overscroll-auto md:rounded-[0.875rem] md:p-2 md:shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)] md:backdrop:bg-transparent"
     >
       <span aria-hidden="true" className="mx-auto mb-2 h-1 w-10 rounded-full bg-line md:hidden" />
       <div className="flex items-center justify-between px-2 pb-2 md:hidden">
