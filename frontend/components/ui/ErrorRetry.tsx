@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 const BOTON = {
   // Ficha, Buscar, Perfil y Ajustes.
   cuadrado:
-    "inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring",
+    "inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[1.375rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring",
   // «Calificaciones y reseñas», con los botones redondos del canvas.
   pildora:
-    "h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring",
+    "h-11 cursor-pointer rounded-full bg-raised-2 px-[1.125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring",
 };
 
 /**

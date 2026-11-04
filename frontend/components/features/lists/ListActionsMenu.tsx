@@ -90,7 +90,7 @@ export function ListActionsMenu({
   }
 
   const fila =
-    "flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 text-left text-[15px] font-medium hover:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-45";
+    "flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[0.625rem] px-3 text-left text-[0.9375rem] font-medium hover:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-45";
 
   return (
     <div className={cn("relative", className)}>
@@ -101,7 +101,7 @@ export function ListActionsMenu({
         aria-expanded={abierto !== null}
         aria-label={etiqueta}
         onClick={() =>
-          setAbierto(window.matchMedia?.("(min-width: 768px)").matches ? "escritorio" : "celular")
+          setAbierto(window.matchMedia?.("(min-width: 48rem)").matches ? "escritorio" : "celular")
         }
         className="grid size-11 cursor-pointer place-items-center rounded-full text-fg-2 hover:bg-raised-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
       >
@@ -116,7 +116,7 @@ export function ListActionsMenu({
             role="menu"
             aria-label={etiqueta}
             onKeyDown={alTeclear}
-            className="absolute top-full right-0 z-50 mt-1 flex w-56 flex-col gap-0.5 rounded-[14px] bg-raised p-2 shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)]"
+            className="absolute top-full right-0 z-50 mt-1 flex w-56 flex-col gap-0.5 rounded-[0.875rem] bg-raised p-2 shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)]"
           >
             {visibles.map((accion) => (
               <button
@@ -137,7 +137,7 @@ export function ListActionsMenu({
 
       {abierto === "celular" && (
         <DialogShell labelledBy={tituloId} onClose={cerrar}>
-          <h2 id={tituloId} className="truncate font-display text-[30px] leading-none">
+          <h2 id={tituloId} className="truncate font-display text-[1.875rem] leading-none">
             {titulo}
           </h2>
           <div className="flex flex-col gap-0.5">

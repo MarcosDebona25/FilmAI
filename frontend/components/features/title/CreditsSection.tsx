@@ -25,7 +25,7 @@ export function CreditsSection({ creditos, tipo }: { creditos: Creditos; tipo: M
 
   return (
     <section aria-labelledby={tituloId} className="flex flex-col gap-6">
-      <h2 id={tituloId} className="font-display text-[34px] leading-none md:text-[44px]">
+      <h2 id={tituloId} className="font-display text-[2.125rem] leading-none md:text-[2.75rem]">
         {hayDirectores ? t("heading") : t("cast")}
       </h2>
       {/* Sin director (muchas series y animes) el reparto ocupa todo el ancho:
@@ -33,12 +33,12 @@ export function CreditsSection({ creditos, tipo }: { creditos: Creditos; tipo: M
       <div
         className={cn(
           "grid gap-x-14 gap-y-6",
-          hayDirectores && "md:grid-cols-[240px_minmax(0,1fr)]"
+          hayDirectores && "md:grid-cols-[15rem_minmax(0,1fr)]"
         )}
       >
         {hayDirectores && (
           <div className="flex flex-col gap-1">
-            <span className="text-[13px] font-semibold text-fg-3">
+            <span className="text-[0.8125rem] font-semibold text-fg-3">
               {tipo === "tv" ? t("creators") : t("directors")}
             </span>
             <span className="font-semibold">{creditos.directores.join(", ")}</span>
@@ -48,7 +48,7 @@ export function CreditsSection({ creditos, tipo }: { creditos: Creditos; tipo: M
           <div className="flex flex-col gap-3">
             {/* Sin director el título ya dice «Reparto». */}
             {hayDirectores && (
-              <span className="text-[13px] font-semibold text-fg-3">{t("cast")}</span>
+              <span className="text-[0.8125rem] font-semibold text-fg-3">{t("cast")}</span>
             )}
             <ul
               className={cn(

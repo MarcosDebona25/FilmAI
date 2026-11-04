@@ -88,7 +88,7 @@ export function RatingDialog({
       initialFocus={(dialog) => dialog.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')}
     >
       <div className="flex items-start justify-between gap-4">
-        <h2 id={tituloId} className="font-display text-[32px] leading-none md:text-[36px]">
+        <h2 id={tituloId} className="font-display text-[2rem] leading-none md:text-[2.25rem]">
           {editando ? t("title.rating.edit") : t("title.rating.titleLabel", { title: titulo })}
         </h2>
         <button
@@ -117,7 +117,7 @@ export function RatingDialog({
             </span>
           </span>
           {editando && valor > 0 && valor !== inicial.valor && (
-            <span className="text-[13px] text-fg-3">
+            <span className="text-[0.8125rem] text-fg-3">
               {t("title.rating.previousLabel")} <Nota valor={inicial.valor} />
             </span>
           )}
@@ -133,7 +133,7 @@ export function RatingDialog({
 
       {!enVistas && (
         <p className="flex items-center gap-2.5 text-sm text-fg-2">
-          <Eye aria-hidden="true" className="size-[18px] shrink-0" />
+          <Eye aria-hidden="true" className="size-[1.125rem] shrink-0" />
           {t(enPendientes ? "title.rating.watchedHelpFromWatchlist" : "title.rating.watchedHelp", {
             title: titulo,
           })}
@@ -163,7 +163,7 @@ export function RatingDialog({
             {t("common.review.moderatedNotice")}
           </p>
         ) : (
-          <span className="self-end text-[13px] text-fg-3 tabular-nums">
+          <span className="self-end text-[0.8125rem] text-fg-3 tabular-nums">
             {texto.length}/{MAX_TEXTO}
           </span>
         )}
@@ -194,7 +194,7 @@ export function RatingDialog({
             type="button"
             onClick={onClose}
             disabled={enviando}
-            className="h-[52px] cursor-pointer rounded-lg px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:font-medium md:shadow-none"
+            className="h-[3.25rem] cursor-pointer rounded-lg px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:font-medium md:shadow-none"
           >
             {t("common.actions.cancel")}
           </button>
@@ -202,7 +202,7 @@ export function RatingDialog({
             type="button"
             onClick={publicar}
             disabled={!valor || enviando}
-            className="h-[52px] cursor-pointer rounded-lg bg-primary px-6 font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40 md:h-12"
+            className="h-[3.25rem] cursor-pointer rounded-lg bg-primary px-6 font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40 md:h-12"
           >
             {editando ? t("common.actions.update") : t("common.review.publish")}
           </button>

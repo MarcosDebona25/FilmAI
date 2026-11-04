@@ -215,10 +215,10 @@ export default function RegisterPage() {
 
   return (
     <AccessShell>
-      <div className="flex w-full max-w-[480px] flex-col gap-[22px]">
+      <div className="flex w-full max-w-[30rem] flex-col gap-[1.375rem]">
         <AccessLogo className="mb-3 self-start" />
         <div>
-          <h1 className="mb-3 font-display text-[48px] leading-[0.95] sm:text-[60px]">
+          <h1 className="mb-3 font-display text-[3rem] leading-[0.95] sm:text-[3.75rem]">
             {nav("signUp")}
           </h1>
           <p className="text-muted-foreground">{t("signUp.description")}</p>
@@ -257,7 +257,7 @@ export default function RegisterPage() {
               help={t("signUp.nameHelp")}
             />
           </div>
-          <div className="grid grid-cols-1 gap-[22px] sm:grid-cols-2 sm:gap-4">
+          <div className="grid grid-cols-1 gap-[1.375rem] sm:grid-cols-2 sm:gap-4">
             <TextField
               label={common("fields.username")}
               name="nombre_usuario"
@@ -336,9 +336,9 @@ export default function RegisterPage() {
               {(Object.keys(reglas) as (keyof typeof reglas)[]).map((regla) => (
                 <li key={regla} className="flex items-center gap-2">
                   {reglas[regla] ? (
-                    <Check aria-hidden="true" className="size-[15px] flex-none text-ok" />
+                    <Check aria-hidden="true" className="size-[0.9375rem] flex-none text-ok" />
                   ) : (
-                    <Circle aria-hidden="true" className="size-[15px] flex-none text-fg-3" />
+                    <Circle aria-hidden="true" className="size-[0.9375rem] flex-none text-fg-3" />
                   )}
                   <span className={reglas[regla] ? "text-muted-foreground" : "text-foreground"}>
                     {reglaTextos[regla]}
@@ -366,7 +366,7 @@ export default function RegisterPage() {
             {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}
             <label
               htmlFor="terminos"
-              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--field-border)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
+              className={`flex cursor-pointer items-start gap-3 rounded-[0.625rem] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--field-border)] ${mostrar("acepta_terminos") ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : ""}`}
             >
               <input
                 id="terminos"
@@ -382,7 +382,7 @@ export default function RegisterPage() {
                 aria-describedby="terminos-error"
                 className="mt-0.5 size-5 flex-none cursor-pointer accent-primary"
               />
-              <span className="flex-1 text-[15px] leading-[1.45] text-muted-foreground">
+              <span className="flex-1 text-[0.9375rem] leading-[1.45] text-muted-foreground">
                 {t.rich("signUp.termsAcceptance", {
                   terms: (chunks) => (
                     <Link
@@ -414,7 +414,7 @@ export default function RegisterPage() {
             {nav("signUp")}
           </button>
           {!formularioValido && (
-            <p id="registro-pendiente" className="-mt-2 text-center text-[13px] text-fg-3">
+            <p id="registro-pendiente" className="-mt-2 text-center text-[0.8125rem] text-fg-3">
               {t("signUp.submitPending")}
             </p>
           )}

@@ -17,7 +17,7 @@ export function DialogShell({
   onClose,
   busy = false,
   initialFocus,
-  ancho = "md:w-[min(560px,calc(100%-2rem))]",
+  ancho = "md:w-[min(35rem,calc(100%-2rem))]",
   children,
 }: {
   role?: "dialog" | "alertdialog";
@@ -61,7 +61,7 @@ export function DialogShell({
         event.preventDefault();
         if (!busy) onClose();
       }}
-      className={`mx-0 mt-auto mb-0 flex max-h-[90dvh] w-full max-w-none flex-col gap-5 overflow-y-auto overscroll-contain rounded-t-2xl border-0 bg-raised p-5 pb-[max(20px,env(safe-area-inset-bottom))] text-foreground shadow-[0_30px_80px_rgb(0_0_0/0.5)] backdrop:bg-black/60 md:m-auto md:rounded-2xl md:p-7 ${ancho}`}
+      className={`mx-0 mt-auto mb-0 flex max-h-[90dvh] w-full max-w-none flex-col gap-5 overflow-y-auto overscroll-contain rounded-t-2xl border-0 bg-raised p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-foreground shadow-[0_30px_80px_rgb(0_0_0/0.5)] backdrop:bg-black/60 md:m-auto md:rounded-2xl md:p-7 ${ancho}`}
     >
       {/* Agarre de la hoja en celular: solo decorativo. */}
       <span

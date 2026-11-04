@@ -110,13 +110,13 @@ export function MyReviewItem({
   }
 
   const itemMenu =
-    "h-11 cursor-pointer rounded-lg px-3 text-left text-[15px] focus-visible:outline-2 focus-visible:outline-ring hover:bg-raised-2 focus:bg-raised-2";
+    "h-11 cursor-pointer rounded-lg px-3 text-left text-[0.9375rem] focus-visible:outline-2 focus-visible:outline-ring hover:bg-raised-2 focus:bg-raised-2";
   const itemHoja =
-    "h-[52px] cursor-pointer rounded-[10px] px-3 text-left text-base focus-visible:outline-2 focus-visible:outline-ring";
+    "h-[3.25rem] cursor-pointer rounded-[0.625rem] px-3 text-left text-base focus-visible:outline-2 focus-visible:outline-ring";
 
   return (
-    <li className="relative grid grid-cols-[56px_minmax(0,1fr)_44px] gap-3.5 border-t border-line py-5 md:grid-cols-[80px_minmax(0,1fr)_auto] md:gap-6 md:py-7">
-      <div className="relative h-[84px] w-14 overflow-hidden rounded-md bg-raised-2 md:h-[120px] md:w-20 md:rounded-lg">
+    <li className="relative grid grid-cols-[3.5rem_minmax(0,1fr)_2.75rem] gap-3.5 border-t border-line py-5 md:grid-cols-[5rem_minmax(0,1fr)_auto] md:gap-6 md:py-7">
+      <div className="relative h-[5.25rem] w-14 overflow-hidden rounded-md bg-raised-2 md:h-[7.5rem] md:w-20 md:rounded-lg">
         {src && !posterFallido ? (
           <Image
             loader={tmdbLoader}
@@ -138,7 +138,7 @@ export function MyReviewItem({
         <h2
           id={tituloId}
           lang={enIngles}
-          className="font-display text-2xl leading-none break-words md:text-[30px]"
+          className="font-display text-2xl leading-none break-words md:text-[1.875rem]"
         >
           <Link
             href={href}
@@ -147,12 +147,12 @@ export function MyReviewItem({
             {item.titulo}
           </Link>
         </h2>
-        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-fg-3 md:gap-x-3 md:text-sm">
-          <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground tabular-nums md:gap-1.5 md:text-[15px]">
+        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.8125rem] text-fg-3 md:gap-x-3 md:text-sm">
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground tabular-nums md:gap-1.5 md:text-[0.9375rem]">
             <span className="sr-only">
               {t("reviews.card.ratingLabel", { rating: String(item.valor) })}
             </span>
-            <Estrella className="size-[13px] md:size-[15px]" />
+            <Estrella className="size-[0.8125rem] md:size-[0.9375rem]" />
             <span aria-hidden="true">{item.valor}</span>
           </span>
           <span aria-hidden="true">·</span>
@@ -165,14 +165,17 @@ export function MyReviewItem({
             <p
               ref={textoRef}
               className={cn(
-                "mt-1 text-[15px] leading-[1.55] break-words whitespace-pre-wrap text-pretty md:text-base md:leading-[1.6]",
+                "mt-1 text-[0.9375rem] leading-[1.55] break-words whitespace-pre-wrap text-pretty md:text-base md:leading-[1.6]",
                 !desplegado && "line-clamp-3"
               )}
             >
               {item.texto}
             </p>
             {moderada && (
-              <p id={avisoId} className="flex items-start gap-1.5 text-[13px] text-fg-3 md:text-sm">
+              <p
+                id={avisoId}
+                className="flex items-start gap-1.5 text-[0.8125rem] text-fg-3 md:text-sm"
+              >
                 <Lock aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
                 {t("common.review.moderatedNotice")}
               </p>
@@ -192,9 +195,9 @@ export function MyReviewItem({
           <Link
             href={href}
             aria-label={t("reviews.card.addReviewLabel", { title: item.titulo })}
-            className="mt-1.5 flex h-12 items-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-line px-3.5 text-sm font-semibold text-fg-2 no-underline hover:text-foreground md:mt-1 md:h-14 md:gap-2.5 md:rounded-xl md:px-[18px] md:text-[15px]"
+            className="mt-1.5 flex h-12 items-center gap-2 rounded-[0.625rem] border-[1.5px] border-dashed border-line px-3.5 text-sm font-semibold text-fg-2 no-underline hover:text-foreground md:mt-1 md:h-14 md:gap-2.5 md:rounded-xl md:px-[1.125rem] md:text-[0.9375rem]"
           >
-            <PenLine aria-hidden="true" className="size-4 md:size-[18px]" />
+            <PenLine aria-hidden="true" className="size-4 md:size-[1.125rem]" />
             {t("common.review.add")}
           </Link>
         )}
@@ -226,7 +229,7 @@ export function MyReviewItem({
           ref={menuRef}
           role="menu"
           aria-label={t("reviews.card.moreActionsLabel", { title: item.titulo })}
-          className="absolute top-[76px] right-0 z-10 hidden w-[230px] flex-col rounded-xl bg-raised p-1.5 shadow-[0_16px_40px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)] md:flex"
+          className="absolute top-[4.75rem] right-0 z-10 hidden w-[14.375rem] flex-col rounded-xl bg-raised p-1.5 shadow-[0_16px_40px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)] md:flex"
         >
           {item.texto && (
             <button
@@ -272,7 +275,7 @@ export function MyReviewItem({
           <div className="-my-2 flex flex-col">
             <h2
               id={hojaTitulo}
-              className="mx-3 mb-1.5 flex items-center gap-1.5 text-[13px] font-normal text-fg-3"
+              className="mx-3 mb-1.5 flex items-center gap-1.5 text-[0.8125rem] font-normal text-fg-3"
             >
               <span lang={enIngles}>{item.titulo}</span>
               <span aria-hidden="true">·</span>
@@ -285,7 +288,7 @@ export function MyReviewItem({
               </span>
             </h2>
             {moderada && (
-              <p id={hojaAvisoId} className="mx-3 mb-1.5 text-[13px] text-fg-3">
+              <p id={hojaAvisoId} className="mx-3 mb-1.5 text-[0.8125rem] text-fg-3">
                 {t("common.review.moderatedNotice")}
               </p>
             )}

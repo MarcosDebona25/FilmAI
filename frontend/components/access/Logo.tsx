@@ -13,9 +13,11 @@ export function TicketMark({
   className?: string;
 }) {
   return (
+    // Tamaño en rem (16 px = 1rem): crece con la escala de la raíz en pantallas
+    // anchas. Es un atributo, así que una clase `h-*`/`w-*` lo sigue pisando.
     <svg
-      width={width}
-      height={height}
+      width={`${width / 16}rem`}
+      height={`${height / 16}rem`}
       viewBox="0 0 32 24"
       aria-hidden="true"
       className={`flex-none ${className}`}
@@ -51,7 +53,7 @@ export function AccessLogo({
       {compact ? <TicketMark width={28} height={21} /> : <TicketMark />}
       <span
         translate="no"
-        className={`font-display leading-none tracking-[0.05em] ${compact ? "text-[26px]" : "text-[30px]"}`}
+        className={`font-display leading-none tracking-[0.05em] ${compact ? "text-[1.625rem]" : "text-[1.875rem]"}`}
       >
         FilmAI
       </span>

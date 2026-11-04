@@ -63,16 +63,16 @@ function ExpiredLink() {
   if (sentTo) return <ConfirmationSent email={sentTo} />;
 
   return (
-    <div className="flex w-full max-w-[480px] flex-col gap-[22px]">
+    <div className="flex w-full max-w-[30rem] flex-col gap-[1.375rem]">
       <AccessLogo className="mb-6 self-start" />
-      <div className="mb-[15px] flex items-center gap-4">
+      <div className="mb-[0.9375rem] flex items-center gap-4">
         <span
           aria-hidden="true"
-          className="grid size-[52px] flex-none place-items-center rounded-full bg-secondary text-destructive"
+          className="grid size-[3.25rem] flex-none place-items-center rounded-full bg-secondary text-destructive"
         >
           <CircleAlert className="size-6" />
         </span>
-        <h1 className="font-display text-[40px] leading-[0.95] sm:text-[52px]">
+        <h1 className="font-display text-[2.5rem] leading-[0.95] sm:text-[3.25rem]">
           {t("invalidTitle")}
         </h1>
       </div>
@@ -152,16 +152,16 @@ export default function ConfirmarCorreoPage() {
         </p>
       )}
       {estado === "ok" && (
-        <div className="flex w-full max-w-[480px] flex-col gap-[22px]">
+        <div className="flex w-full max-w-[30rem] flex-col gap-[1.375rem]">
           <AccessLogo className="mb-6 self-start" />
-          <div className="mb-[15px] flex items-center gap-4">
+          <div className="mb-[0.9375rem] flex items-center gap-4">
             <span
               aria-hidden="true"
-              className="grid size-[52px] flex-none place-items-center rounded-full bg-secondary text-ok"
+              className="grid size-[3.25rem] flex-none place-items-center rounded-full bg-secondary text-ok"
             >
               <Check className="size-6" strokeWidth={2.2} />
             </span>
-            <h1 className="font-display text-[40px] leading-[0.95] sm:text-[52px]">
+            <h1 className="font-display text-[2.5rem] leading-[0.95] sm:text-[3.25rem]">
               {t("successTitle")}
             </h1>
           </div>

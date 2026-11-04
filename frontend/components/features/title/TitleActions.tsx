@@ -135,7 +135,7 @@ export function TitleActions({
   // en escritorio, fila con ícono y texto.
   const accion = (activa: boolean) =>
     cn(
-      "flex h-16 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg text-xs focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait md:h-12 md:flex-row md:gap-2 md:px-4 md:text-[15px]",
+      "flex h-16 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg text-xs focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait md:h-12 md:flex-row md:gap-2 md:px-4 md:text-[0.9375rem]",
       activa
         ? "bg-raised-2 font-semibold text-foreground"
         : "font-medium text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground"
@@ -169,7 +169,7 @@ export function TitleActions({
   // reloj toman el color del fondo del botón para seguir viéndose.
   const icono = (clave: "favoritos" | "vistas" | "pendientes", recorte: string) =>
     cn(
-      "size-5 md:size-[18px]",
+      "size-5 md:size-[1.125rem]",
       porClave(clave)?.contiene && cn("fill-current text-primary", recorte)
     );
 
@@ -187,14 +187,17 @@ export function TitleActions({
             : undefined
         }
         className={cn(
-          "flex h-[52px] cursor-pointer items-center justify-center gap-2 rounded-lg px-5 text-[17px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-12 md:text-base",
+          "flex h-[3.25rem] cursor-pointer items-center justify-center gap-2 rounded-lg px-5 text-[1.0625rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-12 md:text-base",
           miCalificacion
             ? "bg-raised-2 text-foreground"
-            : "bg-primary text-primary-foreground md:px-[22px]"
+            : "bg-primary text-primary-foreground md:px-[1.375rem]"
         )}
       >
         <StarIcon
-          className={cn("size-5 md:size-[18px]", miCalificacion ? "fill-primary" : "fill-current")}
+          className={cn(
+            "size-5 md:size-[1.125rem]",
+            miCalificacion ? "fill-primary" : "fill-current"
+          )}
         />
         {miCalificacion ? (
           <>
@@ -235,7 +238,7 @@ export function TitleActions({
             onClick={() => setMenu(!menu)}
             className={cn(accion(false), "w-full md:pr-3.5")}
           >
-            <ListPlus aria-hidden="true" className="size-5 md:size-[18px]" />
+            <ListPlus aria-hidden="true" className="size-5 md:size-[1.125rem]" />
             <span className="md:hidden">{t("nav.main.lists")}</span>
             <span className="hidden md:inline">{t("common.lists.add")}</span>
             <ChevronDown aria-hidden="true" className="hidden size-4 md:block" />

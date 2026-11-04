@@ -1,4 +1,5 @@
 import type { AppLocale } from "@/i18n/config";
+import { ORIGIN } from "./origen";
 import type { Page } from "@playwright/test";
 
 const initialProfile = {
@@ -26,8 +27,8 @@ export async function prepararCuenta(page: Page, idioma: AppLocale | null = null
     notif_novedades: true,
   };
   await page.context().addCookies([
-    { name: "access", value: "test-session", url: "http://127.0.0.1:3100" },
-    { name: "csrftoken", value: "test-csrf", url: "http://127.0.0.1:3100" },
+    { name: "access", value: "test-session", url: ORIGIN },
+    { name: "csrftoken", value: "test-csrf", url: ORIGIN },
   ]);
   await page.route("**/api/profile/", async (route) => {
     if (route.request().method() === "PUT")

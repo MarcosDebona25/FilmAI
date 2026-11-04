@@ -41,9 +41,9 @@ import { cn } from "@/lib/utils";
 
 // Mismo criterio que el Home (14/10/2026): la letra se achica con el largo.
 const TAMANIO_TITULO = {
-  grande: "text-[48px] md:text-[120px]",
-  mediano: "text-[40px] md:text-[88px]",
-  chico: "text-[32px] md:text-[64px]",
+  grande: "text-[3rem] md:text-[7.5rem]",
+  mediano: "text-[2.5rem] md:text-[5.5rem]",
+  chico: "text-[2rem] md:text-[4rem]",
 } as const;
 // `raised-2`: los bloques van sobre la franja de fondo, que ya es `raised`.
 const ESQUELETO = "rounded bg-raised-2";
@@ -169,10 +169,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
 
   if (detalle.status === "error") {
     return (
-      <main
-        id="contenido"
-        className="mx-auto flex max-w-[1360px] flex-col items-start gap-4 px-5 pt-28 pb-16 md:px-10"
-      >
+      <main id="contenido" className="page-container flex flex-col items-start gap-4 pt-28 pb-16">
         <ErrorRetry
           mensaje={mensajeDeError(detalle.error)}
           onReintentar={() => setIntento((anterior) => anterior + 1)}
@@ -266,7 +263,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   return (
     <main id="contenido" aria-busy={!ficha} className="pb-16">
       {/* Franja de fondo: la barra de navegación va encima (Navbar.tsx). */}
-      <div className="relative h-[280px] overflow-hidden md:h-[620px]">
+      <div className="relative h-[17.5rem] overflow-hidden md:h-[38.75rem]">
         {ficha?.backdrop ? (
           <Image
             loader={tmdbLoader}
@@ -293,11 +290,11 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         />
         {/* Arriba a la izquierda, debajo de la barra, sobre una píldora con velo:
             encima del fondo, el texto suelto se perdía en las imágenes claras. */}
-        <div className="relative mx-auto max-w-[1360px] px-4 pt-[60px] md:px-10 md:pt-[100px]">
+        <div className="relative page-container max-md:px-4 pt-[3.75rem] md:pt-[6.25rem]">
           <Link
             href={volver.href}
             aria-label={t("title.breadcrumb.backTo", { label: volver.label })}
-            className="inline-flex h-10 items-center gap-1 rounded-full bg-[rgb(var(--scrim)/0.6)] pr-3.5 pl-2 text-[15px] font-medium text-foreground no-underline backdrop-blur-sm md:hidden"
+            className="inline-flex h-10 items-center gap-1 rounded-full bg-[rgb(var(--scrim)/0.6)] pr-3.5 pl-2 text-[0.9375rem] font-medium text-foreground no-underline backdrop-blur-sm md:hidden"
           >
             <ChevronLeft aria-hidden="true" className="size-5" />
             {volver.label}
@@ -326,11 +323,11 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         </div>
       </div>
 
-      <div className="relative mx-auto -mt-24 flex max-w-[1360px] flex-col gap-16 px-5 md:-mt-[380px] md:gap-24 md:px-10">
-        <div className="grid grid-cols-[116px_minmax(0,1fr)] items-end gap-x-4 gap-y-6 md:grid-cols-[300px_minmax(0,1fr)] md:items-start md:gap-x-14">
+      <div className="relative page-container -mt-24 flex flex-col gap-16 md:-mt-[23.75rem] md:gap-24">
+        <div className="grid grid-cols-[7.25rem_minmax(0,1fr)] items-end gap-x-4 gap-y-6 md:grid-cols-[18.75rem_minmax(0,1fr)] md:items-start md:gap-x-14">
           <div
             className={cn(
-              "relative aspect-[2/3] overflow-hidden rounded-[10px] bg-raised shadow-[0_14px_34px_rgb(0_0_0/0.5)] md:row-span-2 md:rounded-xl md:shadow-[0_24px_60px_rgb(0_0_0/0.5)]",
+              "relative aspect-[2/3] overflow-hidden rounded-[0.625rem] bg-raised shadow-[0_14px_34px_rgb(0_0_0/0.5)] md:row-span-2 md:rounded-xl md:shadow-[0_24px_60px_rgb(0_0_0/0.5)]",
               !ficha && "bg-raised-2"
             )}
           >
@@ -338,7 +335,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
               <Image
                 loader={tmdbLoader}
                 fill
-                sizes="(min-width: 768px) 300px, 116px"
+                // 18.75rem: desde 1440 px crece con la raíz (180 px + 8,333vw, tope 390 px).
+                sizes="(min-width: 2560px) 390px, (min-width: 1440px) calc(180px + 8.333vw), (min-width: 768px) 300px, 116px"
                 src={ficha.poster}
                 alt={t("common.media.posterAlt", { title: ficha.titulo })}
                 className="object-cover"
@@ -353,7 +351,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                   <h1
                     lang={ficha.tituloEnIngles ? "en" : undefined}
                     className={cn(
-                      "mb-[15px] font-display text-balance break-words",
+                      "mb-[0.9375rem] font-display text-balance break-words",
                       TAMANIO_TITULO[tamanioTitulo(ficha.titulo)],
                       "leading-[0.9]"
                     )}
@@ -364,7 +362,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                     <p className="hidden text-lg text-fg-2 italic md:block">{ficha.lema}</p>
                   )}
                 </div>
-                <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-fg-2 md:gap-x-3.5 md:text-[15px]">
+                <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-fg-2 md:gap-x-3.5 md:text-[0.9375rem]">
                   <span className="font-semibold text-foreground">
                     {t(tipo === "movie" ? "common.content.movie" : "common.content.tvShow")}
                   </span>
@@ -409,7 +407,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                             count: ficha.votos,
                           })}
                         </span>
-                        <StarIcon className="size-[15px] fill-primary" />
+                        <StarIcon className="size-[0.9375rem] fill-primary" />
                         <span aria-hidden="true" className="font-semibold text-foreground">
                           {formats.rating(ficha.nota)}
                         </span>
@@ -423,7 +421,9 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
               </>
             ) : (
               <div aria-hidden="true" className="flex flex-col gap-3 md:gap-5">
-                <span className={cn(ESQUELETO, "h-12 w-3/4 md:mb-[15px] md:h-[108px] md:w-2/3")} />
+                <span
+                  className={cn(ESQUELETO, "h-12 w-3/4 md:mb-[0.9375rem] md:h-[6.75rem] md:w-2/3")}
+                />
                 <span className={cn(ESQUELETO, "hidden h-6 w-1/3 md:block")} />
                 <span className={cn(ESQUELETO, "h-4 w-2/3 md:h-5 md:w-1/2")} />
               </div>
@@ -437,7 +437,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 aria-hidden="true"
                 className="flex flex-col gap-3 md:flex-row md:items-center md:gap-2.5"
               >
-                <span className={cn(ESQUELETO, "h-[52px] rounded-lg md:h-12 md:w-[104px]")} />
+                <span className={cn(ESQUELETO, "h-[3.25rem] rounded-lg md:h-12 md:w-[6.5rem]")} />
                 <span className="grid grid-cols-4 gap-2 md:contents">
                   {[0, 1, 2, 3].map((i) => (
                     <span key={i} className={cn(ESQUELETO, "h-16 rounded-lg md:h-12 md:w-32")} />
@@ -469,7 +469,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
             ) : (
               <Link
                 href={`${routes.login}?next=${encodeURIComponent(pathname)}`}
-                className="inline-flex h-12 items-center justify-center self-stretch rounded-lg bg-primary px-[22px] font-semibold text-primary-foreground no-underline md:self-start"
+                className="inline-flex h-12 items-center justify-center self-stretch rounded-lg bg-primary px-[1.375rem] font-semibold text-primary-foreground no-underline md:self-start"
               >
                 {t("title.actions.signedOutPrompt")}
               </Link>
@@ -480,11 +480,11 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                   {["w-20", "w-24", "w-16"].map((ancho) => (
                     <span
                       key={ancho}
-                      className={cn(ESQUELETO, "h-[30px] rounded-full md:h-8", ancho)}
+                      className={cn(ESQUELETO, "h-[1.875rem] rounded-full md:h-8", ancho)}
                     />
                   ))}
                 </span>
-                <span className="flex flex-col gap-3 md:max-w-[720px]">
+                <span className="flex flex-col gap-3 md:max-w-[45rem]">
                   <span className={cn(ESQUELETO, "mb-1 h-3 w-20")} />
                   {["w-full", "w-full", "w-11/12", "w-2/3"].map((ancho, i) => (
                     <span key={i} className={cn(ESQUELETO, "h-4", ancho)} />
@@ -497,7 +497,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 {ficha.generos.map((genero) => (
                   <li
                     key={genero}
-                    className="inline-flex h-[30px] items-center rounded-full px-3 text-[13px] text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] md:h-8 md:text-sm"
+                    className="inline-flex h-[1.875rem] items-center rounded-full px-3 text-[0.8125rem] text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] md:h-8 md:text-sm"
                   >
                     {genero}
                   </li>
@@ -516,15 +516,15 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
               </p>
             )}
             {ficha?.sinopsis && (
-              <div className="flex flex-col gap-2 md:max-w-[720px]">
-                <h2 className="text-[13px] font-semibold text-fg-3">
+              <div className="flex flex-col gap-2 md:max-w-[45rem]">
+                <h2 className="text-[0.8125rem] font-semibold text-fg-3">
                   {t("title.synopsis.heading")}
                 </h2>
                 <p
                   ref={sinopsisRef}
                   lang={ficha.sinopsisEnIngles ? "en" : undefined}
                   className={cn(
-                    "text-[17px] leading-[1.6] text-pretty",
+                    "text-[1.0625rem] leading-[1.6] text-pretty",
                     !sinopsisCompleta && "line-clamp-5"
                   )}
                 >

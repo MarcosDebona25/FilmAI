@@ -141,8 +141,12 @@ Todas las pantallas autenticadas comparten:
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - "Buscar" click → página `/search` con el buscador.
-- **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», provisoriamente a un 404 hasta desarrollar el chatbot), Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1). No aparece en las pantallas de acceso.
+- **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», provisoriamente a un 404 hasta desarrollar el chatbot), Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1); en celular sin sesión no lleva la fila Log in, que está en la barra inferior (04/11/2026). No aparece en las pantallas de acceso.
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
+- **Barra inferior del celular** (`MobileTabs`, por debajo de 768 px, 04/11/2026): con sesión, Home, Search, Lists y Profile; sin sesión, Home, Search y Log in. Así Buscar se puede usar en celular con o sin cuenta. Sin sesión, el encabezado móvil muestra solo «Sign up». No aparece en las pantallas de acceso ni mientras se carga la cuenta.
+- **Contenedor y escala** (04/11/2026): todas las pantallas usan la utilidad `page-container` (tope de 85rem por debajo de 1440 px y 90rem desde ahí; margen de 1,25rem en celular, 2,5rem desde 768 px y `clamp(2.5rem, 3vw, 4rem)` desde 1440 px). La navbar, el contenido y el footer comparten el borde izquierdo. Desde 1440 px el `font-size` raíz crece con la pantalla: 16 px a 1440, unos 18 px a 1920 y un tope de 20,8 px desde 2560. Términos y Mis reseñas conservan su ancho de lectura.
+- **Tamaños en rem** (04/11/2026): textos, espacios, íconos y anchos se escriben en rem (`text-[0.9375rem]`, no `text-[15px]`), para que escalen con la raíz y respeten el tamaño de letra del navegador. Quedan en px los bordes finos (1 a 3 px), las sombras, los offsets de foco, los `sizes` de imágenes y el `rootMargin` (no acepta rem). Los breakpoints y los `matchMedia` van en rem, como los de Tailwind (`md` = 48rem, 1440 px = 90rem), para que todos se corran juntos si el usuario cambia el tamaño de letra del navegador.
+- **Columnas de pósters** (04/11/2026): `--cols` vale 4 desde 768 px, 5 desde 1024, 6 desde 1280 y 7 desde 1440. Las filas del Inicio muestran siempre tarjetas enteras y las flechas avanzan una página. Buscar y el detalle de lista usan las mismas columnas. En celular las filas se deslizan y las grillas tienen 2 columnas.
 
 ### 4.1 Idioma y selector de idioma
 
@@ -208,7 +212,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 | Tendencias          | Todos                                            | TMDB `/trending`                                                           |
 | Novedades           | Todos                                            | TMDB `/movie/now_playing`, `/discover/tv` año actual con al menos 50 votos |
 
-- Cada fila: título + opcional "Ver más →" + scroll horizontal de MediaCards.
+- Cada fila: título + opcional "Ver más →" + MediaCards. En celular se desliza; desde 768 px muestra siempre tarjetas enteras (`--cols`, ver sección 4) y las flechas avanzan una página.
 - Con «Todo» (por defecto), las filas mezclan películas y series, con badge de tipo en cada card; con «Películas» o «Series», cada fila muestra solo ese tipo.
 - Flechas de navegación en hover (desktop), swipe nativo (mobile).
 - Si una fila no tiene datos (ej. usuario nuevo sin recomendaciones), se oculta completamente.
@@ -238,7 +242,7 @@ navbar con «Buscar» como página actual; antes se describía como un panel ove
 │  [Todo|Películas|Series]   Género [▾]  Año [▾]  Nota [▾]   │
 │  20 resultados para «dune»                               │
 │  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐        │
-│  │post│ │post│ │post│ │post│ │post│ │post│ │post│        │ ← grilla auto-fill 168 px
+│  │post│ │post│ │post│ │post│ │post│ │post│ │post│        │ ← grilla de --cols columnas (4)
 │  └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘        │
 │  … al bajar se cargan más resultados                     │
 └──────────────────────────────────────────────────────────┘
@@ -597,7 +601,7 @@ de un componente «Modal»:
 
 #### Grid de items
 
-- **Escritorio**: grilla `auto-fill` de tarjetas de al menos 220 px; **celular**: 2 columnas.
+- **Escritorio**: grilla de `--cols` columnas, las mismas que las filas del Inicio (04/11/2026; antes `auto-fill` de al menos 220 px); **celular**: 2 columnas.
 - Cada **MediaCard** tiene un botón `✕` en la esquina superior derecha, visible al hover o al foco en escritorio y siempre en pantallas táctiles. Click → confirmación para quitar el ítem. En «Watched», si el título está calificado, el backend responde 409 (Conflict) y se pide confirmar el borrado de la calificación (y la reseña) antes de reintentar.
 - Click en la card → navega a Ficha de detalle (misma pantalla de la sección 5c). El breadcrumb se extiende a: `Listas > {nombre lista} > {título}`.
 - **Fecha de agregado** (CU-009, 18/10/2026): cada MediaCard del detalle muestra, de forma discreta bajo los datos, el ícono de «agregar a lista» y la fecha (tooltip y lectores de pantalla: «Agregada a esta lista el {fecha}»; en inglés, «Added to this list on {fecha}») con un formato numérico compacto según el idioma (`18/10/2026` en español, `10/18/2026` en inglés). Las tarjetas de Home y Buscar no la llevan.

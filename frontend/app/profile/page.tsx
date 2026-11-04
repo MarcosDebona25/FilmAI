@@ -40,12 +40,12 @@ type Campo = "nombre" | "apellido" | "nombre_usuario";
 type Disponibilidad = "idle" | "checking" | "available" | "taken";
 
 const CAMPO =
-  "h-[52px] w-full rounded-[10px] border-0 bg-raised px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
+  "h-[3.25rem] w-full rounded-[0.625rem] border-0 bg-raised px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
 const ETIQUETA = "text-sm font-semibold";
-const AYUDA = "text-[13px] text-fg-3";
-const TITULO_2 = "font-display text-[30px] leading-none md:text-[36px]";
+const AYUDA = "text-[0.8125rem] text-fg-3";
+const TITULO_2 = "font-display text-[1.875rem] leading-none md:text-[2.25rem]";
 const BOTON_SECUNDARIO =
-  "h-[52px] cursor-pointer rounded-[10px] px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait md:h-12 md:font-medium md:shadow-none";
+  "h-[3.25rem] cursor-pointer rounded-[0.625rem] px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait md:h-12 md:font-medium md:shadow-none";
 
 /**
  * Mi perfil según el canvas («My profile · desktop / mobile»). Conserva la
@@ -277,7 +277,7 @@ export default function PerfilPage() {
         </label>
         <div className="relative">
           {campo === "nombre_usuario" && (
-            <span aria-hidden="true" className="absolute top-[15px] left-4 text-fg-3">
+            <span aria-hidden="true" className="absolute top-[0.9375rem] left-4 text-fg-3">
               @
             </span>
           )}
@@ -306,7 +306,7 @@ export default function PerfilPage() {
             id={`${id}-estado`}
             aria-live="polite"
             className={cn(
-              "flex items-center gap-1.5 text-[13px] font-semibold",
+              "flex items-center gap-1.5 text-[0.8125rem] font-semibold",
               disponibilidad === "available"
                 ? "text-ok"
                 : disponibilidad === "taken"
@@ -354,7 +354,10 @@ export default function PerfilPage() {
             aria-describedby={`${ids}-lectura`}
             className={cn(CAMPO, "cursor-not-allowed bg-transparent pr-11 text-fg-2")}
           />
-          <Lock aria-hidden="true" className="absolute top-[17px] right-4 size-[18px] text-fg-3" />
+          <Lock
+            aria-hidden="true"
+            className="absolute top-[1.0625rem] right-4 size-[1.125rem] text-fg-3"
+          />
         </div>
       </div>
     );
@@ -363,7 +366,7 @@ export default function PerfilPage() {
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[920px] flex-col gap-9 px-5 pt-7 pb-[120px] md:gap-14 md:px-10 md:pt-12 md:pb-24"
+      className="mx-auto flex max-w-[57.5rem] flex-col gap-9 px-5 pt-7 pb-[7.5rem] md:gap-14 md:px-10 md:pt-12 md:pb-24"
     >
       {cargando && !perfil && (
         <p role="status" className="text-fg-2">
@@ -376,10 +379,10 @@ export default function PerfilPage() {
         <>
           <section
             aria-labelledby={`${ids}-titulo`}
-            className="flex flex-col gap-[18px] md:flex-row md:flex-wrap md:items-center md:gap-7"
+            className="flex flex-col gap-[1.125rem] md:flex-row md:flex-wrap md:items-center md:gap-7"
           >
             <div className="flex items-center gap-5 md:contents">
-              <div className="relative size-[88px] shrink-0 md:size-[120px] [&>span]:!size-full [&>img]:!size-full">
+              <div className="relative size-[5.5rem] shrink-0 md:size-[7.5rem] [&>span]:!size-full [&>img]:!size-full">
                 <Avatar perfil={vista} avatares={avatares} size={120} />
                 {editando && (
                   <button
@@ -399,11 +402,13 @@ export default function PerfilPage() {
               <div className="flex min-w-0 flex-col md:flex-1">
                 <h1
                   id={`${ids}-titulo`}
-                  className="mb-2 font-display text-[44px] leading-[0.95] break-words md:mb-[15px] md:text-[72px]"
+                  className="mb-2 font-display text-[2.75rem] leading-[0.95] break-words md:mb-[0.9375rem] md:text-[4.5rem]"
                 >
                   {vista.nombre} {vista.apellido}
                 </h1>
-                <p className="font-semibold text-primary md:text-[17px]">@{vista.nombre_usuario}</p>
+                <p className="font-semibold text-primary md:text-[1.0625rem]">
+                  @{vista.nombre_usuario}
+                </p>
                 <p className="hidden text-fg-3 md:block">
                   {t("profile.header.memberEmail", {
                     email: vista.correo,
@@ -421,9 +426,9 @@ export default function PerfilPage() {
               <button
                 type="button"
                 onClick={iniciarEdicion}
-                className="flex h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring md:h-12"
+                className="flex h-[3.25rem] cursor-pointer items-center justify-center gap-2 rounded-[0.625rem] bg-raised-2 px-[1.125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring md:h-12"
               >
-                <Pencil aria-hidden="true" className="size-[18px]" />
+                <Pencil aria-hidden="true" className="size-[1.125rem]" />
                 {t("profile.editor.title")}
               </button>
             )}
@@ -446,9 +451,9 @@ export default function PerfilPage() {
                 ).map(([etiqueta, valor]) => (
                   <div
                     key={etiqueta}
-                    className="flex flex-col gap-0.5 border-t border-line py-3.5 md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 md:border-t-0 md:border-b md:py-[18px]"
+                    className="flex flex-col gap-0.5 border-t border-line py-3.5 md:grid md:grid-cols-[13.75rem_minmax(0,1fr)] md:gap-6 md:border-t-0 md:border-b md:py-[1.125rem]"
                   >
-                    <dt className="text-[13px] text-fg-3 md:text-base">{etiqueta}</dt>
+                    <dt className="text-[0.8125rem] text-fg-3 md:text-base">{etiqueta}</dt>
                     <dd className="font-semibold">{valor}</dd>
                   </div>
                 ))}
@@ -460,7 +465,7 @@ export default function PerfilPage() {
                 aria-labelledby={`${ids}-editar`}
                 onSubmit={(event) => void guardar(event)}
                 noValidate
-                className="flex flex-col gap-5 md:gap-[22px]"
+                className="flex flex-col gap-5 md:gap-[1.375rem]"
               >
                 <h2 id={`${ids}-editar`} className={TITULO_2}>
                   {t("profile.personal.edit")}
@@ -501,7 +506,7 @@ export default function PerfilPage() {
                 <div className="flex flex-col gap-3">
                   <p
                     id={`${ids}-lectura`}
-                    className="flex items-center gap-2 text-[13px] text-fg-2"
+                    className="flex items-center gap-2 text-[0.8125rem] text-fg-2"
                   >
                     <Info aria-hidden="true" className="size-4 shrink-0" />
                     {t("profile.personal.readOnlyFieldsHint")}
@@ -532,7 +537,7 @@ export default function PerfilPage() {
                   <button
                     type="submit"
                     disabled={guardando}
-                    className="h-[52px] cursor-pointer rounded-[10px] bg-primary px-6 font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60 md:h-12"
+                    className="h-[3.25rem] cursor-pointer rounded-[0.625rem] bg-primary px-6 font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60 md:h-12"
                   >
                     {t("common.actions.saveChanges")}
                   </button>
@@ -565,9 +570,9 @@ export default function PerfilPage() {
                     id={`${ids}-form-clave`}
                     onSubmit={(event) => void cambiarContrasena(event)}
                     noValidate
-                    className="flex flex-col gap-4 md:max-w-[480px]"
+                    className="flex flex-col gap-4 md:max-w-[30rem]"
                   >
-                    <p className="flex gap-2.5 text-[15px] text-fg-2 md:text-base">
+                    <p className="flex gap-2.5 text-[0.9375rem] text-fg-2 md:text-base">
                       <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
                       <span>{t("profile.password.logoutWarning")}</span>
                     </p>
@@ -624,7 +629,7 @@ export default function PerfilPage() {
                       <button
                         type="submit"
                         disabled={cambiandoPassword}
-                        className="h-[52px] cursor-pointer rounded-[10px] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60 md:h-12"
+                        className="h-[3.25rem] cursor-pointer rounded-[0.625rem] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60 md:h-12"
                       >
                         {t("profile.password.heading")}
                       </button>
@@ -639,7 +644,7 @@ export default function PerfilPage() {
                   type="button"
                   disabled={enviandoEnlace}
                   onClick={() => void enviarEnlace()}
-                  className="h-12 cursor-pointer rounded-[10px] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60"
+                  className="h-12 cursor-pointer rounded-[0.625rem] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60"
                 >
                   {t("profile.password.sendLink")}
                 </button>
