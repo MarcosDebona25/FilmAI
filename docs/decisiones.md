@@ -5,6 +5,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 04/11/2026 — Chatbot: configuración del LLM, división del trabajo (Motor y Canal), contrato de `responder()` y tope de 3 pasadas de PR-Agent
+
+- **Fecha**: 04/11/2026
+- **Descripción**: puesta a punto antes del PR 1 del chatbot.
+  1. **Configuración del LLM**: se sigue el patrón de TMDB. `settings.py` lee cada valor con `config(..., default=...)` y el código lee solo `settings`. La única variable obligatoria del `.env` es `LLM_API_KEY`. `LLM_BASE_URL`, `LLM_MODEL`, `LLM_THINKING`, `LLM_TIMEOUT_SECONDS`, `CHAT_MENSAJES_POR_HORA` y `OLLAMA_URL` tienen su valor por defecto en `settings.py` y aparecen comentadas en `.env.example`. `settings.py` arma `LLM_PROVEEDORES`, que hoy tiene una sola entrada. El orquestador conoce solo el protocolo `ProveedorLLM`. Para sumar un proveedor de respaldo (*fallback*), se agregan `LLM_FALLBACK_*` al `.env`, una segunda entrada en la lista y un bucle en el orquestador. Así la configuración queda en un solo lugar y el orquestador no depende del entorno.
+  2. **`LLM_PROVIDER` es el tipo de adaptador**, con valor `openai_compatible`. Indica el formato de API que habla el proveedor, no la empresa: DeepSeek habla el formato de OpenAI (`/chat/completions`, que se usa con el SDK `openai` cambiando `base_url`). `llm.py` tiene un registro `{tipo: clase}`, así que un respaldo con API propia suma un tipo y una clase sin tocar el orquestador. Corrige el `openai` de `.env.example` y el `deepseek` del diseño. Hoy ningún código lee `LLM_API_KEY` ni `LLM_PROVIDER`; las variables se incorporan en los PRs 1 y 3.
+  3. **División del trabajo**: se deja el pair prompting y el chatbot se reparte en dos frentes, cortados en `responder()`, el único punto donde se tocan. **Motor (Gonza)**: PR1 (semántica y Q-09), PR2 (tools, perfil, anonimizador), PR3 (orquestador y `chatear`) y el golden set. Es lo que piensa la respuesta. **Canal (Marcos)**: PR4 (persistencia y `GET`), PR6 (panel), PR5 (ASGI y SSE) y PR7 (historial, badge, «Ask FilmAI» y copia). Es lo que transporta la respuesta y la muestra. Cada PR sale de `main` en su propio worktree (`~/FilmAI-worktrees/<rama>`). **La división completa (frentes, dueños de cada archivo, reglas para los compartidos y puntos de sincronización) está en `openspec/changes/chatbot/tasks.md`, sección «Work split».**
+  4. **PR 0, el contrato (en conjunto, antes de separarse)**: `chatbot/eventos.py` fija qué emite `responder(chat, texto, idioma)`: `Estado` y `Texto` mientras trabaja, un único `Resultado(texto, tarjetas)` al final (no se transmite), y `ErrorDelTurno` si falla. `responder()` no guarda nada: el tiempo máximo, el candado y el guardado son de la vista. Así lo decía ya la decisión del candado; el diagrama de secuencia de `design.md`, que ponía el guardado en el orquestador, se corrigió. `chatbot/orquestador_falso.py` cumple el mismo contrato a partir de un guion, para que Canal construya la vista SSE sin esperar al PR3. Cuando entre el PR3, la vista lo reemplaza por el real cambiando una línea.
+  5. **PR-Agent**: como máximo 3 pasadas por PR. Lo que aparezca después pasa al PR siguiente que corresponda, o se descarta. Reemplaza el criterio de cierre de la entrada del 28/10 (allí fueron ocho pasadas).
+- **Descartado**: todo en el `.env` sin valores por defecto (el `.env` crece y el backend no arranca si falta una variable); valores fijos en el código (cambiar de proveedor obligaría a desplegar); una variable JSON con todos los proveedores (no hace falta mientras haya uno o dos); eliminar `LLM_PROVIDER` (es el punto de extensión para el respaldo); repartir en backend y frontend (los dos tocarían la vista y el contrato SSE); tandas de PRs en paralelo trabajando en pair (se dejó el pair prompting).
+- **Archivos afectados**: `openspec/changes/chatbot/design.md`, `openspec/changes/chatbot/tasks.md`, `backend/chatbot/eventos.py`, `backend/chatbot/orquestador_falso.py`, `backend/chatbot/tests_contrato.py`, `docs/decisiones.md`.
+
+---
+
 ## 02/11/2026 — Historia reescrita: solo Marcos y Gonza como contributors
 
 - **Fecha**: 02/11/2026
