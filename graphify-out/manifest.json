@@ -137,12 +137,6 @@
     "ast_hash": "90da3a06605f9a62851ee876f570111e",
     "semantic_hash": ""
   },
-  "backend/chatbot/tests.py": {
-    "mtime": 1791501491.539486,
-    "seen": 1793405280.7414706,
-    "ast_hash": "61c4da0491171e52febe9da45ffd4225",
-    "semantic_hash": "61c4da0491171e52febe9da45ffd4225"
-  },
   "backend/chatbot/views.py": {
     "mtime": 1787089748.0974798,
     "seen": 1793405280.7414715,
@@ -522,8 +516,8 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1793646214.7446473,
-    "seen": 1793646233.5670488,
+    "mtime": 1793646773.214365,
+    "seen": 1793801343.6483626,
     "ast_hash": "24a42833d7fb23ce564f1694d3ee9fc3",
     "semantic_hash": ""
   },
@@ -588,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793646214.749614,
-    "seen": 1793646233.5689907,
-    "ast_hash": "82e6144f9d67c8cd4a188ef5971e79ca",
+    "mtime": 1793802052.8109472,
+    "seen": 1793803274.394902,
+    "ast_hash": "e6d22ba17d17c803918acecec88594e5",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2334,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1793589064.532833,
-    "seen": 1793646233.56086,
+    "mtime": 1793799636.5015025,
+    "seen": 1793801343.6285732,
     "ast_hash": "b6dfa5c8462e15a4f8cb9911eb4d6b66",
     "semantic_hash": ""
   },
@@ -2364,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1793589064.5368862,
-    "seen": 1793646233.560908,
+    "mtime": 1793799636.5055065,
+    "seen": 1793801343.6286657,
     "ast_hash": "72b243bc33ffe31055f1a78635beb353",
     "semantic_hash": ""
   },
@@ -4254,8 +4248,8 @@
     "semantic_hash": ""
   },
   ".husky/commit-msg": {
-    "mtime": 1793646214.7444828,
-    "seen": 1793646233.5400677,
+    "mtime": 1793646773.214365,
+    "seen": 1793801343.5793195,
     "ast_hash": "f63fb6fc6434d207a74cde96ea2bef99",
     "semantic_hash": ""
   },
@@ -4302,9 +4296,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/design.md": {
-    "mtime": 1793646196.659497,
-    "seen": 1793646233.5691445,
-    "ast_hash": "f8540f505bd9eaeb86c51da8a22a5ede",
+    "mtime": 1793802039.3489964,
+    "seen": 1793803274.3951714,
+    "ast_hash": "3422726ed9427362c16c8198707dbc1d",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/proposal.md": {
@@ -4332,9 +4326,27 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/tasks.md": {
-    "mtime": 1793646196.6616948,
-    "seen": 1793646233.569153,
-    "ast_hash": "d3f5f5bce4ca4edd3093327966f354ce",
+    "mtime": 1793802421.7533658,
+    "seen": 1793803274.3955867,
+    "ast_hash": "d0e41881637243723aac30ba70915294",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/eventos.py": {
+    "mtime": 1793802092.566174,
+    "seen": 1793803274.3311439,
+    "ast_hash": "d4b0c001b89b0b0d2286ed7a00e65f3e",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/orquestador_falso.py": {
+    "mtime": 1793802149.771521,
+    "seen": 1793803274.3317413,
+    "ast_hash": "1625913f1f051819c655f23636f1ee5f",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tests_contrato.py": {
+    "mtime": 1793802135.9788728,
+    "seen": 1793803274.3317442,
+    "ast_hash": "def0841d186a117fcce86f74c9286bae",
     "semantic_hash": ""
   }
 }

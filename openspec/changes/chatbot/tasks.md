@@ -6,23 +6,113 @@
 |-------|-------|
 | Estimated changed lines | ~3 000 (backend ~1 800, frontend ~1 200) |
 | 400-line budget risk | High |
-| Chained PRs recommended | Yes — eight, in order |
+| Chained PRs recommended | Yes — a contract PR (PR 0) and eight more, split in two fronts (below) |
 | Delivery strategy | ask-on-risk |
-| Chain strategy | Each PR from `main` after the previous one merges (no stacking) |
-| Way of working | Pair programming, Gonza and Marcos; every async concept explained from zero as it appears |
+| Chain strategy | Each PR from `main`, one worktree per PR in `~/FilmAI-worktrees/<branch>`; a PR that needs an unmerged PR **of the same front** stacks on it (merge commit, no rebase); one that needs the other front waits for the merge |
+| Way of working | Split by fronts (04/11/2026): **Gonza → Motor, Marcos → Canal**; PR 0 together. Every async concept explained from zero as it appears |
+| PR-Agent | At most 3 passes per PR; later findings go to the next PR that fits, or are dropped |
+
+## Work split (04/11/2026)
+
+This section is the reference for who does what. `docs/decisiones.md`
+(entry of 04/11/2026) points here.
+
+The whole chatbot goes through one function, `chatbot/orquestador.py ::
+responder()`. Below it lives what **thinks** the answer (model, tools,
+profile, anonymizer, semantic search): the **Motor**. Above it lives what
+**carries and shows** it (SSE view, lock, save, history, panel): the
+**Canal**. PR 0 fixes that seam (`chatbot/eventos.py`) and ships a fake
+`responder()`, so neither front waits for the other.
+
+```
+                 PR 0 contract (together)
+                   │
+   Motor (Gonza)   ▼                       Canal (Marcos)
+   PR1 semantic ──► PR2 tools ──► PR3 orchestrator      PR4 persistence + GET ──► PR6 panel (fake stream)
+                                        │                       ──► PR5 ASGI/SSE (fake responder) ──► PR7 history/badge/copy
+                                        └──── swap fake → real in the view (sync point 2) ────┘
+                                                              PR8 closing (each front its half)
+```
+
+| | **Motor — Gonza** | **Canal — Marcos** |
+|---|---|---|
+| PRs, in order | 1 → 2 → 3, then golden set (8.1, 8.2) | 4 → 6 → 5 → 7 |
+| Builds | Vectors and `buscar_semantico`, Q-09, TMDB methods, the 8 tools, profile, anonymizer, provider, prompt, orchestrator, `manage.py chatear` | `Mensaje.tarjetas`, `guardar_turno()`, history `GET`, ASGI/`daphne`, SSE view, lock, hourly limit, error codes, panel, history, badge, «Ask FilmAI», copy |
+| Owns these files | `catalogo/services/semantica.py`, `catalogo/client.py`, `catalogo/tasks.py`, `chatbot/tools/`, `chatbot/{contexto,anonimizar,llm,prompts,orquestador}.py`, `chatbot/management/`, `docker-compose.yml`, `.env.example` | `chatbot/{models,servicio,serializers,views,urls}.py`, `chatbot/migrations/`, `filmai/asgi.py`, `filmai/test_asgi.py`, `filmai/errores/catalogo.py`, `contracts/`, `frontend/**`, `traducciones/` |
+| Est. lines | ~1 300 | ~1 550 |
+
+Canal goes 4 → 6 → 5 because the panel only needs the SSE contract (a
+hand-made `text/event-stream`), and by the time PR5 starts PR3 is closer.
+
+**Dependencies**
+
+| PR | Can start with | Needs merged before merging |
+|---|---|---|
+| 0 | — | — |
+| 1 | — | — |
+| 2 | — (leave the `buscar_semantico` tool for last, or stack on PR1) | PR1; PR0 (`Tarjeta`) |
+| 3 | PR2 (same front, may stack) | PR0, PR2 |
+| Golden set | PR3 | — |
+| 4 | — | — |
+| 6 | — | — |
+| 5 | PR0 (fake), PR4 (`guardar_turno`) | PR0, PR4 (not PR3) |
+| 7 | PR4 (`GET`), PR6 (panel); Playwright mocks the API | PR4, PR6 |
+| Swap fake → real | PR3 and PR5 | — |
+
+PR1, PR2, PR4 and PR6 start with no wait at all, not even for PR 0. The only
+cross-front waits are PR 0 (shared) and the final swap (Canal waits for PR3).
+
+**Shared files**
+
+| File | Rule |
+|---|---|
+| `chatbot/eventos.py` | Owned by both. A change goes in its own small PR, agreed first |
+| `backend/filmai/settings.py` | Motor writes the provider block (`LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_THINKING`, `LLM_API_KEY`, `LLM_PROVEEDORES`, `OLLAMA_URL`); Canal the ASGI/`daphne` block plus `LLM_TIMEOUT_SECONDS` and `CHAT_MENSAJES_POR_HORA`, because the view owns the turn timeout and the lock. Separate blocks, each with a header comment |
+| `backend/requirements.txt` | Motor adds `openai`, Canal adds `daphne`; on conflict keep both lines |
+| `docs/decisiones.md` | Each adds its entry on top; on merge keep both |
+| `graphify-out/` | Never resolved by hand: after the merge run `graphify update .` and commit |
+| PR8 docs | Motor: doc 05 (B-02, B-05, B-06), doc 06, spec `semantic-search`. Canal: doc 02 (CU-013/014), doc 03, doc 04 (§3.1), specs `chat-api`, `chat-ui` |
+| `PRODUCT.md`, removing `openspec/changes/chatbot/` | Whoever merges last |
+
+**Sync points**
+
+1. PR 0 (with the docs of 04/11) merged before PR2 or PR5 merge. PR1, PR4 and PR6 do not wait for it.
+2. When PR3 merges: Canal swaps `OrquestadorFalso` for `orquestador.responder`
+   in the view and runs one real turn with `curl -N` against DeepSeek.
+3. Closing: Motor runs the golden set with `manage.py chatear --golden` (no HTTP, so it needs PR3, not PR5); docs split as above.
+4. Copy (7.1): Marcos writes and approves it (09/10/2026).
+
+Q-08 (emails through Celery, doc 05) is the filler task for whoever finishes
+first or is blocked waiting on the other front. Worktree cautions: never run
+two `manage.py test` at once on the same machine (shared `test_*` database);
+real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ### Work Units
 
-| PR | Goal | Est. lines | Focused test command | Rollback boundary |
-|----|------|-----------:|----------------------|-------------------|
-| 1 | B-06: real vectors, semantic query, Ollama profiles | ~350 | `test catalogo.tests_semantica` | Revert `generar_vector` to the stub; remove the profiles |
-| 2 | Tools, profile, anonymizer (sync) | ~450 | `test chatbot.tests_tools chatbot.tests_contexto` | Delete `chatbot/tools/`, `contexto.py`, `anonimizar.py`; nothing calls them yet |
-| 3 | Provider, prompt, async orchestrator, `chatear` | ~400 | `test chatbot.tests_orquestador` | Delete the modules; no endpoint uses them |
-| 4 | Persistence and history `GET` | ~250 | `test chatbot.tests_historial` | Reverse migration; remove the route |
-| 5 | ASGI and the SSE `POST` | ~400 | `test chatbot.tests_sse` | Remove the route and `daphne` |
-| 6 | Panel: provider, FAB, stream, cancel | ~500 | `npm run test:unit -- chat` | Remove the provider from the layout |
-| 7 | History, badge, «Ask FilmAI», copy, e2e | ~400 | `npx playwright test chat` | Restore the `/chat` links |
-| 8 | Golden set, RNF #6, docs | ~250 | manual | Docs only |
+| PR | Front | Goal | Est. lines | Focused test command | Rollback boundary |
+|----|-------|------|-----------:|----------------------|-------------------|
+| 0 | Both | Contract of `responder()`: events, result, fake | ~150 | `test chatbot.tests_contrato` | Delete `eventos.py`, `orquestador_falso.py`; nothing uses them yet |
+| 1 | Motor | B-06: real vectors, semantic query, Ollama profiles | ~350 | `test catalogo.tests_semantica` | Revert `generar_vector` to the stub; remove the profiles |
+| 2 | Motor | Tools, profile, anonymizer (sync) | ~450 | `test chatbot.tests_tools chatbot.tests_contexto` | Delete `chatbot/tools/`, `contexto.py`, `anonimizar.py`; nothing calls them yet |
+| 3 | Motor | Provider, prompt, async orchestrator, `chatear` | ~400 | `test chatbot.tests_orquestador` | Delete the modules; no endpoint uses them |
+| 4 | Canal | Persistence and history `GET` | ~250 | `test chatbot.tests_historial` | Reverse migration; remove the route |
+| 5 | Canal | ASGI and the SSE `POST` | ~400 | `test chatbot.tests_sse` | Remove the route and `daphne` |
+| 6 | Canal | Panel: provider, FAB, stream, cancel | ~500 | `npm run test:unit -- chat` | Remove the provider from the layout |
+| 7 | Canal | History, badge, «Ask FilmAI», copy, e2e | ~400 | `npx playwright test chat` | Restore the `/chat` links |
+| 8 | Both | Golden set, RNF #6, docs | ~250 | manual | Docs only |
+
+## Phase 0: Contract (PR 0) — together
+
+- [ ] 0.1 Explain: async generator, why the last item is a `Resultado`
+      (an async generator cannot `return` a value), `Protocol`, why a fake
+      lets both fronts work in parallel
+- [ ] 0.2 `chatbot/eventos.py`: `Estado`, `Texto`, `Tarjeta`, `Resultado`,
+      `ErrorDelTurno`, `Responder` protocol `(chat, texto, idioma)`
+- [ ] 0.3 `chatbot/orquestador_falso.py`: `OrquestadorFalso(guion, demora,
+      falla_en)` and `GUION_BASICO`
+- [ ] 0.4 `chatbot/tests_contrato.py`: order and single final `Resultado`,
+      scripted failure, cancellation during a delay, recorded calls, card shape
+
 
 ## Phase 1: Semantic search (PR 1)
 
@@ -88,13 +178,16 @@
 - [ ] 3.2 `llm.py`: `ProveedorLLM` protocol; `ProveedorFalso` replaying a
       script of deltas, tool calls, errors and delays
 - [ ] 3.3 RED `chatbot/tests_orquestador.py` with `ProveedorFalso`: plain
-      answer → `texto…`, `tarjetas []`, `fin`-ready result
+      answer → `Texto…` and a final `Resultado` with no cards; `responder()`
+      follows `chatbot/eventos.py` (PR 0) and saves nothing (the view saves)
 - [ ] 3.4 RED: tool round → `estado searching`, tool executed in the bridge,
       result fed back, answer streamed, cards validated; `mostrar_tarjetas`
-      called in a middle round still yields one `tarjetas` after the last
-      `texto`, and none when the turn ends in error
-- [ ] 3.5 RED: 5th tool round → error; timeout → error; provider exception →
-      error; tool exception → turn continues
+      called in a middle round still ends up in the single final `Resultado`
+      (after the last `Texto`), and there is no `Resultado` when the turn
+      raises `ErrorDelTurno`
+- [ ] 3.5 RED: 5th tool round → `ErrorDelTurno`; provider exception →
+      `ErrorDelTurno`; tool exception → turn continues (the 25 s timeout is
+      the view's, task 5.6b)
 - [ ] 3.6 RED: the messages sent to the provider contain the anonymized
       profile, ≤ 10 history messages with the cards line, `ya_recomendados`
       rendered as titles and years (no bare ids),
@@ -139,19 +232,24 @@
       403 `account_deactivated` with a live cookie, 400 length, 409 lock, 429
       with `retry_after_seconds`; a 409 does not move the hourly counter
 - [ ] 5.5 RED: a full turn yields the event sequence and stores the pair on
-      `fin`; provider failure yields `error` and stores nothing
+      `fin`; provider failure yields `error` and stores nothing. Until PR3
+      merges, 5.4–5.6b drive the view with `OrquestadorFalso` (PR 0): its
+      `demora` stands in for a slow turn and `falla_en` for a provider error
 - [ ] 5.6 RED: through `get_asgi_application()` with a fake ASGI `receive`
       that sends `http.disconnect` mid-stream (the `AsyncClient` does not
       simulate a disconnect): nothing is stored and the lock is freed; a
       disconnect during the save keeps the lock until the save ends; a save
       failure sends `error` and no `tarjetas`
 - [ ] 5.6b RED: lock with a per-request token — an expired request's late
-      release leaves the next request's lock; a fake tool that sleeps past
+      release leaves the next request's lock; a fake turn that sleeps past
       the budget hits the 25 s turn timeout and the lock is released; a save
       still running when the budget expires is not interrupted and ends in
       `fin`
 - [ ] 5.7 GREEN: `views.py :: enviar_mensaje`, lock, hourly counter,
-      `idioma_efectivo` once, `contar_llamadas` inside the stream generator
+      `idioma_efectivo` once, `contar_llamadas` inside the stream generator;
+      the view saves with `guardar_turno()` (PR4) from the final `Resultado`.
+      Once PR3 is in `main`, swap the fake for `orquestador.responder` (one
+      line) — sync point 2
 - [ ] 5.8 `contracts/sse-chat.md`; OpenAPI entry for the `POST` with its
       pre-stream responses
 - [ ] 5.9 Manual: `curl -N` against the dev server shows events arriving one

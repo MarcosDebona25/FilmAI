@@ -24,6 +24,14 @@ ChatProvider (root layout)
  └─ history ──GET──▶ chatbot/views.py :: HistorialView (DRF, sync, cursor)
 ```
 
+`chatbot/eventos.py` is the contract between `responder()` and the view (PR 0,
+04/11/2026): `responder(chat, texto, idioma)` yields `Estado` and `Texto`,
+ends with one `Resultado(texto, tarjetas)` and raises `ErrorDelTurno` on
+failure. It saves nothing: the view owns the timeout, the lock and the save.
+`chatbot/orquestador_falso.py` implements the same contract from a script, so
+the SSE view can be built before the real orchestrator exists. The split of
+work around this seam is in `tasks.md` («Work split»).
+
 New modules sit in `backend/chatbot/`; semantic search goes in
 `backend/catalogo/services/semantica.py` next to `embeddings.py`, because it
 is a catalog capability the chatbot happens to be the first to use.
@@ -78,9 +86,10 @@ sequenceDiagram
             O-->>F: event: texto {delta}
         end
     end
-    O->>DB: save user message + answer + cards together (atomic)
-    O-->>F: event: tarjetas [≤ 3 validated cards]
-    O-->>F: event: fin {id, id_pregunta}
+    O-->>V: Resultado {texto, tarjetas} (last item, not streamed)
+    V->>DB: guardar_turno(): user message + answer + cards together (atomic)
+    V-->>F: event: tarjetas [≤ 3 validated cards]
+    V-->>F: event: fin {id, id_pregunta}
     Note over F,V: Cancel = the browser aborts the fetch. Django sees the<br/>disconnect, cancels the generator; before the save, nothing is stored.
 ```
 
@@ -169,7 +178,7 @@ synopsis cut at 300 characters, at most 10 items, «Vistas» removed.
 | `detalle` | `id_tmdb`, `tipo` | `get_movie_detail` / `get_tv_detail` (exist) |
 | `buscar_semantico` | `consulta`, `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
 | `mis_listas` | `lista?` (`vistas`, `pendientes`, `favoritos`, or the `id` of a custom list) | SQL scoped to `ctx.usuario`. The model never passes a user id. Without `lista` it returns the user's lists as `{id, nombre}`; the model then asks by `id`, never by name (the name the model sees is anonymized, so a lookup by name would fail). |
-| `mostrar_tarjetas` | `tarjetas[{id_tmdb, tipo}]` | Validation only: accumulates valid cards in the turn context (a second call adds, up to 3). The orchestrator emits **one** `tarjetas` event after the loop, just before `fin`, so cards never arrive before the final text nor belong to a turn that ends in `error`. |
+| `mostrar_tarjetas` | `tarjetas[{id_tmdb, tipo}]` | Validation only: accumulates valid cards in the turn context (a second call adds, up to 3). The orchestrator returns them in the final `Resultado`; the view saves and then emits **one** `tarjetas` event, just before `fin`, so cards never arrive before the final text nor belong to a turn that ends in `error`. |
 
 TMDB tools go through `servicio_localizado(idioma, get_catalog_service)`:
 cache, per-language cache keys and English fallback, as the catalog does. The
@@ -285,9 +294,28 @@ A style block per language (es/en) is a small dict, not two prompts.
 
 ## Configuration
 
-`.env.example` gains: `LLM_PROVIDER=deepseek`, `LLM_BASE_URL`, `LLM_MODEL=deepseek-flash`,
-`LLM_THINKING=false`, `LLM_TIMEOUT_SECONDS=25`, `OLLAMA_URL`,
-`CHAT_MENSAJES_POR_HORA=20`. The 500-character limit is **not** configurable:
+Same pattern as TMDB (`settings.py` reads each value with
+`config(..., default=...)`; the code reads only `settings`). The only
+required variable in `.env` is `LLM_API_KEY`; everything else has a default
+in `settings.py` and appears commented in `.env.example` (04/11/2026):
+
+| Variable | Default |
+|---|---|
+| `LLM_PROVIDER` | `openai_compatible` — the **adapter type** (the API format the provider speaks), not the company. DeepSeek speaks the OpenAI format |
+| `LLM_BASE_URL` | `https://api.deepseek.com` |
+| `LLM_MODEL` | `deepseek-flash` |
+| `LLM_THINKING` | `false` |
+| `LLM_TIMEOUT_SECONDS` | `25` |
+| `CHAT_MENSAJES_POR_HORA` | `20` |
+| `OLLAMA_URL` | the dev bridge, `http://host.docker.internal:11435`; set explicitly in production |
+
+`settings.py` builds `LLM_PROVEEDORES`, a list with one entry today
+(`{tipo, base_url, modelo, api_key, thinking}`). `llm.py` keeps a registry
+`{tipo: clase}` (`openai_compatible` → `ProveedorOpenAICompatible`) and the
+orchestrator only knows the `ProveedorLLM` protocol, never the environment. A
+future fallback is `LLM_FALLBACK_*` in `.env`, a second entry in the list and a
+loop in the orchestrator; a fallback with its own API adds a type and a class.
+The 500-character limit is **not** configurable:
 it is a contract shared with the panel's `maxLength` and the spec (09/10/2026),
 so it lives as one constant in the backend and one in the frontend. Dependencies:
 `openai`, `daphne` (backend); `react-markdown`, `rehype-sanitize` (frontend).
