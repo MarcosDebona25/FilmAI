@@ -116,7 +116,7 @@ export function ListCard({
             </button>
           )}
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <h2 className="flex items-center gap-2.5 font-display text-[30px] leading-[1.05] md:text-[36px]">
+            <h2 className="flex items-center gap-2.5 font-display text-[1.875rem] leading-[1.05] md:text-[2.25rem]">
               {Icono && <Icono aria-hidden="true" className="size-6 flex-none text-primary" />}
               <Link
                 href={routes.list(lista.id)}
@@ -126,7 +126,7 @@ export function ListCard({
                 {nombre}
               </Link>
             </h2>
-            <p className="text-[15px] text-fg-2">
+            <p className="text-[0.9375rem] text-fg-2">
               {t("lists.count.items", { count: lista.cantidad_items })}
               {lista.cantidad_items > 0 && (
                 <>
@@ -139,7 +139,7 @@ export function ListCard({
             </p>
           </div>
           {predeterminada ? (
-            <span className="mt-1 inline-flex h-7 flex-none items-center rounded-full bg-raised-2 px-3 text-[13px] font-semibold text-fg-2">
+            <span className="mt-1 inline-flex h-7 flex-none items-center rounded-full bg-raised-2 px-3 text-[0.8125rem] font-semibold text-fg-2">
               {t("common.lists.defaultBadge")}
             </span>
           ) : (
@@ -161,14 +161,14 @@ export function ListCard({
                 key={`${ruta}-${indice}`}
                 ruta={ruta}
                 className={cn(
-                  "h-[66px] w-11 flex-none rounded-md shadow-[0_0_0_2px_var(--raised)] md:h-24 md:w-16",
+                  "h-[4.125rem] w-11 flex-none rounded-md shadow-[0_0_0_2px_var(--raised)] md:h-24 md:w-16",
                   indice > 0 && "-ml-3 md:-ml-4",
                   indice >= 3 && "hidden md:block"
                 )}
               />
             ))}
             {masAlla > 0 && (
-              <span className="ml-3 text-[13px] font-semibold text-fg-3">
+              <span className="ml-3 text-[0.8125rem] font-semibold text-fg-3">
                 {t("lists.card.overflowCount", { count: formats.number(masAlla) })}
               </span>
             )}
@@ -176,7 +176,7 @@ export function ListCard({
         ) : (
           <div
             aria-hidden="true"
-            className="h-[66px] rounded-md border border-dashed border-line md:h-24"
+            className="h-[4.125rem] rounded-md border border-dashed border-line md:h-24"
           />
         )}
       </article>

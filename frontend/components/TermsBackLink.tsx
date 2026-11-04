@@ -22,7 +22,7 @@ export function TermsBackLink() {
     <>
       <Link
         href={perfil ? routes.settings : routes.home}
-        className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[15px] font-medium text-fg-2 md:hidden"
+        className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[0.9375rem] font-medium text-fg-2 md:hidden"
       >
         <ChevronLeft aria-hidden="true" className="size-4" />
         {perfil ? t("settings") : t("backLanding")}

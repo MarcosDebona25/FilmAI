@@ -60,7 +60,7 @@ export default function SettingsPage() {
     return (
       <div
         key={campo}
-        className="flex items-center gap-4 border-t border-line py-4 md:gap-6 md:py-[18px]"
+        className="flex items-center gap-4 border-t border-line py-4 md:gap-6 md:py-[1.125rem]"
       >
         <span className="flex flex-1 flex-col">
           <span id={etiqueta} className="font-semibold">
@@ -78,17 +78,17 @@ export default function SettingsPage() {
     );
   }
 
-  const titulo2 = "font-display text-[30px] leading-none md:text-[34px]";
+  const titulo2 = "font-display text-[1.875rem] leading-none md:text-[2.125rem]";
 
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[760px] flex-col gap-9 px-5 pt-4 pb-[120px] md:gap-14 md:px-10 md:pt-12 md:pb-24"
+      className="mx-auto flex max-w-[47.5rem] flex-col gap-9 px-5 pt-4 pb-[7.5rem] md:gap-14 md:px-10 md:pt-12 md:pb-24"
     >
       <div className="flex flex-col gap-2.5 md:gap-3.5">
         <Link
           href={routes.profile}
-          className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[15px] font-medium text-fg-2 no-underline md:hidden"
+          className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[0.9375rem] font-medium text-fg-2 no-underline md:hidden"
         >
           <ChevronLeft aria-hidden="true" className="size-5" />
           {t("nav.main.profileShort")}
@@ -109,7 +109,7 @@ export default function SettingsPage() {
             </li>
           </ol>
         </nav>
-        <h1 className="font-display text-[48px] leading-none md:mb-[15px] md:text-[72px] md:leading-[0.95]">
+        <h1 className="font-display text-[3rem] leading-none md:mb-[0.9375rem] md:text-[4.5rem] md:leading-[0.95]">
           {t("nav.main.settings")}
         </h1>
       </div>
@@ -128,7 +128,7 @@ export default function SettingsPage() {
             <h2 id="t-idioma" className={`${titulo2} scroll-mt-24 md:mb-2`}>
               {t("settings.language.label")}
             </h2>
-            <div className="flex flex-col gap-3 border-y border-line py-4 md:flex-row md:items-center md:gap-6 md:py-[18px]">
+            <div className="flex flex-col gap-3 border-y border-line py-4 md:flex-row md:items-center md:gap-6 md:py-[1.125rem]">
               <span className="flex flex-1 flex-col">
                 <span className="font-semibold">{t("settings.language.interfaceLabel")}</span>
                 <span className="text-sm text-fg-3">{t("settings.language.interfaceHelp")}</span>
@@ -183,7 +183,7 @@ export default function SettingsPage() {
             </h2>
             <Link
               href={routes.terms}
-              className="flex items-center gap-4 border-y border-line py-4 text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring md:gap-6 md:py-[18px]"
+              className="flex items-center gap-4 border-y border-line py-4 text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring md:gap-6 md:py-[1.125rem]"
             >
               <span className="flex flex-1 flex-col">
                 <span className="font-semibold">{t("nav.main.terms")}</span>
@@ -197,13 +197,13 @@ export default function SettingsPage() {
             <h2 id={`${idioma}-cuenta`} className={titulo2}>
               {t("settings.account.heading")}
             </h2>
-            <p className="text-[15px] text-fg-2 md:text-base">
+            <p className="text-[0.9375rem] text-fg-2 md:text-base">
               {t("settings.account.deactivateWarning")}
             </p>
             <button
               type="button"
               onClick={() => setConfirmarBaja(true)}
-              className="h-[52px] cursor-pointer rounded-[10px] px-[18px] font-semibold text-destructive shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:self-start"
+              className="h-[3.25rem] cursor-pointer rounded-[0.625rem] px-[1.125rem] font-semibold text-destructive shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:self-start"
             >
               {t("nav.account.deactivateTitle")}
             </button>

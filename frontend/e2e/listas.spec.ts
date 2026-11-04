@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ORIGIN } from "./origen";
 
 import en from "../messages/en/common.json";
 import es from "../messages/es/common.json";
@@ -364,15 +365,11 @@ for (const viewport of viewports) {
       // sin idioma guardado. Como el navegador del test es es-AR, se arranca en
       // inglés con la cookie.
       await backend(page, { idioma: null });
-      await page
-        .context()
-        .addCookies([{ name: "filmai_locale", value: "en", url: "http://127.0.0.1:3100" }]);
+      await page.context().addCookies([{ name: "filmai_locale", value: "en", url: ORIGIN }]);
       await page.goto("/lists");
       await expect(page.getByRole("heading", { level: 1, name: en.nav.main.lists })).toBeVisible();
 
-      await page
-        .context()
-        .addCookies([{ name: "filmai_locale", value: "es", url: "http://127.0.0.1:3100" }]);
+      await page.context().addCookies([{ name: "filmai_locale", value: "es", url: ORIGIN }]);
       await page.reload();
 
       await expect(page.getByRole("heading", { level: 1, name: es.nav.main.lists })).toBeVisible();

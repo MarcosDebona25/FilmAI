@@ -79,6 +79,12 @@ describe("footer del canvas", () => {
 
     expect(found[es.nav.account.signUp]).toHaveAttribute("href", routes.register);
     expect(found[es.nav.account.logIn]).toHaveAttribute("href", routes.login);
+    // Registro está en escritorio y en celular; Log in solo en la columna de
+    // escritorio: en celular vive en la barra inferior (MobileTabs).
+    expect(within(footer).getAllByRole("link", { name: es.nav.account.signUp })).toHaveLength(2);
+    const logIn = within(footer).getAllByRole("link", { name: es.nav.account.logIn });
+    expect(logIn).toHaveLength(1);
+    expect(logIn[0].closest(".md\\:flex")).not.toBeNull();
     expect(screen.getAllByRole("link", { name: es.footer.main.askFilmAI })).toHaveLength(2);
     expect(within(footer).getAllByRole("radiogroup").length).toBeGreaterThan(0);
     expect(within(footer).queryByRole("link", { name: /Preferencias\./ })).toBeNull();

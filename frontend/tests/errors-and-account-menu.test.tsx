@@ -284,10 +284,10 @@ describe("encabezado y barra inferior", () => {
   it("sin sesión ofrece iniciar sesión y registrarse", () => {
     account.perfil = null;
     render(<Navbar />, { locale: "en" });
-    expect(screen.getByRole("link", { name: en.nav.account.logIn })).toHaveAttribute(
-      "href",
-      routes.login
-    );
+    const logIn = screen.getByRole("link", { name: en.nav.account.logIn });
+    expect(logIn).toHaveAttribute("href", routes.login);
+    // En celular Log in está en la barra inferior: el encabezado lo muestra solo desde md.
+    expect(logIn).toHaveClass("max-md:hidden");
     expect(screen.getByRole("link", { name: en.nav.account.signUp })).toHaveAttribute(
       "href",
       routes.register
@@ -322,11 +322,52 @@ describe("encabezado y barra inferior", () => {
       "aria-current",
       "page"
     );
+    expect(nav).toHaveClass("grid-cols-4");
+    expect(within(nav).queryByRole("link", { name: en.nav.account.logIn })).toBeNull();
   });
 
-  it("la barra inferior no se muestra sin sesión", () => {
+  it("sin sesión la barra inferior enlaza Home, Search y Log in", () => {
     account.perfil = null;
-    const view = render(<MobileTabs />);
-    expect(view.container).toBeEmptyDOMElement();
+    path.current = routes.search;
+    render(<MobileTabs />, { locale: "en" });
+    const nav = screen.getByRole("navigation", { name: en.nav.main.mainLabel });
+    expect(nav).toHaveClass("grid-cols-3", "md:hidden");
+    const links = within(nav).getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      routes.explore,
+      routes.search,
+      routes.login,
+    ]);
+    expect(links.map((link) => link.textContent)).toEqual([
+      en.nav.main.home,
+      en.nav.main.search,
+      en.nav.account.logIn,
+    ]);
+    expect(within(nav).getByRole("link", { name: en.nav.main.search })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    expect(within(nav).queryByRole("link", { name: en.nav.main.lists })).toBeNull();
+    expect(within(nav).queryByRole("link", { name: en.nav.main.profileShort })).toBeNull();
+  });
+
+  it("sin sesión la barra inferior también se traduce", () => {
+    account.perfil = null;
+    render(<MobileTabs />, { locale: "es" });
+    const nav = screen.getByRole("navigation", { name: es.nav.main.mainLabel });
+    expect(within(nav).getByRole("link", { name: es.nav.account.logIn })).toHaveAttribute(
+      "href",
+      routes.login
+    );
+  });
+
+  it("la barra inferior no se muestra mientras carga la cuenta", () => {
+    for (const perfilActual of [perfil, null]) {
+      account.perfil = perfilActual;
+      account.cargando = true;
+      const view = render(<MobileTabs />, { locale: "en" });
+      expect(view.container).toBeEmptyDOMElement();
+      view.unmount();
+    }
   });
 });

@@ -21,9 +21,9 @@ const VELO_CELULAR =
   "linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.9) 32%, rgb(var(--scrim) / 0) 62%), linear-gradient(180deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0) 14%)";
 // Clases enteras (no armadas por partes) para que Tailwind las genere.
 const TAMANIO_TITULO = {
-  grande: "text-[72px] md:text-[152px]",
-  mediano: "text-[56px] md:text-[112px]",
-  chico: "text-[44px] md:text-[88px]",
+  grande: "text-[4.5rem] md:text-[9.5rem]",
+  mediano: "text-[3.5rem] md:text-[7rem]",
+  chico: "text-[2.75rem] md:text-[5.5rem]",
 } as const;
 const VELO_ESCRITORIO =
   "linear-gradient(90deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.92) 28%, rgb(var(--scrim) / 0.25) 58%, rgb(var(--scrim) / 0) 74%), linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0) 34%), linear-gradient(180deg, rgb(var(--scrim) / 0.75) 0%, rgb(var(--scrim) / 0) 22%)";
@@ -57,14 +57,14 @@ export function HomeHero({
   return (
     <section
       aria-labelledby="hero-titulo"
-      className={cn("relative flex flex-col", conImagen && "md:min-h-[720px] md:overflow-hidden")}
+      className={cn("relative flex flex-col", conImagen && "md:min-h-[45rem] md:overflow-hidden")}
     >
       {sinTituloVisible && (
         <h1 id="hero-titulo" className="sr-only">
           {t("nav.main.home")}
         </h1>
       )}
-      <div className="relative z-10 px-5 pt-1 pb-4 md:mx-auto md:w-full md:max-w-[1360px] md:px-10 md:pt-[88px] md:pb-0">
+      <div className="relative page-container w-full z-10 pt-1 pb-4 md:pt-[5.5rem] md:pb-0">
         {selector}
       </div>
       {/*
@@ -75,12 +75,12 @@ export function HomeHero({
         cubre toda la sección, también detrás de la barra y del selector.
       */}
       {cargando ? (
-        <div className="relative min-h-[560px] flex-1 md:static md:min-h-0">
+        <div className="relative min-h-[35rem] flex-1 md:static md:min-h-0">
           <div className="absolute inset-0 bg-raised" />
         </div>
       ) : (
         titulo?.backdrop && (
-          <div className="relative flex min-h-[560px] flex-1 flex-col justify-end md:static md:min-h-0 md:pt-12">
+          <div className="relative flex min-h-[35rem] flex-1 flex-col justify-end md:static md:min-h-0 md:pt-12">
             <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
               <Image
                 loader={tmdbLoader}
@@ -100,8 +100,8 @@ export function HomeHero({
                 style={{ background: VELO_ESCRITORIO }}
               />
             </div>
-            <div className="relative flex flex-col gap-3 px-5 pb-7 md:mx-auto md:w-full md:max-w-[1360px] md:gap-[18px] md:px-10 md:pb-[72px]">
-              <p className="flex gap-2 text-sm text-fg-2 md:gap-2.5 md:text-[15px]">
+            <div className="relative page-container w-full flex flex-col gap-3 pb-7 md:gap-[1.125rem] md:pb-[4.5rem]">
+              <p className="flex gap-2 text-sm text-fg-2 md:gap-2.5 md:text-[0.9375rem]">
                 <span className="font-semibold text-primary">
                   {tipo === "all"
                     ? t("home.hero.trendingRank", { rank: String(hero!.puesto) })
@@ -116,7 +116,7 @@ export function HomeHero({
                 id="hero-titulo"
                 lang={titulo.tituloEnIngles ? "en" : undefined}
                 className={cn(
-                  "mb-[15px] font-display text-balance",
+                  "mb-[0.9375rem] font-display text-balance",
                   TAMANIO_TITULO[tamanioTitulo(titulo.titulo)],
                   // Al final: `tailwind-merge` borra un `leading-*` que venga antes
                   // de una clase de tamaño de letra.
@@ -125,7 +125,7 @@ export function HomeHero({
               >
                 {titulo.titulo}
               </h1>
-              <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-fg-2 md:gap-3 md:text-[15px]">
+              <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-fg-2 md:gap-3 md:text-[0.9375rem]">
                 {titulo.anio && <span>{titulo.anio}</span>}
                 {generos.length > 0 && (
                   // En celular los géneros bajan a su propio renglón (`order-last`,
@@ -146,7 +146,7 @@ export function HomeHero({
                       <span className="sr-only">
                         {t("home.hero.tmdbRatingLabel", { rating: formats.rating(titulo.nota) })}
                       </span>
-                      <StarIcon className="size-[13px] fill-primary" />
+                      <StarIcon className="size-[0.8125rem] fill-primary" />
                       <span aria-hidden="true">{formats.rating(titulo.nota)}</span>
                     </span>
                   </>
@@ -155,17 +155,17 @@ export function HomeHero({
               {titulo.sinopsis && (
                 <p
                   lang={titulo.sinopsisEnIngles ? "en" : undefined}
-                  className="hidden max-w-[520px] text-[17px] leading-[1.6] text-pretty text-fg-2 md:line-clamp-3"
+                  className="hidden max-w-[32.5rem] text-[1.0625rem] leading-[1.6] text-pretty text-fg-2 md:line-clamp-3"
                 >
                   {titulo.sinopsis}
                 </p>
               )}
               <Link
                 href={routes.title(titulo.tipo, titulo.id, "home")}
-                className="mt-1.5 flex h-[52px] items-center justify-center gap-2 rounded-lg bg-primary px-6 font-semibold text-primary-foreground no-underline hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:mt-2 md:inline-flex md:h-12 md:self-start md:pr-[22px]"
+                className="mt-1.5 flex h-[3.25rem] items-center justify-center gap-2 rounded-lg bg-primary px-6 font-semibold text-primary-foreground no-underline hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:mt-2 md:inline-flex md:h-12 md:self-start md:pr-[1.375rem]"
               >
                 {t("common.media.viewDetails")}
-                <ArrowRight aria-hidden="true" className="hidden size-[18px] md:block" />
+                <ArrowRight aria-hidden="true" className="hidden size-[1.125rem] md:block" />
               </Link>
             </div>
           </div>

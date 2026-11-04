@@ -38,18 +38,25 @@ describe("MediaRow", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("mientras carga muestra cinco esqueletos y ninguna tarjeta", () => {
+  it("mientras carga muestra siete esqueletos (la página más ancha) y ninguna tarjeta", () => {
     render(<MediaRow title="New releases" items={[]} showType loading />, { locale: "en" });
 
     const fila = screen.getByRole("region", { name: "New releases" });
     expect(fila).toHaveAttribute("aria-busy", "true");
     expect(within(fila).queryAllByRole("link")).toHaveLength(0);
-    expect(fila.querySelectorAll("[data-skeleton]")).toHaveLength(5);
+    expect(fila.querySelectorAll("[data-skeleton]")).toHaveLength(7);
   });
 
-  it("las flechas desplazan la fila casi un ancho hacia cada lado", () => {
-    // jsdom no calcula tamaños: se fija el ancho visible de la fila a mano.
+  it("las flechas desplazan la fila exactamente una página (ancho visible + gap)", () => {
+    // jsdom no calcula tamaños: se fijan a mano el ancho visible y el gap (20 px).
     vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1000);
+    const original = window.getComputedStyle;
+    vi.spyOn(window, "getComputedStyle").mockImplementation((elemento) => {
+      const estilo = original(elemento);
+      return elemento.tagName === "UL"
+        ? ({ ...estilo, columnGap: "20px" } as CSSStyleDeclaration)
+        : estilo;
+    });
     const scrollBy = vi.fn();
     Element.prototype.scrollBy = scrollBy;
     render(<MediaRow title="Trending this week" items={titulos} showType />, { locale: "en" });
@@ -57,7 +64,7 @@ describe("MediaRow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next in Trending this week" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous in Trending this week" }));
 
-    expect(scrollBy).toHaveBeenNthCalledWith(1, expect.objectContaining({ left: 900 }));
-    expect(scrollBy).toHaveBeenNthCalledWith(2, expect.objectContaining({ left: -900 }));
+    expect(scrollBy).toHaveBeenNthCalledWith(1, expect.objectContaining({ left: 1020 }));
+    expect(scrollBy).toHaveBeenNthCalledWith(2, expect.objectContaining({ left: -1020 }));
   });
 });

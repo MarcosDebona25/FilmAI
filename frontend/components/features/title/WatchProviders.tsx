@@ -31,13 +31,16 @@ function Logo({
   decorativo?: boolean;
 }) {
   const src = tmdbImage(plataforma.logo, "w92");
-  const caja = { width: size, height: size };
+  // En rem: crece con la escala de la raíz en pantallas anchas (globals.css).
+  const caja = { width: `${size / 16}rem`, height: `${size / 16}rem` };
   return src ? (
     <Image
       src={src}
       alt={decorativo ? "" : plataforma.nombre}
       title={decorativo ? undefined : plataforma.nombre}
-      {...caja}
+      width={size}
+      height={size}
+      style={caja}
       unoptimized
       className="rounded-md bg-raised-2 object-cover"
     />
@@ -159,11 +162,11 @@ export function WatchProviders({
           id={panelId}
           role="dialog"
           aria-label={t("panelTitle")}
-          className="flex flex-col gap-5 rounded-xl bg-raised p-4 shadow-[inset_0_0_0_1px_var(--line)] md:max-w-[720px] md:p-5"
+          className="flex flex-col gap-5 rounded-xl bg-raised p-4 shadow-[inset_0_0_0_1px_var(--line)] md:max-w-[45rem] md:p-5"
         >
           {GRUPOS.filter(([clave]) => datos[clave].length > 0).map(([clave, grupo]) => (
             <section key={clave} aria-label={t(`groups.${grupo}`)} className="flex flex-col gap-2">
-              <h3 className="text-[13px] font-semibold text-fg-3">{t(`groups.${grupo}`)}</h3>
+              <h3 className="text-[0.8125rem] font-semibold text-fg-3">{t(`groups.${grupo}`)}</h3>
               <ul className="flex flex-wrap gap-2">
                 {datos[clave].map((p) => (
                   <li key={p.id}>

@@ -79,7 +79,7 @@ export function AccessShell({
         </aside>
         <main
           className={`relative z-10 flex justify-center lg:items-center lg:p-12 ${
-            poster === "band" ? "px-5 pt-5 pb-10" : "items-center px-5 pt-[104px] pb-10"
+            poster === "band" ? "px-5 pt-5 pb-10" : "items-center px-5 pt-[6.5rem] pb-10"
           }`}
         >
           {children}

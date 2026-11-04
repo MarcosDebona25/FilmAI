@@ -156,7 +156,7 @@ export default function CompletarGooglePage() {
 
   return (
     <AccessShell poster="band">
-      <div className="flex w-full max-w-[480px] flex-col gap-5 lg:gap-[22px]">
+      <div className="flex w-full max-w-[30rem] flex-col gap-5 lg:gap-[1.375rem]">
         <div className="hidden lg:block">
           <AccessLogo className="self-start" />
         </div>
@@ -166,7 +166,7 @@ export default function CompletarGooglePage() {
             {t("badge")}
           </p>
           <div>
-            <h1 className="mb-3 font-display text-[48px] leading-[0.95] lg:mb-[15px] lg:text-[60px]">
+            <h1 className="mb-3 font-display text-[3rem] leading-[0.95] lg:mb-[0.9375rem] lg:text-[3.75rem]">
               {t("title")}
             </h1>
             <p className="text-pretty text-muted-foreground">{t("description")}</p>
@@ -175,11 +175,11 @@ export default function CompletarGooglePage() {
         {hayErroresDeCampo && (
           <p
             role="alert"
-            className="flex items-start gap-2.5 rounded-[10px] bg-destructive/12 px-3.5 py-3 text-[15px] leading-[1.45] text-foreground shadow-[inset_0_0_0_1px_var(--destructive)]"
+            className="flex items-start gap-2.5 rounded-[0.625rem] bg-destructive/12 px-3.5 py-3 text-[0.9375rem] leading-[1.45] text-foreground shadow-[inset_0_0_0_1px_var(--destructive)]"
           >
             <CircleAlert
               aria-hidden="true"
-              className="mt-0.5 size-[15px] flex-none text-destructive"
+              className="mt-0.5 size-[0.9375rem] flex-none text-destructive"
             />
             {t("fixHighlighted")}
           </p>
@@ -187,7 +187,7 @@ export default function CompletarGooglePage() {
         <form
           onSubmit={(event: FormEvent) => event.preventDefault()}
           noValidate
-          className="flex flex-col gap-5 lg:gap-[22px]"
+          className="flex flex-col gap-5 lg:gap-[1.375rem]"
         >
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
             <TextField
@@ -248,7 +248,7 @@ export default function CompletarGooglePage() {
             {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}
             <label
               htmlFor="terminos"
-              className={`flex cursor-pointer items-start gap-3 rounded-[10px] px-3.5 py-3 ${terminosError ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : "shadow-[inset_0_0_0_1px_var(--field-border)]"}`}
+              className={`flex cursor-pointer items-start gap-3 rounded-[0.625rem] px-3.5 py-3 ${terminosError ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : "shadow-[inset_0_0_0_1px_var(--field-border)]"}`}
             >
               <input
                 id="terminos"
@@ -263,7 +263,7 @@ export default function CompletarGooglePage() {
                 aria-describedby="terminos-error"
                 className="mt-0.5 size-5 flex-none cursor-pointer accent-primary"
               />
-              <span className="flex-1 text-[15px] leading-[1.45] text-muted-foreground">
+              <span className="flex-1 text-[0.9375rem] leading-[1.45] text-muted-foreground">
                 {signUp.rich("termsAcceptance", {
                   terms: (chunks) => (
                     <Link
@@ -300,7 +300,7 @@ export default function CompletarGooglePage() {
               />
             </div>
             {!formularioValido && (
-              <p className="text-center text-[13px] text-fg-3">{signUp("submitPending")}</p>
+              <p className="text-center text-[0.8125rem] text-fg-3">{signUp("submitPending")}</p>
             )}
           </div>
         </form>

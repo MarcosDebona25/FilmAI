@@ -56,9 +56,9 @@ export function ConfirmDialog({
       onClose={onCancel}
       busy={enviando}
       initialFocus={() => cancelar.current}
-      ancho="md:w-[min(520px,calc(100%-2rem))]"
+      ancho="md:w-[min(32.5rem,calc(100%-2rem))]"
     >
-      <h2 id={tituloId} className="font-display text-[30px] leading-none md:text-[34px]">
+      <h2 id={tituloId} className="font-display text-[1.875rem] leading-none md:text-[2.125rem]">
         {titulo}
       </h2>
       {descripcion && (
@@ -70,7 +70,7 @@ export function ConfirmDialog({
         <div className="flex flex-col items-start gap-1">
           <blockquote
             ref={vistaPrevia}
-            className={`rounded-[10px] bg-background px-4 py-3 text-[15px] leading-[1.55] text-fg-2 ${completa ? "" : "line-clamp-2"}`}
+            className={`rounded-[0.625rem] bg-background px-4 py-3 text-[0.9375rem] leading-[1.55] text-fg-2 ${completa ? "" : "line-clamp-2"}`}
           >
             {preview}
           </blockquote>
@@ -97,7 +97,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onCancel}
           disabled={enviando}
-          className="h-[52px] cursor-pointer rounded-lg px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:font-medium md:shadow-none"
+          className="h-[3.25rem] cursor-pointer rounded-lg px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:font-medium md:shadow-none"
         >
           {t("actions.cancel")}
         </button>
@@ -105,7 +105,7 @@ export function ConfirmDialog({
           type="button"
           onClick={aceptar}
           disabled={enviando}
-          className="h-[52px] cursor-pointer rounded-lg bg-destructive px-[22px] md:h-12 font-semibold text-on-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-[3.25rem] cursor-pointer rounded-lg bg-destructive px-[1.375rem] md:h-12 font-semibold text-on-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"
         >
           {confirmar}
         </button>
