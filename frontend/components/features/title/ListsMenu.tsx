@@ -65,17 +65,25 @@ export function ListsMenu({
     ubicar(dialogo);
     dialogo.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
 
-    const seguirAlBoton = () => ubicar(dialogo);
-    window.addEventListener("scroll", seguirAlBoton, { passive: true });
-    window.addEventListener("resize", seguirAlBoton);
     const desborde = document.body.style.overflow;
-    if (!window.matchMedia?.("(min-width: 48rem)").matches) {
-      document.body.style.overflow = "hidden";
-    }
+    // Girar el celular o angostar la ventana puede cambiar de panel a hoja con
+    // el menú abierto: la página solo queda quieta mientras se ve la hoja.
+    const ajustarBloqueo = () => {
+      const esPanel = window.matchMedia?.("(min-width: 48rem)").matches;
+      document.body.style.overflow = esPanel ? desborde : "hidden";
+    };
+    const seguirAlBoton = () => ubicar(dialogo);
+    const alRedimensionar = () => {
+      ubicar(dialogo);
+      ajustarBloqueo();
+    };
+    ajustarBloqueo();
+    window.addEventListener("scroll", seguirAlBoton, { passive: true });
+    window.addEventListener("resize", alRedimensionar);
     return () => {
       dialogo.close();
       window.removeEventListener("scroll", seguirAlBoton);
-      window.removeEventListener("resize", seguirAlBoton);
+      window.removeEventListener("resize", alRedimensionar);
       document.body.style.overflow = desborde;
     };
   }, []);

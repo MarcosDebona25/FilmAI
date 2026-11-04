@@ -106,6 +106,35 @@ test.describe("menú «Add to list»", () => {
     });
   });
 
+  test.describe("con el menú abierto", () => {
+    test.use({ viewport: ESCRITORIO });
+
+    test("si el botón sale de la ventana, el panel sigue a la vista", async ({ page }) => {
+      await abrirFicha(page);
+      await llevarBotonA(page, 200);
+      await boton(page).click();
+      await expect(panel(page)).toBeVisible();
+
+      await llevarBotonA(page, -150);
+
+      await expect.poll(async () => (await panel(page).boundingBox())!.y).toBe(16);
+    });
+
+    test("cruzar el corte de 768 px cambia el bloqueo de la página", async ({ page }) => {
+      const desborde = () => page.evaluate(() => document.body.style.overflow);
+      await abrirFicha(page);
+      await boton(page).click();
+      await expect(panel(page)).toBeVisible();
+      expect(await desborde()).toBe("");
+
+      await page.setViewportSize(CELULAR);
+      await expect.poll(desborde).toBe("hidden");
+
+      await page.setViewportSize(ESCRITORIO);
+      await expect.poll(desborde).toBe("");
+    });
+  });
+
   test.describe("en celular", () => {
     test.use({ viewport: CELULAR });
 
