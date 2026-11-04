@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeTitle, normalizeTitles, tmdbImage, tmdbLoader } from "@/lib/catalog";
+import { normalizeTitle, normalizeTitles, tmdbConTope, tmdbImage, tmdbLoader } from "@/lib/catalog";
 import { routes } from "@/lib/routes";
 import { insidious, persona, reacher } from "./catalog-fixtures";
 
@@ -110,5 +110,20 @@ describe("tmdbLoader", () => {
 
   it("deja igual lo que no es del CDN de TMDB", () => {
     expect(tmdbLoader({ src: "/avatars/a.png", width: 96 })).toBe("/avatars/a.png");
+  });
+});
+
+describe("tmdbConTope", () => {
+  it("cambia el ancho tope de una URL de TMDB", () => {
+    expect(tmdbConTope("https://image.tmdb.org/t/p/w342/abc.jpg", "w500")).toBe(
+      "https://image.tmdb.org/t/p/w500/abc.jpg"
+    );
+    expect(tmdbConTope("https://image.tmdb.org/t/p/w500/abc.jpg", "w342")).toBe(
+      "https://image.tmdb.org/t/p/w342/abc.jpg"
+    );
+  });
+
+  it("deja igual lo que no es del CDN de TMDB", () => {
+    expect(tmdbConTope("/avatars/w342/a.png", "w500")).toBe("/avatars/w342/a.png");
   });
 });

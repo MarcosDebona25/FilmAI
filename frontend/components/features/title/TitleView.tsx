@@ -335,7 +335,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
               <Image
                 loader={tmdbLoader}
                 fill
-                sizes="(min-width: 768px) 300px, 116px"
+                // 18.75rem: desde 1440 px crece con la raíz (180 px + 8,333vw, tope 390 px).
+                sizes="(min-width: 2560px) 390px, (min-width: 1440px) calc(180px + 8.333vw), (min-width: 768px) 300px, 116px"
                 src={ficha.poster}
                 alt={t("common.media.posterAlt", { title: ficha.titulo })}
                 className="object-cover"
