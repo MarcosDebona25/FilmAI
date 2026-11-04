@@ -101,7 +101,7 @@ export function ListActionsMenu({
         aria-expanded={abierto !== null}
         aria-label={etiqueta}
         onClick={() =>
-          setAbierto(window.matchMedia?.("(min-width: 768px)").matches ? "escritorio" : "celular")
+          setAbierto(window.matchMedia?.("(min-width: 48rem)").matches ? "escritorio" : "celular")
         }
         className="grid size-11 cursor-pointer place-items-center rounded-full text-fg-2 hover:bg-raised-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
       >

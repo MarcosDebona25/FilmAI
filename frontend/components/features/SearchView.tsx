@@ -104,7 +104,7 @@ export function SearchView() {
 
   // En escritorio el campo toma el foco; en celular el teclado taparía los resultados.
   useEffect(() => {
-    if (window.matchMedia?.("(min-width: 768px)").matches) campo.current?.focus();
+    if (window.matchMedia?.("(min-width: 48rem)").matches) campo.current?.focus();
   }, []);
 
   function cerrar() {
