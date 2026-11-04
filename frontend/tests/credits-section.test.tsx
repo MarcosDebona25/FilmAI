@@ -12,7 +12,7 @@ describe("Dirección y reparto", () => {
   it("con director, el reparto va en la columna de la derecha", () => {
     render(<CreditsSection creditos={{ directores: ["Hayao Miyazaki"], reparto }} tipo="movie" />);
     const grilla = screen.getByText("Hayao Miyazaki").closest("div")!.parentElement!;
-    expect(grilla.className).toContain("md:grid-cols-[240px_minmax(0,1fr)]");
+    expect(grilla.className).toContain("md:grid-cols-[15rem_minmax(0,1fr)]");
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Dirección y reparto");
   });
 

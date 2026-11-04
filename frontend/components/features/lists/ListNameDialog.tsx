@@ -70,9 +70,9 @@ export function ListNameDialog({
       onClose={onClose}
       busy={enviando}
       initialFocus={() => campo.current}
-      ancho="md:w-[min(520px,calc(100%-2rem))]"
+      ancho="md:w-[min(32.5rem,calc(100%-2rem))]"
     >
-      <h2 id={tituloId} className="font-display text-[30px] leading-none md:text-[34px]">
+      <h2 id={tituloId} className="font-display text-[1.875rem] leading-none md:text-[2.125rem]">
         {t(modo === "crear" ? "lists.create.title" : "common.lists.renameTitle")}
       </h2>
       <form onSubmit={enviar} noValidate className="flex flex-col gap-4">
@@ -97,7 +97,7 @@ export function ListNameDialog({
             }}
             className="h-12 rounded-lg bg-background px-3.5 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]"
           />
-          <div className="flex justify-between gap-3 text-[13px] text-fg-3">
+          <div className="flex justify-between gap-3 text-[0.8125rem] text-fg-3">
             <span id={ayudaId}>{t("lists.name.allowedCharactersHelp")}</span>
             <span aria-hidden="true" className="tabular-nums">
               {t("lists.name.counter", {
@@ -124,14 +124,14 @@ export function ListNameDialog({
             type="button"
             onClick={onClose}
             disabled={enviando}
-            className="h-[52px] cursor-pointer rounded-lg px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:font-medium md:shadow-none"
+            className="h-[3.25rem] cursor-pointer rounded-lg px-4 font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-12 md:font-medium md:shadow-none"
           >
             {t("common.actions.cancel")}
           </button>
           <button
             type="submit"
             disabled={enviando}
-            className="h-[52px] cursor-pointer rounded-lg bg-primary px-[22px] font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60 md:h-12"
+            className="h-[3.25rem] cursor-pointer rounded-lg bg-primary px-[1.375rem] font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60 md:h-12"
           >
             {t(modo === "crear" ? "common.actions.create" : "common.actions.save")}
           </button>

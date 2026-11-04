@@ -16,7 +16,7 @@ const NAV_LINKS = [
 ] as const;
 
 const authLinkClass =
-  "inline-flex h-11 items-center rounded-[10px] px-3 text-[15px] font-semibold md:px-4 no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+  "inline-flex h-11 items-center rounded-[0.625rem] px-3 text-[0.9375rem] font-semibold md:px-4 no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 /** Encabezado del sitio: marca, navegación principal (escritorio) y cuenta. */
 export function Navbar() {
@@ -44,7 +44,7 @@ export function Navbar() {
       >
         {t("main.skipToContent")}
       </a>
-      <div className="mx-auto flex h-[60px] max-w-[1360px] items-center gap-4 pr-3 pl-5 md:gap-10 md:h-auto md:px-10 md:py-5">
+      <div className="page-container max-md:pr-3 flex h-[3.75rem] items-center gap-4 md:gap-10 md:h-auto md:py-5">
         <Link
           href={routes.explore}
           aria-label={t("main.brandHomeLabel")}
@@ -53,7 +53,7 @@ export function Navbar() {
           <TicketMark width={28} height={21} className="md:h-6 md:w-8" />
           <span
             translate="no"
-            className="font-display text-[26px] leading-none tracking-[0.05em] md:text-[30px]"
+            className="font-display text-[1.625rem] leading-none tracking-[0.05em] md:text-[1.875rem]"
           >
             FilmAI
           </span>
@@ -66,7 +66,7 @@ export function Navbar() {
                 key={item.key}
                 href={item.href}
                 aria-current={current ? "page" : undefined}
-                className={`flex h-11 items-center rounded-lg px-3 text-[15px] font-medium no-underline hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring ${current ? "text-foreground" : "text-fg-2"}`}
+                className={`flex h-11 items-center rounded-lg px-3 text-[0.9375rem] font-medium no-underline hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring ${current ? "text-foreground" : "text-fg-2"}`}
               >
                 {t(`main.${item.key}`)}
               </Link>

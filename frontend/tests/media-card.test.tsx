@@ -85,4 +85,16 @@ describe("MediaCard", () => {
     render(<MediaCard title={pelicula} showType />, { locale: "en" });
     expect(document.querySelector("time")).toBeNull();
   });
+
+  it("en celular pide el póster de siempre (tope w342) y desde md hasta w500", () => {
+    const { container } = render(<MediaCard title={pelicula} showType />, { locale: "en" });
+
+    const img = screen.getByAltText("Insidious: Out of the Further poster");
+    expect(img).toHaveAttribute("sizes", "132px");
+    expect(img.getAttribute("srcset")).toContain("/w342/");
+    expect(img.getAttribute("srcset")).not.toContain("/w500/");
+    const fuente = container.querySelector("source");
+    expect(fuente).toHaveAttribute("media", "(min-width: 768px)");
+    expect(fuente?.getAttribute("srcset")).toContain("/w500/");
+  });
 });

@@ -15,7 +15,7 @@ import { translateError } from "@/lib/errors";
 import { routes } from "@/lib/routes";
 
 const itemClass =
-  "flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] font-medium text-foreground no-underline hover:bg-raised-2 focus-visible:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring";
+  "flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[0.9375rem] font-medium text-foreground no-underline hover:bg-raised-2 focus-visible:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring";
 
 /** Menú de la cuenta (avatar → perfil, reseñas, preferencias, cerrar sesión). */
 export function AccountMenu() {
@@ -111,7 +111,7 @@ export function AccountMenu() {
           <div
             role="menu"
             aria-label={t("account.optionsLabel")}
-            className="absolute top-[54px] right-0 z-40 flex w-[280px] max-w-[calc(100vw-24px)] flex-col rounded-[14px] bg-raised p-2 shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)]"
+            className="absolute top-[3.375rem] right-0 z-40 flex w-[17.5rem] max-w-[calc(100vw-1.5rem)] flex-col rounded-[0.875rem] bg-raised p-2 shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)]"
           >
             <div className="flex items-center gap-3 px-3 pt-2.5 pb-3.5">
               <span aria-hidden="true" className="flex">
@@ -119,7 +119,9 @@ export function AccountMenu() {
               </span>
               <span className="flex min-w-0 flex-col">
                 <span className="truncate font-semibold text-foreground">{nombreCompleto}</span>
-                <span className="truncate text-[13px] text-fg-3">@{perfil.nombre_usuario}</span>
+                <span className="truncate text-[0.8125rem] text-fg-3">
+                  @{perfil.nombre_usuario}
+                </span>
               </span>
             </div>
             <span aria-hidden="true" className="mx-1 mb-1.5 h-px bg-line" />
@@ -130,7 +132,7 @@ export function AccountMenu() {
               onClick={() => setMenuAbierto(false)}
               className={itemClass}
             >
-              <User aria-hidden="true" className="size-[18px] text-fg-2" />
+              <User aria-hidden="true" className="size-[1.125rem] text-fg-2" />
               {t("main.profile")}
             </Link>
             <Link
@@ -139,7 +141,7 @@ export function AccountMenu() {
               onClick={() => setMenuAbierto(false)}
               className={itemClass}
             >
-              <Star aria-hidden="true" className="size-[18px] text-fg-2" />
+              <Star aria-hidden="true" className="size-[1.125rem] text-fg-2" />
               {t("main.ratingsReviews")}
             </Link>
             <Link
@@ -148,7 +150,7 @@ export function AccountMenu() {
               onClick={() => setMenuAbierto(false)}
               className={itemClass}
             >
-              <Settings aria-hidden="true" className="size-[18px] text-fg-2" />
+              <Settings aria-hidden="true" className="size-[1.125rem] text-fg-2" />
               {t("main.settings")}
             </Link>
             <span aria-hidden="true" className="mx-1 my-1.5 h-px bg-line" />
@@ -161,7 +163,7 @@ export function AccountMenu() {
               }}
               className={`${itemClass} cursor-pointer font-semibold text-destructive`}
             >
-              <LogOut aria-hidden="true" className="size-[18px]" />
+              <LogOut aria-hidden="true" className="size-[1.125rem]" />
               {t("account.logOut")}
             </button>
           </div>
@@ -176,11 +178,11 @@ export function AccountMenu() {
           onClose={cerrarLogout}
           busy={saliendo}
           initialFocus={() => cancelarRef.current}
-          ancho="md:w-[min(420px,calc(100%-2rem))]"
+          ancho="md:w-[min(26.25rem,calc(100%-2rem))]"
         >
           <h2
             id="titulo-cerrar-sesion"
-            className="font-display text-[34px] leading-none text-foreground"
+            className="font-display text-[2.125rem] leading-none text-foreground"
           >
             {t("account.logoutConfirmTitle")}
           </h2>
@@ -193,7 +195,7 @@ export function AccountMenu() {
               type="button"
               onClick={cerrarLogout}
               disabled={saliendo}
-              className="h-12 cursor-pointer rounded-[10px] px-4 font-medium text-fg-2 hover:text-foreground disabled:cursor-wait"
+              className="h-12 cursor-pointer rounded-[0.625rem] px-4 font-medium text-fg-2 hover:text-foreground disabled:cursor-wait"
             >
               {common("cancel")}
             </button>
@@ -201,7 +203,7 @@ export function AccountMenu() {
               type="button"
               onClick={logout}
               disabled={saliendo}
-              className="h-12 cursor-pointer rounded-[10px] bg-raised-2 px-5 font-semibold text-foreground hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
+              className="h-12 cursor-pointer rounded-[0.625rem] bg-raised-2 px-5 font-semibold text-foreground hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
             >
               {t("account.logOut")}
             </button>

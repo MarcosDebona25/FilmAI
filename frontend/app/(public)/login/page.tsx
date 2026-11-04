@@ -95,14 +95,14 @@ function ResetPasswordDialog({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="h-12 rounded-[10px] px-5 font-semibold text-foreground hover:bg-secondary"
+              className="h-12 rounded-[0.625rem] px-5 font-semibold text-foreground hover:bg-secondary"
             >
               {common("actions.cancel")}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="h-12 rounded-[10px] bg-primary px-5 font-semibold text-primary-foreground disabled:opacity-70"
+              className="h-12 rounded-[0.625rem] bg-primary px-5 font-semibold text-primary-foreground disabled:opacity-70"
             >
               {common("passwordReset.sendLink")}
             </button>
@@ -191,10 +191,10 @@ function LoginForm() {
 
   return (
     <AccessShell>
-      <div className="flex w-full max-w-[400px] flex-col gap-[22px]">
+      <div className="flex w-full max-w-[25rem] flex-col gap-[1.375rem]">
         <AccessLogo className="mb-6 self-start" />
         <div>
-          <h1 className="mb-3 font-display text-[48px] leading-[0.95] sm:text-[60px]">
+          <h1 className="mb-3 font-display text-[3rem] leading-[0.95] sm:text-[3.75rem]">
             {nav("logIn")}
           </h1>
           <p className="hidden text-muted-foreground sm:block">{t("login.description")}</p>
@@ -203,7 +203,7 @@ function LoginForm() {
           <GoogleButton text="signin_with" onSuccess={onGoogle} />
         </div>
         <Divider>{t("login.alternativeDivider")}</Divider>
-        <form onSubmit={onSubmit} className="flex flex-col gap-[18px]">
+        <form onSubmit={onSubmit} className="flex flex-col gap-[1.125rem]">
           <TextField
             label={t("login.identifierLabel")}
             name="username"

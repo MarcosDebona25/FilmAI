@@ -26,17 +26,17 @@ export function MobileTabs() {
     {
       href: routes.explore,
       label: t("home"),
-      icon: <House aria-hidden="true" className="size-[22px]" />,
+      icon: <House aria-hidden="true" className="size-[1.375rem]" />,
     },
     {
       href: routes.search,
       label: t("search"),
-      icon: <Search aria-hidden="true" className="size-[22px]" />,
+      icon: <Search aria-hidden="true" className="size-[1.375rem]" />,
     },
     {
       href: routes.lists,
       label: t("lists"),
-      icon: <Bookmark aria-hidden="true" className="size-[22px]" />,
+      icon: <Bookmark aria-hidden="true" className="size-[1.375rem]" />,
     },
     {
       href: routes.profile,
@@ -56,16 +56,16 @@ export function MobileTabs() {
         {
           href: routes.login,
           label: account("logIn"),
-          icon: <LogIn aria-hidden="true" className="size-[22px]" />,
+          icon: <LogIn aria-hidden="true" className="size-[1.375rem]" />,
         },
       ];
 
   return (
     <>
-      <div aria-hidden="true" className="h-[76px] md:hidden" />
+      <div aria-hidden="true" className="h-[4.75rem] md:hidden" />
       <nav
         aria-label={t("mainLabel")}
-        className={`fixed inset-x-0 bottom-0 z-30 grid h-[76px] ${perfil ? "grid-cols-4" : "grid-cols-3"} bg-raised px-2 pb-1 shadow-[inset_0_1px_0_var(--line)] md:hidden`}
+        className={`fixed inset-x-0 bottom-0 z-30 grid h-[4.75rem] ${perfil ? "grid-cols-4" : "grid-cols-3"} bg-raised px-2 pb-1 shadow-[inset_0_1px_0_var(--line)] md:hidden`}
       >
         {visibles.map((tab) => {
           const current = pathname === tab.href;

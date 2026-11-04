@@ -21,11 +21,11 @@ export default async function TermsPage() {
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[1120px] flex-col gap-5 px-5 pt-4 pb-12 sm:px-10 md:gap-10 md:pt-8 md:pb-24"
+      className="mx-auto flex max-w-[70rem] flex-col gap-5 px-5 pt-4 pb-12 sm:px-10 md:gap-10 md:pt-8 md:pb-24"
     >
       <div className="flex flex-col gap-2.5 md:gap-3">
         <TermsBackLink />
-        <h1 className="mb-1.5 font-display text-[48px] leading-[0.95] sm:text-[72px] md:mb-0">
+        <h1 className="mb-1.5 font-display text-[3rem] leading-[0.95] sm:text-[4.5rem] md:mb-0">
           {doc.title}
         </h1>
         <p className="text-sm text-fg-3">{nav("termsUpdated", { date })}</p>
@@ -37,13 +37,13 @@ export default async function TermsPage() {
           ) : null
         )}
       </div>
-      <div className="grid gap-5 md:grid-cols-[240px_minmax(0,1fr)] md:gap-16">
-        <details className="group rounded-[14px] bg-card md:hidden">
-          <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-3 px-4 font-semibold [&::-webkit-details-marker]:hidden">
+      <div className="grid gap-5 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-16">
+        <details className="group rounded-[0.875rem] bg-card md:hidden">
+          <summary className="flex min-h-[3.25rem] cursor-pointer list-none items-center justify-between gap-3 px-4 font-semibold [&::-webkit-details-marker]:hidden">
             {nav("termsOnPage")}
             <ChevronDown
               aria-hidden="true"
-              className="size-[18px] transition-transform group-open:rotate-180"
+              className="size-[1.125rem] transition-transform group-open:rotate-180"
             />
           </summary>
           <nav aria-label={nav("termsOnPage")} className="px-1 pb-2.5">
@@ -52,7 +52,7 @@ export default async function TermsPage() {
                 <li key={section.id}>
                   <a
                     href={`#${section.id}`}
-                    className="flex min-h-10 items-center rounded-lg px-3 text-[15px] leading-[1.35] text-muted-foreground"
+                    className="flex min-h-10 items-center rounded-lg px-3 text-[0.9375rem] leading-[1.35] text-muted-foreground"
                   >
                     {section.heading}
                   </a>
@@ -88,7 +88,7 @@ export default async function TermsPage() {
             >
               <h2
                 id={section.id}
-                className="scroll-mt-6 font-display text-[28px] leading-[1.05] md:text-[30px]"
+                className="scroll-mt-6 font-display text-[1.75rem] leading-[1.05] md:text-[1.875rem]"
               >
                 {section.heading}
               </h2>
@@ -100,7 +100,7 @@ export default async function TermsPage() {
                 ) : (
                   <ul
                     key={index}
-                    className="flex max-w-[68ch] list-disc flex-col gap-1.5 pl-[22px]"
+                    className="flex max-w-[68ch] list-disc flex-col gap-1.5 pl-[1.375rem]"
                   >
                     {block.items.map((item) => (
                       <li key={item} className="leading-[1.7] text-muted-foreground">

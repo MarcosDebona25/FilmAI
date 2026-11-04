@@ -54,6 +54,14 @@ export function tmdbImage(
 }
 
 /**
+ * La misma imagen de TMDB con otro ancho tope (`…/t/p/w342/x.jpg` → `w500`).
+ * Lo que no es del CDN de TMDB queda igual.
+ */
+export function tmdbConTope(src: string, size: "w92" | "w185" | "w342" | "w500" | "w1280") {
+  return src.replace(/^(https:\/\/image\.tmdb\.org\/t\/p\/)w\d+\//, `$1${size}/`);
+}
+
+/**
  * Anchos que sirve el CDN de TMDB. Los backdrops tienen su propia escala (la
  * app siempre los pide en w1280); el resto usa la de pósters.
  */

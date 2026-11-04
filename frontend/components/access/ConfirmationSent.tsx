@@ -53,9 +53,9 @@ export function ConfirmationSent({ email }: { email: string }) {
 
   const waiting = remaining > 0;
   return (
-    <div className="flex w-full max-w-[480px] flex-col items-center gap-[22px] text-center">
+    <div className="flex w-full max-w-[30rem] flex-col items-center gap-[1.375rem] text-center">
       <AccessLogo className="mb-6 self-start" />
-      <h1 className="mb-[15px] font-display text-[44px] leading-[0.95] sm:text-[52px]">
+      <h1 className="mb-[0.9375rem] font-display text-[2.75rem] leading-[0.95] sm:text-[3.25rem]">
         {t("inboxTitle")}
       </h1>
       <p className="text-balance text-muted-foreground">
@@ -70,7 +70,7 @@ export function ConfirmationSent({ email }: { email: string }) {
           type="button"
           aria-disabled={waiting || sending}
           onClick={() => void resend()}
-          className={`h-12 rounded-[10px] bg-secondary px-5 text-base font-semibold text-foreground ${waiting || sending ? "cursor-not-allowed opacity-[0.55]" : "hover:brightness-110"}`}
+          className={`h-12 rounded-[0.625rem] bg-secondary px-5 text-base font-semibold text-foreground ${waiting || sending ? "cursor-not-allowed opacity-[0.55]" : "hover:brightness-110"}`}
         >
           {common("email.resendLink")}
         </button>
@@ -80,7 +80,7 @@ export function ConfirmationSent({ email }: { email: string }) {
         </span>
       </div>
       {error && <FieldError>{error}</FieldError>}
-      <p className="w-full border-t border-border pt-[22px] text-muted-foreground">
+      <p className="w-full border-t border-border pt-[1.375rem] text-muted-foreground">
         {t("alreadyConfirmedPrompt")}{" "}
         <Link href={routes.login} className="font-semibold text-foreground">
           {nav("logIn")}

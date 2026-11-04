@@ -154,7 +154,7 @@ export function SortableListsGrid({
             <button
               type="button"
               onClick={onCrear}
-              className="flex h-16 w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl border border-dashed border-line font-semibold text-fg-2 hover:border-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-full md:min-h-[236px] md:flex-col"
+              className="flex h-16 w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl border border-dashed border-line font-semibold text-fg-2 hover:border-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:h-full md:min-h-[14.75rem] md:flex-col"
             >
               <Plus aria-hidden="true" className="size-6 text-primary" />
               {t("lists.create.title")}

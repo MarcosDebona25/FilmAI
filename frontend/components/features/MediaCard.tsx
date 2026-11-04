@@ -2,16 +2,24 @@
 
 import { useState } from "react";
 import { ListPlus } from "lucide-react";
-import Image from "next/image";
+import { getImageProps } from "next/image";
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { StarIcon } from "@/components/ui/StarIcon";
-import { tmdbLoader, type Title } from "@/lib/catalog";
+import { tmdbConTope, tmdbLoader, type Title } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+
+/**
+ * Ancho de la tarjeta desde `md` (fila o grilla con `--cols` columnas, margen
+ * del contenedor y gap de 20 px), para que el navegador baje el póster justo.
+ * Desde 1440 px la raíz crece y la tarjeta llega a ~224 px.
+ */
+const SIZES_ESCRITORIO =
+  "(min-width: 1440px) 224px, (min-width: 1280px) calc(16.67vw - 30px), (min-width: 1024px) calc(20vw - 32px), calc(25vw - 35px)";
 
 /**
  * Tarjeta de un título: póster 2:3, nombre y una línea con tipo, año y nota de
@@ -30,7 +38,7 @@ export function MediaCard({
   showType: boolean;
   /** Origen para la miga de pan de la ficha (`home`, `search`, `list-{id}`…). */
   from?: string;
-  /** En una grilla (Search, L-03) ocupa su columna en vez de 132/176 px. */
+  /** En una grilla (Search, L-03) ocupa su columna también en celular (fila: 132 px). */
   fluid?: boolean;
   /** «No ratings» cuando TMDB no tiene nota (canvas de Search). */
   showUnrated?: boolean;
@@ -52,18 +60,15 @@ export function MediaCard({
       href={routes.title(title.tipo, title.id, from)}
       className={cn(
         "group relative flex flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:gap-3",
-        fluid ? "w-full" : "w-[132px] md:w-[176px]"
+        fluid ? "w-full" : "w-[8.25rem] md:w-full"
       )}
     >
       <span className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-raised transition-[transform,box-shadow] duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgb(0_0_0/0.45)] group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
         {poster ? (
-          <Image
-            loader={tmdbLoader}
+          <Poster
             src={poster}
             alt={t("media.posterAlt", { title: title.titulo })}
-            fill
-            sizes={fluid ? "(min-width: 768px) 220px, 50vw" : "(min-width: 768px) 176px, 132px"}
-            className="object-cover"
+            sizesCelular={fluid ? "50vw" : "132px"}
             onError={() => setFailed(poster)}
           />
         ) : (
@@ -75,11 +80,11 @@ export function MediaCard({
       <span className="flex min-w-0 flex-col gap-px">
         <span
           lang={title.tituloEnIngles ? "en" : undefined}
-          className="truncate text-sm font-semibold md:text-[15px]"
+          className="truncate text-sm font-semibold md:text-[0.9375rem]"
         >
           {title.titulo}
         </span>
-        <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-fg-3 md:gap-x-2 md:text-[13px]">
+        <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-fg-3 md:gap-x-2 md:text-[0.8125rem]">
           {(showType || title.anio) && (
             <span className="whitespace-nowrap">
               {showType && tipo}
@@ -92,7 +97,7 @@ export function MediaCard({
               <span className="sr-only">
                 {t("media.tmdbRatingLabel", { rating: formats.rating(title.nota) })}
               </span>
-              <StarIcon className="size-[11px] fill-primary md:size-3" />
+              <StarIcon className="size-[0.6875rem] fill-primary md:size-3" />
               <span aria-hidden="true">{formats.rating(title.nota)}</span>
             </span>
           )}
@@ -104,9 +109,9 @@ export function MediaCard({
           <time
             dateTime={addedAt}
             title={t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
-            className="inline-flex items-center gap-1 text-[11px] text-fg-3 tabular-nums"
+            className="inline-flex items-center gap-1 text-[0.6875rem] text-fg-3 tabular-nums"
           >
-            <ListPlus className="size-[11px]" aria-hidden="true" />
+            <ListPlus className="size-[0.6875rem]" aria-hidden="true" />
             <span className="sr-only">
               {t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
             </span>
@@ -115,6 +120,41 @@ export function MediaCard({
         )}
       </span>
     </Link>
+  );
+}
+
+/**
+ * Póster con dos juegos de anchos: en celular el de siempre (tope `w342`, mismo
+ * peso que antes) y desde `md` hasta `w500`, para que la tarjeta de ~224 px de
+ * las pantallas anchas no se vea borrosa con densidad 2. `getImageProps` arma
+ * los `srcset` de `next/image` para un `<picture>` (dirección de arte).
+ */
+function Poster({
+  src,
+  alt,
+  sizesCelular,
+  onError,
+}: {
+  src: string;
+  alt: string;
+  sizesCelular: string;
+  onError: () => void;
+}) {
+  const comun = { alt, fill: true, loader: tmdbLoader, className: "object-cover" };
+  const {
+    props: { srcSet: srcSetEscritorio, sizes: sizesEscritorio },
+  } = getImageProps({ ...comun, src: tmdbConTope(src, "w500"), sizes: SIZES_ESCRITORIO });
+  const { props: celular } = getImageProps({
+    ...comun,
+    src: tmdbConTope(src, "w342"),
+    sizes: sizesCelular,
+  });
+  return (
+    <picture>
+      <source media="(min-width: 768px)" srcSet={srcSetEscritorio} sizes={sizesEscritorio} />
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- el alt llega en las props de getImageProps */}
+      <img {...celular} onError={onError} />
+    </picture>
   );
 }
 

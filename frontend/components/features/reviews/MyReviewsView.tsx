@@ -256,12 +256,12 @@ export function MyReviewsView() {
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[1080px] flex-col gap-5 px-5 pt-4 pb-[120px] md:gap-10 md:px-10 md:pt-12 md:pb-24"
+      className="mx-auto flex max-w-[67.5rem] flex-col gap-5 px-5 pt-4 pb-[7.5rem] md:gap-10 md:px-10 md:pt-12 md:pb-24"
     >
       <div className="flex flex-col gap-2.5 md:gap-3.5">
         <Link
           href={routes.profile}
-          className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[15px] font-medium text-fg-2 no-underline md:hidden"
+          className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[0.9375rem] font-medium text-fg-2 no-underline md:hidden"
         >
           <ChevronLeft aria-hidden="true" className="size-5" />
           {t("nav.main.profileShort")}
@@ -285,7 +285,7 @@ export function MyReviewsView() {
         <h1
           ref={titulo}
           tabIndex={-1}
-          className="mb-[15px] font-display text-[48px] leading-none focus-visible:outline-2 focus-visible:outline-ring md:text-[72px] md:leading-[0.95]"
+          className="mb-[0.9375rem] font-display text-[3rem] leading-none focus-visible:outline-2 focus-visible:outline-ring md:text-[4.5rem] md:leading-[0.95]"
         >
           {t("nav.main.ratingsReviews")}
         </h1>
@@ -318,7 +318,7 @@ export function MyReviewsView() {
                     maxLength={MAX_TEXTO}
                     onChange={(evento) => setTexto(evento.target.value)}
                     placeholder={t("reviews.filters.titleSearchLabel")}
-                    className="h-12 w-full rounded-full border-0 bg-raised px-11 text-base font-medium md:text-[15px] text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden"
+                    className="h-12 w-full rounded-full border-0 bg-raised px-11 text-base font-medium md:text-[0.9375rem] text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden"
                   />
                   {texto && (
                     <button
@@ -342,7 +342,7 @@ export function MyReviewsView() {
                   onClick={() => setHoja(true)}
                   className="flex h-12 flex-none cursor-pointer items-center gap-2 rounded-full bg-raised px-4 text-sm font-semibold shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring md:hidden"
                 >
-                  <SlidersHorizontal aria-hidden="true" className="size-[18px]" />
+                  <SlidersHorizontal aria-hidden="true" className="size-[1.125rem]" />
                   {t("common.filters.title")}
                   {activos > 0 && (
                     <span
@@ -445,7 +445,7 @@ export function MyReviewsView() {
 
               {/* Celular: el orden elegido y un chip por filtro, que lo quita. */}
               <div className="flex flex-wrap items-center gap-2 md:hidden">
-                <span className="inline-flex h-8 items-center text-[13px] text-fg-3">
+                <span className="inline-flex h-8 items-center text-[0.8125rem] text-fg-3">
                   {t("reviews.filters.orderPrefix", {
                     sortLabel: t(ETIQUETA_ORDEN[filtros.orden]),
                   })}
@@ -458,10 +458,10 @@ export function MyReviewsView() {
                     aria-label={t("reviews.filters.removeChipLabel", {
                       filterLabel: chip.etiqueta,
                     })}
-                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-raised-2 pr-2 pl-3 text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-raised-2 pr-2 pl-3 text-[0.8125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
                   >
                     {chip.etiqueta}
-                    <X aria-hidden="true" className="size-[13px]" />
+                    <X aria-hidden="true" className="size-[0.8125rem]" />
                   </button>
                 ))}
               </div>
@@ -473,9 +473,9 @@ export function MyReviewsView() {
               {[0, 1, 2].map((fila) => (
                 <div
                   key={fila}
-                  className="grid grid-cols-[56px_minmax(0,1fr)] gap-3.5 border-t border-line py-5 md:grid-cols-[80px_minmax(0,1fr)] md:gap-6 md:py-7"
+                  className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-3.5 border-t border-line py-5 md:grid-cols-[5rem_minmax(0,1fr)] md:gap-6 md:py-7"
                 >
-                  <div className="h-[84px] rounded-md bg-raised-2 md:h-[120px]" />
+                  <div className="h-[5.25rem] rounded-md bg-raised-2 md:h-[7.5rem]" />
                   <div className="flex flex-col gap-3">
                     <div className="h-6 w-1/2 rounded bg-raised-2" />
                     <div className="h-4 w-1/3 rounded bg-raised-2" />
@@ -500,7 +500,7 @@ export function MyReviewsView() {
               <p className="text-fg-2">{t("reviews.results.empty")}</p>
               <Link
                 href={routes.search}
-                className="inline-flex h-11 items-center rounded-full bg-raised-2 px-[18px] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+                className="inline-flex h-11 items-center rounded-full bg-raised-2 px-[1.125rem] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {t("reviews.results.emptyAction")}
               </Link>
@@ -515,7 +515,7 @@ export function MyReviewsView() {
                 <button
                   type="button"
                   onClick={limpiar}
-                  className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                  className="h-11 cursor-pointer rounded-full bg-raised-2 px-[1.125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   {t("common.filters.clear")}
                 </button>
@@ -551,7 +551,7 @@ export function MyReviewsView() {
                     type="button"
                     onClick={cargarMas}
                     disabled={mas === "cargando"}
-                    className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait"
+                    className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-raised-2 px-[1.125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait"
                   >
                     {mas === "cargando" && (
                       <LoaderCircle

@@ -209,16 +209,16 @@ export function SearchView() {
   }));
 
   const pildora =
-    "inline-flex h-12 items-center gap-2.5 rounded-[10px] pr-1.5 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)]";
+    "inline-flex h-12 items-center gap-2.5 rounded-[0.625rem] pr-1.5 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)]";
   const selector =
-    "h-10 min-w-32 cursor-pointer rounded-lg border-0 bg-raised-2 px-2 text-center text-[15px] font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+    "h-10 min-w-32 cursor-pointer rounded-lg border-0 bg-raised-2 px-2 text-center text-[0.9375rem] font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[1360px] flex-col gap-4 px-5 pt-5 pb-[120px] md:gap-7 md:px-10 md:pt-6 md:pb-20"
+      className="page-container flex flex-col gap-4 pt-5 pb-[7.5rem] md:gap-7 md:pt-6 md:pb-20"
     >
-      <h1 className="mb-[15px] font-display text-[44px] leading-none md:sr-only">
+      <h1 className="mb-[0.9375rem] font-display text-[2.75rem] leading-none md:sr-only">
         {t("nav.main.search")}
       </h1>
 
@@ -230,7 +230,7 @@ export function SearchView() {
             </label>
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute top-4 left-4 size-5 text-fg-3 md:top-[18px] md:left-[18px] md:size-[21px]"
+              className="pointer-events-none absolute top-4 left-4 size-5 text-fg-3 md:top-[1.125rem] md:left-[1.125rem] md:size-[1.3125rem]"
             />
             <input
               ref={campo}
@@ -242,14 +242,14 @@ export function SearchView() {
               value={texto}
               onChange={(evento) => setTexto(evento.target.value)}
               placeholder={t("common.search.placeholder")}
-              className="h-[52px] w-full rounded-xl border-0 bg-raised px-12 text-[17px] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-[58px] md:rounded-xl md:px-14 md:font-display md:text-[27px] md:font-extrabold [&::-webkit-search-cancel-button]:appearance-none"
+              className="h-[3.25rem] w-full rounded-xl border-0 bg-raised px-12 text-[1.0625rem] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-[3.625rem] md:rounded-xl md:px-14 md:font-display md:text-[1.6875rem] md:font-extrabold [&::-webkit-search-cancel-button]:appearance-none"
             />
             {texto && (
               <button
                 type="button"
                 onClick={borrarTexto}
                 aria-label={t("search.input.clearLabel")}
-                className="absolute top-1 right-1 grid size-11 cursor-pointer place-items-center rounded-[10px] text-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:top-[7px] md:right-2.5"
+                className="absolute top-1 right-1 grid size-11 cursor-pointer place-items-center rounded-[0.625rem] text-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:top-[0.4375rem] md:right-2.5"
               >
                 <X aria-hidden="true" className="size-5" />
               </button>
@@ -258,7 +258,7 @@ export function SearchView() {
           <button
             type="button"
             onClick={cerrar}
-            className="hidden h-12 cursor-pointer items-center gap-2.5 rounded-[10px] px-3.5 font-medium text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:inline-flex"
+            className="hidden h-12 cursor-pointer items-center gap-2.5 rounded-[0.625rem] px-3.5 font-medium text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:inline-flex"
           >
             {t("common.actions.close")}
             <kbd className="rounded-md px-1.5 py-0.5 font-sans text-xs font-semibold text-fg-3 shadow-[inset_0_0_0_1px_var(--line)]">
@@ -278,7 +278,7 @@ export function SearchView() {
               onClick={() => setHoja(true)}
               className="inline-flex h-12 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-3.5 text-sm font-semibold shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:hidden"
             >
-              <SlidersHorizontal aria-hidden="true" className="size-[18px]" />
+              <SlidersHorizontal aria-hidden="true" className="size-[1.125rem]" />
               {t("common.filters.title")}
               {activos > 0 && (
                 <span
@@ -369,18 +369,20 @@ export function SearchView() {
           flujo con `empty:sr-only` para no sumar un hueco al flex. */}
       <div role="status" className="empty:sr-only">
         {mostrandoResultados && titulos.length === 0 && (
-          <div className="flex max-w-[640px] flex-col items-start gap-3 pt-12 pb-20 md:gap-3.5 md:pt-24 md:pb-[120px]">
-            <p className="font-display text-[44px] leading-[0.95] break-words md:text-[64px]">
+          <div className="flex max-w-[40rem] flex-col items-start gap-3 pt-12 pb-20 md:gap-3.5 md:pt-24 md:pb-[7.5rem]">
+            <p className="font-display text-[2.75rem] leading-[0.95] break-words md:text-[4rem]">
               {q
                 ? t("search.results.emptyTitle", { query: q })
                 : t("search.results.emptyFiltersTitle")}
             </p>
-            <p className="text-pretty text-fg-2 md:text-[17px]">{t("search.results.emptyHint")}</p>
+            <p className="text-pretty text-fg-2 md:text-[1.0625rem]">
+              {t("search.results.emptyHint")}
+            </p>
             {conCriterio && (
               <button
                 type="button"
                 onClick={limpiar}
-                className="mt-2 inline-flex h-12 cursor-pointer items-center rounded-[10px] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                className="mt-2 inline-flex h-12 cursor-pointer items-center rounded-[0.625rem] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {activos > 0 ? t("common.filters.clear") : t("search.input.clearLabel")}
               </button>
@@ -388,7 +390,7 @@ export function SearchView() {
           </div>
         )}
         {mostrandoResultados && titulos.length > 0 && conCriterio && primera && (
-          <p className="text-sm text-fg-2 md:text-[15px]">
+          <p className="text-sm text-fg-2 md:text-[0.9375rem]">
             <span className="font-semibold text-foreground">
               {t("search.results.count", { count: primera.total_results })}
             </span>
@@ -452,5 +454,6 @@ export function SearchView() {
   );
 }
 
+/** Desde md, las mismas columnas que las filas del Home (`--cols`, globals.css). */
 const GRILLA =
-  "grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(168px,100%),1fr))] md:gap-x-5 md:gap-y-8";
+  "grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-5 md:gap-y-8";

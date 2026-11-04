@@ -13,7 +13,7 @@ import { isAccessPath, routes } from "@/lib/routes";
 const linkClass =
   "inline-flex min-h-8 items-center gap-2 text-sm text-fg-2 no-underline hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const rowClass =
-  "flex min-h-12 items-center justify-between text-[15px] font-medium text-fg-2 no-underline hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
+  "flex min-h-12 items-center justify-between text-[0.9375rem] font-medium text-fg-2 no-underline hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
 
 /** Pie del sitio (canvas «Footer»): columnas en escritorio, lista de filas en celular. */
 export function Footer() {
@@ -30,14 +30,14 @@ export function Footer() {
 
   const languageName = language(locale === "en" ? "english" : "spanish");
   const languageLabel = t("languageLink", { language: languageName });
-  const headingClass = "m-0 text-[13px] font-bold uppercase tracking-[0.08em] text-fg-3";
+  const headingClass = "m-0 text-[0.8125rem] font-bold uppercase tracking-[0.08em] text-fg-3";
   const year = String(new Date().getFullYear());
 
   return (
     <footer className="mt-10 border-t border-line">
-      <div className="mx-auto flex max-w-[1360px] flex-col gap-6 px-5 pt-9 pb-5 md:gap-12 md:px-10 md:pt-14 md:pb-10">
+      <div className="page-container flex flex-col gap-6 pt-9 pb-5 md:gap-12 md:pt-14 md:pb-10">
         <div className="flex flex-wrap justify-between gap-x-16 gap-y-10">
-          <div className="flex max-w-[505px] flex-1 basis-80 flex-col gap-3 md:gap-4">
+          <div className="flex max-w-[31.5625rem] flex-1 basis-80 flex-col gap-3 md:gap-4">
             <Link
               href={routes.explore}
               aria-label={nav("brandHomeLabel")}
@@ -46,16 +46,18 @@ export function Footer() {
               <TicketMark width={28} height={21} className="md:h-6 md:w-8" />
               <span
                 translate="no"
-                className="font-display text-[26px] leading-none tracking-[0.05em] md:text-[30px]"
+                className="font-display text-[1.625rem] leading-none tracking-[0.05em] md:text-[1.875rem]"
               >
                 FilmAI
               </span>
             </Link>
-            <p className="m-0 hidden text-[15px] text-fg-2 md:block">{t("descriptionDesktop")}</p>
+            <p className="m-0 hidden text-[0.9375rem] text-fg-2 md:block">
+              {t("descriptionDesktop")}
+            </p>
             <p className="m-0 text-sm text-fg-2 md:hidden">{t("descriptionMobile")}</p>
           </div>
 
-          <div className="hidden flex-wrap gap-x-[72px] gap-y-10 md:flex">
+          <div className="hidden flex-wrap gap-x-[4.5rem] gap-y-10 md:flex">
             <nav aria-label={common("explore")} className="flex flex-col gap-3">
               <h2 className={headingClass}>{common("explore")}</h2>
               <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
@@ -112,7 +114,7 @@ export function Footer() {
                 {perfil ? (
                   <li>
                     <Link href={routes.language} aria-label={languageLabel} className={linkClass}>
-                      <Globe aria-hidden="true" className="size-[15px] flex-none" />
+                      <Globe aria-hidden="true" className="size-[0.9375rem] flex-none" />
                       <span lang={locale}>{languageName}</span>
                     </Link>
                   </li>
@@ -180,8 +182,8 @@ export function Footer() {
           )}
         </ul>
 
-        <div className="flex flex-col gap-2 text-xs text-fg-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-8 md:gap-y-3 md:border-t md:border-line md:pt-7 md:text-[13px]">
-          <p className="m-0 md:max-w-[760px]">{t("tmdbAttribution")}</p>
+        <div className="flex flex-col gap-2 text-xs text-fg-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-8 md:gap-y-3 md:border-t md:border-line md:pt-7 md:text-[0.8125rem]">
+          <p className="m-0 md:max-w-[47.5rem]">{t("tmdbAttribution")}</p>
           <p className="m-0">{t("copyright", { year })}</p>
         </div>
       </div>
