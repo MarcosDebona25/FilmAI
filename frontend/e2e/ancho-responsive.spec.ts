@@ -136,12 +136,18 @@ for (const viewport of VIEWPORTS) {
         expect(Math.abs(logo - contenido)).toBeLessThanOrEqual(1);
         expect(Math.abs(pie - contenido)).toBeLessThanOrEqual(1);
       } else {
-        // Celular: los botones de la barra (Log in / Sign up) se tocan cómodos.
-        for (const nombre of ["Log in", "Sign up"]) {
-          const caja = await page
-            .getByRole("banner")
-            .getByRole("link", { name: nombre, exact: true })
-            .boundingBox();
+        // Celular (opción B): el encabezado solo tiene Sign up; Home, Search y
+        // Log in están en la barra inferior. Todos se tocan cómodos.
+        const objetivos = [
+          page.getByRole("banner").getByRole("link", { name: "Sign up", exact: true }),
+          ...["Home", "Search", "Log in"].map((nombre) =>
+            page
+              .getByRole("navigation", { name: "Main" })
+              .getByRole("link", { name: nombre, exact: true })
+          ),
+        ];
+        for (const objetivo of objetivos) {
+          const caja = await objetivo.boundingBox();
           expect(caja!.height).toBeGreaterThanOrEqual(44);
         }
       }
