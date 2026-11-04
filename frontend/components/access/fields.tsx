@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useId, useState, type ComponentProps, type ReactNode } from "react";
 
 export const fieldClass =
-  "h-[52px] w-full rounded-[10px] border-0 bg-card px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
+  "h-[3.25rem] w-full rounded-[0.625rem] border-0 bg-card px-4 text-base text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:shadow-[inset_0_0_0_1px_var(--destructive)]";
 
 export function FieldError({ id, children }: { id?: string; children: ReactNode }) {
   if (!children) return null;
@@ -13,9 +13,9 @@ export function FieldError({ id, children }: { id?: string; children: ReactNode 
     <p
       id={id}
       role="alert"
-      className="flex items-center gap-1.5 text-[13px] font-semibold text-destructive"
+      className="flex items-center gap-1.5 text-[0.8125rem] font-semibold text-destructive"
     >
-      <CircleAlert aria-hidden="true" className="size-[15px] flex-none" />
+      <CircleAlert aria-hidden="true" className="size-[0.9375rem] flex-none" />
       {children}
     </p>
   );
@@ -23,7 +23,7 @@ export function FieldError({ id, children }: { id?: string; children: ReactNode 
 
 export function FieldHelp({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <p id={id} className="text-[13px] text-fg-3">
+    <p id={id} className="text-[0.8125rem] text-fg-3">
       {children}
     </p>
   );
@@ -31,8 +31,8 @@ export function FieldHelp({ id, children }: { id?: string; children: ReactNode }
 
 export function FieldOk({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <p id={id} className="flex items-center gap-1.5 text-[13px] font-semibold text-ok">
-      <Check aria-hidden="true" className="size-[15px] flex-none" strokeWidth={2.5} />
+    <p id={id} className="flex items-center gap-1.5 text-[0.8125rem] font-semibold text-ok">
+      <Check aria-hidden="true" className="size-[0.9375rem] flex-none" strokeWidth={2.5} />
       {children}
     </p>
   );
@@ -117,7 +117,7 @@ export function PasswordField({
           type={visible ? "text" : "password"}
           aria-invalid={error ? true : undefined}
           aria-describedby={`${fieldId}-info`}
-          className={`${fieldClass} pr-[52px]`}
+          className={`${fieldClass} pr-[3.25rem]`}
           {...input}
         />
         <button

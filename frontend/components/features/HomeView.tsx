@@ -194,30 +194,30 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
         }
       />
       {todoFalla ? (
-        <div className="mx-auto flex max-w-[1360px] flex-col items-start gap-4 px-5 py-16 md:px-10">
+        <div className="mx-auto flex max-w-[85rem] flex-col items-start gap-4 px-5 py-16 md:px-10">
           <p role="alert" className="text-fg-2">
             {mensaje(fallidos[0].error)}
           </p>
           <button
             type="button"
             onClick={() => setIntento((anterior) => anterior + 1)}
-            className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[22px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+            className="inline-flex h-12 cursor-pointer items-center rounded-lg bg-raised-2 px-[1.375rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
           >
             {tc("actions.retry")}
           </button>
         </div>
       ) : todoVacio ? (
-        <div className="mx-auto flex max-w-[1360px] flex-col items-start gap-4 px-5 py-16 md:px-10">
+        <div className="mx-auto flex max-w-[85rem] flex-col items-start gap-4 px-5 py-16 md:px-10">
           <p className="max-w-[60ch] text-fg-2">{t("rows.emptyDescription")}</p>
           <Link
             href={routes.search}
-            className="inline-flex h-12 items-center rounded-lg bg-raised-2 px-[22px] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+            className="inline-flex h-12 items-center rounded-lg bg-raised-2 px-[1.375rem] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
           >
             {tc("actions.explore")}
           </Link>
         </div>
       ) : (
-        <div className="mx-auto flex max-w-[1360px] flex-col gap-11 pt-7 pb-12 md:gap-20 md:px-10 md:pt-10 md:pb-20">
+        <div className="mx-auto flex max-w-[85rem] flex-col gap-11 pt-7 pb-12 md:gap-20 md:px-10 md:pt-10 md:pb-20">
           {filaRecomendado && (
             <MediaRow
               title={t("rows.recommendedTitle")}
@@ -253,16 +253,16 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
               aria-labelledby={invitacionId}
               className="mx-5 flex flex-wrap items-center gap-x-12 gap-y-6 border-y border-line py-10 md:mx-0"
             >
-              <div className="flex flex-[1_1_480px] flex-col gap-1.5">
-                <h2 id={invitacionId} className="font-display text-[40px] leading-none">
+              <div className="flex flex-[1_1_30rem] flex-col gap-1.5">
+                <h2 id={invitacionId} className="font-display text-[2.5rem] leading-none">
                   {t("guest.title")}
                 </h2>
-                <p className="max-w-[560px] text-pretty text-fg-2">{t("guest.description")}</p>
+                <p className="max-w-[35rem] text-pretty text-fg-2">{t("guest.description")}</p>
               </div>
               <div className="flex gap-3">
                 <Link
                   href={routes.register}
-                  className="inline-flex h-12 items-center rounded-lg bg-raised-2 px-[22px] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+                  className="inline-flex h-12 items-center rounded-lg bg-raised-2 px-[1.375rem] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   {tn("signUp")}
                 </Link>
@@ -283,7 +283,7 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
         <Link
           href={routes.askFilmAI}
           prefetch={false}
-          className="fixed right-4 bottom-[92px] z-30 grid size-14 place-items-center rounded-full bg-primary font-semibold text-primary-foreground no-underline shadow-[0_10px_24px_rgb(0_0_0/0.4)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:right-8 md:bottom-8 md:inline-flex md:w-auto md:gap-2.5 md:pr-[22px] md:pl-[18px]"
+          className="fixed right-4 bottom-[5.75rem] z-30 grid size-14 place-items-center rounded-full bg-primary font-semibold text-primary-foreground no-underline shadow-[0_10px_24px_rgb(0_0_0/0.4)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:right-8 md:bottom-8 md:inline-flex md:w-auto md:gap-2.5 md:pr-[1.375rem] md:pl-[1.125rem]"
         >
           <MessageCircle aria-hidden="true" className="size-6" />
           <span className="sr-only md:not-sr-only">{tf("askFilmAI")}</span>

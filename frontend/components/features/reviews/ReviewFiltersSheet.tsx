@@ -35,7 +35,7 @@ export function ReviewFiltersSheet({
   const t = useTranslations();
   const titulo = useId();
 
-  const leyenda = "mb-2.5 p-0 text-[13px] font-semibold text-fg-3";
+  const leyenda = "mb-2.5 p-0 text-[0.8125rem] font-semibold text-fg-3";
 
   return (
     <DialogShell labelledBy={titulo} onClose={onClose}>
@@ -97,7 +97,7 @@ export function ReviewFiltersSheet({
                 )}
               >
                 {t(ETIQUETA_ORDEN[orden])}
-                {activo && <Check aria-hidden="true" className="size-[18px] text-primary" />}
+                {activo && <Check aria-hidden="true" className="size-[1.125rem] text-primary" />}
               </button>
             );
           })}

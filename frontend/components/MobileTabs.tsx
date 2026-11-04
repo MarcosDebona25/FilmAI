@@ -21,17 +21,17 @@ export function MobileTabs() {
     {
       href: routes.explore,
       label: t("home"),
-      icon: <House aria-hidden="true" className="size-[22px]" />,
+      icon: <House aria-hidden="true" className="size-[1.375rem]" />,
     },
     {
       href: routes.search,
       label: t("search"),
-      icon: <Search aria-hidden="true" className="size-[22px]" />,
+      icon: <Search aria-hidden="true" className="size-[1.375rem]" />,
     },
     {
       href: routes.lists,
       label: t("lists"),
-      icon: <Bookmark aria-hidden="true" className="size-[22px]" />,
+      icon: <Bookmark aria-hidden="true" className="size-[1.375rem]" />,
     },
     {
       href: routes.profile,
@@ -46,10 +46,10 @@ export function MobileTabs() {
 
   return (
     <>
-      <div aria-hidden="true" className="h-[76px] md:hidden" />
+      <div aria-hidden="true" className="h-[4.75rem] md:hidden" />
       <nav
         aria-label={t("mainLabel")}
-        className="fixed inset-x-0 bottom-0 z-30 grid h-[76px] grid-cols-4 bg-raised px-2 pb-1 shadow-[inset_0_1px_0_var(--line)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid h-[4.75rem] grid-cols-4 bg-raised px-2 pb-1 shadow-[inset_0_1px_0_var(--line)] md:hidden"
       >
         {tabs.map((tab) => {
           const current = pathname === tab.href;

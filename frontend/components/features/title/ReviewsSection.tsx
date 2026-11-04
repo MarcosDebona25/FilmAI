@@ -46,7 +46,7 @@ function Nota({ valor }: { valor: number }) {
   const t = useTranslations("common.rating");
   return (
     <span className="inline-flex items-center gap-1.5 font-bold tabular-nums">
-      <StarIcon className="size-[15px] fill-primary" />
+      <StarIcon className="size-[0.9375rem] fill-primary" />
       <span className="sr-only">{t("starValueLabel", { rating: String(valor) })}</span>
       <span aria-hidden="true">{valor}</span>
     </span>
@@ -184,15 +184,15 @@ export function ReviewsSection({
     pagina !== null && pagina.total_comunidad > 0 && pagina.results.length === 0;
 
   return (
-    <section aria-labelledby={tituloId} className="flex max-w-[880px] flex-col gap-8">
-      <h2 id={tituloId} className="font-display text-[34px] leading-none md:text-[40px]">
+    <section aria-labelledby={tituloId} className="flex max-w-[55rem] flex-col gap-8">
+      <h2 id={tituloId} className="font-display text-[2.125rem] leading-none md:text-[2.5rem]">
         {t("title.reviews.heading")}
       </h2>
 
       {mia?.texto && perfil && (
         <article
           aria-labelledby={tuyaId}
-          className="grid grid-cols-[44px_minmax(0,1fr)] gap-4 rounded-[14px] bg-raised p-5 md:p-6"
+          className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 rounded-[0.875rem] bg-raised p-5 md:p-6"
         >
           <Avatar perfil={perfil} avatares={avatares} size={44} />
           <div className="flex min-w-0 flex-col gap-2.5">
@@ -303,7 +303,7 @@ export function ReviewsSection({
             <div
               key={i}
               aria-hidden="true"
-              className="grid grid-cols-[40px_minmax(0,1fr)] gap-4 border-t border-line py-[22px]"
+              className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 border-t border-line py-[1.375rem]"
             >
               <span className="size-10 rounded-full bg-raised" />
               <span className="flex flex-col gap-2.5 pt-1">
@@ -319,7 +319,7 @@ export function ReviewsSection({
             // propósito, y esta lista solo crece agregando páginas al final. Con
             // el nombre, dos reseñas anónimas del mismo día chocaban.
             key={`${indice}-${resena.fecha}`}
-            className="grid grid-cols-[40px_minmax(0,1fr)] gap-4 border-t border-line py-[22px]"
+            className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 border-t border-line py-[1.375rem]"
           >
             {resena.avatar_id !== null && avatar(resena.avatar_id) ? (
               <Image

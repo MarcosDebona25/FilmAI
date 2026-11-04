@@ -49,7 +49,9 @@ export function TypeSelector({
             onClick={() => onChange(option.id)}
             className={cn(
               "h-11 cursor-pointer rounded-full transition-colors md:h-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-              compact ? "px-0 text-sm md:px-[18px] md:text-[15px]" : "px-[18px] text-[15px]",
+              compact
+                ? "px-0 text-sm md:px-[1.125rem] md:text-[0.9375rem]"
+                : "px-[1.125rem] text-[0.9375rem]",
               active
                 ? "bg-selected font-semibold text-selected-foreground"
                 : "font-medium text-fg-2 hover:text-foreground"

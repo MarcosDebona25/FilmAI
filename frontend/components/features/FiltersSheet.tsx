@@ -37,7 +37,7 @@ export function FiltersSheet({
   const anioId = useId();
   const campo =
     "h-12 w-full cursor-pointer rounded-full border-0 bg-background px-3.5 text-base font-semibold text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
-  const etiqueta = "text-[13px] font-semibold text-fg-3";
+  const etiqueta = "text-[0.8125rem] font-semibold text-fg-3";
 
   return (
     <DialogShell labelledBy={titulo} onClose={onClose}>

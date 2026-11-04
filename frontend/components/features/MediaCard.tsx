@@ -52,7 +52,7 @@ export function MediaCard({
       href={routes.title(title.tipo, title.id, from)}
       className={cn(
         "group relative flex flex-col gap-2.5 text-foreground no-underline focus-visible:outline-none md:gap-3",
-        fluid ? "w-full" : "w-[132px] md:w-[176px]"
+        fluid ? "w-full" : "w-[8.25rem] md:w-[11rem]"
       )}
     >
       <span className="relative block aspect-[2/3] overflow-hidden rounded-lg bg-raised transition-[transform,box-shadow] duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_rgb(0_0_0/0.45)] group-focus-visible:outline-2 group-focus-visible:outline-offset-[3px] group-focus-visible:outline-ring motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
@@ -75,11 +75,11 @@ export function MediaCard({
       <span className="flex min-w-0 flex-col gap-px">
         <span
           lang={title.tituloEnIngles ? "en" : undefined}
-          className="truncate text-sm font-semibold md:text-[15px]"
+          className="truncate text-sm font-semibold md:text-[0.9375rem]"
         >
           {title.titulo}
         </span>
-        <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-fg-3 md:gap-x-2 md:text-[13px]">
+        <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-fg-3 md:gap-x-2 md:text-[0.8125rem]">
           {(showType || title.anio) && (
             <span className="whitespace-nowrap">
               {showType && tipo}
@@ -92,7 +92,7 @@ export function MediaCard({
               <span className="sr-only">
                 {t("media.tmdbRatingLabel", { rating: formats.rating(title.nota) })}
               </span>
-              <StarIcon className="size-[11px] fill-primary md:size-3" />
+              <StarIcon className="size-[0.6875rem] fill-primary md:size-3" />
               <span aria-hidden="true">{formats.rating(title.nota)}</span>
             </span>
           )}
@@ -104,9 +104,9 @@ export function MediaCard({
           <time
             dateTime={addedAt}
             title={t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
-            className="inline-flex items-center gap-1 text-[11px] text-fg-3 tabular-nums"
+            className="inline-flex items-center gap-1 text-[0.6875rem] text-fg-3 tabular-nums"
           >
-            <ListPlus className="size-[11px]" aria-hidden="true" />
+            <ListPlus className="size-[0.6875rem]" aria-hidden="true" />
             <span className="sr-only">
               {t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
             </span>

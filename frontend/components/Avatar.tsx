@@ -18,13 +18,15 @@ export function Avatar({
   const t = useTranslations("common.avatar");
   const [srcFallida, setSrcFallida] = useState<string | null>(null);
   const avatar = avatares.find((item) => item.id === perfil.avatar_id);
+  // En rem: crece con la escala de la raíz en pantallas anchas (globals.css).
+  const caja = { width: `${size / 16}rem`, height: `${size / 16}rem` };
   const iniciales = `${perfil.nombre.charAt(0)}${perfil.apellido.charAt(0)}`.toUpperCase() || "?";
 
   if (!avatar || srcFallida === avatar.src) {
     return (
       <span
         className="flex shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground"
-        style={{ width: size, height: size }}
+        style={caja}
         aria-label={t("currentAlt")}
       >
         {iniciales}
@@ -38,6 +40,7 @@ export function Avatar({
       alt={t("currentAlt")}
       width={size}
       height={size}
+      style={caja}
       onError={() => setSrcFallida(avatar.src)}
       className="shrink-0 rounded-full object-cover"
     />

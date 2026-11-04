@@ -284,12 +284,12 @@ export function ListDetailView({ id }: { id: number }) {
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[1360px] flex-col gap-5 px-5 pt-4 pb-[120px] md:gap-10 md:px-10 md:pt-12 md:pb-24"
+      className="mx-auto flex max-w-[85rem] flex-col gap-5 px-5 pt-4 pb-[7.5rem] md:gap-10 md:px-10 md:pt-12 md:pb-24"
     >
       <div className="flex flex-col gap-2.5 md:gap-3.5">
         <Link
           href={routes.lists}
-          className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[15px] font-medium text-fg-2 no-underline md:hidden"
+          className="-ml-2.5 inline-flex h-11 items-center gap-1 self-start px-2.5 text-[0.9375rem] font-medium text-fg-2 no-underline md:hidden"
         >
           <ChevronLeft aria-hidden="true" className="size-5" />
           {t("nav.main.lists")}
@@ -315,7 +315,7 @@ export function ListDetailView({ id }: { id: number }) {
             <h1
               ref={titulo}
               tabIndex={-1}
-              className="font-display text-[48px] leading-none break-words focus-visible:outline-2 focus-visible:outline-ring md:text-[72px] md:leading-[0.95]"
+              className="font-display text-[3rem] leading-none break-words focus-visible:outline-2 focus-visible:outline-ring md:text-[4.5rem] md:leading-[0.95]"
             >
               {nombre ?? <span className="sr-only">{t("lists.detail.loading")}</span>}
             </h1>
@@ -377,7 +377,7 @@ export function ListDetailView({ id }: { id: number }) {
                     maxLength={MAX_TEXTO}
                     onChange={(evento) => setTexto(evento.target.value)}
                     placeholder={t("lists.detail.searchPlaceholder")}
-                    className="h-12 w-full rounded-full border-0 bg-raised px-11 text-base font-medium md:text-[15px] text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden"
+                    className="h-12 w-full rounded-full border-0 bg-raised px-11 text-base font-medium md:text-[0.9375rem] text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden"
                   />
                   {texto && (
                     <button
@@ -401,7 +401,7 @@ export function ListDetailView({ id }: { id: number }) {
                   onClick={() => setHoja(true)}
                   className="flex h-12 flex-none cursor-pointer items-center gap-2 rounded-full bg-raised px-4 text-sm font-semibold shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring md:hidden"
                 >
-                  <SlidersHorizontal aria-hidden="true" className="size-[18px]" />
+                  <SlidersHorizontal aria-hidden="true" className="size-[1.125rem]" />
                   {t("common.filters.title")}
                   {activos > 0 && (
                     <span
@@ -486,7 +486,7 @@ export function ListDetailView({ id }: { id: number }) {
 
               {/* Celular: el orden elegido y un chip por filtro, que lo quita. */}
               <div className="flex flex-wrap items-center gap-2 md:hidden">
-                <span className="inline-flex h-8 items-center text-[13px] text-fg-3">
+                <span className="inline-flex h-8 items-center text-[0.8125rem] text-fg-3">
                   {t("lists.detail.sortPrefix", {
                     sortLabel: t(ETIQUETA_ORDEN_LISTA[filtros.orden]),
                   })}
@@ -497,10 +497,10 @@ export function ListDetailView({ id }: { id: number }) {
                     type="button"
                     onClick={chip.quitar}
                     aria-label={t("lists.detail.removeChipLabel", { filterLabel: chip.etiqueta })}
-                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-raised-2 pr-2 pl-3 text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                    className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-raised-2 pr-2 pl-3 text-[0.8125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
                   >
                     {chip.etiqueta}
-                    <X aria-hidden="true" className="size-[13px]" />
+                    <X aria-hidden="true" className="size-[0.8125rem]" />
                   </button>
                 ))}
               </div>
@@ -523,7 +523,7 @@ export function ListDetailView({ id }: { id: number }) {
             <ul
               role="status"
               aria-label={t("lists.detail.loading")}
-              className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] md:gap-x-6 md:gap-y-9"
+              className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(13.75rem,100%),1fr))] md:gap-x-6 md:gap-y-9"
             >
               {[0, 1, 2, 3].map((indice) => (
                 <li key={indice} className="flex flex-col gap-2.5">
@@ -545,13 +545,13 @@ export function ListDetailView({ id }: { id: number }) {
 
           {vacia && estado === "listo" && (
             <div className="flex flex-col items-start gap-3 border-t border-line py-10">
-              <h2 className="font-display text-[30px] leading-none md:text-[34px]">
+              <h2 className="font-display text-[1.875rem] leading-none md:text-[2.125rem]">
                 {t("lists.detail.emptyTitle")}
               </h2>
               <p className="max-w-[52ch] text-fg-2">{t("lists.detail.emptyDescription")}</p>
               <Link
                 href={routes.search}
-                className="inline-flex h-11 items-center rounded-full bg-raised-2 px-[18px] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+                className="inline-flex h-11 items-center rounded-full bg-raised-2 px-[1.125rem] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {t("common.actions.explore")}
               </Link>
@@ -565,7 +565,7 @@ export function ListDetailView({ id }: { id: number }) {
                 <button
                   type="button"
                   onClick={limpiar}
-                  className="h-11 cursor-pointer rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                  className="h-11 cursor-pointer rounded-full bg-raised-2 px-[1.125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   {t("common.filters.clear")}
                 </button>
@@ -575,7 +575,7 @@ export function ListDetailView({ id }: { id: number }) {
 
           {datos && datos.items.length > 0 && estado !== "error" && nombre && (
             <div aria-busy={estado === "cargando"} className="flex flex-col">
-              <ul className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] md:gap-x-6 md:gap-y-9">
+              <ul className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(auto-fill,minmax(min(13.75rem,100%),1fr))] md:gap-x-6 md:gap-y-9">
                 {datos.items.map((item) => (
                   <li key={item.item_id} className="group/item relative list-none">
                     <MediaCard
@@ -617,7 +617,7 @@ export function ListDetailView({ id }: { id: number }) {
                     type="button"
                     onClick={cargarMas}
                     disabled={mas === "cargando"}
-                    className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-raised-2 px-[18px] font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait"
+                    className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-raised-2 px-[1.125rem] font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait"
                   >
                     {mas === "cargando" && (
                       <LoaderCircle

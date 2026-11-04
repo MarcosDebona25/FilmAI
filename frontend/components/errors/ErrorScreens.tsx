@@ -18,7 +18,7 @@ function TornTicket({ label }: { label: string }) {
       viewBox="0 0 200 126"
       role="img"
       aria-label={label}
-      className="h-auto w-[220px] flex-none md:w-[300px]"
+      className="h-auto w-[13.75rem] flex-none md:w-[18.75rem]"
     >
       <g transform="rotate(-9 46 63)">
         <path
@@ -57,15 +57,15 @@ function ErrorLayout({
   return (
     <main
       id="contenido"
-      className="mx-auto flex w-full max-w-[1360px] flex-col gap-3.5 px-5 pt-10 pb-[120px] md:flex-row md:flex-wrap md:items-center md:justify-center md:gap-x-24 md:gap-y-12 md:px-10 md:pt-24"
+      className="mx-auto flex w-full max-w-[85rem] flex-col gap-3.5 px-5 pt-10 pb-[7.5rem] md:flex-row md:flex-wrap md:items-center md:justify-center md:gap-x-24 md:gap-y-12 md:px-10 md:pt-24"
     >
       <TornTicket label={t("ticketIllustrationAlt")} />
-      <div className="flex max-w-[640px] flex-col gap-3.5 max-md:mt-7 md:flex-[1_1_520px] md:gap-4">
+      <div className="flex max-w-[40rem] flex-col gap-3.5 max-md:mt-7 md:flex-[1_1_32.5rem] md:gap-4">
         <p className="text-sm font-semibold text-fg-3">{code}</p>
-        <h1 className="font-display text-[60px] leading-[0.92] md:mb-[15px] md:text-[96px]">
+        <h1 className="font-display text-[3.75rem] leading-[0.92] md:mb-[0.9375rem] md:text-[6rem]">
           {title}
         </h1>
-        <p className="text-[17px] text-fg-2 md:text-lg">{description}</p>
+        <p className="text-[1.0625rem] text-fg-2 md:text-lg">{description}</p>
         <div className="mt-3.5 flex flex-col gap-2.5 md:mt-3 md:flex-row md:flex-wrap md:gap-3">
           {children}
         </div>
@@ -92,7 +92,7 @@ export function NotFoundScreen() {
         title={t("notFoundSignedOutTitle")}
         description={t("notFoundSignedOutDescription")}
         footer={
-          <p className="text-fg-2 max-md:text-center max-md:text-[15px]">
+          <p className="text-fg-2 max-md:text-center max-md:text-[0.9375rem]">
             {t.rich("signUpInvite", {
               register: (chunks) => (
                 <Link href={routes.register} className="font-semibold text-foreground">
@@ -122,7 +122,7 @@ export function NotFoundScreen() {
         {nav("backHome")}
       </Link>
       <Link href={routes.search} className={`${secondaryButtonClass} ${actionClass} gap-2`}>
-        <Search aria-hidden="true" className="size-[18px]" />
+        <Search aria-hidden="true" className="size-[1.125rem]" />
         {nav("search")}
       </Link>
     </ErrorLayout>
@@ -145,7 +145,7 @@ export function UnexpectedErrorScreen({ reset }: { reset: () => void }) {
         onClick={reset}
         className={`${primaryButtonClass} ${actionClass} cursor-pointer gap-2`}
       >
-        <RotateCw aria-hidden="true" className="size-[18px]" />
+        <RotateCw aria-hidden="true" className="size-[1.125rem]" />
         {common("retry")}
       </button>
       <Link href={routes.explore} className={`${secondaryButtonClass} ${actionClass}`}>

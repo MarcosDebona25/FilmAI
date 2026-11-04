@@ -28,7 +28,7 @@ export function Switch({
       aria-labelledby={labelledBy}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="group flex h-11 w-[52px] shrink-0 cursor-pointer items-center focus-visible:outline-none disabled:cursor-wait disabled:opacity-60"
+      className="group flex h-11 w-[3.25rem] shrink-0 cursor-pointer items-center focus-visible:outline-none disabled:cursor-wait disabled:opacity-60"
     >
       <span
         aria-hidden="true"

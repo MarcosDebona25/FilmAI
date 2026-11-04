@@ -52,21 +52,21 @@ export function MediaRow({
     <section
       aria-labelledby={headingId}
       aria-busy={loading || undefined}
-      className="flex flex-col gap-3.5 md:gap-[22px]"
+      className="flex flex-col gap-3.5 md:gap-[1.375rem]"
     >
       <div className="flex items-end justify-between gap-3 pr-3 pl-5 md:px-0">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 id={headingId} className="font-display text-[30px] leading-none md:text-[40px]">
+          <h2 id={headingId} className="font-display text-[1.875rem] leading-none md:text-[2.5rem]">
             {title}
           </h2>
           {description ? (
-            <p className="text-[13px] text-fg-3 md:text-sm">{description}</p>
+            <p className="text-[0.8125rem] text-fg-3 md:text-sm">{description}</p>
           ) : (
             // Mientras carga, la descripción que todavía no llegó (la de
             // Recomendado depende de la respuesta) ocupa su renglón: si no,
             // al llegar corre las tarjetas y todo lo de abajo.
             loading && (
-              <p aria-hidden="true" className="invisible text-[13px] md:text-sm">
+              <p aria-hidden="true" className="invisible text-[0.8125rem] md:text-sm">
                 {"\u00a0"}
               </p>
             )
@@ -99,7 +99,7 @@ export function MediaRow({
         {loading
           ? Array.from({ length: SKELETONS }, (_, index) => (
               <li key={index} data-skeleton aria-hidden="true" className="shrink-0">
-                <span className="block aspect-[2/3] w-[132px] rounded-lg bg-raised md:w-[176px]" />
+                <span className="block aspect-[2/3] w-[8.25rem] rounded-lg bg-raised md:w-[11rem]" />
                 <span className="mt-3 block h-3.5 w-3/4 rounded bg-raised" />
                 <span className="mt-1.5 block h-3 w-1/2 rounded bg-raised" />
               </li>

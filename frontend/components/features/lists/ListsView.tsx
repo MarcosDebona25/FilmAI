@@ -173,10 +173,10 @@ export function ListsView() {
   return (
     <main
       id="contenido"
-      className="mx-auto flex max-w-[1360px] flex-col gap-6 px-5 pt-4 pb-[120px] md:gap-10 md:px-10 md:pt-12 md:pb-24"
+      className="mx-auto flex max-w-[85rem] flex-col gap-6 px-5 pt-4 pb-[7.5rem] md:gap-10 md:px-10 md:pt-12 md:pb-24"
     >
       <div className="flex flex-col gap-2 md:gap-3">
-        <h1 className="font-display text-[48px] leading-none md:text-[72px] md:leading-[0.95]">
+        <h1 className="font-display text-[3rem] leading-none md:text-[4.5rem] md:leading-[0.95]">
           {t("nav.main.lists")}
         </h1>
         {listas && (

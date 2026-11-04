@@ -19,7 +19,7 @@ export function SheetHeader({
   const t = useTranslations("common.actions");
   return (
     <div className="-mt-2 flex items-center justify-between">
-      <h2 id={id} className="font-display text-[30px] leading-none">
+      <h2 id={id} className="font-display text-[1.875rem] leading-none">
         {titulo}
       </h2>
       <button
@@ -98,14 +98,14 @@ export function SheetFooter({
       <button
         type="button"
         onClick={onLimpiar}
-        className="h-[52px] cursor-pointer rounded-[10px] px-[18px] font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring"
+        className="h-[3.25rem] cursor-pointer rounded-[0.625rem] px-[1.125rem] font-semibold text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring"
       >
         {t("clear")}
       </button>
       <button
         type="button"
         onClick={onAplicar}
-        className="h-[52px] cursor-pointer rounded-[10px] bg-primary font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="h-[3.25rem] cursor-pointer rounded-[0.625rem] bg-primary font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         {aplicar}
       </button>

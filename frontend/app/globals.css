@@ -140,7 +140,7 @@
      (92 px de margen + 56 px de alto). Solo en celular: en escritorio no hay barra. */
   @media (width < 48rem) {
     html {
-      scroll-padding-bottom: 164px;
+      scroll-padding-bottom: 10.25rem;
     }
   }
   /* Sin la espera del doble toque (zoom) en los controles táctiles. */
