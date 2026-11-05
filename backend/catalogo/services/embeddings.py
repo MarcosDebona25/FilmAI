@@ -18,14 +18,16 @@ MODEL_VERSION = "bge-m3"
 # Lo que mide `ProduccionEmbedding.vector`: otro tamaño no se puede comparar.
 _DIMENSIONES = 1024
 
-# Cuánto mantiene Ollama el modelo en memoria después de usarlo. Cargarlo tarda
-# ~1,9 s; 30 minutos cubren una sesión sin retener 1,24 GB para siempre.
-_KEEP_ALIVE = "30m"
-
 # Una consulta del chat tiene a una persona esperando: si Ollama se cuelga, se
 # pierde como máximo este tiempo. El backfill usa los valores por defecto de
 # `generar_vector`, porque nadie lo espera y un fallo pasajero se puede reintentar.
 PRESUPUESTO_CHAT = {"timeout": 3, "reintentos": 0}
+# Con el modelo sin cargar: la carga midió entre 2 y 24 s según la memoria libre.
+# Cortar antes es peor que esperar, porque Ollama abandona la carga. Deja lugar
+# dentro de los 25 s del turno para el resto de la respuesta.
+PRESUPUESTO_CARGA = {"timeout": 20, "reintentos": 0}
+# Solo para saber si el modelo está cargado: si esto no responde, Ollama está caído.
+_TIMEOUT_ESTADO = 1
 
 # Etiquetas en inglés y en orden fijo: el corpus de TMDB está en inglés y
 # bge-m3 fue entrenado con texto etiquetado de esta forma (decisión
@@ -93,6 +95,21 @@ def _extraer_vector(respuesta):
     return vector
 
 
+def modelo_cargado(*, transport=None):
+    """Dice si el modelo ya está en memoria, para saber cuánto vale la pena esperar.
+
+    Distingue un modelo cargándose de un Ollama colgado: si esta consulta
+    liviana no responde, no tiene sentido esperar la carga.
+    """
+    url = f"{settings.OLLAMA_URL.rstrip('/')}/api/ps"
+    try:
+        with httpx.Client(timeout=_TIMEOUT_ESTADO, transport=transport) as cliente:
+            modelos = cliente.get(url).json()["models"]
+        return any(m["name"].split(":")[0] == MODEL_VERSION for m in modelos)
+    except (httpx.HTTPError, ValueError, KeyError, TypeError) as error:
+        raise EmbeddingProviderError("No se pudo consultar a Ollama") from error
+
+
 def generar_vector(texto, *, timeout=10, reintentos=2, transport=None):
     """Convierte texto en un vector de 1024 dimensiones usando Ollama.
 
@@ -103,7 +120,11 @@ def generar_vector(texto, *, timeout=10, reintentos=2, transport=None):
     `transport` existe para los tests: reemplaza la red por una respuesta falsa.
     """
     url = f"{settings.OLLAMA_URL.rstrip('/')}/api/embed"
-    cuerpo = {"model": MODEL_VERSION, "input": texto, "keep_alive": _KEEP_ALIVE}
+    cuerpo = {
+        "model": MODEL_VERSION,
+        "input": texto,
+        "keep_alive": settings.OLLAMA_KEEP_ALIVE,
+    }
 
     with httpx.Client(timeout=timeout, transport=transport) as cliente:
         for intento in range(reintentos + 1):

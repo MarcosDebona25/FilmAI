@@ -74,6 +74,7 @@ urlpatterns = [
     path("api/docs/login/", ingresar_a_documentacion, name="docs-login"),
     path("api/catalogo/", include("catalogo.urls")),
     path("api/lists/", include("listas.urls")),
+    path("api/chat/", include("chatbot.urls")),
     # C-08. El `{id}` es la pk de la Calificacion; `/texto/` borra solo el
     # texto y conserva la nota, mientras que la ruta sin sufijo borra las dos.
     path("api/reviews/", CalificacionesView.as_view(), name="calificaciones"),

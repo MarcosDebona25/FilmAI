@@ -43,6 +43,10 @@ TMDB_LLAMADAS_POR_IP_POR_MINUTO = 300
 # Ollama genera los vectores de la búsqueda semántica. Por defecto apunta al
 # puente hacia el Ollama de Windows (perfil `ollama-windows` del compose).
 OLLAMA_URL = config("OLLAMA_URL", default="http://host.docker.internal:11435")
+# Cuánto queda bge-m3 en memoria sin usarse. En desarrollo no ocupa 1,24 GB para
+# siempre; en un servidor conviene `-1m`, que no lo descarga nunca. Tiene que ser
+# una duración: Ollama rechaza `-1` como texto (400, verificado el 05/11/2026).
+OLLAMA_KEEP_ALIVE = config("OLLAMA_KEEP_ALIVE", default="30m")
 
 
 # Application definition

@@ -18,6 +18,7 @@ from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEm
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.embeddings import (
     MODEL_VERSION,
+    EmbeddingProviderError,
     calcular_source_hash,
     construir_texto_canonico,
     generar_vector,
@@ -36,6 +37,10 @@ _RECLAMABLES = (EstadoEmbedding.PENDING, EstadoEmbedding.FAILED)
 # murió a mitad de la tarea (Q-09). El peor caso real son 3 intentos de 10 s, y
 # la fecha se renueva al reclamar, así que la espera en la cola no cuenta.
 _VENCIMIENTO_PROCESSING = timedelta(minutes=5)
+
+
+# Nadie espera esta tarea: puede tardar lo que necesite la carga del modelo.
+_TIMEOUT_CARGA = 60
 
 
 def _processing_vencidas():
@@ -137,6 +142,20 @@ def generar_embedding(produccion_id):
         model_version=MODEL_VERSION,
         fecha_actualizacion=timezone.now(),
     )
+
+
+@shared_task(name="catalogo.calentar_modelo")
+def calentar_modelo():
+    """Carga bge-m3 en Ollama antes de que llegue la primera pregunta del chat.
+
+    Corre en el worker porque la carga puede tardar más que lo que espera una
+    consulta, y si la conexión se corta, Ollama la abandona. Nunca lanza: si
+    Ollama no está, la búsqueda semántica falla igual y reintentar no ayuda.
+    """
+    try:
+        generar_vector("calentar", timeout=_TIMEOUT_CARGA, reintentos=0)
+    except EmbeddingProviderError:
+        logger.warning("calentar_modelo: Ollama no pudo cargar el modelo")
 
 
 # Qué recorre cada corrida nocturna y cómo se sabe el tipo de cada ítem:
