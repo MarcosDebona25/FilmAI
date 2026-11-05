@@ -409,7 +409,7 @@ class PedirCargaTests(SimpleTestCase):
 
         encolar.assert_called_once_with()
 
-    def test_si_redis_esta_caido_no_rompe_y_se_puede_reintentar(self):
+    def test_si_el_broker_falla_no_rompe_y_se_puede_reintentar(self):
         with patch(
             "catalogo.services.semantica.calentar_modelo.delay",
             side_effect=[ConnectionError("broker"), None],
@@ -418,6 +418,46 @@ class PedirCargaTests(SimpleTestCase):
             pedir_carga_del_modelo()
 
         self.assertEqual(encolar.call_count, 2)
+
+    def test_si_la_cache_falla_no_rompe_y_no_encola(self):
+        # En producción la caché es Redis: puede caerse igual que el broker.
+        with (
+            patch("catalogo.services.semantica.cache") as cache_caida,
+            patch("catalogo.services.semantica.calentar_modelo.delay") as encolar,
+            self.assertLogs("catalogo.services.semantica", "ERROR"),
+        ):
+            cache_caida.add.side_effect = ConnectionError("redis")
+            pedir_carga_del_modelo()
+
+        encolar.assert_not_called()
+
+    def test_si_fallan_el_broker_y_despues_la_cache_no_rompe(self):
+        with (
+            patch("catalogo.services.semantica.cache") as cache_caida,
+            patch(
+                "catalogo.services.semantica.calentar_modelo.delay",
+                side_effect=ConnectionError("broker"),
+            ),
+            self.assertLogs("catalogo.services.semantica", "ERROR"),
+        ):
+            cache_caida.add.return_value = True
+            cache_caida.delete.side_effect = ConnectionError("redis")
+            pedir_carga_del_modelo()
+
+    def test_si_la_cache_falla_la_busqueda_conserva_el_error_de_ollama(self):
+        # `tool_failed` depende de que el error de Ollama no se pierda.
+        with (
+            patch("catalogo.services.semantica.modelo_cargado", return_value=False),
+            patch(
+                "catalogo.services.semantica.generar_vector",
+                side_effect=EmbeddingProviderError("timeout"),
+            ),
+            patch("catalogo.services.semantica.cache") as cache_caida,
+            self.assertLogs("catalogo.services.semantica", "ERROR"),
+        ):
+            cache_caida.add.side_effect = ConnectionError("redis")
+            with self.assertRaises(EmbeddingProviderError):
+                buscar_semantico("algo")
 
 
 class VencimientoDeProcessingTests(TestCase):

@@ -41,13 +41,17 @@ _SEGUNDOS_ENTRE_CARGAS = 60
 
 def pedir_carga_del_modelo():
     """Encola la carga del modelo. Nunca lanza: es una ayuda, no un requisito."""
-    if not cache.add(_CLAVE_CARGA, True, _SEGUNDOS_ENTRE_CARGAS):
-        return
     try:
-        calentar_modelo.delay()
+        if not cache.add(_CLAVE_CARGA, True, _SEGUNDOS_ENTRE_CARGAS):
+            return
+        try:
+            calentar_modelo.delay()
+        except Exception:
+            # Sin esto, un broker caído frenaría los reintentos durante un minuto.
+            cache.delete(_CLAVE_CARGA)
+            raise
     except Exception:
-        # Amplio a propósito: si el broker falla, el chat sigue funcionando.
-        cache.delete(_CLAVE_CARGA)
+        # Amplio a propósito: si Redis falla, el chat sigue funcionando.
         logger.exception("No se pudo encolar la carga del modelo")
 
 

@@ -27,6 +27,15 @@ class PrepararChatTests(APITestCase):
         self.assertEqual(respuesta.status_code, 202)
         pedir.assert_called_once_with()
 
+    def test_si_la_cache_falla_igual_responde_202(self):
+        self.client.force_authenticate(UsuarioFactory())
+
+        with patch("catalogo.services.semantica.cache") as cache_caida:
+            cache_caida.add.side_effect = ConnectionError("redis")
+            respuesta = self.client.post(URL)
+
+        self.assertEqual(respuesta.status_code, 202)
+
     def test_get_no_esta_permitido(self):
         self.client.force_authenticate(UsuarioFactory())
 
