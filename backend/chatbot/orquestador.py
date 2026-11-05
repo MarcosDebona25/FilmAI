@@ -157,14 +157,16 @@ async def responder(chat, texto, idioma, *, proveedor=None):
 
         if not vuelta.llamadas:
             break
-        if numero_de_vuelta == _MAX_VUELTAS_CON_TOOLS:
+        # Ya respondió y eligió tarjetas: otra llamada solo la repetiría. Por eso
+        # esta vuelta cierra el turno, aunque sea la última permitida.
+        cierra_el_turno = bool(vuelta.texto) and _solo_tarjetas(vuelta)
+        if numero_de_vuelta == _MAX_VUELTAS_CON_TOOLS and not cierra_el_turno:
             raise ErrorDelTurno("Se pasó del tope de vueltas con tools")
 
         if not _solo_tarjetas(vuelta):
             yield Estado("searching")
         resultados = await en_hilo(_correr_tools, ctx, vuelta.llamadas)
-        if vuelta.texto and _solo_tarjetas(vuelta):
-            # Ya respondió y eligió tarjetas: otra llamada solo la repetiría.
+        if cierra_el_turno:
             break
         mensajes.append(_mensaje_del_asistente(vuelta))
         mensajes.extend(resultados)

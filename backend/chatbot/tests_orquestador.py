@@ -175,6 +175,21 @@ class FallosTests(BaseOrquestador):
 
         self.assertEqual(eventos[-1].texto, "Listo")
 
+    async def test_la_ultima_llamada_puede_cerrar_con_texto_y_tarjetas(self):
+        # Es lo que pide el prompt: no cuenta como pasarse del tope.
+        guion = [[tool("descubrir")] for _ in range(4)] + [["Listo", tarjetas(1)]]
+
+        eventos = await self.correr(guion)
+
+        self.assertEqual(eventos[-1].texto, "Listo")
+        self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Moon")
+
+    async def test_la_ultima_llamada_no_puede_pedir_tarjetas_sin_texto(self):
+        guion = [[tool("descubrir")] for _ in range(4)] + [[tarjetas(1)]]
+
+        with self.assertRaises(ErrorDelTurno):
+            await self.correr(guion)
+
     async def test_si_el_proveedor_falla_no_hay_resultado(self):
         eventos = []
         self.proveedor = ProveedorFalso([["Hola", RuntimeError("503")]])
