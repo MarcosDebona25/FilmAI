@@ -1,5 +1,6 @@
 /** La ficha de una película o serie (C-07): datos, origen y edición de la nota. */
 import { tmdbImage, type MediaType } from "@/lib/catalog";
+import { rutaDeFondo } from "@/lib/fondos";
 
 /** Lo que el backend reenvía de `movie/{id}` o `tv/{id}` de TMDB. */
 export interface TmdbDetalle {
@@ -92,7 +93,7 @@ export function normalizarFicha(raw: TmdbDetalle, tipo: MediaType): Ficha {
     votos: raw.vote_count ?? 0,
     generos: (raw.genres ?? []).map((genero) => genero.name),
     poster: tmdbImage(raw.poster_path, "w500"),
-    backdrop: tmdbImage(raw.backdrop_path, "w1280"),
+    backdrop: tmdbImage(rutaDeFondo(tipo, raw.id, raw.backdrop_path), "w1280"),
     tituloEnIngles: enIngles.includes(tipo === "movie" ? "title" : "name"),
     sinopsisEnIngles: enIngles.includes("overview"),
   };

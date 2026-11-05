@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 05/11/2026 — Fondos elegidos a mano para títulos con arte de póster
+
+- **Fecha**: 05/11/2026
+- **Descripción**: en *Attack on Titan* la imagen de fondo parecía el póster estirado. No lo era: es una panorámica real de TMDB, pero con la misma ilustración, y quedaba una cara gigante detrás del título. Al comparar a ojo 48 títulos, entre un tercio y la mitad tienen arte parecido al póster, aunque en varios queda bien.
+  - **Decisión**: una lista corta a mano en `lib/fondos.ts`, que reemplaza la imagen de los títulos que más molestan. Vale para la ficha y para el Inicio. Se agregan de a uno, con una ruta de `/{tipo}/{id}/images`.
+  - **Descartado**: elegir otra imagen por regla, porque ningún dato de TMDB distingue una escena de un arte de póster, y cambiaría también títulos que hoy están bien. Difuminar siempre, porque pierde la imagen en todos.
+  - **Riesgo**: si TMDB borra una imagen de la lista, ese título se queda sin fondo.
+- **Archivos afectados**: `frontend/lib/{fondos,title,catalog}.ts`. Tests: `frontend/tests/fondos.test.ts`.
+
 ## 05/11/2026 — CI más rápido: hasher rápido en los tests y cancelación de corridas viejas
 
 - **Fecha**: 05/11/2026
@@ -12,6 +21,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Hasher en los tests**: bcrypt es lento a propósito y cada usuario creado en un test lo paga. Con MD5, solo bajo `manage.py test`, la suite pasó de 529 s a 216 s en local, y el job de backend en CI de 7m33s a 1m49s, con todos los tests en verde. Producción sigue con bcrypt (RNF #2). La condición mira el subcomando (`sys.argv[1:2]`) y no cualquier argumento, para que otro comando con `test` como valor no guarde contraseñas con MD5. Tests en un proceso aparte verifican los dos casos.
   - **Corridas viejas**: un push nuevo a un PR cancela la corrida anterior de ese PR. En `main` y `develop` no se corta la corrida en curso; si hay varias en cola, solo queda la última.
   - **Playwright en dos jobs**: con el backend más rápido, Playwright pasó a ser lo más lento (unos 5 minutos). Se reparte con `--shard` en dos máquinas que corren a la vez. Se gasta algo más de máquina, porque la instalación se repite, y en un repo público los runners estándar no se pagan.
+  - **Playwright sin `--with-deps`**: algunos jobs tardaban 12 minutos o más. No era el navegador: esa opción instala fuentes por `apt`, y el mirror de Ubuntu las sirvió a 29,8 kB/s (17 MB en 9 min 43 s). Por eso una caché del navegador no habría servido. El runner ya trae las bibliotecas que hacen falta.
   - **Descartado por ahora**: `--parallel 4` en los tests del backend, porque falla con 429 (Too Many Requests); falta confirmar la causa, posiblemente estado compartido entre procesos. Saltear jobs según lo que cambió también queda afuera: no se eligió.
 - **Archivos afectados**: `backend/filmai/settings.py`, `backend/filmai/test_seguridad_infra.py`, `.github/workflows/ci.yml`.
 
