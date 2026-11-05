@@ -5,6 +5,22 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 05/11/2026 — Proveedor, prompt y orquestador del chatbot (PR 3)
+
+- **Fecha**: 05/11/2026
+- **Descripción**: fase 3 del SDD. `responder()` conecta el modelo con las tools y `manage.py chatear` permite probarlo sin la vista. Lo que se decidió o cambió:
+  - **Historial sin línea de tarjetas**: el SDD agregaba «[Tarjetas: Moon (2009)…]» a cada respuesta. El modelo la imitaba como texto en vez de llamar a `mostrar_tarjetas`, y `ya_recomendados` ya dice qué se mostró. Se sacó, y el PR 3 dejó de depender del PR 4.
+  - **«Recomendame X» si ya lo vio**: avisa que ya lo vio y ofrece parecidos. «Mostrame X» sí muestra la tarjeta.
+  - **Cierre del turno**: el prompt pide texto y `mostrar_tarjetas` en la misma respuesta; si llegan juntos, el turno termina sin otra llamada. «Algo como Interstellar» baja de unos 6,5 s a 4,5 s, y se evita una respuesta duplicada.
+  - **Tope**: 4 vueltas de tools y una llamada final. Una quinta vuelta con tools termina en `ErrorDelTurno`.
+  - **Esquemas sin `strict`**: en DeepSeek no valida nada en la URL normal, y en `/beta` suma unos 240 tokens y hace que el modelo mande nulls.
+  - **Un cliente por llamada**: un `AsyncOpenAI` compartido entre event loops falla con `Event loop is closed`, y crearlo cuesta 0,4 ms.
+  - **`tool_choice="none"` no se usa**: filtró marcado interno al texto, en la única prueba.
+- **Verificado contra DeepSeek (05/11/2026)**: modelo `deepseek-flash` con thinking apagado. Eligió bien la tool en los 7 pedidos de prueba. Con las tools reales: «hola» 1,2 s, «fuera de tema» 1,7 s, un título por nombre 3,3 s, búsqueda semántica 3,7 s, «algo como Interstellar pero más corto» 10,1 s (3 vueltas).
+- **Para el PR 5 (Canal)**: usar `asyncio.timeout_at(plazo)` alrededor de cada `anext()`, no un `asyncio.timeout` con `yield` adentro, porque si vence durante un `send` el stream termina sin `error` ni `fin`. Emitir `error` antes de liberar el candado, porque el hop siguiente espera a una tool trabada.
+- **Pendiente**: el modelo a veces agrega `tipo: movie` o `nota_minima` sin que se lo pidan, y deja series afuera. Se mide en las preguntas de prueba.
+- **Archivos afectados**: `backend/chatbot/{orquestador,llm,prompts,puente}.py`, `backend/chatbot/management/commands/chatear.py`, `backend/filmai/settings.py`, `backend/requirements.txt`, `.env.example`, `openspec/changes/chatbot/`. Tests: `backend/chatbot/tests_orquestador.py`.
+
 ## 05/11/2026 — Fondos elegidos a mano para títulos con arte de póster
 
 - **Fecha**: 05/11/2026

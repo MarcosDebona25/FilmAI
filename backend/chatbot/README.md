@@ -10,25 +10,32 @@ Panel del chat (PR 6) ⏳
 Vista SSE (PR 5) ⏳          guarda el turno y transmite los eventos
   │  llama a responder()
   ▼
-orquestador.py (PR 3) ⏳     habla con el modelo y conecta todo lo de abajo
+orquestador.py              habla con el modelo y conecta todo lo de abajo
   ├─▶ contexto.py            ¿qué le gusta a este usuario?
   ├─▶ anonimizar.py          saca nombres y correos antes de enviar
-  ├─▶ llm.py (PR 3) ⏳       habla con DeepSeek
-  └─▶ tools/ ejecutar()      el modelo pidió una herramienta
+  ├─▶ prompts.py             las instrucciones del modelo
+  ├─▶ llm.py                 habla con DeepSeek
+  └─▶ tools/ ejecutar()      el modelo pidió una herramienta (por puente.py)
         ├─▶ busqueda.py      TMDB y búsqueda semántica
         └─▶ personales.py    listas del usuario y tarjetas
               └─▶ turno.py   recuerda qué apareció en este turno
 ```
 
-Entre la vista y el orquestador está el contrato de `eventos.py`. Mientras el
-orquestador no exista, la vista usa `orquestador_falso.py`.
+Entre la vista y el orquestador está el contrato de `eventos.py`. Para probarlo
+sin la vista: `python manage.py chatear --usuario juanp`. Cada mensaje tiene costo,
+porque usa la clave de `.env`.
 
 ## Qué hace cada archivo
 
 | Archivo | Para qué sirve |
 |---|---|
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
+| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
+| `puente.py` | `en_hilo`: el único paso de código async a código común |
+| `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |
+| `prompts.py` | Las instrucciones del modelo |
+| `management/commands/chatear.py` | Hablar con el bot desde la terminal |
 | `contexto.py` | Arma el perfil del usuario desde la base |
 | `anonimizar.py` | Limpia datos personales de lo que va al proveedor |
 | `tools/__init__.py` | La puerta de las herramientas: `ejecutar()` |
