@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 05/11/2026 — CI más rápido: hasher rápido en los tests y cancelación de corridas viejas
+
+- **Fecha**: 05/11/2026
+- **Descripción**: el CI tardaba unos 8 minutos, y 6 eran los tests del backend. Se midió antes de cambiar nada.
+  - **Hasher en los tests**: bcrypt es lento a propósito y cada usuario creado en un test lo paga. Con MD5, solo bajo `manage.py test`, la suite pasó de 529 s a 216 s en local, y el job de backend en CI de 7m33s a 1m49s, con todos los tests en verde. Producción sigue con bcrypt (RNF #2). La condición mira el subcomando (`sys.argv[1:2]`) y no cualquier argumento, para que otro comando con `test` como valor no guarde contraseñas con MD5. Tests en un proceso aparte verifican los dos casos.
+  - **Corridas viejas**: un push nuevo a un PR cancela la corrida anterior de ese PR. En `main` y `develop` no se corta la corrida en curso; si hay varias en cola, solo queda la última.
+  - **Playwright en dos jobs**: con el backend más rápido, Playwright pasó a ser lo más lento (unos 5 minutos). Se reparte con `--shard` en dos máquinas que corren a la vez. Se gasta algo más de máquina, porque la instalación se repite, y en un repo público los runners estándar no se pagan.
+  - **Descartado por ahora**: `--parallel 4` en los tests del backend, porque falla con 429 (Too Many Requests); falta confirmar la causa, posiblemente estado compartido entre procesos. Saltear jobs según lo que cambió también queda afuera: no se eligió.
+- **Archivos afectados**: `backend/filmai/settings.py`, `backend/filmai/test_seguridad_infra.py`, `.github/workflows/ci.yml`.
+
 ## 04/11/2026 — Navbar siempre visible en escritorio, con fondo según el scroll
 
 - **Fecha**: 04/11/2026

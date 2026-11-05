@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import sys
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import quote, urlsplit
@@ -280,6 +281,12 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.ScryptPasswordHasher",
 ]
+# bcrypt es lento a propósito, y en los tests ese costo no protege nada: cada
+# usuario creado lo paga. Con MD5 la suite tarda 60% menos (medido el 05/11/2026).
+# Se mira el subcomando y no cualquier argumento: `--entorno test` en otro comando
+# guardaría contraseñas con MD5 en una base real. Lo verifica `test_seguridad_infra.py`.
+if sys.argv[1:2] == ["test"]:
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # En desarrollo, sin backend configurado, los emails se imprimen; en producción se exige un backend real para evitar fallos silenciosos.
 EMAIL_BACKEND = config("EMAIL_BACKEND", default="")

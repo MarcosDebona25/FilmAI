@@ -39,6 +39,13 @@ on:
   push:
     branches: [main, develop, "develop/**"]
 
+# Un push nuevo a un PR cancela la corrida anterior de ese PR, que ya quedó
+# vieja. En `main` y `develop` no se corta la corrida en curso: re-verifica lo que
+# entró. Si hay varias en cola, solo queda la última.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # --------------------------------------------------------------------------
   # Frontend: ESLint + TypeScript + Prettier + catálogo + build
@@ -88,9 +95,15 @@ jobs:
         run: python3 -m unittest scripts.test_sync_avatars
         working-directory: .
 
+  # Dos máquinas con la mitad de los tests cada una: el job más lento del CI
+  # tarda menos. `fail-fast: false` deja terminar la otra mitad si una falla.
   e2e:
-    name: Perfil y reseñas (Playwright)
+    name: Perfil y reseñas (Playwright ${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     defaults:
       run:
         working-directory: frontend
@@ -112,7 +125,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Recorridos de perfil
-        run: npm run test:e2e
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/2
 
       # Solo si falla: trace, captura y error-context de cada test caído, para
       # ver qué pasó sin tener que reproducirlo (Playwright los deja en
@@ -121,7 +134,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results
+          name: playwright-test-results-${{ matrix.shard }}
           path: frontend/test-results/
           retention-days: 7
 
