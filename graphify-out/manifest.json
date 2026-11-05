@@ -24,15 +24,15 @@
     "semantic_hash": "e3cc5b25b9137cb4a62384b31295918c"
   },
   "backend/catalogo/cache.py": {
-    "mtime": 1792869113.9951248,
-    "seen": 1793823257.9877481,
-    "ast_hash": "d5511336406b68721cc590e49fef9020",
+    "mtime": 1793886487.704525,
+    "seen": 1793886843.1606276,
+    "ast_hash": "3e0c4e55987e251b7afbee3407b37485",
     "semantic_hash": ""
   },
   "backend/catalogo/client.py": {
-    "mtime": 1793207088.2055876,
-    "seen": 1793823257.987749,
-    "ast_hash": "60bfa25cabe68d59dad7daaf7905d2c2",
+    "mtime": 1793886487.7043355,
+    "seen": 1793886843.1606297,
+    "ast_hash": "bccb35f48e8ad59d8036d54c786a4965",
     "semantic_hash": ""
   },
   "backend/catalogo/exceptions.py": {
@@ -174,8 +174,8 @@
     "semantic_hash": "bc1b1fc0a738c48def56537c0830037a"
   },
   "backend/filmai/settings.py": {
-    "mtime": 1793847034.0609,
-    "seen": 1793847070.193443,
+    "mtime": 1793847332.3793674,
+    "seen": 1793886843.1640997,
     "ast_hash": "446b84177b8adc420edc1366526a4391",
     "semantic_hash": ""
   },
@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   ".github/workflows/ci.yml": {
-    "mtime": 1793847055.2907608,
-    "seen": 1793847070.213341,
+    "mtime": 1793847332.377615,
+    "seen": 1793886843.1825252,
     "ast_hash": "a1b22c89adcf006d184d2d3ad0478e29",
     "semantic_hash": ""
   },
@@ -576,15 +576,15 @@
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
-    "mtime": 1792869115.4944534,
-    "seen": 1793823257.9883885,
-    "ast_hash": "e7db9d5b9e9af9cc6fa0678920225229",
+    "mtime": 1793886817.2156653,
+    "seen": 1793886843.1842582,
+    "ast_hash": "37fc670434b3be6d1955908b66678053",
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793847055.2945805,
-    "seen": 1793847070.215408,
-    "ast_hash": "d7e25d1cd0433c8e71c0b8612eed8ce4",
+    "mtime": 1793886550.7339756,
+    "seen": 1793886843.1842904,
+    "ast_hash": "cac521862c2eb1221d40ab7685da812f",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1793845200.2576096,
-    "seen": 1793847070.2079682,
+    "mtime": 1793882909.9735558,
+    "seen": 1793886843.1773787,
     "ast_hash": "b6dfa5c8462e15a4f8cb9911eb4d6b66",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1793845200.2576096,
-    "seen": 1793847070.20801,
+    "mtime": 1793882909.985556,
+    "seen": 1793886843.1774178,
     "ast_hash": "72b243bc33ffe31055f1a78635beb353",
     "semantic_hash": ""
   },
@@ -2670,9 +2670,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/services/fallback.py": {
-    "mtime": 1792869113.9969778,
-    "seen": 1793823257.987782,
-    "ast_hash": "0f6dac4c1a64d00c6a21460cccb0d147",
+    "mtime": 1793886487.7046988,
+    "seen": 1793886843.1615155,
+    "ast_hash": "149f7119f5c9ad04c50d3668fc925cbd",
     "semantic_hash": ""
   },
   "backend/catalogo/services/traducciones.py": {
@@ -4272,8 +4272,8 @@
     "semantic_hash": ""
   },
   "backend/filmai/test_seguridad_infra.py": {
-    "mtime": 1793847034.0610528,
-    "seen": 1793847070.193806,
+    "mtime": 1793847332.3795319,
+    "seen": 1793886843.164459,
     "ast_hash": "deb933e1f8765b085fbdad65f06c7945",
     "semantic_hash": ""
   },
@@ -4290,9 +4290,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/design.md": {
-    "mtime": 1793846542.4884043,
-    "seen": 1793847070.2155929,
-    "ast_hash": "3622045d9311f3ae88196963903c9de6",
+    "mtime": 1793886550.7296371,
+    "seen": 1793886843.1844437,
+    "ast_hash": "1fc40c2a7c1704940cebb60de03e9780",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/proposal.md": {
@@ -4320,9 +4320,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/tasks.md": {
-    "mtime": 1793846542.488948,
-    "seen": 1793847070.2157323,
-    "ast_hash": "bdae05838b3c908520716aaeb0f60d80",
+    "mtime": 1793886550.7298903,
+    "seen": 1793886843.1846063,
+    "ast_hash": "bd70f803e56ef842815b7cf72ba73762",
     "semantic_hash": ""
   },
   "backend/chatbot/eventos.py": {
@@ -4419,6 +4419,66 @@
     "mtime": 1793846542.4614775,
     "seen": 1793847070.2096677,
     "ast_hash": "5095c900632c8e999a1171548c35e045",
+    "semantic_hash": ""
+  },
+  "backend/catalogo/tests_cliente_chatbot.py": {
+    "mtime": 1793886487.7048292,
+    "seen": 1793886843.1623838,
+    "ast_hash": "09f88433de8899bd3b0860b25289fde7",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/anonimizar.py": {
+    "mtime": 1793885543.8629372,
+    "seen": 1793886843.1628292,
+    "ast_hash": "0b0b621058807c41cdabbf217f6f9c0d",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/contexto.py": {
+    "mtime": 1793885617.031214,
+    "seen": 1793886843.1628647,
+    "ast_hash": "b1162e723dbbdefe7aed44948692acaf",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tests_contexto.py": {
+    "mtime": 1793885635.8693914,
+    "seen": 1793886843.16318,
+    "ast_hash": "795567e12ffba49de18dfd07b69465c6",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tests_tools.py": {
+    "mtime": 1793886487.9953852,
+    "seen": 1793886843.163214,
+    "ast_hash": "eb3f981f8deeced537d4f0b8efb828ec",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tools/__init__.py": {
+    "mtime": 1793885889.2138083,
+    "seen": 1793886843.1632154,
+    "ast_hash": "b6a4ae74e0cf853363922d14ba283c79",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tools/busqueda.py": {
+    "mtime": 1793886487.7049544,
+    "seen": 1793886843.1632164,
+    "ast_hash": "39e89351bc86a08baf9c00f380030035",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tools/esquemas.py": {
+    "mtime": 1793885889.2095594,
+    "seen": 1793886843.1632178,
+    "ast_hash": "14f00a2e5df03b1c17306f3e4bc52d15",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tools/personales.py": {
+    "mtime": 1793886347.8744304,
+    "seen": 1793886843.163219,
+    "ast_hash": "65f9bacf8616b6168a54f0bc9aa16ad8",
+    "semantic_hash": ""
+  },
+  "backend/chatbot/tools/turno.py": {
+    "mtime": 1793885985.0941265,
+    "seen": 1793886843.1632197,
+    "ast_hash": "71d15d5aff38ac5f51bc46488b29cb2c",
     "semantic_hash": ""
   }
 }
