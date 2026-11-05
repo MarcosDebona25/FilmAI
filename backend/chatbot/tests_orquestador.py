@@ -5,9 +5,12 @@ el código que corre en `en_hilo` ve la transacción del test.
 """
 
 import json
+from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase, override_settings
 
 from catalogo.models import Calificacion, ProduccionAudiovisual, TipoProduccion
@@ -291,6 +294,7 @@ class ReglasDelPromptTests(SimpleTestCase):
 
         self.assertIn("`vista: true`", sistema)
         self.assertIn("avisale que ya lo vio", sistema)
+        self.assertIn("aunque ya lo haya visto", sistema)
 
     def test_el_estilo_cambia_con_el_idioma(self):
         self.assertIn("voseo", armar_sistema("", [], "es"))
@@ -321,6 +325,50 @@ class PresupuestoDeTmdbTests(BaseOrquestador):
 
         self.assertEqual(eventos[-1].texto, "Listo")
         self.assertIn("tool_failed", self.proveedor.pedidos[1][-1]["content"])
+
+
+class ComandoChatearTests(TestCase):
+    def setUp(self):
+        self.usuario = UsuarioFactory(nombre_usuario="juanp")
+
+    def chatear(self, guion, **opciones):
+        salida = StringIO()
+        with patch(
+            "chatbot.orquestador.crear_proveedor", return_value=ProveedorFalso(guion)
+        ):
+            call_command(
+                "chatear",
+                usuario="juanp",
+                mensaje="hola",
+                stdout=salida,
+                stderr=salida,
+                **opciones,
+            )
+        return salida.getvalue()
+
+    def test_imprime_la_respuesta_y_guarda_el_turno(self):
+        salida = self.chatear([["Hola, ", "che"]])
+
+        self.assertIn("Hola, che", salida)
+        self.assertEqual(
+            list(Mensaje.objects.values_list("autor", "texto").order_by("id")),
+            [("usuario", "hola"), ("chatbot", "Hola, che")],
+        )
+
+    def test_sin_guardar_no_toca_el_historial(self):
+        self.chatear([["Hola"]], sin_guardar=True)
+
+        self.assertEqual(Mensaje.objects.count(), 0)
+
+    def test_si_el_turno_falla_lo_avisa_y_no_guarda(self):
+        salida = self.chatear([[RuntimeError("503")]])
+
+        self.assertIn("error del turno", salida)
+        self.assertEqual(Mensaje.objects.count(), 0)
+
+    def test_un_usuario_que_no_existe_es_un_error_claro(self):
+        with self.assertRaises(CommandError):
+            call_command("chatear", usuario="nadie", mensaje="hola")
 
 
 def fragmento(*, contenido=None, llamadas=None, razonamiento=None):
