@@ -39,6 +39,12 @@ on:
   push:
     branches: [main, develop, "develop/**"]
 
+# Un push nuevo a un PR cancela la corrida anterior de ese PR, que ya quedó
+# vieja. Los push a `main` y `develop` no se cancelan: re-verifican lo que entró.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # --------------------------------------------------------------------------
   # Frontend: ESLint + TypeScript + Prettier + catálogo + build
