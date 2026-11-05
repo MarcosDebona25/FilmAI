@@ -13,10 +13,15 @@ _TOPE_ITEMS_DE_LISTA = 30
 
 
 def _nombre_visible(lista, usuario):
+    """El nombre de una lista sin datos personales: lo escribió el usuario."""
     return anonimizar(lista.nombre, usuario, ESTRICTO)
 
 
 def _buscar_lista(usuario, referencia):
+    """Encuentra una lista del usuario por clave (`vistas`) o por id (`"69"`).
+
+    Devuelve `None` si no existe o no es suya.
+    """
     # Siempre filtrado por el usuario del turno: un `id` ajeno no existe para él.
     listas = Lista.objects.filter(usuario=usuario)
     if referencia in ClaveLista.values:
@@ -56,6 +61,7 @@ def mis_listas(ctx, lista=None):
 
 
 def _clave_de(pedida):
+    """Convierte lo que mandó el modelo en `(id_tmdb, tipo)`, o `None` si vino mal armado."""
     try:
         return (int(pedida["id_tmdb"]), pedida["tipo"])
     except (KeyError, TypeError, ValueError):

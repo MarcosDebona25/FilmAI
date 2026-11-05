@@ -40,6 +40,7 @@ class ContextoTurno:
     # `cls` es la clase, como `self` es el objeto: `cls(...)` crea el objeto.
     @classmethod
     def para(cls, usuario, idioma):
+        """Crea el contexto de un turno y lee una sola vez qué ya vio el usuario."""
         return cls(usuario=usuario, idioma=idioma, vistas=vistos(usuario))
 
 
