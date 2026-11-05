@@ -156,14 +156,14 @@ its own message, adding a code is additive.
 | Recommendation searches drop «Vistas» **and** `mostrar_tarjetas` validates ids | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
 | `mostrar_tarjetas` keeps only ids returned by a tool in this turn, cuts to 3 | Trust the model's ids | Anchoring: no invented titles reach a card. Invalid ids are dropped silently (09/10). |
 | Cards stored as shown, in the turn language, no FK | A `Tarjeta` model | 09/10/2026: history returns them as they were; no `materializar()` per card inside the RNF #6 budget. |
-| History sent to the model = last 10 messages, text only, cards appended as a line «[Tarjetas: Moon (2009), …]» | Send tool transcripts | Tool calls are not persisted; the line tells the model what it already showed. `Chat.contexto.ya_recomendados` keeps the last 30 cards as `{id_tmdb, tipo, titulo, anio}` and the system prompt renders them as titles («Ya recomendados: Moon (2009), …»): bare TMDB ids would mean nothing to the model. |
+| History sent to the model = last 10 messages, text only | Send tool transcripts; a line «[Tarjetas: Moon (2009), …]» per answer | Tool calls are not persisted. The line was dropped (05/11/2026): the model imitated it as text instead of calling `mostrar_tarjetas`, and `ya_recomendados` already says what it showed. `Chat.contexto.ya_recomendados` keeps the last 30 cards as `{id_tmdb, tipo, titulo, anio}` and the system prompt renders them as titles («Ya recomendados: Moon (2009), …»): bare TMDB ids would mean nothing to the model. |
 | Profile by SQL on every message | Precompute into `Chat.contexto` | 08/10/2026. |
 | `deepseek-flash`, thinking **off** (`{"thinking": {"type": "disabled"}}`), `max_tokens` 800 | Thinking on | 28/10 test: 2.2 s to first text vs 2.8 s, and thinking + tools demands echoing `reasoning_content` every round. `LLM_THINKING` in `.env` turns it on for the golden-set comparison; with it on, the provider echoes each round's `reasoning_content` back in the assistant message (DeepSeek answers 400 otherwise). |
 | Ollama `keep_alive` from `OLLAMA_KEEP_ALIVE` (`30m`; `-1m` on a server) on every call | Default 5 min / forever | Cold load measured between 2 and 24 s; 30 min covers a session without pinning 1.24 GB forever. |
 
 ## Tools
 
-Each tool = a JSON schema (strict) + a **sync** function `(ctx, **args)` where
+Each tool = a JSON schema + a **sync** function `(ctx, **args)` where
 `ctx` carries `usuario`, `idioma` (the turn language, fixed once) and the set of
 ids seen this turn. Search tools return `ProduccionResumen` items:
 `{id_tmdb, tipo, titulo, anio, generos, duracion, nota_tmdb, sinopsis_corta}`,
@@ -337,8 +337,9 @@ so it lives as one constant in the backend and one in the frontend. Dependencies
   the C-01 fake transport.
 - **Unit**: tools, filters, `mostrar_tarjetas`, profile, anonymizer, prompt
   assembly, SSE frame encoding.
-- **Async**: the orchestrator with `ProveedorFalso` (`async_to_sync` in the test
-  or `IsolatedAsyncioTestCase`); the view with Django's `AsyncClient` —
+- **Async**: the orchestrator with `ProveedorFalso`, as `async def` tests in Django's
+  `TestCase`, not `IsolatedAsyncioTestCase`, where the bridge lands in another
+  thread; the view with Django's `AsyncClient` —
   streaming, pre-stream errors, the lock, the hourly limit, persistence only on
   `fin`. Cancellation goes through `get_asgi_application()` with a fake
   `receive` that sends `http.disconnect` (the `AsyncClient` cannot simulate a

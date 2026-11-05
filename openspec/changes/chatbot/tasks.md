@@ -191,7 +191,7 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
       `ErrorDelTurno`; tool exception → turn continues (the 25 s timeout is
       the view's, task 5.6b)
 - [ ] 3.6 RED: the messages sent to the provider contain the anonymized
-      profile, ≤ 10 history messages with the cards line, `ya_recomendados`
+      profile, ≤ 10 history messages, `ya_recomendados`
       rendered as titles and years (no bare ids),
       the anonymized current message, and no full name/email/username
 - [ ] 3.7 RED: two tools of the same turn, each through the bridge, add to the
