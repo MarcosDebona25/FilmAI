@@ -6,9 +6,29 @@ de `backend/`) y no levantan ningún contenedor.
 """
 
 import re
+import subprocess
+import sys
 
 from django.conf import settings
 from django.test import SimpleTestCase
+
+
+class HasheoDeContrasenasTests(SimpleTestCase):
+    def test_fuera_de_los_tests_se_usa_bcrypt(self):
+        """RNF #2. Corre en otro proceso: acá adentro aplica el hasher de los tests."""
+        codigo = (
+            "import os; os.environ['DJANGO_SETTINGS_MODULE'] = 'filmai.settings'; "
+            "from django.conf import settings; print(settings.PASSWORD_HASHERS[0])"
+        )
+        salida = subprocess.run(
+            [sys.executable, "-c", codigo],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=settings.BASE_DIR,
+        )
+
+        self.assertIn("BCryptSHA256PasswordHasher", salida.stdout)
 
 
 class ComposePostgresTests(SimpleTestCase):
