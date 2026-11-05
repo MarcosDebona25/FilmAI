@@ -63,7 +63,6 @@ from catalogo.services.embeddings import (
     MODEL_VERSION,
     calcular_source_hash,
     construir_texto_canonico,
-    generar_vector,
 )
 from catalogo.services.materialization import (
     _necesita_enriquecimiento,
@@ -1183,12 +1182,6 @@ class TextoCanonicoTests(SimpleTestCase):
         # SHA-256 en hexadecimal: 64 caracteres, que es el max_length del campo.
         self.assertEqual(len(calcular_source_hash(texto)), 64)
 
-    def test_el_proveedor_todavia_no_esta_implementado(self):
-        # Contrato explícito para B-06: hasta que Marcos conecte Ollama, la
-        # tarea de Celery captura esto y deja el embedding en `failed`.
-        with self.assertRaises(NotImplementedError):
-            generar_vector("cualquier texto")
-
     def test_hay_una_version_de_modelo_declarada(self):
         self.assertTrue(MODEL_VERSION)
         self.assertLessEqual(len(MODEL_VERSION), 50)
@@ -1293,15 +1286,6 @@ class GenerarEmbeddingTaskTests(TestCase):
         embedding.refresh_from_db()
         self.assertEqual(embedding.estado, EstadoEmbedding.FAILED)
         self.assertGreater(embedding.fecha_actualizacion, vieja)
-
-    def test_con_el_stub_real_queda_failed(self):
-        # Sin mocks: hoy `generar_vector` lanza NotImplementedError (B-06).
-        ProduccionEmbedding.objects.create(produccion=self.produccion)
-
-        generar_embedding(self.produccion.id)
-
-        embedding = ProduccionEmbedding.objects.get(produccion=self.produccion)
-        self.assertEqual(embedding.estado, EstadoEmbedding.FAILED)
 
     @patch("catalogo.tasks.generar_vector", return_value=[0.5] * 1024)
     def test_un_failed_se_reintenta(self, generar):

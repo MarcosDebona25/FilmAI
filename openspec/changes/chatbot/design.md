@@ -199,8 +199,10 @@ A tool exception never ends the turn: the model receives
   load ~1.9 s), so a hung Ollama costs the turn at most 3 s. `MODEL_VERSION = "bge-m3"`: every
   stub-era row becomes stale and the backfill regenerates it.
 - `buscar_semantico(consulta, filtros)` → embed the query, cosine distance over
-  `estado = ready` with the HNSW index, overfetch 50, apply the SQL filters,
-  top 10. The filters are not in the vector (18/08/2026); the 28/10 quality
+  `estado = ready` with the HNSW index (`hnsw.ef_search = 100`: the default 40
+  would silently cap the 50 candidates), overfetch 50, apply the SQL filters,
+  top 10. `generos` are the English names and any match counts; `tipo` and
+  `excluir` use TMDB's `movie`/`tv`. The filters are not in the vector (18/08/2026); the 28/10 quality
   check («para chicos» ranked *About Time* above *Paddington 2*) is the case
   they correct.
 - **Development**: Ollama for Windows on each machine. Containers reach it
