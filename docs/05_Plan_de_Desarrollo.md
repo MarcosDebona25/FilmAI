@@ -121,3 +121,17 @@ Resumen: 10 secciones del canvas completas (3 a 9, 11, 12 y 13) y 1 por desarrol
 | Q-07 | Refactor de riesgo medio (evaluar)  | Evaluar si conviene unificar el flujo de guardar y borrar calificaciones de `TitleView` y `MyReviewsView` en `lib/review-actions.ts`, y los scrolls infinitos en un `useCursorList` + `useSentinel`. Tocan estado y efectos, por eso no entraron en la revisión del 15/10/2026. | Decisión registrada en `docs/decisiones.md`; si se hace, sin cambios de comportamiento y con la suite en verde. | ⬜ Pendiente de evaluación (15/10/2026). Al 16/10/2026 el patrón de cursor + `IntersectionObserver` está copiado en dos pantallas (Mis reseñas y el detalle de Lists) y el centinela en tres (Search, Mis reseñas, Lists); Marcos decidió copiar en vez de extraer los hooks en ese PR. |
 | Q-08 | Correos fuera del pedido            | Mandar los correos transaccionales (confirmación, reenvío, recuperación y aviso de cambio de contraseña) desde una tarea de Celery en lugar de hacerlo dentro del pedido HTTP. Hoy `enviar_correo()` (`filmai/correos/servicio.py`) llama a Resend en el mismo pedido: si Resend tarda, el usuario espera, y si falla, el correo se pierde. La tarea se encola con `transaction.on_commit()` y reintenta con espera creciente (*backoff*), porque los correos no tienen un proceso nocturno que los rescate como los embeddings. Revisar los llamadores que usan el valor devuelto por `send_mail` (`usuarios/adapter.py`, `passwords.py`, `serializers.py`). | Ningún pedido espera a Resend; una falla transitoria de Resend se reintenta sola y una falla definitiva queda en el log sin romper el pedido. | ⬜ Pendiente (30/10/2026). |
 | Q-09 | Embeddings trabados en `processing` | Agregar un vencimiento al reclamo de `generar_embedding`: al pasar a `processing` se renueva `fecha_actualizacion`, y una fila que sigue en `processing` pasado un plazo vuelve a ser reclamable (por la propia tarea y por `backfill_embeddings`). Hoy, si el worker muere a mitad de la tarea, la fila queda en `processing` para siempre y no la recupera nadie. El plazo es de 5 minutos: el peor caso de una tarea son 3 intentos de 10 s. | Una fila abandonada en `processing` se recupera en la corrida siguiente del backfill; una tarea en curso dentro del plazo no se toca. | ✅ Hecha (04/11/2026): vence a los 5 minutos. |
+
+---
+
+## Mejoras futuras
+
+Ideas fuera del alcance actual. No están priorizadas ni comprometidas.
+
+### Recomendaciones dentro de una lista (05/11/2026)
+
+Hoy, una lista vacía invita a explorar, y una con títulos no sugiere nada. La idea es que una lista con títulos proponga otros para agregar, como las playlists de Spotify.
+
+No hace falta entrenar un modelo: alcanza con los vectores de B-06. Se promedian los vectores de los títulos de la lista, se suma el nombre de la lista si dice algo, y se buscan los más cercanos en pgvector, sin lo que ya está en la lista ni las «Vistas». Si la lista tiene pocos títulos con vector, se puede completar con `/recommendations` de TMDB.
+
+La calidad depende del tamaño del catálogo local: con pocos títulos, habrá pocos parecidos.
