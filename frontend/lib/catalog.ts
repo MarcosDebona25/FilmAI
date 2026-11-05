@@ -3,6 +3,8 @@
  * TMDB, venga de `trending`, `discover`, `now-playing` o `recommended`.
  */
 
+import { rutaDeFondo } from "@/lib/fondos";
+
 export type MediaType = "movie" | "tv";
 
 /** Lo que el backend reenvía de TMDB, más la marca del respaldo en inglés. */
@@ -108,7 +110,7 @@ export function normalizeTitle(item: TmdbItem, tipoPorDefecto?: MediaType): Titl
     anio: anio(tipo === "movie" ? item.release_date : item.first_air_date),
     nota: item.vote_average ? item.vote_average : null,
     poster: tmdbImage(item.poster_path, "w342"),
-    backdrop: tmdbImage(item.backdrop_path, "w1280"),
+    backdrop: tmdbImage(rutaDeFondo(tipo, item.id, item.backdrop_path), "w1280"),
     generoIds: item.genre_ids ?? [],
     tituloEnIngles: enIngles.includes(tipo === "movie" ? "title" : "name"),
     sinopsisEnIngles: enIngles.includes("overview"),
