@@ -72,14 +72,15 @@ def mostrar_tarjetas(ctx, tarjetas):
     """Suma tarjetas al turno. Lo que no vale se descarta en silencio.
 
     Solo pasan títulos que una tool devolvió en este turno: así el modelo no
-    puede mostrar uno inventado, y las vistas quedan afuera.
+    puede mostrar uno inventado. Las búsquedas de recomendación nunca anotan
+    títulos vistos, así que uno visto solo llega acá si se pidió directamente.
     """
     elegidas = {(t["id_tmdb"], t["tipo"]) for t in ctx.tarjetas}
     for pedida in tarjetas:
         clave = _clave_de(pedida)
         if len(ctx.tarjetas) == _TOPE_TARJETAS:
             break
-        if clave in ctx.encontrados and clave not in ctx.vistas | elegidas:
+        if clave in ctx.encontrados and clave not in elegidas:
             ctx.tarjetas.append(ctx.encontrados[clave])
             elegidas.add(clave)
     return {"tarjetas": ctx.tarjetas}

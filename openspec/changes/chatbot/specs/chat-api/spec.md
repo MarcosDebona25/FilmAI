@@ -118,9 +118,9 @@ The user message and the bot answer MUST be saved in one transaction only after 
 - WHEN the turn reaches its end
 - THEN the stream ends with `error` and `code: "chat_unavailable"`, not `fin`
 
-### Requirement: Cards come only from this turn's tools and never from «Vistas»
+### Requirement: Cards come only from this turn's tools and recommendations never include «Vistas»
 
-`mostrar_tarjetas` MUST keep only `(id_tmdb, tipo)` pairs returned by a tool earlier in the same turn, drop those in the user's «Vistas», drop duplicates, and keep at most 3 across all its calls in the turn. Dropped cards MUST NOT raise an error. The `tarjetas` event MUST be emitted exactly once per successful turn, after the last `texto` and after the save, immediately before `fin`, and never in a turn that ends in `error` (a failed save included). Every search tool MUST remove «Vistas» from its results before the model sees them.
+`mostrar_tarjetas` MUST keep only `(id_tmdb, tipo)` pairs returned by a tool earlier in the same turn, drop duplicates, and keep at most 3 across all its calls in the turn. Dropped cards MUST NOT raise an error. The `tarjetas` event MUST be emitted exactly once per successful turn, after the last `texto` and after the save, immediately before `fin`, and never in a turn that ends in `error` (a failed save included). Tools that look for what to recommend (`descubrir`, `similares_a`, `buscar_por_persona`, `buscar_semantico`) MUST remove «Vistas» before the model sees them. Direct lookups (`buscar_por_titulo`, `detalle`, `mis_listas`) MUST keep them marked with `vista: true`, so a watched title can be found by name, used as the base of «algo como…», and shown if the user asked for it (05/11/2026).
 
 #### Scenario: Invented id
 

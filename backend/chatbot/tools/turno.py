@@ -80,6 +80,8 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
     """Deja lo que el modelo puede ver y anota esos títulos en el turno.
 
     El póster queda solo en lo anotado: al modelo no le sirve y gasta tokens.
+    Con `sacar_vistas=False` lo visto queda, marcado con `vista` para que el modelo
+    no lo recomiende. Es para consultas directas, no para buscar qué recomendar.
     """
     publicados, repetidos = [], set()
     for item in titulos:
@@ -94,7 +96,10 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
             "poster": item["poster"],
             "anio": item["anio"],
         }
-        publicados.append({k: v for k, v in item.items() if k != "poster"})
+        publicado = {k: v for k, v in item.items() if k != "poster"}
+        if clave in ctx.vistas:
+            publicado["vista"] = True
+        publicados.append(publicado)
         if len(publicados) == tope:
             break
     return publicados
