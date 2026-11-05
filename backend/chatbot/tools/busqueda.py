@@ -1,4 +1,8 @@
-"""Tools que buscan títulos en TMDB y en nuestro catálogo."""
+"""Tools que buscan títulos en TMDB y en nuestro catálogo.
+
+Las llama: `ejecutar()` de `tools/__init__.py`, con el nombre que pide el modelo.
+Usan: `catalogo/services/` (TMDB y `semantica.py`) y `publicar()` de `turno.py`.
+"""
 
 from django.conf import settings
 

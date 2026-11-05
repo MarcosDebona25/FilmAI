@@ -1,6 +1,9 @@
 """Lo que el modelo sabe de cada tool: nombre, para qué sirve y qué recibe.
 
 Ninguna recibe un usuario: sale del contexto del turno, no de lo que pida el modelo.
+
+Lo usa: el orquestador (PR 3), que se lo manda al modelo en cada llamada. El modelo
+lee estas descripciones para decidir qué tool pedir.
 """
 
 # Los nombres que usa TMDB en inglés, verificados contra la API el 05/11/2026.

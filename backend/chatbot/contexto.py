@@ -1,4 +1,8 @@
-"""El perfil del usuario que recibe el modelo, leído de la base en cada mensaje."""
+"""El perfil del usuario que recibe el modelo, leído de la base en cada mensaje.
+
+Lo usa: `prompts.py` (PR 3), que lo pone en las instrucciones del modelo.
+Usa: los modelos `Calificacion` y `Tiene`, y `anonimizar()` para las reseñas.
+"""
 
 from catalogo.models import Calificacion
 from chatbot.anonimizar import ESTRICTO, anonimizar

@@ -3,6 +3,9 @@
 Actúa solo sobre la copia que se manda: lo que se guarda y se muestra queda como
 lo escribió el usuario. Los resultados de TMDB no pasan por acá, porque no son
 datos del usuario y «[usuario] Scorsese» solo los ensuciaría.
+
+Lo usan: `contexto.py` (reseñas), `tools/personales.py` (nombres de listas) y el
+orquestador (PR 3), para el mensaje y el historial.
 """
 
 import re
