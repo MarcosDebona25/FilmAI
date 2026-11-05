@@ -5,6 +5,27 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 05/11/2026 — Herramientas, perfil y anonimizador del chatbot (PR 2)
+
+- **Fecha**: 05/11/2026
+- **Descripción**: fase 2 del SDD. Las 8 tools son funciones síncronas en `chatbot/tools/`, `armar_perfil` lee el perfil de la base en cada mensaje y `anonimizar` limpia lo que viaja al proveedor. Consultar TMDB antes de escribir los tests cambió tres puntos del SDD:
+  - **`similares_a` usa `/recommendations`, no `/similar`**: `/similar` da resultados malos (*Paddington 2* trae *El Señor de los Anillos*, y *Interstellar* trae *Daylight*). Se respeta el orden de TMDB.
+  - **`buscar_por_persona` usa `combined_credits`, no `discover` con `with_people`**: `/discover/tv` ignora ese filtro sin avisar y devuelve cualquier serie. Los créditos traen películas y series en una llamada, y sirven también para directores. Sin `rol`, se cuenta la actuación y la dirección; un productor o guionista no cuenta.
+  - **`duracion_max` solo en películas**: TMDB casi no tiene la duración de las series. Sin `tipo`, un límite de duración busca solo películas; con `tipo=tv`, se ignora. Se pide `with_runtime.gte=1` para dejar afuera las películas con duración 0, que es desconocida.
+  - **Géneros**: el modelo elige entre los nombres en inglés de TMDB, y alcanza con que coincida uno. Como TMDB los nombra distinto (`Science Fiction` y `Sci-Fi & Fantasy`), cada uno se amplía a su equivalente. Si un género no existe en el tipo pedido, no se busca: hacerlo sin el filtro traería cualquier cosa.
+  - **Tarjetas**: `poster` es la ruta de TMDB (`/abc.jpg`), como `poster_path`; el front arma la URL.
+  - **Vistas en consultas directas**: el SDD sacaba las «Vistas» de toda búsqueda, y entonces «algo como Interstellar» fallaba si ya la habían visto, porque el modelo no encontraba el título. Ahora se separan: las búsquedas de recomendación (`descubrir`, `similares_a`, `buscar_por_persona`, `buscar_semantico`) las sacan, y las consultas directas (`buscar_por_titulo`, `detalle`, `mis_listas`) las conservan con `vista: true`. Un título visto puede ser tarjeta solo si llegó por una consulta directa. Que el modelo no lo recomiende por su cuenta depende del prompt (PR 3), no de una validación.
+
+    | Si el usuario pide | Qué hace |
+    |---|---|
+    | «Mostrame Interstellar» (la vio) | La encuentra y muestra la tarjeta |
+    | «¿Cuánto dura Interstellar?» (la vio) | La encuentra y responde |
+    | «Algo como Interstellar» (la vio) | La usa de base para buscar parecidos |
+    | «Recomendame ciencia ficción» | No trae nada visto |
+
+  - **Esquemas**: no se usa `strict`, porque obliga a declarar como requerido cada campo. Se revisa con el proveedor en el PR 3.
+- **Archivos afectados**: `backend/catalogo/{client,cache}.py`, `backend/catalogo/services/fallback.py`, `backend/chatbot/{anonimizar,contexto}.py`, `backend/chatbot/tools/`, `docs/06_TMDB_API_Referencia.md`, `openspec/changes/chatbot/`. Tests: `backend/catalogo/tests_cliente_chatbot.py`, `backend/chatbot/tests_contexto.py`, `backend/chatbot/tests_tools.py`.
+
 ## 05/11/2026 — CI más rápido: hasher rápido en los tests y cancelación de corridas viejas
 
 - **Fecha**: 05/11/2026

@@ -153,7 +153,7 @@ its own message, adding a code is additive.
 | Hourly limit = a fixed-window counter in the cache (`incr`), like `presupuesto.py` | DRF `UserRateThrottle` | The view is not DRF. Same mechanism already used and tested for TMDB. Counts only messages that passed validation and took the lock, so a 409 (Conflict) spends no quota; a 429 (Too Many Requests) releases the lock. |
 | Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: a cancel before the save unwinds the loop and nothing is persisted. A test through `get_asgi_application()` with a real `http.disconnect` pins it (`AsyncClient` cannot simulate one). **The window after the save**: the pair is committed just before `fin` is written, so a cancel in that instant leaves it saved while the panel shows «Solicitud cancelada». That is CU-014's failure postcondition («la cancelación no se procesa a tiempo») and was accepted on 08/10: the answer appears in the history the next time it loads. Rule for the front: whichever the panel processes first wins. A click on «Cancelar» processed before `fin` aborts and discards the answer (CU-014 2.A); once `fin` is processed the turn is over and the button is «Enviar» again, so there is nothing left to cancel. |
 | Save user message and answer **together**, after the last token | Save the question on arrival | A failed or cancelled turn leaves no orphan question (08/10/2026). The front keeps the draft to retry. |
-| Tool results drop «Vistas» **and** `mostrar_tarjetas` validates | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
+| Recommendation searches drop «Vistas» **and** `mostrar_tarjetas` validates ids | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
 | `mostrar_tarjetas` keeps only ids returned by a tool in this turn, cuts to 3 | Trust the model's ids | Anchoring: no invented titles reach a card. Invalid ids are dropped silently (09/10). |
 | Cards stored as shown, in the turn language, no FK | A `Tarjeta` model | 09/10/2026: history returns them as they were; no `materializar()` per card inside the RNF #6 budget. |
 | History sent to the model = last 10 messages, text only, cards appended as a line «[Tarjetas: Moon (2009), …]» | Send tool transcripts | Tool calls are not persisted; the line tells the model what it already showed. `Chat.contexto.ya_recomendados` keeps the last 30 cards as `{id_tmdb, tipo, titulo, anio}` and the system prompt renders them as titles («Ya recomendados: Moon (2009), …»): bare TMDB ids would mean nothing to the model. |
@@ -167,14 +167,16 @@ Each tool = a JSON schema (strict) + a **sync** function `(ctx, **args)` where
 `ctx` carries `usuario`, `idioma` (the turn language, fixed once) and the set of
 ids seen this turn. Search tools return `ProduccionResumen` items:
 `{id_tmdb, tipo, titulo, anio, generos, duracion, nota_tmdb, sinopsis_corta}`,
-synopsis cut at 300 characters, at most 10 items, «Vistas» removed.
+synopsis cut at 300 characters, at most 10 items. Recommendation searches remove
+«Vistas»; direct lookups (`buscar_por_titulo`, `detalle`, `mis_listas`) keep them with
+`vista: true`.
 
 | Tool | Arguments | Backed by |
 |---|---|---|
 | `buscar_por_titulo` | `titulo`, `tipo?`, `anio?` | `search` (exists) |
 | `descubrir` | `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `discover` (exists; generalizes `top_por_genero`) |
-| `similares_a` | `id_tmdb`, `tipo` | **new** `get_similar` → `/movie/{id}/similar`, `/tv/{id}/similar` |
-| `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then `discover` with `with_people` |
+| `similares_a` | `id_tmdb`, `tipo` | **new** `get_recommendations` → `/{tipo}/{id}/recommendations`. Not `/similar`: its results are poor (05/11/2026) |
+| `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then **new** `get_person_credits` → `/person/{id}/combined_credits`. Not `discover` with `with_people`: `/discover/tv` ignores it silently (05/11/2026) |
 | `detalle` | `id_tmdb`, `tipo` | `get_movie_detail` / `get_tv_detail` (exist) |
 | `buscar_semantico` | `consulta`, `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
 | `mis_listas` | `lista?` (`vistas`, `pendientes`, `favoritos`, or the `id` of a custom list) | SQL scoped to `ctx.usuario`. The model never passes a user id. Without `lista` it returns the user's lists as `{id, nombre}`; the model then asks by `id`, never by name (the name the model sees is anonymized, so a lookup by name would fail). |
