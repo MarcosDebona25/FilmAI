@@ -18,7 +18,7 @@ ENDPOINTS_LOCALIZADOS = frozenset(
         "movie_detail",
         "tv_detail",
         "genres",
-        "similar",
+        "recommendations",
         "person_search",
         "person_credits",
     }
@@ -32,8 +32,8 @@ ENDPOINT_TTLS = {
     "movie_detail": 24 * 3600,
     "tv_detail": 24 * 3600,
     "keywords": 24 * 3600,
-    # Lo que usa el chatbot: los similares y la filmografía cambian poco.
-    "similar": 24 * 3600,
+    # Lo que usa el chatbot: las recomendaciones y la filmografía cambian poco.
+    "recommendations": 24 * 3600,
     "person_search": 24 * 3600,
     "person_credits": 24 * 3600,
     # El reparto de una producción ya estrenada casi no cambia: mismo TTL
@@ -281,10 +281,12 @@ class TMDBClientCache:
             "tv_detail", params, lambda: self.client.get_tv_detail(id_tmdb)
         )
 
-    def get_similar(self, id_tmdb, tipo):
+    def get_recommendations(self, id_tmdb, tipo):
         params = {"id_tmdb": id_tmdb, "tipo": tipo}
         return self._cached_call(
-            "similar", params, lambda: self.client.get_similar(id_tmdb, tipo)
+            "recommendations",
+            params,
+            lambda: self.client.get_recommendations(id_tmdb, tipo),
         )
 
     def search_person(self, nombre):

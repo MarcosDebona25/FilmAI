@@ -92,8 +92,8 @@ class CatalogoConRespaldo:
     def search(self, *args, **kwargs):
         return self._listado("search", *args, **kwargs)
 
-    def get_similar(self, *args, **kwargs):
-        return self._listado("get_similar", *args, **kwargs)
+    def get_recommendations(self, *args, **kwargs):
+        return self._listado("get_recommendations", *args, **kwargs)
 
 
 def servicio_localizado(idioma_tmdb, fabrica):

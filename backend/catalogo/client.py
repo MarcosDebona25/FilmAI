@@ -217,8 +217,10 @@ class TMDBClient:
     def get_tv_detail(self, id_tmdb):
         return self._get_localizado(f"/tv/{id_tmdb}")
 
-    def get_similar(self, id_tmdb, tipo):
-        return self._get_localizado(f"/{tipo}/{id_tmdb}/similar")
+    def get_recommendations(self, id_tmdb, tipo):
+        # No `/similar`: compara poco más que géneros y para Paddington 2 trae El
+        # Señor de los Anillos. Este usa lo que ve la gente (05/11/2026).
+        return self._get_localizado(f"/{tipo}/{id_tmdb}/recommendations")
 
     def search_person(self, nombre):
         return self._get_localizado("/search/person", {"query": nombre})

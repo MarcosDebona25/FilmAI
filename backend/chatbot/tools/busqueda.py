@@ -74,12 +74,13 @@ def _desde_tmdb(item, tipo, generos):
     )
 
 
-def _publicar_de_tmdb(ctx, servicio, por_tipo, orden):
+def _publicar_de_tmdb(ctx, servicio, por_tipo, orden=None):
     generos = {tipo: _nombres_de_generos(servicio, tipo) for tipo in por_tipo}
     mezclados = [
         (item, tipo) for tipo, items in por_tipo.items() for item in items or []
     ]
-    mezclados.sort(key=lambda par: par[0].get(orden) or 0, reverse=True)
+    if orden:
+        mezclados.sort(key=lambda par: par[0].get(orden) or 0, reverse=True)
     return publicar(
         ctx, [_desde_tmdb(item, tipo, generos[tipo]) for item, tipo in mezclados]
     )
@@ -126,8 +127,9 @@ def descubrir(
 
 def similares_a(ctx, id_tmdb, tipo):
     servicio = _servicio(ctx)
-    items = servicio.get_similar(id_tmdb, tipo).get("results")
-    return {"resultados": _publicar_de_tmdb(ctx, servicio, {tipo: items}, "popularity")}
+    # Sin ordenar: TMDB ya las trae de la más parecida a la menos parecida.
+    items = servicio.get_recommendations(id_tmdb, tipo).get("results")
+    return {"resultados": _publicar_de_tmdb(ctx, servicio, {tipo: items})}
 
 
 def buscar_por_persona(ctx, nombre, rol=None):

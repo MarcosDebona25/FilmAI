@@ -73,8 +73,8 @@ class CatalogoFalso:
         self.llamadas.append(("discover", tipo, filtros))
         return {"results": self.resultados[tipo]}
 
-    def get_similar(self, id_tmdb, tipo):
-        self.llamadas.append(("similar", id_tmdb, tipo))
+    def get_recommendations(self, id_tmdb, tipo):
+        self.llamadas.append(("recomendaciones", id_tmdb, tipo))
         return {"results": self.resultados[tipo]}
 
     def search_person(self, nombre):
@@ -179,6 +179,18 @@ class FormaDeLosResultadosTests(BaseTools):
         )
 
         self.assertIsNone(resultado["resultados"][0]["anio"])
+
+    def test_similares_respeta_el_orden_de_tmdb(self):
+        self.catalogo.resultados["movie"] = [
+            pelicula(1, popularity=1.0),
+            pelicula(2, popularity=99.0),
+        ]
+
+        resultado = ejecutar(
+            self.contexto(), "similares_a", {"id_tmdb": 5, "tipo": "movie"}
+        )
+
+        self.assertEqual([r["id_tmdb"] for r in resultado["resultados"]], [1, 2])
 
     def test_devuelve_como_mucho_10(self):
         self.catalogo.resultados["movie"] = [pelicula(i) for i in range(15)]
@@ -602,7 +614,9 @@ class MisListasTests(BaseTools):
 
 class FallosTests(BaseTools):
     def test_una_tool_que_explota_no_termina_el_turno(self):
-        with patch.object(self.catalogo, "get_similar", side_effect=RuntimeError("x")):
+        with patch.object(
+            self.catalogo, "get_recommendations", side_effect=RuntimeError("x")
+        ):
             resultado = ejecutar(
                 self.contexto(), "similares_a", {"id_tmdb": 5, "tipo": "movie"}
             )
@@ -611,7 +625,9 @@ class FallosTests(BaseTools):
 
     def test_el_tope_de_llamadas_a_tmdb_es_un_error_de_tool(self):
         with patch.object(
-            self.catalogo, "get_similar", side_effect=TMDBPresupuestoAgotado("tope")
+            self.catalogo,
+            "get_recommendations",
+            side_effect=TMDBPresupuestoAgotado("tope"),
         ):
             resultado = ejecutar(
                 self.contexto(), "similares_a", {"id_tmdb": 5, "tipo": "movie"}
