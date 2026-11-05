@@ -135,3 +135,9 @@ Hoy, una lista vacía invita a explorar, y una con títulos no sugiere nada. La 
 No hace falta entrenar un modelo: alcanza con los vectores de B-06. Se promedian los vectores de los títulos de la lista, se suma el nombre de la lista si dice algo, y se buscan los más cercanos en pgvector, sin lo que ya está en la lista ni las «Vistas». Si la lista tiene pocos títulos con vector, se puede completar con `/recommendations` de TMDB.
 
 La calidad depende del tamaño del catálogo local: con pocos títulos, habrá pocos parecidos.
+
+### Lista predeterminada «Viendo» (05/11/2026)
+
+Una serie se ve durante semanas, y hoy no encaja ni en Pendientes ni en Vistas. La idea es sumar una cuarta lista predeterminada, con el recorrido Pendientes → Viendo → Vistas.
+
+Implica sumar reglas entre listas (entrar a Viendo saca de Pendientes y pasar a Vistas saca de Viendo), resolver la ficha, que ya tiene varios botones (quizá un solo botón de estado), crear la lista en las cuentas existentes con una migración, y actualizar los casos de uso de Listas. En el chatbot, lo que se está viendo no debería recomendarse, y además suma al perfil del usuario.
