@@ -57,6 +57,10 @@ _FILTROS = {
 
 
 def _esquema(nombre, descripcion, propiedades, requeridas=()):
+    """Arma una tool en el formato que espera la API compatible con OpenAI.
+
+    `additionalProperties: False` le indica al modelo que no invente otros argumentos.
+    """
     return {
         "type": "function",
         "function": {

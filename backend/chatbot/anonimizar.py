@@ -37,6 +37,11 @@ def _frase(texto):
 
 
 def _candidatos(usuario, alcance):
+    """Los textos a reemplazar, según el alcance.
+
+    Siempre el nombre completo. En `ESTRICTO`, además, cada parte suelta y el usuario.
+    En `CONVERSACION`, el usuario, salvo que sea igual al nombre o al apellido.
+    """
     nombre = usuario.nombre.strip()
     apellido = usuario.apellido.strip()
     nombre_usuario = usuario.nombre_usuario.strip()

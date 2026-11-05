@@ -28,18 +28,22 @@ _EQUIVALENTES = {
 
 
 def _servicio(ctx):
+    """El catálogo de TMDB en el idioma del turno, con respaldo en inglés."""
     return servicio_localizado(settings.IDIOMAS_TMDB[ctx.idioma], get_catalog_service)
 
 
 def _servicio_en_ingles():
+    """El catálogo en inglés: los géneros se comparan por su nombre en inglés."""
     return get_catalog_service(settings.IDIOMAS_TMDB[settings.IDIOMA_POR_DEFECTO])
 
 
 def _tipos(tipo):
+    """Qué tipos buscar: el pedido o, si no pidió ninguno, películas y series."""
     return [tipo] if tipo else ["movie", "tv"]
 
 
 def _ampliar(generos):
+    """Suma a cada género su equivalente, sin repetir: `Fantasy` trae `Sci-Fi & Fantasy`."""
     ampliados = list(generos or [])
     for genero in generos or []:
         ampliados += _EQUIVALENTES.get(genero, [])
@@ -47,10 +51,15 @@ def _ampliar(generos):
 
 
 def _nombres_de_generos(servicio, tipo):
+    """Un diccionario de id a nombre: TMDB manda ids y el modelo necesita nombres."""
     return {g["id"]: g["name"] for g in servicio.get_genres(tipo)["genres"]}
 
 
 def _ids_de_generos(generos, tipo):
+    """Convierte nombres de géneros en los ids de ese tipo, que es lo que pide TMDB.
+
+    Un género que no existe en el tipo no aparece en el resultado.
+    """
     por_nombre = {
         nombre: id_genero
         for id_genero, nombre in _nombres_de_generos(
@@ -79,6 +88,11 @@ def _desde_tmdb(item, tipo, generos):
 
 
 def _publicar_de_tmdb(ctx, servicio, por_tipo, orden=None):
+    """Junta los resultados de películas y series y los entrega al modelo.
+
+    `por_tipo` es `{"movie": [...], "tv": [...]}`. `orden` es el campo de TMDB por el
+    que se mezclan; sin él, queda el orden en que llegaron.
+    """
     generos = {tipo: _nombres_de_generos(servicio, tipo) for tipo in por_tipo}
     mezclados = [
         (item, tipo) for tipo, items in por_tipo.items() for item in items or []
@@ -91,6 +105,7 @@ def _publicar_de_tmdb(ctx, servicio, por_tipo, orden=None):
 
 
 def buscar_por_titulo(ctx, titulo, tipo=None, anio=None):
+    """Tool: busca por nombre, en películas y series si no se pide un tipo."""
     servicio = _servicio(ctx)
     por_tipo = {
         t: servicio.search(titulo, t, anio=anio).get("results") for t in _tipos(tipo)
@@ -107,6 +122,10 @@ def descubrir(
     nota_minima=None,
     duracion_max=None,
 ):
+    """Tool: busca por datos concretos, como género, año, nota o duración.
+
+    Hace una búsqueda por tipo y las mezcla por popularidad.
+    """
     servicio = _servicio(ctx)
     # TMDB casi no tiene la duración de las series: sin un tipo pedido, un
     # límite de duración significa películas.
@@ -130,6 +149,7 @@ def descubrir(
 
 
 def similares_a(ctx, id_tmdb, tipo):
+    """Tool: títulos parecidos a uno, con las recomendaciones de TMDB."""
     servicio = _servicio(ctx)
     # Sin ordenar: TMDB ya las trae de la más parecida a la menos parecida.
     items = servicio.get_recommendations(id_tmdb, tipo).get("results")
@@ -137,6 +157,13 @@ def similares_a(ctx, id_tmdb, tipo):
 
 
 def buscar_por_persona(ctx, nombre, rol=None):
+    """Tool: lo más votado de un actor o director.
+
+    Primero busca a la persona y después sus créditos. Toma el primer resultado de
+    TMDB, y devuelve `persona` para que el modelo sepa a quién encontró. Un `rol`
+    elige actuación o dirección; sin él, cuentan las dos. Si tuvo varios puestos en un
+    título, `publicar()` saca los repetidos.
+    """
     servicio = _servicio(ctx)
     personas = servicio.search_person(nombre).get("results") or []
     if not personas:
@@ -160,6 +187,7 @@ def buscar_por_persona(ctx, nombre, rol=None):
 
 
 def detalle(ctx, id_tmdb, tipo):
+    """Tool: los datos de un título, con la duración, que los listados no traen."""
     servicio = _servicio(ctx)
     metodo = servicio.get_movie_detail if tipo == "movie" else servicio.get_tv_detail
     # No saca las vistas: el usuario puede preguntar por algo que ya vio.
@@ -178,6 +206,11 @@ def semantico(
     nota_minima=None,
     duracion_max=None,
 ):
+    """Tool: busca por significado en el catálogo local (B-06).
+
+    Si Ollama falla, `buscar_semantico` lanza un error y `ejecutar()` lo convierte en
+    `tool_failed`. Saca las vistas pasándolas en `excluir`.
+    """
     producciones = buscar_semantico(
         consulta,
         generos=_ampliar(generos),
