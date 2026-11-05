@@ -137,7 +137,7 @@ Todas las pantallas autenticadas comparten:
 └──────────────────────────────────────────────────────────┘
 ```
 
-- **Navbar**: 3 links funcionales (Inicio, Buscar, Listas) + avatar a la derecha.
+- **Navbar**: 3 links funcionales (Inicio, Buscar, Listas) + avatar a la derecha. En escritorio queda siempre visible (04/11/2026): transparente con la página arriba de todo, translúcida con desenfoque mientras tiene debajo la imagen del Inicio o de la ficha, y sólida después. En las páginas sin imagen, sólida apenas se desplaza. En celular se va con la página, porque abajo está la barra inferior.
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - "Buscar" click → página `/search` con el buscador.

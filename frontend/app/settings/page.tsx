@@ -125,7 +125,7 @@ export default function SettingsPage() {
         <>
           {/* Id fijo: el footer lleva a `routes.language` (`/settings#t-idioma`). */}
           <section aria-labelledby="t-idioma" className="flex flex-col gap-3.5 md:gap-2">
-            <h2 id="t-idioma" className={`${titulo2} scroll-mt-24 md:mb-2`}>
+            <h2 id="t-idioma" className={`${titulo2} scroll-mt-24 md:mb-2 md:scroll-mt-0`}>
               {t("settings.language.label")}
             </h2>
             <div className="flex flex-col gap-3 border-y border-line py-4 md:flex-row md:items-center md:gap-6 md:py-[1.125rem]">

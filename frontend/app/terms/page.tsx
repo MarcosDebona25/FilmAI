@@ -63,7 +63,7 @@ export default async function TermsPage() {
         </details>
         <nav
           aria-label={nav("termsOnPage")}
-          className="hidden md:sticky md:top-6 md:block md:self-start"
+          className="hidden md:sticky md:top-24 md:block md:self-start"
         >
           <p className="mb-2 px-3 text-xs text-fg-3">{nav("termsOnPage")}</p>
           <ol className="flex flex-col gap-0.5">
