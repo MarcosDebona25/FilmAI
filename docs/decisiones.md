@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 04/11/2026 — Navbar siempre visible en escritorio, con fondo según el scroll
+
+- **Fecha**: 04/11/2026
+- **Descripción**: la navbar se iba con la página, y para cambiar de sección había que volver hasta arriba. El doc 04 ya la describía como «navbar fijo», pero el código no lo hacía. Se eligió que quede siempre visible en escritorio (se descartó esconderla al bajar y mostrarla al subir). En celular no cambia, porque ahí está la barra inferior.
+  - **Fondo**: transparente con la página arriba de todo; translúcido con desenfoque (`bg-background/85`, `backdrop-blur-lg`) mientras tiene debajo la imagen marcada con `data-imagen-bajo-navbar`; sólido después. En las páginas sin imagen, sólido apenas se desplaza.
+  - **Por qué translúcida y no transparente**: con transparencia, el título grande del Inicio y el póster de la ficha pasaban por debajo y tapaban el logo y los enlaces. Se compararon también el sólido inmediato y un degradado.
+  - **Contraste medido**: se tomó el píxel más claro detrás de la barra en el Inicio y la ficha. Con opacidad de 75% el enlace menos visible daba 3,73:1, por debajo del 4,5:1 de WCAG. Con 85%, el peor caso da 5,40:1. Se midió con una película y un título del Inicio; un póster mucho más claro podría dar menos.
+  - **Ajustes**: `scroll-padding-top` de 6rem en escritorio, para que un control enfocado o un salto a una sección no queden debajo de la barra. El índice de Términos pasa a `md:top-24`.
+- **Archivos afectados**: `frontend/components/Navbar.tsx`, `frontend/components/features/HomeHero.tsx`, `frontend/components/features/title/TitleView.tsx`, `frontend/app/globals.css`, `frontend/app/terms/page.tsx`, `frontend/app/settings/page.tsx`, `docs/04_Lineamientos_UI.md`. Tests: `frontend/e2e/navbar-fija.spec.ts` (nuevo).
+
 ## 04/11/2026 — Ancho en pantallas grandes: contenedor único, escala desde 1440 px, filas con tarjetas enteras y tamaños en rem
 
 - **Fecha**: 04/11/2026
