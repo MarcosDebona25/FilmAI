@@ -14,21 +14,34 @@ from django.test import SimpleTestCase
 
 
 class HasheoDeContrasenasTests(SimpleTestCase):
-    def test_fuera_de_los_tests_se_usa_bcrypt(self):
-        """RNF #2. Corre en otro proceso: acá adentro aplica el hasher de los tests."""
+    """RNF #2. Corren en otro proceso: acá adentro aplica el hasher de los tests."""
+
+    def hasher_con_argumentos(self, *argumentos):
         codigo = (
             "import os; os.environ['DJANGO_SETTINGS_MODULE'] = 'filmai.settings'; "
             "from django.conf import settings; print(settings.PASSWORD_HASHERS[0])"
         )
         salida = subprocess.run(
-            [sys.executable, "-c", codigo],
+            [sys.executable, "-c", codigo, *argumentos],
             capture_output=True,
             text=True,
             check=True,
             cwd=settings.BASE_DIR,
         )
+        return salida.stdout
 
-        self.assertIn("BCryptSHA256PasswordHasher", salida.stdout)
+    def test_fuera_de_los_tests_se_usa_bcrypt(self):
+        self.assertIn("BCryptSHA256PasswordHasher", self.hasher_con_argumentos())
+
+    def test_otro_comando_con_el_argumento_test_usa_bcrypt(self):
+        # Por ejemplo, `manage.py cargar_demo --entorno test` sobre una base real.
+        self.assertIn(
+            "BCryptSHA256PasswordHasher",
+            self.hasher_con_argumentos("cargar_demo", "--entorno", "test"),
+        )
+
+    def test_el_comando_test_usa_el_hasher_rapido(self):
+        self.assertIn("MD5PasswordHasher", self.hasher_con_argumentos("test"))
 
 
 class ComposePostgresTests(SimpleTestCase):
