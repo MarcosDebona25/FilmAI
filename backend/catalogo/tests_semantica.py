@@ -5,11 +5,13 @@ ver qué pedido salió, cuántas veces y con qué timeout.
 """
 
 import json
+import logging
 import math
 from datetime import date, timedelta
 from unittest.mock import patch
 
 import httpx
+from django.core.cache import cache
 from django.db import connection
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
@@ -24,9 +26,15 @@ from catalogo.services.embeddings import (
     MODEL_VERSION,
     EmbeddingProviderError,
     generar_vector,
+    modelo_cargado,
 )
-from catalogo.services.semantica import buscar_semantico
-from catalogo.tasks import backfill_embeddings, generar_embedding
+from catalogo.services.semantica import buscar_semantico, pedir_carga_del_modelo
+from catalogo.tasks import (
+    CLAVE_CARGA_MODELO,
+    backfill_embeddings,
+    calentar_modelo,
+    generar_embedding,
+)
 
 VECTOR = [0.1] * 1024
 
@@ -35,7 +43,7 @@ def respuesta_ollama(vector=VECTOR):
     return httpx.Response(200, json={"model": "bge-m3", "embeddings": [vector]})
 
 
-@override_settings(OLLAMA_URL="http://ollama.test:11434")
+@override_settings(OLLAMA_URL="http://ollama.test:11434", OLLAMA_KEEP_ALIVE="30m")
 class GenerarVectorTests(SimpleTestCase):
     def llamar(self, responder, **presupuesto):
         self.pedidos = []
@@ -122,6 +130,98 @@ class GenerarVectorTests(SimpleTestCase):
             self.llamar(lambda request: httpx.Response(200, text="<html>"))
 
 
+@override_settings(OLLAMA_URL="http://ollama.test:11434", OLLAMA_KEEP_ALIVE="-1m")
+class KeepAliveTests(SimpleTestCase):
+    def test_sale_de_la_configuracion(self):
+        pedidos = []
+
+        def responder(request):
+            pedidos.append(json.loads(request.content))
+            return respuesta_ollama()
+
+        generar_vector("hola", transport=httpx.MockTransport(responder))
+
+        self.assertEqual(pedidos[0]["keep_alive"], "-1m")
+
+
+@override_settings(OLLAMA_URL="http://ollama.test:11434")
+class ModeloCargadoTests(SimpleTestCase):
+    def consultar(self, responder):
+        self.pedidos = []
+
+        def registrar(request):
+            self.pedidos.append(request)
+            return responder(request)
+
+        return modelo_cargado(transport=httpx.MockTransport(registrar))
+
+    def test_cargado_si_figura_con_su_etiqueta(self):
+        # Forma real de `/api/ps`, consultada el 05/11/2026.
+        cargado = self.consultar(
+            lambda request: httpx.Response(
+                200, json={"models": [{"name": "bge-m3:latest"}]}
+            )
+        )
+
+        self.assertTrue(cargado)
+        self.assertEqual(str(self.pedidos[0].url), "http://ollama.test:11434/api/ps")
+
+    def test_no_cargado_si_no_hay_modelos(self):
+        self.assertFalse(
+            self.consultar(lambda request: httpx.Response(200, json={"models": []}))
+        )
+
+    def test_no_cargado_si_hay_otro_modelo(self):
+        self.assertFalse(
+            self.consultar(
+                lambda request: httpx.Response(
+                    200, json={"models": [{"name": "bge-m3-otro:latest"}]}
+                )
+            )
+        )
+
+    def test_otra_variante_del_modelo_no_cuenta_como_cargado(self):
+        # `/api/embed` pide `bge-m3`, que es `bge-m3:latest`: otra etiqueta es otra carga.
+        self.assertFalse(
+            self.consultar(
+                lambda request: httpx.Response(
+                    200, json={"models": [{"name": "bge-m3:567m"}]}
+                )
+            )
+        )
+
+    def test_una_entrada_sin_nombre_no_decide_el_resultado(self):
+        self.assertTrue(
+            self.consultar(
+                lambda request: httpx.Response(
+                    200, json={"models": [{"name": None}, {"name": "bge-m3:latest"}]}
+                )
+            )
+        )
+
+    def test_ollama_colgado_se_detecta_en_un_segundo(self):
+        def colgarse(request):
+            raise httpx.ReadTimeout("sin respuesta", request=request)
+
+        with self.assertRaises(EmbeddingProviderError):
+            self.consultar(colgarse)
+
+        self.assertEqual(self.pedidos[0].extensions["timeout"]["read"], 1)
+
+    def test_una_respuesta_rara_es_un_error_del_proveedor(self):
+        for respuesta in (
+            httpx.Response(200, text="<html>"),
+            httpx.Response(200, json={"error": "algo"}),
+            httpx.Response(200, json={"models": None}),
+            httpx.Response(200, json={"models": [5]}),
+        ):
+            with (
+                self.subTest(respuesta.text),
+                self.assertRaises(EmbeddingProviderError),
+            ):
+                self.consultar(lambda request, r=respuesta: r)
+
+
 def vector_a(angulo):
     """Vector a `angulo` radianes de la consulta: más ángulo, más lejos."""
     return [math.cos(angulo), math.sin(angulo)] + [0.0] * 1022
@@ -135,6 +235,12 @@ class BuscarSemanticoTests(TestCase):
             "catalogo.services.semantica.generar_vector", return_value=vector_a(0)
         )
         self.embeber = parche.start()
+        self.addCleanup(parche.stop)
+        parche = patch("catalogo.services.semantica.modelo_cargado", return_value=True)
+        self.cargado = parche.start()
+        self.addCleanup(parche.stop)
+        parche = patch("catalogo.services.semantica.pedir_carga_del_modelo")
+        self.pedir_carga = parche.start()
         self.addCleanup(parche.stop)
         self.proximo_id = 1
 
@@ -165,6 +271,61 @@ class BuscarSemanticoTests(TestCase):
         self.embeber.assert_called_once_with(
             "viajes en el tiempo", timeout=3, reintentos=0
         )
+
+    def test_si_el_modelo_no_esta_cargado_espera_la_carga(self):
+        self.cargado.return_value = False
+
+        buscar_semantico("algo")
+
+        self.embeber.assert_called_once_with("algo", timeout=20, reintentos=0)
+
+    def test_registra_cuanto_espero(self):
+        self.cargado.return_value = False
+
+        with self.assertLogs("catalogo.services.semantica", "INFO") as registro:
+            buscar_semantico("algo")
+
+        self.assertIn("cargado=False", registro.output[0])
+        self.assertRegex(registro.output[0], r"vector_ms=\d+")
+
+    def test_registra_cuanto_espero_tambien_si_falla(self):
+        # Es el caso que más importa medir: la espera de 20 s que no alcanzó.
+        self.cargado.return_value = False
+        self.embeber.side_effect = EmbeddingProviderError("timeout")
+
+        with (
+            self.assertLogs("catalogo.services.semantica", "INFO") as registro,
+            self.assertRaises(EmbeddingProviderError),
+        ):
+            buscar_semantico("algo")
+
+        self.assertIn("cargado=False", registro.output[0])
+
+    def test_ollama_que_no_responde_falla_sin_esperar_la_carga(self):
+        self.cargado.side_effect = EmbeddingProviderError("colgado")
+
+        with self.assertRaises(EmbeddingProviderError):
+            buscar_semantico("algo")
+
+        self.embeber.assert_not_called()
+
+    def test_si_la_carga_no_llega_a_tiempo_sigue_en_segundo_plano(self):
+        # Al cortar, Ollama abandona la carga: otra conexión tiene que seguirla.
+        self.cargado.return_value = False
+        self.embeber.side_effect = EmbeddingProviderError("timeout")
+
+        with self.assertRaises(EmbeddingProviderError):
+            buscar_semantico("algo")
+
+        self.pedir_carga.assert_called_once()
+
+    def test_un_fallo_con_el_modelo_cargado_no_pide_cargarlo(self):
+        self.embeber.side_effect = EmbeddingProviderError("timeout")
+
+        with self.assertRaises(EmbeddingProviderError):
+            buscar_semantico("algo")
+
+        self.pedir_carga.assert_not_called()
 
     def test_solo_considera_los_embeddings_ready(self):
         self.produccion("Lista", 0.5)
@@ -259,6 +420,133 @@ class BuscarSemanticoTests(TestCase):
 
         with self.assertRaises(EmbeddingProviderError):
             buscar_semantico("algo")
+
+
+class RegistroDeLaMedicionTests(SimpleTestCase):
+    def test_la_configuracion_real_deja_salir_la_medicion(self):
+        # `assertLogs` arma su propio nivel y handler: sin esto, la medición podía
+        # no salir nunca y los tests seguir pasando.
+        registro = logging.getLogger("catalogo.services.semantica")
+
+        self.assertTrue(registro.isEnabledFor(logging.INFO))
+        self.assertTrue(registro.handlers)
+
+
+class CalentarModeloTests(SimpleTestCase):
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    def test_no_guarda_resultado(self):
+        # Con resultado, un broker caído bloqueaba 19 s antes de fallar.
+        self.assertTrue(calentar_modelo.ignore_result)
+
+    def test_si_falla_libera_el_pedido_para_que_otro_la_reintente(self):
+        cache.set(CLAVE_CARGA_MODELO, True, 60)
+
+        with patch(
+            "catalogo.tasks.generar_vector", side_effect=EmbeddingProviderError("x")
+        ):
+            calentar_modelo()
+
+        self.assertIsNone(cache.get(CLAVE_CARGA_MODELO))
+
+    def test_carga_el_modelo_sin_apuro(self):
+        with patch("catalogo.tasks.generar_vector") as generar:
+            calentar_modelo()
+
+        generar.assert_called_once()
+        self.assertEqual(generar.call_args.kwargs["timeout"], 60)
+        self.assertEqual(generar.call_args.kwargs["reintentos"], 0)
+
+    def test_si_ollama_falla_no_reintenta_en_loop(self):
+        with patch(
+            "catalogo.tasks.generar_vector", side_effect=EmbeddingProviderError("x")
+        ):
+            calentar_modelo()
+
+
+class PedirCargaTests(SimpleTestCase):
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    def test_encola_la_carga_con_vencimiento(self):
+        # Sin worker, los pedidos viejos no deben acumularse ni correr horas después.
+        with patch(
+            "catalogo.services.semantica.calentar_modelo.apply_async"
+        ) as encolar:
+            pedir_carga_del_modelo()
+
+        encolar.assert_called_once_with(expires=60)
+
+    def test_el_intervalo_entre_cargas_es_un_minuto(self):
+        with (
+            patch("catalogo.services.semantica.cache.add", return_value=False) as add,
+            patch("catalogo.services.semantica.calentar_modelo.apply_async"),
+        ):
+            pedir_carga_del_modelo()
+
+        add.assert_called_once_with(CLAVE_CARGA_MODELO, True, 60)
+
+    def test_abrir_el_panel_varias_veces_encola_una_sola(self):
+        with patch(
+            "catalogo.services.semantica.calentar_modelo.apply_async"
+        ) as encolar:
+            pedir_carga_del_modelo()
+            pedir_carga_del_modelo()
+
+        encolar.assert_called_once()
+
+    def test_si_el_broker_falla_no_rompe_y_se_puede_reintentar(self):
+        with patch(
+            "catalogo.services.semantica.calentar_modelo.apply_async",
+            side_effect=[ConnectionError("broker"), None],
+        ) as encolar:
+            pedir_carga_del_modelo()
+            pedir_carga_del_modelo()
+
+        self.assertEqual(encolar.call_count, 2)
+
+    def test_si_la_cache_falla_no_rompe_y_no_encola(self):
+        # En producción la caché es Redis: puede caerse igual que el broker.
+        with (
+            patch("catalogo.services.semantica.cache") as cache_caida,
+            patch("catalogo.services.semantica.calentar_modelo.apply_async") as encolar,
+            self.assertLogs("catalogo.services.semantica", "ERROR"),
+        ):
+            cache_caida.add.side_effect = ConnectionError("redis")
+            pedir_carga_del_modelo()
+
+        encolar.assert_not_called()
+
+    def test_si_fallan_el_broker_y_despues_la_cache_no_rompe(self):
+        with (
+            patch("catalogo.services.semantica.cache") as cache_caida,
+            patch(
+                "catalogo.services.semantica.calentar_modelo.apply_async",
+                side_effect=ConnectionError("broker"),
+            ),
+            self.assertLogs("catalogo.services.semantica", "ERROR"),
+        ):
+            cache_caida.add.return_value = True
+            cache_caida.delete.side_effect = ConnectionError("redis")
+            pedir_carga_del_modelo()
+
+    def test_si_la_cache_falla_la_busqueda_conserva_el_error_de_ollama(self):
+        # `tool_failed` depende de que el error de Ollama no se pierda.
+        with (
+            patch("catalogo.services.semantica.modelo_cargado", return_value=False),
+            patch(
+                "catalogo.services.semantica.generar_vector",
+                side_effect=EmbeddingProviderError("timeout"),
+            ),
+            patch("catalogo.services.semantica.cache") as cache_caida,
+            self.assertLogs("catalogo.services.semantica", "ERROR"),
+        ):
+            cache_caida.add.side_effect = ConnectionError("redis")
+            with self.assertRaises(EmbeddingProviderError):
+                buscar_semantico("algo")
 
 
 class VencimientoDeProcessingTests(TestCase):

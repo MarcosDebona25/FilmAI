@@ -5,6 +5,23 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 05/11/2026 — Carga anticipada de bge-m3 y espera en `buscar_semantico`
+
+- **Fecha**: 05/11/2026
+- **Descripción**: revisando el PR 1 apareció un error de diseño. Si cargar el modelo tardaba más de 3 s, el chat cortaba la espera, Ollama abandonaba la carga y la búsqueda semántica fallaba **siempre**, hasta que algo lo cargara por otro lado. El registro del 04/11 decía que solo fallaba la primera consulta, y estaba mal. Se decidió:
+  - **Cargar al abrir el panel**: `POST /api/chat/preparar/` devuelve 202 (Accepted) y encola `calentar_modelo`, que espera hasta 60 s en el worker. Hay una sola carga por minuto, aunque se abra el panel varias veces. La llamada desde el panel es del Canal (PR 6).
+  - **Esperar si todavía no cargó**: una pregunta rápida no sale sin búsqueda. `buscar_semantico` consulta `/api/ps` (1 s): si el modelo está cargado espera 3 s; si no, hasta 20 s, dentro de los 25 s del turno. Si Ollama no responde falla enseguida, así que un Ollama caído no gasta esos 20 s.
+  - **Si la espera no alcanza**: la tool devuelve `tool_failed` y se encola la carga, para que siga en segundo plano.
+  - **Medición**: cada búsqueda registra `cargado` y `vector_ms` en los logs.
+  - **`OLLAMA_KEEP_ALIVE`**: configurable, `30m` por defecto. En un servidor conviene `-1m`, que no lo descarga nunca. Tiene que ser una duración: `-1` como texto da 400 (Bad Request).
+- **Comprobado contra Ollama 0.40.14 (05/11/2026)**:
+  - **Si el cliente corta, Ollama abandona la carga**: 10 de 10 repeticiones, en cargas con la caché de Windows caliente; los logs de cortes a 3 s en frío lo respaldan, pero no hay medición directa.
+  - **Quién pidió primero importa**: si `calentar_modelo` llegó antes, el corte del chat no la afecta (3 de 3). Si el chat fue el primero y corta, la carga arranca de cero (3 de 3). Por eso el panel tiene que pedirla al abrirse: es parte del diseño, no un agregado.
+  - **`/api/ps`** figura recién al terminar la carga y no se bloquea: en unas 3900 consultas ninguna llegó a 1 s. Un pedido que llega con la carga en curso se suma a ella.
+- **Riesgo medido**: de 5 cargas frías completas (13,3; 14,4; 21,6; 23,4 y 23,7 s), 3 superan los 20 s, con la PC justa de memoria. Sin carga anticipada, una pregunta en frío probablemente falla. Si el worker no está levantado, la ruta responde 202 pero nada carga, y una carga de más de 20 s nunca termina. Una carga de 19 o 20 s que sí llega puede dejar el turno sin tiempo para las tarjetas (`chat_unavailable`).
+- **Falta**: medir con el panel y el worker reales, con los logs `cargado` y `vector_ms`.
+- **Archivos afectados**: `backend/catalogo/services/{embeddings,semantica}.py`, `backend/catalogo/tasks.py`, `backend/chatbot/{urls,views}.py`, `backend/filmai/{settings,urls}.py`, `contracts/openapi.yaml`, `.env.example`, `openspec/changes/chatbot/`. Tests: `backend/catalogo/tests_semantica.py`, `backend/chatbot/tests_preparar.py`.
+
 ## 05/11/2026 — Herramientas, perfil y anonimizador del chatbot (PR 2)
 
 - **Fecha**: 05/11/2026
@@ -63,7 +80,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Reintentos sin pausa**: el SDD no pide esperar entre intentos; el backfill corre de noche y una fila que falla la retoma la corrida siguiente.
   - **Q-09**: un reclamo en `processing` vence a los 5 minutos. El peor caso de una tarea son 3 intentos de 10 s, y la fecha se renueva al reclamar, así que la espera en la cola no cuenta. El backfill devuelve las vencidas a `pending` antes de reencolar: si solo renovara la fecha, `generar_embedding` vería un reclamo reciente y no las tomaría.
   - **Compose**: perfiles `ollama-windows` (`alpine/socat:1.8.0.3`) y `ollama` (`ollama/ollama:0.40.14`); ninguno arranca por defecto.
-- **Medición real (Gonza, 04/11/2026)**: 402 de 402 producciones en `ready` en 223 s (554 ms por ficha, sin Celery y con Windows casi sin memoria libre). Consultas de `buscar_semantico`: 80 a 125 ms. Con el modelo cargado, un vector tarda unos 60 ms; la carga en frío tardó 21,7 s con 730 MB libres en Windows, contra los 1,9 s medidos el 28/10. En ese caso el presupuesto de 3 s del chat vence y la tool devuelve `tool_failed`: es el comportamiento acordado, y `keep_alive` lo limita a la primera consulta tras 30 minutos sin uso. Falta la corrida de Marcos (tarea 1.7).
+- **Medición real (Gonza, 04/11/2026)**: 402 de 402 producciones en `ready` en 223 s (554 ms por ficha, sin Celery y con Windows casi sin memoria libre). Consultas de `buscar_semantico`: 80 a 125 ms. Con el modelo cargado, un vector tarda unos 60 ms; la carga en frío tardó 21,7 s con 730 MB libres en Windows, contra los 1,9 s medidos el 28/10. En ese caso el presupuesto de 3 s del chat vencía: se corrigió el 05/11/2026 (ver «Carga anticipada de bge-m3»). Falta la corrida de Marcos (tarea 1.7).
 - **Archivos afectados**: `backend/catalogo/services/{embeddings,semantica}.py`, `backend/catalogo/tasks.py`, `backend/catalogo/tests.py`, `backend/catalogo/tests_semantica.py` (nuevo), `backend/filmai/settings.py`, `docker-compose.yml`, `.env.example`, `docs/05_Plan_de_Desarrollo.md`, `openspec/changes/chatbot/`.
 
 ## 04/11/2026 — Ancho en pantallas grandes: contenedor único, escala desde 1440 px, filas con tarjetas enteras y tamaños en rem

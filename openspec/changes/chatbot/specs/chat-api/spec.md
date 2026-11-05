@@ -67,7 +67,7 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 - GIVEN tools and model calls that together keep the turn running (for example, a fake tool that sleeps past the budget)
 - WHEN the turn reaches `LLM_TIMEOUT_SECONDS`
 - THEN the stream ends with `error` and the lock is released
-- AND a hung Ollama is not this case: it fails in 3 s and returns to the model as `tool_failed` (see «Ollama down during a turn»)
+- AND a hung Ollama is not this case: it fails in at most 21 s (1 s of `/api/ps` plus the 20 s load wait) and returns to the model as `tool_failed` (see «Ollama down during a turn»)
 
 ### Requirement: The answer streams as server-sent events
 
