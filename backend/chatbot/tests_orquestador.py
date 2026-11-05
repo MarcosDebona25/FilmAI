@@ -187,6 +187,14 @@ class FallosTests(BaseOrquestador):
 
         self.assertFalse(any(isinstance(e, Resultado) for e in eventos))
 
+    async def test_si_no_se_puede_preparar_el_turno_es_un_error_del_turno(self):
+        # Sin `anio`, `armar_sistema` no puede escribir «Ya recomendados».
+        self.chat.contexto = {"ya_recomendados": [{"titulo": "Moon"}]}
+        await self.chat.asave()
+
+        with self.assertRaises(ErrorDelTurno):
+            await self.correr([["Hola"]])
+
     async def test_una_tool_que_falla_no_termina_el_turno(self):
         with patch.dict(FUNCIONES, {"descubrir": self.explotar}):
             eventos = await self.correr([[tool("descubrir")], ["Sin suerte"]])

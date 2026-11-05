@@ -127,11 +127,11 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     """
     try:
         proveedor = proveedor or crear_proveedor()
+        ctx, mensajes = await en_hilo(_preparar, chat, texto, idioma)
     except Exception as error:
-        # Pasa con un `LLM_PROVIDER` que no existe. La causa queda en el log.
-        logger.exception("El proveedor está mal configurado")
-        raise ErrorDelTurno("El proveedor está mal configurado") from error
-    ctx, mensajes = await en_hilo(_preparar, chat, texto, idioma)
+        # Un `LLM_PROVIDER` que no existe, la base caída o un `contexto` mal armado.
+        logger.exception("No se pudo preparar el turno")
+        raise ErrorDelTurno("No se pudo preparar el turno") from error
     partes = []
 
     for numero_de_vuelta in range(_MAX_VUELTAS_CON_TOOLS + 1):
