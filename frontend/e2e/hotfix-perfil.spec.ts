@@ -60,7 +60,9 @@ for (const width of [390, 1440])
     const trigger = page.getByRole("button", { name: "Cambiar avatar" });
     await expect(trigger).toHaveCSS("cursor", "pointer");
     await page.addStyleTag({ content: "body { min-height: 1600px; }" });
-    await page.evaluate(() => window.scrollTo(0, 80));
+    // Poco scroll a propósito: con más, el botón entra en el `scroll-padding-top`
+    // de la navbar fija y Playwright mueve la página antes de hacer clic.
+    await page.evaluate(() => window.scrollTo(0, 30));
     const bounds = await page.locator("main").boundingBox();
     // El avatar del encabezado; el botón «Cambiar avatar» va encima, aparte.
     const image = page.getByRole("main").getByAltText("Tu avatar");

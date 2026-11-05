@@ -263,7 +263,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   return (
     <main id="contenido" aria-busy={!ficha} className="pb-16">
       {/* Franja de fondo: la barra de navegación va encima (Navbar.tsx). */}
-      <div className="relative h-[17.5rem] overflow-hidden md:h-[38.75rem]">
+      <div data-imagen-bajo-navbar className="relative h-[17.5rem] overflow-hidden md:h-[38.75rem]">
         {ficha?.backdrop ? (
           <Image
             loader={tmdbLoader}

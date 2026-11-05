@@ -5,13 +5,22 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 04/11/2026 — Navbar siempre visible en escritorio, con fondo según el scroll
+
+- **Fecha**: 04/11/2026
+- **Descripción**: la navbar se iba con la página, y para cambiar de sección había que volver hasta arriba. El doc 04 ya la describía como «navbar fijo», pero el código no lo hacía. Se eligió que quede siempre visible en escritorio (se descartó esconderla al bajar y mostrarla al subir). En celular no cambia, porque ahí está la barra inferior.
+  - **Fondo**: transparente con la página arriba de todo; translúcido con desenfoque (`bg-background/85`, `backdrop-blur-lg`) mientras tiene debajo la imagen marcada con `data-imagen-bajo-navbar`; sólido después. En las páginas sin imagen, sólido apenas se desplaza.
+  - **Por qué translúcida y no transparente**: con transparencia, el título grande del Inicio y el póster de la ficha pasaban por debajo y tapaban el logo y los enlaces. Se compararon también el sólido inmediato y un degradado.
+  - **Contraste medido**: se tomó el píxel más claro detrás de la barra en el Inicio y la ficha. Con opacidad de 75% el enlace menos visible daba 3,73:1, por debajo del 4,5:1 de WCAG. Con 85%, el peor caso da 5,40:1. Se midió con una película y un título del Inicio; un póster mucho más claro podría dar menos.
+  - **Ajustes**: `scroll-padding-top` de 6rem en escritorio, para que un control enfocado o un salto a una sección no queden debajo de la barra. El índice de Términos pasa a `md:top-24`.
+- **Archivos afectados**: `frontend/components/Navbar.tsx`, `frontend/components/features/HomeHero.tsx`, `frontend/components/features/title/TitleView.tsx`, `frontend/app/globals.css`, `frontend/app/terms/page.tsx`, `frontend/app/settings/page.tsx`, `docs/04_Lineamientos_UI.md`. Tests: `frontend/e2e/navbar-fija.spec.ts` (nuevo).
 ## 04/11/2026 — Menú «Agregar a lista»: se abre hacia donde hay lugar y no bloquea la rueda
 
 - **Fecha**: 04/11/2026
 - **Descripción**: en la ficha, el panel de «Agregar a lista» se ubicaba siempre 56 px debajo del botón y quedaba cortado cerca del borde inferior. Además, al abrirlo la página dejaba de responder a la rueda del mouse.
   - **Posición**: `lib/posicion-menu.ts` calcula dónde va el panel. Se abre hacia abajo si entra; si no, hacia el lado con más lugar. Si no entra en ninguno, el alto máximo lo achica y el panel se desplaza por dentro. También evita que se salga por la derecha. Se recalcula al abrir, al desplazar, al cambiar el tamaño de la ventana y cuando cambia el alto del panel (formulario de lista nueva, errores).
   - **Rueda**: en escritorio ya no se bloquea el scroll del `body`, y el panel usa `md:overscroll-auto`: sin esa clase, la rueda sobre el panel no llega a la página. El panel sigue al botón mientras la página se desplaza, también si el botón sale de la ventana. El `<dialog>` sigue siendo modal, así que el fondo queda inerte, y Escape y el clic afuera lo cierran.
-  - **Celular**: no cambia. Por debajo de 768 px es una hoja desde abajo y la página queda quieta. El bloqueo se recalcula si se cruza ese ancho con el menú abierto.
+  - **Celular**: no cambia. Por debajo de 768 px es una hoja desde abajo y la página queda quieta. El bloqueo se recalcula si se cruza ese ancho con el menú abierto: sin eso, al girar a horizontal un celular con el menú abierto, el panel quedaba fuera de la pantalla y la página trabada, sin forma de bajar hasta él. Se probó con el mismo código con y sin el recálculo, en un navegador de escritorio con tamaño de celular y con la rueda, no en un teléfono real.
   - **Descartado**: cerrar el panel al desplazar la página, porque se pierde lo que se estaba marcando.
 - **Archivos afectados**: `frontend/components/features/title/ListsMenu.tsx`, `frontend/lib/posicion-menu.ts` (nuevo), `docs/04_Lineamientos_UI.md`. Tests: `frontend/tests/posicion-menu.test.ts` y `frontend/e2e/menu-listas.spec.ts` (nuevos; la rueda y la posición se prueban en navegador real porque jsdom no las reproduce).
 ## 04/11/2026 — B-06 y Q-09: vectores reales, búsqueda semántica y vencimiento de `processing`

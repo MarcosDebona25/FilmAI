@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -8,6 +9,7 @@ import { AccountMenu } from "@/components/AccountMenu";
 import { useAccount } from "@/components/AccountProvider";
 import { TicketMark } from "@/components/access/Logo";
 import { isAccessPath, routes } from "@/lib/routes";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { key: "home", href: routes.explore },
@@ -18,25 +20,67 @@ const NAV_LINKS = [
 const authLinkClass =
   "inline-flex h-11 items-center rounded-[0.625rem] px-3 text-[0.9375rem] font-semibold md:px-4 no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
+type Fondo = "transparente" | "translucido" | "solido";
+
+const CLASES_FONDO: Record<Fondo, string | undefined> = {
+  transparente: undefined,
+  // Con la imagen debajo: el título o el póster que pasan no tapan los enlaces.
+  translucido: "md:bg-background/85 md:backdrop-blur-lg",
+  solido: "md:bg-background md:shadow-[inset_0_-1px_0_var(--line)]",
+};
+
+/**
+ * Fondo de la barra según el scroll: nada con la página arriba de todo,
+ * translúcido mientras tiene debajo la imagen grande de la página
+ * (`data-imagen-bajo-navbar`) y sólido después, o si no hay imagen.
+ */
+function useFondo(barra: React.RefObject<HTMLElement | null>, pathname: string) {
+  const [fondo, setFondo] = useState<Fondo>("transparente");
+
+  useEffect(() => {
+    const actualizar = () => {
+      const imagen = document.querySelector("[data-imagen-bajo-navbar]");
+      const alto = barra.current?.offsetHeight ?? 0;
+      if (window.scrollY <= 0) setFondo("transparente");
+      else if (imagen && imagen.getBoundingClientRect().bottom > alto) setFondo("translucido");
+      else setFondo("solido");
+    };
+    actualizar();
+    window.addEventListener("scroll", actualizar, { passive: true });
+    window.addEventListener("resize", actualizar);
+    return () => {
+      window.removeEventListener("scroll", actualizar);
+      window.removeEventListener("resize", actualizar);
+    };
+  }, [barra, pathname]);
+
+  return fondo;
+}
+
 /** Encabezado del sitio: marca, navegación principal (escritorio) y cuenta. */
 export function Navbar() {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { perfil, cargando } = useAccount();
+  const barra = useRef<HTMLElement>(null);
+  const fondo = useFondo(barra, pathname);
 
   if (isAccessPath(pathname)) return null;
 
+  const posicion =
+    pathname === routes.explore
+      ? "md:fixed md:inset-x-0"
+      : /^\/(movie|tv)\/\d+$/.test(pathname)
+        ? "absolute inset-x-0 z-20 md:fixed"
+        : "md:sticky";
+
   return (
-    // La barra va sobre la imagen de fondo (canvas): en el Home solo en
-    // escritorio (C-05); en la ficha, siempre (C-07). No ocupa lugar.
+    // En escritorio queda siempre visible (04/11/2026). Sobre la imagen de fondo
+    // (canvas) no ocupa lugar: en el Home solo en escritorio (C-05); en la ficha,
+    // siempre (C-07). En celular se va con la página: abajo está MobileTabs.
     <header
-      className={
-        pathname === routes.explore
-          ? "md:absolute md:inset-x-0 md:top-0 md:z-20"
-          : /^\/(movie|tv)\/\d+$/.test(pathname)
-            ? "absolute inset-x-0 top-0 z-20"
-            : undefined
-      }
+      ref={barra}
+      className={cn(posicion, "top-0 md:z-30 md:transition-colors", CLASES_FONDO[fondo])}
     >
       <a
         href="#contenido"
