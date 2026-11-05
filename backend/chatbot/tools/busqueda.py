@@ -87,7 +87,7 @@ def _desde_tmdb(item, tipo, generos):
     )
 
 
-def _publicar_de_tmdb(ctx, servicio, por_tipo, orden=None):
+def _publicar_de_tmdb(ctx, servicio, por_tipo, orden=None, sacar_vistas=True):
     """Junta los resultados de películas y series y los entrega al modelo.
 
     `por_tipo` es `{"movie": [...], "tv": [...]}`. `orden` es el campo de TMDB por el
@@ -100,17 +100,27 @@ def _publicar_de_tmdb(ctx, servicio, por_tipo, orden=None):
     if orden:
         mezclados.sort(key=lambda par: par[0].get(orden) or 0, reverse=True)
     return publicar(
-        ctx, [_desde_tmdb(item, tipo, generos[tipo]) for item, tipo in mezclados]
+        ctx,
+        [_desde_tmdb(item, tipo, generos[tipo]) for item, tipo in mezclados],
+        sacar_vistas=sacar_vistas,
     )
 
 
 def buscar_por_titulo(ctx, titulo, tipo=None, anio=None):
-    """Tool: busca por nombre, en películas y series si no se pide un tipo."""
+    """Tool: busca por nombre, en películas y series si no se pide un tipo.
+
+    No saca las vistas: es una consulta directa. «Algo como Moon» necesita
+    encontrar Moon aunque ya se haya visto.
+    """
     servicio = _servicio(ctx)
     por_tipo = {
         t: servicio.search(titulo, t, anio=anio).get("results") for t in _tipos(tipo)
     }
-    return {"resultados": _publicar_de_tmdb(ctx, servicio, por_tipo, "popularity")}
+    return {
+        "resultados": _publicar_de_tmdb(
+            ctx, servicio, por_tipo, "popularity", sacar_vistas=False
+        )
+    }
 
 
 def descubrir(

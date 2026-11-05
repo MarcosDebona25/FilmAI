@@ -212,7 +212,6 @@ class VistasTests(BaseTools):
             {**pelicula(2, "Otra"), "media_type": "movie"},
         ]
         llamadas = (
-            ("buscar_por_titulo", {"titulo": "Moon", "tipo": "movie"}),
             ("descubrir", {"tipo": "movie"}),
             ("similares_a", {"id_tmdb": 5, "tipo": "movie"}),
             ("buscar_por_persona", {"nombre": "Mark Ruffalo"}),
@@ -223,6 +222,33 @@ class VistasTests(BaseTools):
                 resultado = ejecutar(self.contexto(), nombre, argumentos)
 
                 self.assertEqual([r["id_tmdb"] for r in resultado["resultados"]], [2])
+
+    def test_buscar_por_nombre_encuentra_lo_visto_y_lo_marca(self):
+        # «Algo como Moon» necesita encontrar Moon aunque ya la haya visto.
+        self.marcar_vista(1)
+        self.catalogo.resultados["movie"] = [pelicula(1), pelicula(2, "Otra")]
+
+        resultado = ejecutar(
+            self.contexto(), "buscar_por_titulo", {"titulo": "Moon", "tipo": "movie"}
+        )
+
+        vista, otra = resultado["resultados"]
+        self.assertIs(vista["vista"], True)
+        self.assertNotIn("vista", otra)
+
+    def test_lo_que_una_busqueda_de_recomendacion_saco_no_puede_ser_tarjeta(self):
+        self.marcar_vista(1)
+        self.catalogo.resultados["movie"] = [pelicula(1)]
+        contexto = self.contexto()
+        ejecutar(contexto, "similares_a", {"id_tmdb": 5, "tipo": "movie"})
+
+        resultado = ejecutar(
+            contexto,
+            "mostrar_tarjetas",
+            {"tarjetas": [{"id_tmdb": 1, "tipo": "movie"}]},
+        )
+
+        self.assertEqual(resultado["tarjetas"], [])
 
     def test_una_serie_con_el_id_de_una_pelicula_vista_no_se_saca(self):
         self.marcar_vista(1, TipoProduccion.PELICULA)
@@ -370,7 +396,7 @@ class BuscarPorPersonaTests(BaseTools):
 
 
 class DetalleTests(BaseTools):
-    def test_un_titulo_visto_se_puede_consultar_pero_no_mostrar(self):
+    def test_un_titulo_visto_pedido_directamente_se_puede_mostrar(self):
         self.marcar_vista(1)
         self.catalogo.detalle = pelicula(
             1, runtime=97, genres=[{"id": 18, "name": "Drama"}]
@@ -386,7 +412,8 @@ class DetalleTests(BaseTools):
 
         self.assertEqual(resultado["duracion"], 97)
         self.assertEqual(resultado["generos"], ["Drama"])
-        self.assertEqual(tarjetas["tarjetas"], [])
+        self.assertIs(resultado["vista"], True)
+        self.assertEqual([t["id_tmdb"] for t in tarjetas["tarjetas"]], [1])
 
 
 class BuscarSemanticoTests(BaseTools):

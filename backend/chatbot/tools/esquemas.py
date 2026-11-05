@@ -79,7 +79,8 @@ def _esquema(nombre, descripcion, propiedades, requeridas=()):
 ESQUEMAS = [
     _esquema(
         "buscar_por_titulo",
-        "Busca películas y series por su nombre.",
+        "Busca películas y series por su nombre. Un resultado con `vista: true` ya "
+        "lo vio el usuario: no lo recomiendes, salvo que lo haya pedido.",
         {"titulo": {"type": "string"}, "tipo": _TIPO, "anio": {"type": "integer"}},
         ["titulo"],
     ),
