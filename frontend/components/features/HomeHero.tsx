@@ -56,6 +56,7 @@ export function HomeHero({
 
   return (
     <section
+      data-imagen-bajo-navbar
       aria-labelledby="hero-titulo"
       className={cn("relative flex flex-col", conImagen && "md:min-h-[45rem] md:overflow-hidden")}
     >

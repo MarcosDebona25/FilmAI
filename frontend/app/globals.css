@@ -176,6 +176,13 @@
       scroll-padding-bottom: 10.25rem;
     }
   }
+  /* Lo mismo con la navbar fija de escritorio: un control enfocado o un salto a
+     una sección no quedan debajo de ella. */
+  @media (width >= 48rem) {
+    html {
+      scroll-padding-top: 6rem;
+    }
+  }
   /* Sin la espera del doble toque (zoom) en los controles táctiles. */
   a,
   button,
