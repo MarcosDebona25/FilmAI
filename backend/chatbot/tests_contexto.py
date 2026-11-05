@@ -38,6 +38,7 @@ class AlcanceEstrictoTests(SimpleTestCase):
 
     def test_solo_palabras_enteras(self):
         self.assertEqual(self.limpiar("Don Juanito y juanpi"), "Don Juanito y juanpi")
+        self.assertEqual(self.limpiar("SanJuan queda"), "SanJuan queda")
 
     def test_un_nombre_compuesto_se_reemplaza_por_partes(self):
         maria = SimpleNamespace(

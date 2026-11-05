@@ -155,6 +155,7 @@ class TMDBClient:
         sin_generos=None,
         desde_fecha=None,
         hasta_fecha=None,
+        duracion_max=None,
     ):
         """Busca producciones por filtros. Todo es opcional menos el tipo.
 
@@ -166,7 +167,9 @@ class TMDBClient:
         techo de nota de «Below 5» en Buscar (C-06). `sin_generos` son ids
         separados por coma que se excluyen (`without_genres`); `desde_fecha`
         (AAAA-MM-DD) deja solo lo que estrena desde ese día («A estrenar») y
-        `hasta_fecha`, hasta ese día (décadas en Buscar).
+        `hasta_fecha`, hasta ese día (décadas en Buscar). `duracion_max` son
+        minutos y solo sirve en películas: en series TMDB casi no tiene el dato.
+        El mínimo de 1 deja afuera las películas con duración desconocida (0).
         """
         params = {"page": page}
         if genero is not None:
@@ -191,6 +194,9 @@ class TMDBClient:
             params[f"{_DISCOVER_DATE_PARAM[tipo]}.gte"] = desde_fecha
         if hasta_fecha is not None:
             params[f"{_DISCOVER_DATE_PARAM[tipo]}.lte"] = hasta_fecha
+        if duracion_max is not None:
+            params["with_runtime.gte"] = 1
+            params["with_runtime.lte"] = duracion_max
         return self._get_localizado(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1, anio=None):

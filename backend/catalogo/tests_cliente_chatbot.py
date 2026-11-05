@@ -60,6 +60,14 @@ class ClienteTests(SimpleTestCase):
         self.assertEqual(pedidos[0].url.path, "/3/person/103/combined_credits")
         self.assertEqual(pedidos[0].url.params["language"], "es-MX")
 
+    def test_discover_filtra_por_duracion_sin_las_de_duracion_desconocida(self):
+        tmdb, pedidos = cliente({"results": []})
+
+        tmdb.discover("movie", duracion_max=120)
+
+        self.assertEqual(pedidos[0].url.params["with_runtime.lte"], "120")
+        self.assertEqual(pedidos[0].url.params["with_runtime.gte"], "1")
+
 
 class CacheTests(SimpleTestCase):
     def setUp(self):
@@ -88,6 +96,14 @@ class CacheTests(SimpleTestCase):
         serie = self.cache.get_similar(100, "tv")
 
         self.assertNotEqual(pelicula, serie)
+
+    def test_duraciones_distintas_no_comparten_cache(self):
+        self.tmdb.discover.side_effect = [{"results": [1]}, {"results": [2]}]
+
+        corta = self.cache.discover("movie", duracion_max=90)
+        larga = self.cache.discover("movie", duracion_max=180)
+
+        self.assertNotEqual(corta, larga)
 
     def test_cada_idioma_tiene_su_cache(self):
         # Sin esto, quien pregunta en inglés recibiría títulos guardados en español.
