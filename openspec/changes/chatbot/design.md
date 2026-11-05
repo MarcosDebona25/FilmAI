@@ -159,7 +159,7 @@ its own message, adding a code is additive.
 | History sent to the model = last 10 messages, text only, cards appended as a line «[Tarjetas: Moon (2009), …]» | Send tool transcripts | Tool calls are not persisted; the line tells the model what it already showed. `Chat.contexto.ya_recomendados` keeps the last 30 cards as `{id_tmdb, tipo, titulo, anio}` and the system prompt renders them as titles («Ya recomendados: Moon (2009), …»): bare TMDB ids would mean nothing to the model. |
 | Profile by SQL on every message | Precompute into `Chat.contexto` | 08/10/2026. |
 | `deepseek-flash`, thinking **off** (`{"thinking": {"type": "disabled"}}`), `max_tokens` 800 | Thinking on | 28/10 test: 2.2 s to first text vs 2.8 s, and thinking + tools demands echoing `reasoning_content` every round. `LLM_THINKING` in `.env` turns it on for the golden-set comparison; with it on, the provider echoes each round's `reasoning_content` back in the assistant message (DeepSeek answers 400 otherwise). |
-| Ollama `keep_alive: "30m"` on every call | Default 5 min / forever | Cold load measured at ~1.9 s; 30 min covers a session without pinning 1.24 GB forever. |
+| Ollama `keep_alive` from `OLLAMA_KEEP_ALIVE` (`30m`; `-1m` on a server) on every call | Default 5 min / forever | Cold load measured at ~1.9 s; 30 min covers a session without pinning 1.24 GB forever. |
 
 ## Tools
 
@@ -193,11 +193,15 @@ A tool exception never ends the turn: the model receives
 ## Semantic search (B-06)
 
 - `generar_vector(texto)` → `httpx.post(f"{OLLAMA_URL}/api/embed", json={"model":
-  "bge-m3", "input": texto, "keep_alive": "30m"})`, raises
+  "bge-m3", "input": texto, "keep_alive": OLLAMA_KEEP_ALIVE})`, raises
   `EmbeddingProviderError` (exists). Two budgets: the backfill uses 10 s and 2
   retries; a chat query uses 3 s and no retry (warm queries take ~60 ms, a cold
   load ~1.9 s), so a hung Ollama costs the turn at most 3 s. `MODEL_VERSION = "bge-m3"`: every
-  stub-era row becomes stale and the backfill regenerates it.
+  stub-era row becomes stale and the backfill regenerates it. A chat query first
+  asks `/api/ps` (1 s): loaded → 3 s; not loaded → up to 20 s, because Ollama drops
+  a load when the client disconnects. The panel calls `POST /api/chat/preparar/` on
+  opening, which queues `calentar_modelo` (60 s) so the load starts before the
+  question (05/11/2026).
 - `buscar_semantico(consulta, filtros)` → embed the query, cosine distance over
   `estado = ready` with the HNSW index (`hnsw.ef_search = 100`: the default 40
   would silently cap the 50 candidates), overfetch 50, apply the SQL filters,

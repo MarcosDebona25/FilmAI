@@ -169,6 +169,8 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
       `mark`). Both: every email
       address, the user's own included, → `[correo]`
 - [x] 2.10 GREEN: `contexto.py`, `anonimizar.py`
+- [x] 2.11 RED/GREEN: `modelo_cargado`, wait up to 20 s when the model is not
+      loaded, `calentar_modelo`, `POST /api/chat/preparar/`, `OLLAMA_KEEP_ALIVE`
 
 ## Phase 3: Provider and orchestrator (PR 3) — first async code
 
@@ -264,6 +266,7 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 - [ ] 6.3 RED: Markdown renderer neutralizes `<script>`, `<img onerror>`,
       `javascript:` links and Markdown images (`![x](https://…)` → text, no
       `img`)
+- [ ] 6.3b Panel: `POST /api/chat/preparar/` on opening (05/11/2026)
 - [ ] 6.4 GREEN: `lib/chat.ts`, `ChatProvider`, `ChatFab`, `ChatPanel`,
       `ChatBubble`, `ChatTarjetas`, `ChatInput` following the canvas
 - [ ] 6.5 RED/GREEN: cancel keeps the draft and shows «Solicitud cancelada»;
