@@ -211,6 +211,17 @@ class TMDBClient:
     def get_tv_detail(self, id_tmdb):
         return self._get_localizado(f"/tv/{id_tmdb}")
 
+    def get_similar(self, id_tmdb, tipo):
+        return self._get_localizado(f"/{tipo}/{id_tmdb}/similar")
+
+    def search_person(self, nombre):
+        return self._get_localizado("/search/person", {"query": nombre})
+
+    def get_person_credits(self, id_persona):
+        # Películas y series, como actor (`cast`) o en el equipo (`crew`). `discover`
+        # con `with_people` no sirve: en series TMDB ignora el filtro sin avisar.
+        return self._get_localizado(f"/person/{id_persona}/combined_credits")
+
     def get_keywords(self, id_tmdb, tipo):
         return self._get(f"/{tipo}/{id_tmdb}/keywords")
 
