@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 05/11/2026 — Fondos elegidos a mano para títulos con arte de póster
+
+- **Fecha**: 05/11/2026
+- **Descripción**: en *Attack on Titan* la imagen de fondo parecía el póster estirado. No lo era: es una panorámica real de TMDB, pero con la misma ilustración, y quedaba una cara gigante detrás del título. Al comparar a ojo 48 títulos, entre un tercio y la mitad tienen arte parecido al póster, aunque en varios queda bien.
+  - **Decisión**: una lista corta a mano en `lib/fondos.ts`, que reemplaza la imagen de los títulos que más molestan. Vale para la ficha y para el Inicio. Se agregan de a uno, con una ruta de `/{tipo}/{id}/images`.
+  - **Descartado**: elegir otra imagen por regla, porque ningún dato de TMDB distingue una escena de un arte de póster, y cambiaría también títulos que hoy están bien. Difuminar siempre, porque pierde la imagen en todos.
+  - **Riesgo**: si TMDB borra una imagen de la lista, ese título se queda sin fondo.
+- **Archivos afectados**: `frontend/lib/{fondos,title,catalog}.ts`. Tests: `frontend/tests/fondos.test.ts`.
+
 ## 05/11/2026 — CI más rápido: hasher rápido en los tests y cancelación de corridas viejas
 
 - **Fecha**: 05/11/2026
