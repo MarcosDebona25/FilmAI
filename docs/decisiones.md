@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 04/11/2026 — Menú «Agregar a lista»: se abre hacia donde hay lugar y no bloquea la rueda
+
+- **Fecha**: 04/11/2026
+- **Descripción**: en la ficha, el panel de «Agregar a lista» se ubicaba siempre 56 px debajo del botón y quedaba cortado cerca del borde inferior. Además, al abrirlo la página dejaba de responder a la rueda del mouse.
+  - **Posición**: `lib/posicion-menu.ts` calcula dónde va el panel. Se abre hacia abajo si entra; si no, hacia el lado con más lugar. Si no entra en ninguno, el alto máximo lo achica y el panel se desplaza por dentro. También evita que se salga por la derecha. Se recalcula al abrir, al desplazar, al cambiar el tamaño de la ventana y cuando cambia el alto del panel (formulario de lista nueva, errores).
+  - **Rueda**: en escritorio ya no se bloquea el scroll del `body`, y el panel usa `md:overscroll-auto`: sin esa clase, la rueda sobre el panel no llega a la página. El panel sigue al botón mientras la página se desplaza, también si el botón sale de la ventana. El `<dialog>` sigue siendo modal, así que el fondo queda inerte, y Escape y el clic afuera lo cierran.
+  - **Celular**: no cambia. Por debajo de 768 px es una hoja desde abajo y la página queda quieta. El bloqueo se recalcula si se cruza ese ancho con el menú abierto.
+  - **Descartado**: cerrar el panel al desplazar la página, porque se pierde lo que se estaba marcando.
+- **Archivos afectados**: `frontend/components/features/title/ListsMenu.tsx`, `frontend/lib/posicion-menu.ts` (nuevo), `docs/04_Lineamientos_UI.md`. Tests: `frontend/tests/posicion-menu.test.ts` y `frontend/e2e/menu-listas.spec.ts` (nuevos; la rueda y la posición se prueban en navegador real porque jsdom no las reproduce).
 ## 04/11/2026 — B-06 y Q-09: vectores reales, búsqueda semántica y vencimiento de `processing`
 
 - **Fecha**: 04/11/2026
