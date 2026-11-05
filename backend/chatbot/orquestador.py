@@ -125,7 +125,12 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     un evento a la vista y sigue desde ahí cuando la vista pide el próximo.
     `proveedor` es para los tests; sin él, se usa el configurado.
     """
-    proveedor = proveedor or crear_proveedor()
+    try:
+        proveedor = proveedor or crear_proveedor()
+    except Exception as error:
+        # Pasa con un `LLM_PROVIDER` que no existe. La causa queda en el log.
+        logger.exception("El proveedor está mal configurado")
+        raise ErrorDelTurno("El proveedor está mal configurado") from error
     ctx, mensajes = await en_hilo(_preparar, chat, texto, idioma)
     partes = []
 

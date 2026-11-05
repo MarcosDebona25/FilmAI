@@ -467,3 +467,9 @@ class CrearProveedorTests(SimpleTestCase):
     def test_un_tipo_desconocido_falla_enseguida(self):
         with self.assertRaises(KeyError):
             crear_proveedor()
+
+    @override_settings(LLM_PROVEEDORES=[{"tipo": "deepseek"}])
+    async def test_mal_configurado_es_un_error_del_turno(self):
+        # La vista solo sabe convertir `ErrorDelTurno` en el evento `error`.
+        with self.assertRaises(ErrorDelTurno):
+            await anext(responder(None, "hola", "es"))
