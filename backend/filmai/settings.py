@@ -47,6 +47,17 @@ OLLAMA_URL = config("OLLAMA_URL", default="http://host.docker.internal:11435")
 # siempre; en un servidor conviene `-1m`, que no lo descarga nunca. Tiene que ser
 # una duración: Ollama rechaza `-1` como texto (400, verificado el 05/11/2026).
 OLLAMA_KEEP_ALIVE = config("OLLAMA_KEEP_ALIVE", default="30m")
+# `LLM_PROVIDER` es el formato de la API que habla el proveedor, no la empresa.
+# La lista permite sumar un respaldo sin tocar el código que usa el proveedor.
+LLM_PROVEEDORES = [
+    {
+        "tipo": config("LLM_PROVIDER", default="openai_compatible"),
+        "base_url": config("LLM_BASE_URL", default="https://api.deepseek.com"),
+        "modelo": config("LLM_MODEL", default="deepseek-flash"),
+        "api_key": config("LLM_API_KEY", default=""),
+        "thinking": config("LLM_THINKING", default=False, cast=bool),
+    }
+]
 
 
 # Application definition

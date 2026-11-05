@@ -37,6 +37,10 @@ fakeredis>=2.0,<3.0
 # --- Tareas asincrónicas (Celery) ---
 celery>=5.3,<5.5
 
+# --- Chatbot ---
+# Cliente del proveedor del modelo: DeepSeek habla el mismo formato que OpenAI.
+openai>=3.46,<4
+
 # --- Búsqueda semántica (pgvector) ---
 # El submódulo `pgvector.django` aporta VectorField, HnswIndex y
 # VectorExtension, usados por ProduccionEmbedding (C-04a / B-06).

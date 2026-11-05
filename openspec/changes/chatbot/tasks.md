@@ -174,34 +174,34 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ## Phase 3: Provider and orchestrator (PR 3) — first async code
 
-- [ ] 3.1 Explain from zero, before writing code: what blocks a server thread,
+- [x] 3.1 Explain from zero, before writing code: what blocks a server thread,
       event loop, `async def`/`await`, async generators, `sync_to_async`,
       why only one bridge
-- [ ] 3.2 `llm.py`: `ProveedorLLM` protocol; `ProveedorFalso` replaying a
+- [x] 3.2 `llm.py`: `ProveedorLLM` protocol; `ProveedorFalso` replaying a
       script of deltas, tool calls, errors and delays
-- [ ] 3.3 RED `chatbot/tests_orquestador.py` with `ProveedorFalso`: plain
+- [x] 3.3 RED `chatbot/tests_orquestador.py` with `ProveedorFalso`: plain
       answer → `Texto…` and a final `Resultado` with no cards; `responder()`
       follows `chatbot/eventos.py` (PR 0) and saves nothing (the view saves)
-- [ ] 3.4 RED: tool round → `estado searching`, tool executed in the bridge,
+- [x] 3.4 RED: tool round → `estado searching`, tool executed in the bridge,
       result fed back, answer streamed, cards validated; `mostrar_tarjetas`
       called in a middle round still ends up in the single final `Resultado`
       (after the last `Texto`), and there is no `Resultado` when the turn
       raises `ErrorDelTurno`
-- [ ] 3.5 RED: 5th tool round → `ErrorDelTurno`; provider exception →
+- [x] 3.5 RED: 5th tool round → `ErrorDelTurno`; provider exception →
       `ErrorDelTurno`; tool exception → turn continues (the 25 s timeout is
       the view's, task 5.6b)
-- [ ] 3.6 RED: the messages sent to the provider contain the anonymized
-      profile, ≤ 10 history messages with the cards line, `ya_recomendados`
+- [x] 3.6 RED: the messages sent to the provider contain the anonymized
+      profile, ≤ 10 history messages, `ya_recomendados`
       rendered as titles and years (no bare ids),
       the anonymized current message, and no full name/email/username
-- [ ] 3.7 RED: two tools of the same turn, each through the bridge, add to the
+- [x] 3.7 RED: two tools of the same turn, each through the bridge, add to the
       **same** TMDB budget counter (the total accumulates; the 31st call fails)
-- [ ] 3.8 GREEN: `prompts.py`, `orquestador.py`, `ProveedorOpenAICompatible`
+- [x] 3.8 GREEN: `prompts.py`, `orquestador.py`, `ProveedorOpenAICompatible`
       (`openai` dependency; thinking off by default; `max_tokens` 800);
       `mis_listas` results go through `anonimizar`, TMDB results do not
-- [ ] 3.8b RED/GREEN: with `LLM_THINKING=true`, a tool round echoes
+- [x] 3.8b RED/GREEN: with `LLM_THINKING=true`, a tool round echoes
       `reasoning_content` in the assistant message (needed for 8.2)
-- [ ] 3.9 `manage.py chatear` (interactive, prints events); try it against
+- [x] 3.9 `manage.py chatear` (interactive, prints events); try it against
       DeepSeek with the `.env` key
 
 ## Phase 4: Persistence and history (PR 4)
