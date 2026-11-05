@@ -105,6 +105,23 @@ fabricado mantuvo 172 tests en verde mientras ninguna serie tenía director en
 producción. Lo mismo con las sugerencias de bots de revisión: verificar contra
 el archivo real antes de aplicarlas.
 
+### 9. Cerrar cada PR con una guía de revisión
+
+Al abrir un PR, o al darlo por terminado, entregar sin que lo pidan qué revisar
+de lo hecho. Una tabla en el orden recomendado de lectura, con una fila por
+archivo importante:
+
+| Archivo | Qué hace | Estado | Por qué importa |
+|---|---|---|---|
+
+- El archivo va como enlace, a la línea donde conviene empezar.
+- **Estado** dice si está completo, si algo lo usa ya y qué quedó sin probar.
+- Se elige lo importante, no se copia el diff: los archivos generados y los cambios
+  mecánicos no van.
+- Decir cuáles alcanzan si hay poco tiempo.
+- Cerrar con lo pendiente y con lo que conviene mirar con ojo crítico: una
+  decisión discutible, un riesgo conocido, algo que no se pudo verificar.
+
 ## Qué NO hace esta skill
 
 - No convierte cada respuesta en un tutorial: si el concepto ya se explicó en
