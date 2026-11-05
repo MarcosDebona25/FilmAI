@@ -121,8 +121,10 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Instalar Chromium y bibliotecas del sistema
-        run: npx playwright install --with-deps chromium
+      # Sin `--with-deps`: el runner ya trae las bibliotecas, y esa opción instala
+      # fuentes por apt que a veces bajaban a 30 kB/s y demoraban 10 minutos.
+      - name: Instalar Chromium
+        run: npx playwright install chromium
 
       - name: Recorridos de perfil
         run: npm run test:e2e -- --shard=${{ matrix.shard }}/2
