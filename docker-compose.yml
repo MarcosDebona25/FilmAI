@@ -89,6 +89,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: filmai_backend
+    # Hace que `host.docker.internal` llegue a esta máquina (en Linux no viene
+    # solo): por ahí se alcanza el puente hacia el Ollama de Windows.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # El runserver son dos procesos (el que vigila los archivos y el servidor), y
     # los tests (`exec` o `run`) corren en este mismo contenedor.
     mem_limit: 1536m
@@ -164,6 +168,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: filmai_celery_worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     mem_limit: 1g
     memswap_limit: 1g
     user: "${UID:-1000}:${GID:-1000}"
@@ -231,10 +237,42 @@ services:
     networks:
       - filmai_network
 
+  # 7. Puente hacia Ollama para Windows (perfil `ollama-windows`, B-06)
+  # Con WSL en modo `mirrored`, el Ollama de Windows se ve en 127.0.0.1:11434
+  # del host, pero un contenedor no llega ahí: para él, 127.0.0.1 es él mismo.
+  # socat escucha en la IP del host dentro de la red de Docker (172.17.0.1) y
+  # reenvía. No escucha en 0.0.0.0, así que Ollama no queda expuesto a la red.
+  # Se levanta con: docker compose --profile ollama-windows up -d ollama-puente
+  ollama-puente:
+    image: alpine/socat:1.8.0.3
+    container_name: filmai_ollama_puente
+    profiles: ["ollama-windows"]
+    network_mode: host
+    mem_limit: 32m
+    memswap_limit: 32m
+    command: TCP-LISTEN:11435,bind=172.17.0.1,fork,reuseaddr TCP:127.0.0.1:11434
+
+  # 8. Ollama en un contenedor (perfil `ollama`, B-06)
+  # Para producción u otras máquinas. No publica puertos: el backend lo alcanza
+  # por la red interna con OLLAMA_URL=http://ollama:11434. El modelo se baja
+  # una vez y queda en el volumen:
+  #   docker compose exec ollama ollama pull bge-m3
+  ollama:
+    image: ollama/ollama:0.40.14
+    container_name: filmai_ollama
+    profiles: ["ollama"]
+    mem_limit: 2g
+    memswap_limit: 2g
+    volumes:
+      - ollamadata:/root/.ollama
+    networks:
+      - filmai_network
+
 # Volúmenes con nombre — persisten datos aunque hagas docker compose down
 volumes:
   pgdata:
   redisdata:
+  ollamadata:
 
 # Red interna — los servicios se encuentran por su nombre de servicio. Ej: el backend se conecta a PostgreSQL con host=db, no con localhost
 networks:

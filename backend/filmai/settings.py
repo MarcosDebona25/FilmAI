@@ -38,6 +38,11 @@ TMDB_TIMEOUT = config("TMDB_TIMEOUT", default=5, cast=float)
 # `catalogo/presupuesto.py`.
 TMDB_LLAMADAS_POR_IP_POR_MINUTO = 300
 
+# --- Chatbot: Motor (proveedores) ---
+# Ollama genera los vectores de la búsqueda semántica. Por defecto apunta al
+# puente hacia el Ollama de Windows (perfil `ollama-windows` del compose).
+OLLAMA_URL = config("OLLAMA_URL", default="http://host.docker.internal:11435")
+
 
 # Application definition
 INSTALLED_APPS = [

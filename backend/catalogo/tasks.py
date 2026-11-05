@@ -7,9 +7,11 @@ inconsistentes.
 """
 
 import logging
+from datetime import timedelta
 
 from celery import shared_task
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEmbedding
@@ -29,6 +31,19 @@ logger = logging.getLogger(__name__)
 # no se degrada a `failed` por un proveedor caído. Refrescar los `ready` cuyo
 # texto cambió es trabajo del backfill de C-04b, que los vuelve a `pending`.
 _RECLAMABLES = (EstadoEmbedding.PENDING, EstadoEmbedding.FAILED)
+
+# Una fila en `processing` más vieja que esto se da por abandonada: el worker
+# murió a mitad de la tarea (Q-09). El peor caso real son 3 intentos de 10 s, y
+# la fecha se renueva al reclamar, así que la espera en la cola no cuenta.
+_VENCIMIENTO_PROCESSING = timedelta(minutes=5)
+
+
+def _processing_vencidas():
+    """Condición de las filas abandonadas en `processing`."""
+    return Q(
+        estado=EstadoEmbedding.PROCESSING,
+        fecha_actualizacion__lt=timezone.now() - _VENCIMIENTO_PROCESSING,
+    )
 
 
 @shared_task(name="catalogo.materializar_produccion")
@@ -85,9 +100,11 @@ def generar_embedding(produccion_id):
     # Defensa 2: reclamar la fila. Un UPDATE condicional es atómico en la base,
     # así que de dos workers simultáneos exactamente uno recibe 1 fila y el
     # otro 0, sin locks explícitos.
+    # La fecha se renueva para que el vencimiento cuente desde este reclamo.
     reclamadas = ProduccionEmbedding.objects.filter(
-        produccion_id=produccion_id, estado__in=_RECLAMABLES
-    ).update(estado=EstadoEmbedding.PROCESSING)
+        Q(estado__in=_RECLAMABLES) | _processing_vencidas(),
+        produccion_id=produccion_id,
+    ).update(estado=EstadoEmbedding.PROCESSING, fecha_actualizacion=timezone.now())
     if reclamadas == 0:
         return
 
@@ -332,7 +349,8 @@ def backfill_embeddings(limite=None):
        por fila en Python; la versión del modelo no, pero se comparan juntas
        para recorrer la tabla una sola vez.
 
-    `processing` queda afuera a propósito: alguien la está procesando ahora.
+    `processing` queda afuera a propósito, porque alguien la está procesando,
+    salvo que el reclamo haya vencido: esas filas vuelven antes a `pending`.
 
     No calcula el vector, lo REENCOLA. `generar_embedding` ya es dueña del
     reclamo atómico `pending→processing`; repetir esa lógica acá sería una
@@ -349,16 +367,18 @@ def backfill_embeddings(limite=None):
     queda en `failed` conservando el vector viejo: deja de usarse en la
     búsqueda por una noche, y la corrida siguiente la reintenta porque
     `failed` sí es reclamable.
-
-    Limitación conocida: una fila trabada en `processing` (el worker murió a
-    mitad) no la recupera nadie. Hace falta un lease con vencimiento, que se
-    puede agregar cuando exista el proveedor real (B-06) y las tareas tarden
-    de verdad.
     """
     if limite is None:
         limite = settings.CELERY_BACKFILL_LIMIT
 
     estadisticas = {"reencolados": 0, "desactualizados": 0}
+
+    # A `pending` y no directo a la lista de abajo: esa lista renueva la fecha,
+    # y `generar_embedding` vería un reclamo reciente y no tomaría la fila.
+    # Conservan la fecha vieja, así que van primeras en el orden.
+    ProduccionEmbedding.objects.filter(_processing_vencidas()).update(
+        estado=EstadoEmbedding.PENDING
+    )
 
     sin_completar = list(
         ProduccionEmbedding.objects.filter(estado__in=_RECLAMABLES)
