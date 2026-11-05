@@ -21,7 +21,7 @@ from catalogo.services.embeddings import (
     modelo_cargado,
 )
 from catalogo.services.recomendado import TIPO_DOMINIO, TIPO_TMDB
-from catalogo.tasks import calentar_modelo
+from catalogo.tasks import CLAVE_CARGA_MODELO, calentar_modelo
 
 logger = logging.getLogger(__name__)
 
@@ -34,21 +34,21 @@ _MAXIMO_RESULTADOS = 10
 _EF_SEARCH = 100
 
 
-# Abrir y cerrar el panel no debe llenar la cola: una carga por minuto alcanza.
-_CLAVE_CARGA = "chatbot:carga_modelo"
+# Una carga por minuto alcanza: `calentar_modelo` espera hasta 60 s.
 _SEGUNDOS_ENTRE_CARGAS = 60
 
 
 def pedir_carga_del_modelo():
     """Encola la carga del modelo. Nunca lanza: es una ayuda, no un requisito."""
     try:
-        if not cache.add(_CLAVE_CARGA, True, _SEGUNDOS_ENTRE_CARGAS):
+        if not cache.add(CLAVE_CARGA_MODELO, True, _SEGUNDOS_ENTRE_CARGAS):
             return
         try:
-            calentar_modelo.delay()
+            # Vence: sin worker, un pedido viejo no sirve y solo llenaría la cola.
+            calentar_modelo.apply_async(expires=_SEGUNDOS_ENTRE_CARGAS)
         except Exception:
             # Sin esto, un broker caído frenaría los reintentos durante un minuto.
-            cache.delete(_CLAVE_CARGA)
+            cache.delete(CLAVE_CARGA_MODELO)
             raise
     except Exception:
         # Amplio a propósito: si Redis falla, el chat sigue funcionando.

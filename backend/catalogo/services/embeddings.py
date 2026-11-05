@@ -105,8 +105,10 @@ def modelo_cargado(*, transport=None):
     try:
         with httpx.Client(timeout=_TIMEOUT_ESTADO, transport=transport) as cliente:
             modelos = cliente.get(url).json()["models"]
-        return any(m["name"].split(":")[0] == MODEL_VERSION for m in modelos)
-    except (httpx.HTTPError, ValueError, KeyError, TypeError) as error:
+        # `/api/embed` pide el modelo sin etiqueta, que Ollama entiende como `latest`.
+        nombres = (MODEL_VERSION, f"{MODEL_VERSION}:latest")
+        return any(m.get("name") in nombres for m in modelos)
+    except (httpx.HTTPError, ValueError, KeyError, TypeError, AttributeError) as error:
         raise EmbeddingProviderError("No se pudo consultar a Ollama") from error
 
 

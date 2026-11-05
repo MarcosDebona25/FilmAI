@@ -74,7 +74,7 @@ Conceptual search over the local catalog («algo melancólico sobre viajes en el
 
 ### Requirement: The model loads before the first question
 
-`POST /api/chat/preparar/` MUST require a session, answer 202 (Accepted) without waiting, and queue `calentar_modelo` at most once per minute. A failure to queue MUST NOT fail the request. The panel calls it on opening (05/11/2026).
+`POST /api/chat/preparar/` MUST require a session and enforce CSRF like every cookie-authenticated mutation, answer 202 (Accepted) without waiting, and queue `calentar_modelo` at most once per minute. A failure to queue MUST NOT fail the request. The panel calls it on opening (05/11/2026).
 
 #### Scenario: Opening the panel
 

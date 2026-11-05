@@ -67,7 +67,7 @@ cross-front waits are PR 0 (shared) and the final swap (Canal waits for PR3).
 | File | Rule |
 |---|---|
 | `chatbot/eventos.py` | Owned by both. A change goes in its own small PR, agreed first |
-| `backend/filmai/settings.py` | Motor writes the provider block (`LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_THINKING`, `LLM_API_KEY`, `LLM_PROVEEDORES`, `OLLAMA_URL`); Canal the ASGI/`daphne` block plus `LLM_TIMEOUT_SECONDS` and `CHAT_MENSAJES_POR_HORA`, because the view owns the turn timeout and the lock. Separate blocks, each with a header comment |
+| `backend/filmai/settings.py` | Motor writes the provider block (`LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_THINKING`, `LLM_API_KEY`, `LLM_PROVEEDORES`, `OLLAMA_URL`, `OLLAMA_KEEP_ALIVE`); Canal the ASGI/`daphne` block plus `LLM_TIMEOUT_SECONDS` and `CHAT_MENSAJES_POR_HORA`, because the view owns the turn timeout and the lock. Separate blocks, each with a header comment |
 | `backend/requirements.txt` | Motor adds `openai`, Canal adds `daphne`; on conflict keep both lines |
 | `docs/decisiones.md` | Each adds its entry on top; on merge keep both |
 | `graphify-out/` | Never resolved by hand: after the merge run `graphify update .` and commit |

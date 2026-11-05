@@ -14,7 +14,12 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Si la espera no alcanza**: la tool devuelve `tool_failed` y se encola la carga, para que siga en segundo plano.
   - **Medición**: cada búsqueda registra `cargado` y `vector_ms` en los logs.
   - **`OLLAMA_KEEP_ALIVE`**: configurable, `30m` por defecto. En un servidor conviene `-1m`, que no lo descarga nunca. Tiene que ser una duración: `-1` como texto da 400 (Bad Request).
-- **Medición real (Gonza, 05/11/2026)**: la primera carga tardó 14,5 s y otra anterior 23,7 s. Con el modelo recién descargado, la pregunta a los 0 s de abrir el panel esperó 14,5 s; a los 5 s y a los 10 s, 0,1 s; sin abrir el panel, 1,6 s. Esos últimos tres casos no representan el peor caso: tras la primera carga la siguiente fue mucho más rápida, posiblemente porque Windows retuvo el archivo en memoria. Con una carga de 24 s, 20 s de espera no alcanzan. Falta medirlo con el panel y el worker reales.
+- **Comprobado contra Ollama 0.40.14 (05/11/2026)**:
+  - **Si el cliente corta, Ollama abandona la carga**: 10 de 10 repeticiones, en cargas con la caché de Windows caliente; los logs de cortes a 3 s en frío lo respaldan, pero no hay medición directa.
+  - **Quién pidió primero importa**: si `calentar_modelo` llegó antes, el corte del chat no la afecta (3 de 3). Si el chat fue el primero y corta, la carga arranca de cero (3 de 3). Por eso el panel tiene que pedirla al abrirse: es parte del diseño, no un agregado.
+  - **`/api/ps`** figura recién al terminar la carga y no se bloquea: en unas 3900 consultas ninguna llegó a 1 s. Un pedido que llega con la carga en curso se suma a ella.
+- **Riesgo medido**: de 5 cargas frías completas (13,3; 14,4; 21,6; 23,4 y 23,7 s), 3 superan los 20 s, con la PC justa de memoria. Sin carga anticipada, una pregunta en frío probablemente falla. Si el worker no está levantado, la ruta responde 202 pero nada carga, y una carga de más de 20 s nunca termina. Una carga de 19 o 20 s que sí llega puede dejar el turno sin tiempo para las tarjetas (`chat_unavailable`).
+- **Falta**: medir con el panel y el worker reales, con los logs `cargado` y `vector_ms`.
 - **Archivos afectados**: `backend/catalogo/services/{embeddings,semantica}.py`, `backend/catalogo/tasks.py`, `backend/chatbot/{urls,views}.py`, `backend/filmai/{settings,urls}.py`, `contracts/openapi.yaml`, `.env.example`, `openspec/changes/chatbot/`. Tests: `backend/catalogo/tests_semantica.py`, `backend/chatbot/tests_preparar.py`.
 
 ## 05/11/2026 — Herramientas, perfil y anonimizador del chatbot (PR 2)

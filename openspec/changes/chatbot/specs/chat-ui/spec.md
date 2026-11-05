@@ -87,6 +87,17 @@ The input MUST NOT accept more than 500 characters (`maxLength`), MUST show a co
 - WHEN the input updates
 - THEN it holds 500 characters and the counter shows the limit
 
+### Requirement: The panel prepares the model
+
+On every opening the panel MUST call `POST /api/chat/preparar/`, without waiting for it and without showing anything if it fails. A question asked right after opening is what this protects: a cold load can take more than the 20 s a chat query waits (05/11/2026).
+
+#### Scenario: Opening the panel
+
+- GIVEN a user with a session
+- WHEN they open the panel
+- THEN `POST /api/chat/preparar/` is sent with the CSRF header
+- AND a failure of that request shows nothing
+
 ### Requirement: Welcome, history and unread badge
 
 On opening, the panel MUST load the history (newest page first, older pages on scrolling up) and, when the chat is empty, show the local welcome with the user's first name and the canvas suggestions, without calling the model. An answer that finishes while the panel is closed MUST light the FAB badge until the panel opens.

@@ -315,6 +315,7 @@ in `settings.py` and appears commented in `.env.example` (04/11/2026):
 | `LLM_TIMEOUT_SECONDS` | `25` |
 | `CHAT_MENSAJES_POR_HORA` | `20` |
 | `OLLAMA_URL` | the dev bridge, `http://host.docker.internal:11435`; set explicitly in production |
+| `OLLAMA_KEEP_ALIVE` | `30m`; `-1m` on a server, so the model never unloads. Must be a duration: `-1` as text is a 400 |
 
 `settings.py` builds `LLM_PROVEEDORES`, a list with one entry today
 (`{tipo, base_url, modelo, api_key, thinking}`). `llm.py` keeps a registry

@@ -328,6 +328,12 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        # Cuánto espera cada búsqueda a Ollama: sin esto, INFO no sale en ningún lado.
+        "catalogo.services.semantica": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         # httpx registra en INFO cada URL pedida, y la de TMDB lleva la clave en
         # la query (`api_key=`): con WARNING no queda en ningún log (28/10/2026).
         "httpx": {"level": "WARNING"},
