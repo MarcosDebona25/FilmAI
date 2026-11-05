@@ -173,8 +173,8 @@ synopsis cut at 300 characters, at most 10 items, «Vistas» removed.
 |---|---|---|
 | `buscar_por_titulo` | `titulo`, `tipo?`, `anio?` | `search` (exists) |
 | `descubrir` | `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `discover` (exists; generalizes `top_por_genero`) |
-| `similares_a` | `id_tmdb`, `tipo` | **new** `get_similar` → `/movie/{id}/similar`, `/tv/{id}/similar` |
-| `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then `discover` with `with_people` |
+| `similares_a` | `id_tmdb`, `tipo` | **new** `get_recommendations` → `/{tipo}/{id}/recommendations`. Not `/similar`: its results are poor (05/11/2026) |
+| `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then **new** `get_person_credits` → `/person/{id}/combined_credits`. Not `discover` with `with_people`: `/discover/tv` ignores it silently (05/11/2026) |
 | `detalle` | `id_tmdb`, `tipo` | `get_movie_detail` / `get_tv_detail` (exist) |
 | `buscar_semantico` | `consulta`, `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
 | `mis_listas` | `lista?` (`vistas`, `pendientes`, `favoritos`, or the `id` of a custom list) | SQL scoped to `ctx.usuario`. The model never passes a user id. Without `lista` it returns the user's lists as `{id, nombre}`; the model then asks by `id`, never by name (the name the model sees is anonymized, so a lookup by name would fail). |
