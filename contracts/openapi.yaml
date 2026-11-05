@@ -1212,6 +1212,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/chat/preparar/:
+    post:
+      operationId: chat_preparar_create
+      description: Se llama al abrir el panel, para que el modelo cargue mientras
+        se escribe.
+      tags:
+      - chat
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '202':
+          description: Carga pedida.
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/:
     get:
       operationId: lists_retrieve

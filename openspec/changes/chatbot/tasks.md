@@ -67,7 +67,7 @@ cross-front waits are PR 0 (shared) and the final swap (Canal waits for PR3).
 | File | Rule |
 |---|---|
 | `chatbot/eventos.py` | Owned by both. A change goes in its own small PR, agreed first |
-| `backend/filmai/settings.py` | Motor writes the provider block (`LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_THINKING`, `LLM_API_KEY`, `LLM_PROVEEDORES`, `OLLAMA_URL`); Canal the ASGI/`daphne` block plus `LLM_TIMEOUT_SECONDS` and `CHAT_MENSAJES_POR_HORA`, because the view owns the turn timeout and the lock. Separate blocks, each with a header comment |
+| `backend/filmai/settings.py` | Motor writes the provider block (`LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_THINKING`, `LLM_API_KEY`, `LLM_PROVEEDORES`, `OLLAMA_URL`, `OLLAMA_KEEP_ALIVE`); Canal the ASGI/`daphne` block plus `LLM_TIMEOUT_SECONDS` and `CHAT_MENSAJES_POR_HORA`, because the view owns the turn timeout and the lock. Separate blocks, each with a header comment |
 | `backend/requirements.txt` | Motor adds `openai`, Canal adds `daphne`; on conflict keep both lines |
 | `docs/decisiones.md` | Each adds its entry on top; on merge keep both |
 | `graphify-out/` | Never resolved by hand: after the merge run `graphify update .` and commit |
@@ -143,32 +143,34 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ## Phase 2: Tools, profile, anonymizer (PR 2)
 
-- [ ] 2.1 RED `catalogo` client: `get_similar(id, tipo)` and
-      `search_person(nombre)` hit the right TMDB paths; `discover` accepts
-      `with_people` (C-01 fake transport)
-- [ ] 2.2 GREEN: the three client methods and their cache wrappers; doc 06
-- [ ] 2.3 RED `chatbot/tests_tools.py`: each search tool returns
+- [x] 2.1 RED `catalogo` client: `get_recommendations(id, tipo)`,
+      `search_person(nombre)` and `get_person_credits(id)` hit the right TMDB
+      paths; `discover` accepts `duracion_max` (C-01 fake transport)
+- [x] 2.2 GREEN: the three client methods and their cache wrappers; doc 06
+- [x] 2.3 RED `chatbot/tests_tools.py`: each search tool returns
       `ProduccionResumen` items (≤ 10, synopsis ≤ 300) without «Vistas», and
       records the returned ids in the turn context
-- [ ] 2.4 RED: `mostrar_tarjetas` drops unseen ids, «Vistas» and duplicates,
+- [x] 2.4 RED: `mostrar_tarjetas` drops unseen ids, «Vistas» and duplicates,
       keeps 3, and returns the card dicts in the turn language
-- [ ] 2.5 RED: `mis_listas` reads only the context user's lists; without
+- [x] 2.5 RED: `mis_listas` reads only the context user's lists; without
       arguments it returns `{id, nombre}`; a custom list is read by `id`; the
       `id` of another user's list is not found; a list named with the user's
       name comes back anonymized
-- [ ] 2.6 RED: a tool that raises returns `{"error": "tool_failed"}`; the TMDB
+- [x] 2.6 RED: a tool that raises returns `{"error": "tool_failed"}`; the TMDB
       budget error too
-- [ ] 2.7 GREEN: `chatbot/tools/` (registry, schemas, functions), reusing
+- [x] 2.7 GREEN: `chatbot/tools/` (registry, schemas, functions), reusing
       `servicio_localizado`, `vistos()` and the TMDB budget
-- [ ] 2.8 RED `chatbot/tests_contexto.py`: liked/disliked/watched/favorites
+- [x] 2.8 RED `chatbot/tests_contexto.py`: liked/disliked/watched/favorites
       with their caps and excerpt length; a changed rating moves sections
-- [ ] 2.9 RED: `anonimizar`, case- and accent-insensitive, whole words only.
+- [x] 2.9 RED: `anonimizar`, case- and accent-insensitive, whole words only.
       Strict scope: name, last name and username → `[usuario]`. Conversation
       scope: name and last name together and username → `[usuario]`, a loose
       name stays («Mark Ruffalo» for the user Mark Debona, also with username
       `mark`). Both: every email
       address, the user's own included, → `[correo]`
-- [ ] 2.10 GREEN: `contexto.py`, `anonimizar.py`
+- [x] 2.10 GREEN: `contexto.py`, `anonimizar.py`
+- [x] 2.11 RED/GREEN: `modelo_cargado`, wait up to 20 s when the model is not
+      loaded, `calentar_modelo`, `POST /api/chat/preparar/`, `OLLAMA_KEEP_ALIVE`
 
 ## Phase 3: Provider and orchestrator (PR 3) — first async code
 
@@ -264,6 +266,7 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 - [ ] 6.3 RED: Markdown renderer neutralizes `<script>`, `<img onerror>`,
       `javascript:` links and Markdown images (`![x](https://…)` → text, no
       `img`)
+- [ ] 6.3b Panel: `POST /api/chat/preparar/` on opening (05/11/2026)
 - [ ] 6.4 GREEN: `lib/chat.ts`, `ChatProvider`, `ChatFab`, `ChatPanel`,
       `ChatBubble`, `ChatTarjetas`, `ChatInput` following the canvas
 - [ ] 6.5 RED/GREEN: cancel keeps the draft and shows «Solicitud cancelada»;

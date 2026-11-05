@@ -11,6 +11,7 @@ from datetime import timedelta
 
 from celery import shared_task
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 
@@ -18,6 +19,7 @@ from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEm
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.embeddings import (
     MODEL_VERSION,
+    EmbeddingProviderError,
     calcular_source_hash,
     construir_texto_canonico,
     generar_vector,
@@ -36,6 +38,14 @@ _RECLAMABLES = (EstadoEmbedding.PENDING, EstadoEmbedding.FAILED)
 # murió a mitad de la tarea (Q-09). El peor caso real son 3 intentos de 10 s, y
 # la fecha se renueva al reclamar, así que la espera en la cola no cuenta.
 _VENCIMIENTO_PROCESSING = timedelta(minutes=5)
+
+
+# Abrir y cerrar el panel no debe llenar la cola: esta clave deja pasar una carga
+# por minuto. La escribe `pedir_carga_del_modelo`.
+CLAVE_CARGA_MODELO = "chatbot:carga_modelo"
+
+# Nadie espera esta tarea: puede tardar lo que necesite la carga del modelo.
+_TIMEOUT_CARGA = 60
 
 
 def _processing_vencidas():
@@ -137,6 +147,24 @@ def generar_embedding(produccion_id):
         model_version=MODEL_VERSION,
         fecha_actualizacion=timezone.now(),
     )
+
+
+# Sin resultado: nadie lo lee, y guardarlo hacía que un broker caído bloqueara 19 s
+# a quien encola, en vez de fallar enseguida.
+@shared_task(name="catalogo.calentar_modelo", ignore_result=True)
+def calentar_modelo():
+    """Carga bge-m3 en Ollama antes de que llegue la primera pregunta del chat.
+
+    Corre en el worker porque la carga puede tardar más que lo que espera una
+    consulta, y si la conexión se corta, Ollama la abandona. Si Ollama falla no
+    reintenta acá, pero libera el pedido: sin eso, la próxima pregunta no podría
+    volver a pedir la carga durante un minuto.
+    """
+    try:
+        generar_vector("calentar", timeout=_TIMEOUT_CARGA, reintentos=0)
+    except EmbeddingProviderError:
+        logger.warning("calentar_modelo: Ollama no pudo cargar el modelo")
+        cache.delete(CLAVE_CARGA_MODELO)
 
 
 # Qué recorre cada corrida nocturna y cómo se sabe el tipo de cada ítem:

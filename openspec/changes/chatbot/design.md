@@ -51,7 +51,7 @@ This is the team's first async code, so the boundary is deliberately small.
   `ThreadSensitiveContext` per request (Django 5.2, `core/handlers/asgi.py`),
   so each request gets its own thread: one user's tools never queue behind
   another's. If the turn's timeout fires while a tool runs, its thread keeps
-  going until that tool's own timeout (TMDB's client, Ollama's 3 s); it stores
+  going until that tool's own timeout (TMDB's client, Ollama's 3 or 20 s); it stores
   nothing, because only the orchestrator saves. `asgiref` copies context variables into the
   thread, so the per-request TMDB budget of `catalogo/presupuesto.py` (a
   `ContextVar`) keeps working inside tools; a test pins this.
@@ -153,13 +153,13 @@ its own message, adding a code is additive.
 | Hourly limit = a fixed-window counter in the cache (`incr`), like `presupuesto.py` | DRF `UserRateThrottle` | The view is not DRF. Same mechanism already used and tested for TMDB. Counts only messages that passed validation and took the lock, so a 409 (Conflict) spends no quota; a 429 (Too Many Requests) releases the lock. |
 | Cancel = abort the fetch; Django ≥ 5.0 cancels the async generator on disconnect | A cancel endpoint | Nothing to coordinate: a cancel before the save unwinds the loop and nothing is persisted. A test through `get_asgi_application()` with a real `http.disconnect` pins it (`AsyncClient` cannot simulate one). **The window after the save**: the pair is committed just before `fin` is written, so a cancel in that instant leaves it saved while the panel shows «Solicitud cancelada». That is CU-014's failure postcondition («la cancelación no se procesa a tiempo») and was accepted on 08/10: the answer appears in the history the next time it loads. Rule for the front: whichever the panel processes first wins. A click on «Cancelar» processed before `fin` aborts and discards the answer (CU-014 2.A); once `fin` is processed the turn is over and the button is «Enviar» again, so there is nothing left to cancel. |
 | Save user message and answer **together**, after the last token | Save the question on arrival | A failed or cancelled turn leaves no orphan question (08/10/2026). The front keeps the draft to retry. |
-| Tool results drop «Vistas» **and** `mostrar_tarjetas` validates | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
+| Recommendation searches drop «Vistas» **and** `mostrar_tarjetas` validates ids | Only the card filter | Latency test of 28/10: without thinking, the model recommended a watched title in prose. What it never sees, it cannot name. |
 | `mostrar_tarjetas` keeps only ids returned by a tool in this turn, cuts to 3 | Trust the model's ids | Anchoring: no invented titles reach a card. Invalid ids are dropped silently (09/10). |
 | Cards stored as shown, in the turn language, no FK | A `Tarjeta` model | 09/10/2026: history returns them as they were; no `materializar()` per card inside the RNF #6 budget. |
 | History sent to the model = last 10 messages, text only, cards appended as a line «[Tarjetas: Moon (2009), …]» | Send tool transcripts | Tool calls are not persisted; the line tells the model what it already showed. `Chat.contexto.ya_recomendados` keeps the last 30 cards as `{id_tmdb, tipo, titulo, anio}` and the system prompt renders them as titles («Ya recomendados: Moon (2009), …»): bare TMDB ids would mean nothing to the model. |
 | Profile by SQL on every message | Precompute into `Chat.contexto` | 08/10/2026. |
 | `deepseek-flash`, thinking **off** (`{"thinking": {"type": "disabled"}}`), `max_tokens` 800 | Thinking on | 28/10 test: 2.2 s to first text vs 2.8 s, and thinking + tools demands echoing `reasoning_content` every round. `LLM_THINKING` in `.env` turns it on for the golden-set comparison; with it on, the provider echoes each round's `reasoning_content` back in the assistant message (DeepSeek answers 400 otherwise). |
-| Ollama `keep_alive: "30m"` on every call | Default 5 min / forever | Cold load measured at ~1.9 s; 30 min covers a session without pinning 1.24 GB forever. |
+| Ollama `keep_alive` from `OLLAMA_KEEP_ALIVE` (`30m`; `-1m` on a server) on every call | Default 5 min / forever | Cold load measured between 2 and 24 s; 30 min covers a session without pinning 1.24 GB forever. |
 
 ## Tools
 
@@ -167,14 +167,16 @@ Each tool = a JSON schema (strict) + a **sync** function `(ctx, **args)` where
 `ctx` carries `usuario`, `idioma` (the turn language, fixed once) and the set of
 ids seen this turn. Search tools return `ProduccionResumen` items:
 `{id_tmdb, tipo, titulo, anio, generos, duracion, nota_tmdb, sinopsis_corta}`,
-synopsis cut at 300 characters, at most 10 items, «Vistas» removed.
+synopsis cut at 300 characters, at most 10 items. Recommendation searches remove
+«Vistas»; direct lookups (`buscar_por_titulo`, `detalle`, `mis_listas`) keep them with
+`vista: true`.
 
 | Tool | Arguments | Backed by |
 |---|---|---|
 | `buscar_por_titulo` | `titulo`, `tipo?`, `anio?` | `search` (exists) |
 | `descubrir` | `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `discover` (exists; generalizes `top_por_genero`) |
-| `similares_a` | `id_tmdb`, `tipo` | **new** `get_similar` → `/movie/{id}/similar`, `/tv/{id}/similar` |
-| `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then `discover` with `with_people` |
+| `similares_a` | `id_tmdb`, `tipo` | **new** `get_recommendations` → `/{tipo}/{id}/recommendations`. Not `/similar`: its results are poor (05/11/2026) |
+| `buscar_por_persona` | `nombre`, `rol?` | **new** `search_person` → `/search/person`, then **new** `get_person_credits` → `/person/{id}/combined_credits`. Not `discover` with `with_people`: `/discover/tv` ignores it silently (05/11/2026) |
 | `detalle` | `id_tmdb`, `tipo` | `get_movie_detail` / `get_tv_detail` (exist) |
 | `buscar_semantico` | `consulta`, `generos[]?`, `tipo?`, `anio_desde?`, `anio_hasta?`, `nota_minima?`, `duracion_max?` | `catalogo/services/semantica.py` |
 | `mis_listas` | `lista?` (`vistas`, `pendientes`, `favoritos`, or the `id` of a custom list) | SQL scoped to `ctx.usuario`. The model never passes a user id. Without `lista` it returns the user's lists as `{id, nombre}`; the model then asks by `id`, never by name (the name the model sees is anonymized, so a lookup by name would fail). |
@@ -193,11 +195,16 @@ A tool exception never ends the turn: the model receives
 ## Semantic search (B-06)
 
 - `generar_vector(texto)` → `httpx.post(f"{OLLAMA_URL}/api/embed", json={"model":
-  "bge-m3", "input": texto, "keep_alive": "30m"})`, raises
+  "bge-m3", "input": texto, "keep_alive": OLLAMA_KEEP_ALIVE})`, raises
   `EmbeddingProviderError` (exists). Two budgets: the backfill uses 10 s and 2
-  retries; a chat query uses 3 s and no retry (warm queries take ~60 ms, a cold
-  load ~1.9 s), so a hung Ollama costs the turn at most 3 s. `MODEL_VERSION = "bge-m3"`: every
-  stub-era row becomes stale and the backfill regenerates it.
+  retries; a chat query never retries (warm queries take ~60 ms, a cold load
+  between 2 and 24 s). `MODEL_VERSION = "bge-m3"`: every
+  stub-era row becomes stale and the backfill regenerates it. A chat query first
+  asks `/api/ps` (1 s): loaded → 3 s; not loaded → up to 20 s, because Ollama drops
+  a load when the client disconnects. So a hung Ollama costs the turn at most 21 s,
+  and 1 s if `/api/ps` does not answer. The panel calls `POST /api/chat/preparar/` on
+  opening, which queues `calentar_modelo` (60 s) so the load starts before the
+  question (05/11/2026).
 - `buscar_semantico(consulta, filtros)` → embed the query, cosine distance over
   `estado = ready` with the HNSW index (`hnsw.ef_search = 100`: the default 40
   would silently cap the 50 candidates), overfetch 50, apply the SQL filters,
@@ -310,6 +317,7 @@ in `settings.py` and appears commented in `.env.example` (04/11/2026):
 | `LLM_TIMEOUT_SECONDS` | `25` |
 | `CHAT_MENSAJES_POR_HORA` | `20` |
 | `OLLAMA_URL` | the dev bridge, `http://host.docker.internal:11435`; set explicitly in production |
+| `OLLAMA_KEEP_ALIVE` | `30m`; `-1m` on a server, so the model never unloads. Must be a duration: `-1` as text is a 400 |
 
 `settings.py` builds `LLM_PROVEEDORES`, a list with one entry today
 (`{tipo, base_url, modelo, api_key, thinking}`). `llm.py` keeps a registry

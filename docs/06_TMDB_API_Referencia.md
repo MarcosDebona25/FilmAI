@@ -191,10 +191,10 @@
 | GET    | `/movie/{movie_id}/images`             | Imágenes.                                                     |
 | GET    | `/movie/{movie_id}/keywords`           | **Keywords temáticos** (B-06).                                |
 | GET    | `/movie/{movie_id}/lists`              | Listas que contienen la película.                             |
-| GET    | `/movie/{movie_id}/recommendations`    | Recomendaciones de TMDB.                                      |
+| GET    | `/movie/{movie_id}/recommendations`    | **Recomendaciones** (herramienta `similares_a`).              |
 | GET    | `/movie/{movie_id}/release_dates`      | Fechas de estreno por país.                                   |
 | GET    | `/movie/{movie_id}/reviews`            | Reseñas de TMDB.                                              |
-| GET    | `/movie/{movie_id}/similar`            | **Películas similares** (herramienta `similares_a`).          |
+| GET    | `/movie/{movie_id}/similar`            | Películas similares. No se usa: resultados malos.             |
 | GET    | `/movie/{movie_id}/translations`       | Traducciones.                                                 |
 | GET    | `/movie/{movie_id}/videos`             | Videos (trailers).                                            |
 | GET    | `/movie/{movie_id}/watch/providers`    | Proveedores de streaming. **Usado** en la ficha (ver abajo).  |
@@ -219,7 +219,7 @@
 | :----- | :------------------------------------- | :--------------------- |
 | GET    | `/person/{person_id}`                  | Detalle de persona.    |
 | GET    | `/person/{person_id}/changes`          | Cambios.               |
-| GET    | `/person/{person_id}/combined_credits` | Créditos combinados.   |
+| GET    | `/person/{person_id}/combined_credits` | **Créditos combinados** (herramienta `buscar_por_persona`). |
 | GET    | `/person/{person_id}/external_ids`     | IDs externos.          |
 | GET    | `/person/{person_id}/images`           | Imágenes.              |
 | GET    | `/person/{person_id}/movie_credits`    | Créditos en películas. |
@@ -273,10 +273,10 @@
 | GET    | `/tv/{series_id}/external_ids`          | IDs externos.                                                |
 | GET    | `/tv/{series_id}/images`                | Imágenes.                                                    |
 | GET    | `/tv/{series_id}/keywords`              | **Keywords temáticos** (B-06).                               |
-| GET    | `/tv/{series_id}/recommendations`       | Recomendaciones de TMDB.                                     |
+| GET    | `/tv/{series_id}/recommendations`       | **Recomendaciones** (herramienta `similares_a`).             |
 | GET    | `/tv/{series_id}/reviews`               | Reseñas de TMDB.                                             |
 | GET    | `/tv/{series_id}/screened_theatrically` | Estrenadas en cines.                                         |
-| GET    | `/tv/{series_id}/similar`               | **Series similares** (herramienta `similares_a`).            |
+| GET    | `/tv/{series_id}/similar`               | Series similares. No se usa: resultados malos.               |
 | GET    | `/tv/{series_id}/translations`          | Traducciones.                                                |
 | GET    | `/tv/{series_id}/videos`                | Videos.                                                      |
 | GET    | `/tv/{series_id}/watch/providers`       | Proveedores de streaming. **Usado** en la ficha (ver abajo). |
@@ -343,18 +343,27 @@
 | :----------------------------------- | :---------------------------------------------------- |
 | `buscar_por_titulo(titulo, tipo)`    | `GET /search/movie`, `GET /search/tv`                 |
 | `descubrir(filtros, tipo, page)`     | `GET /discover/movie`, `GET /discover/tv`             |
-| `similares_a(id_tmdb, tipo)`         | `GET /movie/{id}/similar`, `GET /tv/{id}/similar`     |
-| `buscar_por_persona(nombre)`         | `GET /search/person` y los créditos de la persona     |
+| `similares_a(id_tmdb, tipo)`         | `GET /movie/{id}/recommendations`, `GET /tv/{id}/recommendations` |
+| `buscar_por_persona(nombre, rol)`    | `GET /search/person`, `GET /person/{id}/combined_credits` |
 | `detalle(id_tmdb, tipo)`             | `GET /movie/{id}`, `GET /tv/{id}`                     |
 | `buscar_semantico(query)`            | No usa TMDB: pgvector sobre embeddings locales (B-06) |
 | `mis_listas()`                       | No usa TMDB: listas del usuario por SQL               |
 | `mostrar_tarjetas(ids)`              | No usa TMDB: valida ids del turno, hasta 3 tarjetas   |
 | Keywords para embeddings (C-04)      | `GET /movie/{id}/keywords`, `GET /tv/{id}/keywords`   |
 
-`descubrir` generaliza el `top_por_genero` original. Las firmas son orientativas
-hasta el diseño de B-02. Al cliente TMDB le faltan `get_similar` y
-`search_person`. Todas las tools consultan TMDB en el idioma del turno
-(decisiones del 08/10/2026 y 09/10/2026).
+`descubrir` generaliza el `top_por_genero` original. Todas las tools consultan
+TMDB en el idioma del turno (decisiones del 08/10/2026 y 09/10/2026).
+
+Tres comportamientos de la API verificados el 05/11/2026:
+
+- `/similar` compara poco más que géneros: para *Paddington 2* trae *El Señor de
+  los Anillos*. `/recommendations` usa lo que mira la gente y trae *Paddington in
+  Peru*, así que `similares_a` usa ese.
+- `with_people` funciona en `/discover/movie`, pero `/discover/tv` lo ignora sin
+  avisar y devuelve cualquier serie. `combined_credits` trae películas y series,
+  como actor o en el equipo, y repite un título por cada puesto.
+- `with_runtime.lte` no sirve en series, porque TMDB casi nunca tiene el dato. En
+  películas, las de duración desconocida vienen con 0: hay que pedir `with_runtime.gte=1`.
 
 ---
 

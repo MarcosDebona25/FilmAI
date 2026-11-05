@@ -18,6 +18,9 @@ ENDPOINTS_LOCALIZADOS = frozenset(
         "movie_detail",
         "tv_detail",
         "genres",
+        "recommendations",
+        "person_search",
+        "person_credits",
     }
 )
 
@@ -29,6 +32,10 @@ ENDPOINT_TTLS = {
     "movie_detail": 24 * 3600,
     "tv_detail": 24 * 3600,
     "keywords": 24 * 3600,
+    # Lo que usa el chatbot: las recomendaciones y la filmografía cambian poco.
+    "recommendations": 24 * 3600,
+    "person_search": 24 * 3600,
+    "person_credits": 24 * 3600,
     # El reparto de una producción ya estrenada casi no cambia: mismo TTL
     # largo que el detalle y las keywords.
     "credits": 24 * 3600,
@@ -203,6 +210,7 @@ class TMDBClientCache:
         sin_generos=None,
         desde_fecha=None,
         hasta_fecha=None,
+        duracion_max=None,
     ):
         # Todos los filtros entran en la clave: dos consultas que difieren en
         # la década son dos respuestas distintas, no un cache hit.
@@ -228,6 +236,8 @@ class TMDBClientCache:
             params["desde_fecha"] = desde_fecha
         if hasta_fecha is not None:
             params["hasta_fecha"] = hasta_fecha
+        if duracion_max is not None:
+            params["duracion_max"] = duracion_max
         return self._cached_call(
             "discover",
             params,
@@ -245,6 +255,7 @@ class TMDBClientCache:
                 sin_generos,
                 desde_fecha,
                 hasta_fecha,
+                duracion_max,
             ),
         )
 
@@ -268,6 +279,28 @@ class TMDBClientCache:
         params = {"id_tmdb": id_tmdb}
         return self._cached_call(
             "tv_detail", params, lambda: self.client.get_tv_detail(id_tmdb)
+        )
+
+    def get_recommendations(self, id_tmdb, tipo):
+        params = {"id_tmdb": id_tmdb, "tipo": tipo}
+        return self._cached_call(
+            "recommendations",
+            params,
+            lambda: self.client.get_recommendations(id_tmdb, tipo),
+        )
+
+    def search_person(self, nombre):
+        return self._cached_call(
+            "person_search",
+            {"nombre": nombre},
+            lambda: self.client.search_person(nombre),
+        )
+
+    def get_person_credits(self, id_persona):
+        return self._cached_call(
+            "person_credits",
+            {"id_persona": id_persona},
+            lambda: self.client.get_person_credits(id_persona),
         )
 
     def get_keywords(self, id_tmdb, tipo):

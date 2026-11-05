@@ -13,6 +13,43 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Descartado**: elegir otra imagen por regla, porque ningún dato de TMDB distingue una escena de un arte de póster, y cambiaría también títulos que hoy están bien. Difuminar siempre, porque pierde la imagen en todos.
   - **Riesgo**: si TMDB borra una imagen de la lista, ese título se queda sin fondo.
 - **Archivos afectados**: `frontend/lib/{fondos,title,catalog}.ts`. Tests: `frontend/tests/fondos.test.ts`.
+## 05/11/2026 — Carga anticipada de bge-m3 y espera en `buscar_semantico`
+
+- **Fecha**: 05/11/2026
+- **Descripción**: revisando el PR 1 apareció un error de diseño. Si cargar el modelo tardaba más de 3 s, el chat cortaba la espera, Ollama abandonaba la carga y la búsqueda semántica fallaba **siempre**, hasta que algo lo cargara por otro lado. El registro del 04/11 decía que solo fallaba la primera consulta, y estaba mal. Se decidió:
+  - **Cargar al abrir el panel**: `POST /api/chat/preparar/` devuelve 202 (Accepted) y encola `calentar_modelo`, que espera hasta 60 s en el worker. Hay una sola carga por minuto, aunque se abra el panel varias veces. La llamada desde el panel es del Canal (PR 6).
+  - **Esperar si todavía no cargó**: una pregunta rápida no sale sin búsqueda. `buscar_semantico` consulta `/api/ps` (1 s): si el modelo está cargado espera 3 s; si no, hasta 20 s, dentro de los 25 s del turno. Si Ollama no responde falla enseguida, así que un Ollama caído no gasta esos 20 s.
+  - **Si la espera no alcanza**: la tool devuelve `tool_failed` y se encola la carga, para que siga en segundo plano.
+  - **Medición**: cada búsqueda registra `cargado` y `vector_ms` en los logs.
+  - **`OLLAMA_KEEP_ALIVE`**: configurable, `30m` por defecto. En un servidor conviene `-1m`, que no lo descarga nunca. Tiene que ser una duración: `-1` como texto da 400 (Bad Request).
+- **Comprobado contra Ollama 0.40.14 (05/11/2026)**:
+  - **Si el cliente corta, Ollama abandona la carga**: 10 de 10 repeticiones, en cargas con la caché de Windows caliente; los logs de cortes a 3 s en frío lo respaldan, pero no hay medición directa.
+  - **Quién pidió primero importa**: si `calentar_modelo` llegó antes, el corte del chat no la afecta (3 de 3). Si el chat fue el primero y corta, la carga arranca de cero (3 de 3). Por eso el panel tiene que pedirla al abrirse: es parte del diseño, no un agregado.
+  - **`/api/ps`** figura recién al terminar la carga y no se bloquea: en unas 3900 consultas ninguna llegó a 1 s. Un pedido que llega con la carga en curso se suma a ella.
+- **Riesgo medido**: de 5 cargas frías completas (13,3; 14,4; 21,6; 23,4 y 23,7 s), 3 superan los 20 s, con la PC justa de memoria. Sin carga anticipada, una pregunta en frío probablemente falla. Si el worker no está levantado, la ruta responde 202 pero nada carga, y una carga de más de 20 s nunca termina. Una carga de 19 o 20 s que sí llega puede dejar el turno sin tiempo para las tarjetas (`chat_unavailable`).
+- **Falta**: medir con el panel y el worker reales, con los logs `cargado` y `vector_ms`.
+- **Archivos afectados**: `backend/catalogo/services/{embeddings,semantica}.py`, `backend/catalogo/tasks.py`, `backend/chatbot/{urls,views}.py`, `backend/filmai/{settings,urls}.py`, `contracts/openapi.yaml`, `.env.example`, `openspec/changes/chatbot/`. Tests: `backend/catalogo/tests_semantica.py`, `backend/chatbot/tests_preparar.py`.
+
+## 05/11/2026 — Herramientas, perfil y anonimizador del chatbot (PR 2)
+
+- **Fecha**: 05/11/2026
+- **Descripción**: fase 2 del SDD. Las 8 tools son funciones síncronas en `chatbot/tools/`, `armar_perfil` lee el perfil de la base en cada mensaje y `anonimizar` limpia lo que viaja al proveedor. Consultar TMDB antes de escribir los tests cambió tres puntos del SDD:
+  - **`similares_a` usa `/recommendations`, no `/similar`**: `/similar` da resultados malos (*Paddington 2* trae *El Señor de los Anillos*, y *Interstellar* trae *Daylight*). Se respeta el orden de TMDB.
+  - **`buscar_por_persona` usa `combined_credits`, no `discover` con `with_people`**: `/discover/tv` ignora ese filtro sin avisar y devuelve cualquier serie. Los créditos traen películas y series en una llamada, y sirven también para directores. Sin `rol`, se cuenta la actuación y la dirección; un productor o guionista no cuenta.
+  - **`duracion_max` solo en películas**: TMDB casi no tiene la duración de las series. Sin `tipo`, un límite de duración busca solo películas; con `tipo=tv`, se ignora. Se pide `with_runtime.gte=1` para dejar afuera las películas con duración 0, que es desconocida.
+  - **Géneros**: el modelo elige entre los nombres en inglés de TMDB, y alcanza con que coincida uno. Como TMDB los nombra distinto (`Science Fiction` y `Sci-Fi & Fantasy`), cada uno se amplía a su equivalente. Si un género no existe en el tipo pedido, no se busca: hacerlo sin el filtro traería cualquier cosa.
+  - **Tarjetas**: `poster` es la ruta de TMDB (`/abc.jpg`), como `poster_path`; el front arma la URL.
+  - **Vistas en consultas directas**: el SDD sacaba las «Vistas» de toda búsqueda, y entonces «algo como Interstellar» fallaba si ya la habían visto, porque el modelo no encontraba el título. Ahora se separan: las búsquedas de recomendación (`descubrir`, `similares_a`, `buscar_por_persona`, `buscar_semantico`) las sacan, y las consultas directas (`buscar_por_titulo`, `detalle`, `mis_listas`) las conservan con `vista: true`. Un título visto puede ser tarjeta solo si llegó por una consulta directa. Que el modelo no lo recomiende por su cuenta depende del prompt (PR 3), no de una validación.
+
+    | Si el usuario pide | Qué hace |
+    |---|---|
+    | «Mostrame Interstellar» (la vio) | La encuentra y muestra la tarjeta |
+    | «¿Cuánto dura Interstellar?» (la vio) | La encuentra y responde |
+    | «Algo como Interstellar» (la vio) | La usa de base para buscar parecidos |
+    | «Recomendame ciencia ficción» | No trae nada visto |
+
+  - **Esquemas**: no se usa `strict`, porque obliga a declarar como requerido cada campo. Se revisa con el proveedor en el PR 3.
+- **Archivos afectados**: `backend/catalogo/{client,cache}.py`, `backend/catalogo/services/fallback.py`, `backend/chatbot/{anonimizar,contexto}.py`, `backend/chatbot/tools/`, `docs/06_TMDB_API_Referencia.md`, `openspec/changes/chatbot/`. Tests: `backend/catalogo/tests_cliente_chatbot.py`, `backend/chatbot/tests_contexto.py`, `backend/chatbot/tests_tools.py`.
 
 ## 05/11/2026 — CI más rápido: hasher rápido en los tests y cancelación de corridas viejas
 
@@ -51,7 +88,7 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Reintentos sin pausa**: el SDD no pide esperar entre intentos; el backfill corre de noche y una fila que falla la retoma la corrida siguiente.
   - **Q-09**: un reclamo en `processing` vence a los 5 minutos. El peor caso de una tarea son 3 intentos de 10 s, y la fecha se renueva al reclamar, así que la espera en la cola no cuenta. El backfill devuelve las vencidas a `pending` antes de reencolar: si solo renovara la fecha, `generar_embedding` vería un reclamo reciente y no las tomaría.
   - **Compose**: perfiles `ollama-windows` (`alpine/socat:1.8.0.3`) y `ollama` (`ollama/ollama:0.40.14`); ninguno arranca por defecto.
-- **Medición real (Gonza, 04/11/2026)**: 402 de 402 producciones en `ready` en 223 s (554 ms por ficha, sin Celery y con Windows casi sin memoria libre). Consultas de `buscar_semantico`: 80 a 125 ms. Con el modelo cargado, un vector tarda unos 60 ms; la carga en frío tardó 21,7 s con 730 MB libres en Windows, contra los 1,9 s medidos el 28/10. En ese caso el presupuesto de 3 s del chat vence y la tool devuelve `tool_failed`: es el comportamiento acordado, y `keep_alive` lo limita a la primera consulta tras 30 minutos sin uso. Falta la corrida de Marcos (tarea 1.7).
+- **Medición real (Gonza, 04/11/2026)**: 402 de 402 producciones en `ready` en 223 s (554 ms por ficha, sin Celery y con Windows casi sin memoria libre). Consultas de `buscar_semantico`: 80 a 125 ms. Con el modelo cargado, un vector tarda unos 60 ms; la carga en frío tardó 21,7 s con 730 MB libres en Windows, contra los 1,9 s medidos el 28/10. En ese caso el presupuesto de 3 s del chat vencía: se corrigió el 05/11/2026 (ver «Carga anticipada de bge-m3»). Falta la corrida de Marcos (tarea 1.7).
 - **Archivos afectados**: `backend/catalogo/services/{embeddings,semantica}.py`, `backend/catalogo/tasks.py`, `backend/catalogo/tests.py`, `backend/catalogo/tests_semantica.py` (nuevo), `backend/filmai/settings.py`, `docker-compose.yml`, `.env.example`, `docs/05_Plan_de_Desarrollo.md`, `openspec/changes/chatbot/`.
 
 ## 04/11/2026 — Ancho en pantallas grandes: contenedor único, escala desde 1440 px, filas con tarjetas enteras y tamaños en rem
