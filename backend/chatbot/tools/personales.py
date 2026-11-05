@@ -1,4 +1,8 @@
-"""Tools que leen datos del usuario del turno o eligen qué mostrarle."""
+"""Tools que leen datos del usuario del turno o eligen qué mostrarle.
+
+Las llama: `ejecutar()` de `tools/__init__.py`.
+Usan: los modelos de `listas`, `anonimizar()` y lo anotado en `ContextoTurno`.
+"""
 
 from chatbot.anonimizar import ESTRICTO, anonimizar
 from chatbot.tools.turno import desde_produccion, publicar
