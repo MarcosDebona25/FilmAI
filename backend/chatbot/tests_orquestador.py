@@ -162,6 +162,12 @@ class FallosTests(BaseOrquestador):
 
         self.assertEqual(len(self.proveedor.pedidos), 5)
 
+    async def test_pasarse_de_vueltas_falla_aunque_ya_haya_texto(self):
+        guion = [["Busco.", tool("descubrir")] for _ in range(5)]
+
+        with self.assertRaises(ErrorDelTurno):
+            await self.correr(guion)
+
     async def test_cuatro_vueltas_de_tools_y_una_respuesta_estan_permitidas(self):
         guion = [[tool("descubrir")] for _ in range(4)] + [["Listo"]]
 
