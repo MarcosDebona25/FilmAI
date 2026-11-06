@@ -1212,6 +1212,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/chat/messages/:
+    get:
+      operationId: chat_messages_list
+      description: |-
+        El historial del chat del usuario, de más nuevo a más viejo, de a 20.
+
+        Las tarjetas vuelven como se guardaron, en el idioma de su turno.
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: El valor del cursor de paginación.
+        schema:
+          type: string
+      tags:
+      - chat
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMensajeList'
+          description: ''
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/chat/preparar/:
     post:
       operationId: chat_preparar_create
@@ -2049,6 +2087,14 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
 components:
   schemas:
+    AutorEnum:
+      enum:
+      - usuario
+      - chatbot
+      type: string
+      description: |-
+        * `usuario` - Usuario
+        * `chatbot` - Chatbot
     CambiarContrasena:
       type: object
       description: Adjunta metadata después de que Serializer.is_valid reconstruye
@@ -2140,9 +2186,62 @@ components:
           type: string
       required:
       - password
+    Mensaje:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        autor:
+          allOf:
+          - $ref: '#/components/schemas/AutorEnum'
+          readOnly: true
+        texto:
+          type: string
+          readOnly: true
+          description: 'TEXT, como indica el diagrama de tablas (doc 03): una respuesta
+            del LLM puede superar los 250 caracteres que tenía antes.'
+        tarjetas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tarjeta'
+          readOnly: true
+          description: 'Hasta 3 tarjetas que el bot mostró con la respuesta, tal como
+            se vieron, en el idioma de ese turno: no se vuelven a traducir. En los
+            mensajes del usuario, lista vacía.'
+        fecha_hora:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Fecha y hora
+      required:
+      - autor
+      - fecha_hora
+      - id
+      - tarjetas
+      - texto
     NullEnum:
       enum:
       - null
+    PaginatedMensajeList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mensaje'
     PatchedUsuarioDetalles:
       type: object
       description: |-
@@ -2317,6 +2416,40 @@ components:
           readOnly: true
       required:
       - detail
+    Tarjeta:
+      type: object
+      description: |-
+        Una tarjeta guardada, igual que en el evento `tarjetas` (`eventos.Tarjeta`).
+
+        Lee diccionarios del JSON de `Mensaje.tarjetas`, no modelos. Existe para que
+        el contrato OpenAPI describa cada campo en lugar de «cualquier JSON».
+      properties:
+        id_tmdb:
+          type: integer
+        tipo:
+          $ref: '#/components/schemas/TipoEnum'
+        titulo:
+          type: string
+        poster:
+          type: string
+          nullable: true
+        anio:
+          type: integer
+          nullable: true
+      required:
+      - anio
+      - id_tmdb
+      - poster
+      - tipo
+      - titulo
+    TipoEnum:
+      enum:
+      - movie
+      - tv
+      type: string
+      description: |-
+        * `movie` - movie
+        * `tv` - tv
     TokenVerify:
       type: object
       properties:

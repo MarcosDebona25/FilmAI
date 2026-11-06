@@ -206,16 +206,16 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ## Phase 4: Persistence and history (PR 4)
 
-- [ ] 4.1 Migration: `Mensaje.tarjetas` (`JSONField`, default list); update
+- [x] 4.1 Migration: `Mensaje.tarjetas` (`JSONField`, default list); update
       `Chat.contexto` help text (it still describes the discarded precomputed
       profile)
-- [ ] 4.2 RED: `guardar_turno()` saves both messages atomically, appends the
+- [x] 4.2 RED: `guardar_turno()` saves both messages atomically, appends the
       cards to `ya_recomendados` as `{id_tmdb, tipo, titulo, anio}` (cap 30),
       and leaves nothing when it fails
-- [ ] 4.3 RED `chatbot/tests_historial.py`: `GET /api/chat/messages/`
+- [x] 4.3 RED `chatbot/tests_historial.py`: `GET /api/chat/messages/`
       newest first, cursor of 20, own messages only, cards as stored, 401
       without session
-- [ ] 4.4 GREEN: the service, serializer, cursor pagination (pattern of
+- [x] 4.4 GREEN: the service, serializer, cursor pagination (pattern of
       `pagination_reviews.py`), route, OpenAPI regenerated
 
 ## Phase 5: ASGI and the SSE endpoint (PR 5)
