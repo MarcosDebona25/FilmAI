@@ -25,7 +25,7 @@ from chatbot.llm import (
     leer_stream,
 )
 from chatbot.models import Chat, Mensaje, TipoAutor
-from chatbot.orquestador import responder
+from chatbot.orquestador import _LARGO_DE_PREAMBULO, responder
 from chatbot.prompts import armar_sistema
 from chatbot.tools import FUNCIONES, ContextoTurno
 from usuarios.factories import UsuarioFactory
@@ -127,11 +127,35 @@ class VueltaConToolsTests(BaseOrquestador):
         self.assertEqual(sum(isinstance(e, Estado) for e in eventos), 1)
 
     async def test_el_texto_de_dos_vueltas_no_queda_pegado(self):
-        eventos = await self.correr([["Busco.", tool("descubrir")], ["Listo."]])
+        # Un texto largo antes de buscar ya salió al front: el que sigue va aparte.
+        largo = "x" * (_LARGO_DE_PREAMBULO + 1)
+        eventos = await self.correr([[largo, tool("descubrir")], ["Listo."]])
 
-        self.assertEqual(eventos[-1].texto, "Busco.\n\nListo.")
+        self.assertEqual(eventos[-1].texto, f"{largo}\n\nListo.")
         pedazos = "".join(e.delta for e in eventos if isinstance(e, Texto))
         self.assertEqual(pedazos, eventos[-1].texto)
+
+    async def test_un_preambulo_antes_de_buscar_no_llega_al_usuario(self):
+        # «I'll look that up.» y después la respuesta: el prompt lo prohíbe, pero
+        # el modelo a veces lo escribe igual.
+        eventos = await self.correr(
+            [["I'll look ", "that up.", tool("descubrir")], ["Te recomiendo Moon"]]
+        )
+
+        self.assertEqual(eventos[-1].texto, "Te recomiendo Moon")
+        pedazos = "".join(e.delta for e in eventos if isinstance(e, Texto))
+        self.assertEqual(pedazos, "Te recomiendo Moon")
+
+    async def test_el_preambulo_sigue_en_lo_que_ve_el_modelo(self):
+        # El modelo tiene que ver lo que dijo, o la charla que recibe no cierra.
+        await self.correr([["Busco.", tool("descubrir")], ["Listo."]])
+
+        self.assertEqual(self.proveedor.pedidos[1][-2]["content"], "Busco.")
+
+    async def test_el_texto_con_tarjetas_no_es_un_preambulo(self):
+        eventos = await self.correr([[tool("descubrir")], ["Mirá", tarjetas(1)]])
+
+        self.assertEqual(eventos[-1].texto, "Mirá")
 
     async def test_varias_tools_en_una_vuelta_responden_en_orden(self):
         await self.correr([[tool("descubrir", "a"), tool("descubrir", "b")], ["Listo"]])

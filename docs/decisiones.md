@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 06/11/2026 — Un «ya busco» antes de buscar no llega al usuario (corrección al PR 3)
+
+- **Fecha**: 06/11/2026
+- **Corrección al Motor**: el PR 3 es de Gonza. Esta corrección la hizo Marcos con su aval, y queda registrada acá como él pidió para todo cambio a su parte.
+- **Descripción**: el prompt dice «No escribas nada mientras buscás», pero el modelo a veces escribe «I'll look that up.» en la misma vuelta en que pide una búsqueda, y el usuario lo veía pegado a la respuesta. El texto sale al front a medida que llega y recién al final de la vuelta se sabe si hubo tools; el contrato de `eventos.py` no permite retirar texto ya enviado. Ahora `responder()` retiene el comienzo de cada vuelta hasta `_LARGO_DE_PREAMBULO` (200 caracteres). Si la vuelta termina antes y pidió buscar, ese texto no se envía. Si pasa el umbral, o la vuelta cierra el turno, sale como siempre. El modelo lo sigue viendo en los mensajes de la vuelta siguiente.
+- **Costo**: una respuesta larga se demora lo que tarda el modelo en escribir sus primeros 200 caracteres; una corta (un rechazo, un saludo) sale entera al final de su vuelta.
+- **Verificado contra DeepSeek (06/11/2026)**, con un usuario sin historial: el modelo escribió el preámbulo en 4 de 4 pedidos en inglés y no llegó al usuario en ninguno. Sin el cambio, llegó en 1 de 4.
+- **Pendiente para el Motor**: «Algo como Arrival pero más liviano», en español y sin historial, usó 4 o 5 vueltas de búsqueda; con 5 el turno termina en `ErrorDelTurno` (pasó en 2 de 4 corridas). No depende de este cambio: lo que recibe el modelo es igual. Conviene revisar el tope de vueltas o empujar al modelo a responder antes.
+- **Archivos afectados**: `backend/chatbot/orquestador.py`. Tests: `backend/chatbot/tests_orquestador.py`.
+
 ## 06/11/2026 — El chatbot respondía en español a mensajes en inglés (corrección al PR 3)
 
 - **Fecha**: 06/11/2026
