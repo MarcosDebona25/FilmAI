@@ -160,7 +160,9 @@ declare const messages: {
     },
     "country": {
       "placeholder": "Choose your country",
-      "required": "Choose a country to continue."
+      "required": "Choose a country to continue.",
+      "searchLabel": "Search countries",
+      "noResults": "No countries match that name."
     }
   },
   "home": {

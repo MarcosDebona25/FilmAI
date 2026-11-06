@@ -13,7 +13,7 @@ import { GoogleMark } from "@/components/access/GoogleMark";
 import { AccessLogo } from "@/components/access/Logo";
 import {
   FieldError,
-  FieldOk,
+  FieldMessage,
   PasswordField,
   TextField,
   fieldClass,
@@ -203,15 +203,21 @@ export default function RegisterPage() {
     symbol: t("password.symbolRule"),
   } as const;
   const usernameValido = !validarNombreUsuario(form.nombre_usuario);
-  const usernameError = mostrar("nombre_usuario");
-  const usernameStatus =
-    usernameError || !usernameValido ? null : usernameEstado === "disponible" ? (
-      <FieldOk id="usuario-estado">{t("signUp.usernameAvailable")}</FieldOk>
-    ) : usernameEstado === "ocupado" ? (
-      <FieldError>{errors("username_already_used")}</FieldError>
-    ) : usernameEstado === "reservado" ? (
-      <FieldError>{errors("username_not_allowed")}</FieldError>
-    ) : null;
+  // «En uso» y «reservado» son errores del campo (reemplazan la ayuda);
+  // «disponible» es el ✓ dentro del campo, y la ayuda sigue a la vista.
+  const usernameError =
+    mostrar("nombre_usuario") ??
+    (!usernameValido
+      ? undefined
+      : usernameEstado === "ocupado"
+        ? errors("username_already_used")
+        : usernameEstado === "reservado"
+          ? errors("username_not_allowed")
+          : undefined);
+  const usernameOk =
+    usernameValido && !usernameError && usernameEstado === "disponible"
+      ? t("signUp.usernameAvailable")
+      : null;
 
   return (
     <AccessShell>
@@ -267,7 +273,7 @@ export default function RegisterPage() {
               value={form.nombre_usuario}
               onChange={(e) => setField("nombre_usuario", e.target.value)}
               error={usernameError}
-              status={usernameStatus}
+              ok={usernameOk}
               help={t("signUp.usernameHelp")}
             />
             <CountrySelect
@@ -276,6 +282,7 @@ export default function RegisterPage() {
               onBlur={() => setSucios((prev) => ({ ...prev, pais: true }))}
               error={mostrar("pais", true)}
               required
+              reserveMessage
             />
           </div>
           <TextField
@@ -287,6 +294,7 @@ export default function RegisterPage() {
             value={form.correo}
             onChange={(e) => setField("correo", e.target.value)}
             error={mostrar("correo")}
+            reserveMessage
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField
@@ -320,7 +328,7 @@ export default function RegisterPage() {
                   </option>
                 ))}
               </select>
-              {mostrar("genero", true) && <FieldError>{mostrar("genero", true)}</FieldError>}
+              <FieldMessage error={mostrar("genero", true)} reserve />
             </div>
           </div>
           <PasswordField
@@ -331,6 +339,7 @@ export default function RegisterPage() {
             value={form.password1}
             onChange={(e) => setField("password1", e.target.value)}
             error={mostrar("password1")}
+            reserveMessage
           >
             <ul className="flex flex-col gap-1.5 text-sm" aria-label={t("password.label")}>
               {(Object.keys(reglas) as (keyof typeof reglas)[]).map((regla) => (
@@ -361,6 +370,7 @@ export default function RegisterPage() {
             value={form.password2}
             onChange={(e) => setField("password2", e.target.value)}
             error={mostrar("password2")}
+            reserveMessage
           />
           <div className="flex flex-col gap-2">
             {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}

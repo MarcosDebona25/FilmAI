@@ -117,8 +117,10 @@ for (const viewport of viewports) {
           await expect(page.locator(`[name="${name}"]`)).toHaveValue(value, { timeout: 1_000 });
       }).toPass({ timeout: 20_000 });
       // Arranca vacío, aunque el navegador tenga región.
-      await expect(page.locator('select[name="pais"]')).toHaveValue("");
-      await page.locator('select[name="pais"]').selectOption("AR");
+      await expect(page.locator('input[name="pais"]')).toHaveValue("");
+      await page.getByRole("combobox", { name: en.common.fields.country }).click();
+      await page.getByRole("option", { name: "Argentina", exact: true }).click();
+      await expect(page.locator('input[name="pais"]')).toHaveValue("AR");
       await page.locator('[name="correo"]').fill("juan@example.com");
       await page.locator('[name="fecha_nacimiento"]').fill("1992-04-10");
       await page.locator('select[name="genero"]').selectOption("masculino");

@@ -49,7 +49,8 @@ for (const locale of ["en", "es"] as const) {
       for (const [name, value] of Object.entries(campos))
         await expect(page.locator(`[name="${name}"]`)).toHaveValue(value, { timeout: 1_000 });
     }).toPass({ timeout: 20_000 });
-    await page.locator('select[name="pais"]').selectOption("BR");
+    await page.getByRole("combobox", { name: messages.common.fields.country }).click();
+    await page.getByRole("option", { name: /^(Brasil|Brazil)$/ }).click();
     await page.locator('select[name="genero"]').selectOption("no_especifica");
     await page.locator('[name="acepta_terminos"]').check();
     const submit = page.getByRole("button", { name: messages.nav.account.signUp, exact: true });
