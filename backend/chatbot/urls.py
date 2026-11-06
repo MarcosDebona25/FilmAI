@@ -1,11 +1,9 @@
 from django.urls import path
 
-from chatbot.views import HistorialView, PrepararChatView
+from chatbot.views import MensajesView, PrepararChatView
 
 urlpatterns = [
     path("preparar/", PrepararChatView.as_view(), name="chat-preparar"),
-    # El PR 5 suma el POST del stream en esta misma ruta. Como ese POST es una
-    # vista async y esta es DRF (sync), no pueden ser una sola clase: el PR 5
-    # cambia esta línea por una función que despacha según el método.
-    path("messages/", HistorialView.as_view(), name="chat-mensajes"),
+    # GET: el historial. POST: la pregunta, con la respuesta en streaming (PR 5).
+    path("messages/", MensajesView.as_view(), name="chat-mensajes"),
 ]

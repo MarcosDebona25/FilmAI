@@ -1250,6 +1250,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+    post:
+      operationId: chat_messages_create
+      description: 'Manda una pregunta y recibe la respuesta como eventos SSE. Estas
+        respuestas llegan antes de abrir el stream, como JSON con el sobre de errores:
+        400, 401, 403, 409 y 429. El 200 es el stream, con los eventos `estado`, `texto`,
+        `tarjetas`, `fin` y `error` que describe `contracts/sse-chat.md` (drf-spectacular
+        no puede describir SSE). La pregunta y la respuesta se guardan juntas, al
+        final; una cancelación antes de eso no deja nada.'
+      tags:
+      - chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntradaMensaje'
+        required: true
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          content:
+            text/event-stream:
+              schema:
+                type: string
+          description: Stream de eventos; termina con `fin` o `error`.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: '`validation_error`, con `errors.texto`.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: '`not_authenticated`, o `session_revoked` si la cuenta se dio
+            de baja.'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: '`permission_denied`: falta o falló el token CSRF.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: '`chat_request_in_progress`: ya hay una respuesta en curso.'
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: '`throttled`, con `retry_after_seconds` y `Retry-After`.'
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/chat/preparar/:
     post:
       operationId: chat_preparar_create
@@ -2113,6 +2182,16 @@ components:
       - old_password
       - password1
       - password2
+    EntradaMensaje:
+      type: object
+      description: 'Lo que el panel manda: el texto de la pregunta (CU-013).'
+      properties:
+        texto:
+          type: string
+          description: La pregunta, de 1 a 500 caracteres una vez recortados los espacios.
+          maxLength: 500
+      required:
+      - texto
     EstadoEnum:
       enum:
       - pendiente
@@ -2678,6 +2757,8 @@ components:
           - avatar_invalid
           - birth_date_in_future
           - blank
+          - chat_request_in_progress
+          - chat_unavailable
           - country_invalid
           - current_password_incorrect
           - default_list_protected
