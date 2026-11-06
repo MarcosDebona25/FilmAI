@@ -26,7 +26,7 @@
 
 #### 2.1 Modelo 1: Gráfico
 
-> **Nota:** El Diagrama de Clases se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases"). El JSON se actualizó el 18/10/2026 con `Usuario.pais`, `Lista.orden` y `ProduccionAudiovisual.fechaEnriquecimiento`, y sin `Usuario.tema`; el 28/10/2026 se sumó `Mensaje.tarjetas` (diagrama de tablas: `tarjetas JSONB`), todavía sin migración. El repositorio no incluye un script ni un renderizador: la imagen se vuelve a generar con la herramienta de diagramas que lee ese formato, y hasta entonces el JSON es la fuente de verdad.
+> **Nota:** El Diagrama de Clases se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases"). El JSON se actualizó el 18/10/2026 con `Usuario.pais`, `Lista.orden` y `ProduccionAudiovisual.fechaEnriquecimiento`, y sin `Usuario.tema`; el 28/10/2026 se sumó `Mensaje.tarjetas` (diagrama de tablas: `tarjetas JSONB`), migrada el 06/11/2026 (`chatbot/0005_mensaje_tarjetas`). El repositorio no incluye un script ni un renderizador: la imagen se vuelve a generar con la herramienta de diagramas que lee ese formato, y hasta entonces el JSON es la fuente de verdad.
 
 #### 2.2 Modelo 1: Descripción y justificación de elementos más importantes
 
@@ -75,7 +75,7 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 #### 3.1 Modelo 2: Gráfico
 
-> **Nota:** El Diagrama de Tablas se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas"), actualizado el 18/10/2026 con `pais` y sin `tema` en `Usuario`, `orden` en `Lista` y `fechaEnriquecimiento` en `ProduccionAudiovisual`, y desde el 28/10/2026 `tarjetas` en `Mensaje`. Ver la nota del Modelo 1 sobre la regeneración de la imagen.
+> **Nota:** El Diagrama de Tablas se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas"), actualizado el 18/10/2026 con `pais` y sin `tema` en `Usuario`, `orden` en `Lista` y `fechaEnriquecimiento` en `ProduccionAudiovisual`, y desde el 28/10/2026 `tarjetas` en `Mensaje` (migración `chatbot/0005_mensaje_tarjetas`, 06/11/2026). Ver la nota del Modelo 1 sobre la regeneración de la imagen.
 
 #### 3.2 Modelo 2: Descripción y justificación de elementos más importantes
 
@@ -172,7 +172,7 @@ borrados en cascada al dar de baja una cuenta.
 **Cambio en Mensaje:**
 
 - `texto` cambia de VARCHAR(250) a TEXT para no truncar respuestas del chatbot (una respuesta del LLM puede superar 250 caracteres).
-- `tarjetas` (JSON, nuevo; decisiones del 08/10/2026 y 09/10/2026, todavía sin migración): lista de hasta 3 títulos que el chatbot mostró junto a su respuesta. Cada elemento guarda `id_tmdb`, `tipo`, `titulo`, `poster` y `año` tal como se mostraron, en el idioma del turno; el historial los devuelve sin volver a traducir. No es una entidad ni tiene FK a ProduccionAudiovisual: mostrar una tarjeta no materializa la producción. Los mensajes del usuario la llevan vacía.
+- `tarjetas` (JSON, nuevo; decisiones del 08/10/2026 y 09/10/2026; migración `chatbot/0005_mensaje_tarjetas` del 06/11/2026, con valor por defecto lista vacía): lista de hasta 3 títulos que el chatbot mostró junto a su respuesta. Cada elemento guarda `id_tmdb`, `tipo`, `titulo`, `poster` y `anio` tal como se mostraron, en el idioma del turno; el historial los devuelve sin volver a traducir. No es una entidad ni tiene FK a ProduccionAudiovisual: mostrar una tarjeta no materializa la producción. Los mensajes del usuario la llevan vacía.
 - El mensaje del usuario admite hasta 500 caracteres; el límite se valida en la API, no en la columna.
 
 **Cambio en Reseña:**

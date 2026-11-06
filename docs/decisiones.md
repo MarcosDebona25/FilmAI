@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 06/11/2026 — Chat: sugerencias rotativas, textos aprobados y cierre del Canal (PR 8)
+
+- **Fecha**: 06/11/2026
+- **Descripción**: la bienvenida del chat traía tres sugerencias fijas, una de ellas «Parecido a Interstellar». Era igual para todos los usuarios y contradecía lo que el chat promete (recomendar según lo que calificaste): quien no vio esa película o no mira ciencia ficción recibía un ejemplo ajeno. Se evaluaron cuatro caminos y se eligió el A con un pedido de Marcos: que varíe en cada apertura.
+  - **A, elegida**: sugerencias sin títulos fijos que se apoyan en los datos del usuario. El modelo ya recibe en cada turno sus mejores y peores calificaciones (`contexto.py`) y tiene la herramienta `mis_listas`, así que «Algo parecido a lo que mejor califiqué» se resuelve sin código nuevo. Hay un abanico de 14 (4 personales y 10 generales) y en cada apertura del panel se sortean 3 distintas: una personal, para que se vea que el chat usa tus datos, y dos generales (`frontend/lib/chat-sugerencias.ts`). El primer render usa un conjunto fijo (`short`, `similar`, `series`) para que el servidor y el cliente hidraten igual.
+  - **B, descartada**: «Parecido a {tu título mejor calificado}». Es lo más personal, pero pide un dato más al abrir el panel y obliga a resolver el caso sin calificaciones y los títulos en otro idioma. Se reconsidera si la personalización tiene que verse en el texto del botón.
+  - **C, descartada**: pool de producciones conocidas al azar. Sigue siendo arbitrario respecto del usuario, exige traducir los nombres y envejece.
+  - **D, descartada**: sin sugerencias. El panel vacío no orienta y el diseño aprobado tiene los botones.
+  - **Textos (tarea 7.1)**: Marcos aprobó tal cual las 9 filas provisorias de `claves-extra.csv` (cancelado, contador, los errores `chat_unavailable` y `chat_request_in_progress`, saludo, rótulo de sugerencias, carga y reintento del historial, aviso de respuesta nueva) y las 14 sugerencias nuevas. En `claves.csv` las filas `chat.*` quedan como «Curado el 06/11/2026 (tarea 7.1)» y el diálogo de muestra del diseño (505–513) pasa de `chatbot` a `muestra`: no se siembra.
+  - **Cierre del Canal en el PR 8**: docs 02 (CU-013 y CU-014), 03 (`Mensaje.tarjetas` ya migrada) y 04 (§3.1), y las especificaciones canónicas `chat-api` y `chat-ui` en `openspec/specs/`. Le quedan a Gonza el golden set (8.1, 8.2), el doc 05, el doc 06, la especificación `semantic-search`, `PRODUCT.md` y borrar `openspec/changes/chatbot/`.
+- **Verificación local** (sin CI, ver la entrada siguiente): Prettier, ESLint, `tsc` e `i18n:check` limpios; Vitest 536/542, con las 6 fallas de `access-screens` bajo carga que `develop` ya tenía (solo, da 22/22); Playwright `chat` + `home` 16/16; `next build` correcto.
+- **Archivos afectados**: `frontend/lib/chat-sugerencias.ts` (nuevo), `frontend/components/features/chat/ChatPanel.tsx`, `traducciones/{claves,claves-extra}.csv`, `frontend/messages/`, `frontend/tests/{chat-sugerencias.test.ts,chat-ui.test.tsx}`, `frontend/e2e/chat.spec.ts`, `docs/{02,03,04}_*.md`, `openspec/specs/{chat-api,chat-ui}/spec.md`, `openspec/changes/chatbot/tasks.md`.
+
+---
+
 ## 06/11/2026 — CI y PR-Agent desactivados hasta recuperar el beneficio estudiantil
 
 - **Fecha**: 06/11/2026

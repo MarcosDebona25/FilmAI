@@ -2,13 +2,14 @@
 
 import { X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useLayoutEffect, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { TicketMark } from "@/components/access/Logo";
 import { useAccount } from "@/components/AccountProvider";
 import type { AppLocale } from "@/i18n/config";
 import { useChat } from "@/components/ChatProvider";
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
+import { elegirSugerencias, SUGERENCIAS_INICIALES } from "@/lib/chat-sugerencias";
 import { translateError } from "@/lib/errors";
 
 import { BurbujaUsuario, RespuestaAsistente } from "./ChatBubble";
@@ -50,6 +51,12 @@ export function ChatPanel() {
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const conversacionRef = useRef<HTMLDivElement>(null);
   const tituloId = useId();
+  // El primer render usa un conjunto fijo para que el servidor y el cliente coincidan;
+  // cada vez que se abre el panel se sortean otras tres.
+  const [sugerencias, setSugerencias] = useState(SUGERENCIAS_INICIALES);
+  useEffect(() => {
+    if (abierto) setSugerencias(elegirSugerencias());
+  }, [abierto]);
 
   useEffect(() => {
     const dialogo = dialogoRef.current;
@@ -111,7 +118,6 @@ export function ChatPanel() {
 
   const cargandoHistorial = historial.estado === "cargando" || historial.cargandoAnteriores;
   const bienvenida = historial.estado === "listo" && mensajes.length === 0 && !enCurso;
-  const sugerencias = ["short", "similar", "series"] as const;
 
   return (
     <dialog
