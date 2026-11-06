@@ -131,6 +131,10 @@ def _solo_tarjetas(vuelta):
     return all(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
 
 
+def _con_tarjetas(vuelta):
+    return any(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
+
+
 async def responder(chat, texto, idioma, *, proveedor=None):
     """Responde un mensaje, entregando eventos a medida que ocurren.
 
@@ -173,8 +177,9 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             raise ErrorDelTurno("El proveedor falló") from error
 
         # Texto corto y una búsqueda: era un «ya busco», y la respuesta viene después.
-        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`.
-        es_preambulo = vuelta.llamadas and not _solo_tarjetas(vuelta)
+        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`. Si la
+        # vuelta también muestra tarjetas, el texto las acompaña y no se descarta.
+        es_preambulo = vuelta.llamadas and not _con_tarjetas(vuelta)
         if retenido and not es_preambulo:
             for pedazo in _con_separador(retenido, separar):
                 partes.append(pedazo)

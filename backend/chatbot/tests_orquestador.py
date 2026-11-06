@@ -157,6 +157,13 @@ class VueltaConToolsTests(BaseOrquestador):
 
         self.assertEqual(eventos[-1].texto, "Mirá")
 
+    async def test_el_texto_con_tarjetas_y_otra_busqueda_no_es_un_preambulo(self):
+        # Las tarjetas de esta vuelta se muestran: la frase que las acompaña también.
+        guion = [[tool("descubrir")], ["Mirá", tool("descubrir", "2"), tarjetas(1)]]
+        eventos = await self.correr([*guion, ["Listo"]])
+
+        self.assertTrue(eventos[-1].texto.startswith("Mirá"))
+
     async def test_varias_tools_en_una_vuelta_responden_en_orden(self):
         await self.correr([[tool("descubrir", "a"), tool("descubrir", "b")], ["Listo"]])
 
