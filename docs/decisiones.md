@@ -5,6 +5,14 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 06/11/2026 — `packaging` faltante rompía el encolado en Celery
+
+- **Fecha**: 06/11/2026
+- **Descripción**: al agregar a una lista un título que no estaba en la base, el primer clic daba 500 y el segundo funcionaba. Se notaba en Favorita porque suele ser el primer botón que se toca, pero pasaba con cualquier lista. Había dos causas:
+  - **Dependencia faltante**: `kombu` 5.7 importa `packaging` en su transporte de Redis sin declararlo. Antes llegaba por otro paquete, y al reconstruir la imagen para el PR 3 dejó de estar. Todo `.delay()` fallaba en una instalación limpia. El CI no lo vio porque los tests simulan `.delay()`. Se agregó a `requirements.txt`, con un test que importa ese transporte.
+  - **500 por una tarea opcional**: encolar el embedding fallaba después de guardar el título, y eso cortaba el pedido. Ahora va con `on_commit(..., robust=True)`: se registra y sigue, y el backfill recupera el vector.
+- **Archivos afectados**: `backend/requirements.txt`, `backend/catalogo/services/materialization.py`. Tests: `backend/catalogo/test_encolado_celery.py`.
+
 ## 05/11/2026 — Proveedor, prompt y orquestador del chatbot (PR 3)
 
 - **Fecha**: 05/11/2026

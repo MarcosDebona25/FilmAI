@@ -36,6 +36,9 @@ fakeredis>=2.0,<3.0
 
 # --- Tareas asincrónicas (Celery) ---
 celery>=5.3,<5.5
+# kombu 5.7 importa `packaging` en su transporte de Redis sin declararlo: sin esta
+# línea, una instalación limpia rompe todo `.delay()` (05/11/2026).
+packaging>=24,<27
 
 # --- Chatbot ---
 # Cliente del proveedor del modelo: DeepSeek habla el mismo formato que OpenAI.

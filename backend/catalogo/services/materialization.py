@@ -476,4 +476,8 @@ def _encolar_embedding(produccion):
     """
     _, creado = ProduccionEmbedding.objects.get_or_create(produccion=produccion)
     if creado:
-        transaction.on_commit(lambda: generar_embedding.delay(produccion.id))
+        # `robust`: si el broker falla, se registra y sigue. El vector lo recupera el
+        # backfill, y agregar a una lista no debe responder 500 por eso.
+        transaction.on_commit(
+            lambda: generar_embedding.delay(produccion.id), robust=True
+        )
