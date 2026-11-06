@@ -225,3 +225,11 @@ chat.status.cancelled,,status,,Solicitud cancelada,Request canceled,provisorio
 chat.input.counter,,label,"count,max","{count, number}/{max, number}","{count, number}/{max, number}",provisorio
 errors.codes.chat_unavailable,chat_unavailable,error,,No podemos procesar tu solicitud. Intentá más tarde.,We can’t process your request right now. Try again later.,provisorio
 errors.codes.chat_request_in_progress,chat_request_in_progress,error,,Ya hay una respuesta en curso. Esperá a que termine para enviar otra pregunta.,An answer is already in progress. Wait for it to finish before sending another question.,provisorio
+chat.welcome.greeting,,label,name,"¡Hola, {name}! Contame qué tenés ganas de ver y te recomiendo según lo que calificaste.","Hi, {name}! Tell me what you feel like watching and I’ll recommend something based on what you’ve rated.",provisorio
+chat.welcome.suggestionsLabel,,label,,Sugerencias,Suggestions,provisorio
+chat.welcome.suggestions.short,,label,,Algo corto para esta noche,Something short for tonight,provisorio
+chat.welcome.suggestions.similar,,label,,Parecido a Interstellar,Similar to Interstellar,provisorio
+chat.welcome.suggestions.series,,label,,Una serie para maratonear,A TV show to binge,provisorio
+chat.history.loading,,status,,Cargando la conversación…,Loading the conversation…,provisorio
+chat.history.retry,,label,,Reintentar,Retry,provisorio
+chat.fab.unread,,status,,Hay una respuesta nueva,New answer waiting,provisorio

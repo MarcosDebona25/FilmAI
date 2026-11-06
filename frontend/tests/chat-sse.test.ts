@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, SESION_VENCIDA } from "@/lib/api";
-import { type EventoChat, enviarMensaje, leerEventos, prepararChat } from "@/lib/chat";
+import {
+  type EventoChat,
+  cargarHistorial,
+  combinarMensajes,
+  enviarMensaje,
+  leerEventos,
+  prepararChat,
+  rutaHistorial,
+} from "@/lib/chat";
 
 /**
  * Un cuerpo de respuesta que llega en pedazos, como en la red. Cada pedazo es
@@ -267,5 +275,85 @@ describe("prepararChat", () => {
       })
     );
     await expect(prepararChat()).resolves.toBeUndefined();
+  });
+});
+
+describe("cargarHistorial", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.cookie = "csrftoken=; Max-Age=0";
+  });
+
+  const pagina = (results: unknown[], next: string | null = null) =>
+    new Response(JSON.stringify({ next, results }), { status: 200 });
+
+  it("invierte la página (la API manda lo más nuevo primero) y mapea el autor", async () => {
+    const tarjeta = { id_tmdb: 1, tipo: "movie", titulo: "Moon", poster: "/p.jpg", anio: 2009 };
+    const fetchMock = vi.fn(async () =>
+      pagina(
+        [
+          { id: 4, autor: "chatbot", texto: "Mirá", tarjetas: [tarjeta], fecha_hora: "x" },
+          { id: 3, autor: "usuario", texto: "algo", tarjetas: [], fecha_hora: "x" },
+        ],
+        "https://api.example/api/chat/messages/?cursor=abc"
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const resultado = await cargarHistorial();
+    expect(new URL((fetchMock.mock.calls[0] as unknown as [string])[0]).pathname).toBe(
+      "/api/chat/messages/"
+    );
+    expect(resultado.mensajes).toEqual([
+      { id: 3, rol: "usuario", texto: "algo" },
+      { id: 4, rol: "asistente", texto: "Mirá", tarjetas: [tarjeta] },
+    ]);
+    expect(resultado.next).toContain("cursor=abc");
+  });
+
+  it("descarta las tarjetas inválidas igual que las del stream", async () => {
+    const valida = { id_tmdb: 1, tipo: "movie", titulo: "Moon", poster: null, anio: 2009 };
+    const externa = { ...valida, id_tmdb: 2, poster: "https://atacante.example/x.jpg" };
+    const rara = { ...valida, id_tmdb: 3, tipo: "game" };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        pagina([{ id: 1, autor: "chatbot", texto: "t", tarjetas: [valida, externa, rara] }])
+      )
+    );
+    const { mensajes } = await cargarHistorial();
+    expect(mensajes[0]).toMatchObject({ tarjetas: [valida] });
+  });
+
+  it("del cursor next solo usa la query: nunca pide a otro origen", async () => {
+    expect(rutaHistorial()).toBe("/api/chat/messages/");
+    expect(rutaHistorial("https://atacante.example/otra/ruta/?cursor=a%3D")).toBe(
+      "/api/chat/messages/?cursor=a%3D"
+    );
+    const fetchMock = vi.fn(async () => pagina([]));
+    vi.stubGlobal("fetch", fetchMock);
+    await cargarHistorial("https://atacante.example/x/?cursor=zz");
+    const url = new URL((fetchMock.mock.calls[0] as unknown as [string])[0]);
+    expect(url.pathname).toBe("/api/chat/messages/");
+    expect(url.search).toBe("?cursor=zz");
+    expect(url.hostname).not.toBe("atacante.example");
+  });
+
+  it("un rechazo llega como ApiError con su código", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () => new Response(JSON.stringify({ code: "not_authenticated" }), { status: 401 })
+      )
+    );
+    await expect(cargarHistorial()).rejects.toMatchObject({ status: 401 });
+  });
+});
+
+describe("combinarMensajes", () => {
+  it("une por id, ordena y no repite", () => {
+    const m = (id: number) => ({ id, rol: "usuario" as const, texto: String(id) });
+    expect(combinarMensajes([m(3), m(4)], [m(1), m(2), m(3)]).map((x) => x.id)).toEqual([
+      1, 2, 3, 4,
+    ]);
   });
 });

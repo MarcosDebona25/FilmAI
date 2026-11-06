@@ -6,6 +6,7 @@ import { ChevronRight, Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useAccount } from "@/components/AccountProvider";
+import { useChat } from "@/components/ChatProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { TicketMark } from "@/components/access/Logo";
 import { isAccessPath, routes } from "@/lib/routes";
@@ -14,6 +15,27 @@ const linkClass =
   "inline-flex min-h-8 items-center gap-2 text-sm text-fg-2 no-underline hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const rowClass =
   "flex min-h-12 items-center justify-between text-[0.9375rem] font-medium text-fg-2 no-underline hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
+
+/**
+ * «Ask FilmAI» del pie: con sesión abre el panel del chat; sin sesión lleva al
+ * login y vuelve a la página actual (el FAB, en cambio, se ve deshabilitado).
+ */
+function AskFilmAI({ className, children }: { className: string; children: React.ReactNode }) {
+  const { habilitado, abrir } = useChat();
+  const pathname = usePathname();
+  if (habilitado) {
+    return (
+      <button type="button" onClick={abrir} aria-haspopup="dialog" className={className}>
+        {children}
+      </button>
+    );
+  }
+  return (
+    <Link href={`${routes.login}?next=${encodeURIComponent(pathname)}`} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 /** Pie del sitio (canvas «Footer»): columnas en escritorio, lista de filas en celular. */
 export function Footer() {
@@ -72,9 +94,7 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href={routes.askFilmAI} prefetch={false} className={linkClass}>
-                    {t("askFilmAI")}
-                  </Link>
+                  <AskFilmAI className={linkClass}>{t("askFilmAI")}</AskFilmAI>
                 </li>
               </ul>
             </nav>
@@ -148,10 +168,10 @@ export function Footer() {
             </Link>
           </li>
           <li className="border-b border-line">
-            <Link href={routes.askFilmAI} prefetch={false} className={rowClass}>
+            <AskFilmAI className={`${rowClass} w-full`}>
               {t("askFilmAI")}
               <ChevronRight aria-hidden="true" className="size-4" />
-            </Link>
+            </AskFilmAI>
           </li>
           {perfil ? (
             <li className="border-b border-line">

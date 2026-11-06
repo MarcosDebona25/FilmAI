@@ -650,6 +650,22 @@ declare const messages: {
       "placeholder": "Type your question",
       "send": "Send",
       "counter": "{count, number}/{max, number}"
+    },
+    "welcome": {
+      "greeting": "Hi, {name}! Tell me what you feel like watching and I’ll recommend something based on what you’ve rated.",
+      "suggestionsLabel": "Suggestions",
+      "suggestions": {
+        "short": "Something short for tonight",
+        "similar": "Similar to Interstellar",
+        "series": "A TV show to binge"
+      }
+    },
+    "history": {
+      "loading": "Loading the conversation…",
+      "retry": "Retry"
+    },
+    "fab": {
+      "unread": "New answer waiting"
     }
   },
   "errors": {

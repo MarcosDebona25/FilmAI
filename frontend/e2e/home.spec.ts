@@ -115,7 +115,9 @@ for (const viewport of viewports) {
       await expect(
         page.getByRole("main").getByRole("link", { name: en.footer.main.askFilmAI })
       ).toHaveCount(0);
-      await expect(page.getByRole("button", { name: en.footer.main.askFilmAI })).toBeEnabled();
+      await expect(
+        page.getByRole("button", { name: en.footer.main.askFilmAI }).first()
+      ).toBeEnabled();
 
       await page.getByRole("button", { name: en.common.content.tvShows }).click();
       await expect(page).toHaveURL(/\/home\?type=tv$/);

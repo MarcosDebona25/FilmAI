@@ -279,8 +279,19 @@ A style block per language (es/en) is a small dict, not two prompts.
 - `ChatProvider` in `app/layout.tsx`, next to `AccountProvider`: owns
   messages, the in-flight request (`AbortController`), `abierto`, and
   `noLeido` (the badge). It survives navigation because the layout does.
-- `useChat()` exposes `abrir()`, so «Ask FilmAI» in the Home and the footer
-  becomes a button that opens the panel; `routes.askFilmAI` is retired.
+- `useChat()` exposes `abrir()`, so «Ask FilmAI» in the footer is a button that
+  opens the panel for a user with a session and a link to
+  `/login?next=<page>` for a visitor; `routes.askFilmAI` is retired (PR 7,
+  06/11/2026).
+- History (PR 7): `lib/chat.ts :: cargarHistorial()` reads
+  `GET /api/chat/messages/`, reverses the page (the API sends newest first) and
+  keeps only the query of `next`. `ChatProvider` loads it once per session and
+  again on the opening that follows a cancel; messages carry the database id
+  (`fin` gives `id` and `id_pregunta`) and `combinarMensajes()` merges by id.
+  `ChatPanel` asks for older pages with an `IntersectionObserver` sentinel and
+  compensates the scroll height. The welcome is local and its suggestion chips
+  call `enviar(texto)`. `noLeido` lights the FAB badge when `fin` is processed
+  with the panel closed.
 - `lib/chat.ts`: `fetch` with `credentials: "include"` and `X-CSRFToken`, the
   same headers as `apiFetch`; reads `res.body` with a `TextDecoder`, splits
   frames on blank lines, dispatches by `event:`. Pre-stream errors go through

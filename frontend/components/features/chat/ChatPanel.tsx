@@ -2,9 +2,10 @@
 
 import { X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useRef } from "react";
 
 import { TicketMark } from "@/components/access/Logo";
+import { useAccount } from "@/components/AccountProvider";
 import type { AppLocale } from "@/i18n/config";
 import { useChat } from "@/components/ChatProvider";
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
@@ -24,7 +25,27 @@ import { ChatMarkdown } from "./ChatMarkdown";
 export function ChatPanel() {
   const t = useTranslations("chat");
   const locale = useLocale() as AppLocale;
-  const { abierto, cerrar, mensajes, enCurso, aviso, anuncio, fabRef } = useChat();
+  const tw = useTranslations("chat.welcome");
+  const th = useTranslations("chat.history");
+  const { perfil } = useAccount();
+  const {
+    abierto,
+    cerrar,
+    mensajes,
+    enCurso,
+    aviso,
+    anuncio,
+    fabRef,
+    historial,
+    cargarAnteriores,
+    reintentarHistorial,
+    enviar,
+  } = useChat();
+  const centinelaRef = useRef<HTMLDivElement>(null);
+  // Alto del scroll justo antes de pedir una página anterior, y id del primer
+  // mensaje: con eso se sabe si lo nuevo se agregó arriba y cuánto hay que bajar.
+  const alturaRef = useRef(0);
+  const primerIdRef = useRef<number | null>(null);
   const dialogoRef = useRef<HTMLDialogElement>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const conversacionRef = useRef<HTMLDivElement>(null);
@@ -35,6 +56,11 @@ export function ChatPanel() {
     if (!dialogo) return;
     if (abierto && !dialogo.open) {
       dialogo.showModal();
+      // El scroll del efecto de abajo corre antes que este, con el diálogo todavía
+      // cerrado (`display: none`, alto 0). Se repite acá para no depender de que
+      // el navegador conserve la posición al mostrarlo.
+      const conversacion = conversacionRef.current;
+      if (conversacion) conversacion.scrollTop = conversacion.scrollHeight;
       campoRef.current?.focus({ preventScroll: true });
       const overflowAnterior = document.body.style.overflow;
       document.body.style.overflow = "hidden";
@@ -48,11 +74,44 @@ export function ChatPanel() {
     }
   }, [abierto, fabRef]);
 
-  // Cada novedad deja a la vista lo último de la conversación.
+  // Cada novedad deja a la vista lo último de la conversación, salvo cuando
+  // llegan mensajes más viejos arriba: ahí se compensa la altura agregada para
+  // que lo que se estaba leyendo no se mueva.
+  useLayoutEffect(() => {
+    const conversacion = conversacionRef.current;
+    if (!conversacion) return;
+    const primerId = mensajes[0]?.id ?? null;
+    const antepuesto =
+      primerIdRef.current !== null && primerId !== null && primerId < primerIdRef.current;
+    if (antepuesto) conversacion.scrollTop += conversacion.scrollHeight - alturaRef.current;
+    else conversacion.scrollTop = conversacion.scrollHeight;
+    primerIdRef.current = primerId;
+  }, [mensajes, enCurso, aviso, abierto, historial.estado]);
+
+  // Al llegar arriba del todo se piden los mensajes anteriores. El observador
+  // se rehace con cada cambio de `mensajes`: si la página nueva no alcanzó para
+  // llenar el panel, el centinela sigue a la vista y se pide otra.
+  const hayAnteriores = historial.estado === "listo" && historial.next !== null;
   useEffect(() => {
     const conversacion = conversacionRef.current;
-    if (conversacion) conversacion.scrollTop = conversacion.scrollHeight;
-  }, [mensajes, enCurso, aviso, abierto]);
+    const centinela = centinelaRef.current;
+    if (!abierto || !hayAnteriores || !conversacion || !centinela) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        if (!entradas.some((entrada) => entrada.isIntersecting)) return;
+        alturaRef.current = conversacion.scrollHeight;
+        cargarAnteriores();
+      },
+      { root: conversacion }
+    );
+    observador.observe(centinela);
+    return () => observador.disconnect();
+  }, [abierto, hayAnteriores, cargarAnteriores, mensajes]);
+
+  const cargandoHistorial = historial.estado === "cargando" || historial.cargandoAnteriores;
+  const bienvenida = historial.estado === "listo" && mensajes.length === 0 && !enCurso;
+  const sugerencias = ["short", "similar", "series"] as const;
 
   return (
     <dialog
@@ -107,6 +166,52 @@ export function ChatPanel() {
         aria-label={t("panel.conversation")}
         className="flex flex-1 flex-col gap-[1.125rem] overflow-y-auto overscroll-contain p-[1.125rem] md:gap-[1.375rem] md:p-[1.375rem]"
       >
+        {hayAnteriores && <div ref={centinelaRef} aria-hidden="true" className="h-px flex-none" />}
+        {cargandoHistorial && (
+          <p role="status" className="m-0 text-center text-sm text-fg-3">
+            {th("loading")}
+          </p>
+        )}
+        {historial.error && (
+          <div role="alert" className="flex flex-col items-center gap-2 text-center">
+            <p className="m-0 text-sm text-destructive">
+              {translateError(
+                { code: historial.error.code, params: historial.error.params },
+                locale
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={reintentarHistorial}
+              className="min-h-11 rounded-[0.625rem] px-4 text-sm font-medium text-foreground shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {th("retry")}
+            </button>
+          </div>
+        )}
+        {bienvenida && (
+          <div className="flex flex-col gap-3.5">
+            <p className="m-0 max-w-full md:max-w-[96%]">
+              {tw("greeting", { name: perfil?.nombre ?? "" })}
+            </p>
+            <ul
+              aria-label={tw("suggestionsLabel")}
+              className="m-0 flex list-none flex-wrap gap-2 p-0"
+            >
+              {sugerencias.map((clave) => (
+                <li key={clave}>
+                  <button
+                    type="button"
+                    onClick={() => enviar(tw(`suggestions.${clave}`))}
+                    className="min-h-11 rounded-full px-4 text-sm text-foreground shadow-[inset_0_0_0_1px_var(--line)] hover:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring"
+                  >
+                    {tw(`suggestions.${clave}`)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {mensajes.map((mensaje) =>
           mensaje.rol === "usuario" ? (
             <BurbujaUsuario key={mensaje.id} texto={mensaje.texto} />

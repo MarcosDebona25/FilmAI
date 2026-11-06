@@ -8,7 +8,7 @@ The floating chat of the frontend (B-04, CU-013, CU-014; doc 04 §3.1 and canvas
 
 ### Requirement: One chat, available everywhere
 
-The chat state MUST live in a provider in the root layout so it survives navigation. The FAB MUST be on every screen with the chat, disabled without a session, and its accessible name MUST be its visible text («Ask FilmAI»; WCAG 2.5.3, 06/11/2026). Choosing a card MUST close the panel so the title page is visible; the conversation stays. The footer's «Ask FilmAI» link is wired to the panel in PR 7; until then it keeps navigating to `/chat`, which does not exist (28/10/2026).
+The chat state MUST live in a provider in the root layout so it survives navigation. The FAB MUST be on every screen with the chat, disabled without a session, and its accessible name MUST be its visible text («Ask FilmAI»; WCAG 2.5.3, 06/11/2026). Choosing a card MUST close the panel so the title page is visible; the conversation stays. The footer's «Ask FilmAI» MUST open the panel for a user with a session and MUST be a link to `/login?next=<current page>` for a visitor; there is no `/chat` route (06/11/2026).
 
 #### Scenario: Navigating with the panel open
 
@@ -21,6 +21,13 @@ The chat state MUST live in a provider in the root layout so it survives navigat
 - GIVEN a visitor without a session
 - WHEN they look at the FAB
 - THEN it is disabled and nothing is requested from the chat API
+
+#### Scenario: Footer «Ask FilmAI»
+
+- GIVEN a user with a session
+- WHEN they activate «Ask FilmAI» in the footer
+- THEN the panel opens
+- AND a visitor sees it as a link to `/login?next=<current page>`
 
 ### Requirement: Streaming answer with cancel
 
@@ -100,7 +107,7 @@ On every opening the panel MUST call `POST /api/chat/preparar/`, without waiting
 
 ### Requirement: Welcome, history and unread badge
 
-On opening, the panel MUST load the history (newest page first, older pages on scrolling up) and, when the chat is empty, show the local welcome with the user's first name and the canvas suggestions, without calling the model. An answer that finishes while the panel is closed MUST light the FAB badge until the panel opens.
+The panel MUST load the history the first time it opens in a session (newest page first) and MUST NOT request it again on later openings, except the opening that follows a cancel, which requests the newest page again because the server may have saved the discarded answer (CU-014). Older pages MUST load when the user scrolls to the top, using only the query of the `next` cursor (never an origin received from the network), without moving what the user was reading. A failed load MUST show the translated error with a retry button. Messages from the stream and from the history MUST be merged by id so none repeats. When the chat is empty the panel MUST show the local welcome with the user's first name and three suggestions, without calling the model; choosing a suggestion MUST send it right away and MUST NOT touch the draft. An answer that finishes while the panel is closed MUST light the FAB badge (a dot plus text for screen readers) until the panel opens. Signing out MUST clear the conversation, the history and the badge (06/11/2026).
 
 #### Scenario: First time
 
@@ -108,6 +115,34 @@ On opening, the panel MUST load the history (newest page first, older pages on s
 - WHEN they open the panel
 - THEN they see the welcome with their first name and three suggestions
 - AND no request is sent to the model
+
+#### Scenario: Suggestion
+
+- GIVEN the welcome is showing and the input has a draft
+- WHEN the user chooses a suggestion
+- THEN that text is sent as the question
+- AND the draft is unchanged
+
+#### Scenario: History
+
+- GIVEN a user with more than 20 saved messages
+- WHEN they open the panel for the first time
+- THEN the newest 20 are shown, ending at the last one
+- AND scrolling to the top loads the previous page without moving the visible messages
+- AND closing and reopening the panel does not request the history again
+
+#### Scenario: Reopening after a cancel
+
+- GIVEN the user cancelled an answer that the server had already saved
+- WHEN they open the panel again
+- THEN the newest page is requested again and the answer appears once
+
+#### Scenario: Unread badge
+
+- GIVEN a question is being answered and the user closes the panel
+- WHEN the answer ends
+- THEN the FAB shows the badge
+- AND opening the panel turns it off
 
 ### Requirement: Accessible panel
 

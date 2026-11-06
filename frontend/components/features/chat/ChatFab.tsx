@@ -15,8 +15,9 @@ import { isAccessPath } from "@/lib/routes";
  */
 export function ChatFab() {
   const tf = useTranslations("footer.main");
+  const t = useTranslations("chat.fab");
   const pathname = usePathname();
-  const { habilitado, abierto, abrir, fabRef } = useChat();
+  const { habilitado, abierto, abrir, fabRef, noLeido } = useChat();
   if (isAccessPath(pathname)) return null;
   return (
     <button
@@ -30,6 +31,15 @@ export function ChatFab() {
     >
       <MessageCircle aria-hidden="true" className="size-6" />
       <span className="sr-only md:not-sr-only">{tf("askFilmAI")}</span>
+      {noLeido && (
+        <>
+          <span
+            aria-hidden="true"
+            className="absolute top-0 right-0 size-3.5 rounded-full bg-destructive ring-2 ring-background"
+          />
+          <span className="sr-only">{t("unread")}</span>
+        </>
+      )}
     </button>
   );
 }

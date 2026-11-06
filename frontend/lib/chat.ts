@@ -7,7 +7,7 @@
  * `GET`, sin cuerpo y sin headers: el chat necesita `POST` con el texto y el
  * header `X-CSRFToken`. Se usa `fetch` y se lee `res.body` a mano.
  */
-import { ApiError, pedirConSesion } from "@/lib/api";
+import { ApiError, apiFetch, pedirConSesion } from "@/lib/api";
 import type { ErrorParams, FieldError } from "@/lib/errors";
 
 /** Tope de caracteres de un mensaje: el mismo que valida el backend (09/10/2026). */
@@ -175,4 +175,60 @@ export async function* enviarMensaje(
  */
 export async function prepararChat(): Promise<void> {
   await pedirConSesion("/api/chat/preparar/", { method: "POST" }).catch(() => {});
+}
+
+/** Un mensaje de la conversación, del historial o recién terminado. El `id` es el de la base. */
+export type MensajeChat =
+  | { id: number; rol: "usuario"; texto: string }
+  | { id: number; rol: "asistente"; texto: string; tarjetas: Tarjeta[] };
+
+export type PaginaHistorial = {
+  /** De más viejo a más nuevo, listos para mostrar en orden. */
+  mensajes: MensajeChat[];
+  /** Cursor de la página anterior (más vieja); `null` si no quedan más. */
+  next: string | null;
+};
+
+type MensajeApi = {
+  id: number;
+  autor: "usuario" | "chatbot";
+  texto: string;
+  tarjetas?: unknown;
+};
+
+const RUTA_HISTORIAL = "/api/chat/messages/";
+
+/**
+ * Del cursor `next` que manda la API solo se reutiliza la query: nunca se
+ * pide a un origen recibido de la red (se mandarían las cookies de sesión).
+ */
+export function rutaHistorial(next?: string | null) {
+  if (!next) return RUTA_HISTORIAL;
+  return `${RUTA_HISTORIAL}${new URL(next, "http://filmai.local").search}`;
+}
+
+/**
+ * Una página del historial (`GET /api/chat/messages/`). La API la entrega de
+ * más nuevo a más viejo; acá se invierte para que el panel la dibuje en orden.
+ * Las tarjetas pasan por el mismo filtro que las del stream.
+ */
+export async function cargarHistorial(next?: string | null): Promise<PaginaHistorial> {
+  const pagina = await apiFetch<{ next: string | null; results: MensajeApi[] }>(
+    rutaHistorial(next)
+  );
+  const mensajes = pagina.results
+    .map((m): MensajeChat => {
+      if (m.autor === "usuario") return { id: m.id, rol: "usuario", texto: m.texto };
+      const tarjetas = Array.isArray(m.tarjetas) ? m.tarjetas.filter(esTarjeta) : [];
+      return { id: m.id, rol: "asistente", texto: m.texto, tarjetas };
+    })
+    .reverse();
+  return { mensajes, next: pagina.next };
+}
+
+/** Une mensajes por id (los de `nuevos` pisan a los repetidos) y deja el orden por id. */
+export function combinarMensajes(actuales: MensajeChat[], nuevos: MensajeChat[]) {
+  const porId = new Map(actuales.map((m) => [m.id, m]));
+  for (const m of nuevos) porId.set(m.id, m);
+  return [...porId.values()].sort((a, b) => a.id - b.id);
 }

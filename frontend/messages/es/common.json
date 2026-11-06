@@ -647,6 +647,22 @@
       "placeholder": "Escribí tu pregunta",
       "send": "Enviar",
       "counter": "{count, number}/{max, number}"
+    },
+    "welcome": {
+      "greeting": "¡Hola, {name}! Contame qué tenés ganas de ver y te recomiendo según lo que calificaste.",
+      "suggestionsLabel": "Sugerencias",
+      "suggestions": {
+        "short": "Algo corto para esta noche",
+        "similar": "Parecido a Interstellar",
+        "series": "Una serie para maratonear"
+      }
+    },
+    "history": {
+      "loading": "Cargando la conversación…",
+      "retry": "Reintentar"
+    },
+    "fab": {
+      "unread": "Hay una respuesta nueva"
     }
   },
   "errors": {
