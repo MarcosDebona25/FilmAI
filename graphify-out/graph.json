@@ -4916,7 +4916,7 @@
       "file_type": "code",
       "norm_label": "crearproveedortests",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L507"
+      "source_location": "L511"
     },
     {
       "id": "backend_chatbot_tests_orquestador_leerstreamtests",
@@ -4929,7 +4929,7 @@
       "file_type": "code",
       "norm_label": "leerstreamtests",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L456"
+      "source_location": "L460"
     },
     {
       "id": "frontend_e2e_a11y_axe_spec_axe",
@@ -5397,7 +5397,7 @@
       "file_type": "code",
       "norm_label": "comandochateartests",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L395"
+      "source_location": "L399"
     },
     {
       "id": "backend_filmai_test_seguridad_redis_cachesinpickletests",
@@ -7659,7 +7659,7 @@
       "file_type": "code",
       "norm_label": "presupuestodetmdbtests",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L372"
+      "source_location": "L376"
     },
     {
       "id": "backend_chatbot_tests_orquestador_vueltacontoolstests",
@@ -20001,7 +20001,7 @@
       "file_type": "code",
       "norm_label": "armar_sistema()",
       "source_file": "backend/chatbot/prompts.py",
-      "source_location": "L67"
+      "source_location": "L69"
     },
     {
       "id": "backend_chatbot_tests_orquestador_reglasdelprompttests_test_el_estilo_cambia_con_el_idioma",
@@ -20085,7 +20085,7 @@
       "file_type": "code",
       "norm_label": ".test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L368"
+      "source_location": "L372"
     },
     {
       "id": "backend_usuarios_exceptions_cuentainactiva_init",
@@ -32133,7 +32133,7 @@
       "file_type": "code",
       "norm_label": "como_stream()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L451"
+      "source_location": "L455"
     },
     {
       "id": "backend_chatbot_tests_orquestador_crearproveedortests_test_arma_el_proveedor_de_la_configuracion",
@@ -32145,7 +32145,7 @@
       "file_type": "code",
       "norm_label": ".test_arma_el_proveedor_de_la_configuracion()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L519"
+      "source_location": "L523"
     },
     {
       "id": "backend_chatbot_tests_orquestador_crearproveedortests_test_mal_configurado_es_un_error_del_turno",
@@ -32157,7 +32157,7 @@
       "file_type": "code",
       "norm_label": ".test_mal_configurado_es_un_error_del_turno()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L531"
+      "source_location": "L535"
     },
     {
       "id": "backend_chatbot_tests_orquestador_crearproveedortests_test_un_tipo_desconocido_falla_enseguida",
@@ -32169,7 +32169,7 @@
       "file_type": "code",
       "norm_label": ".test_un_tipo_desconocido_falla_enseguida()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L526"
+      "source_location": "L530"
     },
     {
       "id": "backend_chatbot_tests_orquestador_fragmento",
@@ -32181,7 +32181,7 @@
       "file_type": "code",
       "norm_label": "fragmento()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L439"
+      "source_location": "L443"
     },
     {
       "id": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
@@ -32193,7 +32193,7 @@
       "file_type": "code",
       "norm_label": ".leer()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L459"
+      "source_location": "L463"
     },
     {
       "id": "backend_chatbot_tests_orquestador_leerstreamtests_test_el_texto_sale_de_a_pedazos",
@@ -32205,7 +32205,7 @@
       "file_type": "code",
       "norm_label": ".test_el_texto_sale_de_a_pedazos()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L462"
+      "source_location": "L466"
     },
     {
       "id": "backend_chatbot_tests_orquestador_leerstreamtests_test_ignora_los_fragmentos_sin_choices",
@@ -32217,7 +32217,7 @@
       "file_type": "code",
       "norm_label": ".test_ignora_los_fragmentos_sin_choices()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L492"
+      "source_location": "L496"
     },
     {
       "id": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_el_razonamiento",
@@ -32229,7 +32229,7 @@
       "file_type": "code",
       "norm_label": ".test_junta_el_razonamiento()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L499"
+      "source_location": "L503"
     },
     {
       "id": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_los_argumentos_partidos_de_una_tool",
@@ -32241,7 +32241,7 @@
       "file_type": "code",
       "norm_label": ".test_junta_los_argumentos_partidos_de_una_tool()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L468"
+      "source_location": "L472"
     },
     {
       "id": "backend_chatbot_tests_orquestador_leerstreamtests_test_separa_tools_en_paralelo_por_su_indice",
@@ -32253,7 +32253,7 @@
       "file_type": "code",
       "norm_label": ".test_separa_tools_en_paralelo_por_su_indice()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L479"
+      "source_location": "L483"
     },
     {
       "id": "backend_chatbot_tests_orquestador_parte_de_tool",
@@ -32265,7 +32265,7 @@
       "file_type": "code",
       "norm_label": "parte_de_tool()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L446"
+      "source_location": "L450"
     },
     {
       "id": "frontend_e2e_a11y_axe_spec_auditar",
@@ -34185,7 +34185,7 @@
       "file_type": "code",
       "norm_label": ".chatear()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L399"
+      "source_location": "L403"
     },
     {
       "id": "backend_chatbot_tests_orquestador_comandochateartests_setup",
@@ -34197,7 +34197,7 @@
       "file_type": "code",
       "norm_label": ".setup()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L396"
+      "source_location": "L400"
     },
     {
       "id": "backend_chatbot_tests_orquestador_comandochateartests_test_imprime_la_respuesta_y_guarda_el_turno",
@@ -34209,7 +34209,7 @@
       "file_type": "code",
       "norm_label": ".test_imprime_la_respuesta_y_guarda_el_turno()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L414"
+      "source_location": "L418"
     },
     {
       "id": "backend_chatbot_tests_orquestador_comandochateartests_test_si_el_turno_falla_lo_avisa_y_no_guarda",
@@ -34221,7 +34221,7 @@
       "file_type": "code",
       "norm_label": ".test_si_el_turno_falla_lo_avisa_y_no_guarda()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L428"
+      "source_location": "L432"
     },
     {
       "id": "backend_chatbot_tests_orquestador_comandochateartests_test_sin_guardar_no_toca_el_historial",
@@ -34233,7 +34233,7 @@
       "file_type": "code",
       "norm_label": ".test_sin_guardar_no_toca_el_historial()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L423"
+      "source_location": "L427"
     },
     {
       "id": "backend_chatbot_tests_orquestador_comandochateartests_test_un_usuario_que_no_existe_es_un_error_claro",
@@ -34245,7 +34245,7 @@
       "file_type": "code",
       "norm_label": ".test_un_usuario_que_no_existe_es_un_error_claro()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L434"
+      "source_location": "L438"
     },
     {
       "id": "backend_filmai_settings_redis_url",
@@ -44793,7 +44793,7 @@
       "file_type": "code",
       "norm_label": ".llamar_a_tmdb()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L374"
+      "source_location": "L378"
     },
     {
       "id": "backend_chatbot_tests_orquestador_presupuestodetmdbtests_test_las_tools_de_un_turno_suman_al_mismo_contador",
@@ -44805,7 +44805,7 @@
       "file_type": "code",
       "norm_label": ".test_las_tools_de_un_turno_suman_al_mismo_contador()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L378"
+      "source_location": "L382"
     },
     {
       "id": "backend_chatbot_tests_orquestador_presupuestodetmdbtests_test_pasado_el_tope_la_tool_falla_y_el_turno_sigue",
@@ -44817,7 +44817,7 @@
       "file_type": "code",
       "norm_label": ".test_pasado_el_tope_la_tool_falla_y_el_turno_sigue()",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L385"
+      "source_location": "L389"
     },
     {
       "id": "backend_chatbot_tests_orquestador_respuestasimpletests_test_no_guarda_nada",
@@ -58863,7 +58863,7 @@
       "source_location": "L7"
     },
     {
-      "id": "backend_chatbot_prompts_rationale_68",
+      "id": "backend_chatbot_prompts_rationale_70",
       "label": "El mensaje `system` del turno. `idioma` es el de la respuesta: el del mensaje\u2026",
       "_origin": "ast",
       "community": 208,
@@ -58871,7 +58871,7 @@
       "file_type": "rationale",
       "norm_label": "el mensaje `system` del turno. `idioma` es el de la respuesta: el del mensaje...",
       "source_file": "backend/chatbot/prompts.py",
-      "source_location": "L68"
+      "source_location": "L70"
     },
     {
       "id": "backend_usuarios_test_errores_google_py_override_settings",
@@ -66982,7 +66982,7 @@
       "source_location": "L91"
     },
     {
-      "id": "backend_chatbot_tests_orquestador_rationale_457",
+      "id": "backend_chatbot_tests_orquestador_rationale_461",
       "label": "La forma de los fragmentos copia la de DeepSeek, consultada el 05/11/2026.",
       "_origin": "ast",
       "community": 307,
@@ -66990,7 +66990,7 @@
       "file_type": "rationale",
       "norm_label": "la forma de los fragmentos copia la de deepseek, consultada el 05/11/2026.",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L457"
+      "source_location": "L461"
     },
     {
       "id": "frontend_e2e_a11y_axe_spec",
@@ -123010,7 +123010,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L402",
+      "source_location": "L406",
       "weight": 1.0
     },
     {
@@ -123022,7 +123022,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L397",
+      "source_location": "L401",
       "weight": 1.0
     },
     {
@@ -123034,7 +123034,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L415",
+      "source_location": "L419",
       "weight": 1.0
     },
     {
@@ -123046,7 +123046,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L429",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -123058,7 +123058,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L424",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -123070,7 +123070,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L520",
+      "source_location": "L524",
       "weight": 1.0
     },
     {
@@ -123082,7 +123082,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L534",
+      "source_location": "L538",
       "weight": 1.0
     },
     {
@@ -123094,7 +123094,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L528",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -123358,7 +123358,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L460",
+      "source_location": "L464",
       "weight": 1.0
     },
     {
@@ -123370,7 +123370,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L460",
+      "source_location": "L464",
       "weight": 1.0
     },
     {
@@ -123382,7 +123382,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L463",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
@@ -123394,7 +123394,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L463",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
@@ -123406,79 +123406,79 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L466",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_ignora_los_fragmentos_sin_choices",
-      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L493",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_ignora_los_fragmentos_sin_choices",
-      "target": "backend_chatbot_tests_orquestador_fragmento",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L494",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_el_razonamiento",
-      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L500",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_el_razonamiento",
-      "target": "backend_chatbot_tests_orquestador_fragmento",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L501",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_los_argumentos_partidos_de_una_tool",
-      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L469",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_los_argumentos_partidos_de_una_tool",
-      "target": "backend_chatbot_tests_orquestador_fragmento",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/chatbot/tests_orquestador.py",
       "source_location": "L470",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_ignora_los_fragmentos_sin_choices",
+      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/chatbot/tests_orquestador.py",
+      "source_location": "L497",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_ignora_los_fragmentos_sin_choices",
+      "target": "backend_chatbot_tests_orquestador_fragmento",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/chatbot/tests_orquestador.py",
+      "source_location": "L498",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_el_razonamiento",
+      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/chatbot/tests_orquestador.py",
+      "source_location": "L504",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_el_razonamiento",
+      "target": "backend_chatbot_tests_orquestador_fragmento",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/chatbot/tests_orquestador.py",
+      "source_location": "L505",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_los_argumentos_partidos_de_una_tool",
+      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/chatbot/tests_orquestador.py",
+      "source_location": "L473",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_los_argumentos_partidos_de_una_tool",
+      "target": "backend_chatbot_tests_orquestador_fragmento",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/chatbot/tests_orquestador.py",
+      "source_location": "L474",
       "weight": 1.0
     },
     {
@@ -123490,24 +123490,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L470",
+      "source_location": "L474",
       "weight": 1.0
     },
     {
       "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_junta_los_argumentos_partidos_de_una_tool",
       "target": "backend_chatbot_llm_llamadatool",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L476",
-      "weight": 1.0
-    },
-    {
-      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_separa_tools_en_paralelo_por_su_indice",
-      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -123519,6 +123507,18 @@
     },
     {
       "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_separa_tools_en_paralelo_por_su_indice",
+      "target": "backend_chatbot_tests_orquestador_leerstreamtests_leer",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/chatbot/tests_orquestador.py",
+      "source_location": "L484",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_chatbot_tests_orquestador_leerstreamtests_test_separa_tools_en_paralelo_por_su_indice",
       "target": "backend_chatbot_tests_orquestador_fragmento",
       "relation": "calls",
       "_origin": "ast",
@@ -123526,7 +123526,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L481",
+      "source_location": "L485",
       "weight": 1.0
     },
     {
@@ -123538,7 +123538,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L481",
+      "source_location": "L485",
       "weight": 1.0
     },
     {
@@ -123550,7 +123550,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L489",
+      "source_location": "L493",
       "weight": 1.0
     },
     {
@@ -123754,7 +123754,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L375",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -123766,7 +123766,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L380",
+      "source_location": "L384",
       "weight": 1.0
     },
     {
@@ -123778,7 +123778,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L381",
+      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -123790,7 +123790,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L381",
+      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -123802,7 +123802,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L387",
+      "source_location": "L391",
       "weight": 1.0
     },
     {
@@ -123814,7 +123814,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L389",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -123826,7 +123826,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L389",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -123910,7 +123910,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L369",
+      "source_location": "L373",
       "weight": 1.0
     },
     {
@@ -143086,7 +143086,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L508",
+      "source_location": "L512",
       "weight": 1.0
     },
     {
@@ -143098,7 +143098,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L530",
+      "source_location": "L534",
       "weight": 1.0
     },
     {
@@ -143110,7 +143110,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L525",
+      "source_location": "L529",
       "weight": 1.0
     },
     {
@@ -209430,7 +209430,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/prompts.py",
-      "source_location": "L67",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -209694,7 +209694,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -209716,7 +209716,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L395",
+      "source_location": "L399",
       "weight": 1.0
     },
     {
@@ -209738,7 +209738,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L439",
+      "source_location": "L443",
       "weight": 1.0
     },
     {
@@ -209749,7 +209749,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L446",
+      "source_location": "L450",
       "weight": 1.0
     },
     {
@@ -209760,7 +209760,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L451",
+      "source_location": "L455",
       "weight": 1.0
     },
     {
@@ -209771,7 +209771,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L456",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -209782,7 +209782,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L507",
+      "source_location": "L511",
       "weight": 1.0
     },
     {
@@ -230036,7 +230036,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L395",
+      "source_location": "L399",
       "weight": 1.0
     },
     {
@@ -230047,7 +230047,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L507",
+      "source_location": "L511",
       "weight": 1.0
     },
     {
@@ -230069,7 +230069,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L456",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -230091,7 +230091,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -242301,7 +242301,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L396",
+      "source_location": "L400",
       "weight": 1.0
     },
     {
@@ -242312,7 +242312,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L399",
+      "source_location": "L403",
       "weight": 1.0
     },
     {
@@ -242323,7 +242323,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L414",
+      "source_location": "L418",
       "weight": 1.0
     },
     {
@@ -242334,7 +242334,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L423",
+      "source_location": "L427",
       "weight": 1.0
     },
     {
@@ -242345,7 +242345,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L428",
+      "source_location": "L432",
       "weight": 1.0
     },
     {
@@ -242356,7 +242356,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L434",
+      "source_location": "L438",
       "weight": 1.0
     },
     {
@@ -242367,7 +242367,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L519",
+      "source_location": "L523",
       "weight": 1.0
     },
     {
@@ -242378,7 +242378,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L526",
+      "source_location": "L530",
       "weight": 1.0
     },
     {
@@ -242389,7 +242389,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L531",
+      "source_location": "L535",
       "weight": 1.0
     },
     {
@@ -242521,7 +242521,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L459",
+      "source_location": "L463",
       "weight": 1.0
     },
     {
@@ -242532,7 +242532,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L462",
+      "source_location": "L466",
       "weight": 1.0
     },
     {
@@ -242543,7 +242543,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L468",
+      "source_location": "L472",
       "weight": 1.0
     },
     {
@@ -242554,7 +242554,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L479",
+      "source_location": "L483",
       "weight": 1.0
     },
     {
@@ -242565,7 +242565,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L492",
+      "source_location": "L496",
       "weight": 1.0
     },
     {
@@ -242576,7 +242576,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L499",
+      "source_location": "L503",
       "weight": 1.0
     },
     {
@@ -242675,7 +242675,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L374",
+      "source_location": "L378",
       "weight": 1.0
     },
     {
@@ -242686,7 +242686,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L378",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -242697,7 +242697,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L385",
+      "source_location": "L389",
       "weight": 1.0
     },
     {
@@ -242774,7 +242774,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L368",
+      "source_location": "L372",
       "weight": 1.0
     },
     {
@@ -256528,14 +256528,14 @@
       "weight": 1.0
     },
     {
-      "source": "backend_chatbot_prompts_rationale_68",
+      "source": "backend_chatbot_prompts_rationale_70",
       "target": "backend_chatbot_prompts_armar_sistema",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/prompts.py",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -256704,14 +256704,14 @@
       "weight": 1.0
     },
     {
-      "source": "backend_chatbot_tests_orquestador_rationale_457",
+      "source": "backend_chatbot_tests_orquestador_rationale_461",
       "target": "backend_chatbot_tests_orquestador_leerstreamtests",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L457",
+      "source_location": "L461",
       "weight": 1.0
     },
     {
@@ -271835,7 +271835,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L397",
+      "source_location": "L401",
       "weight": 0.8
     },
     {
@@ -271846,7 +271846,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L402",
+      "source_location": "L406",
       "weight": 0.8
     },
     {
@@ -271857,7 +271857,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L419",
+      "source_location": "L423",
       "weight": 0.8
     },
     {
@@ -271868,7 +271868,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L522",
+      "source_location": "L526",
       "weight": 0.8
     },
     {
@@ -271879,7 +271879,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L533",
+      "source_location": "L537",
       "weight": 0.8
     },
     {
@@ -271934,7 +271934,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L466",
+      "source_location": "L470",
       "weight": 0.8
     },
     {
@@ -271945,7 +271945,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/tests_orquestador.py",
-      "source_location": "L476",
+      "source_location": "L480",
       "weight": 0.8
     },
     {
@@ -287906,5 +287906,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "d8c18190d582ed54cbdd707a214e28ad9d92a52a"
+  "built_at_commit": "d4b4c620b1f63dc1fb15ec10c585e7eb7eaea36b"
 }
