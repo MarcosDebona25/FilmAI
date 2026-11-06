@@ -5,6 +5,24 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 06/11/2026 — Panel del chat en el frontend (PR 6 del chatbot)
+
+- **Fecha**: 06/11/2026
+- **Descripción**: fase 6 del SDD. El panel funciona contra un stream SSE armado a mano, porque el `POST` llega en el PR 5. Lo que se decidió con Marcos:
+  - **Sesión compartida**: `apiFetch` lee la respuesta entera y el chat la necesita de a pedazos. Se extrajo `pedirConSesion()` (CSRF, `Accept-Language` y renovación ante un 401 (Unauthorized)), que devuelve la `Response` sin leerla. La usan los dos, así que la regla de sesión está en un solo lugar. Cancelar ya no se informa como error de red.
+  - **Cancelar va en el botón de enviar**, como dice la spec. El canvas lo dibujó en la fila de estado.
+  - **Al cancelar o fallar** se quita la burbuja de la pregunta, porque el servidor no guardó nada y así coincide con el historial. La pregunta vuelve al input solo si está vacío: si el usuario escribió otra cosa mientras esperaba, se respeta.
+  - **Carrera Cancelar/`fin`**: cada envío tiene un número de turno. Un evento de un turno que ya no es el actual se descarta, incluso un `fin` que ya estaba en el buffer del stream.
+  - **Modal en los dos tamaños**: `showModal()` atrapa el foco y deja el fondo inerte. En escritorio el fondo no se oscurece, como en el canvas, que lo había dibujado no modal.
+  - **Anuncio único**: la conversación es `role="log"` sin `aria-live`. Una región aparte recibe la respuesta completa al llegar `fin`; con `aria-live` en el log se anunciaría cada delta.
+  - **FAB**: reemplaza la píldora «Ask FilmAI» que tenía solo la Home y aparece en todas las pantallas salvo las de acceso. Su nombre accesible es el texto visible (WCAG 2.5.3: quien usa control por voz dice lo que ve), en vez del `aria-label` «Abrir chatbot de recomendaciones» del doc 04.
+  - **Tarjetas**: toda la fila es el link, con «Ver detalle» como rótulo en escritorio. Elegir una cierra el panel para que se vea la ficha. La nota de TMDB (`nota_tmdb`, el mismo nombre que ya usan las tools) se muestra si viene: el front la toma como opcional y el contrato (`eventos.py` y `publicar()` en `tools/turno.py`) la suma en un PR aparte, acordado con Gonza.
+  - **Textos**: se sembraron como provisorios las 9 filas `chatbot` que usa el panel y 4 claves nuevas, entre ellas `chat_unavailable` y `chat_request_in_progress`. El test de contrato solo exige que el front traduzca los códigos del backend, así que traducirlos antes del PR 5 no rompe nada. Se curan en la 7.1.
+  - **Encabezado del panel en `<div>`**: el `<dialog>` cerrado sigue en el DOM y un `<header>` adentro duplicaba el de la página para quien lo busque por etiqueta (los e2e de la navbar). Dentro de un diálogo no es un landmark, así que no se pierde semántica.
+  - **Markdown**: `react-markdown` + `rehype-sanitize`, con links e imágenes como texto. Una imagen Markdown del modelo haría que el navegador pida una URL elegida por prompt injection.
+- **Divergencias con el canvas** (para ajustarlo): Cancelar en el botón de enviar, el contador desde 400 caracteres y el panel modal en escritorio.
+- **Archivos afectados**: `frontend/lib/{api,chat}.ts`, `frontend/components/ChatProvider.tsx`, `frontend/components/features/chat/`, `frontend/app/layout.tsx`, `frontend/components/features/HomeView.tsx`, `traducciones/{claves,claves-extra}.csv`, `frontend/messages/`, `docs/04_*.md`, `openspec/changes/chatbot/`. Tests: `frontend/tests/chat-{sse,markdown,provider,ui}.test.ts(x)`, `frontend/e2e/chat.spec.ts`.
+
 ## 06/11/2026 — `packaging` faltante rompía el encolado en Celery
 
 - **Fecha**: 06/11/2026

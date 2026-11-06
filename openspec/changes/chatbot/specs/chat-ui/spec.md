@@ -8,7 +8,7 @@ The floating chat of the frontend (B-04, CU-013, CU-014; doc 04 §3.1 and canvas
 
 ### Requirement: One chat, available everywhere
 
-The chat state MUST live in a provider in the root layout so it survives navigation. The FAB MUST be on every screen with the chat, disabled without a session, with the accessible name of doc 04. «Ask FilmAI» in the Home and the footer MUST open the panel instead of navigating.
+The chat state MUST live in a provider in the root layout so it survives navigation. The FAB MUST be on every screen with the chat, disabled without a session, and its accessible name MUST be its visible text («Ask FilmAI»; WCAG 2.5.3, 06/11/2026). Choosing a card MUST close the panel so the title page is visible; the conversation stays. «Ask FilmAI» in the Home and the footer MUST open the panel instead of navigating.
 
 #### Scenario: Navigating with the panel open
 
@@ -63,7 +63,7 @@ While an answer streams the panel MUST show the status from `estado` codes, appe
 
 ### Requirement: Model output is never trusted as HTML
 
-Answers MUST be rendered as Markdown without raw HTML and sanitized. Links and images written by the model MUST be rendered as plain text: no clickable link and no image request. Card links MUST be built by the frontend from `id_tmdb` and `tipo`. `dangerouslySetInnerHTML` MUST NOT be used (28/10/2026).
+Answers MUST be rendered as Markdown without raw HTML and sanitized. Links and images written by the model MUST be rendered as plain text: no clickable link and no image request. Card links MUST be built by the frontend from `id_tmdb` and `tipo`. A card shows the TMDB rating when the event carries `nota_tmdb` (optional; cards saved before it existed have none). `dangerouslySetInnerHTML` MUST NOT be used (28/10/2026).
 
 #### Scenario: Injected markup
 
