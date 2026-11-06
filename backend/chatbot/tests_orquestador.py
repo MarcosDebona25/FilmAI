@@ -164,6 +164,21 @@ class VueltaConToolsTests(BaseOrquestador):
 
         self.assertTrue(eventos[-1].texto.startswith("Mirá"))
 
+    async def test_el_texto_que_cruza_el_umbral_despues_de_otra_vuelta_no_duplica_el_separador(
+        self,
+    ):
+        # La primera vuelta ya salió al front; en la segunda, dos trozos cruzan el
+        # umbral juntos: el separador va una sola vez y no se reenvía lo ya emitido.
+        largo = "x" * (_LARGO_DE_PREAMBULO + 1)
+        primero, segundo = "y" * 150, "z" * 100
+        eventos = await self.correr([[largo, tool("descubrir")], [primero, segundo]])
+
+        esperado = f"{largo}\n\n{primero}{segundo}"
+        self.assertEqual(eventos[-1].texto, esperado)
+        pedazos = "".join(e.delta for e in eventos if isinstance(e, Texto))
+        self.assertEqual(pedazos, esperado)
+        self.assertEqual(pedazos.count("\n\n"), 1)
+
     async def test_varias_tools_en_una_vuelta_responden_en_orden(self):
         await self.correr([[tool("descubrir", "a"), tool("descubrir", "b")], ["Listo"]])
 
