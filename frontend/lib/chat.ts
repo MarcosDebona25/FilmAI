@@ -22,7 +22,7 @@ export type Tarjeta = {
   poster: string | null;
   anio: number | null;
   /** Promedio de TMDB. Opcional: las tarjetas guardadas antes de sumarlo no lo traen. */
-  nota?: number | null;
+  nota_tmdb?: number | null;
 };
 
 export type EventoChat =
