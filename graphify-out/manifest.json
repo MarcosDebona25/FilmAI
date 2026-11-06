@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793980755.36326,
-    "seen": 1793980931.1105106,
-    "ast_hash": "62bdcdabe92b816e1b2806a47a85b4e4",
+    "mtime": 1793984255.5894642,
+    "seen": 1793984306.3827333,
+    "ast_hash": "6a77477eed1c9f84619fb7d103834099",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1793978837.110564,
-    "seen": 1793979303.2832832,
+    "mtime": 1793983930.5006046,
+    "seen": 1793984306.3600588,
     "ast_hash": "7c22ecbbd0abf82e77bde2b9afd564fa",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1793978837.110564,
-    "seen": 1793979303.2832897,
+    "mtime": 1793983930.5006046,
+    "seen": 1793984306.3601794,
     "ast_hash": "3e5db6c58c359c38ec807f49271815d7",
     "semantic_hash": ""
   },
@@ -4632,9 +4632,9 @@
     "semantic_hash": ""
   },
   "frontend/components/features/chat/ChatPanel.tsx": {
-    "mtime": 1793976706.1439233,
-    "seen": 1793979303.2830637,
-    "ast_hash": "f02e9aed3e440004ac05d84535bb4437",
+    "mtime": 1793982429.0835772,
+    "seen": 1793984306.3493733,
+    "ast_hash": "e8f8929c09d0a8866bca458380871bfb",
     "semantic_hash": ""
   },
   "frontend/components/features/chat/ChatTarjetas.tsx": {
@@ -4644,9 +4644,9 @@
     "semantic_hash": ""
   },
   "frontend/e2e/chat.spec.ts": {
-    "mtime": 1793978941.5192282,
-    "seen": 1793979303.283147,
-    "ast_hash": "2a7e776683320665117eac93a2238412",
+    "mtime": 1793983792.7200072,
+    "seen": 1793984306.3537073,
+    "ast_hash": "f297209fe3e7acfe2fd4d383c317ff36",
     "semantic_hash": ""
   },
   "frontend/lib/chat.ts": {
@@ -4662,9 +4662,9 @@
     "semantic_hash": ""
   },
   "frontend/tests/chat-provider.test.tsx": {
-    "mtime": 1793980597.8214722,
-    "seen": 1793980931.0808687,
-    "ast_hash": "1f7f11bccab728b1da3ffab193eef390",
+    "mtime": 1793984150.5792944,
+    "seen": 1793984306.36205,
+    "ast_hash": "d5ece59ee24b1f2f60cb6c28fcc36e9c",
     "semantic_hash": ""
   },
   "frontend/tests/chat-sse.test.ts": {

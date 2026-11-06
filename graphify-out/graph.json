@@ -17457,7 +17457,7 @@
       "file_type": "code",
       "norm_label": "botonflotante()",
       "source_file": "frontend/e2e/chat.spec.ts",
-      "source_location": "L67"
+      "source_location": "L71"
     },
     {
       "id": "frontend_e2e_chat_spec_frame",
@@ -17505,7 +17505,7 @@
       "file_type": "code",
       "norm_label": "sse()",
       "source_file": "frontend/e2e/chat.spec.ts",
-      "source_location": "L69"
+      "source_location": "L74"
     },
     {
       "id": "frontend_e2e_menu_listas_spec_abrirficha",
@@ -139862,7 +139862,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/chat/ChatPanel.tsx",
-      "source_location": "L116",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -139874,7 +139874,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/chat/ChatPanel.tsx",
-      "source_location": "L173",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -221268,7 +221268,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/e2e/chat.spec.ts",
-      "source_location": "L67",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -221279,7 +221279,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/e2e/chat.spec.ts",
-      "source_location": "L69",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -292123,5 +292123,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "d6b9c8f97a011c51e04150142385e600ee41f26c"
+  "built_at_commit": "a396a96887240f87d2cc7733ce035264e4702b3f"
 }
