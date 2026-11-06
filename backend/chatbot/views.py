@@ -103,6 +103,19 @@ class Turno:
     ident: str  # la IP, a la que se le cobran las llamadas a TMDB de las tools
 
 
+def _soltar_sin_fallar(turno):
+    """Suelta el candado; si la caché falla, lo registra y sigue.
+
+    Lo que ve el usuario lo decide el turno, no la liberación: si el par ya se
+    guardó, un corte de Redis acá no puede convertir el `fin` en un `error` (el
+    panel reintentaría y el turno quedaría duplicado). El candado vence solo.
+    """
+    try:
+        soltar_candado(turno.chat.pk, turno.token)
+    except Exception:
+        logger.exception("No se pudo soltar el candado del chat")
+
+
 def _guardar_y_soltar(turno, resultado):
     """Guarda el turno y suelta el candado, en una sola ida al hilo.
 
@@ -114,7 +127,7 @@ def _guardar_y_soltar(turno, resultado):
     try:
         return guardar_turno(turno.chat, turno.texto, resultado)
     finally:
-        soltar_candado(turno.chat.pk, turno.token)
+        _soltar_sin_fallar(turno)
 
 
 def _registrar_falla_del_guardado(tarea):
@@ -178,11 +191,15 @@ async def _stream(turno):
 
             guardando = True
             tarea = asyncio.ensure_future(en_hilo(_guardar_y_soltar, turno, resultado))
-            tarea.add_done_callback(_registrar_falla_del_guardado)
             try:
                 # `shield`: si el navegador corta ahora, la cancelación llega acá
                 # pero la tarea de guardado sigue hasta el COMMIT.
                 pregunta, respuesta = await asyncio.shield(tarea)
+            except asyncio.CancelledError:
+                # Solo tras un corte nadie más lee el resultado del guardado; sin
+                # corte, su error lo registra el `except` de abajo (una sola vez).
+                tarea.add_done_callback(_registrar_falla_del_guardado)
+                raise
             except Exception:
                 logger.exception("Falló el guardado del turno")
                 yield frame_error()
@@ -192,7 +209,7 @@ async def _stream(turno):
             yield frame("fin", {"id": respuesta.pk, "id_pregunta": pregunta.pk})
     finally:
         if not guardando:
-            soltar_candado(turno.chat.pk, turno.token)
+            _soltar_sin_fallar(turno)
 
 
 def _error(descripcion):

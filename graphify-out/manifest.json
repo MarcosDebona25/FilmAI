@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/views.py": {
-    "mtime": 1793979219.3194036,
-    "seen": 1793979349.1386683,
-    "ast_hash": "11cb847025a738eac55631b5b781ff4c",
+    "mtime": 1793981665.2670102,
+    "seen": 1793982015.8058543,
+    "ast_hash": "1bdc3227230ee0bd7658a286b6dec66e",
     "semantic_hash": ""
   },
   "backend/entrypoint.sh": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793980776.1023412,
-    "seen": 1793980875.5344634,
-    "ast_hash": "f4a7d79d64fcda45669423cdcd876e80",
+    "mtime": 1793981968.6647968,
+    "seen": 1793982015.8796754,
+    "ast_hash": "ede86e1334a1ad03c9b0e6a6432f0c9e",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4692,9 +4692,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_sse.py": {
-    "mtime": 1793977331.3005269,
-    "seen": 1793977583.291139,
-    "ast_hash": "3ba09d3caf6f47f2acad3c86b7b59258",
+    "mtime": 1793981642.5696971,
+    "seen": 1793982015.8049915,
+    "ast_hash": "d8270062e3f9df6548386312bf6f2440",
     "semantic_hash": ""
   },
   "backend/filmai/pruebas_asgi.py": {

@@ -365,8 +365,12 @@ class FallasDelTurnoTests(BaseSSE):
 
     async def test_si_falla_el_guardado_sale_error_y_nunca_tarjetas(self):
         with patch("chatbot.views.guardar_turno", side_effect=RuntimeError("base")):
-            with self.assertLogs("chatbot.views", level="ERROR"):
+            with self.assertLogs("chatbot.views", level="ERROR") as registro:
                 _, eventos = await self.turno()
+                await asyncio.sleep(0)  # deja correr cualquier callback pendiente
+
+        # Sin corte de conexión, la falla se registra una sola vez.
+        self.assertEqual(len(registro.records), 1)
 
         nombres = [n for n, _ in eventos]
         self.assertEqual(nombres[-1], "error")
@@ -374,6 +378,18 @@ class FallasDelTurnoTests(BaseSSE):
         self.assertNotIn("fin", nombres)
         self.assertEqual(await Mensaje.objects.acount(), 0)
         self.assertFalse(self.candado_tomado())
+
+    async def test_si_soltar_el_candado_falla_despues_de_guardar_igual_sale_fin(self):
+        # Redis se cae justo al soltar: el par ya está en la base, así que el
+        # usuario tiene que ver `fin` y no un `error` que lo haga reintentar.
+        self.addCleanup(cache.delete, _clave_candado(self.chat.pk))
+        with patch("chatbot.views.soltar_candado", side_effect=ConnectionError):
+            with self.assertLogs("chatbot.views", level="ERROR") as registro:
+                _, eventos = await self.turno()
+
+        self.assertEqual([n for n, _ in eventos][-2:], ["tarjetas", "fin"])
+        self.assertEqual(await Mensaje.objects.acount(), 2)
+        self.assertIn("candado", registro.output[0])
 
 
 class SimpleOrquestador:
@@ -528,6 +544,30 @@ class CorteDeConexionTests(TransactionTestCase):
 
         self.assertIsNotNone(visto["candado_durante"])
         self.assertEqual(await Mensaje.objects.acount(), 2)
+        self.assertFalse(self.candado_tomado())
+
+    async def test_si_el_guardado_falla_despues_del_corte_queda_en_el_log(self):
+        desconexion = asyncio.Event()
+        bucle = asyncio.get_running_loop()
+
+        def guardado_que_falla(*args):
+            bucle.call_soon_threadsafe(desconexion.set)  # el navegador corta ahora
+            time.sleep(0.2)
+            raise RuntimeError("base")
+
+        with self.assertLogs("chatbot.views", level="ERROR") as registro:
+            with patch("chatbot.views.guardar_turno", guardado_que_falla):
+                with patch("chatbot.views.responder", OrquestadorFalso().responder):
+                    await self.enviar(desconexion=desconexion)
+                for _ in range(50):
+                    if not self.candado_tomado():
+                        break
+                    await asyncio.sleep(0.05)
+                await asyncio.sleep(0.05)  # el callback corre después de la tarea
+
+        # Nadie leía el resultado: lo registra el callback, una sola vez.
+        self.assertEqual(len(registro.records), 1)
+        self.assertIn("guardado", registro.output[0])
         self.assertFalse(self.candado_tomado())
 
     async def test_sin_cortar_pero_con_otro_pedido_en_curso_es_409_bajo_asgi(self):
