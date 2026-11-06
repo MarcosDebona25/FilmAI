@@ -63,8 +63,13 @@ async function prepararChat(
   return { preparar, pedidosHistorial };
 }
 
-/** El FAB flotante: el pie también tiene un botón «Ask FilmAI», pero sin `aria-expanded`. */
-const botonFlotante = (page: Page) => page.locator("button[aria-haspopup='dialog'][aria-expanded]");
+/**
+ * El FAB flotante: el pie también tiene un botón «Ask FilmAI», pero sin
+ * `aria-expanded`. Se pide además el nombre porque otras pantallas tienen
+ * popups con `aria-expanded` (la ficha, «Stream or rent»).
+ */
+const botonFlotante = (page: Page) =>
+  page.getByRole("button", { name: /^Ask FilmAI/ }).and(page.locator("[aria-expanded]"));
 
 const sse = (route: Route) =>
   route.fulfill({
@@ -198,9 +203,13 @@ test.describe("historial, bienvenida y badge", () => {
     await page.goto("/home");
     await botonFlotante(page).click();
     const panel = page.getByRole("dialog", { name: "FilmAI Assistant" });
-    // Se abre al final de la conversación: lo último que se dijo.
-    await expect(panel.getByText(/^Reciente 21\./)).toBeVisible();
+    // Se abre al final de la conversación: lo último que se dijo. `toBeVisible`
+    // no alcanza, porque no mira el recorte del scroll; se mide la posición.
     const conversacion = panel.getByRole("log");
+    const distanciaAlFinal = () =>
+      conversacion.evaluate((nodo) => nodo.scrollHeight - nodo.clientHeight - nodo.scrollTop);
+    await expect(panel.getByText(/^Reciente 40\./)).toBeInViewport();
+    await expect.poll(distanciaAlFinal).toBeLessThan(2);
     expect(pedidosHistorial).toEqual([null]);
 
     await conversacion.evaluate((nodo) => (nodo.scrollTop = 0));
@@ -209,9 +218,11 @@ test.describe("historial, bienvenida y badge", () => {
     // Lo que se estaba leyendo no salta: el panel no queda arriba del todo.
     await expect.poll(() => conversacion.evaluate((nodo) => nodo.scrollTop)).toBeGreaterThan(0);
 
-    // Cerrar y volver a abrir no lo pide de nuevo.
+    // Cerrar y volver a abrir no lo pide de nuevo, y vuelve a mostrar lo último.
     await page.keyboard.press("Escape");
     await botonFlotante(page).click();
+    await expect(panel.getByText(/^Reciente 40\./)).toBeInViewport();
+    await expect.poll(distanciaAlFinal).toBeLessThan(2);
     expect(pedidosHistorial).toEqual([null, "pagina2"]);
   });
 

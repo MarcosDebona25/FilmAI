@@ -359,9 +359,10 @@ describe("ChatProvider: historial", () => {
       next: "c1",
     });
     act(() => result.current.reintentarHistorial());
-    await waitFor(() => expect(result.current.historial.error).toBeNull());
+    // El error se limpia al arrancar el pedido: se espera a que llegue la respuesta.
+    await waitFor(() => expect(result.current.mensajes.map((m) => m.id)).toEqual([3, 5, 6]));
+    expect(result.current.historial.error).toBeNull();
     expect(chat.cargarHistorial).toHaveBeenLastCalledWith(null);
-    expect(result.current.mensajes.map((m) => m.id)).toEqual([3, 5, 6]);
   });
 
   it("si al abrir vuelve una página vieja, el refresco tras un cancel corre después", async () => {

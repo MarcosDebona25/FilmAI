@@ -56,6 +56,11 @@ export function ChatPanel() {
     if (!dialogo) return;
     if (abierto && !dialogo.open) {
       dialogo.showModal();
+      // El scroll del efecto de abajo corre antes que este, con el diálogo todavía
+      // cerrado (`display: none`, alto 0). Se repite acá para no depender de que
+      // el navegador conserve la posición al mostrarlo.
+      const conversacion = conversacionRef.current;
+      if (conversacion) conversacion.scrollTop = conversacion.scrollHeight;
       campoRef.current?.focus({ preventScroll: true });
       const overflowAnterior = document.body.style.overflow;
       document.body.style.overflow = "hidden";
