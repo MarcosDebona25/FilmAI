@@ -363,7 +363,11 @@ class ReglasDelPromptTests(SimpleTestCase):
         sistema = armar_sistema("", [], "es")
 
         self.assertIn("dala para todos los títulos", sistema)
-        self.assertIn("consultala con `detalle`", sistema)
+        self.assertIn(
+            "consultala con `detalle` para cada título que no la traiga", sistema
+        )
+        # Las series casi nunca la tienen: callarla sería repetir el problema.
+        self.assertIn("decí que de ese título no la tenés", sistema)
 
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))
