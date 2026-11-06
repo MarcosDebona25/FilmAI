@@ -61,8 +61,10 @@ def sumar_mensaje(usuario_id):
     try:
         total = cache.incr(clave)
     except ValueError:
-        # Primera del período, o Redis la desalojó. `add` solo crea si no existe:
-        # si otro pedido la sembró justo antes, se vuelve a sumar.
+        # Primera del período, o Redis la desalojó. Con Redis también se llega
+        # acá: el `incr` de Django consulta `exists` y lanza `ValueError` en vez
+        # de dejar que `INCRBY` cree la clave sin vencimiento. `add` solo crea si
+        # no existe: si otro pedido la sembró justo antes, se vuelve a sumar.
         if cache.add(clave, 1, timeout=VENTANA_MENSAJES_SEGUNDOS * 2):
             total = 1
         else:

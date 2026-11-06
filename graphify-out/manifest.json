@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793979204.3778677,
-    "seen": 1793979349.2116797,
-    "ast_hash": "b263da5f3390f4329f8db0b2804b2958",
+    "mtime": 1793980776.1023412,
+    "seen": 1793980875.5344634,
+    "ast_hash": "f4a7d79d64fcda45669423cdcd876e80",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4290,9 +4290,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/design.md": {
-    "mtime": 1793979204.3697524,
-    "seen": 1793979349.2120142,
-    "ast_hash": "46f66f8cdb9f95b4843d1306400b20a4",
+    "mtime": 1793980762.32131,
+    "seen": 1793980875.5350113,
+    "ast_hash": "03aacacc3410f04f49c319b84e509129",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/proposal.md": {
@@ -4680,9 +4680,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/limites.py": {
-    "mtime": 1793976624.7994783,
-    "seen": 1793977583.2910538,
-    "ast_hash": "e44918f63c6d346c868463d5400ac4a4",
+    "mtime": 1793980762.321999,
+    "seen": 1793980875.4203181,
+    "ast_hash": "8bcb18c15da848c8720240a95d609050",
     "semantic_hash": ""
   },
   "backend/chatbot/sse.py": {
