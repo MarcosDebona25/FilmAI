@@ -74,7 +74,7 @@ export function ChatPanel() {
         aria-hidden="true"
         className="mt-2 h-1 w-10 flex-none self-center rounded-full bg-line md:hidden"
       />
-      <header className="flex flex-none items-center gap-2.5 py-2.5 pr-2.5 pl-[1.125rem] shadow-[inset_0_-1px_0_var(--line)] md:gap-3 md:py-[1.125rem] md:pr-4 md:pl-[1.375rem]">
+      <div className="flex flex-none items-center gap-2.5 py-2.5 pr-2.5 pl-[1.125rem] shadow-[inset_0_-1px_0_var(--line)] md:gap-3 md:py-[1.125rem] md:pr-4 md:pl-[1.375rem]">
         <span
           aria-hidden="true"
           className="hidden size-10 flex-none place-items-center rounded-full bg-raised-2 md:grid"
@@ -98,7 +98,7 @@ export function ChatPanel() {
         >
           <X aria-hidden="true" className="size-5" />
         </button>
-      </header>
+      </div>
 
       <div
         ref={conversacionRef}
