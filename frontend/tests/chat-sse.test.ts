@@ -79,6 +79,31 @@ describe("leerEventos: el parser SSE", () => {
     expect(eventos).toEqual([{ tipo: "texto", delta: "a" }]);
   });
 
+  it("descarta tarjetas con datos fuera del contrato", async () => {
+    const valida = {
+      id_tmdb: 1,
+      tipo: "movie",
+      titulo: "Moon",
+      poster: "/m.jpg",
+      anio: 2009,
+    };
+    const eventos = await todos(
+      leerEventos(
+        cuerpo([
+          frame("tarjetas", {
+            tarjetas: [
+              valida,
+              { ...valida, tipo: "/evil.com" },
+              { ...valida, id_tmdb: -1 },
+              { ...valida, poster: "https://otro-host/x.jpg" },
+            ],
+          }),
+        ])
+      )
+    );
+    expect(eventos).toEqual([{ tipo: "tarjetas", tarjetas: [valida] }]);
+  });
+
   it("entrega las tarjetas y el error con su código", async () => {
     const tarjeta = {
       id_tmdb: 157336,

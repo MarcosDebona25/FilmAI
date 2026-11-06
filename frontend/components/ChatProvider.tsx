@@ -55,10 +55,14 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 
 /** Quita los símbolos de Markdown para que el lector de pantalla no los lea. */
 function textoPlano(markdown: string) {
-  return markdown
-    .replace(/[*_`#>~]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    markdown
+      // De un link o una imagen queda solo su texto: la URL no se anuncia.
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/[*_`#>~]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 let siguienteId = 0;

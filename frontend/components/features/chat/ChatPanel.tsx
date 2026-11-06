@@ -52,7 +52,7 @@ export function ChatPanel() {
   useEffect(() => {
     const conversacion = conversacionRef.current;
     if (conversacion) conversacion.scrollTop = conversacion.scrollHeight;
-  }, [mensajes, enCurso, aviso]);
+  }, [mensajes, enCurso, aviso, abierto]);
 
   return (
     <dialog

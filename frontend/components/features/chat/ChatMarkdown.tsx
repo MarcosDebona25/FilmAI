@@ -1,5 +1,6 @@
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
+import { memo } from "react";
 
 /**
  * Links e imágenes del modelo se muestran como texto (28/10/2026). Un link
@@ -18,7 +19,7 @@ const componentes: Components = {
  * `rehype-raw` ese HTML nunca llega al DOM. `rehype-sanitize` es la segunda
  * red: solo deja pasar etiquetas y atributos de una lista blanca.
  */
-export function ChatMarkdown({ texto }: { texto: string }) {
+export const ChatMarkdown = memo(function ChatMarkdown({ texto }: { texto: string }) {
   return (
     <div className="flex flex-col gap-3 leading-[1.6] break-words [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5">
       <ReactMarkdown rehypePlugins={[rehypeSanitize]} components={componentes}>
@@ -26,4 +27,4 @@ export function ChatMarkdown({ texto }: { texto: string }) {
       </ReactMarkdown>
     </div>
   );
-}
+});

@@ -34,6 +34,26 @@ export type EventoChat =
 
 type Datos = Record<string, unknown>;
 
+/** Una tarjeta tal como la puede usar el front: `href` y `src` salen de acá. */
+function esTarjeta(valor: unknown): valor is Tarjeta {
+  if (!valor || typeof valor !== "object") return false;
+  const tarjeta = valor as Record<string, unknown>;
+  return (
+    (tarjeta.tipo === "movie" || tarjeta.tipo === "tv") &&
+    typeof tarjeta.id_tmdb === "number" &&
+    Number.isInteger(tarjeta.id_tmdb) &&
+    tarjeta.id_tmdb > 0 &&
+    typeof tarjeta.titulo === "string" &&
+    (tarjeta.poster === null ||
+      (typeof tarjeta.poster === "string" && tarjeta.poster.startsWith("/"))) &&
+    (tarjeta.anio === null ||
+      (typeof tarjeta.anio === "number" && Number.isInteger(tarjeta.anio))) &&
+    (tarjeta.nota_tmdb === undefined ||
+      tarjeta.nota_tmdb === null ||
+      typeof tarjeta.nota_tmdb === "number")
+  );
+}
+
 /** Convierte un frame (`event: x` + `data: {...}`) en un evento; `null` si no se reconoce. */
 function parsearFrame(frame: string): EventoChat | null {
   let nombre = "";
@@ -54,10 +74,11 @@ function parsearFrame(frame: string): EventoChat | null {
       return typeof datos.code === "string" ? { tipo: "estado", code: datos.code } : null;
     case "texto":
       return typeof datos.delta === "string" ? { tipo: "texto", delta: datos.delta } : null;
-    case "tarjetas":
-      return Array.isArray(datos.tarjetas)
-        ? { tipo: "tarjetas", tarjetas: datos.tarjetas as Tarjeta[] }
-        : null;
+    case "tarjetas": {
+      if (!Array.isArray(datos.tarjetas)) return null;
+      const tarjetas = datos.tarjetas.filter(esTarjeta);
+      return tarjetas.length ? { tipo: "tarjetas", tarjetas } : null;
+    }
     case "fin":
       return typeof datos.id === "number" && typeof datos.id_pregunta === "number"
         ? { tipo: "fin", id: datos.id, id_pregunta: datos.id_pregunta }

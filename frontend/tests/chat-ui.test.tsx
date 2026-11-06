@@ -199,4 +199,17 @@ describe("el chat en pantalla", () => {
     const link = await screen.findByRole("link", { name: /Interstellar/ });
     expect(link).toHaveAttribute("href", "/movie/157336?from=chat");
   });
+
+  it("el anuncio lee el texto del link pero no su URL", async () => {
+    const usuario = userEvent.setup();
+    const soltar = respuesta([{ tipo: "texto", delta: "Mirá [Moon](https://ejemplo/x)" }, FIN]);
+    const { container } = render(<Chat />);
+    await usuario.click(screen.getByRole("button", { name: "Preguntale a FilmAI" }));
+    await usuario.keyboard("Algo{Enter}");
+    soltar();
+    await waitFor(() =>
+      expect(container.querySelector('[aria-live="polite"]')).toHaveTextContent("Mirá Moon")
+    );
+    expect(container.querySelector('[aria-live="polite"]')).not.toHaveTextContent("ejemplo");
+  });
 });
