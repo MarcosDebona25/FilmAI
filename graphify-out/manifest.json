@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793933793.766055,
-    "seen": 1793933950.334013,
-    "ast_hash": "e07e2413409f73372456fcd5f41a573c",
+    "mtime": 1793934363.0366664,
+    "seen": 1793934423.8254378,
+    "ast_hash": "deb383c7f48831eec187145e0c8d83c4",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4290,9 +4290,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/design.md": {
-    "mtime": 1793933783.382071,
-    "seen": 1793933950.3340263,
-    "ast_hash": "fe80bb0d8d3f26ca11dd598cc07d25e8",
+    "mtime": 1793934363.0452971,
+    "seen": 1793934423.8257055,
+    "ast_hash": "72133eaab6a2efe04a13106f74711a56",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/proposal.md": {
@@ -4518,9 +4518,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/prompts.py": {
-    "mtime": 1793931871.1392906,
-    "seen": 1793933950.332146,
-    "ast_hash": "1f12fee7f679ac4a2699df1af877a260",
+    "mtime": 1793934280.0382895,
+    "seen": 1793934423.7675216,
+    "ast_hash": "1f2363cb895598300b413e40a7e2367e",
     "semantic_hash": ""
   },
   "backend/chatbot/puente.py": {
@@ -4530,9 +4530,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_orquestador.py": {
-    "mtime": 1793931871.1392906,
-    "seen": 1793933950.3321707,
-    "ast_hash": "ab22c5a19df03a9dc1531c3c0ee75e36",
+    "mtime": 1793934268.8091536,
+    "seen": 1793934423.7681725,
+    "ast_hash": "e4fe9f9bd8ddfaadb9e37e03be33662c",
     "semantic_hash": ""
   },
   "frontend/lib/fondos.ts": {
