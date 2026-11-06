@@ -93,7 +93,7 @@ for (const viewport of viewports) {
       await expect(page.getByRole("region", { name: en.home.rows.recommendedTitle })).toHaveCount(
         0
       );
-      // El footer también enlaza «Ask FilmAI»; el botón flotante vive dentro de <main>.
+      // El footer también enlaza «Ask FilmAI»; en <main> no queda ningún enlace con ese nombre.
       await expect(
         page.getByRole("main").getByRole("link", { name: en.footer.main.askFilmAI })
       ).toHaveCount(0);
@@ -111,9 +111,11 @@ for (const viewport of viewports) {
         recomendado.getByText("Based on your high ratings in Thriller, Drama, and Crime")
       ).toBeVisible();
       await expect(page.getByRole("region", { name: en.home.guest.title })).toHaveCount(0);
+      // «Ask FilmAI» ya no es un enlace de la Home: es el FAB global del chat (PR 6).
       await expect(
         page.getByRole("main").getByRole("link", { name: en.footer.main.askFilmAI })
-      ).toHaveAttribute("href", "/chat");
+      ).toHaveCount(0);
+      await expect(page.getByRole("button", { name: en.footer.main.askFilmAI })).toBeEnabled();
 
       await page.getByRole("button", { name: en.common.content.tvShows }).click();
       await expect(page).toHaveURL(/\/home\?type=tv$/);
