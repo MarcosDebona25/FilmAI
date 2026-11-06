@@ -19,6 +19,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Verificado contra DeepSeek (06/11/2026)**: inglés con interfaz en inglés y perfil en español, dos veces en inglés; inglés con interfaz en español, en inglés; español con interfaz en inglés, en español; español con interfaz en español, en español.
 - **Archivos afectados**: `backend/chatbot/{idioma,prompts,orquestador}.py`, `backend/chatbot/README.md`, `openspec/changes/chatbot/design.md`, `openspec/changes/chatbot/specs/chat-api/spec.md`. Tests: `backend/chatbot/tests_idioma.py`, `backend/chatbot/tests_orquestador.py`.
 
+## 06/11/2026 — Persistencia e historial del chatbot (PR 4)
+
+- **Fecha**: 06/11/2026
+- **Descripción**: fase 4 del SDD (frente Canal). `guardar_turno()` deja lista la parte de la vista SSE que guarda cada turno (la usa el PR 5), y `GET /api/chat/messages/` sirve el historial que el panel muestra al abrirse (lo usa el PR 7). Lo que se decidió:
+  - **`ya_recomendados` sin repetidos**: nunca guarda un título dos veces. La clave es `(id_tmdb, tipo)`, porque TMDB numera películas y series por separado. Un título que se vuelve a mostrar sale de su lugar y pasa al final, y los repetidos dentro de un mismo turno quedan una vez. El tope de 30 se mantiene (SDD del 28/10) y conserva los más recientes. Cada elemento es `{id_tmdb, tipo, titulo, anio}`, sin póster: es lo que lee `prompts.armar_sistema`, y un test une los dos frentes con ese formato.
+  - **Todo o nada**: la pregunta, la respuesta con sus tarjetas y `ya_recomendados` se guardan en una sola transacción. El chat se relee con `select_for_update`, porque el que trae la vista se cargó al empezar el turno. `guardar_turno` devuelve los dos mensajes, porque `fin` lleva `{id, id_pregunta}`, y no atrapa errores: la vista los convierte en `chat_unavailable`.
+  - **El chat se crea solo con el usuario** (signal, doc 03), y nadie más lo crea. `guardar_turno(chat, …)` recibe el que ya tiene la vista. El historial filtra por `chat__usuario`, así que sin chat devuelve 200 (OK) vacío sin un caso especial y sin escribir en un GET.
+  - **`anio` desconocido se guarda como `None`**, que es el formato acordado. `prompts.armar_sistema` lo muestra como «Título (None)»: queda para el Motor.
+  - **Historial**: `HistorialView` es una `ListAPIView` de DRF (sync), así el contrato OpenAPI describe el cursor, cada mensaje y cada tarjeta (`movie | tv`). Cursor de 20 por `-fecha_hora, -id`, **sin `total`**: el panel no muestra cuántos mensajes hay, `next` en `null` ya dice que no quedan más, y se ahorra un `COUNT(*)` por página. Agregarlo después no rompe a nadie. Las tarjetas vuelven como se guardaron, sin volver a traducirlas.
+  - **Una ruta, dos vistas**: Django no permite un `get` sync y un `post` async en la misma clase, y una vista de DRF no puede ser async. El PR 5 cambia solo la línea de `messages/` en `urls.py` por una función async que manda el `POST` a `enviar_mensaje` y el `GET` a `HistorialView` por `en_hilo`. Si al hacerlo el GET desaparece del esquema, el test del contrato OpenAPI lo detecta.
+- **Para quien corra el backend desde un worktree**: `docker compose -p filmai run` pasa por `entrypoint.sh`, que aplica las migraciones en la base de desarrollo **compartida**. Una migración del worktree queda aplicada en la base que usa `~/FilmAI`. Hay que correr con `-e RUN_MIGRATIONS=false` (los tests crean su propia base igual).
+- **Archivos afectados**: `backend/chatbot/{models,servicio,serializers,views,urls}.py`, `backend/chatbot/migrations/0005_mensaje_tarjetas.py`, `backend/chatbot/README.md`, `contracts/openapi.yaml`, `openspec/changes/chatbot/{design,tasks}.md`. Tests: `backend/chatbot/tests_servicio.py`, `backend/chatbot/tests_historial.py`.
+
 ## 06/11/2026 — `packaging` faltante rompía el encolado en Celery
 
 - **Fecha**: 06/11/2026

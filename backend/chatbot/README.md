@@ -5,9 +5,11 @@ El recorrido de un mensaje, de punta a punta. Lo marcado con ⏳ todavía no exi
 ```
 Panel del chat (PR 6) ⏳
   │  al abrirse: POST /api/chat/preparar/ ── carga bge-m3 en segundo plano
+  │  al abrirse: GET /api/chat/messages/ ── el historial, de a 20 (views.py)
   │  al preguntar: POST /api/chat/messages/
   ▼
-Vista SSE (PR 5) ⏳          guarda el turno y transmite los eventos
+Vista SSE (PR 5) ⏳          transmite los eventos y guarda el turno
+  │                          con servicio.guardar_turno()
   │  llama a responder()
   ▼
 orquestador.py              habla con el modelo y conecta todo lo de abajo
@@ -33,6 +35,9 @@ porque usa la clave de `.env`.
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
 | `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
+| `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
+| `views.py` | `POST /api/chat/preparar/` y el historial (`GET /api/chat/messages/`) |
+| `serializers.py` | Cómo sale cada mensaje y cada tarjeta en el historial |
 | `puente.py` | `en_hilo`: el único paso de código async a código común |
 | `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |
 | `prompts.py` | Las instrucciones del modelo |
