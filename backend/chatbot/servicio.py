@@ -59,3 +59,11 @@ def sumar_recomendados(previas, tarjetas):
         nuevas.setdefault((tarjeta["id_tmdb"], tarjeta["tipo"]), recordada)
     viejas = [t for t in previas if (t["id_tmdb"], t["tipo"]) not in nuevas]
     return (viejas + list(nuevas.values()))[-TOPE_RECOMENDADOS:]
+
+
+def historial_de(usuario):
+    """Los mensajes del usuario. Sin chat no hay mensajes: vuelve vacío.
+
+    El orden lo pone la paginación de la vista.
+    """
+    return Mensaje.objects.filter(chat__usuario=usuario)
