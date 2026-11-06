@@ -41,7 +41,7 @@ export function ChatInput({ campoRef }: { campoRef: RefObject<HTMLTextAreaElemen
         event.preventDefault();
         enviar();
       }}
-      className="flex flex-col gap-2 px-4 pt-3.5 pb-5 shadow-[inset_0_1px_0_var(--line)] md:pb-4"
+      className="flex flex-col gap-2 px-4 pt-3.5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[inset_0_1px_0_var(--line)] md:pb-4"
     >
       <div className="flex items-end gap-2.5">
         <label htmlFor={`${contadorId}-campo`} className="sr-only">
@@ -65,10 +65,17 @@ export function ChatInput({ campoRef }: { campoRef: RefObject<HTMLTextAreaElemen
           }}
           className="min-h-12 flex-1 resize-none rounded-[0.875rem] bg-background px-4 py-[0.8125rem] text-base leading-[1.4] text-foreground shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-ring"
         />
+        {/* Un `key` por botón: si React reusara el mismo nodo, al cancelar el
+            botón pasaría a `submit` antes de que el navegador aplique la acción
+            por defecto del clic, y la pregunta se volvería a enviar. */}
         {respondiendo ? (
           <button
+            key="cancelar"
             type="button"
-            onClick={cancelar}
+            onClick={(event) => {
+              event.preventDefault();
+              cancelar();
+            }}
             aria-label={tc("cancel")}
             className="grid size-12 flex-none place-items-center rounded-[0.875rem] bg-raised-2 text-foreground shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
@@ -76,6 +83,7 @@ export function ChatInput({ campoRef }: { campoRef: RefObject<HTMLTextAreaElemen
           </button>
         ) : (
           <button
+            key="enviar"
             type="submit"
             aria-label={t("send")}
             aria-disabled={vacio}
