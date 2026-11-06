@@ -36,3 +36,18 @@ class MensajeSerializer(serializers.ModelSerializer):
         model = Mensaje
         fields = ("id", "autor", "texto", "tarjetas", "fecha_hora")
         read_only_fields = fields
+
+
+# Un mismo valor para el panel (`maxLength` del input) y el servidor: es un contrato
+# compartido y por eso no es configurable (09/10/2026).
+LARGO_MAXIMO_DEL_MENSAJE = 500
+
+
+class EntradaMensajeSerializer(serializers.Serializer):
+    """Lo que el panel manda: el texto de la pregunta (CU-013)."""
+
+    texto = serializers.CharField(
+        max_length=LARGO_MAXIMO_DEL_MENSAJE,
+        trim_whitespace=True,
+        help_text="La pregunta, de 1 a 500 caracteres una vez recortados los espacios.",
+    )

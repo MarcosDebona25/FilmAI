@@ -1,15 +1,15 @@
 # Cómo se conecta el chatbot
 
-El recorrido de un mensaje, de punta a punta. Lo marcado con ⏳ todavía no existe.
+El recorrido de un mensaje, de punta a punta.
 
 ```
-Panel del chat (PR 6) ⏳
+Panel del chat (PR 6)
   │  al abrirse: POST /api/chat/preparar/ ── carga bge-m3 en segundo plano
   │  al abrirse: GET /api/chat/messages/ ── el historial, de a 20 (views.py)
   │  al preguntar: POST /api/chat/messages/
   ▼
-Vista SSE (PR 5) ⏳          transmite los eventos y guarda el turno
-  │                          con servicio.guardar_turno()
+MensajesView.post (PR 5)    valida, toma el candado y transmite los eventos;
+  │                          guarda el turno con servicio.guardar_turno()
   │  llama a responder()
   ▼
 orquestador.py              habla con el modelo y conecta todo lo de abajo
@@ -24,7 +24,7 @@ orquestador.py              habla con el modelo y conecta todo lo de abajo
               └─▶ turno.py   recuerda qué apareció en este turno
 ```
 
-Entre la vista y el orquestador está el contrato de `eventos.py`. Para probarlo
+Entre la vista y el orquestador está el contrato de `eventos.py`; el del stream hacia el navegador, en `contracts/sse-chat.md`. Para probarlo
 sin la vista: `python manage.py chatear --usuario juanp`. Cada mensaje tiene costo,
 porque usa la clave de `.env`.
 
@@ -36,7 +36,9 @@ porque usa la clave de `.env`.
 | `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
 | `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
-| `views.py` | `POST /api/chat/preparar/` y el historial (`GET /api/chat/messages/`) |
+| `views.py` | `POST /api/chat/preparar/`; `MensajesView`: el historial (`GET`) y la pregunta con su respuesta en streaming (`POST`) |
+| `sse.py` | El formato de cada evento del stream (`event:` y `data:`) |
+| `limites.py` | El candado «una respuesta a la vez» y el tope de mensajes por hora |
 | `serializers.py` | Cómo sale cada mensaje y cada tarjeta en el historial |
 | `puente.py` | `en_hilo`: el único paso de código async a código común |
 | `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |

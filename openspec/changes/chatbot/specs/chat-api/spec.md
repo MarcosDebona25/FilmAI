@@ -21,7 +21,7 @@ Both `POST` and `GET /api/chat/messages/` MUST require a session. Without one th
 
 - GIVEN an account that was deactivated while its JWT cookie is still valid
 - WHEN it POSTs a message
-- THEN the response is 403 with `code: "account_deactivated"`, as in the rest of the API
+- THEN the response is 401 (Unauthorized) with `code: "session_revoked"`, exactly as in the rest of the API (simplejwt rejects the inactive user before the view runs; `account_deactivated` is only for the login endpoint)
 - AND nothing is streamed or stored
 
 #### Scenario: Missing CSRF header

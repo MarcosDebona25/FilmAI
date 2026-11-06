@@ -59,9 +59,20 @@ LLM_PROVEEDORES = [
     }
 ]
 
+# --- Chatbot: Canal (transporte del stream) ---
+# La vista del chat es dueña del tiempo máximo del turno y del candado «una
+# respuesta a la vez»: `LLM_TIMEOUT_SECONDS` cubre el modelo y las tools, y el
+# candado vence 35 s después (el margen del guardado y la liberación).
+LLM_TIMEOUT_SECONDS = config("LLM_TIMEOUT_SECONDS", default=25, cast=int)
+# Mensajes válidos por usuario y por hora; el siguiente recibe 429 (Too Many Requests).
+CHAT_MENSAJES_POR_HORA = config("CHAT_MENSAJES_POR_HORA", default=20, cast=int)
+
 
 # Application definition
 INSTALLED_APPS = [
+    # `daphne` va primero: reemplaza el `runserver` de Django por uno ASGI, que
+    # es lo que necesita el stream SSE del chat. No cambia nada más.
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -125,6 +136,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "filmai.wsgi.application"
+ASGI_APPLICATION = "filmai.asgi.application"
 
 
 # Database

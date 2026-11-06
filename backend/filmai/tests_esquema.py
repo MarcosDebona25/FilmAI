@@ -24,3 +24,33 @@ class EsquemaContratoTests(SimpleTestCase):
             yaml.safe_load(salida.getvalue()),
             yaml.safe_load(archivo.read_text(encoding="utf-8")),
         )
+
+
+class EsquemaDelChatTests(SimpleTestCase):
+    """La ruta `messages/` tiene dos métodos; que el POST no haga perder al GET."""
+
+    def esquema(self):
+        salida = StringIO()
+        call_command("spectacular", stdout=salida, stderr=StringIO())
+        return yaml.safe_load(salida.getvalue())["paths"]["/api/chat/messages/"]
+
+    def test_tiene_el_historial_y_el_envio(self):
+        ruta = self.esquema()
+
+        self.assertEqual(set(ruta), {"get", "post"})
+        # El GET sigue paginado por cursor.
+        self.assertIn("cursor", [p["name"] for p in ruta["get"]["parameters"]])
+
+    def test_el_post_declara_el_stream_y_los_rechazos_previos(self):
+        post = self.esquema()["post"]
+
+        self.assertEqual(
+            list(post["responses"]["200"]["content"]), ["text/event-stream"]
+        )
+        for codigo in ("400", "401", "403", "409", "429"):
+            with self.subTest(codigo=codigo):
+                contenido = post["responses"][codigo]["content"]["application/json"]
+                self.assertEqual(
+                    contenido["schema"], {"$ref": "#/components/schemas/ErrorEnvelope"}
+                )
+        self.assertEqual(list(post["requestBody"]["content"]), ["application/json"])
