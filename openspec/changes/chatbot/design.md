@@ -7,7 +7,7 @@ Browser (Next.js)                         Django (ASGI)
 ─────────────────                         ─────────────
 ChatProvider (root layout)
  ├─ ChatFab ── opens ──▶ ChatPanel
- │                        └─ lib/chat.ts ──POST, SSE──▶ chatbot/views.py :: enviar_mensaje   (async view)
+ │                        └─ lib/chat.ts ──POST, SSE──▶ chatbot/views.py :: MensajesView.post  (sync gate → async stream)
  │                                                       │  auth · CSRF · 400/409/429 before streaming
  │                                                       ▼
  │                                                     chatbot/orquestador.py :: responder()  (async generator)
@@ -61,7 +61,7 @@ This is the team's first async code, so the boundary is deliberately small.
 ```mermaid
 sequenceDiagram
     participant F as Panel (lib/chat.ts)
-    participant V as enviar_mensaje (async view)
+    participant V as MensajesView.post (sync gate, async stream)
     participant O as responder() (orchestrator)
     participant L as DeepSeek
     participant T as Tools (sync, in a thread)
@@ -130,7 +130,7 @@ lacks a translation.
 |---|---|---|
 | `not_authenticated` (exists) | 401 (Unauthorized) | No session |
 | `permission_denied` (exists) | 403 (Forbidden) | CSRF failed |
-| `account_deactivated` (exists) | 403 (Forbidden) | Account not active |
+| `session_revoked` (exists) | 401 (Unauthorized) | Account deactivated while its JWT cookie is still live (`account_deactivated` is the login endpoint's code; 06/11/2026) |
 | `validation_error` (exists) | 400 (Bad Request) | Empty text or over 500 characters; `errors.texto` names the field |
 | `chat_request_in_progress` (new) | 409 (Conflict) | Another answer is being written for this chat |
 | `throttled` (exists) | 429 (Too Many Requests) | Over 20 messages in the hour; `retry_after_seconds` |
@@ -146,7 +146,7 @@ its own message, adding a code is additive.
 
 | Decision | Alternative rejected | Why |
 |---|---|---|
-| A plain async Django view for the `POST` | DRF | DRF views are sync; streaming from them pins a thread for the whole answer. The `GET` stays DRF (`HistorialView`, a `ListAPIView`, PR 4). Django does not allow a sync `get` and an async `post` in one class, so PR 5 routes `messages/` through an async function that sends `POST` to `enviar_mensaje` and `GET` to `HistorialView` through `en_hilo` (06/11/2026). |
+| One DRF class for the route (`MensajesView`, a subclass of `HistorialView`): its sync `post` runs the pre-stream checks and returns a `StreamingHttpResponse` over an **async generator** | A plain async function that dispatches `GET`/`POST` through `en_hilo` (the first plan, 06/11/2026) | Django does not allow a sync `get` and an async `post` in one class, but the `post` does not need to be async: only the generator is. Django runs the sync `post` in the request's thread (session, CSRF, validation, lock and hourly counter all use the ORM or the cache), and the ASGI handler iterates the generator on the event loop, so no thread is pinned while the model writes. One class keeps both methods visible to drf-spectacular, and the error envelope, `Retry-After` and `Accept` handling are DRF's own. `NegociacionSoloJSON` makes DRF ignore the panel's `Accept: text/event-stream`, which would otherwise be a 406 (Not Acceptable) (06/11/2026, PR 5). |
 | Auth with `JWTCookieAuthentication` and the CSRF check DRF uses (`CSRFCheck`), called from the async view through the bridge | Rely on `CsrfViewMiddleware` | The middleware works, but its failure is Django's HTML 403 page. Running the same check by hand gives the `permission_denied` envelope like every other endpoint. The view is `csrf_exempt` for that reason only. |
 | `daphne` in `INSTALLED_APPS` for development; uvicorn in production | `channels` | `daphne` replaces `runserver` with an ASGI one and nothing else. No websockets are needed: SSE is plain HTTP. |
 | Lock "one in flight" = `cache.add(f"chat:{id}:en_curso", <random token>, timeout=LLM_TIMEOUT_SECONDS + 35)` (60 s with the default 25 s; derived, so raising the turn budget in `.env` can never let the lock expire mid-turn), released in `finally` **only if the stored value is still this request's token** | A DB row lock; a fixed value released unconditionally | `cache.add` is atomic in Redis, and the expiry frees the lock if the process dies. The model-and-tools loop runs inside `asyncio.timeout(LLM_TIMEOUT_SECONDS)` (25 s, wall clock, tools included); the save **and the lock release** run **after** that block, together inside one `asyncio.shield` and as **one call through the bridge** (after a disconnect Django closes the request's thread context, so a second hop would land on a thread nothing manages), so the lock is never freed while a save is still writing (a disconnect during the save cannot let a retry in early), and once the save starts the transaction decides the outcome (`fin` if it commits, `error` only if it fails) and a timeout can never report `error` for a pair that was stored. The 35 s margin covers the save and the release, so a live turn always ends before the expiry; the token keeps a late `finally` from deleting a lock that already belongs to another request. In development the cache is `LocMemCache`, per process — correct with a single dev server. |
