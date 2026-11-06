@@ -10,6 +10,9 @@ import { Footer } from "@/components/Footer";
 import { MobileTabs } from "@/components/MobileTabs";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
+import { ChatProvider } from "@/components/ChatProvider";
+import { ChatFab } from "@/components/features/chat/ChatFab";
+import { ChatPanel } from "@/components/features/chat/ChatPanel";
 import { ListsGridPreload } from "@/components/features/lists/ListsGridPreload";
 import { NavigationGuard } from "@/components/NavigationGuard";
 import { NavigationProgress } from "@/components/NavigationProgress";
@@ -61,13 +64,19 @@ export default async function RootLayout({
         </Suspense>
         <NextIntlClientProvider>
           <AccountProvider sesionPosible={sesionPosible}>
-            <NavigationGuard>
-              <Navbar />
-              {children}
-              <Footer />
-              <MobileTabs />
-              <ListsGridPreload />
-            </NavigationGuard>
+            {/* El chat vive en el layout: Next no lo desmonta al navegar, así que
+                la conversación sigue ahí al cambiar de página (B-04). */}
+            <ChatProvider>
+              <NavigationGuard>
+                <Navbar />
+                {children}
+                <Footer />
+                <MobileTabs />
+                <ListsGridPreload />
+                <ChatFab />
+                <ChatPanel />
+              </NavigationGuard>
+            </ChatProvider>
           </AccountProvider>
           <Toaster position="top-center" />
         </NextIntlClientProvider>

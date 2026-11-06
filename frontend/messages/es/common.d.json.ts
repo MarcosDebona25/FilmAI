@@ -633,6 +633,25 @@ declare const messages: {
       "saveError": "No pudimos guardar la preferencia. Intentá de nuevo."
     }
   },
+  "chat": {
+    "panel": {
+      "title": "Asistente FilmAI",
+      "subtitle": "Recomienda según lo que calificaste",
+      "close": "Cerrar el chat",
+      "conversation": "Conversación",
+      "disclaimer": "Las recomendaciones salen del catálogo de TMDB y de tus calificaciones."
+    },
+    "status": {
+      "searching": "Buscando en el catálogo…",
+      "cancelled": "Solicitud cancelada"
+    },
+    "input": {
+      "label": "Tu mensaje",
+      "placeholder": "Escribí tu pregunta",
+      "send": "Enviar",
+      "counter": "{count, number}/{max, number}"
+    }
+  },
   "errors": {
     "pages": {
       "ticketIllustrationAlt": "Una entrada de cine cortada al medio",
@@ -731,7 +750,9 @@ declare const messages: {
       "throttledWithWaitHours": "Hay demasiadas solicitudes. Intentá de nuevo en {hours, plural, one {# hora} other {# horas}}.",
       "list_name_reserved": "Ese nombre está reservado para una lista predeterminada.",
       "terms_not_accepted": "Para crear tu cuenta tenés que aceptar los Términos y Condiciones.",
-      "network_error": "No pudimos conectarnos. Revisá tu conexión e intentá de nuevo."
+      "network_error": "No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.",
+      "chat_unavailable": "No podemos procesar tu solicitud. Intentá más tarde.",
+      "chat_request_in_progress": "Ya hay una respuesta en curso. Esperá a que termine para enviar otra pregunta."
     },
     "fields": {
       "correo": {

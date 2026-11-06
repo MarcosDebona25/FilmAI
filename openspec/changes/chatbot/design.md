@@ -302,7 +302,8 @@ A style block per language (es/en) is a small dict, not two prompts.
   the panel processes first wins: a cancel processed before `fin` discards the
   answer (CU-014 2.A); after `fin` the button is «Enviar» again (see the
   cancel row in Architecture Decisions).
-- Without session the FAB is visible and disabled, `aria-label` from doc 04.
+- Without session the FAB is visible and disabled. Its accessible name is its visible text («Ask FilmAI»), not a separate `aria-label` (WCAG 2.5.3, 06/11/2026).
+- Session: `lib/api.ts :: pedirConSesion()` holds the CSRF, `Accept-Language` and 401 renewal rule and returns the unread `Response`; `apiFetch` reads it whole and `lib/chat.ts` reads it as a stream (06/11/2026).
 - Accessibility: the panel is a `<dialog>`-like region with focus trap and
   Escape; new bot text announced through an `aria-live="polite"` region once
   per answer (not per delta).

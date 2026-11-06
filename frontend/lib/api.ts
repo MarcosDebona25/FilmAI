@@ -124,11 +124,25 @@ export function renovarSesion(): Promise<boolean> {
   return renovacion;
 }
 
-export async function apiFetch<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { method = "GET", body } = options;
+interface PedidoConSesion {
+  method?: string;
+  /** Cuerpo ya serializado: un string se puede reenviar tal cual si hay que repetir. */
+  body?: string;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
 
-  const headers: Record<string, string> = { "Accept-Language": currentLocale() };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+/**
+ * Hace el pedido con la sesión del usuario y devuelve la `Response` sin leer
+ * el cuerpo: `apiFetch` lo lee entero y el chat lo lee de a pedazos (stream).
+ * Las dos comparten así una sola regla de cookies, CSRF y renovación ante un
+ * 401 (Unauthorized).
+ */
+export async function pedirConSesion(
+  path: string,
+  { method = "GET", body, headers: extra = {}, signal }: PedidoConSesion = {}
+): Promise<Response> {
+  const headers: Record<string, string> = { "Accept-Language": currentLocale(), ...extra };
 
   // CSRF: solo las mutaciones requieren el header (los métodos seguros no
   // pasan por la verificación CSRF del backend).
@@ -141,16 +155,15 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
   // Si el pedido ni siquiera llega (sin conexión, servidor apagado, CORS),
   // `fetch` rechaza con un error del navegador («Failed to fetch» en inglés).
   // Se convierte en un error con código propio para que la pantalla muestre un
-  // mensaje entendible y traducido (Q-03, 16/10/2026).
+  // mensaje entendible y traducido (Q-03, 16/10/2026). Cancelar también hace
+  // rechazar a `fetch`, pero eso no es un error de red: se deja pasar.
   const enviar = () =>
-    fetch(apiUrl(path), {
-      method,
-      headers,
-      credentials: "include",
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }).catch(() => {
-      throw new ApiError(0, { code: "network_error" });
-    });
+    fetch(apiUrl(path), { method, headers, credentials: "include", body, signal }).catch(
+      (error: unknown) => {
+        if (signal?.aborted) throw error;
+        throw new ApiError(0, { code: "network_error" });
+      }
+    );
 
   let res = await enviar();
   // Las rutas de `auth/` (login, logout, la renovación misma) contestan 401
@@ -163,6 +176,16 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
     if (res.status === 401 && typeof window !== "undefined")
       window.dispatchEvent(new Event(SESION_VENCIDA));
   }
+  return res;
+}
+
+export async function apiFetch<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
+  const { method = "GET", body } = options;
+  const res = await pedirConSesion(path, {
+    method,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    headers: body !== undefined ? { "Content-Type": "application/json" } : {},
+  });
 
   if (res.status === 204) return undefined as T;
 

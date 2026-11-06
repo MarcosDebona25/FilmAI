@@ -221,3 +221,7 @@ auth.newPassword.goToLogin,,label,,Ir a iniciar sesión,Go to log in,aprobado
 auth.newPassword.invalidTitle,,error,,El enlace no es válido,The link is invalid,aprobado
 auth.newPassword.invalidDescription,,error,,Los enlaces de restablecimiento son válidos durante 1 hora o hasta que se usen. Podés pedir uno nuevo desde «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión.,Reset links are valid for 1 hour or until they are used. You can request a new one from “Forgot your password?” on the login screen.,aprobado
 common.review.moderatedNotice,,label,,"Esta reseña fue moderada, así que no podés editar ni borrar su texto.","This review was moderated, so you can’t edit or delete its text.",aprobado
+chat.status.cancelled,,status,,Solicitud cancelada,Request canceled,provisorio
+chat.input.counter,,label,"count,max","{count, number}/{max, number}","{count, number}/{max, number}",provisorio
+errors.codes.chat_unavailable,chat_unavailable,error,,No podemos procesar tu solicitud. Intentá más tarde.,We can’t process your request right now. Try again later.,provisorio
+errors.codes.chat_request_in_progress,chat_request_in_progress,error,,Ya hay una respuesta en curso. Esperá a que termine para enviar otra pregunta.,An answer is already in progress. Wait for it to finish before sending another question.,provisorio

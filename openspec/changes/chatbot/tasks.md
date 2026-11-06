@@ -259,21 +259,21 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ## Phase 6: The panel (PR 6)
 
-- [ ] 6.1 Dependencies `react-markdown`, `rehype-sanitize` (rebuild + `up -d
+- [x] 6.1 Dependencies `react-markdown`, `rehype-sanitize` (rebuild + `up -d
       -V frontend`, `npm install` on the host)
-- [ ] 6.2 RED Vitest `lib/chat.ts`: frames split across chunks, unknown events
+- [x] 6.2 RED Vitest `lib/chat.ts`: frames split across chunks, unknown events
       ignored, missing `fin` → network error, pre-stream 409/429 → `ApiError`
-- [ ] 6.3 RED: Markdown renderer neutralizes `<script>`, `<img onerror>`,
+- [x] 6.3 RED: Markdown renderer neutralizes `<script>`, `<img onerror>`,
       `javascript:` links and Markdown images (`![x](https://…)` → text, no
       `img`)
-- [ ] 6.3b Panel: `POST /api/chat/preparar/` on opening (05/11/2026)
-- [ ] 6.4 GREEN: `lib/chat.ts`, `ChatProvider`, `ChatFab`, `ChatPanel`,
+- [x] 6.3b Panel: `POST /api/chat/preparar/` on opening (05/11/2026)
+- [x] 6.4 GREEN: `lib/chat.ts`, `ChatProvider`, `ChatFab`, `ChatPanel`,
       `ChatBubble`, `ChatTarjetas`, `ChatInput` following the canvas
-- [ ] 6.5 RED/GREEN: cancel keeps the draft and shows «Solicitud cancelada»;
+- [x] 6.5 RED/GREEN: cancel keeps the draft and shows «Solicitud cancelada»;
       both orders of «Cancelar» vs `fin` (whichever is processed first
       wins); an `error` after some deltas removes
       the partial answer, shows the translated code and keeps the draft
-- [ ] 6.6 Explain: reading a stream in the browser, `AbortController`, why
+- [x] 6.6 Explain: reading a stream in the browser, `AbortController`, why
       the provider sits in the layout
 
 ## Phase 7: History, badge, links, copy (PR 7)

@@ -1268,7 +1268,7 @@ El sistema debe cumplir con los lineamientos de accesibilidad WCAG 2.1 nivel AA.
 - **Star Widget:** Las estrellas deben ser navegables con teclado (flechas izquierda/derecha para seleccionar, Enter para confirmar). Cada estrella debe tener un `aria-label` con su valor (ej: "4 de 10 estrellas").
 - **Drag & Drop de listas:** El reordenamiento de listas personalizadas ofrece alternativas accesibles sin mouse: la manija se opera con teclado (Espacio, flechas, Espacio) y el menú ⋯ ofrece "Mover a la izquierda / derecha" (escritorio) y "Subir / Bajar" (celular). El drag & drop sigue siendo la interacción principal para usuarios de mouse/touch.
 - **Toggle switches:** Deben tener roles ARIA apropiados (`role="switch"`, `aria-checked`).
-- **FAB del chatbot:** Debe ser accesible por teclado y tener un `aria-label="Abrir chatbot de recomendaciones"`.
+- **FAB del chatbot:** Debe ser accesible por teclado. Su nombre accesible es el texto visible, «Ask FilmAI» («Preguntale a FilmAI»), sin un `aria-label` distinto: quien usa control por voz dice lo que ve (WCAG 2.5.3, 06/11/2026). En celular el texto queda oculto a la vista pero se lee.
 - **Toast/Notificaciones:** Deben usar `role="alert"` o `aria-live="polite"` para ser anunciadas por lectores de pantalla.
 
 ### 11.3 Validación
