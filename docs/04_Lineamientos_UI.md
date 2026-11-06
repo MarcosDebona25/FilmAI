@@ -850,6 +850,9 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - Tema: solo oscuro, como identidad de la marca (18/10/2026; el tema claro se descartó). Los tokens del canvas (`--raised`, `--raised-2`, `--line`, `--fg-2`, `--fg-3`, `--ok`, `--on-accent`) viven en `app/globals.css`.
 - Tipografía: Big Shoulders (títulos, `font-display`) y Hanken Grotesk (texto).
 - Términos: `/terms` es una versión mínima que renderiza `frontend/content/legal/terms.{en,es}.md`; se refina con el punto 9 (con/sin sesión, escritorio/celular).
+- **Sin saltos al validar (06/11/2026, issue #175)**: debajo de cada campo hay un solo renglón de mensajes. El error ocupa el lugar de la ayuda (la ayuda queda invisible en la misma celda, así el campo no cambia de alto), y los campos sin ayuda (correo, país, género, contraseñas) reservan ese renglón vacío desde el inicio. El error de la contraseña va debajo de las reglas. La disponibilidad del usuario se muestra como un ✓ verde dentro del campo, a la derecha, y la ayuda sigue a la vista; «en uso» y «reservado» son errores del campo (borde rojo, reemplazan la ayuda). Aplica a Registro y al alta con Google (`/complete-signup`).
+- **Selector de país propio (06/11/2026)**: `CountrySelect` dejó de ser un `<select>` nativo. Con unos 250 países, el navegador elegía dónde abrir la lista y la estiraba hasta el borde de la ventana. Ahora es un campo que abre, **debajo**, una lista de alto fijo (8 países a la vista, con scroll) y un buscador arriba («Buscar país»; ignora tildes y mayúsculas, y si no hay coincidencias dice «No hay países con ese nombre.»). Si abajo no entra, la página baja lo que falta; solo se abre hacia arriba cuando la página ya no puede bajar más. Teclado: flechas y Re Pág/Av Pág para moverse, Enter elige, Escape cierra y vuelve al campo, Tab o un clic afuera cierran sin elegir; escribir sobre el campo cerrado abre la lista y empieza a buscar. Lo usan Registro, el alta con Google y el Perfil.
+- **Collage fijo en escritorio (06/11/2026)**: desde 1024 px el collage es `sticky` y mide el alto de la ventana: no se estira ni se reescala cuando el formulario cambia de alto, y queda quieto al hacer scroll.
 
 ---
 
@@ -1129,7 +1132,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 - **Text input**: con/sin ícono, estados: default, focus, error, disabled.
 - **Password input**: con toggle mostrar/ocultar (ícono ojo).
 - **Search input**: con ícono de lupa, disabled hasta que se ingrese texto.
-- **Select/Dropdown**: género, país (`CountrySelect`, `<select>` nativo compartido por registro, alta con Google y perfil), filtros.
+- **Select/Dropdown**: género (`<select>` nativo), país (`CountrySelect`, lista propia con buscador que se abre debajo del campo, compartida por registro, alta con Google y perfil; ver §Access, 06/11/2026), filtros.
 - **Datepicker**: fecha de nacimiento en registro.
 
 ### 6.3 Navegación
