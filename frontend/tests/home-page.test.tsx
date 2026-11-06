@@ -129,14 +129,15 @@ describe("Home con sesión", () => {
     estado.perfil = { nombre: "Juan" };
   });
 
-  it("suma Recomendado con sus géneros y el botón Ask FilmAI", async () => {
+  it("suma Recomendado con sus géneros; el chat ya no es un link propio de la Home", async () => {
     render(<HomeView />, { locale: "en" });
 
     const recomendado = await fila("Recommended for you");
     expect(
       within(recomendado).getByText("Based on your high ratings in Thriller, Drama, and Crime")
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ask FilmAI" })).toHaveAttribute("href", "/chat");
+    // El botón del chat es `ChatFab`, que vive en el layout (PR 6 del chatbot).
+    expect(screen.queryByRole("link", { name: "Ask FilmAI" })).toBeNull();
     expect(screen.queryByRole("region", { name: "What have you watched lately?" })).toBeNull();
   });
 

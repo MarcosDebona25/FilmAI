@@ -3,7 +3,6 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { MessageCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -45,7 +44,6 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
   const t = useTranslations("home");
   const tc = useTranslations("common");
   const tn = useTranslations("nav.account");
-  const tf = useTranslations("footer.main");
   const tipo = tipoDesdeUrl(useSearchParams().get("type"));
   const { perfil, cargando, sesionPosible } = useAccount();
   const conSesion = !cargando && perfil !== null;
@@ -276,18 +274,6 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
             </section>
           )}
         </div>
-      )}
-      {conSesion && (
-        // Provisorio: el chatbot (B-04) todavía no existe y `/chat` responde 404 (Not Found).
-        // Sin prefetch hasta entonces: cada página pedía ese 404 de fondo.
-        <Link
-          href={routes.askFilmAI}
-          prefetch={false}
-          className="fixed right-4 bottom-[5.75rem] z-30 grid size-14 place-items-center rounded-full bg-primary font-semibold text-primary-foreground no-underline shadow-[0_10px_24px_rgb(0_0_0/0.4)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:right-8 md:bottom-8 md:inline-flex md:w-auto md:gap-2.5 md:pr-[1.375rem] md:pl-[1.125rem]"
-        >
-          <MessageCircle aria-hidden="true" className="size-6" />
-          <span className="sr-only md:not-sr-only">{tf("askFilmAI")}</span>
-        </Link>
       )}
     </main>
   );
