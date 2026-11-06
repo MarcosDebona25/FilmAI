@@ -68,15 +68,17 @@ App Autenticada
 - Funciona naturalmente en desktop (drawer lateral) y mobile (bottom sheet).
 - Coincide con la semántica de los CU: el usuario "abre" la interfaz del chatbot.
 
-**Comportamiento**:
+**Comportamiento** (implementado el 06/11/2026):
 
-- FAB fijo en bottom-right con ícono de chat/burbuja.
-- Al clickear: panel de ~400px (desktop) o bottom sheet fullscreen (mobile).
-- Animación slide-in desde derecha (desktop) / slide-up (mobile).
-- Badge sutil en el FAB cuando hay respuesta nueva sin leer.
-- Visible en todas las pantallas; inactivo si el usuario no está autenticado.
-- El campo de mensaje no deja escribir más de 500 caracteres.
-- Mientras el bot responde no se envía otro mensaje: se puede escribir el borrador y el botón de enviar pasa a ser «Cancelar».
+- FAB fijo en bottom-right con ícono de chat/burbuja y el texto «Ask FilmAI» (en celular el texto queda solo para lectores de pantalla). Visible en todas las pantallas; deshabilitado si el usuario no está autenticado.
+- Al clickear: drawer de 440 px a la derecha (desktop) u hoja que sube desde abajo, casi a pantalla completa (mobile). Slide-in desde la derecha / slide-up. Es un diálogo modal: atrapa el foco, se cierra con Escape y devuelve el foco al FAB.
+- La conversación vive en el layout raíz: sobrevive a la navegación y al elegir una tarjeta, que cierra el panel para dejar ver la ficha.
+- Badge en el FAB (un punto, con texto para lectores de pantalla) cuando una respuesta termina con el panel cerrado; se apaga al abrirlo.
+- «Ask FilmAI» del pie de página (que también ven la Home y el resto de las pantallas) abre el panel; ya no existe la ruta `/chat`. Sin sesión, lleva a `/login?next=<página actual>`.
+- Con el chat vacío, el panel muestra una bienvenida con el nombre del usuario y tres sugerencias que se sortean cada vez que se abre: una personal («Algo parecido a lo que mejor califiqué») y dos generales («Una serie para maratonear»), de un abanico de 14. Ninguna nombra una producción: un título fijo sería ajeno a quien no lo vio. Elegir una la envía.
+- Al abrir se muestra el historial (las 20 más recientes; las anteriores cargan al llegar arriba del todo).
+- El campo de mensaje no deja escribir más de 500 caracteres y muestra un contador cerca del límite.
+- Mientras el bot responde no se envía otro mensaje: se puede escribir el borrador y el botón de enviar pasa a ser «Cancelar». Cancelar conserva el borrador y muestra «Solicitud cancelada».
 - Una respuesta muestra como máximo 3 tarjetas de títulos, con el idioma de la interfaz; el texto de la respuesta sigue el idioma en que escribió el usuario (decisión del 09/10/2026).
 
 ### 3.2 Home: Solo Descubrimiento + Búsqueda como página

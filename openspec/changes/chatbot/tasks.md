@@ -279,8 +279,10 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ## Phase 7: History, badge, links, copy (PR 7)
 
-- [ ] 7.1 Copy: curate the 22 `chatbot` rows of `traducciones/claves.csv`, add
+- [x] 7.1 Copy: curate the 22 `chatbot` rows of `traducciones/claves.csv`, add
       cancel/error/status keys, approve with Marcos, seed; `npm run i18n:check`
+      (06/11/2026: the welcome suggestions are now a rotating pool of 14, one
+      personal + two general drawn on every open, none naming a title)
 - [x] 7.2 History on open, older pages on scroll up; local welcome with first
       name and suggestions
 - [x] 7.3 Badge when an answer ends with the panel closed
@@ -296,8 +298,8 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
       out-of-scope, Portuguese message, injection attempt, «para chicos»)
 - [ ] 8.2 `manage.py chatear --golden` with thinking off and on; record times
       against RNF #6 and the verdict in `docs/decisiones.md`
-- [ ] 8.3 Docs: 02 (CU-013/014 details), 03 (migration done), 04 (§3.1, «Ask
+- [ ] 8.3 (Canal half done 06/11/2026: 02, 03, 04; Gonza: 05, `PRODUCT.md`) Docs: 02 (CU-013/014 details), 03 (migration done), 04 (§3.1, «Ask
       FilmAI»), 05 (B-02…B-06 ✅), `PRODUCT.md`
-- [ ] 8.4 Canonical specs `semantic-search`, `chat-api`, `chat-ui` into
+- [ ] 8.4 (Canal half done 06/11/2026: `chat-api`, `chat-ui`; Gonza: `semantic-search` and removing this folder) Canonical specs `semantic-search`, `chat-api`, `chat-ui` into
       `openspec/specs/`; remove `openspec/changes/chatbot/`
 - [ ] 8.5 `graphify update .`
