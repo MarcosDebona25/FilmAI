@@ -1,7 +1,7 @@
 # Graph Report - feat-chatbot-panel  (2026-11-06)
 
 ## Corpus Check
-- 715 files · ~720,052 words
+- 715 files · ~720,194 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f1fee8dc`
+- Built from commit: `e2fadfb9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1413,7 +1413,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `AppLocale` connect `format.ts` to `@playwright/test`, `api.ts`, `listas.spec.ts`, `vitest`, `react`?**
   _High betweenness centrality (0.204) - this node is a cross-community bridge._
 - **Why does `UsuariosConfig` connect `signals.py` to `format.ts`?**
-  _High betweenness centrality (0.125) - this node is a cross-community bridge._
+  _High betweenness centrality (0.126) - this node is a cross-community bridge._
 - **Are the 102 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 102 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 55 inferred relationships involving `Usuario` (e.g. with `UsuarioAdminTests` and `_buscar_usuario()`) actually correct?**
