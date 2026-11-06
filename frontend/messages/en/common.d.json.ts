@@ -633,6 +633,25 @@ declare const messages: {
       "saveError": "We couldn’t save your preference. Try again."
     }
   },
+  "chat": {
+    "panel": {
+      "title": "FilmAI Assistant",
+      "subtitle": "Recommends based on what you’ve rated",
+      "close": "Close the chat",
+      "conversation": "Conversation",
+      "disclaimer": "Recommendations come from the TMDB catalog and your ratings."
+    },
+    "status": {
+      "searching": "Searching the catalog…",
+      "cancelled": "Request canceled"
+    },
+    "input": {
+      "label": "Your message",
+      "placeholder": "Type your question",
+      "send": "Send",
+      "counter": "{count, number}/{max, number}"
+    }
+  },
   "errors": {
     "pages": {
       "ticketIllustrationAlt": "A movie ticket torn in half",
@@ -731,7 +750,9 @@ declare const messages: {
       "throttledWithWaitHours": "There are too many requests. Try again in {hours, plural, one {# hour} other {# hours}}.",
       "list_name_reserved": "This name is reserved for a default list.",
       "terms_not_accepted": "To create your account you need to accept the Terms and Conditions.",
-      "network_error": "We couldn’t connect. Check your connection and try again."
+      "network_error": "We couldn’t connect. Check your connection and try again.",
+      "chat_unavailable": "We can’t process your request right now. Try again later.",
+      "chat_request_in_progress": "An answer is already in progress. Wait for it to finish before sending another question."
     },
     "fields": {
       "correo": {

@@ -474,10 +474,10 @@ origen_id,clave,namespace,estado,es_original,en_original,es_curado,en_curado,pan
 498,enums.theme.oscuro,enums,ok,Oscuro,Dark,Oscuro,Dark,"[""Settings"",""Settings · mobile""]",,
 499,enums.theme.claro,enums,ok,Claro,Light,Claro,Light,"[""Settings"",""Settings · mobile""]",,
 500,,,chatbot,Chatbot · escritorio,Chatbot · desktop,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
-501,,,chatbot,Asistente FilmAI,FilmAI Assistant,,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
-502,,,chatbot,Recomienda según lo que calificaste,Recommends based on what you’ve rated,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
-503,,,chatbot,Cerrar el chat,Close the chat,,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
-504,,,chatbot,Conversación,Conversation,,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
+501,chat.panel.title,chat,ok,Asistente FilmAI,FilmAI Assistant,Asistente FilmAI,FilmAI Assistant,"[""Chatbot · desktop"",""Chatbot · mobile""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
+502,chat.panel.subtitle,chat,ok,Recomienda según lo que calificaste,Recommends based on what you’ve rated,Recomienda según lo que calificaste,Recommends based on what you’ve rated,"[""Chatbot · desktop""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
+503,chat.panel.close,chat,ok,Cerrar el chat,Close the chat,Cerrar el chat,Close the chat,"[""Chatbot · desktop"",""Chatbot · mobile""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
+504,chat.panel.conversation,chat,ok,Conversación,Conversation,Conversación,Conversation,"[""Chatbot · desktop"",""Chatbot · mobile""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
 505,,,chatbot,"¡Hola, Juan! Contame qué tenés ganas de ver y te recomiendo según lo que calificaste.","Hi, Juan! Tell me what you feel like watching and I’ll recommend something based on what you’ve rated.",,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
 506,,,chatbot,Algo corto para esta noche,Something short for tonight,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
 507,,,chatbot,Parecido a Interstellar,Similar to Interstellar,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
@@ -487,11 +487,11 @@ origen_id,clave,namespace,estado,es_original,en_original,es_curado,en_curado,pan
 511,,,chatbot,a Interstellar:,to Interstellar:,,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
 512,,,chatbot,Ver ficha,View details,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
 513,,,chatbot,¿Y alguna serie para ver con calma?,And a TV show to watch at my own pace?,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
-514,,,chatbot,Buscando en el catálogo…,Searching the catalog…,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
-515,,,chatbot,Tu mensaje,Your message,,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
-516,,,chatbot,Escribí tu pregunta,Type your question,,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
-517,,,chatbot,Enviar,Send,,,"[""Chatbot · desktop"",""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
-518,,,chatbot,Las recomendaciones salen del catálogo de TMDB y de tus calificaciones.,Recommendations come from the TMDB catalog and your ratings.,,,"[""Chatbot · desktop""]",,Chatbot fuera de alcance D11; excluido de siembra.
+514,chat.status.searching,chat,ok,Buscando en el catálogo…,Searching the catalog…,Buscando en el catálogo…,Searching the catalog…,"[""Chatbot · desktop""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
+515,chat.input.label,chat,ok,Tu mensaje,Your message,Tu mensaje,Your message,"[""Chatbot · desktop"",""Chatbot · mobile""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
+516,chat.input.placeholder,chat,ok,Escribí tu pregunta,Type your question,Escribí tu pregunta,Type your question,"[""Chatbot · desktop"",""Chatbot · mobile""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
+517,chat.input.send,chat,ok,Enviar,Send,Enviar,Send,"[""Chatbot · desktop"",""Chatbot · mobile""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
+518,chat.panel.disclaimer,chat,ok,Las recomendaciones salen del catálogo de TMDB y de tus calificaciones.,Recommendations come from the TMDB catalog and your ratings.,Las recomendaciones salen del catálogo de TMDB y de tus calificaciones.,Recommendations come from the TMDB catalog and your ratings.,"[""Chatbot · desktop""]",,"Texto provisorio del panel (PR 6, 06/11/2026); se cura en la tarea 7.1."
 519,,,chatbot,Chatbot · celular,Chatbot · mobile,,,"[""Chatbot · mobile""]",,Chatbot fuera de alcance D11; excluido de siembra.
 521,errors.pages.ticketIllustrationAlt,errors,ok,Una entrada de cine cortada al medio,A movie ticket torn in half,Una entrada de cine cortada al medio,A movie ticket torn in half,"[""404 and error"",""404 and error · mobile""]",,Clave provisional de pantalla futura; confirmar en su implementación.
 522,nav.main.backHome,nav,ok,Volver al inicio,Back to Home,Volver al inicio,Back to Home,"[""404 and error"",""404 and error · mobile"",""Admin access · desktop"",""Admin access · mobile""]",,Clave provisional de pantalla futura; confirmar en su implementación.
