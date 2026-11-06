@@ -52,6 +52,20 @@
       },
       "params": {}
     },
+    "chat_request_in_progress": {
+      "category": "error",
+      "contexts": {
+        "chat": 409
+      },
+      "params": {}
+    },
+    "chat_unavailable": {
+      "category": "error",
+      "contexts": {
+        "chat": 503
+      },
+      "params": {}
+    },
     "confirmation_email_sent": {
       "category": "success",
       "contexts": {

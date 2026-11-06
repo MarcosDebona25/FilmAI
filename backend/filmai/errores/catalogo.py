@@ -81,6 +81,15 @@ CATALOGO = {
         {"retry_after_seconds": "integer"},
         minimos={"retry_after_seconds": 0},
     ),
+    # Chatbot (PR 5). `chat_unavailable` viaja en el evento SSE `error`, dentro de
+    # una respuesta 200 que ya empezó: el 503 (Service Unavailable) es el estado
+    # que le corresponde al sobre, no el de la respuesta HTTP.
+    "chat_request_in_progress": DefinicionCodigo(
+        "Ya hay una respuesta en curso para este chat.", {"chat": 409}
+    ),
+    "chat_unavailable": DefinicionCodigo(
+        "El chat no pudo procesar la solicitud.", {"chat": 503}
+    ),
     "server_error": DefinicionCodigo("Error interno del servidor.", {"api": 500}),
     "upstream_bad_request": DefinicionCodigo(
         "TMDB rechazó los parámetros de la solicitud.", {"tmdb": 400}

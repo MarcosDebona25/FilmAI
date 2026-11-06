@@ -43,6 +43,9 @@ packaging>=24,<27
 # --- Chatbot ---
 # Cliente del proveedor del modelo: DeepSeek habla el mismo formato que OpenAI.
 openai>=3.46,<4
+# Servidor ASGI de desarrollo: el POST del chat transmite con SSE y WSGI no puede.
+# Reemplaza al `runserver` (basta tenerlo primero en INSTALLED_APPS).
+daphne>=4.2,<5
 
 # --- Búsqueda semántica (pgvector) ---
 # El submódulo `pgvector.django` aporta VectorField, HnswIndex y
