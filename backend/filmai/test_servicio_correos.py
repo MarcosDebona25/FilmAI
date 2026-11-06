@@ -81,6 +81,9 @@ class ServicioCorreosTests(SimpleTestCase):
                     self.assertIn("<h1", html)
                     self.assertIn("FilmAI", html)
                     self.assertNotIn("#e67e22", html)
+                    # Sin la franja amarilla de 4 px arriba de la tarjeta (issue #175).
+                    self.assertNotIn('height="4"', html)
+                    self.assertNotIn("height: 4px", html)
                     enlace = self.contexto["activate_url"]
                     if caso == "contrasena_actualizada":
                         # Botón secundario con borde y sin fila de enlace copiable.

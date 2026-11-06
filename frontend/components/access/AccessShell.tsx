@@ -14,6 +14,9 @@ import { AccessLogo } from "@/components/access/Logo";
  *
  * `poster="band"` (alta con Google): en celular el collage es una franja de
  * 160 px arriba, con el logo encima; en escritorio, la columna de siempre.
+ *
+ * En escritorio el collage queda fijo (sticky, del alto de la ventana): si el
+ * formulario cambia de alto, el fondo no se reescala ni se mueve (issue #175).
  */
 export function AccessShell({
   children,
@@ -42,12 +45,8 @@ export function AccessShell({
       >
         <aside
           className={`relative overflow-hidden ${
-            poster === "side"
-              ? "hidden lg:block"
-              : poster === "band"
-                ? "h-40 lg:h-auto"
-                : "absolute inset-0 lg:static"
-          }`}
+            poster === "side" ? "hidden lg:block" : poster === "band" ? "h-40" : "absolute inset-0"
+          } lg:sticky lg:top-0 lg:h-screen`}
         >
           <Image
             src="/collage-posters/Opcion 1.jpg"

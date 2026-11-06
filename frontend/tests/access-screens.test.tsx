@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
 import { ApiError, apiFetch } from "@/lib/api";
+import { elegirPais } from "./elegir-pais";
 import { render, screen, waitFor, within } from "./render";
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }));
@@ -53,7 +54,7 @@ async function fillRegister(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.firstName), "Juan");
   await user.type(screen.getByLabelText(en.common.fields.lastName), "Pérez");
   await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
-  await user.selectOptions(screen.getByLabelText(en.common.fields.country), "AR");
+  await elegirPais(user, screen.getByLabelText(en.common.fields.country), "Argentina");
   await user.type(screen.getByLabelText(en.common.fields.email), "juan@example.com");
   await user.type(screen.getByLabelText(en.common.fields.birthDate), "1992-04-10");
   await user.selectOptions(screen.getByLabelText(en.auth.signUp.genderLabel), "masculino");
@@ -92,7 +93,7 @@ describe("registro", () => {
       en.common.fields.passwordConfirm,
     ];
     for (const etiqueta of campos)
-      expect(screen.getByLabelText(etiqueta, { selector: "input, select" })).toBeRequired();
+      expect(screen.getByLabelText(etiqueta, { selector: "input, select, button" })).toBeRequired();
     expect(screen.getByRole("checkbox")).toBeRequired();
     expect(screen.getByRole("button", { name: en.nav.account.signUp })).toBeDisabled();
   });
@@ -102,19 +103,17 @@ describe("registro", () => {
     const user = userEvent.setup();
     render(<RegisterPage />, { locale: "es" });
     const pais = screen.getByLabelText(es.common.fields.country);
-    expect(pais).toHaveValue("");
-    expect(screen.getByRole("option", { name: es.common.country.placeholder })).toBeDisabled();
-    const nombres = within(pais)
+    expect(pais).toHaveTextContent(es.common.country.placeholder);
+    await user.click(pais);
+    const nombres = within(screen.getByRole("listbox"))
       .getAllByRole("option")
-      .slice(1)
       .map((option) => option.textContent!);
     expect(nombres).toHaveLength(249);
     expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, "es-AR")));
-    expect(screen.getByRole("option", { name: "Argentina" })).toHaveValue("AR");
-    await user.click(pais);
+    // Abrirlo y salir sin elegir muestra que es obligatorio.
     await user.tab();
     expect(await screen.findByText(es.common.country.required)).toBeInTheDocument();
-    await user.selectOptions(pais, "BR");
+    await elegirPais(user, pais, "Brasil");
     expect(screen.queryByText(es.common.country.required)).not.toBeInTheDocument();
   });
 
@@ -222,7 +221,7 @@ describe("registro", () => {
     await user.type(screen.getByLabelText(es.common.fields.firstName), "Juan");
     await user.type(screen.getByLabelText(es.common.fields.lastName), "Pérez");
     await user.type(screen.getByLabelText(es.common.fields.username), "juanperez");
-    await user.selectOptions(screen.getByLabelText(es.common.fields.country), "AR");
+    await elegirPais(user, screen.getByLabelText(es.common.fields.country), "Argentina");
     await user.type(screen.getByLabelText(es.common.fields.email), "juan@example.com");
     await user.type(screen.getByLabelText(es.common.fields.birthDate), "1992-04-10");
     await user.selectOptions(screen.getByLabelText(es.auth.signUp.genderLabel), "masculino");
@@ -260,6 +259,44 @@ describe("registro", () => {
     render(<RegisterPage />, { locale: "en" });
     await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
     expect(await screen.findByText(en.auth.signUp.usernameAvailable)).toBeInTheDocument();
+  });
+
+  it("con el usuario disponible el ✓ va dentro del campo y la ayuda no se mueve (#175)", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const input = screen.getByLabelText(en.common.fields.username);
+    await user.type(input, "juanperez");
+    // «Available» lo anuncia la región viva, sin un renglón visible propio.
+    expect(await screen.findByText(en.auth.signUp.usernameAvailable)).toHaveClass("sr-only");
+    expect(input.parentElement!.querySelector("svg")).not.toBeNull();
+    expect(input).not.toHaveAttribute("aria-invalid");
+    const ayuda = screen.getByText(en.auth.signUp.usernameHelp);
+    expect(ayuda.parentElement).not.toHaveClass("invisible");
+  });
+
+  it("un usuario en uso es un error del campo: lo marca y ocupa el renglón de la ayuda (#175)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, json: async () => ({ disponible: false }) }))
+    );
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const input = screen.getByLabelText(en.common.fields.username);
+    await user.type(input, "juanperez");
+    expect(await screen.findByText(en.errors.codes.username_already_used)).toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input.parentElement!.querySelector("svg")).toBeNull();
+    // La ayuda sigue en la misma celda pero invisible: el campo no cambia de alto.
+    expect(screen.getByText(en.auth.signUp.usernameHelp).parentElement).toHaveClass("invisible");
+  });
+
+  it("los campos sin ayuda reservan el renglón del error desde el inicio (#175)", () => {
+    render(<RegisterPage />, { locale: "en" });
+    for (const etiqueta of [en.common.fields.email, en.common.fields.passwordConfirm]) {
+      const campo = screen.getByLabelText(etiqueta, { selector: "input" });
+      const info = document.getElementById(campo.getAttribute("aria-describedby")!)!;
+      expect(info.querySelector(".min-h-\\[1lh\\]") ?? info).toHaveClass("min-h-[1lh]");
+    }
   });
 
   it("el enlace a los términos abre en pestaña nueva", () => {

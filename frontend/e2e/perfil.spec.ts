@@ -38,8 +38,11 @@ test("muestra el país en Datos personales y se edita en Editar perfil", async (
   await page.goto("/profile");
   await expect(page.getByText("Argentina", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Editar perfil" }).click();
-  await expect(page.getByLabel("País")).toHaveValue("AR");
-  await page.getByLabel("País").selectOption("CN");
+  const pais = page.getByRole("combobox", { name: "País" });
+  await expect(pais).toHaveText("Argentina");
+  await pais.click();
+  await page.getByRole("searchbox", { name: "Buscar país" }).fill("chi");
+  await page.getByRole("option", { name: "China", exact: true }).click();
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByText("China", { exact: true })).toBeVisible();
   expect(cuenta.getPerfil()).toMatchObject({ pais: "CN" });

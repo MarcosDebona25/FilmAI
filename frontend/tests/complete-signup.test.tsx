@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
 import { ApiError, apiFetch } from "@/lib/api";
+import { elegirPais } from "./elegir-pais";
 import { render, screen, waitFor } from "./render";
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -52,7 +53,7 @@ function confirmacion() {
 
 async function completar(user: Usuario, copy: typeof en | typeof es = en) {
   await user.type(screen.getByLabelText(copy.common.fields.username), "juanperez");
-  await user.selectOptions(screen.getByLabelText(copy.common.fields.country), "AR");
+  await elegirPais(user, screen.getByLabelText(copy.common.fields.country), "Argentina");
   await user.type(screen.getByLabelText(copy.common.fields.birthDate), "1992-04-10");
   await user.selectOptions(screen.getByLabelText(copy.auth.signUp.genderLabel), "masculino");
   await user.click(screen.getByRole("checkbox"));
@@ -118,13 +119,12 @@ describe("alta con Google", () => {
     render(<CompletarGooglePage />, { locale: "en" });
     const pais = screen.getByLabelText(en.common.fields.country);
 
-    expect(pais).toHaveValue("");
-    expect(screen.getByRole("option", { name: en.common.country.placeholder })).toBeDisabled();
+    expect(pais).toHaveTextContent(en.common.country.placeholder);
     await user.click(pais);
     await user.tab();
     expect(await screen.findByText(en.common.country.required)).toBeInTheDocument();
     expect(pais).toHaveAttribute("aria-invalid", "true");
-    await user.selectOptions(pais, "AR");
+    await elegirPais(user, pais, "Argentina");
     expect(screen.queryByText(en.common.country.required)).not.toBeInTheDocument();
   });
 
@@ -147,7 +147,7 @@ describe("alta con Google", () => {
     render(<CompletarGooglePage />, { locale: "en" });
 
     await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
-    await user.selectOptions(screen.getByLabelText(en.common.fields.country), "AR");
+    await elegirPais(user, screen.getByLabelText(en.common.fields.country), "Argentina");
     await user.type(screen.getByLabelText(en.common.fields.birthDate), "1992-04-10");
     await user.selectOptions(screen.getByLabelText(en.auth.signUp.genderLabel), "masculino");
     await user.click(screen.getByRole("checkbox"));

@@ -1,3 +1,4 @@
+import { elegirPais } from "./elegir-pais";
 import { fireEvent, render, screen, waitFor, within } from "./render";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -69,6 +70,13 @@ describe("edición de perfil", () => {
     );
     expect(screen.queryByRole("button", { name: "Cambiar avatar" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
+    // En escritorio el overlay es flex en columna: sin `justify-center` el ícono
+    // y el texto quedaban pegados arriba del círculo (issue #175).
+    expect(screen.getByRole("button", { name: "Cambiar avatar" })).toHaveClass(
+      "md:inset-0",
+      "md:items-center",
+      "md:justify-center"
+    );
     await userEvent.click(screen.getByRole("button", { name: "Cambiar avatar" }));
     await userEvent.click(screen.getByRole("radio", { name: "Avatar 2" }));
     expect(screen.getByRole("dialog")).toBeVisible();
@@ -91,8 +99,8 @@ describe("edición de perfil", () => {
     expect(screen.getByText("Argentina")).toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
     const pais = screen.getByLabelText("País");
-    expect(pais).toHaveValue("AR");
-    await userEvent.selectOptions(pais, "BR");
+    expect(pais).toHaveTextContent("Argentina");
+    await elegirPais(userEvent.setup(), pais, "Brasil");
     await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
     expect(apiFetch).toHaveBeenCalledWith(
       "/api/profile/",
@@ -106,7 +114,7 @@ describe("edición de perfil", () => {
       </NavigationGuard>
     );
     await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
-    await userEvent.selectOptions(screen.getByLabelText("País"), "BR");
+    await elegirPais(userEvent.setup(), screen.getByLabelText("País"), "Brasil");
     await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     expect(screen.getByRole("button", { name: "Seguir editando" })).toBeVisible();
   });

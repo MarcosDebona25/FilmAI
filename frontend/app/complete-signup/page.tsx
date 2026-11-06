@@ -11,7 +11,7 @@ import { GoogleButton } from "@/components/GoogleButton";
 import { AccessShell } from "@/components/access/AccessShell";
 import { GoogleMark } from "@/components/access/GoogleMark";
 import { AccessLogo } from "@/components/access/Logo";
-import { FieldError, FieldOk, TextField, fieldClass } from "@/components/access/fields";
+import { FieldError, FieldMessage, TextField, fieldClass } from "@/components/access/fields";
 import type { AppLocale } from "@/i18n/config";
 import enums from "@/i18n/enums.json";
 import { fieldErrors, translateError, type CodedError } from "@/lib/errors";
@@ -141,16 +141,22 @@ export default function CompletarGooglePage() {
     }
   }
 
-  const usernameError = mostrar("nombre_usuario");
-  const usernameStatus =
-    usernameError || validarNombreUsuario(form.nombre_usuario) ? null : usernameEstado ===
-      "disponible" ? (
-      <FieldOk>{signUp("usernameAvailable")}</FieldOk>
-    ) : usernameEstado === "ocupado" ? (
-      <FieldError>{errors("username_already_used")}</FieldError>
-    ) : usernameEstado === "reservado" ? (
-      <FieldError>{errors("username_not_allowed")}</FieldError>
-    ) : null;
+  const usernameValido = !validarNombreUsuario(form.nombre_usuario);
+  // Igual que en el registro: «en uso» y «reservado» son errores del campo y
+  // «disponible» es el ✓ dentro del campo.
+  const usernameError =
+    mostrar("nombre_usuario") ??
+    (!usernameValido
+      ? undefined
+      : usernameEstado === "ocupado"
+        ? errors("username_already_used")
+        : usernameEstado === "reservado"
+          ? errors("username_not_allowed")
+          : undefined);
+  const usernameOk =
+    usernameValido && !usernameError && usernameEstado === "disponible"
+      ? signUp("usernameAvailable")
+      : null;
   const terminosError = servidor.acepta_terminos;
   const activo = formularioValido && !loading;
 
@@ -198,7 +204,7 @@ export default function CompletarGooglePage() {
               value={form.nombre_usuario}
               onChange={(e) => setField("nombre_usuario", e.target.value)}
               error={usernameError}
-              status={usernameStatus}
+              ok={usernameOk}
               help={signUp("usernameHelp")}
             />
             <CountrySelect
@@ -206,6 +212,7 @@ export default function CompletarGooglePage() {
               onChange={(code) => setField("pais", code)}
               onBlur={() => setSucios((prev) => ({ ...prev, pais: true }))}
               error={mostrar("pais")}
+              reserveMessage
             />
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
@@ -241,7 +248,7 @@ export default function CompletarGooglePage() {
                   </option>
                 ))}
               </select>
-              {mostrar("genero") && <FieldError>{mostrar("genero")}</FieldError>}
+              <FieldMessage error={mostrar("genero")} reserve />
             </div>
           </div>
           <div className="flex flex-col gap-2">

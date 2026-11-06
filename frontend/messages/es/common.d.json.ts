@@ -160,7 +160,9 @@ declare const messages: {
     },
     "country": {
       "placeholder": "Elegí tu país",
-      "required": "Elegí un país para continuar."
+      "required": "Elegí un país para continuar.",
+      "searchLabel": "Buscar país",
+      "noResults": "No hay países con ese nombre."
     }
   },
   "home": {
