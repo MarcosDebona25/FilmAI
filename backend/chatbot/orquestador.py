@@ -17,6 +17,7 @@ import logging
 from chatbot.anonimizar import CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
+from chatbot.idioma import detectar_idioma
 from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
@@ -28,6 +29,10 @@ logger = logging.getLogger(__name__)
 # Rondas de tools permitidas. Hay una llamada más, para la respuesta final.
 _MAX_VUELTAS_CON_TOOLS = 4
 _MENSAJES_DE_HISTORIAL = 10
+# Cuánto texto de una vuelta se retiene antes de mandarlo. Un preámbulo («I'll
+# look that up.») es corto: si la vuelta termina antes de este largo y pidió
+# buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
+_LARGO_DE_PREAMBULO = 200
 _TOOL_DE_TARJETAS = "mostrar_tarjetas"
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
@@ -54,8 +59,11 @@ def _preparar(chat, texto, idioma):
     """
     chat = Chat.objects.select_related("usuario").get(pk=chat.pk)
     usuario = chat.usuario
+    # La prosa sigue al idioma del mensaje; las tools y las tarjetas, al del turno.
     sistema = armar_sistema(
-        armar_perfil(usuario), chat.contexto.get("ya_recomendados", []), idioma
+        armar_perfil(usuario),
+        chat.contexto.get("ya_recomendados", []),
+        detectar_idioma(texto) or idioma,
     )
     mensajes = [
         {"role": "system", "content": sistema},
@@ -114,8 +122,17 @@ def _mensaje_del_asistente(vuelta):
     return mensaje
 
 
+def _con_separador(pedazos, separar):
+    """Los pedazos de texto, con «\\n\\n» adelante si hay texto de otra vuelta."""
+    return ["\n\n", *pedazos] if separar else list(pedazos)
+
+
 def _solo_tarjetas(vuelta):
     return all(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
+
+
+def _con_tarjetas(vuelta):
+    return any(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
 
 
 async def responder(chat, texto, idioma, *, proveedor=None):
@@ -138,22 +155,35 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         vuelta = None
         # Sin esto, el texto de dos vueltas saldría pegado: «…despacio.¿Querés…».
         separar = bool(partes)
+        # Lo que todavía no salió al front, por si resulta ser un preámbulo.
+        retenido, en_vivo = [], False
         try:
             async for item in proveedor.escribir(mensajes, ESQUEMAS):
                 if isinstance(item, Vuelta):
                     vuelta = item
                     continue
-                if separar:
-                    separar = False
-                    partes.append("\n\n")
-                    yield Texto("\n\n")
-                partes.append(item)
-                yield Texto(item)
+                retenido.append(item)
+                if not en_vivo and len("".join(retenido)) <= _LARGO_DE_PREAMBULO:
+                    continue
+                en_vivo = True
+                for pedazo in _con_separador(retenido, separar):
+                    partes.append(pedazo)
+                    yield Texto(pedazo)
+                separar, retenido = False, []
         except Exception as error:
             # `Exception` no incluye `CancelledError`: si el usuario cancela, la
             # cancelación tiene que llegar a la vista.
             logger.exception("El proveedor falló")
             raise ErrorDelTurno("El proveedor falló") from error
+
+        # Texto corto y una búsqueda: era un «ya busco», y la respuesta viene después.
+        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`. Si la
+        # vuelta también muestra tarjetas, el texto las acompaña y no se descarta.
+        es_preambulo = vuelta.llamadas and not _con_tarjetas(vuelta)
+        if retenido and not es_preambulo:
+            for pedazo in _con_separador(retenido, separar):
+                partes.append(pedazo)
+                yield Texto(pedazo)
 
         if not vuelta.llamadas:
             break

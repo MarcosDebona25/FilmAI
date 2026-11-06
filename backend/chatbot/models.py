@@ -9,8 +9,10 @@ Implementa la conversación del chatbot (doc 03):
 
 Un `Chat` pertenece a un único usuario. El modelo contempla múltiples chats por
 usuario, aunque el MVP implementa uno solo (doc 03, B-01). El campo `contexto`
-se almacena como JSONB para alojar datos de estructura variable (resumen del
-historial, géneros preferidos, última recomendación y parámetros activos).
+es JSONB y guarda lo que el chat recuerda fuera de los mensajes: hoy, solo
+`ya_recomendados`. El perfil del usuario no se guarda: se arma por SQL en cada
+mensaje (08/10/2026). Los mensajes y `contexto` los escribe
+`servicio.guardar_turno()`.
 """
 
 from django.db import models
@@ -31,8 +33,11 @@ class Chat(models.Model):
         "contexto",
         default=dict,
         help_text=(
-            "JSONB con estado variable de la conversación: resumen del historial, "
-            "géneros preferidos, última recomendación y parámetros activos (B-01)."
+            "JSONB con lo que el chat recuerda fuera de los mensajes. Hoy solo "
+            "`ya_recomendados`: las últimas 30 tarjetas mostradas, sin repetir, como "
+            "{id_tmdb, tipo, titulo, anio}. Lo escribe `guardar_turno()` y lo lee el "
+            "prompt. El perfil no se guarda acá: se arma por SQL en cada mensaje "
+            "(08/10/2026)."
         ),
     )
     fecha = models.DateField("fecha", auto_now_add=True)
@@ -75,6 +80,19 @@ class Mensaje(models.Model):
         ),
     )
     autor = models.CharField("autor", max_length=25, choices=TipoAutor.choices)
+    tarjetas = models.JSONField(
+        "tarjetas",
+        # `list` y no `[]`: Django llama a `list()` por cada mensaje nuevo. Un `[]`
+        # literal sería una sola lista compartida por todos.
+        default=list,
+        blank=True,
+        help_text=(
+            "Hasta 3 tarjetas que el bot mostró con la respuesta, tal como se "
+            "vieron: {id_tmdb, tipo, titulo, poster, anio}, en el idioma del turno. "
+            "Sin FK a la producción (09/10/2026). En los mensajes del usuario, "
+            "lista vacía."
+        ),
+    )
     fecha_hora = models.DateTimeField("fecha y hora", auto_now_add=True)
     chat = models.ForeignKey(
         Chat,

@@ -25,9 +25,9 @@ from chatbot.llm import (
     leer_stream,
 )
 from chatbot.models import Chat, Mensaje, TipoAutor
-from chatbot.orquestador import responder
+from chatbot.orquestador import _LARGO_DE_PREAMBULO, responder
 from chatbot.prompts import armar_sistema
-from chatbot.tools import FUNCIONES
+from chatbot.tools import FUNCIONES, ContextoTurno
 from usuarios.factories import UsuarioFactory
 
 
@@ -127,11 +127,57 @@ class VueltaConToolsTests(BaseOrquestador):
         self.assertEqual(sum(isinstance(e, Estado) for e in eventos), 1)
 
     async def test_el_texto_de_dos_vueltas_no_queda_pegado(self):
-        eventos = await self.correr([["Busco.", tool("descubrir")], ["Listo."]])
+        # Un texto largo antes de buscar ya salió al front: el que sigue va aparte.
+        largo = "x" * (_LARGO_DE_PREAMBULO + 1)
+        eventos = await self.correr([[largo, tool("descubrir")], ["Listo."]])
 
-        self.assertEqual(eventos[-1].texto, "Busco.\n\nListo.")
+        self.assertEqual(eventos[-1].texto, f"{largo}\n\nListo.")
         pedazos = "".join(e.delta for e in eventos if isinstance(e, Texto))
         self.assertEqual(pedazos, eventos[-1].texto)
+
+    async def test_un_preambulo_antes_de_buscar_no_llega_al_usuario(self):
+        # «I'll look that up.» y después la respuesta: el prompt lo prohíbe, pero
+        # el modelo a veces lo escribe igual.
+        eventos = await self.correr(
+            [["I'll look ", "that up.", tool("descubrir")], ["Te recomiendo Moon"]]
+        )
+
+        self.assertEqual(eventos[-1].texto, "Te recomiendo Moon")
+        pedazos = "".join(e.delta for e in eventos if isinstance(e, Texto))
+        self.assertEqual(pedazos, "Te recomiendo Moon")
+
+    async def test_el_preambulo_sigue_en_lo_que_ve_el_modelo(self):
+        # El modelo tiene que ver lo que dijo, o la charla que recibe no cierra.
+        await self.correr([["Busco.", tool("descubrir")], ["Listo."]])
+
+        self.assertEqual(self.proveedor.pedidos[1][-2]["content"], "Busco.")
+
+    async def test_el_texto_con_tarjetas_no_es_un_preambulo(self):
+        eventos = await self.correr([[tool("descubrir")], ["Mirá", tarjetas(1)]])
+
+        self.assertEqual(eventos[-1].texto, "Mirá")
+
+    async def test_el_texto_con_tarjetas_y_otra_busqueda_no_es_un_preambulo(self):
+        # Las tarjetas de esta vuelta se muestran: la frase que las acompaña también.
+        guion = [[tool("descubrir")], ["Mirá", tool("descubrir", "2"), tarjetas(1)]]
+        eventos = await self.correr([*guion, ["Listo"]])
+
+        self.assertTrue(eventos[-1].texto.startswith("Mirá"))
+
+    async def test_el_texto_que_cruza_el_umbral_despues_de_otra_vuelta_no_duplica_el_separador(
+        self,
+    ):
+        # La primera vuelta ya salió al front; en la segunda, dos trozos cruzan el
+        # umbral juntos: el separador va una sola vez y no se reenvía lo ya emitido.
+        largo = "x" * (_LARGO_DE_PREAMBULO + 1)
+        primero, segundo = "y" * 150, "z" * 100
+        eventos = await self.correr([[largo, tool("descubrir")], [primero, segundo]])
+
+        esperado = f"{largo}\n\n{primero}{segundo}"
+        self.assertEqual(eventos[-1].texto, esperado)
+        pedazos = "".join(e.delta for e in eventos if isinstance(e, Texto))
+        self.assertEqual(pedazos, esperado)
+        self.assertEqual(pedazos.count("\n\n"), 1)
 
     async def test_varias_tools_en_una_vuelta_responden_en_orden(self):
         await self.correr([[tool("descubrir", "a"), tool("descubrir", "b")], ["Listo"]])
@@ -248,12 +294,28 @@ class LoQueRecibeElModeloTests(BaseOrquestador):
             usuario=self.usuario, produccion=produccion, valor=9
         )
 
-        await self.correr([["Hola"]], idioma="en")
+        # «Moon» no dice en qué idioma escribió: vale el del turno.
+        await self.correr([["Hola"]], texto="Moon", idioma="en")
 
         sistema = self.mensajes_del_primer_pedido()[0]
         self.assertEqual(sistema["role"], "system")
         self.assertIn("Arrival (9)", sistema["content"])
-        self.assertIn("`en`", sistema["content"])
+        self.assertIn("reply in English", sistema["content"])
+
+    async def test_la_prosa_sigue_al_mensaje_y_las_tools_al_turno(self):
+        # Interfaz en español, mensaje en inglés: el texto va en inglés, pero las
+        # tools (y con ellas las tarjetas) siguen en el idioma del turno.
+        with patch(
+            "chatbot.orquestador.ContextoTurno.para", wraps=ContextoTurno.para
+        ) as para:
+            await self.correr(
+                [["Hi"]], texto="Something like Arrival, but lighter", idioma="es"
+            )
+
+        self.assertIn(
+            "reply in English", self.mensajes_del_primer_pedido()[0]["content"]
+        )
+        self.assertEqual(para.call_args.args[1], "es")
 
     async def test_el_mensaje_actual_va_anonimizado_y_ultimo(self):
         await self.correr([["Hola"]], texto="soy Juan Perez, mail j@x.com")
@@ -328,6 +390,30 @@ class ReglasDelPromptTests(SimpleTestCase):
     def test_el_estilo_cambia_con_el_idioma(self):
         self.assertIn("voseo", armar_sistema("", [], "es"))
         self.assertNotIn("voseo", armar_sistema("", [], "en"))
+
+    def test_el_idioma_se_nombra_al_final_del_sistema(self):
+        # «Respondé en el idioma del mensaje» perdía contra un perfil y un historial
+        # en español. Nombrado y al final, el modelo lo cumple.
+        sistema = armar_sistema("Le gustó: Moon", [], "en")
+
+        self.assertTrue(
+            sistema.split("\n\n")[-1].startswith("Language: reply in English")
+        )
+
+    def test_en_espanol_tambien_se_nombra(self):
+        self.assertIn("respondé en español", armar_sistema("", [], "es"))
+
+    def test_la_duracion_va_para_todos_o_para_ninguno(self):
+        # Los listados de TMDB no traen `runtime`: sin esta regla, el modelo daba la
+        # duración del título que venía de la base y callaba la del otro.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("dala para todos los títulos", sistema)
+        self.assertIn(
+            "consultala con `detalle` para cada título que no la traiga", sistema
+        )
+        # Las series casi nunca la tienen: callarla sería repetir el problema.
+        self.assertIn("decí que de ese título no la tenés", sistema)
 
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))

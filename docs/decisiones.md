@@ -22,6 +22,52 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Markdown**: `react-markdown` + `rehype-sanitize`, con links e imágenes como texto. Una imagen Markdown del modelo haría que el navegador pida una URL elegida por prompt injection.
 - **Divergencias con el canvas** (para ajustarlo): Cancelar en el botón de enviar, el contador desde 400 caracteres y el panel modal en escritorio.
 - **Archivos afectados**: `frontend/lib/{api,chat}.ts`, `frontend/components/ChatProvider.tsx`, `frontend/components/features/chat/`, `frontend/app/layout.tsx`, `frontend/components/features/HomeView.tsx`, `traducciones/{claves,claves-extra}.csv`, `frontend/messages/`, `docs/04_*.md`, `openspec/changes/chatbot/`. Tests: `frontend/tests/chat-{sse,markdown,provider,ui}.test.ts(x)`, `frontend/e2e/chat.spec.ts`.
+## 06/11/2026 — Un «ya busco» antes de buscar no llega al usuario (corrección al PR 3)
+
+- **Fecha**: 06/11/2026
+- **Corrección al Motor**: el PR 3 es de Gonza. Esta corrección la hizo Marcos con su aval, y queda registrada acá como él pidió para todo cambio a su parte.
+- **Descripción**: el prompt dice «No escribas nada mientras buscás», pero el modelo a veces escribe «I'll look that up.» en la misma vuelta en que pide una búsqueda, y el usuario lo veía pegado a la respuesta. El texto sale al front a medida que llega y recién al final de la vuelta se sabe si hubo tools; el contrato de `eventos.py` no permite retirar texto ya enviado. Ahora `responder()` retiene el comienzo de cada vuelta hasta `_LARGO_DE_PREAMBULO` (200 caracteres). Si la vuelta termina antes y pidió buscar, ese texto no se envía. Si pasa el umbral, o la vuelta cierra el turno, sale como siempre. El modelo lo sigue viendo en los mensajes de la vuelta siguiente.
+- **Tarjetas en la misma vuelta**: una vuelta que muestra tarjetas y además pide otra búsqueda ya no se toma como preámbulo: la frase que las acompaña se envía. Lo marcó PR-Agent en el #173; el caso de una vuelta con solo tarjetas estaba cubierto, pero no el de tarjetas junto con otra tool. Test: `test_el_texto_con_tarjetas_y_otra_busqueda_no_es_un_preambulo`.
+- **Costo**: una respuesta larga se demora lo que tarda el modelo en escribir sus primeros 200 caracteres; una corta (un rechazo, un saludo) sale entera al final de su vuelta.
+- **Verificado contra DeepSeek (06/11/2026)**, con un usuario sin historial: el modelo escribió el preámbulo en 4 de 4 pedidos en inglés y no llegó al usuario en ninguno. Sin el cambio, llegó en 1 de 4.
+- **Pendiente para el Motor**: «Algo como Arrival pero más liviano», en español y sin historial, usó 4 o 5 vueltas de búsqueda; con 5 el turno termina en `ErrorDelTurno` (pasó en 2 de 4 corridas). No depende de este cambio: lo que recibe el modelo es igual. Conviene revisar el tope de vueltas o empujar al modelo a responder antes.
+- **Archivos afectados**: `backend/chatbot/orquestador.py`. Tests: `backend/chatbot/tests_orquestador.py`.
+
+## 06/11/2026 — Duración para todos los títulos o para ninguno (corrección al PR 3)
+
+- **Fecha**: 06/11/2026
+- **Corrección al Motor**: el PR 3 es de Gonza. Esta corrección la hizo Marcos con su aval, y queda registrada acá como él pidió para todo cambio a su parte.
+- **Descripción**: a «una de ciencia ficción tranquila, no muy larga», el bot dio la duración de un título y no la del otro. Los listados de TMDB (`buscar_por_titulo`, `descubrir`, `similares_a`) no traen `runtime`, así que esos títulos llegan con `duracion: null`; los de `buscar_semantico` vienen de la base y la traen. El prompt suma una regla: si menciona la duración, la da para todos los títulos; si el usuario pidió algo sobre la duración, la consulta con `detalle` solo para los títulos que no la traen; si no, no la menciona. Si `detalle` tampoco la trae (pasa seguido con series), dice que de ese título no la tiene. Esto último y lo de no repetir `detalle` salieron de una sugerencia de PR-Agent en el #172.
+- **Por qué en el prompt y no en el código**: completar `runtime` en cada listado costaría un pedido a TMDB por título en cada búsqueda, aunque nadie haya preguntado por la duración. Con la regla, el costo aparece solo cuando hace falta.
+- **Verificado contra DeepSeek (06/11/2026)**: «ciencia ficción tranquila, no muy larga» y «algo como Interestelar pero más corto», con la duración en los 3 títulos (12,2 s y 10,6 s, por la vuelta de `detalle`); «recomendame un thriller», sin duraciones ni búsquedas de más (5,3 s).
+- **Archivos afectados**: `backend/chatbot/prompts.py`, `openspec/changes/chatbot/design.md`. Tests: `backend/chatbot/tests_orquestador.py`.
+
+## 06/11/2026 — El chatbot respondía en español a mensajes en inglés (corrección al PR 3)
+
+- **Fecha**: 06/11/2026
+- **Corrección al Motor**: el PR 3 es de Gonza. Esta corrección la hizo Marcos con su aval, y queda registrada acá como él pidió para todo cambio a su parte.
+- **Descripción**: con `chatear --idioma en` y el mensaje «Something like Arrival, but lighter», la respuesta salía en español. El prompt pedía «respondé en el idioma del mensaje del usuario», pero el modelo (`deepseek-flash`) no lo cumplía. Lo que se probó contra DeepSeek:
+  - **Mover la regla al final del system, en español y en inglés, nombrando el perfil y el historial**: siguió en español (6 de 6).
+  - **Un mensaje `system` extra después del del usuario**: siguió en español.
+  - **Sin historial**: siguió en español. **Sin historial ni perfil**: respondió en inglés. El que más pesa es el perfil, que trae las reseñas del usuario en español.
+  - **Nombrar el idioma («Reply in English.»)**: en inglés las 3 veces, con perfil e historial completos.
+- **Lo que se cambió**: `chatbot/idioma.py` detecta el idioma del mensaje (`detectar_idioma()`, `"es"`, `"en"` o `None`) y el prompt lo nombra al final («respondé en español» / «reply in English»). Sin señal suficiente (un título suelto, «ok»), usa el idioma del turno. Las tools y las tarjetas siguen en el idioma del turno, como pide la decisión del 09/10/2026, que no cambia.
+- **Por qué una heurística y no una librería**: con dos idiomas alcanza con contar palabras comunes de cada uno, más `ñ`, `¿`, `¡` y las tildes. Es determinista, se puede testear y no suma dependencias. Cada palabra cuenta una vez, para que un título en inglés dentro de un pedido en español («algo como The Lord of the Rings») no lo dé vuelta.
+- **Verificado contra DeepSeek (06/11/2026)**: inglés con interfaz en inglés y perfil en español, dos veces en inglés; inglés con interfaz en español, en inglés; español con interfaz en inglés, en español; español con interfaz en español, en español.
+- **Archivos afectados**: `backend/chatbot/{idioma,prompts,orquestador}.py`, `backend/chatbot/README.md`, `openspec/changes/chatbot/design.md`, `openspec/changes/chatbot/specs/chat-api/spec.md`. Tests: `backend/chatbot/tests_idioma.py`, `backend/chatbot/tests_orquestador.py`.
+
+## 06/11/2026 — Persistencia e historial del chatbot (PR 4)
+
+- **Fecha**: 06/11/2026
+- **Descripción**: fase 4 del SDD (frente Canal). `guardar_turno()` deja lista la parte de la vista SSE que guarda cada turno (la usa el PR 5), y `GET /api/chat/messages/` sirve el historial que el panel muestra al abrirse (lo usa el PR 7). Lo que se decidió:
+  - **`ya_recomendados` sin repetidos**: nunca guarda un título dos veces. La clave es `(id_tmdb, tipo)`, porque TMDB numera películas y series por separado. Un título que se vuelve a mostrar sale de su lugar y pasa al final, y los repetidos dentro de un mismo turno quedan una vez. El tope de 30 se mantiene (SDD del 28/10) y conserva los más recientes. Cada elemento es `{id_tmdb, tipo, titulo, anio}`, sin póster: es lo que lee `prompts.armar_sistema`, y un test une los dos frentes con ese formato.
+  - **Todo o nada**: la pregunta, la respuesta con sus tarjetas y `ya_recomendados` se guardan en una sola transacción. El chat se relee con `select_for_update`, porque el que trae la vista se cargó al empezar el turno. `guardar_turno` devuelve los dos mensajes, porque `fin` lleva `{id, id_pregunta}`, y no atrapa errores: la vista los convierte en `chat_unavailable`.
+  - **El chat se crea solo con el usuario** (signal, doc 03), y nadie más lo crea. `guardar_turno(chat, …)` recibe el que ya tiene la vista. El historial filtra por `chat__usuario`, así que sin chat devuelve 200 (OK) vacío sin un caso especial y sin escribir en un GET.
+  - **`anio` desconocido se guarda como `None`**, que es el formato acordado. `prompts.armar_sistema` lo muestra como «Título (None)»: queda para el Motor.
+  - **Historial**: `HistorialView` es una `ListAPIView` de DRF (sync), así el contrato OpenAPI describe el cursor, cada mensaje y cada tarjeta (`movie | tv`). Cursor de 20 por `-fecha_hora, -id`, **sin `total`**: el panel no muestra cuántos mensajes hay, `next` en `null` ya dice que no quedan más, y se ahorra un `COUNT(*)` por página. Agregarlo después no rompe a nadie. Las tarjetas vuelven como se guardaron, sin volver a traducirlas.
+  - **Una ruta, dos vistas**: Django no permite un `get` sync y un `post` async en la misma clase, y una vista de DRF no puede ser async. El PR 5 cambia solo la línea de `messages/` en `urls.py` por una función async que manda el `POST` a `enviar_mensaje` y el `GET` a `HistorialView` por `en_hilo`. Si al hacerlo el GET desaparece del esquema, el test del contrato OpenAPI lo detecta.
+- **Para quien corra el backend desde un worktree**: `docker compose -p filmai run` pasa por `entrypoint.sh`, que aplica las migraciones en la base de desarrollo **compartida**. Una migración del worktree queda aplicada en la base que usa `~/FilmAI`. Hay que correr con `-e RUN_MIGRATIONS=false` (los tests crean su propia base igual).
+- **Archivos afectados**: `backend/chatbot/{models,servicio,serializers,views,urls}.py`, `backend/chatbot/migrations/0005_mensaje_tarjetas.py`, `backend/chatbot/README.md`, `contracts/openapi.yaml`, `openspec/changes/chatbot/{design,tasks}.md`. Tests: `backend/chatbot/tests_servicio.py`, `backend/chatbot/tests_historial.py`.
 
 ## 06/11/2026 — `packaging` faltante rompía el encolado en Celery
 
