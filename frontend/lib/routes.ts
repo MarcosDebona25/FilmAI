@@ -9,9 +9,6 @@ export const routes = {
   language: "/settings#t-idioma",
   myReviews: "/my-reviews",
   lists: "/lists",
-  // Provisoria: el chatbot aún no existe, así que hoy responde 404 (Not Found).
-  // Sus enlaces van con `prefetch={false}` hasta que exista (22/10/2026).
-  askFilmAI: "/chat",
   completeSignup: "/complete-signup",
   terms: "/terms",
   /**

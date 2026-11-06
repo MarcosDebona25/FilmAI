@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 06/11/2026 — Historial, badge y «Ask FilmAI» del chat (PR 7 del chatbot)
+
+- **Fecha**: 06/11/2026
+- **Descripción**: fase 7 del SDD (frente Canal). Solo frontend y traducciones: no toca el backend, así que se hizo en paralelo con el PR 5 y ninguno espera al otro. Lo que se decidió con Marcos:
+  - **Historial una vez por sesión**: la primera apertura pide la página más nueva (`GET /api/chat/messages/`); las siguientes no lo vuelven a pedir. Excepción: si hubo un «Cancelar» desde la última carga, la apertura que sigue vuelve a pedir lo reciente, porque el servidor pudo haber guardado la respuesta antes de enterarse (CU-014). Se descartó pedirlo en cada apertura (un `GET` de más sin que haga falta casi nunca).
+  - **Ids del servidor**: `fin` trae `id` e `id_pregunta`, y los mensajes del panel pasan a llevar el id de la base. `combinarMensajes()` une por id y ordena, así que lo que llega por el stream y lo que llega del historial no se repite aunque se pidan en cualquier orden.
+  - **Páginas anteriores**: un centinela arriba de la conversación (`IntersectionObserver`) pide la página que sigue con el cursor `next`. De ese cursor solo se usa la query, como en reseñas: nunca se le pide nada a un origen que venga de la red (se mandarían las cookies de sesión). Al agregar mensajes arriba se compensa la altura nueva para que lo que se estaba leyendo no salte. El observador se rehace con cada cambio de mensajes, para seguir pidiendo si una página no alcanza a llenar el panel.
+  - **Si falla**: el panel muestra el error traducido por su código y un botón «Reintentar». Si fue la primera carga, la próxima apertura también reintenta.
+  - **Bienvenida local**: con el historial cargado y vacío, saludo con el nombre y tres sugerencias; no se llama al modelo. Un clic en una sugerencia **la envía directo** (`enviar(texto)`) y no pisa lo que el usuario tenía escrito en el input.
+  - **Badge**: si `fin` se procesa con el panel cerrado, el FAB muestra un punto y un texto solo para lectores de pantalla («Hay una respuesta nueva»); abrir el panel lo apaga. El nombre accesible sigue empezando por el texto visible «Ask FilmAI» (WCAG 2.5.3).
+  - **Pie de página**: «Ask FilmAI» deja de apuntar a `/chat` (que daba 404 (Not Found)); `routes.askFilmAI` se retiró. Con sesión es un botón que abre el panel; sin sesión es un link a `/login?next=<página actual>`, para que el visitante entienda qué hace falta (el FAB, en ese caso, se ve deshabilitado).
+  - **Cierre de sesión**: además de la conversación se borran el historial, el cursor y el badge, y una carga que vuelve después del cierre se descarta.
+  - **Textos**: se sembraron en `claves-extra.csv` como `provisorio` las 8 claves nuevas (bienvenida, 3 sugerencias, cargando, reintentar, badge). **Pendiente**: que Marcos apruebe la copia, junto con las 4 filas provisorias del PR 6, para pasarlas a `aprobado` (7.1).
+- **Archivos afectados**: `frontend/lib/{chat,routes}.ts`, `frontend/components/{ChatProvider,Footer}.tsx`, `frontend/components/features/chat/{ChatPanel,ChatFab}.tsx`, `traducciones/claves-extra.csv`, `frontend/messages/`, `openspec/changes/chatbot/`. Tests: `frontend/tests/{chat-sse,chat-provider,chat-ui,footer}.test.ts(x)`, `frontend/e2e/chat.spec.ts`.
+
 ## 06/11/2026 — Panel del chat en el frontend (PR 6 del chatbot)
 
 - **Fecha**: 06/11/2026

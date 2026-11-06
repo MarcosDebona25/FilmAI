@@ -280,14 +280,14 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 - [ ] 7.1 Copy: curate the 22 `chatbot` rows of `traducciones/claves.csv`, add
       cancel/error/status keys, approve with Marcos, seed; `npm run i18n:check`
-- [ ] 7.2 History on open, older pages on scroll up; local welcome with first
+- [x] 7.2 History on open, older pages on scroll up; local welcome with first
       name and suggestions
-- [ ] 7.3 Badge when an answer ends with the panel closed
-- [ ] 7.4 «Ask FilmAI» (Home, footer) opens the panel; retire
+- [x] 7.3 Badge when an answer ends with the panel closed
+- [x] 7.4 «Ask FilmAI» (Home, footer) opens the panel; retire
       `routes.askFilmAI`; update the 404 and tests that pointed to `/chat`
-- [ ] 7.5 Playwright with a canned `text/event-stream`: send, stream, cards,
+- [x] 7.5 Playwright with a canned `text/event-stream`: send, stream, cards,
       cancel, keyboard-only flow, mobile bottom sheet
-- [ ] 7.6 `vercel-quality` pass on the panel
+- [x] 7.6 `vercel-quality` pass on the panel
 
 ## Phase 8: Closing (PR 8)
 

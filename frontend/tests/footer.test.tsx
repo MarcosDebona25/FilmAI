@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { routes } from "@/lib/routes";
 import en from "@/messages/en/common.json";
 import es from "@/messages/es/common.json";
-import { render, screen, within } from "./render";
+import { fireEvent, render, screen, within } from "./render";
 
 const path = vi.hoisted(() => ({ current: "/terms" }));
 const account = vi.hoisted(() => ({
@@ -20,11 +20,14 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/AccountProvider", () => ({
   useAccount: () => account,
 }));
+const chat = vi.hoisted(() => ({ habilitado: false, abrir: vi.fn() }));
+vi.mock("@/components/ChatProvider", () => ({ useChat: () => chat }));
 
 beforeEach(() => {
   path.current = "/terms";
   account.perfil = null;
   account.cargando = false;
+  chat.habilitado = false;
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -38,6 +41,7 @@ const links = (container: HTMLElement) =>
 describe("footer del canvas", () => {
   it("con sesión: columnas, idioma hacia Preferencias y avisos legales", () => {
     account.perfil = { nombre: "Juan" };
+    chat.habilitado = true;
     render(<Footer />, { locale: "en" });
     const footer = screen.getByRole("contentinfo");
     const found = links(footer);
@@ -50,12 +54,12 @@ describe("footer del canvas", () => {
     expect(found[en.nav.main.profile]).toHaveAttribute("href", routes.profile);
     expect(found[en.nav.main.settings]).toHaveAttribute("href", routes.settings);
     expect(found[en.nav.main.terms]).toHaveAttribute("href", routes.terms);
-    // El chatbot aún no existe: el enlace está, aunque hoy lleve a un 404 (Not Found).
-    expect(
-      screen
-        .getAllByRole("link", { name: en.footer.main.askFilmAI })
-        .map((l) => l.getAttribute("href"))
-    ).toEqual([routes.askFilmAI, routes.askFilmAI]);
+    // Con sesión «Ask FilmAI» es un botón que abre el panel, no un enlace.
+    expect(screen.queryByRole("link", { name: en.footer.main.askFilmAI })).toBeNull();
+    const botones = screen.getAllByRole("button", { name: en.footer.main.askFilmAI });
+    expect(botones).toHaveLength(2);
+    fireEvent.click(botones[0]);
+    expect(chat.abrir).toHaveBeenCalledOnce();
 
     const language = en.footer.main.languageLink.replace("{language}", "English");
     expect(screen.getAllByRole("link", { name: language })).toHaveLength(2);
@@ -85,7 +89,12 @@ describe("footer del canvas", () => {
     const logIn = within(footer).getAllByRole("link", { name: es.nav.account.logIn });
     expect(logIn).toHaveLength(1);
     expect(logIn[0].closest(".md\\:flex")).not.toBeNull();
-    expect(screen.getAllByRole("link", { name: es.footer.main.askFilmAI })).toHaveLength(2);
+    // Sin sesión lleva al login y vuelve a esta página.
+    const askFilmAI = screen.getAllByRole("link", { name: es.footer.main.askFilmAI });
+    expect(askFilmAI).toHaveLength(2);
+    for (const link of askFilmAI)
+      expect(link).toHaveAttribute("href", `${routes.login}?next=%2Fterms`);
+    expect(screen.queryByRole("button", { name: es.footer.main.askFilmAI })).toBeNull();
     expect(within(footer).getAllByRole("radiogroup").length).toBeGreaterThan(0);
     expect(within(footer).queryByRole("link", { name: /Preferencias\./ })).toBeNull();
   });

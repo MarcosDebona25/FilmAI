@@ -3,12 +3,16 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/lib/api";
-import type { EventoChat } from "@/lib/chat";
+import type { EventoChat, MensajeChat } from "@/lib/chat";
 
 const cuenta = vi.hoisted(() => ({ perfil: { pk: 1 } as object | null }));
 vi.mock("@/components/AccountProvider", () => ({ useAccount: () => cuenta }));
 
-const chat = vi.hoisted(() => ({ enviarMensaje: vi.fn(), prepararChat: vi.fn() }));
+const chat = vi.hoisted(() => ({
+  enviarMensaje: vi.fn(),
+  prepararChat: vi.fn(),
+  cargarHistorial: vi.fn(),
+}));
 vi.mock("@/lib/chat", async (original) => ({ ...(await original()), ...chat }));
 
 import { ChatProvider, useChat } from "@/components/ChatProvider";
@@ -69,6 +73,7 @@ describe("ChatProvider: un turno del chat", () => {
     stream = streamControlado();
     chat.enviarMensaje.mockImplementation(stream.generar);
     chat.prepararChat.mockResolvedValue(undefined);
+    chat.cargarHistorial.mockResolvedValue({ mensajes: [], next: null });
   });
 
   /** Escribe la pregunta y la envía, como el input. */
@@ -212,6 +217,8 @@ describe("ChatProvider: un turno del chat", () => {
 describe("ChatProvider: abrir el panel", () => {
   beforeEach(() => {
     chat.prepararChat.mockResolvedValue(undefined);
+    chat.cargarHistorial.mockReset();
+    chat.cargarHistorial.mockResolvedValue({ mensajes: [], next: null });
   });
 
   it("cada apertura pide preparar el modelo, sin esperar la respuesta", () => {
@@ -232,5 +239,182 @@ describe("ChatProvider: abrir el panel", () => {
     act(() => result.current.abrir());
     expect(result.current.abierto).toBe(false);
     expect(chat.prepararChat).not.toHaveBeenCalled();
+  });
+});
+
+const pregunta = (id: number, texto: string): MensajeChat => ({ id, rol: "usuario", texto });
+const respuesta = (id: number, texto: string): MensajeChat => ({
+  id,
+  rol: "asistente",
+  texto,
+  tarjetas: [],
+});
+
+describe("ChatProvider: historial", () => {
+  beforeEach(() => {
+    cuenta.perfil = { pk: 1 };
+    chat.prepararChat.mockResolvedValue(undefined);
+    chat.cargarHistorial.mockReset();
+    chat.cargarHistorial.mockResolvedValue({ mensajes: [], next: null });
+  });
+
+  it("la primera apertura lo carga y las siguientes no lo piden otra vez", async () => {
+    chat.cargarHistorial.mockResolvedValue({
+      mensajes: [pregunta(1, "hola"), respuesta(2, "Hola")],
+      next: "http://api/api/chat/messages/?cursor=abc",
+    });
+    const { result } = renderHook(useChat, { wrapper });
+    expect(result.current.historial.estado).toBe("sin-cargar");
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.estado).toBe("listo"));
+    expect(result.current.mensajes.map((m) => m.id)).toEqual([1, 2]);
+    expect(result.current.historial.next).toContain("cursor=abc");
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    expect(chat.cargarHistorial).toHaveBeenCalledTimes(1);
+  });
+
+  it("cargarAnteriores agrega arriba con el cursor y no pide dos páginas a la vez", async () => {
+    chat.cargarHistorial
+      .mockResolvedValueOnce({
+        mensajes: [pregunta(3, "tres"), respuesta(4, "cuatro")],
+        next: "c1",
+      })
+      .mockResolvedValueOnce({ mensajes: [pregunta(1, "uno"), respuesta(2, "dos")], next: null });
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.next).toBe("c1"));
+    act(() => {
+      result.current.cargarAnteriores();
+      result.current.cargarAnteriores();
+    });
+    await waitFor(() => expect(result.current.mensajes).toHaveLength(4));
+    expect(chat.cargarHistorial).toHaveBeenCalledTimes(2);
+    expect(chat.cargarHistorial).toHaveBeenLastCalledWith("c1");
+    expect(result.current.mensajes.map((m) => m.id)).toEqual([1, 2, 3, 4]);
+    expect(result.current.historial.next).toBeNull();
+  });
+
+  it("si falla la primera carga muestra el código y reintenta al volver a abrir", async () => {
+    chat.cargarHistorial
+      .mockRejectedValueOnce(new ApiError(500, { code: "server_error" }))
+      .mockResolvedValueOnce({ mensajes: [pregunta(1, "hola")], next: null });
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.estado).toBe("error"));
+    expect(result.current.historial.error).toEqual({ code: "server_error", params: {} });
+    act(() => result.current.reintentarHistorial());
+    await waitFor(() => expect(result.current.historial.estado).toBe("listo"));
+    expect(result.current.historial.error).toBeNull();
+    expect(result.current.mensajes).toHaveLength(1);
+  });
+
+  it("los mensajes de un turno llevan el id del servidor y no se repiten al recargar", async () => {
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.estado).toBe("listo"));
+    act(() => result.current.setBorrador("¿Qué veo?"));
+    act(() => result.current.enviar());
+    act(() => {
+      stream.empujar({ tipo: "texto", delta: "Moon" });
+      stream.empujar({ tipo: "fin", id: 8, id_pregunta: 7 });
+    });
+    await waitFor(() => expect(result.current.mensajes).toHaveLength(2));
+    expect(result.current.mensajes.map((m) => m.id)).toEqual([7, 8]);
+
+    // Un cancel deja pendiente recargar lo reciente: el servidor ya los tiene.
+    chat.cargarHistorial.mockResolvedValue({
+      mensajes: [pregunta(7, "¿Qué veo?"), respuesta(8, "Moon")],
+      next: null,
+    });
+    act(() => result.current.setBorrador("otra"));
+    act(() => result.current.enviar());
+    act(() => result.current.cancelar());
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    await waitFor(() => expect(chat.cargarHistorial).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.historial.estado).toBe("listo"));
+    expect(result.current.mensajes.map((m) => m.id)).toEqual([7, 8]);
+  });
+
+  it("sin cancelar no vuelve a pedir lo reciente en cada apertura", async () => {
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.estado).toBe("listo"));
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    expect(chat.cargarHistorial).toHaveBeenCalledTimes(1);
+  });
+
+  it("una sugerencia se envía directo y no toca el borrador", () => {
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.setBorrador("a medio escribir"));
+    act(() => result.current.enviar("Algo corto para esta noche"));
+    expect(chat.enviarMensaje).toHaveBeenCalledWith(
+      "Algo corto para esta noche",
+      expect.any(AbortSignal)
+    );
+    expect(result.current.borrador).toBe("a medio escribir");
+  });
+});
+
+describe("ChatProvider: respuesta nueva sin leer", () => {
+  beforeEach(() => {
+    cuenta.perfil = { pk: 1 };
+    chat.prepararChat.mockResolvedValue(undefined);
+    chat.cargarHistorial.mockReset();
+    chat.cargarHistorial.mockResolvedValue({ mensajes: [], next: null });
+  });
+
+  it("fin con el panel cerrado enciende el badge y abrir lo apaga", async () => {
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    act(() => result.current.setBorrador("hola"));
+    act(() => result.current.enviar());
+    act(() => result.current.cerrar());
+    act(() => {
+      stream.empujar({ tipo: "texto", delta: "Hola" });
+      stream.empujar(FIN);
+    });
+    await waitFor(() => expect(result.current.noLeido).toBe(true));
+    act(() => result.current.abrir());
+    expect(result.current.noLeido).toBe(false);
+  });
+
+  it("fin con el panel abierto no lo enciende", async () => {
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    act(() => result.current.setBorrador("hola"));
+    act(() => result.current.enviar());
+    act(() => stream.empujar(FIN));
+    await waitFor(() => expect(result.current.mensajes).toHaveLength(2));
+    expect(result.current.noLeido).toBe(false);
+  });
+
+  it("al cerrar la sesión se borran la conversación, el historial y el badge", async () => {
+    chat.cargarHistorial.mockResolvedValue({ mensajes: [pregunta(1, "hola")], next: "c1" });
+    const { result, rerender } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.mensajes).toHaveLength(1));
+    cuenta.perfil = null;
+    rerender();
+    await waitFor(() => expect(result.current.mensajes).toEqual([]));
+    expect(result.current.historial.estado).toBe("sin-cargar");
+    expect(result.current.noLeido).toBe(false);
+    // Otra persona que entra después vuelve a cargar su propio historial.
+    cuenta.perfil = { pk: 2 };
+    rerender();
+    act(() => result.current.abrir());
+    await waitFor(() => expect(chat.cargarHistorial).toHaveBeenCalledTimes(2));
   });
 });
