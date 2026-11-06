@@ -652,9 +652,20 @@
       "greeting": "¡Hola, {name}! Contame qué tenés ganas de ver y te recomiendo según lo que calificaste.",
       "suggestionsLabel": "Sugerencias",
       "suggestions": {
+        "similar": "Algo parecido a lo que mejor califiqué",
+        "fromLists": "Algo de mis listas para ver hoy",
+        "different": "Algo distinto a lo que suelo ver",
+        "unseenClassic": "Un clásico que todavía no vi",
         "short": "Algo corto para esta noche",
-        "similar": "Parecido a Interstellar",
-        "series": "Una serie para maratonear"
+        "series": "Una serie para maratonear",
+        "family": "Una película para ver en familia",
+        "comedy": "Una comedia para despejarme",
+        "thriller": "Un thriller que me atrape",
+        "miniseries": "Una miniserie para el fin de semana",
+        "popular": "Lo más popular del momento",
+        "hiddenGem": "Una joya poco conocida",
+        "acclaimed": "Algo muy bien reseñado",
+        "animated": "Una película animada"
       }
     },
     "history": {

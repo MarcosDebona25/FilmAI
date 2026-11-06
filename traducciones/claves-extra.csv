@@ -221,15 +221,26 @@ auth.newPassword.goToLogin,,label,,Ir a iniciar sesión,Go to log in,aprobado
 auth.newPassword.invalidTitle,,error,,El enlace no es válido,The link is invalid,aprobado
 auth.newPassword.invalidDescription,,error,,Los enlaces de restablecimiento son válidos durante 1 hora o hasta que se usen. Podés pedir uno nuevo desde «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión.,Reset links are valid for 1 hour or until they are used. You can request a new one from “Forgot your password?” on the login screen.,aprobado
 common.review.moderatedNotice,,label,,"Esta reseña fue moderada, así que no podés editar ni borrar su texto.","This review was moderated, so you can’t edit or delete its text.",aprobado
-chat.status.cancelled,,status,,Solicitud cancelada,Request canceled,provisorio
-chat.input.counter,,label,"count,max","{count, number}/{max, number}","{count, number}/{max, number}",provisorio
-errors.codes.chat_unavailable,chat_unavailable,error,,No podemos procesar tu solicitud. Intentá más tarde.,We can’t process your request right now. Try again later.,provisorio
-errors.codes.chat_request_in_progress,chat_request_in_progress,error,,Ya hay una respuesta en curso. Esperá a que termine para enviar otra pregunta.,An answer is already in progress. Wait for it to finish before sending another question.,provisorio
-chat.welcome.greeting,,label,name,"¡Hola, {name}! Contame qué tenés ganas de ver y te recomiendo según lo que calificaste.","Hi, {name}! Tell me what you feel like watching and I’ll recommend something based on what you’ve rated.",provisorio
-chat.welcome.suggestionsLabel,,label,,Sugerencias,Suggestions,provisorio
-chat.welcome.suggestions.short,,label,,Algo corto para esta noche,Something short for tonight,provisorio
-chat.welcome.suggestions.similar,,label,,Parecido a Interstellar,Similar to Interstellar,provisorio
-chat.welcome.suggestions.series,,label,,Una serie para maratonear,A TV show to binge,provisorio
-chat.history.loading,,status,,Cargando la conversación…,Loading the conversation…,provisorio
-chat.history.retry,,label,,Reintentar,Retry,provisorio
-chat.fab.unread,,status,,Hay una respuesta nueva,New answer waiting,provisorio
+chat.status.cancelled,,status,,Solicitud cancelada,Request canceled,aprobado
+chat.input.counter,,label,"count,max","{count, number}/{max, number}","{count, number}/{max, number}",aprobado
+errors.codes.chat_unavailable,chat_unavailable,error,,No podemos procesar tu solicitud. Intentá más tarde.,We can’t process your request right now. Try again later.,aprobado
+errors.codes.chat_request_in_progress,chat_request_in_progress,error,,Ya hay una respuesta en curso. Esperá a que termine para enviar otra pregunta.,An answer is already in progress. Wait for it to finish before sending another question.,aprobado
+chat.welcome.greeting,,label,name,"¡Hola, {name}! Contame qué tenés ganas de ver y te recomiendo según lo que calificaste.","Hi, {name}! Tell me what you feel like watching and I’ll recommend something based on what you’ve rated.",aprobado
+chat.welcome.suggestionsLabel,,label,,Sugerencias,Suggestions,aprobado
+chat.welcome.suggestions.similar,,label,,Algo parecido a lo que mejor califiqué,Something like my top-rated titles,aprobado
+chat.welcome.suggestions.fromLists,,label,,Algo de mis listas para ver hoy,Something from my lists to watch today,aprobado
+chat.welcome.suggestions.different,,label,,Algo distinto a lo que suelo ver,Something different from what I usually watch,aprobado
+chat.welcome.suggestions.unseenClassic,,label,,Un clásico que todavía no vi,A classic I haven’t seen yet,aprobado
+chat.welcome.suggestions.short,,label,,Algo corto para esta noche,Something short for tonight,aprobado
+chat.welcome.suggestions.series,,label,,Una serie para maratonear,A TV show to binge,aprobado
+chat.welcome.suggestions.family,,label,,Una película para ver en familia,A movie to watch with the family,aprobado
+chat.welcome.suggestions.comedy,,label,,Una comedia para despejarme,A comedy to unwind,aprobado
+chat.welcome.suggestions.thriller,,label,,Un thriller que me atrape,A thriller that keeps me hooked,aprobado
+chat.welcome.suggestions.miniseries,,label,,Una miniserie para el fin de semana,A miniseries for the weekend,aprobado
+chat.welcome.suggestions.popular,,label,,Lo más popular del momento,What’s popular right now,aprobado
+chat.welcome.suggestions.hiddenGem,,label,,Una joya poco conocida,A hidden gem,aprobado
+chat.welcome.suggestions.acclaimed,,label,,Algo muy bien reseñado,Something highly acclaimed,aprobado
+chat.welcome.suggestions.animated,,label,,Una película animada,An animated movie,aprobado
+chat.history.loading,,status,,Cargando la conversación…,Loading the conversation…,aprobado
+chat.history.retry,,label,,Reintentar,Retry,aprobado
+chat.fab.unread,,status,,Hay una respuesta nueva,New answer waiting,aprobado

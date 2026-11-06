@@ -652,9 +652,20 @@
       "greeting": "Hi, {name}! Tell me what you feel like watching and I’ll recommend something based on what you’ve rated.",
       "suggestionsLabel": "Suggestions",
       "suggestions": {
+        "similar": "Something like my top-rated titles",
+        "fromLists": "Something from my lists to watch today",
+        "different": "Something different from what I usually watch",
+        "unseenClassic": "A classic I haven’t seen yet",
         "short": "Something short for tonight",
-        "similar": "Similar to Interstellar",
-        "series": "A TV show to binge"
+        "series": "A TV show to binge",
+        "family": "A movie to watch with the family",
+        "comedy": "A comedy to unwind",
+        "thriller": "A thriller that keeps me hooked",
+        "miniseries": "A miniseries for the weekend",
+        "popular": "What’s popular right now",
+        "hiddenGem": "A hidden gem",
+        "acclaimed": "Something highly acclaimed",
+        "animated": "An animated movie"
       }
     },
     "history": {

@@ -176,8 +176,12 @@ test.describe("historial, bienvenida y badge", () => {
     await botonFlotante(page).click();
     const panel = page.getByRole("dialog", { name: "FilmAI Assistant" });
     await expect(panel.getByText(/Hi, Juan! Tell me what you feel like watching/)).toBeVisible();
-    await panel.getByRole("button", { name: "A TV show to binge" }).click();
-    await expect.poll(() => enviado).toBe("A TV show to binge");
+    // Las sugerencias se sortean al abrir: son tres y se elige la primera, sea cual sea.
+    const sugerencias = panel.getByRole("list", { name: "Suggestions" }).getByRole("button");
+    await expect(sugerencias).toHaveCount(3);
+    const texto = (await sugerencias.first().textContent()) ?? "";
+    await sugerencias.first().click();
+    await expect.poll(() => enviado).toBe(texto);
     await expect(panel.getByText("Moon", { exact: true })).toBeVisible();
     await expect(panel.getByRole("list", { name: "Suggestions" })).toHaveCount(0);
   });

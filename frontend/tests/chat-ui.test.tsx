@@ -241,12 +241,43 @@ describe("el chat en pantalla", () => {
     it("un clic en una sugerencia la envía y la bienvenida desaparece", async () => {
       const usuario = await abrir();
       respuesta([]);
-      await usuario.click(await screen.findByRole("button", { name: "Una serie para maratonear" }));
-      expect(chat.enviarMensaje).toHaveBeenCalledWith(
-        "Una serie para maratonear",
-        expect.any(AbortSignal)
-      );
+      const sugerencias = await screen.findByRole("list", { name: "Sugerencias" });
+      const [primera] = within(sugerencias).getAllByRole("button");
+      const texto = primera.textContent ?? "";
+      await usuario.click(primera);
+      expect(chat.enviarMensaje).toHaveBeenCalledWith(texto, expect.any(AbortSignal));
       expect(screen.queryByRole("list", { name: "Sugerencias" })).toBeNull();
+    });
+
+    it("cada vez que se abre el panel sortea otras sugerencias: una personal y dos generales", async () => {
+      // El primer render usa un conjunto fijo; los dos sorteos de acá dan otros dos distintos.
+      const random = vi.spyOn(Math, "random");
+      random.mockReturnValue(0.999);
+      const usuario = await abrir();
+      const nombres = () =>
+        within(screen.getByRole("list", { name: "Sugerencias" }))
+          .getAllByRole("button")
+          .map((boton) => boton.textContent);
+      await screen.findByRole("list", { name: "Sugerencias" });
+      await waitFor(() =>
+        expect(nombres()).toEqual([
+          "Un clásico que todavía no vi",
+          "Una película animada",
+          "Algo corto para esta noche",
+        ])
+      );
+      // jsdom no traduce Escape en el evento `cancel` del <dialog>: se dispara a mano.
+      fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+      random.mockReturnValue(0.5);
+      await usuario.click(screen.getByRole("button", { name: "Preguntale a FilmAI" }));
+      await waitFor(() =>
+        expect(nombres()).toEqual([
+          "Algo distinto a lo que suelo ver",
+          "Una miniserie para el fin de semana",
+          "Algo corto para esta noche",
+        ])
+      );
+      random.mockRestore();
     });
 
     it("con historial no hay bienvenida y se muestra la conversación en orden", async () => {
