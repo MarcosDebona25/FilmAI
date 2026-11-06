@@ -257,7 +257,10 @@ be detected reliably; the panel's footer asks not to share personal data.
 1. **Role and scope**: films, series and the user's own history; anything else
    is declined kindly in one sentence.
 2. **Anchoring**: only name titles returned by a tool in this conversation;
-   call `mostrar_tarjetas` with at most 3; never recommend «Vistas».
+   call `mostrar_tarjetas` with at most 3; never recommend «Vistas». Runtime
+   goes for every title or none: listings come with `duracion: null`, so when
+   the user asks about length the model calls `detalle` (06/11/2026, correction
+   to PR 3).
 3. **Language**: the prompt names the language to answer in («respondé en
    español» / «reply in English»), placed last. `chatbot/idioma.py` detects it
    from the user's message with a word-list heuristic; if it cannot be told, the
