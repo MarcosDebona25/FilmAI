@@ -170,14 +170,20 @@ The personal context MUST be read by SQL for each message: liked (rating ≥ 7, 
 
 ### Requirement: Language of the turn and of the prose
 
-The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming, and every tool, card and status of the turn MUST use it. The system prompt MUST tell the model to write in the language of the user's message, falling back to the turn language. A language change during a request MUST apply from the next message.
+The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming, and every tool, card and status of the turn MUST use it. The backend MUST detect the language of the user's message and the system prompt MUST name it as the language to write in, falling back to the turn language when the message does not tell it (a title alone, «ok»). A language change during a request MUST apply from the next message.
 
 #### Scenario: Interface in English, message in Spanish
 
 - GIVEN a user whose account language is `en`
 - WHEN they write «algo como Interstellar»
 - THEN TMDB is queried in English and the cards show English titles
-- AND the system prompt carries `en` as the fallback language
+- AND the system prompt tells the model to answer in Spanish
+
+#### Scenario: Profile and history in Spanish, message in English
+
+- GIVEN a user whose reviews and previous messages are in Spanish
+- WHEN they write «Something like Arrival, but lighter»
+- THEN the system prompt tells the model to reply in English
 
 ### Requirement: Bounded turn
 

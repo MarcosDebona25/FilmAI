@@ -15,6 +15,7 @@ Vista SSE (PR 5) ⏳          transmite los eventos y guarda el turno
 orquestador.py              habla con el modelo y conecta todo lo de abajo
   ├─▶ contexto.py            ¿qué le gusta a este usuario?
   ├─▶ anonimizar.py          saca nombres y correos antes de enviar
+  ├─▶ idioma.py              ¿en qué idioma escribió el mensaje?
   ├─▶ prompts.py             las instrucciones del modelo
   ├─▶ llm.py                 habla con DeepSeek
   └─▶ tools/ ejecutar()      el modelo pidió una herramienta (por puente.py)
@@ -40,6 +41,7 @@ porque usa la clave de `.env`.
 | `puente.py` | `en_hilo`: el único paso de código async a código común |
 | `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |
 | `prompts.py` | Las instrucciones del modelo |
+| `idioma.py` | `detectar_idioma()`: en qué idioma responder, según el mensaje |
 | `management/commands/chatear.py` | Hablar con el bot desde la terminal |
 | `contexto.py` | Arma el perfil del usuario desde la base |
 | `anonimizar.py` | Limpia datos personales de lo que va al proveedor |

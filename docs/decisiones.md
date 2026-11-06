@@ -5,6 +5,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 06/11/2026 — El chatbot respondía en español a mensajes en inglés (corrección al PR 3)
+
+- **Fecha**: 06/11/2026
+- **Corrección al Motor**: el PR 3 es de Gonza. Esta corrección la hizo Marcos con su aval, y queda registrada acá como él pidió para todo cambio a su parte.
+- **Descripción**: con `chatear --idioma en` y el mensaje «Something like Arrival, but lighter», la respuesta salía en español. El prompt pedía «respondé en el idioma del mensaje del usuario», pero el modelo (`deepseek-flash`) no lo cumplía. Lo que se probó contra DeepSeek:
+  - **Mover la regla al final del system, en español y en inglés, nombrando el perfil y el historial**: siguió en español (6 de 6).
+  - **Un mensaje `system` extra después del del usuario**: siguió en español.
+  - **Sin historial**: siguió en español. **Sin historial ni perfil**: respondió en inglés. El que más pesa es el perfil, que trae las reseñas del usuario en español.
+  - **Nombrar el idioma («Reply in English.»)**: en inglés las 3 veces, con perfil e historial completos.
+- **Lo que se cambió**: `chatbot/idioma.py` detecta el idioma del mensaje (`detectar_idioma()`, `"es"`, `"en"` o `None`) y el prompt lo nombra al final («respondé en español» / «reply in English»). Sin señal suficiente (un título suelto, «ok»), usa el idioma del turno. Las tools y las tarjetas siguen en el idioma del turno, como pide la decisión del 09/10/2026, que no cambia.
+- **Por qué una heurística y no una librería**: con dos idiomas alcanza con contar palabras comunes de cada uno, más `ñ`, `¿`, `¡` y las tildes. Es determinista, se puede testear y no suma dependencias. Cada palabra cuenta una vez, para que un título en inglés dentro de un pedido en español («algo como The Lord of the Rings») no lo dé vuelta.
+- **Verificado contra DeepSeek (06/11/2026)**: inglés con interfaz en inglés y perfil en español, dos veces en inglés; inglés con interfaz en español, en inglés; español con interfaz en inglés, en español; español con interfaz en español, en español.
+- **Archivos afectados**: `backend/chatbot/{idioma,prompts,orquestador}.py`, `backend/chatbot/README.md`, `openspec/changes/chatbot/design.md`, `openspec/changes/chatbot/specs/chat-api/spec.md`. Tests: `backend/chatbot/tests_idioma.py`, `backend/chatbot/tests_orquestador.py`.
+
 ## 06/11/2026 — Persistencia e historial del chatbot (PR 4)
 
 - **Fecha**: 06/11/2026

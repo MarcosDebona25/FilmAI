@@ -27,7 +27,7 @@ from chatbot.llm import (
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.orquestador import responder
 from chatbot.prompts import armar_sistema
-from chatbot.tools import FUNCIONES
+from chatbot.tools import FUNCIONES, ContextoTurno
 from usuarios.factories import UsuarioFactory
 
 
@@ -248,12 +248,28 @@ class LoQueRecibeElModeloTests(BaseOrquestador):
             usuario=self.usuario, produccion=produccion, valor=9
         )
 
-        await self.correr([["Hola"]], idioma="en")
+        # «Moon» no dice en qué idioma escribió: vale el del turno.
+        await self.correr([["Hola"]], texto="Moon", idioma="en")
 
         sistema = self.mensajes_del_primer_pedido()[0]
         self.assertEqual(sistema["role"], "system")
         self.assertIn("Arrival (9)", sistema["content"])
-        self.assertIn("`en`", sistema["content"])
+        self.assertIn("reply in English", sistema["content"])
+
+    async def test_la_prosa_sigue_al_mensaje_y_las_tools_al_turno(self):
+        # Interfaz en español, mensaje en inglés: el texto va en inglés, pero las
+        # tools (y con ellas las tarjetas) siguen en el idioma del turno.
+        with patch(
+            "chatbot.orquestador.ContextoTurno.para", wraps=ContextoTurno.para
+        ) as para:
+            await self.correr(
+                [["Hi"]], texto="Something like Arrival, but lighter", idioma="es"
+            )
+
+        self.assertIn(
+            "reply in English", self.mensajes_del_primer_pedido()[0]["content"]
+        )
+        self.assertEqual(para.call_args.args[1], "es")
 
     async def test_el_mensaje_actual_va_anonimizado_y_ultimo(self):
         await self.correr([["Hola"]], texto="soy Juan Perez, mail j@x.com")
@@ -328,6 +344,18 @@ class ReglasDelPromptTests(SimpleTestCase):
     def test_el_estilo_cambia_con_el_idioma(self):
         self.assertIn("voseo", armar_sistema("", [], "es"))
         self.assertNotIn("voseo", armar_sistema("", [], "en"))
+
+    def test_el_idioma_se_nombra_al_final_del_sistema(self):
+        # «Respondé en el idioma del mensaje» perdía contra un perfil y un historial
+        # en español. Nombrado y al final, el modelo lo cumple.
+        sistema = armar_sistema("Le gustó: Moon", [], "en")
+
+        self.assertTrue(
+            sistema.split("\n\n")[-1].startswith("Language: reply in English")
+        )
+
+    def test_en_espanol_tambien_se_nombra(self):
+        self.assertIn("respondé en español", armar_sistema("", [], "es"))
 
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))
