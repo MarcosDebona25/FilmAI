@@ -94,7 +94,7 @@ export async function* leerEventos(cuerpo: ReadableStream<Uint8Array>): AsyncGen
     while (true) {
       const { value, done } = await lector.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true }).replaceAll("\r\n", "\n");
+      buffer = (buffer + decoder.decode(value, { stream: true })).replaceAll("\r\n", "\n");
       let corte: number;
       while ((corte = buffer.indexOf("\n\n")) !== -1) {
         const evento = parsearFrame(buffer.slice(0, corte));

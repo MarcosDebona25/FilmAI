@@ -103,6 +103,7 @@ export function ChatPanel() {
       <div
         ref={conversacionRef}
         role="log"
+        aria-live="off"
         aria-label={t("panel.conversation")}
         className="flex flex-1 flex-col gap-[1.125rem] overflow-y-auto overscroll-contain p-[1.125rem] md:gap-[1.375rem] md:p-[1.375rem]"
       >

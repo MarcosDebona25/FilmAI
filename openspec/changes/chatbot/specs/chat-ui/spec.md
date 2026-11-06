@@ -8,7 +8,7 @@ The floating chat of the frontend (B-04, CU-013, CU-014; doc 04 §3.1 and canvas
 
 ### Requirement: One chat, available everywhere
 
-The chat state MUST live in a provider in the root layout so it survives navigation. The FAB MUST be on every screen with the chat, disabled without a session, and its accessible name MUST be its visible text («Ask FilmAI»; WCAG 2.5.3, 06/11/2026). Choosing a card MUST close the panel so the title page is visible; the conversation stays. «Ask FilmAI» in the Home and the footer MUST open the panel instead of navigating.
+The chat state MUST live in a provider in the root layout so it survives navigation. The FAB MUST be on every screen with the chat, disabled without a session, and its accessible name MUST be its visible text («Ask FilmAI»; WCAG 2.5.3, 06/11/2026). Choosing a card MUST close the panel so the title page is visible; the conversation stays. The footer's «Ask FilmAI» link is wired to the panel in PR 7; until then it keeps navigating to `/chat`, which does not exist (28/10/2026).
 
 #### Scenario: Navigating with the panel open
 

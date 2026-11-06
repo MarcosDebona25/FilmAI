@@ -69,6 +69,16 @@ describe("leerEventos: el parser SSE", () => {
     expect(eventos).toEqual([{ tipo: "texto", delta: "a" }]);
   });
 
+  it("no pierde el frame si el \\r\\n queda partido entre dos pedazos", async () => {
+    const completo = frame("texto", { delta: "a" }).replaceAll("\n", "\r\n");
+    // El corte cae entre el `\r` y el `\n` de la línea en blanco que cierra el frame.
+    const corte = completo.indexOf("\r\n\r\n") + 3;
+    const eventos = await todos(
+      leerEventos(cuerpo([completo.slice(0, corte), completo.slice(corte)]))
+    );
+    expect(eventos).toEqual([{ tipo: "texto", delta: "a" }]);
+  });
+
   it("entrega las tarjetas y el error con su código", async () => {
     const tarjeta = {
       id_tmdb: 157336,

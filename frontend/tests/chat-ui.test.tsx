@@ -161,6 +161,8 @@ describe("el chat en pantalla", () => {
     };
     const { container } = render(<Chat />);
     await usuario.click(screen.getByRole("button", { name: "Preguntale a FilmAI" }));
+    // `role="log"` anuncia por su cuenta: se anula para que el aviso sea único.
+    expect(screen.getByRole("log")).toHaveAttribute("aria-live", "off");
     await usuario.keyboard("Algo{Enter}");
     const region = container.querySelector('[aria-live="polite"]')!;
     const cambios: string[] = [];
