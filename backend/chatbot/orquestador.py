@@ -17,6 +17,7 @@ import logging
 from chatbot.anonimizar import CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
+from chatbot.idioma import detectar_idioma
 from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
@@ -54,8 +55,11 @@ def _preparar(chat, texto, idioma):
     """
     chat = Chat.objects.select_related("usuario").get(pk=chat.pk)
     usuario = chat.usuario
+    # La prosa sigue al idioma del mensaje; las tools y las tarjetas, al del turno.
     sistema = armar_sistema(
-        armar_perfil(usuario), chat.contexto.get("ya_recomendados", []), idioma
+        armar_perfil(usuario),
+        chat.contexto.get("ya_recomendados", []),
+        detectar_idioma(texto) or idioma,
     )
     mensajes = [
         {"role": "system", "content": sistema},
