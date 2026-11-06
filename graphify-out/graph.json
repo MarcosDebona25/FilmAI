@@ -43533,7 +43533,7 @@
       "file_type": "code",
       "norm_label": "usechat()",
       "source_file": "frontend/components/ChatProvider.tsx",
-      "source_location": "L361"
+      "source_location": "L392"
     },
     {
       "id": "frontend_components_features_chat_chatbubble_burbujausuario",
@@ -139730,7 +139730,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/ChatProvider.tsx",
-      "source_location": "L185",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -139742,7 +139742,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/ChatProvider.tsx",
-      "source_location": "L200",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -139754,7 +139754,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/ChatProvider.tsx",
-      "source_location": "L205",
+      "source_location": "L214",
       "weight": 1.0
     },
     {
@@ -139766,7 +139766,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/ChatProvider.tsx",
-      "source_location": "L242",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -139778,7 +139778,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/ChatProvider.tsx",
-      "source_location": "L285",
+      "source_location": "L310",
       "weight": 1.0
     },
     {
@@ -218826,7 +218826,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/ChatProvider.tsx",
-      "source_location": "L361",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -292123,5 +292123,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "bd505d475e07e3b15a0198a94a3baf77fe7aa314"
+  "built_at_commit": "d6b9c8f97a011c51e04150142385e600ee41f26c"
 }

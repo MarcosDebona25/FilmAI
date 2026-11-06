@@ -339,6 +339,73 @@ describe("ChatProvider: historial", () => {
     expect(result.current.mensajes.map((m) => m.id)).toEqual([7, 8]);
   });
 
+  it("si falla el refresco tras un cancel, Reintentar pide lo reciente y no la página vieja", async () => {
+    chat.enviarMensaje.mockImplementation(streamControlado().generar);
+    chat.cargarHistorial.mockResolvedValueOnce({ mensajes: [pregunta(3, "tres")], next: "c1" });
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.next).toBe("c1"));
+    act(() => result.current.setBorrador("otra"));
+    act(() => result.current.enviar());
+    act(() => result.current.cancelar());
+    act(() => result.current.cerrar());
+
+    chat.cargarHistorial.mockRejectedValueOnce(new ApiError(500, { code: "server_error" }));
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.error?.code).toBe("server_error"));
+
+    chat.cargarHistorial.mockResolvedValueOnce({
+      mensajes: [pregunta(3, "tres"), pregunta(5, "otra"), respuesta(6, "Moon")],
+      next: "c1",
+    });
+    act(() => result.current.reintentarHistorial());
+    await waitFor(() => expect(result.current.historial.error).toBeNull());
+    expect(chat.cargarHistorial).toHaveBeenLastCalledWith(null);
+    expect(result.current.mensajes.map((m) => m.id)).toEqual([3, 5, 6]);
+  });
+
+  it("si al abrir vuelve una página vieja, el refresco tras un cancel corre después", async () => {
+    chat.enviarMensaje.mockImplementation(streamControlado().generar);
+    chat.cargarHistorial.mockResolvedValueOnce({ mensajes: [pregunta(3, "tres")], next: "c1" });
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.next).toBe("c1"));
+
+    let devolverVieja: (pagina: { mensajes: MensajeChat[]; next: null }) => void = () => {};
+    chat.cargarHistorial.mockReturnValueOnce(new Promise((listo) => (devolverVieja = listo)));
+    act(() => result.current.cargarAnteriores());
+    act(() => result.current.setBorrador("otra"));
+    act(() => result.current.enviar());
+    act(() => result.current.cancelar());
+    act(() => result.current.cerrar());
+    chat.cargarHistorial.mockResolvedValueOnce({
+      mensajes: [pregunta(5, "otra"), respuesta(6, "Moon")],
+      next: null,
+    });
+    act(() => result.current.abrir());
+    expect(chat.cargarHistorial).toHaveBeenCalledTimes(2);
+
+    await act(async () => devolverVieja({ mensajes: [pregunta(1, "uno")], next: null }));
+    await waitFor(() => expect(chat.cargarHistorial).toHaveBeenCalledTimes(3));
+    expect(chat.cargarHistorial).toHaveBeenLastCalledWith(null);
+    await waitFor(() => expect(result.current.mensajes.map((m) => m.id)).toEqual([1, 3, 5, 6]));
+  });
+
+  it("el error de una página vieja no reaparece al volver a abrir", async () => {
+    chat.cargarHistorial
+      .mockResolvedValueOnce({ mensajes: [pregunta(3, "tres")], next: "c1" })
+      .mockRejectedValueOnce(new ApiError(500, { code: "server_error" }));
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.next).toBe("c1"));
+    act(() => result.current.cargarAnteriores());
+    await waitFor(() => expect(result.current.historial.error?.code).toBe("server_error"));
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    expect(result.current.historial.error).toBeNull();
+    expect(chat.cargarHistorial).toHaveBeenCalledTimes(2);
+  });
+
   it("sin cancelar no vuelve a pedir lo reciente en cada apertura", async () => {
     const { result } = renderHook(useChat, { wrapper });
     act(() => result.current.abrir());

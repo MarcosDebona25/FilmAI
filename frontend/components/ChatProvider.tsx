@@ -128,6 +128,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   /** Cuenta las sesiones: una carga que vuelve después de cerrar sesión se descarta. */
   const sesionRef = useRef(0);
   const cargandoRef = useRef(false);
+  /** Qué pedido falló por última vez: «Reintentar» repite ese y no otro. */
+  const fallaronAnterioresRef = useRef(false);
+  /**
+   * Una apertura quiso refrescar lo reciente mientras volvía una página vieja:
+   * el refresco corre cuando esa carga termina, en vez de perderse.
+   */
+  const refrescoPendienteRef = useRef(false);
+  /** `cargar` se llama a sí misma para correr el refresco pendiente. */
+  const cargarRef = useRef<(anteriores: boolean) => Promise<void>>(async () => {});
 
   const actualizarHistorial = useCallback((cambio: Partial<HistorialChat>) => {
     historialRef.current = { ...historialRef.current, ...cambio };
@@ -233,6 +242,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const sesion = sesionRef.current;
       cargandoRef.current = true;
       const primera = !cargadoRef.current;
+      // El refresco tras un cancel se da por hecho recién cuando arranca.
+      if (!anteriores) recargarTrasCancelarRef.current = false;
       actualizarHistorial(
         anteriores
           ? { cargandoAnteriores: true, error: null }
@@ -251,6 +262,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         });
       } catch (error) {
         if (sesion !== sesionRef.current) return;
+        fallaronAnterioresRef.current = anteriores;
+        // Si falló el refresco tras un cancel, la próxima apertura lo vuelve a pedir.
+        if (!anteriores && !primera) recargarTrasCancelarRef.current = true;
         actualizarHistorial({
           estado: cargadoRef.current ? "listo" : "error",
           cargandoAnteriores: false,
@@ -260,11 +274,20 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               : { code: "unknown", params: {} },
         });
       } finally {
-        if (sesion === sesionRef.current) cargandoRef.current = false;
+        if (sesion === sesionRef.current) {
+          cargandoRef.current = false;
+          const pendiente = refrescoPendienteRef.current;
+          refrescoPendienteRef.current = false;
+          if (pendiente && anteriores) void cargarRef.current(false);
+        }
       }
     },
     [actualizarHistorial]
   );
+
+  useEffect(() => {
+    cargarRef.current = cargar;
+  }, [cargar]);
 
   const cargarAnteriores = useCallback(() => {
     const { next, estado } = historialRef.current;
@@ -273,7 +296,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [cargar]);
 
   const reintentarHistorial = useCallback(() => {
-    void cargar(cargadoRef.current);
+    // La primera carga fallida o el refresco tras un cancel piden lo reciente;
+    // solo una página vieja fallida vuelve a pedir la anterior.
+    void cargar(cargadoRef.current && fallaronAnterioresRef.current);
   }, [cargar]);
 
   const abrir = useCallback(() => {
@@ -284,10 +309,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     // Sin `await`: el modelo carga mientras el usuario escribe (6.3b).
     void prepararChat();
     if (!cargadoRef.current || recargarTrasCancelarRef.current) {
-      recargarTrasCancelarRef.current = false;
-      void cargar(false);
+      // Si hay una página vieja en vuelo, `cargar` la descartaría: queda pendiente.
+      if (cargandoRef.current) refrescoPendienteRef.current = true;
+      else void cargar(false);
+    } else if (historialRef.current.error) {
+      // El aviso de una página vieja que falló no reaparece en cada apertura.
+      actualizarHistorial({ error: null });
     }
-  }, [habilitado, cargar]);
+  }, [habilitado, cargar, actualizarHistorial]);
 
   const cerrar = useCallback(() => {
     abiertoRef.current = false;
@@ -305,6 +334,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     cargadoRef.current = false;
     cargandoRef.current = false;
     recargarTrasCancelarRef.current = false;
+    refrescoPendienteRef.current = false;
+    fallaronAnterioresRef.current = false;
     historialRef.current = HISTORIAL_INICIAL;
     setHistorial(HISTORIAL_INICIAL);
     setNoLeido(false);
