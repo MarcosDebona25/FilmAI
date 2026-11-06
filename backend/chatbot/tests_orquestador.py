@@ -381,6 +381,18 @@ class ReglasDelPromptTests(SimpleTestCase):
     def test_en_espanol_tambien_se_nombra(self):
         self.assertIn("respondé en español", armar_sistema("", [], "es"))
 
+    def test_la_duracion_va_para_todos_o_para_ninguno(self):
+        # Los listados de TMDB no traen `runtime`: sin esta regla, el modelo daba la
+        # duración del título que venía de la base y callaba la del otro.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("dala para todos los títulos", sistema)
+        self.assertIn(
+            "consultala con `detalle` para cada título que no la traiga", sistema
+        )
+        # Las series casi nunca la tienen: callarla sería repetir el problema.
+        self.assertIn("decí que de ese título no la tenés", sistema)
+
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))
 

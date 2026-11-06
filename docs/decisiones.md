@@ -15,6 +15,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 - **Pendiente para el Motor**: «Algo como Arrival pero más liviano», en español y sin historial, usó 4 o 5 vueltas de búsqueda; con 5 el turno termina en `ErrorDelTurno` (pasó en 2 de 4 corridas). No depende de este cambio: lo que recibe el modelo es igual. Conviene revisar el tope de vueltas o empujar al modelo a responder antes.
 - **Archivos afectados**: `backend/chatbot/orquestador.py`. Tests: `backend/chatbot/tests_orquestador.py`.
 
+## 06/11/2026 — Duración para todos los títulos o para ninguno (corrección al PR 3)
+
+- **Fecha**: 06/11/2026
+- **Corrección al Motor**: el PR 3 es de Gonza. Esta corrección la hizo Marcos con su aval, y queda registrada acá como él pidió para todo cambio a su parte.
+- **Descripción**: a «una de ciencia ficción tranquila, no muy larga», el bot dio la duración de un título y no la del otro. Los listados de TMDB (`buscar_por_titulo`, `descubrir`, `similares_a`) no traen `runtime`, así que esos títulos llegan con `duracion: null`; los de `buscar_semantico` vienen de la base y la traen. El prompt suma una regla: si menciona la duración, la da para todos los títulos; si el usuario pidió algo sobre la duración, la consulta con `detalle` solo para los títulos que no la traen; si no, no la menciona. Si `detalle` tampoco la trae (pasa seguido con series), dice que de ese título no la tiene. Esto último y lo de no repetir `detalle` salieron de una sugerencia de PR-Agent en el #172.
+- **Por qué en el prompt y no en el código**: completar `runtime` en cada listado costaría un pedido a TMDB por título en cada búsqueda, aunque nadie haya preguntado por la duración. Con la regla, el costo aparece solo cuando hace falta.
+- **Verificado contra DeepSeek (06/11/2026)**: «ciencia ficción tranquila, no muy larga» y «algo como Interestelar pero más corto», con la duración en los 3 títulos (12,2 s y 10,6 s, por la vuelta de `detalle`); «recomendame un thriller», sin duraciones ni búsquedas de más (5,3 s).
+- **Archivos afectados**: `backend/chatbot/prompts.py`, `openspec/changes/chatbot/design.md`. Tests: `backend/chatbot/tests_orquestador.py`.
+
 ## 06/11/2026 — El chatbot respondía en español a mensajes en inglés (corrección al PR 3)
 
 - **Fecha**: 06/11/2026
