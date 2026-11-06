@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793935105.2245557,
-    "seen": 1793935184.6975157,
-    "ast_hash": "11cf2883ad57099e4b6766cc49eff54e",
+    "mtime": 1793935979.1406946,
+    "seen": 1793936069.959679,
+    "ast_hash": "80411207b4b36153b48548dcbbb89631",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4512,9 +4512,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/orquestador.py": {
-    "mtime": 1793935064.6399052,
-    "seen": 1793935184.6364613,
-    "ast_hash": "29b2735149e4354b9462edfacc23b393",
+    "mtime": 1793935567.2743864,
+    "seen": 1793936069.897454,
+    "ast_hash": "b0bd06c9aba2d578deca1f7f03360c76",
     "semantic_hash": ""
   },
   "backend/chatbot/prompts.py": {
@@ -4530,9 +4530,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_orquestador.py": {
-    "mtime": 1793935098.1548278,
-    "seen": 1793935184.6372898,
-    "ast_hash": "fb5f615e4fea0a81142f208146ed0818",
+    "mtime": 1793935979.1406946,
+    "seen": 1793936069.898304,
+    "ast_hash": "f03c1a25ea0916fcc3326df1dfe3d020",
     "semantic_hash": ""
   },
   "frontend/lib/fondos.ts": {
