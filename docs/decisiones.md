@@ -23,6 +23,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
   - **Markdown**: `react-markdown` + `rehype-sanitize`, con links e imágenes como texto. Una imagen Markdown del modelo haría que el navegador pida una URL elegida por prompt injection.
 - **Divergencias con el canvas** (para ajustarlo): Cancelar en el botón de enviar, el contador desde 400 caracteres y el panel modal en escritorio.
 - **Archivos afectados**: `frontend/lib/{api,chat}.ts`, `frontend/components/ChatProvider.tsx`, `frontend/components/features/chat/`, `frontend/app/layout.tsx`, `frontend/components/features/HomeView.tsx`, `traducciones/{claves,claves-extra}.csv`, `frontend/messages/`, `docs/04_*.md`, `openspec/changes/chatbot/`. Tests: `frontend/tests/chat-{sse,markdown,provider,ui}.test.ts(x)`, `frontend/e2e/chat.spec.ts`.
+## 06/11/2026 — Pendiente: Brevo como respaldo de Resend y topes de correo más generosos
+
+- **Fecha**: 06/11/2026
+- **Estado**: pendiente. **No hay código escrito todavía.** La cantidad de los topes se evalúa y se discute más adelante.
+- **Qué queda anotado**:
+  1. **Brevo como respaldo de Resend.** Ante cualquier imposibilidad de entregar un correo con Resend (cuota agotada, caída del servicio, clave revocada), el envío tiene que salir por Brevo. El respaldo cubre la entrega, no solo el fin de la cuota.
+  2. **Topes de correo más generosos.** Subir los límites que hoy disparan correos (`registro_ip`, los `reenvio_*` y los `recuperar_contrasena_*`), con la cantidad exacta a definir en una discusión posterior.
+- **Por qué**: hoy todo el correo sale por `ResendBackend` (`backend/filmai/email_backends.py`), un único backend. El plan gratis de Resend son 100 correos por día. Con los topes actuales, una sola IP puede generar hasta ~240 correos diarios por `registro_ip`, otros ~240 por `reenvio_ip` y otros ~240 por `recuperar_contrasena_ip`: un solo abusador agota la cuota en dos o tres horas y, desde ahí, los usuarios legítimos no reciben la confirmación ni el reset. Los topes son por IP y por correo destino (`usuarios/throttles.py`), no globales: 6 usuarios desde 6 IPs distintas no se estorban, pero una camada en la misma red (facultad, oficina, CGNAT) comparte los 10/hora.
+- **Por qué Brevo y no otro**: el plan gratis da 300 correos por día y 9.000 por mes, el mayor cupo diario entre los que tienen API transaccional (3× Resend), con SDK de Python y envío por API o SMTP. Sumado a Resend deja 400/día.
+- **Opciones descartadas, una línea cada una**: Amazon SES (sin techo real a US$0,10 por 1.000 correos, pero exige dominio, DKIM, salir del sandbox y manejar rebotes); Mailjet (200/día) y Mailtrap (150/día), con menos cupo que Brevo y otro panel que mantener; seguir solo con Resend, que deja sin correo cualquier caída o fin de cuota.
+- **Prerrequisito que no depende del proveedor**: hoy `DEFAULT_FROM_EMAIL` es `FilmAI <onboarding@resend.dev>` (`.env.example`), y ese remitente solo existe en Resend. Sin dominio propio verificado en los dos —SPF con los dos `include`, un DKIM por proveedor— el respaldo no puede enviar. Brevo además revisa y aprueba la cuenta antes de habilitar el envío, así que hay que crearla antes de necesitarla.
+- **Lo que implicaría, cuando se haga** (sin escribir nada ahora): un backend que recorra una lista de proveedores, como ya hace `LLM_PROVEEDORES` en `settings.py`; 429 (Too Many Requests), 5xx (errores del servidor) y timeout pasan al siguiente, y un 400 (Bad Request) no, porque la dirección no la acepta nadie; `email_validation.py` tiene que validar el backend nuevo (`:27` hoy solo mira `ResendBackend`); y `send_test_email.py` lee `RESEND_TEST_RECIPIENT` (`:31`) sin condición.
+- **Archivos afectados**: solo `docs/decisiones.md`. La implementación futura tocaría `backend/filmai/{email_backends,email_validation,settings}.py`, `.env.example`, los topes de `DEFAULT_THROTTLE_RATES` y sus tests.
+
 ## 06/11/2026 — Un «ya busco» antes de buscar no llega al usuario (corrección al PR 3)
 
 - **Fecha**: 06/11/2026
