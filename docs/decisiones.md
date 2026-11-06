@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 06/11/2026 — CI y PR-Agent desactivados hasta recuperar el beneficio estudiantil
+
+- **Fecha**: 06/11/2026
+- **Descripción**: el 06/11/2026, cerca de las 16:09 UTC, venció el cupón académico (GitHub Student Developer Pack) de la cuenta dueña del repo (`MarcosDebona25`). GitHub intentó cobrar el plan Pro y, como no había método de pago, bloqueó la cuenta. Desde las 16:20 UTC ningún job de Actions arranca («The job was not started because your account is locked due to a billing issue»). Tampoco arrancan los de Gonza, porque las Actions del repo se le cobran al dueño. No había deuda por uso de Actions: FilmAI es público y el descuento lo cubre. Marcos volvió a pedir el beneficio y falta que lo aprueben.
+- **Decisión**: se desactivan los workflows `CI` y `PR Review` con `gh workflow disable` (en el repo, sin commit y sin tocar `.github/workflows/`). Los jobs bloqueados no consumían minutos, pero dejaban una cruz roja y un correo de fallo en cada push. Ni `main` ni `develop` tienen protección de rama, así que los merges no quedan trabados.
+- **Mientras dure**: la única puerta es la verificación local, con los mismos pasos de `ci.yml`. En el backend, `ruff format --check`, `ruff check` y la suite completa en serie. En el frontend, Prettier, ESLint, `tsc`, Vitest, `npm run i18n:check` y Playwright de los specs tocados. Los resultados se anotan en la entrada del PR. No se relanzan ni se esperan corridas del CI. Así se mergearon el #176 y el #177.
+- **PR-Agent**: corre como workflow en los runners de GitHub, así que también queda apagado y los PRs no reciben revisión automática. La clave de DeepSeek no se ve afectada.
+- **Al recuperar el beneficio**: `gh workflow enable CI` y `gh workflow enable "PR Review"`, y quitar la nota temporal de la sección 8 de `AGENTS.md`.
+- **Archivos afectados**: `docs/decisiones.md` y `AGENTS.md`. Ninguno de código.
+
+---
+
 ## 06/11/2026 — Historial, badge y «Ask FilmAI» del chat (PR 7 del chatbot)
 
 - **Fecha**: 06/11/2026

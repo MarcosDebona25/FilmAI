@@ -63,6 +63,12 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 
 ## 8. Revisión de pull requests
 
+- **Temporal (desde el 06/11/2026)**: `CI` y `PR Review` están desactivados
+  (`gh workflow disable`) porque GitHub bloqueó Actions al vencer el beneficio
+  estudiantil de la cuenta dueña del repo. Hasta que se reactiven, la única
+  puerta es la verificación local, con los mismos pasos de `ci.yml`. No se
+  relanzan ni se esperan corridas del CI. Detalle en `docs/decisiones.md`
+  (06/11/2026).
 - **Revisión automática (reinstaurada el 18/10/2026)**: `.github/workflows/pr-review.yml` corre PR-Agent con DeepSeek V4.1 Flash vía la API de DeepSeek y comenta en cada PR. Es informativa, no bloquea ni aprueba; configuración en `.pr_agent.toml`. Lo que sigue describe las herramientas anteriores, desactivadas el 18/09/2026:
 - **Herramientas anteriores**: tanto AI Review como CodeRabbit fueron desactivados el 18/09/2026.
 - **AI Review**: Workflow eliminado (`.github/workflows/ai-review.yml`). Generaba un 93% de falsos positivos (comentarios que no detectaban bugs reales ni sugerían mejoras válidas). Los comentarios no tenían contexto del proyecto (convenciones de idioma, valores de configuración, arquitectura).
