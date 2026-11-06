@@ -136,11 +136,12 @@ async def _stream(turno):
         # cerraría antes del primer evento y las tools quedarían sin presupuesto.
         with contar_llamadas(ident=turno.ident):
             resultado = None
+            limite = asyncio.timeout(settings.LLM_TIMEOUT_SECONDS)
             try:
                 # El tope es de reloj, tools incluidas. Cubre el modelo y las tools;
                 # el guardado queda afuera, para que un turno que llegó justo no se
                 # corte a la mitad de escribir.
-                async with asyncio.timeout(settings.LLM_TIMEOUT_SECONDS):
+                async with limite:
                     async for evento in responder(
                         turno.chat, turno.texto, turno.idioma
                     ):
@@ -151,7 +152,13 @@ async def _stream(turno):
                         elif isinstance(evento, Texto):
                             yield frame("texto", {"delta": evento.delta})
             except TimeoutError:
-                logger.error("El turno superó los %s s", settings.LLM_TIMEOUT_SECONDS)
+                if limite.expired():
+                    logger.error(
+                        "El turno superó los %s s", settings.LLM_TIMEOUT_SECONDS
+                    )
+                else:
+                    # Un timeout propio de una tool o del socket, dentro del tope.
+                    logger.exception("Un timeout interno cortó el turno del chat")
                 yield frame_error()
                 return
             except ErrorDelTurno:
@@ -225,6 +232,7 @@ def _error(descripcion):
             ),
             403: _error("`permission_denied`: falta o falló el token CSRF."),
             409: _error("`chat_request_in_progress`: ya hay una respuesta en curso."),
+            415: _error("`unsupported_media_type`: el cuerpo no es JSON."),
             429: _error("`throttled`, con `retry_after_seconds` y `Retry-After`."),
         },
     ),

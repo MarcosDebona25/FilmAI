@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/views.py": {
-    "mtime": 1793977175.765114,
-    "seen": 1793977583.2911649,
-    "ast_hash": "45d6ed77e4d7a17231dfcf1516df9cab",
+    "mtime": 1793979219.3194036,
+    "seen": 1793979349.1386683,
+    "ast_hash": "11cb847025a738eac55631b5b781ff4c",
     "semantic_hash": ""
   },
   "backend/entrypoint.sh": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1793977331.2764492,
-    "seen": 1793977583.2931938,
-    "ast_hash": "ddd5b01aafffaf78e56df7483c2e361b",
+    "mtime": 1793979204.3778677,
+    "seen": 1793979349.2116797,
+    "ast_hash": "b263da5f3390f4329f8db0b2804b2958",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "contracts/openapi.yaml": {
-    "mtime": 1793977107.1191344,
-    "seen": 1793977583.2931504,
-    "ast_hash": "8e9c51c0f505ea0d0800304430906179",
+    "mtime": 1793979269.1377473,
+    "seen": 1793979349.2106483,
+    "ast_hash": "d2977017537ef753b1a375be591e6edd",
     "semantic_hash": ""
   },
   "backend/filmai/tests_contrato.py": {
@@ -4290,9 +4290,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/design.md": {
-    "mtime": 1793977157.08351,
-    "seen": 1793977583.293207,
-    "ast_hash": "7c9a689e225ff298b557cf192680d902",
+    "mtime": 1793979204.3697524,
+    "seen": 1793979349.2120142,
+    "ast_hash": "46f66f8cdb9f95b4843d1306400b20a4",
     "semantic_hash": ""
   },
   "openspec/changes/chatbot/proposal.md": {
@@ -4710,9 +4710,9 @@
     "semantic_hash": ""
   },
   "contracts/sse-chat.md": {
-    "mtime": 1793977129.5070975,
-    "seen": 1793977583.293155,
-    "ast_hash": "05c9cf61d0ae85f1cb33cfd1cd963dc0",
+    "mtime": 1793979204.3689716,
+    "seen": 1793979349.210652,
+    "ast_hash": "0e50a4432353b0a3d5533e74d098d2b8",
     "semantic_hash": ""
   }
 }

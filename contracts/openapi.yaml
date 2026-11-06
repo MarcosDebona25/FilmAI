@@ -1301,6 +1301,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: '`chat_request_in_progress`: ya hay una respuesta en curso.'
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: '`unsupported_media_type`: el cuerpo no es JSON.'
         '429':
           content:
             application/json:

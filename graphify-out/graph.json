@@ -3174,7 +3174,7 @@
       "file_type": "code",
       "norm_label": "mensajesview",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L232"
+      "source_location": "L240"
     },
     {
       "id": "backend_chatbot_views_negociacionsolojson",
@@ -15069,7 +15069,7 @@
       "file_type": "code",
       "norm_label": ".post()",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L252"
+      "source_location": "L260"
     },
     {
       "id": "backend_chatbot_tests_contexto_alcanceconversaciontests_limpiar",
@@ -26241,7 +26241,7 @@
       "file_type": "code",
       "norm_label": "_error()",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L191"
+      "source_location": "L198"
     },
     {
       "id": "backend_chatbot_views_guardar_y_soltar",
@@ -63515,7 +63515,7 @@
       "source_location": "L121"
     },
     {
-      "id": "backend_chatbot_views_rationale_192",
+      "id": "backend_chatbot_views_rationale_199",
       "label": "Una respuesta de error con el sobre `{code, params, errors}` de toda la API.",
       "_origin": "ast",
       "community": 261,
@@ -63523,10 +63523,10 @@
       "file_type": "rationale",
       "norm_label": "una respuesta de error con el sobre `{code, params, errors}` de toda la api.",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L192"
+      "source_location": "L199"
     },
     {
-      "id": "backend_chatbot_views_rationale_233",
+      "id": "backend_chatbot_views_rationale_241",
       "label": "`GET`: el historial. `POST`: una pregunta, con su respuesta en streaming. Son\u2026",
       "_origin": "ast",
       "community": 261,
@@ -63534,7 +63534,7 @@
       "file_type": "rationale",
       "norm_label": "`get`: el historial. `post`: una pregunta, con su respuesta en streaming. son...",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L233"
+      "source_location": "L241"
     },
     {
       "id": "backend_chatbot_views_rationale_37",
@@ -70834,7 +70834,7 @@
       "node_kind": "heading",
       "norm_label": "cancelar",
       "source_file": "contracts/sse-chat.md",
-      "source_location": "L73"
+      "source_location": "L74"
     },
     {
       "id": "contracts_sse_chat_contrato_del_stream_del_chat_post_api_chat_messages",
@@ -70858,7 +70858,7 @@
       "node_kind": "heading",
       "norm_label": "el stream",
       "source_file": "contracts/sse-chat.md",
-      "source_location": "L41"
+      "source_location": "L42"
     },
     {
       "id": "contracts_sse_chat_l\u00edmites",
@@ -70870,7 +70870,7 @@
       "node_kind": "heading",
       "norm_label": "limites",
       "source_file": "contracts/sse-chat.md",
-      "source_location": "L81"
+      "source_location": "L82"
     },
     {
       "id": "contracts_sse_chat_pedido",
@@ -130732,7 +130732,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L253",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
@@ -130744,7 +130744,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L261",
+      "source_location": "L269",
       "weight": 1.0
     },
     {
@@ -130756,7 +130756,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L263",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -130768,7 +130768,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L265",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -130780,7 +130780,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L268",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -130792,7 +130792,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L272",
+      "source_location": "L280",
       "weight": 1.0
     },
     {
@@ -130804,7 +130804,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L275",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -130816,7 +130816,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L286",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -130852,7 +130852,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L144",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -130864,7 +130864,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L150",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -130876,7 +130876,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L155",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -130888,7 +130888,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L173",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -130900,7 +130900,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L188",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -147472,7 +147472,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L199",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
@@ -217454,7 +217454,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L191",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -217465,7 +217465,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L232",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -221414,7 +221414,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "contracts/sse-chat.md",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -221425,7 +221425,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "contracts/sse-chat.md",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -221436,7 +221436,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "contracts/sse-chat.md",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -238247,7 +238247,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L232",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -252459,7 +252459,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L252",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -266048,25 +266048,25 @@
       "weight": 1.0
     },
     {
-      "source": "backend_chatbot_views_rationale_192",
+      "source": "backend_chatbot_views_rationale_199",
       "target": "backend_chatbot_views_error",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L192",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
-      "source": "backend_chatbot_views_rationale_233",
+      "source": "backend_chatbot_views_rationale_241",
       "target": "backend_chatbot_views_mensajesview",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L233",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -274994,7 +274994,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L173",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -275006,7 +275006,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L174",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -281749,7 +281749,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L253",
+      "source_location": "L261",
       "weight": 0.8
     },
     {
@@ -281760,7 +281760,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L257",
+      "source_location": "L265",
       "weight": 0.8
     },
     {
@@ -281771,7 +281771,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L265",
+      "source_location": "L273",
       "weight": 0.8
     },
     {
@@ -281782,7 +281782,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 0.8
     },
     {
@@ -281793,7 +281793,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L149",
+      "source_location": "L150",
       "weight": 0.8
     },
     {
@@ -281804,7 +281804,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L151",
+      "source_location": "L152",
       "weight": 0.8
     },
     {
@@ -281815,7 +281815,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/chatbot/views.py",
-      "source_location": "L157",
+      "source_location": "L164",
       "weight": 0.8
     },
     {
@@ -297391,5 +297391,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "bd505d475e07e3b15a0198a94a3baf77fe7aa314"
+  "built_at_commit": "2edf7c4fdd6e7b3c18d9b4b1bc0ddddee77eea87"
 }

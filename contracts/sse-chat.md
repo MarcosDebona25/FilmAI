@@ -34,6 +34,7 @@ Si el pedido se rechaza, la respuesta es JSON común con el sobre de errores
 | 401 (Unauthorized) | `session_revoked` | La cuenta se dio de baja y el JWT todavía no venció (igual que el resto de la API) |
 | 403 (Forbidden) | `permission_denied` | Falta o falló el token CSRF |
 | 409 (Conflict) | `chat_request_in_progress` | Ya hay una respuesta en curso para este chat |
+| 415 (Unsupported Media Type) | `unsupported_media_type` | El cuerpo no es JSON |
 | 429 (Too Many Requests) | `throttled` | Más de `CHAT_MENSAJES_POR_HORA` (20) mensajes en la hora; trae `retry_after_seconds` y el encabezado `Retry-After` |
 
 Un 400 y un 409 no gastan cupo de la hora. Un 429 devuelve el candado.
