@@ -12,7 +12,8 @@
   parámetro `api_key` (v3). La API key vive en las variables de entorno del
   backend (`.env`).
 - **Caché (C-02)**: TTL por endpoint — trending 6h, discover 6h, detalle 24h,
-  search 1h, plataformas (`watch_providers`) 12h. Key pattern
+  search 1h, plataformas (`watch_providers`) 12h; lo que usa el chatbot
+  (`recommendations`, `person_search`, `person_credits`) 24h. Key pattern
   `tmdb:{endpoint}:{params_hash}`.
 - **Rate limiting**: respetar límites, reintentos con backoff, timeout 5s
   (C-01). Consultas de detalle cacheadas para no duplicar llamadas (RNF #8).
@@ -133,8 +134,10 @@
 | GET    | `/discover/movie` | Descubrir películas por filtros (género, año, rating, etc.). |
 | GET    | `/discover/tv`    | Descubrir series por filtros.                                |
 
-> **Uso en FilmAI**: base de la herramienta `top_por_genero` y del
-> "Recomendado para ti" (Home, doc 04 sección 3.3).
+> **Uso en FilmAI**: base de la herramienta `descubrir` del chatbot y del
+> "Recomendado para ti" (Home, doc 04 sección 3.3). El filtro `duracion_max`
+> del cliente se traduce a `with_runtime.gte=1` y `with_runtime.lte`, y solo
+> se usa en películas (ver «Uso en FilmAI (tool calling)»).
 
 ## Find
 
@@ -243,7 +246,7 @@
 | GET    | `/search/keyword`    | Buscar keywords.                                                   |
 | GET    | `/search/movie`      | **Buscar películas por título** (herramienta `buscar_por_titulo`). |
 | GET    | `/search/multi`      | Búsqueda múltiple (películas, series y personas).                  |
-| GET    | `/search/person`     | Buscar personas.                                                   |
+| GET    | `/search/person`     | **Buscar personas** (herramienta `buscar_por_persona`).            |
 | GET    | `/search/tv`         | **Buscar series por título** (herramienta `buscar_por_titulo`).    |
 
 ## Trending
@@ -339,20 +342,26 @@
 
 ## Uso en FilmAI (tool calling)
 
-| Herramienta del LLM (B-02)           | Endpoint(s) de TMDB                                   |
-| :----------------------------------- | :---------------------------------------------------- |
-| `buscar_por_titulo(titulo, tipo)`    | `GET /search/movie`, `GET /search/tv`                 |
-| `descubrir(filtros, tipo, page)`     | `GET /discover/movie`, `GET /discover/tv`             |
-| `similares_a(id_tmdb, tipo)`         | `GET /movie/{id}/recommendations`, `GET /tv/{id}/recommendations` |
-| `buscar_por_persona(nombre, rol)`    | `GET /search/person`, `GET /person/{id}/combined_credits` |
-| `detalle(id_tmdb, tipo)`             | `GET /movie/{id}`, `GET /tv/{id}`                     |
-| `buscar_semantico(query)`            | No usa TMDB: pgvector sobre embeddings locales (B-06) |
-| `mis_listas()`                       | No usa TMDB: listas del usuario por SQL               |
-| `mostrar_tarjetas(ids)`              | No usa TMDB: valida ids del turno, hasta 3 tarjetas   |
-| Keywords para embeddings (C-04)      | `GET /movie/{id}/keywords`, `GET /tv/{id}/keywords`   |
+| Herramienta del LLM (B-02)                  | Método del cliente (C-01)                   | Endpoint(s) de TMDB                                   |
+| :------------------------------------------ | :------------------------------------------ | :---------------------------------------------------- |
+| `buscar_por_titulo(titulo, tipo?, anio?)`   | `search`                                    | `GET /search/movie`, `GET /search/tv`                 |
+| `descubrir(filtros)`                        | `discover`                                  | `GET /discover/movie`, `GET /discover/tv`             |
+| `similares_a(id_tmdb, tipo)`                | `get_recommendations`                       | `GET /movie/{id}/recommendations`, `GET /tv/{id}/recommendations` |
+| `buscar_por_persona(nombre, rol?)`          | `search_person`, `get_person_credits`       | `GET /search/person`, `GET /person/{id}/combined_credits` |
+| `detalle(id_tmdb, tipo)`                    | `get_movie_detail`, `get_tv_detail`         | `GET /movie/{id}`, `GET /tv/{id}`                     |
+| `buscar_semantico(consulta, filtros)`       | —                                           | No usa TMDB: pgvector sobre embeddings locales (B-06) |
+| `mis_listas(lista?)`                        | —                                           | No usa TMDB: listas del usuario por SQL               |
+| `mostrar_tarjetas(tarjetas)`                | —                                           | No usa TMDB: valida ids del turno, hasta 3 tarjetas   |
+| Keywords para embeddings (C-04)             | `get_keywords`                              | `GET /movie/{id}/keywords`, `GET /tv/{id}/keywords`   |
 
-`descubrir` generaliza el `top_por_genero` original. Todas las tools consultan
-TMDB en el idioma del turno (decisiones del 08/10/2026 y 09/10/2026).
+Los `filtros` de `descubrir` y `buscar_semantico` son los mismos: `generos`
+(nombres en inglés de TMDB; alcanza con uno), `tipo`, `anio_desde`,
+`anio_hasta`, `nota_minima` y `duracion_max` (minutos). Los esquemas están en
+`backend/chatbot/tools/esquemas.py`. `descubrir` generaliza el `top_por_genero`
+original. Todas las tools consultan TMDB en el idioma del turno (decisiones del
+08/10/2026 y 09/10/2026), y las tres llamadas nuevas pasan por la caché (24h). Lo que
+no sale de la caché cuenta para el tope de llamadas a TMDB del turno
+(`catalogo/presupuesto.py`).
 
 Tres comportamientos de la API verificados el 05/11/2026:
 
@@ -384,7 +393,8 @@ Tres comportamientos de la API verificados el 05/11/2026:
    Ollama. La generación es asíncrona: ningún endpoint de catálogo o detalle
    espera a Ollama.
 4. **Búsqueda semántica**: `buscar_semantico` consulta solo embeddings en
-   estado `ready` (pgvector). Las producciones sin embedding `ready` siguen
+   estado `ready` (pgvector): toma los 50 más cercanos y recién después
+   aplica los filtros en SQL (spec `openspec/specs/semantic-search/`). Las producciones sin embedding `ready` siguen
    siendo recuperables por las herramientas TMDB de la tabla anterior; si un
    resultado de TMDB es relevante, se materializa y encola (el corpus crece
    progresivamente con el uso).

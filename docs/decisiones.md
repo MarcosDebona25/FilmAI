@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 07/11/2026 — Chat: cierre de la mitad del Motor en los docs (tareas 8.3 y 8.4)
+
+- **Fecha**: 07/11/2026
+- **Descripción**: la mitad del Motor de las tareas 8.3 y 8.4 del SDD del chatbot. Solo documentación: no cambia código. Cada afirmación se contrastó con el código de `main` (merge del PR #179).
+  - **Doc 05, Módulo 5**: B-02 a B-06 pasan a ✅, cada una con sus archivos y pruebas reales. B-02 menciona el usuario entre lo que se anonimiza (antes decía solo correo, nombre y apellido). En B-03 se corrigió «vista async»: la vista es DRF y solo el stream es un generador async (decisión del PR 5). En B-06, «top 5–10» pasa a «hasta 10» y se suma la carga anticipada. Quedan anotados dos pendientes que ya estaban registrados: el comando de arranque con uvicorn al desplegar (B-03) y la corrida del backfill de Marcos (tarea 1.7, B-06).
+  - **Doc 05, estado de la interfaz**: la fila 3 (Home) y la 10 (Chatbot) ya no dicen que «Ask FilmAI» da 404 (Not Found). La 10 pasa a ✅ y anota cómo se resolvió lo que pedía fijar (sin página `/chat`, idioma de la respuesta, cambio de idioma durante una solicitud, tarjetas y errores) y las tres divergencias con el canvas que registró el PR 6. El resumen pasa a 11 secciones completas. En C-04b se sacó «sin B-06 el backfill termina en `failed`»; la fila sigue 🟡 por la notificación al administrador.
+  - **Doc 06**: ya tenía los tres endpoints nuevos (`/recommendations`, `/search/person`, `combined_credits`) y lo verificado contra TMDB el 05/11. Se sumaron los TTL de 24h de `recommendations`, `person_search` y `person_credits`; una columna con el método del cliente en la tabla de tools, y sus firmas reales (`descubrir(filtros)`, `buscar_semantico(consulta, filtros)`, `mis_listas(lista?)`, `mostrar_tarjetas(tarjetas)`); la nota de Discover, que todavía nombraba `top_por_genero`, y `/search/person` marcado como usado.
+  - **Spec `semantic-search`** a `openspec/specs/`, ajustada al código: `generar_vector` no reintenta un 4xx ni una respuesta sin vector, y no espera entre intentos; `modelo_cargado()` acepta `bge-m3` y `bge-m3:latest`; `hnsw.ef_search = 100` con `SET LOCAL`; la ampliación de géneros (`Science Fiction` ↔ `Sci-Fi & Fantasy`) es de la tool, no de `buscar_semantico`; `POST /api/chat/preparar/` con 401, 403 y 405, y un escenario de caché caída que igual responde 202 (Accepted); la clave `chatbot:carga_modelo`, el vencimiento de 60 s de la tarea encolada y `calentar_modelo` con 60 s, sin reintento y liberando la clave si falla; `extra_hosts` en backend y worker.
+  - **Spec `embedding-infrastructure`** (no estaba en el pedido, pero contradecía el código): el requisito del proveedor seguía exigiendo que `generar_vector` lanzara `NotImplementedError` hasta B-06, y el reclamo no contemplaba el vencimiento de `processing` (Q-09). Se actualizaron los dos y se sumó el escenario del reclamo abandonado.
+  - **Doc 04 (pedido por Marcos, aunque es de la mitad del Canal)**: quedaban tres restos del 404 (Not Found) de «Ask FilmAI». El Footer (§3) ahora dice que con sesión abre el panel y sin sesión lleva a `/login?next=…`; la Home (§5) aclara que no tiene botón propio porque el FAB reemplazó a la píldora hacia `/chat`; y la nota de §10 ya no da al chatbot por pendiente.
+  - **Lo que queda para el cierre (T6)**: `PRODUCT.md`, borrar `openspec/changes/chatbot/`, el golden set (8.1) y el veredicto del RNF #6 (8.2). En `tasks.md` solo se anotó qué mitad quedó hecha.
+- **Archivos afectados**: `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md`, `docs/06_TMDB_API_Referencia.md`, `openspec/specs/semantic-search/spec.md` (nuevo), `openspec/specs/embedding-infrastructure/spec.md`, `openspec/changes/chatbot/tasks.md`, `graphify-out/`.
+
+---
+
 ## 06/11/2026 — Issue #175: avatar centrado, registro sin saltos y correos sin franja amarilla
 
 - **Fecha**: 06/11/2026
