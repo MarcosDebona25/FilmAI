@@ -31,14 +31,18 @@ bcrypt>=4.0,<5.0
 resend>=2.0,<3.0
 
 # --- Redis ---
-redis>=5.2,<6.0
+# 6.4 es la mínima que pide kombu 5.7 para su transporte de Redis (07/11/2026).
+redis>=6.4,<7
 fakeredis>=2.0,<3.0
 
 # --- Tareas asincrónicas (Celery) ---
 celery>=5.3,<5.5
-# kombu 5.7 importa `packaging` en su transporte de Redis sin declararlo: sin esta
-# línea, una instalación limpia rompe todo `.delay()` (05/11/2026).
-packaging>=24,<27
+# kombu es el transporte de Celery. Su extra `[redis]` hace que pip respete lo que
+# pide para hablar con Redis (redis-py y `packaging`). Sin él, kombu quedaba en 5.7
+# con redis-py 5.3.1 y todo `.delay()` fallaba con VersionMismatch (07/11/2026).
+# No va como `celery[redis]`: el extra de Celery 5.4 pide redis-py < 6 y pip
+# bajaba Celery a 5.3.1 para cumplirlo.
+kombu[redis]>=5.7,<6
 
 # --- Chatbot ---
 # Cliente del proveedor del modelo: DeepSeek habla el mismo formato que OpenAI.

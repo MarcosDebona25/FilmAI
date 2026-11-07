@@ -134,8 +134,10 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
       `alpine/socat` pinned, `network_mode: host`, bind `172.17.0.1:11435`),
       profile `ollama` (pinned `ollama/ollama`, `mem_limit: 2g`, volume);
       `extra_hosts` on backend and worker; `.env.example` `OLLAMA_URL`
-- [ ] 1.7 Manual: both developers bring up the bridge and run the backfill;
-      record counts and time in `docs/decisiones.md`
+- [x] 1.7 Manual: both developers bring up the bridge and run the backfill;
+      record counts and time in `docs/decisiones.md` (Marcos 07/11/2026:
+      Docker Desktop needs no bridge; the run found and fixed the redis-py 5
+      pin that broke every `.delay()`)
 - [x] 1.7b Q-09 (doc 05): RED/GREEN expiry of the `processing` claim, with the
       deadline taken from the real times of 1.7
 - [x] 1.8 Explain: what an embedding is, cosine distance, why filters run after

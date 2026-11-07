@@ -5,6 +5,25 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 07/11/2026 — El encolado en Celery estaba roto (redis-py 5) y corrida del backfill de Marcos (tarea 1.7)
+
+- **Fecha**: 07/11/2026
+- **Descripción**: al correr el backfill de embeddings para la tarea 1.7 del chatbot, el primer `.delay()` falló con `VersionMismatch: Redis transport requires redis-py versions 6.1.0 or later. You have 5.3.1`.
+  - **Causa**: `requirements.txt` fijaba `redis>=5.2,<6.0` desde la Fundación (sin motivo anotado) e instalaba `celery` sin extras. Celery 5.4 acepta cualquier kombu menor que 6, así que pip instaló kombu 5.7, cuyo transporte de Redis pide `redis>=6.4` y `packaging` **en su extra `[redis]`**. Sin el extra, pip no los hace cumplir. Es el mismo problema que el `packaging` del 05/11/2026, que se había tapado agregando el paquete a mano. Con la imagen del 06/11/2026, ninguna tarea llegaba al worker: como el 05/11/2026 se decidió que un fallo del encolado no corte el pedido, las producciones nuevas quedaban en `pending` sin error visible.
+  - **Por qué no lo vio nadie**: los tests simulan `.delay()`, y el test del 05/11/2026 solo importa el transporte. kombu revisa la versión de redis-py recién al abrir el canal.
+  - **Arreglo**: se declara `kombu[redis]>=5.7,<6` y se sube a `redis>=6.4,<7`. La línea `packaging` se borra, porque ahora la trae el extra. Quedan Celery 5.4.0, kombu 5.7.0, redis-py 6.4.0 y `pip check` sin conflictos.
+  - **Descartado**: `celery[redis]`. El extra de Celery 5.4 pide redis-py menor que 6 y pip bajaba Celery a 5.3.1 para cumplirlo. Tampoco se fijó un kombu viejo que acepte redis-py 5: dejaba kombu atrasado y la línea de `packaging` a mano.
+  - **Test**: `test_redis_py_tiene_la_version_que_pide_kombu` llama al mismo chequeo que hace kombu al abrir el canal (`Channel._get_client`), sin conectarse. Con la imagen vieja falla con el error de arriba.
+- **Tarea 1.7, medición de Marcos (07/11/2026)**: Windows con 3,1 GB libres, Ollama 0.40.15 (solo CPU) y Docker Desktop 4.94. Partida: 581 producciones, 571 embeddings en `failed` y 2 en `pending`.
+  - **Puente**: con Docker Desktop no hace falta. `host.docker.internal:11434` llega directo al Ollama de Windows desde el backend y desde el worker. El perfil `ollama-windows` sigue siendo para Docker instalado dentro de WSL. Se agregó la variante a `.env.example`.
+  - **Carga en frío** de bge-m3: 5,3 s (Gonza midió 21,7 s con 730 MB libres). Con el modelo cargado, un texto corto como la consulta del chat tarda 149 ms.
+  - **Backfill por Celery** (`backfill_embeddings(limite=1000)`, worker con `--concurrency=2`): 573 de 573 en `ready`, sin fallos, en 600 s. Es 1,05 s por ficha.
+  - **Dónde se va el tiempo**: cada tarea tarda 2,2 s de media (p95 3,1 s), pero un vector del texto canónico real (579 caracteres de media) tarda 1,0 s en Ollama, medido de a uno. Los dos procesos del worker se esperan entre sí en Ollama, así que subir la concurrencia no acelera. Gonza midió 554 ms por ficha en su máquina. Ninguno de los dos tiempos afecta al chat: la consulta es corta y su presupuesto es de 3 s.
+- **Pendiente**: hay 8 producciones sin fila en `ProduccionEmbedding`, y el backfill no las ve porque solo recorre filas existentes. La fila se crea al final de `materializar()`. Si `_enriquecer` lanza un error que no es `TMDBNotFound`, la fila no se crea. 4 de las 8 son cascarones sin título y 4 se enriquecieron el 28/10/2026, pero algo falló después del `save()`.
+- **Archivos afectados**: `backend/requirements.txt`, `backend/catalogo/test_encolado_celery.py`, `.env.example`, `openspec/changes/chatbot/tasks.md`.
+
+---
+
 ## 06/11/2026 — Issue #175: avatar centrado, registro sin saltos y correos sin franja amarilla
 
 - **Fecha**: 06/11/2026
