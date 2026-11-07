@@ -95,6 +95,7 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
             "titulo": item["titulo"],
             "poster": item["poster"],
             "anio": item["anio"],
+            "nota_tmdb": item["nota_tmdb"],
         }
         publicado = {k: v for k, v in item.items() if k != "poster"}
         if clave in ctx.vistas:

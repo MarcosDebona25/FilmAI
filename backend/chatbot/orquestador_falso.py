@@ -26,6 +26,7 @@ GUION_BASICO: tuple[Evento, ...] = (
                 "titulo": "Moon",
                 "poster": None,
                 "anio": 2009,
+                "nota_tmdb": 7.6,
             }
         ],
     ),

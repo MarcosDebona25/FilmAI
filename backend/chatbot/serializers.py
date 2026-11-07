@@ -17,6 +17,14 @@ class TarjetaSerializer(serializers.Serializer):
     titulo = serializers.CharField()
     poster = serializers.CharField(allow_null=True)
     anio = serializers.IntegerField(allow_null=True)
+    # Opcional: las tarjetas guardadas antes del 07/11/2026 no lo traen. Con
+    # `allow_null`, DRF devuelve `None` cuando la clave falta en el diccionario.
+    nota_tmdb = serializers.FloatField(
+        required=False,
+        allow_null=True,
+        help_text="Promedio de TMDB con un decimal; null si no tiene o si la "
+        "tarjeta se guardó antes de que existiera el campo.",
+    )
 
 
 class MensajeSerializer(serializers.ModelSerializer):

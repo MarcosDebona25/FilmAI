@@ -64,7 +64,17 @@ class ContratoTests(SimpleTestCase):
         claves = set(get_type_hints(Tarjeta))
         resultado = GUION_BASICO[-1]
 
-        self.assertEqual(claves, {"id_tmdb", "tipo", "titulo", "poster", "anio"})
+        self.assertEqual(
+            claves, {"id_tmdb", "tipo", "titulo", "poster", "anio", "nota_tmdb"}
+        )
         for tarjeta in resultado.tarjetas:
             self.assertEqual(set(tarjeta), claves)
             self.assertIn(tarjeta["tipo"], ("movie", "tv"))
+
+    def test_nota_tmdb_es_la_unica_clave_opcional(self):
+        # Las tarjetas guardadas antes del 07/11/2026 no la traen: el contrato
+        # no puede exigirla. Las demás claves siguen siendo obligatorias.
+        self.assertEqual(Tarjeta.__optional_keys__, {"nota_tmdb"})
+        self.assertEqual(
+            Tarjeta.__required_keys__, {"id_tmdb", "tipo", "titulo", "poster", "anio"}
+        )

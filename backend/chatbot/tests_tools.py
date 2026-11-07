@@ -522,6 +522,7 @@ class MostrarTarjetasTests(BaseTools):
                     "titulo": "T1",
                     "poster": "/1.jpg",
                     "anio": 2009,
+                    "nota_tmdb": 7.6,
                 }
             ],
         )
