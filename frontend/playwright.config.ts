@@ -5,9 +5,16 @@ import { defineConfig } from "@playwright/test";
 const port = process.env.E2E_PORT ?? "3100";
 const origin = `http://127.0.0.1:${port}`;
 
+// En local, 2 workers: cada uno abre su Chromium contra un `next dev` que
+// compila al vuelo, y con más workers WSL se queda sin memoria y los tests
+// fallan por tiempo. Se cambia con E2E_WORKERS o con --workers. En CI queda
+// el valor por defecto de Playwright.
+const workers = process.env.CI ? undefined : Number(process.env.E2E_WORKERS ?? 2);
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  workers,
   use: {
     baseURL: origin,
     browserName: "chromium",
