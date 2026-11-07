@@ -110,7 +110,7 @@ data: <one line of JSON>
 |---|---|---|
 | `estado` | `{"code": "searching"}` | A tool starts running. The front translates the code («Buscando en el catálogo…»). |
 | `texto` | `{"delta": "..."}` | A piece of the answer. The front appends deltas in order. |
-| `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio"}]}` | Once, **after the save** and just before `fin`, possibly empty. `tipo` is `movie` or `tv`, as in the reviews API. A save failure yields `error` with no cards ever sent. |
+| `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio", "nota_tmdb"}]}` | Once, **after the save** and just before `fin`, possibly empty. `tipo` is `movie` or `tv`, as in the reviews API. A save failure yields `error` with no cards ever sent. |
 | `fin` | `{"id": <answer pk>, "id_pregunta": <user message pk>}` | The pair was saved. The only success terminator. |
 | `error` | `{"code", "params", "errors"}` | Terminal. Nothing was saved. |
 
