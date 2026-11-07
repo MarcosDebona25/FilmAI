@@ -5,6 +5,21 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 07/11/2026 — Chatbot: set dorado y `manage.py chatear --golden` (tareas 8.1 y código de 8.2)
+
+- **Fecha**: 07/11/2026
+- **Descripción**: el set dorado del chatbot y el comando que lo corre. Falta la corrida contra DeepSeek con thinking apagado y encendido, los tiempos y el veredicto (T5): eso va en otra entrada.
+  - **`backend/chatbot/golden.yaml`**: 14 preguntas. Cada una tiene `id`, `mensaje`, `idioma` (el del turno, `es` por defecto), `rnf6` (`simple`, menos de 5 s, o `agregacion`, menos de 15 s) y `espera`, lo que una persona revisa en la salida. Cubre: saludo, fuera de tema, un dato (duración de Interstellar), «mostrame» un título, `descubrir` con género y década, persona (Villeneuve), búsqueda semántica, «algo como Arrival pero más liviano», «para chicos» (el caso *About Time* contra *Paddington 2* del 28/10), un mensaje en portugués, uno en inglés con el turno en español, `mis_listas` e intento de inyección. `sin_filtros_de_mas` («Quiero ver algo de terror») muestra si el modelo agrega `tipo` o `nota_minima` sin que se los pidan.
+  - **Las expectativas se revisan a mano**: el comando no da un veredicto por pregunta. Las respuestas de un modelo cambian de una corrida a otra y casi ninguna expectativa se puede chequear con una regla; un «pasó» automático daría una confianza que no corresponde. Lo único que se compara solo es el tiempo contra RNF #6.
+  - **Portugués**: el producto escribe solo en español o en inglés, así que la expectativa es que entienda el pedido y responda en el idioma del turno.
+  - **`chatear --golden [ARCHIVO]`**: sin archivo usa `chatbot/golden.yaml`. Llama a `responder()` del orquestador real, sin HTTP. Por pregunta muestra el mensaje, la expectativa, los eventos (texto, `[buscando…]`, tarjetas), las tools que pidió el modelo con sus argumentos, y el tiempo hasta el primer texto y el total. Cierra con una tabla: primer texto, total y si cumple RNF #6. No guarda los turnos, así cada pregunta ve el mismo historial. Un turno que falla se anota como `error` y sigue con la siguiente. `--golden` y `--mensaje` no van juntos. El encabezado dice el modelo y si thinking está encendido; para comparar se corre dos veces, la segunda con `LLM_THINKING=true` (sin flag nueva: es lo que ya decía `design.md`).
+  - **Las tools se ven con un envoltorio del proveedor (`_Espia`)**: `responder()` solo entrega un `Estado` cuando busca, sin nombre ni argumentos. En vez de tocar `orquestador.py` o el contrato de `eventos.py`, el comando le pasa a `responder()` un proveedor que envuelve al real (`proveedor=`, que ya existía para los tests) e imprime las llamadas de cada `Vuelta`.
+  - **El archivo se valida al cargarlo** (`cargar_golden`): lista no vacía, campos conocidos, obligatorios presentes, `idioma` y `rnf6` válidos, `id` únicos. Se lee con `yaml.safe_load`. PyYAML ya venía con drf-spectacular; se declara en `requirements.txt` porque ahora se importa directo.
+- **Tests** (`chatbot/tests_chatear_golden.py`, con `ProveedorFalso`): el set del repo es válido, tiene entre 10 y 15 preguntas y cubre los casos pedidos; cada error de formato es un `CommandError`; la salida trae pregunta, expectativa y respuesta; muestra las tools con sus argumentos; mide primer texto y total; el resumen marca `cumple`, `excede` (con el reloj simulado) y `error`; sigue después de un turno que falla; no guarda mensajes; no se combina con `--mensaje`.
+- **Archivos afectados**: `backend/chatbot/golden.yaml` (nuevo), `backend/chatbot/management/commands/chatear.py`, `backend/chatbot/tests_chatear_golden.py` (nuevo), `backend/chatbot/README.md`, `backend/requirements.txt`, `openspec/changes/chatbot/tasks.md`.
+
+---
+
 ## 06/11/2026 — Issue #175: avatar centrado, registro sin saltos y correos sin franja amarilla
 
 - **Fecha**: 06/11/2026

@@ -46,6 +46,9 @@ openai>=3.46,<4
 # Servidor ASGI de desarrollo: el POST del chat transmite con SSE y WSGI no puede.
 # Reemplaza al `runserver` (basta tenerlo primero en INSTALLED_APPS).
 daphne>=4.2,<5
+# `manage.py chatear --golden` lee `chatbot/golden.yaml`. Ya venía con
+# drf-spectacular; se declara porque ahora el código lo importa directo.
+PyYAML>=6,<7
 
 # --- Búsqueda semántica (pgvector) ---
 # El submódulo `pgvector.django` aporta VectorField, HnswIndex y

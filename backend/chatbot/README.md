@@ -27,6 +27,8 @@ orquestador.py              habla con el modelo y conecta todo lo de abajo
 Entre la vista y el orquestador está el contrato de `eventos.py`; el del stream hacia el navegador, en `contracts/sse-chat.md`. Para probarlo
 sin la vista: `python manage.py chatear --usuario juanp`. Cada mensaje tiene costo,
 porque usa la clave de `.env`.
+Con `--golden` recorre el set dorado (`golden.yaml`) y mide los tiempos contra
+RNF #6.
 
 ## Qué hace cada archivo
 
@@ -44,7 +46,8 @@ porque usa la clave de `.env`.
 | `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |
 | `prompts.py` | Las instrucciones del modelo |
 | `idioma.py` | `detectar_idioma()`: en qué idioma responder, según el mensaje |
-| `management/commands/chatear.py` | Hablar con el bot desde la terminal |
+| `management/commands/chatear.py` | Hablar con el bot desde la terminal; con `--golden`, correr el set dorado |
+| `golden.yaml` | El set dorado: preguntas fijas, cada una con lo que se espera de la respuesta |
 | `contexto.py` | Arma el perfil del usuario desde la base |
 | `anonimizar.py` | Limpia datos personales de lo que va al proveedor |
 | `tools/__init__.py` | La puerta de las herramientas: `ejecutar()` |
