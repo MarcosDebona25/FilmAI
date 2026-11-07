@@ -143,7 +143,7 @@ Todas las pantallas autenticadas comparten:
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - "Buscar" click → página `/search` con el buscador.
-- **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», provisoriamente a un 404 hasta desarrollar el chatbot), Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1); en celular sin sesión no lleva la fila Log in, que está en la barra inferior (04/11/2026). No aparece en las pantallas de acceso.
+- **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», que con sesión abre el panel del chat y sin sesión lleva a `/login?next=<página actual>`, ver 3.1), Your library e Information, y una fila inferior con la atribución de TMDB y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1); en celular sin sesión no lleva la fila Log in, que está en la barra inferior (04/11/2026). No aparece en las pantallas de acceso.
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
 - **Barra inferior del celular** (`MobileTabs`, por debajo de 768 px, 04/11/2026): con sesión, Home, Search, Lists y Profile; sin sesión, Home, Search y Log in. Así Buscar se puede usar en celular con o sin cuenta. Sin sesión, el encabezado móvil muestra solo «Sign up». No aparece en las pantallas de acceso ni mientras se carga la cuenta.
 - **Contenedor y escala** (04/11/2026): todas las pantallas usan la utilidad `page-container` (tope de 85rem por debajo de 1440 px y 90rem desde ahí; margen de 1,25rem en celular, 2,5rem desde 768 px y `clamp(2.5rem, 3vw, 4rem)` desde 1440 px). La navbar, el contenido y el footer comparten el borde izquierdo. Desde 1440 px el `font-size` raíz crece con la pantalla: 16 px a 1440, unos 18 px a 1920 y un tope de 20,8 px desde 2560. Términos y Mis reseñas conservan su ancho de lectura.
@@ -203,7 +203,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 - Tendencias y Novedades muestran una página de TMDB (20 títulos); Recomendado, hasta 15. En «Todo», Recomendado y Novedades alternan película y serie.
 - Cada tarjeta lleva a la ficha: `/movie/[id]` o `/tv/[id]` (C-07). Calificación como «★ 8,5», nunca «X/10».
 - Sin sesión, al final de las filas: «¿Qué viste últimamente?» con «Registrarse» y «Ya tengo cuenta».
-- Con sesión, botón flotante «Ask FilmAI» hacia `/chat`, que responde 404 (Not Found) hasta que exista el chatbot (B-04).
+- La Home no tiene un botón propio para el chat: el FAB «Ask FilmAI», común a todas las pantallas salvo las de acceso, reemplazó a la píldora que llevaba a `/chat` (06/11/2026, B-04; ver 3.1).
 
 ### Secciones
 
@@ -1238,7 +1238,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 ## 10. Pantallas Definidas
 
-> Estado al 28/10/2026: la marca `[x]` indica que la pantalla está **definida/diseñada** en este documento. Todas están implementadas salvo el chatbot (sección 6.6), que sigue pendiente; el estado por pantalla está en `docs/05_Plan_de_Desarrollo.md`.
+> Estado al 07/11/2026: la marca `[x]` indica que la pantalla está **definida/diseñada** en este documento. Todas están implementadas; el chatbot (sección 6.6) se sumó el 06/11/2026. El estado por pantalla está en `docs/05_Plan_de_Desarrollo.md`.
 
 - [x] Home — Sección 5
 - [x] Buscar (página `/search`) — Sección 5b

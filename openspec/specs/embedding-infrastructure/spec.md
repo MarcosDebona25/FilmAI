@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Minimal Celery + pgvector plumbing that lets the catalog enqueue embedding work without blocking a request, with the actual provider left as a documented extension point. Advanced inside C-04a so that materialization has somewhere to enqueue to; the real provider (Ollama / `bge-m3`) and semantic retrieval are B-06.
+Minimal Celery + pgvector plumbing that lets the catalog enqueue embedding work without blocking a request, with the provider isolated in one function. Advanced inside C-04a so that materialization has somewhere to enqueue to; the real provider (Ollama / `bge-m3`) and semantic retrieval arrived with B-06 (04/11/2026) and are specified in `semantic-search`.
 
 ## Requirements
 
@@ -54,7 +54,7 @@ The system MUST store the SHA-256 of that text as `source_hash` and the producin
 Celery guarantees at-least-once delivery, so `generar_embedding` MUST tolerate being delivered twice or to two workers at once. It MUST:
 
 - no-op when the row is already `ready` with the same `source_hash` and `model_version`;
-- claim the row with a conditional atomic `UPDATE` from `pending`/`failed` to `processing`, and no-op when that update affects zero rows;
+- claim the row with a conditional atomic `UPDATE` from `pending`/`failed`, or from a `processing` claim older than 5 minutes, to `processing`, renewing `fecha_actualizacion`, and no-op when that update affects zero rows;
 - leave `ready` rows alone — a usable vector MUST NOT be downgraded because a provider is momentarily down.
 
 #### Scenario: Two workers, one execution
@@ -62,6 +62,13 @@ Celery guarantees at-least-once delivery, so `generar_embedding` MUST tolerate b
 - GIVEN two workers receive the same task simultaneously
 - WHEN both attempt to claim the row
 - THEN exactly one claim succeeds and the other returns without calling the provider
+
+#### Scenario: Abandoned claim (Q-09)
+
+- GIVEN a row left in `processing` more than 5 minutes ago because its worker died
+- WHEN the task or the backfill runs again
+- THEN the row is claimed again (the backfill first returns it to `pending`)
+- AND a claim younger than 5 minutes is left alone
 
 ### Requirement: Provider call isolation
 
@@ -79,16 +86,16 @@ The task MUST NOT raise. Any provider failure MUST leave the row in `failed` and
 
 ### Requirement: Provider extension point
 
-The system MUST isolate provider access in `catalogo.services.embeddings.generar_vector(texto)`. Until B-06 lands it MUST fail explicitly with `NotImplementedError` rather than returning a placeholder vector, so no meaningless data is ever stored.
+The system MUST isolate provider access in `catalogo.services.embeddings.generar_vector(texto)`. It MUST either return a usable vector or raise, never return a placeholder, so no meaningless data is ever stored. Since B-06 it calls Ollama with `bge-m3` (see `semantic-search`); until then it was a stub that raised `NotImplementedError`.
 
-Replacing that function MUST be sufficient to enable real embeddings: lifecycle, claiming, hashing, enqueueing and failure handling are already implemented and MUST NOT require changes.
+Changing the provider MUST only require changing that function (and `MODEL_VERSION`): lifecycle, claiming, hashing, enqueueing and failure handling MUST NOT change.
 
-#### Scenario: Stub keeps the pipeline honest
+#### Scenario: A failing provider stores nothing
 
-- GIVEN the provider is still the stub
-- WHEN a production is materialized
+- GIVEN the provider raises for a production
+- WHEN the embedding task runs
 - THEN its embedding ends in `failed` with a null vector
-- AND no row is ever marked `ready`
+- AND no row is marked `ready`
 
 ### Requirement: Broker topology
 
