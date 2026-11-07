@@ -5,6 +5,17 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 07/11/2026 — Integración en `develop` del chatbot (encolado, `nota_tmdb`, set dorado, cierre del Motor) y del DateField
+
+- **Fecha**: 07/11/2026
+- **Descripción**: se mergearon en `develop`, con merge commits locales (`--no-ff`) y en este orden, cinco ramas que partían de 741ed5c: `fix/encolado-redis`, `feat/chatbot-contrato-nota-tmdb`, `feat/chatbot-golden`, `docs/chatbot-cierre-motor` y `feat/fecha-por-idioma`. Cada una tiene su entrada propia más abajo. `main` no se tocó: sigue sin el chatbot (PR #166).
+  - **Conflictos**: ninguno de código. En `docs/decisiones.md` se conservaron todas las entradas. El grafo (`graphify-out/`) se resolvió con la versión de `develop` y se regeneró al final con `graphify update .`. `backend/requirements.txt` (Redis/kombu y PyYAML), `openspec/changes/chatbot/tasks.md` (8.1–8.4) y el doc 04 se combinaron solos y se revisaron a mano.
+  - **Limpieza**: se borraron los worktrees y las cinco ramas locales, y la rama remota `fix/issue-175`, ya integrada por el PR #179.
+- **Verificación local** (CI desactivado, mismos pasos que `ci.yml`): imágenes de backend y worker reconstruidas por los cambios de dependencias. `pip check` sin conflictos. Ruff (format y check) limpio. Django: 1397 tests OK. Frontend: `npm ci`, ESLint sin warnings, Prettier, `i18n:check`, `tsc` y `next build` limpios. Vitest 572/572 con `--maxWorkers=4`. Catálogo de avatares sincronizado. Playwright: 190/190. La primera corrida, con 6 workers y el contenedor del frontend prendido, dio 114 OK y 76 fallos por tiempo (WSL con 7,4 GB quedó sin memoria libre). Los 76 pasaron al repetirlos con `--last-failed --workers=2` y el contenedor del frontend apagado.
+- **Archivos afectados**: los de las cinco entradas siguientes, `docs/decisiones.md` y `graphify-out/`.
+
+---
+
 ## 07/11/2026 — El encolado en Celery estaba roto (redis-py 5) y corrida del backfill de Marcos (tarea 1.7)
 
 - **Fecha**: 07/11/2026
