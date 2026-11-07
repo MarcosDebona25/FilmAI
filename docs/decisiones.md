@@ -5,6 +5,15 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 07/11/2026 — Playwright usa 2 workers en local
+
+- **Fecha**: 07/11/2026
+- **Descripción**: con los workers por defecto (6 en esta máquina), cada uno abre su Chromium contra un `next dev` que compila al vuelo. Junto con los contenedores de Docker, WSL (7,4 GB) se quedó sin memoria libre durante la integración de hoy: la PC se trababa y 76 de 190 e2e fallaron por tiempo, para pasar todos al repetirlos con 2 workers. `playwright.config.ts` fija ahora `workers: 2` fuera de CI. Se cambia con la variable `E2E_WORKERS` o con `--workers`. En CI queda el valor por defecto de Playwright.
+- **Verificación**: Prettier, ESLint y `tsc` limpios. `E2E_WORKERS=3 npx playwright test e2e/acceso.spec.ts -g "fecha por teclado"` arranca con 3 workers y pasa 4/4.
+- **Archivos afectados**: `frontend/playwright.config.ts`.
+
+---
+
 ## 07/11/2026 — Integración en `develop` del chatbot (encolado, `nota_tmdb`, set dorado, cierre del Motor) y del DateField
 
 - **Fecha**: 07/11/2026

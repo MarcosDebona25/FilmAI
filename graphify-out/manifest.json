@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794075528.9949827,
-    "seen": 1794075606.660081,
-    "ast_hash": "4b9375ad508769bf744f99708186d1d0",
+    "mtime": 1794075990.397636,
+    "seen": 1794076051.4962182,
+    "ast_hash": "30b61b8ce2f6b319f8635f9e2e41258f",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -1422,9 +1422,9 @@
     "semantic_hash": ""
   },
   "frontend/playwright.config.ts": {
-    "mtime": 1793814622.670725,
-    "seen": 1794070356.1843548,
-    "ast_hash": "04e218384cc84fd3d1743598dc12dae0",
+    "mtime": 1794075753.0439174,
+    "seen": 1794076051.4773314,
+    "ast_hash": "088a71adfc89b8ae60bd1696924b9a9e",
     "semantic_hash": ""
   },
   "scripts/sync_avatars.py": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1794075181.7862942,
-    "seen": 1794075606.6391494,
+    "mtime": 1794075901.7855864,
+    "seen": 1794076051.476884,
     "ast_hash": "7d97531417e312f0067d5c4c8eb43151",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794075181.790551,
-    "seen": 1794075606.6392531,
+    "mtime": 1794075901.7855864,
+    "seen": 1794076051.4770043,
     "ast_hash": "55b8a7322e248220b72cb105b4f779c2",
     "semantic_hash": ""
   },
