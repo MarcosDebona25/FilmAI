@@ -1,0 +1,73 @@
+Consideraciones Legales TMDB (revisar para estar al dia con el cumplimiento de ellas):
+
+===================== LINKS DE REFERENCIA
+- https://developer.themoviedb.org/docs/faq
+- https://www.themoviedb.org/api-terms-of-use
+- https://www.themoviedb.org/about/logos-attribution
+- https://developer.themoviedb.org/docs/rate-limiting
+- https://developer.themoviedb.org/docs/getting-started?trk=public_profile__reactions-text
+
+
+===================== PUNTOS CLAVE A EVALUAR 
+
+- What are the attribution requirements?
+You shall use the TMDB logo to identify your use of the TMDB APIs. You shall place the following notice prominently on your application: "This product uses the TMDB API but is not endorsed or certified by TMDB."
+
+Any use of the TMDB logo in your application shall be less prominent than the logo or mark that primarily describes the application and your use of the TMDB logo shall not imply any endorsement by TMDB. When attributing TMDB, the attribution must be within your application's "About" or "Credits" type section.
+
+- Are there branding requirements?
+Our logo should not be modified in color, aspect ratio, flipped or rotated except where otherwise noted.
+
+Our logo can be white, black or any of the approved colors used throughout our branding. For a list of official logos, see our logos & attribution page.
+
+When referring to TMDB, you should use either the acronym "TMDB" or the full name "The Movie Database". Any other name is not acceptable. When linking back to our website, please point your link to:
+
+https://www.themoviedb.org
+
+If you are putting our company name or logo on any merchandise or product packaging please consult us beforehand for approval.
+
+- Logos & Attribution
+As per our terms of use, every application that uses our data or images is required to properly attribute TMDB as the source. Below you will find some logos you can use within your application. We've also included some basic brand guidelines.
+
+- Primary Color (Dark blue)
+Hex: #0d253f
+RGB: 13, 37, 63
+
+- Secondary Color (Light blue)
+Hex: #01b4e4
+RGB: 1, 180, 228
+
+- Tertiary Color (Light green)
+Hex: #90cea1
+RGB: 144, 206, 161
+
+- While our legacy rate limits have been disabled for some time, we do still have some upper limits to help mitigate needlessly high bulk scraping. They sit somewhere in the 40 requests per second range. This limit could change at any time so be respectful of the service we have built and respect the 429 if you receive one.
+
+- TMDB reserves all rights not expressly granted herein, including the right to make derivatives of the TMDB APIs or TMDB Content, or to use the TMDB APIs or TMDB Content in connection with, or for training, a machine learning or artificial intelligence based Application.
+
+- Restrictions. In addition, You must not:
+
+Attempt to cloak or conceal Your identity, or the identity of any website, program, service, application, or other product (collectively "Application(s)") that accesses TMDB or the TMDB APIs, when using or requesting authorization to use TMDB APIs.
+Use, or create any Application that, in Our sole discretion, (i) uses an excessive amount of bandwidth, (ii) degrade or impairs, including in part, access to, or use of, TMDB, its systems and servers, or the TMDB APIs; or (iii) otherwise adversely impacts the stability of TMDB, its systems and servers, or adversely impacts other users of TMDB or the TMDB APIs.
+Cache, for longer than 6 months, any information obtained through or from TMDB or the TMDB APIs.
+Use the TMDB APIs in connection with any Application that, in TMDB's sole discretion, constitutes, promotes, or is used in connection with materials that constitute, promote, or are used primarily for (a) spyware, adware, or other malicious programs or code, (b) counterfeit goods, or items subject to U.S. embargo, (c) unsolicited mass distribution of email ("spam"), multi-level marketing proposals, (d) hacking/surveillance/interception/descrambling equipment, (e) hate materials, libelous, defamatory, obscene, pornographic, abusive, or otherwise offensive content.
+Use the TMDB APIs in any manner, or for any purpose, that violates any law or regulation, or the rights of any person, including but not limited to intellectual property rights, rights of privacy, or rights of personality.
+Make derivatives of the TMDB APIs or TMDB Content.
+Use TMDB as an image hosting service for banner advertisements, graphics, etc.
+Sell, lease, or sublicense the TMDB APIs, access to the TMDB APIs, or TMDB Content, or derive revenues from the use or provision of TMDB, the TMDB APIs, or TMDB Content, whether for direct commercial or monetary gain or otherwise, except as expressly permitted in a written agreement between You and TMDB, as provided for in Paragraph 2 (Commercial Use) below.
+Use the TMDB APIs in a manner that is confusing or misleading as to the source or origin of Your Application.
+Use the TMDB APIs or TMDB Content in connection with, including for training, a machine learning (ML) or artificial intelligence (AI) based Application.
+
+
+- 2. Commercial Use
+A. Commercial Use Requires a Commercial Agreement. The license in Paragraph 1.A above does not permit any commercial use of TMDB, the TMDB APIs, or TMDB Content. Selling, leasing, or sublicensing the TMDB APIs, access to the TMDB APIs, or TMDB Content, or deriving revenues from the use or provision of TMDB, the TMDB APIs, or TMDB Content, for commercial or monetary gain, directly or indirectly, is, for the purposes of these terms and conditions, considered a commercial use and is only permitted under a separate written agreement between You and TMDB. TMDB reserves the right to, in its sole discretion, determine whether Your use is commercial at the time that you apply for the license to use the TMDB APIs. TMDB reserves the right to monitor Your use or Your Application to make or revise its determination. Common examples (which are by no means exhaustive) of commercial uses include:
+
+Charging users a fee for Your Application, or a 3rd party's Application, that includes some form of integration with, or use of, TMDB, the TMDB APIs, or TMDB Content.
+Selling an Application that uses TMDB or the TMDB APIs to bring TMDB Content into your Application.
+Using TMDB, the TMDB APIs, or TMDB Content on or in connection with a "destination" website, search engine, or interactive query-response system (including large language model (LLM), artificial intelligence, or any other machine learning based interactive query-response systems or chatbots) ("Chatbot(s)"), or for driving traffic or generating revenue for a website, search engine, or Chatbot (including from advertising displayed on or by the website, search engine, Chatbot).
+Operating a website that generates revenue through charging users for access to content, or through recommend content, such as movies, television shows and music, in connection with, or due, to Your use of TMDB, the TMDB APIs, or TMDB Content.
+Training or validating a machine learning or artificial intelligence system (including large language models and Chatbots) using TMDB content, collecting data sets containing TMDB Content for such training or validation, or providing archived or cached data sets containing TMDB Content to another person or entity for such training or validation.
+Commercial Use Requires as Commercial API Key. If Your use (or intended use) is commercial, You must enter into a written agreement with TMDB that expressly permits Your commercial use. Any such agreement may be subject to, among other things, payment of fees. Any commercial use without such a written agreement constitutes a material breach of these API Terms of Use and, You agree that, such a material breach causes irreparable harm to TMDB.
+
+… sigue … https://www.themoviedb.org/api-terms-of-use
+
