@@ -67,6 +67,24 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 07/11/2026 — Fecha de nacimiento con el formato del idioma de la app
+
+- **Fecha**: 07/11/2026
+- **Descripción**: el `<input type="date">` nativo ordena día y mes según el locale del navegador o del sistema, y el atributo `lang` no lo cambia en Chromium ni en Firefox. Con la interfaz en inglés y el navegador en español se veía DD/MM/AAAA, y al revés. El formato pasa a seguir al idioma de la app: `es` → DD/MM/AAAA, `en` → MM/DD/YYYY. Reemplaza las dos entradas del 22/08/2026 sobre el datepicker nativo.
+  - **Diseño (decidido por Marcos, siguiendo «Design Perfect Date Picker», UX Planet)**: un solo campo con máscara más un calendario en un popover. Descartados: tres cajas de día, mes y año; `react-aria-components`; solo máscara sin calendario; un calendario hecho a mano.
+  - **`DateField`** (`components/access/DateField.tsx`, nuevo): campo de texto con `inputMode="numeric"` y `maxLength={10}`; las barras se agregan solas y una barra tipeada después de un dígito completa con cero. Pegar acepta `10/04/1992`, `10041992` y el ISO. El formulario solo recibe el ISO: mientras el texto está incompleto recibe `""` y no se muestra error; incompleto al salir del campo da `invalid`. Una fecha completa que no existe da `date_inexistent` (código nuevo, solo del frontend: el backend ya rechaza esas fechas al parsear). El ícono de calendario abre el popover con el patrón de `CountrySelect` (posición, Escape, clic afuera) y mete el foco en el día elegido; el teclado dentro lo maneja react-day-picker.
+  - **Calendario**: `components/ui/calendar.tsx` generado con `npx shadcn@latest add calendar` (estilo `base-nova`). Dos ajustes al archivo generado: importaba `cn` de un paquete npm llamado `cn` (que el comando instaló; se quitó y se usa `@/lib/utils`), y usaba `toLocaleString`/`toLocaleDateString`, que la regla `i18n/centralized-formats` prohíbe fuera de `lib/format.ts`: el mes del desplegable sale de `formatCalendarMonth` y `data-day` pasa a ser el ISO. Recibe el locale de la app (`react-day-picker/locale`: textos accesibles traducidos), `weekStartsOn` 1 en español y 0 en inglés, `captionLayout="dropdown"`, `reverseYears`, rango enero de 1900 → hoy − 13 años, días posteriores deshabilitados, sin días de otros meses (se veían igual que los del mes). Vacío abre en enero de 2000.
+  - **Dependencias**: `react-day-picker@^10` (el `calendar.tsx` de shadcn compila con la v10, no hizo falta fijar la v9) y `date-fns@^4`, que react-day-picker usa para los locales.
+  - **`lib/format.ts`**: `formatDateInput`, `parseDateInput`, `maskDateInput`, `isoDeFecha`, `fechaExiste` y `formatCalendarMonth`. El ISO se arma con componentes locales, nunca con `toISOString()`.
+  - **`lib/validation.ts`**: `validarFechaNacimiento` aceptaba `1992-02-31` como 2 de marzo (`new Date` desborda); ahora devuelve `date_inexistent`. `maxFechaNacimiento` usaba `toISOString()`, que a la noche en UTC−3 devolvía el día siguiente; ahora usa la fecha local.
+  - **Pantallas**: registro y alta con Google usan `DateField`; en `complete-signup` desaparece el `lang={locale}`. El backend no cambia (sigue recibiendo `%Y-%m-%d`). El perfil muestra la fecha en solo lectura con `formats.date(..., "long")` y no se toca.
+  - **Textos** (`claves-extra.csv`, propuestos y pendientes de que Marcos los revise): `common.fields.dateInputPlaceholder` («DD/MM/AAAA» / «MM/DD/YYYY»), `common.fields.openCalendar` («Abrir calendario» / «Open calendar») y `errors.codes.date_inexistent` («Esa fecha no existe. Revisá el día y el mes.» / «That date doesn’t exist. Check the day and month.»).
+- **Tests**: `tests/date-field.test.tsx` (nuevo, 22): formato y parseo en los dos idiomas, máscara, pegado de los tres formatos, sin error a mitad del tipeo, `invalid` al salir, `date_inexistent`, futura, edad mínima, calendario en español (lunes) y en inglés (domingo), máximo habilitado y día siguiente deshabilitado, Escape, clic afuera, cambio de idioma y el máximo con fecha local. `access-screens` y `complete-signup` tipean en el formato de cada idioma. E2E: `acceso` suma «fecha por teclado y calendario» en `es` y `en` con el navegador en es-AR (escritorio y celular) y verifica el ISO enviado; `alta-google` e `i18n-flows` tipean en el orden del idioma y verifican el ISO.
+- **Verificación local** (CI desactivado, todo desde el worktree): Ruff (format y check) y Django 1381 tests OK en un contenedor efímero con el código del worktree y `RUN_MIGRATIONS=false` (el cambio no toca el backend). ESLint, Prettier, `tsc`, `i18n:check` y `next build` limpios. Vitest 572/572 con `--maxWorkers=4`. Playwright `acceso` + `alta-google` + `i18n-flows` 32/32 en el puerto 3117. Capturas del calendario abierto en 1440 × 900 y 390 × 844.
+- **Archivos afectados**: `frontend/components/access/DateField.tsx` (nuevo), `frontend/components/ui/calendar.tsx` (nuevo), `frontend/lib/{format,validation}.ts`, `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `frontend/package.json`, `frontend/package-lock.json`, `traducciones/claves-extra.csv`, `frontend/messages/`, `frontend/tests/{date-field,access-screens,complete-signup}.test.tsx`, `frontend/e2e/{acceso,alta-google,i18n-flows}.spec.ts`, docs 02 y 04, spec `i18n-core`.
+
+---
+
 ## 06/11/2026 — Issue #175: avatar centrado, registro sin saltos y correos sin franja amarilla
 
 - **Fecha**: 06/11/2026
@@ -1853,6 +1871,8 @@ reading from request's data stream`. En un view de DRF, `self.request.data`
 
 ## 22/08/2026 — Datepicker de fecha de nacimiento: máximo hoy −13 años
 
+> Reemplazada el 07/11/2026: el máximo pasó al calendario de `DateField` (ver esa entrada).
+
 - **Descripción**: los inputs `type="date"` de fecha de nacimiento (registro
   tradicional y completado de Google) definen `max` como la fecha de hoy menos
   13 años. Esto brinda feedback visual inmediato al usuario, impidiendo
@@ -1915,6 +1935,8 @@ reading from request's data stream`. En un view de DRF, `self.request.data`
 - **Archivos**: `frontend/lib/api.ts`.
 
 ## 22/08/2026 — Fecha de nacimiento con datepicker nativo
+
+> Reemplazada el 07/11/2026: el formato ahora sigue al idioma de la app (ver esa entrada).
 
 - **Descripción**: el campo "Fecha de nacimiento" (registro tradicional y
   completado de Google) usa el input HTML nativo `type="date"`, que valida

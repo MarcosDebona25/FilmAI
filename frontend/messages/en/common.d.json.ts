@@ -128,7 +128,9 @@ declare const messages: {
       "birthDate": "Date of birth",
       "passwordConfirm": "Confirm password",
       "email": "Email",
-      "country": "Country"
+      "country": "Country",
+      "dateInputPlaceholder": "MM/DD/YYYY",
+      "openCalendar": "Open calendar"
     },
     "text": {
       "readLess": "Read less",
@@ -745,6 +747,7 @@ declare const messages: {
       "username_not_allowed": "You can’t use that username. Choose another one.",
       "person_name_invalid": "Use only letters and spaces for your first or last name.",
       "birth_date_in_future": "Your date of birth can’t be in the future.",
+      "date_inexistent": "That date doesn’t exist. Check the day and month.",
       "country_invalid": "Choose a country from the list.",
       "minimum_age": "You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.",
       "avatar_invalid": "Choose one of the available avatars.",

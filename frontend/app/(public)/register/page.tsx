@@ -10,6 +10,7 @@ import { AccessShell } from "@/components/access/AccessShell";
 import { CountrySelect } from "@/components/CountrySelect";
 import { ConfirmationSent } from "@/components/access/ConfirmationSent";
 import { GoogleMark } from "@/components/access/GoogleMark";
+import { DateField } from "@/components/access/DateField";
 import { AccessLogo } from "@/components/access/Logo";
 import {
   FieldError,
@@ -28,7 +29,6 @@ import { passwordRules } from "@/lib/password-rules";
 import { routes } from "@/lib/routes";
 import { useUsernameAvailability } from "@/lib/use-username-availability";
 import { useValidation } from "@/lib/use-validation";
-import { maxFechaNacimiento } from "@/lib/validation";
 
 type Campo =
   | "nombre"
@@ -297,14 +297,12 @@ export default function RegisterPage() {
             reserveMessage
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TextField
+            <DateField
               label={common("fields.birthDate")}
               name="fecha_nacimiento"
               required
-              type="date"
-              max={maxFechaNacimiento()}
               value={form.fecha_nacimiento}
-              onChange={(e) => setField("fecha_nacimiento", e.target.value)}
+              onChange={(iso) => setField("fecha_nacimiento", iso)}
               error={mostrar("fecha_nacimiento", true)}
               help={t("signUp.minimumAgeHelp")}
             />

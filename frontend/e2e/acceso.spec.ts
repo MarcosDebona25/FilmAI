@@ -122,7 +122,10 @@ for (const viewport of viewports) {
       await page.getByRole("option", { name: "Argentina", exact: true }).click();
       await expect(page.locator('input[name="pais"]')).toHaveValue("AR");
       await page.locator('[name="correo"]').fill("juan@example.com");
-      await page.locator('[name="fecha_nacimiento"]').fill("1992-04-10");
+      // App en inglés con el navegador en es-AR: el formato sigue a la app (MM/DD/YYYY).
+      const fecha = page.locator('[name="fecha_nacimiento"]');
+      await expect(fecha).toHaveAttribute("placeholder", "MM/DD/YYYY");
+      await fecha.fill("04/10/1992");
       await page.locator('select[name="genero"]').selectOption("masculino");
       await page.locator('[name="password1"]').fill("Popcorn24");
       await expect(page.getByText(en.auth.password.symbolRule).locator("..")).toContainText(
@@ -145,6 +148,7 @@ for (const viewport of viewports) {
       expect(payload).toMatchObject({
         correo: "juan@example.com",
         pais: "AR",
+        fecha_nacimiento: "1992-04-10",
         acepta_terminos: true,
       });
       await expect(page.getByText(/Request another in 1:0\d/)).toBeVisible();
@@ -173,6 +177,44 @@ for (const viewport of viewports) {
       }).toPass({ timeout: 20_000 });
       await expect(page.getByText(en.errors.codes.username_already_used)).toHaveCount(0);
     });
+
+    for (const locale of ["es", "en"] as const) {
+      test(`registro: fecha por teclado y calendario en ${locale}`, async ({ page, baseURL }) => {
+        const copy = locale === "es" ? es : en;
+        await prepararIdioma(page, baseURL!, locale);
+        await page.goto("/register");
+        const campo = page.getByLabel(copy.common.fields.birthDate);
+        const abrir = page.getByRole("button", { name: copy.common.fields.openCalendar });
+        await expect(campo).toHaveAttribute("placeholder", copy.common.fields.dateInputPlaceholder);
+        // Antes de hidratar el clic se pierde: se reintenta hasta ver el calendario.
+        await expect(async () => {
+          await abrir.click();
+          await expect(page.getByRole("dialog")).toBeVisible({ timeout: 2_000 });
+        }).toPass({ timeout: 20_000 });
+        const calendario = page.getByRole("dialog");
+        // Navegador en es-AR: la semana y los textos siguen al idioma de la app.
+        await expect(calendario.locator("th").first()).toHaveAttribute(
+          "aria-label",
+          locale === "es" ? "lunes" : "Sunday"
+        );
+        await calendario.getByRole("combobox").nth(1).selectOption("1992");
+        await calendario.getByRole("combobox").nth(0).selectOption({ index: 3 });
+        await calendario.locator('button[data-day="1992-04-10"]').click();
+        await expect(calendario).toBeHidden();
+        await expect(campo).toBeFocused();
+        await expect(campo).toHaveValue(locale === "es" ? "10/04/1992" : "04/10/1992");
+        // Escape cierra y devuelve el foco al campo.
+        await abrir.click();
+        await expect(calendario).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(calendario).toBeHidden();
+        await expect(campo).toBeFocused();
+        // 31/02 no existe: error específico, sin esperar a salir del campo.
+        await campo.fill(locale === "es" ? "31/02/1992" : "02/31/1992");
+        await expect(page.getByText(copy.errors.codes.date_inexistent)).toBeVisible();
+        await sinDesborde(page);
+      });
+    }
 
     test("registro: el enlace de términos abre /terms en otra pestaña", async ({
       page,

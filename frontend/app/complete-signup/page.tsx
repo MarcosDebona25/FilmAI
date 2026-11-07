@@ -10,6 +10,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { GoogleButton } from "@/components/GoogleButton";
 import { AccessShell } from "@/components/access/AccessShell";
 import { GoogleMark } from "@/components/access/GoogleMark";
+import { DateField } from "@/components/access/DateField";
 import { AccessLogo } from "@/components/access/Logo";
 import { FieldError, FieldMessage, TextField, fieldClass } from "@/components/access/fields";
 import type { AppLocale } from "@/i18n/config";
@@ -23,7 +24,6 @@ import {
 import { routes } from "@/lib/routes";
 import { useUsernameAvailability } from "@/lib/use-username-availability";
 import { useValidation } from "@/lib/use-validation";
-import { maxFechaNacimiento } from "@/lib/validation";
 
 type Campo = "nombre_usuario" | "pais" | "fecha_nacimiento" | "genero";
 const CAMPOS: Campo[] = ["nombre_usuario", "pais", "fecha_nacimiento", "genero"];
@@ -216,14 +216,11 @@ export default function CompletarGooglePage() {
             />
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
-            <TextField
+            <DateField
               label={common("fields.birthDate")}
               name="fecha_nacimiento"
-              type="date"
-              lang={locale}
-              max={maxFechaNacimiento()}
               value={form.fecha_nacimiento}
-              onChange={(e) => setField("fecha_nacimiento", e.target.value)}
+              onChange={(iso) => setField("fecha_nacimiento", iso)}
               error={mostrar("fecha_nacimiento")}
               help={signUp("minimumAgeHelp")}
             />

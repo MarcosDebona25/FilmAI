@@ -56,7 +56,8 @@ async function fillRegister(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
   await elegirPais(user, screen.getByLabelText(en.common.fields.country), "Argentina");
   await user.type(screen.getByLabelText(en.common.fields.email), "juan@example.com");
-  await user.type(screen.getByLabelText(en.common.fields.birthDate), "1992-04-10");
+  // En inglés el campo va en MM/DD/YYYY: 10 de abril de 1992.
+  await user.type(screen.getByLabelText(en.common.fields.birthDate), "04/10/1992");
   await user.selectOptions(screen.getByLabelText(en.auth.signUp.genderLabel), "masculino");
   await user.type(
     screen.getByLabelText(en.auth.password.label, { selector: "input" }),
@@ -223,7 +224,7 @@ describe("registro", () => {
     await user.type(screen.getByLabelText(es.common.fields.username), "juanperez");
     await elegirPais(user, screen.getByLabelText(es.common.fields.country), "Argentina");
     await user.type(screen.getByLabelText(es.common.fields.email), "juan@example.com");
-    await user.type(screen.getByLabelText(es.common.fields.birthDate), "1992-04-10");
+    await user.type(screen.getByLabelText(es.common.fields.birthDate), "10/04/1992");
     await user.selectOptions(screen.getByLabelText(es.auth.signUp.genderLabel), "masculino");
     await user.type(
       screen.getByLabelText(es.auth.password.label, { selector: "input" }),
