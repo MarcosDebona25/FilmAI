@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794073196.9107058,
-    "seen": 1794073276.1537933,
-    "ast_hash": "a25c65e6818866a7fd192cf4dc3cb41b",
+    "mtime": 1794075528.9949827,
+    "seen": 1794075606.660081,
+    "ast_hash": "4b9375ad508769bf744f99708186d1d0",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1794073190.4965038,
-    "seen": 1794073276.1355178,
+    "mtime": 1794075181.7862942,
+    "seen": 1794075606.6391494,
     "ast_hash": "7d97531417e312f0067d5c4c8eb43151",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794073190.5092583,
-    "seen": 1794073276.1355238,
+    "mtime": 1794075181.790551,
+    "seen": 1794075606.6392531,
     "ast_hash": "55b8a7322e248220b72cb105b4f779c2",
     "semantic_hash": ""
   },
