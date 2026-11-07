@@ -125,7 +125,9 @@
       "birthDate": "Fecha de nacimiento",
       "passwordConfirm": "Confirmar contraseña",
       "email": "Correo electrónico",
-      "country": "País"
+      "country": "País",
+      "dateInputPlaceholder": "DD/MM/AAAA",
+      "openCalendar": "Abrir calendario"
     },
     "text": {
       "readLess": "Leer menos",
@@ -742,6 +744,7 @@
       "username_not_allowed": "No podés usar ese nombre de usuario. Elegí otro.",
       "person_name_invalid": "Usá solo letras y espacios para tu nombre o apellido.",
       "birth_date_in_future": "La fecha de nacimiento no puede estar en el futuro.",
+      "date_inexistent": "Esa fecha no existe. Revisá el día y el mes.",
       "country_invalid": "Elegí un país de la lista.",
       "minimum_age": "Tenés que tener al menos {minAge, plural, one {# año} other {# años}} para crear una cuenta.",
       "avatar_invalid": "Elegí uno de los avatares disponibles.",

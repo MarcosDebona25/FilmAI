@@ -1,6 +1,8 @@
 // Reglas de validación del CU-001 (docs/02) para el formulario de registro.
 // Cada validador devuelve null o un código independiente del idioma.
 
+import { fechaExiste, isoDeFecha } from "./format";
+
 const NOMBRE_REGEX = /^\p{L}+(?: \p{L}+)*$/u;
 export const USERNAME_REGEX = /^[A-Za-z0-9]{5,25}$/;
 const CORREO_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -42,17 +44,24 @@ function calcularEdad(fecha: Date): number {
   return hoy.getFullYear() - fecha.getFullYear() - (yaCumplio ? 0 : 1);
 }
 
-/** Fecha máxima para el selector: hoy −13 años (el backend es quien valida). */
+/**
+ * Fecha máxima para el calendario: hoy −13 años (el backend es quien valida).
+ * Con componentes locales: `toISOString()` está en UTC y a la noche de UTC−3
+ * ya devolvía el día siguiente.
+ */
 export function maxFechaNacimiento(): string {
   const d = new Date();
   d.setFullYear(d.getFullYear() - 13);
-  return d.toISOString().slice(0, 10);
+  return isoDeFecha(d);
 }
 
 export function validarFechaNacimiento(valor: string): string | null {
   if (!valor) return "required";
-  const fecha = new Date(`${valor}T00:00:00`);
-  if (Number.isNaN(fecha.getTime())) return "invalid";
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
+  if (!match) return "invalid";
+  // `new Date(1992, 1, 31)` no falla: pasa al 2 de marzo. Se exige que la fecha exista.
+  if (!fechaExiste(+match[1], +match[2], +match[3])) return "date_inexistent";
+  const fecha = new Date(+match[1], +match[2] - 1, +match[3]);
   if (fecha > new Date()) return "birth_date_in_future";
   if (calcularEdad(fecha) < 13) return "minimum_age";
   return null;

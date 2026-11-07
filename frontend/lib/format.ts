@@ -24,6 +24,78 @@ export function formatDateShort(value: string | Date, locale: AppLocale) {
     year: "numeric",
   }).format(asDate(value));
 }
+/**
+ * Fecha escrita a mano en el campo de fecha de nacimiento. El orden lo decide el
+ * idioma de la app, no el del navegador: `es` → DD/MM/AAAA, `en` → MM/DD/YYYY.
+ */
+const ordenDateInput = { es: ["day", "month"], en: ["month", "day"] } as const;
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Arma el ISO `YYYY-MM-DD` con componentes locales (nunca `toISOString()`, que corre un día en UTC−3). */
+export function isoDeFecha(fecha: Date) {
+  const dos = (n: number) => String(n).padStart(2, "0");
+  return `${String(fecha.getFullYear()).padStart(4, "0")}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}`;
+}
+/** `true` si `año-mes-día` existe en el calendario (el 31/02 no: `new Date` lo pasaría al 3 de marzo). */
+export function fechaExiste(year: number, month: number, day: number) {
+  const fecha = new Date(year, month - 1, day);
+  return fecha.getFullYear() === year && fecha.getMonth() === month - 1 && fecha.getDate() === day;
+}
+/** «1992-04-10» → «10/04/1992» (`es`) / «04/10/1992» (`en`); vacío o inválido → «». */
+export function formatDateInput(iso: string, locale: AppLocale) {
+  const match = ISO_DATE.exec(iso);
+  if (!match) return "";
+  const [, year, month, day] = match;
+  const partes = { day, month };
+  const [primero, segundo] = ordenDateInput[locale];
+  return `${partes[primero]}/${partes[segundo]}/${year}`;
+}
+/**
+ * Texto del campo → ISO. Devuelve `null` si faltan dígitos o si la fecha no
+ * existe. Acepta también el ISO tal cual (el autocompletado del navegador).
+ */
+export function parseDateInput(texto: string, locale: AppLocale): string | null {
+  const iso = ISO_DATE.exec(texto.trim());
+  if (iso) return fechaExiste(+iso[1], +iso[2], +iso[3]) ? texto.trim() : null;
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texto.trim());
+  if (!match) return null;
+  const [primero, segundo] = ordenDateInput[locale];
+  const partes = { [primero]: +match[1], [segundo]: +match[2] } as Record<"day" | "month", number>;
+  const year = +match[3];
+  if (!fechaExiste(year, partes.month, partes.day)) return null;
+  return isoDeFecha(new Date(year, partes.month - 1, partes.day));
+}
+/**
+ * Máscara del campo: deja solo dígitos (hasta 8) y pone las barras. Una barra
+ * tipeada después de un solo dígito completa con cero («4/» → «04/»). Con
+ * `barraFinal`, al completar el día o el mes se agrega la barra siguiente, así
+ * el cursor salta solo al próximo segmento.
+ */
+export function maskDateInput(texto: string, barraFinal: boolean) {
+  const segmentos: string[] = [];
+  let actual = "";
+  for (const caracter of texto) {
+    if (/\d/.test(caracter)) {
+      if (segmentos.length === 2 && actual.length === 4) break;
+      actual += caracter;
+      if (segmentos.length < 2 && actual.length === 2) {
+        segmentos.push(actual);
+        actual = "";
+      }
+    } else if (caracter === "/" && segmentos.length < 2 && actual.length === 1) {
+      segmentos.push(`0${actual}`);
+      actual = "";
+    }
+  }
+  const partes = actual ? [...segmentos, actual] : segmentos;
+  let resultado = partes.join("/");
+  if (barraFinal && !actual && segmentos.length > 0 && segmentos.length < 3) resultado += "/";
+  return resultado;
+}
+/** Mes abreviado del desplegable del calendario («abr» / «Apr»), con el código del locale de date-fns. */
+export function formatCalendarMonth(fecha: Date, localeCode?: string) {
+  return new Intl.DateTimeFormat(localeCode, { month: "short" }).format(fecha);
+}
 export function formatNumber(value: number, locale: AppLocale) {
   return new Intl.NumberFormat(intlLocales[locale]).format(value);
 }
