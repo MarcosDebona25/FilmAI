@@ -54,7 +54,11 @@ function confirmacion() {
 async function completar(user: Usuario, copy: typeof en | typeof es = en) {
   await user.type(screen.getByLabelText(copy.common.fields.username), "juanperez");
   await elegirPais(user, screen.getByLabelText(copy.common.fields.country), "Argentina");
-  await user.type(screen.getByLabelText(copy.common.fields.birthDate), "1992-04-10");
+  // El orden sigue al idioma de la app: 10 de abril de 1992 en los dos casos.
+  await user.type(
+    screen.getByLabelText(copy.common.fields.birthDate),
+    copy === es ? "10/04/1992" : "04/10/1992"
+  );
   await user.selectOptions(screen.getByLabelText(copy.auth.signUp.genderLabel), "masculino");
   await user.click(screen.getByRole("checkbox"));
   await waitFor(() => expect(confirmacion()).not.toHaveAttribute("inert"));
@@ -148,7 +152,7 @@ describe("alta con Google", () => {
 
     await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
     await elegirPais(user, screen.getByLabelText(en.common.fields.country), "Argentina");
-    await user.type(screen.getByLabelText(en.common.fields.birthDate), "1992-04-10");
+    await user.type(screen.getByLabelText(en.common.fields.birthDate), "04/10/1992");
     await user.selectOptions(screen.getByLabelText(en.auth.signUp.genderLabel), "masculino");
     await user.click(screen.getByRole("checkbox"));
 

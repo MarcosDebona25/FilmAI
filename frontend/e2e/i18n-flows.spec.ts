@@ -20,6 +20,8 @@ for (const locale of ["en", "es"] as const) {
     await page.route("**/api/auth/registration/", async (route) => {
       expect(route.request().headers()["accept-language"]).toBe(locale);
       expect(route.request().postDataJSON().acepta_terminos).toBe(true);
+      // Lo tipeado sale en el orden del idioma; al backend llega siempre ISO.
+      expect(route.request().postDataJSON().fecha_nacimiento).toBe("1990-01-15");
       await route.fulfill({ status: 201, json: { code: "registration_pending_confirmation" } });
     });
     await page.goto("/register");
@@ -29,7 +31,7 @@ for (const locale of ["en", "es"] as const) {
       apellido: "Pérez",
       nombre_usuario: "anaperez",
       correo: "ana@example.com",
-      fecha_nacimiento: "1990-01-01",
+      fecha_nacimiento: locale === "es" ? "15/01/1990" : "01/15/1990",
       password1: "Password123*",
       password2: "Password123*",
     };

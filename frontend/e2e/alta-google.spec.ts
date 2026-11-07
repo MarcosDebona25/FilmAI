@@ -57,7 +57,10 @@ async function completar(page: Page, copy: typeof en | typeof es) {
   await expect(page.getByText(copy.auth.signUp.usernameAvailable)).toBeVisible();
   await page.getByRole("combobox", { name: copy.common.fields.country }).click();
   await page.getByRole("option", { name: "Argentina", exact: true }).click();
-  await page.getByLabel(copy.common.fields.birthDate).fill("1992-04-10");
+  // 10 de abril de 1992 en el orden del idioma de la app, no del navegador (es-AR).
+  const fecha = page.getByLabel(copy.common.fields.birthDate);
+  await expect(fecha).toHaveAttribute("placeholder", copy.common.fields.dateInputPlaceholder);
+  await fecha.fill(copy === es ? "10/04/1992" : "04/10/1992");
   await page.getByLabel(copy.auth.signUp.genderLabel).selectOption("masculino");
   await page.getByRole("checkbox").check();
 }
