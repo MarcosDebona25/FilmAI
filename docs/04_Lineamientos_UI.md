@@ -786,7 +786,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 | Nombre de usuario    | Alfanumérico, 5–25 caracteres, único. Validación inline de disponibilidad.                      |
 | País                 | Dropdown nativo con los 249 países de ISO 3166-1 (lista fija `paisCodes` de `contracts/enums.json`), nombres en el idioma activo y ordenados en él. Obligatorio y **sin preselección** (18/10/2026): arranca en «Elegí tu país» y el usuario tiene que elegir. Error: «Elegí un país para continuar.» |
 | Email                | Formato válido usuario@dominio.com. Obligatorio.                                                |
-| Fecha de nacimiento  | Selector de fecha nativo (`type="date"`), no futura, ≥13 años.                                  |
+| Fecha de nacimiento  | `DateField` (07/11/2026): un solo campo con máscara en el formato del idioma de la app (`es` DD/MM/AAAA, `en` MM/DD/YYYY) y un ícono de calendario a la derecha que abre un popover con mes y año en desplegables (enero de 1900 → hoy − 13 años). No futura, fecha existente (error `date_inexistent`), ≥13 años. Se envía en ISO. |
 | Género               | Dropdown: Masculino / Femenino / No especificar.                                                |
 | Contraseña           | 8-20 caracteres, al menos 1 mayúscula, 1 minúscula, 1 dígito y 1 carácter especial (`@#$%&*!`). |
 | Confirmar contraseña | Debe coincidir con Contraseña.                                                                  |
@@ -1133,7 +1133,10 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 - **Password input**: con toggle mostrar/ocultar (ícono ojo).
 - **Search input**: con ícono de lupa, disabled hasta que se ingrese texto.
 - **Select/Dropdown**: género (`<select>` nativo), país (`CountrySelect`, lista propia con buscador que se abre debajo del campo, compartida por registro, alta con Google y perfil; ver §Access, 06/11/2026), filtros.
-- **Datepicker**: fecha de nacimiento en registro.
+- **Datepicker** (`DateField`, 07/11/2026): fecha de nacimiento en registro y alta con Google. Un solo campo de texto, nunca tres cajas de día, mes y año, ni el `<input type="date">` nativo (su orden lo decide el navegador).
+  - Máscara: solo dígitos (`inputMode="numeric"`, máx. 10 caracteres); las barras se agregan solas al completar día y mes, y «4/» pasa a «04/». El placeholder muestra el formato del idioma (DD/MM/AAAA o MM/DD/YYYY). Pegar acepta `10/04/1992`, `10041992` y el ISO `1992-04-10` (autocompletado).
+  - Errores: ninguno a mitad del tipeo; incompleto al salir del campo da «fecha no válida»; una fecha completa que no existe da «Esa fecha no existe. Revisá el día y el mes.» al instante; luego futura y edad mínima.
+  - Calendario: botón a la derecha (como el ojo de la contraseña), con `aria-expanded` y `aria-controls`. Popover con el patrón de `CountrySelect` (abajo, o arriba si la página no puede bajar; Escape y clic afuera cierran y Escape devuelve el foco). Mes y año en desplegables, años de más nuevo a más viejo, rango enero de 1900 → hoy − 13 años, días posteriores deshabilitados y sin días de otros meses. Locale de la app: en español semana desde el lunes, en inglés desde el domingo. Vacío abre en enero de 2000; con valor, en ese mes. Al elegir escribe la fecha, cierra y vuelve al campo.
 
 ### 6.3 Navegación
 

@@ -141,6 +141,11 @@ integers use default grouping. Duration uses NumberFormat unit formatting
 with `narrow` in English and `short` in Spanish, joining hours/minutes with
 one space. TMDB uses a separate `en-US`/`es-MX` map, with English fallback.
 Labels for default lists and personal gender MUST resolve from stable enums.
+Date inputs follow the app locale, never the browser locale: `formatDateInput`
+and `parseDateInput` in `lib/format.ts` write and read `DD/MM/YYYY` for `es`
+and `MM/DD/YYYY` for `en`, and the form value stays ISO `YYYY-MM-DD`. The
+calendar receives the app locale explicitly (`es` starts on Monday, `en` on
+Sunday).
 
 #### Scenario: Format a display value
 
@@ -148,6 +153,14 @@ Labels for default lists and personal gender MUST resolve from stable enums.
 - THEN use the active locale and central formatting helpers
 - AND tests compare with Intl output from their environment
 - AND formatting overrides MUST NOT be scattered across components
+
+#### Scenario: Type a date of birth
+
+- GIVEN the app in Spanish and the browser in English (or the reverse)
+- WHEN the user types `10041992` in the date of birth field
+- THEN the field shows `10/04/1992` and the value is `1992-04-10` in Spanish
+- AND the same digits mean `1992-10-04` in English
+- AND an impossible date such as `31/02/1992` shows `date_inexistent`
 
 ### Requirement: Routes and bounded migration
 
