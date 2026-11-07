@@ -17,6 +17,17 @@ class TransporteDeRedisTests(SimpleTestCase):
         # limpia, todo `.delay()` fallaba con ModuleNotFoundError (05/11/2026).
         import kombu.transport.redis  # noqa: F401
 
+    def test_redis_py_tiene_la_version_que_pide_kombu(self):
+        # kombu chequea la versión de redis-py recién al abrir el canal, no al
+        # importar: con redis-py 5.3.1 y kombu 5.7, todo `.delay()` fallaba con
+        # VersionMismatch y el test de arriba seguía en verde (07/11/2026).
+        # `_get_client` es ese chequeo; con un `self` mínimo no se conecta.
+        from types import SimpleNamespace
+
+        from kombu.transport.redis import Channel
+
+        Channel._get_client(SimpleNamespace(global_keyprefix=None))
+
 
 class EncoladoDeEmbeddingTests(TestCase):
     def test_si_el_broker_falla_la_operacion_del_usuario_sigue(self):
