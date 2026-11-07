@@ -296,9 +296,9 @@ real `npm ci` per worktree; one `.codegraph/` per worktree.
 
 ## Phase 8: Closing (PR 8)
 
-- [ ] 8.1 `chatbot/golden.yaml` (10–15 questions: simple, with tools,
+- [x] 8.1 `chatbot/golden.yaml` (10–15 questions: simple, with tools,
       out-of-scope, Portuguese message, injection attempt, «para chicos»)
-- [ ] 8.2 `manage.py chatear --golden` with thinking off and on; record times
+- [ ] 8.2 (code done 07/11/2026: `--golden` with its tests; pending the DeepSeek run, T5) `manage.py chatear --golden` with thinking off and on; record times
       against RNF #6 and the verdict in `docs/decisiones.md`
 - [ ] 8.3 (Canal half done 06/11/2026: 02, 03, 04; Gonza: 05, `PRODUCT.md`) Docs: 02 (CU-013/014 details), 03 (migration done), 04 (§3.1, «Ask
       FilmAI»), 05 (B-02…B-06 ✅), `PRODUCT.md`
