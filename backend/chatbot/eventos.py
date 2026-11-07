@@ -25,7 +25,7 @@ Reglas de `responder(chat, texto, idioma)`:
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Protocol, TypedDict
+from typing import TYPE_CHECKING, Literal, NotRequired, Protocol, TypedDict
 
 if TYPE_CHECKING:
     from chatbot.models import Chat
@@ -40,6 +40,10 @@ class Tarjeta(TypedDict):
     # El formato exacto del póster lo fija `mostrar_tarjetas` (PR2); None si no tiene.
     poster: str | None
     anio: int | None
+    # Promedio de TMDB con un decimal; None si no tiene. `NotRequired` porque las
+    # tarjetas guardadas en `Mensaje.tarjetas` antes de sumarlo no lo traen
+    # (07/11/2026). Las nuevas lo traen siempre.
+    nota_tmdb: NotRequired[float | None]
 
 
 @dataclass(frozen=True)

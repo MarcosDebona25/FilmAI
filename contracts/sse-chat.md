@@ -57,12 +57,18 @@ El `data` va siempre en una línea: los saltos de línea del texto viajan escapa
 |---|---|---|
 | `estado` | `{"code": "searching"}` | Empieza una búsqueda. El front traduce el código |
 | `texto` | `{"delta": "..."}` | Un pedazo de la respuesta; se concatenan en orden |
-| `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio"}]}` | **Una vez**, después de guardar y justo antes de `fin`; puede venir vacío. Nunca en un turno que termina en `error` |
+| `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio", "nota_tmdb"}]}` | **Una vez**, después de guardar y justo antes de `fin`; puede venir vacío. Nunca en un turno que termina en `error` |
 | `fin` | `{"id": <pk de la respuesta>, "id_pregunta": <pk de la pregunta>}` | La pareja quedó guardada. Es el único cierre exitoso |
 | `error` | `{"code": "chat_unavailable", "params": {}, "errors": []}` | Terminal. No se guardó nada |
 
 El stream termina con exactamente un `fin` o un `error`. **Un stream que se corta
 sin ninguno de los dos es un error de red** para el front (decisión del 09/10/2026).
+
+Cada tarjeta: `id_tmdb` (entero), `tipo` (`movie` | `tv`), `titulo`, `poster` (ruta
+de TMDB o `null`), `anio` (entero o `null`) y `nota_tmdb` (promedio de TMDB con un
+decimal, o `null` si no tiene). `nota_tmdb` es **opcional**: las tarjetas guardadas
+antes del 07/11/2026 no la traen, y el historial (`GET`) las devuelve con
+`nota_tmdb: null`. Las del stream la traen siempre (decisión del 07/11/2026).
 
 Orden: `estado`* y `texto`* (mezclados, en el orden en que ocurren), luego
 `tarjetas` y `fin`; o bien `error` en cualquier punto.

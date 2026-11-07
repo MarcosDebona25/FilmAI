@@ -24,6 +24,19 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 07/11/2026 — Chat: `nota_tmdb` en el contrato de las tarjetas
+
+- **Fecha**: 07/11/2026
+- **Descripción**: el PR aparte que anunció la entrada del Canal (fase 6, «Tarjetas»). El front ya mostraba la nota de TMDB si venía, pero el backend no la mandaba: `titulo()` en `tools/turno.py` arma `nota_tmdb` para el modelo y `publicar()` no la copiaba a `ctx.encontrados`, que es de donde `mostrar_tarjetas` saca las tarjetas.
+  - **Tipo**: `nota_tmdb: NotRequired[float | None]` en `eventos.Tarjeta`. Es `None` si TMDB no tiene promedio y `NotRequired` porque las tarjetas que ya están en `Mensaje.tarjetas` no la traen. No se migran: es un JSON sin esquema y el front ya la trata como opcional. Las tarjetas nuevas la traen siempre.
+  - **Historial**: `TarjetaSerializer` suma `FloatField(required=False, allow_null=True)`. Si la clave falta en una tarjeta vieja, DRF devuelve `null`. Para el front, `null` y ausente valen lo mismo, y así el OpenAPI declara el campo como nullable. La otra opción era omitirlo, pero entonces el esquema no podía decir que admite `null`.
+  - **`OrquestadorFalso`**: la tarjeta de Moon del guion trae `nota_tmdb: 7.6`.
+- **Tests**: `tests_contrato` verifica que la tarjeta tenga las seis claves y que `nota_tmdb` sea la única opcional. `tests_tools` verifica que la tarjeta armada lleve la nota. `tests_historial` verifica que una tarjeta guardada con nota vuelva igual y que una vieja vuelva con `nota_tmdb: null`.
+- **Verificación local** (CI desactivado): Ruff (format y check) y Prettier limpios. Django: 1383 tests OK en serie. Con `--parallel`, el runner se cae con `TypeError: cannot pickle 'traceback' object`: algún test falla solo en paralelo y su traceback no se puede serializar. No se investigó; el CI corre en serie.
+- **Archivos afectados**: `backend/chatbot/{eventos,serializers,orquestador_falso}.py`, `backend/chatbot/tools/turno.py`, `backend/chatbot/{tests_contrato,tests_tools,tests_historial}.py`, `contracts/{sse-chat.md,openapi.yaml}`, `openspec/specs/chat-api/spec.md`, `openspec/changes/chatbot/{design.md,specs/chat-api/spec.md}`.
+
+---
+
 ## 06/11/2026 — Issue #175: avatar centrado, registro sin saltos y correos sin franja amarilla
 
 - **Fecha**: 06/11/2026

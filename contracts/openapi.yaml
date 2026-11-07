@@ -2521,6 +2521,12 @@ components:
         anio:
           type: integer
           nullable: true
+        nota_tmdb:
+          type: number
+          format: double
+          nullable: true
+          description: Promedio de TMDB con un decimal; null si no tiene o si la tarjeta
+            se guardó antes de que existiera el campo.
       required:
       - anio
       - id_tmdb

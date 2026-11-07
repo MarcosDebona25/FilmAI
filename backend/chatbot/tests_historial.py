@@ -126,6 +126,7 @@ class HistorialTests(APITestCase):
                 "titulo": "Luna",
                 "poster": None,
                 "anio": 2009,
+                "nota_tmdb": 7.6,
             }
         ]
         self.mensaje("Mirá esta.", 1, autor=TipoAutor.CHATBOT, tarjetas=tarjetas)
@@ -134,6 +135,23 @@ class HistorialTests(APITestCase):
         respuesta = self.client.get(URL, HTTP_ACCEPT_LANGUAGE="en")
 
         self.assertEqual(respuesta.data["results"][0]["tarjetas"], tarjetas)
+
+    def test_una_tarjeta_guardada_sin_nota_vuelve_con_nota_null(self):
+        # Las tarjetas guardadas antes del 07/11/2026 no tienen `nota_tmdb`.
+        vieja = {
+            "id_tmdb": 17431,
+            "tipo": "movie",
+            "titulo": "Moon",
+            "poster": None,
+            "anio": 2009,
+        }
+        self.mensaje("Mirá esta.", 1, autor=TipoAutor.CHATBOT, tarjetas=[vieja])
+
+        respuesta = self.client.get(URL)
+
+        self.assertEqual(
+            respuesta.data["results"][0]["tarjetas"], [{**vieja, "nota_tmdb": None}]
+        )
 
     def test_la_respuesta_no_trae_total(self):
         respuesta = self.client.get(URL)

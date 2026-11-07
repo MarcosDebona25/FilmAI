@@ -89,7 +89,7 @@ A valid `POST` MUST answer 200 with `Content-Type: text/event-stream` and a sequ
 
 ### Requirement: The question and the answer are stored together, at the end
 
-The user message and the bot answer MUST be saved in one transaction only after the last token, immediately before `fin`. A turn that fails, times out or is cancelled **before the save starts** MUST leave no rows; once the save started, the transaction decides (see «Cancelled right after the save» and «The turn budget expires during the save»). `Mensaje.tarjetas` MUST store the cards exactly as streamed.
+The user message and the bot answer MUST be saved in one transaction only after the last token, immediately before `fin`. A turn that fails, times out or is cancelled **before the save starts** MUST leave no rows; once the save started, the transaction decides (see «Cancelled right after the save» and «The turn budget expires during the save»). `Mensaje.tarjetas` MUST store the cards exactly as streamed. A card MUST carry `id_tmdb`, `tipo`, `titulo`, `poster` and `anio`, and SHOULD carry `nota_tmdb` (TMDB average with one decimal, or `null`): every card built from 07/11/2026 on has it, and cards stored before do not, so clients MUST treat it as optional.
 
 #### Scenario: Cancelled mid-answer (CU-014)
 
@@ -203,7 +203,13 @@ A turn MUST stop after 4 tool rounds or `LLM_TIMEOUT_SECONDS` (25), ending with 
 
 ### Requirement: History
 
-`GET /api/chat/messages/` MUST return the authenticated user's messages, newest first, cursor-paginated by 20, each with `id`, `autor` (`usuario` | `chatbot`), `texto`, `tarjetas` and `fecha_hora`. Cards MUST be returned as stored, without translating them again.
+`GET /api/chat/messages/` MUST return the authenticated user's messages, newest first, cursor-paginated by 20, each with `id`, `autor` (`usuario` | `chatbot`), `texto`, `tarjetas` and `fecha_hora`. Cards MUST be returned as stored, without translating them again. A stored card without `nota_tmdb` MUST be returned with `nota_tmdb: null` (07/11/2026).
+
+#### Scenario: A card stored before `nota_tmdb` existed
+
+- GIVEN an answer whose stored card has no `nota_tmdb`
+- WHEN the history is read
+- THEN that card comes back with `nota_tmdb: null` and the rest of its fields unchanged
 
 #### Scenario: Another user's chat
 
