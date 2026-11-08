@@ -5,6 +5,62 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 08/11/2026 — `main` se pone al día con `develop` (chatbot incluido)
+
+- **Fecha**: 08/11/2026
+- **Descripción**: después de mergear en `develop` los planes de #181 (`brevo-respaldo`, PR #182) y #180 (`tmdb-cumplimiento`, PR #183) y el cierre del chatbot (PR #184), `main` se lleva al mismo commit que `develop` por fast-forward (`main` era ancestro directo de `develop`). Con esto se revierte el criterio del 05/11/2026 (PR #166), que dejaba el chatbot fuera de `main`: ahora `main` tiene todo lo implementado hasta hoy. Los planes de #180 y #181 entran solo como planificación; no hay código de esos cambios, y así se comentó en los dos issues. Los dos planes se formatearon con Prettier al integrarlos (sin cambios de contenido). La tarea 8.5 (`graphify update .`) se corrió con todo esto integrado.
+- **Archivos afectados**: `PRODUCT.md` (el chatbot ya está en `main`), `docs/decisiones.md`, `openspec/changes/brevo-respaldo/`, `openspec/changes/tmdb-cumplimiento/`, `graphify-out/`.
+
+---
+
+## 08/11/2026 — Cierre del SDD del chatbot (fase 8, T6)
+
+- **Fecha**: 08/11/2026
+- **Descripción**: con esto se cierra la fase 8 de `openspec/changes/chatbot/tasks.md` y el cambio queda archivado. Solo cambian docs y specs; no se tocó código.
+  - **8.2**: el set dorado corrió contra DeepSeek con thinking apagado y encendido. El RNF #6 se cumple en los dos modos y thinking sigue apagado por defecto. Queda pendiente que el modelo no siempre llama a `mostrar_tarjetas` al recomendar. La tabla y lo revisado a mano están en la entrada siguiente.
+  - **8.3**: los docs 02 a 06 ya estaban cerrados (entradas del 06/11/2026 del Canal y del 07/11/2026 del Motor). Faltaba `PRODUCT.md`: la línea que daba al chatbot por «sin implementar» ahora dice que está en `develop` y en `main` (llevado a `main` el 08/11/2026), que se abre desde el FAB y solo con sesión, que contesta con DeepSeek, que busca en TMDB y con búsqueda semántica (BGE-M3 sobre pgvector) y que las tarjetas solo muestran títulos que salieron de esas búsquedas. El resto del archivo ya coincidía con el producto.
+  - **8.4**: antes de borrar `openspec/changes/chatbot/` se comparó cada spec del cambio con la canónica de `openspec/specs/`. `chat-api` es idéntica. `chat-ui` tiene de más el requisito de las sugerencias rotativas (06/11/2026). `semantic-search` tiene de más lo que se ajustó al código el 07/11/2026, y el escenario del vector de 768 dimensiones sigue ahí, en el requisito de `generar_vector`. Ninguna canónica pierde nada del cambio, así que se borró la carpeta completa (`proposal.md`, `design.md`, `tasks.md` y las tres specs). Las decisiones que tenía `design.md` ya están en este archivo, como pide AGENTS.md (sección 9).
+  - **8.5**: `graphify update .` se corre después de mergear `develop` con los planes de #180 (`tmdb-cumplimiento`) y #181 (`brevo-respaldo`), para regenerar el grafo una sola vez.
+- **Archivos afectados**: `PRODUCT.md`, `docs/decisiones.md`, `openspec/changes/chatbot/` (borrada), `graphify-out/` (en 8.5).
+
+---
+
+## 08/11/2026 — Chatbot: corrida del set dorado contra DeepSeek y veredicto del RNF #6 (tarea 8.2, T5)
+
+- **Fecha**: 08/11/2026
+- **Descripción**: la corrida que faltaba de la entrada «Chatbot: set dorado y `manage.py chatear --golden`» (07/11/2026). Se corrió `chatear --usuario usuario001 --golden` dos veces desde el stack de `~/FilmAI` en `develop` (9135dd2): primero con `LLM_THINKING=false` y después con `LLM_THINKING=true`. Modelo `deepseek-flash` por la API de DeepSeek. `usuario001` tiene 16 calificaciones y 6 listas, así que el perfil y `mis_listas` traen datos. Ollama 0.40.15 en Windows, con bge-m3 cargado antes de empezar (3,5 s), igual que cuando el panel llama a `POST /api/chat/preparar/` al abrirse. Ollama no estaba corriendo al principio: sin él, `buscar_semantico` habría fallado por la conexión y no por el modelo.
+  - **Tiempos** (primer texto / total, en segundos). RNF #6 (doc 02): menos de 5 s para una interacción simple y menos de 15 s para una consulta con agregación.
+
+    | Pregunta                   | RNF #6     | Thinking apagado | Thinking encendido |
+    | -------------------------- | ---------- | ---------------- | ------------------ |
+    | `saludo`                   | simple     | 1,7 / 1,7        | 3,2 / 3,2          |
+    | `fuera_de_tema`            | simple     | 1,1 / 1,1        | 1,7 / 1,7          |
+    | `dato_simple`              | agregación | 1,0 / 1,0        | 5,0 / 5,1          |
+    | `mostrar_por_nombre`       | agregación | 5,2 / 5,2        | 3,5 / 3,5          |
+    | `descubrir_con_filtros`    | agregación | 3,5 / 4,2        | 4,5 / 5,3          |
+    | `sin_filtros_de_mas`       | agregación | 3,9 / 5,7        | 5,6 / 6,9          |
+    | `por_persona`              | agregación | 3,5 / 3,9        | 3,5 / 5,0          |
+    | `semantico`                | agregación | 4,6 / 5,8        | 10,2 / 11,4        |
+    | `como_arrival_mas_liviano` | agregación | 1,1 / 1,1        | 10,1 / 11,6        |
+    | `para_chicos`              | agregación | 3,4 / 4,0        | 4,4 / 5,5          |
+    | `portugues`                | agregación | 3,6 / 5,1        | 3,9 / 5,2          |
+    | `ingles_mas_corto`         | agregación | 6,9 / 8,7        | 8,9 / 10,4         |
+    | `mis_pendientes`           | simple     | 2,8 / 4,3        | 3,6 / 4,9          |
+    | `inyeccion`                | simple     | 1,1 / 1,1        | 1,7 / 1,7          |
+    | **Suma de los totales**    |            | **52,9**         | **81,4**           |
+
+  - **Veredicto del RNF #6: se cumple en los dos modos.** Las 14 preguntas quedan dentro del límite. Con thinking apagado, el peor total es 8,7 s en una consulta con agregación y 4,3 s en una simple. Con thinking encendido, 11,6 s y 4,9 s. El margen más chico es `mis_pendientes` con thinking encendido: 0,1 s por debajo de los 5 s. Está marcada como simple aunque llama a `mis_listas`. Es una sola corrida por modo, y la latencia de la API cambia de un día a otro, así que el número sirve como orden de magnitud y no como garantía.
+  - **Thinking sigue apagado por defecto** (lo que ya decía `design.md`). En la suma tarda un 35 % menos, pero parte de esa ventaja sale de turnos en los que el modelo no buscó nada. Lo que se vio al revisar a mano las expectativas:
+    - **Tarjetas que faltan**: el prompt pide llamar a `mostrar_tarjetas` en la misma respuesta que recomienda. Con thinking apagado, de las 8 preguntas que piden recomendar o mostrar títulos, solo 3 terminaron con tarjetas (`mostrar_por_nombre`, `portugues`, `ingles_mas_corto`). Con thinking encendido terminaron 5. En los dos modos, `descubrir_con_filtros`, `semantico` y `para_chicos` nombran los títulos en el texto pero no los muestran como tarjetas.
+    - **Turnos sin buscar (apagado)**: `dato_simple` respondió 169 min de memoria, sin `buscar_por_titulo`. El dato es correcto, pero no salió de una tool. `como_arrival_mas_liviano` contestó «No tengo títulos que encajen» sin llamar a ninguna tool. Con thinking encendido, las dos buscaron y respondieron bien.
+    - **Filtros de más (encendido)**: en `sin_filtros_de_mas` el modelo agregó `nota_minima: 6.5`, que nadie pidió, y la regla del prompt no lo frenó. Con thinking apagado mandó solo el género.
+    - **Género fuera del enum (encendido)**: en `como_arrival_mas_liviano`, `buscar_semantico` recibió `"generos": ["Ciencia ficción"]`. El esquema de la tool solo admite los nombres en inglés. Los títulos que mostró salen de `similares_a`, así que el turno no se rompió, pero ese filtro no puede encontrar nada. No se investigó qué hace la tool con un valor fuera de la lista.
+    - **Lo que salió bien en los dos modos**: el saludo con voseo, el rechazo de la receta y de la inyección (no mostró el prompt ni dijo la capital), el portugués respondido en español con tarjetas, el inglés respondido en inglés con duraciones para todos los títulos y menores a 148 min, la filmografía de Villeneuve solo con títulos que devolvió la tool, y `mis_listas` con los 6 pendientes.
+  - **Pendiente**: las tarjetas que faltan son el problema más visible para el usuario. Afectan a los dos modos, pero sobre todo al que está por defecto. Queda para una tarea aparte (reforzar la regla del prompt o, si hace falta, que el orquestador avise cuando una respuesta nombra títulos de una tool y no llama a `mostrar_tarjetas`). Volver a evaluar el modo de thinking después de ese arreglo.
+- **Archivos afectados**: `docs/decisiones.md`. La salida completa de las dos corridas no se versiona.
+
+---
+
 ## 07/11/2026 — Playwright usa 2 workers en local
 
 - **Fecha**: 07/11/2026

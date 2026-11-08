@@ -26,7 +26,7 @@ Proyecto académico (Seminario Integrador, UTN-FRSF) de dos personas, que se pre
 
 - Módulos: auth (local + Google), catálogo (Home, Buscar, Ficha), calificaciones y reseñas, listas, perfil y preferencias, chatbot (FAB, solo con sesión), moderación en el Admin.
 - Home y Ficha se ven sin sesión; calificar, listas y chatbot exigen sesión.
-- Pendiente: chatbot (B-02 a B-06) sin implementar; arquitectura acordada el 08/10/2026 y reglas de idioma, tarjetas y errores el 09/10/2026 (`docs/decisiones.md`).
+- Chatbot (B-02 a B-06): integrado en `develop` el 07/11/2026 y en `main` el 08/11/2026. Se abre desde el FAB y solo con sesión. Contesta con DeepSeek y busca títulos en TMDB y en el catálogo local, con búsqueda semántica (vectores de BGE-M3 en pgvector). Las recomendaciones salen como tarjetas de títulos que el modelo encontró en esas búsquedas; no puede mostrar uno que no buscó.
 
 ## Brand Commitments
 
