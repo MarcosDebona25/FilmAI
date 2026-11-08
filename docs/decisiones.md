@@ -5,6 +5,18 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 08/11/2026 — Cierre del SDD del chatbot (fase 8, T6)
+
+- **Fecha**: 08/11/2026
+- **Descripción**: con esto se cierra la fase 8 de `openspec/changes/chatbot/tasks.md` y el cambio queda archivado. Solo cambian docs y specs; no se tocó código.
+  - **8.2**: el set dorado corrió contra DeepSeek con thinking apagado y encendido. El RNF #6 se cumple en los dos modos y thinking sigue apagado por defecto. Queda pendiente que el modelo no siempre llama a `mostrar_tarjetas` al recomendar. La tabla y lo revisado a mano están en la entrada siguiente.
+  - **8.3**: los docs 02 a 06 ya estaban cerrados (entradas del 06/11/2026 del Canal y del 07/11/2026 del Motor). Faltaba `PRODUCT.md`: la línea que daba al chatbot por «sin implementar» ahora dice que está en `develop` (todavía no en `main`), que se abre desde el FAB y solo con sesión, que contesta con DeepSeek, que busca en TMDB y con búsqueda semántica (BGE-M3 sobre pgvector) y que las tarjetas solo muestran títulos que salieron de esas búsquedas. El resto del archivo ya coincidía con el producto.
+  - **8.4**: antes de borrar `openspec/changes/chatbot/` se comparó cada spec del cambio con la canónica de `openspec/specs/`. `chat-api` es idéntica. `chat-ui` tiene de más el requisito de las sugerencias rotativas (06/11/2026). `semantic-search` tiene de más lo que se ajustó al código el 07/11/2026, y el escenario del vector de 768 dimensiones sigue ahí, en el requisito de `generar_vector`. Ninguna canónica pierde nada del cambio, así que se borró la carpeta completa (`proposal.md`, `design.md`, `tasks.md` y las tres specs). Las decisiones que tenía `design.md` ya están en este archivo, como pide AGENTS.md (sección 9).
+  - **8.5**: `graphify update .` se corre después de mergear `develop` con los planes de #180 (`tmdb-cumplimiento`) y #181 (`brevo-respaldo`), para regenerar el grafo una sola vez.
+- **Archivos afectados**: `PRODUCT.md`, `docs/decisiones.md`, `openspec/changes/chatbot/` (borrada), `graphify-out/` (en 8.5).
+
+---
+
 ## 08/11/2026 — Chatbot: corrida del set dorado contra DeepSeek y veredicto del RNF #6 (tarea 8.2, T5)
 
 - **Fecha**: 08/11/2026
