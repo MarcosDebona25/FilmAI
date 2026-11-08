@@ -31,6 +31,13 @@ log those rows instead.
 
 ## Phase 1: Attribution and brand (PR 1)
 
+- [ ] 1.0 Canvas first (07/11/2026): when development of this change
+      starts, design in Claude Design the credits block of «Terms · mobile»
+      and the footer line with its «Credits» link («Footer · desktop» and
+      «Footer · mobile»), in both themes. Choose there which official logo
+      (`docs/tmdb-legales/logo1.svg` … `logo5.svg`), its size and its
+      treatment on each theme. No logo is fixed before this step. Record the
+      choice in `docs/decisiones.md`
 - [ ] 1.1 Explain: why the notice is a catalog key and not a literal; why the
       logo is an `<img>` from `public/` and not an SVG component (no
       recoloring); what an anchor link is and how `routes.terms` builds it
@@ -42,10 +49,9 @@ log those rows instead.
       `footer.main.tmdbAttribution` with the notice; align
       `legal.thirdParty.tmdb` and `emails.shared.copyrightAttribution`.
       Marcos approves the Spanish. Regenerate catalogs; `npm run i18n:check`
-- [ ] 1.3 Logo: compare `logo3.svg`, `logo4.svg`, `logo5.svg` on both themes
-      at the target height; copy the chosen one unchanged to
-      `frontend/public/tmdb/`; check its contrast on the light surface and,
-      if under 3:1, put it on a `#0d253f` surface there
+- [ ] 1.3 Logo: copy the variant chosen in 1.0 unchanged to
+      `frontend/public/tmdb/`, with the size and theme treatment the canvas
+      fixed
 - [ ] 1.4 RED `frontend/tests/tmdb-credits.test.tsx`: the block renders the
       exact English notice, the logo with its alt, the link to
       `https://www.themoviedb.org`, and `id="credits"`; Spanish renders the

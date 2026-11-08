@@ -150,24 +150,23 @@ literal.
 
 ### The logo
 
-- **Variant:** `logo5.svg` (horizontal, 273 × 35.5) for the credits block: the
-  short wordmark fits a line of text and does not compete with a heading.
-  `logo1.svg` / `logo2.svg` (stacked) are too tall for that slot. Final
-  choice is made by looking at both themes (task 1.3); the file is copied
-  byte for byte to `frontend/public/tmdb/`.
+**Not decided yet (07/11/2026).** Which logo, its size, and how it sits on
+each theme are decided in the Claude Design canvas when development of this
+change starts (task 1.0), not in this plan. Until then no variant is fixed.
+What the design MUST respect, whatever is chosen:
+
+- **Official file:** one of `docs/tmdb-legales/logo1.svg` … `logo5.svg`,
+  copied byte for byte to `frontend/public/tmdb/`.
 - **Unmodified:** no `fill` override, no CSS filter, no `currentColor`; served
   as `<img>` so the theme cannot recolor it. Fixed height with `width: auto`
-  so the aspect ratio holds.
-- **Less prominent than FilmAI:** the credits block sits at the end of
-  `/terms`; the logo's height is under the footer wordmark's (≤ 1.25 rem vs
-  1.875 rem). It never appears in the header, the hero, the chat or next to
-  a title, so it cannot read as an endorsement.
-- **Both themes:** the official gradient (`#90cea1` → `#01b4e4`) on the dark
-  theme's background, and on the light one if its contrast is ≥ 3:1 against
-  the surface (WCAG 1.4.11 does not bind logos, but the issue asks that it
-  read well). If not, the block gets the dark brand surface (`#0d253f`, an
-  approved TMDB color) behind the logo in the light theme. The logo itself is
-  never recolored.
+  so the aspect ratio holds. Not rotated or flipped.
+- **Less prominent than FilmAI:** smaller than FilmAI's mark, and never in
+  the header, the hero, the chat or next to a title, so it cannot read as an
+  endorsement.
+- **Both themes:** it must read well on the light and the dark theme. Only
+  white, black or TMDB's approved colors (`#0d253f`, `#01b4e4`, `#90cea1`);
+  how to get there (variant, surface behind it) is part of the canvas
+  decision.
 - **Alt text:** «TMDB logo» / «Logo de TMDB», from the catalogs.
 
 ### Naming audit
