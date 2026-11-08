@@ -50,13 +50,13 @@ empty, same as Resend today) and `_extraer_html(message)`.
 
 ### Brevo payload
 
-| Django `EmailMessage` | Brevo field |
-|---|---|
-| `BREVO_FROM_EMAIL` or else `from_email`, parsed with `email.utils.parseaddr` | `sender: {"name", "email"}` |
-| `to` / `cc` / `bcc` | `to` / `cc` / `bcc`: lists of `{"email": ...}`; empty lists omitted |
-| `subject` | `subject` |
-| `alternatives` `text/html` | `htmlContent` |
-| `body` | `textContent` |
+| Django `EmailMessage`                                                        | Brevo field                                                         |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `BREVO_FROM_EMAIL` or else `from_email`, parsed with `email.utils.parseaddr` | `sender: {"name", "email"}`                                         |
+| `to` / `cc` / `bcc`                                                          | `to` / `cc` / `bcc`: lists of `{"email": ...}`; empty lists omitted |
+| `subject`                                                                    | `subject`                                                           |
+| `alternatives` `text/html`                                                   | `htmlContent`                                                       |
+| `body`                                                                       | `textContent`                                                       |
 
 Brevo requires `htmlContent` when there is no template. Every account email
 has HTML, but a plain-text-only message (`send_test_email`, admin mail) would
@@ -71,17 +71,17 @@ Header `api-key: BREVO_API_KEY`, `accept: application/json`. Success is 201
 Fallback happens **only when the first provider raised**. A 2xx is final, so
 an accepted email is never sent again.
 
-| Failure | Resend | Brevo | Falls back? |
-|---|---|---|---|
-| Connection error, DNS, TLS | transport exception of the SDK's HTTP client (`requests`; verify in task 1.2) | `httpx.TransportError` | Yes |
-| Read timeout (request sent, no answer) | same | `httpx.TimeoutException` | Yes — **D-2** |
-| 5xx | `ApplicationError` / `ResendError` with `code >= 500` | status ≥ 500 | Yes |
-| 429 (Too Many Requests): rate limit, daily or monthly quota | `RateLimitError` (`rate_limit_exceeded`, `daily_quota_exceeded`, `monthly_quota_exceeded`) | 429 | Yes |
-| 402 (Payment Required): out of credits | — | 402 | Yes |
-| 401 (Unauthorized) / 403 (Forbidden): missing or invalid key, unknown IP, unverified sender | `MissingApiKeyError`, `InvalidApiKeyError` | 401 / 403 | Yes — **D-1** |
-| 400 (Bad Request) / 422 (Unprocessable Entity): invalid message data | `ValidationError`, `MissingRequiredFieldsError` | 400 | **No**: the same data would fail again; raise at once |
-| Missing key in settings | provider not `configurado()` | same | Skipped, next provider |
-| Unknown exception | anything else | anything else | No (treated as a bug, raised) |
+| Failure                                                                                     | Resend                                                                                     | Brevo                    | Falls back?                                           |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------ | ----------------------------------------------------- |
+| Connection error, DNS, TLS                                                                  | transport exception of the SDK's HTTP client (`requests`; verify in task 1.2)              | `httpx.TransportError`   | Yes                                                   |
+| Read timeout (request sent, no answer)                                                      | same                                                                                       | `httpx.TimeoutException` | Yes — **D-2**                                         |
+| 5xx                                                                                         | `ApplicationError` / `ResendError` with `code >= 500`                                      | status ≥ 500             | Yes                                                   |
+| 429 (Too Many Requests): rate limit, daily or monthly quota                                 | `RateLimitError` (`rate_limit_exceeded`, `daily_quota_exceeded`, `monthly_quota_exceeded`) | 429                      | Yes                                                   |
+| 402 (Payment Required): out of credits                                                      | —                                                                                          | 402                      | Yes                                                   |
+| 401 (Unauthorized) / 403 (Forbidden): missing or invalid key, unknown IP, unverified sender | `MissingApiKeyError`, `InvalidApiKeyError`                                                 | 401 / 403                | Yes — **D-1**                                         |
+| 400 (Bad Request) / 422 (Unprocessable Entity): invalid message data                        | `ValidationError`, `MissingRequiredFieldsError`                                            | 400                      | **No**: the same data would fail again; raise at once |
+| Missing key in settings                                                                     | provider not `configurado()`                                                               | same                     | Skipped, next provider                                |
+| Unknown exception                                                                           | anything else                                                                              | anything else            | No (treated as a bug, raised)                         |
 
 **Why D-1 says yes.** An invalid or revoked key is exactly the "provider is
 unusable" case the fallback is for, and the issue's manual acceptance test
@@ -147,12 +147,12 @@ in the body).
 
 ## Configuration
 
-| Variable | Use | Production |
-|---|---|---|
-| `EMAIL_BACKEND` | `filmai.email_backends.RespaldoBackend` turns the fallback on. `ResendBackend` and `BrevoBackend` keep working alone | as today |
-| `BREVO_API_KEY` | Brevo API v3 key | required with `RespaldoBackend` or `BrevoBackend` |
-| `BREVO_FROM_EMAIL` | Verified Brevo sender, e.g. `FilmAI <cuenta@…>` (**D-5**). Empty → `from_email` of the message | required with `RespaldoBackend` while `DEFAULT_FROM_EMAIL` is `onboarding@resend.dev` |
-| `BREVO_TEST_RECIPIENT` | Development only: redirect every Brevo send | rejected |
+| Variable               | Use                                                                                                                  | Production                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `EMAIL_BACKEND`        | `filmai.email_backends.RespaldoBackend` turns the fallback on. `ResendBackend` and `BrevoBackend` keep working alone | as today                                                                              |
+| `BREVO_API_KEY`        | Brevo API v3 key                                                                                                     | required with `RespaldoBackend` or `BrevoBackend`                                     |
+| `BREVO_FROM_EMAIL`     | Verified Brevo sender, e.g. `FilmAI <cuenta@…>` (**D-5**). Empty → `from_email` of the message                       | required with `RespaldoBackend` while `DEFAULT_FROM_EMAIL` is `onboarding@resend.dev` |
+| `BREVO_TEST_RECIPIENT` | Development only: redirect every Brevo send                                                                          | rejected                                                                              |
 
 `validar_configuracion_email` gets the new values as keyword arguments and,
 with `debug=False`:
@@ -170,11 +170,11 @@ key, and `RespaldoBackend` without Brevo's key just behaves as Resend alone.
 
 ### Capacity (free plans, November 2026; re-check before deploying)
 
-| Provider | Per day | Per month |
-|---|---:|---:|
-| Resend | 100 | 3 000 |
-| Brevo | 300 | ~9 000 (300 × 30) |
-| **Combined** | **~400** | **~12 000** |
+| Provider     |  Per day |         Per month |
+| ------------ | -------: | ----------------: |
+| Resend       |      100 |             3 000 |
+| Brevo        |      300 | ~9 000 (300 × 30) |
+| **Combined** | **~400** |       **~12 000** |
 
 Resend's monthly cap binds first in a steady month; Brevo then carries up to
 300 a day.
@@ -198,12 +198,12 @@ a change to a rate is a conscious one.
 
 ### When both providers fail (D-4)
 
-| Flow | Today | After |
-|---|---|---|
-| Registration | 500, account left `PENDIENTE` | 503 (Service Unavailable) `email_unavailable`; `perform_create` runs in `transaction.atomic()`, so no `Usuario` and no `EmailAddress` remain; the visitor retries later |
-| Resend confirmation | 500 | 503 (Service Unavailable) `email_unavailable` |
-| Password reset | generic 200 (OK), error logged | unchanged (anti-enumeration, emails spec) |
-| Password updated | error logged, password kept | unchanged |
+| Flow                | Today                          | After                                                                                                                                                                   |
+| ------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registration        | 500, account left `PENDIENTE`  | 503 (Service Unavailable) `email_unavailable`; `perform_create` runs in `transaction.atomic()`, so no `Usuario` and no `EmailAddress` remain; the visitor retries later |
+| Resend confirmation | 500                            | 503 (Service Unavailable) `email_unavailable`                                                                                                                           |
+| Password reset      | generic 200 (OK), error logged | unchanged (anti-enumeration, emails spec)                                                                                                                               |
+| Password updated    | error logged, password kept    | unchanged                                                                                                                                                               |
 
 The view catches `EnvioFallido` only (not every `Exception`) and raises a DRF
 `APIException` subclass with status 503 and code `email_unavailable`, so the
@@ -230,10 +230,10 @@ All unit, no network, no Docker.
 
 ## Architecture decisions
 
-| Decision | Rationale |
-|---|---|
-| Fallback inside the email backend, not in `enviar_correo()` | Keeps the 24/08/2026 rule: one `EMAIL_BACKEND`, callers unaware. Also covers mail not sent by the service (admin, `send_test_email`) |
-| Per-message fallback, not per batch | A batch where Resend fails halfway must not resend the messages it already accepted |
-| `httpx` for Brevo (D-6) | One endpoint; already a dependency with a test transport used elsewhere; anymail would replace the Resend SDK too, which is out of scope |
-| One attempt per provider | The request is synchronous (registration waits for it); retries belong to a Celery move (Q-08) |
-| `RespaldoBackend` as an explicit `EMAIL_BACKEND` value | Turning the fallback on is visible in `.env` and in the start-up validation; no hidden flag |
+| Decision                                                    | Rationale                                                                                                                                |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Fallback inside the email backend, not in `enviar_correo()` | Keeps the 24/08/2026 rule: one `EMAIL_BACKEND`, callers unaware. Also covers mail not sent by the service (admin, `send_test_email`)     |
+| Per-message fallback, not per batch                         | A batch where Resend fails halfway must not resend the messages it already accepted                                                      |
+| `httpx` for Brevo (D-6)                                     | One endpoint; already a dependency with a test transport used elsewhere; anymail would replace the Resend SDK too, which is out of scope |
+| One attempt per provider                                    | The request is synchronous (registration waits for it); retries belong to a Celery move (Q-08)                                           |
+| `RespaldoBackend` as an explicit `EMAIL_BACKEND` value      | Turning the fallback on is visible in `.env` and in the start-up validation; no hidden flag                                              |

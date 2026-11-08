@@ -2,22 +2,22 @@
 
 ## Review Workload Forecast
 
-| Field | Value |
-|-------|-------|
-| Estimated changed lines | ~700 (backend ~500, frontend and copy ~60, docs ~140) |
-| 400-line budget risk | Medium |
-| Chained PRs recommended | Yes — two PRs: providers and fallback (PR 1), limits and the `email_unavailable` code (PR 2) |
-| Delivery strategy | ask-on-risk |
-| Chain strategy | Both PRs from `develop`, one worktree per PR in `~/FilmAI-worktrees/<branch>`; PR 2 stacks on PR 1 (merge commit, no rebase) |
-| Blocking | D-1 to D-6 of `proposal.md` confirmed by the user before task 1.1 |
-| CI | Disabled since 06/11/2026: the local run of `ci.yml`'s steps is the gate |
+| Field                   | Value                                                                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Estimated changed lines | ~700 (backend ~500, frontend and copy ~60, docs ~140)                                                                        |
+| 400-line budget risk    | Medium                                                                                                                       |
+| Chained PRs recommended | Yes — two PRs: providers and fallback (PR 1), limits and the `email_unavailable` code (PR 2)                                 |
+| Delivery strategy       | ask-on-risk                                                                                                                  |
+| Chain strategy          | Both PRs from `develop`, one worktree per PR in `~/FilmAI-worktrees/<branch>`; PR 2 stacks on PR 1 (merge commit, no rebase) |
+| Blocking                | D-1 to D-6 of `proposal.md` confirmed by the user before task 1.1                                                            |
+| CI                      | Disabled since 06/11/2026: the local run of `ci.yml`'s steps is the gate                                                     |
 
 ### Work Units
 
-| PR | Goal | Est. lines | Focused test command | Rollback boundary |
-|----|------|-----------:|----------------------|-------------------|
-| 1 | Provider seam, `BrevoBackend`, `RespaldoBackend`, settings, validation, `.env.example` | ~450 | `python manage.py test filmai.tests filmai.test_email_respaldo` | `EMAIL_BACKEND=filmai.email_backends.ResendBackend`; the refactored `ResendBackend` keeps its tests green |
-| 2 | Throttle comment and tests, `email_unavailable` 503, atomic registration, copy, docs | ~250 | `python manage.py test usuarios.test_seguridad_throttles usuarios.test_errores_registro` and `npm run test:unit -- registro` | Revert the view wrappers; the code stays unused in the catalog |
+| PR  | Goal                                                                                   | Est. lines | Focused test command                                                                                                         | Rollback boundary                                                                                         |
+| --- | -------------------------------------------------------------------------------------- | ---------: | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | Provider seam, `BrevoBackend`, `RespaldoBackend`, settings, validation, `.env.example` |       ~450 | `python manage.py test filmai.tests filmai.test_email_respaldo`                                                              | `EMAIL_BACKEND=filmai.email_backends.ResendBackend`; the refactored `ResendBackend` keeps its tests green |
+| 2   | Throttle comment and tests, `email_unavailable` 503, atomic registration, copy, docs   |       ~250 | `python manage.py test usuarios.test_seguridad_throttles usuarios.test_errores_registro` and `npm run test:unit -- registro` | Revert the view wrappers; the code stays unused in the catalog                                            |
 
 ## Phase 0: Confirm the open decisions
 
@@ -54,18 +54,11 @@
       `ProveedorResend` (today's `_send_one` moved), `ProveedorBrevo` with
       `httpx.Client(timeout=10)`, shared `_destinatarios` and `_extraer_html`;
       `ResendBackend` and `BrevoBackend` over the shared loop
-- [ ] 1.8 RED `RespaldoBackend`:
-      - Resend OK → Brevo never called; log says Resend
-      - Resend 429 / 5xx / network / 401 → Brevo sends; WARNING with the
-        reason, INFO says Brevo
-      - Resend 422 → Brevo not called; raises (or 0 with `fail_silently`)
-      - both fail → `EnvioFallido` with both statuses; with `fail_silently`
-        returns 0 and logs ERROR
-      - two messages, Resend fails only on the second → first sent once by
-        Resend, second by Brevo, return value 2
-      - no `BREVO_API_KEY` → behaves as Resend alone; no Resend key → Brevo
-        alone; neither → error log, 0 (as today)
-      - no log line contains an address (assert over `assertLogs` output)
+- [ ] 1.8 RED `RespaldoBackend`: - Resend OK → Brevo never called; log says Resend - Resend 429 / 5xx / network / 401 → Brevo sends; WARNING with the
+      reason, INFO says Brevo - Resend 422 → Brevo not called; raises (or 0 with `fail_silently`) - both fail → `EnvioFallido` with both statuses; with `fail_silently`
+      returns 0 and logs ERROR - two messages, Resend fails only on the second → first sent once by
+      Resend, second by Brevo, return value 2 - no `BREVO_API_KEY` → behaves as Resend alone; no Resend key → Brevo
+      alone; neither → error log, 0 (as today) - no log line contains an address (assert over `assertLogs` output)
 - [ ] 1.9 GREEN: `RespaldoBackend`
 - [ ] 1.10 Settings: `BREVO_API_KEY`, `BREVO_FROM_EMAIL`,
       `BREVO_TEST_RECIPIENT` next to the `RESEND_*` block; update the
@@ -138,14 +131,10 @@
       Note in `docs/decisiones.md` that a Gmail sender may fail DMARC through
       Brevo, and that the domain setup is part of the deploy
 - [ ] 4.3 Manual end-to-end in Docker (`-p filmai`, `RUN_MIGRATIONS=false`
-      from a worktree), with `EMAIL_BACKEND=filmai.email_backends.RespaldoBackend`:
-      1. Valid Resend key: registration, resend and reset arrive; the log says
-         «vía Resend» and Brevo is not called
-      2. `RESEND_API_KEY=re_invalida`, restart backend: the same three arrive;
-         the log shows the WARNING with 401/403 and «vía Brevo»
-      3. Invalid keys in both: registration answers 503
-         (Service Unavailable) with the translated message and leaves no
-         account; reset answers the generic 200 (OK)
-      4. Check the received email: HTML renders, plain text present, «Sent
-         with Brevo» footer present or not, spam folder or inbox
+      from a worktree), with `EMAIL_BACKEND=filmai.email_backends.RespaldoBackend`: 1. Valid Resend key: registration, resend and reset arrive; the log says
+      «vía Resend» and Brevo is not called 2. `RESEND_API_KEY=re_invalida`, restart backend: the same three arrive;
+      the log shows the WARNING with 401/403 and «vía Brevo» 3. Invalid keys in both: registration answers 503
+      (Service Unavailable) with the translated message and leaves no
+      account; reset answers the generic 200 (OK) 4. Check the received email: HTML renders, plain text present, «Sent
+      with Brevo» footer present or not, spam folder or inbox
 - [ ] 4.4 Record the result of 4.3 in `docs/decisiones.md`

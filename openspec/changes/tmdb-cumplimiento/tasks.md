@@ -2,24 +2,24 @@
 
 ## Review Workload Forecast
 
-| Field | Value |
-|-------|-------|
-| Estimated changed lines | ~1 150 (frontend ~350, backend ~600, docs ~200) |
-| 400-line budget risk | Medium |
-| Chained PRs recommended | Yes — four PRs, mostly independent (below) |
-| Delivery strategy | ask-on-risk |
-| Chain strategy | Each PR from `develop`, one worktree per PR in `~/FilmAI-worktrees/<branch>`; PR 3 may stack on PR 2 (it reuses `disponible_en_tmdb`); merge commit, no rebase |
-| Owners | To agree between Gonza and Marcos. PR 1 is frontend only; PRs 2–3 are backend; PR 4 is closing |
-| PR-Agent | At most 3 passes per PR, while the workflow stays disabled (06/11/2026) the gate is local verification |
+| Field                   | Value                                                                                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Estimated changed lines | ~1 150 (frontend ~350, backend ~600, docs ~200)                                                                                                                |
+| 400-line budget risk    | Medium                                                                                                                                                         |
+| Chained PRs recommended | Yes — four PRs, mostly independent (below)                                                                                                                     |
+| Delivery strategy       | ask-on-risk                                                                                                                                                    |
+| Chain strategy          | Each PR from `develop`, one worktree per PR in `~/FilmAI-worktrees/<branch>`; PR 3 may stack on PR 2 (it reuses `disponible_en_tmdb`); merge commit, no rebase |
+| Owners                  | To agree between Gonza and Marcos. PR 1 is frontend only; PRs 2–3 are backend; PR 4 is closing                                                                 |
+| PR-Agent                | At most 3 passes per PR, while the workflow stays disabled (06/11/2026) the gate is local verification                                                         |
 
 ### Work Units
 
-| PR | Goal | Est. lines | Focused test command | Rollback boundary |
-|----|------|-----------:|----------------------|-------------------|
-| 1 | Credits in `/terms`, logo, footer notice, naming audit | ~350 | `npm run test:unit -- terms footer` + `npx playwright test terms` | Remove `<TmdbCredits />` and restore the old footer key |
-| 2 | Catalog refresh task, 404 rule, cache cap | ~450 | `test catalogo.tests_vencimiento catalogo.test_cache_tope` | Remove the beat entry and the task; reverse the `disponible_en_tmdb` migration |
-| 3 | Chat card trimming and rehydration | ~250 | `test chatbot.tests_recorte` | Remove the beat entry; rehydration of untrimmed cards is a no-op |
-| 4 | API rate measurement, AI-use decision, docs, specs | ~100 + docs | manual + full suite | Docs only |
+| PR  | Goal                                                   |  Est. lines | Focused test command                                              | Rollback boundary                                                              |
+| --- | ------------------------------------------------------ | ----------: | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | Credits in `/terms`, logo, footer notice, naming audit |        ~350 | `npm run test:unit -- terms footer` + `npx playwright test terms` | Remove `<TmdbCredits />` and restore the old footer key                        |
+| 2   | Catalog refresh task, 404 rule, cache cap              |        ~450 | `test catalogo.tests_vencimiento catalogo.test_cache_tope`        | Remove the beat entry and the task; reverse the `disponible_en_tmdb` migration |
+| 3   | Chat card trimming and rehydration                     |        ~250 | `test chatbot.tests_recorte`                                      | Remove the beat entry; rehydration of untrimmed cards is a no-op               |
+| 4   | API rate measurement, AI-use decision, docs, specs     | ~100 + docs | manual + full suite                                               | Docs only                                                                      |
 
 Dependencies: PR 1 and PR 2 start with no wait. PR 3 needs PR 2's
 `disponible_en_tmdb` only for the «unavailable» placeholder; it can start

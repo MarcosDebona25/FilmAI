@@ -24,18 +24,18 @@ The 6-month clock applies to TMDB **content** (texts, image paths, ratings,
 lists of names). Ids (`id_tmdb`, `tipo`, `generos_ids`) are references, not
 content, and are kept as long as the row exists.
 
-| Store | What it holds | Today's maximum age | After this change |
-|---|---|---|---|
-| `ProduccionAudiovisual` | Title, synopsis, poster, cast, directors, genres, keywords, rating, runtime, seasons | Unbounded if TMDB never lists it as changed and nobody opens it; unbounded if never enriched | Refreshed before 150 days; ≤ 180 days guaranteed (see below) |
-| `ProduccionTraduccion` | Title, synopsis, poster per language | Same as its production | Rewritten in the same `_enriquecer()` call (task 2.1 verifies it overwrites, not only fills gaps) |
-| `ProduccionEmbedding` | Vector of the canonical text | Same as its production | Re-embedded when the refresh changes `source_hash`; an unchanged text means the vector already matches fresh data |
-| `Mensaje.tarjetas` | `{id_tmdb, tipo, titulo, poster, anio}` | Forever | `titulo`, `poster`, `anio` removed after 180 days |
-| `Chat.contexto.ya_recomendados` | Last 30 cards as `{id_tmdb, tipo, titulo, anio}` | Forever for an idle chat | Each entry gets `fecha`; after 180 days only `{id_tmdb, tipo, fecha}` remain |
-| Redis, normal keys | API responses | 30 days (`genres`) | Unchanged |
-| Redis, backup (`RESPALDO_TTL`) | Last good response | 30 days | Unchanged; a test pins every TTL ≤ 180 days |
-| Browser cache | API responses | `Cache-Control` of the catalog views | Task 2.8 checks no `max-age` exceeds 180 days |
-| `frontend/public/collage-posters/Opcion 1.jpg` | A collage of posters | Since 13/08/2026 | **Out of scope** (07/11/2026); revisit by 13/02/2027 |
-| Test fixtures (`e2e/api-simulada.ts`, `catalogo/test_datos/tmdb_buscar.json`) | Copies of TMDB responses | Since they were written | **Out of scope** (07/11/2026): test data, never served |
+| Store                                                                         | What it holds                                                                        | Today's maximum age                                                                          | After this change                                                                                                 |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ProduccionAudiovisual`                                                       | Title, synopsis, poster, cast, directors, genres, keywords, rating, runtime, seasons | Unbounded if TMDB never lists it as changed and nobody opens it; unbounded if never enriched | Refreshed before 150 days; ≤ 180 days guaranteed (see below)                                                      |
+| `ProduccionTraduccion`                                                        | Title, synopsis, poster per language                                                 | Same as its production                                                                       | Rewritten in the same `_enriquecer()` call (task 2.1 verifies it overwrites, not only fills gaps)                 |
+| `ProduccionEmbedding`                                                         | Vector of the canonical text                                                         | Same as its production                                                                       | Re-embedded when the refresh changes `source_hash`; an unchanged text means the vector already matches fresh data |
+| `Mensaje.tarjetas`                                                            | `{id_tmdb, tipo, titulo, poster, anio}`                                              | Forever                                                                                      | `titulo`, `poster`, `anio` removed after 180 days                                                                 |
+| `Chat.contexto.ya_recomendados`                                               | Last 30 cards as `{id_tmdb, tipo, titulo, anio}`                                     | Forever for an idle chat                                                                     | Each entry gets `fecha`; after 180 days only `{id_tmdb, tipo, fecha}` remain                                      |
+| Redis, normal keys                                                            | API responses                                                                        | 30 days (`genres`)                                                                           | Unchanged                                                                                                         |
+| Redis, backup (`RESPALDO_TTL`)                                                | Last good response                                                                   | 30 days                                                                                      | Unchanged; a test pins every TTL ≤ 180 days                                                                       |
+| Browser cache                                                                 | API responses                                                                        | `Cache-Control` of the catalog views                                                         | Task 2.8 checks no `max-age` exceeds 180 days                                                                     |
+| `frontend/public/collage-posters/Opcion 1.jpg`                                | A collage of posters                                                                 | Since 13/08/2026                                                                             | **Out of scope** (07/11/2026); revisit by 13/02/2027                                                              |
+| Test fixtures (`e2e/api-simulada.ts`, `catalogo/test_datos/tmdb_buscar.json`) | Copies of TMDB responses                                                             | Since they were written                                                                      | **Out of scope** (07/11/2026): test data, never served                                                            |
 
 `Calificacion`, `Resena` and list items hold user data plus a foreign key to
 the production; they store no TMDB content of their own.
@@ -206,12 +206,12 @@ under its constraints so a future monetization plan meets it.
 
 ## Architecture Decisions
 
-| Decision | Alternative rejected | Why |
-|---|---|---|
-| Credits as a block in `/terms` with an anchor | A new `/about` page | Decided 07/11/2026. TMDB asks for an «About» or «Credits» *section*; `/terms` already lists TMDB as a third party |
-| Reference date = `fecha_enriquecimiento` | A new `fecha_sincronizacion` column | It already records the last TMDB fetch, in the same `save()` as the data; NULL rows are handled by being due |
-| Refresh at 150 days, cap 300 per night | Refresh at 180; no cap | A margin for failed nights; a cap so the worker keeps serving `materializar_produccion` for users |
-| Refresh, never delete referenced rows | Delete rows older than 6 months | CASCADE would take users' ratings, reviews and lists |
-| Trim cards to ids at 180 days, rehydrate on read | Keep them (accepted risk); store ids only from now on | Decided 07/11/2026. Live conversations keep the 09/10 behavior; old ones stay correct without TMDB calls |
-| Logo as `<img>` from `public/` | Inline SVG component | An inline SVG invites `currentColor`/theme tweaks; the terms forbid recoloring |
-| No shared rate limiter | A Redis token bucket | The client is sequential; measure first |
+| Decision                                         | Alternative rejected                                  | Why                                                                                                               |
+| ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Credits as a block in `/terms` with an anchor    | A new `/about` page                                   | Decided 07/11/2026. TMDB asks for an «About» or «Credits» _section_; `/terms` already lists TMDB as a third party |
+| Reference date = `fecha_enriquecimiento`         | A new `fecha_sincronizacion` column                   | It already records the last TMDB fetch, in the same `save()` as the data; NULL rows are handled by being due      |
+| Refresh at 150 days, cap 300 per night           | Refresh at 180; no cap                                | A margin for failed nights; a cap so the worker keeps serving `materializar_produccion` for users                 |
+| Refresh, never delete referenced rows            | Delete rows older than 6 months                       | CASCADE would take users' ratings, reviews and lists                                                              |
+| Trim cards to ids at 180 days, rehydrate on read | Keep them (accepted risk); store ids only from now on | Decided 07/11/2026. Live conversations keep the 09/10 behavior; old ones stay correct without TMDB calls          |
+| Logo as `<img>` from `public/`                   | Inline SVG component                                  | An inline SVG invites `currentColor`/theme tweaks; the terms forbid recoloring                                    |
+| No shared rate limiter                           | A Redis token bucket                                  | The client is sequential; measure first                                                                           |

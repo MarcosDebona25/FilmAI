@@ -36,14 +36,14 @@ task list.
 
 ## What was already decided
 
-| Date | Where | What it fixes |
-|---|---|---|
-| 07/11/2026 | Issue #180 | Academic, non-profit use covers the chatbot and embeddings; commercialization ⇒ talk to TMDB first. Accepted risk |
-| 07/11/2026 | This change, with Marcos | Credits go in a section of `/terms` (`/terms#credits`), not a new page |
-| 07/11/2026 | This change, with Marcos | Chat cards older than 6 months are trimmed to `{id_tmdb, tipo}` and rehydrated from the local catalog when read |
+| Date       | Where                    | What it fixes                                                                                                                                                                                                                                                         |
+| ---------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 07/11/2026 | Issue #180               | Academic, non-profit use covers the chatbot and embeddings; commercialization ⇒ talk to TMDB first. Accepted risk                                                                                                                                                     |
+| 07/11/2026 | This change, with Marcos | Credits go in a section of `/terms` (`/terms#credits`), not a new page                                                                                                                                                                                                |
+| 07/11/2026 | This change, with Marcos | Chat cards older than 6 months are trimmed to `{id_tmdb, tipo}` and rehydrated from the local catalog when read                                                                                                                                                       |
 | 07/11/2026 | This change, with Marcos | The access-screen collage (`frontend/public/collage-posters/Opcion 1.jpg`) and the test fixtures copied from TMDB (`frontend/e2e/api-simulada.ts`, `backend/catalogo/test_datos/tmdb_buscar.json`) are **out of scope**: they are recorded as exceptions, not changed |
-| 09/10/2026 | `docs/decisiones.md` | Cards stored as shown, no FK. This change narrows it: as shown **for 6 months** |
-| 16/10/2026 | `docs/decisiones.md` | Redis backup of 30 days (`RESPALDO_TTL`). Already under 6 months; kept |
+| 09/10/2026 | `docs/decisiones.md`     | Cards stored as shown, no FK. This change narrows it: as shown **for 6 months**                                                                                                                                                                                       |
+| 16/10/2026 | `docs/decisiones.md`     | Redis backup of 30 days (`RESPALDO_TTL`). Already under 6 months; kept                                                                                                                                                                                                |
 
 ## Scope
 
@@ -89,12 +89,12 @@ task list.
 
 ## Risks and rollback
 
-| Risk | Mitigation | Rollback |
-|---|---|---|
-| The refresh task floods TMDB or starves the worker | A per-run cap (`CELERY_REFRESCO_LIMIT`), oldest first, after the 03:00 sync; every call goes through the client that honors 429 and `Retry-After` | Remove the beat entry; rows go back to being refreshed only by the sync and the 90-day net |
-| A title TMDB deleted (404 (Not Found)) can never be refreshed, and deleting the row cascades to users' ratings, reviews and lists | Rows nobody references are deleted; referenced rows have their TMDB text blanked and are flagged, so the UI shows them as unavailable (design, «Titles TMDB no longer has»). **To confirm with Gonza before PR 2 merges** | Drop the 404 branch: the row stays as it was and is logged |
-| Trimming cards changes what an old conversation looks like | Rehydration from the local catalog shows the current title and poster, in the reader's language; only an id that is no longer in the catalog falls back to a neutral card | Stop the trimming step; trimmed cards stay rehydrated, which is still correct |
-| The chosen logo reads poorly on one theme | The variant, size and theme treatment are designed in the canvas before implementing (task 1.0); no logo is fixed in this plan | Swap the SVG file |
-| The non-profit condition is broken later (ads, subscriptions) without anyone remembering #180 | Decision entry in `docs/decisiones.md` and a line in `PRODUCT.md` (task for whoever integrates) | — |
+| Risk                                                                                                                              | Mitigation                                                                                                                                                                                                                | Rollback                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| The refresh task floods TMDB or starves the worker                                                                                | A per-run cap (`CELERY_REFRESCO_LIMIT`), oldest first, after the 03:00 sync; every call goes through the client that honors 429 and `Retry-After`                                                                         | Remove the beat entry; rows go back to being refreshed only by the sync and the 90-day net |
+| A title TMDB deleted (404 (Not Found)) can never be refreshed, and deleting the row cascades to users' ratings, reviews and lists | Rows nobody references are deleted; referenced rows have their TMDB text blanked and are flagged, so the UI shows them as unavailable (design, «Titles TMDB no longer has»). **To confirm with Gonza before PR 2 merges** | Drop the 404 branch: the row stays as it was and is logged                                 |
+| Trimming cards changes what an old conversation looks like                                                                        | Rehydration from the local catalog shows the current title and poster, in the reader's language; only an id that is no longer in the catalog falls back to a neutral card                                                 | Stop the trimming step; trimmed cards stay rehydrated, which is still correct              |
+| The chosen logo reads poorly on one theme                                                                                         | The variant, size and theme treatment are designed in the canvas before implementing (task 1.0); no logo is fixed in this plan                                                                                            | Swap the SVG file                                                                          |
+| The non-profit condition is broken later (ads, subscriptions) without anyone remembering #180                                     | Decision entry in `docs/decisiones.md` and a line in `PRODUCT.md` (task for whoever integrates)                                                                                                                           | —                                                                                          |
 
 Each PR in `tasks.md` names its own rollback boundary.
