@@ -5,12 +5,20 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 08/11/2026 — `main` se pone al día con `develop` (chatbot incluido)
+
+- **Fecha**: 08/11/2026
+- **Descripción**: después de mergear en `develop` los planes de #181 (`brevo-respaldo`, PR #182) y #180 (`tmdb-cumplimiento`, PR #183) y el cierre del chatbot (PR #184), `main` se lleva al mismo commit que `develop` por fast-forward (`main` era ancestro directo de `develop`). Con esto se revierte el criterio del 05/11/2026 (PR #166), que dejaba el chatbot fuera de `main`: ahora `main` tiene todo lo implementado hasta hoy. Los planes de #180 y #181 entran solo como planificación; no hay código de esos cambios, y así se comentó en los dos issues. Los dos planes se formatearon con Prettier al integrarlos (sin cambios de contenido). La tarea 8.5 (`graphify update .`) se corrió con todo esto integrado.
+- **Archivos afectados**: `PRODUCT.md` (el chatbot ya está en `main`), `docs/decisiones.md`, `openspec/changes/brevo-respaldo/`, `openspec/changes/tmdb-cumplimiento/`, `graphify-out/`.
+
+---
+
 ## 08/11/2026 — Cierre del SDD del chatbot (fase 8, T6)
 
 - **Fecha**: 08/11/2026
 - **Descripción**: con esto se cierra la fase 8 de `openspec/changes/chatbot/tasks.md` y el cambio queda archivado. Solo cambian docs y specs; no se tocó código.
   - **8.2**: el set dorado corrió contra DeepSeek con thinking apagado y encendido. El RNF #6 se cumple en los dos modos y thinking sigue apagado por defecto. Queda pendiente que el modelo no siempre llama a `mostrar_tarjetas` al recomendar. La tabla y lo revisado a mano están en la entrada siguiente.
-  - **8.3**: los docs 02 a 06 ya estaban cerrados (entradas del 06/11/2026 del Canal y del 07/11/2026 del Motor). Faltaba `PRODUCT.md`: la línea que daba al chatbot por «sin implementar» ahora dice que está en `develop` (todavía no en `main`), que se abre desde el FAB y solo con sesión, que contesta con DeepSeek, que busca en TMDB y con búsqueda semántica (BGE-M3 sobre pgvector) y que las tarjetas solo muestran títulos que salieron de esas búsquedas. El resto del archivo ya coincidía con el producto.
+  - **8.3**: los docs 02 a 06 ya estaban cerrados (entradas del 06/11/2026 del Canal y del 07/11/2026 del Motor). Faltaba `PRODUCT.md`: la línea que daba al chatbot por «sin implementar» ahora dice que está en `develop` y en `main` (llevado a `main` el 08/11/2026), que se abre desde el FAB y solo con sesión, que contesta con DeepSeek, que busca en TMDB y con búsqueda semántica (BGE-M3 sobre pgvector) y que las tarjetas solo muestran títulos que salieron de esas búsquedas. El resto del archivo ya coincidía con el producto.
   - **8.4**: antes de borrar `openspec/changes/chatbot/` se comparó cada spec del cambio con la canónica de `openspec/specs/`. `chat-api` es idéntica. `chat-ui` tiene de más el requisito de las sugerencias rotativas (06/11/2026). `semantic-search` tiene de más lo que se ajustó al código el 07/11/2026, y el escenario del vector de 768 dimensiones sigue ahí, en el requisito de `generar_vector`. Ninguna canónica pierde nada del cambio, así que se borró la carpeta completa (`proposal.md`, `design.md`, `tasks.md` y las tres specs). Las decisiones que tenía `design.md` ya están en este archivo, como pide AGENTS.md (sección 9).
   - **8.5**: `graphify update .` se corre después de mergear `develop` con los planes de #180 (`tmdb-cumplimiento`) y #181 (`brevo-respaldo`), para regenerar el grafo una sola vez.
 - **Archivos afectados**: `PRODUCT.md`, `docs/decisiones.md`, `openspec/changes/chatbot/` (borrada), `graphify-out/` (en 8.5).
