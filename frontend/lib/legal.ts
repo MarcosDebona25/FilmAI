@@ -8,6 +8,8 @@ export type LegalSection = { id: string; heading: string; blocks: LegalBlock[] }
 export type LegalDocument = {
   title: string;
   updated: string;
+  /** Correo de contacto del cierre («Questions? Write to us at …»); vacío si no hay. */
+  contact: string;
   intro: LegalBlock[];
   sections: LegalSection[];
 };
@@ -16,12 +18,14 @@ export type LegalDocument = {
 export function parseLegalMarkdown(source: string): LegalDocument {
   let text = source.replace(/\r\n/g, "\n");
   let updated = "";
+  let contact = "";
   const front = text.match(/^---\n([\s\S]*?)\n---\n/);
   if (front) {
     updated = front[1].match(/^updated:\s*(.+)$/m)?.[1].trim() ?? "";
+    contact = front[1].match(/^contact:\s*(.+)$/m)?.[1].trim() ?? "";
     text = text.slice(front[0].length);
   }
-  const doc: LegalDocument = { title: "", updated, intro: [], sections: [] };
+  const doc: LegalDocument = { title: "", updated, contact, intro: [], sections: [] };
   let target: LegalBlock[] = doc.intro;
   for (const chunk of text.split(/\n{2,}/)) {
     const block = chunk.trim();

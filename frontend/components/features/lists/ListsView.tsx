@@ -39,6 +39,10 @@ export function ListsView() {
   const [fallo, setFallo] = useState(false);
   const [intento, setIntento] = useState(0);
   const [dialogo, setDialogo] = useState<Dialogo | null>(null);
+  // «Order saved.» al mover con el menú ⋯: solo para lectores de pantalla, sin
+  // toast, porque la grilla ya muestra el nuevo orden (el arrastre se anuncia
+  // con los avisos de dnd-kit).
+  const [anuncioOrden, setAnuncioOrden] = useState("");
   const pedidoOrden = useRef(0);
 
   // El arrastre (dnd-kit) llega en un chunk aparte. `ListsGridPreload` suele
@@ -72,8 +76,10 @@ export function ListsView() {
   const propias = listas ? personalizadas(listas) : [];
   const fijas = listas ? listas.filter(esPredeterminada) : [];
 
-  async function moverA(desde: number, hacia: number) {
+  async function moverA(desde: number, hacia: number, anunciar = false) {
     if (!listas || desde === hacia) return;
+    // Se vacía antes de pedir: si el texto no cambiara, el lector no lo repetiría.
+    if (anunciar) setAnuncioOrden("");
     const ids = reordenar(listas, desde, hacia);
     const previas = listas;
     const id = ++pedidoOrden.current;
@@ -85,6 +91,7 @@ export function ListsView() {
       });
       if (id !== pedidoOrden.current) return;
       setListas(actualizadas);
+      if (anunciar) setAnuncioOrden(t("lists.reorder.saved"));
     } catch (motivo) {
       if (id !== pedidoOrden.current) return;
       setListas(previas);
@@ -136,28 +143,28 @@ export function ListsView() {
         etiqueta: t("common.lists.moveLeft"),
         solo: "escritorio",
         deshabilitada: primera,
-        onSelect: () => void moverA(indice, indice - 1),
+        onSelect: () => void moverA(indice, indice - 1, true),
       },
       {
         id: "move-right",
         etiqueta: t("common.lists.moveRight"),
         solo: "escritorio",
         deshabilitada: ultima,
-        onSelect: () => void moverA(indice, indice + 1),
+        onSelect: () => void moverA(indice, indice + 1, true),
       },
       {
         id: "move-up",
         etiqueta: t("common.lists.moveUp"),
         solo: "celular",
         deshabilitada: primera,
-        onSelect: () => void moverA(indice, indice - 1),
+        onSelect: () => void moverA(indice, indice - 1, true),
       },
       {
         id: "move-down",
         etiqueta: t("common.lists.moveDown"),
         solo: "celular",
         deshabilitada: ultima,
-        onSelect: () => void moverA(indice, indice + 1),
+        onSelect: () => void moverA(indice, indice + 1, true),
       },
       {
         id: "delete",
@@ -207,6 +214,10 @@ export function ListsView() {
           />
         )
       )}
+
+      <p role="status" className="sr-only">
+        {anuncioOrden}
+      </p>
 
       {dialogo?.tipo === "crear" && (
         <ListNameDialog modo="crear" onSubmit={crear} onClose={() => setDialogo(null)} />

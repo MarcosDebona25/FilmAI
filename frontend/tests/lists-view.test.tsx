@@ -240,7 +240,11 @@ describe("Listas: vista general", () => {
     expect(escrituras()).toEqual([
       { path: "/api/lists/order/", method: "PUT", body: { ids: [11, 10, 12] } },
     ]);
+    // «Order saved.» llega solo a los lectores de pantalla: sin toast visible.
     expect(toast.success).not.toHaveBeenCalled();
+    const anuncio = await screen.findByText(en.lists.reorder.saved);
+    expect(anuncio).toHaveAttribute("role", "status");
+    expect(anuncio).toHaveClass("sr-only");
   });
 
   it("deshabilita Move up en la primera personalizada y Move down en la última", async () => {
@@ -287,6 +291,7 @@ describe("Listas: vista general", () => {
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(nombres().slice(3)).toEqual(["Maratón", "Clásicos", "Terror"]);
+    expect(screen.queryByText(en.lists.reorder.saved)).toBeNull();
   });
 });
 

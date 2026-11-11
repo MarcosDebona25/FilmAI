@@ -21,7 +21,8 @@ declare const messages: {
       "brandLandingAlt": "FilmAI, go to the landing page",
       "backLanding": "Back to the landing page",
       "termsUpdated": "Last updated: {date}",
-      "termsOnPage": "On this page"
+      "termsOnPage": "On this page",
+      "termsQuestions": "Questions? Write to us at {email}."
     },
     "account": {
       "userMenuLabel": "{name}’s menu",
@@ -374,7 +375,8 @@ declare const messages: {
       "pickedUp": "{listName} picked up, position {position} of {total}.",
       "movedTo": "{listName} moved to position {position} of {total}.",
       "dropped": "{listName} dropped at position {position} of {total}.",
-      "cancelled": "Reorder cancelled. {listName} went back to position {position}."
+      "cancelled": "Reorder cancelled. {listName} went back to position {position}.",
+      "saved": "Order saved."
     },
     "overview": {
       "loadError": "We couldn’t load your lists. Try again.",

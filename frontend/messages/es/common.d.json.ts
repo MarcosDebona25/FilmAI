@@ -21,7 +21,8 @@ declare const messages: {
       "brandLandingAlt": "FilmAI, ir a la portada",
       "backLanding": "Volver a la portada",
       "termsUpdated": "Última actualización: {date}",
-      "termsOnPage": "En esta página"
+      "termsOnPage": "En esta página",
+      "termsQuestions": "¿Tenés dudas? Escribinos a {email}."
     },
     "account": {
       "userMenuLabel": "Menú de {name}",
@@ -374,7 +375,8 @@ declare const messages: {
       "pickedUp": "{listName} levantada, posición {position} de {total}.",
       "movedTo": "{listName} movida a la posición {position} de {total}.",
       "dropped": "{listName} soltada en la posición {position} de {total}.",
-      "cancelled": "Reordenamiento cancelado. {listName} volvió a la posición {position}."
+      "cancelled": "Reordenamiento cancelado. {listName} volvió a la posición {position}.",
+      "saved": "Orden guardado."
     },
     "overview": {
       "loadError": "No pudimos cargar tus listas. Intentá de nuevo.",

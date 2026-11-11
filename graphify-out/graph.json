@@ -11275,7 +11275,7 @@
       "file_type": "code",
       "norm_label": "accionesde()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L125"
+      "source_location": "L132"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_crear",
@@ -11287,7 +11287,7 @@
       "file_type": "code",
       "norm_label": "crear()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L95"
+      "source_location": "L102"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_eliminar",
@@ -11299,7 +11299,7 @@
       "file_type": "code",
       "norm_label": "eliminar()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L118"
+      "source_location": "L125"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_movera",
@@ -11311,7 +11311,7 @@
       "file_type": "code",
       "norm_label": "movera()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L75"
+      "source_location": "L79"
     },
     {
       "id": "frontend_components_features_lists_listsview_listsview_renombrar",
@@ -11323,7 +11323,7 @@
       "file_type": "code",
       "norm_label": "renombrar()",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L105"
+      "source_location": "L112"
     },
     {
       "id": "frontend_components_features_profile_avatardialog_avatardialog",
@@ -38515,7 +38515,7 @@
       "file_type": "code",
       "norm_label": "tarjeta()",
       "source_file": "frontend/tests/lists-view.test.tsx",
-      "source_location": "L294"
+      "source_location": "L299"
     },
     {
       "id": "frontend_tests_navigation_guard_test_formulario",
@@ -40135,7 +40135,7 @@
       "file_type": "code",
       "norm_label": "termspage()",
       "source_file": "frontend/app/terms/page.tsx",
-      "source_location": "L16"
+      "source_location": "L17"
     },
     {
       "id": "frontend_components_access_accessshell_accessshell",
@@ -40483,7 +40483,7 @@
       "file_type": "code",
       "norm_label": "loadterms()",
       "source_file": "frontend/lib/legal.ts",
-      "source_location": "L46"
+      "source_location": "L50"
     },
     {
       "id": "frontend_lib_legal_parselegalmarkdown",
@@ -40495,7 +40495,7 @@
       "file_type": "code",
       "norm_label": "parselegalmarkdown()",
       "source_file": "frontend/lib/legal.ts",
-      "source_location": "L16"
+      "source_location": "L18"
     },
     {
       "id": "frontend_lib_pending_email_clearpendingemail",
@@ -144715,7 +144715,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/app/terms/page.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -144727,7 +144727,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/app/terms/page.tsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -146083,7 +146083,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L51",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -146095,7 +146095,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L63",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -146107,7 +146107,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L72",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -146119,7 +146119,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L139",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -146131,7 +146131,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L119",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -146143,7 +146143,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L77",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -146155,7 +146155,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L80",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -146167,7 +146167,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L91",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -148579,7 +148579,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/lib/legal.ts",
-      "source_location": "L48",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -149635,7 +149635,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L105",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -149647,7 +149647,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L118",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -149659,7 +149659,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L75",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -226802,7 +226802,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/app/terms/page.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -228116,24 +228116,24 @@
     },
     {
       "source": "frontend_components_features_lists_listsview_listsview",
-      "target": "frontend_components_features_lists_listsview_listsview_accionesde",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L125",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_components_features_lists_listsview_listsview",
       "target": "frontend_components_features_lists_listsview_listsview_crear",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L95",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_components_features_lists_listsview_listsview",
+      "target": "frontend_components_features_lists_listsview_listsview_accionesde",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/components/features/lists/ListsView.tsx",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -231752,7 +231752,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/lib/legal.ts",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -231763,7 +231763,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/lib/legal.ts",
-      "source_location": "L46",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -235030,7 +235030,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/tests/lists-view.test.tsx",
-      "source_location": "L294",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
@@ -281434,7 +281434,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L47",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -281446,7 +281446,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "frontend/components/features/lists/ListsView.tsx",
-      "source_location": "L73",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -303814,5 +303814,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "8367861b6b15d589c718908b405ffecbf5415c77"
+  "built_at_commit": "e491fc2c326de0bc012a857ca8bbe02d42b0d440"
 }

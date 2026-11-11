@@ -1,5 +1,6 @@
 ---
 updated: 2026-10-18
+contact: contacto@filmai.com
 ---
 
 # Terms and Conditions

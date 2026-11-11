@@ -499,6 +499,11 @@ Archivos: `frontend/app/globals.css`, `frontend/components/Navbar.tsx`, `fronten
 Panel modal en escritorio y celular, con «Cancelar» en el lugar del botón de enviar; al cancelar se quita la burbuja de la pregunta, porque el servidor no guardó nada. La conversación es `role="log"` sin anunciar cada fragmento; una región aparte anuncia la respuesta completa. El FAB aparece en todas las pantallas salvo las de acceso; en el footer, «Ask FilmAI» abre el panel con sesión y lleva a `/login?next=…` sin ella. La bienvenida sortea 3 de 14 sugerencias sin títulos fijos.
 Archivos: `frontend/components/ChatProvider.tsx`, `frontend/components/features/chat/ChatPanel.tsx`, `frontend/lib/chat-sugerencias.ts`
 
+### 11/11/2026 — Canvas igualado al código y sin mesas repetidas
+
+Se comparó cada mesa del canvas con el repo; donde había interfaz desarrollada, mandó el código. En el canvas se borraron Main («A · Cartel») y las dos mesas de pantallas grandes, que repetían la Home (la regla de 7 tarjetas desde 1440 px quedó en el título de la sección), y se quitó el tema claro de todas las mesas. Se ajustaron Settings (Privacy y ayudas «Preference for future…»), el chat (modal, «Cancel» en el botón de enviar y sugerencias sin títulos), los textos de la ficha, Home, Lists, el perfil, Terms, el registro y el correo de confirmación. Se sumaron Reset password y variantes por tweak: ficha sin sesión y de serie, perfil con cuenta de Google y diálogo de salir sin guardar, y Search sin resultados por filtros. El error por fila de la Home no existe en el código: falla la fila, se oculta y aparece un toast, y solo cuando fallan todas se ve el error con «Try again». El canvas pasó a mostrar ese comportamiento. Del canvas pasaron al código el cierre de Terms («Questions? Write to us at …», con el correo en el frontmatter `contact`) y «Order saved.», que se anuncia solo a lectores de pantalla al mover una lista desde el menú.
+Archivos: `frontend/content/legal/terms.{en,es}.md`, `frontend/lib/legal.ts`, `frontend/app/terms/page.tsx`, `frontend/components/features/lists/ListsView.tsx`, `traducciones/claves-extra.csv`
+
 ---
 
 ## Seguridad

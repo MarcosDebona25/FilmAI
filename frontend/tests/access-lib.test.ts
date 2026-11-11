@@ -52,6 +52,7 @@ describe("términos y condiciones en Markdown", () => {
     );
     expect(doc.title).toBe("Título");
     expect(doc.updated).toBe("2026-10-18");
+    expect(doc.contact).toBe("");
     expect(doc.intro).toEqual([{ type: "p", text: "Intro." }]);
     expect(doc.sections.map((s) => s.heading)).toEqual(["1. Uno", "2. Dos"]);
     expect(doc.sections[0].blocks).toEqual([
@@ -59,12 +60,21 @@ describe("términos y condiciones en Markdown", () => {
       { type: "ul", items: ["a", "b"] },
     ]);
   });
+  it("lee el correo de contacto del frontmatter", () => {
+    const doc = parseLegalMarkdown(
+      "---\nupdated: 2026-10-18\ncontact: hola@ejemplo.com\n---\n# T\n\n## 1. Uno\n\nTexto.\n"
+    );
+    expect(doc.contact).toBe("hola@ejemplo.com");
+    expect(doc.sections).toHaveLength(1);
+  });
   it.each(["en", "es"] as const)(
     "los archivos versionados en %s tienen 12 secciones",
     async (locale) => {
       const doc = await loadTerms(locale);
       expect(doc.title).not.toBe("");
       expect(doc.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      // El cierre «Questions? Write to us at …» del canvas usa este correo.
+      expect(doc.contact).toBe("contacto@filmai.com");
       expect(doc.sections).toHaveLength(12);
       expect(doc.sections.every((s) => s.blocks.length > 0)).toBe(true);
     }

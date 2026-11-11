@@ -13,6 +13,7 @@ export async function generateMetadata() {
 }
 
 // Celular según el canvas «Terms · mobile». El escritorio sigue pendiente de rehacerse.
+// El cierre «Questions? Write to us at …» toma el correo del frontmatter (`contact`).
 export default async function TermsPage() {
   const locale = (await getLocale()) as AppLocale;
   const doc = await loadTerms(locale);
@@ -112,6 +113,11 @@ export default async function TermsPage() {
               )}
             </section>
           ))}
+          {doc.contact && (
+            <p className="border-t border-border pt-8 text-sm text-fg-3">
+              {nav("termsQuestions", { email: doc.contact })}
+            </p>
+          )}
         </div>
       </div>
     </main>
