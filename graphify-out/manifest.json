@@ -516,8 +516,8 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1794421002.9839902,
-    "seen": 1794421037.2842314,
+    "mtime": 1794422519.1204257,
+    "seen": 1794425091.6665266,
     "ast_hash": "24a42833d7fb23ce564f1694d3ee9fc3",
     "semantic_hash": ""
   },
@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1794073155.829641,
-    "seen": 1794421037.2842844,
-    "ast_hash": "905138bbada1f52d1727599681a99cd7",
+    "mtime": 1794424622.5944698,
+    "seen": 1794425091.668649,
+    "ast_hash": "70c806d414195bdd071a0cacbdd91139",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794421002.9874547,
-    "seen": 1794421037.284288,
-    "ast_hash": "e95167f7b019692a5c5ac388f3d04be2",
+    "mtime": 1794425070.2800612,
+    "seen": 1794425091.668689,
+    "ast_hash": "65c98a1c93dbad2905108740c751b449",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1794420537.5642078,
-    "seen": 1794421037.2840505,
+    "mtime": 1794422280.9093146,
+    "seen": 1794425091.6596313,
     "ast_hash": "7d97531417e312f0067d5c4c8eb43151",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794420537.5670586,
-    "seen": 1794421037.2840533,
+    "mtime": 1794422280.9136493,
+    "seen": 1794425091.6596808,
     "ast_hash": "55b8a7322e248220b72cb105b4f779c2",
     "semantic_hash": ""
   },
@@ -3894,9 +3894,9 @@
     "semantic_hash": ""
   },
   "traducciones/guia.md": {
-    "mtime": 1792343466.832935,
-    "seen": 1794421037.2843308,
-    "ast_hash": "1f5b8519f7016eb8bc39957c505b2c1e",
+    "mtime": 1794425063.2539086,
+    "seen": 1794425091.6704962,
+    "ast_hash": "26531378e4ee03fb23a17f9121437655",
     "semantic_hash": ""
   },
   "traducciones/revision-correos/README.md": {
@@ -4029,12 +4029,6 @@
     "mtime": 1792637003.4614294,
     "seen": 1794421037.2842257,
     "ast_hash": "2b7484c839443219cffcd2d84b0d486d",
-    "semantic_hash": ""
-  },
-  "docs/auditoria-seguridad-resumen.md": {
-    "mtime": 1793202207.4602785,
-    "seen": 1794421037.2842867,
-    "ast_hash": "459694d8c41668ba1997aa033e7d1d9f",
     "semantic_hash": ""
   },
   "backend/filmai/cache.py": {

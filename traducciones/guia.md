@@ -108,4 +108,4 @@ Genre y Gender usan claves distintas aunque coincidan en español. Rating y Revi
 
 Falta abrir los ocho EML de `revision-correos/` en un cliente de correo real y registrar cliente, versión y resultado. No bloquea las interfaces.
 
-El chatbot (B-02–B-06) no está implementado. Sus reglas de idioma quedaron resueltas en `docs/decisiones.md`, entrada «Chatbot: idioma, tarjetas, errores y límites» del 09/10/2026. Sigue pendiente curar y aprobar las 22 filas `chatbot` de `claves.csv` y agregar las de cancelación y errores.
+El chatbot está implementado desde el 06/11/2026 y sus textos salen del catálogo. Sus reglas de idioma están en `docs/decisiones.md`: sección Chatbot, entrada «Idioma del turno, tarjetas y sin cola» (09/10/2026), y sección Multiidioma, entrada «El chatbot detecta el idioma del mensaje» (06/11/2026).
