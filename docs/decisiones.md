@@ -5,6 +5,16 @@ Formato: fecha (DD/MM/AAAA), título y descripción (qué, por qué, archivos af
 
 ---
 
+## 11/11/2026 — CI y PR-Agent reactivados
+
+- **Fecha**: 11/11/2026
+- **Descripción**: GitHub volvió a aprobar el beneficio estudiantil de la cuenta dueña del repo (`MarcosDebona25`), así que se cierra la entrada «CI y PR-Agent desactivados hasta recuperar el beneficio estudiantil» (06/11/2026). Se corrieron `gh workflow enable CI` y `gh workflow enable "PR Review"`. La clave `DEEPSEEK_API_KEY` sigue cargada en los secretos del repo desde el 18/10/2026.
+  - **Comprobación**: se relanzó la última corrida de `CI` en `develop` (merge del PR #177, run 42258592784). Antes cada job se cortaba a los 3 o 4 segundos con el error de facturación. Ahora los cuatro jobs (Backend, Frontend y Playwright 1/2 y 2/2) arrancan y corren completos.
+  - **Vuelve la regla de siempre**: el CI es otra vez la puerta automática y cada uno mergea su trabajo cuando está en verde (AGENTS.md, sección 8). Se borra de esa sección la nota temporal del 06/11/2026. Las entradas de este archivo escritas en esos días quedan como están: su «Verificación local (CI desactivado)» cuenta lo que se hizo en ese momento.
+- **Archivos afectados**: `AGENTS.md` y `docs/decisiones.md`. Ninguno de código ni de `.github/workflows/`.
+
+---
+
 ## 08/11/2026 — `main` se pone al día con `develop` (chatbot incluido)
 
 - **Fecha**: 08/11/2026
