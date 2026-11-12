@@ -144,8 +144,13 @@ export function ListCard({
             </span>
           ) : (
             acciones && (
+              // Sin `z-index` a propósito: con `z-10` esta caja encerraba la capa
+              // que cierra el menú (z-40) y el menú (z-50), que hacia afuera
+              // valían 10 y quedaban debajo de la navbar fija (z-30). `relative`
+              // alcanza para quedar encima del enlace que cubre la tarjeta: los
+              // dos están posicionados y este viene después en el HTML.
               <ListActionsMenu
-                className="relative z-10 -mr-2 flex-none"
+                className="relative -mr-2 flex-none"
                 etiqueta={t("lists.card.actionsLabel", { listName: nombre })}
                 titulo={nombre}
                 acciones={acciones}
