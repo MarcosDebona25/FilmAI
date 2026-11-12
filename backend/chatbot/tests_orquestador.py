@@ -336,6 +336,33 @@ class RedDeTarjetasTests(BaseOrquestador):
 
         self.assertEqual(eventos[-1].tarjetas, [])
 
+    async def test_un_titulo_adentro_de_otro_mas_largo_no_cuenta(self):
+        # Gana el más largo: la tarjeta tiene que mostrar lo que dice el texto.
+        self.peliculas = [
+            pelicula_de_mentira(10, "Dune", 2021),
+            pelicula_de_mentira(11, "Dune: Part Two", 2024),
+            pelicula_de_mentira(12, "Blade Runner", 1982),
+            pelicula_de_mentira(13, "Blade Runner 2049", 2017),
+        ]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Probá **Dune: Part Two** y **Blade Runner 2049**."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [11, 13])
+
+    async def test_el_corto_cuenta_si_tambien_aparece_solo(self):
+        self.peliculas = [
+            pelicula_de_mentira(10, "Dune", 2021),
+            pelicula_de_mentira(11, "Dune: Part Two", 2024),
+        ]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Empezá por **Dune** y seguí con Dune: Part Two."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [10, 11])
+
     async def test_no_cuenta_dentro_de_otra_palabra(self):
         eventos = await self.correr([[tool("descubrir")], ["Algo lunar: Moonlight."]])
 

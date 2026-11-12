@@ -170,24 +170,48 @@ def _tarjetas_nombradas(respuesta, ctx):
     el formato de `mostrar_tarjetas`, que se encarga del tope de 3 y los repetidos.
     """
     plegada = _plegar(respuesta)
-    nombrados = []
+    # Cada título con todas sus apariciones, como pares (inicio, fin).
+    apariciones = {}
     for clave in ctx.recomendables:
         nombre = (ctx.encontrados[clave].get("titulo") or "").strip()
         if not nombre:
             continue
         if len(nombre) <= _LARGO_DE_TITULO_CORTO:
             # Escrito igual y entre `**`: `\*` es un asterisco literal, porque en
-            # una expresión regular `*` solo significa «repetir».
-            patron, texto = rf"\*\*{re.escape(nombre)}\*\*", respuesta
+            # una expresión regular `*` solo significa «repetir». El tramo es el
+            # del título, sin los asteriscos.
+            patron, texto, margen = rf"\*\*{re.escape(nombre)}\*\*", respuesta, 2
         else:
             # `(?<!\w)` y `(?!\w)`: que no haya una letra pegada antes ni después.
             # Así «Moon» no aparece dentro de «Moonlight». `re.escape` hace que los
             # signos del título («Se7en», «Alien³», «¿Qué pasó ayer?») se busquen
             # tal cual.
-            patron, texto = rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)", plegada
-        encontrado = re.search(patron, texto)
-        if encontrado:
-            nombrados.append((encontrado.start(), clave))
+            patron = rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)"
+            texto, margen = plegada, 0
+        # `finditer` recorre todas las apariciones, no solo la primera.
+        tramos = [
+            (m.start() + margen, m.end() - margen) for m in re.finditer(patron, texto)
+        ]
+        if tramos:
+            apariciones[clave] = tramos
+
+    # Gana el más largo: una aparición que cae dentro de la de otro título más
+    # largo no cuenta. «Probá Dune: Part Two» nombra a esa, no a «Dune».
+    todos = [tramo for tramos in apariciones.values() for tramo in tramos]
+    nombrados = []
+    for clave, tramos in apariciones.items():
+        sueltos = [
+            (inicio, fin)
+            for inicio, fin in tramos
+            if not any(
+                otro_inicio <= inicio
+                and fin <= otro_fin
+                and fin - inicio < otro_fin - otro_inicio
+                for otro_inicio, otro_fin in todos
+            )
+        ]
+        if sueltos:
+            nombrados.append((min(sueltos)[0], clave))
     # Ordena por posición en el texto; la clave desempata siempre igual.
     nombrados.sort()
     return [{"id_tmdb": id_tmdb, "tipo": tipo} for _, (id_tmdb, tipo) in nombrados]
