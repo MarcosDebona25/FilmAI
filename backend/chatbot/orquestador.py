@@ -37,8 +37,9 @@ _MENSAJES_DE_HISTORIAL = 10
 # buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
 _LARGO_DE_PREAMBULO = 200
 _TOOL_DE_TARJETAS = "mostrar_tarjetas"
-# Un título de hasta este largo («Up», «Her», «It») tiene que aparecer escrito igual,
-# con mayúsculas: si no, «her» o «it» en una frase en inglés serían tarjetas.
+# Un título de hasta este largo («Up», «Her», «It») cuenta solo en negrita Markdown
+# (**Her**): suelto, «Her latest film…» o «It is…» al empezar una oración serían
+# tarjetas. El modelo escribe los títulos en negrita, así que no se pierde nada.
 _LARGO_DE_TITULO_CORTO = 3
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
@@ -175,16 +176,16 @@ def _tarjetas_nombradas(respuesta, ctx):
         if not nombre:
             continue
         if len(nombre) <= _LARGO_DE_TITULO_CORTO:
-            # En un título corto también cuentan el apóstrofo y el guion: «It» no
-            # tiene que aparecer dentro de «It's» ni «Up» dentro de «Up-to-date».
-            # `\u2019` es el apóstrofo tipográfico, el curvo, que el modelo usa a menudo.
-            texto, buscado, borde = respuesta, nombre, "[\\w'\u2019-]"
+            # Escrito igual y entre `**`: `\*` es un asterisco literal, porque en
+            # una expresión regular `*` solo significa «repetir».
+            patron, texto = rf"\*\*{re.escape(nombre)}\*\*", respuesta
         else:
-            texto, buscado, borde = plegada, _plegar(nombre), r"\w"
-        # `(?<!...)` y `(?!...)`: que no haya una letra pegada antes ni después. Así
-        # «Moon» no aparece dentro de «Moonlight». `re.escape` hace que los signos
-        # del título («Se7en», «Alien³», «¿Qué pasó ayer?») se busquen tal cual.
-        encontrado = re.search(rf"(?<!{borde}){re.escape(buscado)}(?!{borde})", texto)
+            # `(?<!\w)` y `(?!\w)`: que no haya una letra pegada antes ni después.
+            # Así «Moon» no aparece dentro de «Moonlight». `re.escape` hace que los
+            # signos del título («Se7en», «Alien³», «¿Qué pasó ayer?») se busquen
+            # tal cual.
+            patron, texto = rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)", plegada
+        encontrado = re.search(patron, texto)
         if encontrado:
             nombrados.append((encontrado.start(), clave))
     # Ordena por posición en el texto; la clave desempata siempre igual.

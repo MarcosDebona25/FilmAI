@@ -306,8 +306,8 @@ class RedDeTarjetasTests(BaseOrquestador):
 
         self.assertEqual(self.ids(eventos), [4])
 
-    async def test_un_titulo_corto_escrito_igual_si_cuenta(self):
-        eventos = await self.correr([[tool("descubrir")], ["Te va a gustar Her."]])
+    async def test_un_titulo_corto_en_negrita_si_cuenta(self):
+        eventos = await self.correr([[tool("descubrir")], ["Te va a gustar **Her**."]])
 
         self.assertEqual(self.ids(eventos), [3])
 
@@ -323,6 +323,15 @@ class RedDeTarjetasTests(BaseOrquestador):
                 [tool("descubrir")],
                 ["It\u2019s a classic, and it's up-to-date: Up-to-date."],
             ]
+        )
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_un_titulo_corto_sin_negrita_no_cuenta(self):
+        # «Her latest film…» o «It is…» al empezar una oración: escrito igual que el
+        # título, pero no lo nombra. El modelo pone los títulos en negrita.
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Her latest film is great. Te va a gustar Her."]]
         )
 
         self.assertEqual(eventos[-1].tarjetas, [])
