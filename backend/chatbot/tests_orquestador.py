@@ -576,6 +576,17 @@ class ReglasDelPromptTests(SimpleTestCase):
         self.assertIn("avisale que ya lo vio", sistema)
         self.assertIn("aunque ya lo haya visto", sistema)
 
+    def test_una_secuela_sin_la_anterior_recomienda_la_anterior(self):
+        # Va al final de «Títulos vistos»: mover una regla al principio de «Cómo
+        # trabajar» cambió la conducta del modelo (12/11/2026).
+        sistema = armar_sistema("", [], "es")
+        vistos = sistema.split("Títulos vistos:\n", 1)[1].split("\n\n", 1)[0]
+
+        self.assertTrue(
+            vistos.rstrip().endswith("Si ya la vio, no hace falta aclararlo.")
+        )
+        self.assertIn("recomendá la anterior", vistos)
+
     def test_el_estilo_cambia_con_el_idioma(self):
         self.assertIn("voseo", armar_sistema("", [], "es"))
         self.assertNotIn("voseo", armar_sistema("", [], "en"))
