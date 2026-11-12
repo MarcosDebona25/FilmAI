@@ -63,6 +63,15 @@
     `buscar_por_persona` con `rol` director. Nombra títulos que devolvió la tool
     (Arrival, Dune, Sicario, Blade Runner 2049…), sin inventar ninguno.
 
+- id: secuela_sin_la_anterior
+  mensaje: ¿Qué me recomendás de Denis Villeneuve?
+  rnf6: agregacion
+  espera: >
+    Pensada para un usuario que no vio Dune (2021) ni Blade Runner (1982), como
+    gonzag8 el 12/11/2026. `buscar_por_persona` y hasta 3 tarjetas. Si propone
+    Dune: Parte dos, recomienda antes Dune (2021); si propone Blade Runner 2049,
+    recomienda antes Blade Runner. No recomienda una secuela sola.
+
 - id: semantico
   mensaje: Algo melancólico sobre la soledad en una ciudad grande
   rnf6: agregacion

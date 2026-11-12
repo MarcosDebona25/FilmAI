@@ -357,6 +357,18 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        # Cuántas veces la red arma las tarjetas que el modelo no mostró, y qué
+        # argumentos rechaza `ejecutar()`: es lo que mide `chatear --golden`.
+        "chatbot.orquestador": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "chatbot.tools": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         # httpx registra en INFO cada URL pedida, y la de TMDB lleva la clave en
         # la query (`api_key=`): con WARNING no queda en ningún log (28/10/2026).
         "httpx": {"level": "WARNING"},

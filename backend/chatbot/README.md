@@ -35,7 +35,7 @@ RNF #6.
 | Archivo | Para qué sirve |
 |---|---|
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
-| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas |
+| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Si el modelo recomienda en el texto sin llamar a `mostrar_tarjetas`, arma las tarjetas con los títulos que nombró (la «red de tarjetas») |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
 | `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
 | `views.py` | `POST /api/chat/preparar/`; `MensajesView`: el historial (`GET`) y la pregunta con su respuesta en streaming (`POST`) |
@@ -50,11 +50,11 @@ RNF #6.
 | `golden.yaml` | El set dorado: preguntas fijas, cada una con lo que se espera de la respuesta |
 | `contexto.py` | Arma el perfil del usuario desde la base |
 | `anonimizar.py` | Limpia datos personales de lo que va al proveedor |
-| `tools/__init__.py` | La puerta de las herramientas: `ejecutar()` |
+| `tools/__init__.py` | La puerta de las herramientas: `ejecutar()`, que antes revisa los argumentos contra el esquema y devuelve `invalid_arguments` si están mal |
 | `tools/esquemas.py` | La descripción de cada herramienta, que lee el modelo |
 | `tools/busqueda.py` | Las herramientas que buscan títulos |
 | `tools/personales.py` | `mis_listas` y `mostrar_tarjetas` |
-| `tools/turno.py` | `ContextoTurno`: el estado de una pregunta y su respuesta |
+| `tools/turno.py` | `ContextoTurno`: el estado de una pregunta y su respuesta, incluido qué títulos salieron de una búsqueda para recomendar (`recomendables`) |
 
 ## Fuera de esta carpeta
 

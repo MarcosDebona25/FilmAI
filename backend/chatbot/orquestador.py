@@ -13,6 +13,8 @@ común, y se llama con `await en_hilo(...)`.
 
 import json
 import logging
+import re
+import unicodedata
 
 from chatbot.anonimizar import CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
@@ -23,6 +25,7 @@ from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
 from chatbot.tools import ESQUEMAS, ContextoTurno, ejecutar
+from chatbot.tools.personales import mostrar_tarjetas
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +37,10 @@ _MENSAJES_DE_HISTORIAL = 10
 # buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
 _LARGO_DE_PREAMBULO = 200
 _TOOL_DE_TARJETAS = "mostrar_tarjetas"
+# Un título de hasta este largo («Up», «Her», «It») cuenta solo en negrita Markdown
+# (**Her**): suelto, «Her latest film…» o «It is…» al empezar una oración serían
+# tarjetas. El modelo escribe los títulos en negrita, así que no se pierde nada.
+_LARGO_DE_TITULO_CORTO = 3
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
 
@@ -135,6 +142,89 @@ def _con_tarjetas(vuelta):
     return any(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
 
 
+# Apóstrofos que se ven iguales: el modelo a veces escribe «Ocean's» con el curvo
+# (U+2019) y TMDB lo guarda con el recto ('). Todos pasan a ser el recto.
+_APOSTROFOS = {"\u2019": "'", "\u2018": "'", "\u02bc": "'"}
+
+
+def _plegar_letra(letra):
+    """Una letra en minúscula y sin acento: «Á» → «a». Siempre devuelve una sola.
+
+    `NFKD` separa la letra de su tilde («á» pasa a «a» más la tilde sola) y
+    `combining` reconoce la tilde suelta para descartarla. Si el resultado no es una
+    sola letra («ß» da «ss»), queda la original en minúscula: así el texto plegado
+    tiene el mismo largo y las posiciones coinciden con las del original. Los
+    apóstrofos curvos pasan a ser el recto, también de a una letra.
+    """
+    if letra in _APOSTROFOS:
+        return _APOSTROFOS[letra]
+    base = "".join(
+        c for c in unicodedata.normalize("NFKD", letra) if not unicodedata.combining(c)
+    ).lower()
+    return base if len(base) == 1 else letra.lower()
+
+
+def _plegar(texto):
+    return "".join(_plegar_letra(letra) for letra in texto)
+
+
+def _tarjetas_nombradas(respuesta, ctx):
+    """Los títulos para recomendar que la respuesta nombra, en orden de aparición.
+
+    Es la red para cuando el modelo recomienda en el texto pero no llama a
+    `mostrar_tarjetas` (en el set dorado del 08/11/2026, 5 de 8 veces). Solo
+    cuentan los títulos de `ctx.recomendables`: lo que devolvió una búsqueda para
+    recomendar en este turno, que ya viene sin lo visto. Devuelve los pedidos en
+    el formato de `mostrar_tarjetas`, que se encarga del tope de 3 y los repetidos.
+    """
+    plegada = _plegar(respuesta)
+    # Cada título con todas sus apariciones, como pares (inicio, fin).
+    apariciones = {}
+    for clave in ctx.recomendables:
+        nombre = (ctx.encontrados[clave].get("titulo") or "").strip()
+        if not nombre:
+            continue
+        if len(nombre) <= _LARGO_DE_TITULO_CORTO:
+            # Escrito igual y entre `**`: `\*` es un asterisco literal, porque en
+            # una expresión regular `*` solo significa «repetir». El tramo es el
+            # del título, sin los asteriscos.
+            patron, texto, margen = rf"\*\*{re.escape(nombre)}\*\*", respuesta, 2
+        else:
+            # `(?<!\w)` y `(?!\w)`: que no haya una letra pegada antes ni después.
+            # Así «Moon» no aparece dentro de «Moonlight». `re.escape` hace que los
+            # signos del título («Se7en», «Alien³», «¿Qué pasó ayer?») se busquen
+            # tal cual.
+            patron = rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)"
+            texto, margen = plegada, 0
+        # `finditer` recorre todas las apariciones, no solo la primera.
+        tramos = [
+            (m.start() + margen, m.end() - margen) for m in re.finditer(patron, texto)
+        ]
+        if tramos:
+            apariciones[clave] = tramos
+
+    # Gana el más largo: una aparición que cae dentro de la de otro título más
+    # largo no cuenta. «Probá Dune: Part Two» nombra a esa, no a «Dune».
+    todos = [tramo for tramos in apariciones.values() for tramo in tramos]
+    nombrados = []
+    for clave, tramos in apariciones.items():
+        sueltos = [
+            (inicio, fin)
+            for inicio, fin in tramos
+            if not any(
+                otro_inicio <= inicio
+                and fin <= otro_fin
+                and fin - inicio < otro_fin - otro_inicio
+                for otro_inicio, otro_fin in todos
+            )
+        ]
+        if sueltos:
+            nombrados.append((min(sueltos)[0], clave))
+    # Ordena por posición en el texto; la clave desempata siempre igual.
+    nombrados.sort()
+    return [{"id_tmdb": id_tmdb, "tipo": tipo} for _, (id_tmdb, tipo) in nombrados]
+
+
 async def responder(chat, texto, idioma, *, proveedor=None):
     """Responde un mensaje, entregando eventos a medida que ocurren.
 
@@ -204,4 +294,11 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     respuesta = "".join(partes)
     if not respuesta.strip():
         raise ErrorDelTurno("El modelo no escribió nada")
+    if not ctx.tarjetas:
+        # Recomendó en el texto y no mostró tarjetas: se arman con lo que nombró.
+        # `mostrar_tarjetas` no toca la base, así que se llama directo, sin el
+        # puente. Si nombró títulos que ninguna búsqueda devolvió, no pasa nada.
+        mostrar_tarjetas(ctx, _tarjetas_nombradas(respuesta, ctx))
+        if ctx.tarjetas:
+            logger.info("Tarjetas armadas por el orquestador: %d", len(ctx.tarjetas))
     yield Resultado(respuesta, ctx.tarjetas)

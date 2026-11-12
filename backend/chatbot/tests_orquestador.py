@@ -28,6 +28,8 @@ from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.orquestador import _LARGO_DE_PREAMBULO, responder
 from chatbot.prompts import armar_sistema
 from chatbot.tools import FUNCIONES, ContextoTurno
+from chatbot.tools.turno import publicar, titulo
+from listas.models import ClaveLista, Lista, Tiene, TipoLista
 from usuarios.factories import UsuarioFactory
 
 
@@ -197,6 +199,205 @@ class VueltaConToolsTests(BaseOrquestador):
         await self.correr([[tool("descubrir")], ["Listo"]])
 
         self.assertNotIn("reasoning_content", self.proveedor.pedidos[1][-2])
+
+
+def pelicula_de_mentira(id_tmdb, nombre, anio=2009):
+    return titulo(
+        id_tmdb=id_tmdb,
+        tipo="movie",
+        nombre=nombre,
+        anio=anio,
+        generos=["Drama"],
+        duracion=None,
+        nota=7.0,
+        sinopsis="",
+        poster=f"/{id_tmdb}.jpg",
+    )
+
+
+class RedDeTarjetasTests(BaseOrquestador):
+    """Si el modelo recomienda en el texto y no llama a `mostrar_tarjetas`, las
+    tarjetas las arma el orquestador con los títulos que nombró.
+
+    En el set dorado del 08/11/2026 solo 3 de 8 recomendaciones tenían tarjetas.
+    """
+
+    def setUp(self):
+        super().setUp()
+        # Búsquedas de mentira que pasan por `publicar()`, como las reales: así
+        # queda anotado qué títulos salieron de una búsqueda para recomendar.
+        self.peliculas = [
+            pelicula_de_mentira(1, "Moon"),
+            pelicula_de_mentira(2, "Arrival", 2016),
+            pelicula_de_mentira(3, "Her", 2013),
+            pelicula_de_mentira(4, "Solaris", 1972),
+            pelicula_de_mentira(5, "Interstellar", 2014),
+        ]
+        parche = patch.dict(
+            FUNCIONES,
+            {
+                "descubrir": lambda ctx, **_: {
+                    "resultados": publicar(ctx, self.peliculas)
+                },
+                "buscar_por_titulo": lambda ctx, **_: {
+                    "resultados": publicar(ctx, self.peliculas, sacar_vistas=False)
+                },
+            },
+        )
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def ids(self, eventos):
+        return [t["id_tmdb"] for t in eventos[-1].tarjetas]
+
+    async def test_nombra_titulos_sin_mostrarlos_y_aparecen_las_tarjetas(self):
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Te recomiendo **Arrival** y también **Moon**."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [2, 1])
+        self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Arrival")
+
+    async def test_si_el_modelo_mostro_tarjetas_no_se_agrega_nada(self):
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Mirá Arrival, Moon y Solaris.", tarjetas(1)]]
+        )
+
+        self.assertEqual(self.ids(eventos), [1])
+
+    async def test_un_titulo_de_una_consulta_directa_no_se_vuelve_tarjeta(self):
+        # «¿Cuánto dura Interstellar?»: es un dato, no una recomendación.
+        eventos = await self.correr(
+            [[tool("buscar_por_titulo")], ["Interstellar dura 169 minutos."]]
+        )
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_un_titulo_visto_no_se_vuelve_tarjeta(self):
+        produccion = await ProduccionAudiovisual.objects.acreate(
+            id_tmdb=1, tipo=TipoProduccion.PELICULA, titulo="Moon"
+        )
+        vistas, _ = await Lista.objects.aget_or_create(
+            usuario=self.usuario,
+            clave=ClaveLista.VISTAS,
+            defaults={"nombre": "Vistas", "tipo": TipoLista.PREDETERMINADA},
+        )
+        await Tiene.objects.acreate(lista=vistas, produccion=produccion)
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Como ya viste Moon, probá Arrival."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [2])
+
+    async def test_sin_acentos_ni_mayusculas(self):
+        self.peliculas = [pelicula_de_mentira(7, "El Laberinto del Fauno", 2006)]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Probá el laberinto del fauno, es hermosa."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [7])
+
+    async def test_el_apostrofo_curvo_vale_como_el_recto(self):
+        # TMDB escribe «Ocean's Eleven» con el apóstrofo recto y el modelo a veces con
+        # el curvo, U+2019 (PR-Agent en
+        # #187). Para el lector es la misma letra, así que tiene que coincidir.
+        self.peliculas = [pelicula_de_mentira(8, "Ocean's Eleven", 2001)]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Probá **Ocean\u2019s Eleven**, es muy divertida."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [8])
+
+    async def test_un_titulo_corto_no_se_confunde_con_una_palabra(self):
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Show her the way to Solaris, the classic."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [4])
+
+    async def test_un_titulo_corto_en_negrita_si_cuenta(self):
+        eventos = await self.correr([[tool("descubrir")], ["Te va a gustar **Her**."]])
+
+        self.assertEqual(self.ids(eventos), [3])
+
+    async def test_un_titulo_corto_no_cuenta_pegado_a_un_apostrofo_o_un_guion(self):
+        # «It's» y «Up-to-date» no nombran a «It» ni a «Up» (PR-Agent en #187).
+        self.peliculas = [
+            pelicula_de_mentira(8, "It", 2017),
+            pelicula_de_mentira(9, "Up", 2009),
+        ]
+
+        eventos = await self.correr(
+            [
+                [tool("descubrir")],
+                ["It\u2019s a classic, and it's up-to-date: Up-to-date."],
+            ]
+        )
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_un_titulo_corto_sin_negrita_no_cuenta(self):
+        # «Her latest film…» o «It is…» al empezar una oración: escrito igual que el
+        # título, pero no lo nombra. El modelo pone los títulos en negrita.
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Her latest film is great. Te va a gustar Her."]]
+        )
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_un_titulo_adentro_de_otro_mas_largo_no_cuenta(self):
+        # Gana el más largo: la tarjeta tiene que mostrar lo que dice el texto.
+        self.peliculas = [
+            pelicula_de_mentira(10, "Dune", 2021),
+            pelicula_de_mentira(11, "Dune: Part Two", 2024),
+            pelicula_de_mentira(12, "Blade Runner", 1982),
+            pelicula_de_mentira(13, "Blade Runner 2049", 2017),
+        ]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Probá **Dune: Part Two** y **Blade Runner 2049**."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [11, 13])
+
+    async def test_el_corto_cuenta_si_tambien_aparece_solo(self):
+        self.peliculas = [
+            pelicula_de_mentira(10, "Dune", 2021),
+            pelicula_de_mentira(11, "Dune: Part Two", 2024),
+        ]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Empezá por **Dune** y seguí con Dune: Part Two."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [10, 11])
+
+    async def test_no_cuenta_dentro_de_otra_palabra(self):
+        eventos = await self.correr([[tool("descubrir")], ["Algo lunar: Moonlight."]])
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_van_en_orden_de_aparicion_y_como_mucho_3(self):
+        eventos = await self.correr(
+            [
+                [tool("descubrir")],
+                ["Interstellar, Solaris, Moon y Arrival: las cuatro van."],
+            ]
+        )
+
+        self.assertEqual(self.ids(eventos), [5, 4, 1])
+
+    async def test_las_tarjetas_armadas_son_las_mismas_que_las_del_modelo(self):
+        armadas = await self.correr([[tool("descubrir")], ["Probá Moon."]])
+        self.chat = await Chat.objects.aget(pk=self.chat.pk)
+        elegidas = await self.correr(
+            [[tool("descubrir")], ["Probá Moon.", tarjetas(1)]]
+        )
+
+        self.assertEqual(armadas[-1].tarjetas, elegidas[-1].tarjetas)
 
 
 class FallosTests(BaseOrquestador):
@@ -386,6 +587,17 @@ class ReglasDelPromptTests(SimpleTestCase):
         self.assertIn("`vista: true`", sistema)
         self.assertIn("avisale que ya lo vio", sistema)
         self.assertIn("aunque ya lo haya visto", sistema)
+
+    def test_una_secuela_sin_la_anterior_recomienda_la_anterior(self):
+        # Va al final de «Títulos vistos»: mover una regla al principio de «Cómo
+        # trabajar» cambió la conducta del modelo (12/11/2026).
+        sistema = armar_sistema("", [], "es")
+        vistos = sistema.split("Títulos vistos:\n", 1)[1].split("\n\n", 1)[0]
+
+        self.assertTrue(
+            vistos.rstrip().endswith("Si ya la vio, no hace falta aclararlo.")
+        )
+        self.assertIn("recomendá la anterior", vistos)
 
     def test_el_estilo_cambia_con_el_idioma(self):
         self.assertIn("voseo", armar_sistema("", [], "es"))

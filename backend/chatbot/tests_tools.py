@@ -271,6 +271,51 @@ class VistasTests(BaseTools):
         self.assertEqual(buscar.call_args.kwargs["excluir"], {(1, "movie")})
 
 
+class RecomendablesTests(BaseTools):
+    """Qué tools marcan sus títulos como recomendables, con las tools reales.
+
+    La red de tarjetas del orquestador solo arma tarjetas con estos títulos: si una
+    búsqueda para recomendar dejara de marcarlos, la red no haría nada y ningún test
+    del orquestador lo notaría, porque ahí las tools son de mentira.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.catalogo.resultados["movie"] = [pelicula(1)]
+        self.catalogo.personas = [{"id": 103, "name": "Mark Ruffalo"}]
+        self.catalogo.creditos["cast"] = [{**pelicula(1), "media_type": "movie"}]
+        self.catalogo.detalle = pelicula(1, runtime=97)
+        self.moon = self.produccion("Moon", id_tmdb=1)
+
+    def recomendables_de(self, nombre, argumentos):
+        contexto = self.contexto()
+        with patch("chatbot.tools.busqueda.buscar_semantico", return_value=[self.moon]):
+            ejecutar(contexto, nombre, argumentos)
+        return contexto.recomendables
+
+    def test_las_busquedas_para_recomendar_los_marcan(self):
+        llamadas = (
+            ("descubrir", {"tipo": "movie"}),
+            ("similares_a", {"id_tmdb": 5, "tipo": "movie"}),
+            ("buscar_por_persona", {"nombre": "Mark Ruffalo"}),
+            ("buscar_semantico", {"consulta": "algo"}),
+        )
+        for nombre, argumentos in llamadas:
+            with self.subTest(nombre):
+                self.assertEqual(
+                    self.recomendables_de(nombre, argumentos), {(1, "movie")}
+                )
+
+    def test_las_consultas_directas_no(self):
+        llamadas = (
+            ("buscar_por_titulo", {"titulo": "Moon", "tipo": "movie"}),
+            ("detalle", {"id_tmdb": 1, "tipo": "movie"}),
+        )
+        for nombre, argumentos in llamadas:
+            with self.subTest(nombre):
+                self.assertEqual(self.recomendables_de(nombre, argumentos), set())
+
+
 class DescubrirTests(BaseTools):
     def filtros(self, tipo="movie"):
         return next(
@@ -556,7 +601,10 @@ class MostrarTarjetasTests(BaseTools):
 
         self.assertEqual([t["id_tmdb"] for t in resultado["tarjetas"]], [1, 2, 3])
 
-    def test_una_tarjeta_mal_armada_se_descarta_sin_error(self):
+    def test_una_tarjeta_mal_armada_es_un_error_y_no_suma_ninguna(self):
+        # Antes se descartaba solo la mala. Ahora `ejecutar()` rechaza el pedido
+        # entero y el modelo lo corrige; si era la última vuelta, la red del
+        # orquestador arma las tarjetas desde el texto.
         contexto = self.contexto_con_resultados()
 
         resultado = ejecutar(
@@ -565,13 +613,13 @@ class MostrarTarjetasTests(BaseTools):
             {
                 "tarjetas": [
                     {"id_tmdb": "x", "tipo": "movie"},
-                    {},
                     {"id_tmdb": 1, "tipo": "movie"},
                 ]
             },
         )
 
-        self.assertEqual([t["id_tmdb"] for t in resultado["tarjetas"]], [1])
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertEqual(contexto.tarjetas, [])
 
 
 class MisListasTests(BaseTools):
@@ -677,11 +725,89 @@ class FallosTests(BaseTools):
             ejecutar(self.contexto(), "borrar_todo", {}), {"error": "tool_failed"}
         )
 
-    def test_argumentos_que_la_tool_no_conoce_no_rompen_nada(self):
-        self.assertEqual(
-            ejecutar(self.contexto(), "detalle", {"usuario": 1}),
-            {"error": "tool_failed"},
+    def test_un_argumento_de_mas_es_un_error_aunque_esten_los_obligatorios(self):
+        resultado = ejecutar(
+            self.contexto(),
+            "detalle",
+            {"id_tmdb": 5, "tipo": "movie", "usuario": 1},
         )
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertIn("usuario", resultado["detalle"])
+
+
+class ValidacionDeArgumentosTests(BaseTools):
+    """`ejecutar()` revisa los argumentos contra el esquema antes de correr la tool.
+
+    El modelo puede mandar cualquier cosa: un género en español, un `tipo` que no
+    existe o un id que no es número. Sin esta revisión, la tool fallaba en silencio
+    o, peor, buscaba sin el filtro que el usuario pidió.
+    """
+
+    def correr(self, nombre, argumentos):
+        llamada = patch.dict(FUNCIONES, {nombre: self.tool_espia})
+        self.llamadas = []
+        with llamada:
+            return ejecutar(self.contexto(), nombre, argumentos)
+
+    def tool_espia(self, ctx, **argumentos):
+        self.llamadas.append(argumentos)
+        return {"resultados": []}
+
+    def test_un_genero_en_espanol_en_semantico_es_un_error(self):
+        resultado = self.correr(
+            "buscar_semantico", {"consulta": "naves", "generos": ["Ciencia ficción"]}
+        )
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertIn("generos", resultado["detalle"])
+        self.assertEqual(self.llamadas, [])
+
+    def test_un_genero_en_espanol_en_descubrir_es_un_error(self):
+        # Antes se descartaba en silencio y la búsqueda salía sin filtro.
+        resultado = self.correr("descubrir", {"generos": ["Comedia"]})
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertEqual(self.llamadas, [])
+
+    def test_el_error_le_dice_al_modelo_los_valores_validos(self):
+        resultado = self.correr("descubrir", {"generos": ["Comedia"]})
+
+        self.assertIn("Comedy", resultado["detalle"])
+
+    def test_un_tipo_que_no_existe_es_un_error(self):
+        resultado = self.correr("detalle", {"id_tmdb": 5, "tipo": "person"})
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertIn("tipo", resultado["detalle"])
+
+    def test_un_id_que_no_es_numero_es_un_error(self):
+        resultado = self.correr("detalle", {"id_tmdb": "abc", "tipo": "movie"})
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertIn("id_tmdb", resultado["detalle"])
+
+    def test_falta_un_argumento_obligatorio(self):
+        resultado = self.correr("similares_a", {"id_tmdb": 5})
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertIn("tipo", resultado["detalle"])
+
+    def test_un_null_cuenta_como_no_mandado(self):
+        # Algunos modelos mandan `null` en los opcionales: la tool recibe lo mismo
+        # que si no hubieran venido.
+        resultado = self.correr("descubrir", {"tipo": None, "generos": ["Drama"]})
+
+        self.assertEqual(resultado, {"resultados": []})
+        self.assertEqual(self.llamadas, [{"generos": ["Drama"]}])
+
+    def test_un_llamado_valido_llega_a_la_tool(self):
+        argumentos = {"consulta": "algo tranquilo", "generos": ["Drama"], "tipo": "tv"}
+
+        resultado = self.correr("buscar_semantico", argumentos)
+
+        self.assertEqual(resultado, {"resultados": []})
+        self.assertEqual(self.llamadas, [argumentos])
 
 
 class EsquemasTests(BaseTools):
