@@ -271,6 +271,51 @@ class VistasTests(BaseTools):
         self.assertEqual(buscar.call_args.kwargs["excluir"], {(1, "movie")})
 
 
+class RecomendablesTests(BaseTools):
+    """Qué tools marcan sus títulos como recomendables, con las tools reales.
+
+    La red de tarjetas del orquestador solo arma tarjetas con estos títulos: si una
+    búsqueda para recomendar dejara de marcarlos, la red no haría nada y ningún test
+    del orquestador lo notaría, porque ahí las tools son de mentira.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.catalogo.resultados["movie"] = [pelicula(1)]
+        self.catalogo.personas = [{"id": 103, "name": "Mark Ruffalo"}]
+        self.catalogo.creditos["cast"] = [{**pelicula(1), "media_type": "movie"}]
+        self.catalogo.detalle = pelicula(1, runtime=97)
+        self.moon = self.produccion("Moon", id_tmdb=1)
+
+    def recomendables_de(self, nombre, argumentos):
+        contexto = self.contexto()
+        with patch("chatbot.tools.busqueda.buscar_semantico", return_value=[self.moon]):
+            ejecutar(contexto, nombre, argumentos)
+        return contexto.recomendables
+
+    def test_las_busquedas_para_recomendar_los_marcan(self):
+        llamadas = (
+            ("descubrir", {"tipo": "movie"}),
+            ("similares_a", {"id_tmdb": 5, "tipo": "movie"}),
+            ("buscar_por_persona", {"nombre": "Mark Ruffalo"}),
+            ("buscar_semantico", {"consulta": "algo"}),
+        )
+        for nombre, argumentos in llamadas:
+            with self.subTest(nombre):
+                self.assertEqual(
+                    self.recomendables_de(nombre, argumentos), {(1, "movie")}
+                )
+
+    def test_las_consultas_directas_no(self):
+        llamadas = (
+            ("buscar_por_titulo", {"titulo": "Moon", "tipo": "movie"}),
+            ("detalle", {"id_tmdb": 1, "tipo": "movie"}),
+        )
+        for nombre, argumentos in llamadas:
+            with self.subTest(nombre):
+                self.assertEqual(self.recomendables_de(nombre, argumentos), set())
+
+
 class DescubrirTests(BaseTools):
     def filtros(self, tipo="movie"):
         return next(
