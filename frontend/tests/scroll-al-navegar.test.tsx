@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // `vi.hoisted` crea la variable antes que el `vi.mock` de abajo, que Vitest sube
@@ -10,8 +10,6 @@ import { ScrollArribaAlNavegar } from "@/components/ScrollArribaAlNavegar";
 
 describe("ScrollArribaAlNavegar", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
     ruta.actual = "/terms";
     window.history.replaceState(null, "", "/terms");
   });
@@ -39,88 +37,27 @@ describe("ScrollArribaAlNavegar", () => {
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "instant" });
   });
 
-  // Simula que el usuario bajó hasta `y` en la página que está en la URL.
-  function bajarA(y: number) {
-    Object.defineProperty(window, "scrollY", { value: y, configurable: true });
-    window.dispatchEvent(new Event("scroll"));
-  }
+  it("con atrás o adelante no mueve nada: Next y el navegador restauran el scroll", () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    const { rerender } = render(<ScrollArribaAlNavegar />);
 
-  function volverA(anterior: string, rerender: (ui: React.ReactElement) => void) {
-    window.history.replaceState(null, "", anterior);
     window.dispatchEvent(new PopStateEvent("popstate"));
-    ruta.actual = anterior;
+    ruta.actual = "/search";
     rerender(<ScrollArribaAlNavegar />);
-  }
 
-  it("con atrás devuelve el scroll que había en esa página", () => {
-    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-    const { rerender } = render(<ScrollArribaAlNavegar />);
-    bajarA(900);
-    navegarA("/search", rerender);
-    // El navegador recorta el scroll al alto de /search antes de que vuelva /terms.
-    bajarA(534);
-
-    volverA("/terms", rerender);
-
-    expect(scrollTo).toHaveBeenLastCalledWith({ top: 900, left: 0, behavior: "instant" });
-  });
-
-  it("si la página anterior todavía es corta, reintenta hasta llegar", async () => {
-    // Las dos primeras veces la página no da para más de 534 px; después sí.
-    let intentos = 0;
-    vi.spyOn(window, "scrollTo").mockImplementation(((opciones: ScrollToOptions) => {
-      intentos += 1;
-      const top = intentos <= 3 ? Math.min(opciones.top ?? 0, 534) : (opciones.top ?? 0);
-      Object.defineProperty(window, "scrollY", { value: top, configurable: true });
-    }) as typeof window.scrollTo);
-    const { rerender } = render(<ScrollArribaAlNavegar />);
-    bajarA(900);
-    navegarA("/search", rerender);
-
-    volverA("/terms", rerender);
-
-    await waitFor(() => expect(window.scrollY).toBe(900));
-  });
-
-  it("si la persona mueve la página, deja de insistir", async () => {
-    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-    const { rerender } = render(<ScrollArribaAlNavegar />);
-    bajarA(900);
-    navegarA("/search", rerender);
-    volverA("/terms", rerender);
-    const llamadas = scrollTo.mock.calls.length;
-
-    window.dispatchEvent(new Event("wheel"));
-    await new Promise((listo) => setTimeout(listo, 100));
-
-    expect(scrollTo.mock.calls.length).toBe(llamadas);
-  });
-
-  it("si atrás solo cambia la búsqueda (?q=) no mueve la página", () => {
-    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-    const { rerender } = render(<ScrollArribaAlNavegar />);
-    window.history.pushState(null, "", "/terms?q=a");
-
-    window.history.replaceState(null, "", "/terms");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-    rerender(<ScrollArribaAlNavegar />);
-    navegarA("/lists", rerender);
-
-    expect(scrollTo).toHaveBeenCalledTimes(1);
-    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, left: 0, behavior: "instant" });
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 
   it("después de un atrás, la navegación siguiente vuelve a llevar arriba", () => {
     const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     const { rerender } = render(<ScrollArribaAlNavegar />);
-    navegarA("/search", rerender);
-    volverA("/terms", rerender);
-    scrollTo.mockClear();
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    ruta.actual = "/search";
+    rerender(<ScrollArribaAlNavegar />);
 
     navegarA("/lists", rerender);
 
     expect(scrollTo).toHaveBeenCalledTimes(1);
-    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, left: 0, behavior: "instant" });
   });
 
   it("con un ancla (#) no mueve nada: el salto a la sección lo hace el navegador", () => {
