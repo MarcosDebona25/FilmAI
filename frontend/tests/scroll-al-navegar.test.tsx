@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // `vi.hoisted` crea la variable antes que el `vi.mock` de abajo, que Vitest sube
@@ -63,6 +63,37 @@ describe("ScrollArribaAlNavegar", () => {
     volverA("/terms", rerender);
 
     expect(scrollTo).toHaveBeenLastCalledWith({ top: 900, left: 0, behavior: "instant" });
+  });
+
+  it("si la página anterior todavía es corta, reintenta hasta llegar", async () => {
+    // Las dos primeras veces la página no da para más de 534 px; después sí.
+    let intentos = 0;
+    vi.spyOn(window, "scrollTo").mockImplementation(((opciones: ScrollToOptions) => {
+      intentos += 1;
+      const top = intentos <= 3 ? Math.min(opciones.top ?? 0, 534) : (opciones.top ?? 0);
+      Object.defineProperty(window, "scrollY", { value: top, configurable: true });
+    }) as typeof window.scrollTo);
+    const { rerender } = render(<ScrollArribaAlNavegar />);
+    bajarA(900);
+    navegarA("/search", rerender);
+
+    volverA("/terms", rerender);
+
+    await waitFor(() => expect(window.scrollY).toBe(900));
+  });
+
+  it("si la persona mueve la página, deja de insistir", async () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    const { rerender } = render(<ScrollArribaAlNavegar />);
+    bajarA(900);
+    navegarA("/search", rerender);
+    volverA("/terms", rerender);
+    const llamadas = scrollTo.mock.calls.length;
+
+    window.dispatchEvent(new Event("wheel"));
+    await new Promise((listo) => setTimeout(listo, 100));
+
+    expect(scrollTo.mock.calls.length).toBe(llamadas);
   });
 
   it("si atrás solo cambia la búsqueda (?q=) no mueve la página", () => {

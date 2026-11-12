@@ -25,12 +25,44 @@ function claveActual() {
  * El navegador solo no alcanza: restaura apenas cambia la URL, cuando todavía
  * se ve la página de la que se sale, y si esa es más corta el scroll queda
  * recortado a su alto (bajar 900 px en /terms, ir a /search y volver dejaba
- * ~530). Por eso se anota el último scroll de cada URL y se aplica cuando la
- * página anterior ya está en pantalla.
+ * ~530). Por eso se anota el último scroll de cada URL y se aplica cuando
+ * vuelve la página anterior, reintentando hasta que tenga el alto necesario.
  *
  * Un cambio solo de búsqueda (`?q=`, los filtros de Buscar) no cambia
  * `pathname`, así que tampoco mueve la página.
  */
+/** Lo que hace la persona para mover la página por su cuenta. */
+const EVENTOS_DE_LA_PERSONA = ["wheel", "touchstart", "keydown", "mousedown"] as const;
+
+/** Hasta cuántos cuadros (~1 s a 60 por segundo) se reintenta devolver el scroll. */
+const CUADROS_MAXIMOS = 60;
+
+/**
+ * Lleva la página a `top` y reintenta en cada cuadro hasta llegar. `pathname`
+ * cambia antes de que esté todo el contenido de la página anterior (Next lo
+ * pinta en un render posterior), y mientras la página sea más corta el
+ * navegador recorta el scroll. Si la persona mueve la página, deja de insistir.
+ * Devuelve la función que corta los reintentos (la limpieza del efecto).
+ */
+function devolverScroll(top: number) {
+  let cuadro = 0;
+  let pedido = 0;
+  const cortar = () => {
+    cancelAnimationFrame(pedido);
+    for (const evento of EVENTOS_DE_LA_PERSONA) window.removeEventListener(evento, cortar);
+  };
+  const intentar = () => {
+    window.scrollTo({ top, left: 0, behavior: "instant" });
+    cuadro += 1;
+    if (Math.abs(window.scrollY - top) < 1 || cuadro >= CUADROS_MAXIMOS) cortar();
+    else pedido = requestAnimationFrame(intentar);
+  };
+  for (const evento of EVENTOS_DE_LA_PERSONA)
+    window.addEventListener(evento, cortar, { passive: true });
+  intentar();
+  return cortar;
+}
+
 export function ScrollArribaAlNavegar() {
   const pathname = usePathname();
   // `useRef` guarda un valor entre renders sin volver a renderizar: es como un
@@ -74,8 +106,7 @@ export function ScrollArribaAlNavegar() {
     if (volverA.current !== null) {
       const top = volverA.current;
       volverA.current = null;
-      window.scrollTo({ top, left: 0, behavior: "instant" });
-      return;
+      return devolverScroll(top);
     }
     if (window.location.hash) return;
     // `instant`: sin animación, como una página que se abre arriba.
