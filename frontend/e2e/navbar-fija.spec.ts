@@ -85,6 +85,46 @@ test.describe("navbar", () => {
     });
   });
 
+  test.describe("al navegar en escritorio", () => {
+    test.use({ viewport: ESCRITORIO });
+
+    test("la página nueva arranca arriba aunque se haya bajado poco", async ({ page }) => {
+      // Con menos scroll que el alto de la barra, el comienzo de la página nueva
+      // sigue a la vista y Next no la movía: la barra fija la tapaba.
+      await abrir(page, "/terms");
+      await bajarHasta(page, 60);
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(60);
+
+      await page.locator("header nav a[href='/search']").click();
+      await page.waitForURL("**/search");
+
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    });
+
+    test("volver atrás devuelve el scroll de la página anterior", async ({ page }) => {
+      await abrir(page, "/terms");
+      await bajarHasta(page, 900);
+      await page.locator("header nav a[href='/search']").click();
+      await page.waitForURL("**/search");
+
+      await page.goBack();
+      await page.waitForURL("**/terms");
+
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(800);
+    });
+
+    test("en login no se reserva espacio arriba: ahí no hay barra", async ({ page }) => {
+      await sinSesion(page);
+      await page.goto("/login");
+      await expect(page.locator("header")).toHaveCount(0);
+
+      const padding = await page.evaluate(
+        () => getComputedStyle(document.documentElement).scrollPaddingTop
+      );
+      expect(padding).toBe("auto");
+    });
+  });
+
   test.describe("en celular", () => {
     test.use({ viewport: CELULAR });
 
