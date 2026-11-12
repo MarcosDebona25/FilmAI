@@ -175,13 +175,16 @@ def _tarjetas_nombradas(respuesta, ctx):
         if not nombre:
             continue
         if len(nombre) <= _LARGO_DE_TITULO_CORTO:
-            texto, buscado = respuesta, nombre
+            # En un título corto también cuentan el apóstrofo y el guion: «It» no
+            # tiene que aparecer dentro de «It's» ni «Up» dentro de «Up-to-date».
+            # `\u2019` es el apóstrofo tipográfico, el curvo, que el modelo usa a menudo.
+            texto, buscado, borde = respuesta, nombre, "[\\w'\u2019-]"
         else:
-            texto, buscado = plegada, _plegar(nombre)
-        # `(?<!\w)` y `(?!\w)`: que no haya una letra pegada antes ni después. Así
+            texto, buscado, borde = plegada, _plegar(nombre), r"\w"
+        # `(?<!...)` y `(?!...)`: que no haya una letra pegada antes ni después. Así
         # «Moon» no aparece dentro de «Moonlight». `re.escape` hace que los signos
         # del título («Se7en», «Alien³», «¿Qué pasó ayer?») se busquen tal cual.
-        encontrado = re.search(rf"(?<!\w){re.escape(buscado)}(?!\w)", texto)
+        encontrado = re.search(rf"(?<!{borde}){re.escape(buscado)}(?!{borde})", texto)
         if encontrado:
             nombrados.append((encontrado.start(), clave))
     # Ordena por posición en el texto; la clave desempata siempre igual.

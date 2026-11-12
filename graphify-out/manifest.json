@@ -4470,9 +4470,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/orquestador.py": {
-    "mtime": 1794490581.9608366,
-    "seen": 1794491110.195483,
-    "ast_hash": "2bee9a343e7ea786579e5987e47305b0",
+    "mtime": 1794492477.759265,
+    "seen": 1794492498.2395973,
+    "ast_hash": "897b6543f5272a81cef7257bd14e9611",
     "semantic_hash": ""
   },
   "backend/chatbot/prompts.py": {
@@ -4488,9 +4488,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_orquestador.py": {
-    "mtime": 1794490187.7811673,
-    "seen": 1794491110.1958141,
-    "ast_hash": "1a5ef5aa58edf57d27263311a51b0d15",
+    "mtime": 1794492346.515111,
+    "seen": 1794492498.2399995,
+    "ast_hash": "47687b4ec5e67b5408e336ad889bdc54",
     "semantic_hash": ""
   },
   "frontend/lib/fondos.ts": {

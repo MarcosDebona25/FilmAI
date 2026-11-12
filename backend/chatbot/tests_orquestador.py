@@ -311,6 +311,22 @@ class RedDeTarjetasTests(BaseOrquestador):
 
         self.assertEqual(self.ids(eventos), [3])
 
+    async def test_un_titulo_corto_no_cuenta_pegado_a_un_apostrofo_o_un_guion(self):
+        # «It's» y «Up-to-date» no nombran a «It» ni a «Up» (PR-Agent en #187).
+        self.peliculas = [
+            pelicula_de_mentira(8, "It", 2017),
+            pelicula_de_mentira(9, "Up", 2009),
+        ]
+
+        eventos = await self.correr(
+            [
+                [tool("descubrir")],
+                ["It\u2019s a classic, and it's up-to-date: Up-to-date."],
+            ]
+        )
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
     async def test_no_cuenta_dentro_de_otra_palabra(self):
         eventos = await self.correr([[tool("descubrir")], ["Algo lunar: Moonlight."]])
 
