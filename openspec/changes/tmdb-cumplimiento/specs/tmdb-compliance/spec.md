@@ -62,7 +62,7 @@ A `ProduccionAudiovisual` row is due when `fecha_enriquecimiento` is NULL or old
 
 ### Requirement: Titles TMDB no longer has
 
-When the refresh gets 404 (Not Found), a row no user references (ratings, reviews, list items) MUST be deleted. A referenced row MUST keep only `id_tmdb` and `tipo`, have every TMDB content field blanked, `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, and its embedding removed. (Pending confirmation, see design.)
+When the refresh gets 404 (Not Found), a row no user references (ratings, reviews, list items) MUST be deleted. A referenced row MUST keep only `id_tmdb` and `tipo`, have every TMDB content field blanked, `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, and its embedding removed. Only two 404 (Not Found) answers on different nights trigger it; any other error is retried. The delete MUST fail safe: `Calificacion`, `Resena` and `Tiene` protect the production, and a protected row becomes a tombstone instead. A tombstone that TMDB answers again with 200 (OK) MUST be restored. An unavailable title MUST NOT appear in recommendations, semantic search or the chatbot; in the user's lists and reviews it MUST appear as «Title no longer available», without a link, keeping the rating and review.
 
 #### Scenario: A rated title disappears from TMDB
 
@@ -71,6 +71,20 @@ When the refresh gets 404 (Not Found), a row no user references (ratings, review
 - WHEN the task refreshes it
 - THEN the rating still exists
 - AND the production has no title, synopsis or poster and is marked unavailable
+
+#### Scenario: A single 404 is not enough
+
+- GIVEN a production TMDB answers 404 (Not Found) for the first time
+- WHEN the task refreshes it
+- THEN the production keeps its content and is still available
+- AND it is retried the next night
+
+#### Scenario: TMDB restores a title
+
+- GIVEN a production marked unavailable
+- AND TMDB answers 200 (OK) for it again
+- WHEN the task refreshes it
+- THEN its content is filled in and it is available again
 
 ### Requirement: Chat cards keep TMDB content for at most 6 months
 

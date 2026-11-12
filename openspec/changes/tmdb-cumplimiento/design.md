@@ -84,20 +84,46 @@ refreshed is no longer due, so nothing is enriched twice.
 
 ### Titles TMDB no longer has
 
-`materializar(forzar=True)` on an id TMDB answers with 404 (Not Found):
+`materializar(forzar=True)` on an id TMDB answers with 404 (Not Found).
+**Confirmed by Gonza on 12/11/2026** (the tombstone; the alternatives, keeping
+the row as it is or always deleting it, were discarded: the first breaks the
+terms, the second takes the user's ratings, reviews and list items with it).
 
+- **Only a 404 counts.** A timeout, 500 (Internal Server Error), 429 (Too Many
+  Requests) or 401 (Unauthorized) is a failed refresh: the row stays due and is
+  retried the next night.
+- **Two 404s on different nights.** The first 404 only records the date in a
+  new nullable `fecha_404` and leaves the row due. The rule applies when a
+  later night answers 404 again. A successful refresh clears `fecha_404`.
 - **No user references** (no rating, review, list item): delete the row
   (translations and embedding go with it by CASCADE).
 - **Referenced**: keep `id_tmdb` and `tipo`, blank every TMDB content field,
-  set `fecha_enriquecimiento = now` (so it is not retried every night) and set
-  a new boolean `disponible_en_tmdb = False`. Serializers and cards show it as
-  «Title no longer available» (new copy key, en/es). The embedding row is
-  deleted so semantic search cannot return it.
+  set `fecha_enriquecimiento = now` and set a new boolean
+  `disponible_en_tmdb = False`. The embedding row is deleted so semantic
+  search cannot return it.
+- **Check and delete in one operation.** `Calificacion`, `Resena` and `Tiene`
+  move from `CASCADE` to `on_delete=PROTECT` on `produccion`. The task tries
+  the delete inside a transaction; a `ProtectedError` (someone rated or listed
+  the title in the meantime) falls back to the tombstone. Nothing a user did
+  can be deleted by this task.
+- **TMDB restores it.** A tombstone is still refreshed every 150 days like any
+  other row. If TMDB answers 200 (OK) again, the row is filled in,
+  `disponible_en_tmdb` goes back to `True`, `fecha_404` is cleared and the
+  embedding is enqueued again.
+- **Nowhere in the app.** An unavailable title is excluded from Recommended,
+  semantic search, the chatbot tools (`mis_listas` included) and anything
+  that lists catalog rows; its detail page answers like any title TMDB does
+  not have.
+- **What the user sees** (Gonza, 12/11/2026): in their lists and in My
+  reviews, a grey «Title no longer available» card (new copy key, en/es), with
+  no link to the detail page, keeping their rating and review text. They can
+  remove it from the list and delete the review as usual.
 
-This needs one migration (`disponible_en_tmdb`, default `True`). **Open: to
-confirm with Gonza before PR 2 merges** (proposal, risks). If rejected, the
-fallback is to keep the row as it is and log it; it would then be the one
-known case over 180 days.
+This needs one migration (`disponible_en_tmdb`, default `True`, and
+`fecha_404`, nullable) plus the `PROTECT` change. Both are cheap on Postgres
+16 (no table rewrite), so they can run after the mass population of the
+catalog. Before switching to `PROTECT`, check every place that deletes a
+production (admin, seeds, tests) so none of them depended on the cascade.
 
 ## Chat cards: trimming and rehydration
 
