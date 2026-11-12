@@ -103,14 +103,18 @@ test.describe("navbar", () => {
 
     test("volver atrás devuelve el scroll de la página anterior", async ({ page }) => {
       await abrir(page, "/terms");
-      await bajarHasta(page, 900);
+      // Hasta el final: con 720 px de alto, /terms no baja más de ~530 px.
+      await bajarHasta(page, 100_000);
+      const antes = await page.evaluate(() => window.scrollY);
+      expect(antes).toBeGreaterThan(300);
       await page.locator("header nav a[href='/search']").click();
       await page.waitForURL("**/search");
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 
       await page.goBack();
       await page.waitForURL("**/terms");
 
-      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(800);
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(antes);
     });
 
     test("en login no se reserva espacio arriba: ahí no hay barra", async ({ page }) => {
