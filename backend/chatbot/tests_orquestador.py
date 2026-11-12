@@ -299,6 +299,18 @@ class RedDeTarjetasTests(BaseOrquestador):
 
         self.assertEqual(self.ids(eventos), [7])
 
+    async def test_el_apostrofo_curvo_vale_como_el_recto(self):
+        # TMDB escribe «Ocean's Eleven» con el apóstrofo recto y el modelo a veces con
+        # el curvo, U+2019 (PR-Agent en
+        # #187). Para el lector es la misma letra, así que tiene que coincidir.
+        self.peliculas = [pelicula_de_mentira(8, "Ocean's Eleven", 2001)]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Probá **Ocean\u2019s Eleven**, es muy divertida."]]
+        )
+
+        self.assertEqual(self.ids(eventos), [8])
+
     async def test_un_titulo_corto_no_se_confunde_con_una_palabra(self):
         eventos = await self.correr(
             [[tool("descubrir")], ["Show her the way to Solaris, the classic."]]

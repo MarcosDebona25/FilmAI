@@ -142,14 +142,22 @@ def _con_tarjetas(vuelta):
     return any(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
 
 
+# Apóstrofos que se ven iguales: el modelo a veces escribe «Ocean's» con el curvo
+# (U+2019) y TMDB lo guarda con el recto ('). Todos pasan a ser el recto.
+_APOSTROFOS = {"\u2019": "'", "\u2018": "'", "\u02bc": "'"}
+
+
 def _plegar_letra(letra):
     """Una letra en minúscula y sin acento: «Á» → «a». Siempre devuelve una sola.
 
     `NFKD` separa la letra de su tilde («á» pasa a «a» más la tilde sola) y
     `combining` reconoce la tilde suelta para descartarla. Si el resultado no es una
     sola letra («ß» da «ss»), queda la original en minúscula: así el texto plegado
-    tiene el mismo largo y las posiciones coinciden con las del original.
+    tiene el mismo largo y las posiciones coinciden con las del original. Los
+    apóstrofos curvos pasan a ser el recto, también de a una letra.
     """
+    if letra in _APOSTROFOS:
+        return _APOSTROFOS[letra]
     base = "".join(
         c for c in unicodedata.normalize("NFKD", letra) if not unicodedata.combining(c)
     ).lower()
