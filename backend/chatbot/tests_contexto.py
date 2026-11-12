@@ -114,6 +114,14 @@ class ApostrofosYTildesTests(SimpleTestCase):
                     anonimizar("Hola José Pérez", nfd, alcance), "Hola [usuario]"
                 )
 
+    def test_un_mensaje_descompuesto_no_corre_los_reemplazos(self):
+        # `anonimizar()` pasa el mensaje a NFC antes de plegarlo, así que las posiciones
+        # siguen coincidiendo aunque haya una tilde suelta antes del nombre.
+        self.assertEqual(
+            anonimizar("cafe\u0301, soy Mark Debona", MARK, ESTRICTO),
+            "café, soy [usuario]",
+        )
+
     def test_el_usuario_igual_al_nombre_se_queda_aunque_este_descompuesto(self):
         nfd = SimpleNamespace(
             nombre="Jose\u0301", apellido="Perez", nombre_usuario="josé"
