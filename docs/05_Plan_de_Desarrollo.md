@@ -36,7 +36,9 @@ Antes de arrancar hay que resolver tres cosas:
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 
-En el set dorado del 08/11/2026, con thinking apagado (el modo por defecto), solo 3 de 8 preguntas que piden recomendar terminaron con tarjetas: el modelo nombra los títulos en el texto pero no llama a `mostrar_tarjetas`. Es lo más visible para el usuario en la parte de la app que distingue a FilmAI. Se arregla reforzando la regla del prompt o con un control en el orquestador que detecte una respuesta que nombra títulos de una tool sin mostrarlos. Después del arreglo, volver a correr `chatear --golden` y reevaluar el modo de thinking. En la misma corrida, `buscar_semantico` recibió `"Ciencia ficción"` como género, fuera del enum (solo admite los nombres en inglés): falta ver qué hace la tool con ese valor.
+✅ **Resuelto el 12/11/2026.** En el set dorado del 08/11/2026, con thinking apagado (el modo por defecto), solo 3 de 8 preguntas que piden recomendar terminaron con tarjetas. Ahora, si el modelo recomienda en el texto y no llama a `mostrar_tarjetas`, el orquestador arma las tarjetas con los títulos que nombró (la «red de tarjetas»), y `ejecutar()` valida los argumentos de cada tool contra su esquema, así un género en español como `"Ciencia ficción"` vuelve al modelo como `invalid_arguments` en lugar de vaciar la búsqueda. Medición y detalle en `docs/decisiones.md` (12/11/2026).
+
+Queda abierto: el tope de 4 vueltas de tools corta algunos turnos en los que el modelo encadena búsquedas de más (entre 2 y 5 de 32 turnos de recomendación en el set dorado). Opciones a evaluar: subir el tope, pedir en el prompt que no busque títulos sueltos de memoria, o que la última vuelta permitida fuerce la respuesta final.
 
 ### 3. Correos por Celery y Brevo como respaldo (Q-08, #181)
 
