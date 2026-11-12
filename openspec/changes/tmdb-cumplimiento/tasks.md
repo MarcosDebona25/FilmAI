@@ -87,20 +87,24 @@ longer available» card in lists and My reviews.
 - [ ] 2.4 RED: refreshing a row overwrites its `ProduccionTraduccion` texts
       (not only fills empty ones); if it does not, fix `guardar_traducciones`
 - [ ] 2.5 RED: the first 404 (Not Found) only sets `fecha_404` and leaves the
-      row due; a second 404 on a later night applies the rule; a timeout,
-      500, 429 or 401 never counts; a successful refresh clears `fecha_404`
+      row due; a second 404 (Not Found) applies the rule only if `fecha_404` is before
+      today (a second run the same night does not); a timeout, 500 (Internal
+      Server Error), 429 (Too Many Requests) or 401 (Unauthorized) never
+      counts; a successful refresh clears `fecha_404`
 - [ ] 2.5b RED: two 404s (Not Found) on a row nobody references delete it
       (and its translations and embedding)
 - [ ] 2.6 RED: 404 (Not Found) on a row with a rating keeps the rating, blanks
       the TMDB fields, sets `disponible_en_tmdb = False` and
-      `fecha_enriquecimiento`, removes the embedding; semantic search,
+      `fecha_enriquecimiento`, deletes its `ProduccionTraduccion` rows and
+      the embedding; semantic search,
       Recommended, the chatbot tools (`mis_listas` included) and the detail
       page never return it
 - [ ] 2.6b RED: `Calificacion`, `Resena` and `Tiene` protect the production
       (`on_delete=PROTECT`): a rating created between the check and the
-      delete makes the delete fail and the row becomes a tombstone instead.
-      Before the change, review every place that deletes a production
-      (admin, seeds, tests)
+      delete makes the delete fail (inside its own savepoint) and the row
+      becomes a tombstone instead. Before the change, review every place that
+      deletes a production (design lists them: `_descartar_cascaron`, the
+      seed, the admin, tests) and how each handles `ProtectedError`
 - [ ] 2.6c RED: a tombstone TMDB answers with 200 (OK) again is filled in,
       `disponible_en_tmdb = True`, `fecha_404` cleared, embedding enqueued
 - [ ] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`), `fecha_404`

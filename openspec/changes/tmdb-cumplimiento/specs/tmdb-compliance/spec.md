@@ -62,7 +62,7 @@ A `ProduccionAudiovisual` row is due when `fecha_enriquecimiento` is NULL or old
 
 ### Requirement: Titles TMDB no longer has
 
-When the refresh gets 404 (Not Found), a row no user references (ratings, reviews, list items) MUST be deleted. A referenced row MUST keep only `id_tmdb` and `tipo`, have every TMDB content field blanked, `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, and its embedding removed. Only two 404 (Not Found) answers on different nights trigger it; any other error is retried. The delete MUST fail safe: `Calificacion`, `Resena` and `Tiene` protect the production, and a protected row becomes a tombstone instead. A tombstone that TMDB answers again with 200 (OK) MUST be restored. An unavailable title MUST NOT appear in recommendations, semantic search or the chatbot; in the user's lists and reviews it MUST appear as «Title no longer available», without a link, keeping the rating and review.
+When the refresh gets 404 (Not Found), a row no user references (ratings, reviews, list items) MUST be deleted. A referenced row MUST keep only `id_tmdb` and `tipo`, have every TMDB content field blanked (translations included), `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, and its embedding removed. Only two 404 (Not Found) answers on different nights trigger it (the first one's date must be before today); any other error is retried. The delete MUST fail safe: `Calificacion`, `Resena` and `Tiene` protect the production, and a protected row becomes a tombstone instead. A tombstone that TMDB answers again with 200 (OK) MUST be restored. An unavailable title MUST NOT appear in recommendations, semantic search or the chatbot; in the user's lists and reviews it MUST appear as «Title no longer available», without a link, keeping the rating and review.
 
 #### Scenario: A rated title disappears from TMDB
 
@@ -72,12 +72,27 @@ When the refresh gets 404 (Not Found), a row no user references (ratings, review
 - THEN the rating still exists
 - AND the production has no title, synopsis or poster and is marked unavailable
 
-#### Scenario: A single 404 is not enough
+#### Scenario: A single 404 (Not Found) is not enough
 
 - GIVEN a production TMDB answers 404 (Not Found) for the first time
 - WHEN the task refreshes it
 - THEN the production keeps its content and is still available
 - AND it is retried the next night
+
+#### Scenario: A rating arrives while the row is being deleted
+
+- GIVEN a production with no references and a second 404 (Not Found)
+- AND a user rates it between the check and the delete
+- WHEN the task deletes it
+- THEN the delete fails because the rating protects the production
+- AND the production becomes a tombstone and the rating still exists
+
+#### Scenario: An unavailable title in the user's list
+
+- GIVEN a production marked unavailable that a user has in a list and rated
+- WHEN the user opens the list, My reviews, Recommended or asks the chatbot
+- THEN the list and My reviews show «Title no longer available», without a link, with the rating and review
+- AND Recommended, semantic search and the chatbot do not return it
 
 #### Scenario: TMDB restores a title
 

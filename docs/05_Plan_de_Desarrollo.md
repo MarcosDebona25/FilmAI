@@ -22,12 +22,12 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 
 TMDB exige el aviso exacto «This product uses the TMDB API but is not endorsed or certified by TMDB.», su logo oficial sin alterar y que ningún dato suyo quede guardado más de 6 meses sin refrescarse. Hay que cumplirlo antes de mostrar la app a terceros. El plan está en `openspec/changes/tmdb-cumplimiento/` y se reparte en 4 PRs: créditos y logo (solo frontend), tarea nocturna de refresco, recorte de las tarjetas del chat y cierre de documentación. El uso de datos de TMDB en el chatbot y los embeddings ya está decidido: alcanza con ser un proyecto académico sin fines de lucro.
 
-Antes de arrancar quedan dos cosas por resolver (los títulos que TMDB borra ya están decididos):
+Antes de arrancar quedan dos cosas por resolver:
 
 - **Logo**: la tarea 1.0 pide elegir en el canvas cuál de los logos oficiales (`docs/tmdb-legales/`) se usa y cómo se ve en cada tema.
-- **Títulos que TMDB borra**: decidido por Gonza el 12/11/2026 (lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 seguidos, `PROTECT`, restauración) están en el diseño del cambio y en `docs/decisiones.md`.
-
 - **Tope de la tarea de refresco**: el diseño refresca hasta 300 filas por noche (`CELERY_REFRESCO_LIMIT`) con 30 días de margen. Si se cargan 10 000 títulos en un mismo día, todos vencen juntos y se tardan unas 34 noches en refrescarlos, así que unas 1 200 filas pasarían los 180 días. Ajustarlo antes del PR 2: repartir la carga en varios días, subir el tope o calcularlo según el tamaño del catálogo.
+
+Ya decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 (Not Found) en noches distintas, `PROTECT`, restauración) están en el diseño del cambio y en `docs/decisiones.md`.
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 
