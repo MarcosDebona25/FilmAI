@@ -372,7 +372,7 @@ Archivos: `backend/filmai/settings.py`, `openspec/specs/chat-api/spec.md`
 
 ### 28/10/2026 — SDD del chatbot: decisiones de diseño vigentes
 
-- **Errores**: un solo error visible durante el stream, `chat_unavailable` (proveedor caído, cuota, tiempo, tope de vueltas o fallo al guardar), con la causa en el log. Antes del stream, los códigos existentes más `chat_request_in_progress`, 409 (Conflict). Descartado un código por causa: cinco textos que no cambian lo que hace el usuario.
+- **Errores**: un solo error visible durante el stream, `chat_unavailable` (proveedor caído, cuota, tiempo o fallo al guardar; el tope de vueltas dejó de ser un error el 12/11, ver «Última llamada sin tools»), con la causa en el log. Antes del stream, los códigos existentes más `chat_request_in_progress`, 409 (Conflict). Descartado un código por causa: cinco textos que no cambian lo que hace el usuario.
 - **CSRF** con `JWTCookieAuthentication` en una vista DRF, para que el rechazo salga con el sobre de errores. **ASGI**: `daphne` en desarrollo y uvicorn en producción, sin `channels` (SSE es HTTP común). Sin endpoint de cancelación: Django cancela la vista al desconectarse el cliente.
 - **Una solicitud a la vez**: candado con `cache.add` y token propio, que solo libera quien lo tomó; el turno tiene un máximo de 25 s. El tope por hora se cuenta después del candado, así un 409 (Conflict) no gasta cupo.
 - **Cierre**: primero se guarda (con `asyncio.shield`, junto con la liberación del candado) y después salen `tarjetas` y `fin`.
@@ -399,7 +399,7 @@ Archivos: `backend/chatbot/tools/`, `backend/catalogo/client.py`
 
 ### 05/11–06/11/2026 — Orquestador y reglas del prompt
 
-El prompt pide texto y `mostrar_tarjetas` en la misma respuesta; si llegan juntos, el turno termina sin otra llamada (de 6,5 s a 4,5 s). Tope: 4 vueltas de tools y una llamada final. `responder()` retiene los primeros 200 caracteres de cada vuelta y los descarta si la vuelta pide buscar, porque el modelo escribía «I'll look that up.» y el contrato no permite retirar texto enviado. Si menciona la duración, la da para todos los títulos.
+El prompt pide texto y `mostrar_tarjetas` en la misma respuesta; si llegan juntos, el turno termina sin otra llamada (de 6,5 s a 4,5 s). Tope: 4 vueltas de tools y una llamada final (reemplazado el 12/11: si en esa llamada pide tools otra vez ya no es un error, ver «Última llamada sin tools»). `responder()` retiene los primeros 200 caracteres de cada vuelta y los descarta si la vuelta pide buscar, porque el modelo escribía «I'll look that up.» y el contrato no permite retirar texto enviado. Si menciona la duración, la da para todos los títulos.
 Archivos: `backend/chatbot/orquestador.py`, `backend/chatbot/prompts.py`
 
 ### 06/11/2026 — Persistencia del turno y vista SSE
@@ -420,6 +420,11 @@ Archivos: `backend/chatbot/golden.yaml`, `backend/chatbot/management/commands/ch
 **Pendiente aparte**: el tope de 4 vueltas de tools corta turnos que el modelo estira con búsquedas de más (`ingles_mas_corto`, `semantico`, `como_arrival_mas_liviano`): 2 de 32 turnos con `develop` y 5 de 32 con el cambio, 3 de ellos en las dos corridas con el ajuste de prompt descartado. No lo causa la red ni la validación, que no cambian lo que recibe el modelo.
 **Secuelas** (regla nueva del prompt, al final de «Títulos vistos»): si el modelo va a recomendar una secuela o una temporada posterior y el usuario no vio la anterior, recomienda la anterior; si ya la vio, no lo aclara, porque las búsquedas de recomendación sacan lo visto. Va al final de esa sección y no al principio de «Cómo trabajar» porque mover la regla de tarjetas al principio cambió la conducta del modelo. La prueba es `secuela_sin_la_anterior` del set dorado. En 2 corridas (12/11, `gonzag8`, que no vio Dune ni Blade Runner) recomendó empezar por Duna antes de Duna: Parte dos las dos veces, pero en una recomendó Blade Runner 2049 sin mencionar Blade Runner: la cumple a medias. Topes de vueltas en esas corridas: 3 de 16 turnos de las 8 preguntas de antes (5 de 32 en la medición anterior), sin cambios visibles en el resto.
 Archivos: `backend/chatbot/orquestador.py`, `backend/chatbot/tools/__init__.py`, `backend/chatbot/tools/turno.py`, `backend/chatbot/prompts.py`, `backend/chatbot/golden.yaml`
+
+### 12/11/2026 — Última llamada sin tools, red de tarjetas solo en negrita y arreglos invisibles
+
+**Última llamada sin tools** (reemplaza la decisión del 05/11 sobre el tope de vueltas): si tras las 4 vueltas con tools el modelo sigue pidiendo tools, o si el turno termina sin una palabra de texto, `responder()` hace una llamada más al proveedor sin el parámetro `tools` (`llm.py` lo omite si la lista está vacía; no se usa `tool_choice`) y con un mensaje `system`: «Ya no podés buscar. Respondé al usuario con lo que ya encontraste, sin pedir más herramientas.» Esa respuesta sale como texto normal, separada con «\n\n» si ya había texto de vueltas anteriores (que no se repite), y la red de tarjetas arma las tarjetas desde lo que nombra. Las tools que pidió la vuelta que se pasó se corren igual, así que sus resultados y tarjetas entran. `ErrorDelTurno` solo si esa llamada también falla o vuelve vacía. Antes, pasarse del tope era un error visible: 5 de 32 turnos del set dorado. Cada uso queda en el log (`Última llamada sin tools: <motivo>`) y `chatear --golden` lo marca con `[última llamada sin tools]`. `ProveedorFalso` guarda en `esquemas` las tools de cada llamada.
+Archivos: `backend/chatbot/orquestador.py`, `backend/chatbot/llm.py`, `backend/chatbot/management/commands/chatear.py`
 
 ---
 

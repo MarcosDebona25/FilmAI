@@ -7,7 +7,7 @@ el código que corre en `en_hilo` ve la transacción del test.
 import json
 from io import StringIO
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -91,9 +91,10 @@ class RespuestaSimpleTests(BaseOrquestador):
 
         self.assertEqual(await Mensaje.objects.acount(), 0)
 
-    async def test_una_respuesta_vacia_es_un_error(self):
+    async def test_una_respuesta_vacia_y_una_ultima_llamada_vacia_es_un_error(self):
+        # Sin texto hay una última llamada de rescate; si también vuelve vacía, error.
         with self.assertRaises(ErrorDelTurno):
-            await self.correr([[]])
+            await self.correr([[], []])
 
 
 class VueltaConToolsTests(BaseOrquestador):
@@ -258,6 +259,14 @@ class RedDeTarjetasTests(BaseOrquestador):
         self.assertEqual(self.ids(eventos), [2, 1])
         self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Arrival")
 
+    async def test_la_respuesta_de_la_ultima_llamada_tambien_arma_tarjetas(self):
+        guion = [[tool("descubrir")] for _ in range(5)]
+        guion += [["Después de buscar, te va a gustar **Arrival**."]]
+
+        eventos = await self.correr(guion)
+
+        self.assertEqual(self.ids(eventos), [2])
+
     async def test_si_el_modelo_mostro_tarjetas_no_se_agrega_nada(self):
         eventos = await self.correr(
             [[tool("descubrir")], ["Mirá Arrival, Moon y Solaris.", tarjetas(1)]]
@@ -401,16 +410,73 @@ class RedDeTarjetasTests(BaseOrquestador):
 
 
 class FallosTests(BaseOrquestador):
-    async def test_la_quinta_vuelta_con_tools_termina_el_turno(self):
-        guion = [[tool("descubrir")] for _ in range(5)]
+    async def test_la_quinta_vuelta_con_tools_pide_una_ultima_llamada_sin_tools(self):
+        guion = [[tool("descubrir")] for _ in range(5)] + [["Con lo que hay: Moon."]]
+
+        eventos = await self.correr(guion)
+
+        self.assertEqual(eventos[-1].texto, "Con lo que hay: Moon.")
+        self.assertEqual(len(self.proveedor.pedidos), 6)
+        # Las 5 primeras llamadas llevan las tools; la última, ninguna.
+        self.assertTrue(all(self.proveedor.esquemas[:5]))
+        self.assertFalse(self.proveedor.esquemas[5])
+
+    async def test_la_ultima_llamada_lleva_el_aviso_de_que_ya_no_busca(self):
+        guion = [[tool("descubrir")] for _ in range(5)] + [["Listo"]]
+
+        await self.correr(guion)
+
+        aviso = self.proveedor.pedidos[5][-1]
+        self.assertEqual(aviso["role"], "system")
+        self.assertIn("Ya no podés buscar", aviso["content"])
+        # Antes del aviso va todo lo que pasó, incluidos los resultados de las tools.
+        self.assertEqual(self.proveedor.pedidos[5][-2]["role"], "tool")
+
+    async def test_el_texto_ya_emitido_no_se_repite_en_la_ultima_llamada(self):
+        largo = "x" * (_LARGO_DE_PREAMBULO + 1)
+        guion = [[largo, tool("descubrir")]]
+        guion += [[tool("descubrir")] for _ in range(4)] + [["Final."]]
+
+        eventos = await self.correr(guion)
+
+        textos = [e.delta for e in eventos if isinstance(e, Texto)]
+        self.assertEqual("".join(textos), f"{largo}\n\nFinal.")
+        self.assertEqual(eventos[-1].texto, f"{largo}\n\nFinal.")
+
+    async def test_las_tarjetas_de_la_vuelta_que_se_paso_llegan_al_resultado(self):
+        # La quinta vuelta pidió solo tarjetas, sin texto: se corren y la última
+        # llamada escribe la respuesta.
+        guion = [[tool("descubrir")] for _ in range(4)]
+        guion += [[tarjetas(1)], ["Mirá esta."]]
+
+        eventos = await self.correr(guion)
+
+        self.assertEqual(eventos[-1].texto, "Mirá esta.")
+        self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Moon")
+
+    async def test_un_turno_sin_texto_pide_una_ultima_llamada_sin_tools(self):
+        eventos = await self.correr([[tool("descubrir")], [], ["Te recomiendo Moon."]])
+
+        self.assertEqual(eventos[-1].texto, "Te recomiendo Moon.")
+        self.assertEqual(len(self.proveedor.pedidos), 3)
+        self.assertFalse(self.proveedor.esquemas[2])
+        self.assertEqual(self.proveedor.pedidos[2][-1]["role"], "system")
+
+    async def test_si_la_ultima_llamada_falla_es_un_error_del_turno(self):
+        guion = [[tool("descubrir")] for _ in range(5)] + [[RuntimeError("503")]]
 
         with self.assertRaises(ErrorDelTurno):
             await self.correr(guion)
 
-        self.assertEqual(len(self.proveedor.pedidos), 5)
+    async def test_si_la_ultima_llamada_vuelve_vacia_es_un_error_del_turno(self):
+        guion = [[tool("descubrir")] for _ in range(5)] + [[]]
 
-    async def test_pasarse_de_vueltas_falla_aunque_ya_haya_texto(self):
-        guion = [["Busco.", tool("descubrir")] for _ in range(5)]
+        with self.assertRaises(ErrorDelTurno):
+            await self.correr(guion)
+
+    async def test_la_ultima_llamada_no_cuenta_si_solo_pide_tools(self):
+        # Sin esquemas no debería pasar, pero si el modelo igual las pide, se ignoran.
+        guion = [[tool("descubrir")] for _ in range(5)] + [[tool("descubrir")]]
 
         with self.assertRaises(ErrorDelTurno):
             await self.correr(guion)
@@ -430,12 +496,6 @@ class FallosTests(BaseOrquestador):
 
         self.assertEqual(eventos[-1].texto, "Listo")
         self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Moon")
-
-    async def test_la_ultima_llamada_no_puede_pedir_tarjetas_sin_texto(self):
-        guion = [[tool("descubrir")] for _ in range(4)] + [[tarjetas(1)]]
-
-        with self.assertRaises(ErrorDelTurno):
-            await self.correr(guion)
 
     async def test_si_el_proveedor_falla_no_hay_resultado(self):
         eventos = []
@@ -764,6 +824,33 @@ class LeerStreamTests(SimpleTestCase):
         )
 
         self.assertEqual(items[-1].razonamiento, "pensando")
+
+
+class ParametroToolsTests(SimpleTestCase):
+    """Sin esquemas, `tools` no viaja: es lo que hace una llamada «solo texto»."""
+
+    async def pedido_enviado(self, esquemas):
+        crear = AsyncMock(return_value=como_stream(fragmento(contenido="Hola")))
+        with patch("chatbot.llm.AsyncOpenAI") as cliente:
+            cliente.return_value.__aenter__.return_value = MagicMock(
+                chat=MagicMock(completions=MagicMock(create=crear))
+            )
+            proveedor = ProveedorOpenAICompatible(
+                base_url="http://x", modelo="m", api_key="k", thinking=False
+            )
+            [_ async for _ in proveedor.escribir([], esquemas)]
+        return crear.call_args.kwargs
+
+    async def test_con_esquemas_los_manda(self):
+        enviado = await self.pedido_enviado([{"type": "function"}])
+
+        self.assertEqual(enviado["tools"], [{"type": "function"}])
+
+    async def test_sin_esquemas_no_manda_el_parametro_tools(self):
+        enviado = await self.pedido_enviado([])
+
+        self.assertNotIn("tools", enviado)
+        self.assertNotIn("tool_choice", enviado)
 
 
 class CrearProveedorTests(SimpleTestCase):

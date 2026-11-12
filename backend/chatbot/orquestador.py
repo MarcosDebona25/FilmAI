@@ -31,6 +31,13 @@ logger = logging.getLogger(__name__)
 
 # Rondas de tools permitidas. Hay una llamada más, para la respuesta final.
 _MAX_VUELTAS_CON_TOOLS = 4
+# Lo que se le dice al modelo en la última llamada, que va sin tools (ver
+# `_ultima_llamada`). Va como mensaje `system`: es una orden del backend, no algo
+# que haya dicho el usuario.
+_AVISO_DE_ULTIMA_LLAMADA = (
+    "Ya no podés buscar. Respondé al usuario con lo que ya encontraste, sin pedir "
+    "más herramientas."
+)
 _MENSAJES_DE_HISTORIAL = 10
 # Cuánto texto de una vuelta se retiene antes de mandarlo. Un preámbulo («I'll
 # look that up.») es corto: si la vuelta termina antes de este largo y pidió
@@ -225,6 +232,41 @@ def _tarjetas_nombradas(respuesta, ctx):
     return [{"id_tmdb": id_tmdb, "tipo": tipo} for _, (id_tmdb, tipo) in nombrados]
 
 
+async def _ultima_llamada(proveedor, mensajes, partes, motivo):
+    """Una llamada más, sin tools, para que el modelo responda con lo que ya tiene.
+
+    Antes, pasarse del tope de vueltas o terminar sin texto era un error para el
+    usuario (5 de 32 turnos del set dorado, 12/11/2026). Ahora se le pide al modelo
+    que cierre: como no recibe tools, solo puede escribir. Si esta llamada también
+    falla o vuelve vacía, ahí sí es un `ErrorDelTurno`.
+
+    Entrega el texto en vivo y lo suma a `partes`. Si ya había texto de otras
+    vueltas, lo nuevo va separado con un «\n\n» y lo anterior no se repite.
+    """
+    logger.warning("Última llamada sin tools: %s", motivo)
+    mensajes.append({"role": "system", "content": _AVISO_DE_ULTIMA_LLAMADA})
+    separar = bool("".join(partes).strip())
+    escrito = False
+    try:
+        async for item in proveedor.escribir(mensajes, []):
+            # Si el modelo pidiera tools igual, la `Vuelta` final se ignora: solo
+            # importa el texto que salió.
+            if isinstance(item, Vuelta) or not item:
+                continue
+            if separar:
+                partes.append("\n\n")
+                yield Texto("\n\n")
+                separar = False
+            escrito = escrito or bool(item.strip())
+            partes.append(item)
+            yield Texto(item)
+    except Exception as error:
+        logger.exception("La última llamada falló")
+        raise ErrorDelTurno("La última llamada falló") from error
+    if not escrito:
+        raise ErrorDelTurno("La última llamada no escribió nada")
+
+
 async def responder(chat, texto, idioma, *, proveedor=None):
     """Responde un mensaje, entregando eventos a medida que ocurren.
 
@@ -241,7 +283,7 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         raise ErrorDelTurno("No se pudo preparar el turno") from error
     partes = []
 
-    for numero_de_vuelta in range(_MAX_VUELTAS_CON_TOOLS + 1):
+    for _ in range(_MAX_VUELTAS_CON_TOOLS + 1):
         vuelta = None
         # Sin esto, el texto de dos vueltas saldría pegado: «…despacio.¿Querés…».
         separar = bool(partes)
@@ -280,8 +322,6 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         # Ya respondió y eligió tarjetas: otra llamada solo la repetiría. Por eso
         # esta vuelta cierra el turno, aunque sea la última permitida.
         cierra_el_turno = bool(vuelta.texto) and _solo_tarjetas(vuelta)
-        if numero_de_vuelta == _MAX_VUELTAS_CON_TOOLS and not cierra_el_turno:
-            raise ErrorDelTurno("Se pasó del tope de vueltas con tools")
 
         if not _solo_tarjetas(vuelta):
             yield Estado("searching")
@@ -290,10 +330,22 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             break
         mensajes.append(_mensaje_del_asistente(vuelta))
         mensajes.extend(resultados)
+    else:
+        # `for ... else`: el `else` corre solo si el ciclo terminó sin `break` (en
+        # Java no hay equivalente). Acá: la última vuelta permitida todavía pedía
+        # tools, así que el modelo no llegó a responder.
+        motivo = "se pasó del tope de vueltas con tools"
+        async for evento in _ultima_llamada(proveedor, mensajes, partes, motivo):
+            yield evento
+
+    if not "".join(partes).strip():
+        # El turno terminó sin una sola palabra para el usuario.
+        async for evento in _ultima_llamada(
+            proveedor, mensajes, partes, "el modelo no escribió nada"
+        ):
+            yield evento
 
     respuesta = "".join(partes)
-    if not respuesta.strip():
-        raise ErrorDelTurno("El modelo no escribió nada")
     if not ctx.tarjetas:
         # Recomendó en el texto y no mostró tarjetas: se arman con lo que nombró.
         # `mostrar_tarjetas` no toca la base, así que se llama directo, sin el

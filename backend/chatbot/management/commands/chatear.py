@@ -78,6 +78,9 @@ class _Espia:
         self.escribir_linea = escribir
 
     async def escribir(self, mensajes, esquemas):
+        if not esquemas:
+            # La última llamada del orquestador va sin tools: sirve para contarlas.
+            self.escribir_linea("\n[última llamada sin tools]")
         async for item in self.proveedor.escribir(mensajes, esquemas):
             if isinstance(item, Vuelta):
                 for llamada in item.llamadas:
