@@ -249,6 +249,11 @@ Archivos: `backend/usuarios/paises.py`, `backend/catalogo/services/plataformas.p
 `trending` llevaba parámetros sin validar al path de TMDB; ahora usa listas cerradas. Dos topes: 30 llamadas a TMDB por pedido (el máximo legítimo, Buscar en «Todo» y en español, son 20) y 300 por IP por minuto, contadas en el momento con un contador atómico en Redis (cobrarlas al final dejaba pasar pedidos en paralelo); fuera de un pedido HTTP no hay tope. F7: un id que TMDB no conoce ya no deja una producción vacía (se borra el cascarón sin datos) y uno fuera del rango de `integer` responde 400 (Bad Request) en vez de 500 (Internal Server Error).
 Archivos: `backend/catalogo/presupuesto.py`, `backend/catalogo/services/materialization.py`
 
+### 12/11/2026 — Títulos que TMDB borra: lápida (#180)
+
+Para cumplir el tope de 6 meses de los términos de TMDB, la tarea de refresco vuelve a pedir cada producción. Cuando TMDB responde 404 (Not Found) dos noches distintas, la fila se borra si nadie la usa. Si alguien la calificó, la reseñó o la tiene en una lista, queda como lápida: solo `id_tmdb` y `tipo`, sin contenido de TMDB ni embedding, y `disponible_en_tmdb = False`. Solo cuenta el 404; cualquier otro error se reintenta. `Calificacion`, `Resena` y `Tiene` pasan a `PROTECT`, así que el borrado nunca se lleva lo que hizo un usuario, y la lápida vuelve si TMDB restaura el título. No aparece en recomendaciones, búsquedas ni en el chatbot. En las listas y en Mis reseñas se ve una tarjeta gris «Title no longer available», sin enlace, con la nota y la reseña, y se puede quitar o borrar como siempre. Alternativas descartadas: dejar la fila como está (no cumple los términos) y borrarla siempre (el usuario pierde su actividad). Lo decidió Gonza; se implementa en el PR 2 del cambio.
+Archivos: `openspec/changes/tmdb-cumplimiento/design.md`, `openspec/changes/tmdb-cumplimiento/tasks.md`, `openspec/changes/tmdb-cumplimiento/specs/tmdb-compliance/spec.md`, `openspec/changes/tmdb-cumplimiento/proposal.md`, `docs/05_Plan_de_Desarrollo.md`
+
 ---
 
 ## Búsqueda y recomendaciones

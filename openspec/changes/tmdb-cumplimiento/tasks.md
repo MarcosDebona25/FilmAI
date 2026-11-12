@@ -25,9 +25,9 @@ Dependencies: PR 1 and PR 2 start with no wait. PR 3 needs PR 2's
 `disponible_en_tmdb` only for the «unavailable» placeholder; it can start
 before and stack. PR 4 waits for the other three (it records their numbers).
 
-**Before PR 2 merges:** confirm with Gonza the rule for titles TMDB no longer
-has (design, «Titles TMDB no longer has»). If rejected, drop tasks 2.5–2.7 and
-log those rows instead.
+The rule for titles TMDB no longer has was confirmed by Gonza on 12/11/2026
+(design, «Titles TMDB no longer has»): tombstone, and a visible «Title no
+longer available» card in lists and My reviews.
 
 ## Phase 1: Attribution and brand (PR 1)
 
@@ -86,13 +86,29 @@ log those rows instead.
       refreshed / not found / failed and the rows still over 180 days
 - [ ] 2.4 RED: refreshing a row overwrites its `ProduccionTraduccion` texts
       (not only fills empty ones); if it does not, fix `guardar_traducciones`
-- [ ] 2.5 RED: 404 (Not Found) on a row nobody references deletes it (and its
-      translations and embedding)
+- [ ] 2.5 RED: the first 404 (Not Found) only sets `fecha_404` and leaves the
+      row due; a second 404 (Not Found) applies the rule only if `fecha_404` is before
+      today (a second run the same night does not); a timeout, 500 (Internal
+      Server Error), 429 (Too Many Requests) or 401 (Unauthorized) never
+      counts; a successful refresh clears `fecha_404`
+- [ ] 2.5b RED: two 404s (Not Found) on a row nobody references delete it
+      (and its translations and embedding)
 - [ ] 2.6 RED: 404 (Not Found) on a row with a rating keeps the rating, blanks
       the TMDB fields, sets `disponible_en_tmdb = False` and
-      `fecha_enriquecimiento`, removes the embedding; semantic search and
-      browse never return it
-- [ ] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`);
+      `fecha_enriquecimiento`, deletes its `ProduccionTraduccion` rows and
+      the embedding; semantic search,
+      Recommended, the chatbot tools (`mis_listas` included) and the detail
+      page never return it
+- [ ] 2.6b RED: `Calificacion`, `Resena` and `Tiene` protect the production
+      (`on_delete=PROTECT`): a rating created between the check and the
+      delete makes the delete fail (inside its own savepoint) and the row
+      becomes a tombstone instead. Before the change, review every place that
+      deletes a production (design lists them: `_descartar_cascaron`, the
+      seed, the admin, tests) and how each handles `ProtectedError`
+- [ ] 2.6c RED: a tombstone TMDB answers with 200 (OK) again is filled in,
+      `disponible_en_tmdb = True`, `fecha_404` cleared, embedding enqueued
+- [ ] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`), `fecha_404`
+      (nullable) and `PROTECT` on the three foreign keys;
       `catalogo/services/vencimiento.py`; task `catalogo.refrescar_vencidos`;
       settings `DIAS_REFRESCO_TMDB = 150`, `CELERY_REFRESCO_LIMIT = 300`;
       beat entry at 03:30 with its comment
@@ -102,7 +118,9 @@ log those rows instead.
 - [ ] 2.9 RED: the refresh honors 429 (Too Many Requests) with `Retry-After`
       (`httpx.MockTransport`, `time.sleep` patched)
 - [ ] 2.10 Serializers and cards for an unavailable title: «Title no longer
-      available» key (en/es) in the frontend, no link; unit test
+      available» key (en/es) in the frontend, no link, grey card; in lists
+      and My reviews it keeps the rating and review, and can still be removed
+      from the list or have its review deleted; unit test
 - [ ] 2.11 Manual (no Docker in this planning worktree; in the PR's
       worktree with `RUN_MIGRATIONS=false` as usual): run the task once
       against the dev database, record how many rows were due, how long it

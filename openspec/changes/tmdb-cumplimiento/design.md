@@ -84,20 +84,60 @@ refreshed is no longer due, so nothing is enriched twice.
 
 ### Titles TMDB no longer has
 
-`materializar(forzar=True)` on an id TMDB answers with 404 (Not Found):
+`materializar(forzar=True)` on an id TMDB answers with 404 (Not Found).
+**Confirmed by Gonza on 12/11/2026** (the tombstone; the alternatives, keeping
+the row as it is or always deleting it, were discarded: the first breaks the
+terms, the second takes the user's ratings, reviews and list items with it).
 
+- **Only a 404 counts.** A timeout, 500 (Internal Server Error), 429 (Too Many
+  Requests) or 401 (Unauthorized) is a failed refresh: the row stays due and is
+  retried the next night.
+- **Two 404 (Not Found) answers on different nights.** The first one only records the date in a
+  new nullable `fecha_404` and leaves the row due. The rule applies only when
+  `fecha_404` is set **and is a date before today** (in the server's time
+  zone) and TMDB answers 404 (Not Found) again: a manual re-run or a retry on the same
+  night never counts as the second one. A successful refresh clears
+  `fecha_404`.
 - **No user references** (no rating, review, list item): delete the row
   (translations and embedding go with it by CASCADE).
 - **Referenced**: keep `id_tmdb` and `tipo`, blank every TMDB content field,
-  set `fecha_enriquecimiento = now` (so it is not retried every night) and set
-  a new boolean `disponible_en_tmdb = False`. Serializers and cards show it as
-  «Title no longer available» (new copy key, en/es). The embedding row is
-  deleted so semantic search cannot return it.
+  set `fecha_enriquecimiento = now` and set a new boolean
+  `disponible_en_tmdb = False`. Its `ProduccionTraduccion` rows are deleted
+  too (they hold TMDB titles and synopses per language), and so is the
+  embedding row, so semantic search cannot return it.
+- **Check and delete in one operation.** `Calificacion`, `Resena` and `Tiene`
+  move from `CASCADE` to `on_delete=PROTECT` on `produccion`. The delete runs
+  in its own inner `transaction.atomic()` (a savepoint), and the
+  `ProtectedError` (someone rated or listed the title in the meantime) is
+  caught outside it: on Postgres a failed statement aborts the transaction
+  it runs in, so the tombstone `UPDATE` can only run once that savepoint has
+  been rolled back. Nothing a user did can be deleted by this task.
+- **TMDB restores it.** A tombstone is still refreshed every 150 days like any
+  other row. If TMDB answers 200 (OK) again, the row is filled in,
+  `disponible_en_tmdb` goes back to `True`, `fecha_404` is cleared and the
+  embedding is enqueued again.
+- **Not offered anywhere.** An unavailable title is excluded from Recommended,
+  Browse, semantic search and the chatbot tools (`mis_listas` included); its
+  detail page answers 404 (Not Found), like any title TMDB does not have. The
+  only places it still shows are the user's own lists and My reviews, as the
+  placeholder below.
+- **What the user sees** (Gonza, 12/11/2026): in their lists and in My
+  reviews, a grey «Title no longer available» card (new copy key, en/es), with
+  no link to the detail page, keeping their rating and review text. They can
+  remove it from the list and delete the review as usual.
 
-This needs one migration (`disponible_en_tmdb`, default `True`). **Open: to
-confirm with Gonza before PR 2 merges** (proposal, risks). If rejected, the
-fallback is to keep the row as it is and log it; it would then be the one
-known case over 180 days.
+This needs one migration (`disponible_en_tmdb`, default `True`, and
+`fecha_404`, nullable) plus the `PROTECT` change. Both are cheap on Postgres
+16 (no table rewrite), so they can run after the mass population of the
+catalog. Before switching to `PROTECT`, review every place that deletes a
+production so none of them depended on the cascade, and decide how each
+handles `ProtectedError`. As of 12/11/2026 they are:
+`_descartar_cascaron` in `catalogo/services/materialization.py` (deletes
+only an empty shell that TMDB does not know; it should never have
+references, but it must not turn into a 500 (Internal Server Error) if one
+does), `usuarios/management/commands/seed.py` (deletes ratings, reviews and
+list items before productions, so it keeps working), the Django admin, and
+tests that rely on the cascade (`catalogo/tests.py`).
 
 ## Chat cards: trimming and rehydration
 

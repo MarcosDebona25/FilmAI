@@ -22,17 +22,12 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 
 TMDB exige el aviso exacto «This product uses the TMDB API but is not endorsed or certified by TMDB.», su logo oficial sin alterar y que ningún dato suyo quede guardado más de 6 meses sin refrescarse. Hay que cumplirlo antes de mostrar la app a terceros. El plan está en `openspec/changes/tmdb-cumplimiento/` y se reparte en 4 PRs: créditos y logo (solo frontend), tarea nocturna de refresco, recorte de las tarjetas del chat y cierre de documentación. El uso de datos de TMDB en el chatbot y los embeddings ya está decidido: alcanza con ser un proyecto académico sin fines de lucro.
 
-Antes de arrancar hay que resolver tres cosas:
+Antes de arrancar quedan dos cosas por resolver:
 
 - **Logo**: la tarea 1.0 pide elegir en el canvas cuál de los logos oficiales (`docs/tmdb-legales/`) se usa y cómo se ve en cada tema.
-- **Títulos que TMDB borra** (decisión abierta con Gonza): la tarea de refresco vuelve a pedir cada producción antes de los 150 días. Si TMDB la borró, responde 404 (Not Found) y no se puede refrescar. Dejarla como está incumple los términos, y borrarla se lleva la calificación, la reseña y los ítems de lista del usuario, porque esas tablas usan `CASCADE`. Opciones:
-  1. **Lápida (_tombstone_)**: si nadie usa el título, se borra; si alguien lo usa, la fila queda solo con `id_tmdb` y `tipo`, sin contenido de TMDB ni embedding, y con `disponible_en_tmdb = False` (una migración). A favor: cumple los términos y el usuario no pierde su actividad. En contra: una migración, un estado nuevo que hay que filtrar en toda la app y más casos de prueba.
-  2. **No tocarla y registrarla en el log**. A favor: lo más simple. En contra: esas filas superan los 6 meses y no se cumplen los términos.
-  3. **Borrarla siempre**. A favor: cumple los términos sin estados nuevos. En contra: se pierden calificaciones, reseñas e ítems de listas.
-
-  Si se elige la opción 1, hace falta: que solo un 404 dispare la regla y que sean dos seguidos en noches distintas (un timeout, un 500 (Internal Server Error), un 429 (Too Many Requests) o un 401 (Unauthorized) se reintentan); que el título pueda volver si TMDB lo restaura; revisar y borrar en una sola operación, para no llevarse una calificación hecha en el medio; `on_delete=PROTECT` en `Calificacion`, `Resena` y `Tiene` (incompatible con la opción 3), y que un título no disponible no aparezca en ningún lado, chatbot incluido. Queda por decidir qué ve el usuario de su calificación y su reseña sobre ese título.
-
 - **Tope de la tarea de refresco**: el diseño refresca hasta 300 filas por noche (`CELERY_REFRESCO_LIMIT`) con 30 días de margen. Si se cargan 10 000 títulos en un mismo día, todos vencen juntos y se tardan unas 34 noches en refrescarlos, así que unas 1 200 filas pasarían los 180 días. Ajustarlo antes del PR 2: repartir la carga en varios días, subir el tope o calcularlo según el tamaño del catálogo.
+
+Ya decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 (Not Found) en noches distintas, `PROTECT`, restauración) están en el diseño del cambio y en `docs/decisiones.md`.
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 
