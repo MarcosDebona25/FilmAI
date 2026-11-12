@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794490915.726074,
-    "seen": 1794491110.2190444,
-    "ast_hash": "48ee0d88551b5c92a057a2906dbc33a6",
+    "mtime": 1794495749.9553428,
+    "seen": 1794495775.7975628,
+    "ast_hash": "dc1671b57cfc271e163f3e7d40c185da",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4398,9 +4398,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_tools.py": {
-    "mtime": 1794491751.0871227,
-    "seen": 1794491772.1281052,
-    "ast_hash": "d358f0b6e96a50e732e1ae5e8672db60",
+    "mtime": 1794495084.9709356,
+    "seen": 1794495775.7748866,
+    "ast_hash": "0996e9ed47daec0ee7d44eb0f936d185",
     "semantic_hash": ""
   },
   "backend/chatbot/tools/__init__.py": {
@@ -4470,15 +4470,15 @@
     "semantic_hash": ""
   },
   "backend/chatbot/orquestador.py": {
-    "mtime": 1794492477.759265,
-    "seen": 1794492498.2395973,
-    "ast_hash": "897b6543f5272a81cef7257bd14e9611",
+    "mtime": 1794495237.3811214,
+    "seen": 1794495775.7743979,
+    "ast_hash": "87859fddb6a0ee474fa69226fe13d4c6",
     "semantic_hash": ""
   },
   "backend/chatbot/prompts.py": {
-    "mtime": 1794490187.7551167,
-    "seen": 1794491110.1955185,
-    "ast_hash": "ea71f2042ab19bab55a65708923be40b",
+    "mtime": 1794495399.1166663,
+    "seen": 1794495775.774451,
+    "ast_hash": "2a07a0ea46e3152700fda9deee5ed8da",
     "semantic_hash": ""
   },
   "backend/chatbot/puente.py": {
@@ -4488,9 +4488,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_orquestador.py": {
-    "mtime": 1794492346.515111,
-    "seen": 1794492498.2399995,
-    "ast_hash": "47687b4ec5e67b5408e336ad889bdc54",
+    "mtime": 1794495399.1169615,
+    "seen": 1794495775.7747586,
+    "ast_hash": "aa76adee694d5b5d01177bcd3d2a9790",
     "semantic_hash": ""
   },
   "frontend/lib/fondos.ts": {
@@ -4728,9 +4728,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/golden.yaml": {
-    "mtime": 1794489217.039129,
-    "seen": 1794489822.1745925,
-    "ast_hash": "5e3cab9eb2210b496bac97f2036de275",
+    "mtime": 1794495399.14211,
+    "seen": 1794495775.7960515,
+    "ast_hash": "76c8687f67792018cf5b0a14bd63ada8",
     "semantic_hash": ""
   },
   "docs/tmdb-legales/Consideraciones Legales TMDB.txt": {
