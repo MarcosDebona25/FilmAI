@@ -116,7 +116,8 @@ test.describe("navbar", () => {
     test("en login no se reserva espacio arriba: ahí no hay barra", async ({ page }) => {
       await sinSesion(page);
       await page.goto("/login");
-      await expect(page.locator("header")).toHaveCount(0);
+      // Login tiene su propio `header` (el selector de idioma): se busca la navbar.
+      await expect(page.locator("header[data-navbar]")).toHaveCount(0);
 
       const padding = await page.evaluate(
         () => getComputedStyle(document.documentElement).scrollPaddingTop

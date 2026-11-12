@@ -399,7 +399,10 @@ test.describe("Listas: menú ⋯ y navbar en escritorio", () => {
     await page.getByRole("button", { name: "Actions for the list Clásicos" }).click();
     await expect(page.getByRole("menu")).toHaveCount(1);
 
-    await page.locator("header [aria-haspopup='menu']").click();
+    // `force`: la capa que cierra el menú tapa la navbar a propósito, y
+    // Playwright no hace clic donde algo tapa el elemento. Con `force` hace clic
+    // igual en ese punto de la pantalla, como una persona: lo recibe la capa.
+    await page.locator("header [aria-haspopup='menu']").click({ force: true });
 
     await expect(page.getByRole("menu")).toHaveCount(0);
   });
