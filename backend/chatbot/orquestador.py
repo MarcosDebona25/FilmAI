@@ -44,9 +44,8 @@ _MENSAJES_DE_HISTORIAL = 10
 # buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
 _LARGO_DE_PREAMBULO = 200
 _TOOL_DE_TARJETAS = "mostrar_tarjetas"
-# Un título de hasta este largo («Up», «Her», «It») cuenta solo en negrita Markdown
-# (**Her**): suelto, «Her latest film…» o «It is…» al empezar una oración serían
-# tarjetas. El modelo escribe los títulos en negrita, así que no se pierde nada.
+# Un título de hasta este largo («Up», «Her», «It») es una palabra común: en la
+# pregunta del usuario solo cuenta escrito igual (ver `_lo_escribio_el_usuario`).
 _LARGO_DE_TITULO_CORTO = 3
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
@@ -172,10 +171,76 @@ def _plegar_letra(letra):
 
 
 def _plegar(texto):
-    return "".join(_plegar_letra(letra) for letra in texto)
+    """El texto en minúscula, sin acentos y con un solo tipo de apóstrofo.
+
+    Antes lo pasa a `NFC`, que junta cada letra con su tilde suelta: «e» + U+0301
+    pasa a ser «é». Un texto que viene «descompuesto» (en NFD) se ve igual que uno
+    «compuesto», pero son otros caracteres, y sin esto la tilde quedaba en el medio
+    y el título no coincidía. Desde acá, las posiciones son las del texto en NFC.
+    """
+    return "".join(
+        _plegar_letra(letra) for letra in unicodedata.normalize("NFC", texto)
+    )
 
 
-def _tarjetas_nombradas(respuesta, ctx):
+# Palabras que dicen qué es un título, ya plegadas (sin acento ni mayúscula). En
+# español y en inglés. `\b` es un borde de palabra: «tv» no cuenta dentro de «atv».
+_PISTAS_DE_TIPO = {
+    "movie": re.compile(r"\b(?:pelicula|peliculas|movie|movies|film|films|filme)\b"),
+    "tv": re.compile(
+        r"\b(?:serie|series|miniserie|miniseries|show|shows|tv|temporada|season)\b"
+    ),
+}
+# Cuántas letras a cada lado de la mención se miran en busca de una pista.
+_RADIO_DE_PISTAS = 60
+
+
+def _tipo_segun_pistas(plegada, inicio, fin, pregunta):
+    """`"movie"`, `"tv"` o `None` si el contexto no se decide por ninguno.
+
+    Primero manda lo que dice el modelo cerca de la mención («la serie **Fargo**»):
+    gana la pista más cercana. Si no hay ninguna (o están a igual distancia), se
+    cuentan las de la pregunta del usuario. `plegada` y `pregunta` ya vienen plegadas.
+    """
+    cercanas = []
+    for tipo, patron in _PISTAS_DE_TIPO.items():
+        distancias = [
+            # Cuántas letras separan la pista de la mención (0 si se tocan).
+            max(0, m.start() - fin, inicio - m.end())
+            for m in patron.finditer(
+                plegada, max(0, inicio - _RADIO_DE_PISTAS), fin + _RADIO_DE_PISTAS
+            )
+        ]
+        if distancias:
+            cercanas.append((min(distancias), tipo))
+    # Con dos tipos, gana el de la pista más cercana; a igual distancia no deciden.
+    cercanas.sort()
+    if len(cercanas) == 1 or (len(cercanas) == 2 and cercanas[0][0] < cercanas[1][0]):
+        return cercanas[0][1]
+
+    cuenta = {t: len(p.findall(pregunta)) for t, p in _PISTAS_DE_TIPO.items()}
+    if cuenta["movie"] != cuenta["tv"]:
+        return max(cuenta, key=cuenta.get)
+    return None
+
+
+def _lo_escribio_el_usuario(nombre, pregunta):
+    """¿El usuario escribió este título en su pregunta?
+
+    Un título largo cuenta con otra mayúscula o acentos y solo como palabra entera:
+    «Moon» no está en «Moonlight». Uno corto («It», «Her», «Up») es una palabra común
+    («is it scary?»): solo cuenta escrito igual, con su mayúscula. Los bordes del patrón piden que no
+    haya una letra pegada antes ni después.
+    """
+    if len(nombre) <= _LARGO_DE_TITULO_CORTO:
+        texto = unicodedata.normalize("NFC", pregunta)
+        patron = rf"(?<!\w){re.escape(unicodedata.normalize('NFC', nombre))}(?!\w)"
+    else:
+        texto, patron = _plegar(pregunta), rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)"
+    return re.search(patron, texto) is not None
+
+
+def _tarjetas_nombradas(respuesta, ctx, pregunta=""):
     """Los títulos para recomendar que la respuesta nombra, en orden de aparición.
 
     Es la red para cuando el modelo recomienda en el texto pero no llama a
@@ -183,53 +248,48 @@ def _tarjetas_nombradas(respuesta, ctx):
     cuentan los títulos de `ctx.recomendables`: lo que devolvió una búsqueda para
     recomendar en este turno, que ya viene sin lo visto. Devuelve los pedidos en
     el formato de `mostrar_tarjetas`, que se encarga del tope de 3 y los repetidos.
+
+    Reglas (12/11/2026):
+    - Solo cuenta un título escrito en **negrita**: así se marca una recomendación,
+      y un título suelto en la prosa puede ser otra cosa.
+    - Uno que el usuario ya escribió en su `pregunta` no arma tarjeta: lo nombró de
+      referencia («algo como Arrival»).
+    - Si una película y una serie se llaman igual, se elige por las pistas del
+      contexto (`_tipo_segun_pistas`); sin pistas, la primera que trajo la búsqueda.
+      Una sola tarjeta por mención.
     """
     plegada = _plegar(respuesta)
-    # Cada título con todas sus apariciones, como pares (inicio, fin).
-    apariciones = {}
-    for clave in ctx.recomendables:
-        nombre = (ctx.encontrados[clave].get("titulo") or "").strip()
-        if not nombre:
+    pregunta_plegada = _plegar(pregunta)
+    # Cada mención en el texto, como (inicio, fin), con los títulos que se llaman así.
+    menciones = {}
+    # `ctx.encontrados` es un `dict`: Python recuerda el orden en que se insertaron las
+    # claves, así que esto recorre los títulos en el orden de las búsquedas.
+    # `ctx.recomendables` es un `set` y no tiene orden: solo se usa para filtrar.
+    for clave, titulo in ctx.encontrados.items():
+        nombre = (titulo.get("titulo") or "").strip()
+        if (
+            clave not in ctx.recomendables
+            or not nombre
+            or _lo_escribio_el_usuario(nombre, pregunta)
+        ):
             continue
-        if len(nombre) <= _LARGO_DE_TITULO_CORTO:
-            # Escrito igual y entre `**`: `\*` es un asterisco literal, porque en
-            # una expresión regular `*` solo significa «repetir». El tramo es el
-            # del título, sin los asteriscos.
-            patron, texto, margen = rf"\*\*{re.escape(nombre)}\*\*", respuesta, 2
-        else:
-            # `(?<!\w)` y `(?!\w)`: que no haya una letra pegada antes ni después.
-            # Así «Moon» no aparece dentro de «Moonlight». `re.escape` hace que los
-            # signos del título («Se7en», «Alien³», «¿Qué pasó ayer?») se busquen
-            # tal cual.
-            patron = rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)"
-            texto, margen = plegada, 0
+        # `\*` es un asterisco literal: en una expresión regular `*` solo significa
+        # «repetir». `re.escape` hace que los signos del título («Se7en», «Alien³»,
+        # «¿Qué pasó ayer?») se busquen tal cual.
+        patron = rf"\*\*{re.escape(_plegar(nombre))}\*\*"
         # `finditer` recorre todas las apariciones, no solo la primera.
-        tramos = [
-            (m.start() + margen, m.end() - margen) for m in re.finditer(patron, texto)
-        ]
-        if tramos:
-            apariciones[clave] = tramos
+        for m in re.finditer(patron, plegada):
+            menciones.setdefault((m.start(), m.end()), []).append(clave)
 
-    # Gana el más largo: una aparición que cae dentro de la de otro título más
-    # largo no cuenta. «Probá Dune: Part Two» nombra a esa, no a «Dune».
-    todos = [tramo for tramos in apariciones.values() for tramo in tramos]
-    nombrados = []
-    for clave, tramos in apariciones.items():
-        sueltos = [
-            (inicio, fin)
-            for inicio, fin in tramos
-            if not any(
-                otro_inicio <= inicio
-                and fin <= otro_fin
-                and fin - inicio < otro_fin - otro_inicio
-                for otro_inicio, otro_fin in todos
-            )
-        ]
-        if sueltos:
-            nombrados.append((min(sueltos)[0], clave))
-    # Ordena por posición en el texto; la clave desempata siempre igual.
-    nombrados.sort()
-    return [{"id_tmdb": id_tmdb, "tipo": tipo} for _, (id_tmdb, tipo) in nombrados]
+    elegidos = []
+    for (inicio, fin), claves in sorted(menciones.items()):
+        elegida = claves[0]
+        if len(claves) > 1:
+            tipo = _tipo_segun_pistas(plegada, inicio, fin, pregunta_plegada)
+            # `next(..., elegida)`: el primero que cumple, o `elegida` si ninguno.
+            elegida = next((c for c in claves if c[1] == tipo), elegida)
+        elegidos.append(elegida)
+    return [{"id_tmdb": id_tmdb, "tipo": tipo} for id_tmdb, tipo in elegidos]
 
 
 async def _ultima_llamada(proveedor, mensajes, partes, motivo):
@@ -350,7 +410,7 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         # Recomendó en el texto y no mostró tarjetas: se arman con lo que nombró.
         # `mostrar_tarjetas` no toca la base, así que se llama directo, sin el
         # puente. Si nombró títulos que ninguna búsqueda devolvió, no pasa nada.
-        mostrar_tarjetas(ctx, _tarjetas_nombradas(respuesta, ctx))
+        mostrar_tarjetas(ctx, _tarjetas_nombradas(respuesta, ctx, texto))
         if ctx.tarjetas:
             logger.info("Tarjetas armadas por el orquestador: %d", len(ctx.tarjetas))
     yield Resultado(respuesta, ctx.tarjetas)

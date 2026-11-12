@@ -35,7 +35,7 @@ RNF #6.
 | Archivo | Para qué sirve |
 |---|---|
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
-| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Si el modelo recomienda en el texto sin llamar a `mostrar_tarjetas`, arma las tarjetas con los títulos que nombró (la «red de tarjetas») |
+| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Si el modelo recomienda en el texto sin llamar a `mostrar_tarjetas`, arma las tarjetas con los títulos que nombró en **negrita**, sin contar los que escribió el usuario y eligiendo por pistas entre película y serie homónimas (la «red de tarjetas») |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
 | `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
 | `views.py` | `POST /api/chat/preparar/`; `MensajesView`: el historial (`GET`) y la pregunta con su respuesta en streaming (`POST`) |
