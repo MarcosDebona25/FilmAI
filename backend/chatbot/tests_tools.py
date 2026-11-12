@@ -725,10 +725,15 @@ class FallosTests(BaseTools):
             ejecutar(self.contexto(), "borrar_todo", {}), {"error": "tool_failed"}
         )
 
-    def test_argumentos_que_la_tool_no_conoce_no_rompen_nada(self):
-        resultado = ejecutar(self.contexto(), "detalle", {"usuario": 1})
+    def test_un_argumento_de_mas_es_un_error_aunque_esten_los_obligatorios(self):
+        resultado = ejecutar(
+            self.contexto(),
+            "detalle",
+            {"id_tmdb": 5, "tipo": "movie", "usuario": 1},
+        )
 
         self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertIn("usuario", resultado["detalle"])
 
 
 class ValidacionDeArgumentosTests(BaseTools):
