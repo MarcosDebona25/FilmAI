@@ -16,7 +16,7 @@ import logging
 import re
 import unicodedata
 
-from chatbot.anonimizar import CONVERSACION, anonimizar
+from chatbot.anonimizar import APOSTROFOS, CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.idioma import detectar_idioma
@@ -148,11 +148,6 @@ def _con_tarjetas(vuelta):
     return any(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
 
 
-# Apóstrofos que se ven iguales: el modelo a veces escribe «Ocean's» con el curvo
-# (U+2019) y TMDB lo guarda con el recto ('). Todos pasan a ser el recto.
-_APOSTROFOS = {"\u2019": "'", "\u2018": "'", "\u02bc": "'"}
-
-
 def _plegar_letra(letra):
     """Una letra en minúscula y sin acento: «Á» → «a». Siempre devuelve una sola.
 
@@ -162,8 +157,8 @@ def _plegar_letra(letra):
     tiene el mismo largo y las posiciones coinciden con las del original. Los
     apóstrofos curvos pasan a ser el recto, también de a una letra.
     """
-    if letra in _APOSTROFOS:
-        return _APOSTROFOS[letra]
+    if letra in APOSTROFOS:
+        return APOSTROFOS[letra]
     base = "".join(
         c for c in unicodedata.normalize("NFKD", letra) if not unicodedata.combining(c)
     ).lower()

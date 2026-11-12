@@ -11,6 +11,7 @@ from django.test import TestCase
 
 from catalogo.exceptions import TMDBPresupuestoAgotado
 from catalogo.models import (
+    ID_TMDB_MAXIMO,
     ProduccionAudiovisual,
     ProduccionTraduccion,
     TipoProduccion,
@@ -632,6 +633,18 @@ class MisListasTests(BaseTools):
         self.assertIn({"id": lista.pk, "nombre": "Para el finde"}, resultado["listas"])
         self.assertNotIn("Ajena", str(resultado))
 
+    def test_una_lista_inactiva_no_aparece_ni_se_puede_leer(self):
+        # Como en las vistas de `listas`: una lista dada de baja no existe.
+        baja = self.lista(nombre="Borrada")
+        baja.activa = False
+        baja.save()
+
+        listado = ejecutar(self.contexto(), "mis_listas", {})
+        leida = ejecutar(self.contexto(), "mis_listas", {"lista": str(baja.pk)})
+
+        self.assertNotIn("Borrada", str(listado))
+        self.assertEqual(leida, {"error": "not_found"})
+
     def test_el_nombre_de_la_lista_llega_anonimizado(self):
         self.lista(nombre="Cumple de Juan Perez")
 
@@ -808,6 +821,57 @@ class ValidacionDeArgumentosTests(BaseTools):
 
         self.assertEqual(resultado, {"resultados": []})
         self.assertEqual(self.llamadas, [argumentos])
+
+
+class LimitesDeLosEsquemasTests(BaseTools):
+    """Textos con largo máximo y enteros con rango: lo que el modelo manda tiene tope."""
+
+    def invalidos(self, nombre, argumentos):
+        with patch.dict(FUNCIONES, {nombre: lambda ctx, **_: {"resultados": []}}):
+            return ejecutar(self.contexto(), nombre, argumentos)
+
+    def test_los_textos_largos_son_un_error(self):
+        casos = (
+            ("buscar_por_titulo", {"titulo": "x" * 201}),
+            ("buscar_semantico", {"consulta": "x" * 501}),
+            ("buscar_por_persona", {"nombre": "x" * 101}),
+            ("mis_listas", {"lista": "9" * 21}),
+        )
+        for nombre, argumentos in casos:
+            with self.subTest(nombre):
+                resultado = self.invalidos(nombre, argumentos)
+
+                self.assertEqual(resultado["error"], "invalid_arguments")
+                self.assertIn("too long", resultado["detalle"])
+
+    def test_los_enteros_fuera_de_rango_son_un_error(self):
+        casos = (
+            ("buscar_por_titulo", {"titulo": "Moon", "anio": 99999}),
+            ("buscar_por_titulo", {"titulo": "Moon", "anio": -5}),
+            ("descubrir", {"anio_desde": 0}),
+            ("descubrir", {"anio_hasta": 10_000}),
+            ("descubrir", {"duracion_max": 0}),
+            ("descubrir", {"duracion_max": 100_000}),
+            ("detalle", {"id_tmdb": 0, "tipo": "movie"}),
+            ("detalle", {"id_tmdb": ID_TMDB_MAXIMO + 1, "tipo": "movie"}),
+            ("similares_a", {"id_tmdb": -1, "tipo": "tv"}),
+        )
+        for nombre, argumentos in casos:
+            with self.subTest(nombre, argumentos=argumentos):
+                resultado = self.invalidos(nombre, argumentos)
+
+                self.assertEqual(resultado["error"], "invalid_arguments")
+
+    def test_los_valores_normales_pasan(self):
+        casos = (
+            ("buscar_por_titulo", {"titulo": "Moon", "anio": 2009}),
+            ("descubrir", {"anio_desde": 1990, "duracion_max": 120}),
+            ("detalle", {"id_tmdb": ID_TMDB_MAXIMO, "tipo": "movie"}),
+            ("mis_listas", {"lista": "favoritos"}),
+        )
+        for nombre, argumentos in casos:
+            with self.subTest(nombre):
+                self.assertEqual(self.invalidos(nombre, argumentos), {"resultados": []})
 
 
 class EsquemasTests(BaseTools):

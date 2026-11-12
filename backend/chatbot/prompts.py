@@ -77,7 +77,12 @@ def armar_sistema(perfil, ya_recomendados, idioma):
     `ya_recomendados` es una lista de `{titulo, anio}`: van como texto y sin ids, para
     que el modelo no use un id de otro turno.
     """
-    titulos = ", ".join(f"{t['titulo']} ({t['anio']})" for t in ya_recomendados)
+    # Un título sin año («None») va solo, no como «Moon (None)». `t["anio"]` sigue
+    # siendo obligatorio: un registro mal armado tiene que fallar, no taparse.
+    titulos = ", ".join(
+        t["titulo"] if t["anio"] is None else f"{t['titulo']} ({t['anio']})"
+        for t in ya_recomendados
+    )
     return "\n\n".join(
         (
             _INSTRUCCIONES,

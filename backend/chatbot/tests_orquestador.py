@@ -812,6 +812,16 @@ class ReglasDelPromptTests(SimpleTestCase):
         # Las series casi nunca la tienen: callarla sería repetir el problema.
         self.assertIn("decí que de ese título no la tenés", sistema)
 
+    def test_una_tarjeta_sin_anio_no_se_ve_como_titulo_none(self):
+        sistema = armar_sistema(
+            "",
+            [{"titulo": "Moon", "anio": None}, {"titulo": "Her", "anio": 2013}],
+            "es",
+        )
+
+        self.assertIn("Ya recomendados: Moon, Her (2013)", sistema)
+        self.assertNotIn("None", sistema)
+
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))
 

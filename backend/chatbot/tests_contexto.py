@@ -83,6 +83,48 @@ class AlcanceConversacionTests(SimpleTestCase):
         self.assertEqual(self.limpiar("soy Mark Debona", MARK), "soy [usuario]")
 
 
+class ApostrofosYTildesTests(SimpleTestCase):
+    """Lo que se ve igual tiene que anonimizarse igual, aunque sean otros caracteres."""
+
+    OCONNOR = SimpleNamespace(nombre="Sean", apellido="O'Connor", nombre_usuario="soc")
+
+    def test_el_apostrofo_curvo_vale_como_el_recto(self):
+        # El teclado del celular escribe «O'Connor» con el apóstrofo curvo (U+2019).
+        self.assertEqual(
+            anonimizar("Hola O\u2019Connor", self.OCONNOR, ESTRICTO), "Hola [usuario]"
+        )
+
+    def test_el_nombre_guardado_con_apostrofo_curvo_tambien_se_anonimiza(self):
+        curvo = SimpleNamespace(
+            nombre="Sean", apellido="O\u2019Connor", nombre_usuario="soc"
+        )
+
+        self.assertEqual(anonimizar("Hola O'Connor", curvo, ESTRICTO), "Hola [usuario]")
+
+    def test_un_nombre_guardado_descompuesto_se_anonimiza(self):
+        # «é» puede guardarse como «e» + tilde suelta (NFD): se ve igual, pero son
+        # otros caracteres.
+        nfd = SimpleNamespace(
+            nombre="Jose\u0301", apellido="Pe\u0301rez", nombre_usuario="jp"
+        )
+
+        for alcance in (ESTRICTO, CONVERSACION):
+            with self.subTest(alcance):
+                self.assertEqual(
+                    anonimizar("Hola José Pérez", nfd, alcance), "Hola [usuario]"
+                )
+
+    def test_el_usuario_igual_al_nombre_se_queda_aunque_este_descompuesto(self):
+        nfd = SimpleNamespace(
+            nombre="Jose\u0301", apellido="Perez", nombre_usuario="josé"
+        )
+
+        self.assertEqual(
+            anonimizar("algo con José Ruffalo", nfd, CONVERSACION),
+            "algo con José Ruffalo",
+        )
+
+
 class CorreosTests(SimpleTestCase):
     def test_cualquier_correo_en_los_dos_alcances(self):
         for alcance in (ESTRICTO, CONVERSACION):
@@ -93,6 +135,20 @@ class CorreosTests(SimpleTestCase):
                     ),
                     "escribí a [correo], gracias",
                 )
+
+    def test_un_apostrofo_en_la_parte_local_es_parte_del_correo(self):
+        # `o'neil@gmail.com` es un correo válido: no puede quedar «o'[correo]».
+        for escrito in ("o'neil@gmail.com", "o\u2019neil@gmail.com"):
+            with self.subTest(escrito):
+                self.assertEqual(
+                    anonimizar(f"escribí a {escrito}, gracias", JUAN, ESTRICTO),
+                    "escribí a [correo], gracias",
+                )
+
+    def test_otros_signos_validos_en_la_parte_local(self):
+        self.assertEqual(
+            anonimizar("es a#b!c%d@mail.com", JUAN, CONVERSACION), "es [correo]"
+        )
 
     def test_un_usuario_llamado_correo_no_rompe_el_reemplazo(self):
         raro = SimpleNamespace(nombre="Correo", apellido="Usuario", nombre_usuario="c1")
