@@ -177,9 +177,12 @@
     }
   }
   /* Lo mismo con la navbar fija de escritorio: un control enfocado o un salto a
-     una sección no quedan debajo de ella. */
+     una sección no quedan debajo de ella. Solo si la página tiene la barra
+     (`header[data-navbar]`): login y registro no la tienen, y ahí el espacio
+     reservado movía la página sin necesidad. `:has()` elige el `html` según lo
+     que contiene. */
   @media (width >= 48rem) {
-    html {
+    html:has(header[data-navbar]) {
       scroll-padding-top: 6rem;
     }
   }

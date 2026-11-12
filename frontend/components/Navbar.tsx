@@ -29,30 +29,85 @@ const CLASES_FONDO: Record<Fondo, string | undefined> = {
   solido: "md:bg-background md:shadow-[inset_0_-1px_0_var(--line)]",
 };
 
+// El mismo corte que `md:` de Tailwind: los fondos solo existen en escritorio.
+const ESCRITORIO = "(width >= 48rem)";
+
+/** Si la pantalla es de escritorio, y se actualiza si cambia el ancho. */
+function useEscritorio() {
+  const [escritorio, setEscritorio] = useState(false);
+  useEffect(() => {
+    // `?.`: en los tests (jsdom) `matchMedia` puede no existir.
+    const consulta = window.matchMedia?.(ESCRITORIO);
+    if (!consulta) return;
+    const leer = () => setEscritorio(consulta.matches);
+    leer();
+    consulta.addEventListener?.("change", leer);
+    return () => consulta.removeEventListener?.("change", leer);
+  }, []);
+  return escritorio;
+}
+
 /**
  * Fondo de la barra según el scroll: nada con la página arriba de todo,
  * translúcido mientras tiene debajo la imagen grande de la página
  * (`data-imagen-bajo-navbar`) y sólido después, o si no hay imagen.
+ *
+ * Quién avisa cada cosa:
+ * - si la página está arriba de todo, el evento `scroll`, que solo lee
+ *   `window.scrollY` (barato: no obliga al navegador a medir nada);
+ * - si la imagen sigue debajo de la barra, un `IntersectionObserver`. El
+ *   navegador avisa solo cuando eso cambia, también si la imagen cambia de
+ *   alto sin que nadie haga scroll (el hero del Inicio al terminar de cargar).
+ *
+ * En celular no hace nada: las clases de fondo son solo `md:`.
  */
-function useFondo(barra: React.RefObject<HTMLElement | null>, pathname: string) {
+export function useFondo(barra: React.RefObject<HTMLElement | null>, pathname: string) {
   const [fondo, setFondo] = useState<Fondo>("transparente");
+  const escritorio = useEscritorio();
 
   useEffect(() => {
-    const actualizar = () => {
-      const imagen = document.querySelector("[data-imagen-bajo-navbar]");
-      const alto = barra.current?.offsetHeight ?? 0;
-      if (window.scrollY <= 0) setFondo("transparente");
-      else if (imagen && imagen.getBoundingClientRect().bottom > alto) setFondo("translucido");
-      else setFondo("solido");
+    if (!escritorio) {
+      setFondo("transparente");
+      return;
+    }
+    const imagen = document.querySelector("[data-imagen-bajo-navbar]");
+    const alto = barra.current?.offsetHeight ?? 0;
+    // Variables comunes, no estado de React: cambian muy seguido y solo
+    // importan para elegir el fondo. Lo que se renderiza es `fondo`.
+    let arriba = window.scrollY <= 0;
+    // Una sola medición al empezar; después avisa el observador.
+    let imagenDebajo = imagen ? imagen.getBoundingClientRect().bottom > alto : false;
+
+    const decidir = () =>
+      setFondo(arriba ? "transparente" : imagenDebajo ? "translucido" : "solido");
+    const alScroll = () => {
+      const ahora = window.scrollY <= 0;
+      if (ahora !== arriba) {
+        arriba = ahora;
+        decidir();
+      }
     };
-    actualizar();
-    window.addEventListener("scroll", actualizar, { passive: true });
-    window.addEventListener("resize", actualizar);
+
+    let observador: IntersectionObserver | undefined;
+    if (imagen) {
+      // El margen negativo arriba achica la zona observada en el alto de la
+      // barra: la imagen cuenta como visible solo si asoma por debajo de ella.
+      observador = new IntersectionObserver(
+        ([entrada]) => {
+          imagenDebajo = entrada.isIntersecting;
+          decidir();
+        },
+        { rootMargin: `-${alto}px 0px 0px 0px` }
+      );
+      observador.observe(imagen);
+    }
+    decidir();
+    window.addEventListener("scroll", alScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", actualizar);
-      window.removeEventListener("resize", actualizar);
+      observador?.disconnect();
+      window.removeEventListener("scroll", alScroll);
     };
-  }, [barra, pathname]);
+  }, [barra, pathname, escritorio]);
 
   return fondo;
 }
@@ -78,8 +133,11 @@ export function Navbar() {
     // En escritorio queda siempre visible (04/11/2026). Sobre la imagen de fondo
     // (canvas) no ocupa lugar: en el Home solo en escritorio (C-05); en la ficha,
     // siempre (C-07). En celular se va con la página: abajo está MobileTabs.
+    // `data-navbar`: globals.css reserva espacio arriba (scroll-padding-top) solo
+    // en las páginas que tienen esta barra.
     <header
       ref={barra}
+      data-navbar=""
       className={cn(posicion, "top-0 md:z-30 md:transition-colors", CLASES_FONDO[fondo])}
     >
       <a
