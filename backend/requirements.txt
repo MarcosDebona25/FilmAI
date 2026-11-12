@@ -53,6 +53,10 @@ daphne>=4.2,<5
 # `manage.py chatear --golden` lee `chatbot/golden.yaml`. Ya venía con
 # drf-spectacular; se declara porque ahora el código lo importa directo.
 PyYAML>=6,<7
+# `chatbot/tools/__init__.py` valida los argumentos de cada tool contra su esquema.
+# También venía con drf-spectacular; se declara porque ahora el código lo importa
+# directo (lo que pasó con `packaging` en #169: no depender de lo que trae otro).
+jsonschema>=4.18,<5
 
 # --- Búsqueda semántica (pgvector) ---
 # El submódulo `pgvector.django` aporta VectorField, HnswIndex y
