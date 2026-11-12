@@ -116,10 +116,11 @@ terms, the second takes the user's ratings, reviews and list items with it).
   other row. If TMDB answers 200 (OK) again, the row is filled in,
   `disponible_en_tmdb` goes back to `True`, `fecha_404` is cleared and the
   embedding is enqueued again.
-- **Nowhere in the app.** An unavailable title is excluded from Recommended,
-  semantic search, the chatbot tools (`mis_listas` included) and anything
-  that lists catalog rows; its detail page answers like any title TMDB does
-  not have.
+- **Not offered anywhere.** An unavailable title is excluded from Recommended,
+  Browse, semantic search and the chatbot tools (`mis_listas` included); its
+  detail page answers 404 (Not Found), like any title TMDB does not have. The
+  only places it still shows are the user's own lists and My reviews, as the
+  placeholder below.
 - **What the user sees** (Gonza, 12/11/2026): in their lists and in My
   reviews, a grey «Title no longer available» card (new copy key, en/es), with
   no link to the detail page, keeping their rating and review text. They can

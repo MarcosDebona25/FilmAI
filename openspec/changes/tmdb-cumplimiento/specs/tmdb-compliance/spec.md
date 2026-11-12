@@ -62,7 +62,7 @@ A `ProduccionAudiovisual` row is due when `fecha_enriquecimiento` is NULL or old
 
 ### Requirement: Titles TMDB no longer has
 
-When the refresh gets a 404 (Not Found) for the second time, on a later night than the first (the first one only records its date and the row stays as it is; any other error is retried), a row no user references (ratings, reviews, list items) MUST be deleted. A referenced row MUST keep only `id_tmdb` and `tipo`, have every TMDB content field blanked (translations included), `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, and its embedding removed. The delete MUST fail safe: `Calificacion`, `Resena` and `Tiene` protect the production, and a protected row becomes a tombstone instead. A tombstone that TMDB answers again with 200 (OK) MUST be restored. An unavailable title MUST NOT appear in recommendations, semantic search or the chatbot; in the user's lists and reviews it MUST appear as «Title no longer available», without a link, keeping the rating and review.
+When the refresh gets a 404 (Not Found) for the second time, on a later night than the first (the first one only records its date and the row stays as it is; any other error is retried), a row no user references (ratings, reviews, list items) MUST be deleted. A referenced row MUST keep only `id_tmdb` and `tipo`, have every TMDB content field blanked (translations included), `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, and its embedding removed. The delete MUST fail safe: `Calificacion`, `Resena` and `Tiene` protect the production, and a protected row becomes a tombstone instead. A tombstone that TMDB answers again with 200 (OK) MUST be restored. An unavailable title MUST NOT appear in recommendations, semantic search or the chatbot, and its detail endpoint MUST answer 404 (Not Found), like a title TMDB does not have; in the user's lists and reviews it MUST appear as «Title no longer available», without a link, keeping the rating and review.
 
 #### Scenario: A rated title disappears from TMDB
 
@@ -94,6 +94,7 @@ When the refresh gets a 404 (Not Found) for the second time, on a later night th
 - WHEN the user opens the list, My reviews, Recommended or asks the chatbot
 - THEN the list and My reviews show «Title no longer available», without a link, with the rating and review
 - AND Recommended, semantic search and the chatbot do not return it
+- AND its detail page answers 404 (Not Found)
 
 #### Scenario: TMDB restores a title
 
