@@ -99,6 +99,14 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
             self.assertEqual(historial[0]["autor"], "usuario")
             self.assertEqual(historial[-1]["autor"], "asistente")
 
+    def test_los_hace_min_de_un_historial_respetan_el_orden_de_la_charla(self):
+        # Los mensajes se ordenan por fecha: si un mensaje posterior dijera «hace más
+        # minutos» que uno anterior, la charla le llegaría al modelo desordenada.
+        for pregunta in cargar_golden(GOLDEN):
+            minutos = [m.get("hace_min", 0) for m in pregunta.get("historial", [])]
+            with self.subTest(pregunta["id"]):
+                self.assertEqual(minutos, sorted(minutos, reverse=True))
+
     def test_el_idioma_por_defecto_es_espanol(self):
         preguntas = cargar_golden(self.archivo(DOS_PREGUNTAS))
 
