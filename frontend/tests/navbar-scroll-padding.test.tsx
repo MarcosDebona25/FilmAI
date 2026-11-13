@@ -9,7 +9,7 @@ describe("scroll-padding-top de la navbar", () => {
   const css = readFileSync("app/globals.css", "utf8");
 
   it("solo se aplica cuando la página tiene la navbar", () => {
-    expect(css).toMatch(/html:has\(header\[data-navbar\]\)\s*\{\s*scroll-padding-top:\s*6rem;/);
+    expect(css).toMatch(/html:has\(header\[data-navbar\]\)\s*\{\s*scroll-padding-top:\s*5rem;/);
   });
 
   it("no queda un scroll-padding-top para todas las páginas", () => {

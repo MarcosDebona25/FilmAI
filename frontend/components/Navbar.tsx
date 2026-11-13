@@ -146,7 +146,7 @@ export function Navbar() {
       >
         {t("main.skipToContent")}
       </a>
-      <div className="page-container max-md:pr-3 flex h-[3.75rem] items-center gap-4 md:gap-10 md:h-auto md:py-5">
+      <div className="page-container max-md:pr-3 flex h-[3.75rem] items-center gap-4 md:gap-10 md:h-auto md:py-3">
         <Link
           href={routes.explore}
           aria-label={t("main.brandHomeLabel")}

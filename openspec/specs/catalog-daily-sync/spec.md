@@ -8,6 +8,8 @@ Scheduled maintenance of the local catalog (CU-021). A nightly Celery task grows
 
 ### Requirement: Scheduled execution
 
+> Added by #180 (13/11/2026): `catalogo.refrescar_vencidos` also runs at 03:30, and `chatbot.recortar_tarjetas` at 04:30. Their rules live in `tmdb-compliance` and the sections below.
+
 The system MUST run `catalogo.sync_catalogo_diaria` once per day at 03:00 and `catalogo.backfill_embeddings` once per day at 04:00, through a dedicated `celery-beat` service declared in `docker-compose.yml`.
 
 `CELERY_TIMEZONE` MUST be declared explicitly so the schedule is interpreted in the project's timezone rather than UTC.
@@ -153,6 +155,17 @@ A `ready` row selected for regeneration MUST be returned to `pending` before bei
 - GIVEN one `pending` row and one stale `ready` row
 - WHEN the backfill runs with `limite=1`
 - THEN exactly one task is enqueued
+
+### Requirement: Nightly refresh of rows close to TMDB's 6-month limit
+
+`catalogo.refrescar_vencidos` MUST run once per day at 03:30, between the sync (03:00) and the embedding backfill (04:00), from the same `celery-beat` entry list. It refreshes through `materializar(..., forzar=True)` the rows whose `fecha_enriquecimiento` is NULL or older than `DIAS_REFRESCO_TMDB` (150 days), as many as the nightly quota says (`min(CELERY_REFRESCO_TECHO, max(rotation, deadlines))`, NULL rows first, then oldest first). The task MUST NOT raise: a failed row is counted and retried the next night. Its log summary MUST include the quota and which of the three numbers set it, the refreshed, not found, deleted, tombstoned and failed counts, and how many rows are still older than 180 days (a warning when any, or when the ceiling limited the quota). The full contract, with the 404 (Not Found) rule and the tombstone, is `tmdb-compliance`.
+
+#### Scenario: The refresh runs after the sync
+
+- GIVEN the beat schedule
+- WHEN the entries are listed
+- THEN `catalogo.refrescar_vencidos` is set for 03:30
+- AND it comes after `sync_catalogo_diaria` (03:00) and before `backfill_embeddings` (04:00)
 
 ### Requirement: Rows are processed oldest first
 

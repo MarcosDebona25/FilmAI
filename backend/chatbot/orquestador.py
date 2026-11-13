@@ -13,21 +13,22 @@ común, y se llama con `await en_hilo(...)`.
 
 import json
 import logging
-import re
-import unicodedata
+import time
 
+from django.conf import settings
 from django.utils import timezone
 
-from chatbot.anonimizar import APOSTROFOS, CONVERSACION, anonimizar
+from chatbot.anonimizar import CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.idioma import detectar_idioma
 from chatbot.llm import Vuelta, crear_proveedor
+from chatbot.marcadores import FiltroDeMarcadores, recomienda_sin_buscar
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
+from chatbot.servicio import titulos_recordados
 from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno, ejecutar
-from chatbot.tools.personales import mostrar_tarjetas
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +46,10 @@ _MENSAJES_DE_HISTORIAL = 10
 # look that up.») es corto: si la vuelta termina antes de este largo y pidió
 # buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
 _LARGO_DE_PREAMBULO = 200
-_TOOL_DE_TARJETAS = "mostrar_tarjetas"
-# Un título de hasta este largo («Up», «Her», «It») es una palabra común: en la
-# pregunta del usuario solo cuenta escrito igual (ver `_lo_escribio_el_usuario`).
-_LARGO_DE_TITULO_CORTO = 3
+# La búsqueda forzada (ver `responder`) solo se intenta si el turno lleva menos de
+# esta parte del tiempo máximo de la vista (`LLM_TIMEOUT_SECONDS`): otra llamada al
+# modelo más las tools tiene que entrar en lo que queda.
+_FRACCION_PARA_REINTENTAR = 0.4
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
 
@@ -66,6 +67,36 @@ def _historial(chat, usuario):
     ]
 
 
+def _ahora():
+    """El reloj del turno. Aparte para poder fijarlo en los tests (como un `Clock`)."""
+    return time.monotonic()
+
+
+def _tarjetas_del_ultimo_mensaje(chat):
+    """Las tarjetas del último mensaje del asistente, listas para ser candidatas.
+
+    Salen de `Mensaje.tarjetas` (JSON guardado), así que se valida cada una: una
+    mal armada se ignora en vez de romper el turno. Es lo que permite «¿y las
+    tarjetas?» sin volver a buscar: esos títulos entran al turno con su `ref`.
+    """
+    ultimo = (
+        Mensaje.objects.filter(chat=chat, autor=TipoAutor.CHATBOT)
+        .order_by("-fecha_hora", "-id")
+        .first()
+    )
+    validas = []
+    for tarjeta in ultimo.tarjetas if ultimo else []:
+        if (
+            isinstance(tarjeta, dict)
+            and isinstance(tarjeta.get("id_tmdb"), int)
+            and tarjeta.get("tipo") in ("movie", "tv")
+            and isinstance(tarjeta.get("titulo"), str)
+            and tarjeta["titulo"].strip()
+        ):
+            validas.append(tarjeta)
+    return validas
+
+
 def _preparar(chat, texto, idioma):
     """Todo lo que el turno lee de la base, en un solo viaje al hilo.
 
@@ -74,19 +105,34 @@ def _preparar(chat, texto, idioma):
     """
     chat = Chat.objects.select_related("usuario").get(pk=chat.pk)
     usuario = chat.usuario
+    ctx = ContextoTurno.para(usuario, idioma)
+    # Las tarjetas del último mensaje son los primeros candidatos del turno (`ref`
+    # 1, 2, …): las búsquedas de este turno siguen la numeración desde ahí.
+    for tarjeta in _tarjetas_del_ultimo_mensaje(chat):
+        # Las guardadas antes del 07/11/2026 no traen `nota_tmdb`: el contrato del
+        # stream la pide siempre (puede ser `null`).
+        ctx.encontrados[(tarjeta["id_tmdb"], tarjeta["tipo"])] = {
+            "id_tmdb": tarjeta["id_tmdb"],
+            "tipo": tarjeta["tipo"],
+            "titulo": tarjeta["titulo"],
+            "poster": tarjeta.get("poster"),
+            "anio": tarjeta.get("anio"),
+            "nota_tmdb": tarjeta.get("nota_tmdb"),
+        }
     # La prosa sigue al idioma del mensaje; las tools y las tarjetas, al del turno.
     sistema = armar_sistema(
         armar_perfil(usuario),
-        chat.contexto.get("ya_recomendados", []),
+        titulos_recordados(chat.contexto.get("ya_recomendados", [])),
         detectar_idioma(texto) or idioma,
         hoy=timezone.localdate(),
+        ultimas=list(ctx.candidatos().items()),
     )
     mensajes = [
         {"role": "system", "content": sistema},
         *_historial(chat, usuario),
         {"role": "user", "content": anonimizar(texto, usuario, CONVERSACION)},
     ]
-    return ContextoTurno.para(usuario, idioma), mensajes
+    return ctx, mensajes
 
 
 def _argumentos_de(llamada):
@@ -101,15 +147,14 @@ def _argumentos_de(llamada):
 def _cantidad_de(resultado):
     """Cuántos resultados trajo una tool, para el log: un número o `"error"`.
 
-    Las búsquedas devuelven `{"resultados": [...]}` y `mostrar_tarjetas`
-    `{"tarjetas": [...]}`: se cuenta la lista. Una tool que devuelve un solo dato
-    (`detalle`) cuenta como 1. Solo se mira el tamaño, nunca el contenido.
+    Las búsquedas devuelven `{"resultados": [...]}`: se cuenta la lista. Una tool que
+    devuelve un solo dato (`detalle`) cuenta como 1. Solo se mira el tamaño, nunca el
+    contenido.
     """
     if "error" in resultado:
         return "error"
-    for clave in ("resultados", "tarjetas"):
-        if isinstance(resultado.get(clave), list):
-            return len(resultado[clave])
+    if isinstance(resultado.get("resultados"), list):
+        return len(resultado["resultados"])
     return 1
 
 
@@ -167,154 +212,35 @@ def _con_separador(pedazos, separar):
     return ["\n\n", *pedazos] if separar else list(pedazos)
 
 
-def _solo_tarjetas(vuelta):
-    return all(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
+async def _sacar(filtro, partes, pedazos):
+    """Pasa los pedazos por el filtro de marcadores y entrega lo que ya se puede mostrar.
 
-
-def _con_tarjetas(vuelta):
-    return any(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
-
-
-def _plegar_letra(letra):
-    """Una letra en minúscula y sin acento: «Á» → «a». Siempre devuelve una sola.
-
-    `NFKD` separa la letra de su tilde («á» pasa a «a» más la tilde sola) y
-    `combining` reconoce la tilde suelta para descartarla. Si el resultado no es una
-    sola letra («ß» da «ss»), queda la original en minúscula: así el texto plegado
-    tiene el mismo largo y las posiciones coinciden con las del original. Los
-    apóstrofos curvos pasan a ser el recto, también de a una letra.
+    Lo que sale (con los `[[n]]` ya cambiados por el título) se suma a `partes`, que
+    es el texto final del turno, y se entrega como `Texto`. Un pedazo puede no
+    entregar nada: el filtro retiene unos pocos caracteres que podrían ser el
+    comienzo de un marcador. Es un generador async: el que lo llama lo recorre con
+    `async for` y reenvía cada evento con su propio `yield`.
     """
-    if letra in APOSTROFOS:
-        return APOSTROFOS[letra]
-    base = "".join(
-        c for c in unicodedata.normalize("NFKD", letra) if not unicodedata.combining(c)
-    ).lower()
-    return base if len(base) == 1 else letra.lower()
+    for pedazo in pedazos:
+        saliente = filtro.alimentar(pedazo)
+        if saliente:
+            partes.append(saliente)
+            yield Texto(saliente)
 
 
-def _plegar(texto):
-    """El texto en minúscula, sin acentos y con un solo tipo de apóstrofo.
+def _soltar(filtro, partes):
+    """Lo que el filtro retenía al terminar un texto, como `Texto` (o `None` si nada).
 
-    Antes lo pasa a `NFC`, que junta cada letra con su tilde suelta: «e» + U+0301
-    pasa a ser «é». Un texto que viene «descompuesto» (en NFD) se ve igual que uno
-    «compuesto», pero son otros caracteres, y sin esto la tilde quedaba en el medio
-    y el título no coincidía. Desde acá, las posiciones son las del texto en NFC.
+    `cerrar()` ya devuelve texto final: no vuelve a pasar por `alimentar()`.
     """
-    return "".join(
-        _plegar_letra(letra) for letra in unicodedata.normalize("NFC", texto)
-    )
+    resto = filtro.cerrar()
+    if not resto:
+        return None
+    partes.append(resto)
+    return Texto(resto)
 
 
-# Palabras que dicen qué es un título, ya plegadas (sin acento ni mayúscula). En
-# español y en inglés. `\b` es un borde de palabra: «tv» no cuenta dentro de «atv».
-_PISTAS_DE_TIPO = {
-    "movie": re.compile(r"\b(?:pelicula|peliculas|movie|movies|film|films|filme)\b"),
-    "tv": re.compile(
-        r"\b(?:serie|series|miniserie|miniseries|show|shows|tv|temporada|season)\b"
-    ),
-}
-# Cuántas letras a cada lado de la mención se miran en busca de una pista.
-_RADIO_DE_PISTAS = 60
-
-
-def _tipo_segun_pistas(plegada, inicio, fin, pregunta):
-    """`"movie"`, `"tv"` o `None` si el contexto no se decide por ninguno.
-
-    Primero manda lo que dice el modelo cerca de la mención («la serie **Fargo**»):
-    gana la pista más cercana. Si no hay ninguna (o están a igual distancia), se
-    cuentan las de la pregunta del usuario. `plegada` y `pregunta` ya vienen plegadas.
-    """
-    cercanas = []
-    for tipo, patron in _PISTAS_DE_TIPO.items():
-        distancias = [
-            # Cuántas letras separan la pista de la mención (0 si se tocan).
-            max(0, m.start() - fin, inicio - m.end())
-            for m in patron.finditer(
-                plegada, max(0, inicio - _RADIO_DE_PISTAS), fin + _RADIO_DE_PISTAS
-            )
-        ]
-        if distancias:
-            cercanas.append((min(distancias), tipo))
-    # Con dos tipos, gana el de la pista más cercana; a igual distancia no deciden.
-    cercanas.sort()
-    if len(cercanas) == 1 or (len(cercanas) == 2 and cercanas[0][0] < cercanas[1][0]):
-        return cercanas[0][1]
-
-    cuenta = {t: len(p.findall(pregunta)) for t, p in _PISTAS_DE_TIPO.items()}
-    if cuenta["movie"] != cuenta["tv"]:
-        return max(cuenta, key=cuenta.get)
-    return None
-
-
-def _lo_escribio_el_usuario(nombre, pregunta):
-    """¿El usuario escribió este título en su pregunta?
-
-    Un título largo cuenta con otra mayúscula o acentos y solo como palabra entera:
-    «Moon» no está en «Moonlight». Uno corto («It», «Her», «Up») es una palabra común
-    («is it scary?»): solo cuenta escrito igual, con su mayúscula. Los bordes del patrón piden que no
-    haya una letra pegada antes ni después.
-    """
-    if len(nombre) <= _LARGO_DE_TITULO_CORTO:
-        texto = unicodedata.normalize("NFC", pregunta)
-        patron = rf"(?<!\w){re.escape(unicodedata.normalize('NFC', nombre))}(?!\w)"
-    else:
-        texto, patron = _plegar(pregunta), rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)"
-    return re.search(patron, texto) is not None
-
-
-def _tarjetas_nombradas(respuesta, ctx, pregunta=""):
-    """Los títulos para recomendar que la respuesta nombra, en orden de aparición.
-
-    Es la red para cuando el modelo recomienda en el texto pero no llama a
-    `mostrar_tarjetas` (en el set dorado del 08/11/2026, 5 de 8 veces). Solo
-    cuentan los títulos de `ctx.recomendables`: lo que devolvió una búsqueda para
-    recomendar en este turno, que ya viene sin lo visto. Devuelve los pedidos en
-    el formato de `mostrar_tarjetas`, que se encarga del tope de 3 y los repetidos.
-
-    Reglas (12/11/2026):
-    - Solo cuenta un título escrito en **negrita**: así se marca una recomendación,
-      y un título suelto en la prosa puede ser otra cosa.
-    - Uno que el usuario ya escribió en su `pregunta` no arma tarjeta: lo nombró de
-      referencia («algo como Arrival»).
-    - Si una película y una serie se llaman igual, se elige por las pistas del
-      contexto (`_tipo_segun_pistas`); sin pistas, la primera que trajo la búsqueda.
-      Una sola tarjeta por mención.
-    """
-    plegada = _plegar(respuesta)
-    pregunta_plegada = _plegar(pregunta)
-    # Cada mención en el texto, como (inicio, fin), con los títulos que se llaman así.
-    menciones = {}
-    # `ctx.encontrados` es un `dict`: Python recuerda el orden en que se insertaron las
-    # claves, así que esto recorre los títulos en el orden de las búsquedas.
-    # `ctx.recomendables` es un `set` y no tiene orden: solo se usa para filtrar.
-    for clave, titulo in ctx.encontrados.items():
-        nombre = (titulo.get("titulo") or "").strip()
-        if (
-            clave not in ctx.recomendables
-            or not nombre
-            or _lo_escribio_el_usuario(nombre, pregunta)
-        ):
-            continue
-        # `\*` es un asterisco literal: en una expresión regular `*` solo significa
-        # «repetir». `re.escape` hace que los signos del título («Se7en», «Alien³»,
-        # «¿Qué pasó ayer?») se busquen tal cual.
-        patron = rf"\*\*{re.escape(_plegar(nombre))}\*\*"
-        # `finditer` recorre todas las apariciones, no solo la primera.
-        for m in re.finditer(patron, plegada):
-            menciones.setdefault((m.start(), m.end()), []).append(clave)
-
-    elegidos = []
-    for (inicio, fin), claves in sorted(menciones.items()):
-        elegida = claves[0]
-        if len(claves) > 1:
-            tipo = _tipo_segun_pistas(plegada, inicio, fin, pregunta_plegada)
-            # `next(..., elegida)`: el primero que cumple, o `elegida` si ninguno.
-            elegida = next((c for c in claves if c[1] == tipo), elegida)
-        elegidos.append(elegida)
-    return [{"id_tmdb": id_tmdb, "tipo": tipo} for id_tmdb, tipo in elegidos]
-
-
-async def _ultima_llamada(proveedor, mensajes, partes, motivo):
+async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro):
     """Una llamada más, sin tools, para que el modelo responda con lo que ya tiene.
 
     Antes, pasarse del tope de vueltas o terminar sin texto era un error para el
@@ -335,34 +261,47 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo):
             # importa el texto que salió.
             if isinstance(item, Vuelta) or not item:
                 continue
+            saliente = filtro.alimentar(item)
+            if not saliente:
+                continue
             if separar:
                 partes.append("\n\n")
                 yield Texto("\n\n")
                 separar = False
-            escrito = escrito or bool(item.strip())
-            partes.append(item)
-            yield Texto(item)
+            escrito = escrito or bool(saliente.strip())
+            partes.append(saliente)
+            yield Texto(saliente)
     except Exception as error:
         logger.exception("La última llamada falló")
         raise ErrorDelTurno("La última llamada falló") from error
+    if resto := _soltar(filtro, partes):
+        escrito = escrito or bool(resto.delta.strip())
+        yield resto
     if not escrito:
         raise ErrorDelTurno("La última llamada no escribió nada")
 
 
-def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, origen_de_tarjetas):
+def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento):
     """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
     Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
-    tools pidió y con cuántos resultados, si se quedó sin vueltas, de dónde salieron
-    las tarjetas). A propósito no lleva la pregunta ni la respuesta: son datos
+    tools pidió y con cuántos resultados, si se quedó sin vueltas, cuántos marcadores
+    `[[n]]` usó y cuántos no correspondían a ningún título, cuántas negritas escribió
+    por su cuenta, si hubo búsqueda forzada). A propósito no lleva la pregunta ni la respuesta: son datos
     personales y los logs se guardan.
     """
     logger.info(
-        "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s",
+        "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s "
+        "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d "
+        "reintento_forzado=%s",
         ",".join(tools_pedidas) or "ninguna",
         vueltas,
         "si" if ultima_sin_tools else "no",
-        origen_de_tarjetas,
+        "marcadores" if ctx.tarjetas else "ninguna",
+        filtro.validos,
+        filtro.invalidos,
+        filtro.negritas,
+        "si" if reintento else "no",
     )
 
 
@@ -381,56 +320,91 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         logger.exception("No se pudo preparar el turno")
         raise ErrorDelTurno("No se pudo preparar el turno") from error
     partes = []
+    # Cambia los `[[n]]` del modelo por el título y suma las tarjetas (marcadores.py).
+    filtro = FiltroDeMarcadores(ctx)
     # Para la línea de diagnóstico del final (ver `_registrar_turno`).
     tools_pedidas, vueltas, ultima_sin_tools = [], 0, False
+    # Búsqueda forzada: si el modelo recomienda sin haber buscado, la llamada se repite
+    # una sola vez con `tool_choice="required"`. `reintento` dice que ya se decidió
+    # hacerlo; `forzar_ahora`, que la próxima llamada es esa; `descartado`, el texto
+    # del primer intento, por si la llamada forzada falla.
+    inicio = _ahora()
+    reintento = forzar_ahora = False
+    descartado = None
 
     for _ in range(_MAX_VUELTAS_CON_TOOLS + 1):
         vueltas += 1
         vuelta = None
         # Sin esto, el texto de dos vueltas saldría pegado: «…despacio.¿Querés…».
         separar = bool(partes)
+        # Mientras ninguna tool corrió, la vuelta se retiene entera: si resulta que
+        # el modelo recomendó sin buscar, hay que poder descartarla sin que el
+        # usuario haya leído nada. Después de una búsqueda se transmite en vivo.
+        retener = not tools_pedidas
         # Lo que todavía no salió al front, por si resulta ser un preámbulo.
         retenido, en_vivo = [], False
+        # `**{...}` abre el diccionario como argumentos con nombre; vacío, no pasa
+        # ninguno (así un proveedor sin `tool_choice` sigue funcionando).
+        extra = {"tool_choice": "required"} if forzar_ahora else {}
+        forzar_ahora = False
         try:
-            async for item in proveedor.escribir(mensajes, ESQUEMAS):
+            async for item in proveedor.escribir(mensajes, ESQUEMAS, **extra):
                 if isinstance(item, Vuelta):
                     vuelta = item
                     continue
                 retenido.append(item)
-                if not en_vivo and len("".join(retenido)) <= _LARGO_DE_PREAMBULO:
+                if retener or (
+                    not en_vivo and len("".join(retenido)) <= _LARGO_DE_PREAMBULO
+                ):
                     continue
                 en_vivo = True
-                for pedazo in _con_separador(retenido, separar):
-                    partes.append(pedazo)
-                    yield Texto(pedazo)
+                async for evento in _sacar(
+                    filtro, partes, _con_separador(retenido, separar)
+                ):
+                    yield evento
                 separar, retenido = False, []
         except Exception as error:
             # `Exception` no incluye `CancelledError`: si el usuario cancela, la
             # cancelación tiene que llegar a la vista.
             logger.exception("El proveedor falló")
-            raise ErrorDelTurno("El proveedor falló") from error
+            if not (extra and descartado):
+                raise ErrorDelTurno("El proveedor falló") from error
+            # La llamada forzada falló: se muestra el primer intento (sin los
+            # marcadores inválidos), que es mejor que un error.
+            retenido, vuelta = descartado, Vuelta(texto="".join(descartado))
+
+        texto_retenido = "".join(retenido)
+        if (
+            retener
+            and not vuelta.llamadas
+            and not reintento
+            and recomienda_sin_buscar(texto_retenido, ctx.candidatos())
+            and _ahora() - inicio
+            < settings.LLM_TIMEOUT_SECONDS * _FRACCION_PARA_REINTENTAR
+        ):
+            logger.warning("Recomendó sin buscar: se repite la llamada con tool_choice")
+            reintento = forzar_ahora = True
+            descartado = retenido
+            continue
 
         # Texto corto y una búsqueda: era un «ya busco», y la respuesta viene después.
-        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`. Si la
-        # vuelta también muestra tarjetas, el texto las acompaña y no se descarta.
-        es_preambulo = vuelta.llamadas and not _con_tarjetas(vuelta)
+        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`.
+        es_preambulo = vuelta.llamadas and len(texto_retenido) <= _LARGO_DE_PREAMBULO
         if retenido and not es_preambulo:
-            for pedazo in _con_separador(retenido, separar):
-                partes.append(pedazo)
-                yield Texto(pedazo)
+            async for evento in _sacar(
+                filtro, partes, _con_separador(retenido, separar)
+            ):
+                yield evento
+        # Lo que el filtro retenía por si era un marcador: la vuelta terminó.
+        if resto := _soltar(filtro, partes):
+            yield resto
 
         if not vuelta.llamadas:
             break
-        # Ya respondió y eligió tarjetas: otra llamada solo la repetiría. Por eso
-        # esta vuelta cierra el turno, aunque sea la última permitida.
-        cierra_el_turno = bool(vuelta.texto) and _solo_tarjetas(vuelta)
 
-        if not _solo_tarjetas(vuelta):
-            yield Estado("searching")
+        yield Estado("searching")
         resultados, resumen = await en_hilo(_correr_tools, ctx, vuelta.llamadas)
         tools_pedidas.extend(resumen)
-        if cierra_el_turno:
-            break
         mensajes.append(_mensaje_del_asistente(vuelta))
         mensajes.extend(resultados)
     else:
@@ -439,26 +413,19 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         # tools, así que el modelo no llegó a responder.
         motivo = "se pasó del tope de vueltas con tools"
         ultima_sin_tools = True
-        async for evento in _ultima_llamada(proveedor, mensajes, partes, motivo):
+        async for evento in _ultima_llamada(
+            proveedor, mensajes, partes, motivo, filtro
+        ):
             yield evento
 
     if not "".join(partes).strip():
         # El turno terminó sin una sola palabra para el usuario.
         ultima_sin_tools = True
         async for evento in _ultima_llamada(
-            proveedor, mensajes, partes, "el modelo no escribió nada"
+            proveedor, mensajes, partes, "el modelo no escribió nada", filtro
         ):
             yield evento
 
     respuesta = "".join(partes)
-    origen = "mostrar_tarjetas" if ctx.tarjetas else "ninguna"
-    if not ctx.tarjetas:
-        # Recomendó en el texto y no mostró tarjetas: se arman con lo que nombró.
-        # `mostrar_tarjetas` no toca la base, así que se llama directo, sin el
-        # puente. Si nombró títulos que ninguna búsqueda devolvió, no pasa nada.
-        mostrar_tarjetas(ctx, _tarjetas_nombradas(respuesta, ctx, texto))
-        if ctx.tarjetas:
-            origen = "red"
-            logger.info("Tarjetas armadas por el orquestador: %d", len(ctx.tarjetas))
-    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, origen)
+    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento)
     yield Resultado(respuesta, ctx.tarjetas)

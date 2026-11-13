@@ -268,14 +268,24 @@ class RecomendadoResultadosTests(_BaseRecomendado):
         self.assertEqual(primero["title"], "Insidious: Out of the Further")
         self.assertEqual(primero["poster_path"], "/4tTrW9dXCByS5wt2pXVWb58zNjz.jpg")
 
-    def test_saca_lo_que_esta_en_vistas_pero_no_lo_que_esta_en_pendientes(self):
+    def test_saca_lo_que_esta_en_vistas_y_lo_que_esta_en_pendientes(self):
+        # Decisión del 13/11/2026: lo que ya está en Pendientes tampoco se
+        # recomienda (el usuario ya lo tiene anotado); Favoritos sigue sin excluir.
         self._calificar([53])
         self._agregar_a(ClaveLista.VISTAS, 1291595, TipoProduccion.PELICULA)
         self._agregar_a(ClaveLista.PENDIENTES, 1101412, TipoProduccion.PELICULA)
 
         respuesta = self.cliente.get(URL, {"tipo": "movie"})
 
-        self.assertEqual(self._ids(respuesta), [("movie", 1101412), ("movie", 1339274)])
+        self.assertEqual(self._ids(respuesta), [("movie", 1339274)])
+
+    def test_lo_que_esta_en_favoritos_se_sigue_recomendando(self):
+        self._calificar([53])
+        self._agregar_a(ClaveLista.FAVORITOS, 1291595, TipoProduccion.PELICULA)
+
+        respuesta = self.cliente.get(URL, {"tipo": "movie"})
+
+        self.assertIn(("movie", 1291595), self._ids(respuesta))
 
     def test_excluye_por_par_id_y_tipo_no_solo_por_id(self):
         # TMDB numera películas y series por separado: una película vista con

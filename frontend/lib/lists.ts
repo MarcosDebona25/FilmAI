@@ -34,6 +34,8 @@ export interface ItemLista {
   anio: number | null;
   /** Nota de TMDB; `null` si nadie votó. */
   calificacion_promedio: number | null;
+  /** `false` si TMDB ya no tiene el título (lápida): llega sin título ni póster. */
+  disponible: boolean;
 }
 
 export interface PaginaItems {

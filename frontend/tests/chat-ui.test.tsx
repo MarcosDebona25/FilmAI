@@ -207,6 +207,29 @@ describe("el chat en pantalla", () => {
     expect(link).toHaveAttribute("href", "/movie/157336?from=chat");
   });
 
+  it("una tarjeta sin título muestra el aviso, sin link, y no tapa a las demás", async () => {
+    chat.cargarHistorial.mockResolvedValue({
+      mensajes: [
+        {
+          id: 2,
+          rol: "asistente",
+          texto: "Te dije estas",
+          tarjetas: [
+            { id_tmdb: 1, tipo: "movie", titulo: null, poster: null, anio: null },
+            { id_tmdb: 2, tipo: "movie", titulo: "Moon", poster: null, anio: 2009 },
+          ],
+        },
+      ],
+      next: null,
+    });
+    const usuario = userEvent.setup();
+    render(<Chat />);
+    await usuario.click(screen.getByRole("button", { name: "Preguntale a FilmAI" }));
+    expect(await screen.findByText("Título no disponible")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /Moon/ })).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: /no disponible/ })).toBeNull();
+  });
+
   it("el anuncio lee el texto del link pero no su URL", async () => {
     const usuario = userEvent.setup();
     const soltar = respuesta([{ tipo: "texto", delta: "Mirá [Moon](https://ejemplo/x)" }, FIN]);

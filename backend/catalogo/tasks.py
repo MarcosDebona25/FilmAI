@@ -358,6 +358,26 @@ def sync_catalogo_diaria():
     return estadisticas
 
 
+@shared_task(name="catalogo.refrescar_vencidos")
+def refrescar_vencidos():
+    """Refresco nocturno de lo que TMDB exige renovar antes de 6 meses (#180).
+
+    Los términos de TMDB no dejan guardar su contenido más de 180 días sin
+    refrescarlo. Cada noche se calcula cuántas filas toca renovar y se vuelven a
+    pedir con `materializar(forzar=True)`: sin fecha primero, luego las más
+    viejas. La cuota, la regla del 404 y la lápida están en
+    `catalogo.services.vencimiento`.
+
+    Va a las 03:30, después de la sync (03:00) y antes del backfill de
+    embeddings (04:00), que recoge los vectores que este refresco deje viejos.
+    Ninguna fila fallida frena a las demás, y la tarea no lanza.
+    """
+    # Import adentro: vencimiento importa materialization, que importa este módulo.
+    from catalogo.services.vencimiento import refrescar_vencidas
+
+    return refrescar_vencidas()
+
+
 @shared_task(name="catalogo.backfill_embeddings")
 def backfill_embeddings(limite=None):
     """Recupera el trabajo de embeddings que quedó sin completar (C-04b).

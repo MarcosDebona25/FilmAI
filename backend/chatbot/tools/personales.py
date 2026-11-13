@@ -1,4 +1,4 @@
-"""Tools que leen datos del usuario del turno o eligen qué mostrarle.
+"""Tools que leen datos del usuario del turno.
 
 Las llama: `ejecutar()` de `tools/__init__.py`.
 Usan: los modelos de `listas`, `anonimizar()` y lo anotado en `ContextoTurno`.
@@ -8,7 +8,6 @@ from chatbot.anonimizar import ESTRICTO, anonimizar
 from chatbot.tools.turno import desde_produccion, publicar
 from listas.models import ClaveLista, Lista, Tiene
 
-_TOPE_TARJETAS = 3
 _TOPE_ITEMS_DE_LISTA = 30
 
 
@@ -47,7 +46,8 @@ def mis_listas(ctx, lista=None):
     if encontrada is None:
         return {"error": "not_found"}
     filas = (
-        Tiene.objects.filter(lista=encontrada)
+        # Sin lápidas: un título que TMDB ya no tiene no se ofrece (#180).
+        Tiene.objects.filter(lista=encontrada, produccion__disponible_en_tmdb=True)
         .select_related("produccion")
         .prefetch_related("produccion__traducciones")
         .order_by("-fecha_agregado", "-pk")[:_TOPE_ITEMS_DE_LISTA]
@@ -59,29 +59,3 @@ def mis_listas(ctx, lista=None):
             ctx, titulos, sacar_vistas=False, tope=_TOPE_ITEMS_DE_LISTA
         ),
     }
-
-
-def _clave_de(pedida):
-    """Convierte lo que mandó el modelo en `(id_tmdb, tipo)`, o `None` si vino mal armado."""
-    try:
-        return (int(pedida["id_tmdb"]), pedida["tipo"])
-    except (KeyError, TypeError, ValueError):
-        return None
-
-
-def mostrar_tarjetas(ctx, tarjetas):
-    """Suma tarjetas al turno. Lo que no vale se descarta en silencio.
-
-    Solo pasan títulos que una tool devolvió en este turno: así el modelo no
-    puede mostrar uno inventado. Las búsquedas de recomendación nunca anotan
-    títulos vistos, así que uno visto solo llega acá si se pidió directamente.
-    """
-    elegidas = {(t["id_tmdb"], t["tipo"]) for t in ctx.tarjetas}
-    for pedida in tarjetas:
-        clave = _clave_de(pedida)
-        if len(ctx.tarjetas) == _TOPE_TARJETAS:
-            break
-        if clave in ctx.encontrados and clave not in elegidas:
-            ctx.tarjetas.append(ctx.encontrados[clave])
-            elegidas.add(clave)
-    return {"tarjetas": ctx.tarjetas}

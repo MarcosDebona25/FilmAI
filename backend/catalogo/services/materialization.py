@@ -17,6 +17,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
+from django.db.models import ProtectedError
 from django.utils import timezone
 
 from catalogo.exceptions import TMDBError, TMDBNotFound
@@ -65,6 +66,14 @@ def materializar(id_tmdb, tipo_tmdb, forzar=False):
     tipo = tmdb_a_dominio(tipo_tmdb)
     produccion, creada = _obtener_o_crear(id_tmdb, tipo)
 
+    if not forzar and not produccion.disponible_en_tmdb:
+        # Lápida (#180): TMDB ya no tiene el título. Calificarlo o guardarlo
+        # escribiría sobre una fila sin contenido, así que se responde lo mismo
+        # que ante un id desconocido. Solo `forzar` (el refresco nocturno)
+        # vuelve a preguntarle a TMDB y puede restaurarla. Va antes del bloque
+        # de abajo: una lápida tiene el título vacío y se tomaría por cascarón.
+        raise TMDBNotFound(f"{tipo} {id_tmdb} ya no está en TMDB")
+
     if forzar or _necesita_enriquecimiento(produccion):
         try:
             _enriquecer(produccion, id_tmdb, tipo_tmdb)
@@ -93,9 +102,20 @@ def _descartar_cascaron(produccion):
     """
     # `titulo=""` es una defensa explícita: hoy el título y la fecha se guardan
     # en el mismo save(), pero el borrado no tiene que depender de eso.
-    ProduccionAudiovisual.objects.filter(
-        pk=produccion.pk, fecha_enriquecimiento__isnull=True, titulo=""
-    ).delete()
+    try:
+        # Su propio savepoint: ver `vencimiento._registrar_404`.
+        with transaction.atomic():
+            ProduccionAudiovisual.objects.filter(
+                pk=produccion.pk, fecha_enriquecimiento__isnull=True, titulo=""
+            ).delete()
+    except ProtectedError:
+        # Desde #180 calificaciones y listas protegen la producción. Un cascarón
+        # no debería tenerlas, pero si alguien llegó a calificarlo, conservarlo
+        # es lo correcto y el 404 de TMDB sigue su camino sin convertirse en 500.
+        logger.warning(
+            "materializar: el cascarón (%s) tiene referencias y se conserva",
+            produccion.id_tmdb,
+        )
 
 
 def materializar_en_segundo_plano(id_tmdb, tipo_tmdb):
@@ -271,6 +291,10 @@ def _enriquecer(produccion, id_tmdb, tipo_tmdb):
     # En el mismo save() que los datos: si la escritura falla, tampoco queda
     # anotado que se enriqueció.
     produccion.fecha_enriquecimiento = timezone.now()
+    # TMDB respondió: si la fila era una lápida o tenía un 404 anotado (#180),
+    # vuelve a ser una producción normal.
+    produccion.disponible_en_tmdb = True
+    produccion.fecha_404 = None
     produccion.save()
     guardar_traducciones(produccion, id_tmdb, tipo_tmdb)
     # Los valores que vinieron de TMDB son los del JSON, no los de la columna:

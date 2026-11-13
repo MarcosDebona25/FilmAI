@@ -30,7 +30,10 @@ def _gustos(usuario):
     """Lo mejor calificado, con un extracto de la reseña si tiene."""
     calificaciones = (
         Calificacion.objects.filter(
-            usuario=usuario, activa=True, valor__gte=_NOTA_MINIMA_GUSTO
+            usuario=usuario,
+            activa=True,
+            valor__gte=_NOTA_MINIMA_GUSTO,
+            produccion__disponible_en_tmdb=True,
         )
         .select_related("produccion", "resena")
         .order_by("-valor", "-fecha", "-pk")[:_TOPE_GUSTOS]
@@ -49,7 +52,10 @@ def _disgustos(usuario):
     """Lo peor calificado: le dice al modelo qué evitar."""
     calificaciones = (
         Calificacion.objects.filter(
-            usuario=usuario, activa=True, valor__lte=_NOTA_MAXIMA_DISGUSTO
+            usuario=usuario,
+            activa=True,
+            valor__lte=_NOTA_MAXIMA_DISGUSTO,
+            produccion__disponible_en_tmdb=True,
         )
         .select_related("produccion")
         .order_by("valor", "-fecha", "-pk")[:_TOPE_RESTO]
@@ -60,7 +66,11 @@ def _disgustos(usuario):
 def _de_la_lista(usuario, clave):
     """Los títulos más recientes de una lista predeterminada."""
     return list(
-        Tiene.objects.filter(lista__usuario=usuario, lista__clave=clave)
+        Tiene.objects.filter(
+            lista__usuario=usuario,
+            lista__clave=clave,
+            produccion__disponible_en_tmdb=True,
+        )
         .order_by("-fecha_agregado", "-pk")
         .values_list("produccion__titulo", flat=True)[:_TOPE_RESTO]
     )

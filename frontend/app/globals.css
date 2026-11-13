@@ -183,7 +183,7 @@
      que contiene. */
   @media (width >= 48rem) {
     html:has(header[data-navbar]) {
-      scroll-padding-top: 6rem;
+      scroll-padding-top: 5rem;
     }
   }
   /* Sin la espera del doble toque (zoom) en los controles táctiles. */
@@ -198,6 +198,23 @@
   [role="radio"],
   [role="menuitem"] {
     touch-action: manipulation;
+  }
+  /* Mano solo donde hay una acción que se puede disparar. Tailwind 4 dejó el
+     cursor de flecha en los botones. Queda en la capa base: una utilidad como
+     `cursor-not-allowed`, `cursor-wait` o `cursor-grab` la pisa. Los
+     deshabilitados y los `aria-disabled` no la reciben; los textos, las
+     tarjetas y las capas invisibles de cierre tampoco. */
+  button:not(:disabled, [aria-disabled="true"]),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  summary,
+  select:not(:disabled),
+  label:has(input:is([type="checkbox"], [type="radio"]):not(:disabled)),
+  input:is([type="checkbox"], [type="radio"], [type="range"], [type="file"]):not(:disabled) {
+    cursor: pointer;
   }
 }
 

@@ -15,6 +15,7 @@ import { normalizeTitles, type TmdbItem } from "@/lib/catalog";
 import { translateError } from "@/lib/errors";
 import { useFormats } from "@/lib/format";
 import { alternar, elegirHero, rutasDelHero, tipoDesdeUrl, type DatosDelHero } from "@/lib/home";
+import { itemATitulo, type PaginaItems, type ResumenLista } from "@/lib/lists";
 import { routes } from "@/lib/routes";
 import { useCatalog, type Pedido } from "@/lib/use-catalog";
 
@@ -44,6 +45,7 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
   const t = useTranslations("home");
   const tc = useTranslations("common");
   const tn = useTranslations("nav.account");
+  const tl = useTranslations("enums.defaultList");
   const tipo = tipoDesdeUrl(useSearchParams().get("type"));
   const { perfil, cargando, sesionPosible } = useAccount();
   const conSesion = !cargando && perfil !== null;
@@ -87,6 +89,19 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
     intento,
     false
   );
+  // Pendientes (13/11/2026): primero las listas, para saber el id de la
+  // predeterminada y si tiene algo (con la lista vacía no se piden los ítems);
+  // después sus ítems, filtrados por el tipo del selector. La API los devuelve
+  // con lo último agregado primero. Dependen de la cuenta, así que no se cachean.
+  const listas = useCatalog<ResumenLista[]>(conSesion ? "/api/lists/" : null, intento, false);
+  const listaPendientes = listas.data?.find((lista) => lista.clave === "pendientes");
+  const pendientes = useCatalog<PaginaItems>(
+    listaPendientes && listaPendientes.cantidad_items > 0
+      ? `/api/lists/${listaPendientes.id}/items/${tipo === "all" ? "" : `?clase=${tipo}`}`
+      : null,
+    intento,
+    false
+  );
   const generosPeliculas = useCatalog<Generos>(
     rutasDelHero.generos("movie"),
     intento,
@@ -123,10 +138,13 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
       : tipo === "movie"
         ? peliculasNuevas
         : seriesNuevas;
+  const titulosPendientes = (pendientes.data?.results ?? []).slice(0, POR_FILA).map(itemATitulo);
   const recomendados = normalizeTitles(recomendado.data?.results ?? []);
   const generosRecomendados = recomendado.data?.generos ?? [];
 
-  // Una fila cuenta como pedida si no está apagada (`idle`).
+  // Una fila cuenta como pedida si no está apagada (`idle`). Pendientes queda
+  // afuera a propósito: son listas propias (no TMDB), así que si fallan la fila
+  // se oculta en silencio, sin aviso ni cuenta para el estado «fallaron todas».
   const pedidos: Pedido<unknown>[] = [tendencias, enCines, seriesDelAnio, recomendado].filter(
     (pedido) => pedido.status !== "idle"
   );
@@ -246,6 +264,16 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
             from="home"
             loading={enCines.status === "loading" || seriesDelAnio.status === "loading"}
           />
+          {/* Pendientes va última: es la lista propia, no descubrimiento. */}
+          {listaPendientes && (
+            <MediaRow
+              title={tl("pendientes")}
+              items={titulosPendientes}
+              showType={tipo === "all"}
+              from={`list-${listaPendientes.id}`}
+              seeAll={{ href: routes.list(listaPendientes.id), label: t("rows.seeAll") }}
+            />
+          )}
           {!cargando && !perfil && (
             <section
               aria-labelledby={invitacionId}

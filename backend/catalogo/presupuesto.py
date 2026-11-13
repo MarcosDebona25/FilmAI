@@ -52,6 +52,8 @@ class Contador:
         self._lock = threading.Lock()
         self.total = 0
         self.ident = ident
+        # Hasta qué total puede llegar. `tope_de_llamadas` lo baja por un rato.
+        self.tope = MAX_LLAMADAS_POR_PEDIDO
 
     def sumar(self):
         with self._lock:
@@ -75,12 +77,35 @@ def registrar_llamada():
     contador = _contador.get()
     if contador is None:
         return
-    if contador.sumar() > MAX_LLAMADAS_POR_PEDIDO:
+    if contador.sumar() > contador.tope:
         raise TMDBPresupuestoAgotado(
-            f"El pedido superó {MAX_LLAMADAS_POR_PEDIDO} llamadas a TMDB"
+            f"El pedido superó {contador.tope} llamadas a TMDB"
         )
     if contador.ident is not None:
         _cobrar_a_la_ip(contador.ident)
+
+
+@contextmanager
+def tope_de_llamadas(maximo):
+    """Dentro del bloque, el pedido puede hacer como mucho `maximo` llamadas más.
+
+    Es un tope más chico dentro del tope del pedido, para una parte opcional
+    que no puede gastarse el presupuesto entero (el relleno de «títulos
+    parecidos»: 6 llamadas). Pasado el tope, `registrar_llamada` lanza
+    `TMDBPresupuestoAgotado` antes de salir a la red. Al terminar el bloque el
+    pedido recupera su tope de siempre. Fuera de un pedido HTTP no hay contador
+    y no limita nada.
+    """
+    contador = _contador.get()
+    if contador is None:
+        yield
+        return
+    anterior = contador.tope
+    contador.tope = min(anterior, contador.total + maximo)
+    try:
+        yield
+    finally:
+        contador.tope = anterior
 
 
 def _cobrar_a_la_ip(ident):

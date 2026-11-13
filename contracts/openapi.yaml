@@ -1024,6 +1024,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/movie/{id_tmdb}/similar/:
+    get:
+      operationId: catalogo_movie_similar_retrieve
+      description: |-
+        «Parecidos a {título}» de la ficha: hasta 20 títulos, con o sin sesión.
+
+        Responde `{results}`; cada resultado tiene `id_tmdb`, `tipo`, `titulo`,
+        `poster`, `anio`, `calificacion_promedio`, `campos_en_ingles` y `origen`
+        (`catalogo` o `tmdb`). Con sesión no vienen los títulos de «Vistas».
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/now-playing/:
     get:
       operationId: catalogo_now_playing_retrieve
@@ -1197,6 +1231,40 @@ paths:
       security:
       - jwtHeaderAuth: []
       - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/tv/{id_tmdb}/similar/:
+    get:
+      operationId: catalogo_tv_similar_retrieve
+      description: |-
+        «Parecidos a {título}» de la ficha: hasta 20 títulos, con o sin sesión.
+
+        Responde `{results}`; cada resultado tiene `id_tmdb`, `tipo`, `titulo`,
+        `poster`, `anio`, `calificacion_promedio`, `campos_en_ingles` y `origen`
+        (`catalogo` o `tmdb`). Con sesión no vienen los títulos de «Vistas».
+      parameters:
+      - in: path
+        name: id_tmdb
+        schema:
+          type: string
+        required: true
+      tags:
+      - catalogo
+      security:
+      - {}
       responses:
         '200':
           description: No response body
@@ -2515,6 +2583,9 @@ components:
           $ref: '#/components/schemas/TipoEnum'
         titulo:
           type: string
+          nullable: true
+          description: 'Null cuando la tarjeta es de hace más de 180 días y TMDB ya
+            no tiene el título: el panel muestra «Title no longer available» sin enlace.'
         poster:
           type: string
           nullable: true

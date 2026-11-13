@@ -135,6 +135,7 @@ export async function simularListas(page: Page) {
           poster: null,
           anio: 2000 + i,
           calificacion_promedio: 7,
+          disponible: true,
         })),
       },
     });

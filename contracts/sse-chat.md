@@ -56,7 +56,7 @@ El `data` va siempre en una línea: los saltos de línea del texto viajan escapa
 | Evento | `data` | Cuándo |
 |---|---|---|
 | `estado` | `{"code": "searching"}` | Empieza una búsqueda. El front traduce el código |
-| `texto` | `{"delta": "..."}` | Un pedazo de la respuesta; se concatenan en orden |
+| `texto` | `{"delta": "..."}` | Un pedazo de la respuesta; se concatenan en orden. El texto ya lleva los títulos recomendados como `**Título** (año)`: el backend cambia los marcadores `[[n]]` del modelo antes de enviarlo, así que un marcador nunca llega al front (13/11/2026) |
 | `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio", "nota_tmdb"}]}` | **Una vez**, después de guardar y justo antes de `fin`; puede venir vacío. Nunca en un turno que termina en `error` |
 | `fin` | `{"id": <pk de la respuesta>, "id_pregunta": <pk de la pregunta>}` | La pareja quedó guardada. Es el único cierre exitoso |
 | `error` | `{"code": "chat_unavailable", "params": {}, "errors": []}` | Terminal. No se guardó nada |
@@ -69,6 +69,12 @@ de TMDB o `null`), `anio` (entero o `null`) y `nota_tmdb` (promedio de TMDB con 
 decimal, o `null` si no tiene). `nota_tmdb` es **opcional**: las tarjetas guardadas
 antes del 07/11/2026 no la traen, y el historial (`GET`) las devuelve con
 `nota_tmdb: null`. Las del stream la traen siempre (decisión del 07/11/2026).
+
+Solo en el historial, `titulo` puede ser `null`: las tarjetas de más de 180 días se
+guardan recortadas a `{id_tmdb, tipo}` y el `GET` las rehidrata desde el catálogo local;
+si el título ya no está en TMDB, vuelven con `titulo`, `poster`, `anio` y `nota_tmdb` en
+`null` y el panel muestra «Title no longer available» sin enlace. El stream nunca lo
+trae nulo.
 
 Orden: `estado`* y `texto`* (mezclados, en el orden en que ocurren), luego
 `tarjetas` y `fin`; o bien `error` en cualquier punto.
