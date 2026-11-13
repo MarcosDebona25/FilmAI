@@ -91,7 +91,7 @@
       `design.md` §4 and decide whether the multi-centroid follow-up is needed
 - [x] 2.9 Measure with Ollama loaded: cold with name, cold without, cached;
       write the numbers in `design.md` §8
-- [ ] 2.10 `ruff format . && ruff check .`; full backend suite
+- [x] 2.10 `ruff format . && ruff check .`; focused tests (231) local; full backend suite in CI
 
 ## Phase 3: List row (PR 3)
 
