@@ -34,7 +34,18 @@ tarjetas y `ya_recomendados` incluidos).
 Con `--golden` recorre el set dorado (`golden.yaml`) y mide los tiempos contra
 RNF #6.
 Para ver cómo fue un turno, buscá en el log del backend la línea `Turno:` del logger
-`chatbot.orquestador`.
+`chatbot.orquestador`. Además de cómo fue (tools, vueltas, marcadores), trae lo que
+costó: `llamadas`, `tokens_entrada`, `tokens_salida`, `cache_acierto` y `cache_fallo`
+(tokens de la entrada que DeepSeek ya tenía en caché o no; `?` si el proveedor no los
+informa), `cortado_por_largo` (alguna llamada terminó por `length`) y
+`segundos_por_llamada` y `segundos_total`. Nunca lleva texto de la pregunta ni de la
+respuesta.
+
+**Qué historial ve el modelo**: los últimos 10 mensajes **de la sesión actual**. Una
+sesión se corta con un silencio mayor a `CHAT_VENTANA_SESION_MINUTOS` (45 por defecto,
+medido hacia atrás desde el mensaje que llega), y a lo que dijo el asistente se le
+quitan las `**` en la copia que viaja (lo guardado no cambia). En `golden.yaml`, un
+mensaje de `historial` con `hace_min` simula una sesión anterior.
 
 ## Qué hace cada archivo
 
