@@ -817,3 +817,13 @@ Archivos: `backend/chatbot/marcadores.py`, `orquestador.py`, `prompts.py`, `llm.
 
 Tres cambios del Inicio. (1) Fila «Pendientes» después de Tendencias: solo con sesión y con títulos de la lista (y del tipo del selector), lo último agregado primero, hasta 20, con «Ver todo» a `/lists/{id}` y `?from=list-{id}` en las tarjetas; usa `GET /api/lists/` (id y cantidad de la predeterminada) y `GET /api/lists/{id}/items/?clase=`, sin cambios en el backend; sin skeleton, así que no reserva lugar y empuja Novedades solo cuando aparece; si las listas fallan, la fila se oculta en silencio y no cuenta para el aviso ni para «fallaron todas» (que siguen siendo solo del catálogo). (2) «Recomendado» excluye también lo que está en Pendientes (antes solo Vistas): ya lo tiene anotado; Favoritos sigue sin excluir (`catalogo/services/recomendado.py`). (3) En `MediaRow` las flechas dejaron el encabezado (quedaban sobre el último póster) y son dos bandas a los costados, a la altura de los pósters (alto calculado con `cqw` desde el ancho de la fila), con degradé desde `--background`; aparecen con hover o foco de teclado, sin izquierda al principio ni derecha al final (según `scrollLeft`/`scrollWidth`, se recalcula al scrollear y al cambiar el tamaño) y solo desde `md`. El canvas de Claude Design queda por ajustar al código.
 Archivos: `backend/catalogo/services/recomendado.py`, `frontend/components/features/HomeView.tsx`, `frontend/components/features/MediaRow.tsx`, `traducciones/claves-extra.csv`, `docs/04`
+
+### 13/11/2026 — Pendientes, última fila del Inicio
+
+Marcos pidió que la fila «Pendientes» vaya al final, después de Novedades, y no después de Tendencias: las filas de arriba son de descubrimiento y Pendientes es la lista propia. De paso, como es la última fila que llega (primero se piden las listas y después sus ítems), al aparecer ya no empuja hacia abajo a Novedades.
+Archivos: `frontend/components/features/HomeView.tsx`, `frontend/tests/home-page.test.tsx`, `frontend/e2e/home.spec.ts`, `docs/04_Lineamientos_UI.md`
+
+### 13/11/2026 — El botón «Ask FilmAI» ya no se desvanece en el hover
+
+Marcos pidió quitar el desvanecimiento del botón flotante del chat: el hover bajaba el fondo a `bg-primary/80` (el diseño aprobado en la mesa «Chat button · states», ver la entrada de calidad del chatbot) y el amarillo se veía lavado. Ahora el fondo queda igual y el hover es solo la elevación de 2 px con la sombra más profunda; con `motion-reduce`, solo la sombra. El contraste del texto no cambia (el fondo es el amarillo opaco). El e2e pasa a exigir que el fondo se mantenga y que cambie la sombra.
+Archivos: `frontend/components/features/chat/ChatFab.tsx`, `frontend/e2e/chat-calidad.spec.ts`

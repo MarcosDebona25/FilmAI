@@ -158,7 +158,7 @@ for (const viewport of viewports) {
         page.getByRole("button", { name: en.footer.main.askFilmAI }).first()
       ).toBeEnabled();
 
-      // Pendientes va después de Tendencias, con «See all» a la lista.
+      // Pendientes va última, después de Novedades, con «See all» a la lista.
       const pendientes = page.getByRole("region", { name: en.enums.defaultList.pendientes });
       await expect(pendientes.getByRole("link", { name: "Alien" })).toHaveAttribute(
         "href",

@@ -234,7 +234,7 @@ describe("fila Pendientes del Inicio (13/11/2026)", () => {
       estado.perfil = { nombre: "Juan" };
     });
 
-    it("va después de Tendencias y antes de Estrenos, con «See all» a la lista", async () => {
+    it("va última, después de Estrenos, con «See all» a la lista", async () => {
       estado.pendientes = [alien, severance];
       render(<HomeView />, { locale: "en" });
 
@@ -248,8 +248,8 @@ describe("fila Pendientes del Inicio (13/11/2026)", () => {
       expect(orden).toEqual([
         "Recommended for you",
         "Trending this week",
-        "Watchlist",
         "New releases",
+        "Watchlist",
       ]);
       expect(within(pendientes).getByRole("link", { name: "See all" })).toHaveAttribute(
         "href",
