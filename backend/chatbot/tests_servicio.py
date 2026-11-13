@@ -116,6 +116,61 @@ class GuardarTurnoTests(TestCase):
         self.assertNotIn("17431", sistema)
 
 
+class PrecalentarTarjetasTests(TestCase):
+    """Las tarjetas del chat encolan la materialización de sus títulos.
+
+    Entrar a la ficha desde el chat era siempre en frío: la tarjeta nunca
+    pasaba por un listado del catálogo, así que nadie había pedido a TMDB el
+    detalle ni los créditos (medido el 13/11/2026: 0,4 a 1,1 s). Encolarlos al
+    emitir las tarjetas deja la caché de Redis lista antes del clic.
+    """
+
+    ENCOLAR = "chatbot.servicio.materializar_listado_en_segundo_plano"
+
+    def setUp(self):
+        self.chat = UsuarioFactory().chats.get()
+
+    def test_encola_los_titulos_de_las_tarjetas(self):
+        tarjetas = [tarjeta(17431), tarjeta(1399, "GoT", tipo="tv", anio=2011)]
+
+        with patch(self.ENCOLAR) as encolar:
+            guardar_turno(self.chat, "Algo", Resultado("Estas.", tarjetas))
+
+        # Mismo formato que un listado de TMDB: `id` y `media_type` por ítem.
+        encolar.assert_called_once_with(
+            [
+                {"id": 17431, "media_type": "movie"},
+                {"id": 1399, "media_type": "tv"},
+            ]
+        )
+
+    def test_sin_tarjetas_no_encola_nada(self):
+        with patch(self.ENCOLAR) as encolar:
+            guardar_turno(self.chat, "¿Cuánto dura?", Resultado("Dos horas."))
+
+        encolar.assert_not_called()
+
+    def test_si_el_broker_falla_el_turno_se_guarda_igual(self):
+        # Celery o Redis caídos no pueden costarle el turno al usuario.
+        with patch(self.ENCOLAR, side_effect=ConnectionError("broker")):
+            with self.assertLogs("chatbot.servicio", level="ERROR"):
+                pregunta, respuesta = guardar_turno(
+                    self.chat, "Algo", Resultado("Esta.", [tarjeta(1)])
+                )
+
+        self.assertEqual(respuesta.tarjetas, [tarjeta(1)])
+        self.assertEqual(Mensaje.objects.filter(chat=self.chat).count(), 2)
+
+    def test_si_el_guardado_falla_no_se_encola_nada(self):
+        # Las tarjetas de un turno que se deshizo nunca se le mostraron al usuario.
+        with patch(self.ENCOLAR) as encolar:
+            with patch.object(Chat, "save", side_effect=DatabaseError("caída")):
+                with self.assertRaises(DatabaseError):
+                    guardar_turno(self.chat, "Hola", Resultado("Esta.", [tarjeta(2)]))
+
+        encolar.assert_not_called()
+
+
 class SumarRecomendadosTests(SimpleTestCase):
     """La regla de la lista, sin base: es una función pura."""
 
