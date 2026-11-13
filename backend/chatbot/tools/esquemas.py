@@ -51,8 +51,9 @@ _TITULO = {"type": "string", "maxLength": 200}
 # Igual que el mensaje del usuario: 500 caracteres.
 _CONSULTA = {"type": "string", "maxLength": 500}
 _NOMBRE = {"type": "string", "maxLength": 100}
-# Una clave («favoritos») o el id de una lista: nunca pasa de unas pocas letras.
-_LISTA = {"type": "string", "maxLength": 20}
+# Una clave («pendientes», la más larga, tiene 10 letras) o el id de una lista. Con
+# más de 19 dígitos un número no entra en un `bigint` de Postgres: 10 alcanza.
+_LISTA = {"type": "string", "maxLength": 10}
 _FILTROS = {
     "generos": {
         "type": "array",
