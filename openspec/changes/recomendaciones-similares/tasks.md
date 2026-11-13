@@ -32,9 +32,9 @@
 ## Phase 1: Engine and title endpoint (PR 1)
 
 - [ ] 1.1 Branch `feat/similares-motor` from `develop` and its worktree
-- [ ] 1.2 Check in the backend container that an `AllowAny` view with
-      `JWTCookieAuthentication` and an expired or invalid cookie does not
-      answer 401 (Unauthorized). Write the result in `design.md` §7
+- [ ] 1.2 RED/GREEN optional JWT cookie authentication for the title
+      endpoint (§7): an expired or invalid cookie → 200 (OK) as anonymous,
+      a valid one → «Vistas» removed
 - [ ] 1.3 RED `catalogo/tests_similares.py` — `vector_semilla`: average
       normalized, seeds without `ready` vector skipped, none → `None`, the
       name mix with the D-1 table

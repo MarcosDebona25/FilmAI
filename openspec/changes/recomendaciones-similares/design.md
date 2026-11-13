@@ -81,9 +81,11 @@ So the average stays in SQL and only one 1 024-float vector travels. Every
 title weighs the same. Weighting by recency was considered (a playlist leans
 on what was added last) and left out: it adds a parameter without evidence.
 
-Seeds without a `ready` vector (just added, embedding pending) are skipped. If
-**no** seed has a vector, there is no local search: the pool is TMDB only and
-`completo=False` (§6).
+Seeds without a `ready` vector (just added, embedding pending) are skipped,
+and **one is enough** to mark the pool `completo=False` (5 min TTL): the
+signature does not change when an embedding goes from `pending` to `ready`, so
+a 24 h pool would ignore that title until it expired. If **no** seed has a
+vector, there is no local search and the pool is TMDB only.
 
 Averaging assumes the list has one theme. A list with two unrelated groups
 gives a vector between both. Measuring it is the last task of PR 2; the
@@ -275,8 +277,11 @@ appears twice.
 
 - **Permission**: `AllowAny`, with the project's JWT cookie authentication so a
   session is recognized. Throttle scope `catalogo` (60/min). `TopesTMDBMixin`.
-  Task 1.2 checks that an expired cookie on an `AllowAny` view does not answer
-  401 (Unauthorized); if it does, the view authenticates without failing.
+  DRF authenticates before checking permissions, so an expired or invalid
+  cookie would answer 401 (Unauthorized) even with `AllowAny`, and the row
+  would vanish for that visitor. The view uses an optional authentication
+  class: the project's JWT cookie class, returning `None` (anonymous) on
+  `InvalidToken` or `AuthenticationFailed` instead of raising.
 - **Seed**: `ProduccionAudiovisual` by `(id_tmdb, tipo)`. With a `ready`
   vector → engine. Not in the catalog or without vector → TMDB fill only,
   `completo=False` (10 min). The detail views already enqueue its

@@ -14,7 +14,8 @@ list suggestions. Builds on `embedding-infrastructure`, `semantic-search`
 ### Requirement: Seed vector
 
 The engine MUST average the `ready` vectors of the seeds and normalize the
-result. Seeds without a `ready` vector MUST be skipped. When a list name is
+result. Seeds without a `ready` vector MUST be skipped, and if any seed lacks one the
+pool MUST be cached for 5 minutes only. When a list name is
 given, the engine MUST mix it as `normalize((1 − w) · centroid + w · name)`
 with `w = max(0.15, 1 / (n + 1))`, `n` being the seeds with a vector.
 
@@ -113,7 +114,9 @@ a session, with the `catalogo` throttle, and return up to 20 results. The pool
 MUST be cached per title, language and model, and MUST NOT depend on the user.
 With a session, the user's «Vistas» MUST be removed after the cache and the
 answer MUST be `Cache-Control: private`; without one, nothing is removed and
-the answer is `public, max-age=300` with `Vary: Accept-Language`. A title that
+the answer is `public, max-age=300` with `Vary: Accept-Language`. An expired
+or invalid session cookie MUST be treated as no session, never as
+401 (Unauthorized). A title that
 is not in the local catalog or has no vector MUST get TMDB results only, with
 a 10-minute cache.
 
