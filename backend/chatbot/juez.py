@@ -14,6 +14,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 
 from chatbot.anonimizar import CONVERSACION, anonimizar
 from chatbot.tools.personales import _TOPE_TARJETAS, mostrar_tarjetas
@@ -26,7 +27,7 @@ _TIMEOUT_SEGUNDOS = 6
 
 _SISTEMA = (
     "Sos un clasificador. Recibís la pregunta de un usuario, la respuesta de un "
-    "asistente de cine y una lista de títulos candidatos, cada uno con un número `n`. "
+    "asistente de cine y una lista de títulos candidatos, cada uno con un número de orden `n`. "
     "Devolvé los `n` de los títulos que el asistente RECOMENDÓ o presentó como "
     "sugerencia para ver. No incluyas los que solo nombra como referencia de lo que "
     "el usuario ya conoce o le gustó, ni palabras sueltas que coinciden con un "
@@ -38,29 +39,32 @@ _SISTEMA = (
 
 
 def _candidatos(ctx):
-    """Los títulos de búsquedas para recomendar, en el orden en que se buscaron.
+    """Los títulos de búsquedas para recomendar, numerados desde 1 en orden de búsqueda.
 
-    `ctx.encontrados` es un `dict`: Python recuerda el orden de inserción (en Java
-    sería un `LinkedHashMap`). `ctx.recomendables` es un `set`, sin orden: solo filtra.
-    Devuelve `{n: clave}`, con `n` el id de TMDB que ve el modelo.
+    Devuelve `{n: título}`. El modelo ve `n` (el número de orden), no el `id_tmdb`:
+    TMDB numera aparte películas y series, así que un mismo id puede ser un título de
+    cada tipo y no serviría para distinguirlos. `ctx.encontrados` es un `dict`:
+    Python recuerda el orden de inserción (en Java, un `LinkedHashMap`).
+    `ctx.recomendables` es un `set`, sin orden: solo filtra. `enumerate(..., 1)`
+    cuenta desde 1.
     """
-    return {
-        titulo["id_tmdb"]: clave
+    recomendados = [
+        titulo
         for clave, titulo in ctx.encontrados.items()
         if clave in ctx.recomendables
-    }
+    ]
+    return dict(enumerate(recomendados, 1))
 
 
-def _mensajes(ctx, pregunta, respuesta):
+def _mensajes(candidatos, ctx, pregunta, respuesta):
     lista = [
         {
-            "n": titulo["id_tmdb"],
+            "n": n,
             "titulo": titulo["titulo"],
             "anio": titulo.get("anio"),
             "tipo": titulo["tipo"],
         }
-        for clave, titulo in ctx.encontrados.items()
-        if clave in ctx.recomendables
+        for n, titulo in candidatos.items()
     ]
     # Lo que sale de nuestro backend hacia el modelo pasa por `anonimizar`, igual que
     # el historial del chat.
@@ -111,20 +115,26 @@ async def juzgar_tarjetas(proveedor, ctx, pregunta, respuesta):
     candidatos = _candidatos(ctx)
     if ctx.tarjetas or not candidatos or not respuesta.strip():
         return
+    inicio = time.monotonic()
     try:
-        crudo = await _preguntar(proveedor, _mensajes(ctx, pregunta, respuesta))
-        ids = _leer_ids(crudo)
+        mensajes = _mensajes(candidatos, ctx, pregunta, respuesta)
+        ids = _leer_ids(await _preguntar(proveedor, mensajes))
     except Exception:
         # `Exception` no incluye `CancelledError`: si el usuario cancela, sigue.
         # (`TimeoutError` sí es una `Exception`, así que también cae acá.)
         logger.warning("El juez de tarjetas falló; sin tarjetas", exc_info=True)
         return
-    # Solo ids de los candidatos; `mostrar_tarjetas` ignora repetidos y pone el tope.
+    # Solo números de los candidatos; `mostrar_tarjetas` ignora repetidos.
     pedidas = [
-        {"id_tmdb": candidatos[n][0], "tipo": candidatos[n][1]}
+        {"id_tmdb": candidatos[n]["id_tmdb"], "tipo": candidatos[n]["tipo"]}
         for n in ids
-        # `isinstance(n, int)`: el modelo podría mandar «22» como texto o un `null`.
+        # `isinstance(n, int)`: el modelo podría mandar «2» como texto o un `null`.
         if isinstance(n, int) and n in candidatos
     ]
     mostrar_tarjetas(ctx, pedidas[:_TOPE_TARJETAS])
-    logger.info("El juez eligió %d tarjetas (de %d ids)", len(ctx.tarjetas), len(ids))
+    logger.info(
+        "El juez armó %d tarjetas (ids pedidos: %d) en %d ms",
+        len(ctx.tarjetas),
+        len(ids),
+        (time.monotonic() - inicio) * 1000,
+    )

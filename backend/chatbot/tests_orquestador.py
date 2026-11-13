@@ -369,6 +369,28 @@ class JuezDeTarjetasTests(BaseOrquestador):
         # Cuatro candidatos, en el orden de la búsqueda.
         self.assertLess(pedido.index('"n": 1'), pedido.index('"n": 4'))
 
+    async def test_pelicula_y_serie_con_el_mismo_id_son_candidatas_distintas(self):
+        # TMDB numera por separado películas y series: pueden coincidir en el id.
+        # El juez ve números de orden (1, 2, ...) y el 2 es la serie.
+        self.peliculas[:] = [
+            pelicula_de_mentira(7, "Fargo", 1996),
+            pelicula_de_mentira(7, "Fargo", 2014, "tv"),
+        ]
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Si querés la serie, mirá Fargo."], ['{"ids": [2]}']]
+        )
+
+        self.assertEqual([t["tipo"] for t in eventos[-1].tarjetas], ["tv"])
+
+    async def test_el_juez_loguea_cuantas_tarjetas_armo_y_la_latencia(self):
+        with self.assertLogs("chatbot.juez", "INFO") as registro:
+            await self.correr(
+                [[tool("descubrir")], ["Mirá Arrival."], ['{"ids": [2]}']]
+            )
+
+        self.assertRegex(registro.output[-1], r"1 tarjetas.* \d+ ms")
+
     async def test_un_titulo_visto_no_es_candidato(self):
         produccion = await ProduccionAudiovisual.objects.acreate(
             id_tmdb=1, tipo=TipoProduccion.PELICULA, titulo="Moon"
@@ -381,10 +403,11 @@ class JuezDeTarjetasTests(BaseOrquestador):
         await Tiene.objects.acreate(lista=vistas, produccion=produccion)
 
         eventos = await self.correr(
-            [[tool("descubrir")], ["Probá Arrival."], ['{"ids": [1, 2]}']]
+            [[tool("descubrir")], ["Probá Arrival."], ['{"ids": [1]}']]
         )
 
-        self.assertNotIn('"n": 1,', self.proveedor.pedidos[-1][1]["content"])
+        # Moon (vista) no está en la lista: el 1 es Arrival.
+        self.assertNotIn("Moon", self.proveedor.pedidos[-1][1]["content"])
         self.assertEqual(self.ids(eventos), [2])
 
 

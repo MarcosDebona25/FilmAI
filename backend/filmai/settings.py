@@ -364,6 +364,12 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        # Cada vez que el juez arma tarjetas (cuántas y en cuántos ms) o falla.
+        "chatbot.juez": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "chatbot.tools": {
             "handlers": ["console"],
             "level": "INFO",
