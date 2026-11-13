@@ -40,9 +40,7 @@ class BaseSimilaresAPI(BaseSimilares):
         self.addCleanup(cache.clear)
         self.respuestas_tmdb = {}
         self.servicio = ServicioFalso(self.respuestas_tmdb)
-        parche = patch(
-            "catalogo.views.get_catalog_service", return_value=self.servicio
-        )
+        parche = patch("catalogo.views.get_catalog_service", return_value=self.servicio)
         parche.start()
         self.addCleanup(parche.stop)
         parche = patch(
@@ -121,7 +119,9 @@ class SimilaresSinSesionTests(BaseSimilaresAPI):
         self.poblar(vecinas=3)
         self.respuestas_tmdb[(self.semilla.id_tmdb, "tv")] = [serie_tmdb(900)]
 
-        respuesta = self.cliente.get(f"/api/catalogo/tv/{self.semilla.id_tmdb}/similar/")
+        respuesta = self.cliente.get(
+            f"/api/catalogo/tv/{self.semilla.id_tmdb}/similar/"
+        )
 
         # Esa serie no está en el catálogo: solo responde TMDB.
         self.assertEqual(self.ids(respuesta), [("tv", 900)])
@@ -173,7 +173,9 @@ class SimilaresSinSesionTests(BaseSimilaresAPI):
         en_ingles = self.cliente.get(url, HTTP_ACCEPT_LANGUAGE="en")
 
         self.assertEqual(en_espanol.json()["results"][0]["titulo"], "La vecina")
-        self.assertEqual(en_espanol.json()["results"][0]["campos_en_ingles"], ["poster"])
+        self.assertEqual(
+            en_espanol.json()["results"][0]["campos_en_ingles"], ["poster"]
+        )
         # Cada idioma tiene su pool: el inglés no recibe el título en español.
         self.assertEqual(en_ingles.json()["results"][0]["titulo"], "Vecina 0")
 
@@ -201,9 +203,7 @@ class SimilaresCacheTests(BaseSimilaresAPI):
     def test_el_segundo_pedido_no_recalcula(self):
         url = self.poblar()
 
-        with patch.object(
-            similares, "armar_pool", wraps=similares.armar_pool
-        ) as armar:
+        with patch.object(similares, "armar_pool", wraps=similares.armar_pool) as armar:
             primera = self.cliente.get(url)
             segunda = self.cliente.get(url)
 
@@ -217,7 +217,8 @@ class SimilaresCacheTests(BaseSimilaresAPI):
 
         _, ttl, respuesta = self.ttl_guardado("/api/catalogo/movie/27205/similar/")
 
-        self.assertEqual(
+        # El pool se mezcla: importa qué trae, no en qué orden.
+        self.assertCountEqual(
             [(item["origen"], item["id_tmdb"]) for item in respuesta.json()["results"]],
             [("tmdb", 900), ("tmdb", 901)],
         )
@@ -282,9 +283,7 @@ class SimilaresConSesionTests(BaseSimilaresAPI):
         self.marcar_vista(ana, self.vecinas[0])
         vista = ("movie", self.vecinas[0].id_tmdb)
 
-        with patch.object(
-            similares, "armar_pool", wraps=similares.armar_pool
-        ) as armar:
+        with patch.object(similares, "armar_pool", wraps=similares.armar_pool) as armar:
             de_ana = cliente_ana.get(url)
             de_beto = cliente_beto.get(url)
             sin_sesion = self.cliente.get(url)

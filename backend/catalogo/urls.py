@@ -11,6 +11,7 @@ from catalogo.views import (
     ProvidersView,
     RecommendedView,
     SearchView,
+    SimilaresView,
     TrendingView,
     TVDetailView,
 )
@@ -46,6 +47,12 @@ urlpatterns = [
         ProvidersView.as_view(tipo="tv"),
         name="tv_providers",
     ),
+    path(
+        "movie/<id_tmdb>/similar/",
+        SimilaresView.as_view(tipo="movie"),
+        name="movie_similar",
+    ),
+    path("tv/<id_tmdb>/similar/", SimilaresView.as_view(tipo="tv"), name="tv_similar"),
     path("genres/", GenresView.as_view(), name="genres"),
     path("keywords/", KeywordsView.as_view(), name="keywords"),
 ]
