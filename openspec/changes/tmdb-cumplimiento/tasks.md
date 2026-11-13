@@ -85,7 +85,7 @@ longer available» card in lists and My reviews.
       generated catalogs) so a wrong spelling fails
 - [x] 1.9 e2e: `/terms#credits` in both languages, desktop and mobile, dark theme (a11y with
       axe on that section); update the footer snapshots that change
-- [ ] 1.10 Verify: prettier, `npm run i18n:check`, unit tests (with
+- [x] 1.10 Verify: prettier, `npm run i18n:check`, unit tests (with
       `--maxWorkers=4`), the touched e2e
 
 ## Phase 2: Catalog persistence (PR 2)
