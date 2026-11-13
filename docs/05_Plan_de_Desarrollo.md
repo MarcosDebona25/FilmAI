@@ -17,6 +17,7 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 | 7   | Instalación limpia, correos y lector de pantalla reales  | Baja                            | Muy alta                  | Q-01, Q-05, sección 13 del canvas                                            |
 | 8   | Refactor y lista «Viendo»                                | Baja                            | Media                     | Q-07, «Mejoras futuras»                                                      |
 | 9   | Perfil público y notificaciones por correo               | Mínima (amplía el alcance)      | Baja                      | Perfil, Settings                                                             |
+| 10  | Buscar en la navbar, filtro por persona y sin relevancia | Media                           | Alta (diseño hecho)       | `openspec/changes/busqueda-navbar/`                                          |
 
 ### 1. Términos de uso de TMDB (#180)
 
@@ -122,6 +123,16 @@ El de menor importancia: implementarlo amplía el alcance del proyecto, así que
 - **Perfil público**: una versión mínima no cambia el modelo (la URL puede usar `nombre_usuario`, que es único, y las reseñas ya son públicas). Si cada lista tiene su propia visibilidad, `Lista` necesita un campo nuevo.
 - **Notificaciones**: tres correos programados en Celery y en los dos idiomas. Sí cambian el modelo: cada correo tiene que registrar qué se mandó para no repetirlo (un campo de último envío por tipo o una tabla de envíos común), y las novedades necesitan dónde cargar su contenido. La baja puede ir con un token firmado, sin tabla. Conviene hacerlo después del pendiente 3.
 - **Si no entra en el alcance**: sacar esos controles de Settings para no mostrar opciones que no hacen nada.
+
+### 10. Buscar en la navbar, filtro por persona y títulos sin relevancia
+
+Diseñado el 13/11/2026 en `openspec/changes/busqueda-navbar/` (detalle y mediciones en `docs/decisiones.md`). Reúne tres pendientes que estaban sin decidir:
+
+- **Rediseñar Buscar en la navbar**: un campo con sugerencias a la derecha de la navbar de escritorio; en celular no cambia nada. Gonza elige la variante final con un artifact.
+- **Filtrar Buscar por actor o director**: personas en las sugerencias y un campo «Person» en los filtros, sobre `combined_credits`.
+- **Títulos sin relevancia**: con texto, solo los que tienen 5 votos o popularidad 5, o se llaman exactamente como lo buscado. Sin botón para ver el resto.
+
+Seis PRs chicos más el diseño en el canvas, que hace Gonza antes del primer PR de frontend. El corte (PR 1) es solo de backend y puede ir ya.
 
 ### Población masiva de la base
 
