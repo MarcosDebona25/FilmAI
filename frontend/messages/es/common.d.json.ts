@@ -45,7 +45,8 @@ declare const messages: {
       "tvShows": "Series",
       "movie": "Película",
       "tvShow": "Serie",
-      "typeShortLabel": "Tipo"
+      "typeShortLabel": "Tipo",
+      "titleUnavailable": "Título no disponible"
     },
     "media": {
       "viewDetails": "Ver detalle",
@@ -305,13 +306,14 @@ declare const messages: {
   },
   "footer": {
     "main": {
-      "tmdbAttribution": "Datos e imágenes provistos por TMDB. FilmAI es un proyecto independiente y no está afiliado a TMDB ni cuenta con su aval.",
+      "tmdbAttribution": "Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica.",
       "descriptionDesktop": "Descubrí películas y series, calificalas, escribí tus reseñas y organizá tus listas. Y si no sabés qué ver, un asistente con IA te recomienda qué ver según tus gustos.",
       "libraryHeading": "Tu biblioteca",
       "myLists": "Mis listas",
       "informationHeading": "Información",
       "copyright": "© {year} FilmAI. Todos los derechos reservados.",
       "descriptionMobile": "Descubrí, calificá y organizá películas y series, con recomendaciones de un asistente con IA.",
+      "creditsLink": "Créditos",
       "languageLink": "Idioma: {language}. Cambiá el idioma en Preferencias.",
       "askFilmAI": "Preguntale a FilmAI"
     }
@@ -807,6 +809,13 @@ declare const messages: {
       "password": {
         "required": "Ingresá tu contraseña."
       }
+    }
+  },
+  "tmdb": {
+    "credits": {
+      "title": "Créditos",
+      "notice": "Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica.",
+      "logoAlt": "Logo de TMDB"
     }
   }
 };

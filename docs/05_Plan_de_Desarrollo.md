@@ -22,13 +22,13 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 
 TMDB exige el aviso exacto «This product uses the TMDB API but is not endorsed or certified by TMDB.», su logo oficial sin alterar y que ningún dato suyo quede guardado más de 6 meses sin refrescarse. Hay que cumplirlo antes de mostrar la app a terceros. El plan está en `openspec/changes/tmdb-cumplimiento/` y se reparte en 4 PRs: créditos y logo (solo frontend), tarea nocturna de refresco, recorte de las tarjetas del chat y cierre de documentación. El uso de datos de TMDB en el chatbot y los embeddings ya está decidido: alcanza con ser un proyecto académico sin fines de lucro.
 
-Antes de arrancar queda una cosa por resolver:
-
-- **Logo**: la tarea 1.0 elige en el canvas cuál de los logos oficiales (`docs/tmdb-legales/`) se usa y cómo se ve en cada tema, en tres rondas con revisión entre cada una (ver «Combinaciones del logo en el canvas»).
+Ya decidido: **logo** (13/11/2026). La tarea 1.0 se hizo en el canvas en tres rondas con revisión entre cada una (ver «Combinaciones del logo en el canvas»): se usa `logo5.svg`, también chico en el pie, solo en tema oscuro. Está implementado en `feat/tmdb-creditos`.
 
 Ya decidido: **cuota nocturna de la tarea de refresco** (13/11/2026). El tope fijo de 300 filas no crecía con el catálogo y una carga de 10 000 títulos en un mismo día dejaba unas 1 200 filas pasadas de los 180 días. Cada noche se refresca `min(techo, max(rotación, plazos))`: la rotación es `total ÷ 150` (67 filas con 10 000, 134 con 20 000), los plazos son la menor cantidad por noche con la que ninguna fila llega a los 180 días (334 por noche durante 30 noches en el caso de la carga masiva) y el techo, `CELERY_REFRESCO_TECHO = 1000`, protege al worker. Detalle en el diseño del cambio, «Nightly quota».
 
 También decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 (Not Found) en noches distintas, `PROTECT`, restauración) están en el diseño del cambio y en `docs/decisiones.md`.
+
+**Estado del PR 2 (13/11/2026):** implementado en `feat/tmdb-refresco` (tarea nocturna, cuota, lápida, tope de caché y la tarjeta «Title no longer available»), pendiente de PR contra `feat/tmdb-y-calidad-chat`. La copia en español de la tarjeta es «Título no disponible» (aprobada).
 
 #### Rama dedicada y worktrees (pendientes 1 y 4)
 
@@ -57,11 +57,13 @@ herdr worktree create --cwd ~/FilmAI --base feat/tmdb-y-calidad-chat \
 
 La tarea 1.0 se hace por etapas en el canvas, renderizando cada artboard y con una revisión de Marcos entre etapa y etapa:
 
-1. **Comparación**: un artboard por tema (oscuro y claro) con el bloque de créditos en celular y cada logo oficial: `logo1` (apilado), `logo2` (dos líneas) y `logo3` a `logo5` (horizontales). Son 10 combinaciones; quedan como máximo dos.
-2. **En contexto**: los logos que quedaron, a su tamaño, en «Terms · mobile» y «Terms · desktop», en los dos temas, y la línea del footer («Footer · desktop» y «Footer · mobile») con y sin un logo horizontal chico.
+1. **Comparación**: un artboard con el bloque de créditos en celular y cada logo oficial: `logo1` (apilado), `logo2` (dos líneas) y `logo3` a `logo5` (horizontales). Son 5 combinaciones, solo en tema oscuro (el claro se descartó el 18/10/2026); quedan como máximo dos.
+2. **En contexto**: los logos que quedaron, a su tamaño, en «Terms · mobile» y «Terms · desktop», y la línea del footer («Footer · desktop» y «Footer · mobile») con y sin un logo horizontal chico.
 3. **Cierre**: queda solo la combinación elegida, se borran los artboards descartados (el canvas no guarda alternativas) y la elección va a `docs/decisiones.md` y a `docs/04_Lineamientos_UI.md`.
 
-El logo se usa sin alterar en las dos variantes de tema: sin filtros, sin cambiar colores y como `<img>`. Si en el tema claro no se lee bien, se cambia el fondo del bloque, nunca el logo.
+El logo se usa sin alterar: sin filtros, sin cambiar colores y como `<img>`. Si algún día vuelve un tema claro y no se lee bien, se cambia el fondo del bloque, nunca el logo.
+
+Resultado (13/11/2026): se eligió `logo5.svg`, con el logo chico también en el pie; quedó implementado en `feat/tmdb-creditos` (PR 1). Detalle en `docs/decisiones.md` y en `docs/04_Lineamientos_UI.md`.
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 

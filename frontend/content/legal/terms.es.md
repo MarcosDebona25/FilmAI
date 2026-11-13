@@ -48,7 +48,7 @@ El asistente de FilmAI genera recomendaciones a partir de tus calificaciones y d
 
 ## 7. Contenido de terceros
 
-Los datos y las imágenes de películas y series son provistos por TMDB. FilmAI es un proyecto independiente y no está afiliado ni respaldado por TMDB. No nos hacemos responsables de errores u omisiones en esa información. La disponibilidad en plataformas de streaming («Dónde verla») es provista por JustWatch a través de TMDB y puede cambiar sin aviso.
+Los datos y las imágenes de películas y series son provistos por TMDB. Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica. No nos hacemos responsables de errores u omisiones en esa información. La disponibilidad en plataformas de streaming («Dónde verla») es provista por JustWatch a través de TMDB y puede cambiar sin aviso.
 
 ## 8. Propiedad intelectual
 

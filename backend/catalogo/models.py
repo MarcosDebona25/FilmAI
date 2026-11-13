@@ -107,12 +107,35 @@ class ProduccionAudiovisual(models.Model):
         "TMDB reporta como cambiado; esta fecha es además la red de seguridad "
         "si esa lista se pierde.",
     )
+    disponible_en_tmdb = models.BooleanField(
+        "disponible en TMDB",
+        default=True,
+        help_text="Falso cuando TMDB dejó de tener el título y alguien lo usa "
+        "(lo calificó, lo reseñó o lo tiene en una lista): la fila queda como "
+        "lápida, con solo `id_tmdb` y `tipo`, sin contenido de TMDB (#180). Si "
+        "TMDB vuelve a responderlo, se restaura sola.",
+    )
+    fecha_404 = models.DateField(
+        "fecha del primer 404",
+        null=True,
+        blank=True,
+        help_text="Noche en que TMDB respondió 404 (Not Found) por primera vez. "
+        "La regla de la lápida pide un segundo 404 en una noche posterior: un "
+        "reintento el mismo día no cuenta. Un refresco exitoso la borra.",
+    )
 
     class Meta:
         db_table = "produccion_audiovisual"
         verbose_name = "producción audiovisual"
         verbose_name_plural = "producciones audiovisuales"
         ordering = ["titulo"]
+        indexes = [
+            # La tarea de refresco ordena y agrupa por esta fecha todas las
+            # noches (`catalogo.services.vencimiento`).
+            models.Index(
+                fields=["fecha_enriquecimiento"], name="idx_produccion_enriquecimiento"
+            ),
+        ]
         constraints = [
             # Los IDs de TMDB no son únicos entre películas y series (doc 03),
             # por lo que la unicidad es por par (id_tmdb, tipo).
@@ -270,9 +293,12 @@ class Calificacion(models.Model):
         related_name="calificaciones",
         verbose_name="usuario",
     )
+    # PROTECT y no CASCADE (#180): la tarea de refresco puede borrar una
+    # producción que TMDB ya no tiene, y ese borrado nunca debe llevarse la
+    # calificación de un usuario. Si alguien la usa, la fila queda como lápida.
     produccion = models.ForeignKey(
         ProduccionAudiovisual,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="calificaciones",
         verbose_name="producción audiovisual",
     )

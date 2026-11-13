@@ -39,111 +39,120 @@ longer available» card in lists and My reviews.
 
 ## Phase 1: Attribution and brand (PR 1)
 
-- [ ] 1.0 Canvas first (07/11/2026; staged 13/11/2026): design in Claude
+- [x] 1.0 Canvas first (07/11/2026; staged 13/11/2026): design in Claude
       Design the credits block of «Terms» and the footer line with its
       «Credits» link, in staged rounds with a review gate after each:
-      (a) one comparison artboard per theme with the credits block on mobile
-      and each official logo (`logo1.svg` stacked, `logo2.svg` two lines,
-      `logo3`–`logo5` horizontal), 10 combinations; Marcos keeps at most two;
+      (a) one comparison artboard with the credits block on mobile and each
+      official logo (`logo1.svg` stacked, `logo2.svg` two lines,
+      `logo3`–`logo5` horizontal), 5 combinations on the dark theme (the
+      light theme was dropped on 18/10/2026; confirmed with Marcos
+      13/11/2026); Marcos keeps at most two. Done: he kept `logo5.svg`;
       (b) the kept logos at their size in «Terms · mobile» and «Terms ·
-      desktop», both themes, plus the footer line in «Footer · desktop» and
+      desktop», dark theme, plus the footer line in «Footer · desktop» and
       «Footer · mobile» with and without a small horizontal logo;
       (c) the chosen combination only, rendered to check it, and every
       discarded artboard removed. No logo is fixed before this step. Record
       the choice in `docs/decisiones.md`
-- [ ] 1.1 Explain: why the notice is a catalog key and not a literal; why the
+- [x] 1.1 Explain: why the notice is a catalog key and not a literal; why the
       logo is an `<img>` from `public/` and not an SVG component (no
       recoloring); what an anchor link is and how `routes.terms` builds it
-- [ ] 1.2 Copy: in `traducciones/claves.csv`, new keys `legal.credits.title`,
-      `legal.credits.notice` («This product uses the TMDB API but is not
+- [x] 1.2 Copy: in `traducciones/claves.csv`, new keys `tmdb.credits.title`,
+      `tmdb.credits.notice` («This product uses the TMDB API but is not
       endorsed or certified by TMDB.» / «Este producto usa la API de TMDB,
-      pero TMDB no lo respalda ni lo certifica.»), `legal.credits.logoAlt`
+      pero TMDB no lo respalda ni lo certifica.»), `tmdb.credits.logoAlt`
       («TMDB logo» / «Logo de TMDB»), `footer.main.creditsLink`; replace
       `footer.main.tmdbAttribution` with the notice; align
       `legal.thirdParty.tmdb` and `emails.shared.copyrightAttribution`.
       Marcos approves the Spanish. Regenerate catalogs; `npm run i18n:check`
-- [ ] 1.3 Logo: copy the variant chosen in 1.0 unchanged to
+- [x] 1.3 Logo: copy the variant chosen in 1.0 unchanged to
       `frontend/public/tmdb/`, with the size and theme treatment the canvas
       fixed
-- [ ] 1.4 RED `frontend/tests/tmdb-credits.test.tsx`: the block renders the
+- [x] 1.4 RED `frontend/tests/tmdb-credits.test.tsx`: the block renders the
       exact English notice, the logo with its alt, the link to
       `https://www.themoviedb.org`, and `id="credits"`; Spanish renders the
       Spanish notice
-- [ ] 1.5 RED: a Vitest that the file in `frontend/public/tmdb/` is
+- [x] 1.5 RED: a Vitest that the file in `frontend/public/tmdb/` is
       byte-identical to its source in `docs/tmdb-legales/`
-- [ ] 1.6 GREEN `components/TmdbCredits.tsx` and its place at the end of
+- [x] 1.6 GREEN `components/TmdbCredits.tsx` and its place at the end of
       `app/terms/page.tsx`; footer line with the notice and the «Credits»
       link to `${routes.terms}#credits`
-- [ ] 1.7 Naming audit: grep `traducciones/`, `frontend/messages/`,
+- [x] 1.7 Naming audit: grep `traducciones/`, `frontend/messages/`,
       `frontend/content/legal/`, `backend/templates/correos/`,
       `backend/chatbot/prompts.py` and `docs/` for «TMDb», «Tmdb»,
       «themoviedb» as a visible word and for links to TMDB's site that are not
       `https://www.themoviedb.org`; fix what turns up
-- [ ] 1.8 Add the naming rule to `npm run i18n:check` (or a Vitest over the
+- [x] 1.8 Add the naming rule to `npm run i18n:check` (or a Vitest over the
       generated catalogs) so a wrong spelling fails
-- [ ] 1.9 e2e: `/terms#credits` in both languages and both themes (a11y with
+- [x] 1.9 e2e: `/terms#credits` in both languages, desktop and mobile, dark theme (a11y with
       axe on that section); update the footer snapshots that change
 - [ ] 1.10 Verify: prettier, `npm run i18n:check`, unit tests (with
       `--maxWorkers=4`), the touched e2e
 
 ## Phase 2: Catalog persistence (PR 2)
 
-- [ ] 2.1 Explain: what «cache» means in TMDB's terms (anything stored, not
+- [x] 2.1 Explain: what «cache» means in TMDB's terms (anything stored, not
       only Redis); why refresh and not delete (CASCADE to ratings); how a
       beat entry reaches the worker
-- [ ] 2.2 RED `catalogo/tests_vencimiento.py`: the pure function
+- [x] 2.2 RED `catalogo/tests_vencimiento.py`: the pure function
       `cuota_nocturna(total, por_dia, techo)` (design, «Nightly quota»):
       empty catalog gives 0; 10 000 spread rows give 67; 10 000 rows 150 days
       old give 334; NULL and overdue rows count as due tonight; the ceiling
       caps it. The query side groups rows by the day they turn 180 in one
       query, and `a_refrescar(cuota)` returns NULL rows first, then oldest
       `fecha_enriquecimiento`, exactly `cuota` of them
-- [ ] 2.3 RED: `refrescar_vencidos` calls `materializar(forzar=True)` for each
+- [x] 2.3 RED: `refrescar_vencidos` calls `materializar(forzar=True)` for each
       due row; one `TMDBError` does not stop the rest; the summary counts
       refreshed / not found / failed and the rows still over 180 days
-- [ ] 2.4 RED: refreshing a row overwrites its `ProduccionTraduccion` texts
+- [x] 2.4 RED: refreshing a row overwrites its `ProduccionTraduccion` texts
       (not only fills empty ones); if it does not, fix `guardar_traducciones`
-- [ ] 2.5 RED: the first 404 (Not Found) only sets `fecha_404` and leaves the
+- [x] 2.5 RED: the first 404 (Not Found) only sets `fecha_404` and leaves the
       row due; a second 404 (Not Found) applies the rule only if `fecha_404` is before
       today (a second run the same night does not); a timeout, 500 (Internal
       Server Error), 429 (Too Many Requests) or 401 (Unauthorized) never
       counts; a successful refresh clears `fecha_404`
-- [ ] 2.5b RED: two 404s (Not Found) on a row nobody references delete it
+- [x] 2.5b RED: two 404s (Not Found) on a row nobody references delete it
       (and its translations and embedding)
-- [ ] 2.6 RED: 404 (Not Found) on a row with a rating keeps the rating, blanks
+- [x] 2.6 RED: 404 (Not Found) on a row with a rating keeps the rating, blanks
       the TMDB fields, sets `disponible_en_tmdb = False` and
       `fecha_enriquecimiento`, deletes its `ProduccionTraduccion` rows and
       the embedding; semantic search,
       Recommended, the chatbot tools (`mis_listas` included) and the detail
       page never return it
-- [ ] 2.6b RED: `Calificacion`, `Resena` and `Tiene` protect the production
-      (`on_delete=PROTECT`): a rating created between the check and the
+- [x] 2.6b RED: `Calificacion` and `Tiene` protect the production
+      (`on_delete=PROTECT`; `Resena` hangs from its `Calificacion`): a
+      rating created between the check and the
       delete makes the delete fail (inside its own savepoint) and the row
       becomes a tombstone instead. Before the change, review every place that
       deletes a production (design lists them: `_descartar_cascaron`, the
       seed, the admin, tests) and how each handles `ProtectedError`
-- [ ] 2.6c RED: a tombstone TMDB answers with 200 (OK) again is filled in,
+- [x] 2.6c RED: a tombstone TMDB answers with 200 (OK) again is filled in,
       `disponible_en_tmdb = True`, `fecha_404` cleared, embedding enqueued
-- [ ] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`), `fecha_404`
-      (nullable) and `PROTECT` on the three foreign keys;
+- [x] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`), `fecha_404`
+      (nullable) and `PROTECT` on the two foreign keys to the production
+      (`Calificacion`, `Tiene`);
       `catalogo/services/vencimiento.py`; task `catalogo.refrescar_vencidos`;
       settings `DIAS_REFRESCO_TMDB = 150`, `CELERY_REFRESCO_TECHO = 1000`;
       index on `fecha_enriquecimiento`;
       beat entry at 03:30 with its comment
-- [ ] 2.8 RED `catalogo/test_cache_tope.py`: every value in `ENDPOINT_TTLS`,
+- [x] 2.8 RED `catalogo/test_cache_tope.py`: every value in `ENDPOINT_TTLS`,
       `RESPALDO_TTL`, `RESPALDO_TTLS` and every catalog `max-age` is ≤ 180
       days
-- [ ] 2.9 RED: the refresh honors 429 (Too Many Requests) with `Retry-After`
+- [x] 2.9 RED: the refresh honors 429 (Too Many Requests) with `Retry-After`
       (`httpx.MockTransport`, `time.sleep` patched)
-- [ ] 2.10 Serializers and cards for an unavailable title: «Title no longer
+- [x] 2.10 Serializers and cards for an unavailable title: «Title no longer
       available» key (en/es) in the frontend, no link, grey card; in lists
       and My reviews it keeps the rating and review, and can still be removed
       from the list or have its review deleted; unit test
-- [ ] 2.11 Manual (no Docker in this planning worktree; in the PR's
+- [x] 2.11 Manual (no Docker in this planning worktree; in the PR's
       worktree with `RUN_MIGRATIONS=false` as usual): run the task once
       against the dev database, record the quota and how it was obtained,
       how long it took, and how many TMDB calls it made
-- [ ] 2.12 Verify: `ruff format . && ruff check .`, `python manage.py test`
+- [x] 2.12 Verify: `ruff format . && ruff check .`, `python manage.py test`
+
+Done 13/11/2026 on `feat/tmdb-refresco`. 2.4, 2.8 and 2.9 pinned behavior that
+already held (translations were already overwritten, TTLs were already under
+30 days, the client already honored `Retry-After`), so their tests were green
+from the start. The 2.11 run is recorded in `docs/decisiones.md`.
 
 ## Phase 3: Chat cards (PR 3)
 

@@ -449,12 +449,28 @@ CELERY_TIMEZONE = TIME_ZONE
 # y dejaría al worker sin atender nada más por horas. Si el corpus crece y la
 # cola de pendientes no baja, subir el tope o correr el backfill más seguido.
 CELERY_BACKFILL_LIMIT = 100
+# Refresco de lo que TMDB exige renovar (#180). Sus términos no dejan guardar su
+# contenido más de 180 días sin refrescarlo. 150 es el largo de la rotación: el
+# catálogo entero da una vuelta cada 150 días y quedan 30 de margen (una semana
+# de noches fallidas incluida). El techo evita que una noche rara (una carga
+# masiva que vence junta) deje al worker ocupado: es el mismo que atiende
+# `materializar_produccion`. La cuota de cada noche la calcula
+# `catalogo.services.vencimiento.cuota_nocturna`.
+DIAS_REFRESCO_TMDB = 150
+CELERY_REFRESCO_TECHO = 1000
 CELERY_BEAT_SCHEDULE = {
     # Sync del catálogo a las 3 AM: el momento de menos tráfico, y antes de que
     # el primer usuario del día abra la app con datos de ayer.
     "sync-catalogo-diaria": {
         "task": "catalogo.sync_catalogo_diaria",
         "schedule": crontab(hour=3, minute=0),
+    },
+    # Refresco de lo que TMDB exige renovar antes de 6 meses (#180): media hora
+    # después de la sync, que ya refrescó lo que TMDB reportó como cambiado, y
+    # antes del backfill de embeddings, que recoge los vectores que deje viejos.
+    "refrescar-vencidos": {
+        "task": "catalogo.refrescar_vencidos",
+        "schedule": crontab(hour=3, minute=30),
     },
     # Una hora después de la sync, no a la misma hora: así recoge los
     # embeddings que la sync acaba de encolar y fallaron esta misma noche.
