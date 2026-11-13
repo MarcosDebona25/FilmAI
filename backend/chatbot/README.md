@@ -35,7 +35,8 @@ RNF #6.
 | Archivo | Para qué sirve |
 |---|---|
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
-| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Si el modelo recomienda en el texto sin llamar a `mostrar_tarjetas`, arma las tarjetas con los títulos que nombró en **negrita**, sin contar los que escribió el usuario y eligiendo por pistas entre película y serie homónimas (la «red de tarjetas») |
+| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Si el modelo recomienda en el texto sin llamar a `mostrar_tarjetas`, llama al juez (`juez.py`) para armar las tarjetas |
+| `juez.py` | `juzgar_tarjetas()`: si el turno terminó sin tarjetas y hubo una búsqueda para recomendar, hace UNA llamada más al modelo (sin tools, tope de 6 s) con la pregunta anonimizada, la respuesta y los candidatos numerados, y pide un JSON `{"ids": [...]}` con lo que se recomendó (máximo 3, en orden). Solo acepta ids de los candidatos. Si falla o el JSON es inválido, no hay tarjetas y se loguea un WARNING; nunca rompe el turno |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
 | `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
 | `views.py` | `POST /api/chat/preparar/`; `MensajesView`: el historial (`GET`) y la pregunta con su respuesta en streaming (`POST`) |

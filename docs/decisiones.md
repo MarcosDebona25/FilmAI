@@ -615,3 +615,8 @@ Archivos: `frontend/e2e/i18n-flows.spec.ts`, `.github/workflows/ci.yml`
 
 Bajo `manage.py test` se usa el hasher MD5 (producción sigue con bcrypt): el job de backend pasó de 7m33s a 1m49s. Un push nuevo a un PR cancela la corrida anterior y Playwright se reparte con `--shard` en dos jobs. En local se fijan 2 workers: con 6, WSL se quedaba sin memoria y los e2e fallaban por tiempo.
 Archivos: `.github/workflows/ci.yml`, `frontend/playwright.config.ts`
+
+### 13/11/2026 — Un juez del modelo reemplaza las reglas de la red de tarjetas (experimento)
+
+La red que adivinaba tarjetas con regex (negrita, `_lo_escribio_el_usuario`, pistas serie/película, plegado de acentos) se reemplaza por `juez.py`: una llamada extra sin tools, con tope de 6 s, que recibe pregunta y respuesta anonimizadas más los candidatos (`ctx.recomendables`) y devuelve `{"ids": [...]}`. Solo corre sin tarjetas y con recomendables; ids fuera de la lista se ignoran, tope 3; ante JSON roto, excepción o timeout no hay tarjetas, solo un WARNING. Costo: ~1 s y una llamada más en ~1 de cada 3 turnos de recomendación. Límite: los candidatos se numeran por `id_tmdb`, que puede repetirse entre película y serie.
+Archivos: `backend/chatbot/juez.py`, `backend/chatbot/orquestador.py`, `backend/chatbot/tests_orquestador.py`
