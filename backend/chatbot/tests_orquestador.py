@@ -534,6 +534,74 @@ class RedDeTarjetasTests(BaseOrquestador):
 
         self.assertEqual([t["tipo"] for t in eventos[-1].tarjetas], ["tv", "movie"])
 
+    # --- Log de diagnóstico: una línea por turno (13/11/2026) ---------------------
+    # `assertLogs` es como un `Appender` de prueba en Java: captura lo que el logger
+    # escribe y falla si no escribió nada. Es un `with` normal aunque el test sea
+    # `async`: solo envuelve el código, no depende de `await`.
+
+    def linea_del_turno(self, registros):
+        lineas = [m for m in registros.output if "Turno:" in m]
+        self.assertEqual(len(lineas), 1, registros.output)
+        return lineas[0]
+
+    async def test_el_log_cuenta_tools_vueltas_y_origen_de_las_tarjetas(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(
+                [[tool("descubrir")], ["Mirá esta", tarjetas(2)]], texto="algo"
+            )
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=descubrir(5),mostrar_tarjetas(1)", linea)
+        self.assertIn("vueltas=2", linea)
+        self.assertIn("ultima_sin_tools=no", linea)
+        self.assertIn("tarjetas=mostrar_tarjetas", linea)
+
+    async def test_el_log_distingue_las_tarjetas_de_la_red(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr([[tool("descubrir")], ["Te va bien **Arrival**."]])
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=descubrir(5)", linea)
+        self.assertIn("tarjetas=red", linea)
+
+    async def test_el_log_sin_tarjetas_dice_ninguna(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(["Hola, ¿qué querés ver?"])
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=ninguna", linea)
+        self.assertIn("vueltas=1", linea)
+        self.assertIn("tarjetas=ninguna", linea)
+
+    async def test_el_log_avisa_si_hubo_ultima_llamada_sin_tools(self):
+        guion = [[tool("descubrir")] for _ in range(5)] + [["Te va bien **Arrival**."]]
+
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(guion)
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("ultima_sin_tools=si", linea)
+        self.assertIn("vueltas=5", linea)
+
+    async def test_el_log_marca_las_tools_que_fallaron(self):
+        with patch.dict(FUNCIONES, {"descubrir": lambda ctx, **_: {"error": "x"}}):
+            with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+                await self.correr([[tool("descubrir")], ["No encontré nada."]])
+
+        self.assertIn("tools=descubrir(error)", self.linea_del_turno(registros))
+
+    async def test_el_log_no_lleva_la_pregunta_ni_la_respuesta(self):
+        # Son datos personales: el log cuenta cómo fue el turno, no de qué se habló.
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(
+                [[tool("descubrir")], ["Te va bien **Arrival**."]],
+                texto="algo secretisimo",
+            )
+
+        todo = "\n".join(registros.output)
+        self.assertNotIn("secretisimo", todo)
+        self.assertNotIn("Arrival", todo)
+
 
 class FallosTests(BaseOrquestador):
     async def test_la_quinta_vuelta_con_tools_pide_una_ultima_llamada_sin_tools(self):
