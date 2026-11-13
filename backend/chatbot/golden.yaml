@@ -208,3 +208,35 @@
     buscar. Tiene que buscar (`buscar_por_titulo`, después `similares_a` o
     `buscar_semantico`) antes de responder, o aparece `[reintento forzado]` en la
     salida. Hasta 3 tarjetas, ninguna es Sword Art Online.
+
+- id: nolan_tras_rechazos
+  mensaje: ¿Cómo puedo empezar a ver la filmografía de Nolan?
+  rnf6: agregacion
+  historial:
+    - autor: usuario
+      texto: ¿Cómo puedo empezar a ver la filmografía de Nolan?
+    - autor: asistente
+      texto: >
+        Eso queda fuera de lo que puedo hacer: soy el asistente de FilmAI y solo recomiendo películas y series según tus gustos.
+    - autor: usuario
+      texto: ¿Cómo puedo empezar a ver la filmografía de Nolan?
+    - autor: asistente
+      texto: >
+        Lo siento, no puedo ayudarte con eso. Solo recomiendo películas y series. ¿Querés que te sugiera algo?
+    - autor: usuario
+      texto: ¿Cómo puedo empezar a ver la filmografía de Nolan?
+    - autor: asistente
+      texto: >
+        No puedo darte instrucciones para ver una filmografía. Si querés, decime qué género te gusta y te recomiendo algo.
+    - autor: usuario
+      texto: ¿Cómo puedo empezar a ver la filmografía de Nolan?
+    - autor: asistente
+      texto: >
+        Eso no es algo con lo que pueda ayudarte. Estoy para recomendarte películas y series, ¿qué tenés ganas de ver?
+  espera: >
+    Caso del 13/11/2026 (revisión de arquitectura): en un chat con rechazos
+    guardados de este mismo pedido, el modelo los imitaba (4 de 4 rechazos; con
+    el chat limpio, 4 de 4 bien). Tiene que responder como en `filmografia_nolan`:
+    no rechaza, usa `buscar_por_persona` con Christopher Nolan, recomienda un
+    orden con títulos que devolvió la tool y muestra las tarjetas. Si rechaza o
+    contesta sin buscar, el caso falla.
