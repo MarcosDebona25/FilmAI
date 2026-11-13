@@ -14,6 +14,10 @@ from chatbot.tools.turno import desde_produccion, publicar, titulo
 # Sin esto, una nota alta puede ser un título con un solo voto.
 _VOTOS_MINIMOS = 50
 
+# El id de TMDB del keyword «based on novel or book» (verificado el 13/11/2026).
+# `/discover/movie` y `/discover/tv` lo respetan en `with_keywords`.
+_KEYWORD_BASADA_EN_LIBRO = 818
+
 # TMDB nombra distinto algunos géneros de películas y de series.
 _EQUIVALENTES = {
     "Action": ["Action & Adventure"],
@@ -131,6 +135,7 @@ def descubrir(
     anio_hasta=None,
     nota_minima=None,
     duracion_max=None,
+    basada_en_libro=False,
 ):
     """Tool: busca por datos concretos, como género, año, nota o duración.
 
@@ -154,6 +159,7 @@ def descubrir(
             min_rating=nota_minima,
             min_votos=_VOTOS_MINIMOS if nota_minima else None,
             duracion_max=duracion_max if t == "movie" else None,
+            con_keywords=str(_KEYWORD_BASADA_EN_LIBRO) if basada_en_libro else None,
         ).get("results")
     return {"resultados": _publicar_de_tmdb(ctx, servicio, por_tipo, "popularity")}
 
@@ -197,13 +203,24 @@ def buscar_por_persona(ctx, nombre, rol=None):
 
 
 def detalle(ctx, id_tmdb, tipo):
-    """Tool: los datos de un título, con la duración, que los listados no traen."""
+    """Tool: los datos de un título, con la duración, que los listados no traen.
+
+    Una serie suma `temporadas` y `episodios`: sin ellos el modelo los decía de
+    memoria y erraba (22 episodios de Texhnolyze, que tiene 20).
+    """
     servicio = _servicio(ctx)
     metodo = servicio.get_movie_detail if tipo == "movie" else servicio.get_tv_detail
+    datos = metodo(id_tmdb)
     # No saca las vistas: el usuario puede preguntar por algo que ya vio.
-    return publicar(ctx, [_desde_tmdb(metodo(id_tmdb), tipo, {})], sacar_vistas=False)[
-        0
-    ]
+    # `publicar` devuelve el título ya armado; las series suman lo suyo aparte.
+    resultado = publicar(ctx, [_desde_tmdb(datos, tipo, {})], sacar_vistas=False)[0]
+    if tipo == "tv":
+        resultado = {
+            **resultado,
+            "temporadas": datos.get("number_of_seasons"),
+            "episodios": datos.get("number_of_episodes"),
+        }
+    return resultado
 
 
 def semantico(
@@ -215,6 +232,7 @@ def semantico(
     anio_hasta=None,
     nota_minima=None,
     duracion_max=None,
+    basada_en_libro=False,
 ):
     """Tool: busca por significado en el catálogo local (B-06).
 
@@ -229,6 +247,7 @@ def semantico(
         anio_hasta=anio_hasta,
         nota_minima=nota_minima,
         duracion_max=duracion_max,
+        basada_en_libro=basada_en_libro,
         excluir=ctx.vistas,
     )
     return {
