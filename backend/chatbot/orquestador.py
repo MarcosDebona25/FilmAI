@@ -16,6 +16,8 @@ import logging
 import re
 import unicodedata
 
+from django.utils import timezone
+
 from chatbot.anonimizar import APOSTROFOS, CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
@@ -77,6 +79,7 @@ def _preparar(chat, texto, idioma):
         armar_perfil(usuario),
         chat.contexto.get("ya_recomendados", []),
         detectar_idioma(texto) or idioma,
+        hoy=timezone.localdate(),
     )
     mensajes = [
         {"role": "system", "content": sistema},

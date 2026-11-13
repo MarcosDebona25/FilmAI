@@ -5,6 +5,7 @@ el código que corre en `en_hilo` ve la transacción del test.
 """
 
 import json
+from datetime import date
 from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -824,6 +825,84 @@ class ReglasDelPromptTests(SimpleTestCase):
 
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))
+
+    def test_la_fecha_de_hoy_va_en_la_parte_variable_en_el_idioma_de_la_respuesta(self):
+        # Sin la fecha, el modelo no sabe si «Proyecto Fin del Mundo» ya se estrenó.
+        # Va después del perfil: lo fijo del comienzo sigue siendo cacheable.
+        hoy = date(2026, 11, 13)
+        en_es = armar_sistema("Le gustó: Moon", [], "es", hoy=hoy)
+        en_en = armar_sistema("Le gustó: Moon", [], "en", hoy=hoy)
+
+        self.assertIn("13 de noviembre de 2026", en_es)
+        self.assertIn("November 13, 2026", en_en)
+        self.assertGreater(en_es.index("13 de noviembre"), en_es.index("Le gustó"))
+
+    def test_cambiar_la_fecha_no_toca_la_parte_fija(self):
+        a = armar_sistema("", [], "es", hoy=date(2026, 11, 13))
+        b = armar_sistema("", [], "es", hoy=date(2027, 1, 2))
+
+        fija = a.split("Perfil del usuario:")[0]
+        self.assertEqual(fija, b.split("Perfil del usuario:")[0])
+        self.assertNotEqual(a, b)
+
+    def test_no_afirma_fechas_de_estreno_de_memoria(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("puede estar desactualizado", sistema)
+        self.assertIn("«ya salió»", sistema)
+        self.assertIn("salvo que lo haya devuelto una tool en este turno", sistema)
+
+    def test_no_anuncia_cuantos_titulos_recomienda(self):
+        self.assertIn("No anuncies cuántos títulos", armar_sistema("", [], "es"))
+
+    def test_un_criterio_que_no_se_puede_filtrar_se_aclara_en_una_oracion(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("no pueden filtrar", sistema)
+        self.assertIn("sin presentarlo como cumplido", sistema)
+
+    def test_las_reglas_nuevas_no_reordenan_las_existentes(self):
+        # Mover reglas cambió la conducta del modelo el 12/11/2026: las nuevas se
+        # suman en su propia sección, después de «Títulos vistos».
+        sistema = armar_sistema("", [], "es")
+
+        self.assertLess(
+            sistema.index("Títulos vistos:"), sistema.index("Al recomendar:")
+        )
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("Datos no confiables")
+        )
+
+    def test_las_malas_palabras_se_prohiben_con_ejemplos_en_los_dos_idiomas(self):
+        es = armar_sistema("", [], "es")
+        en = armar_sistema("", [], "en")
+
+        for ejemplo in ("carajo", "mierda", "joder", "tampoco las suaves"):
+            self.assertIn(ejemplo, es)
+        for ejemplo in ("damn", "hell", "not even mild"):
+            self.assertIn(ejemplo, en)
+
+    def test_sin_jerga_ni_comentarios_sobre_el_fisico_de_los_actores(self):
+        # «Pibardos» para los protagonistas de «Violet & Finch» (13/11/2026).
+        es = armar_sistema("", [], "es")
+        en = armar_sistema("", [], "en")
+
+        for ejemplo in ("pibardo", "está re fuerte", "un caño", "todo público"):
+            self.assertIn(ejemplo, es)
+        self.assertIn("lo atractivos que son los actores", es)
+        self.assertIn("how attractive the actors are", en)
+        self.assertIn("voseo", es)
+
+
+class FechaDeHoyTests(BaseOrquestador):
+    async def test_el_orquestador_pasa_la_fecha_de_hoy_al_sistema(self):
+        with patch(
+            "chatbot.orquestador.timezone.localdate", return_value=date(2026, 11, 13)
+        ):
+            await self.correr([["Hola"]])
+
+        sistema = self.mensajes_del_primer_pedido()[0]["content"]
+        self.assertIn("13 de noviembre de 2026", sistema)
 
 
 class PresupuestoDeTmdbTests(BaseOrquestador):
