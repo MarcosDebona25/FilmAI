@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1794532129.9353466,
-    "seen": 1794532253.2588086,
-    "ast_hash": "1f171df1b15395ca2fc2130b0ca39f79",
+    "mtime": 1794532725.8224037,
+    "seen": 1794532768.7923436,
+    "ast_hash": "e392259309432727931d64a27cbf2ad4",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794532120.5059912,
-    "seen": 1794532253.2588103,
-    "ast_hash": "f936bd518ed2b5af06475421efb6f0fe",
+    "mtime": 1794532725.821025,
+    "seen": 1794532768.7924266,
+    "ast_hash": "a482c7269d299b18ef9a656c7e7c36d2",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -1200,9 +1200,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/services/materialization.py": {
-    "mtime": 1794531365.0697935,
-    "seen": 1794532253.258024,
-    "ast_hash": "256f09ef4f6db128b77dcf8ee4866d9e",
+    "mtime": 1794532631.0601025,
+    "seen": 1794532768.7321265,
+    "ast_hash": "3f4a56c8dfa7413abb602e2d2f87f6b1",
     "semantic_hash": ""
   },
   "backend/catalogo/services/tmdb.py": {
@@ -2340,9 +2340,9 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.json": {
-    "mtime": 1794531881.1571608,
-    "seen": 1794532253.2585766,
-    "ast_hash": "4c7bfc983f0b9619848013bd9f2a3371",
+    "mtime": 1794532592.663937,
+    "seen": 1794532768.7764654,
+    "ast_hash": "b3cc5126e797ef236c0d9ef7a391c3c3",
     "semantic_hash": ""
   },
   "frontend/tests/i18n-locale.test.ts": {
@@ -2358,9 +2358,9 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794531921.011306,
-    "seen": 1794532253.2585757,
-    "ast_hash": "e8486758315f5c3cbfc6d69e875323ca",
+    "mtime": 1794532592.6636055,
+    "seen": 1794532768.7764616,
+    "ast_hash": "87fc4c7d20e63ecafa0ab3b9d7a8ffe2",
     "semantic_hash": ""
   },
   "frontend/tests/i18n-metadata.test.ts": {
@@ -3558,9 +3558,9 @@
     "semantic_hash": ""
   },
   "frontend/tests/my-reviews-view.test.tsx": {
-    "mtime": 1794531987.058646,
-    "seen": 1794532253.258632,
-    "ast_hash": "1b37464e7c6afeb3eeecb3dc5f2b1965",
+    "mtime": 1794532592.6642373,
+    "seen": 1794532768.7803702,
+    "ast_hash": "d1125935d5b191635a9ed60f97fc2e9a",
     "semantic_hash": ""
   },
   "frontend/tests/my-reviews.test.ts": {
@@ -4866,9 +4866,9 @@
     "semantic_hash": ""
   },
   "backend/catalogo/tests_lapida.py": {
-    "mtime": 1794532019.3112733,
-    "seen": 1794532253.2580628,
-    "ast_hash": "4fd8fbe8be60066f76c96cb3ec737c6b",
+    "mtime": 1794532616.8917215,
+    "seen": 1794532768.7353158,
+    "ast_hash": "f0b5a1193f413004b50c1551dc5c81d7",
     "semantic_hash": ""
   },
   "backend/catalogo/tests_refresco.py": {

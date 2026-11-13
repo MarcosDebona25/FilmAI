@@ -66,6 +66,14 @@ def materializar(id_tmdb, tipo_tmdb, forzar=False):
     tipo = tmdb_a_dominio(tipo_tmdb)
     produccion, creada = _obtener_o_crear(id_tmdb, tipo)
 
+    if not forzar and not produccion.disponible_en_tmdb:
+        # Lápida (#180): TMDB ya no tiene el título. Calificarlo o guardarlo
+        # escribiría sobre una fila sin contenido, así que se responde lo mismo
+        # que ante un id desconocido. Solo `forzar` (el refresco nocturno)
+        # vuelve a preguntarle a TMDB y puede restaurarla. Va antes del bloque
+        # de abajo: una lápida tiene el título vacío y se tomaría por cascarón.
+        raise TMDBNotFound(f"{tipo} {id_tmdb} ya no está en TMDB")
+
     if forzar or _necesita_enriquecimiento(produccion):
         try:
             _enriquecer(produccion, id_tmdb, tipo_tmdb)

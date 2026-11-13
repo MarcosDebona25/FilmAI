@@ -113,8 +113,8 @@ describe("Calificaciones y reseñas", () => {
     estado.pagina = pagina([{ ...INTERSTELLAR, id: 3, titulo: "", poster: "", disponible: false }]);
     render(<MyReviewsView />);
 
-    expect(await screen.findByText("Título ya no disponible")).toBeVisible();
-    expect(screen.queryByRole("link", { name: "Título ya no disponible" })).toBeNull();
+    expect(await screen.findByText("Título no disponible")).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Título no disponible" })).toBeNull();
     // La nota y la reseña del usuario siguen ahí, y se pueden quitar.
     expect(screen.getByText("Tu calificación: 9 de 10")).toBeInTheDocument();
     expect(screen.getByText("La vi con mi papá.")).toBeVisible();
@@ -125,7 +125,7 @@ describe("Calificaciones y reseñas", () => {
     estado.pagina = pagina([{ ...AMERICAN_DAD, titulo: "", disponible: false }]);
     render(<MyReviewsView />);
 
-    await screen.findByText("Título ya no disponible");
+    await screen.findByText("Título no disponible");
     expect(screen.queryByRole("link", { name: /Agregar una reseña/ })).toBeNull();
   });
 

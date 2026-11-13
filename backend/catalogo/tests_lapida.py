@@ -17,6 +17,7 @@ from catalogo.factories import (
     ResenaFactory,
 )
 from catalogo.models import (
+    Calificacion,
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
@@ -165,3 +166,51 @@ class LapidaEnListasYResenasTests(TestCase):
                 id_tmdb=900, disponible_en_tmdb=False
             ).exists()
         )
+
+
+class LapidaNoSeAceptaDeNuevoTests(TestCase):
+    """Si TMDB ya no tiene el título, nadie puede calificarlo ni guardarlo.
+
+    `materializar()` es la puerta común de calificar y de agregar a una lista:
+    una lápida cuenta como enriquecida (su fecha es de hoy), así que sin esta
+    regla se devolvería tal cual y el POST escribiría una fila sobre un título
+    sin contenido.
+    """
+
+    def setUp(self):
+        self.usuario = UsuarioFactory(idioma="en")
+        self.api = APIClient()
+        self.api.force_authenticate(self.usuario)
+        self.muerta = lapida(id_tmdb=901)
+
+    def test_calificar_una_lapida_responde_404_y_no_escribe_nada(self):
+        respuesta = self.api.post(
+            "/api/reviews/",
+            {"id_tmdb": 901, "tipo": "movie", "valor": 4},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 404, respuesta.data)
+        self.assertFalse(Calificacion.objects.exists())
+
+    def test_agregar_una_lapida_a_una_lista_responde_404_y_no_escribe_nada(self):
+        lista = ListaFactory(usuario=self.usuario)
+
+        respuesta = self.api.post(
+            f"/api/lists/{lista.pk}/items/",
+            {"id_tmdb": 901, "tipo": "movie"},
+            format="json",
+        )
+
+        self.assertEqual(respuesta.status_code, 404, respuesta.data)
+        self.assertFalse(Tiene.objects.exists())
+
+    def test_la_lapida_no_se_borra_ni_cambia_al_rechazar_el_pedido(self):
+        self.api.post(
+            "/api/reviews/",
+            {"id_tmdb": 901, "tipo": "movie", "valor": 4},
+            format="json",
+        )
+
+        self.muerta.refresh_from_db()
+        self.assertFalse(self.muerta.disponible_en_tmdb)
