@@ -616,8 +616,8 @@ Archivos: `frontend/components/ScrollArribaAlNavegar.tsx`, `frontend/app/layout.
 
 ### 13/11/2026 — Menos padding vertical en la navbar de escritorio
 
-Marcos sintió que la navbar de escritorio tenía demasiado aire arriba y abajo: el padding vertical baja de `md:py-5` (1,25 rem) a `md:py-3` (0,75 rem). En celular no cambia nada (la altura fija `h-[3.75rem]` sigue igual).
-Archivos: `frontend/components/Navbar.tsx`
+Marcos sintió que la navbar de escritorio tenía demasiado aire arriba y abajo: el padding vertical baja de `md:py-5` (1,25 rem) a `md:py-3` (0,75 rem). En celular no cambia nada (la altura fija `h-[3.75rem]` sigue igual). La barra pasa de 84 a 68 px, así que `scroll-padding-top` (el espacio que se reserva arriba al enfocar un control o saltar a un ancla) baja de `6rem` a `5rem`: el mismo margen de 12 px sobre la barra. Con `6rem`, el e2e del modal del avatar (`hotfix-perfil.spec.ts`) fallaba porque el botón quedaba dentro de esa franja y Playwright movía la página antes del clic.
+Archivos: `frontend/components/Navbar.tsx`, `frontend/app/globals.css`
 
 ---
 

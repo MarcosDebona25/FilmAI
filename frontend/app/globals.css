@@ -183,7 +183,7 @@
      que contiene. */
   @media (width >= 48rem) {
     html:has(header[data-navbar]) {
-      scroll-padding-top: 6rem;
+      scroll-padding-top: 5rem;
     }
   }
   /* Sin la espera del doble toque (zoom) en los controles táctiles. */
