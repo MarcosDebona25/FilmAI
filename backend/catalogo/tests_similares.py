@@ -189,6 +189,12 @@ class CandidatosTests(BaseSimilares):
         # Sin pedir tipo vienen los dos: el texto embebido no dice el tipo.
         self.assertEqual(self.titulos(), ["Película", "Serie"])
 
+    def test_deja_afuera_el_erotismo_que_tmdb_no_marca_adult(self):
+        self.produccion("Normal", vector_a(0.3), keywords=["romance"])
+        self.produccion("Picante", vector_a(0.1), keywords=["romance", "softcore"])
+
+        self.assertEqual(self.titulos(), ["Normal"])
+
     def test_deja_afuera_lo_que_no_tiene_poster_o_nota(self):
         self.produccion("Completa", vector_a(0.3))
         self.produccion("Sin póster", vector_a(0.1), poster="")

@@ -329,6 +329,14 @@ Cierra el #180 (términos de uso de TMDB). Cada parte tiene su entrada con el de
 
 Archivos: `docs/06_TMDB_API_Referencia.md`, `PRODUCT.md`, `docs/05_Plan_de_Desarrollo.md`, `openspec/specs/tmdb-compliance/spec.md`, `openspec/specs/catalog-daily-sync/spec.md`, `openspec/specs/catalog-materialization/spec.md`, `openspec/specs/tmdb-cache/spec.md`, `openspec/specs/chat-api/spec.md`, `openspec/specs/chat-ui/spec.md`
 
+### 13/11/2026 — Filtro de contenido adulto en el cliente de TMDB
+
+Gonza pidió que nada de lo que la app lista o recomienda traiga títulos para adultos. Todo lo de TMDB (Inicio, Buscar, chatbot, seed, sync, títulos parecidos) pasa por `TMDBClient._request`, así que el filtro vive ahí y cubre todos los caminos de una vez: `_sin_adultos` saca de `results`, `cast`, `crew` y `known_for` lo que TMDB marca `adult: true`; el detalle de un título adulto lanza `TMDBNotFound` (404 en la ficha, la materialización no guarda la fila y la sync lo trata como 404). `discover`, `search` y `search_person` piden `include_adult=false` explícito (ya era el default de TMDB, pero un default ajeno no es una garantía).
+
+TMDB **no marca `adult` el erotismo «softcore»** (verificado el 13/11/2026: la keyword 155477 trae 3.682 películas con `adult: false`, p. ej. «9 Songs» o «Emmanuelle»). `discover` agrega `without_keywords=155477` (se probó que anda en películas y series), y las consultas sobre el catálogo local (`buscar_semantico`, `candidatos` de títulos parecidos) excluyen las filas cuyo `keywords` incluye «softcore» (`models.KEYWORD_SOFTCORE`). Límite conocido: `search`, `trending` y `recommendations` no filtran por keyword, así que un softcore sin marca puede aparecer al buscarlo por nombre. Cerrarlo exigiría pedir las keywords de cada resultado (una llamada por título); no se hizo y queda como pregunta. Los títulos adultos que ya estuvieran en el catálogo local no se borran.
+
+Archivos: `backend/catalogo/client.py`, `backend/catalogo/models.py`, `backend/catalogo/services/semantica.py`, `backend/catalogo/services/similares.py`, `backend/catalogo/test_filtro_adulto.py`, `backend/catalogo/tests_semantica.py`, `backend/catalogo/tests_similares.py`.
+
 ---
 
 ## Búsqueda y recomendaciones

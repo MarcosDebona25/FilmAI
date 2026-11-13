@@ -32,6 +32,7 @@ from pgvector.django import CosineDistance
 
 from catalogo.exceptions import TMDBError, TMDBNotFound
 from catalogo.models import (
+    KEYWORD_SOFTCORE,
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
@@ -165,7 +166,8 @@ def candidatos(vector, *, excluir_ids, tipos=None, limite=_LIMITE_CANDIDATOS):
     no se sugiere a sí mismo ni a lo que ya está en la lista. `tipos` usa los
     valores del dominio (`TipoProduccion`); sin él vienen películas y series.
     Solo entran títulos con póster y con nota de TMDB (D-5): una tarjeta sin
-    póster se ve rota, y `> 0` deja afuera también los `NULL`.
+    póster se ve rota, y `> 0` deja afuera también los `NULL`. Los `softcore` quedan
+    afuera siempre (filtro de contenido adulto, 13/11/2026).
     """
     cercanos = (
         ProduccionEmbedding.objects.filter(
@@ -174,6 +176,8 @@ def candidatos(vector, *, excluir_ids, tipos=None, limite=_LIMITE_CANDIDATOS):
             produccion__calificacion_promedio__gt=0,
         )
         .exclude(produccion__poster="")
+        # Erotismo que TMDB no marca `adult`: ver `KEYWORD_SOFTCORE`.
+        .exclude(produccion__keywords__contains=[KEYWORD_SOFTCORE])
         .exclude(produccion_id__in=list(excluir_ids))
         # `annotate` agrega una columna calculada a cada fila: acá, la
         # distancia coseno (`<=>` en pgvector) entre su vector y el pedido.
