@@ -154,7 +154,7 @@ class PrecalentarTarjetasTests(TestCase):
         # Celery o Redis caídos no pueden costarle el turno al usuario.
         with patch(self.ENCOLAR, side_effect=ConnectionError("broker")):
             with self.assertLogs("chatbot.servicio", level="ERROR"):
-                pregunta, respuesta = guardar_turno(
+                _pregunta, respuesta = guardar_turno(
                     self.chat, "Algo", Resultado("Esta.", [tarjeta(1)])
                 )
 
