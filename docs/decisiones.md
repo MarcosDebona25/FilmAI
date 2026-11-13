@@ -614,6 +614,11 @@ Archivos: `frontend/content/legal/terms.{en,es}.md`, `frontend/lib/legal.ts`, `f
 Una revisión del código encontró dos efectos de la navbar fija en escritorio, y Gonza eligió arreglarlos junto con dos menores invisibles. (1) Next solo lleva arriba la página nueva si su comienzo quedó fuera de la pantalla (`topOfElementInViewport` en `layout-router.js`): con menos scroll que el alto de la barra (84 px), la barra tapaba el principio de la página nueva. `ScrollArribaAlNavegar`, en el layout, la lleva arriba en cada cambio de `pathname`, salvo al entrar, con atrás o adelante (`popstate`) y con un ancla. (2) El menú «…» de las tarjetas de Lists estaba en una caja con `z-10`, que encerraba su capa de cierre (z-40) debajo de la barra (z-30): tocar la barra no lo cerraba y quedaban dos menús abiertos. Se sacó el `z-10`; `relative` alcanza para quedar encima del enlace de la tarjeta. (3) `scroll-padding-top` solo en páginas con navbar (`html:has(header[data-navbar])`), no en login ni registro. (4) `useFondo` usa un `IntersectionObserver` sobre la imagen grande y solo en escritorio: el scroll ya no mide la página en cada evento, y el fondo se actualiza aunque la imagen cambie de alto sin scroll. Quedó sin tocar, por decisión de Gonza, el margen de los títulos de Terms al saltar desde el índice.
 Archivos: `frontend/components/ScrollArribaAlNavegar.tsx`, `frontend/app/layout.tsx`, `frontend/components/Navbar.tsx`, `frontend/components/features/lists/ListCard.tsx`, `frontend/app/globals.css`, `frontend/e2e/navbar-fija.spec.ts`, `frontend/e2e/listas.spec.ts`
 
+### 13/11/2026 — Menos padding vertical en la navbar de escritorio
+
+Marcos sintió que la navbar de escritorio tenía demasiado aire arriba y abajo: el padding vertical baja de `md:py-5` (1,25 rem) a `md:py-3` (0,75 rem). En celular no cambia nada (la altura fija `h-[3.75rem]` sigue igual).
+Archivos: `frontend/components/Navbar.tsx`
+
 ---
 
 ## Seguridad
