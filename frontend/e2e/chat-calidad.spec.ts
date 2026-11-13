@@ -368,6 +368,9 @@ test.describe("el botón flotante", () => {
     await page.goto("/home");
     const fab = botonFlotante(page);
     await expect(fab).toBeVisible();
+    // El botón nace deshabilitado hasta que la sesión carga: medir antes daba
+    // `not-allowed` (fallo intermitente en CI, 13/11/2026).
+    await expect(fab).toBeEnabled();
     const estilo = () =>
       fab.evaluate((el) => {
         const s = getComputedStyle(el);

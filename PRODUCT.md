@@ -26,6 +26,7 @@ Proyecto académico (Seminario Integrador, UTN-FRSF) de dos personas, que se pre
 
 - Módulos: auth (local + Google), catálogo (Home, Buscar, Ficha), calificaciones y reseñas, listas, perfil y preferencias, chatbot (FAB, solo con sesión), moderación en el Admin.
 - Home y Ficha se ven sin sesión; calificar, listas y chatbot exigen sesión.
+- Sin ingresos ligados a contenido de TMDB (anuncios, suscripción o plan pago) sin hablar antes con TMDB: el uso con el chatbot y los embeddings se ampara en ser un proyecto académico sin fines de lucro (#180, `docs/decisiones.md`, 07/11/2026).
 - Chatbot (B-02 a B-06): integrado en `develop` el 07/11/2026 y en `main` el 08/11/2026. Se abre desde el FAB y solo con sesión. Contesta con DeepSeek y busca títulos en TMDB y en el catálogo local, con búsqueda semántica (vectores de BGE-M3 en pgvector). Las recomendaciones salen como tarjetas de títulos que el modelo encontró en esas búsquedas; no puede mostrar uno que no buscó.
 
 ## Brand Commitments

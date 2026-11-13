@@ -2,7 +2,7 @@
 
 ## Purpose
 
-What FilmAI does to meet TMDB's API terms of use (issue #180): attribution in a credits section, use of the official logo, a 6-month cap on stored TMDB content, a request rate TMDB tolerates, and the recorded basis for using TMDB content with the chatbot and embeddings. Sources in `docs/tmdb-legales/`. Builds on `catalog-materialization` (single write path), `catalog-daily-sync` (scheduled tasks), `tmdb-cache` (TTLs), `tmdb-client` (retries) and `chat-api` (stored cards).
+What FilmAI does to meet TMDB's API terms of use (issue #180): attribution in a credits section, use of the official logo, a 6-month cap on stored TMDB content, a request rate TMDB tolerates, and the recorded basis for using TMDB content with the chatbot and embeddings. Sources in `docs/tmdb-legales/`. Implemented on 13/11/2026 (PRs #194, #193, #196 and the closing one); the record of each decision is in `docs/decisiones.md`. Builds on `catalog-materialization` (single write path), `catalog-daily-sync` (scheduled tasks), `tmdb-cache` (TTLs), `tmdb-client` (retries) and `chat-api` (stored cards).
 
 ## Requirements
 
@@ -77,6 +77,8 @@ A `ProduccionAudiovisual` row is due when `fecha_enriquecimiento` is NULL or old
 
 When the refresh gets a 404 (Not Found) for the second time, on a later night than the first (the first one only records its date and the row stays as it is; any other error is retried), a row no user references (ratings, reviews, list items) MUST be deleted. A referenced row MUST keep only `id_tmdb` and `tipo`, have every TMDB content field blanked (translations included), `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, and its embedding removed. The delete MUST fail safe: `Calificacion` and `Tiene` protect the production (a `Resena` is protected through its `Calificacion`), and a protected row becomes a tombstone instead. A tombstone that TMDB answers again with 200 (OK) MUST be restored. An unavailable title MUST NOT appear in recommendations, semantic search or the chatbot, and its detail endpoint MUST answer 404 (Not Found), like a title TMDB does not have; in the user's lists and reviews it MUST appear as «Title no longer available», without a link, keeping the rating and review; the API flags it with `disponible: false`.
 
+A tombstone also rotates every 150 days: if nobody references it any more, the next 404 (Not Found) deletes it. A tombstone MUST NOT be rated or added to a list: without `forzar`, `materializar()` raises `TMDBNotFound` for it, so `POST /api/reviews/` and `POST /api/lists/<id>/items/` answer 404 (Not Found) like for an unknown id. The translation backfill MUST skip tombstones.
+
 #### Scenario: A rated title disappears from TMDB
 
 - GIVEN a production a user rated
@@ -109,6 +111,12 @@ When the refresh gets a 404 (Not Found) for the second time, on a later night th
 - AND Recommended, semantic search and the chatbot do not return it
 - AND its detail page answers 404 (Not Found)
 
+#### Scenario: A tombstone is not accepted again
+
+- GIVEN a production marked unavailable
+- WHEN a user tries to rate it or add it to a list
+- THEN the request answers 404 (Not Found) and nothing is created
+
 #### Scenario: TMDB restores a title
 
 - GIVEN a production marked unavailable
@@ -118,7 +126,9 @@ When the refresh gets a 404 (Not Found) for the second time, on a later night th
 
 ### Requirement: Chat cards keep TMDB content for at most 6 months
 
-`chatbot.recortar_tarjetas` MUST run daily and reduce every card of a message older than 180 days to `{id_tmdb, tipo}`, and every `ya_recomendados` entry whose `fecha` is older than 180 days (or missing) to `{id_tmdb, tipo, fecha}`. The history endpoint MUST rehydrate trimmed cards from the local catalog in the reader's language without calling TMDB; a production missing or unavailable yields `titulo: null`.
+`chatbot.recortar_tarjetas` MUST run daily at 04:30 (after the 03:30 refresh) and reduce every card of a message older than 180 days to `{id_tmdb, tipo}`, and every `ya_recomendados` entry whose `fecha` is older than 180 days (or missing) to `{id_tmdb, tipo, fecha}`. The history endpoint MUST rehydrate trimmed cards from the local catalog in the reader's language without calling TMDB; a production missing or unavailable yields `titulo: null`.
+
+The `ya_recomendados` entries MUST carry `fecha`, written when a card is shown and renewed when it is shown again. The system prompt MUST resolve the titles of trimmed entries from the catalog in one query, using the canonical (English) title; an id missing from the catalog, or a tombstone, stays in the no-repeat set but not in the «Ya recomendados» line. The task MUST re-read each chat under a row lock before writing it, so it never overwrites a card a turn just saved.
 
 #### Scenario: An old conversation is read
 

@@ -161,6 +161,27 @@ The three suggestions of the welcome MUST be drawn again every time the panel op
 - WHEN its text is read
 - THEN it names no movie or TV show
 
+### Requirement: A card without a title is a placeholder (#180)
+
+A card from the history whose `titulo` is `null` MUST render as the compact `UnavailableCard` (grey thumbnail and «Title no longer available» / «Título no disponible», key `common.content.titleUnavailable`), without a link. Only the history accepts a null title: the stream guard `esTarjeta` still requires one.
+
+#### Scenario: A trimmed card whose title is gone
+
+- GIVEN a history card with `titulo: null`
+- WHEN the panel renders it
+- THEN it shows «Title no longer available» in a row with a grey thumbnail
+- AND it has no link
+
+### Requirement: The button looks clickable and focus never falls to the page (Q-01, Q-03, Q-04)
+
+The FAB MUST show a hand cursor and a hover state (`bg-primary/80`, 2 px lift with a deeper shadow, 1 px down on press; with `prefers-reduced-motion` only the color changes), only while enabled, with text contrast of at least 4.5:1. A single base rule MUST give the hand cursor to buttons, `role="button|switch|menuitem|radio|tab"`, `summary`, `select` and checkboxes with their label, except disabled and `aria-disabled` ones, in a layer that `cursor-not-allowed`, `cursor-wait` and `cursor-grab` override. When the focused «Cancel» button unmounts, or a suggestion disappears after being chosen, focus MUST move to the input. At 375, 768 and 1440 px the panel and the FAB MUST NOT overflow and MUST have 44 px touch targets; axe-core WCAG 2.1 AA finds no violation in the FAB, the open panel, an answer with cards and the error (`frontend/e2e/chat-calidad.spec.ts`).
+
+#### Scenario: Cancel while focused
+
+- GIVEN a streaming answer and focus on «Cancel»
+- WHEN the user cancels
+- THEN focus moves to the input
+
 ### Requirement: Accessible panel
 
 The panel MUST open and close with keyboard and pointer, trap focus while open, close with Escape and return focus to the FAB. A finished answer MUST be announced once through a polite live region, not delta by delta.
