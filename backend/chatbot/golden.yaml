@@ -9,6 +9,11 @@
 #   idioma   el idioma del turno (`es` o `en`), el que manda la vista. Default: es
 #   rnf6     `simple` (menos de 5 s) o `agregacion` (menos de 15 s), según RNF #6
 #   espera   lo que una persona revisa en la salida. No se verifica solo.
+#   historial  (opcional) mensajes previos de la charla, de más viejo a más nuevo:
+#              una lista de {autor: usuario|asistente, texto, tarjetas}. `tarjetas`
+#              es solo del asistente y va como se guarda en `Mensaje.tarjetas`
+#              ({id_tmdb, tipo, titulo, anio, poster}). Se crean para esa pregunta
+#              y se deshacen al terminarla.
 #
 # El comando no guarda los turnos, así que cada pregunta ve el mismo historial.
 
@@ -37,7 +42,7 @@
   mensaje: Mostrame The Matrix
   rnf6: agregacion
   espera: >
-    `buscar_por_titulo` y `mostrar_tarjetas` con The Matrix (1999), aunque el
+    `buscar_por_titulo` y el marcador `[[n]]` de The Matrix (1999), aunque el
     usuario ya la haya visto. Una sola tarjeta.
 
 - id: descubrir_con_filtros
@@ -159,4 +164,45 @@
     usa `buscar_por_persona` con Christopher Nolan, recomienda un orden con
     títulos que devolvió la tool (no de memoria), muestra las tarjetas en esa
     misma respuesta, no ofrece mostrarlas («¿te armo las tarjetas?») y no usa la
-    palabra «tarjeta», «tool» ni «herramienta».
+    palabra «tarjeta», «tool», «herramienta» ni «marcador».
+
+- id: y_las_tarjetas
+  mensaje: ¿Y las tarjetas?
+  rnf6: agregacion
+  historial:
+    - autor: usuario
+      texto: Recomendame algo de isekai
+    - autor: asistente
+      texto: >
+        Te dejo **Log Horizon** (2013), **Btooom!** (2012) y **Sword Art Online:
+        Alicization** (2018) para arrancar.
+  espera: >
+    Caso del 13/11/2026: el asistente nombró tres títulos sin tarjeta y el
+    usuario las pide. Busca cada uno por nombre (`buscar_por_titulo`) y los
+    marca con `[[n]]`: salen las tres tarjetas, las de esos títulos y no las de
+    «Ya recomendados». Sin ofrecer ni preguntar si las quiere.
+
+- id: bebop_lain
+  mensaje: Dame recomendaciones parecidas a esta serie
+  rnf6: agregacion
+  historial:
+    - autor: usuario
+      texto: Si me gustó Cowboy Bebop, ¿me va a gustar Serial Experiments Lain?
+    - autor: asistente
+      texto: >
+        Puede que sí: comparten un aire de ciencia ficción adulta y una banda
+        sonora cuidada, aunque Lain es mucho más rara y psicológica.
+  espera: >
+    Caso del 13/11/2026 (referencia ambigua). Toma Cowboy Bebop, que nombró el
+    usuario, como base, o aclara en una oración cuál tomó («Tomo Cowboy Bebop
+    como base; si querías Lain, decime»). No recomienda ninguna de las dos
+    series. Hasta 3 tarjetas de títulos que devolvió una búsqueda.
+
+- id: de_memoria
+  mensaje: Algo como Sword Art Online
+  rnf6: agregacion
+  espera: >
+    Caso del 13/11/2026: el modelo conoce el título y recomendaba de memoria, sin
+    buscar. Tiene que buscar (`buscar_por_titulo`, después `similares_a` o
+    `buscar_semantico`) antes de responder, o aparece `[reintento forzado]` en la
+    salida. Hasta 3 tarjetas, ninguna es Sword Art Online.

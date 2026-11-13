@@ -19,6 +19,7 @@ import yaml
 from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from catalogo.presupuesto import contar_llamadas
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
@@ -29,8 +30,46 @@ from chatbot.orquestador import responder
 GOLDEN = Path(__file__).resolve().parents[2] / "golden.yaml"
 # RNF #6: segundos máximos para el turno completo.
 LIMITES_RNF6 = {"simple": 5, "agregacion": 15}
-_CAMPOS = {"id", "mensaje", "idioma", "rnf6", "espera"}
+_CAMPOS = {"id", "mensaje", "idioma", "rnf6", "espera", "historial"}
 _OBLIGATORIOS = ("id", "mensaje", "rnf6", "espera")
+# Un mensaje previo de un caso con `historial`: quién lo escribió y qué dijo. Solo el
+# asistente lleva `tarjetas`, como las que quedan guardadas en `Mensaje.tarjetas`.
+_CAMPOS_DE_MENSAJE = {"autor", "texto", "tarjetas"}
+_AUTORES = {"usuario": TipoAutor.USUARIO, "asistente": TipoAutor.CHATBOT}
+
+
+def _validar_historial(numero, historial):
+    """Revisa el `historial` de una pregunta. Un error es un `CommandError` claro."""
+    donde = f"La pregunta {numero}, `historial`"
+    if not isinstance(historial, list) or not historial:
+        raise CommandError(f"{donde}: tiene que ser una lista no vacía.")
+    for orden, mensaje in enumerate(historial, start=1):
+        if not isinstance(mensaje, dict):
+            raise CommandError(f"{donde}, mensaje {orden}: no es un objeto.")
+        if sobran := set(mensaje) - _CAMPOS_DE_MENSAJE:
+            raise CommandError(f"{donde}, mensaje {orden}: campos de más {sobran}.")
+        if mensaje.get("autor") not in _AUTORES:
+            raise CommandError(
+                f"{donde}, mensaje {orden}: `autor` es usuario o asistente."
+            )
+        texto = mensaje.get("texto")
+        if not isinstance(texto, str) or not texto.strip():
+            raise CommandError(f"{donde}, mensaje {orden}: falta `texto`.")
+        tarjetas = mensaje.get("tarjetas", [])
+        if tarjetas and mensaje["autor"] != "asistente":
+            raise CommandError(
+                f"{donde}, mensaje {orden}: solo el asistente lleva tarjetas."
+            )
+        if not isinstance(tarjetas, list) or not all(
+            isinstance(t, dict)
+            and isinstance(t.get("id_tmdb"), int)
+            and t.get("tipo") in ("movie", "tv")
+            and isinstance(t.get("titulo"), str)
+            for t in tarjetas
+        ):
+            raise CommandError(
+                f"{donde}, mensaje {orden}: cada tarjeta lleva `id_tmdb`, `tipo` y `titulo`."
+            )
 
 
 def cargar_golden(ruta):
@@ -59,6 +98,8 @@ def cargar_golden(ruta):
             raise CommandError(f"La pregunta {numero}: `idioma` es es o en.")
         if pregunta["rnf6"] not in LIMITES_RNF6:
             raise CommandError(f"La pregunta {numero}: `rnf6` es simple o agregacion.")
+        if "historial" in pregunta:
+            _validar_historial(numero, pregunta["historial"])
         if pregunta["id"] in vistos:
             raise CommandError(f"El id `{pregunta['id']}` está repetido.")
         vistos.add(pregunta["id"])
@@ -168,11 +209,20 @@ class Command(BaseCommand):
                 f"\nespera: {pregunta['espera'].strip()}\n"
             )
             inicio = time.perf_counter()
-            try:
-                _, primer_texto = async_to_sync(self._recorrer)(
-                    chat, pregunta["mensaje"], pregunta["idioma"], proveedor
-                )
-            except ErrorDelTurno as error:
+            error, primer_texto = None, None
+            # Los mensajes previos del caso se crean y se deshacen con la pregunta:
+            # `set_rollback(True)` hace que `atomic` revierta todo al salir, haya
+            # salido bien o mal el turno. Es como un `@Transactional` con rollback.
+            with transaction.atomic():
+                self._sembrar(chat, pregunta.get("historial", []))
+                try:
+                    _, primer_texto = async_to_sync(self._recorrer)(
+                        chat, pregunta["mensaje"], pregunta["idioma"], proveedor
+                    )
+                except ErrorDelTurno as falla:
+                    error = falla
+                transaction.set_rollback(True)
+            if error:
                 self.stderr.write(f"\n[error del turno: {error}]")
                 filas.append((pregunta, None, None))
                 continue
@@ -183,6 +233,20 @@ class Command(BaseCommand):
             )
             filas.append((pregunta, primero, total))
         self._resumen(filas)
+
+    def _sembrar(self, chat, historial):
+        """Crea los mensajes previos de un caso, en orden, como si ya hubieran pasado."""
+        for mensaje in historial:
+            Mensaje.objects.create(
+                chat=chat,
+                autor=_AUTORES[mensaje["autor"]],
+                texto=mensaje["texto"],
+                tarjetas=mensaje.get("tarjetas", []),
+            )
+        if historial:
+            self.stdout.write(
+                f"[historial previo: {len(historial)} mensajes, no se guarda]"
+            )
 
     def _resumen(self, filas):
         self.stdout.write("\n\nResumen (RNF #6: simple < 5 s, agregacion < 15 s)")
