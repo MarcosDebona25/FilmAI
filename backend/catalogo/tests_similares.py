@@ -259,15 +259,28 @@ class CandidatosTests(BaseSimilares):
 
 
 def item_tmdb(id_tmdb, titulo=None, **campos):
-    """Un resultado de `/recommendations` con lo que el motor lee."""
+    """Una película de `/recommendations` con lo que el motor lee."""
     return {
         "id": id_tmdb,
-        "title": titulo or f"Película {id_tmdb}",
+        "title": f"Película {id_tmdb}" if titulo is None else titulo,
         "poster_path": f"/{id_tmdb}.jpg",
         "release_date": "2014-11-05",
         "vote_average": 8.4,
         "vote_count": 500,
         "adult": False,
+        **campos,
+    }
+
+
+def serie_tmdb(id_tmdb, titulo=None, **campos):
+    """Una serie: TMDB usa `name` y `first_air_date` en vez de `title` y `release_date`."""
+    return {
+        "id": id_tmdb,
+        "name": f"Serie {id_tmdb}" if titulo is None else titulo,
+        "poster_path": f"/{id_tmdb}.jpg",
+        "first_air_date": "2008-01-20",
+        "vote_average": 8.9,
+        "vote_count": 15000,
         **campos,
     }
 
@@ -317,14 +330,7 @@ class RellenoTMDBTests(SimpleTestCase):
         self.assertTrue(relleno.completo)
 
     def test_una_serie_usa_name_y_first_air_date(self):
-        serie = {
-            "id": 1396,
-            "name": "Breaking Bad",
-            "poster_path": "/bb.jpg",
-            "first_air_date": "2008-01-20",
-            "vote_average": 8.9,
-            "vote_count": 15000,
-        }
+        serie = serie_tmdb(1396, "Breaking Bad")
 
         tarjeta = self.rellenar({(60059, "tv"): [serie]}, [(60059, "tv")]).tarjetas[0]
 
@@ -352,7 +358,7 @@ class RellenoTMDBTests(SimpleTestCase):
         respuestas = {
             (1, "movie"): [item_tmdb(11), item_tmdb(12), item_tmdb(13)],
             (2, "movie"): [item_tmdb(21)],
-            (3, "tv"): [item_tmdb(31), item_tmdb(32)],
+            (3, "tv"): [serie_tmdb(31), serie_tmdb(32)],
         }
 
         relleno = self.rellenar(respuestas, list(respuestas))
@@ -400,7 +406,7 @@ class RellenoTMDBTests(SimpleTestCase):
         self.assertEqual([t["id_tmdb"] for t in relleno.tarjetas], [60, 80, 70])
 
     def test_el_mismo_id_en_pelicula_y_en_serie_son_dos_titulos(self):
-        respuestas = {(1, "tv"): [item_tmdb(50)]}
+        respuestas = {(1, "tv"): [serie_tmdb(50)]}
 
         relleno = self.rellenar(respuestas, [(1, "tv")], excluir={(50, "movie")})
 

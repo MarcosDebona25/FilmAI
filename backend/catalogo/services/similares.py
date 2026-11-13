@@ -17,6 +17,7 @@ semillas, la clave de caché y qué se le saca a cada usuario («Vistas»).
 """
 
 import logging
+from itertools import zip_longest
 from typing import NamedTuple
 
 import numpy as np
@@ -24,7 +25,10 @@ from django.db import connection, transaction
 from django.db.models import Avg, Count
 from pgvector.django import CosineDistance
 
+from catalogo.exceptions import TMDBError, TMDBNotFound
 from catalogo.models import EstadoEmbedding, ProduccionEmbedding, TipoProduccion
+from catalogo.presupuesto import tope_de_llamadas
+from catalogo.services.fallback import MARCA
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +40,13 @@ PESO_MINIMO_DEL_NOMBRE = 0.15
 # (la misma trampa que resolvió B-06 en `semantica.py`).
 _EF_SEARCH = 100
 _LIMITE_CANDIDATOS = 100
+
+# Relleno con TMDB `/recommendations` (design §5): de cuántas semillas se piden
+# recomendaciones y el piso de calidad de lo que vuelve (D-5).
+SEMILLAS_TMDB = 3
+MIN_VOTOS_TMDB = 10
+# 3 semillas × (el idioma pedido + el respaldo en inglés), reintentos incluidos.
+MAX_LLAMADAS_TMDB = 6
 
 
 class Candidato(NamedTuple):
@@ -157,3 +168,92 @@ def candidatos(vector, *, excluir_ids, tipos=None, limite=_LIMITE_CANDIDATOS):
             cursor.execute("SET LOCAL hnsw.iterative_scan = relaxed_order")
         # Un queryset es perezoso: la consulta sale recién acá, al recorrerlo.
         return [Candidato(*fila) for fila in cercanos]
+
+
+class Relleno(NamedTuple):
+    """Lo que aportó TMDB y si se pudo pedir todo (`False`: falló o se cortó)."""
+
+    tarjetas: list
+    completo: bool
+
+
+def _tarjeta_tmdb(item, tipo):
+    """Un resultado de TMDB con la forma de un ítem de lista, o `None` si no sirve.
+
+    Piso de calidad (D-5): sin contenido adulto, con 10 votos o más y con
+    póster. TMDB llama `title`/`release_date` a lo de una película y
+    `name`/`first_air_date` a lo de una serie.
+    """
+    campo_titulo = "title" if tipo == "movie" else "name"
+    titulo = (item.get(campo_titulo) or "").strip()
+    if (
+        not isinstance(item.get("id"), int)
+        or item.get("adult")
+        or (item.get("vote_count") or 0) < MIN_VOTOS_TMDB
+        or not item.get("poster_path")
+        or not titulo
+    ):
+        return None
+    fecha = item.get("release_date" if tipo == "movie" else "first_air_date") or ""
+    return {
+        "id_tmdb": item["id"],
+        "tipo": tipo,
+        "titulo": titulo,
+        "poster": item["poster_path"],
+        # La fecha llega como «2014-11-05»: los primeros 4 caracteres son el año.
+        "anio": int(fecha[:4]) if fecha[:4].isdigit() else None,
+        "calificacion_promedio": item.get("vote_average") or None,
+        # `CatalogoConRespaldo` anota qué campos completó con el inglés.
+        "campos_en_ingles": ["titulo"] if campo_titulo in item.get(MARCA, []) else [],
+        "origen": "tmdb",
+    }
+
+
+def relleno_tmdb(semillas_tmdb, *, servicio, excluir_pares):
+    """Recomendaciones de TMDB para hasta 3 semillas, intercaladas (design §5).
+
+    `semillas_tmdb` y `excluir_pares` son pares `(id_tmdb, tipo de TMDB)`, como
+    los de `vistos()`. `servicio` responde `get_recommendations` (el
+    `TMDBClientCache` del idioma pedido: 24 h de caché, así que una semilla ya
+    consultada no cuesta ninguna llamada).
+
+    Nunca lanza por culpa de TMDB: que falte el relleno no es un error. Si TMDB
+    falla o se acaban las 6 llamadas, devuelve lo que juntó con
+    `completo=False`, y quien llama guarda ese pool por poco tiempo.
+    """
+    semillas = list(semillas_tmdb)[:SEMILLAS_TMDB]
+    ya_estan = set(excluir_pares) | set(semillas)
+    por_semilla = []
+    completo = True
+    # `with` abre el tope y lo cierra al salir del bloque, pase lo que pase:
+    # es el `try-with-resources` de Java.
+    with tope_de_llamadas(MAX_LLAMADAS_TMDB):
+        for id_tmdb, tipo in semillas:
+            try:
+                datos = servicio.get_recommendations(id_tmdb, tipo)
+            except TMDBNotFound:
+                # TMDB no conoce esa semilla: insistir no cambia nada.
+                continue
+            except TMDBError:
+                # Caído, lento o sin presupuesto: no se prueba con las demás,
+                # cada intento fallido suma segundos de reintentos.
+                logger.warning("similares: falló el relleno de TMDB", exc_info=True)
+                completo = False
+                break
+            tarjetas = (
+                _tarjeta_tmdb(item, tipo) for item in datos.get("results") or []
+            )
+            por_semilla.append([tarjeta for tarjeta in tarjetas if tarjeta])
+
+    intercaladas = []
+    # `zip_longest` arma vueltas: la primera de cada semilla, después la
+    # segunda… y pone `None` donde a una semilla ya no le quedan.
+    for vuelta in zip_longest(*por_semilla):
+        for tarjeta in vuelta:
+            if tarjeta is None:
+                continue
+            par = (tarjeta["id_tmdb"], tarjeta["tipo"])
+            if par not in ya_estan:
+                ya_estan.add(par)
+                intercaladas.append(tarjeta)
+    return Relleno(intercaladas, completo)
