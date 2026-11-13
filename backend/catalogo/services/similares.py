@@ -17,18 +17,31 @@ semillas, la clave de caché y qué se le saca a cada usuario («Vistas»).
 """
 
 import logging
+import math
+import random
+from dataclasses import asdict, dataclass
 from itertools import zip_longest
 from typing import NamedTuple
 
 import numpy as np
+from django.conf import settings
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Avg, Count
 from pgvector.django import CosineDistance
 
 from catalogo.exceptions import TMDBError, TMDBNotFound
-from catalogo.models import EstadoEmbedding, ProduccionEmbedding, TipoProduccion
+from catalogo.models import (
+    EstadoEmbedding,
+    ProduccionAudiovisual,
+    ProduccionEmbedding,
+    TipoProduccion,
+)
 from catalogo.presupuesto import tope_de_llamadas
 from catalogo.services.fallback import MARCA
+from catalogo.services.materialization import materializar_listado_en_segundo_plano
+from catalogo.services.recomendado import TIPO_TMDB
+from catalogo.services.traducciones import campos_en_ingles, texto_localizado
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +58,24 @@ _LIMITE_CANDIDATOS = 100
 # recomendaciones y el piso de calidad de lo que vuelve (D-5).
 SEMILLAS_TMDB = 3
 MIN_VOTOS_TMDB = 10
-# 3 semillas × (el idioma pedido + el respaldo en inglés), reintentos incluidos.
+# 3 semillas por 2 llamadas (el idioma pedido + el respaldo en inglés), reintentos incluidos.
 MAX_LLAMADAS_TMDB = 6
+
+# Hasta qué distancia coseno un vecino cuenta como «cercano» (design §4). Un
+# título típico tiene 50 o más vecinos por debajo; uno de nicho tiene pocos, y
+# ahí es justo cuando conviene que TMDB complete.
+DISTANCIA_MAXIMA = 0.40
+# Con menos cercanos que esto se le pide relleno a TMDB.
+MINIMO_CERCANOS = 20
+# Seis páginas de «Ver otras», con margen para lo que saca «Vistas».
+TAMANO_POOL = 60
+TAMANO_PAGINA = 10
+
+# Cuánto vive un pool en la caché. El catálogo local cambia una vez por noche y
+# TMDB guarda `/recommendations` 24 h. Uno incompleto (una semilla sin vector,
+# TMDB caído, nombre sin embeber) dura poco para que se rearme pronto.
+TTL_POOL = 24 * 3600
+TTL_POOL_INCOMPLETO = 5 * 60
 
 
 class Candidato(NamedTuple):
@@ -105,7 +134,7 @@ def _centroide(produccion_ids):
 
 
 def _mezclar_nombre(centroide, vector_nombre, peso):
-    """`normalizar((1 − w) · centroide + w · nombre)`, con los dos ya normalizados."""
+    """`normalizar((1 - w) · centroide + w · nombre)`, con los dos ya normalizados."""
     nombre = _normalizar(vector_nombre)
     if nombre is None:
         return centroide
@@ -257,3 +286,239 @@ def relleno_tmdb(semillas_tmdb, *, servicio, excluir_pares):
                 ya_estan.add(par)
                 intercaladas.append(tarjeta)
     return Relleno(intercaladas, completo)
+
+
+# `frozen=True` hace que los campos no se puedan reasignar después de crear el
+# objeto, como los campos `final` de un `record` de Java.
+@dataclass(frozen=True)
+class Pool:
+    """Los títulos parecidos a un conjunto de semillas, ya ordenados y mezclados.
+
+    Es lo que se guarda en la caché, y nunca tiene nada del usuario: «Vistas»
+    se saca al leerlo (`pagina`). Solo lleva tipos que JSON sabe escribir
+    (listas, diccionarios, números, texto), porque la caché de Redis del
+    proyecto serializa con JSON.
+
+    Cada entrada de `entradas` es un diccionario con `origen`, `id_tmdb` y
+    `tipo` (el de TMDB). Las del catálogo llevan además solo su `pk`: el título
+    y el póster se leen de la base al armar la página, en el idioma del pedido.
+    Las de TMDB ya son la tarjeta completa.
+    """
+
+    entradas: list
+    nombre_usado: bool  # el nombre de la lista entró en el vector
+    completo: bool  # False → se guarda por poco tiempo
+    # Para el registro de cada pedido:
+    semillas_con_vector: int
+    cercanos: int  # locales por debajo de `DISTANCIA_MAXIMA`
+    de_tmdb: int
+
+
+def mezclar_con_pesos(entradas, semilla_azar):
+    """Mezcla al azar, pero dándole más chances de salir primero a lo más cercano.
+
+    `entradas` llega ordenado del mejor al peor. Un pool en ese orden exacto
+    haría que «Ver otras» vaya siempre de bueno a malo, y que la misma lista
+    muestre siempre las mismas diez.
+
+    Método de Efraimidis y Spirakis: a cada entrada se le sortea un número `u`
+    entre 0 y 1 y se la ordena por `u ** (1 / peso)`, de mayor a menor. Con
+    peso alto esa clave queda cerca de 1 casi siempre; con peso bajo, se hunde.
+    El peso baja con el puesto: `1 / (1 + puesto / 10)`.
+
+    El sorteo sale de `random.Random(semilla)`: la misma semilla da siempre los
+    mismos números. Como la semilla es la firma de la clave de caché, el orden
+    se puede repetir (tests, dos pestañas) y cambia cuando cambia la lista.
+    """
+    # No es azar criptográfico ni hace falta: solo decide un orden de tarjetas.
+    azar = random.Random(str(semilla_azar))
+    con_clave = [
+        # `1 / peso` es `1 + puesto / 10`.
+        (azar.random() ** (1 + puesto / 10), puesto, entrada)
+        for puesto, entrada in enumerate(entradas)
+    ]
+    # Se ordena por la clave; el puesto desempata sin comparar diccionarios.
+    con_clave.sort(key=lambda terna: (-terna[0], terna[1]))
+    return [entrada for _, _, entrada in con_clave]
+
+
+def _entrada_local(candidato):
+    return {
+        "origen": "catalogo",
+        "pk": candidato.pk,
+        "id_tmdb": candidato.id_tmdb,
+        "tipo": TIPO_TMDB[candidato.tipo],
+    }
+
+
+def armar_pool(
+    produccion_ids,
+    *,
+    semillas_tmdb,
+    servicio,
+    semilla_azar,
+    tipos=None,
+    vector_nombre=None,
+    nombre_omitido=False,
+):
+    """Arma el pool de parecidos a las semillas (design §2 a §6).
+
+    - `produccion_ids`: pk de las semillas en el catálogo (vacío si el título
+      de la ficha todavía no está).
+    - `semillas_tmdb`: pares `(id_tmdb, tipo de TMDB)` para pedirle relleno a
+      TMDB, la más importante primero (se usan 3 como mucho).
+    - `servicio`: el `TMDBClientCache` del idioma del pedido.
+    - `semilla_azar`: de dónde sale el orden de la mezcla (la firma de la clave).
+    - `tipos`: tipos del dominio a traer; sin él, películas y series.
+    - `vector_nombre`: el nombre de la lista ya embebido, si «dice algo».
+    - `nombre_omitido`: había un nombre para usar y no se pudo embeber.
+
+    Orden antes de mezclar: locales cercanos, TMDB, locales lejanos.
+    """
+    produccion_ids = list(dict.fromkeys(produccion_ids))
+    centroide, con_vector = _centroide(produccion_ids)
+    # Una semilla sin vector alcanza para que el pool dure poco: cuando su
+    # embedding esté listo la firma de la lista no cambia, y un pool de 24 h
+    # la ignoraría todo ese tiempo.
+    completo = (
+        bool(produccion_ids)
+        and con_vector == len(produccion_ids)
+        and not nombre_omitido
+    )
+    nombre_usado = centroide is not None and vector_nombre is not None
+    vector = centroide
+    if nombre_usado:
+        vector = _mezclar_nombre(centroide, vector_nombre, peso_del_nombre(con_vector))
+
+    vecinos = []
+    if vector is not None:
+        vecinos = candidatos(vector, excluir_ids=produccion_ids, tipos=tipos)
+    cercanos = [vecino for vecino in vecinos if vecino.distancia <= DISTANCIA_MAXIMA]
+    lejanos = vecinos[len(cercanos) :]
+
+    tarjetas = []
+    if len(cercanos) < MINIMO_CERCANOS and semillas_tmdb:
+        ya_estan = {(vecino.id_tmdb, TIPO_TMDB[vecino.tipo]) for vecino in vecinos}
+        ya_estan.update(
+            (id_tmdb, TIPO_TMDB[tipo])
+            for id_tmdb, tipo in ProduccionAudiovisual.objects.filter(
+                pk__in=produccion_ids
+            ).values_list("id_tmdb", "tipo")
+        )
+        relleno = relleno_tmdb(semillas_tmdb, servicio=servicio, excluir_pares=ya_estan)
+        tarjetas = relleno.tarjetas
+        completo = completo and relleno.completo
+
+    entradas = [
+        *(_entrada_local(vecino) for vecino in cercanos),
+        *tarjetas,
+        *(_entrada_local(vecino) for vecino in lejanos),
+    ][:TAMANO_POOL]
+    return Pool(
+        entradas=mezclar_con_pesos(entradas, semilla_azar),
+        nombre_usado=nombre_usado,
+        completo=completo,
+        semillas_con_vector=con_vector,
+        cercanos=len(cercanos),
+        de_tmdb=sum(1 for entrada in entradas if entrada["origen"] == "tmdb"),
+    )
+
+
+def pool_en_cache(clave, armar, *, ttl):
+    """Devuelve `(pool, acierto)`: el pool guardado en `clave`, o uno recién armado.
+
+    `armar` es una función sin argumentos que arma el pool; solo se llama si la
+    caché no lo tiene. `ttl` recibe el pool y dice cuántos segundos guardarlo.
+    Pasar funciones como argumento es lo que en Java se hace con un `Supplier`
+    y una `Function`.
+    """
+    guardado = cache.get(clave)
+    if guardado is not None:
+        try:
+            return Pool(**guardado), True
+        except TypeError:
+            # Guardado con otra forma (una versión anterior): se rearma.
+            pass
+    pool = armar()
+    cache.set(clave, asdict(pool), ttl(pool))
+    return pool, False
+
+
+def _visibles(pool, excluir_pares):
+    excluidos = set(excluir_pares)
+    return [
+        entrada
+        for entrada in pool.entradas
+        if (entrada["id_tmdb"], entrada["tipo"]) not in excluidos
+    ]
+
+
+def cantidad_de_paginas(pool, *, excluir_pares=(), tamano=TAMANO_PAGINA):
+    """Cuántas páginas tiene el pool para este usuario, sin lo excluido."""
+    return math.ceil(len(_visibles(pool, excluir_pares)) / tamano)
+
+
+def _tarjeta_local(produccion, idioma):
+    """La tarjeta de un título del catálogo, con la forma de un ítem de lista."""
+    fecha = produccion.fecha_lanzamiento
+    return {
+        "id_tmdb": produccion.id_tmdb,
+        "tipo": TIPO_TMDB[produccion.tipo],
+        "titulo": texto_localizado(produccion, "titulo", idioma),
+        "poster": texto_localizado(produccion, "poster", idioma),
+        "anio": fecha.year if fecha else None,
+        "calificacion_promedio": produccion.calificacion_promedio or None,
+        "campos_en_ingles": campos_en_ingles(produccion, idioma),
+        "origen": "catalogo",
+    }
+
+
+def pagina(pool, *, excluir_pares=(), numero=1, tamano=TAMANO_PAGINA, idioma=None):
+    """Las tarjetas de la página `numero` del pool (la primera es la 1).
+
+    `excluir_pares` son pares `(id_tmdb, tipo de TMDB)`, como los de `vistos()`:
+    se sacan ANTES de cortar, así la página sigue llena. Pasada la última
+    página devuelve una lista vacía. No recalcula nada: el pool ya viene
+    ordenado, acá solo se leen de la base los títulos de esta página.
+    """
+    corte = _visibles(pool, excluir_pares)[(numero - 1) * tamano : numero * tamano]
+    pks = [entrada["pk"] for entrada in corte if entrada["origen"] == "catalogo"]
+    producciones = {}
+    if pks:
+        consulta = ProduccionAudiovisual.objects.filter(pk__in=pks)
+        if idioma and idioma != settings.IDIOMA_POR_DEFECTO:
+            # Trae las traducciones de todas en UNA consulta más, en vez de una
+            # por tarjeta (el problema «N+1» de los ORM, igual que en JPA).
+            consulta = consulta.prefetch_related("traducciones")
+        producciones = {produccion.pk: produccion for produccion in consulta}
+
+    tarjetas = []
+    for entrada in corte:
+        if entrada["origen"] != "catalogo":
+            tarjetas.append(entrada)
+        elif entrada["pk"] in producciones:
+            # Si se borró después de armar el pool, simplemente no aparece.
+            tarjetas.append(_tarjeta_local(producciones[entrada["pk"]], idioma))
+    return tarjetas
+
+
+def materializar_mostradas(tarjetas):
+    """Encola la materialización de las tarjetas de TMDB que se mostraron.
+
+    Como en cualquier listado (C-04a): entran al catálogo y reciben su vector,
+    así el próximo pool ya las encuentra localmente. Nunca lanza: si la base o
+    el broker fallan, la respuesta sale igual.
+    """
+    de_tmdb = [
+        {"id": tarjeta["id_tmdb"], "media_type": tarjeta["tipo"]}
+        for tarjeta in tarjetas
+        if tarjeta["origen"] == "tmdb"
+    ]
+    if not de_tmdb:
+        return
+    try:
+        materializar_listado_en_segundo_plano(de_tmdb)
+    except Exception:
+        # Amplio a propósito, como en `catalogo/views.py`: materializar es una
+        # ayuda para la próxima vez, no parte de la respuesta.
+        logger.exception("similares: no se pudo encolar la materialización")

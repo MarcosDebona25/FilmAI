@@ -121,7 +121,7 @@ class VectorSemillaTests(BaseSimilares):
 
     def test_mezcla_el_nombre_con_el_peso_que_toca_segun_cuantos_titulos_hay(self):
         # Todos los títulos sobre el eje 0 y el nombre sobre el eje 1: en el
-        # vector final, la proporción entre las dos coordenadas es w / (1 − w).
+        # vector final, la proporción entre las dos coordenadas es w / (1 - w).
         ids = []
         for cantidad in range(1, 8):
             ids.append(self.produccion(f"T{cantidad}", eje(0)).pk)
@@ -168,7 +168,7 @@ class CandidatosTests(BaseSimilares):
         encontrados = candidatos(vector_a(0), excluir_ids=[])
 
         self.assertEqual(self.titulos(), ["Cerca", "Medio", "Lejos"])
-        # Distancia coseno = 1 − coseno del ángulo entre los dos vectores.
+        # Distancia coseno = 1 - coseno del ángulo entre los dos vectores.
         self.assertAlmostEqual(encontrados[0].distancia, 1 - math.cos(0.1), places=5)
         self.assertEqual(
             (encontrados[0].id_tmdb, encontrados[0].tipo), (2, TipoProduccion.PELICULA)
@@ -474,7 +474,9 @@ class PresupuestoDelRellenoTests(SimpleTestCase):
         )
         redis = fakeredis.FakeRedis(decode_responses=True)
         return CatalogoConRespaldo(
-            TMDBClientCache(TMDBClient(api_key="k", idioma="es-MX", http_client=http), redis),
+            TMDBClientCache(
+                TMDBClient(api_key="k", idioma="es-MX", http_client=http), redis
+            ),
             TMDBClientCache(TMDBClient(api_key="k", http_client=http), redis),
         )
 
@@ -534,7 +536,7 @@ class PresupuestoDelRellenoTests(SimpleTestCase):
         self.assertEqual(contador.total, 11)
 
 
-# Ángulos a un lado y al otro del umbral: distancia coseno = 1 − cos(ángulo).
+# Ángulos a un lado y al otro del umbral: distancia coseno = 1 - cos(ángulo).
 CERCA = 0.5  # distancia 0.12
 LEJOS = 1.2  # distancia 0.64
 
@@ -774,9 +776,7 @@ class PaginaTests(BaseSimilares):
 
     def pool(self, cantidad, tmdb=()):
         self.producciones = [
-            self.produccion(
-                f"T{numero}", vector_a(0), fecha_lanzamiento="2010-07-16"
-            )
+            self.produccion(f"T{numero}", vector_a(0), fecha_lanzamiento="2010-07-16")
             for numero in range(cantidad)
         ]
         entradas = [
@@ -842,7 +842,9 @@ class PaginaTests(BaseSimilares):
         primera = pagina(pool, excluir_pares=vistas)
 
         # La página sigue teniendo 10: el lugar de la vista lo ocupa la siguiente.
-        self.assertEqual([t["titulo"] for t in primera], [f"T{n}" for n in range(1, 11)])
+        self.assertEqual(
+            [t["titulo"] for t in primera], [f"T{n}" for n in range(1, 11)]
+        )
         self.assertEqual(cantidad_de_paginas(pool, excluir_pares=vistas), 2)
         self.assertEqual(
             [t["titulo"] for t in pagina(pool, excluir_pares=vistas, numero=2)], ["T11"]
