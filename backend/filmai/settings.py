@@ -458,6 +458,9 @@ CELERY_BACKFILL_LIMIT = 100
 # `catalogo.services.vencimiento.cuota_nocturna`.
 DIAS_REFRESCO_TMDB = 150
 CELERY_REFRESCO_TECHO = 1000
+# Las tarjetas del chat son contenido de TMDB copiado en cada mensaje: pasados
+# estos días se recortan a `{id_tmdb, tipo}` (`chatbot.recorte`).
+DIAS_DE_TARJETAS = 180
 CELERY_BEAT_SCHEDULE = {
     # Sync del catálogo a las 3 AM: el momento de menos tráfico, y antes de que
     # el primer usuario del día abra la app con datos de ayer.
@@ -471,6 +474,12 @@ CELERY_BEAT_SCHEDULE = {
     "refrescar-vencidos": {
         "task": "catalogo.refrescar_vencidos",
         "schedule": crontab(hour=3, minute=30),
+    },
+    # Tarjetas del chat con más de 180 días (#180): después del refresco, para que
+    # el historial se rehidrate desde filas ya al día.
+    "recortar-tarjetas": {
+        "task": "chatbot.recortar_tarjetas",
+        "schedule": crontab(hour=4, minute=30),
     },
     # Una hora después de la sync, no a la misma hora: así recoge los
     # embeddings que la sync acaba de encolar y fallaron esta misma noche.

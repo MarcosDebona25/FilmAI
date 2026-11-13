@@ -24,6 +24,7 @@ from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
+from chatbot.servicio import titulos_recordados
 from chatbot.tools import ESQUEMAS, ContextoTurno, ejecutar
 from chatbot.tools.personales import mostrar_tarjetas
 
@@ -75,7 +76,7 @@ def _preparar(chat, texto, idioma):
     # La prosa sigue al idioma del mensaje; las tools y las tarjetas, al del turno.
     sistema = armar_sistema(
         armar_perfil(usuario),
-        chat.contexto.get("ya_recomendados", []),
+        titulos_recordados(chat.contexto.get("ya_recomendados", [])),
         detectar_idioma(texto) or idioma,
     )
     mensajes = [

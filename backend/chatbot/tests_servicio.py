@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.db import DatabaseError
 from django.test import SimpleTestCase, TestCase
+from django.utils import timezone
 
 from chatbot.eventos import Resultado
 from chatbot.models import Chat, Mensaje, TipoAutor
@@ -23,8 +24,14 @@ def tarjeta(id_tmdb, titulo="Moon", tipo="movie", anio=2009):
 
 
 def recordada(id_tmdb, titulo="Moon", tipo="movie", anio=2009):
-    """Lo que queda en `ya_recomendados`: la tarjeta sin el póster."""
-    return {"id_tmdb": id_tmdb, "tipo": tipo, "titulo": titulo, "anio": anio}
+    """Lo que queda en `ya_recomendados`: la tarjeta sin el póster, con la fecha."""
+    return {
+        "id_tmdb": id_tmdb,
+        "tipo": tipo,
+        "titulo": titulo,
+        "anio": anio,
+        "fecha": timezone.localdate().isoformat(),
+    }
 
 
 class GuardarTurnoTests(TestCase):
