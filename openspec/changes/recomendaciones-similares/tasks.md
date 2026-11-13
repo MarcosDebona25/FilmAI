@@ -31,40 +31,41 @@
 
 ## Phase 1: Engine and title endpoint (PR 1)
 
-- [ ] 1.1 Branch `feat/similares-motor` from `develop` and its worktree
-- [ ] 1.2 RED/GREEN optional JWT cookie authentication for the title
+- [x] 1.1 Branch `feat/similares-motor` from `develop` and its worktree
+- [x] 1.2 RED/GREEN optional JWT cookie authentication for the title
       endpoint (§7): an expired or invalid cookie → 200 (OK) as anonymous,
       a valid one → «Vistas» removed
-- [ ] 1.3 RED `catalogo/tests_similares.py` — `vector_semilla`: average
+- [x] 1.3 RED `catalogo/tests_similares.py` — `vector_semilla`: average
       normalized, seeds without `ready` vector skipped, none → `None`, the
       name mix with the D-1 table
-- [ ] 1.4 RED `candidatos`: order by distance; seeds excluded; a list made of
+- [x] 1.4 RED `candidatos`: order by distance; seeds excluded; a list made of
       the 1 000 neighbours of a title still yields 100 (iterative scan); type
       filter; no poster and no rating left out (D-5)
-- [ ] 1.5 GREEN `vector_semilla` (`avg()` in SQL) and `candidatos`: both
+- [x] 1.5 GREEN `vector_semilla` (`avg()` in SQL) and `candidatos`: both
       `SET LOCAL` (`hnsw.ef_search`, `hnsw.iterative_scan = relaxed_order`)
       and the `SELECT` inside one `transaction.atomic()`; a test checks
       `SHOW hnsw.iterative_scan` in that transaction
-- [ ] 1.6 RED `relleno_tmdb` with `TMDBClientCache` mocked: only when fewer
+- [x] 1.6 RED `relleno_tmdb` with `TMDBClientCache` mocked: only when fewer
       than 20 close; up to 3 seeds; round robin; drops `adult`, < 10 votes, no
       poster, seeds and local duplicates; `TMDBError` → empty, not an error;
       the TMDB call counter never passes 6
-- [ ] 1.7 GREEN `relleno_tmdb`, with `materializar_listado_en_segundo_plano`
+- [x] 1.7 GREEN `relleno_tmdb`, with `materializar_listado_en_segundo_plano`
       for the cards that are shown
-- [ ] 1.8 RED pool and pages: weighted shuffle reproducible with the same
+- [x] 1.8 RED pool and pages: weighted shuffle reproducible with the same
       seed, different with another, page 1 mostly close ones (assert on mean
       rank); 60 at most; `pagina` slices and removes `excluir_pares`
-- [ ] 1.9 GREEN `armar_pool`, `pagina`
-- [ ] 1.10 RED `catalogo/tests_similares_api.py`: anonymous → 20 results,
+- [x] 1.9 GREEN `armar_pool`, `pagina`
+- [x] 1.10 RED `catalogo/tests_similares_api.py`: anonymous → 20 results,
       `public` cache and `Vary: Accept-Language`; with session «Vistas»
       removed and `private`; two users share the cached pool; title not in the
       catalog or without vector → TMDB only, 10 min TTL; invalid `id_tmdb` →
       400 (Bad Request) like the detail; throttle scope `catalogo`
-- [ ] 1.11 GREEN `SimilaresView` + routes `movie/<id>/similar/`,
+- [x] 1.11 GREEN `SimilaresView` + routes `movie/<id>/similar/`,
       `tv/<id>/similar/`; log line per request
-- [ ] 1.12 `contracts/openapi.yaml` regenerated if the contract test asks
-- [ ] 1.13 `ruff format . && ruff check .`; full `python manage.py test` with
-      `docker compose run --rm` (db + redis only)
+- [x] 1.12 `contracts/openapi.yaml` regenerated if the contract test asks
+- [x] 1.13 `ruff format . && ruff check .`; tests of `catalogo`, `listas`,
+      `usuarios.tests` and `filmai.tests_esquema` with `docker compose run --rm`
+      (817 tests; the full suite runs in CI, the local WSL has little memory)
 
 ## Phase 2: List endpoint (PR 2)
 

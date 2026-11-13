@@ -194,7 +194,7 @@
 | GET    | `/movie/{movie_id}/images`             | Imágenes.                                                     |
 | GET    | `/movie/{movie_id}/keywords`           | **Keywords temáticos** (B-06).                                |
 | GET    | `/movie/{movie_id}/lists`              | Listas que contienen la película.                             |
-| GET    | `/movie/{movie_id}/recommendations`    | **Recomendaciones** (herramienta `similares_a`).              |
+| GET    | `/movie/{movie_id}/recommendations`    | **Recomendaciones** (`similares_a`, fila de parecidos).       |
 | GET    | `/movie/{movie_id}/release_dates`      | Fechas de estreno por país.                                   |
 | GET    | `/movie/{movie_id}/reviews`            | Reseñas de TMDB.                                              |
 | GET    | `/movie/{movie_id}/similar`            | Películas similares. No se usa: resultados malos.             |
@@ -276,7 +276,7 @@
 | GET    | `/tv/{series_id}/external_ids`          | IDs externos.                                                |
 | GET    | `/tv/{series_id}/images`                | Imágenes.                                                    |
 | GET    | `/tv/{series_id}/keywords`              | **Keywords temáticos** (B-06).                               |
-| GET    | `/tv/{series_id}/recommendations`       | **Recomendaciones** (herramienta `similares_a`).             |
+| GET    | `/tv/{series_id}/recommendations`       | **Recomendaciones** (`similares_a`, fila de parecidos).      |
 | GET    | `/tv/{series_id}/reviews`               | Reseñas de TMDB.                                             |
 | GET    | `/tv/{series_id}/screened_theatrically` | Estrenadas en cines.                                         |
 | GET    | `/tv/{series_id}/similar`               | Series similares. No se usa: resultados malos.               |

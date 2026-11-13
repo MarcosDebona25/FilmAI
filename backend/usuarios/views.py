@@ -19,7 +19,6 @@ from allauth.account.internal.flows.email_verification import (
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from dj_rest_auth.jwt_auth import JWTCookieAuthentication
 from dj_rest_auth.registration.views import (
     RegisterView as BaseRegisterView,
 )
@@ -32,7 +31,6 @@ from django.core import signing
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -43,6 +41,7 @@ from filmai.errores.sobre import (
     construir_sobre,
 )
 
+from .authentication import LenientJWTCookieAuthentication
 from .models import Usuario
 from .pendientes import pendientes_vencidas
 from .serializers import (
@@ -67,38 +66,6 @@ from .throttles import (
 from .validators import USERNAME_REGEX, es_nombre_usuario_reservado
 
 logger = logging.getLogger(__name__)
-
-
-class LenientJWTCookieAuthentication(JWTCookieAuthentication):
-    """Variante que no revienta si la cookie JWT es inválida o está vencida.
-
-    ``JWTCookieAuthentication.authenticate`` lanza ``AuthenticationFailed``
-    cuando encuentra una cookie ``access`` que no pasa la validación (expirada,
-    de otro seed, blacklistada, etc.).  Eso bloquea endpoints públicos como el
-    login: el browser manda la cookie vieja, el auth falla *antes* de llegar a
-    la vista y el usuario recibe 401 sin entender por qué.
-
-    Esta sub-clase captura la excepción y devuelve ``None`` (no autenticado),
-    igual que cuando no hay cookie.  El endpoint de login sigue funcionando
-    porque su permission es ``AllowAny``.
-
-    ``PermissionDenied`` (que `enforce_csrf` lanza cuando falla CSRF con
-    ``JWT_AUTH_COOKIE_USE_CSRF``) NO se captura: propagarla produce un 403.
-    Tragarla haría que un request sin CSRF válido pase por anónimo y el login
-    pierda su protección CSRF siempre que el browser traiga alguna cookie
-    ``access`` previa.
-    """
-
-    def authenticate(self, request):
-        try:
-            return super().authenticate(request)
-        except PermissionDenied:
-            raise
-        except Exception:
-            logger.debug(
-                "Cookie JWT inválida ignorada en %s", request.path, exc_info=True
-            )
-            return None
 
 
 class LoginView(BaseLoginView):

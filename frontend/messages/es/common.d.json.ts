@@ -185,7 +185,8 @@ declare const messages: {
       "tvPremieresTitle": "Series que se estrenaron en {year}",
       "trendingDescription": "Lo más visto en TMDB estos siete días",
       "newReleasesTitle": "Novedades",
-      "emptyDescription": "No hay títulos para mostrar en este momento. Probá de nuevo más tarde o buscá algo puntual."
+      "emptyDescription": "No hay títulos para mostrar en este momento. Probá de nuevo más tarde o buscá algo puntual.",
+      "seeAll": "Ver todo"
     },
     "carousel": {
       "previousRowLabel": "Anteriores en {rowTitle}",
