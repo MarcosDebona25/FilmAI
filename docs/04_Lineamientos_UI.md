@@ -84,7 +84,7 @@ App Autenticada
 ### 3.2 Home: Solo Descubrimiento + Búsqueda como página
 
 **Decisión**: Home es exclusivamente una página de descubrimiento pasivo con filas de contenido
-(Recomendado, Tendencias, Novedades). El catálogo completo para exploración activa se accede
+(Recomendado, Tendencias, Pendientes, Novedades). El catálogo completo para exploración activa se accede
 desde el link "Buscar" en la navbar, que abre la página de búsqueda con grid, toggle de tipo
 (Todo / Películas / Series) y filtros.
 
@@ -114,7 +114,7 @@ este modelo (Inicio, Buscar, Listas + avatar).
 
 1. Por cada tipo, los **3 géneros más repetidos** entre las producciones de ese tipo calificadas con 7+ por el usuario. Un empate lo gana el género de la calificación más reciente.
 2. Llamada a `/discover/movie` o `/discover/tv` con esos géneros unidos con OR (`with_genres=a|b|c`), ordenado por `popularity.desc` y con `vote_count.gte=100`. El mínimo de votos saca títulos sin votos y contenido adulto que TMDB no marca como tal (verificado el 13/10/2026).
-3. Excluir los pares `(id_tmdb, tipo)` que el usuario ya tiene en «Vistas». Con la regla «calificada ⇒ vista» (30/09/2026) esto ya cubre lo calificado, sin excluir «Pendientes».
+3. Excluir los pares `(id_tmdb, tipo)` que el usuario ya tiene en «Vistas» (con la regla «calificada ⇒ vista», 30/09/2026, eso ya cubre lo calificado) o en «Pendientes» (desde el 13/11/2026: ya los tiene anotados). Favoritos no excluye.
 4. Devolver hasta 15 resultados de la primera página de TMDB. En «Todo» se alternan película y serie hasta 15.
 
 **Endpoint**: `GET /api/catalogo/recommended/?tipo=all|movie|tv`, solo con sesión. Devuelve también los nombres de los géneros usados (como mucho 3), que la fila muestra como subtítulo («Based on your high ratings in Thriller, Drama, and Crime»). Sin calificaciones de 7 o más responde vacío y la fila se oculta.
@@ -212,11 +212,13 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 | Hero                | Todos                                            | TMDB trending (rotativo o destacado fijo)                                  |
 | Recomendado para ti | Solo autenticados con ≥1 calificación de 7 o más | TMDB `/discover` filtrado por géneros (ver 3.3)                            |
 | Tendencias          | Todos                                            | TMDB `/trending`                                                           |
+| Pendientes          | Solo autenticados con ≥1 título en Pendientes    | Lista predeterminada Pendientes (`GET /api/lists/{id}/items/`, 13/11/2026) |
 | Novedades           | Todos                                            | TMDB `/movie/now_playing`, `/discover/tv` año actual con al menos 50 votos |
 
 - Cada fila: título + opcional "Ver más →" + MediaCards. En celular se desliza; desde 768 px muestra siempre tarjetas enteras (`--cols`, ver sección 4) y las flechas avanzan una página.
 - Con «Todo» (por defecto), las filas mezclan películas y series, con badge de tipo en cada card; con «Películas» o «Series», cada fila muestra solo ese tipo.
-- Flechas de navegación en hover (desktop), swipe nativo (mobile).
+- Flechas de navegación (13/11/2026): dos bandas superpuestas a los costados de la fila, a la altura de los pósters, con degradé desde el fondo; aparecen con el mouse sobre la fila o con foco de teclado, sin flecha izquierda al principio ni derecha al final. Swipe nativo en celular (sin flechas).
+- **Pendientes** (13/11/2026): va después de Tendencias; solo con sesión y si la lista tiene títulos (del tipo elegido en el selector). Lo último agregado primero, hasta 20, con el enlace «Ver todo» a la lista; las tarjetas llevan `?from=list-{id}` para la miga de la ficha.
 - Si una fila no tiene datos (ej. usuario nuevo sin recomendaciones), se oculta completamente.
 
 ### Estados del Home
@@ -225,7 +227,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 | ------------------------- | ---------------------------------------------------------------------------------------------- |
 | No autenticado            | Hero + Tendencias + Novedades + invitación a registrarse. FAB inactivo.                        |
 | Autenticado sin historial | Ídem, FAB activo, sin fila "Recomendado para ti".                                              |
-| Autenticado con historial | Las 3 filas completas.                                                                         |
+| Autenticado con historial | Todas las filas (Pendientes solo si la lista tiene títulos).                                   |
 | Loading                   | Skeleton cards (4-5 placeholders) por fila.                                                    |
 | Error TMDB                | La fila que falla se oculta y un único toast avisa. Si fallan todas, mensaje con «Reintentar». |
 
