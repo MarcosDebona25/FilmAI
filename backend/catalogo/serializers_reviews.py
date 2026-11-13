@@ -181,3 +181,6 @@ class MiResenaSerializer(ProduccionLocalizadaMixin, CalificacionSerializer):
 
     titulo = serializers.SerializerMethodField()
     poster = serializers.SerializerMethodField()
+    # `false` cuando TMDB ya no tiene el título (lápida, #180): la nota y el
+    # texto siguen, el título y el póster vienen vacíos.
+    disponible = serializers.BooleanField(source="produccion.disponible_en_tmdb")

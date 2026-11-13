@@ -47,6 +47,7 @@ export function Footer() {
   const account = useTranslations("nav.account");
   const common = useTranslations("common.actions");
   const language = useTranslations("settings.language");
+  const credits = useTranslations("tmdb.credits");
 
   if (cargando || isAccessPath(pathname)) return null;
 
@@ -203,7 +204,25 @@ export function Footer() {
         </ul>
 
         <div className="flex flex-col gap-2 text-xs text-fg-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-8 md:gap-y-3 md:border-t md:border-line md:pt-7 md:text-[0.8125rem]">
-          <p className="m-0 md:max-w-[47.5rem]">{t("tmdbAttribution")}</p>
+          <div className="flex flex-col gap-2.5 md:max-w-[47.5rem]">
+            <a
+              href="https://www.themoviedb.org"
+              rel="noopener"
+              className="inline-flex self-start focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- archivo oficial sin tocar */}
+              <img src="/tmdb/logo5.svg" alt={credits("logoAlt")} className="block h-4 w-auto" />
+            </a>
+            <p className="m-0">
+              {t("tmdbAttribution")}{" "}
+              <Link
+                href={`${routes.terms}#credits`}
+                className="text-fg-2 underline underline-offset-[3px] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                {t("creditsLink")}
+              </Link>
+            </p>
+          </div>
           <p className="m-0">{t("copyright", { year })}</p>
         </div>
       </div>

@@ -203,13 +203,26 @@ A turn MUST stop after 4 tool rounds or `LLM_TIMEOUT_SECONDS` (25), ending with 
 
 ### Requirement: History
 
-`GET /api/chat/messages/` MUST return the authenticated user's messages, newest first, cursor-paginated by 20, each with `id`, `autor` (`usuario` | `chatbot`), `texto`, `tarjetas` and `fecha_hora`. Cards MUST be returned as stored, without translating them again. A stored card without `nota_tmdb` MUST be returned with `nota_tmdb: null` (07/11/2026).
+`GET /api/chat/messages/` MUST return the authenticated user's messages, newest first, cursor-paginated by 20, each with `id`, `autor` (`usuario` | `chatbot`), `texto`, `tarjetas` and `fecha_hora`. Cards MUST be returned as stored, without translating them again. A stored card without `nota_tmdb` MUST be returned with `nota_tmdb: null` (07/11/2026). A card that `chatbot.recortar_tarjetas` reduced to `{id_tmdb, tipo}` (messages older than 180 days, #180) MUST be rehydrated in memory for the reader's language from `ProduccionAudiovisual` and its translations, with a fixed number of queries per page (3, and none extra when no card is trimmed), without calling TMDB and without writing; a production that is missing or is a tombstone yields `titulo`, `poster`, `anio` and `nota_tmdb` as `null`. `contracts/openapi.yaml` declares `Tarjeta.titulo` as nullable.
 
 #### Scenario: A card stored before `nota_tmdb` existed
 
 - GIVEN an answer whose stored card has no `nota_tmdb`
 - WHEN the history is read
 - THEN that card comes back with `nota_tmdb: null` and the rest of its fields unchanged
+
+#### Scenario: A trimmed card is rehydrated
+
+- GIVEN a message from 200 days ago whose cards are `{id_tmdb, tipo}`
+- WHEN the history is read in English
+- THEN each card has the current English title, poster and year from the catalog
+- AND no TMDB request is made and nothing is written
+
+#### Scenario: A trimmed card whose title is gone
+
+- GIVEN a trimmed card whose production is a tombstone or not in the catalog
+- WHEN the history is read
+- THEN the card comes back with `titulo: null`
 
 #### Scenario: Another user's chat
 

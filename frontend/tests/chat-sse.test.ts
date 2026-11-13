@@ -324,6 +324,23 @@ describe("cargarHistorial", () => {
     expect(mensajes[0]).toMatchObject({ tarjetas: [valida] });
   });
 
+  it("conserva una tarjeta sin título (el título ya no está en TMDB) para que el panel la marque", async () => {
+    const sinTitulo = {
+      id_tmdb: 1,
+      tipo: "movie",
+      titulo: null,
+      poster: null,
+      anio: null,
+      nota_tmdb: null,
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => pagina([{ id: 1, autor: "chatbot", texto: "t", tarjetas: [sinTitulo] }]))
+    );
+    const { mensajes } = await cargarHistorial();
+    expect(mensajes[0]).toMatchObject({ tarjetas: [sinTitulo] });
+  });
+
   it("del cursor next solo usa la query: nunca pide a otro origen", async () => {
     expect(rutaHistorial()).toBe("/api/chat/messages/");
     expect(rutaHistorial("https://atacante.example/otra/ruta/?cursor=a%3D")).toBe(

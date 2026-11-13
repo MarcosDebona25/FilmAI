@@ -13,6 +13,7 @@ import { useNombreLista } from "@/components/features/lists/ListCard";
 import { ListFiltersSheet } from "@/components/features/lists/ListFiltersSheet";
 import { ListNameDialog } from "@/components/features/lists/ListNameDialog";
 import { MediaCard } from "@/components/features/MediaCard";
+import { UnavailableCard } from "@/components/features/UnavailableCard";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -259,6 +260,9 @@ export function ListDetailView({ id }: { id: number }) {
       "flex h-11 min-w-0 flex-none items-center gap-2 rounded-full py-0 pr-1 pl-3.5 text-sm whitespace-nowrap text-fg-3",
       activo ? "shadow-[inset_0_0_0_1px_var(--fg-3)]" : "shadow-[inset_0_0_0_1px_var(--line)]"
     );
+  // Una lápida llega sin título: en los avisos y diálogos se nombra con su leyenda.
+  const tituloDe = (item: ItemLista) =>
+    item.disponible ? item.titulo : t("common.content.titleUnavailable");
   const etiquetaNota = (nota: (typeof NOTAS)[number]) => t(`common.filters.${ETIQUETA_NOTA[nota]}`);
   const chips = [
     filtros.clase && {
@@ -578,18 +582,22 @@ export function ListDetailView({ id }: { id: number }) {
               <ul className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-6 md:gap-y-9">
                 {datos.items.map((item) => (
                   <li key={item.item_id} className="group/item relative list-none">
-                    <MediaCard
-                      title={itemATitulo(item)}
-                      showType
-                      showUnrated
-                      fluid
-                      addedAt={item.fecha_agregado}
-                      from={`list-${id}`}
-                    />
+                    {item.disponible ? (
+                      <MediaCard
+                        title={itemATitulo(item)}
+                        showType
+                        showUnrated
+                        fluid
+                        addedAt={item.fecha_agregado}
+                        from={`list-${id}`}
+                      />
+                    ) : (
+                      <UnavailableCard addedAt={item.fecha_agregado} />
+                    )}
                     <button
                       type="button"
                       aria-label={t("lists.detail.removeItemLabel", {
-                        title: item.titulo,
+                        title: tituloDe(item),
                         listName: nombre,
                       })}
                       onClick={() => setAccion({ tipo: "quitar", item })}
@@ -663,7 +671,7 @@ export function ListDetailView({ id }: { id: number }) {
       {accion?.tipo === "quitar" && nombre && (
         <ConfirmDialog
           titulo={t("lists.detail.removeConfirmTitle", {
-            title: accion.item.titulo,
+            title: tituloDe(accion.item),
             listName: nombre,
           })}
           confirmar={t("common.actions.remove")}
@@ -678,7 +686,7 @@ export function ListDetailView({ id }: { id: number }) {
             accion.texto
               ? "title.rating.removeBothDescription"
               : "title.rating.removeOnlyDescription",
-            { title: accion.item.titulo }
+            { title: tituloDe(accion.item) }
           )}
           preview={accion.texto}
           confirmar={t("title.watched.remove")}

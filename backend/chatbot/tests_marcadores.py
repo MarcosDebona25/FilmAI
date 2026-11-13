@@ -476,6 +476,18 @@ class TarjetasDelUltimoMensajeTests(BaseMarcadores):
 
         self.assertIn("[[1]] Bien", self.sistema_del_primer_pedido())
 
+    async def test_las_tarjetas_recortadas_no_son_candidatas(self):
+        # El recorte de #180 deja las tarjetas de más de 180 días como
+        # `{id_tmdb, tipo}`: sin título no se pueden nombrar, así que no entran
+        # como candidatas y el turno sigue sin romperse.
+        await sync_to_async(self.charla)([{"id_tmdb": 10, "tipo": "movie"}])
+
+        await self.correr([["Hola"]])
+
+        self.assertIn(
+            "Tarjetas de tu último mensaje: ninguna", self.sistema_del_primer_pedido()
+        )
+
     async def test_el_mismo_titulo_en_una_busqueda_conserva_el_ref_del_mensaje(self):
         await sync_to_async(self.charla)([tarjeta_guardada(1, "Moon", 2009)])
 

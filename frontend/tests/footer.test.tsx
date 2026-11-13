@@ -31,6 +31,8 @@ beforeEach(() => {
 });
 afterEach(() => vi.clearAllMocks());
 
+const AVISO_EN = "This product uses the TMDB API but is not endorsed or certified by TMDB.";
+
 const links = (container: HTMLElement) =>
   Object.fromEntries(
     within(container)
@@ -68,7 +70,13 @@ describe("footer del canvas", () => {
 
     expect(within(footer).queryByRole("radio")).toBeNull();
     expect(within(footer).queryByText(en.nav.account.signUp)).toBeNull();
-    expect(within(footer).getByText(en.footer.main.tmdbAttribution)).toBeVisible();
+    // Aviso exacto de TMDB, logo chico sin alterar y enlace «Credits» al ancla de /terms.
+    expect(within(footer).getByText(AVISO_EN, { exact: false })).toBeVisible();
+    expect(within(footer).getByRole("img", { name: "TMDB logo" })).toHaveAttribute(
+      "src",
+      "/tmdb/logo5.svg"
+    );
+    expect(found[en.footer.main.creditsLink]).toHaveAttribute("href", `${routes.terms}#credits`);
     expect(
       within(footer).getByText(
         en.footer.main.copyright.replace("{year}", String(new Date().getFullYear()))
@@ -96,6 +104,15 @@ describe("footer del canvas", () => {
       expect(link).toHaveAttribute("href", `${routes.login}?next=%2Fterms`);
     expect(screen.queryByRole("button", { name: es.footer.main.askFilmAI })).toBeNull();
     expect(within(footer).getAllByRole("radiogroup").length).toBeGreaterThan(0);
+    expect(
+      within(footer).getByText(
+        "Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica.",
+        {
+          exact: false,
+        }
+      )
+    ).toBeVisible();
+    expect(found[es.footer.main.creditsLink]).toHaveAttribute("href", `${routes.terms}#credits`);
     expect(within(footer).queryByRole("link", { name: /Preferencias\./ })).toBeNull();
   });
 

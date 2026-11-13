@@ -2583,6 +2583,9 @@ components:
           $ref: '#/components/schemas/TipoEnum'
         titulo:
           type: string
+          nullable: true
+          description: 'Null cuando la tarjeta es de hace más de 180 días y TMDB ya
+            no tiene el título: el panel muestra «Title no longer available» sin enlace.'
         poster:
           type: string
           nullable: true

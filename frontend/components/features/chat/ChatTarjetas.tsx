@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { useChat } from "@/components/ChatProvider";
+import { UnavailableCard } from "@/components/features/UnavailableCard";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { tmdbImage } from "@/lib/catalog";
 import type { Tarjeta } from "@/lib/chat";
@@ -25,6 +26,14 @@ export function ChatTarjetas({ tarjetas }: { tarjetas: Tarjeta[] }) {
   return (
     <ul className="m-0 flex list-none flex-col p-0">
       {tarjetas.map((tarjeta) => {
+        if (tarjeta.titulo === null) {
+          // TMDB ya no tiene el título: nada a lo que enlazar (#180).
+          return (
+            <li key={`${tarjeta.tipo}-${tarjeta.id_tmdb}`} className="border-t border-line">
+              <UnavailableCard compact />
+            </li>
+          );
+        }
         const poster = tmdbImage(tarjeta.poster, "w185");
         const tipo = t(tarjeta.tipo === "movie" ? "content.movie" : "content.tvShow");
         return (

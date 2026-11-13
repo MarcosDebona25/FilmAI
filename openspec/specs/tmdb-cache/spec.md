@@ -69,6 +69,16 @@ The system SHALL apply a TTL per endpoint group: lists (trending, now_playing, d
 - AND a search entry expires after 1 hour
 - AND a details entry expires after 24 hours
 
+### Requirement: No stored copy outlives TMDB's 6-month limit (#180)
+
+Every TTL in `ENDPOINT_TTLS`, `RESPALDO_TTL` and `RESPALDO_TTLS`, and every `max-age` the catalog views send, MUST be at most 180 days. `catalogo/test_cache_tope.py` fails naming the endpoint when one is not. Today the longest is 30 days (`genres` and the fallback copy).
+
+#### Scenario: A TTL above the cap fails
+
+- GIVEN a TTL of 200 days in `ENDPOINT_TTLS`
+- WHEN the suite runs
+- THEN the cap test fails naming that endpoint
+
 ### Requirement: Stable cache key
 
 The system SHALL derive the cache key as `tmdb:{endpoint}:{params_hash}`, where `params_hash` is a stable hash of the canonical endpoint parameters (including path arguments) so that identical logical calls map to the same key.

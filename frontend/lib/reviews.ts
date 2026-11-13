@@ -10,6 +10,8 @@ export type MiResena = {
   texto: string | null;
   /** Un administrador la ocultó: su texto no se puede editar ni borrar (F10). */
   moderada: boolean;
+  /** `false` si TMDB ya no tiene el título (lápida): la nota y el texto siguen. */
+  disponible: boolean;
 };
 export type PaginaResenas = {
   total: number;
