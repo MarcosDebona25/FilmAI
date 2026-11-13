@@ -22,6 +22,7 @@ from chatbot.llm import (
     LlamadaTool,
     ProveedorFalso,
     ProveedorOpenAICompatible,
+    Uso,
     Vuelta,
     crear_proveedor,
     leer_stream,
@@ -855,11 +856,16 @@ class ComandoChatearTests(TestCase):
             call_command("chatear", usuario="nadie", mensaje="hola")
 
 
-def fragmento(*, contenido=None, llamadas=None, razonamiento=None):
+def fragmento(*, contenido=None, llamadas=None, razonamiento=None, fin=None):
     delta = SimpleNamespace(
         content=contenido, tool_calls=llamadas, reasoning_content=razonamiento
     )
-    return SimpleNamespace(choices=[SimpleNamespace(delta=delta)])
+    return SimpleNamespace(choices=[SimpleNamespace(delta=delta, finish_reason=fin)])
+
+
+def fragmento_de_uso(**campos):
+    """El último fragmento con `include_usage`: sin `choices` y con el consumo."""
+    return SimpleNamespace(choices=[], usage=SimpleNamespace(**campos))
 
 
 def parte_de_tool(indice, argumentos, id_=None, nombre=None):
@@ -923,6 +929,49 @@ class LeerStreamTests(SimpleTestCase):
         self.assertEqual(items[-1].razonamiento, "pensando")
 
 
+class UsoYFinTests(SimpleTestCase):
+    """`leer_stream` también devuelve el consumo y por qué terminó la respuesta.
+
+    La forma del fragmento de uso copia la de DeepSeek: `prompt_tokens`,
+    `completion_tokens` y, aparte, `prompt_cache_hit_tokens` / `prompt_cache_miss_tokens`.
+    """
+
+    async def leer(self, *fragmentos):
+        return [item async for item in leer_stream(como_stream(*fragmentos))]
+
+    async def test_lee_los_tokens_y_la_cache_del_ultimo_fragmento(self):
+        items = await self.leer(
+            fragmento(contenido="Hola", fin="stop"),
+            fragmento_de_uso(
+                prompt_tokens=1200,
+                completion_tokens=40,
+                prompt_cache_hit_tokens=1000,
+                prompt_cache_miss_tokens=200,
+            ),
+        )
+
+        self.assertEqual(items[-1].uso, Uso(1200, 40, 1000, 200))
+        self.assertEqual(items[-1].fin, "stop")
+
+    async def test_un_proveedor_sin_cache_deja_esos_campos_en_none(self):
+        items = await self.leer(
+            fragmento(contenido="Hola", fin="stop"),
+            fragmento_de_uso(prompt_tokens=10, completion_tokens=2),
+        )
+
+        self.assertEqual(items[-1].uso, Uso(10, 2, None, None))
+
+    async def test_sin_fragmento_de_uso_no_hay_uso(self):
+        items = await self.leer(fragmento(contenido="Hola", fin="stop"))
+
+        self.assertIsNone(items[-1].uso)
+
+    async def test_guarda_el_motivo_de_fin_aunque_sea_length(self):
+        items = await self.leer(fragmento(contenido="Cortad", fin="length"))
+
+        self.assertEqual(items[-1].fin, "length")
+
+
 class ParametroToolsTests(SimpleTestCase):
     """Sin esquemas, `tools` no viaja: es lo que hace una llamada «solo texto»."""
 
@@ -961,6 +1010,25 @@ class ParametroToolsTests(SimpleTestCase):
         )
 
         self.assertEqual(enviado["tool_choice"], "required")
+
+    async def test_pide_el_uso_de_tokens_en_el_stream(self):
+        enviado = await self.pedido_enviado([])
+
+        self.assertEqual(enviado["stream_options"], {"include_usage": True})
+
+    async def test_la_vuelta_trae_los_segundos_de_la_llamada(self):
+        crear = AsyncMock(return_value=como_stream(fragmento(contenido="Hola")))
+        with patch("chatbot.llm.AsyncOpenAI") as cliente:
+            cliente.return_value.__aenter__.return_value = MagicMock(
+                chat=MagicMock(completions=MagicMock(create=crear))
+            )
+            proveedor = ProveedorOpenAICompatible(
+                base_url="http://x", modelo="m", api_key="k", thinking=False
+            )
+            with patch("chatbot.llm._reloj", side_effect=[10.0, 12.5]):
+                items = [_ async for _ in proveedor.escribir([], [])]
+
+        self.assertEqual(items[-1].segundos, 2.5)
 
     async def test_sin_esquemas_ignora_tool_choice(self):
         # La API rechaza `tool_choice` sin `tools`.
