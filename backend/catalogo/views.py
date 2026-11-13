@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import ClassVar
 
 from django.utils.cache import patch_cache_control, patch_vary_headers
@@ -9,10 +10,13 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from catalogo.models import ID_TMDB_MAXIMO
+from catalogo.models import ID_TMDB_MAXIMO, ProduccionAudiovisual
 from catalogo.presupuesto import TopesTMDBMixin
+from catalogo.services import similares
+from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_todo
 from catalogo.services.creditos import creditos
+from catalogo.services.embeddings import MODEL_VERSION
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import (
@@ -20,9 +24,11 @@ from catalogo.services.materialization import (
     materializar_listado_en_segundo_plano,
 )
 from catalogo.services.plataformas import plataformas
-from catalogo.services.recomendado import recomendar
+from catalogo.services.recomendado import recomendar, vistos
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.validacion import ErrorValidacion
+from filmai.idioma import idioma_efectivo
+from usuarios.authentication import LenientJWTCookieAuthentication
 from usuarios.paises import es_pais_valido
 
 logger = logging.getLogger(__name__)
@@ -437,3 +443,98 @@ class RecommendedView(TopesTMDBMixin, APIView):
             },
         )
         return Response(datos)
+
+
+class SimilaresView(TopesTMDBMixin, APIView):
+    """«Parecidos a {título}» de la ficha: hasta 20 títulos, con o sin sesión.
+
+    Responde `{results}`; cada resultado tiene `id_tmdb`, `tipo`, `titulo`,
+    `poster`, `anio`, `calificacion_promedio`, `campos_en_ingles` y `origen`
+    (`catalogo` o `tmdb`). Con sesión no vienen los títulos de «Vistas».
+    """
+
+    # No hereda de `CatalogoBaseView`: aquella no autentica y marca toda
+    # respuesta como pública. Acá la sesión es OPCIONAL: DRF autentica antes de
+    # mirar los permisos, así que con la clase por defecto una cookie vencida
+    # respondería 401 (Unauthorized) aunque el permiso sea `AllowAny`, y la fila
+    # desaparecería para ese visitante. La variante tolerante devuelve «sin
+    # sesión» en vez de fallar.
+    authentication_classes: ClassVar = [LenientJWTCookieAuthentication]
+    permission_classes: ClassVar = [AllowAny]
+    throttle_classes: ClassVar = [ScopedRateThrottle]
+    throttle_scope = "catalogo"
+    tipo = None  # "movie" o "tv", lo fija la ruta
+
+    TARJETAS = 20
+    # El título no está en el catálogo o su vector no está listo: la ficha ya
+    # encoló su materialización, así que en unos minutos el pool puede ser local.
+    TTL_SIN_VECTOR = 10 * 60
+
+    def get(self, request, id_tmdb):
+        inicio = time.perf_counter()
+        id_tmdb = _id_tmdb(id_tmdb)
+        idioma = idioma_efectivo(request)
+        # La clave no lleva nada del usuario: el pool es el mismo para todos.
+        clave = f"similares:titulo:{self.tipo}:{id_tmdb}:{idioma}:{MODEL_VERSION}"
+        pool, en_cache = similares.pool_en_cache(
+            clave,
+            # `lambda` es una función sin nombre: solo se ejecuta si el pool no
+            # estaba guardado.
+            lambda: self._armar(request, id_tmdb, clave),
+            ttl=self._ttl,
+        )
+
+        con_sesion = request.user.is_authenticated
+        resultados = similares.pagina(
+            pool,
+            # «Vistas» se saca DESPUÉS de leer la caché, nunca se guarda con el pool.
+            excluir_pares=vistos(request.user) if con_sesion else (),
+            tamano=self.TARJETAS,
+            idioma=idioma,
+        )
+        similares.materializar_mostradas(resultados)
+        logger.info(
+            "similares: titulo=%s/%s semillas=%d cercanos=%d tmdb=%d cache=%s "
+            "resultados=%d ms=%d",
+            self.tipo,
+            id_tmdb,
+            pool.semillas_con_vector,
+            pool.cercanos,
+            pool.de_tmdb,
+            en_cache,
+            len(resultados),
+            (time.perf_counter() - inicio) * 1000,
+        )
+
+        respuesta = Response({"results": resultados})
+        if con_sesion:
+            # Depende de lo que vio esta persona: solo su navegador la guarda.
+            patch_cache_control(respuesta, private=True)
+        else:
+            patch_cache_control(
+                respuesta, public=True, max_age=CACHE_NAVEGADOR_SEGUNDOS
+            )
+            patch_vary_headers(respuesta, ["Accept-Language"])
+        return respuesta
+
+    def _armar(self, request, id_tmdb, clave):
+        semilla = (
+            ProduccionAudiovisual.objects.filter(
+                id_tmdb=id_tmdb, tipo=tmdb_a_dominio(self.tipo)
+            )
+            .values_list("pk", flat=True)
+            .first()
+        )
+        return similares.armar_pool(
+            [] if semilla is None else [semilla],
+            semillas_tmdb=[(id_tmdb, self.tipo)],
+            servicio=servicio_localizado(idioma_tmdb(request), get_catalog_service),
+            semilla_azar=clave,
+        )
+
+    def _ttl(self, pool):
+        if pool.completo:
+            return similares.TTL_POOL
+        if not pool.semillas_con_vector:
+            return self.TTL_SIN_VECTOR
+        return similares.TTL_POOL_INCOMPLETO
