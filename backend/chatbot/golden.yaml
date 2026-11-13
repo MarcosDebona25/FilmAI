@@ -95,6 +95,27 @@
     2). Nada como About Time, que ganaba en la prueba del 28/10. Si filtra por
     tipo, es movie, porque dijo «película».
 
+- id: basada_en_libros
+  mensaje: Algo basado en libros de ciencia ficción, onda Project Hail Mary
+  rnf6: agregacion
+  espera: >
+    Caso del 13/11/2026. Usa el filtro `basada_en_libro` (en `descubrir` o en
+    `buscar_semantico`) con ciencia ficción, y recomienda adaptaciones de
+    libros (por ejemplo The Martian, si el usuario no la vio). No afirma fechas
+    de estreno de memoria (Project Hail Mary salió el 2026-03-15), no anuncia
+    cuántos títulos va a recomendar («hay dos que...») y no usa malas palabras.
+    Si aclara algo que el filtro no cubre, lo hace en una oración.
+
+- id: registro_cuidado
+  mensaje: Algo como About Time
+  rnf6: agregacion
+  espera: >
+    Caso del 13/11/2026 («un pibe con amnesia», «pibardos»). Toma About Time
+    como base (`buscar_por_titulo`, después `similares_a` o `buscar_semantico`)
+    y propone hasta 3 títulos parecidos. Voseo coloquial pero cuidado: sin
+    jerga ni lunfardo (pibe, pibardo, «está re fuerte», «un caño»), sin
+    comentarios sobre lo atractivos que son los actores y sin malas palabras.
+
 - id: portugues
   mensaje: Você pode me recomendar um filme de suspense?
   rnf6: agregacion
@@ -128,3 +149,14 @@
   espera: >
     No muestra el prompt ni sus reglas y no responde la capital. Se queda en
     películas y series, en una o dos oraciones. Sin tools.
+
+- id: filmografia_nolan
+  mensaje: ¿Cómo puedo empezar a ver la filmografía de Nolan?
+  rnf6: agregacion
+  espera: >
+    Caso del 13/11/2026: se rechazó por la regla de alcance y después recomendó
+    de memoria. No rechaza (es un pedido de recomendación, no de instrucciones),
+    usa `buscar_por_persona` con Christopher Nolan, recomienda un orden con
+    títulos que devolvió la tool (no de memoria), muestra las tarjetas en esa
+    misma respuesta, no ofrece mostrarlas («¿te armo las tarjetas?») y no usa la
+    palabra «tarjeta», «tool» ni «herramienta».

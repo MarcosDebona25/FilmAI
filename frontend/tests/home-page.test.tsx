@@ -18,6 +18,17 @@ const estado = vi.hoisted(() => ({
   /** Todas las filas responden bien pero sin títulos. */
   vacias: false,
   llamadas: [] as string[],
+  /** Lo que hay en la lista Pendientes del usuario (la más reciente primero). */
+  pendientes: [] as {
+    item_id: number;
+    fecha_agregado: string;
+    id_tmdb: number;
+    tipo: "movie" | "tv";
+    titulo: string;
+    poster: string | null;
+    anio: number | null;
+    calificacion_promedio: number | null;
+  }[],
 }));
 const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
 const toast = vi.hoisted(() => ({ error: vi.fn() }));
@@ -65,6 +76,35 @@ vi.mock("@/lib/api", async (importOriginal) => {
       estado.llamadas.push(path);
       if (estado.lentas.some((prefijo) => path.startsWith(prefijo)))
         await new Promise((resolver) => setTimeout(resolver, 60));
+      // Listas del usuario (Pendientes en el Inicio). Se atienden antes que las
+      // demás respuestas: `/api/lists/5/items/` también empieza con `/api/lists/`.
+      if (
+        path.startsWith("/api/lists/") &&
+        estado.fallan.some((prefijo) => path.startsWith(prefijo))
+      )
+        throw new real.ApiError(500, { code: "unknown", params: {}, errors: [] });
+      if (path.startsWith("/api/lists/5/items/")) {
+        const clase = new URL(path, "http://x").searchParams.get("clase");
+        const items = estado.pendientes.filter((item) => !clase || item.tipo === clase);
+        return { next: null, total: items.length, results: items };
+      }
+      if (path === "/api/lists/") {
+        const resumen = (id: number, clave: string, cantidad: number) => ({
+          id,
+          nombre: clave,
+          clave,
+          tipo: "predeterminada",
+          cantidad_items: cantidad,
+          cantidad_peliculas: 0,
+          cantidad_series: 0,
+          preview_posters: [],
+        });
+        return [
+          resumen(3, "favoritos", 0),
+          resumen(4, "vistas", 0),
+          resumen(5, "pendientes", estado.pendientes.length),
+        ];
+      }
       if (estado.vacias && !path.startsWith("/api/catalogo/genres/"))
         return { results: [], generos: [] };
       if (estado.fallan.some((prefijo) => path.startsWith(prefijo)))
@@ -85,6 +125,7 @@ beforeEach(() => {
   estado.lentas = [];
   estado.vacias = false;
   estado.llamadas = [];
+  estado.pendientes = [];
   limpiarCacheCatalogo();
 });
 afterEach(() => {
@@ -154,6 +195,125 @@ describe("Home con sesión", () => {
       )
     );
     expect(toast.error).toHaveBeenCalledTimes(1);
+  });
+});
+
+const alien = {
+  item_id: 11,
+  fecha_agregado: "2026-11-10T12:00:00Z",
+  id_tmdb: 348,
+  tipo: "movie" as const,
+  titulo: "Alien",
+  poster: "/alien.jpg",
+  anio: 1979,
+  calificacion_promedio: 8.1,
+};
+const severance = {
+  item_id: 12,
+  fecha_agregado: "2026-11-09T12:00:00Z",
+  id_tmdb: 95396,
+  tipo: "tv" as const,
+  titulo: "Severance",
+  poster: "/severance.jpg",
+  anio: 2022,
+  calificacion_promedio: 8.4,
+};
+
+describe("fila Pendientes del Inicio (13/11/2026)", () => {
+  it("sin sesión no aparece ni se piden las listas", async () => {
+    estado.pendientes = [alien];
+    render(<HomeView />, { locale: "en" });
+
+    await fila("Trending this week");
+    expect(screen.queryByRole("region", { name: "Watchlist" })).toBeNull();
+    expect(estado.llamadas.some((path) => path.startsWith("/api/lists/"))).toBe(false);
+  });
+
+  describe("con sesión", () => {
+    beforeEach(() => {
+      estado.perfil = { nombre: "Juan" };
+    });
+
+    it("va después de Tendencias y antes de Estrenos, con «See all» a la lista", async () => {
+      estado.pendientes = [alien, severance];
+      render(<HomeView />, { locale: "en" });
+
+      const pendientes = await fila("Watchlist");
+      await fila("New releases");
+      const orden = screen
+        .getAllByRole("region")
+        .slice(1) // la primera es el Hero
+        .map((region) => region.getAttribute("aria-labelledby"))
+        .map((id) => document.getElementById(id ?? "")?.textContent);
+      expect(orden).toEqual([
+        "Recommended for you",
+        "Trending this week",
+        "Watchlist",
+        "New releases",
+      ]);
+      expect(within(pendientes).getByRole("link", { name: "See all" })).toHaveAttribute(
+        "href",
+        "/lists/5"
+      );
+      // Lo último agregado primero, y la miga de la ficha vuelve a la lista.
+      const tarjetas = within(pendientes).getAllByRole("link", { name: /poster|Alien|Severance/ });
+      expect(tarjetas[0]).toHaveAttribute("href", "/movie/348?from=list-5");
+      expect(tarjetas[1]).toHaveAttribute("href", "/tv/95396?from=list-5");
+    });
+
+    it("con la lista vacía no aparece y no pide los ítems", async () => {
+      render(<HomeView />, { locale: "en" });
+
+      await fila("Trending this week");
+      await waitFor(() => expect(estado.llamadas).toContain("/api/lists/"));
+      expect(screen.queryByRole("region", { name: "Watchlist" })).toBeNull();
+      expect(estado.llamadas.some((path) => path.includes("/api/lists/5/items/"))).toBe(false);
+    });
+
+    it("respeta el selector de tipo: pide solo ese tipo", async () => {
+      estado.params = new URLSearchParams("type=tv");
+      estado.pendientes = [alien, severance];
+      render(<HomeView />, { locale: "en" });
+
+      const pendientes = await fila("Watchlist");
+      expect(estado.llamadas).toContain("/api/lists/5/items/?clase=tv");
+      expect(within(pendientes).getAllByRole("listitem")).toHaveLength(1);
+      expect(within(pendientes).getByText("Severance")).toBeInTheDocument();
+    });
+
+    it("si fallan todas las filas del catálogo, sigue el error con Reintentar aunque las listas respondan", async () => {
+      estado.pendientes = [alien];
+      estado.fallan = ["/api/catalogo/"];
+      render(<HomeView />, { locale: "en" });
+
+      expect(
+        await screen.findByText("The catalog couldn’t respond. Try again later.")
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    });
+
+    it("si fallan las listas, la fila se oculta en silencio y el resto sigue", async () => {
+      estado.pendientes = [alien];
+      estado.fallan = ["/api/lists/"];
+      render(<HomeView />, { locale: "en" });
+
+      expect(await fila("Trending this week")).toBeInTheDocument();
+      await waitFor(() => expect(estado.llamadas).toContain("/api/lists/"));
+      // Dejamos pasar un instante: si la fila fuera a aparecer, ya lo habría hecho.
+      await new Promise((resolver) => setTimeout(resolver, 50));
+      expect(screen.queryByRole("region", { name: "Watchlist" })).toBeNull();
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it("si no hay títulos de ese tipo, la fila no aparece", async () => {
+      estado.params = new URLSearchParams("type=tv");
+      estado.pendientes = [alien];
+      render(<HomeView />, { locale: "en" });
+
+      await fila("Trending this week");
+      await waitFor(() => expect(estado.llamadas).toContain("/api/lists/5/items/?clase=tv"));
+      expect(screen.queryByRole("region", { name: "Watchlist" })).toBeNull();
+    });
   });
 });
 

@@ -68,6 +68,15 @@ class ClienteTests(SimpleTestCase):
         self.assertEqual(pedidos[0].url.params["with_runtime.lte"], "120")
         self.assertEqual(pedidos[0].url.params["with_runtime.gte"], "1")
 
+    def test_discover_filtra_por_keyword(self):
+        # TMDB respeta `with_keywords` en películas y en series (verificado el
+        # 13/11/2026: 818, «based on novel or book», baja los totales de los dos).
+        tmdb, pedidos = cliente({"results": []})
+
+        tmdb.discover("tv", con_keywords="818")
+
+        self.assertEqual(pedidos[0].url.params["with_keywords"], "818")
+
 
 class CacheTests(SimpleTestCase):
     def setUp(self):
@@ -104,6 +113,14 @@ class CacheTests(SimpleTestCase):
         larga = self.cache.discover("movie", duracion_max=180)
 
         self.assertNotEqual(corta, larga)
+
+    def test_keywords_distintas_no_comparten_cache(self):
+        self.tmdb.discover.side_effect = [{"results": [1]}, {"results": [2]}]
+
+        con = self.cache.discover("movie", con_keywords="818")
+        sin = self.cache.discover("movie")
+
+        self.assertNotEqual(con, sin)
 
     def test_cada_idioma_tiene_su_cache(self):
         # Sin esto, quien pregunta en inglés recibiría títulos guardados en español.

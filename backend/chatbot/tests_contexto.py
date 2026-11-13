@@ -114,6 +114,58 @@ class ApostrofosYTildesTests(SimpleTestCase):
                     anonimizar("Hola José Pérez", nfd, alcance), "Hola [usuario]"
                 )
 
+    def test_las_letras_que_no_se_descomponen_se_pliegan_a_su_base(self):
+        # La i sin punto (turco), `ł ø đ ð ħ ŧ` no son «letra + tilde»: Unicode no las descompone, así que
+        # «Łukasz» y «Lukasz» eran para el programa dos palabras distintas.
+        casos = (
+            ("Łukasz", "Lukasz"),
+            ("Søren", "Soren"),
+            ("I\u015f\u0131k", "Isik"),  # Isik turco, con la i sin punto
+            ("Đorđe", "Dorde"),
+            ("Ħamrun", "Hamrun"),
+            ("Guðrún", "Gudrun"),
+            ("Aŧila", "Atila"),
+            ("Łódź", "Lodz"),
+        )
+        for guardado, escrito in casos:
+            usuario = SimpleNamespace(
+                nombre=guardado, apellido="Ramos", nombre_usuario="xyz"
+            )
+            with self.subTest(guardado=guardado):
+                # Guardado con la letra rara, escrito sin ella...
+                self.assertEqual(
+                    anonimizar(f"Hola {escrito} Ramos", usuario, ESTRICTO),
+                    "Hola [usuario]",
+                )
+                # ...y al revés: guardado sin ella, escrito con ella.
+                al_reves = SimpleNamespace(
+                    nombre=escrito, apellido="Ramos", nombre_usuario="xyz"
+                )
+                self.assertEqual(
+                    anonimizar(f"Hola {guardado} Ramos", al_reves, ESTRICTO),
+                    "Hola [usuario]",
+                )
+
+    def test_las_letras_dobles_valen_como_sus_dos_letras(self):
+        # `ß æ œ þ` se escriben con dos letras en un teclado sin ellas.
+        casos = (
+            ("Strauß", "Strauss"),
+            ("Æsop", "Aesop"),
+            ("Œdipe", "Oedipe"),
+            ("Þór", "Thor"),
+        )
+        for letra, pares in casos:
+            # Guardado con la letra, escrito con su par; y al revés.
+            for guardado, escrito in ((letra, pares), (pares, letra)):
+                usuario = SimpleNamespace(
+                    nombre=guardado, apellido="", nombre_usuario="xyz"
+                )
+                with self.subTest(guardado=guardado, escrito=escrito):
+                    self.assertEqual(
+                        anonimizar(f"Hola {escrito}", usuario, ESTRICTO),
+                        "Hola [usuario]",
+                    )
+
     def test_un_mensaje_descompuesto_no_corre_los_reemplazos(self):
         # `anonimizar()` pasa el mensaje a NFC antes de plegarlo, así que las posiciones
         # siguen coincidiendo aunque haya una tilde suelta antes del nombre.
