@@ -14,6 +14,7 @@ Lo usan: la tarea `chatbot.recortar_tarjetas` (`recortar`) y la vista del histor
 from datetime import date, timedelta
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -60,24 +61,43 @@ def _es_vieja(entrada, limite):
         return True
 
 
+def _sin_titulo_las_viejas(entradas, limite):
+    return [
+        {k: v for k, v in e.items() if k not in ("titulo", "anio")}
+        if _es_vieja(e, limite)
+        else e
+        for e in entradas
+    ]
+
+
+def _candidatos(limite):
+    """Los pk de los chats con algo para recortar. Sin candado: solo detecta."""
+    return [
+        chat.pk
+        for chat in Chat.objects.only("contexto").iterator(chunk_size=_LOTE)
+        if (entradas := chat.contexto.get("ya_recomendados", []))
+        != _sin_titulo_las_viejas(entradas, limite)
+    ]
+
+
 def _recortar_recomendados(limite):
     """Les quita `titulo` y `anio` a las entradas viejas de `ya_recomendados`."""
-    cambiados = []
-    for chat in Chat.objects.only("contexto").iterator(chunk_size=_LOTE):
-        entradas = chat.contexto.get("ya_recomendados", [])
-        nuevas = [
-            {k: v for k, v in e.items() if k not in ("titulo", "anio")}
-            if _es_vieja(e, limite)
-            else e
-            for e in entradas
-        ]
-        # Comparar con lo que había es lo que vuelve idempotente a la tarea: una
-        # segunda corrida no encuentra nada distinto y no escribe.
-        if nuevas != entradas:
-            chat.contexto["ya_recomendados"] = nuevas
-            cambiados.append(chat)
-    Chat.objects.bulk_update(cambiados, ["contexto"], batch_size=_LOTE)
-    return len(cambiados)
+    cambiados = 0
+    for pk in _candidatos(limite):
+        # Cada chat se relee con candado, igual que `guardar_turno`: un turno del
+        # usuario a las 04:30 escribe este mismo JSON, y reescribir la copia leída
+        # antes le pisaría la tarjeta recién mostrada.
+        with transaction.atomic():
+            chat = Chat.objects.select_for_update().get(pk=pk)
+            entradas = chat.contexto.get("ya_recomendados", [])
+            nuevas = _sin_titulo_las_viejas(entradas, limite)
+            # Comparar con lo que hay es lo que vuelve idempotente a la tarea: una
+            # segunda corrida no encuentra nada distinto y no escribe.
+            if nuevas != entradas:
+                chat.contexto["ya_recomendados"] = nuevas
+                chat.save(update_fields=["contexto"])
+                cambiados += 1
+    return cambiados
 
 
 def recortar():

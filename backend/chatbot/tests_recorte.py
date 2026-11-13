@@ -174,6 +174,23 @@ class RecorteDeRecomendadosTests(BaseChat, TestCase):
         self.assertEqual(recortar()["chats"], 1)
         self.assertEqual(recortar()["chats"], 0)
 
+    def test_relee_el_chat_con_candado_y_no_pisa_un_turno_reciente(self):
+        # La primera pasada vio una entrada vieja; antes del candado, un turno del
+        # usuario escribió otra reciente. La tarea tiene que partir de lo guardado.
+        self.con_recomendados([self.entrada(1, fecha_hace(181))])
+        reciente = self.entrada(2, fecha_hace(0))
+
+        def turno_a_mitad_de_corrida(*args, **kwargs):
+            self.chat.contexto = {"ya_recomendados": [reciente], "otra": 1}
+            self.chat.save(update_fields=["contexto"])
+            return [self.chat.pk]
+
+        with patch("chatbot.recorte._candidatos", turno_a_mitad_de_corrida):
+            self.assertEqual(recortar()["chats"], 0)
+
+        self.chat.refresh_from_db()
+        self.assertEqual(self.chat.contexto, {"ya_recomendados": [reciente], "otra": 1})
+
     def test_un_chat_sin_contexto_no_falla(self):
         self.assertEqual(recortar()["chats"], 0)
 
