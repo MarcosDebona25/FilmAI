@@ -2,7 +2,7 @@
 
 ## Purpose
 
-What FilmAI does to meet TMDB's API terms of use (issue #180): attribution in a credits section, use of the official logo, a 6-month cap on stored TMDB content, a request rate TMDB tolerates, and the recorded basis for using TMDB content with the chatbot and embeddings. Sources in `docs/tmdb-legales/`. Implemented on 13/11/2026 (PRs #194, #193, #195, #196 and the closing one); the record of each decision is in `docs/decisiones.md`. Builds on `catalog-materialization` (single write path), `catalog-daily-sync` (scheduled tasks), `tmdb-cache` (TTLs), `tmdb-client` (retries) and `chat-api` (stored cards).
+What FilmAI does to meet TMDB's API terms of use (issue #180): attribution in a credits section, use of the official logo, a 6-month cap on stored TMDB content, a request rate TMDB tolerates, and the recorded basis for using TMDB content with the chatbot and embeddings. Sources in `docs/tmdb-legales/`. Implemented on 13/11/2026 (PRs #194, #193, #196 and the closing one); the record of each decision is in `docs/decisiones.md`. Builds on `catalog-materialization` (single write path), `catalog-daily-sync` (scheduled tasks), `tmdb-cache` (TTLs), `tmdb-client` (retries) and `chat-api` (stored cards).
 
 ## Requirements
 
