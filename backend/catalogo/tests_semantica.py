@@ -371,6 +371,17 @@ class BuscarSemanticoTests(TestCase):
 
         self.assertEqual(self.titulos(duracion_max=120), ["Corta"])
 
+    def test_basada_en_libro_deja_solo_los_titulos_con_esa_keyword(self):
+        # C-04a guarda los keywords de TMDB como nombres en inglés.
+        self.produccion("Original", 0.1, keywords=["space"])
+        self.produccion("Adaptada", 0.2, keywords=["space", "based on novel or book"])
+        self.produccion("Sin dato", 0.3)
+
+        self.assertEqual(self.titulos(basada_en_libro=True), ["Adaptada"])
+        self.assertEqual(
+            self.titulos(basada_en_libro=False), ["Original", "Adaptada", "Sin dato"]
+        )
+
     def test_excluye_por_id_y_tipo_no_solo_por_id(self):
         # Los ids de TMDB se repiten entre películas y series.
         moon = self.produccion("Moon", 0.1, tipo=TipoProduccion.PELICULA)

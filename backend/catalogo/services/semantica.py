@@ -88,6 +88,10 @@ def _ids_mas_cercanos(vector):
         return list(cercanos)
 
 
+# Cómo guarda C-04a el keyword de TMDB 818: por su nombre, en inglés.
+KEYWORD_BASADA_EN_LIBRO = "based on novel or book"
+
+
 def buscar_semantico(
     consulta,
     *,
@@ -97,11 +101,13 @@ def buscar_semantico(
     anio_hasta=None,
     nota_minima=None,
     duracion_max=None,
+    basada_en_libro=False,
     excluir=(),
 ):
     """Devuelve hasta 10 producciones parecidas a `consulta`, las mejores primero.
 
-    `generos` usa los nombres en inglés de `ProduccionAudiovisual.generos`, y
+    `basada_en_libro` deja los títulos cuyos `keywords` incluyen el de TMDB «based on
+    novel or book». `generos` usa los nombres en inglés de `ProduccionAudiovisual.generos`, y
     alcanza con que coincida uno. Un título sin el dato que pide un filtro (por
     ejemplo, una serie sin `duracion`) queda afuera. `excluir` recibe pares
     `(id_tmdb, tipo)`. Tanto ahí como en `tipo`, el tipo es el de TMDB (`movie`
@@ -125,6 +131,9 @@ def buscar_semantico(
         producciones = producciones.filter(calificacion_promedio__gte=nota_minima)
     if duracion_max is not None:
         producciones = producciones.filter(duracion__lte=duracion_max)
+    if basada_en_libro:
+        # `contains` sobre un ArrayField es el `@>` de Postgres: «el array incluye».
+        producciones = producciones.filter(keywords__contains=[KEYWORD_BASADA_EN_LIBRO])
 
     excluidas = set(excluir)
     posicion = {id_: puesto for puesto, id_ in enumerate(ids)}

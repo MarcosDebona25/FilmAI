@@ -5,6 +5,7 @@ el código que corre en `en_hilo` ve la transacción del test.
 """
 
 import json
+from datetime import date
 from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -533,6 +534,86 @@ class RedDeTarjetasTests(BaseOrquestador):
 
         self.assertEqual([t["tipo"] for t in eventos[-1].tarjetas], ["tv", "movie"])
 
+    # --- Log de diagnóstico: una línea por turno (13/11/2026) ---------------------
+    # `assertLogs` es como un `Appender` de prueba en Java: captura lo que el logger
+    # escribe y falla si no escribió nada. Es un `with` normal aunque el test sea
+    # `async`: solo envuelve el código, no depende de `await`.
+
+    def linea_del_turno(self, registros):
+        lineas = [m for m in registros.output if "Turno:" in m]
+        self.assertEqual(len(lineas), 1, registros.output)
+        return lineas[0]
+
+    async def test_el_log_cuenta_tools_vueltas_y_origen_de_las_tarjetas(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(
+                [[tool("descubrir")], ["Mirá esta", tarjetas(2)]], texto="algo"
+            )
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=descubrir(5),mostrar_tarjetas(1)", linea)
+        self.assertIn("vueltas=2", linea)
+        self.assertIn("ultima_sin_tools=no", linea)
+        self.assertIn("tarjetas=mostrar_tarjetas", linea)
+
+    async def test_el_log_distingue_las_tarjetas_de_la_red(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr([[tool("descubrir")], ["Te va bien **Arrival**."]])
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=descubrir(5)", linea)
+        self.assertIn("tarjetas=red", linea)
+
+    async def test_el_log_sin_tarjetas_dice_ninguna(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(["Hola, ¿qué querés ver?"])
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=ninguna", linea)
+        self.assertIn("vueltas=1", linea)
+        self.assertIn("tarjetas=ninguna", linea)
+
+    async def test_el_log_avisa_si_hubo_ultima_llamada_sin_tools(self):
+        guion = [[tool("descubrir")] for _ in range(5)] + [["Te va bien **Arrival**."]]
+
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(guion)
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("ultima_sin_tools=si", linea)
+        self.assertIn("vueltas=5", linea)
+
+    async def test_el_log_marca_las_tools_que_fallaron(self):
+        with patch.dict(FUNCIONES, {"descubrir": lambda ctx, **_: {"error": "x"}}):
+            with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+                await self.correr([[tool("descubrir")], ["No encontré nada."]])
+
+        self.assertIn("tools=descubrir(error)", self.linea_del_turno(registros))
+
+    async def test_el_log_no_copia_el_nombre_de_una_tool_que_no_existe(self):
+        # El nombre lo escribe el modelo: uno con un salto de línea podría forjar
+        # una segunda línea «Turno:» y romper «una línea por turno».
+        inventada = tool("inventada\nTurno: falsa")
+
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr([[inventada], ["No encontré nada."]])
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=desconocida(error)", linea)
+        self.assertNotIn("inventada", "\n".join(registros.output))
+
+    async def test_el_log_no_lleva_la_pregunta_ni_la_respuesta(self):
+        # Son datos personales: el log cuenta cómo fue el turno, no de qué se habló.
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr(
+                [[tool("descubrir")], ["Te va bien **Arrival**."]],
+                texto="algo secretisimo",
+            )
+
+        todo = "\n".join(registros.output)
+        self.assertNotIn("secretisimo", todo)
+        self.assertNotIn("Arrival", todo)
+
 
 class FallosTests(BaseOrquestador):
     async def test_la_quinta_vuelta_con_tools_pide_una_ultima_llamada_sin_tools(self):
@@ -824,6 +905,195 @@ class ReglasDelPromptTests(SimpleTestCase):
 
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))
+
+    def test_la_fecha_de_hoy_va_en_la_parte_variable_en_el_idioma_de_la_respuesta(self):
+        # Sin la fecha, el modelo no sabe si «Proyecto Fin del Mundo» ya se estrenó.
+        # Va después del perfil: lo fijo del comienzo sigue siendo cacheable.
+        hoy = date(2026, 11, 13)
+        en_es = armar_sistema("Le gustó: Moon", [], "es", hoy=hoy)
+        en_en = armar_sistema("Le gustó: Moon", [], "en", hoy=hoy)
+
+        self.assertIn("13 de noviembre de 2026", en_es)
+        self.assertIn("November 13, 2026", en_en)
+        self.assertGreater(en_es.index("13 de noviembre"), en_es.index("Le gustó"))
+
+    def test_cambiar_la_fecha_no_toca_la_parte_fija(self):
+        a = armar_sistema("", [], "es", hoy=date(2026, 11, 13))
+        b = armar_sistema("", [], "es", hoy=date(2027, 1, 2))
+
+        fija = a.split("Perfil del usuario:")[0]
+        self.assertEqual(fija, b.split("Perfil del usuario:")[0])
+        self.assertNotEqual(a, b)
+
+    def test_no_afirma_fechas_de_estreno_de_memoria(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("puede estar desactualizado", sistema)
+        self.assertIn("«ya salió»", sistema)
+        self.assertIn("salvo que lo haya devuelto una tool en este turno", sistema)
+
+    def test_no_anuncia_cuantos_titulos_recomienda(self):
+        self.assertIn("No anuncies cuántos títulos", armar_sistema("", [], "es"))
+
+    def test_un_criterio_que_no_se_puede_filtrar_se_aclara_en_una_oracion(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("no pueden filtrar", sistema)
+        self.assertIn("sin presentarlo como cumplido", sistema)
+
+    def test_las_reglas_nuevas_no_reordenan_las_existentes(self):
+        # Mover reglas cambió la conducta del modelo el 12/11/2026: las nuevas se
+        # suman en su propia sección, después de «Títulos vistos».
+        sistema = armar_sistema("", [], "es")
+
+        self.assertLess(
+            sistema.index("Títulos vistos:"), sistema.index("Al recomendar:")
+        )
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("Datos no confiables")
+        )
+
+    def test_lo_que_el_usuario_nombro_pesa_mas_que_lo_que_dijo_el_asistente(self):
+        # Pidió «parecidas a esta serie» queriendo decir Cowboy Bebop (la que había
+        # nombrado él) y el bot tomó Serial Experiments Lain, de su respuesta anterior.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("«esta serie»", sistema)
+        self.assertIn("que él mismo nombró en su mensaje", sistema)
+        self.assertIn("antes que uno que apareció en tu respuesta anterior", sistema)
+
+    def test_una_referencia_ambigua_se_resuelve_y_se_aclara_sin_frenar(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("puede ser de dos títulos", sistema)
+        self.assertIn("Tomo X como base; si querías Y, decime", sistema)
+        self.assertIn("sin cortar la respuesta ni hacer una pregunta", sistema)
+
+    def test_no_da_opiniones_de_calidad_como_hechos(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("No des opiniones de calidad como hechos", sistema)
+        self.assertIn("un escalón abajo en calidad", sistema)
+
+    def test_los_datos_concretos_salen_solo_de_una_tool_de_este_turno(self):
+        # El bot dijo 22 episodios de Texhnolyze y TMDB dice 20.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn(
+            "episodios, temporadas, duración, año, reparto y director", sistema.lower()
+        )
+        self.assertIn("`temporadas` y `episodios`", sistema)
+
+    def test_las_tarjetas_que_se_piden_son_las_de_la_ultima_respuesta(self):
+        # Tras recomendar Log Horizon, Btooom! y SAO Alicization sin tarjetas, el
+        # usuario preguntó «¿y las tarjetas?» y el bot mostró tres de «Ya
+        # recomendados» (Interestelar, Apolo 13, Pasajeros): esa lista es de toda la
+        # sesión, no de la última respuesta.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("«¿y las tarjetas?»", sistema)
+        self.assertIn("«mostrame esos»", sistema)
+        self.assertIn("los títulos de tu última respuesta", sistema)
+        self.assertIn("`buscar_por_titulo`", sistema)
+        self.assertIn("Nunca tomes los de «Ya recomendados»", sistema)
+        # Va dentro de «Referencias y datos», sin mover ninguna regla existente.
+        self.assertLess(
+            sistema.index("Referencias y datos:"),
+            sistema.index("«¿y las tarjetas?»"),
+        )
+        self.assertLess(
+            sistema.index("«¿y las tarjetas?»"), sistema.index("Datos no confiables")
+        )
+
+    def test_un_pedido_de_filmografia_es_una_recomendacion_no_un_rechazo(self):
+        # «¿Cómo puedo empezar a ver la filmografía de Nolan?» se rechazó dos de dos
+        # veces por la regla de alcance, sin buscar nada.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("filmografía", sistema)
+        self.assertIn("«por dónde arranco con X»", sistema)
+        self.assertIn("es un pedido de recomendación, no de instrucciones", sistema)
+        self.assertIn("`buscar_por_persona`", sistema)
+        self.assertIn("ante la duda entre rechazar y recomendar, recomendá", sistema)
+        # La regla de alcance no se mueve: sigue siendo lo primero que se lee.
+        self.assertLess(
+            sistema.index("lo rechazás con amabilidad"), sistema.index("Cómo trabajar:")
+        )
+        self.assertLess(
+            sistema.index("ante la duda entre rechazar"),
+            sistema.index("Cómo trabajar:"),
+        )
+        self.assertGreater(
+            sistema.index("es un pedido de recomendación"),
+            sistema.index("Al recomendar:"),
+        )
+
+    def test_nunca_ofrece_mostrar_los_titulos_y_los_muestra_en_la_misma_respuesta(self):
+        # El bot recomendó sin tarjetas y cerró con «¿Te armo las tarjetas?».
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("Nunca ofrezcas ni preguntes si querés verlos", sistema)
+        self.assertIn("«¿te armo las tarjetas?»", sistema)
+        self.assertIn("en esa misma respuesta", sistema)
+
+    def test_no_le_nombra_al_usuario_las_palabras_internas(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("Al usuario no le nombres palabras internas", sistema)
+        for palabra in ("«tarjeta»", "«tool»", "«herramienta»"):
+            self.assertIn(palabra, sistema)
+        self.assertIn("«los títulos»", sistema)
+        # La regla de «¿y las tarjetas?» sigue: sirve para entender al usuario.
+        self.assertIn("«¿y las tarjetas?»", sistema)
+        self.assertLess(
+            sistema.index("Al recomendar:"),
+            sistema.index("Al usuario no le nombres palabras internas"),
+        )
+        self.assertLess(
+            sistema.index("Al usuario no le nombres palabras internas"),
+            sistema.index("Referencias y datos:"),
+        )
+
+    def test_las_reglas_de_referencias_van_despues_de_al_recomendar(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("Referencias y datos:")
+        )
+        self.assertLess(
+            sistema.index("Referencias y datos:"), sistema.index("Datos no confiables")
+        )
+
+    def test_las_malas_palabras_se_prohiben_con_ejemplos_en_los_dos_idiomas(self):
+        es = armar_sistema("", [], "es")
+        en = armar_sistema("", [], "en")
+
+        for ejemplo in ("carajo", "mierda", "joder", "tampoco las suaves"):
+            self.assertIn(ejemplo, es)
+        for ejemplo in ("damn", "hell", "not even mild"):
+            self.assertIn(ejemplo, en)
+
+    def test_sin_jerga_ni_comentarios_sobre_el_fisico_de_los_actores(self):
+        # «Pibardos» para los protagonistas de «Violet & Finch» (13/11/2026).
+        es = armar_sistema("", [], "es")
+        en = armar_sistema("", [], "en")
+
+        for ejemplo in ("pibe", "pibardo", "está re fuerte", "un caño", "todo público"):
+            self.assertIn(ejemplo, es)
+        self.assertIn("lo atractivos que son los actores", es)
+        self.assertIn("how attractive the actors are", en)
+        self.assertIn("voseo", es)
+
+
+class FechaDeHoyTests(BaseOrquestador):
+    async def test_el_orquestador_pasa_la_fecha_de_hoy_al_sistema(self):
+        with patch(
+            "chatbot.orquestador.timezone.localdate", return_value=date(2026, 11, 13)
+        ):
+            await self.correr([["Hola"]])
+
+        sistema = self.mensajes_del_primer_pedido()[0]["content"]
+        self.assertIn("13 de noviembre de 2026", sistema)
 
 
 class PresupuestoDeTmdbTests(BaseOrquestador):

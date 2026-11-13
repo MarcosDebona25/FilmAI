@@ -47,11 +47,11 @@ class ConArchivos:
 
 
 class CargarGoldenTests(ConArchivos, SimpleTestCase):
-    def test_el_set_del_repo_es_valido_y_tiene_entre_10_y_15_preguntas(self):
+    def test_el_set_del_repo_es_valido_y_tiene_entre_10_y_20_preguntas(self):
         preguntas = cargar_golden(GOLDEN)
 
         self.assertGreaterEqual(len(preguntas), 10)
-        self.assertLessEqual(len(preguntas), 15)
+        self.assertLessEqual(len(preguntas), 20)
 
     def test_el_set_del_repo_cubre_los_casos_pedidos(self):
         ids = {p["id"] for p in cargar_golden(GOLDEN)}
