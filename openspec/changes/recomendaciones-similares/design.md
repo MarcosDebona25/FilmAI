@@ -90,7 +90,8 @@ vector, there is no local search and the pool is TMDB only.
 Averaging assumes the list has one theme. A list with two unrelated groups
 gives a vector between both. Measuring it is the last task of PR 2; the
 follow-up, if it shows up, is k-means with 2–3 centroids and interleaved
-results, not part of this change.
+results, not part of this change. Measured in PR 2 (§4): the average drifts to
+the generic cluster but does not break.
 
 ### List name (lists only, custom lists only)
 
@@ -200,6 +201,52 @@ Start with **0.40**: a typical title has 50+ neighbours under it and a niche
 one has few, which is exactly when TMDB should fill. A centroid of many titles
 is closer to everything, so the value is checked with three real lists in PR 2
 and fixed in `docs/decisiones.md`.
+
+**Calibration with real lists (13/11/2026, dev database, 6 077 vectors).**
+Cosine distance of the k-th neighbour of the list centroid, seeds excluded:
+
+| List (items)                                   | Rank 1 | Rank 10 | Rank 20 | Rank 50 | Rank 100 | Under 0.40 |
+| ---------------------------------------------- | -----: | ------: | ------: | ------: | -------: | ---------: |
+| «Dramas que me marcaron» (6 films, one theme)  |  0.185 |   0.223 |   0.227 |   0.235 |    0.244 |        100 |
+| «Noches de ciencia ficción» (7, films + shows) |  0.157 |   0.192 |   0.203 |   0.218 |    0.228 |        100 |
+| «Volvería a ver» (9, mixed types, anime)       |  0.178 |   0.227 |   0.234 |   0.248 |    0.259 |        100 |
+| Favoritos (10, unrelated themes)               |  0.186 |   0.213 |   0.219 |   0.227 |    0.235 |        100 |
+
+And the same Favorites list cut to its first `k` items (does the centroid
+compress the distances?):
+
+|   k | Rank 1 | Rank 10 | Rank 20 | Rank 50 | Rank 100 |
+| --: | -----: | ------: | ------: | ------: | -------: |
+|   1 |  0.195 |   0.310 |   0.322 |   0.334 |    0.348 |
+|   2 |  0.196 |   0.261 |   0.273 |   0.289 |    0.298 |
+|   3 |  0.205 |   0.236 |   0.246 |   0.258 |    0.268 |
+|   5 |  0.193 |   0.216 |   0.226 |   0.236 |    0.247 |
+|  10 |  0.186 |   0.213 |   0.219 |   0.227 |    0.235 |
+
+- The centroid compresses the distances: from 3 titles on, the 100th neighbour
+  is under 0.27, far below 0.40. With the current catalog a list of 3 or more
+  titles **never** asks TMDB for a fill; only a list of 1 or 2 niche titles,
+  or one whose titles have no vector, does.
+- **`DISTANCIA_MAXIMA` stays at 0.40.** Lowering it to 0.35 would send half of
+  the single-title lists to TMDB (in the title table above rank 20 sits near
+  0.345, so about half of the titles would have fewer than 20 under 0.35),
+  and TMDB's `/recommendations` is English-biased (§5). Raising it changes
+  nothing for lists. The threshold only matters for a single title, which is
+  what the 0.40 of the title page table already measured.
+- **The name** moves 0 to 2 of the first 10: «Dramas que me marcaron» drops
+  «Sherlock Holmes» and «Avengers» for «Mystic River» and «First Blood»;
+  «Noches de ciencia ficción» keeps the same ten in another order; «Volvería
+  a ver» swaps «Attack on Titan: Counter» for «InuYasha». The distances barely
+  change (rank 100 moves up to 0.02). That is the weight of D-1: 0.15 from
+  6 titles on. With 1 or 2 titles, where it weighs 0.50 and 0.33, it matters
+  more, but no real list of the dev database is that short.
+- **Multi-centroid** (the follow-up of §3): Favorites mixes action, romance
+  and series, and its first ten are all blockbusters (Batman, Fast & Furious,
+  Predator, Star Trek…). Each seed sits between 0.17 and 0.26 from the
+  centroid, so the average does not break (there is no «empty middle»), but
+  it drifts to the most generic cluster and the romance ends up absent. It
+  is a quality limit, not a failure: left as a follow-up, not needed for this
+  change.
 
 **Type (D-3)**: the canonical text has no type, so movies and shows mix
 naturally. A list with only movies asks `tipos=['pelicula']`, only shows
@@ -360,9 +407,32 @@ cache hit, milliseconds (like `buscar_semantico: cargado=… vector_ms=…`).
 
 Measured on 13/11/2026 against the local Docker database (6 077 vectors) with
 `docker compose exec backend python manage.py shell`. Ollama was not running
-during the measurement, so the name rows come from B-06; task 2.9 measures
-them with the model loaded. The title page adds **nothing** to the detail: the
+during the measurement, so the name rows come from B-06; PR 2 measured them
+with the model loaded (below). The title page adds **nothing** to the detail: the
 row is a separate request made when it nears the viewport (§9).
+
+**List endpoint, measured with Ollama loaded** (13/11/2026, `bge-m3` loaded
+on the Windows host through the `ollama-puente`, seven requests per case,
+median; 6 077 vectors; the `shell` of the container, so the cache was
+`LocMem` and not Redis, which adds about 1 ms per read; TMDB was not asked
+because every list had 100 close neighbours):
+
+| Case                                              | Median (min – max)   |
+| ------------------------------------------------- | -------------------- |
+| Cold, with name, vector of the name not saved     | 101 ms (89 – 1 734)  |
+| Cold, with name, vector of the name saved         | 21 ms (18 – 24)      |
+| Cold, without name (Favorites, 10 titles)         | 15 ms (15 – 233)     |
+| Pool saved («Refresh», page 2)                    | 9 – 32 ms            |
+| Ollama down (connection refused), 1st request     | 67 ms                |
+| Ollama down, 2nd request (60 s flag)              | 27 ms                |
+
+The maximum of the first two rows is the first request of the process (cold
+connections), not the steady state. Embedding the name costs about 80 ms,
+as B-06 measured; once saved (30 days) it is free. The 1 s timeout of
+`modelo_cargado()` was not reached: «down» here is a refused connection,
+which fails at once. Loading `bge-m3` from nothing took 65 s on this machine
+(it was already known to be between 2 and 24 s on a free machine), which is
+why the name is never waited for.
 
 ## 9. Frontend
 
