@@ -745,6 +745,18 @@ class HistorialDeLaSesionTests(BaseOrquestador):
         self.assertEqual(guardado.texto, "Mirá **Moon** (2009).")
 
 
+class FormatoDelPromptTests(SimpleTestCase):
+    def test_el_prompt_no_pide_negritas_al_modelo(self):
+        # La negrita de los títulos la arma el filtro de marcadores; si el prompt la
+        # pidiera, `recomienda_sin_buscar` la tomaría por un título escrito de memoria
+        # y forzaría una búsqueda de más (13/11/2026).
+        sistema = armar_sistema("", [], "es", hoy=date(2026, 11, 13))
+
+        formato = sistema[sistema.index("Formato:") :].split("\n\n")[0]
+        self.assertNotIn("negrita y listas", formato)
+        self.assertIn("sin negritas", formato)
+
+
 class FechaDeHoyTests(BaseOrquestador):
     async def test_el_orquestador_pasa_la_fecha_de_hoy_al_sistema(self):
         with patch(
