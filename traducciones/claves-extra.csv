@@ -251,3 +251,4 @@ chat.welcome.suggestions.animated,,label,,Una película animada,An animated movi
 chat.history.loading,,status,,Cargando la conversación…,Loading the conversation…,aprobado
 chat.history.retry,,label,,Reintentar,Retry,aprobado
 chat.fab.unread,,status,,Hay una respuesta nueva,New answer waiting,aprobado
+home.rows.seeAll,,label,,Ver todo,See all,aprobado
