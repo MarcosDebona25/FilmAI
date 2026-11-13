@@ -296,19 +296,16 @@ class VistasTests(BaseTools):
         self.assertIs(vista["vista"], True)
         self.assertNotIn("vista", otra)
 
-    def test_lo_que_una_busqueda_de_recomendacion_saco_no_puede_ser_tarjeta(self):
+    def test_lo_que_una_busqueda_de_recomendacion_saco_no_es_un_candidato(self):
+        # Sin `ref` no hay marcador `[[n]]` posible: no puede llegar a ser tarjeta.
         self.marcar_vista(1)
         self.catalogo.resultados["movie"] = [pelicula(1)]
         contexto = self.contexto()
-        ejecutar(contexto, "similares_a", {"id_tmdb": 5, "tipo": "movie"})
 
-        resultado = ejecutar(
-            contexto,
-            "mostrar_tarjetas",
-            {"tarjetas": [{"id_tmdb": 1, "tipo": "movie"}]},
-        )
+        resultado = ejecutar(contexto, "similares_a", {"id_tmdb": 5, "tipo": "movie"})
 
-        self.assertEqual(resultado["tarjetas"], [])
+        self.assertEqual(resultado["resultados"], [])
+        self.assertEqual(contexto.candidatos(), {})
 
     def test_una_serie_con_el_id_de_una_pelicula_vista_no_se_saca(self):
         self.marcar_vista(1, TipoProduccion.PELICULA)
@@ -329,51 +326,6 @@ class VistasTests(BaseTools):
             ejecutar(self.contexto(), "buscar_semantico", {"consulta": "algo"})
 
         self.assertEqual(buscar.call_args.kwargs["excluir"], {(1, "movie")})
-
-
-class RecomendablesTests(BaseTools):
-    """Qué tools marcan sus títulos como recomendables, con las tools reales.
-
-    La red de tarjetas del orquestador solo arma tarjetas con estos títulos: si una
-    búsqueda para recomendar dejara de marcarlos, la red no haría nada y ningún test
-    del orquestador lo notaría, porque ahí las tools son de mentira.
-    """
-
-    def setUp(self):
-        super().setUp()
-        self.catalogo.resultados["movie"] = [pelicula(1)]
-        self.catalogo.personas = [{"id": 103, "name": "Mark Ruffalo"}]
-        self.catalogo.creditos["cast"] = [{**pelicula(1), "media_type": "movie"}]
-        self.catalogo.detalle = pelicula(1, runtime=97)
-        self.moon = self.produccion("Moon", id_tmdb=1)
-
-    def recomendables_de(self, nombre, argumentos):
-        contexto = self.contexto()
-        with patch("chatbot.tools.busqueda.buscar_semantico", return_value=[self.moon]):
-            ejecutar(contexto, nombre, argumentos)
-        return contexto.recomendables
-
-    def test_las_busquedas_para_recomendar_los_marcan(self):
-        llamadas = (
-            ("descubrir", {"tipo": "movie"}),
-            ("similares_a", {"id_tmdb": 5, "tipo": "movie"}),
-            ("buscar_por_persona", {"nombre": "Mark Ruffalo"}),
-            ("buscar_semantico", {"consulta": "algo"}),
-        )
-        for nombre, argumentos in llamadas:
-            with self.subTest(nombre):
-                self.assertEqual(
-                    self.recomendables_de(nombre, argumentos), {(1, "movie")}
-                )
-
-    def test_las_consultas_directas_no(self):
-        llamadas = (
-            ("buscar_por_titulo", {"titulo": "Moon", "tipo": "movie"}),
-            ("detalle", {"id_tmdb": 1, "tipo": "movie"}),
-        )
-        for nombre, argumentos in llamadas:
-            with self.subTest(nombre):
-                self.assertEqual(self.recomendables_de(nombre, argumentos), set())
 
 
 class DescubrirTests(BaseTools):
@@ -515,7 +467,7 @@ class BuscarPorPersonaTests(BaseTools):
 
 
 class DetalleTests(BaseTools):
-    def test_un_titulo_visto_pedido_directamente_se_puede_mostrar(self):
+    def test_un_titulo_visto_pedido_directamente_es_un_candidato_marcado_vista(self):
         self.marcar_vista(1)
         self.catalogo.detalle = pelicula(
             1, runtime=97, genres=[{"id": 18, "name": "Drama"}]
@@ -523,38 +475,11 @@ class DetalleTests(BaseTools):
         contexto = self.contexto()
 
         resultado = ejecutar(contexto, "detalle", {"id_tmdb": 1, "tipo": "movie"})
-        tarjetas = ejecutar(
-            contexto,
-            "mostrar_tarjetas",
-            {"tarjetas": [{"id_tmdb": 1, "tipo": "movie"}]},
-        )
 
         self.assertEqual(resultado["duracion"], 97)
         self.assertEqual(resultado["generos"], ["Drama"])
         self.assertIs(resultado["vista"], True)
-        self.assertEqual([t["id_tmdb"] for t in tarjetas["tarjetas"]], [1])
-
-    def test_una_serie_trae_temporadas_y_episodios(self):
-        # El bot dijo 22 episodios de Texhnolyze y TMDB dice 20: el dato tiene que
-        # salir de una tool, no de la memoria del modelo.
-        self.catalogo.detalle = serie(
-            1, "Texhnolyze", number_of_seasons=1, number_of_episodes=20
-        )
-
-        resultado = ejecutar(self.contexto(), "detalle", {"id_tmdb": 1, "tipo": "tv"})
-
-        self.assertEqual(resultado["temporadas"], 1)
-        self.assertEqual(resultado["episodios"], 20)
-
-    def test_una_pelicula_no_trae_temporadas_ni_episodios(self):
-        self.catalogo.detalle = pelicula(1)
-
-        resultado = ejecutar(
-            self.contexto(), "detalle", {"id_tmdb": 1, "tipo": "movie"}
-        )
-
-        self.assertNotIn("temporadas", resultado)
-        self.assertNotIn("episodios", resultado)
+        self.assertEqual(contexto.candidatos()[resultado["ref"]]["id_tmdb"], 1)
 
 
 class BuscarSemanticoTests(BaseTools):
@@ -639,91 +564,6 @@ class BuscarSemanticoTests(BaseTools):
         self.assertIs(buscar.call_args.kwargs["basada_en_libro"], True)
 
 
-class MostrarTarjetasTests(BaseTools):
-    def contexto_con_resultados(self, cantidad=5):
-        self.catalogo.resultados["movie"] = [
-            pelicula(i, f"T{i}") for i in range(1, cantidad + 1)
-        ]
-        contexto = self.contexto()
-        ejecutar(contexto, "similares_a", {"id_tmdb": 99, "tipo": "movie"})
-        return contexto
-
-    def mostrar(self, contexto, *ids, tipo="movie"):
-        return ejecutar(
-            contexto,
-            "mostrar_tarjetas",
-            {"tarjetas": [{"id_tmdb": i, "tipo": tipo} for i in ids]},
-        )
-
-    def test_arma_la_tarjeta_del_contrato(self):
-        contexto = self.contexto_con_resultados()
-
-        self.mostrar(contexto, 1)
-
-        self.assertEqual(
-            contexto.tarjetas,
-            [
-                {
-                    "id_tmdb": 1,
-                    "tipo": "movie",
-                    "titulo": "T1",
-                    "poster": "/1.jpg",
-                    "anio": 2009,
-                    "nota_tmdb": 7.6,
-                }
-            ],
-        )
-
-    def test_descarta_lo_que_ninguna_tool_devolvio(self):
-        contexto = self.contexto_con_resultados()
-
-        resultado = self.mostrar(contexto, 1, 777)
-
-        self.assertEqual([t["id_tmdb"] for t in resultado["tarjetas"]], [1])
-
-    def test_el_mismo_id_de_otro_tipo_no_cuenta_como_visto_en_el_turno(self):
-        contexto = self.contexto_con_resultados()
-
-        resultado = self.mostrar(contexto, 1, tipo="tv")
-
-        self.assertEqual(resultado["tarjetas"], [])
-
-    def test_descarta_duplicados(self):
-        contexto = self.contexto_con_resultados()
-
-        resultado = self.mostrar(contexto, 1, 1)
-
-        self.assertEqual(len(resultado["tarjetas"]), 1)
-
-    def test_el_tope_de_3_vale_entre_varias_llamadas(self):
-        contexto = self.contexto_con_resultados()
-
-        self.mostrar(contexto, 1, 2)
-        resultado = self.mostrar(contexto, 2, 3, 4)
-
-        self.assertEqual([t["id_tmdb"] for t in resultado["tarjetas"]], [1, 2, 3])
-
-    def test_una_tarjeta_mal_armada_es_un_error_y_no_suma_ninguna(self):
-        # Antes se descartaba solo la mala. Ahora `ejecutar()` rechaza el pedido
-        # entero y el modelo lo corrige; si era la última vuelta, la red del
-        # orquestador arma las tarjetas desde el texto.
-        contexto = self.contexto_con_resultados()
-
-        resultado = ejecutar(
-            contexto,
-            "mostrar_tarjetas",
-            {
-                "tarjetas": [
-                    {"id_tmdb": "x", "tipo": "movie"},
-                    {"id_tmdb": 1, "tipo": "movie"},
-                ]
-            },
-        )
-
-        self.assertEqual(resultado["error"], "invalid_arguments")
-        self.assertEqual(contexto.tarjetas, [])
-
-
 class MisListasTests(BaseTools):
     def test_sin_argumentos_devuelve_las_listas_del_usuario(self):
         lista = self.lista(nombre="Para el finde")
@@ -792,14 +632,11 @@ class MisListasTests(BaseTools):
         Tiene.objects.create(lista=lista, produccion=moon)
         contexto = self.contexto()
 
-        ejecutar(contexto, "mis_listas", {"lista": "pendientes"})
-        resultado = ejecutar(
-            contexto,
-            "mostrar_tarjetas",
-            {"tarjetas": [{"id_tmdb": moon.id_tmdb, "tipo": "movie"}]},
-        )
+        resultado = ejecutar(contexto, "mis_listas", {"lista": "pendientes"})
 
-        self.assertEqual(resultado["tarjetas"][0]["poster"], "/m.jpg")
+        # El póster queda en lo anotado (para la tarjeta), no en lo que ve el modelo.
+        candidato = contexto.candidatos()[resultado["resultados"][0]["ref"]]
+        self.assertEqual(candidato["poster"], "/m.jpg")
 
 
 class FallosTests(BaseTools):

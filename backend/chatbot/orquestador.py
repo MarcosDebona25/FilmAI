@@ -13,12 +13,10 @@ común, y se llama con `await en_hilo(...)`.
 
 import json
 import logging
-import re
-import unicodedata
 
 from django.utils import timezone
 
-from chatbot.anonimizar import APOSTROFOS, CONVERSACION, anonimizar
+from chatbot.anonimizar import CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.idioma import detectar_idioma
@@ -28,7 +26,6 @@ from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
 from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno, ejecutar
-from chatbot.tools.personales import mostrar_tarjetas
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +43,6 @@ _MENSAJES_DE_HISTORIAL = 10
 # look that up.») es corto: si la vuelta termina antes de este largo y pidió
 # buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
 _LARGO_DE_PREAMBULO = 200
-_TOOL_DE_TARJETAS = "mostrar_tarjetas"
-# Un título de hasta este largo («Up», «Her», «It») es una palabra común: en la
-# pregunta del usuario solo cuenta escrito igual (ver `_lo_escribio_el_usuario`).
-_LARGO_DE_TITULO_CORTO = 3
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
 
@@ -102,15 +95,14 @@ def _argumentos_de(llamada):
 def _cantidad_de(resultado):
     """Cuántos resultados trajo una tool, para el log: un número o `"error"`.
 
-    Las búsquedas devuelven `{"resultados": [...]}` y `mostrar_tarjetas`
-    `{"tarjetas": [...]}`: se cuenta la lista. Una tool que devuelve un solo dato
-    (`detalle`) cuenta como 1. Solo se mira el tamaño, nunca el contenido.
+    Las búsquedas devuelven `{"resultados": [...]}`: se cuenta la lista. Una tool que
+    devuelve un solo dato (`detalle`) cuenta como 1. Solo se mira el tamaño, nunca el
+    contenido.
     """
     if "error" in resultado:
         return "error"
-    for clave in ("resultados", "tarjetas"):
-        if isinstance(resultado.get(clave), list):
-            return len(resultado[clave])
+    if isinstance(resultado.get("resultados"), list):
+        return len(resultado["resultados"])
     return 1
 
 
@@ -166,153 +158,6 @@ def _mensaje_del_asistente(vuelta):
 def _con_separador(pedazos, separar):
     """Los pedazos de texto, con «\\n\\n» adelante si hay texto de otra vuelta."""
     return ["\n\n", *pedazos] if separar else list(pedazos)
-
-
-def _solo_tarjetas(vuelta):
-    return all(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
-
-
-def _con_tarjetas(vuelta):
-    return any(llamada.nombre == _TOOL_DE_TARJETAS for llamada in vuelta.llamadas)
-
-
-def _plegar_letra(letra):
-    """Una letra en minúscula y sin acento: «Á» → «a». Siempre devuelve una sola.
-
-    `NFKD` separa la letra de su tilde («á» pasa a «a» más la tilde sola) y
-    `combining` reconoce la tilde suelta para descartarla. Si el resultado no es una
-    sola letra («ß» da «ss»), queda la original en minúscula: así el texto plegado
-    tiene el mismo largo y las posiciones coinciden con las del original. Los
-    apóstrofos curvos pasan a ser el recto, también de a una letra.
-    """
-    if letra in APOSTROFOS:
-        return APOSTROFOS[letra]
-    base = "".join(
-        c for c in unicodedata.normalize("NFKD", letra) if not unicodedata.combining(c)
-    ).lower()
-    return base if len(base) == 1 else letra.lower()
-
-
-def _plegar(texto):
-    """El texto en minúscula, sin acentos y con un solo tipo de apóstrofo.
-
-    Antes lo pasa a `NFC`, que junta cada letra con su tilde suelta: «e» + U+0301
-    pasa a ser «é». Un texto que viene «descompuesto» (en NFD) se ve igual que uno
-    «compuesto», pero son otros caracteres, y sin esto la tilde quedaba en el medio
-    y el título no coincidía. Desde acá, las posiciones son las del texto en NFC.
-    """
-    return "".join(
-        _plegar_letra(letra) for letra in unicodedata.normalize("NFC", texto)
-    )
-
-
-# Palabras que dicen qué es un título, ya plegadas (sin acento ni mayúscula). En
-# español y en inglés. `\b` es un borde de palabra: «tv» no cuenta dentro de «atv».
-_PISTAS_DE_TIPO = {
-    "movie": re.compile(r"\b(?:pelicula|peliculas|movie|movies|film|films|filme)\b"),
-    "tv": re.compile(
-        r"\b(?:serie|series|miniserie|miniseries|show|shows|tv|temporada|season)\b"
-    ),
-}
-# Cuántas letras a cada lado de la mención se miran en busca de una pista.
-_RADIO_DE_PISTAS = 60
-
-
-def _tipo_segun_pistas(plegada, inicio, fin, pregunta):
-    """`"movie"`, `"tv"` o `None` si el contexto no se decide por ninguno.
-
-    Primero manda lo que dice el modelo cerca de la mención («la serie **Fargo**»):
-    gana la pista más cercana. Si no hay ninguna (o están a igual distancia), se
-    cuentan las de la pregunta del usuario. `plegada` y `pregunta` ya vienen plegadas.
-    """
-    cercanas = []
-    for tipo, patron in _PISTAS_DE_TIPO.items():
-        distancias = [
-            # Cuántas letras separan la pista de la mención (0 si se tocan).
-            max(0, m.start() - fin, inicio - m.end())
-            for m in patron.finditer(
-                plegada, max(0, inicio - _RADIO_DE_PISTAS), fin + _RADIO_DE_PISTAS
-            )
-        ]
-        if distancias:
-            cercanas.append((min(distancias), tipo))
-    # Con dos tipos, gana el de la pista más cercana; a igual distancia no deciden.
-    cercanas.sort()
-    if len(cercanas) == 1 or (len(cercanas) == 2 and cercanas[0][0] < cercanas[1][0]):
-        return cercanas[0][1]
-
-    cuenta = {t: len(p.findall(pregunta)) for t, p in _PISTAS_DE_TIPO.items()}
-    if cuenta["movie"] != cuenta["tv"]:
-        return max(cuenta, key=cuenta.get)
-    return None
-
-
-def _lo_escribio_el_usuario(nombre, pregunta):
-    """¿El usuario escribió este título en su pregunta?
-
-    Un título largo cuenta con otra mayúscula o acentos y solo como palabra entera:
-    «Moon» no está en «Moonlight». Uno corto («It», «Her», «Up») es una palabra común
-    («is it scary?»): solo cuenta escrito igual, con su mayúscula. Los bordes del patrón piden que no
-    haya una letra pegada antes ni después.
-    """
-    if len(nombre) <= _LARGO_DE_TITULO_CORTO:
-        texto = unicodedata.normalize("NFC", pregunta)
-        patron = rf"(?<!\w){re.escape(unicodedata.normalize('NFC', nombre))}(?!\w)"
-    else:
-        texto, patron = _plegar(pregunta), rf"(?<!\w){re.escape(_plegar(nombre))}(?!\w)"
-    return re.search(patron, texto) is not None
-
-
-def _tarjetas_nombradas(respuesta, ctx, pregunta=""):
-    """Los títulos para recomendar que la respuesta nombra, en orden de aparición.
-
-    Es la red para cuando el modelo recomienda en el texto pero no llama a
-    `mostrar_tarjetas` (en el set dorado del 08/11/2026, 5 de 8 veces). Solo
-    cuentan los títulos de `ctx.recomendables`: lo que devolvió una búsqueda para
-    recomendar en este turno, que ya viene sin lo visto. Devuelve los pedidos en
-    el formato de `mostrar_tarjetas`, que se encarga del tope de 3 y los repetidos.
-
-    Reglas (12/11/2026):
-    - Solo cuenta un título escrito en **negrita**: así se marca una recomendación,
-      y un título suelto en la prosa puede ser otra cosa.
-    - Uno que el usuario ya escribió en su `pregunta` no arma tarjeta: lo nombró de
-      referencia («algo como Arrival»).
-    - Si una película y una serie se llaman igual, se elige por las pistas del
-      contexto (`_tipo_segun_pistas`); sin pistas, la primera que trajo la búsqueda.
-      Una sola tarjeta por mención.
-    """
-    plegada = _plegar(respuesta)
-    pregunta_plegada = _plegar(pregunta)
-    # Cada mención en el texto, como (inicio, fin), con los títulos que se llaman así.
-    menciones = {}
-    # `ctx.encontrados` es un `dict`: Python recuerda el orden en que se insertaron las
-    # claves, así que esto recorre los títulos en el orden de las búsquedas.
-    # `ctx.recomendables` es un `set` y no tiene orden: solo se usa para filtrar.
-    for clave, titulo in ctx.encontrados.items():
-        nombre = (titulo.get("titulo") or "").strip()
-        if (
-            clave not in ctx.recomendables
-            or not nombre
-            or _lo_escribio_el_usuario(nombre, pregunta)
-        ):
-            continue
-        # `\*` es un asterisco literal: en una expresión regular `*` solo significa
-        # «repetir». `re.escape` hace que los signos del título («Se7en», «Alien³»,
-        # «¿Qué pasó ayer?») se busquen tal cual.
-        patron = rf"\*\*{re.escape(_plegar(nombre))}\*\*"
-        # `finditer` recorre todas las apariciones, no solo la primera.
-        for m in re.finditer(patron, plegada):
-            menciones.setdefault((m.start(), m.end()), []).append(clave)
-
-    elegidos = []
-    for (inicio, fin), claves in sorted(menciones.items()):
-        elegida = claves[0]
-        if len(claves) > 1:
-            tipo = _tipo_segun_pistas(plegada, inicio, fin, pregunta_plegada)
-            # `next(..., elegida)`: el primero que cumple, o `elegida` si ninguno.
-            elegida = next((c for c in claves if c[1] == tipo), elegida)
-        elegidos.append(elegida)
-    return [{"id_tmdb": id_tmdb, "tipo": tipo} for id_tmdb, tipo in elegidos]
 
 
 async def _sacar(filtro, partes, pedazos):
@@ -384,20 +229,25 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro):
         raise ErrorDelTurno("La última llamada no escribió nada")
 
 
-def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, origen_de_tarjetas):
+def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro):
     """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
     Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
-    tools pidió y con cuántos resultados, si se quedó sin vueltas, de dónde salieron
-    las tarjetas). A propósito no lleva la pregunta ni la respuesta: son datos
+    tools pidió y con cuántos resultados, si se quedó sin vueltas, cuántos marcadores
+    `[[n]]` usó y cuántos no correspondían a ningún título, cuántas negritas escribió
+    por su cuenta). A propósito no lleva la pregunta ni la respuesta: son datos
     personales y los logs se guardan.
     """
     logger.info(
-        "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s",
+        "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s "
+        "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d",
         ",".join(tools_pedidas) or "ninguna",
         vueltas,
         "si" if ultima_sin_tools else "no",
-        origen_de_tarjetas,
+        "marcadores" if ctx.tarjetas else "ninguna",
+        filtro.validos,
+        filtro.invalidos,
+        filtro.negritas,
     )
 
 
@@ -449,10 +299,8 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             raise ErrorDelTurno("El proveedor falló") from error
 
         # Texto corto y una búsqueda: era un «ya busco», y la respuesta viene después.
-        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`. Si la
-        # vuelta también muestra tarjetas, el texto las acompaña y no se descarta.
-        es_preambulo = vuelta.llamadas and not _con_tarjetas(vuelta)
-        if retenido and not es_preambulo:
+        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`.
+        if retenido and not vuelta.llamadas:
             async for evento in _sacar(
                 filtro, partes, _con_separador(retenido, separar)
             ):
@@ -463,16 +311,9 @@ async def responder(chat, texto, idioma, *, proveedor=None):
 
         if not vuelta.llamadas:
             break
-        # Ya respondió y eligió tarjetas: otra llamada solo la repetiría. Por eso
-        # esta vuelta cierra el turno, aunque sea la última permitida.
-        cierra_el_turno = bool(vuelta.texto) and _solo_tarjetas(vuelta)
-
-        if not _solo_tarjetas(vuelta):
-            yield Estado("searching")
+        yield Estado("searching")
         resultados, resumen = await en_hilo(_correr_tools, ctx, vuelta.llamadas)
         tools_pedidas.extend(resumen)
-        if cierra_el_turno:
-            break
         mensajes.append(_mensaje_del_asistente(vuelta))
         mensajes.extend(resultados)
     else:
@@ -495,14 +336,5 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             yield evento
 
     respuesta = "".join(partes)
-    origen = "mostrar_tarjetas" if ctx.tarjetas else "ninguna"
-    if not ctx.tarjetas:
-        # Recomendó en el texto y no mostró tarjetas: se arman con lo que nombró.
-        # `mostrar_tarjetas` no toca la base, así que se llama directo, sin el
-        # puente. Si nombró títulos que ninguna búsqueda devolvió, no pasa nada.
-        mostrar_tarjetas(ctx, _tarjetas_nombradas(respuesta, ctx, texto))
-        if ctx.tarjetas:
-            origen = "red"
-            logger.info("Tarjetas armadas por el orquestador: %d", len(ctx.tarjetas))
-    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, origen)
+    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro)
     yield Resultado(respuesta, ctx.tarjetas)

@@ -34,13 +34,6 @@ class ContextoTurno:
     # Con `= {}` todos los turnos compartirían el mismo, de todos los usuarios.
     encontrados: dict = field(default_factory=dict)
     tarjetas: list = field(default_factory=list)
-    # Las claves de `encontrados` que salieron de una búsqueda para recomendar
-    # (`descubrir`, `similares_a`, `buscar_por_persona`, `buscar_semantico`). Las
-    # consultas directas (`buscar_por_titulo`, `detalle`, `mis_listas`) no entran:
-    # «¿cuánto dura Interstellar?» nombra un título, pero no lo recomienda. Lo usa
-    # la red de tarjetas del orquestador. Un `set` no guarda repetidos, como un
-    # `HashSet` de Java.
-    recomendables: set = field(default_factory=set)
 
     def candidatos(self):
         """Los títulos del turno por su número de referencia: `{ref: título}`.
@@ -107,10 +100,6 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
         if clave in repetidos or (sacar_vistas and clave in ctx.vistas):
             continue
         repetidos.add(clave)
-        if sacar_vistas:
-            # Solo las búsquedas para recomendar sacan lo visto: es la señal de que
-            # este título se puede proponer.
-            ctx.recomendables.add(clave)
         ctx.encontrados[clave] = {
             "id_tmdb": item["id_tmdb"],
             "tipo": item["tipo"],

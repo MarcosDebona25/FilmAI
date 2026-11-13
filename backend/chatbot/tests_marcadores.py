@@ -12,7 +12,7 @@ from django.test import SimpleTestCase
 from chatbot.eventos import Texto
 from chatbot.marcadores import FiltroDeMarcadores
 from chatbot.tests_orquestador import BaseOrquestador, pelicula_de_mentira, tool
-from chatbot.tools import FUNCIONES, ContextoTurno
+from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno
 from chatbot.tools.turno import publicar
 
 
@@ -170,9 +170,7 @@ class FiltroDeMarcadoresTests(SimpleTestCase):
         self.assertEqual([t["tipo"] for t in ctx.tarjetas], ["tv", "movie"])
 
 
-class MarcadoresEnElTurnoTests(BaseOrquestador):
-    """El filtro conectado al orquestador: lo que sale por SSE y lo que se guarda."""
-
+class BaseMarcadores(BaseOrquestador):
     def setUp(self):
         super().setUp()
         self.peliculas = [
@@ -195,6 +193,10 @@ class MarcadoresEnElTurnoTests(BaseOrquestador):
     @staticmethod
     def deltas(eventos):
         return [e.delta for e in eventos if isinstance(e, Texto)]
+
+
+class MarcadoresEnElTurnoTests(BaseMarcadores):
+    """El filtro conectado al orquestador: lo que sale por SSE y lo que se guarda."""
 
     async def test_el_marcador_sale_como_titulo_y_suma_la_tarjeta(self):
         eventos = await self.correr(
@@ -255,3 +257,31 @@ class MarcadoresEnElTurnoTests(BaseOrquestador):
 
         self.assertEqual(eventos[-1].texto, "Te dejo **Moon** (2009)")
         self.assertEqual(len(eventos[-1].tarjetas), 1)
+
+
+class SinMostrarTarjetasTests(BaseMarcadores):
+    """Los marcadores reemplazan a la tool `mostrar_tarjetas` y a la red de #189."""
+
+    def test_la_tool_mostrar_tarjetas_ya_no_existe(self):
+        nombres = [esquema["function"]["name"] for esquema in ESQUEMAS]
+
+        self.assertNotIn("mostrar_tarjetas", nombres)
+        self.assertNotIn("mostrar_tarjetas", FUNCIONES)
+
+    async def test_un_titulo_en_negrita_sin_marcador_no_arma_tarjeta(self):
+        # La red de #189 adivinaba tarjetas desde el texto. Ahora la única forma de
+        # mostrar una es el marcador: el texto que el modelo escribe no decide nada.
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Te recomiendo **Moon** y **Arrival**."]]
+        )
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_el_log_del_turno_dice_que_las_tarjetas_salieron_de_marcadores(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            await self.correr([[tool("descubrir")], ["Mirá [[1]] y [[9]]"]])
+
+        linea = next(m for m in log.output if "Turno:" in m)
+        self.assertIn("tarjetas=marcadores", linea)
+        self.assertIn("marcadores_validos=1", linea)
+        self.assertIn("marcadores_invalidos=1", linea)

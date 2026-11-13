@@ -596,14 +596,7 @@ class OrquestadorRealTests(BaseSSE):
         proveedor = ProveedorFalso(
             [
                 [LlamadaTool("1", "descubrir", "{}")],
-                [
-                    "Te recomiendo Moon",
-                    LlamadaTool(
-                        "2",
-                        "mostrar_tarjetas",
-                        json.dumps({"tarjetas": [{"id_tmdb": 1, "tipo": "movie"}]}),
-                    ),
-                ],
+                ["Te recomiendo [[1]]"],
             ]
         )
         with (
@@ -618,7 +611,7 @@ class OrquestadorRealTests(BaseSSE):
         )
         self.assertEqual(dict(eventos)["tarjetas"]["tarjetas"][0]["titulo"], "Moon")
         guardada = await Mensaje.objects.aget(autor=TipoAutor.CHATBOT)
-        self.assertEqual(guardada.texto, "Te recomiendo Moon")
+        self.assertEqual(guardada.texto, "Te recomiendo **Moon** (2009)")
 
     async def test_un_proveedor_que_falla_es_chat_unavailable(self):
         proveedor = ProveedorFalso([[ConnectionError("503")]])
