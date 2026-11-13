@@ -29,6 +29,28 @@ _LARGO_MINIMO_DE_PARTE = 3
 # recto. También lo usa el orquestador para comparar títulos.
 APOSTROFOS = {"\u2019": "'", "\u2018": "'", "\u02bc": "'"}
 
+# Letras que Unicode no descompone en «letra + tilde» (`NFD` no las toca): «Łukasz» y
+# «Lukasz» eran para el programa dos palabras distintas. Cada una se pliega a la
+# letra base más parecida, una por una, porque `_plano()` no puede cambiar el largo.
+# U+0131 (i sin punto, turco), `ł` (polaco), `ø` (danés/noruego), `đ` (croata) y `ð`
+# (islandés), `ħ` (maltés) y `ŧ` (sami). Todas llegan ya en minúscula.
+LETRAS_SIN_DESCOMPONER = {
+    "\u0131": "i",  # i sin punto: ruff avisa si va escrita tal cual
+    "ł": "l",
+    "ø": "o",
+    "đ": "d",
+    "ð": "d",
+    "ħ": "h",
+    "ŧ": "t",
+}
+
+# Letras que equivalen a dos: `ß` se escribe «ss» en un teclado sin ella. No entran en
+# `_plano()` (cambiarían el largo): se resuelven en el patrón, que acepta cualquiera
+# de las dos formas, la letra o su par, sea cuál sea la que está guardada.
+_DOBLES = {"ß": "ss", "æ": "ae", "œ": "oe", "þ": "th"}
+_PARTE_DOBLE = re.compile("(" + "|".join([*_DOBLES, *_DOBLES.values()]) + ")")
+_AL_REVES = {**_DOBLES, **{par: letra for letra, par in _DOBLES.items()}}
+
 
 def _plano(texto):
     """Minúsculas y sin tildes, con exactamente el mismo largo que `texto`.
@@ -41,15 +63,32 @@ def _plano(texto):
     uno compuesto, pero son otros caracteres, y sin esto no coincidían. Si `texto` ya
     está en NFC (como en `anonimizar`), el largo no cambia.
     """
-    return "".join(
-        APOSTROFOS.get(c) or unicodedata.normalize("NFD", c)[0].lower()[0]
-        for c in unicodedata.normalize("NFC", texto)
-    )
+    return "".join(_letra_plana(c) for c in unicodedata.normalize("NFC", texto))
+
+
+def _letra_plana(caracter):
+    """Un carácter, plegado a su letra base en minúscula (siempre uno solo)."""
+    if caracter in APOSTROFOS:
+        return APOSTROFOS[caracter]
+    # `NFD` separa «é» en «e» + tilde: nos quedamos con la letra, sin la tilde.
+    base = unicodedata.normalize("NFD", caracter)[0].lower()[0]
+    return LETRAS_SIN_DESCOMPONER.get(base, base)
 
 
 def _frase(texto):
     """Patrón de un texto de una o más palabras, con cualquier espacio entre ellas."""
-    return r"\s+".join(re.escape(parte) for parte in _plano(texto).split())
+    return r"\s+".join(_palabra(parte) for parte in _plano(texto).split())
+
+
+def _palabra(palabra):
+    """Patrón de una palabra ya plana: `ß` y «ss» valen lo mismo (y `æ`/«ae», etc.)."""
+    # `split` con paréntesis conserva los separadores: las posiciones impares son las
+    # letras dobles o sus pares, y cada una acepta las dos formas.
+    trozos = _PARTE_DOBLE.split(palabra)
+    return "".join(
+        f"(?:{re.escape(trozo)}|{_AL_REVES[trozo]})" if i % 2 else re.escape(trozo)
+        for i, trozo in enumerate(trozos)
+    )
 
 
 def _candidatos(usuario, alcance):
