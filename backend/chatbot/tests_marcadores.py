@@ -11,8 +11,10 @@ from asgiref.sync import sync_to_async
 from django.test import SimpleTestCase
 
 from chatbot.eventos import Texto
+from chatbot.llm import ProveedorFalso
 from chatbot.marcadores import FiltroDeMarcadores
 from chatbot.models import Mensaje, TipoAutor
+from chatbot.orquestador import _LARGO_DE_PREAMBULO, responder
 from chatbot.prompts import armar_sistema
 from chatbot.tests_orquestador import BaseOrquestador, pelicula_de_mentira, tool
 from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno
@@ -449,3 +451,111 @@ class TarjetasDelUltimoMensajeTests(BaseMarcadores):
 
         self.assertIn("«Tarjetas de tu último mensaje»", sistema)
         self.assertIn("sin buscar de nuevo", sistema)
+
+
+class ReintentoForzadoTests(BaseMarcadores):
+    """Si recomienda sin haber buscado, se repite la llamada obligándolo a buscar."""
+
+    async def test_un_marcador_sin_candidatos_repite_con_tool_choice_required(self):
+        eventos = await self.correr(
+            [["Intento [[9]]"], [tool("descubrir")], ["Mirá [[2]]"]]
+        )
+
+        self.assertEqual(self.proveedor.tool_choices, [None, "required", None])
+        self.assertEqual(eventos[-1].texto, "Mirá **Arrival** (2016)")
+        self.assertEqual([t["id_tmdb"] for t in eventos[-1].tarjetas], [2])
+
+    async def test_un_titulo_en_negrita_sin_buscar_tambien_repite(self):
+        eventos = await self.correr(
+            [["Te recomiendo **Moon**."], [tool("descubrir")], ["Mirá [[1]]"]]
+        )
+
+        self.assertEqual(self.proveedor.tool_choices, [None, "required", None])
+        self.assertEqual(eventos[-1].texto, "Mirá **Moon** (2009)")
+
+    async def test_el_primer_intento_descartado_nunca_llega_al_usuario(self):
+        eventos = await self.correr(
+            [["Intento [[9]] fallido"], [tool("descubrir")], ["Mirá [[2]]"]]
+        )
+
+        self.assertEqual("".join(self.deltas(eventos)), "Mirá **Arrival** (2016)")
+
+    async def test_el_primer_intento_no_queda_en_lo_que_ve_el_modelo(self):
+        await self.correr([["Intento [[9]]"], [tool("descubrir")], ["Mirá [[2]]"]])
+
+        contenidos = [m.get("content") for m in self.proveedor.pedidos[1]]
+        self.assertNotIn("Intento [[9]]", contenidos)
+
+    async def test_una_respuesta_que_no_recomienda_no_reintenta(self):
+        eventos = await self.correr([["Hola, ¿en qué te ayudo?"]])
+
+        self.assertEqual(self.proveedor.tool_choices, [None])
+        self.assertEqual(eventos[-1].texto, "Hola, ¿en qué te ayudo?")
+
+    async def test_si_busco_primero_no_hay_reintento(self):
+        await self.correr([[tool("descubrir")], ["Mirá [[2]]"]])
+
+        self.assertEqual(self.proveedor.tool_choices, [None, None])
+
+    async def test_los_marcadores_de_las_tarjetas_previas_no_cuentan_como_recomendar_sin_buscar(
+        self,
+    ):
+        await sync_to_async(Mensaje.objects.create)(
+            chat=self.chat,
+            texto="x",
+            autor=TipoAutor.CHATBOT,
+            tarjetas=[tarjeta_guardada(10, "Log Horizon")],
+        )
+
+        await self.correr([["Acá va [[1]]"]])
+
+        self.assertEqual(self.proveedor.tool_choices, [None])
+
+    async def test_es_un_solo_reintento(self):
+        # Si el segundo intento tampoco busca, se muestra lo que escribió, limpio.
+        eventos = await self.correr([["Uno [[9]]"], ["Dos [[8]]"]])
+
+        self.assertEqual(self.proveedor.tool_choices, [None, "required"])
+        self.assertEqual(eventos[-1].texto, "Dos")
+
+    async def test_si_el_reintento_falla_se_muestra_el_primer_intento(self):
+        eventos = await self.correr([["Primero [[9]] ok"], [RuntimeError("503")]])
+
+        self.assertEqual(eventos[-1].texto, "Primero ok")
+
+    async def test_sin_tiempo_no_reintenta(self):
+        # Ya pasó la mitad del presupuesto del turno: otra llamada no entraría.
+        with patch("chatbot.orquestador._ahora", side_effect=[0, 100, 100, 100]):
+            eventos = await self.correr([["Uno [[9]]"]])
+
+        self.assertEqual(self.proveedor.tool_choices, [None])
+        self.assertEqual(eventos[-1].texto, "Uno")
+
+    async def test_la_primera_vuelta_sin_tools_sale_recien_al_terminar(self):
+        # Se retiene entera para poder descartarla: el texto sale después del último
+        # trozo del modelo, no mientras llega.
+        # El primer trozo ya pasa el umbral del preámbulo: sin retención saldría solo.
+        largo = "x" * (_LARGO_DE_PREAMBULO + 1)
+        self.proveedor = ProveedorFalso([[largo, "y"]])
+        generador = responder(self.chat, "hola", "es", proveedor=self.proveedor)
+
+        primero = await anext(generador)
+
+        self.assertEqual(self.proveedor.entregados, 2)
+        self.assertEqual(primero, Texto(largo))
+        await generador.aclose()
+
+    async def test_el_log_cuenta_el_reintento(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            await self.correr([["Uno [[9]]"], [tool("descubrir")], ["Mirá [[2]]"]])
+
+        linea = next(m for m in log.output if "Turno:" in m)
+        self.assertIn("reintento_forzado=si", linea)
+
+    async def test_el_log_sin_reintento(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            await self.correr([["Hola"]])
+
+        self.assertIn(
+            "reintento_forzado=no", next(m for m in log.output if "Turno:" in m)
+        )

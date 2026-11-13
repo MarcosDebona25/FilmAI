@@ -13,7 +13,9 @@ común, y se llama con `await en_hilo(...)`.
 
 import json
 import logging
+import time
 
+from django.conf import settings
 from django.utils import timezone
 
 from chatbot.anonimizar import CONVERSACION, anonimizar
@@ -21,7 +23,7 @@ from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.idioma import detectar_idioma
 from chatbot.llm import Vuelta, crear_proveedor
-from chatbot.marcadores import FiltroDeMarcadores
+from chatbot.marcadores import FiltroDeMarcadores, recomienda_sin_buscar
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
@@ -43,6 +45,10 @@ _MENSAJES_DE_HISTORIAL = 10
 # look that up.») es corto: si la vuelta termina antes de este largo y pidió
 # buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
 _LARGO_DE_PREAMBULO = 200
+# La búsqueda forzada (ver `responder`) solo se intenta si el turno lleva menos de
+# esta parte del tiempo máximo de la vista (`LLM_TIMEOUT_SECONDS`): otra llamada al
+# modelo más las tools tiene que entrar en lo que queda.
+_FRACCION_PARA_REINTENTAR = 0.4
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
 
@@ -58,6 +64,11 @@ def _historial(chat, usuario):
         }
         for mensaje in reversed(ultimos)
     ]
+
+
+def _ahora():
+    """El reloj del turno. Aparte para poder fijarlo en los tests (como un `Clock`)."""
+    return time.monotonic()
 
 
 def _tarjetas_del_ultimo_mensaje(chat):
@@ -260,18 +271,19 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro):
         raise ErrorDelTurno("La última llamada no escribió nada")
 
 
-def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro):
+def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento):
     """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
     Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
     tools pidió y con cuántos resultados, si se quedó sin vueltas, cuántos marcadores
     `[[n]]` usó y cuántos no correspondían a ningún título, cuántas negritas escribió
-    por su cuenta). A propósito no lleva la pregunta ni la respuesta: son datos
+    por su cuenta, si hubo búsqueda forzada). A propósito no lleva la pregunta ni la respuesta: son datos
     personales y los logs se guardan.
     """
     logger.info(
         "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s "
-        "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d",
+        "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d "
+        "reintento_forzado=%s",
         ",".join(tools_pedidas) or "ninguna",
         vueltas,
         "si" if ultima_sin_tools else "no",
@@ -279,6 +291,7 @@ def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro):
         filtro.validos,
         filtro.invalidos,
         filtro.negritas,
+        "si" if reintento else "no",
     )
 
 
@@ -301,21 +314,38 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     filtro = FiltroDeMarcadores(ctx)
     # Para la línea de diagnóstico del final (ver `_registrar_turno`).
     tools_pedidas, vueltas, ultima_sin_tools = [], 0, False
+    # Búsqueda forzada: si el modelo recomienda sin haber buscado, la llamada se repite
+    # una sola vez con `tool_choice="required"`. `reintento` dice que ya se decidió
+    # hacerlo; `forzar_ahora`, que la próxima llamada es esa; `descartado`, el texto
+    # del primer intento, por si la llamada forzada falla.
+    inicio = _ahora()
+    reintento = forzar_ahora = False
+    descartado = None
 
     for _ in range(_MAX_VUELTAS_CON_TOOLS + 1):
         vueltas += 1
         vuelta = None
         # Sin esto, el texto de dos vueltas saldría pegado: «…despacio.¿Querés…».
         separar = bool(partes)
+        # Mientras ninguna tool corrió, la vuelta se retiene entera: si resulta que
+        # el modelo recomendó sin buscar, hay que poder descartarla sin que el
+        # usuario haya leído nada. Después de una búsqueda se transmite en vivo.
+        retener = not tools_pedidas
         # Lo que todavía no salió al front, por si resulta ser un preámbulo.
         retenido, en_vivo = [], False
+        # `**{...}` abre el diccionario como argumentos con nombre; vacío, no pasa
+        # ninguno (así un proveedor sin `tool_choice` sigue funcionando).
+        extra = {"tool_choice": "required"} if forzar_ahora else {}
+        forzar_ahora = False
         try:
-            async for item in proveedor.escribir(mensajes, ESQUEMAS):
+            async for item in proveedor.escribir(mensajes, ESQUEMAS, **extra):
                 if isinstance(item, Vuelta):
                     vuelta = item
                     continue
                 retenido.append(item)
-                if not en_vivo and len("".join(retenido)) <= _LARGO_DE_PREAMBULO:
+                if retener or (
+                    not en_vivo and len("".join(retenido)) <= _LARGO_DE_PREAMBULO
+                ):
                     continue
                 en_vivo = True
                 async for evento in _sacar(
@@ -327,11 +357,30 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             # `Exception` no incluye `CancelledError`: si el usuario cancela, la
             # cancelación tiene que llegar a la vista.
             logger.exception("El proveedor falló")
-            raise ErrorDelTurno("El proveedor falló") from error
+            if not (extra and descartado):
+                raise ErrorDelTurno("El proveedor falló") from error
+            # La llamada forzada falló: se muestra el primer intento (sin los
+            # marcadores inválidos), que es mejor que un error.
+            retenido, vuelta = descartado, Vuelta(texto="".join(descartado))
+
+        texto_retenido = "".join(retenido)
+        if (
+            retener
+            and not vuelta.llamadas
+            and not reintento
+            and recomienda_sin_buscar(texto_retenido, ctx.candidatos())
+            and _ahora() - inicio
+            < settings.LLM_TIMEOUT_SECONDS * _FRACCION_PARA_REINTENTAR
+        ):
+            logger.warning("Recomendó sin buscar: se repite la llamada con tool_choice")
+            reintento = forzar_ahora = True
+            descartado = retenido
+            continue
 
         # Texto corto y una búsqueda: era un «ya busco», y la respuesta viene después.
         # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`.
-        if retenido and not vuelta.llamadas:
+        es_preambulo = vuelta.llamadas and len(texto_retenido) <= _LARGO_DE_PREAMBULO
+        if retenido and not es_preambulo:
             async for evento in _sacar(
                 filtro, partes, _con_separador(retenido, separar)
             ):
@@ -342,6 +391,7 @@ async def responder(chat, texto, idioma, *, proveedor=None):
 
         if not vuelta.llamadas:
             break
+
         yield Estado("searching")
         resultados, resumen = await en_hilo(_correr_tools, ctx, vuelta.llamadas)
         tools_pedidas.extend(resumen)
@@ -367,5 +417,5 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             yield evento
 
     respuesta = "".join(partes)
-    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro)
+    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento)
     yield Resultado(respuesta, ctx.tarjetas)

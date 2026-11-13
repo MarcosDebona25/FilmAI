@@ -781,7 +781,7 @@ class LeerStreamTests(SimpleTestCase):
 class ParametroToolsTests(SimpleTestCase):
     """Sin esquemas, `tools` no viaja: es lo que hace una llamada «solo texto»."""
 
-    async def pedido_enviado(self, esquemas):
+    async def pedido_enviado(self, esquemas, **extra):
         crear = AsyncMock(return_value=como_stream(fragmento(contenido="Hola")))
         with patch("chatbot.llm.AsyncOpenAI") as cliente:
             cliente.return_value.__aenter__.return_value = MagicMock(
@@ -790,7 +790,7 @@ class ParametroToolsTests(SimpleTestCase):
             proveedor = ProveedorOpenAICompatible(
                 base_url="http://x", modelo="m", api_key="k", thinking=False
             )
-            [_ async for _ in proveedor.escribir([], esquemas)]
+            [_ async for _ in proveedor.escribir([], esquemas, **extra)]
         return crear.call_args.kwargs
 
     async def test_con_esquemas_los_manda(self):
@@ -802,6 +802,25 @@ class ParametroToolsTests(SimpleTestCase):
         enviado = await self.pedido_enviado([])
 
         self.assertNotIn("tools", enviado)
+        self.assertNotIn("tool_choice", enviado)
+
+    async def test_sin_tool_choice_no_lo_manda(self):
+        enviado = await self.pedido_enviado([{"type": "function"}])
+
+        self.assertNotIn("tool_choice", enviado)
+
+    async def test_con_tool_choice_required_lo_manda(self):
+        # Obliga al modelo a pedir una tool (lo usa la búsqueda forzada).
+        enviado = await self.pedido_enviado(
+            [{"type": "function"}], tool_choice="required"
+        )
+
+        self.assertEqual(enviado["tool_choice"], "required")
+
+    async def test_sin_esquemas_ignora_tool_choice(self):
+        # La API rechaza `tool_choice` sin `tools`.
+        enviado = await self.pedido_enviado([], tool_choice="required")
+
         self.assertNotIn("tool_choice", enviado)
 
 

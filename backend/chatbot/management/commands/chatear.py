@@ -77,11 +77,13 @@ class _Espia:
         self.proveedor = proveedor
         self.escribir_linea = escribir
 
-    async def escribir(self, mensajes, esquemas):
+    async def escribir(self, mensajes, esquemas, tool_choice=None):
         if not esquemas:
             # La última llamada del orquestador va sin tools: sirve para contarlas.
             self.escribir_linea("\n[última llamada sin tools]")
-        async for item in self.proveedor.escribir(mensajes, esquemas):
+        if tool_choice:
+            self.escribir_linea(f"\n[reintento forzado: tool_choice={tool_choice}]")
+        async for item in self.proveedor.escribir(mensajes, esquemas, tool_choice):
             if isinstance(item, Vuelta):
                 for llamada in item.llamadas:
                     self.escribir_linea(

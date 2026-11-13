@@ -112,3 +112,15 @@ class FiltroDeMarcadores:
         if len(self.ctx.tarjetas) == TOPE_TARJETAS or titulo in self.ctx.tarjetas:
             return
         self.ctx.tarjetas.append(titulo)
+
+
+def recomienda_sin_buscar(texto, candidatos):
+    """¿Este texto recomienda títulos sin que ninguna tool los haya devuelto?
+
+    Es la señal para repetir la llamada obligando al modelo a buscar. Cuenta como
+    recomendar: un marcador `[[n]]` sin candidato `n`, o una `**negrita**` (el prompt
+    la reserva para los títulos y el modelo, sin buscar, los escribiría de memoria).
+    `candidatos` es `{ref: título}` (ver `ContextoTurno.candidatos`).
+    """
+    inventados = any(int(n) not in candidatos for _, n in _MARCADOR.findall(texto))
+    return inventados or bool(_NEGRITA.search(texto))
