@@ -60,6 +60,31 @@ def _historial(chat, usuario):
     ]
 
 
+def _tarjetas_del_ultimo_mensaje(chat):
+    """Las tarjetas del último mensaje del asistente, listas para ser candidatas.
+
+    Salen de `Mensaje.tarjetas` (JSON guardado), así que se valida cada una: una
+    mal armada se ignora en vez de romper el turno. Es lo que permite «¿y las
+    tarjetas?» sin volver a buscar: esos títulos entran al turno con su `ref`.
+    """
+    ultimo = (
+        Mensaje.objects.filter(chat=chat, autor=TipoAutor.CHATBOT)
+        .order_by("-fecha_hora", "-id")
+        .first()
+    )
+    validas = []
+    for tarjeta in ultimo.tarjetas if ultimo else []:
+        if (
+            isinstance(tarjeta, dict)
+            and isinstance(tarjeta.get("id_tmdb"), int)
+            and tarjeta.get("tipo") in ("movie", "tv")
+            and isinstance(tarjeta.get("titulo"), str)
+            and tarjeta["titulo"].strip()
+        ):
+            validas.append(tarjeta)
+    return validas
+
+
 def _preparar(chat, texto, idioma):
     """Todo lo que el turno lee de la base, en un solo viaje al hilo.
 
@@ -68,19 +93,25 @@ def _preparar(chat, texto, idioma):
     """
     chat = Chat.objects.select_related("usuario").get(pk=chat.pk)
     usuario = chat.usuario
+    ctx = ContextoTurno.para(usuario, idioma)
+    # Las tarjetas del último mensaje son los primeros candidatos del turno (`ref`
+    # 1, 2, …): las búsquedas de este turno siguen la numeración desde ahí.
+    for tarjeta in _tarjetas_del_ultimo_mensaje(chat):
+        ctx.encontrados[(tarjeta["id_tmdb"], tarjeta["tipo"])] = tarjeta
     # La prosa sigue al idioma del mensaje; las tools y las tarjetas, al del turno.
     sistema = armar_sistema(
         armar_perfil(usuario),
         chat.contexto.get("ya_recomendados", []),
         detectar_idioma(texto) or idioma,
         hoy=timezone.localdate(),
+        ultimas=list(ctx.candidatos().items()),
     )
     mensajes = [
         {"role": "system", "content": sistema},
         *_historial(chat, usuario),
         {"role": "user", "content": anonimizar(texto, usuario, CONVERSACION)},
     ]
-    return ContextoTurno.para(usuario, idioma), mensajes
+    return ctx, mensajes
 
 
 def _argumentos_de(llamada):

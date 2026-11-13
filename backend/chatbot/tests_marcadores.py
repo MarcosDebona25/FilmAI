@@ -7,10 +7,12 @@ El modelo escribe `[[3]]` en lugar del título; el filtro lo cambia por
 import json
 from unittest.mock import patch
 
+from asgiref.sync import sync_to_async
 from django.test import SimpleTestCase
 
 from chatbot.eventos import Texto
 from chatbot.marcadores import FiltroDeMarcadores
+from chatbot.models import Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.tests_orquestador import BaseOrquestador, pelicula_de_mentira, tool
 from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno
@@ -340,3 +342,110 @@ class PromptDeMarcadoresTests(SimpleTestCase):
         self.assertIn("«¿y las tarjetas?»", sistema)
         self.assertIn("los títulos de tu última respuesta", sistema)
         self.assertIn("Nunca tomes los de «Ya recomendados»", sistema)
+
+
+def tarjeta_guardada(id_tmdb, nombre, anio=2009, tipo="movie"):
+    """Una tarjeta como queda en `Mensaje.tarjetas`."""
+    return {
+        "id_tmdb": id_tmdb,
+        "tipo": tipo,
+        "titulo": nombre,
+        "poster": f"/{id_tmdb}.jpg",
+        "anio": anio,
+    }
+
+
+class TarjetasDelUltimoMensajeTests(BaseMarcadores):
+    """«¿Y las tarjetas?»: las del último mensaje del asistente son candidatas."""
+
+    def charla(self, *tarjetas_por_respuesta):
+        for tarjetas in tarjetas_por_respuesta:
+            Mensaje.objects.create(
+                chat=self.chat, texto="pregunta", autor=TipoAutor.USUARIO
+            )
+            Mensaje.objects.create(
+                chat=self.chat,
+                texto="respuesta",
+                autor=TipoAutor.CHATBOT,
+                tarjetas=tarjetas,
+            )
+
+    def sistema_del_primer_pedido(self):
+        return self.proveedor.pedidos[0][0]["content"]
+
+    async def test_se_pueden_marcar_sin_volver_a_buscar(self):
+        await sync_to_async(self.charla)(
+            [
+                tarjeta_guardada(10, "Log Horizon", 2013),
+                tarjeta_guardada(11, "Btooom!", 2012),
+            ]
+        )
+
+        eventos = await self.correr(
+            [["Acá van [[1]] y [[2]]."]], texto="¿y las tarjetas?"
+        )
+
+        self.assertEqual(
+            eventos[-1].texto, "Acá van **Log Horizon** (2013) y **Btooom!** (2012)."
+        )
+        self.assertEqual([t["id_tmdb"] for t in eventos[-1].tarjetas], [10, 11])
+        self.assertEqual(len(self.proveedor.pedidos), 1)
+
+    async def test_el_modelo_las_ve_numeradas_en_el_sistema(self):
+        await sync_to_async(self.charla)([tarjeta_guardada(10, "Log Horizon", 2013)])
+
+        await self.correr([["Hola"]])
+
+        self.assertIn(
+            "Tarjetas de tu último mensaje: [[1]] Log Horizon (2013)",
+            self.sistema_del_primer_pedido(),
+        )
+
+    async def test_sin_tarjetas_el_sistema_lo_dice(self):
+        await self.correr([["Hola"]])
+
+        self.assertIn(
+            "Tarjetas de tu último mensaje: ninguna", self.sistema_del_primer_pedido()
+        )
+
+    async def test_solo_cuenta_el_ultimo_mensaje_del_asistente(self):
+        await sync_to_async(self.charla)(
+            [tarjeta_guardada(10, "Vieja")], [tarjeta_guardada(11, "Nueva")]
+        )
+
+        await self.correr([["Hola"]])
+
+        sistema = self.sistema_del_primer_pedido()
+        self.assertIn("[[1]] Nueva", sistema)
+        self.assertNotIn("Vieja", sistema)
+
+    async def test_los_refs_de_las_busquedas_siguen_despues_de_las_del_mensaje(self):
+        await sync_to_async(self.charla)([tarjeta_guardada(10, "Log Horizon")])
+
+        await self.correr([[tool("descubrir")], ["Listo"]])
+
+        resultado = json.loads(self.proveedor.pedidos[1][-1]["content"])
+        self.assertEqual([r["ref"] for r in resultado["resultados"]], [2, 3, 4, 5])
+
+    async def test_una_tarjeta_vieja_mal_formada_se_ignora(self):
+        await sync_to_async(self.charla)(
+            [{"titulo": "Sin id"}, tarjeta_guardada(10, "Bien")]
+        )
+
+        await self.correr([["Hola"]])
+
+        self.assertIn("[[1]] Bien", self.sistema_del_primer_pedido())
+
+    async def test_el_mismo_titulo_en_una_busqueda_conserva_el_ref_del_mensaje(self):
+        await sync_to_async(self.charla)([tarjeta_guardada(1, "Moon", 2009)])
+
+        await self.correr([[tool("descubrir")], ["Listo"]])
+
+        resultado = json.loads(self.proveedor.pedidos[1][-1]["content"])
+        self.assertEqual(resultado["resultados"][0]["ref"], 1)
+
+    def test_el_prompt_manda_a_marcar_las_tarjetas_del_ultimo_mensaje(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("«Tarjetas de tu último mensaje»", sistema)
+        self.assertIn("sin buscar de nuevo", sistema)
