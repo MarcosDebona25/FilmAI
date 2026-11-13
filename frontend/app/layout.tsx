@@ -16,6 +16,7 @@ import { ChatPanel } from "@/components/features/chat/ChatPanel";
 import { ListsGridPreload } from "@/components/features/lists/ListsGridPreload";
 import { NavigationGuard } from "@/components/NavigationGuard";
 import { NavigationProgress } from "@/components/NavigationProgress";
+import { ScrollArribaAlNavegar } from "@/components/ScrollArribaAlNavegar";
 import "./globals.css";
 
 const hanken = Hanken_Grotesk({
@@ -62,6 +63,9 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>
+        {/* Al ir a otra página la deja arriba: con la navbar fija, Next no
+            siempre lo hacía (ver el componente). */}
+        <ScrollArribaAlNavegar />
         <NextIntlClientProvider>
           <AccountProvider sesionPosible={sesionPosible}>
             {/* El chat vive en el layout: Next no lo desmonta al navegar, así que

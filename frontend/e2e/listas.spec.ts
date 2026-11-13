@@ -387,6 +387,27 @@ for (const viewport of viewports) {
   });
 }
 
+test.describe("Listas: menú ⋯ y navbar en escritorio", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("con el menú ⋯ abierto, tocar la navbar lo cierra y no abre otro", async ({ page }) => {
+    // La capa que cierra el menú al tocar afuera tiene que quedar por encima de
+    // la navbar fija (z-30). Con el menú dentro de una caja z-10 quedaba debajo,
+    // y el clic en el avatar abría su menú con el ⋯ todavía abierto.
+    await backend(page);
+    await page.goto("/lists");
+    await page.getByRole("button", { name: "Actions for the list Clásicos" }).click();
+    await expect(page.getByRole("menu")).toHaveCount(1);
+
+    // `force`: la capa que cierra el menú tapa la navbar a propósito, y
+    // Playwright no hace clic donde algo tapa el elemento. Con `force` hace clic
+    // igual en ese punto de la pantalla, como una persona: lo recibe la capa.
+    await page.locator("header [aria-haspopup='menu']").click({ force: true });
+
+    await expect(page.getByRole("menu")).toHaveCount(0);
+  });
+});
+
 test.describe("Listas: arrastrar en escritorio", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 

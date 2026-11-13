@@ -85,6 +85,58 @@ test.describe("navbar", () => {
     });
   });
 
+  test.describe("al navegar en escritorio", () => {
+    test.use({ viewport: ESCRITORIO });
+
+    test("la página nueva arranca arriba aunque se haya bajado poco", async ({ page }) => {
+      // Con menos scroll que el alto de la barra, el comienzo de la página nueva
+      // sigue a la vista y Next no la movía: la barra fija la tapaba.
+      await abrir(page, "/terms");
+      await bajarHasta(page, 60);
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(60);
+
+      await page.locator("header nav a[href='/search']").click();
+      await page.waitForURL("**/search");
+
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    });
+
+    test("volver atrás devuelve el scroll de la página anterior", async ({ page }) => {
+      await abrir(page, "/terms");
+      // Hasta el final: el navegador tiene que devolver justo ese punto aunque
+      // /search sea más corta.
+      await bajarHasta(page, 100_000);
+      const antes = await page.evaluate(() => window.scrollY);
+      expect(antes).toBeGreaterThan(300);
+      // Click con el mouse en el centro del enlace, como una persona. El
+      // `locator.click()` de Playwright primero hace scroll para «mostrar» el
+      // enlace y, con la barra `fixed`, movía la página 366 px antes de
+      // navegar: el navegador guardaba esa posición y el test fallaba.
+      const enlace = await page.locator("header nav a[href='/search']").boundingBox();
+      expect(enlace).not.toBeNull();
+      await page.mouse.click(enlace!.x + enlace!.width / 2, enlace!.y + enlace!.height / 2);
+      await page.waitForURL("**/search");
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+
+      await page.goBack();
+      await page.waitForURL("**/terms");
+
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(antes);
+    });
+
+    test("en login no se reserva espacio arriba: ahí no hay barra", async ({ page }) => {
+      await sinSesion(page);
+      await page.goto("/login");
+      // Login tiene su propio `header` (el selector de idioma): se busca la navbar.
+      await expect(page.locator("header[data-navbar]")).toHaveCount(0);
+
+      const padding = await page.evaluate(
+        () => getComputedStyle(document.documentElement).scrollPaddingTop
+      );
+      expect(padding).toBe("auto");
+    });
+  });
+
   test.describe("en celular", () => {
     test.use({ viewport: CELULAR });
 
