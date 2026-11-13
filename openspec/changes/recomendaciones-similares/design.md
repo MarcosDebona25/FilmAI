@@ -121,6 +121,10 @@ With one title the name is what tells «Titanic in "Pelis para llorar"» from
 tilts. bge-m3 is multilingual, so a Spanish name against English canonical
 texts works (B-06 already relies on it for the chatbot).
 
+**Text embedded**: the name as the user wrote it, trimmed, with no label or
+prefix (bge-m3 needs none for short queries, as in `buscar_semantico`). The
+normalized form is only for the rule above and the cache key.
+
 **Name vector cache**: `similares:nombre:{MODEL_VERSION}:{sha256(normalized
 name)}`, 30 days. Names repeat across users («Sci Fi», «Terror»), so most
 requests never reach Ollama.
@@ -259,8 +263,11 @@ lists, nothing else: the seeds are already out) and returns slice
 the last one it goes back to 1. No recalculation: the pool comes from Redis.
 
 **After «+ Add»**: the item enters the list, so the signature changes and the
-next request recomputes. The frontend does not refetch: it marks that card as
-added and keeps the rest, and the next «Refresh» gets page 2 of the new pool.
+next request recomputes a new pool, which is a new shuffle. The frontend does
+not refetch: it marks that card as added and keeps the rest. The row keeps the
+set of `(id_tmdb, tipo)` it has shown; after an add, «Refresh» asks for page 1
+of the new pool (not page 2) and drops what was already shown, so a card never
+appears twice.
 
 ## 7. Endpoints
 

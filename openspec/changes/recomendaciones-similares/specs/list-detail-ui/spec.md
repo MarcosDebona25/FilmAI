@@ -46,7 +46,8 @@ refetching the row. API errors MUST be shown by code.
 A «Refresh» button MUST ask for the next page and go back to page 1 after the
 last one. The current cards MUST stay until the new ones arrive, the row MUST
 scroll back to its start, focus MUST stay on the button, and a polite status
-MUST announce the new suggestions.
+MUST announce the new suggestions. After an «+ Add», «Refresh» MUST ask for
+page 1 and MUST drop the titles the row already showed.
 
 #### Scenario: Last page
 
