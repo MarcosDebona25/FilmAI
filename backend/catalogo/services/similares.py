@@ -58,7 +58,8 @@ _LIMITE_CANDIDATOS = 100
 # recomendaciones y el piso de calidad de lo que vuelve (D-5).
 SEMILLAS_TMDB = 3
 MIN_VOTOS_TMDB = 10
-# 3 semillas por 2 llamadas (el idioma pedido + el respaldo en inglés), reintentos incluidos.
+# 3 semillas por 2 llamadas (el idioma pedido y el respaldo en inglés),
+# reintentos incluidos.
 MAX_LLAMADAS_TMDB = 6
 
 # Hasta qué distancia coseno un vecino cuenta como «cercano» (design §4). Un
