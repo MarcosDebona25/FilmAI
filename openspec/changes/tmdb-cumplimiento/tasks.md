@@ -156,27 +156,27 @@ from the start. The 2.11 run is recorded in `docs/decisiones.md`.
 
 ## Phase 3: Chat cards (PR 3)
 
-- [ ] 3.1 Explain: why trimming is a nightly task and not a read-time filter;
+- [x] 3.1 Explain: why trimming is a nightly task and not a read-time filter;
       what `bulk_update` saves; how one prefetch avoids a query per card
-- [ ] 3.2 RED `chatbot/tests_recorte.py`: cards of a message older than 180
+- [x] 3.2 RED `chatbot/tests_recorte.py`: cards of a message older than 180
       days become `{id_tmdb, tipo}`; a 30-day-old message is untouched; a
       second run changes nothing
-- [ ] 3.3 RED: `ya_recomendados` entries get `fecha` when written and when a
+- [x] 3.3 RED: `ya_recomendados` entries get `fecha` when written and when a
       card is shown again; the task strips `titulo` and `anio` from entries
       older than 180 days or without `fecha`
-- [ ] 3.4 RED: the history `GET` rehydrates trimmed cards in the reader's
+- [x] 3.4 RED: the history `GET` rehydrates trimmed cards in the reader's
       language with a fixed number of queries per page; a missing or
       unavailable production gives `titulo: null`; no TMDB call
-- [ ] 3.5 RED: the system prompt resolves stripped `ya_recomendados` titles
+- [x] 3.5 RED: the system prompt resolves stripped `ya_recomendados` titles
       from the catalog in one query; an id not in the catalog stays in the
       no-repeat set but not in the «Ya recomendados» line
-- [ ] 3.6 GREEN: task `chatbot.recortar_tarjetas`, beat entry at 04:30;
+- [x] 3.6 GREEN: task `chatbot.recortar_tarjetas`, beat entry at 04:30;
       serializer rehydration; orchestrator writes `fecha`; prompt builder
-- [ ] 3.7 Panel: a card with `titulo: null` renders the «Title no longer
+- [x] 3.7 Panel: a card with `titulo: null` renders the «Title no longer
       available» placeholder without a link; Vitest
-- [ ] 3.8 Update `contracts/` if the history card shape documents
+- [x] 3.8 Update `contracts/` if the history card shape documents
       `titulo` as required
-- [ ] 3.9 Verify: ruff, `python manage.py test`, prettier, unit tests
+- [x] 3.9 Verify: ruff, `python manage.py test`, prettier, unit tests
 
 ## Phase 4: API use, AI decision and docs (PR 4)
 

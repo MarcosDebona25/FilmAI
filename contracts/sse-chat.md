@@ -70,6 +70,12 @@ decimal, o `null` si no tiene). `nota_tmdb` es **opcional**: las tarjetas guarda
 antes del 07/11/2026 no la traen, y el historial (`GET`) las devuelve con
 `nota_tmdb: null`. Las del stream la traen siempre (decisión del 07/11/2026).
 
+Solo en el historial, `titulo` puede ser `null`: las tarjetas de más de 180 días se
+guardan recortadas a `{id_tmdb, tipo}` y el `GET` las rehidrata desde el catálogo local;
+si el título ya no está en TMDB, vuelven con `titulo`, `poster`, `anio` y `nota_tmdb` en
+`null` y el panel muestra «Title no longer available» sin enlace. El stream nunca lo
+trae nulo.
+
 Orden: `estado`* y `texto`* (mezclados, en el orden en que ocurren), luego
 `tarjetas` y `fin`; o bien `error` en cualquier punto.
 
