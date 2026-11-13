@@ -798,8 +798,15 @@ class ComandoChatearTests(TestCase):
             )
         return salida.getvalue()
 
-    def test_imprime_la_respuesta_y_guarda_el_turno(self):
+    def test_imprime_la_respuesta_y_por_defecto_no_guarda_nada(self):
+        # El chat real del usuario no se ensucia con las pruebas (13/11/2026).
         salida = self.chatear([["Hola, ", "che"]])
+
+        self.assertIn("Hola, che", salida)
+        self.assertEqual(Mensaje.objects.count(), 0)
+
+    def test_con_guardar_se_guarda_el_turno(self):
+        salida = self.chatear([["Hola, ", "che"]], guardar=True)
 
         self.assertIn("Hola, che", salida)
         self.assertEqual(
@@ -807,10 +814,23 @@ class ComandoChatearTests(TestCase):
             [("usuario", "hola"), ("chatbot", "Hola, che")],
         )
 
-    def test_sin_guardar_no_toca_el_historial(self):
-        self.chatear([["Hola"]], sin_guardar=True)
+    def test_guardar_deja_las_tarjetas_y_los_ya_recomendados_como_la_app(self):
+        # Antes el comando creaba los `Mensaje` a mano, sin tarjetas ni
+        # `ya_recomendados`: el chat quedaba distinto al de una charla real.
+        buscar = {"descubrir": BaseOrquestador.buscar_de_mentira}
+        with (
+            patch.dict(FUNCIONES, buscar),
+            patch("chatbot.servicio.materializar_listado_en_segundo_plano"),
+        ):
+            self.chatear([[tool("descubrir")], ["Mirá [[1]]"]], guardar=True)
 
-        self.assertEqual(Mensaje.objects.count(), 0)
+        respuesta = Mensaje.objects.get(autor=TipoAutor.CHATBOT)
+        self.assertEqual(respuesta.texto, "Mirá **Moon** (2009)")
+        self.assertEqual([t["titulo"] for t in respuesta.tarjetas], ["Moon"])
+        chat = Chat.objects.get(usuario=self.usuario)
+        self.assertEqual(
+            [t["titulo"] for t in chat.contexto["ya_recomendados"]], ["Moon"]
+        )
 
     def test_si_el_turno_falla_lo_avisa_y_no_guarda(self):
         salida = self.chatear([[RuntimeError("503")]])

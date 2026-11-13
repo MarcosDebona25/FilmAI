@@ -237,6 +237,15 @@ class ComandoGoldenTests(ConArchivos, TestCase):
 
         self.assertEqual(Mensaje.objects.count(), 0)
 
+    def test_no_se_combina_con_guardar(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "chatear",
+                usuario="juanp",
+                golden=self.archivo(DOS_PREGUNTAS),
+                guardar=True,
+            )
+
     def test_no_se_combina_con_mensaje(self):
         with self.assertRaises(CommandError):
             call_command(

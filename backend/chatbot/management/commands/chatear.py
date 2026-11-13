@@ -3,6 +3,9 @@
 Prueba el orquestador real sin panel ni vista. Sirve para desarrollar y para las
 preguntas de prueba. Usa la clave de `.env`, así que cada mensaje tiene costo.
 
+Por defecto no guarda nada, así que se puede probar con un usuario real sin ensuciar
+su chat. Con `--guardar` cada turno se guarda como lo hace la app (`guardar_turno`).
+
 Con `--golden` recorre `chatbot/golden.yaml` (el set dorado): por cada pregunta
 muestra la expectativa, los eventos, las tools que pidió el modelo con sus
 argumentos, y cuánto tardó el primer texto y el turno completo. No guarda nada.
@@ -28,6 +31,7 @@ from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.orquestador import responder
+from chatbot.servicio import guardar_turno
 
 GOLDEN = Path(__file__).resolve().parents[2] / "golden.yaml"
 # RNF #6: segundos máximos para el turno completo.
@@ -151,9 +155,13 @@ class Command(BaseCommand):
         parser.add_argument("--idioma", default="es", choices=["es", "en"])
         parser.add_argument("--mensaje", help="Manda solo este mensaje y termina.")
         parser.add_argument(
-            "--sin-guardar",
+            "--guardar",
             action="store_true",
-            help="No guarda el turno: el historial del usuario queda como estaba.",
+            help=(
+                "Guarda cada turno en el chat del usuario, igual que la app (con "
+                "tarjetas y «ya recomendados»). Sin esto no se guarda nada: el "
+                "historial del usuario queda como estaba."
+            ),
         )
         parser.add_argument(
             "--golden",
@@ -166,6 +174,8 @@ class Command(BaseCommand):
     def handle(self, *args, **opciones):
         if opciones["golden"] and opciones["mensaje"]:
             raise CommandError("--golden y --mensaje no van juntos.")
+        if opciones["golden"] and opciones["guardar"]:
+            raise CommandError("--golden nunca guarda: no va con --guardar.")
         chat = Chat.objects.filter(usuario__nombre_usuario=opciones["usuario"]).first()
         if chat is None:
             raise CommandError("Ese usuario no existe o no tiene chat.")
@@ -184,7 +194,11 @@ class Command(BaseCommand):
             pass
 
     def _turno(self, chat, texto, opciones):
-        """Corre un turno y lo guarda, que es lo que hará la vista en el PR 5."""
+        """Corre un turno. Solo con `--guardar` lo guarda, como lo hace la vista.
+
+        Por defecto no se guarda: una prueba con el usuario real le dejaba mensajes
+        (y rechazos) en el chat, y el modelo los leía como historial después.
+        """
         inicio = time.perf_counter()
         try:
             resultado, _ = async_to_sync(self._recorrer)(
@@ -194,11 +208,10 @@ class Command(BaseCommand):
             self.stderr.write(f"\n[error del turno: {error}]")
             return
         self.stdout.write(f"\n[{time.perf_counter() - inicio:.1f} s]")
-        if not opciones["sin_guardar"]:
-            Mensaje.objects.create(chat=chat, texto=texto, autor=TipoAutor.USUARIO)
-            Mensaje.objects.create(
-                chat=chat, texto=resultado.texto, autor=TipoAutor.CHATBOT
-            )
+        if opciones["guardar"]:
+            # La misma función que usa la vista: guarda la pregunta, la respuesta con
+            # sus tarjetas y suma lo recomendado a `ya_recomendados`, todo o nada.
+            guardar_turno(chat, texto, resultado)
 
     def _golden(self, chat, ruta):
         """Recorre el set dorado y cierra con una tabla de tiempos contra RNF #6."""

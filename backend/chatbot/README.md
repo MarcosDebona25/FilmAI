@@ -28,6 +28,9 @@ orquestador.py              habla con el modelo y conecta todo lo de abajo
 Entre la vista y el orquestador está el contrato de `eventos.py`; el del stream hacia el navegador, en `contracts/sse-chat.md`. Para probarlo
 sin la vista: `python manage.py chatear --usuario juanp`. Cada mensaje tiene costo,
 porque usa la clave de `.env`.
+Por defecto no guarda nada, así que se puede probar con un usuario real sin ensuciar
+su chat; con `--guardar` cada turno se guarda como lo hace la app (`guardar_turno()`:
+tarjetas y `ya_recomendados` incluidos).
 Con `--golden` recorre el set dorado (`golden.yaml`) y mide los tiempos contra
 RNF #6.
 Para ver cómo fue un turno, buscá en el log del backend la línea `Turno:` del logger
