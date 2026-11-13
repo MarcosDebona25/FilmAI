@@ -729,13 +729,10 @@ class TMDBClientCacheTest(SimpleTestCase):
         self.assertEqual(len(calls), 2)
 
     def test_credits_tiene_ttl_propio(self):
-        self.assertIn("credits", ENDPOINT_TTLS)
-
-        cache, _ = self.make_cache()
-        cache.get_credits(550, "movie")
-        key = _build_key("credits", {"id_tmdb": 550, "tipo": "movie"})
-
-        self.assertEqual(self.redis.ttl(key), ENDPOINT_TTLS["credits"])
+        # Desde el 13/11/2026 los créditos se guardan recortados bajo otro
+        # nombre (`creditos_ficha`) y una sola vez: ver test_creditos_cache.py.
+        self.assertIn("creditos_ficha", ENDPOINT_TTLS)
+        self.assertNotIn("credits", ENDPOINT_TTLS)
 
     def test_changes_se_cachea_por_tipo_y_pagina(self):
         cache, calls = self.make_cache(body={"page": 1, "results": [{"id": 550}]})
