@@ -17,6 +17,12 @@
   `tmdb:{endpoint}:{params_hash}`.
 - **Rate limiting**: respetar límites, reintentos con backoff, timeout 5s
   (C-01). Consultas de detalle cacheadas para no duplicar llamadas (RNF #8).
+  Todo pedido a TMDB pasa por `catalogo/client.py` (verificado el 13/11/2026,
+  #180) y reintenta 429 (Too Many Requests) respetando `Retry-After`. La tasa
+  medida está en «Persistencia, caducidad y ritmo de uso».
+- **Términos de uso (#180)**: aviso y logo en «Credits», nada guardado más de
+  180 días sin refrescar, sin ingresos ligados al contenido de TMDB. Detalle
+  abajo y en `openspec/specs/tmdb-compliance/`.
 - **Referencia oficial**: https://developer.themoviedb.org/reference
 
 ---
@@ -439,3 +445,49 @@ Los listados y detalles en español completan únicamente los campos vacíos con
 `python manage.py rellenar_traducciones` procesa producciones enriquecidas, por lotes e idempotentemente. Los registros sin `fecha_enriquecimiento` se completan al materializarse. La sincronización diaria reintenta traducciones pendientes; no altera el texto canónico ni el hash de embeddings. En la base revisada el 08/10/2026 no quedan producciones enriquecidas pendientes; las 39 filas sin enriquecer quedan fuera del relleno.
 
 El cliente frontend envía `Accept-Language` en cada solicitud. La localización de TMDB usa `es-MX`, mientras fechas y números de interfaz usan `es-AR`. El chatbot utilizará tools localizadas en el idioma efectivo, fijado al abrir el stream; la prosa sigue el idioma del mensaje del usuario y su corpus BGE-M3 conserva el inglés (decisiones del 08/10/2026 y 09/10/2026).
+
+## Persistencia, caducidad y ritmo de uso (#180, 13/11/2026)
+
+Los términos de TMDB piden no guardar su contenido más de 6 meses sin refrescarlo. Contrato completo: `openspec/specs/tmdb-compliance/`; decisiones: `docs/decisiones.md`, «Cierre del #180».
+
+### Qué se guarda de TMDB
+
+El reloj de 180 días corre sobre el **contenido** (textos, rutas de imagen, notas, listas de nombres). Los ids (`id_tmdb`, `tipo`, `generos_ids`) son referencias y duran lo que dure la fila.
+
+| Dónde                            | Qué guarda                                                                                   | Edad máxima                                                                                              |
+| -------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `ProduccionAudiovisual`          | título, sinopsis, póster, reparto, directores, géneros, keywords, nota, duración, temporadas | se refresca antes de los 150 días; nunca más de 180                                                      |
+| `ProduccionTraduccion`           | título, sinopsis y póster por idioma                                                         | la de su producción (se reescribe en el mismo `_enriquecer`)                                             |
+| `ProduccionEmbedding`            | vector del texto canónico                                                                    | la de su producción (se recalcula si cambia `source_hash`)                                               |
+| `Mensaje.tarjetas`               | `{id_tmdb, tipo, titulo, poster, anio, nota_tmdb}`                                           | 180 días; después queda `{id_tmdb, tipo}`                                                                |
+| `Chat.contexto.ya_recomendados`  | las últimas 30 tarjetas, con `fecha`                                                         | 180 días; después queda `{id_tmdb, tipo, fecha}`                                                         |
+| Redis, claves normales           | respuestas de la API                                                                         | 30 días (`genres`); el resto, 1 h a 24 h                                                                 |
+| Redis, respaldo (`RESPALDO_TTL`) | última respuesta buena                                                                       | 30 días (7 para `watch_providers`)                                                                       |
+| Caché del navegador              | respuestas del catálogo                                                                      | `max-age` del catálogo; `catalogo/test_cache_tope.py` fija todos los TTL y `max-age` en 180 días o menos |
+
+`Calificacion`, `Resena` y los ítems de lista guardan datos del usuario y una clave a la producción, no contenido de TMDB.
+
+**Excepciones aceptadas** (07/11/2026): el collage de las pantallas de acceso (`frontend/public/collage-posters/Opcion 1.jpg`, desde el 13/08/2026, **revisar antes del 13/02/2027**) y los fixtures de prueba con copias de respuestas (`frontend/e2e/api-simulada.ts`, `backend/catalogo/test_datos/tmdb_buscar.json`), que nunca se sirven.
+
+### Regla de refresco
+
+Una fila está vencida si `fecha_enriquecimiento` es NULL o tiene más de `DIAS_REFRESCO_TMDB` (150) días. `catalogo.refrescar_vencidos` corre a las 03:30 y refresca por `materializar(forzar=True)` las filas de la cuota de la noche: `min(CELERY_REFRESCO_TECHO, max(rotación, plazos))` (rotación = `ceil(total ÷ 150)`; plazos = la menor cantidad por noche que evita que alguna fila llegue a 180 días; techo 1000). Primero las filas sin fecha, después las más viejas. `chatbot.recortar_tarjetas` corre a las 04:30.
+
+### Regla del 404 (Not Found)
+
+Solo cuenta un 404 (Not Found); un timeout, 500 (Internal Server Error), 429 (Too Many Requests) o 401 (Unauthorized) deja la fila vencida para la noche siguiente. El primer 404 (Not Found) anota `fecha_404`; el segundo, en una noche posterior, borra la fila si nadie la usa o la deja como lápida (sin contenido, sin traducciones ni embedding, `disponible_en_tmdb = False`). Una lápida no aparece en recomendaciones, búsqueda semántica ni chatbot, su ficha responde 404 (Not Found) y no se puede calificar ni agregar a una lista; en las listas y en Mis reseñas se ve como «Title no longer available». Si TMDB la vuelve a responder con 200 (OK), se restaura.
+
+### Tasa de pedidos medida (13/11/2026)
+
+Se contó cada intento HTTP con el contador de `registrar_llamada` (reintentos incluidos) y se midió el máximo de pedidos dentro de cualquier ventana de 1 s. Corrida en un proyecto de compose aparte con base y Redis vacíos, con el Redis vaciado antes de cada fase (peor caso: sin respuestas en caché), en un solo proceso, sin Ollama.
+
+| Fase                                                   | Pedidos | Duración | Promedio | Pico en 1 s |
+| ------------------------------------------------------ | ------: | -------: | -------: | ----------: |
+| `seed_catalogo --limite 200` (200 títulos)             |     813 |    171 s |   4,8 /s |        6 /s |
+| `sync_catalogo_diaria` (sobre 255 filas)               |     457 |     89 s |   5,2 /s |        6 /s |
+| `rellenar_traducciones --limite 200`                   |     400 |     74 s |   5,4 /s |        6 /s |
+| `refrescar_vencidos` (255 filas a 179 días, cuota 255) |    1020 |    184 s |   5,5 /s |        7 /s |
+
+El cliente es síncrono: un proceso manda un pedido por vez y su ritmo lo fija la latencia de TMDB (unos 5 por segundo). El pico más alto fue 7 por segundo. Con el worker en `--concurrency=2` más un seed manual, tres procesos en paralelo darían unos 21 por segundo (estimado, no medido), por debajo del umbral de 30 por segundo. No hace falta un limitador compartido. Lo que cambie la concurrencia del worker o sume tareas en paralelo obliga a repetir esta medición. Cada fila refrescada cuesta 4 pedidos (detalle, créditos, keywords y la traducción).
+
+Imágenes: las URLs de `image.tmdb.org` solo se arman en `frontend/lib/catalog.ts` a partir de rutas del catálogo (verificado el 13/11/2026), nunca como gráficos decorativos.
