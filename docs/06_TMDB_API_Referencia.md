@@ -351,7 +351,6 @@
 | `detalle(id_tmdb, tipo)`                    | `get_movie_detail`, `get_tv_detail`         | `GET /movie/{id}`, `GET /tv/{id}`                     |
 | `buscar_semantico(consulta, filtros)`       | —                                           | No usa TMDB: pgvector sobre embeddings locales (B-06) |
 | `mis_listas(lista?)`                        | —                                           | No usa TMDB: listas del usuario por SQL               |
-| `mostrar_tarjetas(tarjetas)`                | —                                           | No usa TMDB: valida ids del turno, hasta 3 tarjetas   |
 | Keywords para embeddings (C-04)             | `get_keywords`                              | `GET /movie/{id}/keywords`, `GET /tv/{id}/keywords`   |
 
 Los `filtros` de `descubrir` y `buscar_semantico` son los mismos: `generos`

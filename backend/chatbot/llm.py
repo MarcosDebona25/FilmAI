@@ -47,10 +47,16 @@ class ProveedorLLM(Protocol):
     """
 
     def escribir(
-        self, mensajes: list[dict], esquemas: list[dict]
+        self,
+        mensajes: list[dict],
+        esquemas: list[dict],
+        tool_choice: str | None = None,
     ) -> AsyncIterator[str | Vuelta]: ...
 
     # Con `esquemas` vacío el modelo no recibe tools y solo puede escribir texto.
+    # `tool_choice="required"` lo obliga a pedir al menos una tool (la búsqueda
+    # forzada del orquestador); `None` lo deja decidir a él. Un `= None` en la firma
+    # es un argumento opcional: en Java sería una sobrecarga del método.
 
 
 async def leer_stream(stream):
@@ -98,7 +104,7 @@ class ProveedorOpenAICompatible:
         self.api_key = api_key
         self.thinking = thinking
 
-    async def escribir(self, mensajes, esquemas):
+    async def escribir(self, mensajes, esquemas, tool_choice=None):
         # Un cliente por llamada: compartido entre event loops falla con
         # `Event loop is closed`, y crearlo cuesta menos de un milisegundo.
         async with AsyncOpenAI(
@@ -111,6 +117,8 @@ class ProveedorOpenAICompatible:
             # vacía, y sin él el modelo no tiene cómo pedir una tool. `**{...}` abre el
             # diccionario como argumentos con nombre, igual que en `ejecutar()`.
             con_tools = {"tools": esquemas} if esquemas else {}
+            if esquemas and tool_choice:
+                con_tools["tool_choice"] = tool_choice
             stream = await cliente.chat.completions.create(
                 model=self.modelo,
                 messages=mensajes,
@@ -130,8 +138,9 @@ class ProveedorFalso:
     """Reproduce un guion, para probar el orquestador sin red ni costo.
 
     Cada elemento de `guion` es una vuelta: una lista de `str`, `LlamadaTool` o una
-    excepción, que se lanza en ese punto. Guarda en `pedidos` los mensajes que recibió
-    y en `esquemas` las tools que se le ofrecieron en cada llamada.
+    excepción, que se lanza en ese punto. Guarda en `pedidos` los mensajes que recibió,
+    en `esquemas` las tools que se le ofrecieron en cada llamada y en `tool_choices`
+    el `tool_choice` de cada una. `entregados` cuenta los trozos de texto entregados.
     """
 
     def __init__(self, guion, razonamiento=None):
@@ -139,11 +148,14 @@ class ProveedorFalso:
         self.razonamiento = razonamiento
         self.pedidos = []
         self.esquemas = []
+        self.tool_choices = []
+        self.entregados = 0
 
-    async def escribir(self, mensajes, esquemas):
+    async def escribir(self, mensajes, esquemas, tool_choice=None):
         # Copia: el orquestador sigue agregando mensajes a la misma lista.
         self.pedidos.append(list(mensajes))
         self.esquemas.append(esquemas)
+        self.tool_choices.append(tool_choice)
         texto, llamadas = [], []
         for item in self.guion.pop(0):
             if isinstance(item, Exception):
@@ -152,6 +164,7 @@ class ProveedorFalso:
                 llamadas.append(item)
             else:
                 texto.append(item)
+                self.entregados += 1
                 yield item
         yield Vuelta("".join(texto), llamadas, self.razonamiento)
 
