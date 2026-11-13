@@ -88,62 +88,69 @@ longer available» card in lists and My reviews.
 
 ## Phase 2: Catalog persistence (PR 2)
 
-- [ ] 2.1 Explain: what «cache» means in TMDB's terms (anything stored, not
+- [x] 2.1 Explain: what «cache» means in TMDB's terms (anything stored, not
       only Redis); why refresh and not delete (CASCADE to ratings); how a
       beat entry reaches the worker
-- [ ] 2.2 RED `catalogo/tests_vencimiento.py`: the pure function
+- [x] 2.2 RED `catalogo/tests_vencimiento.py`: the pure function
       `cuota_nocturna(total, por_dia, techo)` (design, «Nightly quota»):
       empty catalog gives 0; 10 000 spread rows give 67; 10 000 rows 150 days
       old give 334; NULL and overdue rows count as due tonight; the ceiling
       caps it. The query side groups rows by the day they turn 180 in one
       query, and `a_refrescar(cuota)` returns NULL rows first, then oldest
       `fecha_enriquecimiento`, exactly `cuota` of them
-- [ ] 2.3 RED: `refrescar_vencidos` calls `materializar(forzar=True)` for each
+- [x] 2.3 RED: `refrescar_vencidos` calls `materializar(forzar=True)` for each
       due row; one `TMDBError` does not stop the rest; the summary counts
       refreshed / not found / failed and the rows still over 180 days
-- [ ] 2.4 RED: refreshing a row overwrites its `ProduccionTraduccion` texts
+- [x] 2.4 RED: refreshing a row overwrites its `ProduccionTraduccion` texts
       (not only fills empty ones); if it does not, fix `guardar_traducciones`
-- [ ] 2.5 RED: the first 404 (Not Found) only sets `fecha_404` and leaves the
+- [x] 2.5 RED: the first 404 (Not Found) only sets `fecha_404` and leaves the
       row due; a second 404 (Not Found) applies the rule only if `fecha_404` is before
       today (a second run the same night does not); a timeout, 500 (Internal
       Server Error), 429 (Too Many Requests) or 401 (Unauthorized) never
       counts; a successful refresh clears `fecha_404`
-- [ ] 2.5b RED: two 404s (Not Found) on a row nobody references delete it
+- [x] 2.5b RED: two 404s (Not Found) on a row nobody references delete it
       (and its translations and embedding)
-- [ ] 2.6 RED: 404 (Not Found) on a row with a rating keeps the rating, blanks
+- [x] 2.6 RED: 404 (Not Found) on a row with a rating keeps the rating, blanks
       the TMDB fields, sets `disponible_en_tmdb = False` and
       `fecha_enriquecimiento`, deletes its `ProduccionTraduccion` rows and
       the embedding; semantic search,
       Recommended, the chatbot tools (`mis_listas` included) and the detail
       page never return it
-- [ ] 2.6b RED: `Calificacion`, `Resena` and `Tiene` protect the production
-      (`on_delete=PROTECT`): a rating created between the check and the
+- [x] 2.6b RED: `Calificacion` and `Tiene` protect the production
+      (`on_delete=PROTECT`; `Resena` hangs from its `Calificacion`): a
+      rating created between the check and the
       delete makes the delete fail (inside its own savepoint) and the row
       becomes a tombstone instead. Before the change, review every place that
       deletes a production (design lists them: `_descartar_cascaron`, the
       seed, the admin, tests) and how each handles `ProtectedError`
-- [ ] 2.6c RED: a tombstone TMDB answers with 200 (OK) again is filled in,
+- [x] 2.6c RED: a tombstone TMDB answers with 200 (OK) again is filled in,
       `disponible_en_tmdb = True`, `fecha_404` cleared, embedding enqueued
-- [ ] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`), `fecha_404`
-      (nullable) and `PROTECT` on the three foreign keys;
+- [x] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`), `fecha_404`
+      (nullable) and `PROTECT` on the two foreign keys to the production
+      (`Calificacion`, `Tiene`);
       `catalogo/services/vencimiento.py`; task `catalogo.refrescar_vencidos`;
       settings `DIAS_REFRESCO_TMDB = 150`, `CELERY_REFRESCO_TECHO = 1000`;
       index on `fecha_enriquecimiento`;
       beat entry at 03:30 with its comment
-- [ ] 2.8 RED `catalogo/test_cache_tope.py`: every value in `ENDPOINT_TTLS`,
+- [x] 2.8 RED `catalogo/test_cache_tope.py`: every value in `ENDPOINT_TTLS`,
       `RESPALDO_TTL`, `RESPALDO_TTLS` and every catalog `max-age` is ≤ 180
       days
-- [ ] 2.9 RED: the refresh honors 429 (Too Many Requests) with `Retry-After`
+- [x] 2.9 RED: the refresh honors 429 (Too Many Requests) with `Retry-After`
       (`httpx.MockTransport`, `time.sleep` patched)
-- [ ] 2.10 Serializers and cards for an unavailable title: «Title no longer
+- [x] 2.10 Serializers and cards for an unavailable title: «Title no longer
       available» key (en/es) in the frontend, no link, grey card; in lists
       and My reviews it keeps the rating and review, and can still be removed
       from the list or have its review deleted; unit test
-- [ ] 2.11 Manual (no Docker in this planning worktree; in the PR's
+- [x] 2.11 Manual (no Docker in this planning worktree; in the PR's
       worktree with `RUN_MIGRATIONS=false` as usual): run the task once
       against the dev database, record the quota and how it was obtained,
       how long it took, and how many TMDB calls it made
-- [ ] 2.12 Verify: `ruff format . && ruff check .`, `python manage.py test`
+- [x] 2.12 Verify: `ruff format . && ruff check .`, `python manage.py test`
+
+Done 13/11/2026 on `feat/tmdb-refresco`. 2.4, 2.8 and 2.9 pinned behavior that
+already held (translations were already overwritten, TTLs were already under
+30 days, the client already honored `Retry-After`), so their tests were green
+from the start. The 2.11 run is recorded in `docs/decisiones.md`.
 
 ## Phase 3: Chat cards (PR 3)
 
