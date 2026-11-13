@@ -109,7 +109,9 @@
     libros (por ejemplo The Martian, si el usuario no la vio). No afirma fechas
     de estreno de memoria (Project Hail Mary salió el 2026-03-15), no anuncia
     cuántos títulos va a recomendar («hay dos que...») y no usa malas palabras.
-    Si aclara algo que el filtro no cubre, lo hace en una oración.
+    Si aclara algo que el filtro no cubre, lo hace en una oración. Pero no se
+    excusa por el filtro de libros si lo usó y trajo resultados (en la medición
+    de #201 decía «el buscador no filtra bien por basada en libro»).
 
 - id: registro_cuidado
   mensaje: Algo como About Time

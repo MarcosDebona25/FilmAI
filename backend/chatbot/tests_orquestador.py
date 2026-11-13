@@ -488,6 +488,18 @@ class ReglasDelPromptTests(SimpleTestCase):
         self.assertIn("no pueden filtrar", sistema)
         self.assertIn("sin presentarlo como cumplido", sistema)
 
+    def test_si_un_filtro_existe_y_se_uso_no_se_excusa(self):
+        # En la medición de #201 el bot decía «el buscador no filtra bien por basada
+        # en libro» aunque `basada_en_libro` se había aplicado y traído resultados.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("solo cuando ninguna tool aceptó ese criterio", sistema)
+        self.assertIn("Si usaste un filtro que existe, no te excuses", sistema)
+        # La regla sigue en su lugar, dentro de «Al recomendar».
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("no pueden filtrar")
+        )
+
     def test_las_reglas_nuevas_no_reordenan_las_existentes(self):
         # Mover reglas cambió la conducta del modelo el 12/11/2026: las nuevas se
         # suman en su propia sección, después de «Títulos vistos».
