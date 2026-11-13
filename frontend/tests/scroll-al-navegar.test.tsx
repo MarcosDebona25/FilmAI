@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,6 +18,15 @@ describe("ScrollArribaAlNavegar", () => {
   function navegarA(nueva: string, rerender: (ui: React.ReactElement) => void) {
     ruta.actual = nueva;
     window.history.pushState(null, "", nueva);
+    rerender(<ScrollArribaAlNavegar />);
+  }
+
+  // Atrás o adelante: el navegador cambia la URL y recién después avisa con
+  // `popstate`; Next actualiza `pathname` más tarde.
+  function atrasA(destino: string, rerender: (ui: React.ReactElement) => void) {
+    window.history.replaceState(null, "", destino);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    ruta.actual = destino.split("?")[0];
     rerender(<ScrollArribaAlNavegar />);
   }
 
@@ -41,9 +51,7 @@ describe("ScrollArribaAlNavegar", () => {
     const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     const { rerender } = render(<ScrollArribaAlNavegar />);
 
-    window.dispatchEvent(new PopStateEvent("popstate"));
-    ruta.actual = "/search";
-    rerender(<ScrollArribaAlNavegar />);
+    atrasA("/search", rerender);
 
     expect(scrollTo).not.toHaveBeenCalled();
   });
@@ -51,9 +59,7 @@ describe("ScrollArribaAlNavegar", () => {
   it("después de un atrás, la navegación siguiente vuelve a llevar arriba", () => {
     const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     const { rerender } = render(<ScrollArribaAlNavegar />);
-    window.dispatchEvent(new PopStateEvent("popstate"));
-    ruta.actual = "/search";
-    rerender(<ScrollArribaAlNavegar />);
+    atrasA("/search", rerender);
 
     navegarA("/lists", rerender);
 
@@ -67,5 +73,30 @@ describe("ScrollArribaAlNavegar", () => {
     navegarA("/settings#t-idioma", rerender);
 
     expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("en desarrollo React corre cada efecto dos veces, y al entrar tampoco mueve nada", () => {
+    // `StrictMode` es lo que usa Next en `npm run dev`: monta, desmonta y vuelve
+    // a montar para encontrar efectos mal escritos (PR-Agent en #188).
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+
+    render(
+      <StrictMode>
+        <ScrollArribaAlNavegar />
+      </StrictMode>
+    );
+
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("un atrás que no cambia de página no frena la navegación siguiente", () => {
+    // En Buscar, atrás entre dos filtros (`?q=a` y `?q=b`) no cambia `pathname`.
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    const { rerender } = render(<ScrollArribaAlNavegar />);
+    atrasA("/terms?q=a", rerender);
+
+    navegarA("/lists", rerender);
+
+    expect(scrollTo).toHaveBeenCalledTimes(1);
   });
 });

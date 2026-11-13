@@ -808,6 +808,20 @@ class ValidacionDeArgumentosTests(BaseTools):
         self.llamadas.append(argumentos)
         return {"resultados": []}
 
+    def test_una_lista_con_un_id_de_20_digitos_es_un_error(self):
+        # Postgres no acepta un número de más de 19 dígitos (`bigint`): la consulta
+        # fallaba con un error de base (PR-Agent en #189). 20 caracteres no alcanzaban.
+        resultado = self.correr("mis_listas", {"lista": "9" * 20})
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        self.assertEqual(self.llamadas, [])
+
+    def test_las_claves_de_lista_mas_largas_siguen_valiendo(self):
+        # «pendientes» tiene 10 letras: es la clave más larga y no puede quedar afuera.
+        resultado = self.correr("mis_listas", {"lista": "pendientes"})
+
+        self.assertNotIn("error", resultado)
+
     def test_un_genero_en_espanol_en_semantico_es_un_error(self):
         resultado = self.correr(
             "buscar_semantico", {"consulta": "naves", "generos": ["Ciencia ficción"]}

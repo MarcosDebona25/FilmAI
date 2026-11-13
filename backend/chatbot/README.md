@@ -51,7 +51,7 @@ Para ver cómo fue un turno, buscá en el log del backend la línea `Turno:` del
 | `management/commands/chatear.py` | Hablar con el bot desde la terminal; con `--golden`, correr el set dorado |
 | `golden.yaml` | El set dorado: preguntas fijas, cada una con lo que se espera de la respuesta |
 | `contexto.py` | Arma el perfil del usuario desde la base |
-| `anonimizar.py` | Limpia datos personales de lo que va al proveedor: correos y nombres, sin importar apóstrofos curvos ni tildes sueltas |
+| `anonimizar.py` | Limpia datos personales de lo que va al proveedor: correos y nombres, sin importar apóstrofos curvos, tildes sueltas ni letras como `ł`, `ø`, `ı` o `ß` (que valen como `l`, `o`, `i` y «ss») |
 | `tools/__init__.py` | La puerta de las herramientas: `ejecutar()`, que antes revisa los argumentos contra el esquema y devuelve `invalid_arguments` si están mal |
 | `tools/esquemas.py` | La descripción de cada herramienta, que lee el modelo, con el largo máximo de los textos y el rango de los números |
 | `tools/busqueda.py` | Las herramientas que buscan títulos. `descubrir` y `buscar_semantico` aceptan `basada_en_libro` (keyword de TMDB «based on novel or book»); `detalle` de una serie trae `temporadas` y `episodios` |

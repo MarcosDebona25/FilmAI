@@ -468,6 +468,11 @@ Cinco casos reales con `gonzag8` mostraron huecos del prompt. Todo cambió **sin
 
 Archivos: `backend/chatbot/prompts.py`, `backend/chatbot/orquestador.py`, `backend/chatbot/tools/busqueda.py`, `backend/chatbot/tools/esquemas.py`, `backend/chatbot/golden.yaml`, `backend/catalogo/client.py`, `backend/catalogo/cache.py`, `backend/catalogo/services/semantica.py`
 
+### 13/11/2026 — Anonimizado de letras sin descomposición
+
+`anonimizar()` plegaba las tildes con `NFD`, que no descompone las letras que no son «letra + tilde»: «Łukasz» guardado y «Lukasz» escrito (o al revés) no coincidían y el nombre viajaba al proveedor. Ahora `_plano()` pliega, una por una, `ı`, `ł`, `ø`, `đ`, `ð`, `ħ` y `ŧ` a su letra base. Las letras dobles `ß`, `æ`, `œ` y `þ` equivalen a «ss», «ae», «oe» y «th»: no pueden plegarse sin cambiar el largo del texto (rompería las posiciones del reemplazo), así que el patrón de cada nombre acepta las dos formas, sea cual sea la guardada. Limitación: no se cubren letras muy raras ni otros alfabetos (cirílico, griego). Los otros dos pendientes de esta tanda ya estaban hechos: `ejecutar()` valida `tipo` (`enum`) e `id_tmdb` (1 a `ID_TMDB_MAXIMO`) contra el esquema y devuelve `invalid_arguments` sin llamar a la tool ni a TMDB, y `mis_listas` filtra `activa=True` (en `Lista`, como en las vistas de `listas`, significa «no dada de baja»), ambos del 12/11.
+Archivos: `backend/chatbot/anonimizar.py`, `backend/chatbot/tests_contexto.py`, `backend/chatbot/README.md`
+
 ---
 
 ## Multiidioma
