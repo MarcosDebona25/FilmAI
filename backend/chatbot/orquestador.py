@@ -23,6 +23,7 @@ from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.idioma import detectar_idioma
 from chatbot.llm import Vuelta, crear_proveedor
+from chatbot.marcadores import FiltroDeMarcadores
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
@@ -314,7 +315,35 @@ def _tarjetas_nombradas(respuesta, ctx, pregunta=""):
     return [{"id_tmdb": id_tmdb, "tipo": tipo} for id_tmdb, tipo in elegidos]
 
 
-async def _ultima_llamada(proveedor, mensajes, partes, motivo):
+async def _sacar(filtro, partes, pedazos):
+    """Pasa los pedazos por el filtro de marcadores y entrega lo que ya se puede mostrar.
+
+    Lo que sale (con los `[[n]]` ya cambiados por el título) se suma a `partes`, que
+    es el texto final del turno, y se entrega como `Texto`. Un pedazo puede no
+    entregar nada: el filtro retiene unos pocos caracteres que podrían ser el
+    comienzo de un marcador. Es un generador async: el que lo llama lo recorre con
+    `async for` y reenvía cada evento con su propio `yield`.
+    """
+    for pedazo in pedazos:
+        saliente = filtro.alimentar(pedazo)
+        if saliente:
+            partes.append(saliente)
+            yield Texto(saliente)
+
+
+def _soltar(filtro, partes):
+    """Lo que el filtro retenía al terminar un texto, como `Texto` (o `None` si nada).
+
+    `cerrar()` ya devuelve texto final: no vuelve a pasar por `alimentar()`.
+    """
+    resto = filtro.cerrar()
+    if not resto:
+        return None
+    partes.append(resto)
+    return Texto(resto)
+
+
+async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro):
     """Una llamada más, sin tools, para que el modelo responda con lo que ya tiene.
 
     Antes, pasarse del tope de vueltas o terminar sin texto era un error para el
@@ -335,16 +364,22 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo):
             # importa el texto que salió.
             if isinstance(item, Vuelta) or not item:
                 continue
+            saliente = filtro.alimentar(item)
+            if not saliente:
+                continue
             if separar:
                 partes.append("\n\n")
                 yield Texto("\n\n")
                 separar = False
-            escrito = escrito or bool(item.strip())
-            partes.append(item)
-            yield Texto(item)
+            escrito = escrito or bool(saliente.strip())
+            partes.append(saliente)
+            yield Texto(saliente)
     except Exception as error:
         logger.exception("La última llamada falló")
         raise ErrorDelTurno("La última llamada falló") from error
+    if resto := _soltar(filtro, partes):
+        escrito = escrito or bool(resto.delta.strip())
+        yield resto
     if not escrito:
         raise ErrorDelTurno("La última llamada no escribió nada")
 
@@ -381,6 +416,8 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         logger.exception("No se pudo preparar el turno")
         raise ErrorDelTurno("No se pudo preparar el turno") from error
     partes = []
+    # Cambia los `[[n]]` del modelo por el título y suma las tarjetas (marcadores.py).
+    filtro = FiltroDeMarcadores(ctx)
     # Para la línea de diagnóstico del final (ver `_registrar_turno`).
     tools_pedidas, vueltas, ultima_sin_tools = [], 0, False
 
@@ -400,9 +437,10 @@ async def responder(chat, texto, idioma, *, proveedor=None):
                 if not en_vivo and len("".join(retenido)) <= _LARGO_DE_PREAMBULO:
                     continue
                 en_vivo = True
-                for pedazo in _con_separador(retenido, separar):
-                    partes.append(pedazo)
-                    yield Texto(pedazo)
+                async for evento in _sacar(
+                    filtro, partes, _con_separador(retenido, separar)
+                ):
+                    yield evento
                 separar, retenido = False, []
         except Exception as error:
             # `Exception` no incluye `CancelledError`: si el usuario cancela, la
@@ -415,9 +453,13 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         # vuelta también muestra tarjetas, el texto las acompaña y no se descarta.
         es_preambulo = vuelta.llamadas and not _con_tarjetas(vuelta)
         if retenido and not es_preambulo:
-            for pedazo in _con_separador(retenido, separar):
-                partes.append(pedazo)
-                yield Texto(pedazo)
+            async for evento in _sacar(
+                filtro, partes, _con_separador(retenido, separar)
+            ):
+                yield evento
+        # Lo que el filtro retenía por si era un marcador: la vuelta terminó.
+        if resto := _soltar(filtro, partes):
+            yield resto
 
         if not vuelta.llamadas:
             break
@@ -439,14 +481,16 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         # tools, así que el modelo no llegó a responder.
         motivo = "se pasó del tope de vueltas con tools"
         ultima_sin_tools = True
-        async for evento in _ultima_llamada(proveedor, mensajes, partes, motivo):
+        async for evento in _ultima_llamada(
+            proveedor, mensajes, partes, motivo, filtro
+        ):
             yield evento
 
     if not "".join(partes).strip():
         # El turno terminó sin una sola palabra para el usuario.
         ultima_sin_tools = True
         async for evento in _ultima_llamada(
-            proveedor, mensajes, partes, "el modelo no escribió nada"
+            proveedor, mensajes, partes, "el modelo no escribió nada", filtro
         ):
             yield evento
 

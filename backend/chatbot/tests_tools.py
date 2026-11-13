@@ -141,6 +141,7 @@ class FormaDeLosResultadosTests(BaseTools):
             resultado["resultados"],
             [
                 {
+                    "ref": 1,
                     "id_tmdb": 1,
                     "tipo": "movie",
                     "titulo": "Moon",
@@ -201,6 +202,64 @@ class FormaDeLosResultadosTests(BaseTools):
         )
 
         self.assertEqual(len(resultado["resultados"]), 10)
+
+
+class RefsTests(BaseTools):
+    """Cada título lleva un `ref`: el número que el modelo escribe como `[[ref]]`."""
+
+    def buscar(self, contexto, tipo="movie"):
+        return ejecutar(contexto, "similares_a", {"id_tmdb": 99, "tipo": tipo})
+
+    def test_los_refs_siguen_el_orden_de_aparicion_desde_1(self):
+        self.catalogo.resultados["movie"] = [pelicula(50), pelicula(7), pelicula(30)]
+
+        resultado = self.buscar(self.contexto())
+
+        self.assertEqual([r["ref"] for r in resultado["resultados"]], [1, 2, 3])
+        self.assertEqual([r["id_tmdb"] for r in resultado["resultados"]], [50, 7, 30])
+
+    def test_un_id_repetido_entre_pelicula_y_serie_tiene_refs_distintos(self):
+        self.catalogo.resultados["movie"] = [pelicula(5)]
+        self.catalogo.resultados["tv"] = [serie(5)]
+        contexto = self.contexto()
+
+        refs = [
+            self.buscar(contexto, tipo)["resultados"][0]["ref"]
+            for tipo in ("movie", "tv")
+        ]
+
+        self.assertEqual(refs, [1, 2])
+
+    def test_los_refs_siguen_entre_busquedas_del_mismo_turno(self):
+        contexto = self.contexto()
+        self.catalogo.resultados["movie"] = [pelicula(1), pelicula(2)]
+        self.buscar(contexto)
+        self.catalogo.resultados["movie"] = [pelicula(3)]
+
+        resultado = self.buscar(contexto)
+
+        self.assertEqual(resultado["resultados"][0]["ref"], 3)
+
+    def test_un_titulo_que_vuelve_a_salir_conserva_su_ref(self):
+        contexto = self.contexto()
+        self.catalogo.resultados["movie"] = [pelicula(1), pelicula(2)]
+        self.buscar(contexto)
+        self.catalogo.resultados["movie"] = [pelicula(2), pelicula(3)]
+
+        resultado = self.buscar(contexto)
+
+        self.assertEqual([r["ref"] for r in resultado["resultados"]], [2, 3])
+
+    def test_candidatos_devuelve_el_titulo_de_cada_ref(self):
+        contexto = self.contexto()
+        self.catalogo.resultados["movie"] = [pelicula(1, "A"), pelicula(2, "B")]
+        self.buscar(contexto)
+
+        candidatos = contexto.candidatos()
+
+        self.assertEqual(
+            {n: t["titulo"] for n, t in candidatos.items()}, {1: "A", 2: "B"}
+        )
 
 
 class VistasTests(BaseTools):
@@ -525,6 +584,7 @@ class BuscarSemanticoTests(BaseTools):
             resultado["resultados"],
             [
                 {
+                    "ref": 1,
                     "id_tmdb": 17431,
                     "tipo": "movie",
                     "titulo": "Moon",

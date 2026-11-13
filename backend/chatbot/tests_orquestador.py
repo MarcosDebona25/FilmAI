@@ -82,8 +82,11 @@ class RespuestaSimpleTests(BaseOrquestador):
     async def test_el_texto_sale_de_a_pedazos_y_cierra_con_un_resultado(self):
         eventos = await self.correr([["Hola ", "che"]])
 
+        # El filtro de marcadores retiene un espacio final por si lo que sigue es un
+        # `[[n]]` inválido (que se borra junto con su espacio): los cortes se
+        # corren, pero el texto es el mismo.
         self.assertEqual(
-            eventos, [Texto("Hola "), Texto("che"), Resultado("Hola che", [])]
+            eventos, [Texto("Hola"), Texto(" che"), Resultado("Hola che", [])]
         )
 
     async def test_no_guarda_nada(self):

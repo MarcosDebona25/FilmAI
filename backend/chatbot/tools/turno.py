@@ -42,6 +42,17 @@ class ContextoTurno:
     # `HashSet` de Java.
     recomendables: set = field(default_factory=set)
 
+    def candidatos(self):
+        """Los títulos del turno por su número de referencia: `{ref: título}`.
+
+        El `ref` es la posición de aparición (desde 1) en `encontrados`, no el
+        `id_tmdb`: TMDB numera aparte películas y series, así que un mismo id puede
+        ser un título de cada tipo. Un `dict` recuerda el orden de inserción (en
+        Java, un `LinkedHashMap`) y volver a anotar un título no cambia su lugar:
+        el `ref` es estable durante todo el turno. `enumerate(..., 1)` cuenta desde 1.
+        """
+        return dict(enumerate(self.encontrados.values(), 1))
+
     # `@classmethod`: se llama sobre la clase, sin tener un objeto todavía:
     # `ContextoTurno.para(usuario, "es")`. Es un constructor con un paso extra.
     # `cls` es la clase, como `self` es el objeto: `cls(...)` crea el objeto.
@@ -108,7 +119,10 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
             "anio": item["anio"],
             "nota_tmdb": item["nota_tmdb"],
         }
-        publicado = {k: v for k, v in item.items() if k != "poster"}
+        # `ref` va primero: es lo que el modelo escribe entre corchetes (`[[3]]`)
+        # para recomendar este título (ver `marcadores.py`).
+        ref = list(ctx.encontrados).index(clave) + 1
+        publicado = {"ref": ref, **{k: v for k, v in item.items() if k != "poster"}}
         if clave in ctx.vistas:
             publicado["vista"] = True
         publicados.append(publicado)
