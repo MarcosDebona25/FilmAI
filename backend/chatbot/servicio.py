@@ -4,9 +4,14 @@ Lo usan: la vista SSE (PR 5) para guardar cada turno y la vista del historial.
 Es código sync, como todo el ORM: la vista async lo llama a través de `en_hilo`.
 """
 
+import logging
+
 from django.db import transaction
 
+from catalogo.services.materialization import materializar_listado_en_segundo_plano
 from chatbot.models import Chat, Mensaje, TipoAutor
+
+logger = logging.getLogger(__name__)
 
 # Lo que el prompt necesita de cada tarjeta: `titulo` y `anio` para nombrarla,
 # `id_tmdb` y `tipo` para no repetirla. El póster no lo lee nadie.
@@ -41,7 +46,32 @@ def guardar_turno(chat, texto, resultado):
             chat.contexto.get("ya_recomendados", []), resultado.tarjetas
         )
         chat.save(update_fields=["contexto"])
+    # Fuera del `atomic`: si el guardado se deshizo, el usuario nunca vio esas
+    # tarjetas y no hay nada que precalentar.
+    _precalentar_tarjetas(resultado.tarjetas)
     return pregunta, respuesta
+
+
+def _precalentar_tarjetas(tarjetas):
+    """Encola la materialización de las tarjetas para que su ficha no abra en frío.
+
+    Una tarjeta del chat nunca pasó por un listado del catálogo, así que nadie
+    había pedido a TMDB su detalle y créditos: el clic en la tarjeta tardaba de
+    0,4 a 1,1 s. La tarea de Celery los pide y los deja en la caché de Redis.
+
+    Mismo criterio que las vistas del catálogo: es una optimización, así que si
+    la base o el broker fallan se registra y el turno sigue (en Java sería un
+    `try/catch` que solo loguea, para no tumbar la respuesta por algo accesorio).
+    """
+    if not tarjetas:
+        return
+    try:
+        # Los listados de TMDB traen `id` y `media_type`: se arma el mismo formato.
+        materializar_listado_en_segundo_plano(
+            [{"id": t["id_tmdb"], "media_type": t["tipo"]} for t in tarjetas]
+        )
+    except Exception:
+        logger.exception("No se pudo precalentar las tarjetas del chat")
 
 
 def sumar_recomendados(previas, tarjetas):
