@@ -13,9 +13,12 @@ canvas artboards «List detail» desktop and mobile.
 
 The detail of a custom list or of Favorites with at least one item MUST show,
 after the grid, a horizontal row «Suggested for this list» with the results of
-`GET /api/lists/{id}/suggestions/`. It MUST NOT appear in Pendientes or Vistas,
-while the grid has a next page, or while a filter or search is active. Empty
-results MUST hide the row. Loading MUST show skeletons with `aria-busy`; an
+`GET /api/lists/{id}/suggestions/`. It MUST NOT appear in Pendientes or Vistas.
+It MUST appear with or without an active filter or search, after the loaded
+items and only once the grid (filtered or not) has no next page. A filter that
+leaves the grid empty MUST still show the row under the empty filtered state.
+Filters and search MUST NOT change the request, the suggestions or the cache:
+they always come from the whole list. Empty results MUST hide the row. Loading MUST show skeletons with `aria-busy`; an
 error MUST show a retry inside the row and leave the list usable.
 
 #### Scenario: Pendientes
@@ -25,8 +28,19 @@ error MUST show a retry inside the row and leave the list usable.
 
 #### Scenario: Filtering
 
-- GIVEN a custom list with the «Movies» filter active
-- THEN the row is hidden until the filter is cleared
+- GIVEN a custom list with the «Movies» filter active and no next page
+- THEN the row is shown at the end of the filtered grid
+- AND its suggestions are the same as without the filter
+
+#### Scenario: Filter with no matches
+
+- GIVEN a filter that leaves the grid empty
+- THEN the row is shown under «No titles in this list match these filters»
+
+#### Scenario: More pages to load
+
+- GIVEN the grid still has a next page
+- THEN the row is not drawn until the last page is loaded
 
 ### Requirement: Add with one click
 

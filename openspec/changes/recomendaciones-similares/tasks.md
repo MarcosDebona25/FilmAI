@@ -9,7 +9,7 @@
 | Chained PRs recommended | Yes — five PRs: engine + title endpoint, list endpoint, list row, title row, e2e + docs                                    |
 | Delivery strategy       | ask-on-risk                                                                                                                |
 | Chain strategy          | Each PR from `develop` in its own worktree `~/FilmAI-worktrees/<branch>`; PR 2 stacks on PR 1, PR 3 on PR 2 (merge commit) |
-| Blocking                | D-1 to D-9 of `design.md` §11 confirmed before task 1.1; the canvas (task 3.1) before any frontend code                    |
+| Blocking                | D-1 to D-9 decided 13/11/2026 (`design.md` §11); the canvas (task 3.1) before any frontend code                            |
 
 ### Work Units
 
@@ -21,11 +21,10 @@
 | 4   | `SimilarTitles` on the title page, loaded near the viewport                 |       ~200 | `npm run test:unit -- SimilarTitles`                                          | Remove `<SimilarTitles/>` from `TitleView`        |
 | 5   | e2e for both rows, canonical specs, decisions, doc 05, archive the change   |       ~250 | `npm run test:e2e -- similares --workers=1`                                   | Docs only                                         |
 
-## Phase 0: Confirm the open decisions
+## Phase 0: Decisions
 
-- [ ] 0.1 Ask Gonza D-1 to D-9 (`design.md` §11) and write the answers there.
-      If one differs from the recommendation, update `design.md`, the spec
-      deltas and these tasks first
+- [x] 0.1 Gonza answered D-1 to D-9 on 13/11/2026 (`design.md` §11); D-6
+      changed and the design, the spec deltas and these tasks follow it
 - [ ] 0.2 Explain (skill `explicar-al-implementar`): what a centroid of
       embeddings is, cosine distance, why HNSW with a `WHERE` can return fewer
       rows, what a cache key with a signature is
@@ -104,8 +103,10 @@
       `npm run i18n:generate`, `npm run i18n:check`
 - [ ] 3.3 RED Vitest `MediaRow`: `encabezado` and `accion` render; the Home
       rows are unchanged without them
-- [ ] 3.4 RED Vitest `ListSuggestions`: hidden for Pendientes and Vistas, with
-      filters, while there is a next page and with empty results; add →
+- [ ] 3.4 RED Vitest `ListSuggestions`: hidden for Pendientes and Vistas,
+      while there is a next page and with empty results; shown with an active
+      filter, also under the empty filtered state, without refetching when
+      the filter changes; add →
       «Added», disabled, appended to the grid, toast by error code; refresh →
       next page, wraps to 1, old cards kept until the new ones arrive, status
       announced; error → retry inside the row

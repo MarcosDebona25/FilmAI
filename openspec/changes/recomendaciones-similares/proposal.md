@@ -32,22 +32,22 @@ has few close ones.
 | `catalogo/presupuesto.py`                          | 30 TMDB calls per request, 300 per IP per minute; what comes from Redis does not count                                                                                                                                                                                |
 | `listas/models.py`, `listas/views.py`              | 100 custom lists, 1 000 items per custom list; `_lista_propia` answers 404 (Not Found) for someone else's list; adding an item materializes it                                                                                                                        |
 
-## Decisions that need Gonza (rule 3 of `AGENTS.md`)
+## Decisions (answered by Gonza, 13/11/2026)
 
-The plan follows the **recommended** option of each; `design.md` §11 has the
-reasoning. Nothing is implemented until they are confirmed.
+All follow the recommendation below except D-6, which changed: see the table
+and `design.md` §11.
 
-| #   | Question                                                  | Recommendation                                                                                                   |
-| --- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| D-1 | Weight of the list name in the vector                     | `w = max(0.15, 1 / (n + 1))`: half with 1 title, 0.15 from 6 titles on                                           |
-| D-2 | When the name «says something»                            | A deterministic rule: some word of 3 or more letters left after removing digits and a short list of filler words |
-| D-3 | Lists of a single type                                    | Only movies → only movies; only shows → only shows; mixed → mixed                                                |
-| D-4 | Favorites excludes «Vistas» like the rest?                | Yes, the same rule everywhere (suggestions are for discovering)                                                  |
-| D-5 | Minimum quality of a local candidate                      | Poster required; TMDB rating present (at least one vote); TMDB fill without `adult` and with 10 votes or more    |
-| D-6 | Where the list row lives with infinite scroll and filters | At the end; drawn only once the last page is loaded, and hidden while a filter or search is active               |
-| D-7 | Title page: how many cards and Refresh?                   | Up to 20 (two desktop pages of the row), no Refresh                                                              |
-| D-8 | Copy in English and Spanish                               | The keys of `design.md` §9, to approve with the canvas                                                           |
-| D-9 | Ollama not loaded: wait for the name or skip it?          | Skip it without waiting, ask for the load, and cache that answer for 5 minutes only                              |
+| #   | Question                                                  | Decision                                                                                                                                   |
+| --- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| D-1 | Weight of the list name in the vector                     | `w = max(0.15, 1 / (n + 1))`: half with 1 title, 0.15 from 6 titles on                                                                     |
+| D-2 | When the name «says something»                            | A deterministic rule: some word of 3 or more letters left after removing digits and a short list of filler words                           |
+| D-3 | Lists of a single type                                    | Only movies → only movies; only shows → only shows; mixed → mixed                                                                          |
+| D-4 | Favorites excludes «Vistas» like the rest?                | Yes, the same rule everywhere (suggestions are for discovering)                                                                            |
+| D-5 | Minimum quality of a local candidate                      | Poster required; TMDB rating present (at least one vote); TMDB fill without `adult` and with 10 votes or more                              |
+| D-6 | Where the list row lives with infinite scroll and filters | **Decided otherwise**: always at the end, also with a filter or search active; after the last loaded page; suggestions from the whole list |
+| D-7 | Title page: how many cards and Refresh?                   | Up to 20 (two desktop pages of the row), no Refresh                                                                                        |
+| D-8 | Copy in English and Spanish                               | The keys of `design.md` §9, to approve with the canvas                                                                                     |
+| D-9 | Ollama not loaded: wait for the name or skip it?          | Skip it without waiting, ask for the load, and cache that answer for 5 minutes only                                                        |
 
 ## Scope
 

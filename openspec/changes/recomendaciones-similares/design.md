@@ -377,8 +377,16 @@ props, without changing the Home:
 
 ### List row (`components/features/lists/ListSuggestions.tsx`)
 
-- Shown in custom lists and Favorites with at least 1 item, at the end, only
-  when the grid has no next page and no filter or search is active (D-6).
+- Shown in custom lists and Favorites with at least 1 item, always at the
+  end of the detail, with or without an active filter or search (D-6). With
+  infinite scroll it is drawn after what is loaded, once there is no next page
+  (of the filtered view when a filter is active), so it does not keep moving
+  down while pages arrive.
+- Filters and search never change the suggestions: the seeds, the signature
+  and the cache are always those of the whole list, and the request does not
+  carry the filter parameters. Changing a filter does not refetch the row.
+- A filter that leaves the grid empty still shows the row, under the
+  «No titles in this list match these filters» state and its «Clear» button.
 - `aria-busy` and skeletons while loading. Error → a small `ErrorRetry` inside
   the section, the list keeps working. Empty `results` → the row is not drawn.
 - **«+ Add»**: `POST /api/lists/{id}/items/`; the button becomes «Added» with a
@@ -441,22 +449,26 @@ brings them), approved by Gonza, then `npm run i18n:generate` and
   does not; Ollama down skips the name, sets the 60 s flag and the 5 min TTL;
   budget of TMDB calls (≤ 6) asserted with the counter.
 - **Frontend** (Vitest): add marks «Added» and appends to the grid; refresh
-  wraps; error and empty states; labels; the row is hidden with filters and
-  while there is a next page; the title row requests only after the sentinel
+  wraps; error and empty states; labels; the row waits for the last page, is
+  shown with an active filter (also under the empty filtered state) and does
+  not refetch when the filter changes; the title row requests only after the sentinel
   intersects.
 - **e2e** (Playwright, controlled API like the profile tests): add from the
   row, refresh, keyboard path, axe on both rows.
 
-## 11. Open decisions for Gonza
+## 11. Decisions (decided 13/11/2026)
 
-| #   | Question                                  | Options                                                                          | Recommendation and why                                                                                                                                                                                     |
-| --- | ----------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D-1 | Weight of the name                        | Fixed (e.g. 0.25) · decreasing with the size · only when the list has ≤ 3 titles | **Decreasing, `max(0.15, 1/(n+1))`**: with 1 title the name is half of the intent; with 50 it should only tilt. A fixed weight either drowns big lists or ignores the name in small ones                   |
-| D-2 | When the name says something              | Filler-word rule · semantic threshold · always                                   | **Filler-word rule**: deterministic, testable without Ollama, and «Lista 3» never moves the vector. «Always» lets «My list» drag results toward titles called "My …"                                       |
-| D-3 | Lists of a single type                    | Always mixed · same type when the list has one type · proportional               | **Same type when the list has one**: a list of only shows is a strong signal. Mixed lists stay mixed. Proportional adds complexity for little                                                              |
-| D-4 | Favorites excludes «Vistas»               | Yes · no (show watched titles not yet favourited)                                | **Yes**: one rule for every row, and suggestions are for discovering. The other option is a different feature («you might also love…»)                                                                     |
-| D-5 | Quality floor                             | Nothing · poster · poster + rating · poster + rating + votes ≥ N                 | **Poster and rating present locally; TMDB fill without `adult` and with ≥ 10 votes**: the local model stores no vote count, and a card without poster looks broken                                         |
-| D-6 | List row with infinite scroll and filters | Always at the end · only after the last page · above the grid                    | **After the last page, hidden while filtering**: a row that keeps moving down while pages load is unreachable, and suggestions for the whole list under a filtered grid read as suggestions for the filter |
-| D-7 | Title page size and Refresh               | 10 · 20 · 20 + Refresh                                                           | **20 without Refresh**: two pages of the desktop row; a title page is browsed, not curated                                                                                                                 |
-| D-8 | Copy                                      | The table of §9                                                                  | **Approve with the canvas**; «Ver otras» reads better than a literal «Refrescar»                                                                                                                           |
-| D-9 | Ollama not loaded                         | Wait up to 20 s like the chatbot · skip the name                                 | **Skip and cache for 5 min**: the row is secondary and the titles' vectors do not need Ollama; the next request after the load uses the name                                                               |
+Gonza answered the open questions on 13/11/2026. All follow the recommendation
+except D-6.
+
+| #   | Question                                  | Decision                                                                                                                                                                                                                                                                 | Why                                                                                                                                                |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-1 | Weight of the name                        | **`max(0.15, 1/(n+1))`**                                                                                                                                                                                                                                                 | With 1 title the name is half of the intent; with 50 it should only tilt. A fixed weight either drowns big lists or ignores the name in small ones |
+| D-2 | When the name says something              | **Filler-word rule** (§3)                                                                                                                                                                                                                                                | Deterministic, testable without Ollama, and «Lista 3» never moves the vector                                                                       |
+| D-3 | Lists of a single type                    | **Only that type**; mixed lists and the title page mix both                                                                                                                                                                                                              | A list of only shows is a strong signal                                                                                                            |
+| D-4 | Favorites excludes «Vistas»               | **Yes**, like every row                                                                                                                                                                                                                                                  | One rule everywhere; suggestions are for discovering                                                                                               |
+| D-5 | Quality floor                             | **Poster and rating locally; TMDB fill without `adult` and with ≥ 10 votes**                                                                                                                                                                                             | The local model stores no vote count, and a card without poster looks broken                                                                       |
+| D-6 | List row with infinite scroll and filters | **Changed from the proposal**: always at the end of the detail, with or without filters or search; drawn after what is loaded once there is no next page (of the filtered view if filtering); also under the empty filtered state. Suggestions always use the whole list | Gonza prefers the row to be always reachable at the end. Filters only change what the grid shows, never the seeds or the cache (§9)                |
+| D-7 | Title page size and Refresh               | **20 cards, no Refresh**                                                                                                                                                                                                                                                 | Two pages of the desktop row; a title page is browsed, not curated                                                                                 |
+| D-8 | Copy                                      | **The table of §9, approved together with the canvas** (task 3.1)                                                                                                                                                                                                        | The wording depends on the design                                                                                                                  |
+| D-9 | Ollama not loaded                         | **Skip the name without waiting, request the load, cache the pool for 5 min**                                                                                                                                                                                            | The row is secondary and the titles' vectors do not need Ollama                                                                                    |

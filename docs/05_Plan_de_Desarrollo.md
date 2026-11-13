@@ -82,7 +82,7 @@ Las revisiones de accesibilidad, de estados de carga y error y de responsive se 
 
 ### 5. Títulos parecidos en listas y en la ficha
 
-Es la que más se acerca a la idea de FilmAI: con los vectores de B-06 alcanza, sin entrenar nada. El 13/11/2026 se amplió a la ficha («More like {title}») y se diseñó en `openspec/changes/recomendaciones-similares/`: un solo motor para la fila «Suggested for this list» (listas personalizadas y Favoritos, con «+ Add» y «Refresh») y para la ficha, con relleno de `/recommendations` de TMDB. Son 5 PRs (motor y endpoint de la ficha, endpoint de listas, fila de listas, fila de la ficha, e2e y documentación). Antes de escribir código, Gonza tiene que responder las decisiones D-1 a D-9 del diseño y dibujar las filas en el canvas de Claude Design. La calidad crece con la población masiva de la base, pero no depende de ella.
+Es la que más se acerca a la idea de FilmAI: con los vectores de B-06 alcanza, sin entrenar nada. El 13/11/2026 se amplió a la ficha («More like {title}») y se diseñó en `openspec/changes/recomendaciones-similares/`: un solo motor para la fila «Suggested for this list» (listas personalizadas y Favoritos, con «+ Add» y «Refresh») y para la ficha, con relleno de `/recommendations` de TMDB. Son 5 PRs (motor y endpoint de la ficha, endpoint de listas, fila de listas, fila de la ficha, e2e y documentación). Las decisiones D-1 a D-9 quedaron respondidas el 13/11/2026; antes del frontend falta dibujar las filas en el canvas de Claude Design. La calidad crece con la población masiva de la base, pero no depende de ella.
 
 ### 6. Lo que se resuelve al desplegar
 
