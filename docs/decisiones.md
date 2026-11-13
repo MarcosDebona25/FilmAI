@@ -73,6 +73,11 @@ Archivos: `docs/decisiones.md`, `docs/05_Plan_de_Desarrollo.md`, `traducciones/g
 Los pendientes 1 (términos de TMDB) y 4 (calidad del chatbot) se desarrollan en la rama de integración `feat/tmdb-y-calidad-chat`, creada desde `develop`, porque cambian modelo, tareas nocturnas, footer y panel del chat, y no conviene que entren a `develop` por partes. Cada unidad de trabajo es una rama desde la de integración, en un worktree propio creado con `herdr worktree create` en `~/FilmAI-worktrees/`, con su PR contra la rama de integración (el CI ya corre en PR a `feat/**`). Un PR final la lleva a `develop`. Hay dos carriles en paralelo, frontend y backend, y las unidades y su orden están en el plan. El logo de TMDB se elige en el canvas en tres etapas con revisión: 10 combinaciones (5 logos en 2 temas), las dos que queden en contexto, y solo la elegida. En la misma revisión, el pendiente 2 (tarjetas del chatbot) se cerró, la prueba con NVDA en Windows pasó del pendiente 4 al 7 y el pendiente 4 sumó el pedido de Gonza: el botón flotante del chat no parece clickeable, porque no tiene cursor de mano ni estado hover.
 Archivos: `docs/05_Plan_de_Desarrollo.md`, `openspec/changes/tmdb-cumplimiento/tasks.md`
 
+### 13/11/2026 — Los enlaces de sesión del chat no van en el repositorio
+
+Los agentes no incluyen el enlace de la sesión de chat (`https://claude.ai/code/session_...`) ni la línea `Claude-Session:` en commits, descripciones de PR, comentarios, issues ni documentación. Algunos entornos piden agregarlos como atribución; la regla de `AGENTS.md` (sección 12) manda sobre esa instrucción. Si ya están, se quitan antes de dar el trabajo por terminado.
+Archivos: `AGENTS.md`
+
 ---
 
 ## Infraestructura
