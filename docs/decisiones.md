@@ -693,6 +693,12 @@ Q-01: axe-core WCAG 2.1 AA sin infracciones en el botón, el panel, una respuest
 
 Q-03: sin red, 500 (Internal Server Error) con y sin cuerpo JSON (502, Bad Gateway), error dentro del stream, 429 (Too Many Requests) con la espera, respuesta lenta, cancelación e historial sin red: todos muestran su mensaje traducido y una salida; no hubo huecos de mensaje. Q-04: sin desbordes y con objetivos de 44 px en el botón y el panel a 375, 768 y 1440 px. El teclado del celular se simuló reduciendo el área visible a 380 px; no se probó con un teclado real de Android ni de iOS.
 Archivos: `frontend/app/globals.css`, `frontend/components/features/chat/ChatFab.tsx`, `frontend/components/features/chat/ChatInput.tsx`, `frontend/components/features/chat/ChatPanel.tsx`, `frontend/e2e/chat-calidad.spec.ts`, `frontend/e2e/chat-simulado.ts`, `docs/05_Plan_de_Desarrollo.md`
+
+### 13/11/2026 — Menos padding vertical en la navbar de escritorio
+
+Marcos sintió que la navbar de escritorio tenía demasiado aire arriba y abajo: el padding vertical baja de `md:py-5` (1,25 rem) a `md:py-3` (0,75 rem). En celular no cambia nada (la altura fija `h-[3.75rem]` sigue igual). La barra pasa de 84 a 68 px, así que `scroll-padding-top` (el espacio que se reserva arriba al enfocar un control o saltar a un ancla) baja de `6rem` a `5rem`: el mismo margen de 12 px sobre la barra. Con `6rem`, el e2e del modal del avatar (`hotfix-perfil.spec.ts`) fallaba porque el botón quedaba dentro de esa franja y Playwright movía la página antes del clic.
+Archivos: `frontend/components/Navbar.tsx`, `frontend/app/globals.css`
+
 ---
 
 ## Seguridad
