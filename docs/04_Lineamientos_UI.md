@@ -84,7 +84,7 @@ App Autenticada
 ### 3.2 Home: Solo Descubrimiento + Búsqueda como página
 
 **Decisión**: Home es exclusivamente una página de descubrimiento pasivo con filas de contenido
-(Recomendado, Tendencias, Pendientes, Novedades). El catálogo completo para exploración activa se accede
+(Recomendado, Tendencias, Novedades, Pendientes). El catálogo completo para exploración activa se accede
 desde el link "Buscar" en la navbar, que abre la página de búsqueda con grid, toggle de tipo
 (Todo / Películas / Series) y filtros.
 
@@ -224,7 +224,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 - Cada fila: título + opcional "Ver más →" + MediaCards. En celular se desliza; desde 768 px muestra siempre tarjetas enteras (`--cols`, ver sección 4) y las flechas avanzan una página.
 - Con «Todo» (por defecto), las filas mezclan películas y series, con badge de tipo en cada card; con «Películas» o «Series», cada fila muestra solo ese tipo.
 - Flechas de navegación (13/11/2026): dos bandas superpuestas a los costados de la fila, a la altura de los pósters, con degradé desde el fondo; aparecen con el mouse sobre la fila o con foco de teclado, sin flecha izquierda al principio ni derecha al final. Swipe nativo en celular (sin flechas).
-- **Pendientes** (13/11/2026): va después de Tendencias; solo con sesión y si la lista tiene títulos (del tipo elegido en el selector). Lo último agregado primero, hasta 20, con el enlace «Ver todo» a la lista; las tarjetas llevan `?from=list-{id}` para la miga de la ficha.
+- **Pendientes** (13/11/2026): va última, después de Novedades; solo con sesión y si la lista tiene títulos (del tipo elegido en el selector). Lo último agregado primero, hasta 20, con el enlace «Ver todo» a la lista; las tarjetas llevan `?from=list-{id}` para la miga de la ficha.
 - Si una fila no tiene datos (ej. usuario nuevo sin recomendaciones), se oculta completamente.
 
 ### Estados del Home

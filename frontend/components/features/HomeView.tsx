@@ -256,6 +256,15 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
             from="home"
             loading={tendencias.status === "loading"}
           />
+          <MediaRow
+            title={t("rows.newReleasesTitle")}
+            description={descripcionNovedades}
+            items={novedades}
+            showType={tipo === "all"}
+            from="home"
+            loading={enCines.status === "loading" || seriesDelAnio.status === "loading"}
+          />
+          {/* Pendientes va última: es la lista propia, no descubrimiento. */}
           {listaPendientes && (
             <MediaRow
               title={tl("pendientes")}
@@ -265,14 +274,6 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
               seeAll={{ href: routes.list(listaPendientes.id), label: t("rows.seeAll") }}
             />
           )}
-          <MediaRow
-            title={t("rows.newReleasesTitle")}
-            description={descripcionNovedades}
-            items={novedades}
-            showType={tipo === "all"}
-            from="home"
-            loading={enCines.status === "loading" || seriesDelAnio.status === "loading"}
-          />
           {!cargando && !perfil && (
             <section
               aria-labelledby={invitacionId}
