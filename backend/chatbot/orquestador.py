@@ -16,6 +16,8 @@ import logging
 import re
 import unicodedata
 
+from django.utils import timezone
+
 from chatbot.anonimizar import APOSTROFOS, CONVERSACION, anonimizar
 from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
@@ -24,7 +26,7 @@ from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
-from chatbot.tools import ESQUEMAS, ContextoTurno, ejecutar
+from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno, ejecutar
 from chatbot.tools.personales import mostrar_tarjetas
 
 logger = logging.getLogger(__name__)
@@ -77,6 +79,7 @@ def _preparar(chat, texto, idioma):
         armar_perfil(usuario),
         chat.contexto.get("ya_recomendados", []),
         detectar_idioma(texto) or idioma,
+        hoy=timezone.localdate(),
     )
     mensajes = [
         {"role": "system", "content": sistema},
@@ -95,9 +98,29 @@ def _argumentos_de(llamada):
     return argumentos if isinstance(argumentos, dict) else None
 
 
+def _cantidad_de(resultado):
+    """Cuántos resultados trajo una tool, para el log: un número o `"error"`.
+
+    Las búsquedas devuelven `{"resultados": [...]}` y `mostrar_tarjetas`
+    `{"tarjetas": [...]}`: se cuenta la lista. Una tool que devuelve un solo dato
+    (`detalle`) cuenta como 1. Solo se mira el tamaño, nunca el contenido.
+    """
+    if "error" in resultado:
+        return "error"
+    for clave in ("resultados", "tarjetas"):
+        if isinstance(resultado.get(clave), list):
+            return len(resultado[clave])
+    return 1
+
+
 def _correr_tools(ctx, llamadas):
-    """Corre las tools de una vuelta, en orden, y arma los mensajes de resultado."""
-    resultados = []
+    """Corre las tools de una vuelta, en orden.
+
+    Devuelve dos listas: los mensajes de resultado para el modelo y, para el log,
+    un `nombre(cantidad)` por tool. Una función puede devolver varios valores en
+    Python (una tupla); en Java habría que armar una clase chica para eso.
+    """
+    resultados, resumen = [], []
     for llamada in llamadas:
         argumentos = _argumentos_de(llamada)
         if argumentos is None:
@@ -105,6 +128,10 @@ def _correr_tools(ctx, llamadas):
             resultado = {"error": "tool_failed"}
         else:
             resultado = ejecutar(ctx, llamada.nombre, argumentos)
+        # El nombre lo escribe el modelo: solo se loguea si es una tool real. Si no,
+        # un nombre con saltos de línea podría forjar líneas falsas en el log.
+        nombre = llamada.nombre if llamada.nombre in FUNCIONES else "desconocida"
+        resumen.append(f"{nombre}({_cantidad_de(resultado)})")
         resultados.append(
             {
                 "role": "tool",
@@ -112,7 +139,7 @@ def _correr_tools(ctx, llamadas):
                 "content": json.dumps(resultado, ensure_ascii=False),
             }
         )
-    return resultados
+    return resultados, resumen
 
 
 def _mensaje_del_asistente(vuelta):
@@ -322,6 +349,23 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo):
         raise ErrorDelTurno("La última llamada no escribió nada")
 
 
+def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, origen_de_tarjetas):
+    """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
+
+    Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
+    tools pidió y con cuántos resultados, si se quedó sin vueltas, de dónde salieron
+    las tarjetas). A propósito no lleva la pregunta ni la respuesta: son datos
+    personales y los logs se guardan.
+    """
+    logger.info(
+        "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s",
+        ",".join(tools_pedidas) or "ninguna",
+        vueltas,
+        "si" if ultima_sin_tools else "no",
+        origen_de_tarjetas,
+    )
+
+
 async def responder(chat, texto, idioma, *, proveedor=None):
     """Responde un mensaje, entregando eventos a medida que ocurren.
 
@@ -337,8 +381,11 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         logger.exception("No se pudo preparar el turno")
         raise ErrorDelTurno("No se pudo preparar el turno") from error
     partes = []
+    # Para la línea de diagnóstico del final (ver `_registrar_turno`).
+    tools_pedidas, vueltas, ultima_sin_tools = [], 0, False
 
     for _ in range(_MAX_VUELTAS_CON_TOOLS + 1):
+        vueltas += 1
         vuelta = None
         # Sin esto, el texto de dos vueltas saldría pegado: «…despacio.¿Querés…».
         separar = bool(partes)
@@ -380,7 +427,8 @@ async def responder(chat, texto, idioma, *, proveedor=None):
 
         if not _solo_tarjetas(vuelta):
             yield Estado("searching")
-        resultados = await en_hilo(_correr_tools, ctx, vuelta.llamadas)
+        resultados, resumen = await en_hilo(_correr_tools, ctx, vuelta.llamadas)
+        tools_pedidas.extend(resumen)
         if cierra_el_turno:
             break
         mensajes.append(_mensaje_del_asistente(vuelta))
@@ -390,22 +438,27 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         # Java no hay equivalente). Acá: la última vuelta permitida todavía pedía
         # tools, así que el modelo no llegó a responder.
         motivo = "se pasó del tope de vueltas con tools"
+        ultima_sin_tools = True
         async for evento in _ultima_llamada(proveedor, mensajes, partes, motivo):
             yield evento
 
     if not "".join(partes).strip():
         # El turno terminó sin una sola palabra para el usuario.
+        ultima_sin_tools = True
         async for evento in _ultima_llamada(
             proveedor, mensajes, partes, "el modelo no escribió nada"
         ):
             yield evento
 
     respuesta = "".join(partes)
+    origen = "mostrar_tarjetas" if ctx.tarjetas else "ninguna"
     if not ctx.tarjetas:
         # Recomendó en el texto y no mostró tarjetas: se arman con lo que nombró.
         # `mostrar_tarjetas` no toca la base, así que se llama directo, sin el
         # puente. Si nombró títulos que ninguna búsqueda devolvió, no pasa nada.
         mostrar_tarjetas(ctx, _tarjetas_nombradas(respuesta, ctx, texto))
         if ctx.tarjetas:
+            origen = "red"
             logger.info("Tarjetas armadas por el orquestador: %d", len(ctx.tarjetas))
+    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, origen)
     yield Resultado(respuesta, ctx.tarjetas)

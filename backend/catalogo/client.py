@@ -156,6 +156,7 @@ class TMDBClient:
         desde_fecha=None,
         hasta_fecha=None,
         duracion_max=None,
+        con_keywords=None,
     ):
         """Busca producciones por filtros. Todo es opcional menos el tipo.
 
@@ -170,6 +171,9 @@ class TMDBClient:
         `hasta_fecha`, hasta ese día (décadas en Buscar). `duracion_max` son
         minutos y solo sirve en películas: en series TMDB casi no tiene el dato.
         El mínimo de 1 deja afuera las películas con duración desconocida (0).
+        `con_keywords` son ids de keywords de TMDB (`with_keywords`), separados por
+        coma (todos) o por barra (alguno). A diferencia de `with_people`, TMDB sí lo
+        respeta en series (verificado el 13/11/2026 con 818, «based on novel or book»).
         """
         params = {"page": page}
         if genero is not None:
@@ -197,6 +201,8 @@ class TMDBClient:
         if duracion_max is not None:
             params["with_runtime.gte"] = 1
             params["with_runtime.lte"] = duracion_max
+        if con_keywords is not None:
+            params["with_keywords"] = con_keywords
         return self._get_localizado(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1, anio=None):
