@@ -18,9 +18,10 @@ orquestador.py              habla con el modelo y conecta todo lo de abajo
   ├─▶ idioma.py              ¿en qué idioma escribió el mensaje?
   ├─▶ prompts.py             las instrucciones del modelo
   ├─▶ llm.py                 habla con DeepSeek
+  ├─▶ marcadores.py          cambia los [[n]] del modelo por el título y arma las tarjetas
   └─▶ tools/ ejecutar()      el modelo pidió una herramienta (por puente.py)
         ├─▶ busqueda.py      TMDB y búsqueda semántica
-        └─▶ personales.py    listas del usuario y tarjetas
+        └─▶ personales.py    listas del usuario
               └─▶ turno.py   recuerda qué apareció en este turno
 ```
 
@@ -37,7 +38,7 @@ Para ver cómo fue un turno, buscá en el log del backend la línea `Turno:` del
 | Archivo | Para qué sirve |
 |---|---|
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
-| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Al cerrar cada turno escribe una línea de log INFO (`Turno: tools=… vueltas=… ultima_sin_tools=… tarjetas=…`) con las tools pedidas y su cantidad de resultados, sin la pregunta ni la respuesta. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Si el modelo recomienda en el texto sin llamar a `mostrar_tarjetas`, arma las tarjetas con los títulos que nombró en **negrita**, sin contar los que escribió el usuario y eligiendo por pistas entre película y serie homónimas (la «red de tarjetas») |
+| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Al cerrar cada turno escribe una línea de log INFO (`Turno: tools=… vueltas=… ultima_sin_tools=… tarjetas=…`) con las tools pedidas y su cantidad de resultados, sin la pregunta ni la respuesta. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Las tarjetas salen de los marcadores `[[n]]` que escribe el modelo (ver `marcadores.py`); el log suma `marcadores_validos`, `marcadores_invalidos`, `negritas_propias` y `reintento_forzado`. Si el modelo recomienda sin haber buscado (un `[[n]]` sin candidato o una negrita), descarta ese primer intento y repite la llamada una vez con `tool_choice="required"`; por eso la primera vuelta del turno se retiene entera hasta saber si hubo tools. Las tarjetas del último mensaje del asistente entran como candidatos numerados («¿y las tarjetas?») |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
 | `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
 | `views.py` | `POST /api/chat/preparar/`; `MensajesView`: el historial (`GET`) y la pregunta con su respuesta en streaming (`POST`) |
@@ -55,8 +56,9 @@ Para ver cómo fue un turno, buscá en el log del backend la línea `Turno:` del
 | `tools/__init__.py` | La puerta de las herramientas: `ejecutar()`, que antes revisa los argumentos contra el esquema y devuelve `invalid_arguments` si están mal |
 | `tools/esquemas.py` | La descripción de cada herramienta, que lee el modelo, con el largo máximo de los textos y el rango de los números |
 | `tools/busqueda.py` | Las herramientas que buscan títulos. `descubrir` y `buscar_semantico` aceptan `basada_en_libro` (keyword de TMDB «based on novel or book»); `detalle` de una serie trae `temporadas` y `episodios` |
-| `tools/personales.py` | `mis_listas` (solo las listas activas) y `mostrar_tarjetas` |
-| `tools/turno.py` | `ContextoTurno`: el estado de una pregunta y su respuesta, incluido qué títulos salieron de una búsqueda para recomendar (`recomendables`) |
+| `marcadores.py` | `FiltroDeMarcadores`: mientras el texto sale por SSE, cambia cada `[[n]]` por `**Título** (año)` y suma la tarjeta (hasta 3, sin repetir; un marcador sin candidato se elimina y se loguea) |
+| `tools/personales.py` | `mis_listas` (solo las listas activas) |
+| `tools/turno.py` | `ContextoTurno`: el estado de una pregunta y su respuesta, incluidos los títulos encontrados, numerados por orden de aparición (`candidatos()`, el `ref` de cada resultado) |
 
 ## Fuera de esta carpeta
 

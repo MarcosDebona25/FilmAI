@@ -118,7 +118,11 @@ def buscar_semantico(
     """
     ids = _ids_mas_cercanos(_vector_de(consulta))
 
-    producciones = ProduccionAudiovisual.objects.filter(pk__in=ids)
+    # `disponible_en_tmdb`: una lápida pierde su embedding al nacer, pero uno en
+    # vuelo no puede devolver un título sin contenido (#180).
+    producciones = ProduccionAudiovisual.objects.filter(
+        pk__in=ids, disponible_en_tmdb=True
+    )
     if generos:
         producciones = producciones.filter(generos__overlap=generos)
     if tipo:

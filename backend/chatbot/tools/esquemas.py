@@ -146,21 +146,4 @@ ESQUEMAS = [
         "adentro: `vistas`, `pendientes`, `favoritos` o el `id` de una personalizada.",
         {"lista": _LISTA},
     ),
-    _esquema(
-        "mostrar_tarjetas",
-        "Muestra hasta 3 títulos como tarjetas. Solo títulos que devolvió otra "
-        "tool en este turno.",
-        {
-            "tarjetas": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {"id_tmdb": _ID, "tipo": _TIPO},
-                    "required": ["id_tmdb", "tipo"],
-                    "additionalProperties": False,
-                },
-            }
-        },
-        ["tarjetas"],
-    ),
 ]

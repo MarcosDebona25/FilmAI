@@ -118,6 +118,8 @@ for (const viewport of VIEWPORTS) {
 
         // «Siguiente» avanza exactamente una página: la tarjeta cols + 1 queda primera.
         const tendencias = page.getByRole("region", { name: "Trending this week" });
+        // La flecha solo recibe clics con el mouse sobre la fila (invisible no es clicable).
+        await tendencias.getByRole("link").first().hover();
         await tendencias.getByRole("button", { name: /^Next in/ }).click();
         const lista = tendencias.getByRole("list");
         await expect

@@ -61,6 +61,44 @@ async function prepararCatalogo(page: Page) {
   );
 }
 
+/** Lista Pendientes del usuario (id 5) con los títulos dados, o vacía. */
+async function prepararPendientes(page: Page, titulos: { id: number; titulo: string }[]) {
+  await page.route("**/api/lists/**", (route) => {
+    const { pathname } = new URL(route.request().url());
+    if (pathname.endsWith("/items/"))
+      return route.fulfill({
+        json: {
+          next: null,
+          total: titulos.length,
+          results: titulos.map(({ id, titulo }, indice) => ({
+            item_id: indice + 1,
+            fecha_agregado: "2026-11-10T12:00:00Z",
+            id_tmdb: id,
+            tipo: "movie",
+            titulo,
+            poster: "/alien.jpg",
+            anio: 1979,
+            calificacion_promedio: 8.1,
+          })),
+        },
+      });
+    return route.fulfill({
+      json: [
+        {
+          id: 5,
+          nombre: "Pendientes",
+          clave: "pendientes",
+          tipo: "predeterminada",
+          cantidad_items: titulos.length,
+          cantidad_peliculas: titulos.length,
+          cantidad_series: 0,
+          preview_posters: [],
+        },
+      ],
+    });
+  });
+}
+
 async function sinSesion(page: Page) {
   await page.route("**/api/profile/", (route) =>
     route.fulfill({ status: 401, json: { code: "not_authenticated", params: {}, errors: [] } })
@@ -103,6 +141,7 @@ for (const viewport of viewports) {
     test("con sesión: Recomendado, Ask FilmAI y selector en la URL", async ({ page }) => {
       await prepararCuenta(page);
       await prepararCatalogo(page);
+      await prepararPendientes(page, [{ id: 348, titulo: "Alien" }]);
       await page.goto("/home");
 
       const recomendado = page.getByRole("region", { name: en.home.rows.recommendedTitle });
@@ -118,6 +157,17 @@ for (const viewport of viewports) {
       await expect(
         page.getByRole("button", { name: en.footer.main.askFilmAI }).first()
       ).toBeEnabled();
+
+      // Pendientes va última, después de Novedades, con «See all» a la lista.
+      const pendientes = page.getByRole("region", { name: en.enums.defaultList.pendientes });
+      await expect(pendientes.getByRole("link", { name: "Alien" })).toHaveAttribute(
+        "href",
+        "/movie/348?from=list-5"
+      );
+      await expect(pendientes.getByRole("link", { name: en.home.rows.seeAll })).toHaveAttribute(
+        "href",
+        "/lists/5"
+      );
 
       await page.getByRole("button", { name: en.common.content.tvShows }).click();
       await expect(page).toHaveURL(/\/home\?type=tv$/);
@@ -166,5 +216,41 @@ test.describe("Hero en escritorio", () => {
       return Math.round(alto / parseFloat(getComputedStyle(h1).lineHeight));
     });
     expect(renglones).toBeLessThanOrEqual(2);
+  });
+});
+
+test.describe("Flechas de las filas en escritorio", () => {
+  test.use({
+    viewport: { width: 1440, height: 900 },
+    locale: "en-US",
+    extraHTTPHeaders: { "Accept-Language": "en-US,en;q=0.9" },
+  });
+
+  test("aparecen al pasar el mouse, sin izquierda al principio, y quedan a la altura de los pósters", async ({
+    page,
+  }) => {
+    await sinSesion(page);
+    await prepararCatalogo(page);
+    await page.goto("/home");
+
+    const fila = page.getByRole("region", { name: en.home.rows.trendingTitle });
+    const siguiente = fila.getByRole("button", { name: /^Next in/ });
+    const anterior = fila.getByRole("button", { name: /^Previous in/ });
+    await expect(fila.getByRole("link").first()).toBeVisible();
+    await expect(siguiente).toHaveCount(1);
+    await expect(anterior).toHaveCount(0);
+
+    // Sin el mouse encima la banda es transparente; con él, visible.
+    await expect(siguiente).toHaveCSS("opacity", "0");
+    await fila.getByRole("link").first().hover();
+    await expect(siguiente).toHaveCSS("opacity", "1");
+
+    // Mide lo que el póster: el alto de la banda es el de la imagen, no el de la tarjeta con su texto.
+    const banda = await siguiente.boundingBox();
+    const poster = await fila.getByRole("link").first().locator("> span").first().boundingBox();
+    expect(Math.abs(banda!.height - poster!.height)).toBeLessThanOrEqual(2);
+
+    await siguiente.click();
+    await expect(anterior).toHaveCount(1);
   });
 });

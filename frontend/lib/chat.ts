@@ -17,7 +17,11 @@ export const MAX_MENSAJE = 500;
 export type Tarjeta = {
   id_tmdb: number;
   tipo: "movie" | "tv";
-  titulo: string;
+  /**
+   * `null` solo en el historial: la tarjeta tiene más de 180 días y TMDB ya no
+   * tiene el título. El panel la muestra como «Title no longer available».
+   */
+  titulo: string | null;
   /** Ruta de TMDB (`/abc.jpg`); la URL la arma `tmdbImage`. */
   poster: string | null;
   anio: number | null;
@@ -34,8 +38,11 @@ export type EventoChat =
 
 type Datos = Record<string, unknown>;
 
-/** Una tarjeta tal como la puede usar el front: `href` y `src` salen de acá. */
-function esTarjeta(valor: unknown): valor is Tarjeta {
+/**
+ * Una tarjeta tal como la puede usar el front: `href` y `src` salen de acá.
+ * El stream siempre trae título; solo el historial admite `titulo: null`.
+ */
+function esTarjeta(valor: unknown, admiteSinTitulo = false): valor is Tarjeta {
   if (!valor || typeof valor !== "object") return false;
   const tarjeta = valor as Record<string, unknown>;
   return (
@@ -43,7 +50,7 @@ function esTarjeta(valor: unknown): valor is Tarjeta {
     typeof tarjeta.id_tmdb === "number" &&
     Number.isInteger(tarjeta.id_tmdb) &&
     tarjeta.id_tmdb > 0 &&
-    typeof tarjeta.titulo === "string" &&
+    (typeof tarjeta.titulo === "string" || (admiteSinTitulo && tarjeta.titulo === null)) &&
     (tarjeta.poster === null ||
       (typeof tarjeta.poster === "string" && tarjeta.poster.startsWith("/"))) &&
     (tarjeta.anio === null ||
@@ -76,7 +83,7 @@ function parsearFrame(frame: string): EventoChat | null {
       return typeof datos.delta === "string" ? { tipo: "texto", delta: datos.delta } : null;
     case "tarjetas": {
       if (!Array.isArray(datos.tarjetas)) return null;
-      const tarjetas = datos.tarjetas.filter(esTarjeta);
+      const tarjetas = datos.tarjetas.filter((t) => esTarjeta(t));
       return tarjetas.length ? { tipo: "tarjetas", tarjetas } : null;
     }
     case "fin":
@@ -210,7 +217,8 @@ export function rutaHistorial(next?: string | null) {
 /**
  * Una página del historial (`GET /api/chat/messages/`). La API la entrega de
  * más nuevo a más viejo; acá se invierte para que el panel la dibuje en orden.
- * Las tarjetas pasan por el mismo filtro que las del stream.
+ * Las tarjetas pasan por el mismo filtro que las del stream, salvo que acá
+ * puede faltar el título (tarjetas de más de 180 días).
  */
 export async function cargarHistorial(next?: string | null): Promise<PaginaHistorial> {
   const pagina = await apiFetch<{ next: string | null; results: MensajeApi[] }>(
@@ -219,7 +227,9 @@ export async function cargarHistorial(next?: string | null): Promise<PaginaHisto
   const mensajes = pagina.results
     .map((m): MensajeChat => {
       if (m.autor === "usuario") return { id: m.id, rol: "usuario", texto: m.texto };
-      const tarjetas = Array.isArray(m.tarjetas) ? m.tarjetas.filter(esTarjeta) : [];
+      const tarjetas = Array.isArray(m.tarjetas)
+        ? m.tarjetas.filter((t) => esTarjeta(t, true))
+        : [];
       return { id: m.id, rol: "asistente", texto: m.texto, tarjetas };
     })
     .reverse();
