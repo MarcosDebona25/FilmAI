@@ -64,6 +64,11 @@ LLM_PROVEEDORES = [
 # respuesta a la vez»: `LLM_TIMEOUT_SECONDS` cubre el modelo y las tools, y el
 # candado vence 35 s después (el margen del guardado y la liberación).
 LLM_TIMEOUT_SECONDS = config("LLM_TIMEOUT_SECONDS", default=25, cast=int)
+# Minutos de silencio que cortan una sesión de chat: al modelo solo le llega el
+# historial desde el último hueco mayor a esto (`orquestador._historial`).
+CHAT_VENTANA_SESION_MINUTOS = config(
+    "CHAT_VENTANA_SESION_MINUTOS", default=45, cast=int
+)
 # Mensajes válidos por usuario y por hora; el siguiente recibe 429 (Too Many Requests).
 CHAT_MENSAJES_POR_HORA = config("CHAT_MENSAJES_POR_HORA", default=20, cast=int)
 

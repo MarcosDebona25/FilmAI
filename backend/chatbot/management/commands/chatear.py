@@ -13,6 +13,7 @@ es async, y espera a que termine.
 """
 
 import time
+from datetime import timedelta
 from pathlib import Path
 
 import yaml
@@ -20,6 +21,7 @@ from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from catalogo.presupuesto import contar_llamadas
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
@@ -34,7 +36,9 @@ _CAMPOS = {"id", "mensaje", "idioma", "rnf6", "espera", "historial"}
 _OBLIGATORIOS = ("id", "mensaje", "rnf6", "espera")
 # Un mensaje previo de un caso con `historial`: quién lo escribió y qué dijo. Solo el
 # asistente lleva `tarjetas`, como las que quedan guardadas en `Mensaje.tarjetas`.
-_CAMPOS_DE_MENSAJE = {"autor", "texto", "tarjetas"}
+# `hace_min` (opcional) lo fecha hace tantos minutos: con más que la ventana de sesión
+# (`CHAT_VENTANA_SESION_MINUTOS`), el mensaje es de otra sesión y el modelo no lo ve.
+_CAMPOS_DE_MENSAJE = {"autor", "texto", "tarjetas", "hace_min"}
 _AUTORES = {"usuario": TipoAutor.USUARIO, "asistente": TipoAutor.CHATBOT}
 
 
@@ -55,6 +59,12 @@ def _validar_historial(numero, historial):
         texto = mensaje.get("texto")
         if not isinstance(texto, str) or not texto.strip():
             raise CommandError(f"{donde}, mensaje {orden}: falta `texto`.")
+        hace_min = mensaje.get("hace_min", 0)
+        # `bool` es un `int` en Python (`True == 1`): se descarta aparte.
+        if isinstance(hace_min, bool) or not isinstance(hace_min, int) or hace_min < 0:
+            raise CommandError(
+                f"{donde}, mensaje {orden}: `hace_min` es un entero de 0 o más."
+            )
         tarjetas = mensaje.get("tarjetas", [])
         if tarjetas and mensaje["autor"] != "asistente":
             raise CommandError(
@@ -237,12 +247,18 @@ class Command(BaseCommand):
     def _sembrar(self, chat, historial):
         """Crea los mensajes previos de un caso, en orden, como si ya hubieran pasado."""
         for mensaje in historial:
-            Mensaje.objects.create(
+            creado = Mensaje.objects.create(
                 chat=chat,
                 autor=_AUTORES[mensaje["autor"]],
                 texto=mensaje["texto"],
                 tarjetas=mensaje.get("tarjetas", []),
             )
+            if hace_min := mensaje.get("hace_min"):
+                # `auto_now_add` pisa la fecha al crear: se corrige con `update`, que
+                # va directo al SQL.
+                Mensaje.objects.filter(pk=creado.pk).update(
+                    fecha_hora=timezone.now() - timedelta(minutes=hace_min)
+                )
         if historial:
             self.stdout.write(
                 f"[historial previo: {len(historial)} mensajes, no se guarda]"

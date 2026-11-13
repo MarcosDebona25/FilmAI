@@ -14,6 +14,7 @@ común, y se llama con `await en_hilo(...)`.
 import json
 import logging
 import time
+from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
@@ -54,17 +55,42 @@ _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
 
 def _historial(chat, usuario):
-    """Los últimos mensajes, de más viejo a más nuevo y anonimizados."""
+    """Los últimos mensajes de la sesión actual, de más viejo a más nuevo.
+
+    Sale anonimizado y con dos cuidados para que el modelo no imite lo que no debe
+    (revisión del 13/11/2026: con rechazos viejos guardados, 4 de 4 respuestas a un
+    pedido válido eran rechazos, y con el chat limpio 4 de 4 salían bien):
+
+    - **Solo la sesión actual.** Se recorren los mensajes del más nuevo al más viejo
+      y se corta en el primer hueco mayor a `CHAT_VENTANA_SESION_MINUTOS`. El primer
+      hueco se mide contra el momento actual (el mensaje que está por llegar): si el
+      último mensaje guardado es de hace horas, es otra sesión y el historial va vacío.
+    - **Sin negritas en lo que dijo el asistente.** Lo guardado lleva `**Título**`
+      (lo arma el filtro de marcadores), pero el modelo no tiene que ver su propia
+      respuesta con negritas: las copiaría sin haber buscado. Es una copia: lo
+      guardado queda como está.
+    """
+    ventana = timedelta(minutes=settings.CHAT_VENTANA_SESION_MINUTOS)
     ultimos = Mensaje.objects.filter(chat=chat).order_by("-fecha_hora", "-id")[
         :_MENSAJES_DE_HISTORIAL
     ]
-    return [
-        {
-            "role": _ROLES[mensaje.autor],
-            "content": anonimizar(mensaje.texto, usuario, CONVERSACION),
-        }
-        for mensaje in reversed(ultimos)
-    ]
+    sesion = []
+    # Hasta dónde llega el hueco que se está midiendo: al principio, hasta ahora.
+    # `timedelta` es una duración, como `java.time.Duration`: se compara con `>`.
+    referencia = timezone.now()
+    for mensaje in ultimos:
+        if referencia - mensaje.fecha_hora > ventana:
+            break
+        sesion.append(mensaje)
+        referencia = mensaje.fecha_hora
+
+    historial = []
+    for mensaje in reversed(sesion):
+        texto = anonimizar(mensaje.texto, usuario, CONVERSACION)
+        if mensaje.autor == TipoAutor.CHATBOT:
+            texto = texto.replace("**", "")
+        historial.append({"role": _ROLES[mensaje.autor], "content": texto})
+    return historial
 
 
 def _ahora():

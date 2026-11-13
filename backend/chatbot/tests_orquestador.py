@@ -5,7 +5,7 @@ el código que corre en `en_hilo` ve la transacción del test.
 """
 
 import json
-from datetime import date
+from datetime import date, timedelta
 from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase, override_settings
+from django.utils import timezone
 
 from catalogo.models import Calificacion, ProduccionAudiovisual, TipoProduccion
 from catalogo.presupuesto import contar_llamadas, registrar_llamada
@@ -642,6 +643,106 @@ class ReglasDelPromptTests(SimpleTestCase):
         self.assertIn("lo atractivos que son los actores", es)
         self.assertIn("how attractive the actors are", en)
         self.assertIn("voseo", es)
+
+
+class HistorialDeLaSesionTests(BaseOrquestador):
+    """El modelo solo ve la charla de la sesión actual, y sin negritas en lo suyo.
+
+    Una «sesión» es una racha de mensajes sin un hueco mayor a
+    `CHAT_VENTANA_SESION_MINUTOS`. Se mide hacia atrás desde el mensaje que llega
+    ahora: si el último guardado es de hace horas, es otra sesión.
+
+    Las fechas se fijan restando minutos al reloj real (`auto_now_add` pisa lo que
+    se pase al crear, así que se corrige con `update`). Los tests usan márgenes
+    grandes (por ejemplo 30 contra 60 minutos) para no depender del segundo exacto.
+    """
+
+    async def crear(self, texto, autor, hace_min):
+        mensaje = await Mensaje.objects.acreate(
+            chat=self.chat, texto=texto, autor=autor
+        )
+        await Mensaje.objects.filter(pk=mensaje.pk).aupdate(
+            fecha_hora=timezone.now() - timedelta(minutes=hace_min)
+        )
+
+    def historial_enviado(self):
+        return [
+            (m["role"], m["content"]) for m in self.mensajes_del_primer_pedido()[1:-1]
+        ]
+
+    async def test_lo_de_otra_sesion_no_viaja(self):
+        await self.crear("de ayer", TipoAutor.USUARIO, 24 * 60)
+        await self.crear("rechazo de ayer", TipoAutor.CHATBOT, 24 * 60 - 1)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(self.historial_enviado(), [])
+
+    async def test_un_hueco_grande_corta_la_sesion(self):
+        await self.crear("viejo", TipoAutor.USUARIO, 300)
+        await self.crear("viejo bot", TipoAutor.CHATBOT, 299)
+        await self.crear("reciente", TipoAutor.USUARIO, 30)
+        await self.crear("reciente bot", TipoAutor.CHATBOT, 29)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(
+            self.historial_enviado(),
+            [("user", "reciente"), ("assistant", "reciente bot")],
+        )
+
+    async def test_una_charla_larga_sin_huecos_grandes_sigue_siendo_una_sesion(self):
+        # Cada hueco (30, 30 y 20 minutos) entra en la ventana de 45, aunque el
+        # primer mensaje sea de hace 80 minutos: lo que cuenta es el hueco, no la
+        # antigüedad total.
+        await self.crear("uno", TipoAutor.USUARIO, 80)
+        await self.crear("dos", TipoAutor.CHATBOT, 50)
+        await self.crear("tres", TipoAutor.USUARIO, 20)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(
+            [c for _, c in self.historial_enviado()], ["uno", "dos", "tres"]
+        )
+
+    async def test_si_el_ultimo_mensaje_es_viejo_empieza_una_sesion_nueva(self):
+        await self.crear("pregunta", TipoAutor.USUARIO, 61)
+        await self.crear("respuesta", TipoAutor.CHATBOT, 60)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(self.historial_enviado(), [])
+
+    @override_settings(CHAT_VENTANA_SESION_MINUTOS=10)
+    async def test_la_ventana_sale_de_la_configuracion(self):
+        await self.crear("hace 20 minutos", TipoAutor.USUARIO, 20)
+        await self.crear("hace 5 minutos", TipoAutor.CHATBOT, 5)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(self.historial_enviado(), [("assistant", "hace 5 minutos")])
+
+    async def test_a_lo_del_asistente_se_le_quitan_las_negritas(self):
+        await self.crear("Quiero **algo** bueno", TipoAutor.USUARIO, 2)
+        await self.crear("Mirá **Moon** (2009) y **Luna**.", TipoAutor.CHATBOT, 1)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(
+            self.historial_enviado(),
+            [
+                ("user", "Quiero **algo** bueno"),
+                ("assistant", "Mirá Moon (2009) y Luna."),
+            ],
+        )
+
+    async def test_lo_guardado_conserva_las_negritas(self):
+        await self.crear("Mirá **Moon** (2009).", TipoAutor.CHATBOT, 1)
+
+        await self.correr([["Hola"]])
+
+        guardado = await Mensaje.objects.aget(chat=self.chat)
+        self.assertEqual(guardado.texto, "Mirá **Moon** (2009).")
 
 
 class FechaDeHoyTests(BaseOrquestador):
