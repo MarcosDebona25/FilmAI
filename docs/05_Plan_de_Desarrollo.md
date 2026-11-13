@@ -66,7 +66,7 @@ El logo se usa sin alterar en las dos variantes de tema: sin filtros, sin cambia
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 
-✅ **Cerrado el 13/11/2026.** Con thinking apagado, solo 3 de 8 pedidos de recomendación terminaban con tarjetas. #187 sumó la «red de tarjetas» (si el modelo nombra títulos y no llama a `mostrar_tarjetas`, el orquestador las arma) y la validación de argumentos de cada tool contra su esquema. #189 sumó la última llamada sin tools, cuando el modelo se pasa del tope de 4 vueltas o termina sin texto. Esa llamada está cubierta por tests; en la medición posterior ningún turno llegó al tope, así que todavía no se vio contra DeepSeek. No queda nada por hacer: si aparece en uso real, se trata como un bug nuevo. Detalle en `docs/decisiones.md` (12/11/2026).
+✅ **Cerrado el 13/11/2026.** Con thinking apagado, solo 3 de 8 pedidos de recomendación terminaban con tarjetas. #187 sumó la «red de tarjetas» (si el modelo nombra títulos y no llama a `mostrar_tarjetas`, el orquestador las arma) y la validación de argumentos de cada tool contra su esquema. #189 sumó la última llamada sin tools, cuando el modelo se pasa del tope de 4 vueltas o termina sin texto. Esa llamada está cubierta por tests; en la medición posterior ningún turno llegó al tope, así que todavía no se vio contra DeepSeek. No queda nada por hacer: si aparece en uso real, se trata como un bug nuevo. Detalle en `docs/decisiones.md` (12/11/2026). El 13/11/2026 las tarjetas pasaron a marcadores `[[n]]` (ver `docs/decisiones.md`); la tool `mostrar_tarjetas` y la red se retiraron.
 
 ### 3. Correos por Celery y Brevo como respaldo (Q-08, #181)
 

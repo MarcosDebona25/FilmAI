@@ -596,14 +596,7 @@ class OrquestadorRealTests(BaseSSE):
         proveedor = ProveedorFalso(
             [
                 [LlamadaTool("1", "descubrir", "{}")],
-                [
-                    "Te recomiendo Moon",
-                    LlamadaTool(
-                        "2",
-                        "mostrar_tarjetas",
-                        json.dumps({"tarjetas": [{"id_tmdb": 1, "tipo": "movie"}]}),
-                    ),
-                ],
+                ["Te recomiendo [[1]]"],
             ]
         )
         with (
@@ -613,12 +606,16 @@ class OrquestadorRealTests(BaseSSE):
             respuesta = await self.enviar("algo como Moon")
             eventos = eventos_de(await self.leer(respuesta))
 
+        # El texto llega en uno o más eventos (el filtro de marcadores corta donde
+        # hay un `[[n]]`): lo que importa es el orden y que lo leído sea completo.
         self.assertEqual(
-            [n for n, _ in eventos], ["estado", "texto", "tarjetas", "fin"]
+            [n for n, _ in eventos if n != "texto"], ["estado", "tarjetas", "fin"]
         )
+        leido = "".join(d["delta"] for n, d in eventos if n == "texto")
+        self.assertEqual(leido, "Te recomiendo **Moon** (2009)")
         self.assertEqual(dict(eventos)["tarjetas"]["tarjetas"][0]["titulo"], "Moon")
         guardada = await Mensaje.objects.aget(autor=TipoAutor.CHATBOT)
-        self.assertEqual(guardada.texto, "Te recomiendo Moon")
+        self.assertEqual(guardada.texto, "Te recomiendo **Moon** (2009)")
 
     async def test_un_proveedor_que_falla_es_chat_unavailable(self):
         proveedor = ProveedorFalso([[ConnectionError("503")]])

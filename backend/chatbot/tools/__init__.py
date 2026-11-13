@@ -37,7 +37,6 @@ FUNCIONES = {
     "detalle": busqueda.detalle,
     "buscar_semantico": busqueda.semantico,
     "mis_listas": personales.mis_listas,
-    "mostrar_tarjetas": personales.mostrar_tarjetas,
 }
 
 
