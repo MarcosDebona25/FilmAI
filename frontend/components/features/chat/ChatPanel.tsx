@@ -208,7 +208,11 @@ export function ChatPanel() {
                 <li key={clave}>
                   <button
                     type="button"
-                    onClick={() => enviar(tw(`suggestions.${clave}`))}
+                    onClick={() => {
+                      enviar(tw(`suggestions.${clave}`));
+                      // La lista se desmonta al enviar: el foco pasa al campo, no al `body`.
+                      campoRef.current?.focus({ preventScroll: true });
+                    }}
                     className="min-h-11 rounded-full px-4 text-sm text-foreground shadow-[inset_0_0_0_1px_var(--line)] hover:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring"
                   >
                     {tw(`suggestions.${clave}`)}
