@@ -581,13 +581,13 @@ class ReglasDelPromptTests(SimpleTestCase):
 
         self.assertIn("Nunca ofrezcas ni preguntes si querés verlos", sistema)
         self.assertIn("«¿te armo las tarjetas?»", sistema)
-        self.assertIn("en esa misma respuesta", sistema)
+        self.assertIn("en esa misma respuesta, con su marcador", sistema)
 
     def test_no_le_nombra_al_usuario_las_palabras_internas(self):
         sistema = armar_sistema("", [], "es")
 
         self.assertIn("Al usuario no le nombres palabras internas", sistema)
-        for palabra in ("«tarjeta»", "«tool»", "«herramienta»"):
+        for palabra in ("«tarjeta»", "«tool»", "«herramienta»", "«marcador»", "`ref`"):
             self.assertIn(palabra, sistema)
         self.assertIn("«los títulos»", sistema)
         # La regla de «¿y las tarjetas?» sigue: sirve para entender al usuario.

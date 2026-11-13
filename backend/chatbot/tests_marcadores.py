@@ -11,6 +11,7 @@ from django.test import SimpleTestCase
 
 from chatbot.eventos import Texto
 from chatbot.marcadores import FiltroDeMarcadores
+from chatbot.prompts import armar_sistema
 from chatbot.tests_orquestador import BaseOrquestador, pelicula_de_mentira, tool
 from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno
 from chatbot.tools.turno import publicar
@@ -285,3 +286,57 @@ class SinMostrarTarjetasTests(BaseMarcadores):
         self.assertIn("tarjetas=marcadores", linea)
         self.assertIn("marcadores_validos=1", linea)
         self.assertIn("marcadores_invalidos=1", linea)
+
+
+class PromptDeMarcadoresTests(SimpleTestCase):
+    def sistema(self):
+        return armar_sistema("", [], "es")
+
+    def test_no_menciona_la_tool_que_ya_no_existe(self):
+        self.assertNotIn("mostrar_tarjetas", self.sistema())
+
+    def test_explica_como_usar_el_marcador(self):
+        sistema = self.sistema()
+
+        self.assertIn("`ref`", sistema)
+        self.assertIn("`[[ref]]`", sistema)
+        self.assertIn("en el lugar de su nombre", sistema)
+        self.assertIn("como mucho 3", sistema)
+
+    def test_una_referencia_va_con_el_nombre_y_sin_marcador(self):
+        sistema = self.sistema()
+
+        self.assertIn("«algo como Arrival»", sistema)
+        self.assertIn("sin marcador", sistema)
+
+    def test_nunca_escribe_un_titulo_recomendado_sin_marcador(self):
+        sistema = self.sistema()
+
+        self.assertIn("Nunca escribas el nombre de un título que recomendás", sistema)
+
+    def test_pedir_algo_como_x_tambien_se_busca_antes(self):
+        self.assertIn("«algo como X»", self.sistema())
+
+    def test_las_secciones_siguen_en_el_mismo_orden(self):
+        # El 12/11 mover reglas cambió la conducta del modelo: solo se reemplazan en
+        # su lugar las que hablaban de `mostrar_tarjetas`.
+        sistema = self.sistema()
+        orden = [
+            sistema.index(titulo)
+            for titulo in (
+                "Cómo trabajar:",
+                "Títulos vistos:",
+                "Al recomendar:",
+                "Referencias y datos:",
+                "Datos no confiables",
+            )
+        ]
+
+        self.assertEqual(orden, sorted(orden))
+
+    def test_pedir_las_tarjetas_se_resuelve_con_marcadores(self):
+        sistema = self.sistema()
+
+        self.assertIn("«¿y las tarjetas?»", sistema)
+        self.assertIn("los títulos de tu última respuesta", sistema)
+        self.assertIn("Nunca tomes los de «Ya recomendados»", sistema)
