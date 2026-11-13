@@ -49,7 +49,14 @@ export function MyReviewItem({
   const masRef = useRef<HTMLButtonElement>(null);
   const src = tmdbImage(item.poster, "w185");
   const href = routes.title(item.tipo, item.id_tmdb, "reviews");
-  const enIngles = item.campos_en_ingles?.includes("titulo") ? "en" : undefined;
+  // Una lápida (TMDB ya no tiene el título) llega sin título ni póster: no hay
+  // ficha a la que ir, pero la nota y el texto del usuario siguen y se pueden
+  // borrar como siempre.
+  const disponible = item.disponible;
+  const titulo = disponible ? item.titulo : t("common.content.titleUnavailable");
+  // La leyenda de la lápida ya viene en el idioma de la interfaz: el aviso de
+  // `campos_en_ingles` habla del título de TMDB, que ahí no existe.
+  const enIngles = disponible && item.campos_en_ingles?.includes("titulo") ? "en" : undefined;
 
   useEffect(() => {
     if (!menu) return;
@@ -140,12 +147,16 @@ export function MyReviewItem({
           lang={enIngles}
           className="font-display text-2xl leading-none break-words md:text-[1.875rem]"
         >
-          <Link
-            href={href}
-            className="text-foreground no-underline hover:underline hover:underline-offset-4"
-          >
-            {item.titulo}
-          </Link>
+          {disponible ? (
+            <Link
+              href={href}
+              className="text-foreground no-underline hover:underline hover:underline-offset-4"
+            >
+              {item.titulo}
+            </Link>
+          ) : (
+            <span className="text-fg-3">{titulo}</span>
+          )}
         </h2>
         <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.8125rem] text-fg-3 md:gap-x-3 md:text-sm">
           <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground tabular-nums md:gap-1.5 md:text-[0.9375rem]">
@@ -191,7 +202,7 @@ export function MyReviewItem({
               </button>
             )}
           </>
-        ) : (
+        ) : disponible ? (
           <Link
             href={href}
             aria-label={t("reviews.card.addReviewLabel", { title: item.titulo })}
@@ -200,7 +211,7 @@ export function MyReviewItem({
             <PenLine aria-hidden="true" className="size-4 md:size-[1.125rem]" />
             {t("common.review.add")}
           </Link>
-        )}
+        ) : null}
       </article>
 
       {/* Escritorio: «Editar» y el menú con lo que borra. */}
@@ -215,7 +226,7 @@ export function MyReviewItem({
         <button
           ref={masRef}
           type="button"
-          aria-label={t("reviews.card.moreActionsLabel", { title: item.titulo })}
+          aria-label={t("reviews.card.moreActionsLabel", { title: titulo })}
           aria-haspopup="menu"
           aria-expanded={menu}
           onClick={() => setMenu(!menu)}
@@ -228,7 +239,7 @@ export function MyReviewItem({
         <div
           ref={menuRef}
           role="menu"
-          aria-label={t("reviews.card.moreActionsLabel", { title: item.titulo })}
+          aria-label={t("reviews.card.moreActionsLabel", { title: titulo })}
           className="absolute top-[4.75rem] right-0 z-10 hidden w-[14.375rem] flex-col rounded-xl bg-raised p-1.5 shadow-[0_16px_40px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)] md:flex"
         >
           {item.texto && (
@@ -263,7 +274,7 @@ export function MyReviewItem({
       {/* Celular: un botón y las acciones en una hoja. */}
       <button
         type="button"
-        aria-label={t("reviews.card.actionsLabel", { title: item.titulo })}
+        aria-label={t("reviews.card.actionsLabel", { title: titulo })}
         aria-haspopup="dialog"
         onClick={() => setHoja(true)}
         className="grid size-11 cursor-pointer place-items-center text-fg-2 focus-visible:outline-2 focus-visible:outline-ring md:hidden"
@@ -277,7 +288,7 @@ export function MyReviewItem({
               id={hojaTitulo}
               className="mx-3 mb-1.5 flex items-center gap-1.5 text-[0.8125rem] font-normal text-fg-3"
             >
-              <span lang={enIngles}>{item.titulo}</span>
+              <span lang={enIngles}>{titulo}</span>
               <span aria-hidden="true">·</span>
               <span className="inline-flex items-center gap-1 font-bold text-foreground tabular-nums">
                 <span className="sr-only">

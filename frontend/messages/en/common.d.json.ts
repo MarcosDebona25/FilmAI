@@ -45,7 +45,8 @@ declare const messages: {
       "tvShows": "TV shows",
       "movie": "Movie",
       "tvShow": "TV show",
-      "typeShortLabel": "Type"
+      "typeShortLabel": "Type",
+      "titleUnavailable": "Title no longer available"
     },
     "media": {
       "viewDetails": "View details",
