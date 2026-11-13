@@ -349,6 +349,20 @@ class DescubrirTests(BaseTools):
         self.assertEqual(self.filtros("movie")["genero"], "878")
         self.assertEqual(self.filtros("tv")["genero"], "10765")
 
+    def test_basada_en_libro_pide_el_keyword_a_peliculas_y_series(self):
+        # 818 es «based on novel or book» en TMDB, y `/discover/tv` lo respeta.
+        ejecutar(self.contexto(), "descubrir", {"basada_en_libro": True})
+
+        self.assertEqual(self.filtros("movie")["con_keywords"], "818")
+        self.assertEqual(self.filtros("tv")["con_keywords"], "818")
+
+    def test_sin_basada_en_libro_o_en_falso_no_manda_keywords(self):
+        ejecutar(self.contexto(), "descubrir", {"tipo": "movie"})
+        ejecutar(self.contexto(), "descubrir", {"tipo": "tv", "basada_en_libro": False})
+
+        self.assertIsNone(self.filtros("movie")["con_keywords"])
+        self.assertIsNone(self.filtros("tv")["con_keywords"])
+
     def test_un_genero_que_el_tipo_no_tiene_no_devuelve_cualquier_cosa(self):
         self.catalogo.resultados["tv"] = [serie(2)]
 
@@ -461,6 +475,28 @@ class DetalleTests(BaseTools):
         self.assertIs(resultado["vista"], True)
         self.assertEqual([t["id_tmdb"] for t in tarjetas["tarjetas"]], [1])
 
+    def test_una_serie_trae_temporadas_y_episodios(self):
+        # El bot dijo 22 episodios de Texhnolyze y TMDB dice 20: el dato tiene que
+        # salir de una tool, no de la memoria del modelo.
+        self.catalogo.detalle = serie(
+            1, "Texhnolyze", number_of_seasons=1, number_of_episodes=20
+        )
+
+        resultado = ejecutar(self.contexto(), "detalle", {"id_tmdb": 1, "tipo": "tv"})
+
+        self.assertEqual(resultado["temporadas"], 1)
+        self.assertEqual(resultado["episodios"], 20)
+
+    def test_una_pelicula_no_trae_temporadas_ni_episodios(self):
+        self.catalogo.detalle = pelicula(1)
+
+        resultado = ejecutar(
+            self.contexto(), "detalle", {"id_tmdb": 1, "tipo": "movie"}
+        )
+
+        self.assertNotIn("temporadas", resultado)
+        self.assertNotIn("episodios", resultado)
+
 
 class BuscarSemanticoTests(BaseTools):
     def buscar(self, contexto, producciones, **argumentos):
@@ -536,6 +572,11 @@ class BuscarSemanticoTests(BaseTools):
         self.assertEqual(filtros["anio_hasta"], 2010)
         self.assertEqual(filtros["nota_minima"], 7)
         self.assertEqual(filtros["duracion_max"], 60)
+
+    def test_basada_en_libro_llega_al_catalogo_local(self):
+        _, buscar = self.buscar(self.contexto(), [], basada_en_libro=True)
+
+        self.assertIs(buscar.call_args.kwargs["basada_en_libro"], True)
 
 
 class MostrarTarjetasTests(BaseTools):
@@ -861,6 +902,19 @@ class LimitesDeLosEsquemasTests(BaseTools):
                 resultado = self.invalidos(nombre, argumentos)
 
                 self.assertEqual(resultado["error"], "invalid_arguments")
+
+    def test_basada_en_libro_es_un_booleano(self):
+        for nombre in ("descubrir", "buscar_semantico"):
+            with self.subTest(nombre):
+                propiedades = next(
+                    e["function"]["parameters"]["properties"]
+                    for e in ESQUEMAS
+                    if e["function"]["name"] == nombre
+                )
+                self.assertEqual(propiedades["basada_en_libro"]["type"], "boolean")
+
+        resultado = self.invalidos("descubrir", {"basada_en_libro": "si"})
+        self.assertEqual(resultado["error"], "invalid_arguments")
 
     def test_los_valores_normales_pasan(self):
         casos = (

@@ -69,6 +69,11 @@ _FILTROS = {
         "maximum": 1000,
         "description": "Minutos. Solo es confiable en películas.",
     },
+    "basada_en_libro": {
+        "type": "boolean",
+        "description": "true deja solo títulos basados en una novela o un libro, "
+        "para pedidos como «adaptaciones de libros». Si no, no lo mandes.",
+    },
 }
 
 
