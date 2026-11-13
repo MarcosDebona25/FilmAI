@@ -73,7 +73,7 @@ changes something there (measurements, an answered question).
 - [ ] 3.5 Tests with fixtures from real «nolan», «dune» and «tom» answers:
       one call, caps, filters, validation, scope, no enqueued task.
 - [ ] 3.6 Measure again end to end (cold and warm) with `docker compose run
-    --rm`; record the numbers in the decision entry.
+  --rm`; record the numbers in the decision entry.
 - [ ] 3.7 Spec `tmdb-endpoints` («Suggestions»); `docs/06_TMDB_API_Referencia.md`
       (`search/multi`, `person/{id}`).
 

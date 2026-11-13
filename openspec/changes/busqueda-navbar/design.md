@@ -215,7 +215,8 @@ first (task 3.0, Gonza).
 On desktop, `/` focuses the navbar field when the focus is not in an
 editable element (`input`, `textarea`, `select`, `[contenteditable]`) and no
 `dialog[open]` exists. On `/search` it focuses the page's field. The handler
-lives in `NavbarSearch` (one listener). The field shows the hint «/» while it
+lives in `Navbar` (one listener, mounted on every page with the bar,
+`/search` included, where `NavbarSearch` is not rendered). The field shows the hint «/» while it
 is empty and unfocused.
 
 ## 3. Accessibility: ARIA 1.2 combobox
@@ -309,10 +310,10 @@ its exact name.
 `person_not_found`. The answer adds:
 
 ```json
-"persona": {"id": 525, "name": "Christopher Nolan", "rol": "director", "profile_path": "/x.jpg"}
+"persona": {"id": 525, "name": "Christopher Nolan", "rol": "director", "gender": 2, "profile_path": "/x.jpg"}
 ```
 
-so the chip has its name after a reload or from a shared URL. The name comes
+so the chip has its name and the role by gender after a reload or from a shared URL. The name comes
 from `person/{id}` (new cached endpoint `person_detail`, 24 h), not from the
 URL: a URL cannot make the chip say something else.
 
