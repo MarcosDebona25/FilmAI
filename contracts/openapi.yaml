@@ -1675,6 +1675,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/lists/{lista_id}/suggestions/:
+    get:
+      operationId: lists_suggestions_retrieve
+      description: |-
+        «Sugeridas para esta lista»: títulos parecidos a los de una lista propia.
+
+        `GET /api/lists/{id}/suggestions/?pagina=N` responde
+        `{results, pagina, paginas, nombre_usado}`. Solo las listas personalizadas
+        y Favoritos tienen sugerencias: Pendientes y Vistas dan 404 (Not Found),
+        como si el recurso no existiera.
+
+        Cómo se arma (design §7), en tres pasos:
+
+        1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
+        2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo
+           una *firma* de la lista: agregar, quitar o renombrar cambia la firma, y
+           el pool viejo se vence solo. No hace falta código que invalide nada.
+        3. A la página pedida se le sacan las «Vistas» del usuario DESPUÉS de leer
+           la caché: el pool no lleva nada de nadie, y calificar un título (que lo
+           agrega a «Vistas») no obliga a recalcularlo.
+      parameters:
+      - in: path
+        name: lista_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/lists/order/:
     put:
       operationId: lists_order_update
