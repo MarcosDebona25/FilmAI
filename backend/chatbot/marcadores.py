@@ -19,22 +19,50 @@ logger = logging.getLogger(__name__)
 TOPE_TARJETAS = 3
 
 # Un marcador completo: `[[` + de 1 a 3 dígitos + `]]`. Los paréntesis hacen
-# «grupos»: el primero captura el espacio que lo precede (por si hay que borrarlo)
-# y el segundo, el número. `\s` es cualquier espacio o salto de línea.
-_MARCADOR = re.compile(r"(\s?)\[\[(\d{1,3})\]\]")
+# «grupos», que se leen con `group(n)`: el 1 captura el espacio que lo precede (por
+# si hay que borrarlo), el 2 una negrita que lo abre y el 3 el número. El modelo a
+# veces lo escribe envuelto en negrita (`**[[3]]**`) o con el año (`[[3]] (1999)`):
+# como el filtro agrega las dos cosas por su cuenta, acá se absorben para no
+# duplicarlas. `(?(2)\*\*)` es un condicional: pide el `**` de cierre solo si hubo
+# uno de apertura. `\s` es cualquier espacio o salto de línea.
+_MARCADOR = re.compile(
+    r"(\s?)(\*\*)?\[\[(\d{1,3})\]\](?:\s?\(\d{4}\))?(?(2)\*\*)(?:\s?\(\d{4}\))?"
+)
 
-# Cómo puede terminar un texto que todavía no está completo, para no mostrar
-# `[[3` a medias. `\Z` es «el final del texto». Reconoce, en este orden y siempre
-# pegado al final: un espacio opcional y después `[`, `[[`, `[[3` o `[[3]`. Hasta 3
-# dígitos, como el marcador. Cada `(?: ... )?` es un tramo opcional.
-_COLA_INCOMPLETA = re.compile(r"\s?(?:\[(?:\[(?:\d{1,3}\]?)?)?)?\Z")
+# Los únicos caracteres que pueden formar parte de un marcador a medias: espacios,
+# `*`, `[`, `]`, dígitos y paréntesis. Mientras el final del texto sea una racha de
+# estos (de hasta 26: el marcador más largo, `**[[123]] (1999)**`, tiene 18 más los
+# espacios), el filtro no sabe todavía si es un marcador (ver `_cola_incompleta`).
+_RACHA_POSIBLE = re.compile(r"[\s*\[\]\d()]{0,26}\Z")
 
 # Lo que queda retenido si el stream termina en medio de un marcador: se descarta.
-_MARCADOR_CORTADO = re.compile(r"\s?\[\[\d{0,3}\]?\Z")
+_MARCADOR_CORTADO = re.compile(r"\s?(?:\*\*)?\[\[\d{0,3}(?:\]\]?)?[\s(\d)*]*\Z")
 
 # Una negrita escrita por el modelo (`**algo**`), que en el prompt está reservada
 # para los títulos que pone este filtro.
 _NEGRITA = re.compile(r"\*\*[^*\n]+\*\*")
+
+
+def _cola_incompleta(texto):
+    """Dónde empieza el final del texto que podría ser un marcador a medias.
+
+    Devuelve la posición desde la que hay que retener (`len(texto)` si no hay nada
+    que retener). Mira la racha final de caracteres posibles en un marcador
+    (`_RACHA_POSIBLE`) y retiene desde su primer `*` o `[`, más el espacio que lo
+    precede. Retiene de más a propósito: un `(19` suelto también se queda esperando
+    al próximo trozo. No pasa nada: se suelta enseguida, apenas llega algo que no
+    encaja. Sin `*` ni `[`, solo se retiene un espacio final, por si lo que sigue es
+    un marcador inválido que se borra junto con ese espacio.
+    """
+    racha = _RACHA_POSIBLE.search(texto)
+    inicio, cola = racha.start(), racha.group()
+    disparadores = [i for i in (cola.find("*"), cola.find("[")) if i != -1]
+    if not disparadores:
+        return len(texto) - 1 if texto[-1:].isspace() else len(texto)
+    desde = min(disparadores)
+    if desde > 0 and cola[desde - 1].isspace():
+        desde -= 1
+    return inicio + desde
 
 
 class FiltroDeMarcadores:
@@ -44,7 +72,7 @@ class FiltroDeMarcadores:
     puede quedar cortado entre dos: `[[` en uno y `3]]` en el siguiente. Si cada
     trozo se procesara solo, el `[[` saldría al usuario antes de saber qué viene
     después. Por eso el filtro **retiene** el final de cada trozo cuando podría ser
-    el comienzo de un marcador (como mucho 6 caracteres) y lo junta con el trozo
+    el comienzo de un marcador (unos 25 caracteres como mucho) y lo junta con el trozo
     siguiente. Es un `StringBuilder` con memoria, que en Java sería un
     `FilterReader` con un buffer de lookahead.
 
@@ -75,21 +103,21 @@ class FiltroDeMarcadores:
         """Recibe un trozo y devuelve el texto que ya se puede mostrar."""
         self._crudo.append(trozo)
         texto = self.pendiente + trozo
-        # `search` encuentra dónde empieza la cola que podría ser un marcador a
-        # medias; todo lo anterior es seguro. Siempre hay coincidencia: el patrón
-        # acepta una cola vacía.
-        corte = _COLA_INCOMPLETA.search(texto).start()
+        # Todo lo anterior a la cola incompleta es seguro: se puede reemplazar ya.
+        corte = _cola_incompleta(texto)
         seguro, self.pendiente = texto[:corte], texto[corte:]
         return _MARCADOR.sub(self._reemplazar, seguro)
 
     def cerrar(self):
         """El texto retenido, cuando ya no va a llegar más. Un `[[3` sin cerrar se descarta."""
         resto, self.pendiente = self.pendiente, ""
-        return _MARCADOR_CORTADO.sub("", resto)
+        # Puede quedar un marcador completo (con un año a medias detrás): se resuelve
+        # igual que en `alimentar`. Lo que siga sin cerrar se descarta.
+        return _MARCADOR_CORTADO.sub("", _MARCADOR.sub(self._reemplazar, resto))
 
     def _reemplazar(self, coincidencia):
         """Qué se escribe en lugar de un marcador completo (se usa en `re.sub`)."""
-        espacio, numero = coincidencia.group(1), int(coincidencia.group(2))
+        espacio, numero = coincidencia.group(1), int(coincidencia.group(3))
         candidatos = self.ctx.candidatos()
         titulo = candidatos.get(numero)
         if titulo is None:
@@ -122,5 +150,7 @@ def recomienda_sin_buscar(texto, candidatos):
     la reserva para los títulos y el modelo, sin buscar, los escribiría de memoria).
     `candidatos` es `{ref: título}` (ver `ContextoTurno.candidatos`).
     """
-    inventados = any(int(n) not in candidatos for _, n in _MARCADOR.findall(texto))
+    inventados = any(
+        int(m.group(3)) not in candidatos for m in _MARCADOR.finditer(texto)
+    )
     return inventados or bool(_NEGRITA.search(texto))

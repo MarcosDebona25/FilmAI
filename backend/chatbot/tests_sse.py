@@ -606,9 +606,13 @@ class OrquestadorRealTests(BaseSSE):
             respuesta = await self.enviar("algo como Moon")
             eventos = eventos_de(await self.leer(respuesta))
 
+        # El texto llega en uno o más eventos (el filtro de marcadores corta donde
+        # hay un `[[n]]`): lo que importa es el orden y que lo leído sea completo.
         self.assertEqual(
-            [n for n, _ in eventos], ["estado", "texto", "tarjetas", "fin"]
+            [n for n, _ in eventos if n != "texto"], ["estado", "tarjetas", "fin"]
         )
+        leido = "".join(d["delta"] for n, d in eventos if n == "texto")
+        self.assertEqual(leido, "Te recomiendo **Moon** (2009)")
         self.assertEqual(dict(eventos)["tarjetas"]["tarjetas"][0]["titulo"], "Moon")
         guardada = await Mensaje.objects.aget(autor=TipoAutor.CHATBOT)
         self.assertEqual(guardada.texto, "Te recomiendo **Moon** (2009)")

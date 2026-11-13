@@ -102,6 +102,37 @@ class FiltroDeMarcadoresTests(SimpleTestCase):
                 )
                 self.assertFalse(any("[" in s for s in salidas))
 
+    def test_un_marcador_envuelto_en_negrita_no_duplica_la_negrita(self):
+        # El 13/11/2026 el modelo escribió `**[[1]] (1999)**` y salió `****Matrix**`.
+        casos = {
+            "Acá: **[[1]]** va": "Acá: **Moon** (2009) va",
+            "Acá: **[[1]] (2009)** va": "Acá: **Moon** (2009) va",
+            "Acá: **[[1]]** (2009) va": "Acá: **Moon** (2009) va",
+            "Acá: [[1]] (2009) va": "Acá: **Moon** (2009) va",
+            "Acá: [[1]] (1999) va": "Acá: **Moon** (2009) va",
+        }
+        for texto, esperado in casos.items():
+            for corte in range(1, len(texto)):
+                with self.subTest(texto=texto, corte=corte):
+                    self.setUp()
+                    salidas = self.pasar(texto[:corte], texto[corte:])
+                    self.assertEqual("".join(salidas), esperado)
+                    self.assertEqual(self.ids(), [1])
+
+    def test_las_negritas_y_los_anios_normales_pasan_tal_cual(self):
+        texto = "**Para empezar**\n* un item (2009) y 1999)\n- **A** (1990) [ok]"
+        for corte in range(1, len(texto)):
+            with self.subTest(corte=corte):
+                self.setUp()
+                self.assertEqual(
+                    "".join(self.pasar(texto[:corte], texto[corte:])), texto
+                )
+
+    def test_un_marcador_invalido_envuelto_en_negrita_se_elimina_entero(self):
+        salidas = self.pasar("Mirá **[[9]]** ya")
+
+        self.assertEqual("".join(salidas), "Mirá ya")
+
     def test_un_marcador_que_no_corresponde_a_nadie_se_elimina_sin_dejar_hueco(self):
         salidas = self.pasar("Mirá [[9]].")
 
