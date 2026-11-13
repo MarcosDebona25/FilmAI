@@ -4,20 +4,20 @@ Estado contrastado el **26/09/2026** con los documentos 01–04, el código y la
 
 ## Pendientes (13/11/2026)
 
-Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son un issue abierto, cierres de calidad y mejoras. Los pendientes 1, 2 y 4 quedan en la tabla como cerrados: el 2 está en `develop`; el 1 y el 4 están en la rama `feat/tmdb-y-calidad-chat`, a la espera de que Gonza revise el PR a `develop`.
+Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son un issue abierto, cierres de calidad y mejoras. Los pendientes 1, 2 y 4 quedan en la tabla como cerrados y los tres están en `develop`: el 1 y el 4 entraron con #198 el 13/11/2026 (#180 cerrado). Quedan abiertos un issue (#181) y el resto de los PRs de los pendientes 5 y 10.
 
-| #   | Pendiente                                                   | Importancia                     | Viabilidad                | Referencia                                     |
-| --- | ----------------------------------------------------------- | ------------------------------- | ------------------------- | ---------------------------------------------- |
-| 1   | ✅ Términos de uso de TMDB                                  | Alta                            | —                         | #180, `openspec/specs/tmdb-compliance/`, #198  |
-| 2   | ✅ Cerrado: el chatbot recomienda sin mostrar tarjetas      | —                               | —                         | #187, #189                                     |
-| 3   | Correos por Celery y Brevo como respaldo                    | Media-alta                      | Alta                      | Q-08, #181, `openspec/changes/brevo-respaldo/` |
-| 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                           | —                         | Q-01, Q-03, Q-04, #198                         |
-| 5   | Títulos parecidos en listas y en la ficha                   | Media                           | Media (plan hecho, 5 PRs) | `openspec/changes/recomendaciones-similares/`  |
-| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna | Media                     | Seguridad, B-03, C-04b, CU-021                 |
-| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                            | Muy alta                  | Q-01, Q-05, sección 13 del canvas              |
-| 8   | Refactor y lista «Viendo»                                   | Baja                            | Media                     | Q-07, «Mejoras futuras»                        |
-| 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)      | Baja                      | Perfil, Settings                               |
-| 10  | Buscar en la navbar, filtro por persona y sin relevancia    | Media                           | Alta (diseño hecho)       | `openspec/changes/busqueda-navbar/`            |
+| #   | Pendiente                                                   | Importancia                     | Viabilidad               | Referencia                                     |
+| --- | ----------------------------------------------------------- | ------------------------------- | ------------------------ | ---------------------------------------------- |
+| 1   | ✅ Términos de uso de TMDB                                  | Alta                            | —                        | #180, `openspec/specs/tmdb-compliance/`, #198  |
+| 2   | ✅ Cerrado: el chatbot recomienda sin mostrar tarjetas      | —                               | —                        | #187, #189                                     |
+| 3   | Correos por Celery y Brevo como respaldo                    | Media-alta                      | Alta                     | Q-08, #181, `openspec/changes/brevo-respaldo/` |
+| 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                           | —                        | Q-01, Q-03, Q-04, #198                         |
+| 5   | Títulos parecidos en listas y en la ficha                   | Media                           | Media (PR 1 de 5 hecho)  | `openspec/changes/recomendaciones-similares/`  |
+| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna | Media                    | Seguridad, B-03, C-04b, CU-021                 |
+| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                            | Muy alta                 | Q-01, Q-05, sección 13 del canvas              |
+| 8   | Refactor y lista «Viendo»                                   | Baja                            | Media                    | Q-07, «Mejoras futuras»                        |
+| 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)      | Baja                     | Perfil, Settings                               |
+| 10  | Buscar en la navbar, filtro por persona y sin relevancia    | Media                           | Alta (diseño en develop) | `openspec/changes/busqueda-navbar/`            |
 
 ### 1. Términos de uso de TMDB (#180)
 
@@ -29,7 +29,7 @@ Ya decidido: **cuota nocturna de la tarea de refresco** (13/11/2026). El tope fi
 
 También decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 (Not Found) en noches distintas, `PROTECT`, restauración) están en `openspec/specs/tmdb-compliance/` y en `docs/decisiones.md`.
 
-**Estado (13/11/2026):** los cuatro PRs están en la rama de integración `feat/tmdb-y-calidad-chat`: créditos y logo (#194), refresco con cuota nocturna y lápida (#193), recorte de tarjetas del chat (#196) y el cierre de documentación. El cierre midió la tasa de pedidos a TMDB (pico de 6 a 7 por segundo en un proceso, sin necesidad de un limitador compartido; doc 06) y dejó dos excepciones aceptadas: el collage de las pantallas de acceso, que hay que reemplazar o revisar **antes del 13/02/2027**, y los fixtures de prueba. El PR de la rama a `develop` lo revisa Gonza antes de mergear.
+**Estado (13/11/2026):** ✅ en `develop` con #198 y #180 cerrado. Los cuatro PRs pasaron por la rama de integración `feat/tmdb-y-calidad-chat`: créditos y logo (#194), refresco con cuota nocturna y lápida (#193), recorte de tarjetas del chat (#196) y el cierre de documentación. El cierre midió la tasa de pedidos a TMDB (pico de 6 a 7 por segundo en un proceso, sin necesidad de un limitador compartido; doc 06) y dejó dos excepciones aceptadas: el collage de las pantallas de acceso, que hay que reemplazar o revisar **antes del 13/02/2027**, y los fixtures de prueba. Al desplegar hay que aplicar las migraciones `0008_lapida_tmdb` de `catalogo` y `listas` (en desarrollo, `docker exec filmai_backend python manage.py migrate` después de traer `develop`).
 
 #### Rama dedicada y worktrees (pendientes 1 y 4)
 
@@ -73,12 +73,12 @@ Las revisiones de accesibilidad, de estados de carga y error y de responsive se 
 - **Q-01**: axe-core WCAG 2.1 AA sobre el FAB, el panel abierto, una respuesta con tarjetas y el error, a 375, 768 y 1440 px y en los dos temas; foco al abrir y cerrar, `Escape`, orden de tabulación y que la región de anuncios lea solo la respuesta completa. La prueba con un lector de pantalla real pasó al pendiente 7.
 - **Q-03**: fallas forzadas como en la revisión del 16/10/2026: sin red, error del servidor, respuesta lenta, cancelación y límite de pedidos; cada caso con su mensaje y su salida.
 - **Q-04**: el panel y el FAB a 375, 768 y 1440 px, sin desbordes, con objetivos táctiles de 44 px y el teclado del celular abierto.
-- **Estado (13/11/2026)**: hecho e integrado en `feat/tmdb-y-calidad-chat` (#195). Los tests están en `frontend/e2e/chat-calidad.spec.ts`. Quedan fuera, y pasan al pendiente 7, la prueba con lector de pantalla real y la del teclado de un celular real.
-- **Botón del chat (pedido de Gonza, 13/11/2026)**: el FAB no parece clickeable. `ChatFab.tsx` no tiene `cursor-pointer` (Tailwind 4 deja el cursor por defecto en los botones) ni estado hover. Se suma el cursor y un efecto al pasar el mouse, diseñado primero en el canvas, en la línea de los demás botones primarios (`hover:bg-primary/80` en `components/ui/button.tsx`), con `motion-reduce` si tiene movimiento y sin bajar el contraste de 4,5:1. Conviene revisar si otros botones sin la variante de `Button` tienen el mismo problema.
+- **Estado (13/11/2026)**: ✅ hecho y en `develop` (#195, integrado con #198). Los tests están en `frontend/e2e/chat-calidad.spec.ts`. Quedan fuera, y pasan al pendiente 7, la prueba con lector de pantalla real y la del teclado de un celular real.
+- **Botón del chat (pedido de Gonza, 13/11/2026)**: el FAB no parece clickeable. `ChatFab.tsx` no tiene `cursor-pointer` (Tailwind 4 deja el cursor por defecto en los botones) ni estado hover. Se suma el cursor y un efecto al pasar el mouse, diseñado primero en el canvas, en la línea de los demás botones primarios (`hover:bg-primary/80` en `components/ui/button.tsx`), con `motion-reduce` si tiene movimiento y sin bajar el contraste de 4,5:1. Conviene revisar si otros botones sin la variante de `Button` tienen el mismo problema. Hecho en #195; el 13/11/2026 Marcos pidió quitar el desvanecimiento del fondo (`bg-primary/80`): el hover quedó en elevación y sombra.
 
 ### 5. Títulos parecidos en listas y en la ficha
 
-Es la que más se acerca a la idea de FilmAI: con los vectores de B-06 alcanza, sin entrenar nada. El 13/11/2026 se amplió a la ficha («More like {title}») y se diseñó en `openspec/changes/recomendaciones-similares/`: un solo motor para la fila «Suggested for this list» (listas personalizadas y Favoritos, con «+ Add» y «Refresh») y para la ficha, con relleno de `/recommendations` de TMDB. Son 5 PRs (motor y endpoint de la ficha, endpoint de listas, fila de listas, fila de la ficha, e2e y documentación). Las decisiones D-1 a D-9 quedaron respondidas el 13/11/2026; antes del frontend falta dibujar las filas en el canvas de Claude Design. La calidad crece con la población masiva de la base, pero no depende de ella.
+Es la que más se acerca a la idea de FilmAI: con los vectores de B-06 alcanza, sin entrenar nada. El 13/11/2026 se amplió a la ficha («More like {title}») y se diseñó en `openspec/changes/recomendaciones-similares/`: un solo motor para la fila «Suggested for this list» (listas personalizadas y Favoritos, con «+ Add» y «Refresh») y para la ficha, con relleno de `/recommendations` de TMDB. Son 5 PRs (motor y endpoint de la ficha, endpoint de listas, fila de listas, fila de la ficha, e2e y documentación). Las decisiones D-1 a D-9 quedaron respondidas el 13/11/2026. **Estado (13/11/2026):** el PR 1 (motor y endpoint `GET /api/catalogo/{movie|tv}/{id}/similar/`) está en `develop` (#207). Falta el endpoint de listas (PR 2), las dos filas del frontend (PR 3 y 4, que antes se dibujan en el canvas de Claude Design) y el cierre con e2e y documentación (PR 5). La calidad crece con la población masiva de la base, pero no depende de ella.
 
 ### 6. Lo que se resuelve al desplegar
 
@@ -127,7 +127,7 @@ Diseñado el 13/11/2026 en `openspec/changes/busqueda-navbar/` (detalle y medici
 - **Filtrar Buscar por actor o director**: personas en las sugerencias y un campo «Person» en los filtros, sobre `combined_credits`.
 - **Títulos sin relevancia**: con texto, solo los que tienen 5 votos o popularidad 5, o se llaman exactamente como lo buscado. Sin botón para ver el resto.
 
-Seis PRs chicos más el diseño en el canvas, que hace Gonza antes del primer PR de frontend. El corte (PR 1) es solo de backend y puede ir ya.
+Seis PRs chicos más el diseño en el canvas, que hace Gonza antes del primer PR de frontend. El corte (PR 1) es solo de backend y puede ir ya. **Estado (13/11/2026):** el diseño está en `develop` (#204); quedan abiertas las preguntas Q-1 a Q-8 de `proposal.md` y no hay código todavía.
 
 ### Población masiva de la base
 
