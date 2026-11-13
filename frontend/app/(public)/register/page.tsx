@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Check, Circle } from "lucide-react";
 
+import type { AvatarOption } from "@/components/AccountProvider";
+import { AvatarRadioGroup } from "@/components/AvatarRadioGroup";
 import { AccessShell } from "@/components/access/AccessShell";
 import { CountrySelect } from "@/components/CountrySelect";
 import { ConfirmationSent } from "@/components/access/ConfirmationSent";
@@ -75,6 +77,11 @@ export default function RegisterPage() {
     password2: "",
   });
   const [acepta, setAcepta] = useState(false);
+  // Catálogo público de avatares y el elegido. Arranca en el primero del catálogo
+  // (el mismo que el backend asigna si el alta no trae `avatar_id`). Si el
+  // catálogo no carga, el selector no aparece y el alta sigue sin ese campo.
+  const [avatares, setAvatares] = useState<AvatarOption[]>([]);
+  const [avatarId, setAvatarId] = useState<number | null>(null);
   // «Sucio» = el usuario escribió o eligió algo en el campo; foco y blur no cuentan.
   const [sucios, setSucios] = useState<Partial<Record<Campo, boolean>>>({});
   const [erroresServidor, setErroresServidor] = useState<Errores>({});
@@ -110,6 +117,20 @@ export default function RegisterPage() {
     (Object.keys(validadores) as (keyof typeof form)[]).every(
       (campo) => !validadores[campo](form[campo], form)
     );
+
+  useEffect(() => {
+    let activo = true;
+    apiFetch<AvatarOption[]>("/api/avatars/")
+      .then((lista) => {
+        if (!activo || lista.length === 0) return;
+        setAvatares(lista);
+        setAvatarId((actual) => actual ?? lista[0].id);
+      })
+      .catch(() => {});
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   useEffect(() => {
     const id = setTimeout(() => setDiferido(form), ERROR_DELAY_MS);
@@ -157,6 +178,7 @@ export default function RegisterPage() {
           password1: form.password1,
           password2: form.password2,
           acepta_terminos: true,
+          ...(avatarId !== null && { avatar_id: avatarId }),
         },
       });
       savePendingEmail(form.correo);
@@ -329,6 +351,18 @@ export default function RegisterPage() {
               <FieldMessage error={mostrar("genero", true)} reserve />
             </div>
           </div>
+          {avatarId !== null && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-2 text-sm font-semibold">{t("signUp.avatarLabel")}</legend>
+              <AvatarRadioGroup
+                avatares={avatares}
+                elegido={avatarId}
+                onChange={setAvatarId}
+                className="[--anillo:var(--background)] grid-cols-6 gap-2 sm:grid-cols-9"
+              />
+              <p className="text-[0.8125rem] text-fg-3">{t("signUp.avatarHelp")}</p>
+            </fieldset>
+          )}
           <PasswordField
             label={t("password.label")}
             name="password1"

@@ -94,6 +94,15 @@ for (const viewport of viewports) {
     test("registro: términos obligatorios, reglas y confirmación", async ({ page, baseURL }) => {
       await prepararIdioma(page, baseURL!, "en");
       let payload: Record<string, unknown> | null = null;
+      // Catálogo público de avatares: el registro lo pide al abrirse.
+      await page.route("**/api/avatars/", (route) =>
+        route.fulfill({
+          json: Array.from({ length: 26 }, (_, i) => ({
+            id: i + 1,
+            src: `/avatars/recortados/avatar%20(${i + 1}).png`,
+          })),
+        })
+      );
       await page.route("**/api/auth/registration/", async (route) => {
         payload = route.request().postDataJSON();
         await route.fulfill({ status: 201, json: { code: "registration_pending_confirmation" } });
@@ -133,6 +142,17 @@ for (const viewport of viewports) {
       );
       await page.locator('[name="password1"]').fill("Popcorn24!");
       await page.locator('[name="password2"]').fill("Popcorn24!");
+      // El avatar 1 viene preseleccionado; se elige el 3 con el teclado (flechas).
+      const grupoAvatares = page.getByRole("radiogroup", { name: en.common.avatar.optionsLabel });
+      await expect(
+        grupoAvatares.getByRole("radio", { name: "Avatar 1", exact: true })
+      ).toBeChecked();
+      await grupoAvatares.getByRole("radio", { name: "Avatar 1", exact: true }).focus();
+      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("ArrowRight");
+      await expect(
+        grupoAvatares.getByRole("radio", { name: "Avatar 3", exact: true })
+      ).toBeChecked();
 
       // Sin aceptar los términos el botón sigue deshabilitado.
       const submit = page.getByRole("button", { name: en.nav.account.signUp, exact: true });
@@ -150,6 +170,7 @@ for (const viewport of viewports) {
         pais: "AR",
         fecha_nacimiento: "1992-04-10",
         acepta_terminos: true,
+        avatar_id: 3,
       });
       await expect(page.getByText(/Request another in 1:0\d/)).toBeVisible();
       await expect(page.getByRole("button", { name: en.common.email.resendLink })).toHaveAttribute(

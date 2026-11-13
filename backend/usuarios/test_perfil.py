@@ -72,7 +72,10 @@ class PerfilTests(TestCase):
 
     def test_catalogo_expone_todos_los_avatares_y_rechaza_ids_ajenos(self):
         """Selector y validación usan el mismo catálogo de 26 imágenes individuales."""
-        self.assertEqual(Client().get("/api/avatars/").status_code, 401)
+        # El catálogo es público: el registro lo necesita antes de tener sesión.
+        sin_sesion = Client().get("/api/avatars/")
+        self.assertEqual(sin_sesion.status_code, 200)
+        self.assertEqual(len(sin_sesion.json()), 26)
         response = self.client.get("/api/avatars/")
         self.assertEqual(response.status_code, 200)
         opciones = response.json()

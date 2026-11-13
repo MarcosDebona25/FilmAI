@@ -10,6 +10,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from .adapter import UsuarioAccountAdapter
+from .avatares import AVATAR_ID_DEFAULT, AVATAR_IDS_VALIDOS
 from .factories import UsuarioFactory
 from .models import Usuario
 
@@ -66,6 +67,38 @@ class ErroresRegistroTests(TestCase):
         usuario = Usuario.objects.get(correo=self.payload["correo"])
         self.assertIsNotNone(usuario.fecha_aceptacion_terminos)
         self.assertGreaterEqual(usuario.fecha_aceptacion_terminos, antes)
+
+    def test_registro_guarda_el_avatar_elegido(self):
+        """El avatar que viaja en el alta queda en el usuario creado."""
+        response = self.registrar({"avatar_id": 7})
+        self.assertEqual(response.status_code, 201)
+        usuario = Usuario.objects.get(correo=self.payload["correo"])
+        self.assertEqual(usuario.avatar_id, 7)
+
+    def test_registro_sin_avatar_asigna_el_de_siempre(self):
+        """El campo es opcional: sin él se mantiene el avatar por defecto."""
+        response = self.registrar({})
+        self.assertEqual(response.status_code, 201)
+        usuario = Usuario.objects.get(correo=self.payload["correo"])
+        self.assertEqual(usuario.avatar_id, AVATAR_ID_DEFAULT)
+
+    def test_registro_rechaza_un_avatar_fuera_del_catalogo(self):
+        """Mismo código y parámetros que el perfil, y no se crea la cuenta."""
+        for invalido in (999, 0, -1):
+            with self.subTest(avatar_id=invalido):
+                response = self.registrar({"avatar_id": invalido})
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(
+                    response.data["errors"],
+                    [
+                        {
+                            "field": "avatar_id",
+                            "code": "avatar_invalid",
+                            "params": {"allowedIds": sorted(AVATAR_IDS_VALIDOS)},
+                        }
+                    ],
+                )
+        self.assertFalse(Usuario.objects.filter(correo=self.payload["correo"]).exists())
 
     def test_duplicados_mantienen_campos_y_http_de_registro(self):
         """A diferencia del perfil, el duplicado detectado en registro sigue siendo 400."""

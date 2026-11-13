@@ -30,6 +30,8 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
         user.fecha_nacimiento = data.get("fecha_nacimiento")
         user.genero = data.get("genero", TipoGenero.NO_ESPECIFICA)
         user.pais = data.get("pais", "")
+        # El avatar ya llegó validado por el serializer; sin él, el del modelo.
+        user.avatar_id = data.get("avatar_id", user.avatar_id)
         user.idioma = idioma_efectivo(request, user)
         user.fecha_aceptacion_terminos = timezone.now()
 
