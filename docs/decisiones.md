@@ -662,3 +662,27 @@ Archivos: `frontend/e2e/i18n-flows.spec.ts`, `.github/workflows/ci.yml`
 
 Bajo `manage.py test` se usa el hasher MD5 (producción sigue con bcrypt): el job de backend pasó de 7m33s a 1m49s. Un push nuevo a un PR cancela la corrida anterior y Playwright se reparte con `--shard` en dos jobs. En local se fijan 2 workers: con 6, WSL se quedaba sin memoria y los e2e fallaban por tiempo.
 Archivos: `.github/workflows/ci.yml`, `frontend/playwright.config.ts`
+
+### 13/11/2026 — Tarjetas del chatbot por marcadores `[[n]]`
+
+Con thinking apagado, el modelo recomendaba en el texto y a veces no llamaba a `mostrar_tarjetas`; la red de #189 lo arreglaba adivinando desde el texto (negritas, pistas de «serie» o «película»), con reglas frágiles. Se compararon cuatro caminos:
+
+| Opción | Qué hace | Por qué no / sí |
+|---|---|---|
+| Juez de tarjetas (#192, cerrado) | Un segundo llamado al modelo decide qué títulos del texto llevan tarjeta | Suma una llamada por turno y el texto y las tarjetas siguen saliendo de dos lugares que pueden contradecirse |
+| Salida estructurada JSON | El modelo devuelve `{texto, tarjetas}` | No se puede transmitir el texto en vivo por SSE hasta cerrar el JSON |
+| Juez sin búsqueda previa | El juez también valida títulos de memoria | Sigue sin resolver que el modelo recomiende sin buscar |
+| **Marcadores `[[n]]` (elegida)** | Cada título de una tool lleva un `ref`; el modelo escribe `[[ref]]` en lugar del nombre y el backend lo cambia por `**Título** (año)` mientras transmite y suma la tarjeta | Texto y tarjetas salen del mismo dato; no cuesta una llamada extra; se conserva el streaming |
+
+Decisiones de detalle:
+- El `ref` es el orden de aparición en el turno (`ContextoTurno.candidatos()`), no el `id_tmdb`: TMDB repite ids entre película y serie.
+- `FiltroDeMarcadores` (`backend/chatbot/marcadores.py`) retiene solo el final del texto que podría ser un marcador a medias (hasta unos 25 caracteres) y absorbe la negrita o el año que el modelo escribe alrededor (`**[[3]] (1999)**`). Hasta 3 tarjetas, en orden de aparición y sin repetir; un marcador por encima del tope deja el título en el texto, sin tarjeta. Un marcador sin candidato se elimina junto con su espacio y se loguea.
+- Se elimina la tool `mostrar_tarjetas` (esquema, registro y prompt) y también la red de #189 con `ctx.recomendables`: con marcadores, un título en negrita sin marcador no arma tarjeta. Se mide `negritas_propias` en el log para vigilar si hace falta un respaldo. Las reglas del prompt no se reordenaron: se reemplazaron en su lugar.
+- Las tarjetas del último mensaje del asistente entran como candidatos numerados («Tarjetas de tu último mensaje» en el `system`), para «¿y las tarjetas?» sin volver a buscar.
+- Búsqueda forzada solo reactiva: si en la primera respuesta del turno el modelo recomienda sin haber llamado una tool (un `[[n]]` sin candidato o una negrita), se descarta ese intento y se repite una vez con `tool_choice="required"` (DeepSeek lo acepta con thinking apagado), solo si el turno lleva menos del 40 % de `LLM_TIMEOUT_SECONDS`. Si la llamada forzada falla, se muestra el primer intento. Costo: la primera vuelta de un turno sin tools se retiene entera antes de salir (un saludo ya no transmite en vivo, 1,3 a 1,6 s en total).
+- El log por turno suma `marcadores_validos`, `marcadores_invalidos`, `negritas_propias` y `reintento_forzado`; `tarjetas=marcadores`.
+- El set dorado acepta `historial` (mensajes previos con tarjetas, que se crean y se deshacen con cada pregunta) y suma `y_las_tarjetas`, `bebop_lain` y `de_memoria` (21 preguntas).
+- El contrato SSE y el front no cambian: `tarjetas` sigue una vez al final y el texto ya llega con los títulos reemplazados.
+
+Medición con DeepSeek real (thinking apagado, usuario temporal sin historial, 27 turnos): tarjetas en todos los turnos que recomiendan, siempre 3 y siempre nombradas en el texto; 0 marcadores inválidos; 0 reintentos forzados en esos 27 turnos (en una corrida anterior hubo uno, «algo como Sword Art Online» de memoria, con +1 s aprox. frente a 5,9 a 6,8 s sin reintento); latencia p50 4,7 s y máxima 7,3 s frente a los 25 s del turno. Nolan: 3 corridas con 3 tarjetas (4,5 a 4,9 s); Sword Art Online: 3 corridas con 3 tarjetas (5,7 a 6,8 s). Una primera corrida mostró `****Matrix** (1999)**` por un marcador envuelto en negrita: se corrigió en el filtro. `buscar_semantico` falló en el entorno local (Ollama sin conexión) y el modelo se apoyó en las otras tools.
+Archivos: `backend/chatbot/marcadores.py`, `orquestador.py`, `prompts.py`, `llm.py`, `tools/` (turno, personales, esquemas), `management/commands/chatear.py`, `golden.yaml`, `README.md`, `contracts/sse-chat.md`, `openspec/specs/chat-api/spec.md`

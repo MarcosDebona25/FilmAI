@@ -460,6 +460,13 @@ class TarjetasDelUltimoMensajeTests(BaseMarcadores):
         resultado = json.loads(self.proveedor.pedidos[1][-1]["content"])
         self.assertEqual([r["ref"] for r in resultado["resultados"]], [2, 3, 4, 5])
 
+    async def test_una_tarjeta_guardada_sin_nota_sale_con_nota_null(self):
+        await sync_to_async(self.charla)([tarjeta_guardada(10, "Vieja")])
+
+        eventos = await self.correr([["Va [[1]]"]], texto="¿y las tarjetas?")
+
+        self.assertIsNone(eventos[-1].tarjetas[0]["nota_tmdb"])
+
     async def test_una_tarjeta_vieja_mal_formada_se_ignora(self):
         await sync_to_async(self.charla)(
             [{"titulo": "Sin id"}, tarjeta_guardada(10, "Bien")]

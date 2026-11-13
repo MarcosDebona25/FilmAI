@@ -108,7 +108,16 @@ def _preparar(chat, texto, idioma):
     # Las tarjetas del último mensaje son los primeros candidatos del turno (`ref`
     # 1, 2, …): las búsquedas de este turno siguen la numeración desde ahí.
     for tarjeta in _tarjetas_del_ultimo_mensaje(chat):
-        ctx.encontrados[(tarjeta["id_tmdb"], tarjeta["tipo"])] = tarjeta
+        # Las guardadas antes del 07/11/2026 no traen `nota_tmdb`: el contrato del
+        # stream la pide siempre (puede ser `null`).
+        ctx.encontrados[(tarjeta["id_tmdb"], tarjeta["tipo"])] = {
+            "id_tmdb": tarjeta["id_tmdb"],
+            "tipo": tarjeta["tipo"],
+            "titulo": tarjeta["titulo"],
+            "poster": tarjeta.get("poster"),
+            "anio": tarjeta.get("anio"),
+            "nota_tmdb": tarjeta.get("nota_tmdb"),
+        }
     # La prosa sigue al idioma del mensaje; las tools y las tarjetas, al del turno.
     sistema = armar_sistema(
         armar_perfil(usuario),
