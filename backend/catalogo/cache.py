@@ -6,6 +6,7 @@ import redis
 from django.conf import settings
 
 from catalogo.exceptions import TMDBBadRequest, TMDBError, TMDBNotFound
+from catalogo.services.creditos import MAX_REPARTO
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +38,10 @@ ENDPOINT_TTLS = {
     "person_search": 24 * 3600,
     "person_credits": 24 * 3600,
     # El reparto de una producción ya estrenada casi no cambia: mismo TTL
-    # largo que el detalle y las keywords.
-    "credits": 24 * 3600,
+    # largo que el detalle y las keywords. Se guarda recortado y una sola vez
+    # (ver `UNA_SOLA_CLAVE`); el nombre cambió de `credits` a `creditos_ficha`
+    # para no leer las entradas viejas, que tenían la respuesta entera.
+    "creditos_ficha": 24 * 3600,
     # Disponibilidad en plataformas (JustWatch vía TMDB): son contratos que
     # cambian seguido, así que el TTL es corto. Se cachea por título y no por
     # país: la respuesta trae todos los países y un llamado sirve a todos.
@@ -60,6 +63,14 @@ RESPALDO_TTL = 30 * 24 * 3600
 # mal sin enterarse. Ahí conviene que el fallo se vea.
 RESPALDO_TTLS = {"watch_providers": 7 * 24 * 3600}
 SIN_RESPALDO = frozenset({"changes"})
+# Endpoints que guardan UNA sola copia en vez de la normal más la de respaldo.
+# La copia vive lo que vive el respaldo (30 días) y su frescura se mide con el
+# TTL que le queda: si lleva guardada menos que el TTL del endpoint, es fresca;
+# si no, se vuelve a pedir y, si TMDB falla, se sirve esa misma copia vieja. Así
+# se conserva el respaldo sin gastar el doble de memoria en Redis.
+UNA_SOLA_CLAVE = frozenset({"creditos_ficha"})
+# Cuánto tiempo se considera fresca la copia de los créditos (24 h).
+CREDITOS_FRESCOS_SEGUNDOS = ENDPOINT_TTLS["creditos_ficha"]
 # Con TMDB caído, cada pedido que sale del respaldo dejaría un aviso: uno por
 # endpoint cada 5 minutos alcanza para enterarse sin llenar el log.
 AVISO_RESPALDO_SEGUNDOS = 5 * 60
@@ -78,6 +89,29 @@ def _build_key(endpoint, params):
 
 def _clave_respaldo(clave):
     return clave.replace("tmdb:", "tmdb:respaldo:", 1)
+
+
+def _recortar_creditos(datos):
+    """De la respuesta de créditos de TMDB, solo lo que lee el proyecto.
+
+    TMDB devuelve cientos de personas con ~12 campos cada una (foto, popularidad,
+    ids internos): hasta 260 KB por título. La ficha muestra los primeros
+    `MAX_REPARTO` actores con su personaje y los directores del equipo, y la
+    materialización toma los nombres de los primeros 10 actores y los
+    directores. Se conservan las mismas claves (`cast`, `crew`, `name`,
+    `character`, `job`) para que quien consume no cambie.
+    """
+    reparto = [
+        {"name": persona["name"], "character": persona.get("character") or ""}
+        for persona in (datos.get("cast") or [])
+        if persona.get("name")
+    ][:MAX_REPARTO]
+    directores = [
+        {"name": persona["name"], "job": "Director"}
+        for persona in (datos.get("crew") or [])
+        if persona.get("job") == "Director" and persona.get("name")
+    ]
+    return {"cast": reparto, "crew": directores}
 
 
 def _tmdb_no_disponible(error):
@@ -114,7 +148,7 @@ class TMDBClientCache:
             redis_available = False
             raw = None
 
-        if raw is not None:
+        if raw is not None and self._es_fresca(endpoint, key):
             try:
                 return json.loads(raw)
             except (TypeError, ValueError):
@@ -130,6 +164,10 @@ class TMDBClientCache:
         if redis_available:
             try:
                 serializado = json.dumps(result)
+                if endpoint in UNA_SOLA_CLAVE:
+                    # Una sola copia, con la vida larga del respaldo.
+                    self.redis.set(key, serializado, ex=RESPALDO_TTL)
+                    return result
                 self.redis.set(key, serializado, ex=ENDPOINT_TTLS[endpoint])
                 if endpoint not in SIN_RESPALDO:
                     self.redis.set(
@@ -141,6 +179,21 @@ class TMDBClientCache:
                 pass
         return result
 
+    def _es_fresca(self, endpoint, key):
+        """¿La copia guardada todavía vale como respuesta normal?
+
+        Solo importa en los endpoints de `UNA_SOLA_CLAVE`: ahí la clave vive 30
+        días y su edad sale del TTL que le queda. En los demás, Redis ya la
+        borró al vencer el TTL del endpoint, así que existir es estar fresca.
+        """
+        if endpoint not in UNA_SOLA_CLAVE:
+            return True
+        try:
+            edad = RESPALDO_TTL - self.redis.ttl(key)
+        except redis.RedisError:
+            return False
+        return edad < ENDPOINT_TTLS[endpoint]
+
     def _respaldo(self, endpoint, key, error, redis_available):
         """La última respuesta guardada, si TMDB no está disponible; si no, None."""
         if (
@@ -150,7 +203,8 @@ class TMDBClientCache:
         ):
             return None
         try:
-            raw = self.redis.get(_clave_respaldo(key))
+            copia = key if endpoint in UNA_SOLA_CLAVE else _clave_respaldo(key)
+            raw = self.redis.get(copia)
             datos = json.loads(raw) if raw is not None else None
         except (redis.RedisError, TypeError, ValueError):
             return None
@@ -211,6 +265,7 @@ class TMDBClientCache:
         desde_fecha=None,
         hasta_fecha=None,
         duracion_max=None,
+        con_keywords=None,
     ):
         # Todos los filtros entran en la clave: dos consultas que difieren en
         # la década son dos respuestas distintas, no un cache hit.
@@ -238,6 +293,8 @@ class TMDBClientCache:
             params["hasta_fecha"] = hasta_fecha
         if duracion_max is not None:
             params["duracion_max"] = duracion_max
+        if con_keywords is not None:
+            params["con_keywords"] = con_keywords
         return self._cached_call(
             "discover",
             params,
@@ -256,6 +313,7 @@ class TMDBClientCache:
                 desde_fecha,
                 hasta_fecha,
                 duracion_max,
+                con_keywords,
             ),
         )
 
@@ -312,7 +370,9 @@ class TMDBClientCache:
     def get_credits(self, id_tmdb, tipo):
         params = {"id_tmdb": id_tmdb, "tipo": tipo}
         return self._cached_call(
-            "credits", params, lambda: self.client.get_credits(id_tmdb, tipo)
+            "creditos_ficha",
+            params,
+            lambda: _recortar_creditos(self.client.get_credits(id_tmdb, tipo)),
         )
 
     def get_watch_providers(self, id_tmdb, tipo):

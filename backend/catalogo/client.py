@@ -14,6 +14,11 @@ from catalogo.exceptions import (
 )
 from catalogo.presupuesto import registrar_llamada
 
+# httpx cierra por defecto las conexiones que pasan 5 s sin usarse, y abrir una
+# nueva (TCP + TLS) contra TMDB cuesta ~300 ms (medido el 13/11/2026). Entre
+# dos fichas separadas por más de 5 s, ese costo caía sobre el usuario. Con 60 s
+# la conexión sigue abierta y la siguiente ficha la reutiliza.
+KEEPALIVE_SEGUNDOS = 60
 MAX_RETRIES = 3
 BASE_BACKOFF = 1.0
 BACKOFF_FACTOR = 2
@@ -43,9 +48,31 @@ def _redactar_clave(texto, clave=""):
     return texto.replace(clave, "***") if clave else texto
 
 
+def crear_http_client(*, base_url=None, timeout=None, transport=None):
+    """Arma el `httpx.Client` hacia TMDB, con conexiones que duran 60 s ociosas.
+
+    Un `httpx.Client` es como un pool de conexiones de JDBC: abrirlo es caro y
+    se reutiliza. Es seguro usarlo desde varios hilos, por eso se puede
+    compartir entre los clientes de distintos idiomas (ver `services/tmdb.py`).
+    """
+    return httpx.Client(
+        base_url=settings.TMDB_API_BASE_URL if base_url is None else base_url,
+        timeout=settings.TMDB_TIMEOUT if timeout is None else timeout,
+        transport=transport,
+        limits=httpx.Limits(keepalive_expiry=KEEPALIVE_SEGUNDOS),
+    )
+
+
 class TMDBClient:
     def __init__(
-        self, *, api_key=None, base_url=None, timeout=None, transport=None, idioma=None
+        self,
+        *,
+        api_key=None,
+        base_url=None,
+        timeout=None,
+        transport=None,
+        idioma=None,
+        http_client=None,
     ):
         self.idioma = (
             settings.IDIOMAS_TMDB[settings.IDIOMA_POR_DEFECTO]
@@ -57,10 +84,10 @@ class TMDBClient:
         self.api_key = settings.TMDB_API_KEY if api_key is None else api_key
         self.base_url = settings.TMDB_API_BASE_URL if base_url is None else base_url
         self.timeout = settings.TMDB_TIMEOUT if timeout is None else timeout
-        self._client = httpx.Client(
-            base_url=self.base_url,
-            timeout=self.timeout,
-            transport=transport,
+        # `http_client` permite compartir una sola conexión entre idiomas (inyección
+        # de dependencias); sin él, cada TMDBClient arma la suya, como siempre.
+        self._client = http_client or crear_http_client(
+            base_url=self.base_url, timeout=self.timeout, transport=transport
         )
 
     def _get(self, path, params=None):
@@ -156,6 +183,7 @@ class TMDBClient:
         desde_fecha=None,
         hasta_fecha=None,
         duracion_max=None,
+        con_keywords=None,
     ):
         """Busca producciones por filtros. Todo es opcional menos el tipo.
 
@@ -170,6 +198,9 @@ class TMDBClient:
         `hasta_fecha`, hasta ese día (décadas en Buscar). `duracion_max` son
         minutos y solo sirve en películas: en series TMDB casi no tiene el dato.
         El mínimo de 1 deja afuera las películas con duración desconocida (0).
+        `con_keywords` son ids de keywords de TMDB (`with_keywords`), separados por
+        coma (todos) o por barra (alguno). A diferencia de `with_people`, TMDB sí lo
+        respeta en series (verificado el 13/11/2026 con 818, «based on novel or book»).
         """
         params = {"page": page}
         if genero is not None:
@@ -197,6 +228,8 @@ class TMDBClient:
         if duracion_max is not None:
             params["with_runtime.gte"] = 1
             params["with_runtime.lte"] = duracion_max
+        if con_keywords is not None:
+            params["with_keywords"] = con_keywords
         return self._get_localizado(f"/discover/{tipo}", params)
 
     def search(self, query, tipo, page=1, anio=None):
