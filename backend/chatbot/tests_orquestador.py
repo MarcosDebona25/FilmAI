@@ -873,6 +873,47 @@ class ReglasDelPromptTests(SimpleTestCase):
             sistema.index("Al recomendar:"), sistema.index("Datos no confiables")
         )
 
+    def test_lo_que_el_usuario_nombro_pesa_mas_que_lo_que_dijo_el_asistente(self):
+        # Pidió «parecidas a esta serie» queriendo decir Cowboy Bebop (la que había
+        # nombrado él) y el bot tomó Serial Experiments Lain, de su respuesta anterior.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("«esta serie»", sistema)
+        self.assertIn("que él mismo nombró en su mensaje", sistema)
+        self.assertIn("antes que uno que apareció en tu respuesta anterior", sistema)
+
+    def test_una_referencia_ambigua_se_resuelve_y_se_aclara_sin_frenar(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("puede ser de dos títulos", sistema)
+        self.assertIn("Tomo X como base; si querías Y, decime", sistema)
+        self.assertIn("sin cortar la respuesta ni hacer una pregunta", sistema)
+
+    def test_no_da_opiniones_de_calidad_como_hechos(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("No des opiniones de calidad como hechos", sistema)
+        self.assertIn("un escalón abajo en calidad", sistema)
+
+    def test_los_datos_concretos_salen_solo_de_una_tool_de_este_turno(self):
+        # El bot dijo 22 episodios de Texhnolyze y TMDB dice 20.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn(
+            "episodios, temporadas, duración, año, reparto y director", sistema.lower()
+        )
+        self.assertIn("`temporadas` y `episodios`", sistema)
+
+    def test_las_reglas_de_referencias_van_despues_de_al_recomendar(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("Referencias y datos:")
+        )
+        self.assertLess(
+            sistema.index("Referencias y datos:"), sistema.index("Datos no confiables")
+        )
+
     def test_las_malas_palabras_se_prohiben_con_ejemplos_en_los_dos_idiomas(self):
         es = armar_sistema("", [], "es")
         en = armar_sistema("", [], "en")
@@ -887,7 +928,7 @@ class ReglasDelPromptTests(SimpleTestCase):
         es = armar_sistema("", [], "es")
         en = armar_sistema("", [], "en")
 
-        for ejemplo in ("pibardo", "está re fuerte", "un caño", "todo público"):
+        for ejemplo in ("pibe", "pibardo", "está re fuerte", "un caño", "todo público"):
             self.assertIn(ejemplo, es)
         self.assertIn("lo atractivos que son los actores", es)
         self.assertIn("how attractive the actors are", en)
