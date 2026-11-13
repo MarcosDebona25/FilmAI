@@ -6,7 +6,10 @@ con los vectores (promediar, ordenar, excluir), no qué tan bueno es el modelo.
 Ni Ollama ni TMDB se llaman de verdad.
 """
 
+import json
 import math
+from dataclasses import asdict
+from statistics import mean
 from unittest.mock import patch
 
 import fakeredis
@@ -22,13 +25,22 @@ from catalogo.models import (
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
+    ProduccionTraduccion,
     TipoProduccion,
 )
 from catalogo.presupuesto import contar_llamadas
 from catalogo.services.fallback import CatalogoConRespaldo
 from catalogo.services.similares import (
+    DISTANCIA_MAXIMA,
     MAX_LLAMADAS_TMDB,
+    TAMANO_POOL,
+    Pool,
+    armar_pool,
     candidatos,
+    cantidad_de_paginas,
+    materializar_mostradas,
+    mezclar_con_pesos,
+    pagina,
     peso_del_nombre,
     relleno_tmdb,
     vector_semilla,
@@ -520,3 +532,392 @@ class PresupuestoDelRellenoTests(SimpleTestCase):
                 servicio.get_recommendations(id_tmdb, "movie")
 
         self.assertEqual(contador.total, 11)
+
+
+# Ángulos a un lado y al otro del umbral: distancia coseno = 1 − cos(ángulo).
+CERCA = 0.5  # distancia 0.12
+LEJOS = 1.2  # distancia 0.64
+
+
+class MezclaConPesosTests(SimpleTestCase):
+    """La mezcla del pool: al azar, pero favoreciendo a los más cercanos."""
+
+    def test_la_misma_semilla_da_el_mismo_orden(self):
+        entradas = list(range(60))
+
+        self.assertEqual(
+            mezclar_con_pesos(entradas, "firma-a"),
+            mezclar_con_pesos(entradas, "firma-a"),
+        )
+
+    def test_otra_semilla_da_otro_orden_con_los_mismos_elementos(self):
+        entradas = list(range(60))
+
+        una = mezclar_con_pesos(entradas, "firma-a")
+        otra = mezclar_con_pesos(entradas, "firma-b")
+
+        self.assertNotEqual(una, otra)
+        self.assertEqual(sorted(una), entradas)
+        self.assertEqual(sorted(otra), entradas)
+
+    def test_la_primera_pagina_trae_sobre_todo_a_los_mas_cercanos(self):
+        # Cada entrada es su puesto por distancia (0 = el más cercano). Al azar
+        # puro, el promedio de cualquier página sería 29.5. Se promedian 200
+        # mezclas para que el test no dependa de la suerte de una sola.
+        entradas = list(range(60))
+        mezclas = [mezclar_con_pesos(entradas, f"firma-{n}") for n in range(200)]
+
+        primera = mean(mean(mezcla[:10]) for mezcla in mezclas)
+        ultima = mean(mean(mezcla[-10:]) for mezcla in mezclas)
+
+        self.assertLess(primera, 25)
+        self.assertGreater(ultima, 34)
+
+    def test_no_es_el_orden_exacto_por_distancia(self):
+        entradas = list(range(60))
+
+        self.assertNotEqual(mezclar_con_pesos(entradas, "firma-a")[:10], entradas[:10])
+
+
+class ArmarPoolTests(BaseSimilares):
+    """De las semillas al pool: locales cercanos, relleno de TMDB y locales lejanos."""
+
+    def armar(self, semillas, respuestas=None, **opciones):
+        self.servicio = ServicioFalso(respuestas or {})
+        opciones.setdefault("semillas_tmdb", [(s.id_tmdb, "movie") for s in semillas])
+        opciones.setdefault("semilla_azar", "firma")
+        return armar_pool(
+            [semilla.pk for semilla in semillas], servicio=self.servicio, **opciones
+        )
+
+    def sin_mezclar(self):
+        """Deja el pool en el orden en que se armó, para poder mirarlo."""
+        parche = patch(
+            "catalogo.services.similares.mezclar_con_pesos",
+            side_effect=lambda entradas, semilla: entradas,
+        )
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def test_el_umbral_de_cercania_es_el_del_diseno(self):
+        self.assertEqual(DISTANCIA_MAXIMA, 0.40)
+        self.assertEqual(TAMANO_POOL, 60)
+
+    def test_con_veinte_cercanos_no_se_llama_a_tmdb(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        for numero in range(20):
+            self.produccion(f"C{numero}", vector_a(0.01 * numero))
+
+        pool = self.armar([semilla])
+
+        self.assertEqual(self.servicio.pedidos, [])
+        self.assertEqual((pool.cercanos, pool.de_tmdb, len(pool.entradas)), (20, 0, 20))
+        self.assertTrue(pool.completo)
+
+    def test_con_menos_de_veinte_cercanos_tmdb_completa_en_el_medio(self):
+        self.sin_mezclar()
+        semilla = self.produccion("Semilla", vector_a(0))
+        cerca = self.produccion("Cerca", vector_a(CERCA))
+        lejos = self.produccion("Lejos", vector_a(LEJOS))
+
+        pool = self.armar(
+            [semilla], {(semilla.id_tmdb, "movie"): [item_tmdb(900), item_tmdb(901)]}
+        )
+
+        # Primero lo local cercano, después TMDB, al final lo local lejano.
+        self.assertEqual(
+            [(e["origen"], e["id_tmdb"]) for e in pool.entradas],
+            [
+                ("catalogo", cerca.id_tmdb),
+                ("tmdb", 900),
+                ("tmdb", 901),
+                ("catalogo", lejos.id_tmdb),
+            ],
+        )
+        self.assertEqual((pool.cercanos, pool.de_tmdb), (1, 2))
+        self.assertTrue(pool.completo)
+
+    def test_tmdb_no_repite_lo_que_ya_vino_del_catalogo_ni_las_semillas(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        otra_semilla = self.produccion("Otra", vector_a(0.1))
+        cerca = self.produccion("Cerca", vector_a(CERCA))
+        lejos = self.produccion("Lejos", vector_a(LEJOS))
+        respuestas = {
+            (semilla.id_tmdb, "movie"): [
+                item_tmdb(cerca.id_tmdb),
+                item_tmdb(lejos.id_tmdb),
+                item_tmdb(otra_semilla.id_tmdb),
+                item_tmdb(900),
+            ]
+        }
+
+        pool = self.armar(
+            [semilla, otra_semilla],
+            respuestas,
+            semillas_tmdb=[(semilla.id_tmdb, "movie")],
+        )
+
+        self.assertEqual(
+            [e["id_tmdb"] for e in pool.entradas if e["origen"] == "tmdb"], [900]
+        )
+
+    def test_el_pool_tiene_sesenta_como_mucho(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        for numero in range(70):
+            self.produccion(f"C{numero}", vector_a(0.001 * numero))
+
+        self.assertEqual(len(self.armar([semilla]).entradas), 60)
+
+    def test_el_orden_depende_solo_de_la_semilla_de_azar(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        for numero in range(30):
+            self.produccion(f"C{numero}", vector_a(0.01 * numero))
+
+        una = self.armar([semilla], semilla_azar="a").entradas
+        igual = self.armar([semilla], semilla_azar="a").entradas
+        otra = self.armar([semilla], semilla_azar="b").entradas
+
+        self.assertEqual(una, igual)
+        self.assertNotEqual(una, otra)
+
+    def test_una_semilla_sin_vector_deja_el_pool_incompleto(self):
+        lista = self.produccion("Lista", vector_a(0))
+        pendiente = self.produccion("Pendiente", None, EstadoEmbedding.PENDING)
+        for numero in range(20):
+            self.produccion(f"C{numero}", vector_a(0.01 * numero))
+
+        pool = self.armar([lista, pendiente])
+
+        # Cuando su vector esté listo la firma no cambia: por eso dura poco.
+        self.assertFalse(pool.completo)
+        self.assertEqual(pool.semillas_con_vector, 1)
+        self.assertEqual(len(pool.entradas), 20)
+
+    def test_sin_ninguna_semilla_con_vector_el_pool_es_solo_de_tmdb(self):
+        pendiente = self.produccion("Pendiente", None, EstadoEmbedding.PENDING)
+        self.produccion("Vecina", vector_a(0.1))
+
+        pool = self.armar([pendiente], {(pendiente.id_tmdb, "movie"): [item_tmdb(900)]})
+
+        self.assertEqual([e["origen"] for e in pool.entradas], ["tmdb"])
+        self.assertFalse(pool.completo)
+
+    def test_un_titulo_que_no_esta_en_el_catalogo_se_arma_solo_con_tmdb(self):
+        pool = self.armar(
+            [],
+            {(27205, "movie"): [item_tmdb(900)]},
+            semillas_tmdb=[(27205, "movie")],
+        )
+
+        self.assertEqual([e["id_tmdb"] for e in pool.entradas], [900])
+        self.assertFalse(pool.completo)
+
+    def test_si_tmdb_falla_queda_lo_local_y_el_pool_incompleto(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        cerca = self.produccion("Cerca", vector_a(CERCA))
+
+        pool = self.armar([semilla], {(semilla.id_tmdb, "movie"): TMDBServerError("x")})
+
+        self.assertEqual([e["id_tmdb"] for e in pool.entradas], [cerca.id_tmdb])
+        self.assertFalse(pool.completo)
+
+    def test_filtra_los_candidatos_por_tipo(self):
+        semilla = self.produccion("Semilla", vector_a(0), tipo=TipoProduccion.SERIE)
+        self.produccion("Película", vector_a(0.1))
+        serie = self.produccion("Serie", vector_a(0.2), tipo=TipoProduccion.SERIE)
+
+        pool = self.armar([semilla], tipos=[TipoProduccion.SERIE], semillas_tmdb=[])
+
+        self.assertEqual(
+            [(e["id_tmdb"], e["tipo"]) for e in pool.entradas], [(serie.id_tmdb, "tv")]
+        )
+
+    def test_el_nombre_inclina_el_vector_y_queda_anotado(self):
+        self.sin_mezclar()
+        semilla = self.produccion("Semilla", vector_a(0))
+        del_tema = self.produccion("Del tema", vector_a(1.0))
+        del_otro_lado = self.produccion("Del otro lado", vector_a(-0.9))
+
+        sin_nombre = self.armar([semilla], semillas_tmdb=[])
+        con_nombre = self.armar(
+            [semilla], semillas_tmdb=[], vector_nombre=vector_a(1.0)
+        )
+
+        self.assertFalse(sin_nombre.nombre_usado)
+        self.assertEqual(sin_nombre.entradas[0]["id_tmdb"], del_otro_lado.id_tmdb)
+        self.assertTrue(con_nombre.nombre_usado)
+        self.assertEqual(con_nombre.entradas[0]["id_tmdb"], del_tema.id_tmdb)
+
+    def test_un_nombre_que_no_se_pudo_embeber_deja_el_pool_incompleto(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        for numero in range(20):
+            self.produccion(f"C{numero}", vector_a(0.01 * numero))
+
+        pool = self.armar([semilla], nombre_omitido=True)
+
+        self.assertFalse(pool.nombre_usado)
+        self.assertFalse(pool.completo)
+
+    def test_el_pool_se_puede_guardar_como_json(self):
+        # La caché de Redis del proyecto serializa con JSON (`filmai/cache.py`).
+        semilla = self.produccion("Semilla", vector_a(0))
+        self.produccion("Cerca", vector_a(CERCA))
+        pool = self.armar([semilla], {(semilla.id_tmdb, "movie"): [item_tmdb(900)]})
+
+        ida_y_vuelta = Pool(**json.loads(json.dumps(asdict(pool))))
+
+        self.assertEqual(ida_y_vuelta, pool)
+
+
+class PaginaTests(BaseSimilares):
+    """Cada página es un corte del pool, sin lo que el usuario ya vio."""
+
+    def pool(self, cantidad, tmdb=()):
+        self.producciones = [
+            self.produccion(
+                f"T{numero}", vector_a(0), fecha_lanzamiento="2010-07-16"
+            )
+            for numero in range(cantidad)
+        ]
+        entradas = [
+            {
+                "origen": "catalogo",
+                "pk": p.pk,
+                "id_tmdb": p.id_tmdb,
+                "tipo": "movie",
+            }
+            for p in self.producciones
+        ]
+        return Pool(
+            entradas=[*entradas, *tmdb],
+            nombre_usado=False,
+            completo=True,
+            semillas_con_vector=1,
+            cercanos=cantidad,
+            de_tmdb=len(tmdb),
+        )
+
+    def test_una_tarjeta_local_tiene_la_forma_de_un_item_de_lista(self):
+        pool = self.pool(1)
+
+        self.assertEqual(
+            pagina(pool),
+            [
+                {
+                    "id_tmdb": self.producciones[0].id_tmdb,
+                    "tipo": "movie",
+                    "titulo": "T0",
+                    "poster": "/poster.jpg",
+                    "anio": 2010,
+                    "calificacion_promedio": 7.0,
+                    "campos_en_ingles": [],
+                    "origen": "catalogo",
+                }
+            ],
+        )
+
+    def test_corta_de_a_diez_y_respeta_el_orden_del_pool(self):
+        pool = self.pool(25)
+
+        self.assertEqual(
+            [t["titulo"] for t in pagina(pool, numero=1)],
+            [f"T{n}" for n in range(10)],
+        )
+        self.assertEqual(
+            [t["titulo"] for t in pagina(pool, numero=3)],
+            [f"T{n}" for n in range(20, 25)],
+        )
+        self.assertEqual(cantidad_de_paginas(pool), 3)
+
+    def test_pasada_la_ultima_pagina_no_hay_resultados(self):
+        self.assertEqual(pagina(self.pool(5), numero=2), [])
+
+    def test_el_tamano_de_la_pagina_se_puede_pedir(self):
+        self.assertEqual(len(pagina(self.pool(25), tamano=20)), 20)
+
+    def test_saca_lo_excluido_antes_de_cortar(self):
+        pool = self.pool(12)
+        vistas = {(self.producciones[0].id_tmdb, "movie")}
+
+        primera = pagina(pool, excluir_pares=vistas)
+
+        # La página sigue teniendo 10: el lugar de la vista lo ocupa la siguiente.
+        self.assertEqual([t["titulo"] for t in primera], [f"T{n}" for n in range(1, 11)])
+        self.assertEqual(cantidad_de_paginas(pool, excluir_pares=vistas), 2)
+        self.assertEqual(
+            [t["titulo"] for t in pagina(pool, excluir_pares=vistas, numero=2)], ["T11"]
+        )
+
+    def test_las_tarjetas_de_tmdb_van_como_llegaron_y_tambien_se_excluyen(self):
+        tarjeta = {
+            "id_tmdb": 900,
+            "tipo": "tv",
+            "titulo": "De TMDB",
+            "poster": "/900.jpg",
+            "anio": 2020,
+            "calificacion_promedio": 8.0,
+            "campos_en_ingles": [],
+            "origen": "tmdb",
+        }
+        pool = self.pool(1, tmdb=[tarjeta])
+
+        self.assertEqual(pagina(pool)[1], tarjeta)
+        self.assertEqual(len(pagina(pool, excluir_pares={(900, "tv")})), 1)
+        # El mismo id en película es otro título: no la saca.
+        self.assertEqual(len(pagina(pool, excluir_pares={(900, "movie")})), 2)
+
+    def test_localiza_el_titulo_y_marca_lo_que_quedo_en_ingles(self):
+        pool = self.pool(2)
+        ProduccionTraduccion.objects.create(
+            produccion=self.producciones[0], idioma="es", titulo="El origen"
+        )
+
+        en_espanol = pagina(pool, idioma="es")
+
+        self.assertEqual(en_espanol[0]["titulo"], "El origen")
+        # Sin póster traducido, el póster es el canónico (en inglés).
+        self.assertEqual(en_espanol[0]["campos_en_ingles"], ["poster"])
+        self.assertEqual(en_espanol[1]["titulo"], "T1")
+        self.assertEqual(en_espanol[1]["campos_en_ingles"], ["titulo", "poster"])
+
+    def test_no_hace_una_consulta_por_tarjeta(self):
+        pool = self.pool(10)
+
+        # Una para las producciones y otra para sus traducciones.
+        with self.assertNumQueries(2):
+            pagina(pool, idioma="es")
+
+    def test_una_produccion_borrada_despues_de_armar_el_pool_se_saltea(self):
+        pool = self.pool(3)
+        self.producciones[1].delete()
+
+        self.assertEqual([t["titulo"] for t in pagina(pool)], ["T0", "T2"])
+
+
+class MaterializarMostradasTests(SimpleTestCase):
+    """Lo que TMDB aportó y se mostró entra al catálogo, para la próxima vez."""
+
+    TARJETAS = (
+        {"id_tmdb": 1, "tipo": "movie", "origen": "catalogo"},
+        {"id_tmdb": 900, "tipo": "tv", "origen": "tmdb"},
+    )
+
+    @patch("catalogo.services.similares.materializar_listado_en_segundo_plano")
+    def test_encola_solo_las_tarjetas_de_tmdb(self, encolar):
+        materializar_mostradas(self.TARJETAS)
+
+        encolar.assert_called_once_with([{"id": 900, "media_type": "tv"}])
+
+    @patch("catalogo.services.similares.materializar_listado_en_segundo_plano")
+    def test_sin_tarjetas_de_tmdb_no_encola_nada(self, encolar):
+        materializar_mostradas(self.TARJETAS[:1])
+
+        encolar.assert_not_called()
+
+    @patch(
+        "catalogo.services.similares.materializar_listado_en_segundo_plano",
+        side_effect=RuntimeError("broker caído"),
+    )
+    def test_si_no_se_puede_encolar_la_respuesta_sigue(self, _encolar):
+        with self.assertLogs("catalogo.services.similares", "ERROR"):
+            materializar_mostradas(self.TARJETAS)
