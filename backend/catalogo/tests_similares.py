@@ -7,18 +7,32 @@ Ni Ollama ni TMDB se llaman de verdad.
 """
 
 import math
+from unittest.mock import patch
 
+import fakeredis
+import httpx
 import numpy as np
 from django.db import connection
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
+from catalogo.cache import TMDBClientCache
+from catalogo.client import TMDBClient, crear_http_client
+from catalogo.exceptions import TMDBNotFound, TMDBServerError
 from catalogo.models import (
     EstadoEmbedding,
     ProduccionAudiovisual,
     ProduccionEmbedding,
     TipoProduccion,
 )
-from catalogo.services.similares import candidatos, peso_del_nombre, vector_semilla
+from catalogo.presupuesto import contar_llamadas
+from catalogo.services.fallback import CatalogoConRespaldo
+from catalogo.services.similares import (
+    MAX_LLAMADAS_TMDB,
+    candidatos,
+    peso_del_nombre,
+    relleno_tmdb,
+    vector_semilla,
+)
 
 DIMENSIONES = 1024
 
@@ -242,3 +256,261 @@ class CandidatosTests(BaseSimilares):
             self.assertEqual(cursor.fetchone()[0], "relaxed_order")
             cursor.execute("SHOW hnsw.ef_search")
             self.assertEqual(cursor.fetchone()[0], "100")
+
+
+def item_tmdb(id_tmdb, titulo=None, **campos):
+    """Un resultado de `/recommendations` con lo que el motor lee."""
+    return {
+        "id": id_tmdb,
+        "title": titulo or f"Película {id_tmdb}",
+        "poster_path": f"/{id_tmdb}.jpg",
+        "release_date": "2014-11-05",
+        "vote_average": 8.4,
+        "vote_count": 500,
+        "adult": False,
+        **campos,
+    }
+
+
+class ServicioFalso:
+    """Hace de `TMDBClientCache`: responde lo que se le cargó y anota qué se pidió."""
+
+    def __init__(self, respuestas):
+        self.respuestas = respuestas
+        self.pedidos = []
+
+    def get_recommendations(self, id_tmdb, tipo):
+        self.pedidos.append((id_tmdb, tipo))
+        respuesta = self.respuestas.get((id_tmdb, tipo), [])
+        if isinstance(respuesta, Exception):
+            raise respuesta
+        return {"results": respuesta}
+
+
+class RellenoTMDBTests(SimpleTestCase):
+    """Lo que completa TMDB `/recommendations` cuando hay pocos vecinos locales."""
+
+    def rellenar(self, respuestas, semillas, excluir=()):
+        self.servicio = ServicioFalso(respuestas)
+        return relleno_tmdb(semillas, servicio=self.servicio, excluir_pares=excluir)
+
+    def test_arma_tarjetas_con_la_forma_de_un_item_de_lista(self):
+        relleno = self.rellenar(
+            {(27205, "movie"): [item_tmdb(157336, "Interstellar")]}, [(27205, "movie")]
+        )
+
+        self.assertEqual(
+            relleno.tarjetas,
+            [
+                {
+                    "id_tmdb": 157336,
+                    "tipo": "movie",
+                    "titulo": "Interstellar",
+                    "poster": "/157336.jpg",
+                    "anio": 2014,
+                    "calificacion_promedio": 8.4,
+                    "campos_en_ingles": [],
+                    "origen": "tmdb",
+                }
+            ],
+        )
+        self.assertTrue(relleno.completo)
+
+    def test_una_serie_usa_name_y_first_air_date(self):
+        serie = {
+            "id": 1396,
+            "name": "Breaking Bad",
+            "poster_path": "/bb.jpg",
+            "first_air_date": "2008-01-20",
+            "vote_average": 8.9,
+            "vote_count": 15000,
+        }
+
+        tarjeta = self.rellenar({(60059, "tv"): [serie]}, [(60059, "tv")]).tarjetas[0]
+
+        self.assertEqual(
+            (tarjeta["tipo"], tarjeta["titulo"], tarjeta["anio"]),
+            ("tv", "Breaking Bad", 2008),
+        )
+
+    def test_marca_el_titulo_que_quedo_en_ingles(self):
+        # `CatalogoConRespaldo` anota en `campos_en_ingles` lo que completó.
+        item = item_tmdb(1, "Moon", campos_en_ingles=["title", "overview"])
+
+        tarjeta = self.rellenar({(9, "movie"): [item]}, [(9, "movie")]).tarjetas[0]
+
+        self.assertEqual(tarjeta["campos_en_ingles"], ["titulo"])
+
+    def test_usa_como_mucho_tres_semillas(self):
+        semillas = [(numero, "movie") for numero in range(1, 6)]
+
+        self.rellenar({}, semillas)
+
+        self.assertEqual(self.servicio.pedidos, semillas[:3])
+
+    def test_intercala_una_de_cada_semilla(self):
+        respuestas = {
+            (1, "movie"): [item_tmdb(11), item_tmdb(12), item_tmdb(13)],
+            (2, "movie"): [item_tmdb(21)],
+            (3, "tv"): [item_tmdb(31), item_tmdb(32)],
+        }
+
+        relleno = self.rellenar(respuestas, list(respuestas))
+
+        # Una de cada semilla por vuelta: así una sola no se queda con todo.
+        self.assertEqual(
+            [(t["id_tmdb"], t["tipo"]) for t in relleno.tarjetas],
+            [
+                (11, "movie"),
+                (21, "movie"),
+                (31, "tv"),
+                (12, "movie"),
+                (32, "tv"),
+                (13, "movie"),
+            ],
+        )
+
+    def test_descarta_adulto_pocos_votos_y_sin_poster(self):
+        respuestas = {
+            (1, "movie"): [
+                item_tmdb(10, adult=True),
+                item_tmdb(11, vote_count=9),
+                item_tmdb(12, poster_path=None),
+                item_tmdb(13, poster_path=""),
+                item_tmdb(14, vote_count=10),
+            ]
+        }
+
+        relleno = self.rellenar(respuestas, [(1, "movie")])
+
+        self.assertEqual([t["id_tmdb"] for t in relleno.tarjetas], [14])
+
+    def test_descarta_las_semillas_lo_excluido_y_los_repetidos(self):
+        respuestas = {
+            (1, "movie"): [item_tmdb(2), item_tmdb(50), item_tmdb(60), item_tmdb(70)],
+            (2, "movie"): [item_tmdb(1), item_tmdb(60), item_tmdb(80)],
+        }
+
+        relleno = self.rellenar(
+            respuestas, [(1, "movie"), (2, "movie")], excluir={(50, "movie")}
+        )
+
+        # 1 y 2 son las semillas, 50 ya estaba (en la lista o entre los
+        # candidatos locales) y 60 vino dos veces.
+        self.assertEqual([t["id_tmdb"] for t in relleno.tarjetas], [60, 80, 70])
+
+    def test_el_mismo_id_en_pelicula_y_en_serie_son_dos_titulos(self):
+        respuestas = {(1, "tv"): [item_tmdb(50)]}
+
+        relleno = self.rellenar(respuestas, [(1, "tv")], excluir={(50, "movie")})
+
+        self.assertEqual([t["id_tmdb"] for t in relleno.tarjetas], [50])
+
+    def test_si_tmdb_falla_devuelve_lo_que_tenia_y_avisa_que_quedo_incompleto(self):
+        respuestas = {
+            (1, "movie"): [item_tmdb(11)],
+            (2, "movie"): TMDBServerError("502"),
+            (3, "movie"): [item_tmdb(31)],
+        }
+
+        relleno = self.rellenar(respuestas, list(respuestas))
+
+        self.assertEqual([t["id_tmdb"] for t in relleno.tarjetas], [11])
+        self.assertFalse(relleno.completo)
+        # Con TMDB caído no se insiste con la semilla que falta.
+        self.assertEqual(len(self.servicio.pedidos), 2)
+
+    def test_una_semilla_que_tmdb_no_conoce_se_saltea(self):
+        respuestas = {
+            (1, "movie"): TMDBNotFound("404"),
+            (2, "movie"): [item_tmdb(21)],
+        }
+
+        relleno = self.rellenar(respuestas, list(respuestas))
+
+        self.assertEqual([t["id_tmdb"] for t in relleno.tarjetas], [21])
+        self.assertTrue(relleno.completo)
+
+    def test_sin_semillas_no_llama_a_tmdb(self):
+        relleno = self.rellenar({}, [])
+
+        self.assertEqual((relleno.tarjetas, self.servicio.pedidos), ([], []))
+
+
+class PresupuestoDelRellenoTests(SimpleTestCase):
+    """El relleno no puede costar más de 6 llamadas a TMDB por pedido.
+
+    Acá el cliente de TMDB es el real y lo falso es la red (`MockTransport`):
+    así cuenta el mismo contador que usa producción, reintentos incluidos.
+    """
+
+    def servicio(self, responder):
+        self.urls = []
+
+        def registrar(request):
+            self.urls.append(str(request.url))
+            return responder(request)
+
+        http = crear_http_client(
+            base_url="https://tmdb.test/3", transport=httpx.MockTransport(registrar)
+        )
+        redis = fakeredis.FakeRedis(decode_responses=True)
+        return CatalogoConRespaldo(
+            TMDBClientCache(TMDBClient(api_key="k", idioma="es-MX", http_client=http), redis),
+            TMDBClientCache(TMDBClient(api_key="k", http_client=http), redis),
+        )
+
+    def test_tres_semillas_con_respaldo_en_ingles_son_seis_llamadas(self):
+        def responder(request):
+            # En español el título llega vacío: obliga a pedir la página en inglés.
+            titulo = "" if request.url.params["language"] == "es-MX" else "Moon"
+            return httpx.Response(200, json={"results": [item_tmdb(17431, titulo)]})
+
+        servicio = self.servicio(responder)
+        with contar_llamadas() as contador:
+            relleno = relleno_tmdb(
+                [(1, "movie"), (2, "movie"), (3, "movie"), (4, "movie")],
+                servicio=servicio,
+                excluir_pares=(),
+            )
+
+        self.assertEqual(contador.total, 6)
+        self.assertEqual(MAX_LLAMADAS_TMDB, 6)
+        self.assertEqual(relleno.tarjetas[0]["titulo"], "Moon")
+        self.assertEqual(relleno.tarjetas[0]["campos_en_ingles"], ["titulo"])
+
+    @patch("catalogo.client.time.sleep")
+    def test_los_reintentos_tambien_cuentan_y_nunca_pasan_de_seis(self, _dormir):
+        intentos = iter(range(100))
+
+        def responder(request):
+            # Falla una de cada dos: cada llamada cuesta dos pedidos HTTP.
+            if next(intentos) % 2 == 0:
+                return httpx.Response(503, json={})
+            titulo = "" if request.url.params["language"] == "es-MX" else "Moon"
+            return httpx.Response(200, json={"results": [item_tmdb(17431, titulo)]})
+
+        servicio = self.servicio(responder)
+        with contar_llamadas() as contador:
+            relleno = relleno_tmdb(
+                [(1, "movie"), (2, "movie"), (3, "movie")],
+                servicio=servicio,
+                excluir_pares=(),
+            )
+
+        self.assertEqual(len(self.urls), 6)
+        # El intento 7 se corta antes de salir a la red, pero queda contado.
+        self.assertLessEqual(contador.total, 7)
+        self.assertFalse(relleno.completo)
+
+    def test_el_tope_del_relleno_no_le_quita_presupuesto_al_resto_del_pedido(self):
+        servicio = self.servicio(
+            lambda request: httpx.Response(200, json={"results": []})
+        )
+        with contar_llamadas() as contador:
+            relleno_tmdb([(1, "movie")], servicio=servicio, excluir_pares=())
+            # Después del relleno, el pedido vuelve a su tope de siempre (30).
+            for id_tmdb in range(10, 20):
+                servicio.get_recommendations(id_tmdb, "movie")
+
+        self.assertEqual(contador.total, 11)
