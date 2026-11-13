@@ -822,3 +822,8 @@ Archivos: `backend/catalogo/services/recomendado.py`, `frontend/components/featu
 
 Marcos pidió que la fila «Pendientes» vaya al final, después de Novedades, y no después de Tendencias: las filas de arriba son de descubrimiento y Pendientes es la lista propia. De paso, como es la última fila que llega (primero se piden las listas y después sus ítems), al aparecer ya no empuja hacia abajo a Novedades.
 Archivos: `frontend/components/features/HomeView.tsx`, `frontend/tests/home-page.test.tsx`, `frontend/e2e/home.spec.ts`, `docs/04_Lineamientos_UI.md`
+
+### 13/11/2026 — El botón «Ask FilmAI» ya no se desvanece en el hover
+
+Marcos pidió quitar el desvanecimiento del botón flotante del chat: el hover bajaba el fondo a `bg-primary/80` (el diseño aprobado en la mesa «Chat button · states», ver la entrada de calidad del chatbot) y el amarillo se veía lavado. Ahora el fondo queda igual y el hover es solo la elevación de 2 px con la sombra más profunda; con `motion-reduce`, solo la sombra. El contraste del texto no cambia (el fondo es el amarillo opaco). El e2e pasa a exigir que el fondo se mantenga y que cambie la sombra.
+Archivos: `frontend/components/features/chat/ChatFab.tsx`, `frontend/e2e/chat-calidad.spec.ts`

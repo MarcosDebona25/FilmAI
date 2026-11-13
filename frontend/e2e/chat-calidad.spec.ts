@@ -374,18 +374,25 @@ test.describe("el botón flotante", () => {
     const estilo = () =>
       fab.evaluate((el) => {
         const s = getComputedStyle(el);
-        return { cursor: s.cursor, fondo: s.backgroundColor, desplazamiento: s.translate };
+        return {
+          cursor: s.cursor,
+          fondo: s.backgroundColor,
+          sombra: s.boxShadow,
+          desplazamiento: s.translate,
+        };
       });
     const reposo = await estilo();
     expect(reposo.cursor).toBe("pointer");
     await fab.hover();
-    await expect.poll(async () => (await estilo()).fondo).not.toBe(reposo.fondo);
+    // Sin desvanecer el amarillo (13/11/2026): el hover es la sombra y la elevación.
+    await expect.poll(async () => (await estilo()).sombra).not.toBe(reposo.sombra);
+    expect((await estilo()).fondo).toBe(reposo.fondo);
     // Sube 2 px (`translate` de Tailwind 4, no `transform`).
     await expect.poll(async () => (await estilo()).desplazamiento).toBe("0px -2px");
     await expect(page.getByRole("contentinfo").getByRole("button")).toHaveCSS("cursor", "pointer");
   });
 
-  test("con movimiento reducido cambia el color pero no se mueve", async ({ page }) => {
+  test("con movimiento reducido cambia la sombra pero no se mueve", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await prepararChat(page, sse);
     await page.goto("/home");
@@ -394,7 +401,7 @@ test.describe("el botón flotante", () => {
     await expect(fab).toHaveCSS("translate", /^(none|0px)$/);
   });
 
-  test("el texto sobre el amarillo del hover mantiene 4,5:1", async ({ page }) => {
+  test("el texto sobre el amarillo mantiene 4,5:1 con el hover", async ({ page }) => {
     await prepararChat(page, sse);
     await page.goto("/home");
     const fab = botonFlotante(page);
