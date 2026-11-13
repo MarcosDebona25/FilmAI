@@ -22,8 +22,9 @@ def _buscar_lista(usuario, referencia):
 
     Devuelve `None` si no existe o no es suya.
     """
-    # Siempre filtrado por el usuario del turno: un `id` ajeno no existe para él.
-    listas = Lista.objects.filter(usuario=usuario)
+    # Siempre filtrado por el usuario del turno: un `id` ajeno no existe para él. Y
+    # solo las activas, como las vistas de `listas`: una dada de baja no existe.
+    listas = Lista.objects.filter(usuario=usuario, activa=True)
     if referencia in ClaveLista.values:
         return listas.filter(clave=referencia).first()
     if str(referencia).isdigit():
@@ -34,7 +35,7 @@ def _buscar_lista(usuario, referencia):
 def mis_listas(ctx, lista=None):
     """Sin `lista`, las listas del usuario; con ella, lo que hay adentro."""
     if lista is None:
-        listas = Lista.objects.filter(usuario=ctx.usuario)
+        listas = Lista.objects.filter(usuario=ctx.usuario, activa=True)
         return {
             "listas": [
                 {"id": item.pk, "nombre": _nombre_visible(item, ctx.usuario)}

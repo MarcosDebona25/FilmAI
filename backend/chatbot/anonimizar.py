@@ -17,9 +17,17 @@ ESTRICTO = "estricto"
 # Ruffalo siendo Mark. Se reemplaza el nombre completo y el nombre de usuario.
 CONVERSACION = "conversacion"
 
-_CORREO = r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"
+# La parte local (antes de la `@`) admite también `'`, `#`, `!` y `%`: «o'neil@gmail.com»
+# es un correo válido. El `-` va al final de los corchetes: en el medio sería un rango.
+_CORREO = r"[\w.+'#!%-]+@[\w-]+(?:\.[\w-]+)+"
 # Más cortas no son un nombre: «de» o «la» de «de la Cruz» aparecen en cualquier frase.
 _LARGO_MINIMO_DE_PARTE = 3
+
+
+# Apóstrofos que se ven iguales: el teclado del celular escribe el de «O'Connor»
+# curvo (U+2019) y el nombre guardado puede tener el recto ('). Todos pasan a ser el
+# recto. También lo usa el orquestador para comparar títulos.
+APOSTROFOS = {"\u2019": "'", "\u2018": "'", "\u02bc": "'"}
 
 
 def _plano(texto):
@@ -27,8 +35,16 @@ def _plano(texto):
 
     Se compara contra esta copia y se reemplaza en el original, así que cada
     posición de una tiene que valer para la otra.
+
+    Antes pasa el texto a `NFC`, que junta cada letra con su tilde suelta («e» +
+    U+0301 pasa a ser «é»): un nombre guardado «descompuesto» (NFD) se ve igual que
+    uno compuesto, pero son otros caracteres, y sin esto no coincidían. Si `texto` ya
+    está en NFC (como en `anonimizar`), el largo no cambia.
     """
-    return "".join(unicodedata.normalize("NFD", c)[0].lower()[0] for c in texto)
+    return "".join(
+        APOSTROFOS.get(c) or unicodedata.normalize("NFD", c)[0].lower()[0]
+        for c in unicodedata.normalize("NFC", texto)
+    )
 
 
 def _frase(texto):

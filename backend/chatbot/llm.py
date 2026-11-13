@@ -50,6 +50,8 @@ class ProveedorLLM(Protocol):
         self, mensajes: list[dict], esquemas: list[dict]
     ) -> AsyncIterator[str | Vuelta]: ...
 
+    # Con `esquemas` vacío el modelo no recibe tools y solo puede escribir texto.
+
 
 async def leer_stream(stream):
     """Convierte los fragmentos del proveedor en texto y una `Vuelta` final.
@@ -105,10 +107,14 @@ class ProveedorOpenAICompatible:
             timeout=_TIMEOUT_SEGUNDOS,
             max_retries=_REINTENTOS,
         ) as cliente:
+            # Sin esquemas, el parámetro `tools` ni se manda: la API rechaza una lista
+            # vacía, y sin él el modelo no tiene cómo pedir una tool. `**{...}` abre el
+            # diccionario como argumentos con nombre, igual que en `ejecutar()`.
+            con_tools = {"tools": esquemas} if esquemas else {}
             stream = await cliente.chat.completions.create(
                 model=self.modelo,
                 messages=mensajes,
-                tools=esquemas,
+                **con_tools,
                 max_tokens=_MAX_TOKENS,
                 stream=True,
                 # En DeepSeek viene prendido por defecto, y hace la respuesta más lenta.
@@ -124,17 +130,20 @@ class ProveedorFalso:
     """Reproduce un guion, para probar el orquestador sin red ni costo.
 
     Cada elemento de `guion` es una vuelta: una lista de `str`, `LlamadaTool` o una
-    excepción, que se lanza en ese punto. Guarda en `pedidos` lo que recibió.
+    excepción, que se lanza en ese punto. Guarda en `pedidos` los mensajes que recibió
+    y en `esquemas` las tools que se le ofrecieron en cada llamada.
     """
 
     def __init__(self, guion, razonamiento=None):
         self.guion = list(guion)
         self.razonamiento = razonamiento
         self.pedidos = []
+        self.esquemas = []
 
     async def escribir(self, mensajes, esquemas):
         # Copia: el orquestador sigue agregando mensajes a la misma lista.
         self.pedidos.append(list(mensajes))
+        self.esquemas.append(esquemas)
         texto, llamadas = [], []
         for item in self.guion.pop(0):
             if isinstance(item, Exception):
