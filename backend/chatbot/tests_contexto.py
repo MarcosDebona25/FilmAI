@@ -154,17 +154,17 @@ class ApostrofosYTildesTests(SimpleTestCase):
             ("Œdipe", "Oedipe"),
             ("Þór", "Thor"),
         )
-        for guardado, escrito in casos:
-            usuario = SimpleNamespace(
-                nombre=guardado, apellido="", nombre_usuario="xyz"
-            )
-            with self.subTest(guardado=guardado):
-                self.assertEqual(
-                    anonimizar(f"Hola {escrito}", usuario, ESTRICTO), "Hola [usuario]"
+        for letra, pares in casos:
+            # Guardado con la letra, escrito con su par; y al revés.
+            for guardado, escrito in ((letra, pares), (pares, letra)):
+                usuario = SimpleNamespace(
+                    nombre=guardado, apellido="", nombre_usuario="xyz"
                 )
-                self.assertEqual(
-                    anonimizar(f"Hola {guardado}", usuario, ESTRICTO), "Hola [usuario]"
-                )
+                with self.subTest(guardado=guardado, escrito=escrito):
+                    self.assertEqual(
+                        anonimizar(f"Hola {escrito}", usuario, ESTRICTO),
+                        "Hola [usuario]",
+                    )
 
     def test_un_mensaje_descompuesto_no_corre_los_reemplazos(self):
         # `anonimizar()` pasa el mensaje a NFC antes de plegarlo, así que las posiciones
