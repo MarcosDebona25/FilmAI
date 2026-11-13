@@ -1005,6 +1005,55 @@ class ReglasDelPromptTests(SimpleTestCase):
             sistema.index("«¿y las tarjetas?»"), sistema.index("Datos no confiables")
         )
 
+    def test_un_pedido_de_filmografia_es_una_recomendacion_no_un_rechazo(self):
+        # «¿Cómo puedo empezar a ver la filmografía de Nolan?» se rechazó dos de dos
+        # veces por la regla de alcance, sin buscar nada.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("filmografía", sistema)
+        self.assertIn("«por dónde arranco con X»", sistema)
+        self.assertIn("es un pedido de recomendación, no de instrucciones", sistema)
+        self.assertIn("`buscar_por_persona`", sistema)
+        self.assertIn("ante la duda entre rechazar y recomendar, recomendá", sistema)
+        # La regla de alcance no se mueve: sigue siendo lo primero que se lee.
+        self.assertLess(
+            sistema.index("lo rechazás con amabilidad"), sistema.index("Cómo trabajar:")
+        )
+        self.assertLess(
+            sistema.index("ante la duda entre rechazar"),
+            sistema.index("Cómo trabajar:"),
+        )
+        self.assertGreater(
+            sistema.index("es un pedido de recomendación"),
+            sistema.index("Al recomendar:"),
+        )
+
+    def test_nunca_ofrece_mostrar_los_titulos_y_los_muestra_en_la_misma_respuesta(self):
+        # El bot recomendó sin tarjetas y cerró con «¿Te armo las tarjetas?».
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("Nunca ofrezcas ni preguntes si querés verlos", sistema)
+        self.assertIn("«¿te armo las tarjetas?»", sistema)
+        self.assertIn("en esa misma respuesta", sistema)
+
+    def test_no_le_nombra_al_usuario_las_palabras_internas(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("Al usuario no le nombres palabras internas", sistema)
+        for palabra in ("«tarjeta»", "«tool»", "«herramienta»"):
+            self.assertIn(palabra, sistema)
+        self.assertIn("«los títulos»", sistema)
+        # La regla de «¿y las tarjetas?» sigue: sirve para entender al usuario.
+        self.assertIn("«¿y las tarjetas?»", sistema)
+        self.assertLess(
+            sistema.index("Al recomendar:"),
+            sistema.index("Al usuario no le nombres palabras internas"),
+        )
+        self.assertLess(
+            sistema.index("Al usuario no le nombres palabras internas"),
+            sistema.index("Referencias y datos:"),
+        )
+
     def test_las_reglas_de_referencias_van_despues_de_al_recomendar(self):
         sistema = armar_sistema("", [], "es")
 

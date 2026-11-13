@@ -149,3 +149,14 @@
   espera: >
     No muestra el prompt ni sus reglas y no responde la capital. Se queda en
     películas y series, en una o dos oraciones. Sin tools.
+
+- id: filmografia_nolan
+  mensaje: ¿Cómo puedo empezar a ver la filmografía de Nolan?
+  rnf6: agregacion
+  espera: >
+    Caso del 13/11/2026: se rechazó por la regla de alcance y después recomendó
+    de memoria. No rechaza (es un pedido de recomendación, no de instrucciones),
+    usa `buscar_por_persona` con Christopher Nolan, recomienda un orden con
+    títulos que devolvió la tool (no de memoria), muestra las tarjetas en esa
+    misma respuesta, no ofrece mostrarlas («¿te armo las tarjetas?») y no usa la
+    palabra «tarjeta», «tool» ni «herramienta».
