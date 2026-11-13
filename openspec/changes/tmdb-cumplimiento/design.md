@@ -57,20 +57,52 @@ is also what the catalog wants anyway (they lack genres, cast and keywords).
 **`catalogo.refrescar_vencidos`**, daily at 03:30, after the sync and before
 the embedding backfill (so the backfill at 04:00 picks up re-embeddings):
 
-1. Select due rows, NULL first, then oldest `fecha_enriquecimiento`, capped at
-   `CELERY_REFRESCO_LIMIT` (300).
-2. For each one, `materializar(id_tmdb, tipo, forzar=True)`, the single write
+1. Compute tonight's quota (below) from the database.
+2. Select that many rows, NULL first, then oldest `fecha_enriquecimiento`.
+   The quota may reach rows younger than 150 days: that is the rotation
+   working, not a bug.
+3. For each one, `materializar(id_tmdb, tipo, forzar=True)`, the single write
    path required by `catalog-materialization`. One item failing does not stop
    the rest, as in the sync.
-3. Log a summary: refreshed, not found, failed, and **how many rows are still
-   older than 180 days** (with `logger.warning` if any).
+4. Log a summary: the quota and how it was obtained, refreshed, not found,
+   failed, and **how many rows are still older than 180 days** (with
+   `logger.warning` if any).
 
-**Why 150 and 300.** 30 days of margin cover a week of failed nights. With a
-corpus of ~10 000 rows the steady state is 10 000 / 150 ≈ 67 rows a day; 300
-leaves room for the first runs, which find every NULL row and every row seeded
-in August due at once, and drains a full backlog in ~34 nights. Both values
-live in `settings.py`; the summary's «still older than 180 days» number says
-when to raise them.
+### Nightly quota (decided 13/11/2026)
+
+A fixed cap of 300 failed two ways: it does not grow with the catalog, which
+only grows, and a bulk load of 10 000 titles on one day would leave about
+1 200 rows over 180 days. The quota is computed every night as the larger of
+two numbers, capped by a safety ceiling:
+
+```
+cuota = min(CELERY_REFRESCO_TECHO, max(rotacion, plazos))
+
+rotacion = ceil(total_rows / DIAS_REFRESCO_TMDB)                 # 150
+plazos   = max over k = 1..30 of ceil(rows that reach 180 days within k nights / k)
+           (NULL rows and rows already over 180 days count from k = 1)
+```
+
+- **Rotation** refreshes the oldest `total / 150` rows every night, so the
+  whole catalog goes round once every ~150 days. It is what spreads a bulk
+  load: after its first round, the 10 000 titles no longer fall due on the
+  same day. 10 000 rows give 67 a night; 20 000 give 134, with no setting to
+  change.
+- **Deadlines** is the smallest nightly amount that gets every row refreshed
+  before it turns 180 (earliest deadline first). On a spread catalog it stays
+  under the rotation and changes nothing. In the 10 000-on-one-day case it
+  gives 334 a night from day 150 for 30 nights, and no row goes over.
+- **Ceiling** `CELERY_REFRESCO_TECHO = 1000` keeps one odd night from holding
+  the worker that also serves `materializar_produccion`. If the deadlines ask
+  for more, the summary says so and how many rows will go over 180 days.
+- **Cost**: one `COUNT` and one `GROUP BY` on the day each row turns 180 (at
+  most 31 groups), with an index on `fecha_enriquecimiento`. The arithmetic is
+  a pure function, `cuota_nocturna(total, por_dia, techo)`, tested without a
+  database: empty catalog, spread catalog, 10 000 on one day, rows already
+  overdue, NULL rows, and the ceiling.
+
+**Why 150.** It is the length of the rotation, and the 30 days up to 180 cover
+a week of failed nights. Both values and the ceiling live in `settings.py`.
 
 **Why not deleting.** `Calificacion`, `Resena` and `Tiene` (list items) point to
 `ProduccionAudiovisual` with `on_delete=CASCADE`. Deleting a
@@ -80,7 +112,8 @@ keeps both promises.
 **Interaction with what exists.** The sync's change-list refresh and the
 90-day net of `_necesita_enriquecimiento` stay: they keep popular rows fresher
 than 150 days. The new task only catches what they miss. A row the sync just
-refreshed is no longer due, so nothing is enriched twice.
+refreshed goes to the back of the oldest-first order, so nothing is enriched
+twice.
 
 ### Titles TMDB no longer has
 
@@ -250,7 +283,7 @@ under its constraints so a future monetization plan meets it.
 | ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Credits as a block in `/terms` with an anchor    | A new `/about` page                                   | Decided 07/11/2026. TMDB asks for an «About» or «Credits» _section_; `/terms` already lists TMDB as a third party |
 | Reference date = `fecha_enriquecimiento`         | A new `fecha_sincronizacion` column                   | It already records the last TMDB fetch, in the same `save()` as the data; NULL rows are handled by being due      |
-| Refresh at 150 days, cap 300 per night           | Refresh at 180; no cap                                | A margin for failed nights; a cap so the worker keeps serving `materializar_produccion` for users                 |
+| Nightly quota: max(rotation, deadlines), ceiling | A fixed cap of 300; staggering dates at bulk load     | Decided 13/11/2026. Grows with the catalog and absorbs a bulk load in time; staggering misses non-seed loads      |
 | Refresh, never delete referenced rows            | Delete rows older than 6 months                       | CASCADE would take users' ratings, reviews and lists                                                              |
 | Trim cards to ids at 180 days, rehydrate on read | Keep them (accepted risk); store ids only from now on | Decided 07/11/2026. Live conversations keep the 09/10 behavior; old ones stay correct without TMDB calls          |
 | Logo as `<img>` from `public/`                   | Inline SVG component                                  | An inline SVG invites `currentColor`/theme tweaks; the terms forbid recoloring                                    |

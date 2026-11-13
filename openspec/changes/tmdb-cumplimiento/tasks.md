@@ -2,15 +2,15 @@
 
 ## Review Workload Forecast
 
-| Field                   | Value                                                                                                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Estimated changed lines | ~1 150 (frontend ~350, backend ~600, docs ~200)                                                                                                                |
-| 400-line budget risk    | Medium                                                                                                                                                         |
-| Chained PRs recommended | Yes — four PRs, mostly independent (below)                                                                                                                     |
-| Delivery strategy       | ask-on-risk                                                                                                                                                    |
-| Chain strategy          | Each PR from `develop`, one worktree per PR in `~/FilmAI-worktrees/<branch>`; PR 3 may stack on PR 2 (it reuses `disponible_en_tmdb`); merge commit, no rebase |
-| Owners                  | To agree between Gonza and Marcos. PR 1 is frontend only; PRs 2–3 are backend; PR 4 is closing                                                                 |
-| PR-Agent                | At most 3 passes per PR, while the workflow stays disabled (06/11/2026) the gate is local verification                                                         |
+| Field                   | Value                                                                                                                                                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Estimated changed lines | ~1 150 (frontend ~350, backend ~600, docs ~200)                                                                                                                                                                            |
+| 400-line budget risk    | Medium                                                                                                                                                                                                                     |
+| Chained PRs recommended | Yes — four PRs, mostly independent (below)                                                                                                                                                                                 |
+| Delivery strategy       | ask-on-risk                                                                                                                                                                                                                |
+| Chain strategy          | Integration branch `feat/tmdb-y-calidad-chat` (from `develop`, 13/11/2026); each PR in its own herdr worktree `~/FilmAI-worktrees/<branch>` based on it, PR against it; one final PR to `develop`; merge commit, no rebase |
+| Owners                  | To agree between Gonza and Marcos. PR 1 is frontend only; PRs 2–3 are backend; PR 4 is closing                                                                                                                             |
+| PR-Agent                | At most 3 passes per PR, while the workflow stays disabled (06/11/2026) the gate is local verification                                                                                                                     |
 
 ### Work Units
 
@@ -20,6 +20,14 @@
 | 2   | Catalog refresh task, 404 rule, cache cap              |        ~450 | `test catalogo.tests_vencimiento catalogo.test_cache_tope`        | Remove the beat entry and the task; reverse the `disponible_en_tmdb` migration |
 | 3   | Chat card trimming and rehydration                     |        ~250 | `test chatbot.tests_recorte`                                      | Remove the beat entry; rehydration of untrimmed cards is a no-op               |
 | 4   | API rate measurement, AI-use decision, docs, specs     | ~100 + docs | manual + full suite                                               | Docs only                                                                      |
+
+Branching (13/11/2026): this change and pendiente 4 of the plan (chatbot
+quality) share the integration branch `feat/tmdb-y-calidad-chat`. Each work
+unit is a branch from it, in a worktree created with
+`herdr worktree create --cwd ~/FilmAI --base feat/tmdb-y-calidad-chat --branch <branch> --path ~/FilmAI-worktrees/<branch>`;
+its PR targets the integration branch (CI runs on PRs to `feat/**`). When
+every unit is in, one PR takes the branch to `develop`. Order and parallel
+lanes are in `docs/05_Plan_de_Desarrollo.md`, pendiente 1.
 
 Dependencies: PR 1 and PR 2 start with no wait. PR 3 needs PR 2's
 `disponible_en_tmdb` only for the «unavailable» placeholder; it can start
@@ -31,13 +39,18 @@ longer available» card in lists and My reviews.
 
 ## Phase 1: Attribution and brand (PR 1)
 
-- [ ] 1.0 Canvas first (07/11/2026): when development of this change
-      starts, design in Claude Design the credits block of «Terms · mobile»
-      and the footer line with its «Credits» link («Footer · desktop» and
-      «Footer · mobile»), in both themes. Choose there which official logo
-      (`docs/tmdb-legales/logo1.svg` … `logo5.svg`), its size and its
-      treatment on each theme. No logo is fixed before this step. Record the
-      choice in `docs/decisiones.md`
+- [ ] 1.0 Canvas first (07/11/2026; staged 13/11/2026): design in Claude
+      Design the credits block of «Terms» and the footer line with its
+      «Credits» link, in staged rounds with a review gate after each:
+      (a) one comparison artboard per theme with the credits block on mobile
+      and each official logo (`logo1.svg` stacked, `logo2.svg` two lines,
+      `logo3`–`logo5` horizontal), 10 combinations; Marcos keeps at most two;
+      (b) the kept logos at their size in «Terms · mobile» and «Terms ·
+      desktop», both themes, plus the footer line in «Footer · desktop» and
+      «Footer · mobile» with and without a small horizontal logo;
+      (c) the chosen combination only, rendered to check it, and every
+      discarded artboard removed. No logo is fixed before this step. Record
+      the choice in `docs/decisiones.md`
 - [ ] 1.1 Explain: why the notice is a catalog key and not a literal; why the
       logo is an `<img>` from `public/` and not an SVG component (no
       recoloring); what an anchor link is and how `routes.terms` builds it
@@ -78,9 +91,13 @@ longer available» card in lists and My reviews.
 - [ ] 2.1 Explain: what «cache» means in TMDB's terms (anything stored, not
       only Redis); why refresh and not delete (CASCADE to ratings); how a
       beat entry reaches the worker
-- [ ] 2.2 RED `catalogo/tests_vencimiento.py`: `vencidas()` returns NULL rows
-      first, then by oldest `fecha_enriquecimiento`, excludes rows newer than
-      150 days, and respects the limit
+- [ ] 2.2 RED `catalogo/tests_vencimiento.py`: the pure function
+      `cuota_nocturna(total, por_dia, techo)` (design, «Nightly quota»):
+      empty catalog gives 0; 10 000 spread rows give 67; 10 000 rows 150 days
+      old give 334; NULL and overdue rows count as due tonight; the ceiling
+      caps it. The query side groups rows by the day they turn 180 in one
+      query, and `a_refrescar(cuota)` returns NULL rows first, then oldest
+      `fecha_enriquecimiento`, exactly `cuota` of them
 - [ ] 2.3 RED: `refrescar_vencidos` calls `materializar(forzar=True)` for each
       due row; one `TMDBError` does not stop the rest; the summary counts
       refreshed / not found / failed and the rows still over 180 days
@@ -110,7 +127,8 @@ longer available» card in lists and My reviews.
 - [ ] 2.7 GREEN: migration `disponible_en_tmdb` (default `True`), `fecha_404`
       (nullable) and `PROTECT` on the three foreign keys;
       `catalogo/services/vencimiento.py`; task `catalogo.refrescar_vencidos`;
-      settings `DIAS_REFRESCO_TMDB = 150`, `CELERY_REFRESCO_LIMIT = 300`;
+      settings `DIAS_REFRESCO_TMDB = 150`, `CELERY_REFRESCO_TECHO = 1000`;
+      index on `fecha_enriquecimiento`;
       beat entry at 03:30 with its comment
 - [ ] 2.8 RED `catalogo/test_cache_tope.py`: every value in `ENDPOINT_TTLS`,
       `RESPALDO_TTL`, `RESPALDO_TTLS` and every catalog `max-age` is ≤ 180
@@ -123,8 +141,8 @@ longer available» card in lists and My reviews.
       from the list or have its review deleted; unit test
 - [ ] 2.11 Manual (no Docker in this planning worktree; in the PR's
       worktree with `RUN_MIGRATIONS=false` as usual): run the task once
-      against the dev database, record how many rows were due, how long it
-      took, and how many TMDB calls it made
+      against the dev database, record the quota and how it was obtained,
+      how long it took, and how many TMDB calls it made
 - [ ] 2.12 Verify: `ruff format . && ruff check .`, `python manage.py test`
 
 ## Phase 3: Chat cards (PR 3)

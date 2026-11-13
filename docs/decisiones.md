@@ -68,6 +68,11 @@ Este archivo se condensó (ver la introducción). `docs/auditoria-seguridad-resu
 De paso se corrigió en `traducciones/guia.md` un párrafo que daba al chatbot por no implementado.
 Archivos: `docs/decisiones.md`, `docs/05_Plan_de_Desarrollo.md`, `traducciones/guia.md`
 
+### 13/11/2026 — Rama dedicada para el #180 y la calidad del chatbot
+
+Los pendientes 1 (términos de TMDB) y 4 (calidad del chatbot) se desarrollan en la rama de integración `feat/tmdb-y-calidad-chat`, creada desde `develop`, porque cambian modelo, tareas nocturnas, footer y panel del chat, y no conviene que entren a `develop` por partes. Cada unidad de trabajo es una rama desde la de integración, en un worktree propio creado con `herdr worktree create` en `~/FilmAI-worktrees/`, con su PR contra la rama de integración (el CI ya corre en PR a `feat/**`). Un PR final la lleva a `develop`. Hay dos carriles en paralelo, frontend y backend, y las unidades y su orden están en el plan. El logo de TMDB se elige en el canvas en tres etapas con revisión: 10 combinaciones (5 logos en 2 temas), las dos que queden en contexto, y solo la elegida. En la misma revisión, el pendiente 2 (tarjetas del chatbot) se cerró, la prueba con NVDA en Windows pasó del pendiente 4 al 7 y el pendiente 4 sumó el pedido de Gonza: el botón flotante del chat no parece clickeable, porque no tiene cursor de mano ni estado hover.
+Archivos: `docs/05_Plan_de_Desarrollo.md`, `openspec/changes/tmdb-cumplimiento/tasks.md`
+
 ---
 
 ## Infraestructura
@@ -260,6 +265,11 @@ El aviso al administrador cuando la sync falla entera deja de ser un pendiente p
 
 El mismo día se cerró la revisión de la lista de pendientes. Perfil público y notificaciones por correo pasan a ser un pendiente propio, el último (9): amplían el alcance y se decide con Gonza si entran; si no, se sacan sus controles de Settings. El pendiente 2 deja de mostrar el tope de vueltas como abierto, porque lo cerró #189. En el pendiente 7 se anotó que los `.eml` de revisión están desactualizados, y en el canvas se quitó la franja dorada de los cuatro correos, que el código ya no tiene desde el 06/11/2026 (#175).
 Archivos: `docs/05_Plan_de_Desarrollo.md`
+
+### 13/11/2026 — Cuota nocturna de la tarea de refresco (#180)
+
+El diseño refrescaba hasta 300 filas por noche (`CELERY_REFRESCO_LIMIT`). Ese tope no crece con el catálogo, que solo va a crecer, y si se cargan 10 000 títulos en un mismo día unas 1 200 filas pasarían los 180 días. Ahora la tarea calcula cada noche cuántas filas refresca: `min(CELERY_REFRESCO_TECHO, max(rotación, plazos))`. La rotación es `ceil(total ÷ 150)` y renueva siempre las filas más viejas, así el catálogo da una vuelta cada 150 días y una carga masiva queda repartida después de su primera vuelta. Los plazos son la menor cantidad por noche con la que ninguna fila llega a los 180 días: con las 10 000 cargadas juntas, 334 por noche durante 30 noches. El techo (1000) evita que una noche rara ocupe el worker, y el resumen avisa si los plazos piden más. Cuesta un `COUNT` y un `GROUP BY` sobre `fecha_enriquecimiento`, que se indexa. El cálculo es una función pura que se testea sin base. Descartados: subir el tope fijo (hay que volver a ajustarlo) y escalonar las fechas al cargar (no cubre las cargas que no pasan por el seed).
+Archivos: `openspec/changes/tmdb-cumplimiento/design.md`, `openspec/changes/tmdb-cumplimiento/specs/tmdb-compliance/spec.md`, `openspec/changes/tmdb-cumplimiento/tasks.md`, `openspec/changes/tmdb-cumplimiento/proposal.md`, `docs/05_Plan_de_Desarrollo.md`
 
 ---
 

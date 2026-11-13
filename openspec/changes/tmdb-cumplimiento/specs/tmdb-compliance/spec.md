@@ -45,20 +45,33 @@ Visible text, emails, chatbot prompts and documentation MUST name TMDB only as Â
 
 ### Requirement: Catalog rows are refreshed before 6 months
 
-A `ProduccionAudiovisual` row is due when `fecha_enriquecimiento` is NULL or older than `DIAS_REFRESCO_TMDB` (150) days. `catalogo.refrescar_vencidos` MUST run daily at 03:30, select due rows NULL first and then oldest first, up to `CELERY_REFRESCO_LIMIT`, and refresh each through `materializar(..., forzar=True)`. One failure MUST NOT stop the run. The run MUST log how many rows remain older than 180 days, as a warning when the number is not zero. Refreshing a row MUST rewrite its translations.
+A `ProduccionAudiovisual` row is due when `fecha_enriquecimiento` is NULL or older than `DIAS_REFRESCO_TMDB` (150) days. `catalogo.refrescar_vencidos` MUST run daily at 03:30, compute a nightly quota as `min(CELERY_REFRESCO_TECHO, max(ceil(total / DIAS_REFRESCO_TMDB), deadlines))`, where deadlines is the smallest nightly amount that refreshes every row before it turns 180 days old (NULL and overdue rows count as due tonight), select that many rows NULL first and then oldest first, and refresh each through `materializar(..., forzar=True)`. One failure MUST NOT stop the run. The run MUST log how many rows remain older than 180 days, as a warning when the number is not zero. Refreshing a row MUST rewrite its translations.
 
-#### Scenario: Old and never-enriched rows are refreshed, fresh ones are not
+#### Scenario: Never-enriched and oldest rows go first
 
-- GIVEN a row enriched 160 days ago, a row with NULL `fecha_enriquecimiento` and a row enriched 10 days ago
+- GIVEN 300 rows enriched 10 days ago, a row enriched 160 days ago and a row with NULL `fecha_enriquecimiento`
+- WHEN the task runs with a quota of 2
+- THEN the NULL row and the 160-day row are materialized with `forzar=True`, the NULL one first
+- AND none of the 10-day rows is touched
+
+#### Scenario: The rotation follows the size of the catalog
+
+- GIVEN 10 000 rows spread evenly over the last 150 days
+- WHEN the quota is computed
+- THEN it is 67
+
+#### Scenario: A bulk load is refreshed before 180 days
+
+- GIVEN 10 000 rows enriched 150 days ago and nothing else
+- WHEN the quota is computed
+- THEN it is 334, so the 30 nights left refresh all of them
+
+#### Scenario: The ceiling holds and is reported
+
+- GIVEN 40 000 rows enriched 179 days ago and `CELERY_REFRESCO_TECHO = 1000`
 - WHEN the task runs
-- THEN the first two are materialized with `forzar=True`, the NULL one first
-- AND the third is not touched
-
-#### Scenario: The cap holds
-
-- GIVEN 500 due rows and `CELERY_REFRESCO_LIMIT = 300`
-- WHEN the task runs
-- THEN exactly the 300 oldest are refreshed
+- THEN exactly 1 000 rows are refreshed
+- AND the summary warns how many rows will go over 180 days
 
 ### Requirement: Titles TMDB no longer has
 
