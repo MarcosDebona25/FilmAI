@@ -12,7 +12,12 @@ from django.core.cache import cache
 from django.db import connection, transaction
 from pgvector.django import CosineDistance
 
-from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEmbedding
+from catalogo.models import (
+    KEYWORD_SOFTCORE,
+    EstadoEmbedding,
+    ProduccionAudiovisual,
+    ProduccionEmbedding,
+)
 from catalogo.services.embeddings import (
     PRESUPUESTO_CARGA,
     PRESUPUESTO_CHAT,
@@ -90,9 +95,6 @@ def _ids_mas_cercanos(vector):
 
 # Cómo guarda C-04a el keyword de TMDB 818: por su nombre, en inglés.
 KEYWORD_BASADA_EN_LIBRO = "based on novel or book"
-# La 155477 de TMDB. Marca erotismo que TMDB no etiqueta `adult` (13/11/2026): el
-# catálogo local guarda sus keywords por nombre y por ahí se lo deja afuera.
-KEYWORD_SOFTCORE = "softcore"
 
 
 def buscar_semantico(
