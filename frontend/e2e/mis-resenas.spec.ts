@@ -10,6 +10,7 @@ type Item = {
   valor: number;
   fecha: string;
   texto: string | null;
+  disponible: boolean;
 };
 
 const INICIALES: Item[] = [
@@ -22,6 +23,7 @@ const INICIALES: Item[] = [
     valor: 9,
     fecha: "2026-10-03",
     texto: "Una reseña extensa sobre el viaje y el regreso. ".repeat(12),
+    disponible: true,
   },
   {
     id: 2,
@@ -32,6 +34,7 @@ const INICIALES: Item[] = [
     valor: 7,
     fecha: "2026-09-28",
     texto: null,
+    disponible: true,
   },
   {
     id: 3,
@@ -42,6 +45,7 @@ const INICIALES: Item[] = [
     valor: 4,
     fecha: "2026-09-20",
     texto: "Linda de ver, guion flojo.",
+    disponible: true,
   },
 ];
 

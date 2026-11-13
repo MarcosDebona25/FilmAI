@@ -1518,9 +1518,9 @@
     "semantic_hash": ""
   },
   "frontend/e2e/mis-resenas.spec.ts": {
-    "mtime": 1794530301.3838332,
-    "seen": 1794532253.2585,
-    "ast_hash": "6c869b2ee2c274e2bb59bf9ffb30a7a5",
+    "mtime": 1794534302.4249556,
+    "seen": 1794535137.4933496,
+    "ast_hash": "673c8791316423a9bcb314e7041c6138",
     "semantic_hash": ""
   },
   "frontend/lib/profile-draft.ts": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1794531921.011306,
-    "seen": 1794532253.258573,
+    "mtime": 1794534658.1186647,
+    "seen": 1794535137.4954572,
     "ast_hash": "038f16e8146320a1afd934e69b0930ec",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794532592.6636055,
-    "seen": 1794532768.7764616,
+    "mtime": 1794534658.1227336,
+    "seen": 1794535137.49551,
     "ast_hash": "87fc4c7d20e63ecafa0ab3b9d7a8ffe2",
     "semantic_hash": ""
   },
@@ -3534,9 +3534,9 @@
     "semantic_hash": ""
   },
   "frontend/components/features/reviews/MyReviewItem.tsx": {
-    "mtime": 1794531721.6059418,
-    "seen": 1794532253.258463,
-    "ast_hash": "5fa95a222b393f2e112a9e38191edd9b",
+    "mtime": 1794534344.7595637,
+    "seen": 1794535137.4915812,
+    "ast_hash": "8df9fbe26aa55523fcb3a389babf595d",
     "semantic_hash": ""
   },
   "frontend/components/features/reviews/MyReviewsView.tsx": {
@@ -3558,9 +3558,9 @@
     "semantic_hash": ""
   },
   "frontend/tests/my-reviews-view.test.tsx": {
-    "mtime": 1794532592.6642373,
-    "seen": 1794532768.7803702,
-    "ast_hash": "d1125935d5b191635a9ed60f97fc2e9a",
+    "mtime": 1794534322.8273365,
+    "seen": 1794535137.4978235,
+    "ast_hash": "576d5fc19efd0a76a604fde8a73eb399",
     "semantic_hash": ""
   },
   "frontend/tests/my-reviews.test.ts": {
@@ -4800,9 +4800,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/tmdb-cumplimiento/design.md": {
-    "mtime": 1794532129.9216926,
-    "seen": 1794532253.2588198,
-    "ast_hash": "641f6686c8e8f92e70d5eaea64ae9cf4",
+    "mtime": 1794534317.0504103,
+    "seen": 1794535137.506621,
+    "ast_hash": "22a4c4b6a1fbbe9f99b770b72ecfc939",
     "semantic_hash": ""
   },
   "openspec/changes/tmdb-cumplimiento/proposal.md": {

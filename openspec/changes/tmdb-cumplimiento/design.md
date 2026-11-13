@@ -105,9 +105,10 @@ plazos   = max over k = 1..30 of ceil(rows that reach 180 days within k nights /
 a week of failed nights. Both values and the ceiling live in `settings.py`.
 
 **Why not deleting.** `Calificacion` and `Tiene` (list items) point to
-`ProduccionAudiovisual` with `on_delete=CASCADE`, and `Resena` hangs from a
-`Calificacion`. Deleting a
-stale row would delete a user's rating. Refreshing is the only option that
+`ProduccionAudiovisual` with `on_delete=PROTECT`, and `Resena` is protected
+transitively through its `Calificacion`. Deleting a stale row that someone
+rated or listed fails with `ProtectedError`, and the row becomes a tombstone
+instead. Refreshing is the only option that
 keeps both promises.
 
 **Interaction with what exists.** The sync's change-list refresh and the

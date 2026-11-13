@@ -54,7 +54,9 @@ export function MyReviewItem({
   // borrar como siempre.
   const disponible = item.disponible;
   const titulo = disponible ? item.titulo : t("common.content.titleUnavailable");
-  const enIngles = item.campos_en_ingles?.includes("titulo") ? "en" : undefined;
+  // La leyenda de la lápida ya viene en el idioma de la interfaz: el aviso de
+  // `campos_en_ingles` habla del título de TMDB, que ahí no existe.
+  const enIngles = disponible && item.campos_en_ingles?.includes("titulo") ? "en" : undefined;
 
   useEffect(() => {
     if (!menu) return;

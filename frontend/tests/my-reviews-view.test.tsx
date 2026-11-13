@@ -121,6 +121,23 @@ describe("Calificaciones y reseñas", () => {
     expect(screen.getByRole("button", { name: /Más acciones/ })).toBeInTheDocument();
   });
 
+  it("la leyenda de una lápida no hereda el lang en inglés del título de TMDB", async () => {
+    estado.pagina = pagina([
+      {
+        ...INTERSTELLAR,
+        id: 3,
+        titulo: "",
+        poster: "",
+        disponible: false,
+        campos_en_ingles: ["titulo"],
+      },
+    ]);
+    render(<MyReviewsView />);
+
+    const leyenda = await screen.findByText("Título no disponible");
+    expect(leyenda.closest("[lang]")).toBeNull();
+  });
+
   it("un título que TMDB ya no tiene y sin texto no ofrece «Agregar reseña»", async () => {
     estado.pagina = pagina([{ ...AMERICAN_DAD, titulo: "", disponible: false }]);
     render(<MyReviewsView />);

@@ -1,7 +1,7 @@
 # Graph Report - tmdb-refresco  (2026-11-13)
 
 ## Corpus Check
-- 745 files · ~693,047 words
+- 745 files · ~693,144 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3bd3584c`
+- Built from commit: `503ba91f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1479,11 +1479,11 @@ Nodes (38): EntradaMensajeSerializer, Lo que el panel manda: el texto de la preg
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AppConfig` connect `format.ts` to `django_apps`?**
-  _High betweenness centrality (0.235) - this node is a cross-community bridge._
+  _High betweenness centrality (0.223) - this node is a cross-community bridge._
 - **Why does `AppLocale` connect `format.ts` to `@playwright/test`, `api.ts`, `listas.spec.ts`, `apiFetch`, `translateError`, `vitest`, `next-intl`?**
-  _High betweenness centrality (0.218) - this node is a cross-community bridge._
-- **Why does `UsuariosConfig` connect `django_apps` to `format.ts`?**
-  _High betweenness centrality (0.133) - this node is a cross-community bridge._
+  _High betweenness centrality (0.206) - this node is a cross-community bridge._
+- **Why does `UsuarioFactory` connect `UsuarioFactory` to `ClaveDeConfirmacionEnLogsTests`, `ErroresGoogleTests`, `refrescar_vencidos`, `materializar`, `tests_sse.py`, `ArmarPerfilTests`, `RecuperarContrasenaTests`, `pendiente`, `AgregarIdInexistenteTests`, `PerfilTests`, `LimiteLoginAdminTests`, `ContratoErroresAPITests`, `ProduccionAudiovisualFactory`, `LoginSerializer`, `ListasEndpointsTests`, `IngresoDocumentacionTests`, `BajaCuentaTests`, `QueriesNoCrecenConLasFilasTests`, `.rafaga`, `ErroresContrasenaTests`, `MisListasTests`, `ProvidersViewTests`, `LoginDualTests`, `listas/views.py`, `ProveedorFalso`, `RestriccionesClaveTests`, `test_seguridad_topes_tmdb.py`, `usuarios/views.py`, `ManejadorSobreTests`, `.correr`, `perfil.py`, `RecuperacionSesionTests`, `._calificacion_existente`, `MisResenasFiltrosTests`, `RecomendadoSinGustosTests`, `Usuario`, `ResenaAdminTests`, `AdminStaffParcialTests`, `pedir`, `ErroresPerfilTests`, `PerfilPaisTests`, `ContrasenaTests`, `GoogleOAuthTests`, `CodigosValidacionListasTests`, `ResenaModeradaTests`, `HistorialTests`, `Mensaje`, `IdiomaDelDestinatarioTests`, `CorreosContratoTests`, `Command`, `SeedSoloResenasTests`, `ErroresRegistroTests`, `ProduccionAudiovisual`, `UsuarioSocialAccountAdapter`, `RelojJWTTests`, `catalogo/tests.py`?**
+  _High betweenness centrality (0.130) - this node is a cross-community bridge._
 - **Are the 110 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 110 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 63 inferred relationships involving `ProduccionAudiovisual` (e.g. with `ProduccionAudiovisualFactory` and `ProduccionAudiovisual`) actually correct?**
