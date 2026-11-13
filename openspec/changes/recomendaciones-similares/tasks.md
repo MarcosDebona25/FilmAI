@@ -42,8 +42,10 @@
 - [ ] 1.4 RED `candidatos`: order by distance; seeds excluded; a list made of
       the 1 000 neighbours of a title still yields 100 (iterative scan); type
       filter; no poster and no rating left out (D-5)
-- [ ] 1.5 GREEN `vector_semilla` (`avg()` in SQL) and `candidatos` (`SET
-LOCAL hnsw.ef_search`, `hnsw.iterative_scan = relaxed_order`)
+- [ ] 1.5 GREEN `vector_semilla` (`avg()` in SQL) and `candidatos`: both
+      `SET LOCAL` (`hnsw.ef_search`, `hnsw.iterative_scan = relaxed_order`)
+      and the `SELECT` inside one `transaction.atomic()`; a test checks
+      `SHOW hnsw.iterative_scan` in that transaction
 - [ ] 1.6 RED `relleno_tmdb` with `TMDBClientCache` mocked: only when fewer
       than 20 close; up to 3 seeds; round robin; drops `adult`, < 10 votes, no
       poster, seeds and local duplicates; `TMDBError` → empty, not an error;

@@ -144,6 +144,11 @@ is never needed for them.
 
 ## 4. Candidates in pgvector
 
+Everything below runs inside one `transaction.atomic()`, like
+`_ids_mas_cercanos` in `semantica.py`: `SET LOCAL` only lasts until the end of
+the transaction, and in Django's autocommit each `execute` would be its own, so
+the settings would not reach the `SELECT`.
+
 ```sql
 SET LOCAL hnsw.ef_search = 100;
 SET LOCAL hnsw.iterative_scan = relaxed_order;
