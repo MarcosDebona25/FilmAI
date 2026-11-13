@@ -186,5 +186,6 @@ class CreditosEnRedisTests(SimpleTestCase):
         detalle = {"title": "X", "genres": []}
         con_recorte = _mapear(detalle, recortado, {}, "movie")
         con_todo = _mapear(detalle, entero, {}, "movie")
-        self.assertEqual(con_recorte["reparto"], con_todo["reparto"])
-        self.assertEqual(con_recorte["directores"], con_todo["directores"])
+        # Se compara el resultado completo: si `_mapear` empezara a leer otro campo
+        # del reparto o del equipo, el recorte lo dejaría vacío y este test fallaría.
+        self.assertEqual(con_recorte, con_todo)
