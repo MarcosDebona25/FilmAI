@@ -82,6 +82,9 @@ def _ids_mas_cercanos(vector):
     """Ids de las producciones `ready` más cercanas, de la mejor a la peor."""
     cercanos = (
         ProduccionEmbedding.objects.filter(estado=EstadoEmbedding.READY)
+        # El softcore se saca ANTES de cortar a los más cercanos: si se sacara después,
+        # una consulta cercana al erotismo dejaría pocos resultados o ninguno.
+        .exclude(produccion__keywords__contains=[KEYWORD_SOFTCORE])
         .order_by(CosineDistance("vector", vector))
         .values_list("produccion_id", flat=True)[:_CANDIDATOS]
     )
@@ -127,7 +130,7 @@ def buscar_semantico(
     # vuelo no puede devolver un título sin contenido (#180).
     producciones = ProduccionAudiovisual.objects.filter(
         pk__in=ids, disponible_en_tmdb=True
-    ).exclude(keywords__contains=[KEYWORD_SOFTCORE])
+    )
     if generos:
         producciones = producciones.filter(generos__overlap=generos)
     if tipo:
