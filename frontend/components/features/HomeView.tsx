@@ -142,15 +142,12 @@ export function HomeView({ inicial }: { inicial?: DatosDelHero }) {
   const recomendados = normalizeTitles(recomendado.data?.results ?? []);
   const generosRecomendados = recomendado.data?.generos ?? [];
 
-  // Una fila cuenta como pedida si no está apagada (`idle`).
-  const pedidos: Pedido<unknown>[] = [
-    tendencias,
-    enCines,
-    seriesDelAnio,
-    recomendado,
-    listas,
-    pendientes,
-  ].filter((pedido) => pedido.status !== "idle");
+  // Una fila cuenta como pedida si no está apagada (`idle`). Pendientes queda
+  // afuera a propósito: son listas propias (no TMDB), así que si fallan la fila
+  // se oculta en silencio, sin aviso ni cuenta para el estado «fallaron todas».
+  const pedidos: Pedido<unknown>[] = [tendencias, enCines, seriesDelAnio, recomendado].filter(
+    (pedido) => pedido.status !== "idle"
+  );
   const fallidos = pedidos.filter((pedido) => pedido.status === "error");
   const todoFalla = pedidos.length > 0 && fallidos.length === pedidos.length;
   // El aviso de «algo no cargó» espera a que terminen todos los pedidos: si no,

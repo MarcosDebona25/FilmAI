@@ -78,6 +78,11 @@ vi.mock("@/lib/api", async (importOriginal) => {
         await new Promise((resolver) => setTimeout(resolver, 60));
       // Listas del usuario (Pendientes en el Inicio). Se atienden antes que las
       // demás respuestas: `/api/lists/5/items/` también empieza con `/api/lists/`.
+      if (
+        path.startsWith("/api/lists/") &&
+        estado.fallan.some((prefijo) => path.startsWith(prefijo))
+      )
+        throw new real.ApiError(500, { code: "unknown", params: {}, errors: [] });
       if (path.startsWith("/api/lists/5/items/")) {
         const clase = new URL(path, "http://x").searchParams.get("clase");
         const items = estado.pendientes.filter((item) => !clase || item.tipo === clase);
@@ -274,6 +279,30 @@ describe("fila Pendientes del Inicio (13/11/2026)", () => {
       expect(estado.llamadas).toContain("/api/lists/5/items/?clase=tv");
       expect(within(pendientes).getAllByRole("listitem")).toHaveLength(1);
       expect(within(pendientes).getByText("Severance")).toBeInTheDocument();
+    });
+
+    it("si fallan todas las filas del catálogo, sigue el error con Reintentar aunque las listas respondan", async () => {
+      estado.pendientes = [alien];
+      estado.fallan = ["/api/catalogo/"];
+      render(<HomeView />, { locale: "en" });
+
+      expect(
+        await screen.findByText("The catalog couldn’t respond. Try again later.")
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    });
+
+    it("si fallan las listas, la fila se oculta en silencio y el resto sigue", async () => {
+      estado.pendientes = [alien];
+      estado.fallan = ["/api/lists/"];
+      render(<HomeView />, { locale: "en" });
+
+      expect(await fila("Trending this week")).toBeInTheDocument();
+      await waitFor(() => expect(estado.llamadas).toContain("/api/lists/"));
+      // Dejamos pasar un instante: si la fila fuera a aparecer, ya lo habría hecho.
+      await new Promise((resolver) => setTimeout(resolver, 50));
+      expect(screen.queryByRole("region", { name: "Watchlist" })).toBeNull();
+      expect(toast.error).not.toHaveBeenCalled();
     });
 
     it("si no hay títulos de ese tipo, la fila no aparece", async () => {
