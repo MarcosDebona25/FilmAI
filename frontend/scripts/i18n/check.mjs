@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import ts from "typescript";
 import { legacyFiles } from "./rules.mjs";
+import { namingViolations } from "./naming.mjs";
 
 export function residues(root) {
   const violations = [];
@@ -41,8 +42,12 @@ export function residues(root) {
 }
 if (process.argv[1]?.endsWith("check.mjs")) {
   const found = residues(process.cwd());
-  if (found.length) {
-    process.stderr.write(`${found.join("\n")}\n`);
+  const naming = namingViolations(process.cwd());
+  if (found.length || naming.length) {
+    process.stderr.write(`${[...found, ...naming].join("\n")}\n`);
     process.exitCode = 1;
-  } else process.stdout.write("Sin residuos fuera de las excepciones documentadas.\n");
+  } else
+    process.stdout.write(
+      "Sin residuos fuera de las excepciones documentadas ni grafías incorrectas de TMDB.\n"
+    );
 }

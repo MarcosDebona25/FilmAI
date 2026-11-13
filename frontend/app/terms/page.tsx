@@ -2,6 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { TermsBackLink } from "@/components/TermsBackLink";
+import { TmdbCredits } from "@/components/TmdbCredits";
 import type { AppLocale } from "@/i18n/config";
 import { formatDate } from "@/lib/format";
 import { loadTerms } from "@/lib/legal";
@@ -113,6 +114,7 @@ export default async function TermsPage() {
               )}
             </section>
           ))}
+          <TmdbCredits />
           {doc.contact && (
             <p className="border-t border-border pt-8 text-sm text-fg-3">
               {nav("termsQuestions", { email: doc.contact })}

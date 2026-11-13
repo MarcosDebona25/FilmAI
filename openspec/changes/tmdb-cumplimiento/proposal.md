@@ -56,7 +56,7 @@ task list.
   that section.
 - **Brand.** One official logo, chosen in the Claude Design canvas when
   development starts (none is fixed here), copied as-is to `frontend/public/`,
-  shown in both themes, smaller and quieter than FilmAI's mark, with translated
+  shown on the dark theme (the only one since 18/10/2026), smaller and quieter than FilmAI's mark, with translated
   alternative text. An audit of every mention: only «TMDB» or «The Movie
   Database», in the UI, the emails, the chatbot prompts and the docs; every
   link to the site points to `https://www.themoviedb.org`.
