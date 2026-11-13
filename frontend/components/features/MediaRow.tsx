@@ -99,8 +99,8 @@ export function MediaRow({
   // teclado enfoca un botón o una tarjeta (`has-[a:focus-visible]`). Desde md:
   // en celular se desliza con el dedo.
   const banda = cn(
-    "absolute top-1.5 z-10 hidden w-14 cursor-pointer items-center text-foreground opacity-0 transition-opacity duration-200 md:flex",
-    "group-hover/fila:opacity-100 group-has-[a:focus-visible]/fila:opacity-100 focus-visible:opacity-100",
+    "absolute top-1.5 z-10 hidden w-14 cursor-pointer items-center text-foreground opacity-0 pointer-events-none transition-opacity duration-200 md:flex",
+    "group-hover/fila:pointer-events-auto group-hover/fila:opacity-100 group-has-[a:focus-visible]/fila:opacity-100 focus-visible:opacity-100",
     "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
     ALTO_DE_POSTERS
   );
@@ -139,28 +139,6 @@ export function MediaRow({
         )}
       </div>
       <div className="group/fila @container relative">
-        <ul
-          ref={list}
-          onScroll={actualizarFlechas}
-          aria-label={t("swipeRowHint", { rowTitle: title })}
-          // Desde md: `grid-auto-columns` = (100 % − (cols − 1) · gap) / cols. El
-          // 1.25rem del cálculo es el `md:gap-5`: cambian juntos.
-          className="flex snap-x snap-mandatory scroll-px-5 gap-3.5 overflow-x-auto overscroll-x-contain px-5 pt-1.5 pb-2.5 [scrollbar-width:none] md:grid md:scroll-px-0 md:auto-cols-[calc((100%_-_(var(--cols)_-_1)_*_1.25rem)_/_var(--cols))] md:grid-flow-col md:gap-5 md:px-0 [&::-webkit-scrollbar]:hidden"
-        >
-          {loading
-            ? Array.from({ length: SKELETONS }, (_, index) => (
-                <li key={index} data-skeleton aria-hidden="true" className="shrink-0">
-                  <span className="block aspect-[2/3] w-[8.25rem] rounded-lg bg-raised md:w-full" />
-                  <span className="mt-3 block h-3.5 w-3/4 rounded bg-raised" />
-                  <span className="mt-1.5 block h-3 w-1/2 rounded bg-raised" />
-                </li>
-              ))
-            : items.map((item) => (
-                <li key={`${item.tipo}-${item.id}`} className="shrink-0 snap-start">
-                  <MediaCard title={item} showType={showType} from={from} />
-                </li>
-              ))}
-        </ul>
         {hayAnteriores && (
           <button
             type="button"
@@ -187,6 +165,28 @@ export function MediaRow({
             <ChevronRight aria-hidden="true" className="size-8 drop-shadow" />
           </button>
         )}
+        <ul
+          ref={list}
+          onScroll={actualizarFlechas}
+          aria-label={t("swipeRowHint", { rowTitle: title })}
+          // Desde md: `grid-auto-columns` = (100 % − (cols − 1) · gap) / cols. El
+          // 1.25rem del cálculo es el `md:gap-5`: cambian juntos.
+          className="flex snap-x snap-mandatory scroll-px-5 gap-3.5 overflow-x-auto overscroll-x-contain px-5 pt-1.5 pb-2.5 [scrollbar-width:none] md:grid md:scroll-px-0 md:auto-cols-[calc((100%_-_(var(--cols)_-_1)_*_1.25rem)_/_var(--cols))] md:grid-flow-col md:gap-5 md:px-0 [&::-webkit-scrollbar]:hidden"
+        >
+          {loading
+            ? Array.from({ length: SKELETONS }, (_, index) => (
+                <li key={index} data-skeleton aria-hidden="true" className="shrink-0">
+                  <span className="block aspect-[2/3] w-[8.25rem] rounded-lg bg-raised md:w-full" />
+                  <span className="mt-3 block h-3.5 w-3/4 rounded bg-raised" />
+                  <span className="mt-1.5 block h-3 w-1/2 rounded bg-raised" />
+                </li>
+              ))
+            : items.map((item) => (
+                <li key={`${item.tipo}-${item.id}`} className="shrink-0 snap-start">
+                  <MediaCard title={item} showType={showType} from={from} />
+                </li>
+              ))}
+        </ul>
       </div>
     </section>
   );

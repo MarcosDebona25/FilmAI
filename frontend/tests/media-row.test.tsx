@@ -84,6 +84,18 @@ describe("MediaRow", () => {
       expect(siguiente()).toBeNull();
     });
 
+    it("las flechas van antes de las tarjetas en el orden de tabulación", () => {
+      medidas();
+      render(filaDeTendencias(), { locale: "en" });
+      scrollear(screen.getByRole("list"), 1000);
+
+      const lista = screen.getByRole("list");
+      const antes = (a: Node, b: Node) =>
+        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(antes(anterior()!, lista)).toBe(true);
+      expect(antes(siguiente()!, lista)).toBe(true);
+    });
+
     it("si todo entra sin scroll no hay ninguna flecha", () => {
       medidas({ ancho: 1000, total: 1000 });
       render(filaDeTendencias(), { locale: "en" });
@@ -120,6 +132,9 @@ describe("MediaRow", () => {
       const clases = siguiente()!.className;
       expect(clases.split(" ")).toEqual(expect.arrayContaining(["hidden", "md:flex"]));
       expect(clases).toContain("opacity-0");
+      // Invisible no es clicable: en una tablet sin hover, tocar el borde del póster abre la ficha.
+      expect(clases).toContain("pointer-events-none");
+      expect(clases).toContain("group-hover/fila:pointer-events-auto");
       expect(clases).toContain("group-hover/fila:opacity-100");
       expect(clases).toContain("focus-visible:opacity-100");
       expect(clases).toContain("motion-reduce:transition-none");
