@@ -103,11 +103,18 @@ test.describe("navbar", () => {
 
     test("volver atrás devuelve el scroll de la página anterior", async ({ page }) => {
       await abrir(page, "/terms");
-      // Hasta el final: con 720 px de alto, /terms no baja más de ~530 px.
+      // Hasta el final: el navegador tiene que devolver justo ese punto aunque
+      // /search sea más corta.
       await bajarHasta(page, 100_000);
       const antes = await page.evaluate(() => window.scrollY);
       expect(antes).toBeGreaterThan(300);
-      await page.locator("header nav a[href='/search']").click();
+      // Click con el mouse en el centro del enlace, como una persona. El
+      // `locator.click()` de Playwright primero hace scroll para «mostrar» el
+      // enlace y, con la barra `fixed`, movía la página 366 px antes de
+      // navegar: el navegador guardaba esa posición y el test fallaba.
+      const enlace = await page.locator("header nav a[href='/search']").boundingBox();
+      expect(enlace).not.toBeNull();
+      await page.mouse.click(enlace!.x + enlace!.width / 2, enlace!.y + enlace!.height / 2);
       await page.waitForURL("**/search");
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 
