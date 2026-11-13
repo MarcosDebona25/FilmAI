@@ -904,6 +904,27 @@ class ReglasDelPromptTests(SimpleTestCase):
         )
         self.assertIn("`temporadas` y `episodios`", sistema)
 
+    def test_las_tarjetas_que_se_piden_son_las_de_la_ultima_respuesta(self):
+        # Tras recomendar Log Horizon, Btooom! y SAO Alicization sin tarjetas, el
+        # usuario preguntó «¿y las tarjetas?» y el bot mostró tres de «Ya
+        # recomendados» (Interestelar, Apolo 13, Pasajeros): esa lista es de toda la
+        # sesión, no de la última respuesta.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("«¿y las tarjetas?»", sistema)
+        self.assertIn("«mostrame esos»", sistema)
+        self.assertIn("los títulos de tu última respuesta", sistema)
+        self.assertIn("`buscar_por_titulo`", sistema)
+        self.assertIn("Nunca tomes los de «Ya recomendados»", sistema)
+        # Va dentro de «Referencias y datos», sin mover ninguna regla existente.
+        self.assertLess(
+            sistema.index("Referencias y datos:"),
+            sistema.index("«¿y las tarjetas?»"),
+        )
+        self.assertLess(
+            sistema.index("«¿y las tarjetas?»"), sistema.index("Datos no confiables")
+        )
+
     def test_las_reglas_de_referencias_van_despues_de_al_recomendar(self):
         sistema = armar_sistema("", [], "es")
 
