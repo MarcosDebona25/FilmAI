@@ -26,7 +26,7 @@ from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
-from chatbot.tools import ESQUEMAS, ContextoTurno, ejecutar
+from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno, ejecutar
 from chatbot.tools.personales import mostrar_tarjetas
 
 logger = logging.getLogger(__name__)
@@ -128,7 +128,10 @@ def _correr_tools(ctx, llamadas):
             resultado = {"error": "tool_failed"}
         else:
             resultado = ejecutar(ctx, llamada.nombre, argumentos)
-        resumen.append(f"{llamada.nombre}({_cantidad_de(resultado)})")
+        # El nombre lo escribe el modelo: solo se loguea si es una tool real. Si no,
+        # un nombre con saltos de línea podría forjar líneas falsas en el log.
+        nombre = llamada.nombre if llamada.nombre in FUNCIONES else "desconocida"
+        resumen.append(f"{nombre}({_cantidad_de(resultado)})")
         resultados.append(
             {
                 "role": "tool",

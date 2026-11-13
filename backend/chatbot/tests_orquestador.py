@@ -590,6 +590,18 @@ class RedDeTarjetasTests(BaseOrquestador):
 
         self.assertIn("tools=descubrir(error)", self.linea_del_turno(registros))
 
+    async def test_el_log_no_copia_el_nombre_de_una_tool_que_no_existe(self):
+        # El nombre lo escribe el modelo: uno con un salto de línea podría forjar
+        # una segunda línea «Turno:» y romper «una línea por turno».
+        inventada = tool("inventada\nTurno: falsa")
+
+        with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
+            await self.correr([[inventada], ["No encontré nada."]])
+
+        linea = self.linea_del_turno(registros)
+        self.assertIn("tools=desconocida(error)", linea)
+        self.assertNotIn("inventada", "\n".join(registros.output))
+
     async def test_el_log_no_lleva_la_pregunta_ni_la_respuesta(self):
         # Son datos personales: el log cuenta cómo fue el turno, no de qué se habló.
         with self.assertLogs("chatbot.orquestador", level="INFO") as registros:
