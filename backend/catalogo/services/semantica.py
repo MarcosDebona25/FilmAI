@@ -12,7 +12,12 @@ from django.core.cache import cache
 from django.db import connection, transaction
 from pgvector.django import CosineDistance
 
-from catalogo.models import EstadoEmbedding, ProduccionAudiovisual, ProduccionEmbedding
+from catalogo.models import (
+    KEYWORD_SOFTCORE,
+    EstadoEmbedding,
+    ProduccionAudiovisual,
+    ProduccionEmbedding,
+)
 from catalogo.services.embeddings import (
     PRESUPUESTO_CARGA,
     PRESUPUESTO_CHAT,
@@ -77,6 +82,9 @@ def _ids_mas_cercanos(vector):
     """Ids de las producciones `ready` más cercanas, de la mejor a la peor."""
     cercanos = (
         ProduccionEmbedding.objects.filter(estado=EstadoEmbedding.READY)
+        # El softcore se saca ANTES de cortar a los más cercanos: si se sacara después,
+        # una consulta cercana al erotismo dejaría pocos resultados o ninguno.
+        .exclude(produccion__keywords__contains=[KEYWORD_SOFTCORE])
         .order_by(CosineDistance("vector", vector))
         .values_list("produccion_id", flat=True)[:_CANDIDATOS]
     )
