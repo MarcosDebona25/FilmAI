@@ -90,6 +90,9 @@ def _ids_mas_cercanos(vector):
 
 # Cómo guarda C-04a el keyword de TMDB 818: por su nombre, en inglés.
 KEYWORD_BASADA_EN_LIBRO = "based on novel or book"
+# La 155477 de TMDB. Marca erotismo que TMDB no etiqueta `adult` (13/11/2026): el
+# catálogo local guarda sus keywords por nombre y por ahí se lo deja afuera.
+KEYWORD_SOFTCORE = "softcore"
 
 
 def buscar_semantico(
@@ -122,7 +125,7 @@ def buscar_semantico(
     # vuelo no puede devolver un título sin contenido (#180).
     producciones = ProduccionAudiovisual.objects.filter(
         pk__in=ids, disponible_en_tmdb=True
-    )
+    ).exclude(keywords__contains=[KEYWORD_SOFTCORE])
     if generos:
         producciones = producciones.filter(generos__overlap=generos)
     if tipo:

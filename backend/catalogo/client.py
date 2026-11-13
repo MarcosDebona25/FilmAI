@@ -14,6 +14,13 @@ from catalogo.exceptions import (
 )
 from catalogo.presupuesto import registrar_llamada
 
+# Keyword «softcore» de TMDB (verificada el 13/11/2026 con /search/keyword). Miles de
+# títulos eróticos la llevan SIN que TMDB los marque `adult` (with_keywords=155477 trae
+# 3682 películas con `adult` en false: 9 Songs, Emmanuelle...), así que `include_adult`
+# no los frena. `discover` la excluye con `without_keywords`; el resto de los
+# endpoints (search, trending) no filtran por keyword y quedan fuera de este alcance.
+KEYWORD_SOFTCORE = 155477
+
 # httpx cierra por defecto las conexiones que pasan 5 s sin usarse, y abrir una
 # nueva (TCP + TLS) contra TMDB cuesta ~300 ms (medido el 13/11/2026). Entre
 # dos fichas separadas por más de 5 s, ese costo caía sobre el usuario. Con 60 s
@@ -61,6 +68,36 @@ def crear_http_client(*, base_url=None, timeout=None, transport=None):
         transport=transport,
         limits=httpx.Limits(keepalive_expiry=KEEPALIVE_SEGUNDOS),
     )
+
+
+def _sin_adultos(cuerpo):
+    """Saca de una respuesta de TMDB todo lo que ella misma marca como `adult`.
+
+    TMDB devuelve las listas bajo `results` (trending, discover, search,
+    recommendations, changes) o bajo `cast`/`crew` (créditos de una persona), y cada
+    persona de una búsqueda trae sus `known_for`. Se filtran todas: así ningún
+    camino (Inicio, Buscar, chatbot, seed, similares) recibe un título para adultos.
+    Un ítem sin el campo `adult` se conserva: solo se saca lo marcado en `true`.
+    """
+    if not isinstance(cuerpo, dict):
+        return cuerpo
+    for clave in ("results", "cast", "crew"):
+        items = cuerpo.get(clave)
+        if isinstance(items, list):
+            cuerpo[clave] = [
+                _con_known_for_limpio(item)
+                for item in items
+                if not (isinstance(item, dict) and item.get("adult"))
+            ]
+    return cuerpo
+
+
+def _con_known_for_limpio(item):
+    if isinstance(item, dict) and isinstance(item.get("known_for"), list):
+        item["known_for"] = [
+            x for x in item["known_for"] if not (isinstance(x, dict) and x.get("adult"))
+        ]
+    return item
 
 
 class TMDBClient:
@@ -116,7 +153,7 @@ class TMDBClient:
 
             if 200 <= response.status_code < 300:
                 try:
-                    return response.json()
+                    return _sin_adultos(response.json())
                 except (ValueError, httpx.DecodingError) as error:
                     raise TMDBTransportError(
                         "Invalid JSON response from TMDB"
@@ -202,7 +239,13 @@ class TMDBClient:
         coma (todos) o por barra (alguno). A diferencia de `with_people`, TMDB sí lo
         respeta en series (verificado el 13/11/2026 con 818, «based on novel or book»).
         """
-        params = {"page": page}
+        # `include_adult=false` ya es el default de TMDB, pero se pide explícito. Lo que
+        # no frena es el erotismo sin marcar: por eso también `without_keywords`.
+        params = {
+            "page": page,
+            "include_adult": "false",
+            "without_keywords": KEYWORD_SOFTCORE,
+        }
         if genero is not None:
             params["with_genres"] = genero
         if anio is not None:
@@ -239,16 +282,24 @@ class TMDBClient:
         o `first_air_date_year`): `year`, el genérico, es flojo y trae
         producciones de otros años (verificado el 14/10/2026, C-06).
         """
-        params = {"query": query, "page": page}
+        params = {"query": query, "page": page, "include_adult": "false"}
         if anio is not None:
             params[_DISCOVER_YEAR_PARAM[tipo]] = anio
         return self._get_localizado(f"/search/{tipo}", params)
 
     def get_movie_detail(self, id_tmdb):
-        return self._get_localizado(f"/movie/{id_tmdb}")
+        return self._detalle_sin_adultos(f"/movie/{id_tmdb}")
 
     def get_tv_detail(self, id_tmdb):
-        return self._get_localizado(f"/tv/{id_tmdb}")
+        return self._detalle_sin_adultos(f"/tv/{id_tmdb}")
+
+    def _detalle_sin_adultos(self, path):
+        """Un título marcado `adult` se trata como inexistente: 404 en la ficha y,
+        como la materialización lo recibe como `TMDBNotFound`, no se guarda la fila."""
+        detalle = self._get_localizado(path)
+        if isinstance(detalle, dict) and detalle.get("adult"):
+            raise TMDBNotFound("TMDB marca este título como para adultos")
+        return detalle
 
     def get_recommendations(self, id_tmdb, tipo):
         # No `/similar`: compara poco más que géneros y para Paddington 2 trae El
@@ -256,7 +307,9 @@ class TMDBClient:
         return self._get_localizado(f"/{tipo}/{id_tmdb}/recommendations")
 
     def search_person(self, nombre):
-        return self._get_localizado("/search/person", {"query": nombre})
+        return self._get_localizado(
+            "/search/person", {"query": nombre, "include_adult": "false"}
+        )
 
     def get_person_credits(self, id_persona):
         # Películas y series, como actor (`cast`) o en el equipo (`crew`). `discover`
