@@ -7,8 +7,11 @@ Es código sync, como todo el ORM: la vista async lo llama a través de `en_hilo
 import logging
 
 from django.db import transaction
+from django.utils import timezone
 
+from catalogo.models import ProduccionAudiovisual
 from catalogo.services.materialization import materializar_listado_en_segundo_plano
+from catalogo.services.recomendado import TIPO_TMDB
 from chatbot.models import Chat, Mensaje, TipoAutor
 
 logger = logging.getLogger(__name__)
@@ -19,6 +22,16 @@ _CLAVES_RECORDADAS = ("id_tmdb", "tipo", "titulo", "anio")
 # Unos 10 turnos de 3 tarjetas: el doble de lo que cubren los 10 mensajes de
 # historial que recibe el modelo (SDD del 28/10/2026).
 TOPE_RECOMENDADOS = 30
+
+
+def fecha_de_hoy():
+    """La fecha (ISO) que se anota en cada entrada de `ya_recomendados`.
+
+    Sirve para recortar a los 180 días lo que quedó de TMDB (`chatbot.recorte`).
+    Un solo lugar para escribirla: `sumar_recomendados` la llama cada vez que una
+    tarjeta se muestra, sea la primera o una repetida.
+    """
+    return timezone.localdate().isoformat()
 
 
 def guardar_turno(chat, texto, resultado):
@@ -80,10 +93,13 @@ def sumar_recomendados(previas, tarjetas):
     La lista va de la más vieja a la más nueva. Un título que se repite sale de
     donde estaba y pasa al final: se mostró de nuevo, así que es reciente. La
     clave es `(id_tmdb, tipo)` porque TMDB numera películas y series por separado.
+    Cada entrada nueva lleva la `fecha` de hoy, y una repetida la renueva.
     """
     nuevas = {}
+    hoy = fecha_de_hoy()
     for tarjeta in tarjetas:
         recordada = {clave: tarjeta[clave] for clave in _CLAVES_RECORDADAS}
+        recordada["fecha"] = hoy
         # Un dict conserva el orden de inserción: un repetido del mismo turno
         # queda una sola vez, en su primer lugar.
         nuevas.setdefault((tarjeta["id_tmdb"], tarjeta["tipo"]), recordada)
@@ -97,3 +113,34 @@ def historial_de(usuario):
     El orden lo pone la paginación de la vista.
     """
     return Mensaje.objects.filter(chat__usuario=usuario)
+
+
+def titulos_recordados(ya_recomendados):
+    """Los `{titulo, anio}` de `ya_recomendados` para el prompt.
+
+    Las entradas recortadas (sin `titulo`, ver `chatbot.recorte`) se resuelven desde
+    el catálogo con una sola consulta, con el título canónico (en inglés): resolver
+    el idioma pediría otra consulta por las traducciones, y al modelo le alcanza
+    para no repetir. Un id que ya no está en el catálogo, o es una lápida, queda
+    afuera de la línea «Ya recomendados» pero sigue en la lista que evita repetir.
+    """
+    faltan = {t["id_tmdb"] for t in ya_recomendados if "titulo" not in t}
+    producciones = {}
+    if faltan:
+        filas = ProduccionAudiovisual.objects.filter(
+            id_tmdb__in=faltan, disponible_en_tmdb=True
+        ).only("id_tmdb", "tipo", "titulo", "fecha_lanzamiento")
+        producciones = {(p.id_tmdb, TIPO_TMDB[p.tipo]): p for p in filas}
+
+    titulos = []
+    for entrada in ya_recomendados:
+        if "titulo" in entrada:
+            titulos.append({"titulo": entrada["titulo"], "anio": entrada["anio"]})
+            continue
+        produccion = producciones.get((entrada["id_tmdb"], entrada["tipo"]))
+        if produccion is not None and produccion.titulo:
+            fecha = produccion.fecha_lanzamiento
+            titulos.append(
+                {"titulo": produccion.titulo, "anio": fecha.year if fecha else None}
+            )
+    return titulos

@@ -27,6 +27,7 @@ from chatbot.marcadores import FiltroDeMarcadores, recomienda_sin_buscar
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
+from chatbot.servicio import titulos_recordados
 from chatbot.tools import ESQUEMAS, FUNCIONES, ContextoTurno, ejecutar
 
 logger = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ def _preparar(chat, texto, idioma):
     # La prosa sigue al idioma del mensaje; las tools y las tarjetas, al del turno.
     sistema = armar_sistema(
         armar_perfil(usuario),
-        chat.contexto.get("ya_recomendados", []),
+        titulos_recordados(chat.contexto.get("ya_recomendados", [])),
         detectar_idioma(texto) or idioma,
         hoy=timezone.localdate(),
         ultimas=list(ctx.candidatos().items()),

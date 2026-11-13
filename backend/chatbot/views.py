@@ -24,6 +24,7 @@ from chatbot.limites import soltar_candado, sumar_mensaje, tomar_candado
 from chatbot.models import Chat
 from chatbot.orquestador import responder
 from chatbot.puente import en_hilo
+from chatbot.recorte import rehidratar
 from chatbot.serializers import EntradaMensajeSerializer, MensajeSerializer
 from chatbot.servicio import guardar_turno, historial_de
 from chatbot.sse import frame, frame_error
@@ -67,7 +68,10 @@ class MensajesCursorPagination(CursorPagination):
 class HistorialView(ListAPIView):
     """El historial del chat del usuario, de más nuevo a más viejo, de a 20.
 
-    Las tarjetas vuelven como se guardaron, en el idioma de su turno.
+    Las tarjetas de los últimos 180 días vuelven como se guardaron, en el idioma de
+    su turno. Las más viejas se guardan recortadas y acá se rehidratan desde el
+    catálogo local, en el idioma de quien lee; si el título ya no está, vuelven con
+    `titulo: null`.
     """
 
     serializer_class = MensajeSerializer
@@ -75,6 +79,14 @@ class HistorialView(ListAPIView):
 
     def get_queryset(self):
         return historial_de(self.request.user)
+
+    def paginate_queryset(self, queryset):
+        # La página ya está leída: las tarjetas recortadas (más de 180 días) se
+        # completan en memoria desde el catálogo, en el idioma de quien lee.
+        pagina = super().paginate_queryset(queryset)
+        if pagina:
+            rehidratar(pagina, idioma_efectivo(self.request))
+        return pagina
 
 
 class NegociacionSoloJSON(DefaultContentNegotiation):

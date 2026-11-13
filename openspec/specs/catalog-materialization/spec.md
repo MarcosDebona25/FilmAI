@@ -220,6 +220,16 @@ This window is NOT the primary refresh mechanism. Actual change detection belong
 - THEN TMDB is queried again
 - AND the row's fields and `fecha_enriquecimiento` are updated in place
 
+### Requirement: Titles TMDB no longer has (#180)
+
+When `materializar(..., forzar=True)` receives 404 (Not Found) from TMDB for a row it already holds, it MUST NOT treat it as a failed refresh. The first 404 (Not Found) only records `fecha_404` (today) and leaves the row as it is; a second one on a later night either deletes the row (nobody references it) or turns it into a tombstone: `titulo`, `sinopsis`, `poster` and every other TMDB content field blanked, `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, translations and embedding deleted. Any other error (timeout, 500, 429, 401) MUST NOT count. A successful enrichment MUST set `disponible_en_tmdb = True` and clear `fecha_404`, in `_enriquecer`, so every write path restores a tombstone. Without `forzar`, a tombstone MUST raise `TMDBNotFound` (it is not a complete row, even though its date is recent). The delete MUST survive `ProtectedError` and `IntegrityError` by falling back to the tombstone, and `_descartar_cascaron` MUST keep a protected shell instead of failing. Details and scenarios: `tmdb-compliance`.
+
+#### Scenario: A tombstone is not served as a complete row
+
+- GIVEN a tombstone enriched today
+- WHEN `materializar()` is called for it without `forzar`
+- THEN `TMDBNotFound` is raised and no TMDB request is made
+
 ### Requirement: Traducciones persistidas (OT-62, OT-63)
 
 `ProduccionAudiovisual` MUST seguir siendo canónica en inglés; el texto de

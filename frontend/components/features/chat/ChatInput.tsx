@@ -75,6 +75,9 @@ export function ChatInput({ campoRef }: { campoRef: RefObject<HTMLTextAreaElemen
             onClick={(event) => {
               event.preventDefault();
               cancelar();
+              // El botón se desmonta al cancelar: sin esto el foco cae al `body`,
+              // fuera del campo, dentro de un diálogo modal.
+              campoRef.current?.focus({ preventScroll: true });
             }}
             aria-label={tc("cancel")}
             className="grid size-12 flex-none place-items-center rounded-[0.875rem] bg-raised-2 text-foreground shadow-[inset_0_0_0_1px_var(--line)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

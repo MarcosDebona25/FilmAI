@@ -230,7 +230,7 @@ for (const viewport of viewports) {
       await expect(
         popup.getByRole("heading", { name: "Términos y Condiciones", level: 1 })
       ).toBeVisible();
-      await expect(popup.locator("main section")).toHaveCount(12);
+      await expect(popup.locator("main section:not(#credits)")).toHaveCount(12);
     });
 
     test("confirmación: cuenta confirmada y enlace vencido con reenvío", async ({
@@ -277,7 +277,7 @@ test("terminos: se sirve en el idioma elegido y sin sesión", async ({ page, bas
   await prepararIdioma(page, baseURL!, "en");
   await page.goto("/terms");
   await expect(page.getByRole("heading", { name: "Terms and Conditions", level: 1 })).toBeVisible();
-  await expect(page.locator("main section")).toHaveCount(12);
+  await expect(page.locator("main section:not(#credits)")).toHaveCount(12);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
 });
 

@@ -15,6 +15,7 @@ const INTERSTELLAR: MiResena = {
   fecha: "2026-10-03",
   texto: "La vi con mi papá.",
   moderada: false,
+  disponible: true,
 };
 const AMERICAN_DAD: MiResena = {
   id: 2,
@@ -26,6 +27,7 @@ const AMERICAN_DAD: MiResena = {
   fecha: "2026-09-28",
   texto: null,
   moderada: false,
+  disponible: true,
 };
 
 const estado = vi.hoisted(() => ({
@@ -105,6 +107,43 @@ describe("Calificaciones y reseñas", () => {
     expect(window.sessionStorage.getItem("filmai:ultimas-resenas")).toBe(
       "/my-reviews?type=movie&rating=8&sort=highest"
     );
+  });
+
+  it("un título que TMDB ya no tiene conserva la nota y el texto, sin enlace a la ficha", async () => {
+    estado.pagina = pagina([{ ...INTERSTELLAR, id: 3, titulo: "", poster: "", disponible: false }]);
+    render(<MyReviewsView />);
+
+    expect(await screen.findByText("Título no disponible")).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Título no disponible" })).toBeNull();
+    // La nota y la reseña del usuario siguen ahí, y se pueden quitar.
+    expect(screen.getByText("Tu calificación: 9 de 10")).toBeInTheDocument();
+    expect(screen.getByText("La vi con mi papá.")).toBeVisible();
+    expect(screen.getByRole("button", { name: /Más acciones/ })).toBeInTheDocument();
+  });
+
+  it("la leyenda de una lápida no hereda el lang en inglés del título de TMDB", async () => {
+    estado.pagina = pagina([
+      {
+        ...INTERSTELLAR,
+        id: 3,
+        titulo: "",
+        poster: "",
+        disponible: false,
+        campos_en_ingles: ["titulo"],
+      },
+    ]);
+    render(<MyReviewsView />);
+
+    const leyenda = await screen.findByText("Título no disponible");
+    expect(leyenda.closest("[lang]")).toBeNull();
+  });
+
+  it("un título que TMDB ya no tiene y sin texto no ofrece «Agregar reseña»", async () => {
+    estado.pagina = pagina([{ ...AMERICAN_DAD, titulo: "", disponible: false }]);
+    render(<MyReviewsView />);
+
+    await screen.findByText("Título no disponible");
+    expect(screen.queryByRole("link", { name: /Agregar una reseña/ })).toBeNull();
   });
 
   it("un filtro cambia la URL y conserva los demás", async () => {

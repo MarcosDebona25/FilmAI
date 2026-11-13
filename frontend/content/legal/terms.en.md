@@ -48,7 +48,7 @@ The FilmAI assistant generates recommendations from your ratings and the availab
 
 ## 7. Third-party content
 
-Data and images of movies and TV shows are provided by TMDB. FilmAI is an independent project and is not affiliated with or endorsed by TMDB. We are not responsible for errors or omissions in that information. Streaming availability ("Where to watch") is provided by JustWatch through TMDB and may change without notice.
+Data and images of movies and TV shows are provided by TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB. We are not responsible for errors or omissions in that information. Streaming availability ("Where to watch") is provided by JustWatch through TMDB and may change without notice.
 
 ## 8. Intellectual property
 
