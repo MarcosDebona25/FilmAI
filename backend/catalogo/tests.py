@@ -474,7 +474,9 @@ class GetCatalogServiceTest(SimpleTestCase):
         self.assertIs(first, second)
         self.assertIs(first.client, tmdb_client)
         self.assertIs(first.redis, redis_client)
-        client.assert_called_once_with()
+        # Desde el 13/11/2026 recibe el cliente HTTP compartido entre idiomas.
+        client.assert_called_once()
+        self.assertIn("http_client", client.call_args.kwargs)
         get_redis.assert_called_once_with()
 
 
