@@ -2,38 +2,70 @@
 
 Estado contrastado el **26/09/2026** con los documentos 01–04, el código y las pruebas. Las filas de la interfaz, de Listas y de Calidad se revisaron de nuevo el **15/10/2026**. ✅ Implementado; 🟡 parcial; ⬜ pendiente. Un check verde indica que el alcance de la fila existe en el repositorio; las integraciones externas requieren sus credenciales y servicios para funcionar.
 
-## Pendientes (12/11/2026)
+## Pendientes (13/11/2026)
 
-Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son dos issues abiertos, un problema del chatbot que no tiene issue, cierres de calidad y mejoras.
+Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son dos issues abiertos, cierres de calidad y mejoras. El pendiente 2 queda en la tabla como cerrado.
 
-| #   | Pendiente                                                | Importancia                     | Viabilidad               | Referencia                                     |
-| --- | -------------------------------------------------------- | ------------------------------- | ------------------------ | ---------------------------------------------- |
-| 1   | Términos de uso de TMDB                                  | Alta                            | Alta (plan hecho, 4 PRs) | #180, `openspec/changes/tmdb-cumplimiento/`    |
-| 2   | El chatbot recomienda sin mostrar tarjetas               | Alta                            | Alta                     | Sin issue                                      |
-| 3   | Correos por Celery y Brevo como respaldo                 | Media-alta                      | Alta                     | Q-08, #181, `openspec/changes/brevo-respaldo/` |
-| 4   | Calidad del chatbot (accesibilidad, estados, responsive) | Media                           | Alta                     | Q-01, Q-03, Q-04                               |
-| 5   | Recomendaciones dentro de una lista                      | Media                           | Media                    | «Mejoras futuras»                              |
-| 6   | Lo que se resuelve al desplegar                          | Alta al desplegar; hoy, ninguna | Media                    | Seguridad, B-03, C-04b, CU-021                 |
-| 7   | Instalación limpia y correos en un cliente real          | Baja                            | Muy alta                 | Q-05, sección 13 del canvas                    |
-| 8   | Refactor y lista «Viendo»                                | Baja                            | Media                    | Q-07, «Mejoras futuras»                        |
-| 9   | Perfil público y notificaciones por correo               | Mínima (amplía el alcance)      | Baja                     | Perfil, Settings                               |
+| #   | Pendiente                                                | Importancia                     | Viabilidad               | Referencia                                                                   |
+| --- | -------------------------------------------------------- | ------------------------------- | ------------------------ | ---------------------------------------------------------------------------- |
+| 1   | Términos de uso de TMDB                                  | Alta                            | Alta (plan hecho, 4 PRs) | #180, `openspec/changes/tmdb-cumplimiento/`, rama `feat/tmdb-y-calidad-chat` |
+| 2   | ✅ Cerrado: el chatbot recomienda sin mostrar tarjetas   | —                               | —                        | #187, #189                                                                   |
+| 3   | Correos por Celery y Brevo como respaldo                 | Media-alta                      | Alta                     | Q-08, #181, `openspec/changes/brevo-respaldo/`                               |
+| 4   | Calidad del chatbot (accesibilidad, estados, responsive) | Media                           | Alta                     | Q-01, Q-03, Q-04, rama `feat/tmdb-y-calidad-chat`                            |
+| 5   | Recomendaciones dentro de una lista                      | Media                           | Media                    | «Mejoras futuras»                                                            |
+| 6   | Lo que se resuelve al desplegar                          | Alta al desplegar; hoy, ninguna | Media                    | Seguridad, B-03, C-04b, CU-021                                               |
+| 7   | Instalación limpia, correos y lector de pantalla reales  | Baja                            | Muy alta                 | Q-01, Q-05, sección 13 del canvas                                            |
+| 8   | Refactor y lista «Viendo»                                | Baja                            | Media                    | Q-07, «Mejoras futuras»                                                      |
+| 9   | Perfil público y notificaciones por correo               | Mínima (amplía el alcance)      | Baja                     | Perfil, Settings                                                             |
 
 ### 1. Términos de uso de TMDB (#180)
 
 TMDB exige el aviso exacto «This product uses the TMDB API but is not endorsed or certified by TMDB.», su logo oficial sin alterar y que ningún dato suyo quede guardado más de 6 meses sin refrescarse. Hay que cumplirlo antes de mostrar la app a terceros. El plan está en `openspec/changes/tmdb-cumplimiento/` y se reparte en 4 PRs: créditos y logo (solo frontend), tarea nocturna de refresco, recorte de las tarjetas del chat y cierre de documentación. El uso de datos de TMDB en el chatbot y los embeddings ya está decidido: alcanza con ser un proyecto académico sin fines de lucro.
 
-Antes de arrancar quedan dos cosas por resolver:
+Antes de arrancar queda una cosa por resolver:
 
-- **Logo**: la tarea 1.0 pide elegir en el canvas cuál de los logos oficiales (`docs/tmdb-legales/`) se usa y cómo se ve en cada tema.
-- **Tope de la tarea de refresco**: el diseño refresca hasta 300 filas por noche (`CELERY_REFRESCO_LIMIT`) con 30 días de margen. Si se cargan 10 000 títulos en un mismo día, todos vencen juntos y se tardan unas 34 noches en refrescarlos, así que unas 1 200 filas pasarían los 180 días. Ajustarlo antes del PR 2: repartir la carga en varios días, subir el tope o calcularlo según el tamaño del catálogo.
+- **Logo**: la tarea 1.0 elige en el canvas cuál de los logos oficiales (`docs/tmdb-legales/`) se usa y cómo se ve en cada tema, en tres rondas con revisión entre cada una (ver «Combinaciones del logo en el canvas»).
 
-Ya decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 (Not Found) en noches distintas, `PROTECT`, restauración) están en el diseño del cambio y en `docs/decisiones.md`.
+Ya decidido: **cuota nocturna de la tarea de refresco** (13/11/2026). El tope fijo de 300 filas no crecía con el catálogo y una carga de 10 000 títulos en un mismo día dejaba unas 1 200 filas pasadas de los 180 días. Cada noche se refresca `min(techo, max(rotación, plazos))`: la rotación es `total ÷ 150` (67 filas con 10 000, 134 con 20 000), los plazos son la menor cantidad por noche con la que ninguna fila llega a los 180 días (334 por noche durante 30 noches en el caso de la carga masiva) y el techo, `CELERY_REFRESCO_TECHO = 1000`, protege al worker. Detalle en el diseño del cambio, «Nightly quota».
+
+También decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 (Not Found) en noches distintas, `PROTECT`, restauración) están en el diseño del cambio y en `docs/decisiones.md`.
+
+#### Rama dedicada y worktrees (pendientes 1 y 4)
+
+Los pendientes 1 y 4 van juntos en la rama de integración `feat/tmdb-y-calidad-chat`, creada desde `develop`: tocan modelo, tareas nocturnas, el panel del chat y el footer, y no conviene que lleguen a `develop` por partes. Cada unidad de trabajo es una rama desde la de integración, en su propio worktree creado con herdr, y abre su PR contra ella (el CI corre en los PR a `feat/**`). Cuando entran todas, un solo PR lleva la rama a `develop`, con merge commit.
+
+```
+herdr worktree create --cwd ~/FilmAI --base feat/tmdb-y-calidad-chat \
+  --branch <rama> --path ~/FilmAI-worktrees/<rama> --label "<etiqueta>"
+```
+
+| Unidad | Rama                     | Contenido                                                         | Depende de            | Carril          |
+| ------ | ------------------------ | ----------------------------------------------------------------- | --------------------- | --------------- |
+| A      | `feat/tmdb-creditos`     | #180 PR 1: canvas del logo (1.0), créditos, footer, nombres       | —                     | 1               |
+| B      | `feat/tmdb-refresco`     | #180 PR 2: cuota nocturna, regla del 404, lápida, tope de caché   | —                     | 2               |
+| C      | `feat/calidad-chat`      | Pendiente 4: axe, fallas forzadas, responsive y el botón del chat | —                     | 1, después de A |
+| D      | `feat/tmdb-recorte-chat` | #180 PR 3: recorte y rehidratación de tarjetas                    | B (y C, por el panel) | 2               |
+| E      | `docs/tmdb-cierre`       | #180 PR 4: medición de la tasa, decisiones, specs                 | A, B, C, D            | —               |
+
+- **Dos carriles en paralelo**: frontend (A y después C) y backend (B y después D). A y C tocan el footer y el panel, B y D comparten `disponible_en_tmdb`, así que dentro de cada carril van en serie.
+- **D después de C**: el marcador «Title no longer available» del panel (tarea 3.7) entra sobre el panel ya revisado, y no al revés.
+- **Docker**: correr el backend de cada worktree con `-e RUN_MIGRATIONS=false`, porque la base de desarrollo es compartida. B agrega una migración: la prueba manual 2.11 va con un proyecto de compose propio (`-p filmai-refresco`) o se revierte la migración al terminar.
+- **CodeGraph**: cada worktree necesita su propio índice (`gentle-ai codegraph init --cwd <worktree>`); no se copia el de `~/FilmAI`.
+- **Cierre de cada unidad**: ruff, `python manage.py test`, prettier, `npm run i18n:check`, Vitest con `--maxWorkers=4` y los e2e tocados; la decisión en `docs/decisiones.md` y `graphify update .` antes del commit.
+
+#### Combinaciones del logo en el canvas
+
+La tarea 1.0 se hace por etapas en el canvas, renderizando cada artboard y con una revisión de Marcos entre etapa y etapa:
+
+1. **Comparación**: un artboard por tema (oscuro y claro) con el bloque de créditos en celular y cada logo oficial: `logo1` (apilado), `logo2` (dos líneas) y `logo3` a `logo5` (horizontales). Son 10 combinaciones; quedan como máximo dos.
+2. **En contexto**: los logos que quedaron, a su tamaño, en «Terms · mobile» y «Terms · desktop», en los dos temas, y la línea del footer («Footer · desktop» y «Footer · mobile») con y sin un logo horizontal chico.
+3. **Cierre**: queda solo la combinación elegida, se borran los artboards descartados (el canvas no guarda alternativas) y la elección va a `docs/decisiones.md` y a `docs/04_Lineamientos_UI.md`.
+
+El logo se usa sin alterar en las dos variantes de tema: sin filtros, sin cambiar colores y como `<img>`. Si en el tema claro no se lee bien, se cambia el fondo del bloque, nunca el logo.
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 
-✅ **Resuelto el 12/11/2026.** En el set dorado del 08/11/2026, con thinking apagado (el modo por defecto), solo 3 de 8 preguntas que piden recomendar terminaron con tarjetas. Ahora, si el modelo recomienda en el texto y no llama a `mostrar_tarjetas`, el orquestador arma las tarjetas con los títulos que nombró (la «red de tarjetas»), y `ejecutar()` valida los argumentos de cada tool contra su esquema, así un género en español como `"Ciencia ficción"` vuelve al modelo como `invalid_arguments` en lugar de vaciar la búsqueda. Medición y detalle en `docs/decisiones.md` (12/11/2026).
-
-El tope de 4 vueltas de tools, que cortaba entre 2 y 5 de 32 turnos de recomendación, se cerró con #189: si el modelo se pasa del tope o termina sin texto, `responder()` hace una última llamada sin tools y responde con lo que ya encontró («Última llamada sin tools», `docs/decisiones.md`, 12/11/2026). En la medición posterior ningún turno llegó al tope, así que esa llamada está probada con tests y todavía no contra DeepSeek.
+✅ **Cerrado el 13/11/2026.** Con thinking apagado, solo 3 de 8 pedidos de recomendación terminaban con tarjetas. #187 sumó la «red de tarjetas» (si el modelo nombra títulos y no llama a `mostrar_tarjetas`, el orquestador las arma) y la validación de argumentos de cada tool contra su esquema. #189 sumó la última llamada sin tools, cuando el modelo se pasa del tope de 4 vueltas o termina sin texto. Esa llamada está cubierta por tests; en la medición posterior ningún turno llegó al tope, así que todavía no se vio contra DeepSeek. No queda nada por hacer: si aparece en uso real, se trata como un bug nuevo. Detalle en `docs/decisiones.md` (12/11/2026).
 
 ### 3. Correos por Celery y Brevo como respaldo (Q-08, #181)
 
@@ -41,7 +73,12 @@ Hoy `enviar_correo()` llama a Resend dentro del pedido HTTP: si Resend tarda, el
 
 ### 4. Calidad del chatbot (Q-01, Q-03, Q-04)
 
-Las revisiones de accesibilidad, de estados de carga y error y de responsive se hicieron antes de que existiera el chatbot, y las tres filas siguen 🟡 con «Falta el chatbot». Hay que pasar el panel por las mismas revisiones (axe-core, fallas forzadas, 375/768/1440 px) y hacer la prueba con un lector de pantalla real que Q-01 tiene pendiente.
+Las revisiones de accesibilidad, de estados de carga y error y de responsive se hicieron antes de que existiera el chatbot, y las tres filas siguen 🟡 con «Falta el chatbot». Se hace en la rama `feat/tmdb-y-calidad-chat` (unidad C, ver el punto 1):
+
+- **Q-01**: axe-core WCAG 2.1 AA sobre el FAB, el panel abierto, una respuesta con tarjetas y el error, a 375, 768 y 1440 px y en los dos temas; foco al abrir y cerrar, `Escape`, orden de tabulación y que la región de anuncios lea solo la respuesta completa. La prueba con un lector de pantalla real pasó al pendiente 7.
+- **Q-03**: fallas forzadas como en la revisión del 16/10/2026: sin red, error del servidor, respuesta lenta, cancelación y límite de pedidos; cada caso con su mensaje y su salida.
+- **Q-04**: el panel y el FAB a 375, 768 y 1440 px, sin desbordes, con objetivos táctiles de 44 px y el teclado del celular abierto.
+- **Botón del chat (pedido de Gonza, 13/11/2026)**: el FAB no parece clickeable. `ChatFab.tsx` no tiene `cursor-pointer` (Tailwind 4 deja el cursor por defecto en los botones) ni estado hover. Se suma el cursor y un efecto al pasar el mouse, diseñado primero en el canvas, en la línea de los demás botones primarios (`hover:bg-primary/80` en `components/ui/button.tsx`), con `motion-reduce` si tiene movimiento y sin bajar el contraste de 4,5:1. Conviene revisar si otros botones sin la variante de `Button` tienen el mismo problema.
 
 ### 5. Recomendaciones dentro de una lista
 
@@ -65,12 +102,13 @@ Todavía no hay un despliegue público. Antes de publicar una instancia:
 - **Riesgo aceptado de F10**: quitar la calificación y volver a calificar crea una reseña nueva sin la marca de moderación. Cerrarlo exige recordar la moderación por usuario y producción en un modelo aparte.
 - **Decisiones abiertas de la auditoría de seguridad**: techo de ítems en Favoritos y Pendientes, duración del access token (8 h), tope por IP detrás de NAT y enumeración por tiempo en el reset de contraseña.
 
-### 7. Instalación limpia y correos en un cliente real
+### 7. Instalación limpia, correos y lector de pantalla reales
 
-Q-05 pide documentar una instalación desde cero siguiendo el README. Los 4 correos transaccionales (en y es) todavía no se revisaron en un cliente de correo real. Son tareas cortas.
+Q-05 pide documentar una instalación desde cero siguiendo el README. Los 4 correos transaccionales (en y es) todavía no se revisaron en un cliente de correo real. Q-01 pide una prueba con un lector de pantalla real (NVDA en Windows), que se movió acá desde el pendiente 4 el 13/11/2026. Son tareas cortas y manuales.
 
 - **No usar los `.eml` de `traducciones/revision-correos/`**: son del 20/10/2026 y no coinciden con la plantilla actual (no tienen la tipografía Big Shoulders del encabezado y el borde es de otro color). Hay que generarlos de nuevo desde `backend/templates/correos/` o mandar los correos reales con Resend y `RESEND_TEST_RECIPIENT`, que además prueba el envío de punta a punta.
 - **Confirmar que no tienen la franja dorada de arriba**: se quitó de `base.html` el 06/11/2026 (#175), y la sección 13 del canvas se actualizó el 13/11/2026 para que coincida.
+- **NVDA en Windows**: recorrer con NVDA y Firefox o Chrome el registro, la búsqueda, una ficha con calificación, una lista y el chat (abrir, preguntar, leer las tarjetas, cerrar). Anotar lo que se lee mal o no se anuncia y abrir un issue por cada problema.
 
 ### 8. Refactor y lista «Viendo»
 
@@ -87,13 +125,13 @@ El de menor importancia: implementarlo amplía el alcance del proyecto, así que
 
 ### Población masiva de la base
 
-En el código actual no hay cambios de modelo sin migración. De lo pendiente, solo el #180 agrega una migración (`disponible_en_tmdb`, si se elige la opción 1), y agregar una columna con valor por defecto en Postgres 16 no reescribe la tabla, así que se puede migrar después de poblar. Para la carga con `seed_catalogo`:
+En el código actual no hay cambios de modelo sin migración. De lo pendiente, solo el #180 agrega una migración (`disponible_en_tmdb` y `fecha_404`), y agregar una columna con valor por defecto en Postgres 16 no reescribe la tabla, así que se puede migrar después de poblar. Para la carga con `seed_catalogo`:
 
 - **Ollama levantado durante la carga**: cada producción encola su embedding. Si Ollama está apagado, quedan en `failed` y el backfill nocturno recupera solo 100 por noche (`CELERY_BACKFILL_LIMIT`). Con la medición del 04/11/2026 (402 en 223 s), 10 000 títulos tardan alrededor de 1,5 h.
-- **Tope de refresco del #180**: ver el punto 1.
+- **Refresco del #180**: la cuota nocturna absorbe la carga masiva sin pasar los 180 días (ver el punto 1).
 - **Mediciones**: la carga sirve para medir la tasa de pedidos a TMDB (tarea 5 del #180) y los RNF #4 y #9 (menos de 2 s en navegación y búsqueda, y menos de 3 s en búsquedas sobre grandes volúmenes) con volumen real.
 
-Orden sugerido: PR 1 del #180 (no depende de nada), PR 2 con el tope ajustado, la población masiva, y después el arreglo de las tarjetas del chatbot. Q-08 con Brevo puede ir en paralelo.
+Orden sugerido: la rama `feat/tmdb-y-calidad-chat` (punto 1) y, con el PR 2 del #180 adentro, la población masiva. Q-08 con Brevo puede ir en paralelo.
 
 ## Estado de la interfaz frente al canvas de Claude Design
 
