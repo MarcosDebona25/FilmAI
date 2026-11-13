@@ -30,6 +30,8 @@ También decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si 
 
 **Estado del PR 2 (13/11/2026):** implementado en `feat/tmdb-refresco` (tarea nocturna, cuota, lápida, tope de caché y la tarjeta «Title no longer available»), pendiente de PR contra `feat/tmdb-y-calidad-chat`. La copia en español de la tarjeta es «Título no disponible» (aprobada).
 
+**Estado del PR 3 (13/11/2026):** implementado en `feat/tmdb-recorte-chat`: la tarea `chatbot.recortar_tarjetas` (04:30), la `fecha` en `ya_recomendados`, la rehidratación del historial con 3 queries por página, los títulos recortados en el prompt y la tarjeta «Title no longer available» en el panel. Detalle en `docs/decisiones.md`.
+
 #### Rama dedicada y worktrees (pendientes 1 y 4)
 
 Los pendientes 1 y 4 van juntos en la rama de integración `feat/tmdb-y-calidad-chat`, creada desde `develop`: tocan modelo, tareas nocturnas, el panel del chat y el footer, y no conviene que lleguen a `develop` por partes. Cada unidad de trabajo es una rama desde la de integración, en su propio worktree creado con herdr, y abre su PR contra ella (el CI corre en los PR a `feat/**`). Cuando entran todas, un solo PR lleva la rama a `develop`, con merge commit.

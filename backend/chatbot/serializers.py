@@ -14,7 +14,11 @@ class TarjetaSerializer(serializers.Serializer):
 
     id_tmdb = serializers.IntegerField()
     tipo = serializers.ChoiceField(choices=["movie", "tv"])
-    titulo = serializers.CharField()
+    titulo = serializers.CharField(
+        allow_null=True,
+        help_text="Null cuando la tarjeta es de hace más de 180 días y TMDB ya no "
+        "tiene el título: el panel muestra «Title no longer available» sin enlace.",
+    )
     poster = serializers.CharField(allow_null=True)
     anio = serializers.IntegerField(allow_null=True)
     # Opcional: las tarjetas guardadas antes del 07/11/2026 no lo traen. Con
