@@ -16,6 +16,14 @@ import { CreditsSection } from "@/components/features/title/CreditsSection";
 import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ReviewsSection } from "@/components/features/title/ReviewsSection";
 import { TitleActions } from "@/components/features/title/TitleActions";
+import {
+  ESQUELETO,
+  EsqueletoAcciones,
+  EsqueletoDetalle,
+  EsqueletoEncabezado,
+  VELO_CELULAR,
+  VELO_ESCRITORIO,
+} from "@/components/features/title/TitleSkeleton";
 import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -45,13 +53,6 @@ const TAMANIO_TITULO = {
   mediano: "text-[2.5rem] md:text-[5.5rem]",
   chico: "text-[2rem] md:text-[4rem]",
 } as const;
-// `raised-2`: los bloques van sobre la franja de fondo, que ya es `raised`.
-const ESQUELETO = "rounded bg-raised-2";
-const VELO_CELULAR =
-  "linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.2) 60%), linear-gradient(180deg, rgb(var(--scrim) / 0.85) 0%, rgb(var(--scrim) / 0) 30%)";
-const VELO_ESCRITORIO =
-  "linear-gradient(0deg, rgb(var(--scrim)) 0%, rgb(var(--scrim) / 0.85) 30%, rgb(var(--scrim) / 0.2) 70%), linear-gradient(180deg, rgb(var(--scrim) / 0.8) 0%, rgb(var(--scrim) / 0) 24%)";
-
 type Modal = null | "calificar" | "quitar";
 
 /**
@@ -420,30 +421,13 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 </p>
               </>
             ) : (
-              <div aria-hidden="true" className="flex flex-col gap-3 md:gap-5">
-                <span
-                  className={cn(ESQUELETO, "h-12 w-3/4 md:mb-[0.9375rem] md:h-[6.75rem] md:w-2/3")}
-                />
-                <span className={cn(ESQUELETO, "hidden h-6 w-1/3 md:block")} />
-                <span className={cn(ESQUELETO, "h-4 w-2/3 md:h-5 md:w-1/2")} />
-              </div>
+              <EsqueletoEncabezado />
             )}
           </div>
 
           <div className="col-span-2 flex min-w-0 flex-col gap-8 md:col-span-1 md:col-start-2 md:gap-6">
             {cargando || cargandoUsuario || (conSesion && !ficha) ? (
-              // Misma forma que las acciones: calificar y las cuatro listas.
-              <div
-                aria-hidden="true"
-                className="flex flex-col gap-3 md:flex-row md:items-center md:gap-2.5"
-              >
-                <span className={cn(ESQUELETO, "h-[3.25rem] rounded-lg md:h-12 md:w-[6.5rem]")} />
-                <span className="grid grid-cols-4 gap-2 md:contents">
-                  {[0, 1, 2, 3].map((i) => (
-                    <span key={i} className={cn(ESQUELETO, "h-16 rounded-lg md:h-12 md:w-32")} />
-                  ))}
-                </span>
-              </div>
+              <EsqueletoAcciones />
             ) : conSesion && listas && ficha ? (
               <div className="flex flex-col gap-3">
                 <TitleActions
@@ -474,24 +458,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                 {t("title.actions.signedOutPrompt")}
               </Link>
             )}
-            {!ficha && (
-              <div aria-hidden="true" className="flex flex-col gap-8 md:gap-6">
-                <span className="flex gap-2">
-                  {["w-20", "w-24", "w-16"].map((ancho) => (
-                    <span
-                      key={ancho}
-                      className={cn(ESQUELETO, "h-[1.875rem] rounded-full md:h-8", ancho)}
-                    />
-                  ))}
-                </span>
-                <span className="flex flex-col gap-3 md:max-w-[45rem]">
-                  <span className={cn(ESQUELETO, "mb-1 h-3 w-20")} />
-                  {["w-full", "w-full", "w-11/12", "w-2/3"].map((ancho, i) => (
-                    <span key={i} className={cn(ESQUELETO, "h-4", ancho)} />
-                  ))}
-                </span>
-              </div>
-            )}
+            {!ficha && <EsqueletoDetalle />}
             {ficha && ficha.generos.length > 0 && (
               <ul aria-label={t("title.metadata.genresTitle")} className="flex flex-wrap gap-2">
                 {ficha.generos.map((genero) => (
