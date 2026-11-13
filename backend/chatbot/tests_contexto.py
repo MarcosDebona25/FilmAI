@@ -123,6 +123,8 @@ class ApostrofosYTildesTests(SimpleTestCase):
             ("I\u015f\u0131k", "Isik"),  # Isik turco, con la i sin punto
             ("Đorđe", "Dorde"),
             ("Ħamrun", "Hamrun"),
+            ("Guðrún", "Gudrun"),
+            ("Aŧila", "Atila"),
             ("Łódź", "Lodz"),
         )
         for guardado, escrito in casos:
