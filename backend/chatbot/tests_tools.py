@@ -687,6 +687,52 @@ class FallosTests(BaseTools):
         self.assertIn("usuario", resultado["detalle"])
 
 
+class LogsSinTextoDelUsuarioTests(BaseTools):
+    """Los logs se guardan: no pueden llevar lo que escribió el usuario ni el modelo.
+
+    Una consulta del usuario viaja en los argumentos (`consulta`) y un nombre de tool
+    inventado lo escribe el modelo. `assertLogs` captura lo que se loguea para revisarlo.
+    """
+
+    def test_un_valor_rechazado_no_se_loguea_solo_el_campo_y_la_regla(self):
+        # El valor rechazado va en un campo con valores permitidos (`enum`): el
+        # mensaje de `jsonschema` lo copia entero.
+        secreto = "mi consulta con datos personales juan@x.com"
+
+        with self.assertLogs("chatbot.tools", level="INFO") as log:
+            resultado = ejecutar(
+                self.contexto(),
+                "buscar_semantico",
+                {"consulta": "algo", "tipo": secreto},
+            )
+
+        self.assertEqual(resultado["error"], "invalid_arguments")
+        salida = "\n".join(log.output)
+        self.assertNotIn(secreto, salida)
+        self.assertNotIn("juan@x.com", salida)
+        self.assertIn("buscar_semantico", salida)
+        self.assertIn("tipo", salida)
+        self.assertIn("enum", salida)  # `error.validator`: la regla que falló
+
+    def test_a_la_respuesta_para_el_modelo_le_sigue_llegando_el_detalle(self):
+        resultado = ejecutar(self.contexto(), "buscar_semantico", {"consulta": 5})
+
+        self.assertIn("consulta", resultado["detalle"])
+        self.assertIn("5", resultado["detalle"])
+
+    def test_el_nombre_de_una_tool_inexistente_no_se_loguea(self):
+        nombre = "borrar\nINFO falso juan@x.com"
+
+        with self.assertLogs("chatbot.tools", level="INFO") as log:
+            resultado = ejecutar(self.contexto(), nombre, {})
+
+        self.assertEqual(resultado, {"error": "tool_failed"})
+        salida = "\n".join(log.output)
+        self.assertNotIn("juan@x.com", salida)
+        self.assertNotIn("falso", salida)
+        self.assertIn("desconocida", salida)
+
+
 class ValidacionDeArgumentosTests(BaseTools):
     """`ejecutar()` revisa los argumentos contra el esquema antes de correr la tool.
 
