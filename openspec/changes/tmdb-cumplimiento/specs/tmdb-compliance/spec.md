@@ -8,7 +8,7 @@ What FilmAI does to meet TMDB's API terms of use (issue #180): attribution in a 
 
 ### Requirement: Credits section with the exact notice
 
-`/terms` MUST contain a section with `id="credits"` that shows, in both languages and both themes: the official TMDB logo as a link to `https://www.themoviedb.org`, and the notice «This product uses the TMDB API but is not endorsed or certified by TMDB.» (English, verbatim) or its approved Spanish translation. The footer MUST show the same notice and a link to `/terms#credits` built from `lib/routes.ts`.
+`/terms` MUST contain a section with `id="credits"` that shows, in both languages (the dark theme is the only one): the official TMDB logo as a link to `https://www.themoviedb.org`, and the notice «This product uses the TMDB API but is not endorsed or certified by TMDB.» (English, verbatim) or its approved Spanish translation. The footer MUST show the same notice and a link to `/terms#credits` built from `lib/routes.ts`.
 
 #### Scenario: Visitor opens the credits
 

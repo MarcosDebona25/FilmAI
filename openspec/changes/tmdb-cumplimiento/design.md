@@ -223,10 +223,12 @@ literal.
 
 ### The logo
 
-**Not decided yet (07/11/2026).** Which logo, its size, and how it sits on
-each theme are decided in the Claude Design canvas when development of this
-change starts (task 1.0), not in this plan. Until then no variant is fixed.
-What the design MUST respect, whatever is chosen:
+**Decided 13/11/2026, in the Claude Design canvas (task 1.0):** `logo5.svg`
+(the short horizontal one), copied byte for byte to
+`frontend/public/tmdb/logo5.svg`. Height 20 px in «Terms · desktop», 18 px in
+«Terms · mobile» and 16 px in the footer line, width automatic. Dark theme
+only: the light theme was dropped on 18/10/2026, so the comparison had 5
+combinations, not 10. What the design respects:
 
 - **Official file:** one of `docs/tmdb-legales/logo1.svg` … `logo5.svg`,
   copied byte for byte to `frontend/public/tmdb/`.
@@ -236,10 +238,9 @@ What the design MUST respect, whatever is chosen:
 - **Less prominent than FilmAI:** smaller than FilmAI's mark, and never in
   the header, the hero, the chat or next to a title, so it cannot read as an
   endorsement.
-- **Both themes:** it must read well on the light and the dark theme. Only
-  white, black or TMDB's approved colors (`#0d253f`, `#01b4e4`, `#90cea1`);
-  how to get there (variant, surface behind it) is part of the canvas
-  decision.
+- **Dark theme only:** the app has no light theme (18/10/2026). The logo's
+  gradient reads well on `--bg`. If a light theme ever returns, change the
+  surface behind the logo, never the logo.
 - **Alt text:** «TMDB logo» / «Logo de TMDB», from the catalogs.
 
 ### Naming audit

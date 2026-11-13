@@ -39,49 +39,51 @@ longer available» card in lists and My reviews.
 
 ## Phase 1: Attribution and brand (PR 1)
 
-- [ ] 1.0 Canvas first (07/11/2026; staged 13/11/2026): design in Claude
+- [x] 1.0 Canvas first (07/11/2026; staged 13/11/2026): design in Claude
       Design the credits block of «Terms» and the footer line with its
       «Credits» link, in staged rounds with a review gate after each:
-      (a) one comparison artboard per theme with the credits block on mobile
-      and each official logo (`logo1.svg` stacked, `logo2.svg` two lines,
-      `logo3`–`logo5` horizontal), 10 combinations; Marcos keeps at most two;
+      (a) one comparison artboard with the credits block on mobile and each
+      official logo (`logo1.svg` stacked, `logo2.svg` two lines,
+      `logo3`–`logo5` horizontal), 5 combinations on the dark theme (the
+      light theme was dropped on 18/10/2026; confirmed with Marcos
+      13/11/2026); Marcos keeps at most two. Done: he kept `logo5.svg`;
       (b) the kept logos at their size in «Terms · mobile» and «Terms ·
-      desktop», both themes, plus the footer line in «Footer · desktop» and
+      desktop», dark theme, plus the footer line in «Footer · desktop» and
       «Footer · mobile» with and without a small horizontal logo;
       (c) the chosen combination only, rendered to check it, and every
       discarded artboard removed. No logo is fixed before this step. Record
       the choice in `docs/decisiones.md`
-- [ ] 1.1 Explain: why the notice is a catalog key and not a literal; why the
+- [x] 1.1 Explain: why the notice is a catalog key and not a literal; why the
       logo is an `<img>` from `public/` and not an SVG component (no
       recoloring); what an anchor link is and how `routes.terms` builds it
-- [ ] 1.2 Copy: in `traducciones/claves.csv`, new keys `legal.credits.title`,
-      `legal.credits.notice` («This product uses the TMDB API but is not
+- [x] 1.2 Copy: in `traducciones/claves.csv`, new keys `tmdb.credits.title`,
+      `tmdb.credits.notice` («This product uses the TMDB API but is not
       endorsed or certified by TMDB.» / «Este producto usa la API de TMDB,
-      pero TMDB no lo respalda ni lo certifica.»), `legal.credits.logoAlt`
+      pero TMDB no lo respalda ni lo certifica.»), `tmdb.credits.logoAlt`
       («TMDB logo» / «Logo de TMDB»), `footer.main.creditsLink`; replace
       `footer.main.tmdbAttribution` with the notice; align
       `legal.thirdParty.tmdb` and `emails.shared.copyrightAttribution`.
       Marcos approves the Spanish. Regenerate catalogs; `npm run i18n:check`
-- [ ] 1.3 Logo: copy the variant chosen in 1.0 unchanged to
+- [x] 1.3 Logo: copy the variant chosen in 1.0 unchanged to
       `frontend/public/tmdb/`, with the size and theme treatment the canvas
       fixed
-- [ ] 1.4 RED `frontend/tests/tmdb-credits.test.tsx`: the block renders the
+- [x] 1.4 RED `frontend/tests/tmdb-credits.test.tsx`: the block renders the
       exact English notice, the logo with its alt, the link to
       `https://www.themoviedb.org`, and `id="credits"`; Spanish renders the
       Spanish notice
-- [ ] 1.5 RED: a Vitest that the file in `frontend/public/tmdb/` is
+- [x] 1.5 RED: a Vitest that the file in `frontend/public/tmdb/` is
       byte-identical to its source in `docs/tmdb-legales/`
-- [ ] 1.6 GREEN `components/TmdbCredits.tsx` and its place at the end of
+- [x] 1.6 GREEN `components/TmdbCredits.tsx` and its place at the end of
       `app/terms/page.tsx`; footer line with the notice and the «Credits»
       link to `${routes.terms}#credits`
-- [ ] 1.7 Naming audit: grep `traducciones/`, `frontend/messages/`,
+- [x] 1.7 Naming audit: grep `traducciones/`, `frontend/messages/`,
       `frontend/content/legal/`, `backend/templates/correos/`,
       `backend/chatbot/prompts.py` and `docs/` for «TMDb», «Tmdb»,
       «themoviedb» as a visible word and for links to TMDB's site that are not
       `https://www.themoviedb.org`; fix what turns up
-- [ ] 1.8 Add the naming rule to `npm run i18n:check` (or a Vitest over the
+- [x] 1.8 Add the naming rule to `npm run i18n:check` (or a Vitest over the
       generated catalogs) so a wrong spelling fails
-- [ ] 1.9 e2e: `/terms#credits` in both languages and both themes (a11y with
+- [x] 1.9 e2e: `/terms#credits` in both languages, desktop and mobile, dark theme (a11y with
       axe on that section); update the footer snapshots that change
 - [ ] 1.10 Verify: prettier, `npm run i18n:check`, unit tests (with
       `--maxWorkers=4`), the touched e2e

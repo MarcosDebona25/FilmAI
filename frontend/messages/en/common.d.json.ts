@@ -305,13 +305,14 @@ declare const messages: {
   },
   "footer": {
     "main": {
-      "tmdbAttribution": "Data and images provided by TMDB. FilmAI is an independent project and is not affiliated with or endorsed by TMDB.",
+      "tmdbAttribution": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
       "descriptionDesktop": "Discover movies and TV shows, rate them, write your reviews, and organize your lists. And if you don’t know what to watch, an AI assistant recommends something based on your taste.",
       "libraryHeading": "Your library",
       "myLists": "My lists",
       "informationHeading": "Information",
       "copyright": "© {year} FilmAI. All rights reserved.",
       "descriptionMobile": "Discover, rate, and organize movies and TV shows, with recommendations from an AI assistant.",
+      "creditsLink": "Credits",
       "languageLink": "Language: {language}. Change it in Settings.",
       "askFilmAI": "Ask FilmAI"
     }
@@ -807,6 +808,13 @@ declare const messages: {
       "password": {
         "required": "Enter your password."
       }
+    }
+  },
+  "tmdb": {
+    "credits": {
+      "title": "Credits",
+      "notice": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+      "logoAlt": "TMDB logo"
     }
   }
 };
