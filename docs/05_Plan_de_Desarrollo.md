@@ -30,6 +30,8 @@ Ya decidido: **cuota nocturna de la tarea de refresco** (13/11/2026). El tope fi
 
 También decidido: **títulos que TMDB borra** (Gonza, 12/11/2026, lápida). Si nadie usa el título, se borra; si alguien lo usa, queda sin contenido de TMDB y con `disponible_en_tmdb = False`, y en listas y Mis reseñas se ve una tarjeta «Title no longer available» con la nota y la reseña. Las condiciones (dos 404 (Not Found) en noches distintas, `PROTECT`, restauración) están en el diseño del cambio y en `docs/decisiones.md`.
 
+**Estado del PR 2 (13/11/2026):** implementado en `feat/tmdb-refresco` (tarea nocturna, cuota, lápida, tope de caché y la tarjeta «Title no longer available»), pendiente de PR contra `feat/tmdb-y-calidad-chat`. La copia en español de la tarjeta es «Título no disponible» (aprobada).
+
 #### Rama dedicada y worktrees (pendientes 1 y 4)
 
 Los pendientes 1 y 4 van juntos en la rama de integración `feat/tmdb-y-calidad-chat`, creada desde `develop`: tocan modelo, tareas nocturnas, el panel del chat y el footer, y no conviene que lleguen a `develop` por partes. Cada unidad de trabajo es una rama desde la de integración, en su propio worktree creado con herdr, y abre su PR contra ella (el CI corre en los PR a `feat/**`). Cuando entran todas, un solo PR lleva la rama a `develop`, con merge commit.

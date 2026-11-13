@@ -126,9 +126,11 @@ class Tiene(models.Model):
         related_name="items",
         verbose_name="lista",
     )
+    # PROTECT (#180): ver `Calificacion.produccion`. Un ítem de lista también es
+    # actividad del usuario que el borrado de una producción no puede llevarse.
     produccion = models.ForeignKey(
         "catalogo.ProduccionAudiovisual",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="+",
         verbose_name="producción audiovisual",
     )

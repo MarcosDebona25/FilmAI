@@ -47,7 +47,8 @@ def mis_listas(ctx, lista=None):
     if encontrada is None:
         return {"error": "not_found"}
     filas = (
-        Tiene.objects.filter(lista=encontrada)
+        # Sin lápidas: un título que TMDB ya no tiene no se ofrece (#180).
+        Tiene.objects.filter(lista=encontrada, produccion__disponible_en_tmdb=True)
         .select_related("produccion")
         .prefetch_related("produccion__traducciones")
         .order_by("-fecha_agregado", "-pk")[:_TOPE_ITEMS_DE_LISTA]

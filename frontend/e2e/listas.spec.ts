@@ -192,6 +192,7 @@ async function backend(
           poster: null,
           anio: i.anio,
           calificacion_promedio: i.nota,
+          disponible: true,
         })),
       });
     }

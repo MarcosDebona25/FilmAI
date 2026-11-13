@@ -109,6 +109,7 @@ describe("ítems", () => {
     poster: "/p.jpg",
     anio: 2020,
     calificacion_promedio: null,
+    disponible: true,
   });
 
   it("no repite ítems al sumar una página", () => {

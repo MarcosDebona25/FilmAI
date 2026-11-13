@@ -83,6 +83,7 @@ function item(item_id: number, extra: Partial<ItemLista> = {}): ItemLista {
     poster: null,
     anio: 2020,
     calificacion_promedio: 8.1,
+    disponible: true,
     ...extra,
   };
 }
@@ -128,6 +129,27 @@ describe("Detalle de una lista", () => {
       "/tv/103?from=list-7"
     );
     expect(lecturas()).toEqual(["/api/lists/7/items/"]);
+  });
+
+  it("un título que TMDB ya no tiene es una tarjeta gris sin enlace y se puede quitar", async () => {
+    const user = userEvent.setup();
+    estado.paginas = [
+      pagina([item(1), item(2, { disponible: false, titulo: "", anio: null, id_tmdb: 902 })]),
+    ];
+    render(<ListDetailView id={7} />, { locale: "en" });
+
+    const aviso = await screen.findByText("Title no longer available");
+    // No hay ficha a la que ir: ni la tarjeta ni su texto son enlaces.
+    expect(aviso.closest("a")).toBeNull();
+    expect(screen.queryByRole("link", { name: /902/ })).toBeNull();
+    expect(screen.getByRole("link", { name: /Título 1/ })).toBeInTheDocument();
+    // Quitarla funciona como siempre, y el aviso la nombra con su leyenda.
+    await user.click(
+      screen.getByRole("button", { name: "Remove Title no longer available from Maratón" })
+    );
+    expect(
+      await screen.findByText("Remove “Title no longer available” from Maratón?")
+    ).toBeVisible();
   });
 
   it("cada tarjeta muestra la fecha en que se agregó, en el formato del idioma", async () => {

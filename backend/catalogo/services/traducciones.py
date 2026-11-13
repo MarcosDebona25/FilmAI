@@ -78,7 +78,11 @@ def pendientes():
     """Producciones enriquecidas a las que les falta alguna traducción o los ids."""
     esperadas = len(idiomas_traducidos())
     return (
-        ProduccionAudiovisual.objects.filter(fecha_enriquecimiento__isnull=False)
+        # Una lápida no tiene traducciones a propósito: pedirlas a TMDB daría 404
+        # todas las noches (#180).
+        ProduccionAudiovisual.objects.filter(
+            fecha_enriquecimiento__isnull=False, disponible_en_tmdb=True
+        )
         .annotate(total_traducciones=Count("traducciones"))
         .filter(
             Q(total_traducciones__lt=esperadas) | (Q(generos_ids=[]) & ~Q(generos=[]))

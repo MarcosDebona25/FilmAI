@@ -148,6 +148,9 @@ class ListaItemSerializer(ProduccionLocalizadaMixin, serializers.Serializer):
     # La «★ 8.5» de la tarjeta (canvas «List detail»). `null` si TMDB todavía
     # no la calificó: TMDB manda 0 sin votos y la UI muestra «Unrated».
     calificacion_promedio = serializers.SerializerMethodField()
+    # `false` cuando TMDB ya no tiene el título (lápida, #180): sin título ni
+    # póster, y el frontend muestra la tarjeta «Title no longer available».
+    disponible = serializers.BooleanField(source="produccion.disponible_en_tmdb")
 
     def get_calificacion_promedio(self, item):
         return item.produccion.calificacion_promedio or None
