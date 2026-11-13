@@ -186,7 +186,8 @@ declare const messages: {
       "tvPremieresTitle": "TV shows released in {year}",
       "trendingDescription": "Most viewed on TMDB in the last seven days",
       "newReleasesTitle": "New releases",
-      "emptyDescription": "There’s nothing to show right now. Try again later or search for something specific."
+      "emptyDescription": "There’s nothing to show right now. Try again later or search for something specific.",
+      "seeAll": "See all"
     },
     "carousel": {
       "previousRowLabel": "Previous in {rowTitle}",

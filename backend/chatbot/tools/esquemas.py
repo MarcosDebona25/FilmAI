@@ -51,8 +51,9 @@ _TITULO = {"type": "string", "maxLength": 200}
 # Igual que el mensaje del usuario: 500 caracteres.
 _CONSULTA = {"type": "string", "maxLength": 500}
 _NOMBRE = {"type": "string", "maxLength": 100}
-# Una clave («favoritos») o el id de una lista: nunca pasa de unas pocas letras.
-_LISTA = {"type": "string", "maxLength": 20}
+# Una clave («pendientes», la más larga, tiene 10 letras) o el id de una lista. Con
+# más de 19 dígitos un número no entra en un `bigint` de Postgres: 10 alcanza.
+_LISTA = {"type": "string", "maxLength": 10}
 _FILTROS = {
     "generos": {
         "type": "array",
@@ -68,6 +69,11 @@ _FILTROS = {
         "minimum": 1,
         "maximum": 1000,
         "description": "Minutos. Solo es confiable en películas.",
+    },
+    "basada_en_libro": {
+        "type": "boolean",
+        "description": "true deja solo títulos basados en una novela o un libro, "
+        "para pedidos como «adaptaciones de libros». Si no, no lo mandes.",
     },
 }
 
@@ -139,22 +145,5 @@ ESQUEMAS = [
         "Sin `lista`, devuelve las listas del usuario. Con `lista`, lo que hay "
         "adentro: `vistas`, `pendientes`, `favoritos` o el `id` de una personalizada.",
         {"lista": _LISTA},
-    ),
-    _esquema(
-        "mostrar_tarjetas",
-        "Muestra hasta 3 títulos como tarjetas. Solo títulos que devolvió otra "
-        "tool en este turno.",
-        {
-            "tarjetas": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {"id_tmdb": _ID, "tipo": _TIPO},
-                    "required": ["id_tmdb", "tipo"],
-                    "additionalProperties": False,
-                },
-            }
-        },
-        ["tarjetas"],
     ),
 ]

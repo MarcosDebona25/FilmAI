@@ -5,6 +5,7 @@ el código que corre en `en_hilo` ve la transacción del test.
 """
 
 import json
+from datetime import date
 from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -28,18 +29,12 @@ from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.orquestador import _LARGO_DE_PREAMBULO, responder
 from chatbot.prompts import armar_sistema
 from chatbot.tools import FUNCIONES, ContextoTurno
-from chatbot.tools.turno import publicar, titulo
-from listas.models import ClaveLista, Lista, Tiene, TipoLista
+from chatbot.tools.turno import titulo
 from usuarios.factories import UsuarioFactory
 
 
 def tool(nombre, _id="1", **argumentos):
     return LlamadaTool(_id, nombre, json.dumps(argumentos))
-
-
-def tarjetas(*ids):
-    pedidas = [{"id_tmdb": i, "tipo": "movie"} for i in ids]
-    return tool("mostrar_tarjetas", "t", tarjetas=pedidas)
 
 
 class BaseOrquestador(TestCase):
@@ -81,8 +76,11 @@ class RespuestaSimpleTests(BaseOrquestador):
     async def test_el_texto_sale_de_a_pedazos_y_cierra_con_un_resultado(self):
         eventos = await self.correr([["Hola ", "che"]])
 
+        # El filtro de marcadores retiene un espacio final por si lo que sigue es un
+        # `[[n]]` inválido (que se borra junto con su espacio): los cortes se
+        # corren, pero el texto es el mismo.
         self.assertEqual(
-            eventos, [Texto("Hola "), Texto("che"), Resultado("Hola che", [])]
+            eventos, [Texto("Hola"), Texto(" che"), Resultado("Hola che", [])]
         )
 
     async def test_no_guarda_nada(self):
@@ -109,26 +107,6 @@ class VueltaConToolsTests(BaseOrquestador):
         self.assertEqual(resultado["tool_call_id"], "1")
         self.assertIn("Moon", resultado["content"])
 
-    async def test_las_tarjetas_de_una_vuelta_del_medio_llegan_al_resultado(self):
-        eventos = await self.correr([[tool("descubrir")], [tarjetas(1)], ["Mirá esta"]])
-
-        self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Moon")
-        self.assertEqual(sum(isinstance(e, Resultado) for e in eventos), 1)
-        self.assertIsInstance(eventos[-2], Texto)
-
-    async def test_texto_con_solo_tarjetas_cierra_sin_otra_llamada(self):
-        # Ahorra una llamada entera, y evita que el modelo repita la respuesta.
-        eventos = await self.correr([[tool("descubrir")], ["Mirá esta", tarjetas(1)]])
-
-        self.assertEqual(len(self.proveedor.pedidos), 2)
-        self.assertEqual(eventos[-1].texto, "Mirá esta")
-        self.assertEqual(len(eventos[-1].tarjetas), 1)
-
-    async def test_mostrar_tarjetas_sola_no_avisa_que_busca(self):
-        eventos = await self.correr([[tool("descubrir")], ["Esta", tarjetas(1)]])
-
-        self.assertEqual(sum(isinstance(e, Estado) for e in eventos), 1)
-
     async def test_el_texto_de_dos_vueltas_no_queda_pegado(self):
         # Un texto largo antes de buscar ya salió al front: el que sigue va aparte.
         largo = "x" * (_LARGO_DE_PREAMBULO + 1)
@@ -154,18 +132,6 @@ class VueltaConToolsTests(BaseOrquestador):
         await self.correr([["Busco.", tool("descubrir")], ["Listo."]])
 
         self.assertEqual(self.proveedor.pedidos[1][-2]["content"], "Busco.")
-
-    async def test_el_texto_con_tarjetas_no_es_un_preambulo(self):
-        eventos = await self.correr([[tool("descubrir")], ["Mirá", tarjetas(1)]])
-
-        self.assertEqual(eventos[-1].texto, "Mirá")
-
-    async def test_el_texto_con_tarjetas_y_otra_busqueda_no_es_un_preambulo(self):
-        # Las tarjetas de esta vuelta se muestran: la frase que las acompaña también.
-        guion = [[tool("descubrir")], ["Mirá", tool("descubrir", "2"), tarjetas(1)]]
-        eventos = await self.correr([*guion, ["Listo"]])
-
-        self.assertTrue(eventos[-1].texto.startswith("Mirá"))
 
     async def test_el_texto_que_cruza_el_umbral_despues_de_otra_vuelta_no_duplica_el_separador(
         self,
@@ -216,324 +182,6 @@ def pelicula_de_mentira(id_tmdb, nombre, anio=2009, tipo="movie"):
     )
 
 
-class RedDeTarjetasTests(BaseOrquestador):
-    """Si el modelo recomienda en el texto y no llama a `mostrar_tarjetas`, las
-    tarjetas las arma el orquestador con los títulos que nombró.
-
-    En el set dorado del 08/11/2026 solo 3 de 8 recomendaciones tenían tarjetas.
-    """
-
-    def setUp(self):
-        super().setUp()
-        # Búsquedas de mentira que pasan por `publicar()`, como las reales: así
-        # queda anotado qué títulos salieron de una búsqueda para recomendar.
-        self.peliculas = [
-            pelicula_de_mentira(1, "Moon"),
-            pelicula_de_mentira(2, "Arrival", 2016),
-            pelicula_de_mentira(3, "Her", 2013),
-            pelicula_de_mentira(4, "Solaris", 1972),
-            pelicula_de_mentira(5, "Interstellar", 2014),
-        ]
-        parche = patch.dict(
-            FUNCIONES,
-            {
-                "descubrir": lambda ctx, **_: {
-                    "resultados": publicar(ctx, self.peliculas)
-                },
-                "buscar_por_titulo": lambda ctx, **_: {
-                    "resultados": publicar(ctx, self.peliculas, sacar_vistas=False)
-                },
-            },
-        )
-        parche.start()
-        self.addCleanup(parche.stop)
-
-    def ids(self, eventos):
-        return [t["id_tmdb"] for t in eventos[-1].tarjetas]
-
-    async def test_nombra_titulos_sin_mostrarlos_y_aparecen_las_tarjetas(self):
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Te recomiendo **Arrival** y también **Moon**."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [2, 1])
-        self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Arrival")
-
-    async def test_la_respuesta_de_la_ultima_llamada_tambien_arma_tarjetas(self):
-        guion = [[tool("descubrir")] for _ in range(5)]
-        guion += [["Después de buscar, te va a gustar **Arrival**."]]
-
-        eventos = await self.correr(guion)
-
-        self.assertEqual(self.ids(eventos), [2])
-
-    async def test_si_el_modelo_mostro_tarjetas_no_se_agrega_nada(self):
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Mirá Arrival, Moon y Solaris.", tarjetas(1)]]
-        )
-
-        self.assertEqual(self.ids(eventos), [1])
-
-    async def test_un_titulo_de_una_consulta_directa_no_se_vuelve_tarjeta(self):
-        # «¿Cuánto dura Interstellar?»: es un dato, no una recomendación.
-        eventos = await self.correr(
-            [[tool("buscar_por_titulo")], ["Interstellar dura 169 minutos."]]
-        )
-
-        self.assertEqual(eventos[-1].tarjetas, [])
-
-    async def test_un_titulo_visto_no_se_vuelve_tarjeta(self):
-        produccion = await ProduccionAudiovisual.objects.acreate(
-            id_tmdb=1, tipo=TipoProduccion.PELICULA, titulo="Moon"
-        )
-        vistas, _ = await Lista.objects.aget_or_create(
-            usuario=self.usuario,
-            clave=ClaveLista.VISTAS,
-            defaults={"nombre": "Vistas", "tipo": TipoLista.PREDETERMINADA},
-        )
-        await Tiene.objects.acreate(lista=vistas, produccion=produccion)
-
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Como ya viste Moon, probá **Arrival**."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [2])
-
-    async def test_sin_acentos_ni_mayusculas(self):
-        self.peliculas = [pelicula_de_mentira(7, "El Laberinto del Fauno", 2006)]
-
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Probá **el laberinto del fauno**, es hermosa."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [7])
-
-    async def test_el_apostrofo_curvo_vale_como_el_recto(self):
-        # TMDB escribe «Ocean's Eleven» con el apóstrofo recto y el modelo a veces con
-        # el curvo, U+2019 (PR-Agent en
-        # #187). Para el lector es la misma letra, así que tiene que coincidir.
-        self.peliculas = [pelicula_de_mentira(8, "Ocean's Eleven", 2001)]
-
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Probá **Ocean\u2019s Eleven**, es muy divertida."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [8])
-
-    async def test_un_titulo_corto_no_se_confunde_con_una_palabra(self):
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Show her the way to **Solaris**, the classic."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [4])
-
-    async def test_un_titulo_corto_en_negrita_si_cuenta(self):
-        eventos = await self.correr([[tool("descubrir")], ["Te va a gustar **Her**."]])
-
-        self.assertEqual(self.ids(eventos), [3])
-
-    async def test_un_titulo_corto_no_cuenta_pegado_a_un_apostrofo_o_un_guion(self):
-        # «It's» y «Up-to-date» no nombran a «It» ni a «Up» (PR-Agent en #187).
-        self.peliculas = [
-            pelicula_de_mentira(8, "It", 2017),
-            pelicula_de_mentira(9, "Up", 2009),
-        ]
-
-        eventos = await self.correr(
-            [
-                [tool("descubrir")],
-                ["It\u2019s a classic, and it's up-to-date: Up-to-date."],
-            ]
-        )
-
-        self.assertEqual(eventos[-1].tarjetas, [])
-
-    async def test_un_titulo_corto_sin_negrita_no_cuenta(self):
-        # «Her latest film…» o «It is…» al empezar una oración: escrito igual que el
-        # título, pero no lo nombra. El modelo pone los títulos en negrita.
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Her latest film is great. Te va a gustar Her."]]
-        )
-
-        self.assertEqual(eventos[-1].tarjetas, [])
-
-    async def test_un_titulo_adentro_de_otro_mas_largo_no_cuenta(self):
-        # Gana el más largo: la tarjeta tiene que mostrar lo que dice el texto.
-        self.peliculas = [
-            pelicula_de_mentira(10, "Dune", 2021),
-            pelicula_de_mentira(11, "Dune: Part Two", 2024),
-            pelicula_de_mentira(12, "Blade Runner", 1982),
-            pelicula_de_mentira(13, "Blade Runner 2049", 2017),
-        ]
-
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Probá **Dune: Part Two** y **Blade Runner 2049**."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [11, 13])
-
-    async def test_un_titulo_largo_sin_negrita_no_cuenta(self):
-        # Ahora la negrita vale para todos los títulos, no solo los cortos: un
-        # título suelto en la prosa («Probá Arrival…») puede no ser una recomendación.
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Probá Arrival, o mejor **Moon**."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [1])
-
-    async def test_el_titulo_en_negrita_cuenta_aunque_haya_otro_mas_largo_sin_negrita(
-        self,
-    ):
-        self.peliculas = [
-            pelicula_de_mentira(10, "Dune", 2021),
-            pelicula_de_mentira(11, "Dune: Part Two", 2024),
-        ]
-
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Empezá por **Dune** y seguí con Dune: Part Two."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [10])
-
-    async def test_no_cuenta_dentro_de_otra_palabra(self):
-        eventos = await self.correr([[tool("descubrir")], ["Algo lunar: Moonlight."]])
-
-        self.assertEqual(eventos[-1].tarjetas, [])
-
-    async def test_van_en_orden_de_aparicion_y_como_mucho_3(self):
-        eventos = await self.correr(
-            [
-                [tool("descubrir")],
-                [
-                    "**Interstellar**, **Solaris**, **Moon** y **Arrival**: las cuatro van."
-                ],
-            ]
-        )
-
-        self.assertEqual(self.ids(eventos), [5, 4, 1])
-
-    async def test_las_tarjetas_armadas_son_las_mismas_que_las_del_modelo(self):
-        armadas = await self.correr([[tool("descubrir")], ["Probá **Moon**."]])
-        self.chat = await Chat.objects.aget(pk=self.chat.pk)
-        elegidas = await self.correr(
-            [[tool("descubrir")], ["Probá **Moon**.", tarjetas(1)]]
-        )
-
-        self.assertEqual(armadas[-1].tarjetas, elegidas[-1].tarjetas)
-
-    # --- Lo que el usuario ya escribió en su pregunta -----------------------
-
-    async def test_un_titulo_que_escribio_el_usuario_no_arma_tarjeta(self):
-        # «Algo como Arrival»: el modelo lo nombra de referencia, no lo recomienda.
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Parecido a **Arrival**: **Moon**."]],
-            texto="Quiero algo como arrival",
-        )
-
-        self.assertEqual(self.ids(eventos), [1])
-
-    async def test_un_titulo_corto_solo_cuenta_como_escrito_si_es_igual(self):
-        # «is it scary?» no nombra a «It»; «Quiero ver It» sí.
-        corta = [pelicula_de_mentira(8, "It", 2017)]
-        self.peliculas = corta
-
-        como_palabra = await self.correr(
-            [[tool("descubrir")], ["Te recomiendo **It**."]], texto="is it scary?"
-        )
-        self.chat = await Chat.objects.aget(pk=self.chat.pk)
-        como_titulo = await self.correr(
-            [[tool("descubrir")], ["Te recomiendo **It**."]], texto="Quiero ver It"
-        )
-
-        self.assertEqual(self.ids(como_palabra), [8])
-        self.assertEqual(como_titulo[-1].tarjetas, [])
-
-    # --- Texto con la tilde suelta (NFD) --------------------------------------
-
-    async def test_un_texto_con_la_tilde_suelta_coincide(self):
-        # «é» puede venir como «e» + una tilde aparte (U+0301): se junta antes de
-        # comparar.
-        self.peliculas = [pelicula_de_mentira(9, "Amélie", 2001)]
-
-        eventos = await self.correr(
-            [[tool("descubrir")], ["Probá **Ame\u0301lie**, es hermosa."]]
-        )
-
-        self.assertEqual(self.ids(eventos), [9])
-
-    # --- Homónimos: una película y una serie con el mismo nombre -------------
-
-    def homonimos(self, primero="movie"):
-        orden = [primero, "tv" if primero == "movie" else "movie"]
-        self.peliculas = [
-            pelicula_de_mentira(20 + i, "Fargo", 1996 + i, tipo=tipo)
-            for i, tipo in enumerate(orden)
-        ]
-
-    async def test_homonimos_sin_pistas_gana_el_primero_de_la_busqueda(self):
-        for primero in ("movie", "tv"):
-            with self.subTest(primero):
-                self.homonimos(primero)
-                self.chat = await Chat.objects.aget(pk=self.chat.pk)
-
-                eventos = await self.correr([[tool("descubrir")], ["Mirá **Fargo**."]])
-
-                self.assertEqual([t["tipo"] for t in eventos[-1].tarjetas], [primero])
-
-    async def test_homonimos_una_sola_tarjeta_por_mencion(self):
-        self.homonimos()
-
-        eventos = await self.correr([[tool("descubrir")], ["Mirá **Fargo**."]])
-
-        self.assertEqual(len(eventos[-1].tarjetas), 1)
-
-    async def test_homonimos_la_pregunta_del_usuario_da_la_pista(self):
-        for pregunta, tipo in (
-            ("Recomendame una serie", "tv"),
-            ("any good tv show?", "tv"),
-            ("Quiero una película", "movie"),
-            ("a movie please", "movie"),
-        ):
-            with self.subTest(pregunta):
-                self.homonimos("movie" if tipo == "tv" else "tv")
-                self.chat = await Chat.objects.aget(pk=self.chat.pk)
-
-                eventos = await self.correr(
-                    [[tool("descubrir")], ["Mirá **Fargo**."]], texto=pregunta
-                )
-
-                self.assertEqual([t["tipo"] for t in eventos[-1].tarjetas], [tipo])
-
-    async def test_homonimos_el_texto_alrededor_de_la_mencion_da_la_pista(self):
-        for texto, tipo in (
-            ("Te recomiendo **Fargo**, una serie de crimen.", "tv"),
-            ("Try **Fargo**, the 1996 film.", "movie"),
-            ("La película **Fargo** es genial.", "movie"),
-            ("The **Fargo** show is great.", "tv"),
-        ):
-            with self.subTest(texto):
-                self.homonimos("movie" if tipo == "tv" else "tv")
-                self.chat = await Chat.objects.aget(pk=self.chat.pk)
-
-                eventos = await self.correr([[tool("descubrir")], [texto]])
-
-                self.assertEqual([t["tipo"] for t in eventos[-1].tarjetas], [tipo])
-
-    async def test_homonimos_cada_mencion_elige_con_su_propio_contexto(self):
-        self.homonimos()
-
-        eventos = await self.correr(
-            [
-                [tool("descubrir")],
-                [
-                    "La serie **Fargo** y también la película **Fargo**, que es anterior."
-                ],
-            ]
-        )
-
-        self.assertEqual([t["tipo"] for t in eventos[-1].tarjetas], ["tv", "movie"])
-
-
 class FallosTests(BaseOrquestador):
     async def test_la_quinta_vuelta_con_tools_pide_una_ultima_llamada_sin_tools(self):
         guion = [[tool("descubrir")] for _ in range(5)] + [["Con lo que hay: Moon."]]
@@ -568,17 +216,6 @@ class FallosTests(BaseOrquestador):
         self.assertEqual("".join(textos), f"{largo}\n\nFinal.")
         self.assertEqual(eventos[-1].texto, f"{largo}\n\nFinal.")
 
-    async def test_las_tarjetas_de_la_vuelta_que_se_paso_llegan_al_resultado(self):
-        # La quinta vuelta pidió solo tarjetas, sin texto: se corren y la última
-        # llamada escribe la respuesta.
-        guion = [[tool("descubrir")] for _ in range(4)]
-        guion += [[tarjetas(1)], ["Mirá esta."]]
-
-        eventos = await self.correr(guion)
-
-        self.assertEqual(eventos[-1].texto, "Mirá esta.")
-        self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Moon")
-
     async def test_un_turno_sin_texto_pide_una_ultima_llamada_sin_tools(self):
         eventos = await self.correr([[tool("descubrir")], [], ["Te recomiendo Moon."]])
 
@@ -612,15 +249,6 @@ class FallosTests(BaseOrquestador):
         eventos = await self.correr(guion)
 
         self.assertEqual(eventos[-1].texto, "Listo")
-
-    async def test_la_ultima_llamada_puede_cerrar_con_texto_y_tarjetas(self):
-        # Es lo que pide el prompt: no cuenta como pasarse del tope.
-        guion = [[tool("descubrir")] for _ in range(4)] + [["Listo", tarjetas(1)]]
-
-        eventos = await self.correr(guion)
-
-        self.assertEqual(eventos[-1].texto, "Listo")
-        self.assertEqual(eventos[-1].tarjetas[0]["titulo"], "Moon")
 
     async def test_si_el_proveedor_falla_no_hay_resultado(self):
         eventos = []
@@ -764,7 +392,7 @@ class ReglasDelPromptTests(SimpleTestCase):
         # Lo fijo adelante es lo que el proveedor puede cachear.
         sistema = armar_sistema("Le gustó: Moon", [], "es")
 
-        self.assertLess(sistema.index("mostrar_tarjetas"), sistema.index("Le gustó"))
+        self.assertLess(sistema.index("Cómo trabajar"), sistema.index("Le gustó"))
 
     def test_lleva_las_reglas_de_los_titulos_vistos(self):
         sistema = armar_sistema("", [], "es")
@@ -824,6 +452,207 @@ class ReglasDelPromptTests(SimpleTestCase):
 
     def test_sin_datos_lo_dice_en_vez_de_dejarlo_vacio(self):
         self.assertIn("Todavía no hay datos.", armar_sistema("", [], "es"))
+
+    def test_la_fecha_de_hoy_va_en_la_parte_variable_en_el_idioma_de_la_respuesta(self):
+        # Sin la fecha, el modelo no sabe si «Proyecto Fin del Mundo» ya se estrenó.
+        # Va después del perfil: lo fijo del comienzo sigue siendo cacheable.
+        hoy = date(2026, 11, 13)
+        en_es = armar_sistema("Le gustó: Moon", [], "es", hoy=hoy)
+        en_en = armar_sistema("Le gustó: Moon", [], "en", hoy=hoy)
+
+        self.assertIn("13 de noviembre de 2026", en_es)
+        self.assertIn("November 13, 2026", en_en)
+        self.assertGreater(en_es.index("13 de noviembre"), en_es.index("Le gustó"))
+
+    def test_cambiar_la_fecha_no_toca_la_parte_fija(self):
+        a = armar_sistema("", [], "es", hoy=date(2026, 11, 13))
+        b = armar_sistema("", [], "es", hoy=date(2027, 1, 2))
+
+        fija = a.split("Perfil del usuario:")[0]
+        self.assertEqual(fija, b.split("Perfil del usuario:")[0])
+        self.assertNotEqual(a, b)
+
+    def test_no_afirma_fechas_de_estreno_de_memoria(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("puede estar desactualizado", sistema)
+        self.assertIn("«ya salió»", sistema)
+        self.assertIn("salvo que lo haya devuelto una tool en este turno", sistema)
+
+    def test_no_anuncia_cuantos_titulos_recomienda(self):
+        self.assertIn("No anuncies cuántos títulos", armar_sistema("", [], "es"))
+
+    def test_un_criterio_que_no_se_puede_filtrar_se_aclara_en_una_oracion(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("no pueden filtrar", sistema)
+        self.assertIn("sin presentarlo como cumplido", sistema)
+
+    def test_si_un_filtro_existe_y_se_uso_no_se_excusa(self):
+        # En la medición de #201 el bot decía «el buscador no filtra bien por basada
+        # en libro» aunque `basada_en_libro` se había aplicado y traído resultados.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("solo cuando ninguna tool aceptó ese criterio", sistema)
+        self.assertIn("Si usaste un filtro que existe, no te excuses", sistema)
+        # La regla sigue en su lugar, dentro de «Al recomendar».
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("no pueden filtrar")
+        )
+
+    def test_las_reglas_nuevas_no_reordenan_las_existentes(self):
+        # Mover reglas cambió la conducta del modelo el 12/11/2026: las nuevas se
+        # suman en su propia sección, después de «Títulos vistos».
+        sistema = armar_sistema("", [], "es")
+
+        self.assertLess(
+            sistema.index("Títulos vistos:"), sistema.index("Al recomendar:")
+        )
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("Datos no confiables")
+        )
+
+    def test_lo_que_el_usuario_nombro_pesa_mas_que_lo_que_dijo_el_asistente(self):
+        # Pidió «parecidas a esta serie» queriendo decir Cowboy Bebop (la que había
+        # nombrado él) y el bot tomó Serial Experiments Lain, de su respuesta anterior.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("«esta serie»", sistema)
+        self.assertIn("que él mismo nombró en su mensaje", sistema)
+        self.assertIn("antes que uno que apareció en tu respuesta anterior", sistema)
+
+    def test_una_referencia_ambigua_se_resuelve_y_se_aclara_sin_frenar(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("puede ser de dos títulos", sistema)
+        self.assertIn("Tomo X como base; si querías Y, decime", sistema)
+        self.assertIn("sin cortar la respuesta ni hacer una pregunta", sistema)
+
+    def test_no_da_opiniones_de_calidad_como_hechos(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("No des opiniones de calidad como hechos", sistema)
+        self.assertIn("un escalón abajo en calidad", sistema)
+
+    def test_los_datos_concretos_salen_solo_de_una_tool_de_este_turno(self):
+        # El bot dijo 22 episodios de Texhnolyze y TMDB dice 20.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn(
+            "episodios, temporadas, duración, año, reparto y director", sistema.lower()
+        )
+        self.assertIn("`temporadas` y `episodios`", sistema)
+
+    def test_las_tarjetas_que_se_piden_son_las_de_la_ultima_respuesta(self):
+        # Tras recomendar Log Horizon, Btooom! y SAO Alicization sin tarjetas, el
+        # usuario preguntó «¿y las tarjetas?» y el bot mostró tres de «Ya
+        # recomendados» (Interestelar, Apolo 13, Pasajeros): esa lista es de toda la
+        # sesión, no de la última respuesta.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("«¿y las tarjetas?»", sistema)
+        self.assertIn("«mostrame esos»", sistema)
+        self.assertIn("los títulos de tu última respuesta", sistema)
+        self.assertIn("`buscar_por_titulo`", sistema)
+        self.assertIn("Nunca tomes los de «Ya recomendados»", sistema)
+        # Va dentro de «Referencias y datos», sin mover ninguna regla existente.
+        self.assertLess(
+            sistema.index("Referencias y datos:"),
+            sistema.index("«¿y las tarjetas?»"),
+        )
+        self.assertLess(
+            sistema.index("«¿y las tarjetas?»"), sistema.index("Datos no confiables")
+        )
+
+    def test_un_pedido_de_filmografia_es_una_recomendacion_no_un_rechazo(self):
+        # «¿Cómo puedo empezar a ver la filmografía de Nolan?» se rechazó dos de dos
+        # veces por la regla de alcance, sin buscar nada.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("filmografía", sistema)
+        self.assertIn("«por dónde arranco con X»", sistema)
+        self.assertIn("es un pedido de recomendación, no de instrucciones", sistema)
+        self.assertIn("`buscar_por_persona`", sistema)
+        self.assertIn("ante la duda entre rechazar y recomendar, recomendá", sistema)
+        # La regla de alcance no se mueve: sigue siendo lo primero que se lee.
+        self.assertLess(
+            sistema.index("lo rechazás con amabilidad"), sistema.index("Cómo trabajar:")
+        )
+        self.assertLess(
+            sistema.index("ante la duda entre rechazar"),
+            sistema.index("Cómo trabajar:"),
+        )
+        self.assertGreater(
+            sistema.index("es un pedido de recomendación"),
+            sistema.index("Al recomendar:"),
+        )
+
+    def test_nunca_ofrece_mostrar_los_titulos_y_los_muestra_en_la_misma_respuesta(self):
+        # El bot recomendó sin tarjetas y cerró con «¿Te armo las tarjetas?».
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("Nunca ofrezcas ni preguntes si querés verlos", sistema)
+        self.assertIn("«¿te armo las tarjetas?»", sistema)
+        self.assertIn("en esa misma respuesta, con su marcador", sistema)
+
+    def test_no_le_nombra_al_usuario_las_palabras_internas(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("Al usuario no le nombres palabras internas", sistema)
+        for palabra in ("«tarjeta»", "«tool»", "«herramienta»", "«marcador»", "`ref`"):
+            self.assertIn(palabra, sistema)
+        self.assertIn("«los títulos»", sistema)
+        # La regla de «¿y las tarjetas?» sigue: sirve para entender al usuario.
+        self.assertIn("«¿y las tarjetas?»", sistema)
+        self.assertLess(
+            sistema.index("Al recomendar:"),
+            sistema.index("Al usuario no le nombres palabras internas"),
+        )
+        self.assertLess(
+            sistema.index("Al usuario no le nombres palabras internas"),
+            sistema.index("Referencias y datos:"),
+        )
+
+    def test_las_reglas_de_referencias_van_despues_de_al_recomendar(self):
+        sistema = armar_sistema("", [], "es")
+
+        self.assertLess(
+            sistema.index("Al recomendar:"), sistema.index("Referencias y datos:")
+        )
+        self.assertLess(
+            sistema.index("Referencias y datos:"), sistema.index("Datos no confiables")
+        )
+
+    def test_las_malas_palabras_se_prohiben_con_ejemplos_en_los_dos_idiomas(self):
+        es = armar_sistema("", [], "es")
+        en = armar_sistema("", [], "en")
+
+        for ejemplo in ("carajo", "mierda", "joder", "tampoco las suaves"):
+            self.assertIn(ejemplo, es)
+        for ejemplo in ("damn", "hell", "not even mild"):
+            self.assertIn(ejemplo, en)
+
+    def test_sin_jerga_ni_comentarios_sobre_el_fisico_de_los_actores(self):
+        # «Pibardos» para los protagonistas de «Violet & Finch» (13/11/2026).
+        es = armar_sistema("", [], "es")
+        en = armar_sistema("", [], "en")
+
+        for ejemplo in ("pibe", "pibardo", "está re fuerte", "un caño", "todo público"):
+            self.assertIn(ejemplo, es)
+        self.assertIn("lo atractivos que son los actores", es)
+        self.assertIn("how attractive the actors are", en)
+        self.assertIn("voseo", es)
+
+
+class FechaDeHoyTests(BaseOrquestador):
+    async def test_el_orquestador_pasa_la_fecha_de_hoy_al_sistema(self):
+        with patch(
+            "chatbot.orquestador.timezone.localdate", return_value=date(2026, 11, 13)
+        ):
+            await self.correr([["Hola"]])
+
+        sistema = self.mensajes_del_primer_pedido()[0]["content"]
+        self.assertIn("13 de noviembre de 2026", sistema)
 
 
 class PresupuestoDeTmdbTests(BaseOrquestador):
@@ -964,7 +793,7 @@ class LeerStreamTests(SimpleTestCase):
 class ParametroToolsTests(SimpleTestCase):
     """Sin esquemas, `tools` no viaja: es lo que hace una llamada «solo texto»."""
 
-    async def pedido_enviado(self, esquemas):
+    async def pedido_enviado(self, esquemas, **extra):
         crear = AsyncMock(return_value=como_stream(fragmento(contenido="Hola")))
         with patch("chatbot.llm.AsyncOpenAI") as cliente:
             cliente.return_value.__aenter__.return_value = MagicMock(
@@ -973,7 +802,7 @@ class ParametroToolsTests(SimpleTestCase):
             proveedor = ProveedorOpenAICompatible(
                 base_url="http://x", modelo="m", api_key="k", thinking=False
             )
-            [_ async for _ in proveedor.escribir([], esquemas)]
+            [_ async for _ in proveedor.escribir([], esquemas, **extra)]
         return crear.call_args.kwargs
 
     async def test_con_esquemas_los_manda(self):
@@ -985,6 +814,25 @@ class ParametroToolsTests(SimpleTestCase):
         enviado = await self.pedido_enviado([])
 
         self.assertNotIn("tools", enviado)
+        self.assertNotIn("tool_choice", enviado)
+
+    async def test_sin_tool_choice_no_lo_manda(self):
+        enviado = await self.pedido_enviado([{"type": "function"}])
+
+        self.assertNotIn("tool_choice", enviado)
+
+    async def test_con_tool_choice_required_lo_manda(self):
+        # Obliga al modelo a pedir una tool (lo usa la búsqueda forzada).
+        enviado = await self.pedido_enviado(
+            [{"type": "function"}], tool_choice="required"
+        )
+
+        self.assertEqual(enviado["tool_choice"], "required")
+
+    async def test_sin_esquemas_ignora_tool_choice(self):
+        # La API rechaza `tool_choice` sin `tools`.
+        enviado = await self.pedido_enviado([], tool_choice="required")
+
         self.assertNotIn("tool_choice", enviado)
 
 

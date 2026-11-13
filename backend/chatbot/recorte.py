@@ -26,7 +26,7 @@ from chatbot.models import Chat, Mensaje
 # Cuántas filas se reescriben por `UPDATE`: `bulk_update` arma un solo SQL por lote
 # en vez de uno por fila.
 _LOTE = 500
-# El bot muestra hasta 3 tarjetas por respuesta (`mostrar_tarjetas`).
+# El bot muestra hasta 3 tarjetas por respuesta (las de los marcadores `[[n]]`).
 _POSICIONES_DE_TARJETA = range(3)
 # Lo que sobrevive al recorte: con el id y el tipo se vuelve a encontrar la fila.
 _CLAVES_QUE_QUEDAN = ("id_tmdb", "tipo")

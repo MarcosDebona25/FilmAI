@@ -6,17 +6,17 @@ Estado contrastado el **26/09/2026** con los documentos 01–04, el código y la
 
 Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son un issue abierto, cierres de calidad y mejoras. Los pendientes 1, 2 y 4 quedan en la tabla como cerrados: el 2 está en `develop`; el 1 y el 4 están en la rama `feat/tmdb-y-calidad-chat`, a la espera de que Gonza revise el PR a `develop`.
 
-| #   | Pendiente                                                   | Importancia                     | Viabilidad | Referencia                                                                                                          |
-| --- | ----------------------------------------------------------- | ------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
-| 1   | ✅ Términos de uso de TMDB                                  | Alta                            | —          | #180, `openspec/specs/tmdb-compliance/`; en la rama `feat/tmdb-y-calidad-chat`, PR a `develop` en revisión de Gonza |
-| 2   | ✅ Cerrado: el chatbot recomienda sin mostrar tarjetas      | —                               | —          | #187, #189                                                                                                          |
-| 3   | Correos por Celery y Brevo como respaldo                    | Media-alta                      | Alta       | Q-08, #181, `openspec/changes/brevo-respaldo/`                                                                      |
-| 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                           | —          | Q-01, Q-03, Q-04; en la rama `feat/tmdb-y-calidad-chat`, PR a `develop` en revisión de Gonza                        |
-| 5   | Recomendaciones dentro de una lista                         | Media                           | Media      | «Mejoras futuras»                                                                                                   |
-| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna | Media      | Seguridad, B-03, C-04b, CU-021                                                                                      |
-| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                            | Muy alta   | Q-01, Q-05, sección 13 del canvas                                                                                   |
-| 8   | Refactor y lista «Viendo»                                   | Baja                            | Media      | Q-07, «Mejoras futuras»                                                                                             |
-| 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)      | Baja       | Perfil, Settings                                                                                                    |
+| #   | Pendiente                                                   | Importancia                     | Viabilidad                | Referencia                                     |
+| --- | ----------------------------------------------------------- | ------------------------------- | ------------------------- | ---------------------------------------------- |
+| 1   | ✅ Términos de uso de TMDB                                  | Alta                            | —                         | #180, `openspec/specs/tmdb-compliance/`, #198  |
+| 2   | ✅ Cerrado: el chatbot recomienda sin mostrar tarjetas      | —                               | —                         | #187, #189                                     |
+| 3   | Correos por Celery y Brevo como respaldo                    | Media-alta                      | Alta                      | Q-08, #181, `openspec/changes/brevo-respaldo/` |
+| 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                           | —                         | Q-01, Q-03, Q-04, #198                         |
+| 5   | Títulos parecidos en listas y en la ficha                   | Media                           | Media (plan hecho, 5 PRs) | `openspec/changes/recomendaciones-similares/`  |
+| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna | Media                     | Seguridad, B-03, C-04b, CU-021                 |
+| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                            | Muy alta                  | Q-01, Q-05, sección 13 del canvas              |
+| 8   | Refactor y lista «Viendo»                                   | Baja                            | Media                     | Q-07, «Mejoras futuras»                        |
+| 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)      | Baja                      | Perfil, Settings                               |
 
 ### 1. Términos de uso de TMDB (#180)
 
@@ -59,7 +59,7 @@ Resultado (13/11/2026): se eligió `logo5.svg`, con el logo chico también en el
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 
-✅ **Cerrado el 13/11/2026.** Con thinking apagado, solo 3 de 8 pedidos de recomendación terminaban con tarjetas. #187 sumó la «red de tarjetas» (si el modelo nombra títulos y no llama a `mostrar_tarjetas`, el orquestador las arma) y la validación de argumentos de cada tool contra su esquema. #189 sumó la última llamada sin tools, cuando el modelo se pasa del tope de 4 vueltas o termina sin texto. Esa llamada está cubierta por tests; en la medición posterior ningún turno llegó al tope, así que todavía no se vio contra DeepSeek. No queda nada por hacer: si aparece en uso real, se trata como un bug nuevo. Detalle en `docs/decisiones.md` (12/11/2026).
+✅ **Cerrado el 13/11/2026.** Con thinking apagado, solo 3 de 8 pedidos de recomendación terminaban con tarjetas. #187 sumó la «red de tarjetas» (si el modelo nombra títulos y no llama a `mostrar_tarjetas`, el orquestador las arma) y la validación de argumentos de cada tool contra su esquema. #189 sumó la última llamada sin tools, cuando el modelo se pasa del tope de 4 vueltas o termina sin texto. Esa llamada está cubierta por tests; en la medición posterior ningún turno llegó al tope, así que todavía no se vio contra DeepSeek. No queda nada por hacer: si aparece en uso real, se trata como un bug nuevo. Detalle en `docs/decisiones.md` (12/11/2026). El 13/11/2026 las tarjetas pasaron a marcadores `[[n]]` (ver `docs/decisiones.md`); la tool `mostrar_tarjetas` y la red se retiraron.
 
 ### 3. Correos por Celery y Brevo como respaldo (Q-08, #181)
 
@@ -75,9 +75,9 @@ Las revisiones de accesibilidad, de estados de carga y error y de responsive se 
 - **Estado (13/11/2026)**: hecho e integrado en `feat/tmdb-y-calidad-chat` (#195). Los tests están en `frontend/e2e/chat-calidad.spec.ts`. Quedan fuera, y pasan al pendiente 7, la prueba con lector de pantalla real y la del teclado de un celular real.
 - **Botón del chat (pedido de Gonza, 13/11/2026)**: el FAB no parece clickeable. `ChatFab.tsx` no tiene `cursor-pointer` (Tailwind 4 deja el cursor por defecto en los botones) ni estado hover. Se suma el cursor y un efecto al pasar el mouse, diseñado primero en el canvas, en la línea de los demás botones primarios (`hover:bg-primary/80` en `components/ui/button.tsx`), con `motion-reduce` si tiene movimiento y sin bajar el contraste de 4,5:1. Conviene revisar si otros botones sin la variante de `Button` tienen el mismo problema.
 
-### 5. Recomendaciones dentro de una lista
+### 5. Títulos parecidos en listas y en la ficha
 
-Detallada en «Mejoras futuras». Es la que más se acerca a la idea de FilmAI: con los vectores de B-06 alcanza, sin entrenar nada. Su calidad depende del tamaño del catálogo, así que conviene encararla después de la población masiva de la base.
+Es la que más se acerca a la idea de FilmAI: con los vectores de B-06 alcanza, sin entrenar nada. El 13/11/2026 se amplió a la ficha («More like {title}») y se diseñó en `openspec/changes/recomendaciones-similares/`: un solo motor para la fila «Suggested for this list» (listas personalizadas y Favoritos, con «+ Add» y «Refresh») y para la ficha, con relleno de `/recommendations` de TMDB. Son 5 PRs (motor y endpoint de la ficha, endpoint de listas, fila de listas, fila de la ficha, e2e y documentación). Las decisiones D-1 a D-9 quedaron respondidas el 13/11/2026; antes del frontend falta dibujar las filas en el canvas de Claude Design. La calidad crece con la población masiva de la base, pero no depende de ella.
 
 ### 6. Lo que se resuelve al desplegar
 
@@ -255,6 +255,8 @@ Resumen: las 11 secciones del canvas están completas (2 a 12); el chatbot se su
 Ideas fuera del alcance actual. No están priorizadas ni comprometidas.
 
 ### Recomendaciones dentro de una lista (05/11/2026)
+
+Pasó al pendiente 5 el 13/11/2026, ampliada a la ficha; el diseño está en `openspec/changes/recomendaciones-similares/`. Lo que sigue es la idea original.
 
 Hoy, una lista vacía invita a explorar, y una con títulos no sugiere nada. La idea es que una lista con títulos proponga otros para agregar, como las playlists de Spotify.
 

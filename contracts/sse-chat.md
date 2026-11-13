@@ -56,7 +56,7 @@ El `data` va siempre en una línea: los saltos de línea del texto viajan escapa
 | Evento | `data` | Cuándo |
 |---|---|---|
 | `estado` | `{"code": "searching"}` | Empieza una búsqueda. El front traduce el código |
-| `texto` | `{"delta": "..."}` | Un pedazo de la respuesta; se concatenan en orden |
+| `texto` | `{"delta": "..."}` | Un pedazo de la respuesta; se concatenan en orden. El texto ya lleva los títulos recomendados como `**Título** (año)`: el backend cambia los marcadores `[[n]]` del modelo antes de enviarlo, así que un marcador nunca llega al front (13/11/2026) |
 | `tarjetas` | `{"tarjetas": [{"id_tmdb", "tipo", "titulo", "poster", "anio", "nota_tmdb"}]}` | **Una vez**, después de guardar y justo antes de `fin`; puede venir vacío. Nunca en un turno que termina en `error` |
 | `fin` | `{"id": <pk de la respuesta>, "id_pregunta": <pk de la pregunta>}` | La pareja quedó guardada. Es el único cierre exitoso |
 | `error` | `{"code": "chat_unavailable", "params": {}, "errors": []}` | Terminal. No se guardó nada |

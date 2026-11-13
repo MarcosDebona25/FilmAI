@@ -36,6 +36,22 @@ DOS_PREGUNTAS = """
 """
 
 
+HISTORIAL_BUENO = """historial:
+    - autor: usuario
+      texto: ¿Algo de isekai?
+    - autor: asistente
+      texto: Te dejo **Log Horizon** (2013).
+      tarjetas: [{id_tmdb: 10, tipo: tv, titulo: Log Horizon, anio: 2013}]"""
+
+CON_HISTORIAL = f"""
+- id: tarjetas
+  mensaje: ¿y las tarjetas?
+  rnf6: agregacion
+  espera: Marca lo del último mensaje.
+  {HISTORIAL_BUENO}
+"""
+
+
 class ConArchivos:
     def archivo(self, contenido):
         """Escribe `contenido` en un .yaml temporal, que se borra al terminar el test."""
@@ -47,11 +63,11 @@ class ConArchivos:
 
 
 class CargarGoldenTests(ConArchivos, SimpleTestCase):
-    def test_el_set_del_repo_es_valido_y_tiene_entre_10_y_15_preguntas(self):
+    def test_el_set_del_repo_es_valido_y_tiene_entre_10_y_25_preguntas(self):
         preguntas = cargar_golden(GOLDEN)
 
         self.assertGreaterEqual(len(preguntas), 10)
-        self.assertLessEqual(len(preguntas), 15)
+        self.assertLessEqual(len(preguntas), 25)
 
     def test_el_set_del_repo_cubre_los_casos_pedidos(self):
         ids = {p["id"] for p in cargar_golden(GOLDEN)}
@@ -64,8 +80,19 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
             "para_chicos",
             "como_arrival_mas_liviano",
             "sin_filtros_de_mas",
+            "y_las_tarjetas",
+            "bebop_lain",
+            "de_memoria",
         ):
             self.assertIn(caso, ids)
+
+    def test_los_casos_con_historial_traen_mensajes_previos(self):
+        por_id = {p["id"]: p for p in cargar_golden(GOLDEN)}
+
+        for caso in ("y_las_tarjetas", "bebop_lain"):
+            historial = por_id[caso]["historial"]
+            self.assertEqual(historial[0]["autor"], "usuario")
+            self.assertEqual(historial[-1]["autor"], "asistente")
 
     def test_el_idioma_por_defecto_es_espanol(self):
         preguntas = cargar_golden(self.archivo(DOS_PREGUNTAS))
@@ -84,6 +111,25 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
             "id repetido": "- {id: a, mensaje: hola, rnf6: simple, espera: x}\n"
             "- {id: a, mensaje: chau, rnf6: simple, espera: y}",
             "YAML roto": "- [sin cerrar",
+            "historial vacío": CON_HISTORIAL.replace(HISTORIAL_BUENO, "historial: []"),
+            "historial que no es lista": CON_HISTORIAL.replace(
+                HISTORIAL_BUENO, "historial: hola"
+            ),
+            "autor inválido": CON_HISTORIAL.replace("autor: usuario", "autor: bot"),
+            "mensaje previo sin texto": CON_HISTORIAL.replace(
+                "texto: ¿Algo de isekai?", "texto: ''"
+            ),
+            "tarjetas en un mensaje del usuario": CON_HISTORIAL.replace(
+                "texto: ¿Algo de isekai?",
+                "texto: hola\n      tarjetas: [{id_tmdb: 1, tipo: movie, titulo: A}]",
+            ),
+            "tarjeta mal armada": CON_HISTORIAL.replace(
+                "tarjetas: [{id_tmdb: 10, tipo: tv, titulo: Log Horizon, anio: 2013}]",
+                "tarjetas: [{titulo: sin id}]",
+            ),
+            "campo de más en un mensaje previo": CON_HISTORIAL.replace(
+                "autor: usuario", "autor: usuario\n      rol: x"
+            ),
         }
         for nombre, contenido in casos.items():
             with self.subTest(nombre), self.assertRaises(CommandError):
@@ -188,3 +234,57 @@ class ComandoGoldenTests(ConArchivos, TestCase):
                 golden=self.archivo(DOS_PREGUNTAS),
                 mensaje="x",
             )
+
+
+class CasosConHistorialTests(ConArchivos, TestCase):
+    """Un caso con `historial` siembra mensajes previos, solo mientras dura la pregunta."""
+
+    def setUp(self):
+        UsuarioFactory(nombre_usuario="juanp")
+
+    def correr(self, guion):
+        proveedor = ProveedorFalso(guion)
+        salida = StringIO()
+        with patch(
+            "chatbot.management.commands.chatear.crear_proveedor",
+            return_value=proveedor,
+        ):
+            call_command(
+                "chatear",
+                usuario="juanp",
+                golden=self.archivo(CON_HISTORIAL),
+                stdout=salida,
+                stderr=StringIO(),
+            )
+        return proveedor, salida.getvalue()
+
+    def test_el_modelo_recibe_el_historial_y_las_tarjetas_previas(self):
+        proveedor, _ = self.correr([["Va [[1]]"]])
+
+        roles = [m["role"] for m in proveedor.pedidos[0]]
+        self.assertEqual(roles, ["system", "user", "assistant", "user"])
+        self.assertEqual(proveedor.pedidos[0][1]["content"], "¿Algo de isekai?")
+        self.assertIn("[[1]] Log Horizon (2013)", proveedor.pedidos[0][0]["content"])
+
+    def test_las_tarjetas_previas_se_pueden_marcar(self):
+        _, salida = self.correr([["Va [[1]]"]])
+
+        self.assertIn("Va **Log Horizon** (2013)", salida)
+        self.assertIn("[tarjeta: Log Horizon (2013)]", salida)
+
+    def test_no_queda_nada_guardado(self):
+        self.correr([["Va [[1]]"]])
+
+        self.assertEqual(Mensaje.objects.count(), 0)
+
+    def test_si_el_turno_falla_tampoco_queda_nada_guardado(self):
+        self.correr([[RuntimeError("503")]])
+
+        self.assertEqual(Mensaje.objects.count(), 0)
+
+    def test_muestra_cuando_la_llamada_se_repite_forzada(self):
+        _, salida = self.correr(
+            [["Va [[9]]"], [LlamadaTool("1", "descubrir", "{}")], ["Ok"]]
+        )
+
+        self.assertIn("[reintento forzado: tool_choice=required]", salida)

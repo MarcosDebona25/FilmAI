@@ -2,7 +2,8 @@
 
 Parte de lo que el usuario calificó con 7 o más: por tipo, los 3 géneros más
 repetidos. Con ellos pide a TMDB lo más popular de esos géneros (unidos con OR,
-con un mínimo de votos) y saca lo que el usuario ya tiene en «Vistas».
+con un mínimo de votos) y saca lo que el usuario ya tiene en «Vistas» o en
+«Pendientes» (decisión del 13/11/2026: lo anotado para ver tampoco se sugiere).
 
 No sabe de HTTP ni de idiomas: la vista le pasa el servicio de TMDB ya
 localizado y una función que traduce ids de género a nombres.
@@ -59,6 +60,14 @@ def vistos(usuario):
     return {(id_tmdb, TIPO_TMDB[tipo]) for id_tmdb, tipo in filas}
 
 
+def pendientes(usuario):
+    """Pares `(id_tmdb, tipo de TMDB)` de la lista «Pendientes» (mismo formato que `vistos`)."""
+    filas = Tiene.objects.filter(
+        lista__usuario=usuario, lista__clave=ClaveLista.PENDIENTES
+    ).values_list("produccion__id_tmdb", "produccion__tipo")
+    return {(id_tmdb, TIPO_TMDB[tipo]) for id_tmdb, tipo in filas}
+
+
 def _de_un_tipo(servicio, tipo, generos, excluir):
     datos = servicio.discover(
         tipo,
@@ -96,7 +105,8 @@ def recomendar(usuario, tipo, servicio, nombres_de_generos):
         # Sin calificaciones de 7 o más no hay de dónde partir: ni se llama a TMDB.
         return VACIO
 
-    excluir = vistos(usuario)
+    # `|` es la unión de conjuntos (como `addAll` en Java).
+    excluir = vistos(usuario) | pendientes(usuario)
     resultados = _alternar(
         *(_de_un_tipo(servicio, t, favoritos[t], excluir) for t in tipos)
     )
