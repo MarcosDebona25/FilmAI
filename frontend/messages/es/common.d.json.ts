@@ -501,7 +501,9 @@ declare const messages: {
       "genderLabel": "Género",
       "termsAcceptance": "Leí y acepto los <terms>Términos y condiciones</terms> de FilmAI.",
       "termsNewTabHint": "(se abre en otra pestaña)",
-      "submitPending": "Completá todos los campos y aceptá los Términos y Condiciones para continuar."
+      "submitPending": "Completá todos los campos y aceptá los Términos y Condiciones para continuar.",
+      "avatarLabel": "Elegí tu avatar",
+      "avatarHelp": "Podés cambiarlo cuando quieras desde tu perfil."
     },
     "confirmation": {
       "pageTitle": "Confirmación de cuenta",

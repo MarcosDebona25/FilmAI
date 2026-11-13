@@ -31,7 +31,7 @@ from filmai.errores.serializadores import FronteraErroresMixin
 from filmai.errores.validacion import ErrorValidacion
 from filmai.idioma import idioma_efectivo
 
-from .avatares import es_avatar_valido
+from .avatares import AVATAR_ID_DEFAULT, AVATAR_IDS_VALIDOS, es_avatar_valido
 from .errores import CampoNombreUsuario, FronteraUsuarioMixin
 from .exceptions import (
     CuentaInactiva,
@@ -102,6 +102,21 @@ class LoginSerializer(BaseLoginSerializer):
         return None
 
 
+def validar_avatar_id_api(value):
+    """Valida un ``avatar_id`` recibido por la API (perfil y registro).
+
+    Un único validador para los dos endpoints: así el registro y el perfil
+    aceptan exactamente los mismos avatares y devuelven el mismo error
+    (`avatar_invalid`, con la lista de ids permitidos en `allowedIds`).
+    """
+    if not es_avatar_valido(value):
+        raise serializers.ValidationError(
+            f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}",
+            code="avatar_invalid",
+        )
+    return value
+
+
 def _rechazar_reservado(nombre_usuario):
     """Nombres que se confunden con una cuenta del equipo (issue #137).
 
@@ -124,6 +139,8 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     genero = serializers.ChoiceField(choices=TipoGenero.choices)
     pais = serializers.CharField(max_length=2)
     acepta_terminos = serializers.BooleanField()
+    # Opcional: sin él, el modelo asigna el avatar por defecto (AVATAR_ID_DEFAULT).
+    avatar_id = serializers.IntegerField(required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -173,6 +190,9 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
     def validate_pais(self, value):
         return validar_pais(value)
 
+    def validate_avatar_id(self, value):
+        return validar_avatar_id_api(value)
+
     def validate_fecha_nacimiento(self, value):
         hoy = date.today()
         if value > hoy:
@@ -211,6 +231,7 @@ class RegisterSerializer(FronteraUsuarioMixin, BaseRegisterSerializer):
             "fecha_nacimiento": self.validated_data.get("fecha_nacimiento"),
             "genero": self.validated_data.get("genero", TipoGenero.NO_ESPECIFICA),
             "pais": self.validated_data.get("pais", ""),
+            "avatar_id": self.validated_data.get("avatar_id", AVATAR_ID_DEFAULT),
             "password1": self.validated_data.get("password1", ""),
             "password2": self.validated_data.get("password2", ""),
         }
@@ -586,14 +607,7 @@ class UsuarioPerfilSerializer(FronteraUsuarioMixin, serializers.ModelSerializer)
 
     def validate_avatar_id(self, value):
         """Valida que avatar_id sea uno de los avatares disponibles."""
-        if not es_avatar_valido(value):
-            from .avatares import AVATAR_IDS_VALIDOS
-
-            raise serializers.ValidationError(
-                f"avatar_id inválido. Debe ser uno de: {sorted(AVATAR_IDS_VALIDOS)}",
-                code="avatar_invalid",
-            )
-        return value
+        return validar_avatar_id_api(value)
 
     def validate_fecha_nacimiento(self, value):
         """Valida que la fecha de nacimiento no sea futura y el usuario tenga al menos 13 años."""

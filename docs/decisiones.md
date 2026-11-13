@@ -329,6 +329,14 @@ Cierra el #180 (términos de uso de TMDB). Cada parte tiene su entrada con el de
 
 Archivos: `docs/06_TMDB_API_Referencia.md`, `PRODUCT.md`, `docs/05_Plan_de_Desarrollo.md`, `openspec/specs/tmdb-compliance/spec.md`, `openspec/specs/catalog-daily-sync/spec.md`, `openspec/specs/catalog-materialization/spec.md`, `openspec/specs/tmdb-cache/spec.md`, `openspec/specs/chat-api/spec.md`, `openspec/specs/chat-ui/spec.md`
 
+### 13/11/2026 — Filtro de contenido adulto en el cliente de TMDB
+
+Gonza pidió que nada de lo que la app lista o recomienda traiga títulos para adultos. Todo lo de TMDB (Inicio, Buscar, chatbot, seed, sync, títulos parecidos) pasa por `TMDBClient._request`, así que el filtro vive ahí y cubre todos los caminos de una vez: `_sin_adultos` saca de `results`, `cast`, `crew` y `known_for` lo que TMDB marca `adult: true`; el detalle de un título adulto lanza `TMDBNotFound` (404 en la ficha, la materialización no guarda la fila y la sync lo trata como 404). `discover`, `search` y `search_person` piden `include_adult=false` explícito (ya era el default de TMDB, pero un default ajeno no es una garantía).
+
+TMDB **no marca `adult` el erotismo «softcore»** (verificado el 13/11/2026: la keyword 155477 trae 3.682 películas con `adult: false`, p. ej. «9 Songs» o «Emmanuelle»). `discover` agrega `without_keywords=155477` (se probó que anda en películas y series), y las consultas sobre el catálogo local (`buscar_semantico`, `candidatos` de títulos parecidos) excluyen las filas cuyo `keywords` incluye «softcore» (`models.KEYWORD_SOFTCORE`). Límite conocido: `search`, `trending` y `recommendations` no filtran por keyword, así que un softcore sin marca puede aparecer al buscarlo por nombre. Cerrarlo exigiría pedir las keywords de cada resultado (una llamada por título); no se hizo y queda como pregunta. Los títulos adultos que ya estuvieran en el catálogo local no se borran.
+
+Archivos: `backend/catalogo/client.py`, `backend/catalogo/models.py`, `backend/catalogo/services/semantica.py`, `backend/catalogo/services/similares.py`, `backend/catalogo/test_filtro_adulto.py`, `backend/catalogo/tests_semantica.py`, `backend/catalogo/tests_similares.py`.
+
 ---
 
 ## Búsqueda y recomendaciones
@@ -827,6 +835,11 @@ Archivos: `frontend/components/features/HomeView.tsx`, `frontend/tests/home-page
 
 Marcos pidió quitar el desvanecimiento del botón flotante del chat: el hover bajaba el fondo a `bg-primary/80` (el diseño aprobado en la mesa «Chat button · states», ver la entrada de calidad del chatbot) y el amarillo se veía lavado. Ahora el fondo queda igual y el hover es solo la elevación de 2 px con la sombra más profunda; con `motion-reduce`, solo la sombra. El contraste del texto no cambia (el fondo es el amarillo opaco). El e2e pasa a exigir que el fondo se mantenga y que cambie la sombra.
 Archivos: `frontend/components/features/chat/ChatFab.tsx`, `frontend/e2e/chat-calidad.spec.ts`
+
+### 13/11/2026 — Elegir el avatar al registrarse
+
+Gonza pidió poder elegir el avatar en el formulario de registro. El alta acepta un `avatar_id` opcional con el mismo validador que el perfil (`avatar_invalid` con `allowedIds`); sin él, la cuenta queda con el avatar 1 como hasta ahora. Como el selector necesita el catálogo antes de que haya sesión, `GET /api/avatars/` pasó a ser público (es un catálogo estático, sin datos del usuario). En el front, el radiogrupo se extrajo del diálogo del perfil a `AvatarRadioGroup` y lo usan los dos (teclado y lector de pantalla iguales). Preselección: el primer avatar del catálogo, que coincide con el que asigna el backend; así no hay que pedirle un valor al servidor ni queda el formulario sin elección. Si el catálogo no carga, el grupo no se muestra y el registro sigue funcionando sin ese campo. Pendiente de Gonza: ajustar el canvas de Claude Design a este código.
+Archivos: `backend/usuarios/{serializers,adapter,perfil}.py`, `frontend/components/AvatarRadioGroup.tsx`, `frontend/components/features/profile/AvatarDialog.tsx`, `frontend/app/(public)/register/page.tsx`, `traducciones/claves-extra.csv`, `docs/02`, `docs/04`, `docs/05`
 
 ### 13/11/2026 — Historial por sesión, medición del turno y arreglos de la revisión de arquitectura
 

@@ -818,6 +818,7 @@ paths:
       security:
       - jwtHeaderAuth: []
       - jwtCookieAuth: []
+      - {}
       responses:
         '200':
           description: No response body
@@ -2542,6 +2543,8 @@ components:
           maxLength: 2
         acepta_terminos:
           type: boolean
+        avatar_id:
+          type: integer
       required:
       - acepta_terminos
       - apellido

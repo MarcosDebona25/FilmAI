@@ -265,6 +265,23 @@ class BuscarSemanticoTests(TestCase):
 
         self.assertEqual(self.titulos(), ["Cerca", "Medio", "Lejos"])
 
+    def test_un_titulo_softcore_no_se_recomienda(self):
+        # Contenido erótico que TMDB no marca `adult` (13/11/2026): se lo reconoce
+        # por la keyword «softcore» que guarda la materialización.
+        self.produccion("Normal", 0.5, keywords=["romance"])
+        self.produccion("Picante", 0.1, keywords=["romance", "softcore"])
+
+        self.assertEqual(self.titulos(), ["Normal"])
+
+    def test_los_softcore_no_ocupan_el_lugar_de_los_candidatos(self):
+        # Si sacarlos fuera después del corte a los más cercanos, uno de ellos
+        # que desplaza a un título válido dejaría el resultado más corto.
+        with patch("catalogo.services.semantica._CANDIDATOS", 1):
+            self.produccion("Picante", 0.1, keywords=["softcore"])
+            self.produccion("Normal", 0.5, keywords=["romance"])
+
+            self.assertEqual(self.titulos(), ["Normal"])
+
     def test_la_consulta_usa_el_presupuesto_del_chat(self):
         buscar_semantico("viajes en el tiempo")
 
