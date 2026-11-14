@@ -257,7 +257,7 @@ describe("encabezado y barra inferior", () => {
       "href",
       routes.explore
     );
-    // «Search» ya no es un enlace de la barra de escritorio (15/11/2026): lo
+    // «Search» ya no es un enlace de la barra de escritorio (14/11/2026): lo
     // reemplaza la lupa, que despliega un campo con sugerencias.
     expect(within(nav).queryByRole("link", { name: en.nav.main.search })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: en.nav.search.openLabel })).toBeInTheDocument();

@@ -144,7 +144,7 @@ for (const viewport of escritorios) {
       await page.goto("/home");
 
       const encabezado = page.getByRole("banner");
-      // «Search» ya no es un enlace de escritorio: lo reemplaza la lupa (15/11/2026).
+      // «Search» ya no es un enlace de escritorio: lo reemplaza la lupa (14/11/2026).
       await expect(encabezado.getByRole("button", { name: en.nav.search.openLabel })).toBeVisible();
       await expect(encabezado.getByRole("link", { name: en.nav.main.search })).toHaveCount(0);
       await expect(encabezado.getByRole("link", { name: en.nav.account.logIn })).toBeVisible();

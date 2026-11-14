@@ -127,7 +127,7 @@ for (const viewport of viewports) {
         await expect(page).toHaveURL(/\/profile$/);
       } else {
         // «Search» ya no es un enlace de escritorio: la lupa despliega un campo y
-        // Enter lleva a Buscar con el texto (15/11/2026).
+        // Enter lleva a Buscar con el texto (14/11/2026).
         await page.getByRole("button", { name: es.nav.search.openLabel }).click();
         await page.getByRole("combobox").fill("dune");
         await page.getByRole("combobox").press("Enter");

@@ -12,7 +12,7 @@ import { TicketMark } from "@/components/access/Logo";
 import { isAccessPath, routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
-// «Search» ya no es un enlace de escritorio (15/11/2026): lo reemplaza la lupa de
+// «Search» ya no es un enlace de escritorio (14/11/2026): lo reemplaza la lupa de
 // `NavbarSearch`. En celular sigue como pestaña en `MobileTabs`.
 const NAV_LINKS = [
   { key: "home", href: routes.explore },

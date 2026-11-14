@@ -97,37 +97,37 @@ changes something there (measurements, an answered question).
 
 ## Phase 5: Navbar field (PR 5)
 
-- [ ] 5.1 `components/NavbarSearch.tsx`: the combobox of `design.md` §3 on
+- [x] 5.1 `components/NavbarSearch.tsx`: the combobox of `design.md` §3 on
       the pattern of `CountrySelect.tsx`; debounce 250 ms, 2 characters,
       abort, session cache per language, stale answers dropped.
-- [ ] 5.2 `Navbar.tsx`: «Search» leaves `NAV_LINKS`; the magnifier button
+- [x] 5.2 `Navbar.tsx`: «Search» leaves `NAV_LINKS`; the magnifier button
       (`aria-expanded`, `aria-controls`, `aria-keyshortcuts="/"`) before the
       account from `md`; pressing it unfolds the field and focuses it; Esc
       or ✕ fold it and return the focus to the magnifier; blur folds it only
       with no text; not rendered on `/search` nor below `md`.
-- [ ] 5.3 Navigation: title → title page, person → `/search?person=…&role=…`,
+- [x] 5.3 Navigation: title → title page, person → `/search?person=…&role=…`,
       Enter / «See all results» → `/search?q=…`; clear and close after.
-- [ ] 5.4 `/` shortcut (Q-6) with its guards: it unfolds the magnifier and
+- [x] 5.4 `/` shortcut (Q-6) with its guards: it unfolds the magnifier and
       focuses the field; on `/search` it focuses the page field.
-- [ ] 5.5 Keys (en/es) and `npm run i18n:check`.
-- [ ] 5.6 Vitest (magnifier `aria-expanded` and focus on open and on Esc,
+- [x] 5.5 Keys (en/es) and `npm run i18n:check`.
+- [x] 5.6 Vitest (magnifier `aria-expanded` and focus on open and on Esc,
       keyboard, `aria-activedescendant`, live region, stale answers,
       shortcut) and e2e (navbar → person → Search; absent on
-      `/search` and mobile; axe with the list open).
-- [ ] 5.7 `vercel-quality` checklist; new canonical spec `navbar-search`;
+      `/search` and mobile; axe with the list open: not done, the repo has no axe setup yet).
+- [ ] 5.7 (spec and docs/04 done; checklist pending) `vercel-quality` checklist; new canonical spec `navbar-search`;
       `docs/04_Lineamientos_UI.md` (navbar).
 
 ## Phase 6: Person field and chip (PR 6)
 
-- [ ] 6.1 `lib/search.ts`: `person` and `role` in the URL and in
+- [x] 6.1 `lib/search.ts`: `person` and `role` in the URL and in
       `consultaApi`; a person counts as one active filter; «Clear filters»
       removes it.
-- [ ] 6.2 Chip above the results with photo, «Name · Role» and ✕ (Q-2), on
+- [x] 6.2 Chip above the results with photo, «Name · Role» and ✕ (Q-2), on
       desktop and mobile.
 - [ ] 6.3 «Person» field reusing the combobox with `suggest/?tipo=person`.
-- [ ] 6.4 Count «N results for “Name”» without text; empty state; 404
+- [x] 6.4 Count «N results for “Name”» without text; empty state; 404
       `person_not_found` with «Clear filters».
-- [ ] 6.5 Vitest + e2e; spec `search-ui` («Filters», «Page and state»).
+- [x] 6.5 Vitest + e2e; spec `search-ui` («Filters», «Page and state»).
 
 ## Phase 7: Links from the title page (PR 7, optional)
 
