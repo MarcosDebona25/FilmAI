@@ -251,7 +251,7 @@
 | GET    | `/search/company`    | Buscar compañías.                                                  |
 | GET    | `/search/keyword`    | Buscar keywords.                                                   |
 | GET    | `/search/movie`      | **Buscar películas por título** (herramienta `buscar_por_titulo`). |
-| GET    | `/search/multi`      | Búsqueda múltiple (películas, series y personas).                  |
+| GET    | `/search/multi`      | **Búsqueda múltiple** (películas, series y personas): sugerencias de la navbar (`suggest/`), una llamada por texto, sin adultos. |
 | GET    | `/search/person`     | **Buscar personas** (herramienta `buscar_por_persona`).            |
 | GET    | `/search/tv`         | **Buscar series por título** (herramienta `buscar_por_titulo`).    |
 

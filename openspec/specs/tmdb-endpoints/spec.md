@@ -248,6 +248,33 @@ inglés los nombres vacíos.
 - THEN `overview` trae el texto inglés y `campos_en_ingles` es `["overview"]`
 - AND una segunda solicitud no vuelve a llamar a TMDB
 
+### Requirement: Suggestions (13/11/2026)
+
+`GET /api/catalogo/suggest/` MUST be public, take `q` (trimmed, 2 to 50 characters; otherwise 400 (Bad Request) with `min_length` or `max_length`) and `tipo` (`all` by default, or `person`; otherwise 400 `invalid_choice`), and answer `{results}` with at most 5 items, each with `media_type`. It MUST make one TMDB call, `search/multi` page 1 without adult content, cached for 1 hour like `search`, and MUST keep TMDB's order:
+
+- movies and shows that pass the relevance rule of Buscar (5 votes or more, popularity 5 or more, or a title equal to the text); if none of them passes, the titles as received;
+- at most 2 people whose `known_for_department` is `Acting` or `Directing` and whose popularity is 1 or more, each with `rol` (`actor` or `director`), `gender` and `profile_path`.
+
+With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill only empty titles and names from English. It MUST NOT enqueue the materialization of its results. It MUST use its own throttle scope `sugerencias` (120 requests per minute per IP) and count its TMDB calls in the existing caps.
+
+#### Scenario: A person query
+
+- GIVEN TMDB's `search/multi` for «nolan» puts Christopher Nolan (Directing, popularity 9.2) first and «Nolan Yee» (Crew, 0.1) later
+- WHEN `suggest/?q=nolan` is requested
+- THEN the first result is Christopher Nolan with `rol: "director"`
+- AND «Nolan Yee» is not in the results
+
+#### Scenario: Too short
+
+- GIVEN `suggest/?q=a`
+- THEN the answer is 400 with `min_length`
+
+#### Scenario: Cached
+
+- GIVEN `suggest/?q=dune` was answered a minute ago
+- WHEN it is requested again
+- THEN no call reaches TMDB
+
 ### Requirement: Buscar combina discover y search (C-06)
 
 `GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 `invalid_choice`) and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.

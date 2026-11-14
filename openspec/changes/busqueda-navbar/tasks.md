@@ -65,20 +65,20 @@ changes something there (measurements, an answered question).
 
 ## Phase 3: Suggestions endpoint (PR 3)
 
-- [ ] 3.1 `search_multi` in `TMDBClient` and `TMDBClientCache` (TTL 1 h,
+- [x] 3.1 `search_multi` in `TMDBClient` and `TMDBClientCache` (TTL 1 h,
       backup copy like the rest; listed in the endpoints the cache knows).
-- [ ] 3.2 `catalogo/services/sugerencias.py`: TMDB order, the cut on titles,
+- [x] 3.2 `catalogo/services/sugerencias.py`: TMDB order, the cut on titles,
       people with `Acting`/`Directing` and `popularity ≥ 1`, at most 2 people
       and 5 in total; `rol` and `gender` for people; `tipo=person`.
-- [ ] 3.3 `SuggestView` in `CatalogoBaseView` with `q` 2–50 characters and
+- [x] 3.3 `SuggestView` in `CatalogoBaseView` with `q` 2–50 characters and
       `tipo`; no materialization; throttle scope `sugerencias` (120/min) in
       `settings.py`.
-- [ ] 3.4 Spanish fill limited to `title`/`name` of the kept items.
-- [ ] 3.5 Tests with fixtures from real «nolan», «dune» and «tom» answers:
+- [x] 3.4 Spanish fill limited to `title`/`name` of the kept items.
+- [x] 3.5 Tests with fixtures from real «nolan», «dune» and «tom» answers:
       one call, caps, filters, validation, scope, no enqueued task.
-- [ ] 3.6 Measure again end to end (cold and warm) with `docker compose run
+- [x] 3.6 Measure again end to end (cold and warm) with `docker compose run
   --rm`; record the numbers in the decision entry.
-- [ ] 3.7 Spec `tmdb-endpoints` («Suggestions»); `docs/06_TMDB_API_Referencia.md`
+- [x] 3.7 Spec `tmdb-endpoints` («Suggestions»); `docs/06_TMDB_API_Referencia.md`
       (`search/multi`, `person/{id}`).
 
 ## Phase 4: Person filter, backend (PR 4)
