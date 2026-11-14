@@ -49,6 +49,12 @@ class BaseOrquestador(TestCase):
         parche = patch.dict(FUNCIONES, {"descubrir": self.buscar_de_mentira})
         parche.start()
         self.addCleanup(parche.stop)
+        # TMDB nunca se llama de verdad en los tests: el armado de tarjetas le pregunta
+        # la colección de cada película (`una_parte_por_saga`) y acá todas son sueltas.
+        tmdb = patch("chatbot.marcadores.get_catalog_service")
+        self.tmdb = tmdb.start().return_value
+        self.tmdb.get_movie_detail.return_value = {"belongs_to_collection": None}
+        self.addCleanup(tmdb.stop)
 
     @staticmethod
     def buscar_de_mentira(ctx, **argumentos):
@@ -417,6 +423,18 @@ class ReglasDelPromptTests(SimpleTestCase):
         )
         self.assertIn("recomendá la anterior", vistos)
 
+    def test_una_saga_ocupa_un_solo_lugar(self):
+        # 14/11/2026: «sci fi basada en libros» marcó Duna y Duna: Parte dos, y el
+        # cuarto título (Klara y el sol) se quedó sin tarjeta por el tope de 3.
+        # La regla va en «Al recomendar»: la de secuelas tiene que seguir siendo la
+        # última de «Títulos vistos» (ver el test de arriba).
+        sistema = armar_sistema("", [], "es")
+        al_recomendar = sistema.split("Al recomendar:\n", 1)[1]
+
+        self.assertIn("una sola parte de cada saga", al_recomendar)
+        # Sin nombrar las otras: la red de tarjetas convertiría el nombre en tarjeta.
+        self.assertIn("no nombres las otras partes", al_recomendar)
+
     def test_el_estilo_cambia_con_el_idioma(self):
         self.assertIn("voseo", armar_sistema("", [], "es"))
         self.assertNotIn("voseo", armar_sistema("", [], "en"))
@@ -433,17 +451,27 @@ class ReglasDelPromptTests(SimpleTestCase):
     def test_en_espanol_tambien_se_nombra(self):
         self.assertIn("respondé en español", armar_sistema("", [], "es"))
 
-    def test_la_duracion_va_para_todos_o_para_ninguno(self):
-        # Los listados de TMDB no traen `runtime`: sin esta regla, el modelo daba la
-        # duración del título que venía de la base y callaba la del otro.
+    def test_la_duracion_va_solo_si_la_piden_y_para_todos(self):
+        # Los listados de TMDB no traen `runtime`: el modelo daba la duración del
+        # título que venía de la base y callaba la del otro. La primera regla («si
+        # la mencionás, para todos») lo llevaba a cerrar con «no tengo la duración
+        # de las dos series» sin que nadie la pidiera (14/11/2026): ahora va solo
+        # si el usuario la pidió.
         sistema = armar_sistema("", [], "es")
 
-        self.assertIn("dala para todos los títulos", sistema)
+        self.assertIn("Mencioná la duración solo si el usuario la pidió", sistema)
+        self.assertNotIn("Si mencionás la duración", sistema)
         self.assertIn(
             "consultala con `detalle` para cada título que no la traiga", sistema
         )
-        # Las series casi nunca la tienen: callarla sería repetir el problema.
         self.assertIn("decí que de ese título no la tenés", sistema)
+
+    def test_no_cierra_con_aclaraciones_que_nadie_pidio(self):
+        # «No tengo la duración de las dos series y en la búsqueda no apareció nada
+        # más ajustado» (14/11/2026): una disculpa que el usuario no pidió.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("No cierres la respuesta con aclaraciones", sistema)
 
     def test_una_tarjeta_sin_anio_no_se_ve_como_titulo_none(self):
         sistema = armar_sistema(

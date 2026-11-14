@@ -7,17 +7,31 @@ nombre. Este módulo cambia, mientras el texto sale por SSE, cada marcador por
 como tarjeta salen del mismo lugar y no pueden contradecirse.
 
 Lo usa: `orquestador.py`.
-Usa: `ContextoTurno` de `tools/turno.py` (de ahí salen los candidatos).
+Usa: `ContextoTurno` de `tools/turno.py` (de ahí salen los candidatos) y el catálogo
+de TMDB (`una_parte_por_saga` le pregunta a qué colección pertenece cada película).
 """
 
 import logging
 import re
+import time
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import wait as esperar
+
+from catalogo.services.tmdb import get_catalog_service
 
 logger = logging.getLogger(__name__)
 
 # Las tarjetas que se muestran como mucho. Más títulos van en el texto, sin tarjeta.
 TOPE_TARJETAS = 3
+
+# Cuánto se espera, en total, a que TMDB diga las colecciones (segundos). Medido el
+# 14/11/2026: un detalle tarda 180-540 ms en frío (570 ms tres a la vez) y 1,3 ms con
+# caché. 2 s cubre dos rondas en frío y un TMDB algo lento; pasado ese tiempo la
+# respuesta sale con las tarjetas como si no existiera esta regla. Es menos que el
+# `TMDB_TIMEOUT` de una llamada (5 s) a propósito: acá, esperar de más le cuesta al
+# usuario más que mostrar una parte repetida.
+PRESUPUESTO_SAGAS = 2.0
 
 # Un marcador completo: `[[` + de 1 a 3 dígitos + `]]`. Los paréntesis hacen
 # «grupos», que se leen con `group(n)`: el 1 captura el espacio que lo precede (por
@@ -91,6 +105,10 @@ class FiltroDeMarcadores:
         self.pendiente = ""
         self.validos = 0
         self.invalidos = 0
+        # Los títulos que el modelo marcó, en orden y sin repetir, SIN el tope: el
+        # orquestador los usa al final para saltear las partes repetidas de una saga
+        # (`una_parte_por_saga`) y que el lugar lo ocupe el título que sigue.
+        self.mencionados = []
         # Todo lo que el modelo escribió, antes de reemplazar: sirve para contar
         # las negritas que puso por su cuenta (diagnóstico y búsqueda forzada).
         self._crudo = []
@@ -132,6 +150,8 @@ class FiltroDeMarcadores:
             )
             return ""
         self.validos += 1
+        if titulo not in self.mencionados:
+            self.mencionados.append(titulo)
         self._sumar_tarjeta(titulo)
         anio = titulo.get("anio")
         return f"{espacio}**{titulo['titulo']}**" + (f" ({anio})" if anio else "")
@@ -141,6 +161,100 @@ class FiltroDeMarcadores:
         if len(self.ctx.tarjetas) == TOPE_TARJETAS or titulo in self.ctx.tarjetas:
             return
         self.ctx.tarjetas.append(titulo)
+
+
+def _coleccion_de(id_tmdb):
+    """El id de la colección (saga) de una película en TMDB, o `None` si no tiene.
+
+    TMDB agrupa las partes de una saga en una «colección» y la informa en el detalle
+    de cada película: `{"belongs_to_collection": {"id": 726871, "name": "Dune
+    Collection", ...}}`, o `null` si es suelta. `get_catalog_service()` ya cachea el
+    detalle 24 h en Redis. Si TMDB falla, la excepción sube: la maneja el que llama.
+    """
+    detalle = get_catalog_service().get_movie_detail(id_tmdb)
+    coleccion = detalle.get("belongs_to_collection")
+    return coleccion.get("id") if isinstance(coleccion, dict) else None
+
+
+def una_parte_por_saga(titulos, tope=TOPE_TARJETAS, presupuesto=PRESUPUESTO_SAGAS):
+    """Las tarjetas de la respuesta, sin dos películas de la misma saga.
+
+    Recibe los títulos que el texto recomendó, en orden y sin el tope aplicado, y
+    devuelve `(tarjetas, descartadas)`: las primeras `tope` que no repiten colección
+    y cuántas se saltearon por ser de una saga que ya tenía tarjeta. La parte
+    descartada sigue nombrada en el texto (no se toca): solo pierde la tarjeta, y su
+    lugar lo ocupa el título que sigue. Las series no tienen colección en TMDB, así
+    que nunca se descartan.
+
+    Cómo evita llamadas de más:
+    - Con menos de dos películas no hay con qué chocar: no se le pregunta nada a TMDB.
+    - Se miran los títulos de a tandas del tamaño de los lugares que faltan, y los
+      detalles de cada tanda se piden a la vez (un hilo por película). Lo normal es
+      una sola tanda; si hubo un descarte, una segunda con los reemplazos.
+
+    Nunca rompe el turno: si TMDB falla o se pasa del `presupuesto` (segundos en
+    total), esa película entra como siempre, sin saber su colección.
+    """
+    if sum(t["tipo"] == "movie" for t in titulos) < 2:
+        return list(titulos[:tope]), 0
+    limite = time.monotonic() + presupuesto
+    tarjetas, vistas, descartadas = [], set(), 0
+    pendientes = list(titulos)
+    hilos = ThreadPoolExecutor(max_workers=tope)
+    try:
+        while pendientes and len(tarjetas) < tope:
+            lugares = tope - len(tarjetas)
+            tanda, pendientes = pendientes[:lugares], pendientes[lugares:]
+            colecciones = _colecciones_de(hilos, tanda, limite)
+            for titulo in tanda:
+                # Solo películas: cine y series tienen ids independientes en TMDB,
+                # así que una serie podría coincidir con el id de una película.
+                coleccion = (
+                    colecciones.get(titulo["id_tmdb"])
+                    if titulo["tipo"] == "movie"
+                    else None
+                )
+                if coleccion is not None and coleccion in vistas:
+                    descartadas += 1
+                    continue
+                if coleccion is not None:
+                    vistas.add(coleccion)
+                tarjetas.append(titulo)
+    finally:
+        # `wait=False`: no se espera a un hilo colgado (el cliente HTTP tiene su
+        # propio timeout, así que termina solo). Sin esto el `with` habitual
+        # esperaría a todos y el presupuesto no serviría de nada.
+        hilos.shutdown(wait=False, cancel_futures=True)
+    return tarjetas, descartadas
+
+
+def _colecciones_de(hilos, titulos, limite):
+    """`{id_tmdb: id de colección}` de las películas de `titulos` que se pudieron leer.
+
+    Las pide a la vez al `hilos` (un `ThreadPoolExecutor`: en Java, un
+    `ExecutorService`) y espera hasta `limite` (un `time.monotonic()`). Las que
+    fallan, tardan o no tienen colección no aparecen: es lo mismo que «no se sabe».
+    """
+    futuros = {
+        hilos.submit(_coleccion_de, t["id_tmdb"]): t["id_tmdb"]
+        for t in titulos
+        if t["tipo"] == "movie"
+    }
+    hechos, _ = esperar(futuros, timeout=max(0.0, limite - time.monotonic()))
+    colecciones = {}
+    for futuro, id_tmdb in futuros.items():
+        if futuro not in hechos:
+            futuro.cancel()
+            logger.warning("Saga: TMDB no contestó a tiempo (película %d)", id_tmdb)
+            continue
+        try:
+            coleccion = futuro.result()
+        except Exception as error:
+            logger.warning("Saga: sin detalle de la película %d (%r)", id_tmdb, error)
+            continue
+        if coleccion is not None:
+            colecciones[id_tmdb] = coleccion
+    return colecciones
 
 
 def recomienda_sin_buscar(texto, candidatos):
@@ -220,13 +334,14 @@ def _nombres(ctx, clave, titulo):
     return {n for n in (_normalizar(c) for c in crudos if c) if n}
 
 
-def tarjetas_sin_marcadores(texto, ctx, pedido=""):
+def tarjetas_sin_marcadores(texto, ctx, pedido="", tope=TOPE_TARJETAS):
     """Las tarjetas de los candidatos que el texto nombra sin haber usado `[[n]]`.
 
     Es la red de seguridad del final del turno (14/11/2026): el modelo buscó y
     recomendó en texto plano, así que sin esto la respuesta saldría sin tarjetas. No
     toca el texto, que ya se transmitió: solo devuelve qué tarjetas sumar, en orden
-    de aparición y hasta `TOPE_TARJETAS`, sin repetir.
+    de aparición y hasta `tope` (`None`: todas, para que `una_parte_por_saga` elija),
+    sin repetir.
 
     Cómo decide:
     - Compara contra el título y el título original de cada candidato, normalizados
@@ -288,4 +403,4 @@ def tarjetas_sin_marcadores(texto, ctx, pedido=""):
         elegidos.setdefault(elegida, inicio)
 
     en_orden = sorted(elegidos, key=elegidos.get)
-    return [ctx.encontrados[c] for c in en_orden[:TOPE_TARJETAS]]
+    return [ctx.encontrados[c] for c in en_orden[:tope]]

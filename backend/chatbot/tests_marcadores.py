@@ -5,14 +5,17 @@ El modelo escribe `[[3]]` en lugar del título; el filtro lo cambia por
 """
 
 import json
-from unittest.mock import patch
+import threading
+import time
+from unittest.mock import MagicMock, patch
 
 from asgiref.sync import sync_to_async
 from django.test import SimpleTestCase
 
+from catalogo.exceptions import TMDBError
 from chatbot.eventos import Texto
 from chatbot.llm import ProveedorFalso, Uso
-from chatbot.marcadores import FiltroDeMarcadores
+from chatbot.marcadores import FiltroDeMarcadores, una_parte_por_saga
 from chatbot.models import Mensaje, TipoAutor
 from chatbot.orquestador import _LARGO_DE_PREAMBULO, responder
 from chatbot.prompts import armar_sistema
@@ -850,3 +853,287 @@ class MedicionDelTurnoTests(BaseMarcadores):
 
         todo = "\n".join(log.output)
         self.assertNotIn("secreta", todo)
+
+
+# Datos reales mínimos de TMDB: Dune (2021) y Dune: Parte dos (2024) son de la misma
+# colección, «Dune Collection». Arrival y Contact no son de ninguna.
+DUNE, DUNE_2, ARRIVAL, CONTACT = 438631, 693134, 329865, 686
+DUNE_COLLECTION = 726871
+
+
+def servicio_de_tmdb(colecciones=None, fallan=(), espera=None):
+    """Un `get_catalog_service` de mentira: `get_movie_detail` según `colecciones`.
+
+    `colecciones` es `{id_tmdb: id de colección}`; el resto devuelve
+    `belongs_to_collection: None`, como TMDB con una película suelta. `fallan` son
+    los ids que dan error. `espera` es una función que corre antes de contestar
+    (para simular lentitud o forzar que las llamadas sean simultáneas).
+    """
+    colecciones = colecciones or {}
+    servicio = MagicMock()
+
+    def detalle(id_tmdb):
+        if espera:
+            espera()
+        if id_tmdb in fallan:
+            raise TMDBError("HTTP 503")
+        coleccion = colecciones.get(id_tmdb)
+        return {
+            "id": id_tmdb,
+            "belongs_to_collection": (
+                {"id": coleccion, "name": "Dune Collection"} if coleccion else None
+            ),
+        }
+
+    servicio.get_movie_detail.side_effect = detalle
+    return servicio
+
+
+def consultados(servicio):
+    """Los ids de película cuyo detalle se pidió, sin importar el orden."""
+    return sorted(c.args[0] for c in servicio.get_movie_detail.call_args_list)
+
+
+class UnaPartePorSagaTests(SimpleTestCase):
+    """`una_parte_por_saga`: dos películas de la misma colección no llevan dos tarjetas."""
+
+    def setUp(self):
+        self.dune = titulo_de(DUNE, "Dune", 2021)
+        self.dune_2 = titulo_de(DUNE_2, "Dune: Parte dos", 2024)
+        self.arrival = titulo_de(ARRIVAL, "Arrival", 2016)
+        self.contact = titulo_de(CONTACT, "Contact", 1997)
+
+    def correr(self, titulos, servicio, **extra):
+        with patch("chatbot.marcadores.get_catalog_service", return_value=servicio):
+            return una_parte_por_saga(titulos, **extra)
+
+    def test_dos_de_la_misma_coleccion_dejan_una_y_entra_la_siguiente(self):
+        servicio = servicio_de_tmdb({DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION})
+
+        tarjetas, descartadas = self.correr(
+            [self.dune, self.dune_2, self.arrival, self.contact], servicio
+        )
+
+        self.assertEqual(tarjetas, [self.dune, self.arrival, self.contact])
+        self.assertEqual(descartadas, 1)
+
+    def test_se_queda_con_la_primera_que_el_texto_nombro(self):
+        servicio = servicio_de_tmdb({DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION})
+
+        tarjetas, _ = self.correr([self.dune_2, self.dune, self.arrival], servicio)
+
+        self.assertEqual(tarjetas, [self.dune_2, self.arrival])
+
+    def test_sin_coleccion_no_cambia_nada(self):
+        servicio = servicio_de_tmdb()
+
+        tarjetas, descartadas = self.correr(
+            [self.dune, self.dune_2, self.arrival, self.contact], servicio
+        )
+
+        self.assertEqual(tarjetas, [self.dune, self.dune_2, self.arrival])
+        self.assertEqual(descartadas, 0)
+
+    def test_las_series_no_piden_detalle_ni_se_descartan(self):
+        serie = titulo_de(1396, "Breaking Bad", 2008, tipo="tv")
+        otra = titulo_de(1399, "Game of Thrones", 2011, tipo="tv")
+        servicio = servicio_de_tmdb()
+
+        tarjetas, descartadas = self.correr([serie, otra, self.arrival], servicio)
+
+        self.assertEqual(tarjetas, [serie, otra, self.arrival])
+        self.assertEqual(descartadas, 0)
+        # La única película no tiene con qué chocar: no hace falta preguntar.
+        servicio.get_movie_detail.assert_not_called()
+
+    def test_una_serie_con_el_mismo_id_que_una_pelicula_de_saga_no_se_confunde(self):
+        serie = titulo_de(DUNE_2, "Una serie", 2020, tipo="tv")
+        servicio = servicio_de_tmdb({DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION})
+
+        tarjetas, descartadas = self.correr([self.dune, serie, self.arrival], servicio)
+
+        self.assertEqual(tarjetas, [self.dune, serie, self.arrival])
+        self.assertEqual(descartadas, 0)
+
+    def test_una_serie_con_el_id_de_una_pelicula_de_la_misma_tanda_no_se_descarta(self):
+        # Ids de cine y series son independientes en TMDB: la serie 438631 no es
+        # Dune y no hereda su colección aunque las dos estén en la misma tanda
+        # (lo marcó PR-Agent el 14/11/2026).
+        serie = titulo_de(DUNE, "Una serie", 2020, tipo="tv")
+        servicio = servicio_de_tmdb({DUNE: DUNE_COLLECTION})
+
+        tarjetas, descartadas = self.correr([self.dune, serie, self.arrival], servicio)
+
+        self.assertEqual(tarjetas, [self.dune, serie, self.arrival])
+        self.assertEqual(descartadas, 0)
+
+    def test_con_una_sola_pelicula_no_se_pide_ningun_detalle(self):
+        servicio = servicio_de_tmdb()
+
+        tarjetas, descartadas = self.correr([self.dune], servicio)
+
+        self.assertEqual((tarjetas, descartadas), ([self.dune], 0))
+        servicio.get_movie_detail.assert_not_called()
+
+    def test_sin_titulos_devuelve_vacio_sin_llamar_a_tmdb(self):
+        servicio = servicio_de_tmdb()
+
+        self.assertEqual(self.correr([], servicio), ([], 0))
+        servicio.get_movie_detail.assert_not_called()
+
+    def test_pide_solo_los_detalles_que_hacen_falta_para_llenar_el_tope(self):
+        # Cinco películas sueltas: con las tres primeras ya hay tope, no se miran más.
+        cinco = [titulo_de(i, f"Peli {i}") for i in range(1, 6)]
+        servicio = servicio_de_tmdb()
+
+        tarjetas, _ = self.correr(cinco, servicio)
+
+        self.assertEqual(tarjetas, cinco[:3])
+        self.assertEqual(consultados(servicio), [1, 2, 3])
+
+    def test_un_descarte_pide_solo_el_detalle_de_la_que_entra_en_su_lugar(self):
+        servicio = servicio_de_tmdb({DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION})
+        quinta = titulo_de(99, "Otra")
+
+        self.correr(
+            [self.dune, self.dune_2, self.arrival, self.contact, quinta], servicio
+        )
+
+        self.assertEqual(
+            consultados(servicio), sorted([DUNE, DUNE_2, ARRIVAL, CONTACT])
+        )
+
+    def test_pide_los_detalles_en_paralelo(self):
+        # Cada llamada espera a que llegue otra: en fila nunca coincidirían (la barrera
+        # vence a los 2 s, la llamada falla y no habría descarte).
+        barrera = threading.Barrier(2, timeout=2)
+        servicio = servicio_de_tmdb(
+            {DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION}, espera=barrera.wait
+        )
+
+        tarjetas, descartadas = self.correr([self.dune, self.dune_2], servicio)
+
+        self.assertEqual((tarjetas, descartadas), ([self.dune], 1))
+
+    def test_si_tmdb_falla_la_tarjeta_se_arma_como_hoy(self):
+        servicio = servicio_de_tmdb(
+            {DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION}, fallan={DUNE_2}
+        )
+
+        tarjetas, descartadas = self.correr(
+            [self.dune, self.dune_2, self.arrival, self.contact], servicio
+        )
+
+        self.assertEqual(tarjetas, [self.dune, self.dune_2, self.arrival])
+        self.assertEqual(descartadas, 0)
+
+    def test_un_error_inesperado_tampoco_rompe(self):
+        servicio = MagicMock()
+        servicio.get_movie_detail.side_effect = ValueError("respuesta rara")
+
+        tarjetas, descartadas = self.correr([self.dune, self.dune_2], servicio)
+
+        self.assertEqual((tarjetas, descartadas), ([self.dune, self.dune_2], 0))
+
+    def test_un_detalle_sin_el_campo_o_con_otra_forma_cuenta_como_sin_coleccion(self):
+        servicio = MagicMock()
+        servicio.get_movie_detail.return_value = {"id": 1}
+
+        tarjetas, descartadas = self.correr([self.dune, self.dune_2], servicio)
+
+        self.assertEqual((tarjetas, descartadas), ([self.dune, self.dune_2], 0))
+
+    def test_si_tmdb_tarda_mas_que_el_presupuesto_sigue_sin_esperar(self):
+        liberar = threading.Event()
+        self.addCleanup(liberar.set)
+        servicio = servicio_de_tmdb(
+            {DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION},
+            espera=lambda: liberar.wait(5),
+        )
+
+        inicio = time.monotonic()
+        tarjetas, descartadas = self.correr(
+            [self.dune, self.dune_2, self.arrival], servicio, presupuesto=0.2
+        )
+
+        self.assertLess(time.monotonic() - inicio, 1.5)
+        self.assertEqual(tarjetas, [self.dune, self.dune_2, self.arrival])
+        self.assertEqual(descartadas, 0)
+
+
+class SagasEnElTurnoTests(BaseMarcadores):
+    """Las sagas conectadas al orquestador: tarjetas, log y texto."""
+
+    def setUp(self):
+        super().setUp()
+        self.peliculas = [
+            pelicula_de_mentira(DUNE, "Dune", 2021),
+            pelicula_de_mentira(DUNE_2, "Dune: Parte dos", 2024),
+            pelicula_de_mentira(ARRIVAL, "Arrival", 2016),
+            pelicula_de_mentira(CONTACT, "Contact", 1997),
+        ]
+        self.tmdb = servicio_de_tmdb({DUNE: DUNE_COLLECTION, DUNE_2: DUNE_COLLECTION})
+        parche = patch("chatbot.marcadores.get_catalog_service", return_value=self.tmdb)
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    async def test_la_segunda_parte_no_lleva_tarjeta_y_entra_la_siguiente(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            eventos = await self.correr(
+                [[tool("descubrir")], ["Mirá [[1]], [[2]], [[3]] y [[4]]."]]
+            )
+
+        self.assertEqual(
+            [t["id_tmdb"] for t in eventos[-1].tarjetas], [DUNE, ARRIVAL, CONTACT]
+        )
+        linea = next(m for m in log.output if "Turno:" in m)
+        self.assertIn("saga_descartadas=1", linea)
+        self.assertIn("tarjetas=marcadores", linea)
+
+    async def test_el_texto_nombra_igual_las_dos_partes(self):
+        eventos = await self.correr([[tool("descubrir")], ["Mirá [[1]] y [[2]]."]])
+
+        self.assertEqual(
+            eventos[-1].texto,
+            "Mirá **Dune** (2021) y **Dune: Parte dos** (2024).",
+        )
+        self.assertEqual([t["id_tmdb"] for t in eventos[-1].tarjetas], [DUNE])
+
+    async def test_sin_sagas_el_log_dice_cero(self):
+        self.tmdb = servicio_de_tmdb()
+        with patch("chatbot.marcadores.get_catalog_service", return_value=self.tmdb):
+            with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+                await self.correr([[tool("descubrir")], ["Mirá [[1]] y [[2]]."]])
+
+        self.assertIn(
+            "saga_descartadas=0", next(m for m in log.output if "Turno:" in m)
+        )
+
+    async def test_una_sola_pelicula_no_consulta_a_tmdb(self):
+        await self.correr([[tool("descubrir")], ["Mirá [[1]]."]])
+
+        self.tmdb.get_movie_detail.assert_not_called()
+
+    async def test_tmdb_caido_deja_las_tarjetas_como_antes(self):
+        self.tmdb.get_movie_detail.side_effect = TMDBError("HTTP 503")
+
+        eventos = await self.correr(
+            [[tool("descubrir")], ["Mirá [[1]], [[2]] y [[3]]."]]
+        )
+
+        self.assertEqual(
+            [t["id_tmdb"] for t in eventos[-1].tarjetas], [DUNE, DUNE_2, ARRIVAL]
+        )
+
+    async def test_la_red_sin_marcadores_tambien_respeta_la_saga(self):
+        # Sin `[[n]]` el texto nombra las cuatro: la red arma las tarjetas igual.
+        eventos = await self.correr(
+            [
+                [tool("descubrir")],
+                ["Te van a gustar Dune, Dune: Parte dos, Arrival y Contact."],
+            ]
+        )
+
+        self.assertEqual(
+            [t["id_tmdb"] for t in eventos[-1].tarjetas], [DUNE, ARRIVAL, CONTACT]
+        )
