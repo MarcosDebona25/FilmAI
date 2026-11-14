@@ -955,6 +955,18 @@ class UnaPartePorSagaTests(SimpleTestCase):
         self.assertEqual(tarjetas, [self.dune, serie, self.arrival])
         self.assertEqual(descartadas, 0)
 
+    def test_una_serie_con_el_id_de_una_pelicula_de_la_misma_tanda_no_se_descarta(self):
+        # Ids de cine y series son independientes en TMDB: la serie 438631 no es
+        # Dune y no hereda su colección aunque las dos estén en la misma tanda
+        # (lo marcó PR-Agent el 14/11/2026).
+        serie = titulo_de(DUNE, "Una serie", 2020, tipo="tv")
+        servicio = servicio_de_tmdb({DUNE: DUNE_COLLECTION})
+
+        tarjetas, descartadas = self.correr([self.dune, serie, self.arrival], servicio)
+
+        self.assertEqual(tarjetas, [self.dune, serie, self.arrival])
+        self.assertEqual(descartadas, 0)
+
     def test_con_una_sola_pelicula_no_se_pide_ningun_detalle(self):
         servicio = servicio_de_tmdb()
 

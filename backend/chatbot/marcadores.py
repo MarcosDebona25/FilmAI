@@ -207,7 +207,13 @@ def una_parte_por_saga(titulos, tope=TOPE_TARJETAS, presupuesto=PRESUPUESTO_SAGA
             tanda, pendientes = pendientes[:lugares], pendientes[lugares:]
             colecciones = _colecciones_de(hilos, tanda, limite)
             for titulo in tanda:
-                coleccion = colecciones.get(titulo["id_tmdb"])
+                # Solo películas: cine y series tienen ids independientes en TMDB,
+                # así que una serie podría coincidir con el id de una película.
+                coleccion = (
+                    colecciones.get(titulo["id_tmdb"])
+                    if titulo["tipo"] == "movie"
+                    else None
+                )
                 if coleccion is not None and coleccion in vistas:
                     descartadas += 1
                     continue
