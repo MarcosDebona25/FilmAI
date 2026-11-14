@@ -1133,6 +1133,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/suggest/:
+    get:
+      operationId: catalogo_suggest_retrieve
+      description: |-
+        Sugerencias de la navbar: títulos y personas con una sola llamada a TMDB.
+
+        No encola la materialización (a diferencia de `browse/` y los listados):
+        cada tecla pedida dejaría hasta 5 tareas por títulos que nadie abrió; la
+        ficha materializa cuando se abre. Tiene su propio límite (`sugerencias`,
+        120 por minuto) para que escribir no gaste el cupo de la página que el
+        usuario está por abrir.
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /api/catalogo/trending/:
     get:
       operationId: catalogo_trending_retrieve

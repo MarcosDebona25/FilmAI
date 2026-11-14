@@ -16,6 +16,7 @@ ENDPOINTS_LOCALIZADOS = frozenset(
         "now_playing",
         "discover",
         "search",
+        "search_multi",
         "movie_detail",
         "tv_detail",
         "genres",
@@ -31,6 +32,8 @@ ENDPOINT_TTLS = {
     "discover": 6 * 3600,
     "search": 1 * 3600,
     "movie_detail": 24 * 3600,
+    # Sugerencias de la navbar: el mismo TTL que `search`.
+    "search_multi": 1 * 3600,
     "tv_detail": 24 * 3600,
     "keywords": 24 * 3600,
     # Lo que usa el chatbot: las recomendaciones y la filmografía cambian poco.
@@ -330,6 +333,12 @@ class TMDBClientCache:
     def get_movie_detail(self, id_tmdb):
         params = {"id_tmdb": id_tmdb}
         return self._cached_call(
+    def search_multi(self, query, page=1):
+        params = {"query": query, "page": page}
+        return self._cached_call(
+            "search_multi", params, lambda: self.client.search_multi(query, page)
+        )
+
             "movie_detail", params, lambda: self.client.get_movie_detail(id_tmdb)
         )
 

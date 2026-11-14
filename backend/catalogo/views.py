@@ -25,6 +25,7 @@ from catalogo.services.materialization import (
 )
 from catalogo.services.plataformas import plataformas
 from catalogo.services.recomendado import recomendar, vistos
+from catalogo.services.sugerencias import sugerir
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.validacion import ErrorValidacion
 from filmai.idioma import idioma_efectivo
@@ -248,6 +249,42 @@ class SearchView(CatalogoBaseView):
         data = self._service(request).search(query, tipo, self._page(request))
         _materializar_listado_sin_interrumpir(data, tipo)
         return Response(data)
+
+
+class SuggestView(CatalogoBaseView):
+    """Sugerencias de la navbar: títulos y personas con una sola llamada a TMDB.
+
+    No encola la materialización (a diferencia de `browse/` y los listados):
+    cada tecla pedida dejaría hasta 5 tareas por títulos que nadie abrió; la
+    ficha materializa cuando se abre. Tiene su propio límite (`sugerencias`,
+    120 por minuto) para que escribir no gaste el cupo de la página que el
+    usuario está por abrir.
+    """
+
+    throttle_scope = "sugerencias"
+    MIN_TEXTO = 2
+    MAX_TEXTO = 50
+    tipos: ClassVar = ["all", "person"]
+
+    def get(self, request):
+        params = request.query_params
+        q = (params.get("q") or "").strip()
+        if len(q) < self.MIN_TEXTO:
+            raise _error_param(
+                "q",
+                f"Ensure this field has at least {self.MIN_TEXTO} characters.",
+                "min_length",
+                {"minLength": self.MIN_TEXTO},
+            )
+        if len(q) > self.MAX_TEXTO:
+            raise _error_param(
+                "q",
+                f"Ensure this field has no more than {self.MAX_TEXTO} characters.",
+                "max_length",
+                {"maxLength": self.MAX_TEXTO},
+            )
+        tipo = _opcion(params.get("tipo", "all"), "tipo", self.tipos)
+        return Response(sugerir(self._service(request), q, tipo))
 
 
 class BrowseView(CatalogoBaseView):
