@@ -34,6 +34,16 @@ export type Sugerencia =
       poster: string | null;
     };
 
+export type SugerenciaPersona = Extract<Sugerencia, { tipo: "person" }>;
+export type SugerenciaTitulo = Exclude<Sugerencia, SugerenciaPersona>;
+
+/** Una fila de la lista: una sugerencia o el «Ver todos los resultados» del final. */
+export type Fila = { id: string; sugerencia: Sugerencia | null };
+
+/** Id estable de una opción (`sug-person-525`): es el que apunta `aria-activedescendant`. */
+export const idDe = (sugerencia: Sugerencia) => `sug-${sugerencia.tipo}-${sugerencia.id}`;
+export const ID_VER_TODO = "sug-all";
+
 /** Lo que manda `suggest/`: títulos con los nombres de campo de TMDB y personas con `rol`. */
 interface ItemSugerido extends TmdbItem {
   rol?: RolPersona;
@@ -107,5 +117,56 @@ export function esAtajoDeBusqueda(evento: KeyboardEvent) {
   if (!(destino instanceof HTMLElement)) return true;
   return !destino.closest(
     "input, textarea, select, [contenteditable]:not([contenteditable=false])"
+  );
+}
+
+/** Separa la lista en los dos grupos que se pintan; el orden de cada grupo es el recibido. */
+export function agruparSugerencias(sugerencias: Sugerencia[]) {
+  return {
+    personas: sugerencias.filter((s): s is SugerenciaPersona => s.tipo === "person"),
+    titulos: sugerencias.filter((s): s is SugerenciaTitulo => s.tipo !== "person"),
+  };
+}
+
+/** Las filas en el orden en que se recorren con el teclado: personas, títulos y, si se pide, «Ver todo». */
+export function filasDeSugerencias(sugerencias: Sugerencia[], conVerTodo: boolean): Fila[] {
+  const { personas, titulos } = agruparSugerencias(sugerencias);
+  const filas: Fila[] = [...personas, ...titulos].map((sugerencia) => ({
+    id: idDe(sugerencia),
+    sugerencia,
+  }));
+  return conVerTodo ? [...filas, { id: ID_VER_TODO, sugerencia: null }] : filas;
+}
+
+/**
+ * La opción activa después de apretar ↓ (`paso` 1) o ↑ (-1). Pasada la última
+ * (o antes de la primera) se vuelve al campo: `null`, ninguna activa.
+ */
+export function moverActiva(filas: Fila[], activoId: string | null, paso: 1 | -1) {
+  const actual = filas.findIndex((fila) => fila.id === activoId);
+  let siguiente = actual + paso;
+  if (actual === -1 && paso === -1) siguiente = filas.length - 1;
+  return siguiente < 0 || siguiente >= filas.length ? null : filas[siguiente].id;
+}
+
+/** Minúsculas y sin acentos: «Penélope» y «penelope» son lo mismo para comparar. */
+function sinAcentos(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+/**
+ * La primera persona de la lista cuyo nombre contiene todas las palabras del
+ * texto (sin acentos ni mayúsculas), o `undefined`. Es lo que decide el aviso
+ * «¿Buscabas a…?» de Buscar. En Java sería un `stream().filter(...).findFirst()`.
+ */
+export function personaQueCoincide(sugerencias: Sugerencia[], texto: string) {
+  const palabras = sinAcentos(texto).split(/\s+/).filter(Boolean);
+  if (palabras.length === 0) return undefined;
+  return sugerencias.find(
+    (s): s is SugerenciaPersona =>
+      s.tipo === "person" && palabras.every((palabra) => sinAcentos(s.nombre).includes(palabra))
   );
 }
