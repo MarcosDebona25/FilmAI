@@ -83,17 +83,17 @@ changes something there (measurements, an answered question).
 
 ## Phase 4: Person filter, backend (PR 4)
 
-- [ ] 4.1 `person_detail` (`person/{id}`) in the client and the cache (24 h).
-- [ ] 4.2 `browse/`: `persona` and `rol` validated; 404 `person_not_found`
+- [x] 4.1 `person_detail` (`person/{id}`) in the client and the cache (24 h).
+- [x] 4.2 `browse/`: `persona` and `rol` validated; 404 `person_not_found`
       (error code in `filmai/exceptions.py` and the error contract).
-- [ ] 4.3 `services/browse.py`: credits by role (movies `Director`, shows
+- [x] 4.3 `services/browse.py`: credits by role (movies `Director`, shows
       `Creator`, cast without News/Talk), deduplication, `_pasa()` filters,
       text by substring without accents, cut, score order, pagination;
       `persona` in the answer.
-- [ ] 4.4 Tests with fixtures from real Nolan, Gilligan and Hanks credits:
+- [x] 4.4 Tests with fixtures from real Nolan, Gilligan and Hanks credits:
       `Creator` counts and an episode `Director` does not; Tom Hanks without
       talk shows; Nolan + «TV shows» is empty; 2 calls cold, 0 cached.
-- [ ] 4.5 Spec `tmdb-endpoints` and the error contract.
+- [x] 4.5 Spec `tmdb-endpoints` and the error contract.
 
 ## Phase 5: Navbar field (PR 5)
 

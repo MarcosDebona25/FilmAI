@@ -275,14 +275,30 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 - WHEN it is requested again
 - THEN no call reaches TMDB
 
+### Requirement: Person filter in Buscar (13/11/2026)
+
+`GET /api/catalogo/browse/` MUST accept `persona` (a positive TMDB person id; otherwise 400 (Bad Request) with `invalid`, `min_value` or `max_value`) and `rol` (`director` or `actor`; absent means both; otherwise 400 `invalid_choice`). With `persona` it MUST read the person's `combined_credits` (cached 24 h) and keep, for `actor`, the cast without shows in News or Talk (10763, 10767), and for `director`, the crew with `job` «Director» in movies and «Creator» in shows. It MUST drop duplicates by type and id, apply type, genre, year, `a_estrenar`, `decada` and rating in memory as with text, keep only titles whose `title`, `name`, `original_title` or `original_name` contains `q` (normalized: lowercase, without accents, spaces collapsed) when there is text, and sort and paginate like a text search. The answer MUST add `persona: {id, name, rol, gender, profile_path}` read from TMDB's `person/{id}` (cached 24 h). An id TMDB does not know MUST answer 404 (Not Found) with `person_not_found`. TMDB's `discover` with `with_people` MUST NOT be used (TMDB ignores it for shows).
+
+#### Scenario: Directed by Vince Gilligan
+
+- GIVEN Gilligan's credits list Breaking Bad as `Creator` and «The X-Files» only as an episode `Director`
+- WHEN `browse/?persona=66633&rol=director&tipo=tv` is requested
+- THEN Breaking Bad is in the results and «The X-Files» is not
+
+#### Scenario: Cheap after the first time
+
+- GIVEN `browse/?persona=525` was requested once
+- WHEN `browse/?persona=525&genero=878&page=2` is requested
+- THEN no call reaches TMDB
+
 ### Requirement: Buscar combina discover y search (C-06)
 
-`GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 `invalid_choice`) and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
+`GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 `invalid_choice`), `persona` and `rol` («Person filter in Buscar») and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
 
 - Without text it MUST use `discover` sorted by popularity, with at least 50 votes, except for a future year or `a_estrenar` without a rating filter (announced titles have no votes); `a_estrenar` sends `primary_release_date.gte` / `first_air_date.gte` with tomorrow's date; shows MUST exclude News and Talk unless a genre is chosen.
 - With text it MUST read up to the first 5 TMDB `search` pages per type (sending the year as `primary_release_year` or `first_air_date_year`), keep the items that pass the filters, and sort all of them — movies and shows together in `all` — by `max(vote_count, popularity × 100)`, descending, keeping TMDB's order on ties; pages hold 20 per type (40 in `all`). TMDB's relevance order puts titles with no votes first, and an upcoming title with high popularity must not sink (decided 14/10/2026).
 - Genre, rating, `a_estrenar` and `decada` MUST be filtered on those items (by release date for `a_estrenar` and `decada`, without a date out; rating with at least 50 votes). A TMDB error in any page MUST fail the request, never return a partial count.
-- **Relevance cut (13/11/2026)**: with text, after the filters and before paginating, it MUST leave out the items with fewer than 5 votes and popularity under 5, unless their `title`, `name`, `original_title` or `original_name`, normalized (lowercase, without accents, spaces collapsed), equals the normalized text. If no item passes, all of them MUST be kept. `total_results` and `total_pages` MUST count only what is kept; there is no way to ask for what was left out. `video`, the synopsis and `adult` MUST NOT be used as signals. It makes no extra TMDB call.
+- **Relevance cut (13/11/2026)**: with text or `persona`, after the filters and before paginating, it MUST leave out the items with fewer than 5 votes and popularity under 5, unless their `title`, `name`, `original_title` or `original_name`, normalized (lowercase, without accents, spaces collapsed), equals the normalized text. If no item passes, all of them MUST be kept. `total_results` and `total_pages` MUST count only what is kept; there is no way to ask for what was left out. `video`, the synopsis and `adult` MUST NOT be used as signals. It makes no extra TMDB call.
 - Without text, `all` MUST alternate movies and shows and add their totals. A genre MUST be mapped to its show id when TMDB uses another one (28 and 12 → 10759, 878 and 14 → 10765, 10752 → 10768); a genre with no counterpart MUST leave that side empty without calling TMDB for it.
 
 `GET /api/catalogo/genres/?tipo=all` MUST return the movie genres followed by the show-only ones with no movie counterpart (10762, 10763, 10764, 10766, 10767).
