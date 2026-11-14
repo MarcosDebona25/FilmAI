@@ -451,17 +451,27 @@ class ReglasDelPromptTests(SimpleTestCase):
     def test_en_espanol_tambien_se_nombra(self):
         self.assertIn("respondé en español", armar_sistema("", [], "es"))
 
-    def test_la_duracion_va_para_todos_o_para_ninguno(self):
-        # Los listados de TMDB no traen `runtime`: sin esta regla, el modelo daba la
-        # duración del título que venía de la base y callaba la del otro.
+    def test_la_duracion_va_solo_si_la_piden_y_para_todos(self):
+        # Los listados de TMDB no traen `runtime`: el modelo daba la duración del
+        # título que venía de la base y callaba la del otro. La primera regla («si
+        # la mencionás, para todos») lo llevaba a cerrar con «no tengo la duración
+        # de las dos series» sin que nadie la pidiera (14/11/2026): ahora va solo
+        # si el usuario la pidió.
         sistema = armar_sistema("", [], "es")
 
-        self.assertIn("dala para todos los títulos", sistema)
+        self.assertIn("Mencioná la duración solo si el usuario la pidió", sistema)
+        self.assertNotIn("Si mencionás la duración", sistema)
         self.assertIn(
             "consultala con `detalle` para cada título que no la traiga", sistema
         )
-        # Las series casi nunca la tienen: callarla sería repetir el problema.
         self.assertIn("decí que de ese título no la tenés", sistema)
+
+    def test_no_cierra_con_aclaraciones_que_nadie_pidio(self):
+        # «No tengo la duración de las dos series y en la búsqueda no apareció nada
+        # más ajustado» (14/11/2026): una disculpa que el usuario no pidió.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("No cierres la respuesta con aclaraciones", sistema)
 
     def test_una_tarjeta_sin_anio_no_se_ve_como_titulo_none(self):
         sistema = armar_sistema(

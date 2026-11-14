@@ -898,3 +898,8 @@ Archivos: `backend/chatbot/prompts.py`, `backend/chatbot/tests_orquestador.py`, 
 **Latencia medida (14/11/2026)**: 180-540 ms por detalle en frío, ~570 ms tres a la vez, 1,3 ms con caché. Los 2 s dan para dos rondas en frío y son menos que el `TMDB_TIMEOUT` de una llamada (5 s): esperar de más le cuesta al usuario más que mostrar una parte repetida.
 **Opciones descartadas**: (1) solo el prompt: funcionó 1 de 2 veces. (2) Filtrar por el nombre antes de «:» (Duna / Duna: Parte dos): no detecta sagas con nombres distintos (Los juegos del hambre: Sinsajo, El Señor de los Anillos) y puede juntar títulos que no son de la misma saga.
 Archivos (refuerzo): `backend/chatbot/marcadores.py`, `orquestador.py`, `tests_marcadores.py`, `tests_orquestador.py`, `backend/chatbot/README.md`, `openspec/specs/chat-api/spec.md`
+
+### 14/11/2026 — Chatbot: duración solo si la piden y sin cierres con disculpas
+
+Pidiendo «algo como Los juegos del hambre basado en libros», el chat cerró con «No tengo la duración de las dos series y en la búsqueda no apareció nada más ajustado». Nadie había pedido la duración: la búsqueda trajo la de la película, el modelo la puso, y la regla «si mencionás la duración, dala para todos» lo obligó a disculparse por las series. A Gonza no le cerró. Ahora la duración va **solo si el usuario la pidió** (y entonces para todos, con `detalle`), y una regla nueva prohíbe cerrar con aclaraciones sobre lo que no encontró o no sabe si no se las pidieron. Probado una vez en vivo: sin duraciones ni disculpas. Queda abierto que el modelo a veces marca 4 títulos con el tope de 3, y el cuarto sale sin tarjeta.
+Archivos: `backend/chatbot/prompts.py`, `backend/chatbot/tests_orquestador.py`
