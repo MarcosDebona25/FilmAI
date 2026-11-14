@@ -88,6 +88,9 @@ export function NavbarSearch() {
   useEffect(() => {
     function alApretar(evento: globalThis.KeyboardEvent) {
       if (!esAtajoDeBusqueda(evento)) return;
+      // Por debajo de 768 px la lupa está oculta (`max-md:hidden`) pero montada:
+      // sin este corte, «/» se comería la tecla y abriría un campo invisible.
+      if (!window.matchMedia("(min-width: 48rem)").matches) return;
       evento.preventDefault();
       if (abierto) campo.current?.focus();
       else setAbierto(true);

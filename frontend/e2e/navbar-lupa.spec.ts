@@ -46,7 +46,8 @@ async function preparar(page: Page) {
 const lupa = (page: Page) => page.getByRole("button", { name: en.nav.search.openLabel });
 
 test.describe("lupa de la navbar en escritorio", () => {
-  test.use({ viewport: ESCRITORIO });
+  // Textos en inglés: sin esto el navegador del CI pide español.
+  test.use({ viewport: ESCRITORIO, locale: "en-US" });
 
   test("escribir, elegir una persona y quitar su chip en Buscar", async ({ page }) => {
     await preparar(page);
@@ -103,7 +104,7 @@ test.describe("lupa de la navbar en escritorio", () => {
 });
 
 test.describe("lupa de la navbar en celular", () => {
-  test.use({ viewport: CELULAR });
+  test.use({ viewport: CELULAR, locale: "en-US" });
 
   test("no hay lupa: Buscar sigue en la barra inferior", async ({ page }) => {
     await preparar(page);

@@ -341,6 +341,29 @@ describe("ratón y cierre", () => {
 });
 
 describe("atajo /", () => {
+  // jsdom no trae `matchMedia`: lo simulamos con un ancho de escritorio o de celular.
+  function anchoDeEscritorio(esEscritorio: boolean) {
+    vi.stubGlobal("matchMedia", (consulta: string) => ({
+      matches: esEscritorio,
+      media: consulta,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+  }
+  beforeEach(() => anchoDeEscritorio(true));
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("en celular no hace nada: la lupa está oculta y la tecla se escribe", () => {
+    anchoDeEscritorio(false);
+    render(<NavbarSearch />, { locale: "en" });
+
+    const evento = new KeyboardEvent("keydown", { key: "/", bubbles: true, cancelable: true });
+    document.body.dispatchEvent(evento);
+
+    expect(evento.defaultPrevented).toBe(false);
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  });
+
   it("despliega la lupa y enfoca el campo", () => {
     render(<NavbarSearch />, { locale: "en" });
 
