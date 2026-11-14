@@ -522,7 +522,7 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     # tarjetas de los candidatos que nombra (ver `tarjetas_sin_marcadores`).
     red = False
     if tools_pedidas and filtro.validos == 0 and not ctx.tarjetas:
-        ctx.tarjetas.extend(tarjetas_sin_marcadores(respuesta, ctx))
+        ctx.tarjetas.extend(tarjetas_sin_marcadores(respuesta, ctx, texto))
         red = bool(ctx.tarjetas)
     _registrar_turno(
         tools_pedidas,

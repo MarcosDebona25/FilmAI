@@ -327,9 +327,9 @@ class SinMostrarTarjetasTests(BaseMarcadores):
 class RedSinMarcadoresTests(BaseMarcadores):
     """Red del 14/11/2026: el modelo buscó y recomendó en texto plano, sin `[[n]]`."""
 
-    async def correr_con(self, peliculas, respuesta):
+    async def correr_con(self, peliculas, respuesta, pedido="hola"):
         self.peliculas = peliculas
-        return await self.correr([[tool("descubrir")], [respuesta]])
+        return await self.correr([[tool("descubrir")], [respuesta]], texto=pedido)
 
     def ids(self, eventos):
         return [t["id_tmdb"] for t in eventos[-1].tarjetas]
@@ -428,6 +428,60 @@ class RedSinMarcadoresTests(BaseMarcadores):
         eventos = await self.correr([["Moon es una buena opción."]])
 
         self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_no_arma_tarjeta_del_titulo_que_el_usuario_nombro(self):
+        # «Algo como Fargo»: Fargo es la referencia del pedido, no una recomendación.
+        peliculas = [
+            pelicula_de_mentira(5, "Fargo", 1996),
+            pelicula_de_mentira(6, "Blood Simple", 1984),
+        ]
+
+        eventos = await self.correr_con(
+            peliculas,
+            "Como Fargo, pero más cruda: Blood Simple.",
+            pedido="algo como FARGO, ¿qué me recomendás?",
+        )
+
+        self.assertEqual(self.ids(eventos), [6])
+
+    async def test_no_arma_tarjeta_de_un_titulo_ya_visto(self):
+        def con_una_vista(ctx, **_):
+            ctx.vistas.add((1, "movie"))
+            return {"resultados": publicar(ctx, self.peliculas, sacar_vistas=False)}
+
+        with patch.dict(FUNCIONES, {"descubrir": con_una_vista}):
+            eventos = await self.correr_con(
+                self.peliculas, "Moon ya la viste, probá Arrival."
+            )
+
+        self.assertEqual(self.ids(eventos), [2])
+
+    async def test_un_titulo_seguido_de_dos_puntos_o_parte_n_es_otra_pelicula(self):
+        # «Dune» es candidata, pero el texto habla de «Dune: Parte Dos» (que no lo es).
+        peliculas = [pelicula_de_mentira(11, "Dune", 2021)]
+        textos = [
+            "Mirá Dune: Parte Dos, es genial.",
+            "Mirá Dune Parte Dos, es genial.",
+            "Mirá Dune Part 2, es genial.",
+            "Mirá Dune: La batalla final.",
+        ]
+
+        for texto in textos:
+            with self.subTest(texto=texto):
+                eventos = await self.correr_con(peliculas, texto)
+                self.assertEqual(self.ids(eventos), [])
+
+    async def test_un_titulo_seguido_de_otra_cosa_si_cuenta(self):
+        peliculas = [pelicula_de_mentira(11, "Dune", 2021)]
+
+        # El año y los dos puntos después del paréntesis son el formato normal.
+        eventos = await self.correr_con(
+            peliculas, "Dune (2021): épica de ciencia ficción."
+        )
+        parte = await self.correr_con(peliculas, "Dune, una parte de la historia.")
+
+        self.assertEqual(self.ids(eventos), [11])
+        self.assertEqual(self.ids(parte), [11])
 
     async def test_si_el_texto_no_nombra_ningun_candidato_no_hay_tarjetas(self):
         eventos = await self.correr_con(self.peliculas, "No encontré nada parecido.")
