@@ -1,5 +1,8 @@
 """Endpoints autenticados para gestionar listas e ítems del usuario."""
 
+import hashlib
+import logging
+import time
 from collections import defaultdict
 from typing import ClassVar
 
@@ -32,18 +35,27 @@ from django.db.models.functions import (
     NullIf,
     RowNumber,
 )
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from catalogo.models import Calificacion, ProduccionTraduccion, TipoProduccion
 from catalogo.presupuesto import TopesTMDBMixin
+from catalogo.services import similares
 from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.browse import NOTAS
+from catalogo.services.embeddings import MODEL_VERSION
+from catalogo.services.fallback import servicio_localizado
+from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import materializar
+from catalogo.services.recomendado import TIPO_TMDB, vistos
+from catalogo.services.tmdb import get_catalog_service
 from catalogo.services.traducciones import texto_localizado
 from filmai.errores.base import ExcepcionAPI
+from filmai.errores.validacion import ErrorValidacion
 from filmai.idioma import idioma_efectivo
 from filmai.throttles import EscrituraThrottle
 
@@ -73,6 +85,8 @@ from .serializers import (
     QuitarItemQuerySerializer,
 )
 from .services import quitar_de_pendientes
+
+logger = logging.getLogger(__name__)
 
 _ORDEN_PREDETERMINADAS = Case(
     When(clave=ClaveLista.FAVORITOS, tipo=TipoLista.PREDETERMINADA, then=Value(0)),
@@ -538,3 +552,148 @@ class ListaItemDetailView(APIView):
                 calificacion.delete()
             item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def _numero_de_pagina(valor):
+    """El `?pagina=` como entero >= 1 (por defecto 1), o 400 `invalid`.
+
+    Cero, negativos, decimales y texto dan el mismo error: la pregunta es una
+    sola («¿es un entero positivo?»), así que el código también.
+    """
+    if valor is None:
+        return 1
+    try:
+        numero = int(valor)
+    except ValueError:
+        numero = 0
+    if numero < 1:
+        raise ErrorValidacion(
+            {"pagina": "Must be an integer greater than or equal to 1."},
+            "invalid",
+            parametros_por_ruta={("pagina",): {"expectedType": "integer"}},
+        )
+    return numero
+
+
+class ListaSugerenciasView(TopesTMDBMixin, APIView):
+    """«Sugeridas para esta lista»: títulos parecidos a los de una lista propia.
+
+    `GET /api/lists/{id}/suggestions/?pagina=N` responde
+    `{results, pagina, paginas, nombre_usado}`. Solo las listas personalizadas
+    y Favoritos tienen sugerencias: Pendientes y Vistas dan 404 (Not Found),
+    como si el recurso no existiera.
+
+    Cómo se arma (design §7), en tres pasos:
+
+    1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
+    2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo
+       una *firma* de la lista: agregar, quitar o renombrar cambia la firma, y
+       el pool viejo se vence solo. No hace falta código que invalide nada.
+    3. A la página pedida se le sacan las «Vistas» del usuario DESPUÉS de leer
+       la caché: el pool no lleva nada de nadie, y calificar un título (que lo
+       agrega a «Vistas») no obliga a recalcularlo.
+    """
+
+    # Es una lectura: `EscrituraThrottle` solo cuenta escrituras, así que se usa
+    # el límite del catálogo, como la ficha.
+    throttle_classes: ClassVar[list] = [ScopedRateThrottle]
+    throttle_scope = "catalogo"
+
+    def get(self, request, lista_id):
+        inicio = time.perf_counter()
+        lista = _lista_propia(request, lista_id)
+        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave in (
+            ClaveLista.PENDIENTES,
+            ClaveLista.VISTAS,
+        ):
+            raise Http404
+        pagina = _numero_de_pagina(request.query_params.get("pagina"))
+        idioma = idioma_efectivo(request)
+
+        # Del más nuevo al más viejo: los 3 primeros son las semillas de TMDB.
+        items = list(
+            Tiene.objects.filter(lista=lista)
+            .order_by("-fecha_agregado", "-id")
+            .values_list("produccion_id", "produccion__id_tmdb", "produccion__tipo")
+        )
+        if not items:
+            return Response(
+                {"results": [], "pagina": pagina, "paginas": 0, "nombre_usado": False}
+            )
+
+        ids = [pk for pk, _, _ in items]
+        # Una lista de una sola clase pide solo esa clase (D-3); una mixta, ambas.
+        tipos = {tipo for _, _, tipo in items}
+        # Favoritos tiene un nombre de sistema que no dice nada de la lista.
+        nombre = lista.nombre if lista.tipo == TipoLista.PERSONALIZADA else ""
+        usa_nombre = bool(nombre) and similares.nombre_dice_algo(nombre)
+        clave = self._clave(lista, idioma, nombre, ids)
+
+        pool, en_cache = similares.pool_en_cache(
+            clave,
+            lambda: self._armar(request, items, tipos, nombre, usa_nombre, clave),
+            ttl=lambda pool: (
+                similares.TTL_POOL if pool.completo else similares.TTL_POOL_INCOMPLETO
+            ),
+        )
+
+        excluir = vistos(request.user)
+        resultados = similares.pagina(
+            pool, excluir_pares=excluir, numero=pagina, idioma=idioma
+        )
+        similares.materializar_mostradas(resultados)
+        logger.info(
+            "sugerencias: lista=%s semillas=%d cercanos=%d tmdb=%d nombre=%s "
+            "cache=%s resultados=%d ms=%d",
+            lista.pk,
+            pool.semillas_con_vector,
+            pool.cercanos,
+            pool.de_tmdb,
+            pool.nombre_usado,
+            en_cache,
+            len(resultados),
+            (time.perf_counter() - inicio) * 1000,
+        )
+        return Response(
+            {
+                "results": resultados,
+                "pagina": pagina,
+                "paginas": similares.cantidad_de_paginas(pool, excluir_pares=excluir),
+                "nombre_usado": pool.nombre_usado,
+            }
+        )
+
+    @staticmethod
+    def _clave(lista, idioma, nombre, ids):
+        """`similares:lista:{id}:{firma}` (design §7).
+
+        La firma resume todo lo que cambia el pool: el modelo, el idioma, el
+        nombre normalizado y los títulos de la lista (ordenados, para que el
+        orden en que se agregaron no importe). «Vistas» NO entra.
+        """
+        partes = [
+            MODEL_VERSION,
+            idioma,
+            similares.normalizar_nombre(nombre),
+            ",".join(str(pk) for pk in sorted(ids)),
+        ]
+        # `\x1f` (separador de unidades) no aparece en ninguna de las partes:
+        # así dos listas distintas no pueden dar el mismo texto al unirlas.
+        firma = hashlib.sha256("\x1f".join(partes).encode()).hexdigest()
+        return f"similares:lista:{lista.pk}:{firma}"
+
+    @staticmethod
+    def _armar(request, items, tipos, nombre, usa_nombre, clave):
+        """Arma el pool; solo corre cuando la caché no lo tiene."""
+        vector_nombre = similares.vector_del_nombre(nombre) if usa_nombre else None
+        return similares.armar_pool(
+            [pk for pk, _, _ in items],
+            semillas_tmdb=[
+                (id_tmdb, TIPO_TMDB[tipo]) for _, id_tmdb, tipo in items[:3]
+            ],
+            servicio=servicio_localizado(idioma_tmdb(request), get_catalog_service),
+            semilla_azar=clave,
+            tipos=sorted(tipos),
+            vector_nombre=vector_nombre,
+            nombre_omitido=usa_nombre and vector_nombre is None,
+        )
