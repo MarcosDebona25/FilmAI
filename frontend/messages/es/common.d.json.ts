@@ -35,6 +35,17 @@ declare const messages: {
       "deactivate": "Dar de baja",
       "logoutConfirmTitle": "¿Querés cerrar sesión?",
       "logoutConfirmDescription": "Vas a salir de FilmAI en este dispositivo."
+    },
+    "search": {
+      "placeholder": "Buscar títulos y personas",
+      "label": "Buscar en FilmAI",
+      "openLabel": "Abrir la búsqueda",
+      "closeLabel": "Cerrar la búsqueda",
+      "groupPeople": "Personas",
+      "groupTitles": "Títulos",
+      "seeAll": "Ver todos los resultados de «{query}»",
+      "count": "{count, plural, =0 {Sin sugerencias} one {# sugerencia} other {# sugerencias}}",
+      "titleMeta": "{year, select, none {{type}} other {{type} · {year}}}"
     }
   },
   "common": {
@@ -421,6 +432,10 @@ declare const messages: {
       "reality": "Reality",
       "soap": "Telenovelas",
       "talk": "Entrevistas"
+    },
+    "person": {
+      "role": "{role, select, director {{gender, select, female {Directora} male {Director} other {Dirección}}} other {{gender, select, female {Actriz} male {Actor} other {Actuación}}}}",
+      "remove": "Quitar el filtro {name}"
     }
   },
   "reviews": {

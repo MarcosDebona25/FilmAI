@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -10,7 +11,7 @@ import { MediaCard, MediaCardSkeleton } from "@/components/features/MediaCard";
 import { TypeSelector, type ContentType } from "@/components/features/TypeSelector";
 import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { ApiError } from "@/lib/api";
-import { normalizeTitles, type TmdbItem } from "@/lib/catalog";
+import { normalizeTitles, tmdbImage, tmdbLoader, type TmdbItem } from "@/lib/catalog";
 import { translateError } from "@/lib/errors";
 import { routes } from "@/lib/routes";
 import {
@@ -29,10 +30,26 @@ import {
   urlDeBusqueda,
   type Busqueda,
   type Nota,
+  type RolPersona,
 } from "@/lib/search";
+import { generoDe, esAtajoDeBusqueda } from "@/lib/sugerencias";
 import { useCatalog, useCatalogPaginas } from "@/lib/use-catalog";
 
-type Pagina = { page: number; total_pages: number; total_results: number; results: TmdbItem[] };
+/** La persona del filtro, como la devuelve `browse/` (el nombre sale de TMDB, no de la URL). */
+type PersonaFiltrada = {
+  id: number;
+  name: string;
+  rol: RolPersona | null;
+  gender: number | null;
+  profile_path: string | null;
+};
+type Pagina = {
+  page: number;
+  total_pages: number;
+  total_results: number;
+  results: TmdbItem[];
+  persona?: PersonaFiltrada;
+};
 type Generos = { genres: { id: number; name: string }[] };
 
 /**
@@ -118,6 +135,12 @@ export function SearchView() {
 
   useEffect(() => {
     function alApretar(evento: KeyboardEvent) {
+      // «/» enfoca el campo de la página (en el resto de las pantallas abre la lupa de la navbar).
+      if (esAtajoDeBusqueda(evento)) {
+        evento.preventDefault();
+        campo.current?.focus();
+        return;
+      }
       // Con un diálogo abierto, Escape lo cierra a él (lo maneja `<dialog>`).
       if (evento.key !== "Escape" || document.querySelector("dialog[open]")) return;
       evento.preventDefault();
@@ -147,13 +170,16 @@ export function SearchView() {
 
   function limpiar() {
     if (activos > 0) {
-      cambiar({ genero: null, anio: null, nota: null });
+      cambiar({ genero: null, anio: null, nota: null, persona: null, rol: null });
     } else {
       borrarTexto();
     }
   }
 
   const primera = resultados.paginas[0];
+  const persona = busqueda.persona !== null ? primera?.persona : undefined;
+  const personaInexistente =
+    resultados.error instanceof ApiError && resultados.error.code === "person_not_found";
   // `normalizeTitles` descarta repetidos: si la popularidad cambió entre una
   // página y la siguiente, un título puede venir dos veces.
   const titulos = normalizeTitles(resultados.paginas.flatMap((pagina) => pagina.results));
@@ -200,6 +226,8 @@ export function SearchView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puedeSeguir, cargadas, url]);
   const q = busqueda.q.trim();
+  // Sin texto, el contador nombra a la persona: «12 results for “Christopher Nolan”».
+  const sujeto = q || persona?.name || "";
   const conCriterio = q !== "" || activos > 0;
   const opcionesGenero = (generos.data?.genres ?? []).map((genero) => ({
     id: genero.id,
@@ -354,6 +382,26 @@ export function SearchView() {
             )}
           </div>
         </div>
+        {persona && (
+          <div className="flex">
+            <span className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-full bg-raised py-1 pr-1 pl-1.5 shadow-[inset_0_0_0_1px_var(--line)]">
+              <FotoPersona persona={persona} />
+              <span className="min-w-0 truncate text-[0.9375rem] font-medium">
+                {persona.name}
+                {persona.rol &&
+                  ` · ${t("search.person.role", { role: persona.rol, gender: generoDe(persona.gender) })}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => cambiar({ persona: null, rol: null })}
+                aria-label={t("search.person.remove", { name: persona.name })}
+                className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full text-fg-3 hover:bg-raised-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <X aria-hidden="true" className="size-4" />
+              </button>
+            </span>
+          </div>
+        )}
       </search>
       {hoja && (
         <FiltersSheet
@@ -394,12 +442,27 @@ export function SearchView() {
             <span className="font-semibold text-foreground">
               {t("search.results.count", { count: primera.total_results })}
             </span>
-            {q && ` ${t("search.results.queryHint", { query: q })}`}
+            {sujeto && ` ${t("search.results.queryHint", { query: sujeto })}`}
           </p>
         )}
       </div>
 
-      {resultados.status === "error" && resultados.paginas.length === 0 ? (
+      {personaInexistente ? (
+        // TMDB no conoce a esa persona (una URL vieja o inventada): reintentar no
+        // sirve, lo útil es sacar el filtro.
+        <div className="flex flex-col items-start gap-4 py-16">
+          <p role="alert" className="text-fg-2">
+            {mensaje(resultados.error)}
+          </p>
+          <button
+            type="button"
+            onClick={limpiar}
+            className="inline-flex h-12 cursor-pointer items-center rounded-[0.625rem] bg-raised-2 px-5 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            {t("common.filters.clear")}
+          </button>
+        </div>
+      ) : resultados.status === "error" && resultados.paginas.length === 0 ? (
         <ErrorRetry
           mensaje={mensaje(resultados.error)}
           onReintentar={() => setIntento((anterior) => anterior + 1)}
@@ -451,6 +514,28 @@ export function SearchView() {
         </>
       )}
     </main>
+  );
+}
+
+/** Foto redonda de la persona del chip; sin foto, su inicial. */
+function FotoPersona({ persona }: { persona: PersonaFiltrada }) {
+  const foto = tmdbImage(persona.profile_path, "w92");
+  return foto ? (
+    <Image
+      src={foto}
+      alt=""
+      width={32}
+      height={32}
+      loader={tmdbLoader}
+      className="size-8 shrink-0 rounded-full object-cover"
+    />
+  ) : (
+    <span
+      aria-hidden="true"
+      className="grid size-8 shrink-0 place-items-center rounded-full bg-raised-2 text-sm font-semibold text-fg-2"
+    >
+      {persona.name.charAt(0)}
+    </span>
   );
 }
 

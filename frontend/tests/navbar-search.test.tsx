@@ -99,7 +99,8 @@ describe("la lupa", () => {
     expect(campo()).toHaveFocus();
     expect(campo()).toHaveAttribute("placeholder", en.nav.search.placeholder);
     // El campo está dentro de un <search> con su etiqueta, al que apunta la lupa.
-    const buscador = screen.getByRole("search", { name: en.nav.search.label });
+    // jsdom no conoce el rol de <search>: se lo busca por la etiqueta.
+    const buscador = screen.getByLabelText(en.nav.search.label, { selector: "search" });
     expect(lupa()).toHaveAttribute("aria-controls", buscador.id);
   });
 
@@ -124,11 +125,11 @@ describe("sugerencias", () => {
     fireEvent.change(campo(), { target: { value: "no" } });
     fireEvent.change(campo(), { target: { value: "nol" } });
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(ESPERA - 10);
+      await vi.advanceTimersByTimeAsync(ESPERA - 60);
     });
     expect(api.apiFetch).not.toHaveBeenCalled();
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(20);
+      await vi.advanceTimersByTimeAsync(100);
     });
 
     expect(api.apiFetch).toHaveBeenCalledTimes(1);

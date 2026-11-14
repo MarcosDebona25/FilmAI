@@ -118,7 +118,7 @@ for (const viewport of viewports) {
       await expect(principal.getByRole("link")).toHaveText(
         viewport.movil
           ? [es.nav.main.home, es.nav.main.search, es.nav.main.lists, es.nav.main.profileShort]
-          : [es.nav.main.home, es.nav.main.search, es.nav.main.lists]
+          : [es.nav.main.home, es.nav.main.lists]
       );
       if (viewport.movil) {
         const caja = await principal.boundingBox();
@@ -126,8 +126,12 @@ for (const viewport of viewports) {
         await principal.getByRole("link", { name: es.nav.main.profileShort }).click();
         await expect(page).toHaveURL(/\/profile$/);
       } else {
-        await principal.getByRole("link", { name: es.nav.main.search }).click();
-        await expect(page).toHaveURL(/\/search$/);
+        // «Search» ya no es un enlace de escritorio: la lupa despliega un campo y
+        // Enter lleva a Buscar con el texto (15/11/2026).
+        await page.getByRole("button", { name: es.nav.search.openLabel }).click();
+        await page.getByRole("combobox").fill("dune");
+        await page.getByRole("combobox").press("Enter");
+        await expect(page).toHaveURL(/\/search\?q=dune$/);
         // Desde C-06 (14/10/2026) Buscar existe: antes el enlace llevaba al 404.
         await expect(page.getByRole("searchbox")).toBeVisible();
       }

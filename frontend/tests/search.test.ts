@@ -105,7 +105,14 @@ describe("«A estrenar»", () => {
 describe("consultaApi", () => {
   it("traduce al contrato de browse/ (nota con +, «Menos de 5» como m5)", () => {
     expect(
-      consultaApi({ q: " dune ", tipo: "all", genero: 878, anio: 2021, nota: "8", pagina: 3 })
+      consultaApi({
+        ...BUSQUEDA_VACIA,
+        q: " dune ",
+        genero: 878,
+        anio: 2021,
+        nota: "8",
+        pagina: 3,
+      })
     ).toBe("/api/catalogo/browse/?q=dune&tipo=all&genero=878&anio=2021&nota=8%2B&page=3");
     expect(consultaApi({ ...BUSQUEDA_VACIA, nota: "lt5" })).toBe(
       "/api/catalogo/browse/?tipo=all&nota=m5&page=1"

@@ -138,13 +138,15 @@ for (const viewport of escritorios) {
   test.describe(`navegación sin sesión a ${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport, ...idioma });
 
-    test("sin barra inferior: Search y Log in están en el encabezado", async ({ page }) => {
+    test("sin barra inferior: la lupa y Log in están en el encabezado", async ({ page }) => {
       await sinSesion(page);
       await prepararCatalogo(page);
       await page.goto("/home");
 
       const encabezado = page.getByRole("banner");
-      await expect(encabezado.getByRole("link", { name: en.nav.main.search })).toBeVisible();
+      // «Search» ya no es un enlace de escritorio: lo reemplaza la lupa (15/11/2026).
+      await expect(encabezado.getByRole("button", { name: en.nav.search.openLabel })).toBeVisible();
+      await expect(encabezado.getByRole("link", { name: en.nav.main.search })).toHaveCount(0);
       await expect(encabezado.getByRole("link", { name: en.nav.account.logIn })).toBeVisible();
       await expect(encabezado.getByRole("link", { name: en.nav.account.signUp })).toBeVisible();
       // La única navegación principal visible es la del encabezado.
