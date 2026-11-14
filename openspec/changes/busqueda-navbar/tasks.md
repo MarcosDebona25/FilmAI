@@ -20,9 +20,13 @@
 | 2   | Canvas in Claude Design (Gonza, no code; task 2.0) |          — | —                                                                        | —                                                             |
 | 3   | `suggest/` endpoint on `search/multi`              |       ~250 | `python manage.py test catalogo.tests_sugerencias`                       | Remove the route and the throttle scope                       |
 | 4   | Person filter in `browse/` (`persona`, `rol`)      |       ~300 | `python manage.py test catalogo.tests_browse_persona`                    | Remove the parameters; `browse/` answers as before            |
-| 5   | Navbar field with suggestions, `/` shortcut        |       ~400 | `npm run test:unit -- navbar` + `npx playwright test navbar --workers=1` | Restore the «Search» link and drop `<NavbarSearch/>`          |
+| 5   | Navbar magnifier + field with suggestions, `/`     |       ~400 | `npm run test:unit -- navbar` + `npx playwright test navbar --workers=1` | Restore the «Search» link and drop `<NavbarSearch/>`          |
 | 6   | Person field and chip in Search                    |       ~250 | `npm run test:unit -- search` + `npx playwright test search --workers=1` | Remove the field and the chip; `person` in the URL is ignored |
 | 7   | (Optional, Q-7) Cast and directors link to Search  |       ~120 | `test catalogo.tests_ficha` + `npm run test:unit -- title`               | Names go back to plain text; `id` in `credits/` is harmless   |
+
+Update 14/11/2026: PRs 1, 3 and 4 (the whole backend) go together in one PR
+(`feat/buscar-backend`), as small commits in that order; the frontend PRs
+follow the lanes below.
 
 Lanes: **backend** 1 → 3 → 4 (independent of each other; this order is by
 value) and **frontend** 5 (after 3 and the canvas) → 6 (after 4 and 5), with
@@ -51,11 +55,11 @@ changes something there (measurements, an answered question).
 
 - [ ] 2.0 **Canvas first (Gonza, Claude Design)**, the first task of the
       frontend work, in rounds with a review after each: (a) «Navbar ·
-      desktop» with the variant Gonza picks in his artifact (today: the field
-      on the right) at 1440 and 1024 px, both themes, signed in and out; the
-      open dropdown with titles, a person and «See all results»; the `/`
-      hint; (b) the plan B at 768 px (magnifier closed and expanded), only if
-      (a) shows the field does not fit; (c) «Search · desktop» and «Search ·
+      desktop» with the variant Gonza chose on 14/11/2026 (the magnifier that
+      unfolds into a field, on the right) at 1440, 1024 and 768 px, both
+      themes, signed in and out: the magnifier closed, the field unfolded and
+      the open dropdown with titles, a person and «See all results»; the `/`
+      hint and the unfold animation; (b) «Search · desktop» and «Search ·
       mobile» with the «Person» field and the active person chip with ✕
       above the results. Approve the copy of `design.md` §7 in the same pass.
 
@@ -96,16 +100,19 @@ changes something there (measurements, an answered question).
 - [ ] 5.1 `components/NavbarSearch.tsx`: the combobox of `design.md` §3 on
       the pattern of `CountrySelect.tsx`; debounce 250 ms, 2 characters,
       abort, session cache per language, stale answers dropped.
-- [ ] 5.2 `Navbar.tsx`: «Search» leaves `NAV_LINKS`; the field before the
-      account from `lg`, plan B if the canvas asks for it; not rendered on
-      `/search` nor below `md`.
+- [ ] 5.2 `Navbar.tsx`: «Search» leaves `NAV_LINKS`; the magnifier button
+      (`aria-expanded`, `aria-controls`, `aria-keyshortcuts="/"`) before the
+      account from `md`; pressing it unfolds the field and focuses it; Esc
+      or ✕ fold it and return the focus to the magnifier; blur folds it only
+      with no text; not rendered on `/search` nor below `md`.
 - [ ] 5.3 Navigation: title → title page, person → `/search?person=…&role=…`,
       Enter / «See all results» → `/search?q=…`; clear and close after.
-- [ ] 5.4 `/` shortcut (Q-6) with its guards; on `/search` it focuses the page
-      field.
+- [ ] 5.4 `/` shortcut (Q-6) with its guards: it unfolds the magnifier and
+      focuses the field; on `/search` it focuses the page field.
 - [ ] 5.5 Keys (en/es) and `npm run i18n:check`.
-- [ ] 5.6 Vitest (keyboard, `aria-activedescendant`, live region, stale
-      answers, shortcut) and e2e (navbar → person → Search; absent on
+- [ ] 5.6 Vitest (magnifier `aria-expanded` and focus on open and on Esc,
+      keyboard, `aria-activedescendant`, live region, stale answers,
+      shortcut) and e2e (navbar → person → Search; absent on
       `/search` and mobile; axe with the list open).
 - [ ] 5.7 `vercel-quality` checklist; new canonical spec `navbar-search`;
       `docs/04_Lineamientos_UI.md` (navbar).
