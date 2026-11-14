@@ -24,7 +24,11 @@ from chatbot.contexto import armar_perfil
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.idioma import detectar_idioma
 from chatbot.llm import Vuelta, crear_proveedor
-from chatbot.marcadores import FiltroDeMarcadores, recomienda_sin_buscar
+from chatbot.marcadores import (
+    FiltroDeMarcadores,
+    recomienda_sin_buscar,
+    tarjetas_sin_marcadores,
+)
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
 from chatbot.puente import en_hilo
@@ -352,7 +356,15 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro, medicion)
 
 
 def _registrar_turno(
-    tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento, medicion, total
+    tools_pedidas,
+    vueltas,
+    ultima_sin_tools,
+    ctx,
+    filtro,
+    reintento,
+    medicion,
+    total,
+    red=False,
 ):
     """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
@@ -371,7 +383,7 @@ def _registrar_turno(
         ",".join(tools_pedidas) or "ninguna",
         vueltas,
         "si" if ultima_sin_tools else "no",
-        "marcadores" if ctx.tarjetas else "ninguna",
+        "red_sin_marcadores" if red else "marcadores" if ctx.tarjetas else "ninguna",
         filtro.validos,
         filtro.invalidos,
         filtro.negritas,
@@ -505,6 +517,13 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             yield evento
 
     respuesta = "".join(partes)
+    # Red de seguridad: hubo búsquedas, pero el modelo recomendó en texto plano (sin
+    # un solo `[[n]]` válido). El texto ya salió y no se toca: solo se arman las
+    # tarjetas de los candidatos que nombra (ver `tarjetas_sin_marcadores`).
+    red = False
+    if tools_pedidas and filtro.validos == 0 and not ctx.tarjetas:
+        ctx.tarjetas.extend(tarjetas_sin_marcadores(respuesta, ctx, texto))
+        red = bool(ctx.tarjetas)
     _registrar_turno(
         tools_pedidas,
         vueltas,
@@ -514,5 +533,6 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         reintento,
         medicion,
         _reloj() - inicio_medido,
+        red,
     )
     yield Resultado(respuesta, ctx.tarjetas)

@@ -12,6 +12,7 @@ Usa: `ContextoTurno` de `tools/turno.py` (de ahí salen los candidatos).
 
 import logging
 import re
+import unicodedata
 
 logger = logging.getLogger(__name__)
 
@@ -154,3 +155,137 @@ def recomienda_sin_buscar(texto, candidatos):
         int(m.group(3)) not in candidatos for m in _MARCADOR.finditer(texto)
     )
     return inventados or bool(_NEGRITA.search(texto))
+
+
+def _normalizar_con_mapa(texto):
+    """El texto para comparar títulos, y de dónde salió cada carácter.
+
+    Normalizar es: sin tildes, en minúsculas y sin puntuación. `NFKD` separa cada letra
+    de su tilde («é» → «e» más la marca) y las marcas sueltas se descartan; todo lo que
+    no es letra ni número pasa a ser un espacio y los espacios repetidos se juntan:
+    «¡Amélie!» y «amelie» quedan iguales. Devuelve `(normalizado, origen)`, donde
+    `origen[i]` es la posición en el texto original del carácter `i` del normalizado
+    (sirve para mirar la puntuación que la normalización borró).
+    """
+    caracteres, origen = [], []
+    for i, letra in enumerate(texto):
+        for suelta in unicodedata.normalize("NFKD", letra):
+            if unicodedata.combining(suelta):
+                continue
+            for c in suelta.casefold():
+                if c.isalnum():
+                    caracteres.append(c)
+                    origen.append(i)
+                elif caracteres and caracteres[-1] != " ":
+                    caracteres.append(" ")
+                    origen.append(i)
+    if caracteres and caracteres[-1] == " ":
+        caracteres.pop()
+        origen.pop()
+    return "".join(caracteres), origen
+
+
+def _normalizar(texto):
+    """Solo el texto normalizado (ver `_normalizar_con_mapa`)."""
+    return _normalizar_con_mapa(texto)[0]
+
+
+# Lo que, pegado al título, lo vuelve parte de otro («Dune» → «Dune Parte Dos»):
+# «parte»/«part» + un número, un ordinal o un romano. Se mira sobre el texto ya
+# normalizado, así que va sin tildes ni mayúsculas.
+_CONTINUACION = re.compile(
+    r" (?:parte|part) (?:\d+\w*|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez"
+    r"|one|two|three|four|five|six|seven|eight|nine|ten|primera|segunda|tercera"
+    r"|first|second|third|i{1,3}|iv|vi{0,3}|ix|x)(?!\w)"
+)
+# Los dos puntos pegados al título (con o sin la negrita que lo cierra): «Dune: …».
+_DOS_PUNTOS = re.compile(r"\**:")
+
+
+def _es_parte_de_otro_titulo(normal, origen, texto, fin):
+    """¿Lo que viene justo después del título (que termina en `fin`) lo continúa?
+
+    Cuenta un «:» pegado o un «Parte/Part» con número: el texto habla de «Dune:
+    Parte Dos», no de «Dune», que puede ser otra película.
+    """
+    return bool(
+        _CONTINUACION.match(normal, fin)
+        or _DOS_PUNTOS.match(texto, origen[fin - 1] + 1)
+    )
+
+
+def _nombres(ctx, clave, titulo):
+    """Los nombres con los que un candidato puede aparecer en el texto, normalizados."""
+    crudos = (titulo.get("titulo"), ctx.originales.get(clave))
+    return {n for n in (_normalizar(c) for c in crudos if c) if n}
+
+
+def tarjetas_sin_marcadores(texto, ctx, pedido=""):
+    """Las tarjetas de los candidatos que el texto nombra sin haber usado `[[n]]`.
+
+    Es la red de seguridad del final del turno (14/11/2026): el modelo buscó y
+    recomendó en texto plano, así que sin esto la respuesta saldría sin tarjetas. No
+    toca el texto, que ya se transmitió: solo devuelve qué tarjetas sumar, en orden
+    de aparición y hasta `TOPE_TARJETAS`, sin repetir.
+
+    Cómo decide:
+    - Compara contra el título y el título original de cada candidato, normalizados
+      (`_normalizar`) y como palabras completas: el patrón no encuentra «Up»
+      dentro de «supuesto». Se arma con `(?<!\\w)` y `(?!\\w)`, que miran un
+      carácter hacia atrás y hacia adelante sin consumirlo.
+    - Si dos candidatos se llaman igual (película y serie), gana el que el texto
+      acompaña con su año justo detrás; si ninguno, el primero (el de menor `ref`).
+    - Un nombre que está dentro de otro más largo que también aparece («Up» dentro
+      de «Up in the Air») no cuenta, salvo que el texto lo use también por su cuenta.
+    - Un nombre seguido de «:» o de «Parte/Part» y un número («Dune: Parte Dos») es
+      otro título que no está entre los candidatos: no cuenta.
+    - No hay tarjeta para los títulos que el usuario nombró en su `pedido` (son la
+      referencia, no la recomendación) ni para los que ya vio (`ctx.vistas`).
+    """
+    normal, origen = _normalizar_con_mapa(texto)
+    del_pedido = _normalizar(pedido)
+    # (inicio, fin, nombre, clave) de cada aparición de cada candidato.
+    apariciones = []
+    # Los candidatos que no pueden tener tarjeta (los nombra el pedido o ya se vieron).
+    excluidos = set()
+    for clave, titulo in ctx.encontrados.items():
+        nombres = _nombres(ctx, clave, titulo)
+        if clave in ctx.vistas or any(
+            re.search(rf"(?<!\w){re.escape(n)}(?!\w)", del_pedido) for n in nombres
+        ):
+            excluidos.add(clave)
+        for nombre in nombres:
+            for m in re.finditer(rf"(?<!\w){re.escape(nombre)}(?!\w)", normal):
+                if not _es_parte_de_otro_titulo(normal, origen, texto, m.end()):
+                    apariciones.append((m.start(), m.end(), nombre, clave))
+
+    # Una aparición cubierta por otra más larga no cuenta.
+    def tapada(a):
+        return any(
+            b[0] <= a[0] and a[1] <= b[1] and (b[1] - b[0]) > (a[1] - a[0])
+            for b in apariciones
+        )
+
+    por_lugar = {}
+    for a in apariciones:
+        if a[3] not in excluidos and not tapada(a):
+            por_lugar.setdefault((a[0], a[1]), []).append(a[3])
+
+    elegidos = {}  # clave -> posición de su primera aparición
+    claves = list(ctx.encontrados)
+    for (inicio, fin), homonimos in sorted(por_lugar.items()):
+        homonimos = sorted(set(homonimos), key=claves.index)
+        # El año que el texto pone justo después del nombre («Dune (2021)»).
+        anio = re.match(r"\s?(\d{4})(?!\d)", normal[fin:])
+        elegida = next(
+            (
+                c
+                for c in homonimos
+                if anio and str(ctx.encontrados[c].get("anio")) == anio.group(1)
+            ),
+            homonimos[0],
+        )
+        elegidos.setdefault(elegida, inicio)
+
+    en_orden = sorted(elegidos, key=elegidos.get)
+    return [ctx.encontrados[c] for c in en_orden[:TOPE_TARJETAS]]

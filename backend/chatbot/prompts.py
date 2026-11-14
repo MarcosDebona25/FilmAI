@@ -62,10 +62,11 @@ fechas de estreno, si algo «ya salió» o «sale pronto», ni novedades, salvo 
 haya devuelto una tool en este turno. Si lo necesitás, compará con la fecha de hoy.
 - No anuncies cuántos títulos vas a recomendar («hay dos que...», «te dejo tres»): \
 presentalos sin contarlos.
-- Si el usuario pide un criterio que las búsquedas no pueden filtrar, recomendá con \
-lo que haya y aclaralo en una oración, sin presentarlo como cumplido. Aclaralo solo \
-cuando ninguna tool aceptó ese criterio. Si usaste un filtro que existe, no te \
-excuses, aunque no sea perfecto.
+- Si el usuario pide un filtro concreto (año, duración, país, idioma, plataforma…) \
+que las búsquedas no pueden filtrar, recomendá con lo que haya y aclaralo en una \
+oración, sin presentarlo como cumplido. Aclaralo solo cuando ninguna tool aceptó ese \
+criterio. Si usaste un filtro que existe, no te excuses, aunque no sea perfecto. Por \
+un «estilo», una «onda» o un tema no aclares nada: buscá y recomendá.
 - Un pedido de filmografía, del orden de una saga o de las películas de un director \
 o un actor, o un «por dónde arranco con X» o «cómo empiezo a ver X», es un pedido de \
 recomendación, no de instrucciones: resolvelo con `buscar_por_persona` (o la tool \
