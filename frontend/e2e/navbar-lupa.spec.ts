@@ -110,7 +110,9 @@ test.describe("lupa de la navbar en celular", () => {
     await preparar(page);
     await page.goto("/home");
 
-    await expect(page.getByRole("link", { name: en.nav.account.signUp })).toBeVisible();
+    await expect(
+      page.getByRole("banner").getByRole("link", { name: en.nav.account.signUp })
+    ).toBeVisible();
     await expect(lupa(page)).toBeHidden();
     await expect(
       page.getByRole("navigation", { name: en.nav.main.mainLabel }).getByRole("link", {
