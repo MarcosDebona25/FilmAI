@@ -9,6 +9,7 @@ llamada que corresponde, y en «Todo» alterna películas y series.
 | ----- | ---------------------------------------------------------------- |
 | no    | `discover`, por popularidad; «Todo» alterna películas y series   |
 | sí    | los primeros 100 de `search`, filtrados y ordenados por puntaje  |
+| persona | su filmografía (`combined_credits`), filtrada en memoria       |
 
 Con texto, el orden de TMDB es de relevancia y deja arriba títulos con 0 votos
 («the office»: tres películas sin votos antes que la serie con 5579). Se ordena
@@ -25,6 +26,7 @@ from math import ceil
 
 from django.utils import timezone
 
+from catalogo.exceptions import PersonaNoEncontrada, TMDBNotFound
 from catalogo.presupuesto import con_contexto
 
 POR_PAGINA = 20
@@ -89,6 +91,8 @@ def explorar(
     page=1,
     a_estrenar=False,
     decada=None,
+    persona=None,
+    rol=None,
 ):
     """Una página de Buscar, con la forma de los listados de TMDB.
 
@@ -118,6 +122,11 @@ def explorar(
         "hasta": hasta,
         "sin_minimo": futuro and nota is None,
     }
+    if persona is not None:
+        # `rol` sin persona no hace nada: es una opción de este filtro.
+        return _con_persona(
+            servicio, tipos, persona, rol, genero=genero, **_sin_genero(filtros)
+        )
     if q:
         return _con_texto(servicio, tipos, genero=genero, **_sin_genero(filtros))
     del filtros["q"]
@@ -251,6 +260,113 @@ def _con_texto(servicio, tipos, *, q, genero, anio, nota, page, desde, hasta, **
         "total_results": len(todos),
         "results": todos[inicio : inicio + por_pagina],
     }
+
+
+# Géneros de series que son programas de entrevistas o noticias (en TMDB son
+# ids de series, no de películas): quedan fuera de la filmografía como actor.
+GENEROS_NEWS_Y_TALK = {10763, 10767}
+# `job` de TMDB que cuenta como «director» en cada tipo. En series son los
+# creadores (como «Created by» de la ficha), no los directores de episodios:
+# Vince Gilligan dirigió 2 de «The X-Files» y no la creó (Q-1 de la propuesta).
+JOB_DIRECTOR = {"movie": "Director", "tv": "Creator"}
+
+
+def _con_persona(
+    servicio, tipos, persona, rol, *, q, genero, anio, nota, page, desde, hasta, **_
+):
+    """Lo que hizo una persona, con los mismos filtros y orden que una búsqueda.
+
+    `discover` con `with_people` no sirve (TMDB lo ignora en series) y la
+    búsqueda por texto no entiende de personas, así que se lee la filmografía
+    entera (`combined_credits`, cacheada 24 h) y se filtra en memoria: la
+    primera vez son 2 llamadas (créditos y detalle) y después ninguna, para
+    cualquier página o combinación de filtros.
+    """
+    detalle, creditos = _persona_y_creditos(servicio, persona)
+    # Un año es un rango de fechas de ese año: la filmografía no pasa por TMDB.
+    if anio is not None and desde is None:
+        desde, hasta = f"{anio}-01-01", f"{anio}-12-31"
+    buscado = normalizar(q)
+    items = []
+    for item in _filmografia(creditos, rol):
+        tipo = item["media_type"]
+        genero_tipo = genero if len(tipos) == 1 else _genero_para(tipo, genero)
+        if (
+            tipo in tipos
+            and genero_tipo is not False
+            and _pasa(item, genero_tipo, nota, desde, hasta)
+            and (not buscado or _contiene(item, buscado))
+        ):
+            items.append(item)
+    todos = sorted(con_corte(items, q), key=_puntaje, reverse=True)
+    por_pagina = POR_PAGINA * len(tipos)
+    inicio = (page - 1) * por_pagina
+    return {
+        "page": page,
+        "total_pages": ceil(len(todos) / por_pagina),
+        "total_results": len(todos),
+        "results": todos[inicio : inicio + por_pagina],
+        "persona": {
+            "id": persona,
+            "name": detalle.get("name") or "",
+            "rol": rol,
+            "gender": detalle.get("gender"),
+            "profile_path": detalle.get("profile_path"),
+        },
+    }
+
+
+def _persona_y_creditos(servicio, persona):
+    """El detalle y la filmografía de TMDB, en paralelo (los dos se cachean 24 h)."""
+    with ThreadPoolExecutor(max_workers=2) as hilos:
+        pedidos = [
+            hilos.submit(con_contexto(lambda: servicio.get_person_detail(persona))),
+            hilos.submit(con_contexto(lambda: servicio.get_person_credits(persona))),
+        ]
+        try:
+            detalle, creditos = (pedido.result() for pedido in pedidos)
+        except TMDBNotFound:
+            # Un id que TMDB no conoce no es «el recurso no existe» a secas:
+            # tiene su propio código para que la página ofrezca limpiar el filtro.
+            raise PersonaNoEncontrada from None
+    return detalle, creditos
+
+
+def _filmografia(creditos, rol):
+    """Películas y series de la persona en ese rol, sin repetir.
+
+    Una persona puede aparecer varias veces en el mismo título (dirigió y fue
+    creadora de una serie): se queda la primera, por `(tipo, id)`.
+    """
+    candidatos = []
+    if rol in (None, "actor"):
+        candidatos += [
+            item
+            for item in creditos.get("cast") or []
+            if not (
+                item.get("media_type") == "tv"
+                and GENEROS_NEWS_Y_TALK & set(item.get("genre_ids") or [])
+            )
+        ]
+    if rol in (None, "director"):
+        candidatos += [
+            item
+            for item in creditos.get("crew") or []
+            if item.get("job") == JOB_DIRECTOR.get(item.get("media_type"))
+        ]
+    vistos = set()
+    resultado = []
+    for item in candidatos:
+        clave = (item.get("media_type"), item.get("id"))
+        if item.get("media_type") in ("movie", "tv") and clave not in vistos:
+            vistos.add(clave)
+            resultado.append(item)
+    return resultado
+
+
+def _contiene(item, buscado):
+    """Si algún nombre del título (traducido u original) contiene el texto."""
+    return any(buscado in normalizar(item.get(campo)) for campo in CAMPOS_TITULO)
 
 
 def _puntaje(item):

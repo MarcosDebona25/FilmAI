@@ -293,10 +293,15 @@ class BrowseView(CatalogoBaseView):
     `q` admite cualquier texto: se recorta y se mide después (decisión del
     14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
     TMDB para cada combinación lo decide `services/browse.py`.
+
+    `persona` (id de TMDB) y `rol` (`director` o `actor`) filtran por lo que
+    hizo esa persona (13/11/2026); una persona que TMDB no conoce es un 404
+    (Not Found) con `person_not_found`.
     """
 
     MAX_TEXTO = 50
     tipos: ClassVar = ["all", "movie", "tv"]
+    roles: ClassVar = ["director", "actor"]
 
     def get(self, request):
         params = request.query_params
@@ -312,6 +317,13 @@ class BrowseView(CatalogoBaseView):
         nota = params.get("nota") or None
         if nota is not None:
             _opcion(nota, "nota", list(NOTAS))
+        # Filtro por persona (13/11/2026): `rol` solo tiene sentido con `persona`.
+        persona = _int_param(
+            params.get("persona"), "persona", default=None, maximo=ID_TMDB_MAXIMO
+        )
+        rol = params.get("rol") or None
+        if rol is not None:
+            _opcion(rol, "rol", self.roles)
         page = self._page(request)
         datos = explorar(
             self._service(request),
@@ -323,6 +335,8 @@ class BrowseView(CatalogoBaseView):
             page=page,
             a_estrenar=self._a_estrenar(params.get("a_estrenar")),
             decada=self._decada(params.get("decada")),
+            persona=persona,
+            rol=rol,
         )
         # Cada ítem de Buscar trae su `media_type`.
         _materializar_listado_sin_interrumpir(datos)

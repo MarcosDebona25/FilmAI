@@ -322,6 +322,10 @@ class TMDBClient:
             "/search/person", {"query": nombre, "include_adult": "false"}
         )
 
+    def get_person_detail(self, id_persona):
+        """Nombre, género y foto de una persona (el chip del filtro por persona)."""
+        return self._get_localizado(f"/person/{id_persona}")
+
     def get_person_credits(self, id_persona):
         # Películas y series, como actor (`cast`) o en el equipo (`crew`). `discover`
         # con `with_people` no sirve: en series TMDB ignora el filtro sin avisar.

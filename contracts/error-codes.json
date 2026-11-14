@@ -469,6 +469,13 @@
         "maxLength": "integer"
       }
     },
+    "person_not_found": {
+      "category": "error",
+      "contexts": {
+        "tmdb": 404
+      },
+      "params": {}
+    },
     "rating_blocks_removal_from_watched": {
       "category": "error",
       "contexts": {

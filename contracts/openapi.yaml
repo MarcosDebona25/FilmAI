@@ -843,6 +843,10 @@ paths:
         `q` admite cualquier texto: se recorta y se mide después (decisión del
         14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
         TMDB para cada combinación lo decide `services/browse.py`.
+
+        `persona` (id de TMDB) y `rol` (`director` o `actor`) filtran por lo que
+        hizo esa persona (13/11/2026); una persona que TMDB no conoce es un 404
+        (Not Found) con `person_not_found`.
       tags:
       - catalogo
       security:
@@ -2921,6 +2925,7 @@ components:
           - passwords_do_not_match
           - permission_denied
           - person_name_invalid
+          - person_not_found
           - rating_blocks_removal_from_watched
           - rating_duplicated
           - required

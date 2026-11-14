@@ -718,6 +718,7 @@ declare const messages: {
       "server_error": "Ocurrió un error. Intentá de nuevo más tarde.",
       "upstream_bad_request": "No pudimos consultar el catálogo con esos datos.",
       "upstream_not_found": "No encontramos esta película o serie en el catálogo.",
+      "person_not_found": "No encontramos a esa persona.",
       "upstream_error": "El catálogo no pudo responder. Intentá de nuevo más tarde.",
       "upstream_unavailable": "El catálogo no está disponible en este momento. Intentá de nuevo más tarde.",
       "invalid_token": "Tu sesión no es válida o venció. Iniciá sesión de nuevo.",
