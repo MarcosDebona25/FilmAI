@@ -256,3 +256,15 @@ chat.history.retry,,label,,Reintentar,Retry,aprobado
 chat.fab.unread,,status,,Hay una respuesta nueva,New answer waiting,aprobado
 common.content.titleUnavailable,,label,,Título no disponible,Title no longer available,aprobado
 home.rows.seeAll,,label,,Ver todo,See all,aprobado
+nav.search.placeholder,,label,,Buscar títulos y personas,Search titles and people,aprobado
+nav.search.label,,label,,Buscar en FilmAI,Search FilmAI,aprobado
+nav.search.openLabel,,label,,Abrir la búsqueda,Open search,aprobado
+nav.search.closeLabel,,label,,Cerrar la búsqueda,Close search,aprobado
+nav.search.groupPeople,,label,,Personas,People,aprobado
+nav.search.groupTitles,,label,,Títulos,Titles,aprobado
+nav.search.seeAll,,label,query,Ver todos los resultados de «{query}»,See all results for “{query}”,aprobado
+nav.search.count,,status,count,"{count, plural, =0 {Sin sugerencias} one {# sugerencia} other {# sugerencias}}","{count, plural, =0 {No suggestions} one {# suggestion} other {# suggestions}}",aprobado
+nav.search.titleMeta,,label,"type, year","{year, select, none {{type}} other {{type} · {year}}}","{year, select, none {{type}} other {{type} · {year}}}",aprobado
+search.person.role,,label,"role, gender","{role, select, director {{gender, select, female {Directora} male {Director} other {Dirección}}} other {{gender, select, female {Actriz} male {Actor} other {Actuación}}}}","{role, select, director {{gender, select, female {Director} male {Director} other {Director}}} other {{gender, select, female {Actress} male {Actor} other {Actor}}}}",aprobado
+search.person.remove,,label,name,Quitar el filtro {name},Remove filter {name},aprobado
+search.person.lookingFor,,label,name,¿Buscabas a {name}? <link>Ver sus producciones</link>,Looking for {name}? <link>See their titles</link>,aprobado

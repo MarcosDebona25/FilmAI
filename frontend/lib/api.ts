@@ -82,6 +82,8 @@ export function extraerErroresPorCampo(error: ApiError): Record<string, string> 
 interface ApiOptions {
   method?: string;
   body?: unknown;
+  /** Para cancelar el pedido (las sugerencias de la navbar cancelan el anterior al escribir). */
+  signal?: AbortSignal;
 }
 
 // ---------------------------------------------------------------------------
@@ -180,9 +182,10 @@ export async function pedirConSesion(
 }
 
 export async function apiFetch<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { method = "GET", body } = options;
+  const { method = "GET", body, signal } = options;
   const res = await pedirConSesion(path, {
     method,
+    signal,
     body: body !== undefined ? JSON.stringify(body) : undefined,
     headers: body !== undefined ? { "Content-Type": "application/json" } : {},
   });

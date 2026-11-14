@@ -24,6 +24,9 @@ async function prepararBuscar(page: Page) {
       },
     })
   );
+  await page.route("**/api/catalogo/suggest/**", (route) =>
+    route.fulfill({ json: { results: [] } })
+  );
   await page.route("**/api/catalogo/browse/**", (route) => {
     const params = new URL(route.request().url()).searchParams;
     consultas.push(params);
@@ -61,7 +64,7 @@ for (const viewport of viewports) {
       await page.goto("/search");
       await expect(page.getByText("Insidious: Out of the Further")).toBeVisible();
 
-      await page.getByRole("searchbox").fill("law");
+      await page.locator("#busqueda").fill("law");
 
       await expect(page.getByRole("main").getByRole("status")).toHaveText("4 results for “law”");
       // Con pocos resultados la grilla no llena la pantalla: la página 2 se pide sola.
