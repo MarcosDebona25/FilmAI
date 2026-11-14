@@ -718,6 +718,7 @@ declare const messages: {
       "server_error": "Something went wrong. Try again later.",
       "upstream_bad_request": "We couldn’t query the catalog with those details.",
       "upstream_not_found": "We couldn’t find this movie or TV show in the catalog.",
+      "person_not_found": "We couldn’t find that person.",
       "upstream_error": "The catalog couldn’t respond. Try again later.",
       "upstream_unavailable": "The catalog is currently unavailable. Try again later.",
       "invalid_token": "Your session is invalid or has expired. Log in again.",

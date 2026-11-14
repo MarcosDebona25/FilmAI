@@ -8,6 +8,7 @@ Frontend (Next.js)                                         Backend (Django + DRF
 Navbar (desktop, ≥ md)                                     catalogo/urls.py
  ├─ Home · Lists                (left; «Search» leaves)     ├─ suggest/   SuggestView        (new)
  └─ <NavbarSearch/>             (right, before account)     │     └─ services/sugerencias.py ─▶ TMDB search/multi
+      ├─ magnifier button ─▶ unfolds the field in place
       ├─ GET suggest/?q=        (debounce 250 ms, ≥ 2)      └─ browse/    BrowseView         (+ persona, rol)
       ├─ title  ─▶ /movie/{id} · /tv/{id}                         └─ services/browse.py
       ├─ person ─▶ /search?person={id}&role=…                          ├─ text:   search/{movie,tv} ×5 pages (exists)
@@ -168,25 +169,43 @@ debounce.
 
 ### Layout
 
-- **≥ 1024 px (`lg`)**: a field of 18–20 rem on the right of the bar, before
-  the account (or «Log in · Sign up»), with a magnifier, the placeholder
-  «Search titles and people» and a `kbd` «/» hint. The left keeps «Home» and
-  «Lists».
-- **768–1023 px (`md` to `lg`)**, plan B, only if the canvas shows that the
-  field does not fit: a magnifier button in the same place; pressing it
-  expands the field in place, over the left links, with focus in it; Escape
-  or leaving it empty and blurring collapses it.
-- **< 768 px**: no field. `MobileTabs` keeps its «Search» tab.
-- **On `/search`**: the field is not rendered (Q-4). The page has its own big
-  field with focus on desktop; two fields with the same text would fight for
-  Escape (the page closes Search with it) and for `/`.
+Variant chosen by Gonza on 14/11/2026, after seeing an artifact with the four
+variants: **a magnifier that unfolds into a field in the same place**.
 
-The navbar variant is still being chosen by Gonza with an artifact
-(13/11/2026); this design starts from the field with suggestions, his choice
-so far, and keeps the expanding magnifier as plan B. The exact sizes, the
-dropdown's look (poster thumbnails, round photos for
-people, the «See all results» row) and the plan B are designed in the canvas
-first (task 3.0, Gonza).
+- **Closed (default, ≥ 768 px)**: a magnifier button on the right of the bar,
+  before the account (or «Log in · Sign up»). The left keeps «Home» and
+  «Lists». The closed state takes the room of one icon button (44 px), so the
+  bar's layout does not depend on the width.
+- **Open**: pressing the magnifier (or `/`) unfolds a field of 18–20 rem in
+  the same place, growing to the left over the free space of the bar (over
+  the links only on the narrowest widths, while it has focus), with the
+  magnifier icon, the placeholder «Search titles and people», a `kbd` «/»
+  hint while empty, and a ✕ button. Focus moves into the field.
+- **Closing**: Esc, the ✕ button, or leaving the field (blur) **with no
+  text**. Leaving it with text keeps it unfolded (the text is not thrown
+  away) with the list closed. Closing returns focus to the magnifier when it
+  was a keyboard action (Esc, ✕); on blur the focus is where the user put it.
+  Navigating (a suggestion, Enter) clears and closes it as well.
+- **< 768 px**: neither the magnifier nor the field. `MobileTabs` keeps its
+  «Search» tab.
+- **On `/search`**: the magnifier is not rendered (Q-4). The page has its own
+  big field with focus on desktop; two fields with the same text would fight
+  for Escape (the page closes Search with it) and for `/`.
+- **Discarded variant: the always-visible field** (the first plan, 13/11/2026).
+  Gonza chose the magnifier on 14/11/2026: a permanent field of 18–20 rem
+  takes room from the links on medium widths (it needed a magnifier as plan B
+  below 1024 px anyway), and next to the page's own big field on `/search` it
+  made the bar heavier. One variant at every width is simpler than two.
+
+Accessibility of the magnifier: it is a `<button>` with an accessible name
+(«Open search»), `aria-expanded` (`true` while the field is unfolded) and
+`aria-controls` pointing to the field's container. On opening, the focus
+goes to the field; on Esc, the focus goes back to the magnifier, which is
+visible again.
+
+The exact sizes, the unfold animation (respecting `prefers-reduced-motion`),
+the dropdown's look (poster thumbnails, round photos for people, the «See all
+results» row) are designed in the canvas first (task 2.0, Gonza).
 
 ### Behavior
 
@@ -206,18 +225,20 @@ first (task 3.0, Gonza).
 - A **title** navigates to `/movie/{id}` or `/tv/{id}` without `from` (the
   crumb goes to Home, as for any title opened outside Search).
 - A **person** navigates to `/search?person={id}&role={director|actor}`.
-- After navigating, the field is cleared and the list closes.
+- After navigating, the field is cleared, the list closes and the field folds
+  back into the magnifier.
 - Errors (429, 503) close the list silently; Enter still goes to Search, which
   shows its own error.
 
 ### `/` shortcut (Q-6)
 
-On desktop, `/` focuses the navbar field when the focus is not in an
-editable element (`input`, `textarea`, `select`, `[contenteditable]`) and no
-`dialog[open]` exists. On `/search` it focuses the page's field. The handler
-lives in `Navbar` (one listener, mounted on every page with the bar,
-`/search` included, where `NavbarSearch` is not rendered). The field shows the hint «/» while it
-is empty and unfocused.
+On desktop, `/` unfolds the magnifier and focuses the field when the focus is
+not in an editable element (`input`, `textarea`, `select`,
+`[contenteditable]`) and no `dialog[open]` exists. On `/search` it focuses the
+page's field. The handler lives in `Navbar` (one listener, mounted on every
+page with the bar, `/search` included, where `NavbarSearch` is not rendered).
+The unfolded field shows the hint «/» while it is empty and unfocused, and the
+magnifier's `title` and `aria-keyshortcuts="/"` tell the shortcut exists.
 
 ## 3. Accessibility: ARIA 1.2 combobox
 
@@ -228,7 +249,11 @@ autocomplete with manual selection»):
   `aria-expanded`, `aria-controls` pointing to the `role="listbox"` and,
   while an option is active, `aria-activedescendant` with its id. The field
   is wrapped in `<search>` with its label («Search FilmAI») and a visible or
-  `sr-only` `<label>`.
+  `sr-only` `<label>`. That wrapper is the magnifier's `aria-controls` target
+  and is only in the DOM while the field is unfolded.
+- The magnifier is a `<button>` with `aria-expanded` and `aria-controls`.
+  Opening it moves the focus to the field; Escape (with the list closed)
+  folds the field and gives the focus back to the magnifier.
 - Each option has `role="option"`, a stable id (`sug-movie-27205`,
   `sug-person-525`, `sug-all`) and `aria-selected="true"` when active. Its
   accessible name reads the whole row: «El origen, Movie, 2010», «Christopher
@@ -236,7 +261,9 @@ autocomplete with manual selection»):
 - Keyboard: ↓ / ↑ move the active option (from the field ↓ goes to the first;
   past the last it returns to the field, no active option); Enter follows the
   active option or, with none, goes to Search; Escape closes the list, and a
-  second Escape clears the field; Tab closes the list without choosing;
+  second Escape clears and folds the field and returns the focus to the
+  magnifier; the ✕ button does the same; Tab closes the list without
+  choosing;
   Alt+↓ opens the list with the last answer. Typing never moves the active
   option (manual selection: nothing is chosen for the user).
 - Mouse: hovering does not change `aria-activedescendant`; a click follows
@@ -246,7 +273,8 @@ autocomplete with manual selection»):
   once per answer; `aria-activedescendant` changes are read by the screen
   reader itself.
 - Focus ring and target sizes as the rest of the navbar (44 px rows).
-- The list closes on blur, on route change and on Escape; the bar's
+- The list closes on blur, on route change and on Escape; the field folds on
+  blur only when it holds no text; the bar's
   `z-index` keeps it above the Home hero and the title page backdrop.
 
 ## 4. Relevance cut
@@ -383,7 +411,8 @@ New keys, to approve with the canvas (copy lives in `traducciones/claves.csv`):
 | `nav.search.label`              | Search FilmAI                                                                                | Buscar en FilmAI                                                                                                                                                           |
 | `nav.search.seeAll`             | See all results for “{query}”                                                                | Ver todos los resultados de «{query}»                                                                                                                                      |
 | `nav.search.count`              | {count, plural, =0 {No suggestions} one {# suggestion} other {# suggestions}}                | {count, plural, =0 {Sin sugerencias} one {# sugerencia} other {# sugerencias}}                                                                                             |
-| `nav.search.openLabel` (plan B) | Open search                                                                                  | Abrir la búsqueda                                                                                                                                                          |
+| `nav.search.openLabel`          | Open search                                                                                  | Abrir la búsqueda                                                                                                                                                          |
+| `nav.search.closeLabel`         | Close search                                                                                 | Cerrar la búsqueda                                                                                                                                                         |
 | `search.person.role`            | {role, select, director {Director} other {{gender, select, female {Actress} other {Actor}}}} | {role, select, director {{gender, select, female {Directora} male {Director} other {Dirección}}} other {{gender, select, female {Actriz} male {Actor} other {Actuación}}}} |
 | `search.person.label`           | Person                                                                                       | Persona                                                                                                                                                                    |
 | `search.person.remove`          | Remove filter {name}                                                                         | Quitar el filtro {name}                                                                                                                                                    |

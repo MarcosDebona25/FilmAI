@@ -97,6 +97,10 @@ CATALOGO = {
     "upstream_not_found": DefinicionCodigo(
         "El recurso solicitado no existe en TMDB.", {"tmdb": 404}
     ),
+    # `browse/?persona=` con una persona que TMDB no conoce (13/11/2026).
+    "person_not_found": DefinicionCodigo(
+        "No se encontró a esa persona en TMDB.", {"tmdb": 404}
+    ),
     "upstream_error": DefinicionCodigo("Error del servicio TMDB.", {"tmdb": 502}),
     "upstream_unavailable": DefinicionCodigo(
         "No se pudo consultar el servicio TMDB.", {"tmdb": 503}

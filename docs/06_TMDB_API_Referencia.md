@@ -226,9 +226,9 @@
 
 | Método | Endpoint                               | Detalle                |
 | :----- | :------------------------------------- | :--------------------- |
-| GET    | `/person/{person_id}`                  | Detalle de persona.    |
+| GET    | `/person/{person_id}`                  | Detalle de persona (nombre, género y foto del filtro por persona de Buscar). |
 | GET    | `/person/{person_id}/changes`          | Cambios.               |
-| GET    | `/person/{person_id}/combined_credits` | **Créditos combinados** (herramienta `buscar_por_persona`). |
+| GET    | `/person/{person_id}/combined_credits` | **Créditos combinados** (herramienta `buscar_por_persona` y filtro por persona de Buscar: `Director` en películas, `Creator` en series). |
 | GET    | `/person/{person_id}/external_ids`     | IDs externos.          |
 | GET    | `/person/{person_id}/images`           | Imágenes.              |
 | GET    | `/person/{person_id}/movie_credits`    | Créditos en películas. |
@@ -251,7 +251,7 @@
 | GET    | `/search/company`    | Buscar compañías.                                                  |
 | GET    | `/search/keyword`    | Buscar keywords.                                                   |
 | GET    | `/search/movie`      | **Buscar películas por título** (herramienta `buscar_por_titulo`). |
-| GET    | `/search/multi`      | Búsqueda múltiple (películas, series y personas).                  |
+| GET    | `/search/multi`      | **Búsqueda múltiple** (películas, series y personas): sugerencias de la navbar (`suggest/`), una llamada por texto, sin adultos. |
 | GET    | `/search/person`     | **Buscar personas** (herramienta `buscar_por_persona`).            |
 | GET    | `/search/tv`         | **Buscar series por título** (herramienta `buscar_por_titulo`).    |
 

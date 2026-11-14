@@ -843,6 +843,10 @@ paths:
         `q` admite cualquier texto: se recorta y se mide después (decisión del
         14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
         TMDB para cada combinación lo decide `services/browse.py`.
+
+        `persona` (id de TMDB) y `rol` (`director` o `actor`) filtran por lo que
+        hizo esa persona (13/11/2026); una persona que TMDB no conoce es un 404
+        (Not Found) con `person_not_found`.
       tags:
       - catalogo
       security:
@@ -1114,6 +1118,36 @@ paths:
   /api/catalogo/search/:
     get:
       operationId: catalogo_search_retrieve
+      tags:
+      - catalogo
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/catalogo/suggest/:
+    get:
+      operationId: catalogo_suggest_retrieve
+      description: |-
+        Sugerencias de la navbar: títulos y personas con una sola llamada a TMDB.
+
+        No encola la materialización (a diferencia de `browse/` y los listados):
+        cada tecla pedida dejaría hasta 5 tareas por títulos que nadie abrió; la
+        ficha materializa cuando se abre. Tiene su propio límite (`sugerencias`,
+        120 por minuto) para que escribir no gaste el cupo de la página que el
+        usuario está por abrir.
       tags:
       - catalogo
       security:
@@ -2937,6 +2971,7 @@ components:
           - passwords_do_not_match
           - permission_denied
           - person_name_invalid
+          - person_not_found
           - rating_blocks_removal_from_watched
           - rating_duplicated
           - required

@@ -13,6 +13,7 @@ errors.codes.throttled,throttled,error,,Hay demasiadas solicitudes. Intentá de 
 errors.codes.server_error,server_error,error,,Ocurrió un error. Intentá de nuevo más tarde.,Something went wrong. Try again later.,aprobado
 errors.codes.upstream_bad_request,upstream_bad_request,error,,No pudimos consultar el catálogo con esos datos.,We couldn’t query the catalog with those details.,aprobado
 errors.codes.upstream_not_found,upstream_not_found,error,,No encontramos esta película o serie en el catálogo.,We couldn’t find this movie or TV show in the catalog.,aprobado
+errors.codes.person_not_found,person_not_found,error,,No encontramos a esa persona.,We couldn’t find that person.,aprobado
 errors.codes.upstream_error,upstream_error,error,,El catálogo no pudo responder. Intentá de nuevo más tarde.,The catalog couldn’t respond. Try again later.,aprobado
 errors.codes.upstream_unavailable,upstream_unavailable,error,,El catálogo no está disponible en este momento. Intentá de nuevo más tarde.,The catalog is currently unavailable. Try again later.,aprobado
 errors.codes.invalid_token,invalid_token,error,,Tu sesión no es válida o venció. Iniciá sesión de nuevo.,Your session is invalid or has expired. Log in again.,aprobado

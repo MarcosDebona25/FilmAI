@@ -73,6 +73,20 @@ class CalificacionDuplicada(APIException):
     }
 
 
+class PersonaNoEncontrada(APIException):
+    """`browse/?persona=` con un id que TMDB no conoce (p. ej. una persona borrada).
+
+    No se reutiliza `TMDBNotFound`: ese cae en `upstream_not_found`, que dice
+    «el recurso no existe en TMDB» sin decir cuál. Acá el frontend necesita
+    distinguir «esa persona no existe» para ofrecer «Clear filters» (una URL
+    compartida con una persona que ya no está no puede dejar la página rota).
+    """
+
+    status_code = 404
+    default_code = "person_not_found"
+    default_detail = "No se encontró a esa persona en TMDB."
+
+
 class ResenaModerada(APIException):
     """El texto de una reseña moderada no se edita ni se borra (F10, auditoría).
 

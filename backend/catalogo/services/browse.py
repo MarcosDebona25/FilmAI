@@ -9,6 +9,7 @@ llamada que corresponde, y en «Todo» alterna películas y series.
 | ----- | ---------------------------------------------------------------- |
 | no    | `discover`, por popularidad; «Todo» alterna películas y series   |
 | sí    | los primeros 100 de `search`, filtrados y ordenados por puntaje  |
+| persona | su filmografía (`combined_credits`), filtrada en memoria       |
 
 Con texto, el orden de TMDB es de relevancia y deja arriba títulos con 0 votos
 («the office»: tres películas sin votos antes que la serie con 5579). Se ordena
@@ -18,12 +19,14 @@ muy esperado, al fondo lo desconocido (pedido del usuario, 14/10/2026).
 El diseño completo está en `openspec/changes/search-catalogo/design.md`.
 """
 
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from math import ceil
 
 from django.utils import timezone
 
+from catalogo.exceptions import PersonaNoEncontrada, TMDBNotFound
 from catalogo.presupuesto import con_contexto
 
 POR_PAGINA = 20
@@ -39,6 +42,16 @@ PESO_POPULARIDAD = 100
 # Votos mínimos sin texto y para filtrar por nota: sin él, «Menos de 5» se
 # llena de títulos sin votos. Mismo umbral que las series del año del Home (C-05).
 MIN_VOTOS_NOTA = 50
+
+# Corte de relevancia (Gonza, 13/11/2026): con texto, un título se muestra si
+# tiene al menos 5 votos o al menos 5 de popularidad. Medido el 13/11/2026:
+# «chihiro» pasa de 13 títulos a 3 y «the office» de 158 a 35, y la popularidad
+# conserva los estrenos sin votos (Dune: Part Three, The Batman: Part II). Son
+# constantes a propósito: con las dos en 0 no se oculta nada (el rollback).
+MIN_VOTOS_RELEVANTE = 5
+MIN_POPULARIDAD_RELEVANTE = 5
+# Los campos con el nombre de un título: el traducido y el original.
+CAMPOS_TITULO = ("title", "name", "original_title", "original_name")
 
 # `nota` → (mínimo, máximo) de `vote_average`. «Menos de 5» es un techo.
 NOTAS = {
@@ -78,6 +91,8 @@ def explorar(
     page=1,
     a_estrenar=False,
     decada=None,
+    persona=None,
+    rol=None,
 ):
     """Una página de Buscar, con la forma de los listados de TMDB.
 
@@ -107,6 +122,11 @@ def explorar(
         "hasta": hasta,
         "sin_minimo": futuro and nota is None,
     }
+    if persona is not None:
+        # `rol` sin persona no hace nada: es una opción de este filtro.
+        return _con_persona(
+            servicio, tipos, persona, rol, genero=genero, **_sin_genero(filtros)
+        )
     if q:
         return _con_texto(servicio, tipos, genero=genero, **_sin_genero(filtros))
     del filtros["q"]
@@ -134,6 +154,42 @@ def explorar(
         "total_results": sum(lado["total_results"] for lado in lados),
         "results": _alternar(*(lado["results"] for lado in lados)),
     }
+
+
+def normalizar(texto):
+    """Minúsculas, sin tildes y con los espacios colapsados: «CHIHIRÓ » → «chihiro».
+
+    `NFKD` separa cada letra de su tilde («ó» pasa a «o» más un acento suelto) y
+    se descartan los acentos sueltos (categoría `Mn`, de «marca sin espacio»).
+    En Java sería `Normalizer.normalize(texto, Form.NFD)` y un `replaceAll`.
+    """
+    descompuesto = unicodedata.normalize("NFKD", texto or "")
+    sin_tildes = "".join(c for c in descompuesto if not unicodedata.combining(c))
+    return " ".join(sin_tildes.lower().split())
+
+
+def es_relevante(item, q=None):
+    """Si un título se muestra en una búsqueda con texto (o con persona).
+
+    Pasa con 5 votos o con 5 de popularidad. Excepción: el título que se llama
+    exactamente como el texto (traducido u original, sin tildes ni mayúsculas):
+    quien escribe el nombre completo quiere ese título, tenga los votos que
+    tenga. `video`, la sinopsis y `adult` no cuentan como señal (Gonza, 13/11/2026).
+    """
+    if (item.get("vote_count") or 0) >= MIN_VOTOS_RELEVANTE:
+        return True
+    if (item.get("popularity") or 0) >= MIN_POPULARIDAD_RELEVANTE:
+        return True
+    if not q:
+        return False
+    buscado = normalizar(q)
+    return any(normalizar(item.get(campo)) == buscado for campo in CAMPOS_TITULO)
+
+
+def con_corte(items, q=None):
+    """Los relevantes; si no pasa ninguno, todos (mejor eso que una página vacía)."""
+    relevantes = [item for item in items if es_relevante(item, q)]
+    return relevantes or items
 
 
 def generos_de_todo(peliculas, series):
@@ -188,9 +244,13 @@ def _con_texto(servicio, tipos, *, q, genero, anio, nota, page, desde, hasta, **
     # Los dos tipos a la vez: cada uno pide hasta 5 páginas.
     with ThreadPoolExecutor(max_workers=len(tipos)) as hilos:
         listas = list(hilos.map(con_contexto(coincidencias), tipos))
+    # El corte va después de los filtros y antes de contar y paginar: así los
+    # totales y el scroll infinito cuentan solo lo que se muestra.
     # `sorted` es estable: en un empate queda el orden de relevancia de TMDB.
     todos = sorted(
-        (item for lista in listas for item in lista), key=_puntaje, reverse=True
+        con_corte([item for lista in listas for item in lista], q),
+        key=_puntaje,
+        reverse=True,
     )
     por_pagina = POR_PAGINA * len(tipos)
     inicio = (page - 1) * por_pagina
@@ -200,6 +260,113 @@ def _con_texto(servicio, tipos, *, q, genero, anio, nota, page, desde, hasta, **
         "total_results": len(todos),
         "results": todos[inicio : inicio + por_pagina],
     }
+
+
+# Géneros de series que son programas de entrevistas o noticias (en TMDB son
+# ids de series, no de películas): quedan fuera de la filmografía como actor.
+GENEROS_NEWS_Y_TALK = {10763, 10767}
+# `job` de TMDB que cuenta como «director» en cada tipo. En series son los
+# creadores (como «Created by» de la ficha), no los directores de episodios:
+# Vince Gilligan dirigió 2 de «The X-Files» y no la creó (Q-1 de la propuesta).
+JOB_DIRECTOR = {"movie": "Director", "tv": "Creator"}
+
+
+def _con_persona(
+    servicio, tipos, persona, rol, *, q, genero, anio, nota, page, desde, hasta, **_
+):
+    """Lo que hizo una persona, con los mismos filtros y orden que una búsqueda.
+
+    `discover` con `with_people` no sirve (TMDB lo ignora en series) y la
+    búsqueda por texto no entiende de personas, así que se lee la filmografía
+    entera (`combined_credits`, cacheada 24 h) y se filtra en memoria: la
+    primera vez son 2 llamadas (créditos y detalle) y después ninguna, para
+    cualquier página o combinación de filtros.
+    """
+    detalle, creditos = _persona_y_creditos(servicio, persona)
+    # Un año es un rango de fechas de ese año: la filmografía no pasa por TMDB.
+    if anio is not None and desde is None:
+        desde, hasta = f"{anio}-01-01", f"{anio}-12-31"
+    buscado = normalizar(q)
+    items = []
+    for item in _filmografia(creditos, rol):
+        tipo = item["media_type"]
+        genero_tipo = genero if len(tipos) == 1 else _genero_para(tipo, genero)
+        if (
+            tipo in tipos
+            and genero_tipo is not False
+            and _pasa(item, genero_tipo, nota, desde, hasta)
+            and (not buscado or _contiene(item, buscado))
+        ):
+            items.append(item)
+    todos = sorted(con_corte(items, q), key=_puntaje, reverse=True)
+    por_pagina = POR_PAGINA * len(tipos)
+    inicio = (page - 1) * por_pagina
+    return {
+        "page": page,
+        "total_pages": ceil(len(todos) / por_pagina),
+        "total_results": len(todos),
+        "results": todos[inicio : inicio + por_pagina],
+        "persona": {
+            "id": persona,
+            "name": detalle.get("name") or "",
+            "rol": rol,
+            "gender": detalle.get("gender"),
+            "profile_path": detalle.get("profile_path"),
+        },
+    }
+
+
+def _persona_y_creditos(servicio, persona):
+    """El detalle y la filmografía de TMDB, en paralelo (los dos se cachean 24 h)."""
+    with ThreadPoolExecutor(max_workers=2) as hilos:
+        pedidos = [
+            hilos.submit(con_contexto(lambda: servicio.get_person_detail(persona))),
+            hilos.submit(con_contexto(lambda: servicio.get_person_credits(persona))),
+        ]
+        try:
+            detalle, creditos = (pedido.result() for pedido in pedidos)
+        except TMDBNotFound:
+            # Un id que TMDB no conoce no es «el recurso no existe» a secas:
+            # tiene su propio código para que la página ofrezca limpiar el filtro.
+            raise PersonaNoEncontrada from None
+    return detalle, creditos
+
+
+def _filmografia(creditos, rol):
+    """Películas y series de la persona en ese rol, sin repetir.
+
+    Una persona puede aparecer varias veces en el mismo título (dirigió y fue
+    creadora de una serie): se queda la primera, por `(tipo, id)`.
+    """
+    candidatos = []
+    if rol in (None, "actor"):
+        candidatos += [
+            item
+            for item in creditos.get("cast") or []
+            if not (
+                item.get("media_type") == "tv"
+                and GENEROS_NEWS_Y_TALK & set(item.get("genre_ids") or [])
+            )
+        ]
+    if rol in (None, "director"):
+        candidatos += [
+            item
+            for item in creditos.get("crew") or []
+            if item.get("job") == JOB_DIRECTOR.get(item.get("media_type"))
+        ]
+    vistos = set()
+    resultado = []
+    for item in candidatos:
+        clave = (item.get("media_type"), item.get("id"))
+        if item.get("media_type") in ("movie", "tv") and clave not in vistos:
+            vistos.add(clave)
+            resultado.append(item)
+    return resultado
+
+
+def _contiene(item, buscado):
+    """Si algún nombre del título (traducido u original) contiene el texto."""
+    return any(buscado in normalizar(item.get(campo)) for campo in CAMPOS_TITULO)
 
 
 def _puntaje(item):
