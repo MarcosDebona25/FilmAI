@@ -167,7 +167,7 @@ for (const viewport of VIEWPORTS) {
       expect(await columnasDeGrilla(resultados.first())).toBe(cols);
       if (escritorio) {
         const logo = await izquierda(page.getByRole("banner").getByRole("link", { name: MARCA }));
-        expect(Math.abs(logo - (await izquierda(page.getByRole("searchbox"))))).toBeLessThanOrEqual(
+        expect(Math.abs(logo - (await izquierda(page.locator("#busqueda"))))).toBeLessThanOrEqual(
           1
         );
       }

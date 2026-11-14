@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SearchView } from "@/components/features/SearchView";
 import type { TmdbItem } from "@/lib/catalog";
+import en from "@/messages/en/common.json";
+import { limpiarCacheSugerencias } from "@/lib/sugerencias";
 import { limpiarCacheCatalogo } from "@/lib/use-catalog";
 import { reacher, svu } from "./catalog-fixtures";
 import { act, fireEvent, render, screen, waitFor, within } from "./render";
@@ -30,6 +32,24 @@ const GENEROS = [
   { id: 10762, name: "Kids" },
 ];
 
+/** Recortes con la forma de `suggest/` (14/11/2026): una persona y una película. */
+const RYAN = {
+  media_type: "person",
+  id: 30614,
+  name: "Ryan Gosling",
+  rol: "actor",
+  gender: 2,
+  profile_path: "/r.jpg",
+};
+const DRIVE = {
+  media_type: "movie",
+  id: 64690,
+  title: "Drive",
+  release_date: "2011-09-15",
+  poster_path: null,
+  vote_average: 7.6,
+};
+
 const estado = vi.hoisted(() => ({
   params: new URLSearchParams(),
   respuesta: null as null | Record<string, unknown>,
@@ -40,6 +60,8 @@ const estado = vi.hoisted(() => ({
   /** Código con el que `browse/` responde 404 (Not Found), p. ej. `person_not_found`. */
   noEncontrado: null as null | string,
   pedidos: [] as string[],
+  /** Lo que contesta `suggest/` (el mismo pedido que usa la lupa de la navbar). */
+  sugerencias: { results: [] } as { results: Record<string, unknown>[] },
 }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn() }));
 
@@ -54,6 +76,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
     apiFetch: vi.fn(async (path: string) => {
       estado.pedidos.push(path);
       if (path.startsWith("/api/catalogo/genres/")) return { genres: GENEROS };
+      if (path.startsWith("/api/catalogo/suggest/")) return structuredClone(estado.sugerencias);
       const pagina = Number(new URL(path, "http://x").searchParams.get("page"));
       if (estado.noEncontrado)
         throw new real.ApiError(404, { code: estado.noEncontrado, params: {}, errors: [] });
@@ -83,6 +106,8 @@ beforeEach(() => {
   estado.fallaPagina = null;
   estado.noEncontrado = null;
   estado.pedidos = [];
+  estado.sugerencias = { results: [RYAN, DRIVE] };
+  limpiarCacheSugerencias();
   observadores.length = 0;
   vi.stubGlobal(
     "IntersectionObserver",
@@ -125,6 +150,8 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+/** El campo de texto: Género, Año y Nota (`<select>`) también son «combobox». */
+const campo = () => screen.getByRole("combobox", { name: en.common.search.placeholder });
 const pedidosDeBusqueda = () => estado.pedidos.filter((p) => p.startsWith("/api/catalogo/browse/"));
 
 describe("Buscar", () => {
@@ -157,8 +184,8 @@ describe("Buscar", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     render(<SearchView />, { locale: "en" });
 
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "dun" } });
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "dune" } });
+    fireEvent.change(campo(), { target: { value: "dun" } });
+    fireEvent.change(campo(), { target: { value: "dune" } });
     act(() => vi.advanceTimersByTime(300));
     expect(reemplazos).toEqual([]);
     act(() => vi.advanceTimersByTime(60));
@@ -169,8 +196,8 @@ describe("Buscar", () => {
   it("Enter busca enseguida", () => {
     render(<SearchView />, { locale: "en" });
 
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "ocean's" } });
-    fireEvent.submit(screen.getByRole("searchbox"));
+    fireEvent.change(campo(), { target: { value: "ocean's" } });
+    fireEvent.submit(campo());
 
     expect(reemplazos).toEqual(["/search?q=ocean%27s"]);
   });
@@ -395,7 +422,7 @@ describe("Buscar", () => {
   it("el campo no deja escribir más de 50 caracteres", () => {
     render(<SearchView />, { locale: "en" });
 
-    expect(screen.getByRole("searchbox")).toHaveAttribute("maxLength", "50");
+    expect(campo()).toHaveAttribute("maxLength", "50");
   });
 });
 
@@ -491,5 +518,209 @@ describe("Buscar con una persona", () => {
 
     expect(await screen.findByText("Nothing with these filters")).toBeInTheDocument();
     expect(screen.getByText("Christopher Nolan · Director")).toBeInTheDocument();
+  });
+});
+
+describe("el campo de Buscar sugiere como la lupa", () => {
+  const ESPERA = 250;
+  beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
+
+  /** Escribe y deja pasar la espera de las sugerencias (250 ms) y su respuesta. */
+  async function escribir(texto: string) {
+    fireEvent.change(campo(), { target: { value: texto } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ESPERA);
+    });
+  }
+  const pedidosDeSugerencias = () =>
+    estado.pedidos.filter((p) => p.startsWith("/api/catalogo/suggest/"));
+
+  it("agrupa personas y títulos en una lista bajo el campo, con los mismos tiempos", async () => {
+    render(<SearchView />, { locale: "en" });
+    fireEvent.change(campo(), { target: { value: "ryan" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ESPERA - 60);
+    });
+    expect(pedidosDeSugerencias()).toEqual([]);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60);
+    });
+
+    const lista = await screen.findByRole("listbox");
+    expect(pedidosDeSugerencias()).toEqual(["/api/catalogo/suggest/?q=ryan"]);
+    expect(within(lista).getByRole("group", { name: "People" })).toBeInTheDocument();
+    expect(within(lista).getByRole("group", { name: "Titles" })).toBeInTheDocument();
+    expect(within(lista).getByRole("option", { name: /Ryan Gosling.*Actor/ })).toBeInTheDocument();
+    expect(within(lista).getByRole("option", { name: /Drive.*Movie · 2011/ })).toBeInTheDocument();
+    // Ya se está viendo «todos los resultados»: no hay fila «See all results».
+    expect(within(lista).getAllByRole("option")).toHaveLength(2);
+    expect(campo()).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("con 1 carácter no pide sugerencias", async () => {
+    render(<SearchView />, { locale: "en" });
+    await escribir("r");
+
+    expect(pedidosDeSugerencias()).toEqual([]);
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("elegir una persona pone su filtro y borra el texto del campo y de la URL", async () => {
+    estado.params = new URLSearchParams("q=ryan&type=movie");
+    render(<SearchView />, { locale: "en" });
+    await escribir("ryan gosl");
+
+    fireEvent.click(await screen.findByRole("option", { name: /Ryan Gosling/ }));
+
+    expect(reemplazos.at(-1)).toBe("/search?type=movie&person=30614&role=actor");
+    expect(campo()).toHaveValue("");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    // El texto pendiente (350 ms) no pisa el filtro recién puesto.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(reemplazos).toEqual(["/search?type=movie&person=30614&role=actor"]);
+  });
+
+  it("elegir un título abre su ficha con ?from=search", async () => {
+    render(<SearchView />, { locale: "en" });
+    await escribir("drive");
+
+    fireEvent.click(await screen.findByRole("option", { name: /Drive/ }));
+
+    expect(router.push).toHaveBeenCalledWith("/movie/64690?from=search");
+  });
+
+  it("↓ y Enter eligen con el teclado; el foco no sale del campo", async () => {
+    render(<SearchView />, { locale: "en" });
+    await escribir("ryan");
+    const entrada = campo();
+
+    fireEvent.keyDown(entrada, { key: "ArrowDown" });
+    expect(entrada).toHaveAttribute("aria-activedescendant", "sug-person-30614");
+    fireEvent.keyDown(entrada, { key: "Enter" });
+
+    expect(reemplazos.at(-1)).toBe("/search?person=30614&role=actor");
+  });
+
+  it("Enter sin opción activa cierra la lista y busca el texto en los títulos", async () => {
+    render(<SearchView />, { locale: "en" });
+    await escribir("nolan");
+    const entrada = campo();
+
+    fireEvent.keyDown(entrada, { key: "Enter" });
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    fireEvent.submit(entrada);
+
+    expect(reemplazos).toEqual(["/search?q=nolan"]);
+  });
+
+  it("Escape cierra la lista sin salir de Buscar", async () => {
+    render(<SearchView />, { locale: "en" });
+    await escribir("ryan");
+    await screen.findByRole("listbox");
+
+    fireEvent.keyDown(campo(), { key: "Escape" });
+
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(router.back).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("anuncia cuántas sugerencias llegaron", async () => {
+    render(<SearchView />, { locale: "en" });
+    await escribir("ryan");
+
+    expect(await screen.findByText("2 suggestions")).toBeInTheDocument();
+  });
+
+  it("si suggest/ falla, la lista no aparece y el campo sigue buscando", async () => {
+    estado.sugerencias = null as never;
+    render(<SearchView />, { locale: "en" });
+    await escribir("ryan");
+
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+});
+
+describe("el aviso «¿Buscabas a…?»", () => {
+  beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
+  const esperar = () =>
+    act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+  it("aparece con «ryan gosling» y su enlace pone persona y rol y saca el texto", async () => {
+    estado.params = new URLSearchParams("q=ryan+gosling&type=movie");
+    render(<SearchView />, { locale: "en" });
+    await esperar();
+
+    const aviso = (await screen.findByText(/Looking for Ryan Gosling\?/)).closest("p");
+    expect(aviso).toHaveTextContent(/Looking for Ryan Gosling\? See their titles\s*· Actor/);
+    // Sale de la misma función: un solo pedido de sugerencias para ese texto.
+    expect(estado.pedidos.filter((p) => p.startsWith("/api/catalogo/suggest/"))).toEqual([
+      "/api/catalogo/suggest/?q=ryan%20gosling",
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "See their titles" }));
+
+    expect(reemplazos.at(-1)).toBe("/search?type=movie&person=30614&role=actor");
+    expect(campo()).toHaveValue("");
+  });
+
+  it("compara sin acentos ni mayúsculas, con todas las palabras del texto", async () => {
+    estado.params = new URLSearchParams("q=penelope+CRUZ");
+    estado.sugerencias = {
+      results: [
+        { ...RYAN, id: 955, name: "Penélope Cruz", gender: 1, rol: "actor" },
+        { ...RYAN, id: 1, name: "Penelope Spheeris", rol: "director" },
+      ],
+    };
+    render(<SearchView />, { locale: "en" });
+    await esperar();
+
+    expect(await screen.findByText(/Looking for Penélope Cruz\?/)).toBeInTheDocument();
+    expect(screen.getByText(/Actress/)).toBeInTheDocument();
+  });
+
+  it("de varias personas, solo la primera que cumple", async () => {
+    estado.params = new URLSearchParams("q=ryan");
+    estado.sugerencias = {
+      results: [{ ...RYAN, id: 2, name: "Meg Ryan" }, RYAN],
+    };
+    render(<SearchView />, { locale: "en" });
+    await esperar();
+
+    expect(await screen.findByText(/Looking for Meg Ryan\?/)).toBeInTheDocument();
+    expect(screen.queryByText(/Looking for Ryan Gosling/)).not.toBeInTheDocument();
+  });
+
+  it("no aparece si ninguna persona contiene todas las palabras", async () => {
+    estado.params = new URLSearchParams("q=ryan+gosling");
+    estado.sugerencias = { results: [{ ...RYAN, name: "Ryan Reynolds" }, DRIVE] };
+    render(<SearchView />, { locale: "en" });
+    await esperar();
+
+    expect(estado.pedidos.some((p) => p.startsWith("/api/catalogo/suggest/"))).toBe(true);
+    expect(screen.queryByText(/Looking for/)).not.toBeInTheDocument();
+  });
+
+  it("no aparece si ya hay una persona filtrada", async () => {
+    estado.params = new URLSearchParams("q=ryan+gosling&person=30614&role=actor");
+    estado.respuesta = pagina([DUNE_2], {
+      persona: { id: 30614, name: "Ryan Gosling", rol: "actor", gender: 2, profile_path: null },
+    });
+    render(<SearchView />, { locale: "en" });
+    await esperar();
+
+    expect(await screen.findByText("Ryan Gosling · Actor")).toBeInTheDocument();
+    expect(screen.queryByText(/Looking for/)).not.toBeInTheDocument();
+  });
+
+  it("no aparece sin texto", async () => {
+    render(<SearchView />, { locale: "en" });
+    await esperar();
+
+    expect(screen.queryByText(/Looking for/)).not.toBeInTheDocument();
   });
 });

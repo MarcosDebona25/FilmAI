@@ -435,7 +435,8 @@ declare const messages: {
     },
     "person": {
       "role": "{role, select, director {{gender, select, female {Directora} male {Director} other {Dirección}}} other {{gender, select, female {Actriz} male {Actor} other {Actuación}}}}",
-      "remove": "Quitar el filtro {name}"
+      "remove": "Quitar el filtro {name}",
+      "lookingFor": "¿Buscabas a {name}? <link>Ver sus producciones</link>"
     }
   },
   "reviews": {

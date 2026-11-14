@@ -110,7 +110,7 @@ for (const viewport of celulares) {
         "page"
       );
 
-      await page.getByRole("searchbox").fill("law");
+      await page.locator("#busqueda").fill("law");
       await expect(page.getByRole("main").getByRole("status")).toHaveText("2 results for “law”");
       await expect(
         page.getByRole("link", { name: /Law & Order: Special Victims Unit/ })

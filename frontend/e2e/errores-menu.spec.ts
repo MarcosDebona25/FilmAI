@@ -133,7 +133,7 @@ for (const viewport of viewports) {
         await page.getByRole("combobox").press("Enter");
         await expect(page).toHaveURL(/\/search\?q=dune$/);
         // Desde C-06 (14/10/2026) Buscar existe: antes el enlace llevaba al 404.
-        await expect(page.getByRole("searchbox")).toBeVisible();
+        await expect(page.locator("#busqueda")).toBeVisible();
       }
     });
 
