@@ -263,6 +263,8 @@ la lupa de la navbar (Enter o «See all results») o la pestaña de la barra inf
 - **Campo**: grande, con lupa y botón para borrar; acepta cualquier texto hasta 50 caracteres. La
   búsqueda arranca sola 350 ms después de dejar de escribir. En escritorio toma el foco al abrir;
   en celular no, para que el teclado no tape los resultados.
+- **Sugerencias del campo** (14/11/2026): al escribir (desde 2 caracteres, 250 ms) se despliega bajo el campo la misma lista que la lupa de la navbar, con Personas y Títulos, sin «Ver todos los resultados». Elegir una persona pone su chip y vacía el campo; elegir un título abre su ficha; Enter sin opción activa sigue buscando el texto en los títulos; Escape cierra primero la lista.
+- **Aviso «¿Buscabas a…?»** (14/11/2026): con texto y sin persona filtrada, una línea sobre los resultados («¿Buscabas a Ryan Gosling? Ver sus producciones · Actor», con foto chica) ofrece las producciones de la primera persona sugerida que contiene todas las palabras del texto. El botón pone su chip y borra el texto.
 - **Cerrar / Escape**: vuelve a donde estaba el usuario si venía de la app; si no, al Inicio.
 - **Tipo**: Todo / Películas / Series (el mismo selector del Inicio).
 - **Filtros**: Género, Año (Cualquiera, «A estrenar» —lo que estrena después de hoy—, años sueltos del actual a 1990 y, antes, décadas: «Década de 1980» … «Década de 1900») y Nota de TMDB (Cualquiera, 9 o

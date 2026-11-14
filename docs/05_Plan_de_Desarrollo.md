@@ -127,7 +127,7 @@ Diseñado el 13/11/2026 en `openspec/changes/busqueda-navbar/` (detalle y medici
 - **Filtrar Buscar por actor o director**: personas en las sugerencias y un campo «Person» en los filtros, sobre `combined_credits`.
 - **Títulos sin relevancia**: con texto, solo los que tienen 5 votos o popularidad 5, o se llaman exactamente como lo buscado. Sin botón para ver el resto.
 
-Seis PRs chicos más el diseño en el canvas, que hace Gonza antes del primer PR de frontend. El corte (PR 1) es solo de backend y puede ir ya. **Estado (14/11/2026):** el diseño (#204) y todo el backend (corte de relevancia, sugerencias `suggest/` y filtro por persona en `browse/`, #215) están en `develop`. El 14/11/2026 Gonza eligió la variante de la lupa que se despliega, y el frontend (lupa con sugerencias y chip de persona en Buscar) va en `feat/buscar-lupa`, sin esperar el canvas. Faltan el campo «Person» dentro de los filtros (tarea 6.3), los enlaces desde los créditos de la ficha (fase 7, opcional) y el cierre.
+Seis PRs chicos más el diseño en el canvas, que hace Gonza antes del primer PR de frontend. El corte (PR 1) es solo de backend y puede ir ya. **Estado (14/11/2026):** el diseño (#204) y todo el backend (corte de relevancia, sugerencias `suggest/` y filtro por persona en `browse/`, #215) están en `develop`. El 14/11/2026 Gonza eligió la variante de la lupa que se despliega, y el frontend (lupa con sugerencias, chip de persona y, en el campo de Buscar, las mismas sugerencias y el aviso «¿Buscabas a…?») va en `feat/buscar-lupa`, sin esperar el canvas. El campo «Person» dentro de los filtros (tarea 6.3) se reemplazó por esas sugerencias. Faltan los enlaces desde los créditos de la ficha (fase 7, opcional) y el cierre.
 
 ### Población masiva de la base
 

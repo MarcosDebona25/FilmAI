@@ -31,6 +31,45 @@ The field MUST accept any text up to 50 characters and search 350 ms after the l
 - GIVEN the user types «dun» and then «dune» within 350 ms
 - THEN only `?q=dune` reaches the URL, once
 
+### Requirement: Field suggestions (14/11/2026)
+
+The field MUST suggest like the navbar magnifier (`navbar-search`): the same `suggest/` request, timings (250 ms after the last keystroke, from 2 characters), per-language cache, groups «People» and «Titles», keyboard, ARIA 1.2 combobox with `aria-activedescendant` and polite live region, and a list that closes on Escape (first Escape), Tab, blur or an error. The list MUST open under the field without moving the chip or the filters, and MUST NOT end with «See all results» (the page already shows them). Choosing a person MUST set `person` and `role` and remove the text (field and `q`), keeping the other filters; choosing a title MUST open `/{type}/{id}?from=search`. Enter with no active option MUST close the list and search the text in titles as before: a title called «Nolan» has to stay searchable. The field MUST keep searching while the user types.
+
+#### Scenario: Choosing a person
+
+- GIVEN `/search?q=ryan&type=movie` and the list shows «Ryan Gosling · Actor»
+- WHEN the user picks it
+- THEN the URL becomes `/search?type=movie&person=30614&role=actor`
+- AND the field is empty and the chip reads «Ryan Gosling · Actor»
+
+#### Scenario: Choosing a title
+
+- GIVEN the list shows «Drive · Movie · 2011»
+- WHEN the user picks it
+- THEN the page is `/movie/64690?from=search`
+
+#### Scenario: Enter searches the text
+
+- GIVEN the user typed «nolan» and the list is open with no active option
+- WHEN the user presses Enter
+- THEN the list closes and the URL is `/search?q=nolan`
+
+### Requirement: «Looking for…?» notice (14/11/2026)
+
+With text `q` and no person filter, above the results, the page MUST show one line «Looking for {name}? See their titles» (with a small photo and the role) when the `suggest/` answer for that same text (same function and cache as the field) has a person whose name, lowercased and without accents, contains every word of the text. Only the first matching person MUST be offered; with none, nothing. «See their titles» MUST be a real button that sets `person` and `role` and removes `q`.
+
+#### Scenario: A name typed in the field
+
+- GIVEN `/search?q=ryan+gosling` and `suggest/` returns «Ryan Gosling · Actor» first
+- THEN a line reads «Looking for Ryan Gosling? See their titles · Actor»
+- AND pressing «See their titles» makes the URL `/search?person=30614&role=actor`
+
+#### Scenario: No notice
+
+- GIVEN `/search?q=ryan+gosling` and only «Ryan Reynolds» comes back as a person
+- THEN no «Looking for…» line is shown
+- AND the same holds when `person` is already in the URL
+
 ### Requirement: Filters
 
 The page MUST offer the type selector (All · Movies · TV shows), Genre (from `genres/?tipo=` of the current type), Year (Any, «Upcoming» — what premieres after today —, single years from the current one down to 1990, then decades «1980s» … «1900s») and TMDB rating (Any, 9 or higher … 5 or higher, Below 5). Changing the type MUST keep the genre only when it has the same id for movies and shows. The five show-only genres TMDB does not translate (Kids, News, Reality, Soap, Talk) MUST use the app's copy. On mobile the filters MUST live in a «Filters» sheet opened by a button that announces how many are active; each change applies at once and «Show results» closes it.
@@ -44,7 +83,7 @@ The page MUST offer the type selector (All · Movies · TV shows), Genre (from `
 
 ### Requirement: Person filter (13/11/2026)
 
-A person reaches Search from a navbar suggestion (`navbar-search`), which sets `person` and `role` in the URL; a «Person» field inside the filters is still pending (`busqueda-navbar`, task 6.3). With a person, the page MUST show, above the results, a chip with the photo, «Name · Role» (role by TMDB gender: «Director» / «Directora», «Actor» / «Actriz», or «Dirección» / «Actuación» when unknown) and a ✕ button labelled «Remove filter {name}» that removes `person` and `role`. The name MUST come from the API's `persona`, never from the URL. A person MUST count as one active filter, MUST survive a change of type, and «Clear filters» MUST remove it. Without text, the count MUST read «N results for “{name}”». A `person_not_found` error MUST show the empty state with «Clear filters».
+A person reaches Search from a navbar suggestion (`navbar-search`), which sets `person` and `role` in the URL; a person is also reachable from the field's own suggestions and the «Looking for…?» notice (see «Field suggestions»); the separate «Person» field of the filters was dropped (`busqueda-navbar`, task 6.3). With a person, the page MUST show, above the results, a chip with the photo, «Name · Role» (role by TMDB gender: «Director» / «Directora», «Actor» / «Actriz», or «Dirección» / «Actuación» when unknown) and a ✕ button labelled «Remove filter {name}» that removes `person` and `role`. The name MUST come from the API's `persona`, never from the URL. A person MUST count as one active filter, MUST survive a change of type, and «Clear filters» MUST remove it. Without text, the count MUST read «N results for “{name}”». A `person_not_found` error MUST show the empty state with «Clear filters».
 
 #### Scenario: From a navbar suggestion
 

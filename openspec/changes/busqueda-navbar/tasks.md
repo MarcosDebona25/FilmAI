@@ -124,7 +124,10 @@ changes something there (measurements, an answered question).
       removes it.
 - [x] 6.2 Chip above the results with photo, «Name · Role» and ✕ (Q-2), on
       desktop and mobile.
-- [ ] 6.3 «Person» field reusing the combobox with `suggest/?tipo=person`.
+- [x] 6.3 (replaced, 14/11/2026) The «Person» field was dropped: it did not solve typing a name in
+      the main field. Instead the Search field suggests like the magnifier
+      (`useSugerencias` + `SugerenciasLista`, shared with `NavbarSearch`) and shows a
+      «Looking for {name}? See their titles» notice; see `search-ui` and `docs/decisiones.md`.
 - [x] 6.4 Count «N results for “Name”» without text; empty state; 404
       `person_not_found` with «Clear filters».
 - [x] 6.5 Vitest + e2e; spec `search-ui` («Filters», «Page and state»).
