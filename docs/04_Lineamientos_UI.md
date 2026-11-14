@@ -18,12 +18,12 @@ App Autenticada
 └── [Avatar]               ← dropdown: Mi perfil / Mis reseñas / Preferencias / Cerrar sesión
 ```
 
-**Navbar definitiva**: `[Logo]  Inicio  Buscar  Listas                    [Avatar]`
+**Navbar definitiva** (escritorio, 14/11/2026): `[Logo]  Inicio  Listas                    [🔍] [Avatar]`
 
 - 3 links de navegación + avatar a la derecha.
 - El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil", "Mis reseñas", "Preferencias" y "Cerrar sesión".
 - «Mis reseñas» permite gestionar calificaciones y textos propios, con pósters y acciones de edición y eliminación.
-- "Buscar" abre la página `/search` con el catálogo completo (grid + filtros + toggle Todo/Películas/Series; 14/10/2026, antes un panel overlay).
+- En escritorio «Buscar» ya no es un enlace (14/11/2026): la lupa a la derecha se despliega en un campo con sugerencias de títulos y personas, y Enter abre `/search` con el texto. En celular sigue la pestaña «Search» de la barra inferior. La página `/search` con el catálogo completo (grid + filtros + toggle Todo/Películas/Series; 14/10/2026, antes un panel overlay).
 - El chatbot se accede desde un FAB flotante presente en todas las pantallas.
 
 ---
@@ -139,10 +139,10 @@ Todas las pantallas autenticadas comparten:
 └──────────────────────────────────────────────────────────┘
 ```
 
-- **Navbar**: 3 links funcionales (Inicio, Buscar, Listas) + avatar a la derecha. En escritorio queda siempre visible (04/11/2026): transparente con la página arriba de todo, translúcida con desenfoque mientras tiene debajo la imagen del Inicio o de la ficha, y sólida después. En las páginas sin imagen, sólida apenas se desplaza. En celular se va con la página, porque abajo está la barra inferior.
+- **Navbar**: en escritorio, 2 links (Inicio, Listas), la lupa de búsqueda y el avatar a la derecha (14/11/2026; antes «Buscar» era el tercer link). La lupa no aparece en `/search` ni por debajo de 768 px. En escritorio queda siempre visible (04/11/2026): transparente con la página arriba de todo, translúcida con desenfoque mientras tiene debajo la imagen del Inicio o de la ficha, y sólida después. En las páginas sin imagen, sólida apenas se desplaza. En celular se va con la página, porque abajo está la barra inferior.
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
-  - "Buscar" click → página `/search` con el buscador.
+  - Lupa click (o `/`) → campo con hasta 5 sugerencias; una persona lleva a `/search?person=…&role=…` con su chip, y Enter a `/search?q=…`.
 - **Footer** (canvas «Footer · desktop» y «Footer · mobile»): marca y descripción; en escritorio, columnas Explore (con «Ask FilmAI», que con sesión abre el panel del chat y sin sesión lleva a `/login?next=<página actual>`, ver 3.1), Your library e Information, y una fila inferior con la atribución de TMDB (logo chico, aviso exacto y enlace «Credits» a `/terms#credits`, ver «Créditos de TMDB») y el copyright; en celular, filas Terms and Conditions, Ask FilmAI e Idioma. Con sesión muestra el idioma actual y enlaza a Preferencias; sin sesión incluye Sign up, Log in y el selector de idioma (ver 4.1); en celular sin sesión no lleva la fila Log in, que está en la barra inferior (04/11/2026). No aparece en las pantallas de acceso.
 - **Créditos de TMDB** (13/11/2026, #180; canvas «Terms and Conditions», «Terms · mobile» y los dos footers): TMDB exige su logo oficial sin alterar y el aviso exacto, dentro de una sección «About» o «Credits».
   - **Sección**: al final de `/terms`, después de la cláusula 12 y antes de «Questions?», con `id="credits"`: título «Credits» («Créditos»), el logo como enlace a `https://www.themoviedb.org` (`rel="noopener"`) y debajo el aviso «This product uses the TMDB API but is not endorsed or certified by TMDB.» («Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica.»). No figura en el índice «On this page» porque no es una cláusula numerada.
@@ -197,7 +197,7 @@ FilmAI es nativa en inglés (idioma por defecto) y admite español. Los diseños
 ```
 
 El Home es **solo descubrimiento**. No tiene catálogo completo, ni tabs, ni grid con filtros.
-Para buscar, el usuario clickea "Buscar" en la navbar.
+Para buscar, el usuario abre la lupa de la navbar (en celular, la pestaña «Search»).
 
 **Selector global (30/09/2026):** arriba de las filas, `Todo · Películas · Series`. «Todo» es el valor por defecto y mezcla los dos tipos; «Películas» y «Series» cambian la fuente de cada fila. En «Recomendado para ti», cada tipo usa los géneros de lo que el usuario calificó con 7+ de ese tipo, y «Todo» es la unión de ambos, sin traducir géneros entre películas y series.
 
@@ -243,7 +243,7 @@ Para buscar, el usuario clickea "Buscar" en la navbar.
 
 Página `/search` (14/10/2026, según el canvas «Search · desktop» y «Search · mobile»: lleva la
 navbar con «Buscar» como página actual; antes se describía como un panel overlay). Se llega desde
-«Buscar» en la navbar o en la barra inferior del celular.
+la lupa de la navbar (Enter o «See all results») o la pestaña de la barra inferior del celular.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -263,6 +263,8 @@ navbar con «Buscar» como página actual; antes se describía como un panel ove
 - **Campo**: grande, con lupa y botón para borrar; acepta cualquier texto hasta 50 caracteres. La
   búsqueda arranca sola 350 ms después de dejar de escribir. En escritorio toma el foco al abrir;
   en celular no, para que el teclado no tape los resultados.
+- **Sugerencias del campo** (14/11/2026): al escribir (desde 2 caracteres, 250 ms) se despliega bajo el campo la misma lista que la lupa de la navbar, con Personas y Títulos, sin «Ver todos los resultados». Elegir una persona pone su chip y vacía el campo; elegir un título abre su ficha; Enter sin opción activa sigue buscando el texto en los títulos; Escape cierra primero la lista.
+- **Aviso «¿Buscabas a…?»** (14/11/2026): con texto y sin persona filtrada, una línea sobre los resultados («¿Buscabas a Ryan Gosling? Ver sus producciones · Actor», con foto chica) ofrece las producciones de la primera persona sugerida que contiene todas las palabras del texto. El botón pone su chip y borra el texto.
 - **Cerrar / Escape**: vuelve a donde estaba el usuario si venía de la app; si no, al Inicio.
 - **Tipo**: Todo / Películas / Series (el mismo selector del Inicio).
 - **Filtros**: Género, Año (Cualquiera, «A estrenar» —lo que estrena después de hoy—, años sueltos del actual a 1990 y, antes, décadas: «Década de 1980» … «Década de 1900») y Nota de TMDB (Cualquiera, 9 o

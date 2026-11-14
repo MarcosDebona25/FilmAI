@@ -102,7 +102,9 @@ export function FiltersSheet({
       </fieldset>
 
       <SheetFooter
-        onLimpiar={() => onCambiar({ genero: null, anio: null, nota: null })}
+        onLimpiar={() =>
+          onCambiar({ genero: null, anio: null, nota: null, persona: null, rol: null })
+        }
         onAplicar={onClose}
         aplicar={t("search.filters.apply")}
       />

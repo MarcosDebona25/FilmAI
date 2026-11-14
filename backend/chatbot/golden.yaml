@@ -79,6 +79,15 @@
     Dune: Parte dos, recomienda antes Dune (2021); si propone Blade Runner 2049,
     recomienda antes Blade Runner. No recomienda una secuela sola.
 
+- id: una_parte_por_saga
+  mensaje: ¿Y si quisiera ciencia ficción basada en libros?
+  rnf6: agregacion
+  espera: >
+    Caso real del 14/11/2026: marcó Duna y Duna: Parte dos, y el cuarto título
+    (Klara y el sol) se quedó sin tarjeta por el tope de 3. Ahora recomienda
+    una sola parte de cada saga (Duna sí, Duna: Parte dos no, ni nombrada) y
+    hasta 3 títulos distintos, todos con tarjeta.
+
 - id: semantico
   mensaje: Algo melancólico sobre la soledad en una ciudad grande
   rnf6: agregacion

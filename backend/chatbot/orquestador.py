@@ -25,9 +25,11 @@ from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.idioma import detectar_idioma
 from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.marcadores import (
+    TOPE_TARJETAS,
     FiltroDeMarcadores,
     recomienda_sin_buscar,
     tarjetas_sin_marcadores,
+    una_parte_por_saga,
 )
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.prompts import armar_sistema
@@ -365,13 +367,15 @@ def _registrar_turno(
     medicion,
     total,
     red=False,
+    saga_descartadas=0,
 ):
     """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
     Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
     tools pidió y con cuántos resultados, si se quedó sin vueltas, cuántos marcadores
     `[[n]]` usó y cuántos no correspondían a ningún título, cuántas negritas escribió
-    por su cuenta, si hubo búsqueda forzada) y cuánto costó: tokens de entrada y salida,
+    por su cuenta, si hubo búsqueda forzada, cuántas tarjetas se saltearon por ser otra
+    parte de una saga que ya tenía la suya) y cuánto costó: tokens de entrada y salida,
     los que salieron de la caché del proveedor, si alguna llamada se cortó por largo y
     los segundos de cada llamada y del turno (ver `_Medicion`). A propósito no lleva la
     pregunta ni la respuesta: son datos personales y los logs se guardan.
@@ -379,7 +383,7 @@ def _registrar_turno(
     logger.info(
         "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s "
         "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d "
-        "reintento_forzado=%s %s",
+        "reintento_forzado=%s saga_descartadas=%d %s",
         ",".join(tools_pedidas) or "ninguna",
         vueltas,
         "si" if ultima_sin_tools else "no",
@@ -388,6 +392,7 @@ def _registrar_turno(
         filtro.invalidos,
         filtro.negritas,
         "si" if reintento else "no",
+        saga_descartadas,
         medicion.resumen(total),
     )
 
@@ -521,9 +526,19 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     # un solo `[[n]]` válido). El texto ya salió y no se toca: solo se arman las
     # tarjetas de los candidatos que nombra (ver `tarjetas_sin_marcadores`).
     red = False
+    mencionados = filtro.mencionados
     if tools_pedidas and filtro.validos == 0 and not ctx.tarjetas:
-        ctx.tarjetas.extend(tarjetas_sin_marcadores(respuesta, ctx, texto))
+        # Sin tope: `una_parte_por_saga` elige y puede necesitar uno más.
+        mencionados = tarjetas_sin_marcadores(respuesta, ctx, texto, tope=None)
+        ctx.tarjetas.extend(mencionados[:TOPE_TARJETAS])
         red = bool(ctx.tarjetas)
+    # Una sola parte de cada saga (14/11/2026): con dos o más títulos se mira en TMDB
+    # si alguna película repite colección. Es código bloqueante (hilos y red), así que
+    # va por `en_hilo` como las tools. No falla nunca: ante un error, queda lo de antes.
+    saga_descartadas = 0
+    if len(mencionados) > 1:
+        tarjetas, saga_descartadas = await en_hilo(una_parte_por_saga, mencionados)
+        ctx.tarjetas[:] = tarjetas
     _registrar_turno(
         tools_pedidas,
         vueltas,
@@ -534,5 +549,6 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         medicion,
         _reloj() - inicio_medido,
         red,
+        saga_descartadas,
     )
     yield Resultado(respuesta, ctx.tarjetas)

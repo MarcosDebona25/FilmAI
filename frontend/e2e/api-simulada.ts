@@ -62,6 +62,8 @@ export async function simularCatalogo(page: Page) {
           genres: url.searchParams.get("tipo") === "tv" ? generosSeries : generosPeliculas,
         },
       });
+    // Las sugerencias del campo de Buscar y de la lupa: sin ninguna.
+    if (recurso === "suggest") return route.fulfill({ json: { results: [] } });
     if (recurso === "browse") {
       const pag = Number(url.searchParams.get("page") ?? 1);
       return route.fulfill({
