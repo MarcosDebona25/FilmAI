@@ -63,6 +63,10 @@ test.describe("campo de Buscar con sugerencias", () => {
     await page.goto("/search");
 
     await campo(page).fill("ryan gosling");
+    // Mientras se escribe, la lista de sugerencias tapa el aviso (y ya ofrece a la
+    // persona). Enter la cierra y deja el aviso a la vista, como haría una persona.
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("listbox")).toHaveCount(0);
     const aviso = page.getByText(/Looking for Ryan Gosling\?/);
     await expect(aviso).toBeVisible({ timeout: 15_000 });
     // El campo sigue buscando el texto mientras se escribe, aviso aparte.
