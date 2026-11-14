@@ -13,6 +13,7 @@ import {
   scrollGuardado,
   ultimaBusqueda,
   urlDeBusqueda,
+  urlDePersona,
 } from "@/lib/search";
 
 describe("busquedaDesdeUrl", () => {
@@ -30,7 +31,25 @@ describe("busquedaDesdeUrl", () => {
       anio: 2021,
       nota: "8",
       pagina: 2,
+      persona: null,
+      rol: null,
     });
+  });
+
+  it("lee la persona y su rol; un rol desconocido se ignora y sin persona no hay rol", () => {
+    expect(busquedaDesdeUrl(new URLSearchParams("person=525&role=director"))).toMatchObject({
+      persona: 525,
+      rol: "director",
+    });
+    expect(busquedaDesdeUrl(new URLSearchParams("person=525&role=writer"))).toMatchObject({
+      persona: 525,
+      rol: null,
+    });
+    expect(busquedaDesdeUrl(new URLSearchParams("person=abc&role=actor"))).toMatchObject({
+      persona: null,
+      rol: null,
+    });
+    expect(busquedaDesdeUrl(new URLSearchParams("role=actor"))).toMatchObject({ rol: null });
   });
 
   it("descarta lo que no entiende en vez de romper", () => {
@@ -86,7 +105,14 @@ describe("«A estrenar»", () => {
 describe("consultaApi", () => {
   it("traduce al contrato de browse/ (nota con +, «Menos de 5» como m5)", () => {
     expect(
-      consultaApi({ q: " dune ", tipo: "all", genero: 878, anio: 2021, nota: "8", pagina: 3 })
+      consultaApi({
+        ...BUSQUEDA_VACIA,
+        q: " dune ",
+        genero: 878,
+        anio: 2021,
+        nota: "8",
+        pagina: 3,
+      })
     ).toBe("/api/catalogo/browse/?q=dune&tipo=all&genero=878&anio=2021&nota=8%2B&page=3");
     expect(consultaApi({ ...BUSQUEDA_VACIA, nota: "lt5" })).toBe(
       "/api/catalogo/browse/?tipo=all&nota=m5&page=1"
@@ -179,5 +205,36 @@ describe("opcionesDeAnio", () => {
     // Lo que no es una década válida se ignora.
     expect(busquedaDesdeUrl(new URLSearchParams("year=1985s")).anio).toBeNull();
     expect(busquedaDesdeUrl(new URLSearchParams("year=1890s")).anio).toBeNull();
+  });
+});
+
+describe("persona en la búsqueda", () => {
+  const nolan = { ...BUSQUEDA_VACIA, persona: 525, rol: "director" as const };
+
+  it("va a la URL y a la API, y la URL vuelve a leerse igual", () => {
+    const url = urlDeBusqueda({ ...nolan, tipo: "movie" });
+
+    expect(url).toBe("/search?type=movie&person=525&role=director");
+    expect(busquedaDesdeUrl(new URL(url, "http://x").searchParams)).toEqual({
+      ...nolan,
+      tipo: "movie",
+    });
+    expect(consultaApi(nolan)).toBe(
+      "/api/catalogo/browse/?tipo=all&persona=525&rol=director&page=1"
+    );
+  });
+
+  it("sin rol manda solo la persona", () => {
+    expect(urlDeBusqueda({ ...BUSQUEDA_VACIA, persona: 31 })).toBe("/search?person=31");
+    expect(consultaApi({ ...BUSQUEDA_VACIA, persona: 31 })).not.toContain("rol=");
+  });
+
+  it("cuenta como un filtro activo", () => {
+    expect(filtrosActivos(nolan)).toBe(1);
+    expect(filtrosActivos({ ...nolan, genero: 18, nota: "8" })).toBe(3);
+  });
+
+  it("urlDePersona arma el destino de la navbar, sin los filtros anteriores", () => {
+    expect(urlDePersona(525, "director")).toBe("/search?person=525&role=director");
   });
 });

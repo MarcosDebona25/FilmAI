@@ -35,6 +35,17 @@ declare const messages: {
       "deactivate": "Deactivate",
       "logoutConfirmTitle": "Log out of FilmAI?",
       "logoutConfirmDescription": "You’ll be logged out of FilmAI on this device."
+    },
+    "search": {
+      "placeholder": "Search titles and people",
+      "label": "Search FilmAI",
+      "openLabel": "Open search",
+      "closeLabel": "Close search",
+      "groupPeople": "People",
+      "groupTitles": "Titles",
+      "seeAll": "See all results for “{query}”",
+      "count": "{count, plural, =0 {No suggestions} one {# suggestion} other {# suggestions}}",
+      "titleMeta": "{year, select, none {{type}} other {{type} · {year}}}"
     }
   },
   "common": {
@@ -421,6 +432,11 @@ declare const messages: {
       "reality": "Reality",
       "soap": "Soap",
       "talk": "Talk"
+    },
+    "person": {
+      "role": "{role, select, director {{gender, select, female {Director} male {Director} other {Director}}} other {{gender, select, female {Actress} male {Actor} other {Actor}}}}",
+      "remove": "Remove filter {name}",
+      "lookingFor": "Looking for {name}? <link>See their titles</link>"
     }
   },
   "reviews": {

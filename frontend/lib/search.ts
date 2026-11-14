@@ -17,12 +17,20 @@ export const A_ESTRENAR = "proximos";
 /** Década antes de 1990, como `1980s` (14/10/2026). */
 export type Decada = `${number}s`;
 
+/** Rol de una persona en la filmografía que se filtra (`role=` en la URL, `rol` en la API). */
+export type RolPersona = "director" | "actor";
+const ROLES: RolPersona[] = ["director", "actor"];
+
 export interface Busqueda {
   q: string;
   tipo: ContentType;
   genero: number | null;
   anio: number | typeof A_ESTRENAR | Decada | null;
   nota: Nota | null;
+  /** Id de TMDB de la persona cuya filmografía se muestra (`person=`), o `null`. */
+  persona: number | null;
+  /** Qué hizo esa persona; `null` es cualquier cosa. Sin `persona` siempre es `null`. */
+  rol: RolPersona | null;
   pagina: number;
 }
 
@@ -42,6 +50,8 @@ export const BUSQUEDA_VACIA: Busqueda = {
   genero: null,
   anio: null,
   nota: null,
+  persona: null,
+  rol: null,
   pagina: 1,
 };
 
@@ -56,12 +66,16 @@ function entero(valor: string | null) {
 }
 
 export function busquedaDesdeUrl(params: URLSearchParams): Busqueda {
+  const persona = entero(params.get("person"));
   return {
     q: (params.get("q") ?? "").slice(0, MAX_TEXTO),
     tipo: de(TIPOS, params.get("type")) ?? "all",
     genero: entero(params.get("genre")),
     anio: anioDesdeOpcion(params.get("year") ?? ""),
     nota: de(NOTAS, params.get("rating")),
+    persona,
+    // El rol solo tiene sentido con persona: un `role=` suelto se ignora.
+    rol: persona === null ? null : de(ROLES, params.get("role")),
     pagina: entero(params.get("page")) ?? 1,
   };
 }
@@ -73,6 +87,10 @@ export function urlDeBusqueda(busqueda: Busqueda) {
   if (busqueda.genero !== null) params.set("genre", String(busqueda.genero));
   if (busqueda.anio !== null) params.set("year", opcionDeAnio(busqueda.anio));
   if (busqueda.nota !== null) params.set("rating", busqueda.nota);
+  if (busqueda.persona !== null) {
+    params.set("person", String(busqueda.persona));
+    if (busqueda.rol !== null) params.set("role", busqueda.rol);
+  }
   if (busqueda.pagina > 1) params.set("page", String(busqueda.pagina));
   const consulta = params.toString();
   return consulta ? `${routes.search}?${consulta}` : routes.search;
@@ -89,13 +107,29 @@ export function consultaApi(busqueda: Busqueda) {
   else if (busqueda.anio !== null) params.set("anio", String(busqueda.anio));
   if (busqueda.nota !== null)
     params.set("nota", busqueda.nota === "lt5" ? "m5" : `${busqueda.nota}+`);
+  if (busqueda.persona !== null) {
+    params.set("persona", String(busqueda.persona));
+    if (busqueda.rol !== null) params.set("rol", busqueda.rol);
+  }
   params.set("page", String(busqueda.pagina));
   return `/api/catalogo/browse/?${params}`;
 }
 
-/** Género, año y nota: lo que cuenta el badge de «Filters» en celular. */
+/** Género, año, nota y persona: lo que cuenta el badge de «Filters» en celular. */
 export function filtrosActivos(busqueda: Busqueda) {
-  return [busqueda.genero, busqueda.anio, busqueda.nota].filter((valor) => valor !== null).length;
+  return [busqueda.genero, busqueda.anio, busqueda.nota, busqueda.persona].filter(
+    (valor) => valor !== null
+  ).length;
+}
+
+/** Destino de la navbar al elegir una persona: su filmografía, sin filtros previos. */
+export function urlDePersona(persona: number, rol: RolPersona) {
+  return urlDeBusqueda({ ...BUSQUEDA_VACIA, persona, rol });
+}
+
+/** Destino de «Ver todos los resultados»: una búsqueda nueva con ese texto. */
+export function urlDeTexto(q: string) {
+  return urlDeBusqueda({ ...BUSQUEDA_VACIA, q: q.slice(0, MAX_TEXTO) });
 }
 
 /**
