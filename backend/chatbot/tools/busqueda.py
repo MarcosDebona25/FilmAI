@@ -88,6 +88,7 @@ def _desde_tmdb(item, tipo, generos):
         nota=item.get("vote_average"),
         sinopsis=item.get("overview"),
         poster=item.get("poster_path"),
+        original=item.get("original_title") or item.get("original_name"),
     )
 
 

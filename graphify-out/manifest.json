@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794680371.2027926,
-    "seen": 1794684667.7917693,
-    "ast_hash": "b27f32b0d632cc1f8cc71a019660a8ff",
+    "mtime": 1794684725.2105076,
+    "seen": 1794684742.5031562,
+    "ast_hash": "9785a54ebe645c4d55633e5bec2931b9",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4410,9 +4410,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tools/busqueda.py": {
-    "mtime": 1794623017.1059573,
-    "seen": 1794684667.7910624,
-    "ast_hash": "7bc9180c76a37fe751b7e262253374e1",
+    "mtime": 1794684709.3023787,
+    "seen": 1794684742.4785845,
+    "ast_hash": "10e7882e6b60fcf3622858fc3adc49ed",
     "semantic_hash": ""
   },
   "backend/chatbot/tools/esquemas.py": {
@@ -4428,9 +4428,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tools/turno.py": {
-    "mtime": 1794623017.1059573,
-    "seen": 1794684667.7910655,
-    "ast_hash": "e91ff07d0e92eea8c1cf7aa13b9571d8",
+    "mtime": 1794684709.3023787,
+    "seen": 1794684742.4786572,
+    "ast_hash": "bf5b7fef7d78699d84ccaec8c3c1558b",
     "semantic_hash": ""
   },
   "backend/chatbot/tests_preparar.py": {
@@ -4470,15 +4470,15 @@
     "semantic_hash": ""
   },
   "backend/chatbot/orquestador.py": {
-    "mtime": 1794623017.1027226,
-    "seen": 1794684667.7910373,
-    "ast_hash": "7e2d5d065d4e9e5edd46f46d60322d1c",
+    "mtime": 1794684709.2703788,
+    "seen": 1794684742.4779534,
+    "ast_hash": "1b64e0943595a36d6e356fa3a42988ce",
     "semantic_hash": ""
   },
   "backend/chatbot/prompts.py": {
-    "mtime": 1794623017.1027226,
-    "seen": 1794684667.7910392,
-    "ast_hash": "393abfa6bdb1364de679daf06cc88b44",
+    "mtime": 1794684709.3023787,
+    "seen": 1794684742.477989,
+    "ast_hash": "bcff3a0358d27a8257004bf51bcad7ab",
     "semantic_hash": ""
   },
   "backend/chatbot/puente.py": {
@@ -4488,9 +4488,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_orquestador.py": {
-    "mtime": 1794623017.1027226,
-    "seen": 1794684667.7910542,
-    "ast_hash": "3374e733813caea40e45bb17a1401a4e",
+    "mtime": 1794684709.3023787,
+    "seen": 1794684742.4783857,
+    "ast_hash": "dd5b2bdd9b7206e8c0d1587aff01d537",
     "semantic_hash": ""
   },
   "frontend/lib/fondos.ts": {
@@ -4914,15 +4914,15 @@
     "semantic_hash": ""
   },
   "backend/chatbot/marcadores.py": {
-    "mtime": 1794623017.102291,
-    "seen": 1794684667.7910283,
-    "ast_hash": "dd48a103c7bdb2b280eadc5acd9ea203",
+    "mtime": 1794684709.2703788,
+    "seen": 1794684742.47767,
+    "ast_hash": "835551501536a02ccb82db03cfdf22e5",
     "semantic_hash": ""
   },
   "backend/chatbot/tests_marcadores.py": {
-    "mtime": 1794623017.1027226,
-    "seen": 1794684667.7910533,
-    "ast_hash": "d7bfc0276dfc09b9c2675be6621ff6cb",
+    "mtime": 1794684709.3023787,
+    "seen": 1794684742.4783845,
+    "ast_hash": "7ec46b1004c0c964234acdb7996372ca",
     "semantic_hash": ""
   },
   "openspec/changes/busqueda-navbar/design.md": {
