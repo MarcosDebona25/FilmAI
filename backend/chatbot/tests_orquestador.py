@@ -49,6 +49,12 @@ class BaseOrquestador(TestCase):
         parche = patch.dict(FUNCIONES, {"descubrir": self.buscar_de_mentira})
         parche.start()
         self.addCleanup(parche.stop)
+        # TMDB nunca se llama de verdad en los tests: el armado de tarjetas le pregunta
+        # la colección de cada película (`una_parte_por_saga`) y acá todas son sueltas.
+        tmdb = patch("chatbot.marcadores.get_catalog_service")
+        self.tmdb = tmdb.start().return_value
+        self.tmdb.get_movie_detail.return_value = {"belongs_to_collection": None}
+        self.addCleanup(tmdb.stop)
 
     @staticmethod
     def buscar_de_mentira(ctx, **argumentos):
