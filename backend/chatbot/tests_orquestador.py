@@ -417,6 +417,18 @@ class ReglasDelPromptTests(SimpleTestCase):
         )
         self.assertIn("recomendá la anterior", vistos)
 
+    def test_una_saga_ocupa_un_solo_lugar(self):
+        # 14/11/2026: «sci fi basada en libros» marcó Duna y Duna: Parte dos, y el
+        # cuarto título (Klara y el sol) se quedó sin tarjeta por el tope de 3.
+        # La regla va en «Al recomendar»: la de secuelas tiene que seguir siendo la
+        # última de «Títulos vistos» (ver el test de arriba).
+        sistema = armar_sistema("", [], "es")
+        al_recomendar = sistema.split("Al recomendar:\n", 1)[1]
+
+        self.assertIn("una sola parte de cada saga", al_recomendar)
+        # Sin nombrar las otras: la red de tarjetas convertiría el nombre en tarjeta.
+        self.assertIn("no nombres las otras partes", al_recomendar)
+
     def test_el_estilo_cambia_con_el_idioma(self):
         self.assertIn("voseo", armar_sistema("", [], "es"))
         self.assertNotIn("voseo", armar_sistema("", [], "en"))
