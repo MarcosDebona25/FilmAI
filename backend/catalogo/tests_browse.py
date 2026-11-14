@@ -71,10 +71,13 @@ class TMDBFalso:
 
 
 class BrowseBase(SimpleTestCase):
+    # Qué servicio falso usa cada clase de tests; una subclase puede cambiarlo.
+    Falso = TMDBFalso
+
     def setUp(self):
         # El throttle `catalogo` guarda su contador en la caché compartida.
         dj_cache.clear()
-        self.tmdb = TMDBFalso()
+        self.tmdb = self.Falso()
         parche = patch("catalogo.views.get_catalog_service", return_value=self.tmdb)
         parche.start()
         self.addCleanup(parche.stop)
@@ -260,12 +263,12 @@ class DecadasTests(BrowseBase):
         self.assertEqual(params["min_votos"], 50)
 
     def test_con_texto_filtra_la_ventana_por_el_rango(self):
-        # De las 100 primeras películas de «dune», 9 son de los 80, entre ellas
-        # la de David Lynch (1984).
+        # De las 100 primeras películas de «dune», 9 son de los 80 (entre ellas
+        # la de David Lynch, 1984) y 5 pasan el corte de relevancia.
         datos = self.ok(q="dune", tipo="movie", decada=1980)
 
         fechas = [item["release_date"] for item in datos["results"]]
-        self.assertEqual(datos["total_results"], 9)
+        self.assertEqual(datos["total_results"], 5)
         self.assertTrue(all("1980-01-01" <= fecha <= "1989-12-31" for fecha in fechas))
         self.assertIn("Dune", [item["title"] for item in datos["results"]])
 
@@ -294,12 +297,14 @@ class TextoTests(BrowseBase):
         llamadas = self.tmdb.de("search", "movie")
         self.assertEqual(sorted(llamada[2] for llamada in llamadas), [1, 2, 3, 4, 5])
         self.assertTrue(all(llamada[3] == {"anio": 2021} for llamada in llamadas))
-        self.assertEqual((datos["total_results"], datos["total_pages"]), (100, 5))
+        # 100 en la ventana, 48 pasan el corte de relevancia.
+        self.assertEqual((datos["total_results"], datos["total_pages"]), (48, 3))
 
     def test_el_texto_llega_sin_espacios_de_mas(self):
         datos = self.ok(q="  dune ", tipo="tv")
 
-        self.assertEqual(datos["total_results"], 96)
+        # 96 series en la ventana; 56 pasan el corte de relevancia.
+        self.assertEqual(datos["total_results"], 56)
 
     def test_lo_conocido_o_muy_esperado_arriba(self):
         datos = self.ok(q="dune", tipo="movie")
@@ -318,8 +323,9 @@ class TextoTests(BrowseBase):
         primera = self.ok(q="dune")
         segunda = self.ok(q="dune", page=2)
 
-        # 100 películas + 96 series, de a 40 (20 por tipo).
-        self.assertEqual((primera["total_results"], primera["total_pages"]), (196, 5))
+        # 100 películas + 96 series en la ventana; con el corte quedan 104, de
+        # a 40 (20 por tipo).
+        self.assertEqual((primera["total_results"], primera["total_pages"]), (104, 3))
         self.assertEqual(len(primera["results"]), 40)
         puntajes = [_puntaje(item) for item in primera["results"] + segunda["results"]]
         self.assertEqual(puntajes, sorted(puntajes, reverse=True))
@@ -337,7 +343,8 @@ class VentanaTests(BrowseBase):
         paginas = sorted(llamada[2] for llamada in self.tmdb.de("search", "movie"))
         # TMDB tiene 56 páginas: la ventana se corta en 5.
         self.assertEqual(paginas, [1, 2, 3, 4, 5])
-        self.assertEqual(datos["total_results"], 10)
+        # Eran 10 de ciencia ficción; uno no pasa el corte de relevancia.
+        self.assertEqual(datos["total_results"], 9)
         self.assertEqual(datos["total_pages"], 1)
         self.assertTrue(all(878 in item["genre_ids"] for item in datos["results"]))
 
@@ -348,13 +355,13 @@ class VentanaTests(BrowseBase):
         self.assertEqual(paginas, [1, 2, 3])
 
     def test_pagina_de_a_20_dentro_de_la_ventana(self):
-        # Drama en las 100 primeras películas de «dune»: 34.
+        # Drama en las 100 primeras películas de «dune»: 34, y 21 pasan el corte.
         primera = self.ok(q="dune", tipo="movie", genero=18)
         segunda = self.ok(q="dune", tipo="movie", genero=18, page=2)
 
-        self.assertEqual((primera["total_results"], primera["total_pages"]), (34, 2))
+        self.assertEqual((primera["total_results"], primera["total_pages"]), (21, 2))
         self.assertEqual(len(primera["results"]), 20)
-        self.assertEqual(len(segunda["results"]), 14)
+        self.assertEqual(len(segunda["results"]), 1)
         ids = {item["id"] for item in primera["results"]}
         self.assertFalse(ids & {item["id"] for item in segunda["results"]})
 
@@ -382,8 +389,9 @@ class VentanaTests(BrowseBase):
     def test_todo_con_genero_suma_cada_tipo_con_su_id(self):
         datos = self.ok(q="dune", genero=878)
 
-        # 10 películas de Science Fiction y 6 series de Sci-Fi & Fantasy.
-        self.assertEqual(datos["total_results"], 16)
+        # 9 películas de Science Fiction y 6 series de Sci-Fi & Fantasy, ya sin
+        # lo que no pasa el corte de relevancia.
+        self.assertEqual(datos["total_results"], 15)
         puntajes = [_puntaje(item) for item in datos["results"]]
         self.assertEqual(puntajes, sorted(puntajes, reverse=True))
         series = [item for item in datos["results"] if item["media_type"] == "tv"]

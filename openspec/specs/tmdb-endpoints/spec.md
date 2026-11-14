@@ -255,6 +255,7 @@ inglés los nombres vacíos.
 - Without text it MUST use `discover` sorted by popularity, with at least 50 votes, except for a future year or `a_estrenar` without a rating filter (announced titles have no votes); `a_estrenar` sends `primary_release_date.gte` / `first_air_date.gte` with tomorrow's date; shows MUST exclude News and Talk unless a genre is chosen.
 - With text it MUST read up to the first 5 TMDB `search` pages per type (sending the year as `primary_release_year` or `first_air_date_year`), keep the items that pass the filters, and sort all of them — movies and shows together in `all` — by `max(vote_count, popularity × 100)`, descending, keeping TMDB's order on ties; pages hold 20 per type (40 in `all`). TMDB's relevance order puts titles with no votes first, and an upcoming title with high popularity must not sink (decided 14/10/2026).
 - Genre, rating, `a_estrenar` and `decada` MUST be filtered on those items (by release date for `a_estrenar` and `decada`, without a date out; rating with at least 50 votes). A TMDB error in any page MUST fail the request, never return a partial count.
+- **Relevance cut (13/11/2026)**: with text, after the filters and before paginating, it MUST leave out the items with fewer than 5 votes and popularity under 5, unless their `title`, `name`, `original_title` or `original_name`, normalized (lowercase, without accents, spaces collapsed), equals the normalized text. If no item passes, all of them MUST be kept. `total_results` and `total_pages` MUST count only what is kept; there is no way to ask for what was left out. `video`, the synopsis and `adult` MUST NOT be used as signals. It makes no extra TMDB call.
 - Without text, `all` MUST alternate movies and shows and add their totals. A genre MUST be mapped to its show id when TMDB uses another one (28 and 12 → 10759, 878 and 14 → 10765, 10752 → 10768); a genre with no counterpart MUST leave that side empty without calling TMDB for it.
 
 `GET /api/catalogo/genres/?tipo=all` MUST return the movie genres followed by the show-only ones with no movie counterpart (10762, 10763, 10764, 10766, 10767).
@@ -271,6 +272,25 @@ inglés los nombres vacíos.
 - GIVEN no text and no filters
 - WHEN `browse/?tipo=tv` is requested
 - THEN `discover/tv` is called with `vote_count.gte=50` and `without_genres=10763,10767`
+
+#### Scenario: Irrelevant titles are left out
+
+- GIVEN «chihiro» matches 13 titles and only 3 have 5 votes or popularity 5
+- WHEN `browse/?q=chihiro` is requested
+- THEN `total_results` is 3
+- AND «La arquitectura de El Viaje de Chihiro» (1 vote, popularity 0.2) is not in any page
+
+#### Scenario: The exact title is kept
+
+- GIVEN a film titled «Sato no Chihiro» with 1 vote and popularity 0.1
+- WHEN `browse/?q=sato no chihiro` is requested
+- THEN it is in the results
+
+#### Scenario: Nothing passes the cut
+
+- GIVEN every match of a text has fewer than 5 votes and popularity under 5 and none is named as the text
+- WHEN it is searched
+- THEN all matches are returned
 
 ### Requirement: Browser caching and compression (22/10/2026)
 

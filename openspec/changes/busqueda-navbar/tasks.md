@@ -39,17 +39,17 @@ changes something there (measurements, an answered question).
 
 ## Phase 1: Relevance cut, backend (PR 1)
 
-- [ ] 1.1 `normalizar()` and `es_relevante(item, q)` with the two constants in
+- [x] 1.1 `normalizar()` and `es_relevante(item, q)` with the two constants in
       `catalogo/services/browse.py`; tests at the edges (4 and 5 votes; 4.9
       and 5 popularity) and for the exact title, translated or original,
       without accents, case or extra spaces.
-- [ ] 1.2 `_con_texto` (and later the person branch) drops what does not pass
+- [x] 1.2 `_con_texto` (and later the person branch) drops what does not pass
       after the filters and before paginating; if nothing passes, keeps
       everything. `total_results` and `total_pages` count what is shown.
-- [ ] 1.3 Fixture from a real «chihiro» answer (`test_datos/`): 3 shown,
+- [x] 1.3 Fixture from a real «chihiro» answer (`test_datos/`): 3 shown,
       «La arquitectura de El Viaje de Chihiro» left out; a title with 0 votes
       named exactly as the text is shown; no extra TMDB call.
-- [ ] 1.4 Spec `tmdb-endpoints` («Buscar combina discover y search»).
+- [x] 1.4 Spec `tmdb-endpoints` («Buscar combina discover y search»).
 
 ## Phase 2: Canvas (Gonza)
 
