@@ -37,6 +37,8 @@ const estado = vi.hoisted(() => ({
   /** Si está, la página N responde `porPagina[N - 1]`. */
   porPagina: null as null | Record<string, unknown>[],
   fallaPagina: null as null | number,
+  /** Código con el que `browse/` responde 404 (Not Found), p. ej. `person_not_found`. */
+  noEncontrado: null as null | string,
   pedidos: [] as string[],
 }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn() }));
@@ -53,6 +55,8 @@ vi.mock("@/lib/api", async (importOriginal) => {
       estado.pedidos.push(path);
       if (path.startsWith("/api/catalogo/genres/")) return { genres: GENEROS };
       const pagina = Number(new URL(path, "http://x").searchParams.get("page"));
+      if (estado.noEncontrado)
+        throw new real.ApiError(404, { code: estado.noEncontrado, params: {}, errors: [] });
       if (estado.falla || estado.fallaPagina === pagina)
         throw new real.ApiError(502, { code: "upstream_error", params: {}, errors: [] });
       return structuredClone(estado.porPagina ? estado.porPagina[pagina - 1] : estado.respuesta);
@@ -77,6 +81,7 @@ beforeEach(() => {
   estado.falla = false;
   estado.porPagina = null;
   estado.fallaPagina = null;
+  estado.noEncontrado = null;
   estado.pedidos = [];
   observadores.length = 0;
   vi.stubGlobal(
@@ -391,5 +396,100 @@ describe("Buscar", () => {
     render(<SearchView />, { locale: "en" });
 
     expect(screen.getByRole("searchbox")).toHaveAttribute("maxLength", "50");
+  });
+});
+
+describe("Buscar con una persona", () => {
+  /** Recorte de `browse/?persona=525&rol=director` (el backend manda `persona`). */
+  const NOLAN = {
+    id: 525,
+    name: "Christopher Nolan",
+    rol: "director",
+    gender: 2,
+    profile_path: "/x.jpg",
+  };
+  const DE_NOLAN = (extra = {}) => pagina([DUNE_2], { persona: NOLAN, ...extra });
+
+  it("la manda a la API y muestra el chip con su nombre y rol, sin contar el texto", async () => {
+    estado.params = new URLSearchParams("person=525&role=director");
+    estado.respuesta = DE_NOLAN({ total_results: 12, total_pages: 1 });
+    render(<SearchView />, { locale: "en" });
+
+    const chip = await screen.findByText("Christopher Nolan · Director");
+    expect(chip).toBeInTheDocument();
+    expect(pedidosDeBusqueda()[0]).toBe(
+      "/api/catalogo/browse/?tipo=all&persona=525&rol=director&page=1"
+    );
+    // Sin texto, el contador nombra a la persona.
+    expect(screen.getByRole("status")).toHaveTextContent("12 results for “Christopher Nolan”");
+  });
+
+  it("el rol sale según el género: actriz, o solo el nombre si no hay rol", async () => {
+    estado.params = new URLSearchParams("person=1&role=actor");
+    estado.respuesta = pagina([DUNE_2], {
+      persona: { id: 1, name: "Zendaya", rol: "actor", gender: 1, profile_path: null },
+    });
+    const { unmount } = render(<SearchView />, { locale: "en" });
+    expect(await screen.findByText("Zendaya · Actress")).toBeInTheDocument();
+    unmount();
+
+    estado.params = new URLSearchParams("person=1");
+    estado.respuesta = pagina([DUNE_2], {
+      persona: { id: 1, name: "Zendaya", rol: null, gender: 1, profile_path: null },
+    });
+    render(<SearchView />, { locale: "en" });
+    expect(await screen.findByText("Zendaya")).toBeInTheDocument();
+  });
+
+  it("la ✕ del chip quita la persona y el rol, y conserva lo demás", async () => {
+    estado.params = new URLSearchParams("q=dune&type=movie&person=525&role=director");
+    estado.respuesta = DE_NOLAN();
+    render(<SearchView />, { locale: "en" });
+
+    fireEvent.click(await screen.findByRole("button", { name: "Remove filter Christopher Nolan" }));
+
+    expect(reemplazos).toEqual(["/search?q=dune&type=movie"]);
+  });
+
+  it("«Clear filters» también la quita", async () => {
+    estado.params = new URLSearchParams("person=525&role=director&genre=18");
+    estado.respuesta = DE_NOLAN();
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Christopher Nolan · Director");
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(reemplazos).toEqual(["/search"]);
+  });
+
+  it("cambiar el tipo conserva a la persona", async () => {
+    estado.params = new URLSearchParams("person=525&role=director");
+    estado.respuesta = DE_NOLAN();
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Christopher Nolan · Director");
+
+    fireEvent.click(screen.getByRole("button", { name: "Movies" }));
+
+    expect(reemplazos).toEqual(["/search?type=movie&person=525&role=director"]);
+  });
+
+  it("una persona que TMDB no conoce muestra el aviso traducido y deja limpiar", async () => {
+    estado.params = new URLSearchParams("person=99999999");
+    estado.noEncontrado = "person_not_found";
+    render(<SearchView />, { locale: "en" });
+
+    expect(await screen.findByText("We couldn’t find that person.")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Clear filters" }).at(-1)!);
+
+    expect(reemplazos).toEqual(["/search"]);
+  });
+
+  it("con persona y sin resultados dice que no hay nada con esos filtros", async () => {
+    estado.params = new URLSearchParams("person=525&role=director&type=tv");
+    estado.respuesta = pagina([], { persona: NOLAN });
+    render(<SearchView />, { locale: "en" });
+
+    expect(await screen.findByText("Nothing with these filters")).toBeInTheDocument();
+    expect(screen.getByText("Christopher Nolan · Director")).toBeInTheDocument();
   });
 });

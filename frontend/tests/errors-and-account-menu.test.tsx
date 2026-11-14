@@ -257,10 +257,10 @@ describe("encabezado y barra inferior", () => {
       "href",
       routes.explore
     );
-    expect(within(nav).getByRole("link", { name: en.nav.main.search })).toHaveAttribute(
-      "href",
-      routes.search
-    );
+    // «Search» ya no es un enlace de la barra de escritorio (15/11/2026): lo
+    // reemplaza la lupa, que despliega un campo con sugerencias.
+    expect(within(nav).queryByRole("link", { name: en.nav.main.search })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: en.nav.search.openLabel })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: en.nav.main.lists })).toHaveAttribute(
       "href",
       routes.lists
@@ -270,15 +270,21 @@ describe("encabezado y barra inferior", () => {
   });
 
   it("marca la página actual", () => {
-    path.current = routes.search;
+    path.current = routes.explore;
     render(<Navbar />, { locale: "en" });
-    expect(screen.getByRole("link", { name: en.nav.main.search })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: en.nav.main.home })).toHaveAttribute(
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: en.nav.main.home })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: en.nav.main.lists })).not.toHaveAttribute(
       "aria-current"
     );
+  });
+
+  it("en Buscar no hay lupa: la página tiene su propio campo", () => {
+    path.current = routes.search;
+    render(<Navbar />, { locale: "en" });
+    expect(screen.queryByRole("button", { name: en.nav.search.openLabel })).not.toBeInTheDocument();
   });
 
   it("sin sesión ofrece iniciar sesión y registrarse", () => {
