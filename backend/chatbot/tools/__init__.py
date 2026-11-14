@@ -50,18 +50,15 @@ _VALIDADORES = {
 }
 
 
-def _error_de_argumentos(validador, argumentos):
-    """El primer problema de los argumentos, en una línea, o `None` si están bien.
-
-    Va el nombre del campo adelante («generos.0: ...») para que el modelo sepa qué
-    corregir. Para un `enum`, el mensaje de `jsonschema` ya trae los valores válidos.
-    """
+def _primer_error(validador, argumentos):
+    """El error de `jsonschema` más útil de los argumentos, o `None` si están bien."""
     # `best_match` elige, entre todos los errores, el más útil para mostrar.
-    error = best_match(validador.iter_errors(argumentos))
-    if error is None:
-        return None
-    campo = ".".join(str(parte) for parte in error.absolute_path) or "argumentos"
-    return f"{campo}: {error.message}"
+    return best_match(validador.iter_errors(argumentos))
+
+
+def _campo_de(error):
+    """El nombre del campo con el problema («generos.0»), o «argumentos» si es el conjunto."""
+    return ".".join(str(parte) for parte in error.absolute_path) or "argumentos"
 
 
 def ejecutar(ctx, nombre, argumentos):
@@ -77,10 +74,27 @@ def ejecutar(ctx, nombre, argumentos):
         # Un `null` en un opcional cuenta como no mandado: algunos modelos los
         # completan así, y las tools ya tienen `None` como valor por defecto.
         argumentos = {k: v for k, v in argumentos.items() if v is not None}
-        detalle = _error_de_argumentos(validador, argumentos)
-        if detalle is not None:
-            logger.info("Argumentos inválidos para %s: %s", nombre, detalle)
-            return {"error": "invalid_arguments", "detalle": detalle}
+        error = _primer_error(validador, argumentos)
+        if error is not None:
+            campo = _campo_de(error)
+            # Al log van solo el campo y la regla que falló (`enum`, `type`…): el
+            # mensaje de `jsonschema` copia el valor rechazado, que puede ser una
+            # consulta del usuario, y los logs se guardan. Al modelo sí le llega el
+            # mensaje completo, para que corrija: nombra el campo y, para un `enum`,
+            # los valores válidos.
+            logger.info(
+                "Argumentos inválidos para %s: %s (%s)", nombre, campo, error.validator
+            )
+            return {
+                "error": "invalid_arguments",
+                "detalle": f"{campo}: {error.message}",
+            }
+    if nombre not in FUNCIONES:
+        # El nombre lo escribe el modelo: no se loguea (podría llevar texto del
+        # usuario o saltos de línea que forjen líneas falsas) ni se intenta correr:
+        # `logger.exception` imprimiría el `KeyError` con el nombre adentro.
+        logger.warning("El modelo pidió una tool desconocida")
+        return {"error": "tool_failed"}
     try:
         # `**` abre el diccionario: {"id_tmdb": 5} pasa como `id_tmdb=5`. Así esta
         # función sirve para todas las tools sin saber qué recibe cada una.

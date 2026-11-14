@@ -14,6 +14,7 @@ común, y se llama con `await en_hilo(...)`.
 import json
 import logging
 import time
+from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
@@ -54,17 +55,83 @@ _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
 
 def _historial(chat, usuario):
-    """Los últimos mensajes, de más viejo a más nuevo y anonimizados."""
+    """Los últimos mensajes de la sesión actual, de más viejo a más nuevo.
+
+    Sale anonimizado y con dos cuidados para que el modelo no imite lo que no debe
+    (revisión del 13/11/2026: con rechazos viejos guardados, 4 de 4 respuestas a un
+    pedido válido eran rechazos, y con el chat limpio 4 de 4 salían bien):
+
+    - **Solo la sesión actual.** Se recorren los mensajes del más nuevo al más viejo
+      y se corta en el primer hueco mayor a `CHAT_VENTANA_SESION_MINUTOS`. El primer
+      hueco se mide contra el momento actual (el mensaje que está por llegar): si el
+      último mensaje guardado es de hace horas, es otra sesión y el historial va vacío.
+    - **Sin negritas en lo que dijo el asistente.** Lo guardado lleva `**Título**`
+      (lo arma el filtro de marcadores), pero el modelo no tiene que ver su propia
+      respuesta con negritas: las copiaría sin haber buscado. Es una copia: lo
+      guardado queda como está.
+    """
+    ventana = timedelta(minutes=settings.CHAT_VENTANA_SESION_MINUTOS)
     ultimos = Mensaje.objects.filter(chat=chat).order_by("-fecha_hora", "-id")[
         :_MENSAJES_DE_HISTORIAL
     ]
-    return [
-        {
-            "role": _ROLES[mensaje.autor],
-            "content": anonimizar(mensaje.texto, usuario, CONVERSACION),
-        }
-        for mensaje in reversed(ultimos)
-    ]
+    sesion = []
+    # Hasta dónde llega el hueco que se está midiendo: al principio, hasta ahora.
+    # `timedelta` es una duración, como `java.time.Duration`: se compara con `>`.
+    referencia = timezone.now()
+    for mensaje in ultimos:
+        if referencia - mensaje.fecha_hora > ventana:
+            break
+        sesion.append(mensaje)
+        referencia = mensaje.fecha_hora
+
+    historial = []
+    for mensaje in reversed(sesion):
+        texto = anonimizar(mensaje.texto, usuario, CONVERSACION)
+        if mensaje.autor == TipoAutor.CHATBOT:
+            texto = texto.replace("**", "")
+        historial.append({"role": _ROLES[mensaje.autor], "content": texto})
+    return historial
+
+
+def _reloj():
+    """Segundos para medir cuánto tarda el turno (solo para el log). Fijable en tests."""
+    return time.perf_counter()
+
+
+class _Medicion:
+    """Lo que costó el turno: una `Vuelta` por cada llamada al modelo.
+
+    Solo mira cantidades (tokens, segundos, el motivo de fin): nunca texto. Se llena
+    con cada `Vuelta` que entrega el proveedor, incluidas la llamada descartada de la
+    búsqueda forzada y la última sin tools, porque también cuestan.
+    """
+
+    def __init__(self):
+        self.vueltas = []
+
+    def sumar(self, vuelta):
+        self.vueltas.append(vuelta)
+
+    def _suma(self, campo):
+        """La suma de un campo de `Uso` entre las llamadas, o `"?"` si ninguna lo informó."""
+        valores = [
+            getattr(v.uso, campo)
+            for v in self.vueltas
+            if v.uso and getattr(v.uso, campo) is not None
+        ]
+        return sum(valores) if valores else "?"
+
+    def resumen(self, total):
+        """Los campos para la línea `Turno:`, ya como texto: `clave=valor` separados."""
+        return (
+            f"llamadas={len(self.vueltas)} tokens_entrada={self._suma('entrada')} "
+            f"tokens_salida={self._suma('salida')} "
+            f"cache_acierto={self._suma('cache_acierto')} "
+            f"cache_fallo={self._suma('cache_fallo')} "
+            f"cortado_por_largo={'si' if any(v.fin == 'length' for v in self.vueltas) else 'no'} "
+            f"segundos_por_llamada={','.join(f'{v.segundos:.1f}' for v in self.vueltas)} "
+            f"segundos_total={total:.1f}"
+        )
 
 
 def _ahora():
@@ -240,7 +307,7 @@ def _soltar(filtro, partes):
     return Texto(resto)
 
 
-async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro):
+async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro, medicion):
     """Una llamada más, sin tools, para que el modelo responda con lo que ya tiene.
 
     Antes, pasarse del tope de vueltas o terminar sin texto era un error para el
@@ -259,7 +326,10 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro):
         async for item in proveedor.escribir(mensajes, []):
             # Si el modelo pidiera tools igual, la `Vuelta` final se ignora: solo
             # importa el texto que salió.
-            if isinstance(item, Vuelta) or not item:
+            if isinstance(item, Vuelta):
+                medicion.sumar(item)
+                continue
+            if not item:
                 continue
             saliente = filtro.alimentar(item)
             if not saliente:
@@ -281,19 +351,23 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro):
         raise ErrorDelTurno("La última llamada no escribió nada")
 
 
-def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento):
+def _registrar_turno(
+    tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento, medicion, total
+):
     """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
     Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
     tools pidió y con cuántos resultados, si se quedó sin vueltas, cuántos marcadores
     `[[n]]` usó y cuántos no correspondían a ningún título, cuántas negritas escribió
-    por su cuenta, si hubo búsqueda forzada). A propósito no lleva la pregunta ni la respuesta: son datos
-    personales y los logs se guardan.
+    por su cuenta, si hubo búsqueda forzada) y cuánto costó: tokens de entrada y salida,
+    los que salieron de la caché del proveedor, si alguna llamada se cortó por largo y
+    los segundos de cada llamada y del turno (ver `_Medicion`). A propósito no lleva la
+    pregunta ni la respuesta: son datos personales y los logs se guardan.
     """
     logger.info(
         "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s "
         "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d "
-        "reintento_forzado=%s",
+        "reintento_forzado=%s %s",
         ",".join(tools_pedidas) or "ninguna",
         vueltas,
         "si" if ultima_sin_tools else "no",
@@ -302,6 +376,7 @@ def _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, rein
         filtro.invalidos,
         filtro.negritas,
         "si" if reintento else "no",
+        medicion.resumen(total),
     )
 
 
@@ -329,6 +404,8 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     # hacerlo; `forzar_ahora`, que la próxima llamada es esa; `descartado`, el texto
     # del primer intento, por si la llamada forzada falla.
     inicio = _ahora()
+    inicio_medido = _reloj()
+    medicion = _Medicion()
     reintento = forzar_ahora = False
     descartado = None
 
@@ -351,6 +428,7 @@ async def responder(chat, texto, idioma, *, proveedor=None):
             async for item in proveedor.escribir(mensajes, ESQUEMAS, **extra):
                 if isinstance(item, Vuelta):
                     vuelta = item
+                    medicion.sumar(item)
                     continue
                 retenido.append(item)
                 if retener or (
@@ -414,7 +492,7 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         motivo = "se pasó del tope de vueltas con tools"
         ultima_sin_tools = True
         async for evento in _ultima_llamada(
-            proveedor, mensajes, partes, motivo, filtro
+            proveedor, mensajes, partes, motivo, filtro, medicion
         ):
             yield evento
 
@@ -422,10 +500,19 @@ async def responder(chat, texto, idioma, *, proveedor=None):
         # El turno terminó sin una sola palabra para el usuario.
         ultima_sin_tools = True
         async for evento in _ultima_llamada(
-            proveedor, mensajes, partes, "el modelo no escribió nada", filtro
+            proveedor, mensajes, partes, "el modelo no escribió nada", filtro, medicion
         ):
             yield evento
 
     respuesta = "".join(partes)
-    _registrar_turno(tools_pedidas, vueltas, ultima_sin_tools, ctx, filtro, reintento)
+    _registrar_turno(
+        tools_pedidas,
+        vueltas,
+        ultima_sin_tools,
+        ctx,
+        filtro,
+        reintento,
+        medicion,
+        _reloj() - inicio_medido,
+    )
     yield Resultado(respuesta, ctx.tarjetas)

@@ -51,6 +51,11 @@ CON_HISTORIAL = f"""
   {HISTORIAL_BUENO}
 """
 
+# Los mismos mensajes, de hace 3 horas: otra sesión (ver `CHAT_VENTANA_SESION_MINUTOS`).
+CON_HISTORIAL_VIEJO = CON_HISTORIAL.replace(
+    "autor: usuario", "autor: usuario\n      hace_min: 180"
+).replace("autor: asistente", "autor: asistente\n      hace_min: 179")
+
 
 class ConArchivos:
     def archivo(self, contenido):
@@ -94,6 +99,14 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
             self.assertEqual(historial[0]["autor"], "usuario")
             self.assertEqual(historial[-1]["autor"], "asistente")
 
+    def test_los_hace_min_de_un_historial_respetan_el_orden_de_la_charla(self):
+        # Los mensajes se ordenan por fecha: si un mensaje posterior dijera «hace más
+        # minutos» que uno anterior, la charla le llegaría al modelo desordenada.
+        for pregunta in cargar_golden(GOLDEN):
+            minutos = [m.get("hace_min", 0) for m in pregunta.get("historial", [])]
+            with self.subTest(pregunta["id"]):
+                self.assertEqual(minutos, sorted(minutos, reverse=True))
+
     def test_el_idioma_por_defecto_es_espanol(self):
         preguntas = cargar_golden(self.archivo(DOS_PREGUNTAS))
 
@@ -129,6 +142,12 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
             ),
             "campo de más en un mensaje previo": CON_HISTORIAL.replace(
                 "autor: usuario", "autor: usuario\n      rol: x"
+            ),
+            "hace_min negativo": CON_HISTORIAL.replace(
+                "autor: usuario", "autor: usuario\n      hace_min: -5"
+            ),
+            "hace_min que no es entero": CON_HISTORIAL.replace(
+                "autor: usuario", "autor: usuario\n      hace_min: mucho"
             ),
         }
         for nombre, contenido in casos.items():
@@ -226,6 +245,15 @@ class ComandoGoldenTests(ConArchivos, TestCase):
 
         self.assertEqual(Mensaje.objects.count(), 0)
 
+    def test_no_se_combina_con_guardar(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "chatear",
+                usuario="juanp",
+                golden=self.archivo(DOS_PREGUNTAS),
+                guardar=True,
+            )
+
     def test_no_se_combina_con_mensaje(self):
         with self.assertRaises(CommandError):
             call_command(
@@ -265,6 +293,25 @@ class CasosConHistorialTests(ConArchivos, TestCase):
         self.assertEqual(roles, ["system", "user", "assistant", "user"])
         self.assertEqual(proveedor.pedidos[0][1]["content"], "¿Algo de isekai?")
         self.assertIn("[[1]] Log Horizon (2013)", proveedor.pedidos[0][0]["content"])
+
+    def test_hace_min_manda_el_mensaje_a_otra_sesion(self):
+        proveedor = ProveedorFalso([["Hola"]])
+        with patch(
+            "chatbot.management.commands.chatear.crear_proveedor",
+            return_value=proveedor,
+        ):
+            call_command(
+                "chatear",
+                usuario="juanp",
+                golden=self.archivo(CON_HISTORIAL_VIEJO),
+                stdout=StringIO(),
+                stderr=StringIO(),
+            )
+
+        # Solo quedan el sistema y la pregunta: el historial viejo no viaja.
+        roles = [m["role"] for m in proveedor.pedidos[0]]
+        self.assertEqual(roles, ["system", "user"])
+        self.assertEqual(Mensaje.objects.count(), 0)
 
     def test_las_tarjetas_previas_se_pueden_marcar(self):
         _, salida = self.correr([["Va [[1]]"]])

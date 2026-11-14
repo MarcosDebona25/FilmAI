@@ -5,7 +5,7 @@ el código que corre en `en_hilo` ve la transacción del test.
 """
 
 import json
-from datetime import date
+from datetime import date, timedelta
 from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase, override_settings
+from django.utils import timezone
 
 from catalogo.models import Calificacion, ProduccionAudiovisual, TipoProduccion
 from catalogo.presupuesto import contar_llamadas, registrar_llamada
@@ -21,6 +22,7 @@ from chatbot.llm import (
     LlamadaTool,
     ProveedorFalso,
     ProveedorOpenAICompatible,
+    Uso,
     Vuelta,
     crear_proveedor,
     leer_stream,
@@ -644,6 +646,118 @@ class ReglasDelPromptTests(SimpleTestCase):
         self.assertIn("voseo", es)
 
 
+class HistorialDeLaSesionTests(BaseOrquestador):
+    """El modelo solo ve la charla de la sesión actual, y sin negritas en lo suyo.
+
+    Una «sesión» es una racha de mensajes sin un hueco mayor a
+    `CHAT_VENTANA_SESION_MINUTOS`. Se mide hacia atrás desde el mensaje que llega
+    ahora: si el último guardado es de hace horas, es otra sesión.
+
+    Las fechas se fijan restando minutos al reloj real (`auto_now_add` pisa lo que
+    se pase al crear, así que se corrige con `update`). Los tests usan márgenes
+    grandes (por ejemplo 30 contra 60 minutos) para no depender del segundo exacto.
+    """
+
+    async def crear(self, texto, autor, hace_min):
+        mensaje = await Mensaje.objects.acreate(
+            chat=self.chat, texto=texto, autor=autor
+        )
+        await Mensaje.objects.filter(pk=mensaje.pk).aupdate(
+            fecha_hora=timezone.now() - timedelta(minutes=hace_min)
+        )
+
+    def historial_enviado(self):
+        return [
+            (m["role"], m["content"]) for m in self.mensajes_del_primer_pedido()[1:-1]
+        ]
+
+    async def test_lo_de_otra_sesion_no_viaja(self):
+        await self.crear("de ayer", TipoAutor.USUARIO, 24 * 60)
+        await self.crear("rechazo de ayer", TipoAutor.CHATBOT, 24 * 60 - 1)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(self.historial_enviado(), [])
+
+    async def test_un_hueco_grande_corta_la_sesion(self):
+        await self.crear("viejo", TipoAutor.USUARIO, 300)
+        await self.crear("viejo bot", TipoAutor.CHATBOT, 299)
+        await self.crear("reciente", TipoAutor.USUARIO, 30)
+        await self.crear("reciente bot", TipoAutor.CHATBOT, 29)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(
+            self.historial_enviado(),
+            [("user", "reciente"), ("assistant", "reciente bot")],
+        )
+
+    async def test_una_charla_larga_sin_huecos_grandes_sigue_siendo_una_sesion(self):
+        # Cada hueco (30, 30 y 20 minutos) entra en la ventana de 45, aunque el
+        # primer mensaje sea de hace 80 minutos: lo que cuenta es el hueco, no la
+        # antigüedad total.
+        await self.crear("uno", TipoAutor.USUARIO, 80)
+        await self.crear("dos", TipoAutor.CHATBOT, 50)
+        await self.crear("tres", TipoAutor.USUARIO, 20)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(
+            [c for _, c in self.historial_enviado()], ["uno", "dos", "tres"]
+        )
+
+    async def test_si_el_ultimo_mensaje_es_viejo_empieza_una_sesion_nueva(self):
+        await self.crear("pregunta", TipoAutor.USUARIO, 61)
+        await self.crear("respuesta", TipoAutor.CHATBOT, 60)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(self.historial_enviado(), [])
+
+    @override_settings(CHAT_VENTANA_SESION_MINUTOS=10)
+    async def test_la_ventana_sale_de_la_configuracion(self):
+        await self.crear("hace 20 minutos", TipoAutor.USUARIO, 20)
+        await self.crear("hace 5 minutos", TipoAutor.CHATBOT, 5)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(self.historial_enviado(), [("assistant", "hace 5 minutos")])
+
+    async def test_a_lo_del_asistente_se_le_quitan_las_negritas(self):
+        await self.crear("Quiero **algo** bueno", TipoAutor.USUARIO, 2)
+        await self.crear("Mirá **Moon** (2009) y **Luna**.", TipoAutor.CHATBOT, 1)
+
+        await self.correr([["Hola"]])
+
+        self.assertEqual(
+            self.historial_enviado(),
+            [
+                ("user", "Quiero **algo** bueno"),
+                ("assistant", "Mirá Moon (2009) y Luna."),
+            ],
+        )
+
+    async def test_lo_guardado_conserva_las_negritas(self):
+        await self.crear("Mirá **Moon** (2009).", TipoAutor.CHATBOT, 1)
+
+        await self.correr([["Hola"]])
+
+        guardado = await Mensaje.objects.aget(chat=self.chat)
+        self.assertEqual(guardado.texto, "Mirá **Moon** (2009).")
+
+
+class FormatoDelPromptTests(SimpleTestCase):
+    def test_el_prompt_no_pide_negritas_al_modelo(self):
+        # La negrita de los títulos la arma el filtro de marcadores; si el prompt la
+        # pidiera, `recomienda_sin_buscar` la tomaría por un título escrito de memoria
+        # y forzaría una búsqueda de más (13/11/2026).
+        sistema = armar_sistema("", [], "es", hoy=date(2026, 11, 13))
+
+        formato = sistema[sistema.index("Formato:") :].split("\n\n")[0]
+        self.assertNotIn("negrita y listas", formato)
+        self.assertIn("sin negritas", formato)
+
+
 class FechaDeHoyTests(BaseOrquestador):
     async def test_el_orquestador_pasa_la_fecha_de_hoy_al_sistema(self):
         with patch(
@@ -697,8 +811,15 @@ class ComandoChatearTests(TestCase):
             )
         return salida.getvalue()
 
-    def test_imprime_la_respuesta_y_guarda_el_turno(self):
+    def test_imprime_la_respuesta_y_por_defecto_no_guarda_nada(self):
+        # El chat real del usuario no se ensucia con las pruebas (13/11/2026).
         salida = self.chatear([["Hola, ", "che"]])
+
+        self.assertIn("Hola, che", salida)
+        self.assertEqual(Mensaje.objects.count(), 0)
+
+    def test_con_guardar_se_guarda_el_turno(self):
+        salida = self.chatear([["Hola, ", "che"]], guardar=True)
 
         self.assertIn("Hola, che", salida)
         self.assertEqual(
@@ -706,10 +827,23 @@ class ComandoChatearTests(TestCase):
             [("usuario", "hola"), ("chatbot", "Hola, che")],
         )
 
-    def test_sin_guardar_no_toca_el_historial(self):
-        self.chatear([["Hola"]], sin_guardar=True)
+    def test_guardar_deja_las_tarjetas_y_los_ya_recomendados_como_la_app(self):
+        # Antes el comando creaba los `Mensaje` a mano, sin tarjetas ni
+        # `ya_recomendados`: el chat quedaba distinto al de una charla real.
+        buscar = {"descubrir": BaseOrquestador.buscar_de_mentira}
+        with (
+            patch.dict(FUNCIONES, buscar),
+            patch("chatbot.servicio.materializar_listado_en_segundo_plano"),
+        ):
+            self.chatear([[tool("descubrir")], ["Mirá [[1]]"]], guardar=True)
 
-        self.assertEqual(Mensaje.objects.count(), 0)
+        respuesta = Mensaje.objects.get(autor=TipoAutor.CHATBOT)
+        self.assertEqual(respuesta.texto, "Mirá **Moon** (2009)")
+        self.assertEqual([t["titulo"] for t in respuesta.tarjetas], ["Moon"])
+        chat = Chat.objects.get(usuario=self.usuario)
+        self.assertEqual(
+            [t["titulo"] for t in chat.contexto["ya_recomendados"]], ["Moon"]
+        )
 
     def test_si_el_turno_falla_lo_avisa_y_no_guarda(self):
         salida = self.chatear([[RuntimeError("503")]])
@@ -722,11 +856,16 @@ class ComandoChatearTests(TestCase):
             call_command("chatear", usuario="nadie", mensaje="hola")
 
 
-def fragmento(*, contenido=None, llamadas=None, razonamiento=None):
+def fragmento(*, contenido=None, llamadas=None, razonamiento=None, fin=None):
     delta = SimpleNamespace(
         content=contenido, tool_calls=llamadas, reasoning_content=razonamiento
     )
-    return SimpleNamespace(choices=[SimpleNamespace(delta=delta)])
+    return SimpleNamespace(choices=[SimpleNamespace(delta=delta, finish_reason=fin)])
+
+
+def fragmento_de_uso(**campos):
+    """El último fragmento con `include_usage`: sin `choices` y con el consumo."""
+    return SimpleNamespace(choices=[], usage=SimpleNamespace(**campos))
 
 
 def parte_de_tool(indice, argumentos, id_=None, nombre=None):
@@ -790,6 +929,49 @@ class LeerStreamTests(SimpleTestCase):
         self.assertEqual(items[-1].razonamiento, "pensando")
 
 
+class UsoYFinTests(SimpleTestCase):
+    """`leer_stream` también devuelve el consumo y por qué terminó la respuesta.
+
+    La forma del fragmento de uso copia la de DeepSeek: `prompt_tokens`,
+    `completion_tokens` y, aparte, `prompt_cache_hit_tokens` / `prompt_cache_miss_tokens`.
+    """
+
+    async def leer(self, *fragmentos):
+        return [item async for item in leer_stream(como_stream(*fragmentos))]
+
+    async def test_lee_los_tokens_y_la_cache_del_ultimo_fragmento(self):
+        items = await self.leer(
+            fragmento(contenido="Hola", fin="stop"),
+            fragmento_de_uso(
+                prompt_tokens=1200,
+                completion_tokens=40,
+                prompt_cache_hit_tokens=1000,
+                prompt_cache_miss_tokens=200,
+            ),
+        )
+
+        self.assertEqual(items[-1].uso, Uso(1200, 40, 1000, 200))
+        self.assertEqual(items[-1].fin, "stop")
+
+    async def test_un_proveedor_sin_cache_deja_esos_campos_en_none(self):
+        items = await self.leer(
+            fragmento(contenido="Hola", fin="stop"),
+            fragmento_de_uso(prompt_tokens=10, completion_tokens=2),
+        )
+
+        self.assertEqual(items[-1].uso, Uso(10, 2, None, None))
+
+    async def test_sin_fragmento_de_uso_no_hay_uso(self):
+        items = await self.leer(fragmento(contenido="Hola", fin="stop"))
+
+        self.assertIsNone(items[-1].uso)
+
+    async def test_guarda_el_motivo_de_fin_aunque_sea_length(self):
+        items = await self.leer(fragmento(contenido="Cortad", fin="length"))
+
+        self.assertEqual(items[-1].fin, "length")
+
+
 class ParametroToolsTests(SimpleTestCase):
     """Sin esquemas, `tools` no viaja: es lo que hace una llamada «solo texto»."""
 
@@ -828,6 +1010,25 @@ class ParametroToolsTests(SimpleTestCase):
         )
 
         self.assertEqual(enviado["tool_choice"], "required")
+
+    async def test_pide_el_uso_de_tokens_en_el_stream(self):
+        enviado = await self.pedido_enviado([])
+
+        self.assertEqual(enviado["stream_options"], {"include_usage": True})
+
+    async def test_la_vuelta_trae_los_segundos_de_la_llamada(self):
+        crear = AsyncMock(return_value=como_stream(fragmento(contenido="Hola")))
+        with patch("chatbot.llm.AsyncOpenAI") as cliente:
+            cliente.return_value.__aenter__.return_value = MagicMock(
+                chat=MagicMock(completions=MagicMock(create=crear))
+            )
+            proveedor = ProveedorOpenAICompatible(
+                base_url="http://x", modelo="m", api_key="k", thinking=False
+            )
+            with patch("chatbot.llm._reloj", side_effect=[10.0, 12.5]):
+                items = [_ async for _ in proveedor.escribir([], [])]
+
+        self.assertEqual(items[-1].segundos, 2.5)
 
     async def test_sin_esquemas_ignora_tool_choice(self):
         # La API rechaza `tool_choice` sin `tools`.
