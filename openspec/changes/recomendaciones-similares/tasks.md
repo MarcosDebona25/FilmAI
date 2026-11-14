@@ -69,29 +69,29 @@
 
 ## Phase 2: List endpoint (PR 2)
 
-- [ ] 2.1 Branch `feat/similares-listas` from PR 1's branch and its worktree
-- [ ] 2.2 RED name rule (D-2): «Lista 3», «My list», «Nueva lista» → no; «Sci
+- [x] 2.1 Branch `feat/similares-listas` from PR 1's branch and its worktree
+- [x] 2.2 RED name rule (D-2): «Lista 3», «My list», «Nueva lista» → no; «Sci
       Fi», «Pelis para llorar», «Domingo de lluvia» → yes; Favorites never
-- [ ] 2.3 RED name vector: cached by normalized name; Ollama via
+- [x] 2.3 RED name vector: cached by normalized name; Ollama via
       `MockTransport`; not loaded → skipped, `pedir_carga_del_modelo` called,
       5 min TTL; `/api/ps` failing → flag for 60 s and a second request does
       not call Ollama
-- [ ] 2.4 RED `listas/tests_sugerencias.py`: 401 (Unauthorized) without
+- [x] 2.4 RED `listas/tests_sugerencias.py`: 401 (Unauthorized) without
       session; 404 (Not Found) for someone else's list, an inactive one,
       Pendientes and Vistas; `pagina` 0, -1, `abc` → 400 (Bad Request); empty
       list → 200 (OK) empty without TMDB; list of only shows → only shows
       (D-3); «Vistas» removed after the cache
-- [ ] 2.5 RED signature: adding or removing an item and renaming change the
+- [x] 2.5 RED signature: adding or removing an item and renaming change the
       key; rating a title (adds to «Vistas») does not
-- [ ] 2.6 GREEN `ListaSugerenciasView` + route `<id>/suggestions/`
-- [ ] 2.7 Contract tests and `contracts/` if they ask
-- [ ] 2.8 Calibrate `DISTANCIA_MAXIMA` with three real lists of the dev
+- [x] 2.6 GREEN `ListaSugerenciasView` + route `<id>/suggestions/`
+- [x] 2.7 Contract tests and `contracts/` if they ask
+- [x] 2.8 Calibrate `DISTANCIA_MAXIMA` with three real lists of the dev
       database (one theme, mixed types, two unrelated themes): print the
       distances and the first 10 with and without the name. Record in
       `design.md` §4 and decide whether the multi-centroid follow-up is needed
-- [ ] 2.9 Measure with Ollama loaded: cold with name, cold without, cached;
+- [x] 2.9 Measure with Ollama loaded: cold with name, cold without, cached;
       write the numbers in `design.md` §8
-- [ ] 2.10 `ruff format . && ruff check .`; full backend suite
+- [x] 2.10 `ruff format . && ruff check .`; focused tests (231) local; full backend suite in CI
 
 ## Phase 3: List row (PR 3)
 

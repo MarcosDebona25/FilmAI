@@ -423,6 +423,24 @@ Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`,
 
 ---
 
+### 13/11/2026 — Títulos parecidos: sugerencias de una lista (PR 2)
+
+`GET /api/lists/{id}/suggestions/?pagina=N` (`ListaSugerenciasView`, en `listas/views.py`) usa el mismo motor con los títulos de la lista como semillas. Vale para las listas personalizadas y Favoritos; Pendientes y Vistas dan 404 (Not Found) `not_found`, igual que la lista de otra persona o una inactiva. `pagina` debe ser un entero mayor o igual a 1 (si no, 400 (Bad Request) `invalid`); una lista vacía responde 200 (OK) sin resultados y sin llamar a TMDB. Las decisiones de Gonza (D-1 a D-9, 13/11/2026) se aplican tal cual: una lista de una sola clase trae solo esa clase, Vistas se saca también en Favoritos, y el nombre pesa `max(0.15, 1/(n+1))`.
+
+- **El nombre «dice algo»** (`nombre_dice_algo`): sin tildes ni números y sin las palabras de relleno del diseño, tiene que quedar una palabra de 3 letras o más. Favoritos nunca lo usa.
+- **El vector del nombre nunca hace esperar** (`vector_del_nombre`): se guarda 30 días por nombre normalizado y modelo; si no está y el modelo no está cargado, se saltea, se pide la carga y el pool dura 5 minutos; si Ollama no responde se recuerda 60 s (`similares:ollama_no`) para que un Ollama caído cueste a lo sumo una consulta por minuto.
+- **Firma de la caché**: `similares:lista:{id}:{firma}`, con `sha256(modelo, idioma, nombre normalizado, ids de los títulos ordenados)`. Agregar, quitar o renombrar cambia la clave y la vieja se vence sola; calificar (que agrega a Vistas) no la cambia, porque Vistas se saca después de leer el pool. La semilla de la mezcla es la clave entera.
+
+Desvíos del diseño: la firma usa los ids que ya trae la consulta de los títulos (una sola consulta, del más nuevo al más viejo, de donde salen también las 3 semillas de TMDB) en vez del `string_agg` en SQL, porque esa lista hace falta igual y son a lo sumo 1 000 enteros; `Pool` ya llevaba `nombre_usado` y `completo`, así que el motor casi no cambió (solo se le sumaron las tres funciones del nombre). El error de `pagina` se arma con `ErrorValidacion` y no con un serializador, porque la spec pide el código `invalid` para cero, negativos y texto, y `IntegerField(min_value=1)` daría `min_value`.
+
+Calibración con listas reales de la base de desarrollo (6 077 vectores): `DISTANCIA_MAXIMA` se queda en 0.40. El centroide comprime las distancias: desde 3 títulos, el vecino 100 está por debajo de 0.27, así que una lista de 3 o más títulos no necesita el relleno de TMDB; solo una de 1 o 2 títulos de nicho o sin vectores. Bajarlo a 0.35 mandaría a TMDB a la mitad de los títulos sueltos, y `/recommendations` favorece al inglés. El nombre cambia entre 0 y 2 de los primeros 10 (peso 0.15 desde 6 títulos). El promedio de una lista con temas distintos (Favoritos: acción, romance, series) se corre hacia lo más genérico pero no se rompe (cada semilla queda entre 0.17 y 0.26 del centroide); varios centroides queda como mejora futura, no hace falta ahora.
+
+Medido con `bge-m3` cargado: en frío con el nombre sin guardar, 101 ms; con el nombre guardado, 21 ms; en frío sin nombre, 15 ms; con el pool guardado, 9 a 32 ms; con Ollama caído, 67 ms el primer pedido y 27 ms el segundo. La carga del modelo desde cero tardó 65 s en esta máquina: por eso el nombre no se espera.
+
+Archivos: `backend/catalogo/services/similares.py`, `backend/listas/views.py`, `backend/listas/urls.py`, `backend/catalogo/tests_similares_nombre.py`, `backend/listas/tests_sugerencias.py`, `contracts/openapi.yaml`, `openspec/changes/recomendaciones-similares/design.md`
+
+---
+
 ## Listas
 
 ### 19/09/2026 — Resumen de listas y nombres permitidos
