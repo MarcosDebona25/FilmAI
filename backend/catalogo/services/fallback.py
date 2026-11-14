@@ -17,10 +17,10 @@ def _vacio(valor):
     return valor is None or (isinstance(valor, str) and not valor.strip())
 
 
-def _completar(destino, respaldo):
+def _completar(destino, respaldo, campos=CAMPOS_TRADUCIBLES):
     """Copia del respaldo solo lo que falta; devuelve los campos completados."""
     completados = []
-    for campo in CAMPOS_TRADUCIBLES:
+    for campo in campos:
         if (
             campo in destino
             and _vacio(destino[campo])
@@ -31,8 +31,8 @@ def _completar(destino, respaldo):
     return completados
 
 
-def _incompleto(item):
-    return any(campo in item and _vacio(item[campo]) for campo in CAMPOS_TRADUCIBLES)
+def _incompleto(item, campos=CAMPOS_TRADUCIBLES):
+    return any(campo in item and _vacio(item[campo]) for campo in campos)
 
 
 def _clave(item):
@@ -79,6 +79,27 @@ class CatalogoConRespaldo:
                 if respaldo is not None and _incompleto(item):
                     item[MARCA] = _completar(item, respaldo)
         return datos
+
+    def completar_titulos(self, items, metodo, *args):
+        """Completa `title`/`name` vacíos de `items` con la misma consulta en inglés.
+
+        Para las sugerencias: solo importa el nombre (no la sinopsis) y solo de
+        los ítems que se van a mostrar, así que no se pide el inglés por una
+        sinopsis vacía ni por un título que ya quedó afuera. Si ningún título
+        está vacío —lo normal: TMDB cae al título original— no hace ninguna
+        llamada. Devuelve `items` (los mismos objetos, modificados).
+        """
+        campos = ("title", "name")
+        for item in items:
+            item[MARCA] = []
+        if any(_incompleto(item, campos) for item in items):
+            en_ingles = getattr(self._respaldo, metodo)(*args)
+            por_clave = {_clave(item): item for item in en_ingles.get("results") or []}
+            for item in items:
+                respaldo = por_clave.get(_clave(item))
+                if respaldo is not None and _incompleto(item, campos):
+                    item[MARCA] = _completar(item, respaldo, campos)
+        return items
 
     def get_trending(self, *args, **kwargs):
         return self._listado("get_trending", *args, **kwargs)

@@ -16,9 +16,12 @@ Este módulo no sabe de listas, usuarios ni HTTP: las vistas deciden las
 semillas, la clave de caché y qué se le saca a cada usuario («Vistas»).
 """
 
+import hashlib
 import logging
 import math
 import random
+import re
+import unicodedata
 from dataclasses import asdict, dataclass
 from itertools import zip_longest
 from typing import NamedTuple
@@ -39,9 +42,17 @@ from catalogo.models import (
     TipoProduccion,
 )
 from catalogo.presupuesto import tope_de_llamadas
+from catalogo.services.embeddings import (
+    MODEL_VERSION,
+    PRESUPUESTO_CHAT,
+    EmbeddingProviderError,
+    generar_vector,
+    modelo_cargado,
+)
 from catalogo.services.fallback import MARCA
 from catalogo.services.materialization import materializar_listado_en_segundo_plano
 from catalogo.services.recomendado import TIPO_TMDB
+from catalogo.services.semantica import pedir_carga_del_modelo
 from catalogo.services.traducciones import campos_en_ingles, texto_localizado
 
 logger = logging.getLogger(__name__)
@@ -79,6 +90,25 @@ TAMANO_PAGINA = 10
 TTL_POOL = 24 * 3600
 TTL_POOL_INCOMPLETO = 5 * 60
 
+# El nombre de la lista (design §3). Los nombres se repiten entre usuarios
+# («Sci Fi», «Terror»): guardar su vector 30 días evita casi todos los viajes a
+# Ollama.
+TTL_VECTOR_NOMBRE = 30 * 24 * 3600
+# Marca «Ollama no responde»: mientras dure, ningún pedido lo intenta.
+CLAVE_OLLAMA_NO = "similares:ollama_no"
+TTL_OLLAMA_NO = 60
+
+# Palabras que no dicen de qué trata una lista (D-2), ya sin tildes ni
+# mayúsculas. Un `frozenset` es un conjunto que no se puede modificar: sirve
+# para preguntar «¿está?» al instante, como un `Set` de Java.
+PALABRAS_DE_RELLENO = frozenset(
+    {
+        "list", "lista", "my", "mi", "mis", "new", "nueva", "movies",
+        "peliculas", "pelis", "series", "shows", "tv", "watch", "ver", "to",
+        "para", "de", "the", "and", "y", "misc", "varios", "cosas", "stuff",
+    }
+)  # fmt: skip
+
 
 class Candidato(NamedTuple):
     """Un vecino del vector semilla.
@@ -114,6 +144,80 @@ def peso_del_nombre(cantidad_de_titulos):
     tercio; desde seis, 0.15: los títulos hablan y el nombre solo inclina.
     """
     return max(PESO_MINIMO_DEL_NOMBRE, 1 / (cantidad_de_titulos + 1))
+
+
+def normalizar_nombre(nombre):
+    """Minúsculas, sin tildes y con un solo espacio entre palabras.
+
+    Sirve para decidir si el nombre dice algo y para la clave de caché: «Sci Fi»
+    y «SCI  fi» son la misma idea. El texto que se embebe NO es este: es el que
+    escribió la persona.
+    """
+    # NFKD separa cada letra de su tilde («é» pasa a «e» más la marca de la tilde), y después se
+    # descartan las marcas sueltas (categoría `Mn`).
+    sin_tildes = "".join(
+        letra
+        for letra in unicodedata.normalize("NFKD", nombre.lower())
+        if unicodedata.category(letra) != "Mn"
+    )
+    return " ".join(sin_tildes.split())
+
+
+def nombre_dice_algo(nombre):
+    """`True` si el nombre cuenta de qué trata la lista (D-2).
+
+    Se sacan los números y las palabras de relleno, y tiene que quedar al menos
+    una palabra de 3 letras o más: «Lista 3» y «My list» no dicen nada;
+    «Sci Fi», «Pelis para llorar» y «Domingo de lluvia» sí. Es una regla fija
+    (y no una medida de distancia) para poder probarla sin Ollama.
+    """
+    # `[^\W\d_]+` son tramos de letras: sin dígitos, guiones bajos ni símbolos.
+    palabras = re.findall(r"[^\W\d_]+", normalizar_nombre(nombre))
+    return any(
+        len(palabra) >= 3 and palabra not in PALABRAS_DE_RELLENO for palabra in palabras
+    )
+
+
+def vector_del_nombre(nombre, *, transport=None):
+    """El vector del nombre de la lista, o `None` si no se pudo sin esperar (D-9).
+
+    A quien mira su lista nunca se lo hace esperar a Ollama (en frío tarda hasta
+    20 s): si el vector no está guardado y el modelo no está cargado, se saltea
+    el nombre y se pide la carga para la próxima. Orden:
+
+    1. Vector guardado por nombre normalizado: se usa.
+    2. Marca «Ollama no responde»: se saltea.
+    3. Modelo sin cargar o Ollama caído: se saltea, se pide la carga, y si
+       estaba caído se recuerda 60 s (un Ollama caído cuesta 1 s por minuto,
+       no por pedido).
+    4. Cargado: se embebe con el presupuesto del chat (3 s, sin reintentos).
+
+    `transport` existe para los tests, como en `generar_vector`.
+    """
+    nombre = nombre.strip()
+    huella = hashlib.sha256(normalizar_nombre(nombre).encode()).hexdigest()
+    clave = f"similares:nombre:{MODEL_VERSION}:{huella}"
+    guardado = cache.get(clave)
+    if guardado is not None:
+        return guardado
+    if cache.get(CLAVE_OLLAMA_NO):
+        return None
+    try:
+        cargado = modelo_cargado(transport=transport)
+    except EmbeddingProviderError:
+        cache.set(CLAVE_OLLAMA_NO, True, TTL_OLLAMA_NO)
+        pedir_carga_del_modelo()
+        return None
+    if not cargado:
+        pedir_carga_del_modelo()
+        return None
+    try:
+        vector = generar_vector(nombre, **PRESUPUESTO_CHAT, transport=transport)
+    except EmbeddingProviderError:
+        cache.set(CLAVE_OLLAMA_NO, True, TTL_OLLAMA_NO)
+        return None
+    cache.set(clave, vector, TTL_VECTOR_NOMBRE)
+    return vector
 
 
 def _centroide(produccion_ids):

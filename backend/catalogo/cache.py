@@ -16,12 +16,14 @@ ENDPOINTS_LOCALIZADOS = frozenset(
         "now_playing",
         "discover",
         "search",
+        "search_multi",
         "movie_detail",
         "tv_detail",
         "genres",
         "recommendations",
         "person_search",
         "person_credits",
+        "person_detail",
     }
 )
 
@@ -30,6 +32,8 @@ ENDPOINT_TTLS = {
     "now_playing": 6 * 3600,
     "discover": 6 * 3600,
     "search": 1 * 3600,
+    # Sugerencias de la navbar: el mismo TTL que `search`.
+    "search_multi": 1 * 3600,
     "movie_detail": 24 * 3600,
     "tv_detail": 24 * 3600,
     "keywords": 24 * 3600,
@@ -37,6 +41,8 @@ ENDPOINT_TTLS = {
     "recommendations": 24 * 3600,
     "person_search": 24 * 3600,
     "person_credits": 24 * 3600,
+    # El filtro por persona de Buscar pide el nombre y la foto junto con la filmografía.
+    "person_detail": 24 * 3600,
     # El reparto de una producción ya estrenada casi no cambia: mismo TTL
     # largo que el detalle y las keywords. Se guarda recortado y una sola vez
     # (ver `UNA_SOLA_CLAVE`); el nombre cambió de `credits` a `creditos_ficha`
@@ -327,6 +333,12 @@ class TMDBClientCache:
             "search", params, lambda: self.client.search(query, tipo, page, anio)
         )
 
+    def search_multi(self, query, page=1):
+        params = {"query": query, "page": page}
+        return self._cached_call(
+            "search_multi", params, lambda: self.client.search_multi(query, page)
+        )
+
     def get_movie_detail(self, id_tmdb):
         params = {"id_tmdb": id_tmdb}
         return self._cached_call(
@@ -352,6 +364,13 @@ class TMDBClientCache:
             "person_search",
             {"nombre": nombre},
             lambda: self.client.search_person(nombre),
+        )
+
+    def get_person_detail(self, id_persona):
+        return self._cached_call(
+            "person_detail",
+            {"id_persona": id_persona},
+            lambda: self.client.get_person_detail(id_persona),
         )
 
     def get_person_credits(self, id_persona):

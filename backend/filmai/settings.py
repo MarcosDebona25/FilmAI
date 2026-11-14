@@ -233,6 +233,9 @@ REST_FRAMEWORK = {
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
         "catalogo": "60/min",
+        # Sugerencias de la navbar: una tecla (con espera de 250 ms) es un
+        # pedido, así que tienen su propio cupo, más holgado (13/11/2026).
+        "sugerencias": "120/min",
         # Escrituras de reseñas, listas y perfil, por usuario (26/10/2026).
         "escritura": "60/min",
         # Login: 10 intentos por minuto por cuenta (frena el adivinado de

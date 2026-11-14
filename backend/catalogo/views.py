@@ -25,6 +25,7 @@ from catalogo.services.materialization import (
 )
 from catalogo.services.plataformas import plataformas
 from catalogo.services.recomendado import recomendar, vistos
+from catalogo.services.sugerencias import sugerir
 from catalogo.services.tmdb import get_catalog_service
 from filmai.errores.validacion import ErrorValidacion
 from filmai.idioma import idioma_efectivo
@@ -250,16 +251,57 @@ class SearchView(CatalogoBaseView):
         return Response(data)
 
 
+class SuggestView(CatalogoBaseView):
+    """Sugerencias de la navbar: títulos y personas con una sola llamada a TMDB.
+
+    No encola la materialización (a diferencia de `browse/` y los listados):
+    cada tecla pedida dejaría hasta 5 tareas por títulos que nadie abrió; la
+    ficha materializa cuando se abre. Tiene su propio límite (`sugerencias`,
+    120 por minuto) para que escribir no gaste el cupo de la página que el
+    usuario está por abrir.
+    """
+
+    throttle_scope = "sugerencias"
+    MIN_TEXTO = 2
+    MAX_TEXTO = 50
+    tipos: ClassVar = ["all", "person"]
+
+    def get(self, request):
+        params = request.query_params
+        q = (params.get("q") or "").strip()
+        if len(q) < self.MIN_TEXTO:
+            raise _error_param(
+                "q",
+                f"Ensure this field has at least {self.MIN_TEXTO} characters.",
+                "min_length",
+                {"minLength": self.MIN_TEXTO},
+            )
+        if len(q) > self.MAX_TEXTO:
+            raise _error_param(
+                "q",
+                f"Ensure this field has no more than {self.MAX_TEXTO} characters.",
+                "max_length",
+                {"maxLength": self.MAX_TEXTO},
+            )
+        tipo = _opcion(params.get("tipo", "all"), "tipo", self.tipos)
+        return Response(sugerir(self._service(request), q, tipo))
+
+
 class BrowseView(CatalogoBaseView):
     """Buscar (C-06): texto opcional, tipo y filtros, en una sola respuesta.
 
     `q` admite cualquier texto: se recorta y se mide después (decisión del
     14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
     TMDB para cada combinación lo decide `services/browse.py`.
+
+    `persona` (id de TMDB) y `rol` (`director` o `actor`) filtran por lo que
+    hizo esa persona (13/11/2026); una persona que TMDB no conoce es un 404
+    (Not Found) con `person_not_found`.
     """
 
     MAX_TEXTO = 50
     tipos: ClassVar = ["all", "movie", "tv"]
+    roles: ClassVar = ["director", "actor"]
 
     def get(self, request):
         params = request.query_params
@@ -275,6 +317,13 @@ class BrowseView(CatalogoBaseView):
         nota = params.get("nota") or None
         if nota is not None:
             _opcion(nota, "nota", list(NOTAS))
+        # Filtro por persona (13/11/2026): `rol` solo tiene sentido con `persona`.
+        persona = _int_param(
+            params.get("persona"), "persona", default=None, maximo=ID_TMDB_MAXIMO
+        )
+        rol = params.get("rol") or None
+        if rol is not None:
+            _opcion(rol, "rol", self.roles)
         page = self._page(request)
         datos = explorar(
             self._service(request),
@@ -286,6 +335,8 @@ class BrowseView(CatalogoBaseView):
             page=page,
             a_estrenar=self._a_estrenar(params.get("a_estrenar")),
             decada=self._decada(params.get("decada")),
+            persona=persona,
+            rol=rol,
         )
         # Cada ítem de Buscar trae su `media_type`.
         _materializar_listado_sin_interrumpir(datos)
