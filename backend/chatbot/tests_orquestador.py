@@ -102,7 +102,9 @@ class VueltaConToolsTests(BaseOrquestador):
         eventos = await self.correr([[tool("descubrir")], ["Te recomiendo Moon"]])
 
         self.assertEqual(eventos[0], Estado("searching"))
-        self.assertEqual(eventos[-1], Resultado("Te recomiendo Moon", []))
+        # Sin `[[n]]`, la red del final arma la tarjeta de Moon (el texto la nombra).
+        self.assertEqual(eventos[-1].texto, "Te recomiendo Moon")
+        self.assertEqual([t["id_tmdb"] for t in eventos[-1].tarjetas], [1])
         asistente, resultado = self.proveedor.pedidos[1][-2:]
         self.assertEqual(asistente["tool_calls"][0]["function"]["name"], "descubrir")
         self.assertEqual(resultado["role"], "tool")
@@ -170,7 +172,7 @@ class VueltaConToolsTests(BaseOrquestador):
         self.assertNotIn("reasoning_content", self.proveedor.pedidos[1][-2])
 
 
-def pelicula_de_mentira(id_tmdb, nombre, anio=2009, tipo="movie"):
+def pelicula_de_mentira(id_tmdb, nombre, anio=2009, tipo="movie", original=None):
     return titulo(
         id_tmdb=id_tmdb,
         tipo=tipo,
@@ -181,6 +183,7 @@ def pelicula_de_mentira(id_tmdb, nombre, anio=2009, tipo="movie"):
         nota=7.0,
         sinopsis="",
         poster=f"/{id_tmdb}.jpg",
+        original=original,
     )
 
 
@@ -489,6 +492,18 @@ class ReglasDelPromptTests(SimpleTestCase):
 
         self.assertIn("no pueden filtrar", sistema)
         self.assertIn("sin presentarlo como cumplido", sistema)
+
+    def test_el_descargo_es_solo_para_un_filtro_concreto_no_para_un_estilo(self):
+        # 14/11/2026: «de ese estilo» disparaba el descargo aunque no había nada que
+        # filtrar. Solo aplica a año, duración, país, idioma, plataforma…
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn(
+            "Si el usuario pide un filtro concreto (año, duración, país, idioma, "
+            "plataforma…)",
+            sistema,
+        )
+        self.assertIn("Por un «estilo», una «onda» o un tema no aclares nada", sistema)
 
     def test_si_un_filtro_existe_y_se_uso_no_se_excusa(self):
         # En la medición de #201 el bot decía «el buscador no filtra bien por basada

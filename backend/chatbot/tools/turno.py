@@ -34,6 +34,10 @@ class ContextoTurno:
     # Con `= {}` todos los turnos compartirían el mismo, de todos los usuarios.
     encontrados: dict = field(default_factory=dict)
     tarjetas: list = field(default_factory=list)
+    # Título original (el del idioma de producción) de cada título de `encontrados`,
+    # por la misma clave `(id_tmdb, tipo)`. Vive aparte para no meterse en las
+    # tarjetas ni en lo que ve el modelo: solo lo usa la red de `marcadores.py`.
+    originales: dict = field(default_factory=dict)
 
     def candidatos(self):
         """Los títulos del turno por su número de referencia: `{ref: título}`.
@@ -56,7 +60,19 @@ class ContextoTurno:
 
 
 # El `*` obliga a pasar los argumentos por nombre: con tantos, evita confundirlos.
-def titulo(*, id_tmdb, tipo, nombre, anio, generos, duracion, nota, sinopsis, poster):
+def titulo(
+    *,
+    id_tmdb,
+    tipo,
+    nombre,
+    anio,
+    generos,
+    duracion,
+    nota,
+    sinopsis,
+    poster,
+    original=None,
+):
     """Un título tal como lo manejan las tools, venga de TMDB o de nuestra base."""
     return {
         "id_tmdb": id_tmdb,
@@ -68,6 +84,7 @@ def titulo(*, id_tmdb, tipo, nombre, anio, generos, duracion, nota, sinopsis, po
         "nota_tmdb": round(nota, 1) if nota else None,
         "sinopsis_corta": (sinopsis or "")[:_LARGO_SINOPSIS],
         "poster": poster or None,
+        "titulo_original": original or None,
     }
 
 
@@ -84,7 +101,12 @@ def desde_produccion(produccion, idioma):
         nota=produccion.calificacion_promedio,
         sinopsis=texto_localizado(produccion, "sinopsis", idioma),
         poster=texto_localizado(produccion, "poster", idioma),
+        original=produccion.titulo,
     )
+
+
+# Campos que el modelo no necesita ver: gastan tokens (el póster y el título original).
+_SOLO_INTERNOS = ("poster", "titulo_original")
 
 
 def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
@@ -108,10 +130,14 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
             "anio": item["anio"],
             "nota_tmdb": item["nota_tmdb"],
         }
+        ctx.originales[clave] = item.get("titulo_original")
         # `ref` va primero: es lo que el modelo escribe entre corchetes (`[[3]]`)
         # para recomendar este título (ver `marcadores.py`).
         ref = list(ctx.encontrados).index(clave) + 1
-        publicado = {"ref": ref, **{k: v for k, v in item.items() if k != "poster"}}
+        publicado = {
+            "ref": ref,
+            **{k: v for k, v in item.items() if k not in _SOLO_INTERNOS},
+        }
         if clave in ctx.vistas:
             publicado["vista"] = True
         publicados.append(publicado)

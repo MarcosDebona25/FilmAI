@@ -304,14 +304,15 @@ class SinMostrarTarjetasTests(BaseMarcadores):
         self.assertNotIn("mostrar_tarjetas", nombres)
         self.assertNotIn("mostrar_tarjetas", FUNCIONES)
 
-    async def test_un_titulo_en_negrita_sin_marcador_no_arma_tarjeta(self):
-        # La red de #189 adivinaba tarjetas desde el texto. Ahora la única forma de
-        # mostrar una es el marcador: el texto que el modelo escribe no decide nada.
+    async def test_un_titulo_en_negrita_sin_marcador_no_arma_tarjeta_en_el_texto(self):
+        # La red de #189 adivinaba tarjetas desde el texto mientras salía. Ahora el
+        # texto que el modelo escribe no se toca: solo la red del final del turno
+        # (`RedSinMarcadoresTests`) arma tarjetas, y sin cambiar ni una palabra.
         eventos = await self.correr(
             [[tool("descubrir")], ["Te recomiendo **Moon** y **Arrival**."]]
         )
 
-        self.assertEqual(eventos[-1].tarjetas, [])
+        self.assertEqual(eventos[-1].texto, "Te recomiendo **Moon** y **Arrival**.")
 
     async def test_el_log_del_turno_dice_que_las_tarjetas_salieron_de_marcadores(self):
         with self.assertLogs("chatbot.orquestador", level="INFO") as log:
@@ -321,6 +322,117 @@ class SinMostrarTarjetasTests(BaseMarcadores):
         self.assertIn("tarjetas=marcadores", linea)
         self.assertIn("marcadores_validos=1", linea)
         self.assertIn("marcadores_invalidos=1", linea)
+
+
+class RedSinMarcadoresTests(BaseMarcadores):
+    """Red del 14/11/2026: el modelo buscó y recomendó en texto plano, sin `[[n]]`."""
+
+    async def correr_con(self, peliculas, respuesta):
+        self.peliculas = peliculas
+        return await self.correr([[tool("descubrir")], [respuesta]])
+
+    def ids(self, eventos):
+        return [t["id_tmdb"] for t in eventos[-1].tarjetas]
+
+    async def test_el_caso_demian_arma_las_tarjetas_en_orden_de_aparicion(self):
+        peliculas = [
+            pelicula_de_mentira(1, "Demian", 1993),
+            pelicula_de_mentira(2, "Llámame por tu nombre", 2017),
+            pelicula_de_mentira(3, "Harold y Maude", 1971),
+            pelicula_de_mentira(4, "El club de la pelea", 1999),
+            pelicula_de_mentira(5, "Taxi Driver", 1976),
+        ]
+        respuesta = (
+            "Para ese estilo, mirá El club de la pelea, después Harold y Maude "
+            "y Llámame por tu nombre."
+        )
+
+        eventos = await self.correr_con(peliculas, respuesta)
+
+        self.assertEqual(self.ids(eventos), [4, 3, 2])
+        # El texto no se modifica: ya se transmitió.
+        self.assertEqual(eventos[-1].texto, respuesta)
+
+    async def test_el_log_dice_que_las_tarjetas_salieron_de_la_red(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            await self.correr_con(self.peliculas, "Te recomiendo Moon.")
+
+        linea = next(m for m in log.output if "Turno:" in m)
+        self.assertIn("tarjetas=red_sin_marcadores", linea)
+        self.assertIn("marcadores_validos=0", linea)
+
+    async def test_no_distingue_tildes_mayusculas_ni_puntuacion(self):
+        peliculas = [pelicula_de_mentira(7, "¡Amélie!", 2001)]
+
+        eventos = await self.correr_con(peliculas, "Te va a gustar AMELIE, seguro.")
+
+        self.assertEqual(self.ids(eventos), [7])
+
+    async def test_tambien_reconoce_el_titulo_original(self):
+        peliculas = [
+            pelicula_de_mentira(8, "Cuenta conmigo", 1986, original="Stand by Me")
+        ]
+
+        eventos = await self.correr_con(peliculas, "Mirá Stand by Me, es un clásico.")
+
+        self.assertEqual(self.ids(eventos), [8])
+
+    async def test_un_titulo_corto_no_matchea_dentro_de_otra_palabra(self):
+        peliculas = [pelicula_de_mentira(9, "Up", 2009)]
+
+        sin = await self.correr_con(peliculas, "Es un supuesto upgrade, nada más.")
+        con = await self.correr_con(peliculas, "Mirá Up, de Pixar.")
+
+        self.assertEqual(self.ids(sin), [])
+        self.assertEqual(self.ids(con), [9])
+
+    async def test_un_titulo_corto_dentro_de_otro_mas_largo_no_cuenta(self):
+        peliculas = [
+            pelicula_de_mentira(9, "Up", 2009),
+            pelicula_de_mentira(10, "Up in the Air", 2009),
+        ]
+
+        eventos = await self.correr_con(peliculas, "Te recomiendo Up in the Air.")
+
+        self.assertEqual(self.ids(eventos), [10])
+
+    async def test_homonimos_gana_el_que_el_texto_acompana_con_su_anio(self):
+        peliculas = [
+            pelicula_de_mentira(5, "Fargo", 1996, "movie"),
+            pelicula_de_mentira(5, "Fargo", 2014, "tv"),
+        ]
+
+        con_anio = await self.correr_con(peliculas, "Mirá Fargo (2014), la serie.")
+        sin_anio = await self.correr_con(peliculas, "Mirá Fargo, que es genial.")
+
+        self.assertEqual(con_anio[-1].tarjetas[0]["tipo"], "tv")
+        self.assertEqual(len(con_anio[-1].tarjetas), 1)
+        # Sin año, el primero que devolvió la tool.
+        self.assertEqual(sin_anio[-1].tarjetas[0]["tipo"], "movie")
+        self.assertEqual(len(sin_anio[-1].tarjetas), 1)
+
+    async def test_pone_como_mucho_el_tope_y_sin_repetir(self):
+        eventos = await self.correr_con(
+            self.peliculas, "Solaris, Her, Moon, Moon otra vez y también Arrival."
+        )
+
+        self.assertEqual(self.ids(eventos), [4, 3, 1])
+
+    async def test_con_un_marcador_valido_la_red_no_actua(self):
+        eventos = await self.correr_con(self.peliculas, "Mirá [[1]] y también Arrival.")
+
+        self.assertEqual(self.ids(eventos), [1])
+
+    async def test_sin_busquedas_en_el_turno_no_actua(self):
+        # El texto nombra a Moon, pero ninguna tool corrió: no hay candidatos.
+        eventos = await self.correr([["Moon es una buena opción."]])
+
+        self.assertEqual(eventos[-1].tarjetas, [])
+
+    async def test_si_el_texto_no_nombra_ningun_candidato_no_hay_tarjetas(self):
+        eventos = await self.correr_con(self.peliculas, "No encontré nada parecido.")
+
+        self.assertEqual(eventos[-1].tarjetas, [])
 
 
 class PromptDeMarcadoresTests(SimpleTestCase):
