@@ -67,7 +67,9 @@ class PerfilView(GenericAPIView):
 class AvataresView(APIView):
     """Opciones disponibles para el selector, con IDs estables."""
 
-    permission_classes: ClassVar[list] = [permissions.IsAuthenticated]
+    # Público a propósito: es un catálogo estático y el formulario de registro
+    # lo necesita antes de que exista una sesión.
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     def get(self, request):
         return Response(list(AVATARES.values()))

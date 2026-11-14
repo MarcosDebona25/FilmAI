@@ -34,10 +34,32 @@ import RegisterPage from "@/app/(public)/register/page";
 import LoginPage from "@/app/(public)/login/page";
 import ConfirmPage from "@/app/confirm-email/[key]/page";
 
+// Catálogo público de avatares que el registro pide al montarse (GET /api/avatars/).
+const catalogoAvatares = [
+  { id: 1, src: "/uno.png" },
+  { id: 2, src: "/dos.png" },
+  { id: 3, src: "/tres.png" },
+];
+
+/** Simula la API por ruta: el catálogo responde siempre y el alta lo decide cada test. */
+function simularApi(alta: () => Promise<unknown> = async () => ({})) {
+  vi.mocked(apiFetch).mockImplementation(async (path) =>
+    path === "/api/avatars/" ? catalogoAvatares : alta()
+  );
+}
+
+/** Cuerpo que el formulario mandó al endpoint de registro. */
+function cuerpoDelAlta() {
+  const llamada = vi
+    .mocked(apiFetch)
+    .mock.calls.find(([ruta]) => ruta === "/api/auth/registration/");
+  return (llamada?.[1] as { body: Record<string, unknown> }).body;
+}
+
 beforeEach(() => {
   consulta.texto = "";
   sessionStorage.clear();
-  vi.mocked(apiFetch).mockResolvedValue({});
+  simularApi();
   vi.stubGlobal(
     "fetch",
     vi.fn(async () => ({ ok: true, json: async () => ({ disponible: true }) }))
@@ -193,10 +215,8 @@ describe("registro", () => {
     const submit = screen.getByRole("button", { name: en.nav.account.signUp });
     await waitFor(() => expect(submit).toBeEnabled());
     await user.click(submit);
-    await waitFor(() => expect(apiFetch).toHaveBeenCalled());
-    const [path, options] = vi.mocked(apiFetch).mock.calls[0];
-    expect(path).toBe("/api/auth/registration/");
-    expect((options as { body: Record<string, unknown> }).body).toMatchObject({
+    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
+    expect(cuerpoDelAlta()).toMatchObject({
       correo: "juan@example.com",
       nombre_usuario: "juanperez",
       pais: "AR",
@@ -209,14 +229,72 @@ describe("registro", () => {
     expect(screen.getByText(/Request another in 1:00/)).toBeInTheDocument();
   });
 
+  it("ofrece el selector de avatares con el 1 preseleccionado y lo envía sin tocarlo", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const grupo = await screen.findByRole("radiogroup", { name: en.common.avatar.optionsLabel });
+    expect(within(grupo).getAllByRole("radio")).toHaveLength(3);
+    expect(screen.getByRole("radio", { name: "Avatar 1" })).toHaveAttribute("aria-checked", "true");
+    await fillRegister(user);
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
+    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
+    expect(cuerpoDelAlta()).toMatchObject({ avatar_id: 1 });
+  });
+
+  it("el avatar elegido con el mouse viaja en el alta", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await user.click(await screen.findByRole("radio", { name: "Avatar 3" }));
+    expect(screen.getByRole("radio", { name: "Avatar 3" })).toHaveAttribute("aria-checked", "true");
+    await fillRegister(user);
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
+    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
+    expect(cuerpoDelAlta()).toMatchObject({ avatar_id: 3 });
+  });
+
+  it("el selector se maneja con el teclado como en el perfil (flechas y un solo Tab)", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "es" });
+    const primero = await screen.findByRole("radio", { name: "Avatar 1" });
+    expect(primero).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("radio", { name: "Avatar 2" })).toHaveAttribute("tabindex", "-1");
+    primero.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("radio", { name: "Avatar 2" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Avatar 2" })).toHaveFocus();
+    // El grupo tiene nombre visible y explica que se puede cambiar después.
+    expect(screen.getByRole("group", { name: es.auth.signUp.avatarLabel })).toBeInTheDocument();
+    expect(screen.getByText(es.auth.signUp.avatarHelp)).toBeInTheDocument();
+  });
+
+  it("si el catálogo no carga, el alta sigue funcionando sin avatar", async () => {
+    const user = userEvent.setup();
+    vi.mocked(apiFetch).mockImplementation(async (path) => {
+      if (path === "/api/avatars/") throw new ApiError(500, { code: "unknown" });
+      return {};
+    });
+    render(<RegisterPage />, { locale: "en" });
+    await fillRegister(user);
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
+    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
+    // El cambio de idioma también es un radiogroup: se busca el de avatares por nombre.
+    expect(
+      screen.queryByRole("radiogroup", { name: en.common.avatar.optionsLabel })
+    ).not.toBeInTheDocument();
+    expect(cuerpoDelAlta()).not.toHaveProperty("avatar_id");
+  });
+
   it("muestra el error de términos que devuelve el backend", async () => {
     const user = userEvent.setup();
-    vi.mocked(apiFetch).mockRejectedValueOnce(
-      new ApiError(400, {
+    simularApi(async () => {
+      throw new ApiError(400, {
         code: "validation_error",
         errors: [{ field: "acepta_terminos", code: "terms_not_accepted", params: {} }],
-      })
-    );
+      });
+    });
     document.documentElement.lang = "es";
     render(<RegisterPage />, { locale: "es" });
     await user.type(screen.getByLabelText(es.common.fields.firstName), "Juan");

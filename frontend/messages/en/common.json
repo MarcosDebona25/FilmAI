@@ -498,7 +498,9 @@
       "genderLabel": "Gender",
       "termsAcceptance": "I have read and accept FilmAI’s <terms>Terms and Conditions</terms>.",
       "termsNewTabHint": "(opens in a new tab)",
-      "submitPending": "Complete all fields and accept the Terms and Conditions to continue."
+      "submitPending": "Complete all fields and accept the Terms and Conditions to continue.",
+      "avatarLabel": "Choose your avatar",
+      "avatarHelp": "You can change it anytime from your profile."
     },
     "confirmation": {
       "pageTitle": "Account confirmation",

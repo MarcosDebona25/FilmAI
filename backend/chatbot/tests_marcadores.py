@@ -11,7 +11,7 @@ from asgiref.sync import sync_to_async
 from django.test import SimpleTestCase
 
 from chatbot.eventos import Texto
-from chatbot.llm import ProveedorFalso
+from chatbot.llm import ProveedorFalso, Uso
 from chatbot.marcadores import FiltroDeMarcadores
 from chatbot.models import Mensaje, TipoAutor
 from chatbot.orquestador import _LARGO_DE_PREAMBULO, responder
@@ -609,3 +609,78 @@ class ReintentoForzadoTests(BaseMarcadores):
         self.assertIn(
             "reintento_forzado=no", next(m for m in log.output if "Turno:" in m)
         )
+
+
+class MedicionDelTurnoTests(BaseMarcadores):
+    """La línea `Turno:` suma tokens, caché, cortes por largo y segundos de cada llamada.
+
+    El proveedor falso reparte el consumo que se le indica en `usos`, una `Uso` por
+    llamada (en el mismo orden que el guion).
+    """
+
+    async def linea(self, guion, usos=None, fines=None, segundos=None):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            await self.correr(guion, usos=usos, fines=fines, segundos=segundos)
+        return next(m for m in log.output if "Turno:" in m)
+
+    async def test_suma_los_tokens_de_todas_las_llamadas(self):
+        linea = await self.linea(
+            [[tool("descubrir")], ["Mirá [[1]]"]],
+            usos=[Uso(1000, 20, 800, 200), Uso(1100, 60, 1000, 100)],
+        )
+
+        self.assertIn("tokens_entrada=2100", linea)
+        self.assertIn("tokens_salida=80", linea)
+        self.assertIn("cache_acierto=1800", linea)
+        self.assertIn("cache_fallo=300", linea)
+
+    async def test_cuenta_tambien_la_llamada_descartada_del_reintento(self):
+        linea = await self.linea(
+            [["Uno [[9]]"], [tool("descubrir")], ["Mirá [[2]]"]],
+            usos=[Uso(10, 1), Uso(20, 2), Uso(30, 3)],
+        )
+
+        self.assertIn("tokens_entrada=60", linea)
+        self.assertIn("llamadas=3", linea)
+
+    async def test_cuenta_la_ultima_llamada_sin_tools(self):
+        # Cuatro vueltas de tools sin texto y la de rescate: 6 llamadas.
+        guion = [[tool("descubrir")]] * 5 + [["Listo"]]
+        linea = await self.linea(guion, usos=[Uso(1, 1)] * 6)
+
+        self.assertIn("ultima_sin_tools=si", linea)
+        self.assertIn("tokens_entrada=6", linea)
+
+    async def test_sin_datos_de_uso_no_inventa_numeros(self):
+        linea = await self.linea([["Hola"]])
+
+        self.assertIn("tokens_entrada=?", linea)
+        self.assertIn("cache_acierto=?", linea)
+
+    async def test_avisa_si_alguna_llamada_termino_por_length(self):
+        linea = await self.linea(
+            [[tool("descubrir")], ["Mirá [[1]]"]], fines=["stop", "length"]
+        )
+
+        self.assertIn("cortado_por_largo=si", linea)
+
+    async def test_sin_cortes_dice_no(self):
+        linea = await self.linea([["Hola"]], fines=["stop"])
+
+        self.assertIn("cortado_por_largo=no", linea)
+
+    async def test_lleva_los_segundos_de_cada_llamada_y_el_total(self):
+        with patch("chatbot.orquestador._reloj", side_effect=[100.0, 104.2]):
+            linea = await self.linea(
+                [[tool("descubrir")], ["Mirá [[1]]"]], segundos=[1.5, 2.25]
+            )
+
+        self.assertIn("segundos_por_llamada=1.5,2.2", linea)
+        self.assertIn("segundos_total=4.2", linea)
+
+    async def test_no_lleva_texto_de_la_pregunta_ni_de_la_respuesta(self):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            await self.correr([["Respuesta secreta"]], texto="pregunta secreta")
+
+        todo = "\n".join(log.output)
+        self.assertNotIn("secreta", todo)

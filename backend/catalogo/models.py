@@ -33,6 +33,13 @@ class TipoProduccion(models.TextChoices):
     SERIE = "serie", "Serie"
 
 
+# Cómo guarda la materialización la keyword 155477 de TMDB: por su nombre. Marca
+# erotismo que TMDB NO etiqueta `adult` (13/11/2026), así que las consultas sobre el
+# catálogo local la usan para dejar esos títulos afuera (búsqueda semántica y
+# títulos parecidos). El filtro de TMDB en vivo está en `client.KEYWORD_SOFTCORE`.
+KEYWORD_SOFTCORE = "softcore"
+
+
 class ProduccionAudiovisual(models.Model):
     """Catálogo unificado de películas y series sincronizado desde TMDB (CU-021).
 

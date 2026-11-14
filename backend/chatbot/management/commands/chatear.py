@@ -3,6 +3,9 @@
 Prueba el orquestador real sin panel ni vista. Sirve para desarrollar y para las
 preguntas de prueba. Usa la clave de `.env`, así que cada mensaje tiene costo.
 
+Por defecto no guarda nada, así que se puede probar con un usuario real sin ensuciar
+su chat. Con `--guardar` cada turno se guarda como lo hace la app (`guardar_turno`).
+
 Con `--golden` recorre `chatbot/golden.yaml` (el set dorado): por cada pregunta
 muestra la expectativa, los eventos, las tools que pidió el modelo con sus
 argumentos, y cuánto tardó el primer texto y el turno completo. No guarda nada.
@@ -13,6 +16,7 @@ es async, y espera a que termine.
 """
 
 import time
+from datetime import timedelta
 from pathlib import Path
 
 import yaml
@@ -20,12 +24,14 @@ from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from catalogo.presupuesto import contar_llamadas
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.llm import Vuelta, crear_proveedor
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.orquestador import responder
+from chatbot.servicio import guardar_turno
 
 GOLDEN = Path(__file__).resolve().parents[2] / "golden.yaml"
 # RNF #6: segundos máximos para el turno completo.
@@ -34,7 +40,9 @@ _CAMPOS = {"id", "mensaje", "idioma", "rnf6", "espera", "historial"}
 _OBLIGATORIOS = ("id", "mensaje", "rnf6", "espera")
 # Un mensaje previo de un caso con `historial`: quién lo escribió y qué dijo. Solo el
 # asistente lleva `tarjetas`, como las que quedan guardadas en `Mensaje.tarjetas`.
-_CAMPOS_DE_MENSAJE = {"autor", "texto", "tarjetas"}
+# `hace_min` (opcional) lo fecha hace tantos minutos: con más que la ventana de sesión
+# (`CHAT_VENTANA_SESION_MINUTOS`), el mensaje es de otra sesión y el modelo no lo ve.
+_CAMPOS_DE_MENSAJE = {"autor", "texto", "tarjetas", "hace_min"}
 _AUTORES = {"usuario": TipoAutor.USUARIO, "asistente": TipoAutor.CHATBOT}
 
 
@@ -55,6 +63,12 @@ def _validar_historial(numero, historial):
         texto = mensaje.get("texto")
         if not isinstance(texto, str) or not texto.strip():
             raise CommandError(f"{donde}, mensaje {orden}: falta `texto`.")
+        hace_min = mensaje.get("hace_min", 0)
+        # `bool` es un `int` en Python (`True == 1`): se descarta aparte.
+        if isinstance(hace_min, bool) or not isinstance(hace_min, int) or hace_min < 0:
+            raise CommandError(
+                f"{donde}, mensaje {orden}: `hace_min` es un entero de 0 o más."
+            )
         tarjetas = mensaje.get("tarjetas", [])
         if tarjetas and mensaje["autor"] != "asistente":
             raise CommandError(
@@ -141,9 +155,13 @@ class Command(BaseCommand):
         parser.add_argument("--idioma", default="es", choices=["es", "en"])
         parser.add_argument("--mensaje", help="Manda solo este mensaje y termina.")
         parser.add_argument(
-            "--sin-guardar",
+            "--guardar",
             action="store_true",
-            help="No guarda el turno: el historial del usuario queda como estaba.",
+            help=(
+                "Guarda cada turno en el chat del usuario, igual que la app (con "
+                "tarjetas y «ya recomendados»). Sin esto no se guarda nada: el "
+                "historial del usuario queda como estaba."
+            ),
         )
         parser.add_argument(
             "--golden",
@@ -156,6 +174,8 @@ class Command(BaseCommand):
     def handle(self, *args, **opciones):
         if opciones["golden"] and opciones["mensaje"]:
             raise CommandError("--golden y --mensaje no van juntos.")
+        if opciones["golden"] and opciones["guardar"]:
+            raise CommandError("--golden nunca guarda: no va con --guardar.")
         chat = Chat.objects.filter(usuario__nombre_usuario=opciones["usuario"]).first()
         if chat is None:
             raise CommandError("Ese usuario no existe o no tiene chat.")
@@ -174,7 +194,11 @@ class Command(BaseCommand):
             pass
 
     def _turno(self, chat, texto, opciones):
-        """Corre un turno y lo guarda, que es lo que hará la vista en el PR 5."""
+        """Corre un turno. Solo con `--guardar` lo guarda, como lo hace la vista.
+
+        Por defecto no se guarda: una prueba con el usuario real le dejaba mensajes
+        (y rechazos) en el chat, y el modelo los leía como historial después.
+        """
         inicio = time.perf_counter()
         try:
             resultado, _ = async_to_sync(self._recorrer)(
@@ -184,11 +208,10 @@ class Command(BaseCommand):
             self.stderr.write(f"\n[error del turno: {error}]")
             return
         self.stdout.write(f"\n[{time.perf_counter() - inicio:.1f} s]")
-        if not opciones["sin_guardar"]:
-            Mensaje.objects.create(chat=chat, texto=texto, autor=TipoAutor.USUARIO)
-            Mensaje.objects.create(
-                chat=chat, texto=resultado.texto, autor=TipoAutor.CHATBOT
-            )
+        if opciones["guardar"]:
+            # La misma función que usa la vista: guarda la pregunta, la respuesta con
+            # sus tarjetas y suma lo recomendado a `ya_recomendados`, todo o nada.
+            guardar_turno(chat, texto, resultado)
 
     def _golden(self, chat, ruta):
         """Recorre el set dorado y cierra con una tabla de tiempos contra RNF #6."""
@@ -237,12 +260,18 @@ class Command(BaseCommand):
     def _sembrar(self, chat, historial):
         """Crea los mensajes previos de un caso, en orden, como si ya hubieran pasado."""
         for mensaje in historial:
-            Mensaje.objects.create(
+            creado = Mensaje.objects.create(
                 chat=chat,
                 autor=_AUTORES[mensaje["autor"]],
                 texto=mensaje["texto"],
                 tarjetas=mensaje.get("tarjetas", []),
             )
+            if hace_min := mensaje.get("hace_min"):
+                # `auto_now_add` pisa la fecha al crear: se corrige con `update`, que
+                # va directo al SQL.
+                Mensaje.objects.filter(pk=creado.pk).update(
+                    fecha_hora=timezone.now() - timedelta(minutes=hace_min)
+                )
         if historial:
             self.stdout.write(
                 f"[historial previo: {len(historial)} mensajes, no se guarda]"
