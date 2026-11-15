@@ -2,14 +2,17 @@
 
 import { useId, type ReactNode } from "react";
 import Image from "next/image";
-import { CornerDownLeft } from "lucide-react";
+import { ArrowRight, CornerDownLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { StarIcon } from "@/components/ui/StarIcon";
 import { tmdbLoader } from "@/lib/catalog";
+import { useFormats } from "@/lib/format";
 import {
   ID_VER_TODO,
   agruparSugerencias,
   idDe,
+  inicialesDe,
   type Fila,
   type Sugerencia,
   type SugerenciaPersona,
@@ -27,6 +30,12 @@ interface Props {
   alElegir: (fila: Fila) => void;
   /** Texto de «Ver todos los resultados» para el final de la lista; sin él, no hay esa fila. */
   verTodo?: string;
+  /**
+   * El desplegable «rico» de la lupa de la navbar (canvas, sección 13): filas de
+   * 84 px, póster de 48 × 72, nota de TMDB y fotos de 48 px. Sin él queda la
+   * lista compacta del campo de Buscar.
+   */
+  rica?: boolean;
   className?: string;
 }
 
@@ -43,11 +52,14 @@ export function SugerenciasLista({
   activaId,
   alElegir,
   verTodo,
+  rica = false,
   className,
 }: Props) {
   const t = useTranslations("nav.search");
   const contenido = useTranslations("common.content");
   const persona = useTranslations("search.person");
+  const media = useTranslations("common.media");
+  const formats = useFormats();
   const base = useId();
   const encabezadoPersonas = `${base}-personas`;
   const encabezadoTitulos = `${base}-titulos`;
@@ -70,7 +82,10 @@ export function SugerenciasLista({
       onMouseDown={(evento) => evento.preventDefault()}
       onClick={() => alElegir(fila)}
       className={cn(
-        "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2.5 py-1.5",
+        "flex cursor-pointer items-center",
+        rica
+          ? "min-h-21 gap-3.5 rounded-[0.625rem] px-2.5 py-1"
+          : "min-h-11 gap-3 rounded-lg px-2.5 py-1.5",
         fila.id === activaId && "bg-raised-2",
         extra
       )}
@@ -81,6 +96,16 @@ export function SugerenciasLista({
 
   const encabezado =
     "px-2.5 pt-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.08em] text-fg-3 uppercase";
+  // Las dos líneas de texto de una fila: nombre o título arriba, el dato abajo.
+  const textos = rica ? "flex min-w-0 flex-col gap-[0.1875rem]" : "min-w-0";
+  const principal = rica
+    ? "truncate text-base leading-tight font-semibold"
+    : "block truncate font-medium";
+  const secundario = rica ? "text-[0.8125rem] text-fg-3" : "block text-xs text-fg-3";
+  const foto = rica ? { lado: 48, clase: "size-12" } : { lado: 34, clase: "size-[2.125rem]" };
+  const poster = rica
+    ? { ancho: 48, alto: 72, clase: "h-18 w-12 rounded-md" }
+    : { ancho: 28, alto: 40, clase: "h-10 w-7 rounded" };
 
   return (
     <div
@@ -89,7 +114,10 @@ export function SugerenciasLista({
       aria-label={t("label")}
       aria-busy={cargando}
       className={cn(
-        "rounded-xl bg-raised p-1.5 shadow-[inset_0_0_0_1px_var(--line),0_16px_40px_rgb(0_0_0/0.45)]",
+        "bg-raised p-1.5",
+        rica
+          ? "rounded-[0.875rem] shadow-[inset_0_0_0_1px_var(--line),0_16px_40px_rgb(0_0_0/0.5)]"
+          : "rounded-xl shadow-[inset_0_0_0_1px_var(--line),0_16px_40px_rgb(0_0_0/0.45)]",
         className
       )}
     >
@@ -106,22 +134,26 @@ export function SugerenciasLista({
                   <Image
                     src={s.foto}
                     alt=""
-                    width={34}
-                    height={34}
+                    width={foto.lado}
+                    height={foto.lado}
                     loader={tmdbLoader}
-                    className="size-[2.125rem] shrink-0 rounded-full object-cover"
+                    className={cn("shrink-0 rounded-full object-cover", foto.clase)}
                   />
                 ) : (
                   <span
                     aria-hidden="true"
-                    className="grid size-[2.125rem] shrink-0 place-items-center rounded-full bg-raised-2 text-sm font-semibold text-fg-2"
+                    className={cn(
+                      "grid shrink-0 place-items-center rounded-full bg-raised-2 text-sm text-fg-2",
+                      foto.clase,
+                      rica ? "font-bold" : "font-semibold"
+                    )}
                   >
-                    {s.nombre.charAt(0)}
+                    {inicialesDe(s.nombre)}
                   </span>
                 )}
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{s.nombre}</span>
-                  <span className="block text-xs text-fg-3">{etiquetaRol(s)}</span>
+                <span className={textos}>
+                  <span className={principal}>{s.nombre}</span>
+                  <span className={secundario}>{etiquetaRol(s)}</span>
                 </span>
               </>
             )
@@ -141,17 +173,28 @@ export function SugerenciasLista({
                   <Image
                     src={s.poster}
                     alt=""
-                    width={28}
-                    height={40}
+                    width={poster.ancho}
+                    height={poster.alto}
                     loader={tmdbLoader}
-                    className="h-10 w-7 shrink-0 rounded object-cover"
+                    className={cn("shrink-0 bg-raised-2 object-cover", poster.clase)}
                   />
                 ) : (
-                  <span aria-hidden="true" className="h-10 w-7 shrink-0 rounded bg-raised-2" />
+                  <span aria-hidden="true" className={cn("shrink-0 bg-raised-2", poster.clase)} />
                 )}
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{s.titulo}</span>
-                  <span className="block text-xs text-fg-3">{etiquetaTitulo(s)}</span>
+                <span className={textos}>
+                  <span className={principal}>{s.titulo}</span>
+                  <span className={cn(secundario, rica && "inline-flex items-center gap-2")}>
+                    {etiquetaTitulo(s)}
+                    {rica && s.nota !== null && (
+                      <span className="inline-flex items-center gap-1 text-fg-2">
+                        <span className="sr-only">
+                          {media("tmdbRatingLabel", { rating: formats.rating(s.nota) })}
+                        </span>
+                        <StarIcon className="size-3 fill-primary" />
+                        <span aria-hidden="true">{formats.rating(s.nota)}</span>
+                      </span>
+                    )}
+                  </span>
                 </span>
               </>
             )
@@ -161,13 +204,22 @@ export function SugerenciasLista({
       {verTodo !== undefined &&
         opcion(
           { id: ID_VER_TODO, sugerencia: null },
-          <>
-            <span className="min-w-0 flex-1 truncate font-semibold text-primary">
-              {t("seeAll", { query: verTodo })}
-            </span>
-            <CornerDownLeft aria-hidden="true" className="size-4 shrink-0 text-fg-3" />
-          </>,
-          "mt-1 border-t border-line rounded-t-none pt-2"
+          rica ? (
+            <>
+              <span className="min-w-0 flex-1 truncate">{t("seeAll", { query: verTodo })}</span>
+              <ArrowRight aria-hidden="true" className="size-[1.125rem] shrink-0" />
+            </>
+          ) : (
+            <>
+              <span className="min-w-0 flex-1 truncate font-semibold text-primary">
+                {t("seeAll", { query: verTodo })}
+              </span>
+              <CornerDownLeft aria-hidden="true" className="size-4 shrink-0 text-fg-3" />
+            </>
+          ),
+          rica
+            ? "mt-1 min-h-12 gap-2 py-0 text-sm font-semibold text-fg-2 shadow-[inset_0_1px_0_var(--line)]"
+            : "mt-1 rounded-t-none border-t border-line pt-2"
         )}
     </div>
   );

@@ -32,6 +32,8 @@ export type Sugerencia =
       titulo: string;
       anio: number | null;
       poster: string | null;
+      /** Nota de TMDB, o `null` si todavía no tiene votos. */
+      nota: number | null;
     };
 
 export type SugerenciaPersona = Extract<Sugerencia, { tipo: "person" }>;
@@ -75,6 +77,7 @@ function aSugerencia(item: ItemSugerido): Sugerencia | null {
     titulo: titulo.titulo,
     anio: titulo.anio,
     poster: tmdbImage(item.poster_path, "w92"),
+    nota: titulo.nota,
   };
 }
 
@@ -118,6 +121,17 @@ export function esAtajoDeBusqueda(evento: KeyboardEvent) {
   return !destino.closest(
     "input, textarea, select, [contenteditable]:not([contenteditable=false])"
   );
+}
+
+/**
+ * Las iniciales del círculo de una persona sin foto: la primera letra del
+ * nombre y la del apellido («CN»), o una sola si el nombre es una palabra.
+ */
+export function inicialesDe(nombre: string) {
+  const palabras = nombre.trim().split(/\s+/).filter(Boolean);
+  const letras = palabras.length > 1 ? [palabras[0], palabras.at(-1)!] : palabras;
+  // `Array.from` corta por carácter y no por unidad UTF-16 (un emoji no se parte).
+  return letras.map((palabra) => Array.from(palabra)[0]).join("");
 }
 
 /** Separa la lista en los dos grupos que se pintan; el orden de cada grupo es el recibido. */
