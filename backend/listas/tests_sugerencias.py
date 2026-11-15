@@ -101,15 +101,26 @@ class AccesoTests(BaseSugerencias):
 
         self.assertEqual(self.api.get(self.url(lista)).status_code, 404)
 
-    def test_pendientes_y_vistas_son_404_not_found(self):
-        for clave in (ClaveLista.PENDIENTES, ClaveLista.VISTAS):
-            with self.subTest(clave=clave):
-                lista = self.usuario.listas.get(clave=clave)
+    def test_pendientes_es_404_not_found(self):
+        # Pendientes es lo que la persona YA eligió ver: no se le sugiere más.
+        pendientes = self.usuario.listas.get(clave=ClaveLista.PENDIENTES)
+        Tiene.objects.create(lista=pendientes, produccion=self.produccion("A", eje(0)))
+        self.vecinas(3)
 
-                respuesta = self.api.get(self.url(lista))
+        respuesta = self.api.get(self.url(pendientes))
 
-                self.assertEqual(respuesta.status_code, 404)
-                self.assertEqual(respuesta.json()["code"], "not_found")
+        self.assertEqual(respuesta.status_code, 404)
+        self.assertEqual(respuesta.json()["code"], "not_found")
+
+    def test_vistas_si_tiene_sugerencias(self):
+        vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+        Tiene.objects.create(lista=vistas, produccion=self.produccion("A", eje(0)))
+        self.vecinas(3)
+
+        respuesta = self.api.get(self.url(vistas))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(len(respuesta.json()["results"]), 3)
 
     def test_favoritos_si_tiene_sugerencias(self):
         favoritos = self.usuario.listas.get(clave=ClaveLista.FAVORITOS)
@@ -164,6 +175,30 @@ class ParametroPaginaTests(BaseSugerencias):
         self.assertEqual(cuarta.status_code, 200)
         self.assertEqual(cuarta.json()["results"], [])
         self.assertEqual(cuarta.json()["pagina"], 4)
+
+    def test_pagina_y_paginas_dicen_si_queda_una_pagina_mas(self):
+        # El botón «Show more suggestions» se muestra mientras `pagina < paginas`.
+        lista = self.lista_con(self.produccion("Semilla", vector_a(0)))
+        self.vecinas(25)
+
+        for numero, queda_otra in ((1, True), (2, True), (3, False)):
+            with self.subTest(pagina=numero):
+                cuerpo = self.api.get(self.url(lista, numero)).json()
+
+                self.assertEqual(cuerpo["pagina"] < cuerpo["paginas"], queda_otra)
+
+    def test_paginas_no_cuenta_lo_que_se_le_saca_al_usuario(self):
+        # 12 candidatas menos 2 vistas son 10: una sola página, sin «ver más».
+        lista = self.lista_con(self.produccion("Semilla", vector_a(0)))
+        vecinas = self.vecinas(12)
+        vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+        for produccion in vecinas[:2]:
+            Tiene.objects.create(lista=vistas, produccion=produccion)
+
+        cuerpo = self.api.get(self.url(lista)).json()
+
+        self.assertEqual(len(cuerpo["results"]), 10)
+        self.assertEqual((cuerpo["pagina"], cuerpo["paginas"]), (1, 1))
 
 
 class ContenidoTests(BaseSugerencias):
@@ -330,6 +365,56 @@ class VistasTests(BaseSugerencias):
         cliente.force_authenticate(otra)
         ajena = cliente.get(self.url(favoritos_ajenos))
         self.assertIn(("movie", vecinas[1].id_tmdb), self.ids(ajena))
+
+
+class SugerenciasDeVistasTests(BaseSugerencias):
+    """«Vistas» como lista con sugerencias: sus títulos son las semillas."""
+
+    def setUp(self):
+        super().setUp()
+        self.vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+
+    def test_no_sugiere_lo_que_ya_esta_en_vistas(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        otra = self.produccion("Otra", vector_a(0.02))
+        for produccion in (semilla, otra):
+            Tiene.objects.create(lista=self.vistas, produccion=produccion)
+        self.vecinas(3)
+
+        ids = self.ids(self.api.get(self.url(self.vistas)))
+
+        self.assertNotIn(("movie", semilla.id_tmdb), ids)
+        self.assertNotIn(("movie", otra.id_tmdb), ids)
+        self.assertEqual(len(ids), 3)
+
+    def test_vacia_es_200_sin_resultados_y_sin_llamar_a_tmdb(self):
+        respuesta = self.api.get(self.url(self.vistas))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.json()["results"], [])
+        self.assertEqual(respuesta.json()["paginas"], 0)
+        self.assertEqual(self.servicio.pedidos, [])
+
+    def test_nunca_usa_su_nombre(self):
+        Tiene.objects.create(lista=self.vistas, produccion=self.produccion("A", eje(0)))
+
+        respuesta = self.api.get(self.url(self.vistas))
+
+        self.vector_nombre.assert_not_called()
+        self.assertFalse(respuesta.json()["nombre_usado"])
+
+    def test_pagina_como_cualquier_otra_lista(self):
+        Tiene.objects.create(
+            lista=self.vistas, produccion=self.produccion("Semilla", vector_a(0))
+        )
+        self.vecinas(25)
+
+        primera = self.api.get(self.url(self.vistas, 1))
+        tercera = self.api.get(self.url(self.vistas, 3))
+
+        self.assertEqual(primera.json()["paginas"], 3)
+        self.assertEqual(len(primera.json()["results"]), 10)
+        self.assertEqual(len(tercera.json()["results"]), 5)
 
 
 class NombreTests(BaseSugerencias):

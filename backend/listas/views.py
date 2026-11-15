@@ -579,9 +579,10 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
     """«Sugeridas para esta lista»: títulos parecidos a los de una lista propia.
 
     `GET /api/lists/{id}/suggestions/?pagina=N` responde
-    `{results, pagina, paginas, nombre_usado}`. Solo las listas personalizadas
-    y Favoritos tienen sugerencias: Pendientes y Vistas dan 404 (Not Found),
-    como si el recurso no existiera.
+    `{results, pagina, paginas, nombre_usado}`; queda una página más mientras
+    `pagina < paginas`. Tienen sugerencias las listas personalizadas, Favoritos
+    y Vistas. Pendientes da 404 (Not Found), como si el recurso no existiera:
+    es lo que la persona ya eligió ver.
 
     Cómo se arma (design §7), en tres pasos:
 
@@ -602,9 +603,9 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
     def get(self, request, lista_id):
         inicio = time.perf_counter()
         lista = _lista_propia(request, lista_id)
-        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave in (
-            ClaveLista.PENDIENTES,
-            ClaveLista.VISTAS,
+        if (
+            lista.tipo == TipoLista.PREDETERMINADA
+            and lista.clave == ClaveLista.PENDIENTES
         ):
             raise Http404
         pagina = _numero_de_pagina(request.query_params.get("pagina"))
@@ -624,7 +625,7 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
         ids = [pk for pk, _, _ in items]
         # Una lista de una sola clase pide solo esa clase (D-3); una mixta, ambas.
         tipos = {tipo for _, _, tipo in items}
-        # Favoritos tiene un nombre de sistema que no dice nada de la lista.
+        # Favoritos y Vistas tienen un nombre de sistema que no dice nada de la lista.
         nombre = lista.nombre if lista.tipo == TipoLista.PERSONALIZADA else ""
         usa_nombre = bool(nombre) and similares.nombre_dice_algo(nombre)
         clave = self._clave(lista, idioma, nombre, ids)
