@@ -142,7 +142,7 @@ mensaje de `historial` con `hace_min` simula una sesión anterior.
 | `plazo.py` | `Plazo` (cuánto le queda al turno) y `Corte` (dejar de esperar a una hora dada, con `asyncio.timeout_at`). Ver «El plazo del turno» |
 | `puente.py` | `en_hilo`: el único paso de código async a código común |
 | `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |
-| `prompts.py` | Las instrucciones del modelo. La fecha de hoy va en la parte variable (junto al perfil), para no perder el caché del texto fijo |
+| `prompts.py` | Las instrucciones del modelo. La fecha de hoy va en la parte variable (junto al perfil), para no perder el caché del texto fijo. El tope de 3 se le pide como tope de títulos recomendados (contando un extra en el cierre), no de marcadores: un cuarto marcador sale en el texto, sin tarjeta |
 | `idioma.py` | `detectar_idioma()`: en qué idioma responder, según el mensaje |
 | `management/commands/chatear.py` | Hablar con el bot desde la terminal; con `--golden`, correr el set dorado |
 | `golden.yaml` | El set dorado: preguntas fijas, cada una con lo que se espera de la respuesta |
