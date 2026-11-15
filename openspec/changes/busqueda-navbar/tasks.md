@@ -134,10 +134,10 @@ changes something there (measurements, an answered question).
 
 ## Phase 7: Links from the title page (PR 7, optional)
 
-- [ ] 7.1 `credits/` adds `id` to directors, creators and cast.
-- [ ] 7.2 Names in «Director and cast» link to Search with the person and
+- [x] 7.1 `credits/` adds `id` to directors, creators and cast.
+- [x] 7.2 Names in «Director and cast» link to Search with the person and
       the role.
-- [ ] 7.3 Tests; spec `title-page-ui`.
+- [x] 7.3 Tests; spec `title-page-ui`.
 
 ## Closing
 

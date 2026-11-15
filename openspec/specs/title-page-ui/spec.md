@@ -17,7 +17,13 @@ The title page of a movie or TV show (C-07), with the rating dialog (C-08's fron
 
 ### Requirement: Title data
 
-The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded only when it overflows). While the detail loads, the page MUST show a static skeleton (no pulse or shimmer animation, 18/10/2026) with the shape of the backdrop, poster, title, data, actions, genres, synopsis and three reviews. «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10.
+The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded only when it overflows). While the detail loads, the page MUST show a static skeleton (no pulse or shimmer animation, 18/10/2026) with the shape of the backdrop, poster, title, data, actions, genres, synopsis and three reviews. «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10. Each name MUST link to Search filtered by that person (`/search?person={id}&role=director` for directors and creators, `role=actor` for the cast; 15/11/2026), the same destination as the person's row in the navbar search; the character is not part of the link. A person without a TMDB `id` in `credits/` MUST stay as plain text.
+
+#### Scenario: From a name to the person's filmography
+
+- GIVEN `/movie/157336`, whose credits list Christopher Nolan (TMDB id 525) as director
+- WHEN the user follows his name in «Director and cast»
+- THEN Search opens at `/search?person=525&role=director` with the chip «Christopher Nolan · Director»
 
 #### Scenario: A show
 
