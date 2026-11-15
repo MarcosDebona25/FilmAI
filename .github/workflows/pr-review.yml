@@ -1,7 +1,7 @@
 # =============================================================================
 # FilmAI — Revisión automática de PRs (PR-Agent + DeepSeek)
 # =============================================================================
-# Publica un resumen de revisión y sugerencias en línea en cada PR. Es un
+# Publica un resumen de revisión y sugerencias en línea al abrir cada PR. Es un
 # complemento informativo: NO aprueba, NO mergea y NO pushea. El gate real
 # sigue siendo ci.yml.
 #
@@ -9,19 +9,28 @@
 #   - Modelo, endpoint y límites de tokens: bloque `env` de este archivo.
 #   - Qué revisar y cómo: `.pr_agent.toml` (raíz del repo).
 # Secret requerido: DEEPSEEK_API_KEY (Settings > Secrets and variables >
-# Actions). Detalle en docs/decisiones.md (18/10/2026).
+# Actions). Detalle en docs/decisiones.md (18/10/2026 y 14/11/2026).
+#
+# Para ahorrar saldo (14/11/2026) corre solo al abrir el PR o al sacarlo de
+# borrador, no en cada push. Para repetirlo después de cambios, comentá en el
+# PR `/review` (revisión) o `/improve` (sugerencias). Ojo: GitHub corre los
+# comentarios con la versión de este archivo que está en `main`, así que el
+# `/review` anda recién cuando este cambio llega a main.
 # =============================================================================
 
 name: PR Review
 
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review, synchronize]
+    types: [opened, reopened, ready_for_review]
     branches: ["**"]
+  # `/review` o `/improve` comentado en un PR lo vuelve a correr a pedido.
+  issue_comment:
+    types: [created]
 
 # Un push nuevo cancela la revisión anterior del mismo PR.
 concurrency:
-  group: pr-review-${{ github.event.pull_request.number }}
+  group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
 
 permissions:
@@ -38,10 +47,21 @@ jobs:
     # - Sin bots (evita bucles con commits/comentarios automáticos).
     # - Sin forks: GitHub no les pasa secrets en `pull_request`, y usar
     #   `pull_request_target` expondría el secret a código no confiable.
+    # - A pedido: solo comentarios en PRs (no en issues) que empiezan con
+    #   `/review` o `/improve`, y solo de gente del repo (dueño, miembros o
+    #   colaboradores): un desconocido no puede gastar el saldo comentando.
     if: >-
-      github.event.pull_request.draft == false &&
-      github.event.sender.type != 'Bot' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.sender.type != 'Bot' && (
+        (github.event_name == 'pull_request' &&
+          github.event.pull_request.draft == false &&
+          github.event.pull_request.head.repo.full_name == github.repository) ||
+        (github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request &&
+          (startsWith(github.event.comment.body, '/review') ||
+            startsWith(github.event.comment.body, '/improve')) &&
+          contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
+            github.event.comment.author_association))
+      )
     steps:
       # Imagen fijada por versión: la acción no hace checkout del repo, solo
       # lee el diff por la API de GitHub. Para actualizar, cambiar el tag.
@@ -56,11 +76,13 @@ jobs:
           OPENAI__API_BASE: https://api.deepseek.com
           CONFIG.MODEL: openai/deepseek-flash
           CONFIG.FALLBACK_MODELS: '["openai/deepseek-flash"]'
-          CONFIG.CUSTOM_MODEL_MAX_TOKENS: "150000"
-          CONFIG.MAX_MODEL_TOKENS: "150000"
+          # Tope de contexto: con 150k mandaba diffs enteros; 64k alcanza para
+          # los PRs normales y en los grandes PR-Agent recorta (14/11/2026).
+          CONFIG.CUSTOM_MODEL_MAX_TOKENS: "64000"
+          CONFIG.MAX_MODEL_TOKENS: "64000"
           CONFIG.AI_TIMEOUT: "180"
           # Solo review + sugerencias en línea; sin describe (menos costo/ruido).
           github_action_config.auto_review: "true"
           github_action_config.auto_improve: "true"
           github_action_config.auto_describe: "false"
-          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "synchronize"]'
+          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review"]'
