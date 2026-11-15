@@ -122,9 +122,7 @@ class LineaDelTurnoTests(BaseOrquestador):
         self.assertIn("tarjetas=marcadores marcadores_validos=1", linea)
 
     async def test_la_busqueda_forzada_cuenta_como_una_vuelta_mas(self):
-        linea = await self.linea(
-            [["Uno [[9]]"], [tool("descubrir")], ["Mirá [[1]]"]]
-        )
+        linea = await self.linea([["Uno [[9]]"], [tool("descubrir")], ["Mirá [[1]]"]])
 
         self.assertIn("vueltas=3", linea)
         self.assertIn("reintento_forzado=si", linea)
