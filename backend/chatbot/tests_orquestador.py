@@ -515,6 +515,34 @@ class ReglasDelPromptTests(SimpleTestCase):
     def test_no_anuncia_cuantos_titulos_recomienda(self):
         self.assertIn("No anuncies cuántos títulos", armar_sistema("", [], "es"))
 
+    def test_el_tope_de_tres_titulos_cuenta_tambien_el_extra_del_cierre(self):
+        # 14/11/2026: «algo como Los juegos del hambre basado en libros» traía tres
+        # títulos en lista y un cuarto en el cierre («Si querés algo más adulto…
+        # Duna»): 4 marcadores con tope de 3 tarjetas, y Duna sin tarjeta. El tope
+        # estaba dicho como tope de *marcadores* («Marcá como mucho 3…»), y otra
+        # regla obliga a marcar todo título recomendado: el modelo cumplía la segunda
+        # y se pasaba de la primera. Ahora el tope es de *títulos recomendados* y
+        # nombra el patrón del extra. `assertIn(a, b)` es `assertTrue(b.contains(a))`.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertIn("Recomendá como mucho 3 títulos por respuesta", sistema)
+        self.assertIn("«si preferís algo más…»", sistema)
+        self.assertIn("no nombres los demás", sistema)
+        # Va con las otras reglas de «Al recomendar», no antes (ver el test de orden).
+        self.assertLess(
+            sistema.index("Al recomendar:"),
+            sistema.index("Recomendá como mucho 3 títulos por respuesta"),
+        )
+
+    def test_el_tope_ya_no_se_dice_como_tope_de_marcadores(self):
+        # La frase vieja invitaba a leerlo al revés: «puedo recomendar más, mientras
+        # marque 3». Y un título recomendado sin marcar está prohibido, así que el
+        # cuarto terminaba marcado igual.
+        sistema = armar_sistema("", [], "es")
+
+        self.assertNotIn("Marcá como mucho 3 títulos", sistema)
+        self.assertIn("Un cuarto título distinto se queda sin tarjeta", sistema)
+
     def test_un_criterio_que_no_se_puede_filtrar_se_aclara_en_una_oracion(self):
         sistema = armar_sistema("", [], "es")
 

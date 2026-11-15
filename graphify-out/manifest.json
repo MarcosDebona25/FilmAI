@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794715858.1043735,
-    "seen": 1794715869.7942822,
-    "ast_hash": "3a1de750f8cea338b2fa646e978f91b8",
+    "mtime": 1794716467.7107363,
+    "seen": 1794716484.9222517,
+    "ast_hash": "5b220eeebe872230309e57b22194a5f0",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4476,9 +4476,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/prompts.py": {
-    "mtime": 1794713000.294432,
-    "seen": 1794714146.1869595,
-    "ast_hash": "b01bea7af536b9f226d064c1ab0b2c46",
+    "mtime": 1794716467.6510768,
+    "seen": 1794716484.8972292,
+    "ast_hash": "823ae35112969de7a34c12d1b0d92b51",
     "semantic_hash": ""
   },
   "backend/chatbot/puente.py": {
@@ -4488,9 +4488,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_orquestador.py": {
-    "mtime": 1794713000.346433,
-    "seen": 1794714146.1869738,
-    "ast_hash": "2ac29c7e084e69de576e05c97e1bd20f",
+    "mtime": 1794716467.6510768,
+    "seen": 1794716484.897681,
+    "ast_hash": "dabd30aaf1de9bb9fbb2f3edef969137",
     "semantic_hash": ""
   },
   "frontend/lib/fondos.ts": {
@@ -4506,9 +4506,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/README.md": {
-    "mtime": 1794714012.6760993,
-    "seen": 1794714146.187556,
-    "ast_hash": "5a47e33ea8b7e2944b5c273960744b9c",
+    "mtime": 1794716467.6510768,
+    "seen": 1794716484.9205265,
+    "ast_hash": "e36876b1e9fb05134affa361631f7f31",
     "semantic_hash": ""
   },
   "backend/catalogo/test_encolado_celery.py": {
@@ -4728,9 +4728,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/golden.yaml": {
-    "mtime": 1794713000.2624314,
-    "seen": 1794714146.187557,
-    "ast_hash": "b298dad38422fab4bac5445a26b8e258",
+    "mtime": 1794716467.6510768,
+    "seen": 1794716484.9205287,
+    "ast_hash": "df5ab23a22b7fa7fad627e2b0c2f392b",
     "semantic_hash": ""
   },
   "docs/tmdb-legales/Consideraciones Legales TMDB.txt": {

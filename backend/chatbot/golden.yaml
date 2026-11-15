@@ -88,6 +88,16 @@
     una sola parte de cada saga (Duna sí, Duna: Parte dos no, ni nombrada) y
     hasta 3 títulos distintos, todos con tarjeta.
 
+- id: tope_de_tres_titulos
+  mensaje: Recomendame algo como Los juegos del hambre, también basado en libros
+  rnf6: agregacion
+  espera: >
+    Caso real del 14/11/2026: tres títulos en lista y un cuarto en el cierre
+    («Si querés algo más adulto… Duna»), que salía en negrita y sin tarjeta
+    (`marcadores_validos=4` en la línea `Turno:` del log). Ahora recomienda
+    como mucho 3 títulos distintos, todos con tarjeta, y cierra sin sumar otro
+    («si preferís…», «otra opción es…»).
+
 - id: semantico
   mensaje: Algo melancólico sobre la soledad en una ciudad grande
   rnf6: agregacion
