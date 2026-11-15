@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1794713000.8144417,
-    "seen": 1794714146.1875947,
-    "ast_hash": "6960e76fbcfaaf6defd741dddcad38f9",
+    "mtime": 1794715858.0430112,
+    "seen": 1794715869.7942502,
+    "ast_hash": "127fe01fdd66a92cad2a93709d120bad",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794714012.6711974,
-    "seen": 1794714146.1876295,
-    "ast_hash": "cb49666ac5fe9c67cf77a937395c6f33",
+    "mtime": 1794715858.1043735,
+    "seen": 1794715869.7942822,
+    "ast_hash": "3a1de750f8cea338b2fa646e978f91b8",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -3888,9 +3888,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/pr-review.yml": {
-    "mtime": 1794712999.6995788,
-    "seen": 1794714146.1875525,
-    "ast_hash": "2210be83537fd007c39f48d87211aff2",
+    "mtime": 1794715858.0430112,
+    "seen": 1794715869.7922182,
+    "ast_hash": "c27ccd89372748405f533b0e1b52071f",
     "semantic_hash": ""
   },
   "traducciones/guia.md": {
