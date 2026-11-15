@@ -384,6 +384,14 @@ declare const messages: {
       "removeChipLabel": "Remove filter {filterLabel}",
       "loading": "Loading the list…"
     },
+    "suggestions": {
+      "title": "Suggested for this list",
+      "basisWithName": "Based on its {count, plural, one {# title} other {# titles}} and its name, without what you already watched.",
+      "basis": "Based on its {count, plural, one {# title} other {# titles}}, without what you already watched.",
+      "add": "Add",
+      "addLabel": "Add {title} to {listName}",
+      "showMore": "Show more suggestions"
+    },
     "reorder": {
       "instructions": "To reorder, press space or enter on the handle, move with the arrow keys, and press space or enter again to drop. Press escape to cancel.",
       "pickedUp": "{listName} picked up, position {position} of {total}.",

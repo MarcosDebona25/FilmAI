@@ -12,6 +12,7 @@ import { ListActionsMenu } from "@/components/features/lists/ListActionsMenu";
 import { useNombreLista } from "@/components/features/lists/ListCard";
 import { ListFiltersSheet } from "@/components/features/lists/ListFiltersSheet";
 import { ListNameDialog } from "@/components/features/lists/ListNameDialog";
+import { ListSuggestions } from "@/components/features/lists/ListSuggestions";
 import { MediaCard } from "@/components/features/MediaCard";
 import { UnavailableCard } from "@/components/features/UnavailableCard";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
@@ -33,6 +34,7 @@ import {
   hayFiltros,
   itemATitulo,
   rutaPaginaItems,
+  tieneSugerencias,
   urlDeFiltros,
   type FiltrosLista,
   type ItemLista,
@@ -46,6 +48,12 @@ import { cn } from "@/lib/utils";
 
 /** Espera después de la última tecla antes de filtrar, como Buscar. */
 const ESPERA_MS = 350;
+/** El aviso de la ficha al agregar a una predeterminada; acá se reutiliza. */
+const AVISO_AGREGADA = {
+  favoritos: "title.feedback.favoriteAdded",
+  vistas: "title.feedback.watchedAdded",
+  pendientes: "title.feedback.watchlistAdded",
+} as const;
 /** Distancia al final de la grilla a la que se pide la página siguiente. */
 const ANTICIPO = "600px";
 
@@ -79,6 +87,8 @@ export function ListDetailView({ id }: { id: number }) {
   const [hoja, setHoja] = useState(false);
   const [dialogo, setDialogo] = useState<"renombrar" | "eliminar" | null>(null);
   const [accion, setAccion] = useState<Accion | null>(null);
+  // Sube con cada alta, baja o renombre: el backend arma otro pool de sugerencias.
+  const [revision, setRevision] = useState(0);
   const pedido = useRef(0);
   const centinela = useRef<HTMLDivElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -200,8 +210,43 @@ export function ListDetailView({ id }: { id: number }) {
           }
         : actual
     );
+    setRevision((anterior) => anterior + 1);
     // La tarjeta ya no existe: el foco va al título de la página.
     requestAnimationFrame(() => titulo.current?.focus());
+  }
+
+  /** Un título agregado desde las sugerencias: ya está guardado, falta mostrarlo. */
+  function sumarALaGrilla(item: ItemLista) {
+    setLista((actual) =>
+      actual
+        ? {
+            ...actual,
+            cantidad_items: actual.cantidad_items + 1,
+            cantidad_peliculas: actual.cantidad_peliculas + (item.tipo === "movie" ? 1 : 0),
+            cantidad_series: actual.cantidad_series + (item.tipo === "tv" ? 1 : 0),
+          }
+        : actual
+    );
+    // Con un filtro activo no se sabe si el título lo cumple (eso lo decide el
+    // backend): cuenta en la lista y aparece al quitar el filtro.
+    if (!filtrando)
+      setDatos((actual) =>
+        actual
+          ? {
+              ...actual,
+              // «Recently added» lo lleva primero; en los demás órdenes va al final.
+              items: filtros.orden === "recent" ? [item, ...actual.items] : [...actual.items, item],
+              total: actual.total + 1,
+            }
+          : actual
+      );
+    setRevision((anterior) => anterior + 1);
+    if (!lista) return;
+    toast.success(
+      lista.clave
+        ? t(AVISO_AGREGADA[lista.clave])
+        : t("title.lists.addedFeedback", { title: item.titulo, listName: lista.nombre })
+    );
   }
 
   async function quitar(item: ItemLista) {
@@ -240,6 +285,7 @@ export function ListDetailView({ id }: { id: number }) {
       body: { nombre },
     });
     setLista((actual) => (actual ? { ...actual, ...actualizada } : actual));
+    setRevision((anterior) => anterior + 1);
     setDialogo(null);
     toast.success(t("lists.feedback.renamed"));
   }
@@ -638,6 +684,18 @@ export function ListDetailView({ id }: { id: number }) {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Al final y solo con la grilla completa, así no se corre mientras llegan páginas. */}
+          {lista && nombre && tieneSugerencias(lista) && !vacia && (
+            <ListSuggestions
+              listaId={id}
+              nombre={nombre}
+              cantidad={lista.cantidad_items}
+              revision={revision}
+              visible={datos !== null && datos.next === null && estado !== "error"}
+              onAgregada={sumarALaGrilla}
+            />
           )}
         </>
       )}

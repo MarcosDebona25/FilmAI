@@ -44,6 +44,36 @@ export interface PaginaItems {
   results: ItemLista[];
 }
 
+/** Una sugerencia de `GET /api/lists/{id}/suggestions/`: un ítem sin `item_id` ni fecha. */
+export interface Sugerencia {
+  id_tmdb: number;
+  tipo: "movie" | "tv";
+  titulo: string;
+  poster: string | null;
+  anio: number | null;
+  calificacion_promedio: number | null;
+  /** No viaja en las respuestas en inglés. */
+  campos_en_ingles?: string[];
+  origen: "catalogo" | "tmdb";
+}
+
+export interface PaginaSugerencias {
+  results: Sugerencia[];
+  pagina: number;
+  /** Queda una página más mientras `pagina < paginas`. */
+  paginas: number;
+  /** El nombre de la lista entró en el cálculo. */
+  nombre_usado: boolean;
+}
+
+/** Favoritos, Vistas y las personalizadas tienen sugerencias; Pendientes no (15/11/2026). */
+export const tieneSugerencias = (lista: Pick<ResumenLista, "clave">) =>
+  lista.clave !== "pendientes";
+
+/** TMDB numera películas y series por separado: la identidad es el par. */
+export const claveDeSugerencia = (sugerencia: Pick<Sugerencia, "tipo" | "id_tmdb">) =>
+  `${sugerencia.tipo}-${sugerencia.id_tmdb}`;
+
 /** Mismo tope que valida el backend (`NombreListaSerializer`). */
 export const MAX_NOMBRE = 80;
 /** Letras, números y espacios (de cualquier idioma), como el backend. */
