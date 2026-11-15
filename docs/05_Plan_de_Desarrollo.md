@@ -14,7 +14,7 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 | 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                           | —                            | Q-01, Q-03, Q-04, #198                                               |
 | 5   | Títulos parecidos en listas y en la ficha                   | Media                           | Media (PR 1 y 2 de 5 hechos) | `openspec/changes/recomendaciones-similares/`, sección 14 del canvas |
 | 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna | Media                        | Seguridad, B-03, C-04b, CU-021                                       |
-| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                            | Muy alta                     | Q-01, Q-05, sección 13 del canvas                                    |
+| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                            | Muy alta                     | Q-01, Q-05, sección 12 del canvas                                    |
 | 8   | Refactor y lista «Viendo»                                   | Baja                            | Media                        | Q-07, sección 15 del canvas                                          |
 | 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)      | Baja                         | Perfil, Settings                                                     |
 | 10  | Buscar en la navbar, filtro por persona y sin relevancia    | Media                           | Alta (backend y lupa hechos) | `openspec/changes/busqueda-navbar/`, sección 13 del canvas           |
@@ -104,7 +104,7 @@ Todavía no hay un despliegue público. Antes de publicar una instancia:
 Q-05 pide documentar una instalación desde cero siguiendo el README. Los 4 correos transaccionales (en y es) todavía no se revisaron en un cliente de correo real. Q-01 pide una prueba con un lector de pantalla real (NVDA en Windows), que se movió acá desde el pendiente 4 el 13/11/2026. Q-04 pide además una prueba del panel del chat con el teclado abierto de un celular real (Android e iOS): en el repositorio solo se simuló el área visible reducida. Son tareas cortas y manuales.
 
 - **No usar los `.eml` de `traducciones/revision-correos/`**: son del 20/10/2026 y no coinciden con la plantilla actual (no tienen la tipografía Big Shoulders del encabezado y el borde es de otro color). Hay que generarlos de nuevo desde `backend/templates/correos/` o mandar los correos reales con Resend y `RESEND_TEST_RECIPIENT`, que además prueba el envío de punta a punta.
-- **Confirmar que no tienen la franja dorada de arriba**: se quitó de `base.html` el 06/11/2026 (#175), y la sección 13 del canvas se actualizó el 13/11/2026 para que coincida.
+- **Confirmar que no tienen la franja dorada de arriba**: se quitó de `base.html` el 06/11/2026 (#175), y la sección de correos del canvas (hoy la 12) se actualizó el 13/11/2026 para que coincida.
 - **NVDA en Windows**: recorrer con NVDA y Firefox o Chrome el registro, la búsqueda, una ficha con calificación, una lista y el chat (abrir, preguntar, leer las tarjetas, cerrar). Anotar lo que se lee mal o no se anuncia y abrir un issue por cada problema.
 
 ### 8. Refactor y lista «Viendo»
