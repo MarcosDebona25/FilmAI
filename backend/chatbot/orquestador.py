@@ -164,7 +164,7 @@ class _Medicion:
 
 
 def _ahora():
-    """El reloj del plazo del turno. Aparte para poder fijarlo en los tests (como un `Clock`)."""
+    """El reloj del plazo del turno. Aparte para poder fijarlo en los tests."""
     return time.monotonic()
 
 
