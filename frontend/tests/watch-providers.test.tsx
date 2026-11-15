@@ -1,3 +1,4 @@
+import { fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -10,7 +11,7 @@ import { PLATAFORMAS_AR, PLATAFORMAS_CN } from "./title-fixtures";
 const ok = (data: Plataformas): Pedido<Plataformas> => ({ status: "ok", data, error: null });
 
 describe("WatchProviders", () => {
-  it("con datos: línea con la cantidad de plataformas únicas y panel con los grupos", async () => {
+  it("con datos: la línea es un botón y abre un diálogo modal con los grupos", async () => {
     const user = userEvent.setup();
     render(<WatchProviders pedido={ok(PLATAFORMAS_AR)} pais="AR" />, { locale: "en" });
 
@@ -19,21 +20,28 @@ describe("WatchProviders", () => {
     expect(linea).toHaveTextContent("3 options in Argentina");
     expect(linea).toHaveAttribute("aria-expanded", "false");
     expect(linea).toHaveAttribute("aria-haspopup", "dialog");
+    expect(linea).toHaveClass("min-h-11");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     await user.click(linea);
     expect(linea).toHaveAttribute("aria-expanded", "true");
     const panel = screen.getByRole("dialog", { name: "Where to watch" });
-    expect(within(panel).getByRole("heading", { name: "Stream" })).toBeInTheDocument();
-    expect(within(panel).getByRole("heading", { name: "Rent" })).toBeInTheDocument();
-    expect(within(panel).getByRole("heading", { name: "Buy" })).toBeInTheDocument();
-    // Los grupos vacíos no aparecen.
-    expect(within(panel).queryByRole("heading", { name: "Free" })).not.toBeInTheDocument();
-    // Los logos llevan alt y title, y no son enlaces.
+    expect(panel).toHaveAttribute("aria-modal", "true");
+    // Etiquetado por su título visible, no por un `aria-label` suelto.
+    const titulo = within(panel).getByRole("heading", { level: 2, name: "Where to watch" });
+    expect(panel).toHaveAttribute("aria-labelledby", titulo.id);
+    // Los grupos vacíos no aparecen (acá, Free).
+    expect(
+      within(panel)
+        .getAllByRole("heading", { level: 3 })
+        .map((h) => h.textContent)
+    ).toEqual(["Stream", "Rent", "Buy"]);
+    // Los logos llevan alt y title, sin nombre visible, y no son enlaces.
     const logo = within(panel).getAllByAltText("Netflix")[0];
     expect(logo).toHaveAttribute("title", "Netflix");
     expect(logo.closest("a")).toBeNull();
     expect(logo).toHaveAttribute("src", expect.stringContaining("image.tmdb.org/t/p/w92/"));
+    expect(within(panel).queryByText("Netflix")).not.toBeInTheDocument();
     const tmdb = within(panel).getByRole("link", { name: /See all options on TMDB/ });
     expect(tmdb).toHaveAttribute("href", PLATAFORMAS_AR.enlace);
     expect(tmdb).toHaveAttribute("target", "_blank");
@@ -45,6 +53,43 @@ describe("WatchProviders", () => {
     expect(panel).toHaveTextContent("Data by JustWatch");
   });
 
+  it("con gratuitas: los grupos van en el orden Stream, Free, Rent, Buy y suman al conteo", async () => {
+    const user = userEvent.setup();
+    const conGratis = {
+      ...PLATAFORMAS_AR,
+      gratis: [{ id: 73, nombre: "Tubi TV", logo: null }],
+    };
+    render(<WatchProviders pedido={ok(conGratis)} pais="AR" />, { locale: "en" });
+
+    const linea = screen.getByRole("button", { name: /Stream or rent/ });
+    expect(linea).toHaveTextContent("4 options in Argentina");
+    await user.click(linea);
+    const panel = screen.getByRole("dialog", { name: "Where to watch" });
+    expect(
+      within(panel)
+        .getAllByRole("heading", { level: 3 })
+        .map((h) => h.textContent)
+    ).toEqual(["Stream", "Free", "Rent", "Buy"]);
+    // Sin logo: la inicial, con el nombre como etiqueta accesible y tooltip.
+    const tubi = within(within(panel).getByRole("region", { name: "Free" })).getByRole("img", {
+      name: "Tubi TV",
+    });
+    expect(tubi).toHaveAttribute("title", "Tubi TV");
+  });
+
+  it("el botón de cerrar cierra el diálogo y devuelve el foco a la línea", async () => {
+    const user = userEvent.setup();
+    render(<WatchProviders pedido={ok(PLATAFORMAS_AR)} pais="AR" />, { locale: "en" });
+    const linea = screen.getByRole("button", { name: /Stream or rent/ });
+    await user.click(linea);
+    const cerrar = within(screen.getByRole("dialog")).getByRole("button", { name: "Close" });
+    expect(cerrar).toHaveClass("size-11");
+    await user.click(cerrar);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(linea).toHaveAttribute("aria-expanded", "false");
+    expect(linea).toHaveFocus();
+  });
+
   it("el plural y el idioma salen del catálogo", () => {
     const una = { ...PLATAFORMAS_CN, pais: "AR", suscripcion: [PLATAFORMAS_AR.suscripcion[0]] };
     render(<WatchProviders pedido={ok(una)} pais="AR" />, { locale: "es" });
@@ -53,12 +98,13 @@ describe("WatchProviders", () => {
     );
   });
 
-  it("Escape cierra el panel y devuelve el foco a la línea", async () => {
+  it("Escape cierra el diálogo y devuelve el foco a la línea", async () => {
     const user = userEvent.setup();
     render(<WatchProviders pedido={ok(PLATAFORMAS_AR)} pais="AR" />, { locale: "en" });
     const linea = screen.getByRole("button", { name: /Stream or rent/ });
     await user.click(linea);
-    await user.keyboard("{Escape}");
+    // jsdom no traduce Escape en el evento `cancel` del <dialog>: se dispara a mano.
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(linea).toHaveFocus();
   });

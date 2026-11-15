@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import Image from "next/image";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight, ExternalLink, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { DialogShell } from "@/components/features/title/DialogShell";
 import { tmdbImage } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import type { Pedido } from "@/lib/use-catalog";
@@ -60,8 +61,8 @@ function Logo({
 
 /**
  * «Dónde verla» en la ficha: una línea con los logos y la cantidad de
- * opciones en el país, que abre un panel con los grupos Stream / Free / Rent /
- * Buy. TMDB no da enlaces directos por plataforma, así que los logos no son
+ * opciones en el país, que abre un diálogo (hoja desde abajo en celular) con
+ * los grupos Stream / Free / Rent / Buy. TMDB no da enlaces directos por plataforma, así que los logos no son
  * enlaces: hay un solo enlace a TMDB. Cargando muestra un esqueleto; si el
  * pedido falla o no hay país, la sección no aparece (no es contenido crítico).
  */
@@ -76,28 +77,9 @@ export function WatchProviders({
 }) {
   const t = useTranslations("title.providers");
   const formats = useFormats();
-  const panelId = useId();
-  const raiz = useRef<HTMLDivElement>(null);
-  const boton = useRef<HTMLButtonElement>(null);
+  const tc = useTranslations("common.actions");
+  const tituloId = useId();
   const [abierto, setAbierto] = useState(false);
-
-  useEffect(() => {
-    if (!abierto) return;
-    const fuera = (event: PointerEvent) => {
-      if (!raiz.current?.contains(event.target as Node)) setAbierto(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setAbierto(false);
-      boton.current?.focus();
-    };
-    document.addEventListener("pointerdown", fuera);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", fuera);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [abierto]);
 
   if (!pais || pedido.status === "idle" || pedido.status === "error") return null;
 
@@ -131,15 +113,13 @@ export function WatchProviders({
   }
 
   return (
-    <div ref={raiz} className={cn("flex flex-col gap-3", className)}>
+    <div className={cn("flex flex-col", className)}>
       <button
-        ref={boton}
         type="button"
         aria-expanded={abierto}
         aria-haspopup="dialog"
-        aria-controls={abierto ? panelId : undefined}
-        onClick={() => setAbierto((actual) => !actual)}
-        className="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 self-start rounded-lg text-left text-sm text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        onClick={() => setAbierto(true)}
+        className="group flex min-h-11 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 self-start rounded-lg pr-1.5 text-left text-sm text-fg-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <span className="font-semibold text-foreground">{t("lead")}</span>
         <span aria-hidden="true" className="flex gap-1.5">
@@ -149,23 +129,43 @@ export function WatchProviders({
             </span>
           ))}
         </span>
-        <span className="inline-flex items-center gap-1">
+        <span className="inline-flex items-center gap-2">
           {t("options", { count: total, country: nombrePais })}
-          <ChevronDown
+          <span
             aria-hidden="true"
-            className={cn("size-4 transition-transform", abierto && "rotate-180")}
-          />
+            className="grid size-7 place-items-center rounded-full bg-raised-2 text-foreground group-hover:bg-selected group-hover:text-selected-foreground"
+          >
+            <ChevronRight className="size-4" strokeWidth={2.2} />
+          </span>
         </span>
       </button>
       {abierto && (
-        <div
-          id={panelId}
-          role="dialog"
-          aria-label={t("panelTitle")}
-          className="flex flex-col gap-5 rounded-xl bg-raised p-4 shadow-[inset_0_0_0_1px_var(--line)] md:max-w-[45rem] md:p-5"
+        // Al desmontarse, `DialogShell` devuelve el foco a la línea que lo abrió.
+        <DialogShell
+          labelledBy={tituloId}
+          onClose={() => setAbierto(false)}
+          ancho="md:w-[min(32.5rem,calc(100%-3rem))]"
+          relleno="px-5 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:pb-5 md:shadow-[inset_0_0_0_1px_var(--line),0_24px_60px_rgb(0_0_0/0.5)]"
         >
+          <div className="flex items-center justify-between py-3">
+            <h2 id={tituloId} className="font-display text-[1.875rem] leading-none">
+              {t("panelTitle")}
+            </h2>
+            <button
+              type="button"
+              aria-label={tc("close")}
+              onClick={() => setAbierto(false)}
+              className="grid size-11 cursor-pointer place-items-center rounded-full text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <X aria-hidden="true" className="size-[1.125rem]" />
+            </button>
+          </div>
           {GRUPOS.filter(([clave]) => datos[clave].length > 0).map(([clave, grupo]) => (
-            <section key={clave} aria-label={t(`groups.${grupo}`)} className="flex flex-col gap-2">
+            <section
+              key={clave}
+              aria-label={t(`groups.${grupo}`)}
+              className="flex flex-col gap-2.5 border-t border-line py-3.5"
+            >
               <h3 className="text-[0.8125rem] font-semibold text-fg-3">{t(`groups.${grupo}`)}</h3>
               <ul className="flex flex-wrap gap-2">
                 {datos[clave].map((p) => (
@@ -176,15 +176,16 @@ export function WatchProviders({
               </ul>
             </section>
           ))}
-          <div className="flex flex-col gap-2 text-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line pt-1.5 text-sm">
             {datos.enlace && (
               <a
                 href={datos.enlace}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center font-semibold text-foreground underline underline-offset-[3px]"
+                className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-foreground underline underline-offset-[3px]"
               >
                 {t("seeAll")}
+                <ExternalLink aria-hidden="true" className="size-3.5" />
                 <span className="sr-only"> {t("newTabHint")}</span>
               </a>
             )}
@@ -203,7 +204,7 @@ export function WatchProviders({
               })}
             </p>
           </div>
-        </div>
+        </DialogShell>
       )}
     </div>
   );
