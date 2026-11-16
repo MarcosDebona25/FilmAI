@@ -604,3 +604,4 @@ origen_id,clave,namespace,estado,es_original,en_original,es_curado,en_curado,pan
 642,lists.suggestions.add,lists,ok,Agregar,Add,Agregar,Add,"[""List detail"",""List detail · mobile""]",,Botón «+ Add» de cada sugerencia.
 643,lists.suggestions.addLabel,lists,ok,Agregar The Odyssey a Sci Fi,Add The Odyssey to Sci Fi,Agregar {title} a {listName},Add {title} to {listName},"[""List detail"",""List detail · mobile""]",,Nombre accesible de «+ Add».
 644,lists.suggestions.showMore,lists,ok,Ver más sugerencias,Show more suggestions,Ver más sugerencias,Show more suggestions,"[""List detail"",""List detail · mobile""]",,Pide la página siguiente (`?pagina=N`) y la agrega debajo.
+645,title.similar.title,title,ok,Parecidos a Interstellar,More like Interstellar,Parecidos a {title},More like {title},"[""Title page"",""Title page · mobile""]",,Encabezado de la fila de títulos parecidos de la ficha (canvas sección 14).

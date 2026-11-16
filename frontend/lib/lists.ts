@@ -44,7 +44,10 @@ export interface PaginaItems {
   results: ItemLista[];
 }
 
-/** Una sugerencia de `GET /api/lists/{id}/suggestions/`: un ítem sin `item_id` ni fecha. */
+/**
+ * Una sugerencia de `GET /api/lists/{id}/suggestions/` o un parecido de
+ * `GET /api/catalogo/{tipo}/{id}/similar/`: un ítem sin `item_id` ni fecha.
+ */
 export interface Sugerencia {
   id_tmdb: number;
   tipo: "movie" | "tv";
@@ -123,6 +126,23 @@ export function itemATitulo(item: ItemLista): Title {
     backdrop: null,
     generoIds: [],
     tituloEnIngles: false,
+    sinopsisEnIngles: false,
+  };
+}
+
+/** Una sugerencia (de una lista o de «More like {title}») como tarjeta. */
+export function sugerenciaATitulo(sugerencia: Sugerencia): Title {
+  return {
+    tipo: sugerencia.tipo,
+    id: sugerencia.id_tmdb,
+    titulo: sugerencia.titulo,
+    sinopsis: "",
+    anio: sugerencia.anio,
+    nota: sugerencia.calificacion_promedio,
+    poster: tmdbImage(sugerencia.poster, "w342"),
+    backdrop: null,
+    generoIds: [],
+    tituloEnIngles: sugerencia.campos_en_ingles?.includes("titulo") ?? false,
     sinopsisEnIngles: false,
   };
 }

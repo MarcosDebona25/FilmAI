@@ -292,6 +292,9 @@ declare const messages: {
       "removeConfirmTitle": "Remove from Watched?",
       "remove": "Remove from Watched"
     },
+    "similar": {
+      "title": "More like {title}"
+    },
     "breadcrumb": {
       "backTo": "Back to {label}"
     },

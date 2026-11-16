@@ -292,6 +292,9 @@ declare const messages: {
       "removeConfirmTitle": "¿Quitar de Vistas?",
       "remove": "Quitar de Vistas"
     },
+    "similar": {
+      "title": "Parecidos a {title}"
+    },
     "breadcrumb": {
       "backTo": "Volver a {label}"
     },
