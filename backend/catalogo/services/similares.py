@@ -1,6 +1,6 @@
 """Motor de «títulos parecidos»: lo comparten la ficha y las sugerencias de una lista.
 
-Diseño: `openspec/changes/recomendaciones-similares/design.md`. Los dos usos
+Diseño: `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026). Los dos usos
 hacen los mismos tres pasos:
 
 1. **Semillas → vector.** Cada título del catálogo tiene un *embedding*: 1 024

@@ -1,6 +1,6 @@
 """Sugerencias de una lista: `GET /api/lists/{id}/suggestions/?pagina=N`.
 
-Diseño en `openspec/changes/recomendaciones-similares/design.md` §7. El motor
+Diseño en `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026). El motor
 tiene sus propios tests (`catalogo/tests_similares.py`) y el nombre de la lista
 también (`catalogo/tests_similares_nombre.py`). Acá se prueba lo que agrega la
 vista: quién puede pedirla, qué semillas arma con los ítems de la lista, qué

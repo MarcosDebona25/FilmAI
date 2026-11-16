@@ -1717,9 +1717,10 @@ paths:
         «Sugeridas para esta lista»: títulos parecidos a los de una lista propia.
 
         `GET /api/lists/{id}/suggestions/?pagina=N` responde
-        `{results, pagina, paginas, nombre_usado}`. Solo las listas personalizadas
-        y Favoritos tienen sugerencias: Pendientes y Vistas dan 404 (Not Found),
-        como si el recurso no existiera.
+        `{results, pagina, paginas, nombre_usado}`; queda una página más mientras
+        `pagina < paginas`. Tienen sugerencias las listas personalizadas, Favoritos
+        y Vistas. Pendientes da 404 (Not Found), como si el recurso no existiera:
+        es lo que la persona ya eligió ver.
 
         Cómo se arma (design §7), en tres pasos:
 

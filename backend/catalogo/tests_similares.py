@@ -1,6 +1,6 @@
 """Motor de «títulos parecidos» (`catalogo/services/similares.py`).
 
-Diseño en `openspec/changes/recomendaciones-similares/design.md`. Los vectores
+Diseño en `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026). Los vectores
 se arman a mano, como en `tests_semantica.py`: acá se prueba qué hace el motor
 con los vectores (promediar, ordenar, excluir), no qué tan bueno es el modelo.
 Ni Ollama ni TMDB se llaman de verdad.
