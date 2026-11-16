@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1794786737.7326505,
-    "seen": 1794787354.1967788,
-    "ast_hash": "904dca0d16e700f8c3408fae68be915b",
+    "mtime": 1794788339.3222344,
+    "seen": 1794790620.594497,
+    "ast_hash": "98960a728b5664c7d7923d468ad6ed61",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794786755.1286507,
-    "seen": 1794787354.1967804,
-    "ast_hash": "37aca6ad08b01c383776ce2a9e466d6f",
+    "mtime": 1794790576.6764016,
+    "seen": 1794790620.594542,
+    "ast_hash": "b2e640fd1610a8d935a04818c3f31060",
     "semantic_hash": ""
   },
   "frontend/README.md": {
