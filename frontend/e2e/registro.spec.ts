@@ -240,6 +240,115 @@ for (const viewport of viewports) {
       await sinDesborde(page);
     });
 
+    for (const locale of ["en", "es"] as const) {
+      test(`nada salta entre pasos, con errores ni con el diálogo de avatar en ${locale}`, async ({
+        page,
+        baseURL,
+      }, testInfo) => {
+        test.setTimeout(90_000);
+        const copy = locale === "es" ? es : en;
+        await preparar(page, baseURL!, locale);
+        await abrir(page, copy);
+        const principal = page.locator('form:has([data-paso]) button[type="submit"]');
+        const entrar = page
+          .locator("form:has([data-paso])")
+          .getByRole("link", { name: copy.nav.account.logIn });
+        /** Posición dentro del documento (no de la ventana: el foco puede desplazarla). */
+        const medir = () =>
+          page.evaluate(() => {
+            const caja = (selector: string) => {
+              const r = document.querySelector(selector)!.getBoundingClientRect();
+              return { x: r.left + window.scrollX, y: r.top + window.scrollY };
+            };
+            return {
+              boton: caja('form:has([data-paso]) button[type="submit"]'),
+              fila: caja('form:has([data-paso]) a[href="/login"]'),
+              alto: document.documentElement.scrollHeight,
+            };
+          });
+        await expect(entrar).toBeVisible();
+        const base = await medir();
+        const medidas: Record<string, number[]> = {};
+        const igual = async (momento: string) => {
+          const ahora = await medir();
+          medidas[momento] = [ahora.boton.y, ahora.fila.y];
+          for (const parte of ["boton", "fila"] as const) {
+            expect(
+              Math.abs(ahora[parte].y - base[parte].y),
+              `${momento}: ${parte} (y)`
+            ).toBeLessThanOrEqual(1);
+            expect(
+              Math.abs(ahora[parte].x - base[parte].x),
+              `${momento}: ${parte} (x)`
+            ).toBeLessThanOrEqual(1);
+          }
+          expect(
+            Math.abs(ahora.alto - base.alto),
+            `${momento}: alto de la página`
+          ).toBeLessThanOrEqual(1);
+        };
+        medidas["paso 1"] = [base.boton.y, base.fila.y];
+        const alertas = page.locator("form:has([data-paso])").getByRole("alert");
+
+        // Paso 1 con errores.
+        await principal.click();
+        await expect(alertas).toHaveCount(3);
+        await igual("paso 1 con errores");
+        // Con los pasos 2 y 3 ocultos en la página.
+        await auditar(page);
+        await llenarPaso1(page);
+        await principal.click();
+        await expect(barra(page, copy)).toHaveAttribute("aria-valuenow", "2");
+        await igual("paso 2");
+
+        // Paso 2 con errores.
+        await principal.click();
+        await expect(alertas).toHaveCount(6);
+        await igual("paso 2 con errores");
+        await auditar(page);
+        await llenarPaso2(page, copy);
+        await igual("paso 2 completo");
+        await principal.click();
+        await expect(barra(page, copy)).toHaveAttribute("aria-valuenow", "3");
+        await igual("paso 3");
+
+        // Paso 3 con el error de los términos.
+        await principal.click();
+        await expect(page.getByText(copy.errors.codes.terms_not_accepted)).toBeVisible();
+        await igual("paso 3 con errores");
+        await auditar(page);
+
+        // El diálogo de avatar no mueve la página al abrir, paginar ni cerrar.
+        await page
+          .getByRole("button", { name: copy.auth.signUp.avatarChoose, exact: true })
+          .click();
+        const dialogo = page.getByRole("dialog", { name: copy.auth.signUp.avatarLabel });
+        await expect(dialogo).toBeVisible();
+        await igual("diálogo abierto");
+        await dialogo.getByRole("button", { name: copy.auth.signUp.avatarMore }).click();
+        await igual("diálogo en la página 2");
+        await page.keyboard.press("Escape");
+        await expect(dialogo).toBeHidden();
+        await igual("diálogo cerrado");
+
+        // «Back» hasta el paso 1.
+        const atras = page
+          .locator("form:has([data-paso])")
+          .getByText(copy.auth.signUp.back, { exact: true });
+        await atras.click();
+        await expect(barra(page, copy)).toHaveAttribute("aria-valuenow", "2");
+        await igual("vuelta al paso 2");
+        await atras.click();
+        await expect(barra(page, copy)).toHaveAttribute("aria-valuenow", "1");
+        await igual("vuelta al paso 1");
+        await sinDesborde(page);
+        await testInfo.attach("posiciones", {
+          body: JSON.stringify(medidas),
+          contentType: "application/json",
+        });
+      });
+    }
+
     test("si el servidor rechaza el alta, vuelve al paso del campo con error", async ({
       page,
       baseURL,

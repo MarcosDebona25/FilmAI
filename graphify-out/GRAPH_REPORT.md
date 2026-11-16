@@ -1,16 +1,16 @@
 # Graph Report - feat-canvas-registro  (2026-11-16)
 
 ## Corpus Check
-- 798 files · ~777,047 words
+- 798 files · ~777,719 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 9228 nodes · 21817 edges · 426 communities (300 shown, 101 thin omitted)
+- 9228 nodes · 21820 edges · 430 communities (300 shown, 105 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 1490 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e57eb2f7`
+- Built from commit: `9d66e758`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -21,35 +21,35 @@
 - el
 - setLiveState
 - initPageChat
-- tests_orquestador.py
+- django_db
 - api.ts
 - package.json
-- MyReviewsView.tsx
+- TMDBClient
 - ListDetailView.tsx
 - TMDBClientCache
 - react
 - initGlobalBar
 - materializar
-- .turno
+- OrquestadorFalso
 - GoogleSocialLoginSerializer
 - Requirements
-- OrquestadorFalso
+- tests_sse.py
 - README de FilmAI
 - ArmarPerfilTests
 - GoogleOAuthTests
 - New visual work (new-work flow)
-- catalogo/tests.py
+- get_catalog_service
 - HomeView.tsx
 - $impeccable harden
 - impeccable/SKILL.md
 - validate-findings.cjs
-- ValidadoresContrasenaTests
+- ._resena
 - RecuperarContrasenaTests
 - vector_a
 - $impeccable doctor
 - resolveLiveInjectionAnchor
 - handleManualEditActivity
-- catalogo/views.py
+- TopesTMDBMixin
 - $impeccable live (interactive variant mode)
 - .correr
 - PerfilTests
@@ -80,9 +80,9 @@
 - Cloud and Deployment Hunting
 - createLiveBrowserDomHelpers
 - SignupAvatarDialog.tsx
-- tests_vencimiento.py
+- TitleActions.tsx
 - tomar_candado
-- PreferenciasTests
+- ProduccionEmbeddingModelTests
 - SeedCatalogoTests
 - Internationalization core capability
 - listas/tests_sugerencias.py
@@ -105,7 +105,7 @@
 - next.config.ts
 - AdminStaffParcialTests
 - RedSinMarcadoresTests
-- test_traducciones.py
+- recorte.py
 - asset-producer.md
 - Requirements
 - Módulo 0 — Fundación
@@ -120,9 +120,9 @@
 - Requirement: Brevo fallback behind one email backend
 - Requirements
 - ErroresRegistroTests
-- TitleView.tsx
-- TMDBClient
-- CatalogoBaseView
+- cn
+- catalogo/tests.py
+- catalogo/views.py
 - ResenaAdmin
 - item_tmdb
 - Requirements
@@ -172,7 +172,7 @@
 - CatalogoThrottleTests
 - .titulos
 - ItemsDeListaTests
-- TipoProduccion
+- ProduccionAudiovisual
 - ref_next_intl_server
 - chat-calidad.spec.ts
 - vector_semilla
@@ -199,12 +199,12 @@
 - armar_sistema
 - ref_node_fs
 - errores/__init__.py
-- ContratoErroresAPITests
+- tmdb_a_dominio
 - mezclar_con_pesos
 - CodigosParametrosCatalogoTests
 - BuscarSemanticoTests
 - vitest.config.mts
-- .limpiar
+- LoginDualTests
 - BaseOrquestador
 - captureElementToBlob
 - EjecutorConSobre
@@ -227,7 +227,7 @@
 - BrowseBase
 - MigracionClaveListaTests
 - Módulo 2 — Catálogo y Búsqueda (Gonza)
-- similares.py
+- contar_llamadas
 - CatalogoConRespaldo
 - detectar_idioma
 - CreditosTests
@@ -250,7 +250,7 @@
 - Layout base (Shell): navbar Inicio/Buscar/Listas + avatar
 - ADDED Requirements
 - Mis reseñas (ReviewCard)
-- ejecutar
+- tests_tools.py
 - ClaveDeConfirmacionEnLogsTests
 - MedicionDelTurnoTests
 - Modal Calificar / Reseña (star widget 10 estrellas)
@@ -259,29 +259,29 @@
 - AccountProvider.tsx
 - Supply Chain and Release Hunting
 - Desktop, Mobile, and Local IPC Hunting
-- ProduccionAudiovisual
+- sync_catalogo_diaria
 - TitulosPorIdiomaTests
 - Pantallas de error (404, 500/timeout)
 - Perfil con edición inline
 - IdiomaDelDestinatarioTests
-- django_test
+- listas/views.py
 - CatalogoFalso
 - modern-screenshot.umd.js
 - cargar_golden
 - onAnnotDown
 - Preferencias (tema, privacidad, notificaciones, baja)
-- CorreoThrottleTests
-- anonimizar.py
+- PerfilView
+- CalificarIdInexistenteTests
 - Sección Listas (vista general, detalle, modales)
 - django_apps
 - cliente
 - Proposal: Similar titles for lists and title pages (pendiente 5)
 - ResendBackend
 - Vulnerability Hunting
-- .buscar
-- tests_tools.py
+- pelicula
+- ErroresPerfilTests
 - Resource Exhaustion and Availability Hunting
-- usuarios/throttles.py
+- SugerenciasBase
 - AI, LLM, and Agent Hunting
 - ListaFactory
 - scripts
@@ -289,8 +289,8 @@
 - VistasIdiomaTests
 - @playwright/test
 - UsuarioAdmin
-- tests_sse.py
-- CursorConTotal
+- pedir
+- LoginSerializer
 - revision-correos/README.md
 - EntrypointSuperusuarioTests
 - Requirement: Placement
@@ -301,7 +301,7 @@
 - A-06: Google OAuth
 - RespaldoTMDBTest
 - HTTP-Protocol and Authentication Hunting
-- test_nombres_reservados.py
+- PerfilTests
 - usuarios/serializers.py
 - Requirements
 - Módulo 4 — Perfil y Preferencias (Gonza)
@@ -320,15 +320,15 @@
 - sync_avatars.py
 - ADDED Requirements
 - explicar-al-implementar/SKILL.md
-- ResetContrasenaThrottleTests
+- RecomendadoSinGustosTests
 - Command
 - ComandoChatearTests
 - UnaPartePorSagaTests
-- ListaSugerenciasView
+- explorar
 - RedisCacheConSerializadorTests
 - listas.spec.ts
 - Tasks: Similar titles for lists and title pages (pendiente 5)
-- django_db
+- 0006_lista_restricciones_clave.py
 - ValidacionDeArgumentosTests
 - Requirement: Suggestions row
 - Validation, Structured Output, Verification, and Reporting
@@ -349,52 +349,52 @@
 - _Medicion
 - Requirements
 - cliente
-- personales.py
+- sugerir
 - CacheTests
 - Tasks: Brevo as a fallback for Resend (issue #181)
 - Visualize: direction comps & asset production (impeccable reference)
 - .test_cambio_por_cookie_rechaza_csrf_ausente_o_invalido
 - MisListasTests
-- titulos_recordados
+- RestriccionesClaveTests
 - test_seguridad_redis.py
-- conventional-commits/SKILL.md
+- Regla 6: .agents/skills/ es la única fuente de skills
 - browse.py
 - .test_refresh_valido_rota_y_cookie_exige_csrf
 - a11y-axe.spec.ts
 - navegacion-movil.spec.ts
 - importar_settings
 - RelojJWTTests
-- Mensaje
+- Resultado
 - AEstrenarTests
-- EmailRateThrottle
+- os
 - RedisFalso
 - Design: Brevo as a fallback for Resend (issue #181)
-- PorCuentaThrottle
+- VistasDeListadosMaterializanTests
 - CountrySelect
 - Requirement: A moderated review's text is locked (28/10/2026, security audit F10)
 - format.ts
 - Proposal: Brevo as a fallback for Resend (issue #181)
 - Requirement: Person filter (13/11/2026)
-- Usuario
+- pendiente
 - TopeDeCacheTests
 - L-01: Endpoints de listas
 - ErroresTests
 - OrdenDeListasTests
 - ResultadoTests
 - test_seguridad_infra.py
-- _recortar_recomendados
+- Mensaje
 - Requirement: The community's reviews of a production
 - Cómo se conecta el chatbot
 - CostoTests
 - Proposal: Search in the navbar, a person filter and hiding irrelevant titles
-- pruebas.py
+- test_contrato_codigos.py
 - Requirement: A rated production is in `Vistas`
 - Requirement: Writing goes through materialization
-- armar_perfil
+- CacheTests
 - acceso.spec.ts
 - generate.py
 - Requirement: More like this title
-- MigracionPaisTests
+- test_pais.py
 - Requirement: Removing from `Vistas` may delete the rating on request
 - Responder
 - ADDED Requirements
@@ -411,11 +411,15 @@
 - alta-google.spec.ts
 - pagina
 - field-border-contrast.test.ts
-- Command
-- RegisterView
-- ServicioFalso
+- normalizar
+- IdiomaTests
+- TMDBFalso
 - AD-01': Configurar Django Admin
 - _fecha_de_hoy
+- esquemas.py
+- .finalize_response
+- _primer_error
+- .para
 
 ## God Nodes (most connected - your core abstractions)
 1. `UsuarioFactory` - 379 edges
@@ -436,10 +440,10 @@
   README.md → backend/catalogo/client.py
 - `ProduccionEmbedding` --implements--> `Database-level invariants`  [INFERRED]
   backend/catalogo/models.py → openspec/specs/embedding-infrastructure/spec.md
-- `tmdb_a_dominio()` --implements--> `TMDB field mapping table`  [INFERRED]
-  backend/catalogo/services/adapter.py → openspec/specs/catalog-materialization/spec.md
 - `Ejemplo de diagrama: celery-beat → Redis DB 1 → celery-worker → TMDB (HTTP) / Postgres (SQL)` --conceptually_related_to--> `sync_catalogo_diaria()`  [INFERRED]
   .agents/skills/explicar-al-implementar/SKILL.md → backend/catalogo/tasks.py
+- `backfill_embeddings()` --implements--> `Rows are processed oldest first`  [INFERRED]
+  backend/catalogo/tasks.py → openspec/specs/catalog-daily-sync/spec.md
 
 ## Import Cycles
 - None detected.
@@ -460,7 +464,7 @@
 - **Flujo materialización → embedding pending → worker → ready/failed** — backend_catalogo_services_materialization_materializar, backend_catalogo_services_materialization_encolar_embedding, backend_catalogo_tasks_generar_embedding, backend_catalogo_services_embeddings_generar_vector, backend_catalogo_models_produccionembedding, backend_catalogo_models_estadoembedding, docs_decisiones_embeddings_asincronos_con_celery_e_idempotencia, docs_decisiones_c_04a_adelanta_la_infraestructura_minima_de_embeddings, docs_decisiones_c_04a_completa_materializar_y_politica_de_fallo, docs_05_plan_de_desarrollo_c_04a [INFERRED 0.95]
 - **Sync diaria C-04b: refresco por /changes, descubrimiento y backfill** — backend_catalogo_tasks_sync_catalogo_diaria, backend_catalogo_tasks_ids_cambiados, backend_catalogo_client_tmdbclient_get_changes, backend_catalogo_tasks_backfill_embeddings, backend_catalogo_services_materialization_materializar, backend_catalogo_services_materialization_necesita_enriquecimiento, docs_decisiones_c_04b_la_sync_escribe_por_materializar_y_frescura_explicita, docs_decisiones_la_frescura_la_responde_tmdb_no_una_ventana_de_tiempo, docs_decisiones_la_sync_refresca_antes_de_descubrir, docs_decisiones_zona_horaria_de_celery_y_backfill_cierra_c_04b, docs_05_plan_de_desarrollo_c_04b, docs_02_especificaci_n_de_requerimientos_cu_021 [INFERRED 0.95]
 
-## Communities (426 total, 101 thin omitted)
+## Communities (430 total, 105 thin omitted)
 
 ### Community 0 - "live-browser.js"
 Cohesion: 0.03
@@ -486,9 +490,9 @@ Nodes (71): abortSvelteComponentInjection(), applyEditing(), beginNewLiveConfigu
 Cohesion: 0.08
 Nodes (53): armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), buildSteerProcessingDots(), buildSteerQueueHint(), clearSteerAwaitTimer(), clearSteerFocusRecoverTimer(), collapsePageChat() (+45 more)
 
-### Community 6 - "tests_orquestador.py"
+### Community 6 - "django_db"
 Cohesion: 0.02
-Nodes (109): crear_proveedor(), leer_stream(), ProveedorLLM, Protocol, Cómo se habla con el modelo, sin que el resto del chatbot sepa con cuál. El…, El `Uso` a partir del `usage` del SDK. Los campos de caché son de DeepSeek., El proveedor configurado en `LLM_PROVEEDORES`., Una respuesta completa del modelo. Es lo último que entrega `escribir()`.… (+101 more)
+Nodes (138): Migration, Migration, Migration, Migration, Migration, Migration, Migration, Migration (+130 more)
 
 ### Community 7 - "api.ts"
 Cohesion: 0.04
@@ -498,17 +502,17 @@ Nodes (63): AvisoChat, ChatContext, ChatContextValue, ChatProvider(), HISTORIAL_
 Cohesion: 0.07
 Nodes (27): name, private, version, @base-ui/react, class-variance-authority, clsx, date-fns, @dnd-kit/sortable (+19 more)
 
-### Community 9 - "MyReviewsView.tsx"
-Cohesion: 0.08
-Nodes (43): SegmentedPills(), SheetFooter(), SheetHeader(), AccionResena, Estrella(), Datos, MyReviewsView(), borrarTexto() (+35 more)
+### Community 9 - "TMDBClient"
+Cohesion: 0.04
+Nodes (31): Busca producciones por filtros. Todo es opcional menos el tipo. `anio` filtra…, Búsqueda por nombre. TMDB no filtra acá por género ni por nota. El año va con…, Un título marcado `adult` se trata como inexistente: 404 en la ficha y, como la…, Películas, series y personas en una sola búsqueda (sugerencias de la navbar).…, Nombre, género y foto de una persona (el chip del filtro por persona)., TMDBClient, ClienteCompartidoTests, ConexionOciosaTests (+23 more)
 
 ### Community 10 - "ListDetailView.tsx"
 Cohesion: 0.05
 Nodes (70): AccionLista, ListActionsMenu(), alTeclear(), cerrar(), ICONOS, ListCard(), useNombreLista(), Accion (+62 more)
 
 ### Community 11 - "TMDBClientCache"
-Cohesion: 0.08
-Nodes (15): _clave_respaldo(), De la respuesta de créditos de TMDB, solo lo que lee el proyecto. TMDB devuelve…, ¿La copia guardada todavía vale como respuesta normal? Solo importa en los…, La última respuesta guardada, si TMDB no está disponible; si no, None., ¿Ya pasaron 5 minutos desde el último aviso de respaldo de este endpoint?, _recortar_creditos(), TMDBClientCache, CacheTests (+7 more)
+Cohesion: 0.10
+Nodes (14): _clave_respaldo(), De la respuesta de créditos de TMDB, solo lo que lee el proyecto. TMDB devuelve…, ¿La copia guardada todavía vale como respuesta normal? Solo importa en los…, La última respuesta guardada, si TMDB no está disponible; si no, None., ¿Ya pasaron 5 minutos desde el último aviso de respaldo de este endpoint?, _recortar_creditos(), TMDBClientCache, Cache-aside lookup (+6 more)
 
 ### Community 12 - "react"
 Cohesion: 0.03
@@ -519,24 +523,24 @@ Cohesion: 0.09
 Nodes (39): agentHasWorkInFlight(), agentStatusText(), barPaletteForTheme(), brandMarkSvg(), buildDesignHeader(), buildParamsPanel(), cursorForInsertAxis(), designPanelCss() (+31 more)
 
 ### Community 14 - "materializar"
-Cohesion: 0.04
-Nodes (36): _descartar_cascaron(), materializar(), Garantiza que la producción exista en la base con su embedding encolado. Recibe…, Borra la fila vacía de un id que TMDB no conoce (auditoría F7). Sin esto,…, CalificarIdInexistenteTests, _campos_con_error(), CatalogoIdFueraDeRangoTests, LecturasIdFueraDeRangoTests (+28 more)
+Cohesion: 0.05
+Nodes (27): _descartar_cascaron(), materializar(), Garantiza que la producción exista en la base con su embedding encolado. Recibe…, Borra la fila vacía de un id que TMDB no conoce (auditoría F7). Sin esto,…, MaterializarIdInexistenteTests, Qué deja `materializar()` en la base cuando TMDB no tiene el id., MaterializacionConTraduccionesTests, MaterializacionBase (+19 more)
 
-### Community 15 - ".turno"
+### Community 15 - "OrquestadorFalso"
 Cohesion: 0.07
-Nodes (18): BaseSSE, CorteDeConexionTests, eventos_de(), FallasDelTurnoTests, OrquestadorRealTests, TestCase, TransactionTestCase, Envuelve una función `async def` con `yield` como si fuera un orquestador. (+10 more)
+Nodes (19): OrquestadorFalso, Reproduce `guion` con `demora` segundos antes de cada evento. Con `falla_en=n`…, BaseSSE, CorteDeConexionTests, eventos_de(), FallasDelTurnoTests, OrquestadorRealTests, TransactionTestCase (+11 more)
 
 ### Community 16 - "GoogleSocialLoginSerializer"
-Cohesion: 0.04
-Nodes (23): CuentaInactiva, Cuenta de baja o sin confirmar; solo se lanza tras validar la credencial. HTTP…, GoogleSocialLoginSerializer, Nombres que se confunden con una cuenta del equipo (issue #137). El mensaje no…, Registro tradicional (CU-001) con los campos del modelo `Usuario`., Login y registro con Google mediante ``id_token``., El país debe ser un código ISO 3166-1 alfa-2 de la lista del contrato., _rechazar_reservado() (+15 more)
+Cohesion: 0.03
+Nodes (36): ContratoErroresAPITests, override_settings, TestCase, Congela HTTP y JSON; no depende de tokens, fechas ni servicios externos., OT-41 conserva el duplicado personalizado, separado del reservado., cuenta_inactiva_login(), CuentaInactiva, Cuenta de baja o sin confirmar; solo se lanza tras validar la credencial. HTTP… (+28 more)
 
 ### Community 17 - "Requirements"
 Cohesion: 0.05
 Nodes (41): chat-api Specification, Purpose, Requirement: Bounded turn, Requirement: Cards come only from this turn's tools and recommendations never include «Vistas», Requirement: History, Requirement: Language of the turn and of the prose, Requirement: No full name, username or email reaches the provider, Requirement: Only an authenticated, active user chats (+33 more)
 
-### Community 18 - "OrquestadorFalso"
-Cohesion: 0.10
-Nodes (21): ErrorDelTurno, Estado, Exception, Contrato entre el orquestador del chatbot y la vista que lo transmite (PR 0).…, Una tarjeta de producción, igual en el evento `tarjetas` y en el historial., Algo está pasando (hoy, solo una búsqueda). El front traduce el código., Un pedazo de la respuesta. El front los concatena en el orden en que llegan., El turno no pudo terminar. La causa va al log; el usuario ve un solo mensaje. (+13 more)
+### Community 18 - "tests_sse.py"
+Cohesion: 0.08
+Nodes (24): asyncio, ErrorDelTurno, Estado, Exception, Contrato entre el orquestador del chatbot y la vista que lo transmite (PR 0).…, Una tarjeta de producción, igual en el evento `tarjetas` y en el historial., Algo está pasando (hoy, solo una búsqueda). El front traduce el código., Un pedazo de la respuesta. El front los concatena en el orden en que llegan. (+16 more)
 
 ### Community 19 - "README de FilmAI"
 Cohesion: 0.08
@@ -544,19 +548,19 @@ Nodes (33): Servicio Postgres pgvector/pgvector:pg16 en CI, Regla 2: docs/ (01 a
 
 ### Community 21 - "GoogleOAuthTests"
 Cohesion: 0.07
-Nodes (24): django-allauth[socialaccount]==65.19.1 (pin exacto), Adaptador social (Google OAuth) para `usuarios.Usuario`., Persiste el alta social de forma atómica., UsuarioSocialAccountAdapter, PreferenciasIdiomaTests, override_settings, TestCase, La frontera OAuth se aísla; el adaptador y guardado social son reales. (+16 more)
+Nodes (25): django-allauth[socialaccount]==65.19.1 (pin exacto), Adaptador social (Google OAuth) para `usuarios.Usuario`., Persiste el alta social de forma atómica., Construye un perfil nuevo sin sobrescribir una cuenta vinculada., UsuarioSocialAccountAdapter, PreferenciasIdiomaTests, override_settings, TestCase (+17 more)
 
 ### Community 22 - "New visual work (new-work flow)"
 Cohesion: 0.10
 Nodes (46): android.md (Android platform reference), craft-floor.md (Refuse list and craft floors), Build wins over direction contract, Impeccable Documenter (inline degraded role), Not-canonized defects line, Disposition vocabulary (recapture/rebuild/fix/ship), Check 0: Evidence (capture validity), Fidelity element matrix (TYPE / MATERIAL / GROUND rows) (+38 more)
 
-### Community 23 - "catalogo/tests.py"
-Cohesion: 0.02
-Nodes (137): get_redis(), Completa `generos_ids` y las traducciones de las producciones ya guardadas., Seed inicial del catálogo (C-04c): `python manage.py seed_catalogo`. La sync…, ProduccionTraduccion, Modelos de la app `catalogo`. Implementa las entidades del dominio de…, Textos de una producción en un idioma distinto del canónico (inglés).…, dominio_a_tmdb(), Traducción entre el vocabulario de TMDB y el del dominio (C-04a). TMDB dice… (+129 more)
+### Community 23 - "get_catalog_service"
+Cohesion: 0.07
+Nodes (43): get_redis(), crear_http_client(), Arma el `httpx.Client` hacia TMDB, con conexiones que duran 60 s ociosas. Un…, get_catalog_service(), _http_compartido(), Un solo pool de conexiones hacia TMDB para todos los idiomas. Antes el inglés…, Normaliza la llamada sin argumentos para compartir el mismo cliente EN., _servicio_por_idioma() (+35 more)
 
 ### Community 24 - "HomeView.tsx"
 Cohesion: 0.07
-Nodes (36): HomePage(), Generos, HomeView(), Lista, mensaje(), Recomendado, MediaCard(), MediaRow() (+28 more)
+Nodes (38): HomePage(), HomeHero(), Generos, HomeView(), Lista, mensaje(), Recomendado, MediaCard() (+30 more)
 
 ### Community 25 - "$impeccable harden"
 Cohesion: 0.09
@@ -570,9 +574,9 @@ Nodes (54): openai.yaml (Codex agent interface: display_name, short_description,
 Cohesion: 0.11
 Nodes (40): canonicalKey(), append(), encode(), codePointLength(), collect(), collectDataLimitErrors(), collectFindingSemanticErrors(), collectSchemaErrors() (+32 more)
 
-### Community 28 - "ValidadoresContrasenaTests"
-Cohesion: 0.07
-Nodes (15): Tests unitarios para las políticas de contraseña de FilmAI. Verifica…, Una contraseña que cumple todas las reglas debe ser aceptada., Contraseñas con menos de 8 caracteres deben ser rechazadas., Contraseñas con más de 20 caracteres deben ser rechazadas., Contraseñas sin mayúsculas deben ser rechazadas., Contraseñas sin minúsculas deben ser rechazadas., Contraseñas sin dígitos deben ser rechazadas., Contraseñas sin caracteres especiales deben ser rechazadas. (+7 more)
+### Community 28 - "._resena"
+Cohesion: 0.06
+Nodes (11): ComunidadOrdenYFiltroTests, MiCalificacionEnUnaFichaTests, MisResenasTests, PaginacionDeResenasTests, `orden`, `nota_min` y `nota_max` en las reseñas de la comunidad (C-07)., `GET /api/reviews/mias/`: la pantalla «Mis reseñas» (P-06)., `GET /api/reviews/mias/?id_tmdb=&tipo=`: qué mostrar en la ficha., Cursor de 20, para los dos scrolls infinitos. (+3 more)
 
 ### Community 29 - "RecuperarContrasenaTests"
 Cohesion: 0.16
@@ -594,9 +598,9 @@ Nodes (19): buildSvelteExpressionTextMap(), buildSveltePropValuesFromLiveElement
 Cohesion: 0.16
 Nodes (26): clearStoredManualApplyState(), fetchPendingCount(), handleManualEditActivity(), hasTextRows(), hidePendingApplyDock(), manualApplyLoadingText(), manualApplyStateKey(), manualEditEventForCurrentPage() (+18 more)
 
-### Community 34 - "catalogo/views.py"
-Cohesion: 0.09
-Nodes (26): TopesTMDBMixin, generos_de_todo(), Lista de géneros de «Todo»: los de películas y los de series sin par., Servicio del idioma pedido; fuera del inglés, con respaldo campo por campo.…, servicio_localizado(), idioma_tmdb(), Mapa entre idioma efectivo de aplicación y variante del proveedor., _alternar() (+18 more)
+### Community 34 - "TopesTMDBMixin"
+Cohesion: 0.11
+Nodes (16): TopesTMDBMixin, generos_de_todo(), Lista de géneros de «Todo»: los de películas y los de series sin par., Servicio del idioma pedido; fuera del inglés, con respaldo campo por campo.…, servicio_localizado(), idioma_tmdb(), Mapa entre idioma efectivo de aplicación y variante del proveedor., _generos_localizados() (+8 more)
 
 ### Community 35 - "$impeccable live (interactive variant mode)"
 Cohesion: 0.10
@@ -627,8 +631,8 @@ Cohesion: 0.11
 Nodes (22): Avoid animating width/height/top/left/margins; use FLIP, transforms or grid; bound blur/filter/shadow; will-change only during known animation, Choose animated properties by what the transition communicates (continuity, focus/depth, reveal, material, state), Motion thesis: focal moment, continuity, feedback, budget, Every web animation needs a prefers-reduced-motion path with an intentional alternative, Timing bands 100–150 / 150–300 / 300–500 / 500–800 ms; exit faster than entrance; cubic-bezier(0.16, 1, 0.3, 1), Visitor mode for motion: Persuade/Experience may let motion carry the voice; Operate/Read keep transitions fast, Audit Health Score: 5 dimensions × 0–4 = /20 (A11y, Performance, Theming, Responsive, Implementation Integrity) with rating bands, A11y check: prefers-reduced-motion needs an intentional alternative; flag a global 0.01ms kill (+14 more)
 
 ### Community 43 - "Command"
-Cohesion: 0.08
-Nodes (14): IdentidadListaTests, TestCase, Command, BaseCommand, Catálogo de TMDB y actividad con sentido (modo por defecto). La red va ANTES de…, Siembra solo calificaciones y reseñas sobre lo que ya existe. Modo no…, Se niega a pisar un catálogo que costó horas, salvo pedido explícito.…, Borra los datos de las apps de negocio, conservando al superusuario. Con… (+6 more)
+Cohesion: 0.06
+Nodes (25): IdentidadListaTests, TestCase, Command, BaseCommand, Repara listas predeterminadas y chat faltantes de usuarios existentes., Command, BaseCommand, Catálogo de TMDB y actividad con sentido (modo por defecto). La red va ANTES de… (+17 more)
 
 ### Community 44 - "Requirements"
 Cohesion: 0.20
@@ -675,8 +679,8 @@ Cohesion: 0.08
 Nodes (24): Error contract capability, General and domain codes, Implementation progress, Implementation status (OT-34, 08/10/2026), Purpose and evidence, Requirement: Catalog as the sole production source, Requirement: Code-bearing successful responses, Requirement: Debug is conditional (+16 more)
 
 ### Community 56 - ".rafaga"
-Cohesion: 0.18
-Nodes (4): LoginThrottleTests, TestCase, Un `username` enviado como número no debe esquivar el límite., ThrottleBase
+Cohesion: 0.08
+Nodes (9): CorreoThrottleTests, LoginThrottleTests, override_settings, TestCase, Vacía solo el contador del enfriamiento de 1 minuto., Reset de contraseña: cuerpo inválido sin 500 (Internal Server Error) y tope por…, Un `username` enviado como número no debe esquivar el límite., ResetContrasenaThrottleTests (+1 more)
 
 ### Community 57 - "API characterization capability"
 Cohesion: 0.22
@@ -710,17 +714,17 @@ Nodes (10): createLiveBrowserDomHelpers(), cssId(), liveUiRoot(), makeFrozenAnch
 Cohesion: 0.12
 Nodes (15): POR_PAGINA, SignupAvatarDialog(), AvatarOption, AvatarRadioGroup(), AvatarDialog(), DialogShell(), Modal(), Context (+7 more)
 
-### Community 66 - "tests_vencimiento.py"
-Cohesion: 0.19
-Nodes (11): a_refrescar(), contar_plazos(), Las `cuota` filas a refrescar esta noche: sin fecha primero, luego las más…, `(total, por_dia)` con dos consultas, sin importar cuántas filas haya. Un…, ALRefrescarTests, ContarPlazosTests, crear(), FilasPasadasDe180Tests (+3 more)
+### Community 66 - "TitleActions.tsx"
+Cohesion: 0.14
+Nodes (22): aceptar(), ListsMenu(), crear(), ubicar(), mensajeDeError(), ReviewsSection(), borrarTexto(), cargarMas() (+14 more)
 
 ### Community 67 - "tomar_candado"
-Cohesion: 0.14
-Nodes (13): _clave_candado(), Lo que limita al chat: una respuesta a la vez por chat y N mensajes por hora.…, Toma el candado «una respuesta en curso» y devuelve su token; `None` si ya está…, Suelta el candado solo si todavía es de este pedido. Si el pedido tardó tanto…, Cuenta un mensaje en la hora actual. Devuelve `(dentro_del_tope,…, soltar_candado(), sumar_mensaje(), tomar_candado() (+5 more)
+Cohesion: 0.16
+Nodes (10): _clave_candado(), Lo que limita al chat: una respuesta a la vez por chat y N mensajes por hora.…, Toma el candado «una respuesta en curso» y devuelve su token; `None` si ya está…, Suelta el candado solo si todavía es de este pedido. Si el pedido tardó tanto…, soltar_candado(), tomar_candado(), CandadoTests, override_settings (+2 more)
 
-### Community 68 - "PreferenciasTests"
-Cohesion: 0.10
-Nodes (11): EstadoCuentaTests, PreferenciasTests, TestCase, El navegador necesita CSRF para cambiar preferencias., Solo activa permite cualquiera de los cinco caminos de autenticación., Cambiar el correo en Google no crea otro usuario ni sobrescribe el perfil., Un enlace de activación todavía válido no puede revertir una baja., Los defaults se devuelven y cada preferencia es independiente. (+3 more)
+### Community 68 - "ProduccionEmbeddingModelTests"
+Cohesion: 0.08
+Nodes (11): claves_frescas(), Instante antes del cual una fila enriquecida cuenta como vencida., `{(id_tmdb, tipo)}` de las filas que `materializar()` no volvería a enriquecer.…, _umbral_de_frescura(), ClavesFrescasTests, ProduccionEmbeddingModelTests, TestCase, Garantías que aporta la base de datos, no el código Python (C-04a). Se prueban… (+3 more)
 
 ### Community 69 - "SeedCatalogoTests"
 Cohesion: 0.18
@@ -740,23 +744,19 @@ Nodes (39): ATTEMPT_FIELDS, ATTEMPT_STATUSES, collectUnitErrors(), createErrorLi
 
 ### Community 73 - "CalificacionFactory"
 Cohesion: 0.04
-Nodes (34): CalificacionFactory, Meta, ResenaFactory, CodigosResenasTests, lapida(), LapidaEnListasYResenasTests, LapidaNoSeAceptaDeNuevoTests, TestCase (+26 more)
+Nodes (30): CalificacionFactory, Meta, ResenaFactory, CodigosResenasTests, OT-32: parámetros, reseñas y errores de TMDB del catálogo llevan código estable., lapida(), LapidaEnListasYResenasTests, LapidaNoSeAceptaDeNuevoTests (+22 more)
 
 ### Community 74 - "anonimizar"
-Cohesion: 0.19
-Nodes (6): anonimizar(), Reemplaza correos por `[correo]` y datos del usuario por `[usuario]`., ApostrofosYTildesTests, CorreosTests, SimpleTestCase, Lo que se ve igual tiene que anonimizarse igual, aunque sean otros caracteres.
-
-### Community 75 - ".ok"
-Cohesion: 0.09
-Nodes (8): IdiomaTests, Responde las capturas reales de `search/multi` y anota cada llamada., En español, el título vacío se completa con el inglés (solo `title`/`name`)., ResultadosTests, SugerenciasBase, ThrottleTests, TMDBFalso, ValidacionTests
+Cohesion: 0.08
+Nodes (18): anonimizar(), _candidatos(), _frase(), _letra_plana(), _palabra(), _plano(), Reemplaza correos por `[correo]` y datos del usuario por `[usuario]`., Minúsculas y sin tildes, con exactamente el mismo largo que `texto`. Se compara… (+10 more)
 
 ### Community 76 - "tool"
 Cohesion: 0.10
 Nodes (8): LlamadaTool, El modelo pidió una tool. `argumentos` es texto JSON, tal como llegó., MarcadoresEnElTurnoTests, El filtro conectado al orquestador: lo que sale por SSE y lo que se guarda., FallosTests, PresupuestoDeTmdbTests, tool(), VueltaConToolsTests
 
 ### Community 77 - "UsuarioFactory"
-Cohesion: 0.01
-Nodes (76): patch, Hace de `get_catalog_service(idioma)`: responde con los recortes reales y anota…, Sin calificaciones de 7 o más no hay géneros de dónde partir., RecomendadoSinGustosTests, ServicioFalso, _BaseLectura, _BaseResenas, CalificarMaterializaTests (+68 more)
+Cohesion: 0.02
+Nodes (129): AbstractBaseUser, allauth_account_adapter, allauth_account_admin, allauth_account_forms, allauth_account_models, allauth_account_utils, allauth_socialaccount_adapter, allauth_socialaccount_admin (+121 more)
 
 ### Community 78 - "Terms and Conditions"
 Cohesion: 0.14
@@ -799,8 +799,8 @@ Cohesion: 0.14
 Nodes (13): 10. Limitación de responsabilidad, 11. Cambios en estos términos, 12. Ley aplicable y contacto, 1. Aceptación de los términos, 2. Qué ofrece FilmAI, 3. Tu cuenta, 4. Calificaciones y reseñas, 5. Reglas de uso (+5 more)
 
 ### Community 87 - "refrescar_vencidos"
-Cohesion: 0.11
-Nodes (14): shared_task, Refresco nocturno de lo que TMDB exige renovar antes de 6 meses (#180). Los…, refrescar_vencidos(), crear(), ElegirYContarTests, TestCase, Tareas 2.5, 2.5b y 2.6: dos 404 en noches distintas y, según el uso, se borra o…, Con `materializar` de verdad: lo que un refresco exitoso deja escrito. (+6 more)
+Cohesion: 0.13
+Nodes (11): Refresco nocturno de lo que TMDB exige renovar antes de 6 meses (#180). Los…, refrescar_vencidos(), crear(), ElegirYContarTests, TestCase, Tareas 2.5, 2.5b y 2.6: dos 404 en noches distintas y, según el uso, se borra o…, Tarea 2.9: el refresco pasa por el cliente de siempre, que espera lo que TMDB…, Producción con contenido; `antiguedad_dias=None` = nunca enriquecida. (+3 more)
 
 ### Community 88 - "next.config.ts"
 Cohesion: 0.33
@@ -814,9 +814,9 @@ Nodes (12): AdminBorradoTests, AdminStaffParcialTests, AdminSuperusuarioTests, T
 Cohesion: 0.30
 Nodes (3): Red del 14/11/2026: el modelo buscó y recomendó en texto plano, sin `[[n]]`., RedSinMarcadoresTests, pelicula_de_mentira()
 
-### Community 91 - "test_traducciones.py"
-Cohesion: 0.07
-Nodes (23): Command, BaseCommand, La tarjeta de un título del catálogo, con la forma de un ítem de lista., _tarjeta_local(), campos_en_ingles(), _guardar_cursor(), _leer_cursor(), pendientes() (+15 more)
+### Community 91 - "recorte.py"
+Cohesion: 0.08
+Nodes (21): La tarjeta de un título del catálogo, con la forma de un ítem de lista., _tarjeta_local(), campos_en_ingles(), ProduccionLocalizadaMixin, `titulo`, `sinopsis` o `poster` en el idioma pedido, con respaldo canónico.…, Marca el respaldo canónico sin consultar traducciones por cada campo., Título, póster y `campos_en_ingles` de `instance.produccion` en el idioma. Lo…, texto_localizado() (+13 more)
 
 ### Community 92 - "asset-producer.md"
 Cohesion: 0.31
@@ -843,8 +843,8 @@ Cohesion: 0.18
 Nodes (4): HistorialTests, APITestCase, Un mensaje con la hora fijada a mano. `auto_now_add` pisa cualquier…, La razón del cursor: con offset, la página 2 repetiría «m5».
 
 ### Community 99 - "patch"
-Cohesion: 0.04
-Nodes (25): backfill_embeddings(), generar_embedding(), _processing_vencidas(), Recupera el trabajo de embeddings que quedó sin completar (C-04b).…, Condición de las filas abandonadas en `processing`., Genera el vector semántico de una producción ya materializada. Nunca lanza: si…, BackfillEmbeddingsTests, BackfillIntegracionTests (+17 more)
+Cohesion: 0.05
+Nodes (30): calcular_source_hash(), Huella del texto embebido (SHA-256 hexadecimal, 64 caracteres). Se guarda junto…, backfill_embeddings(), generar_embedding(), materializar_produccion(), shared_task, Recupera el trabajo de embeddings que quedó sin completar (C-04b).…, Materializa en el worker lo que se abrió en una ficha (C-04a, 14/10/2026). La… (+22 more)
 
 ### Community 100 - "CorreosContratoTests"
 Cohesion: 0.17
@@ -870,17 +870,17 @@ Nodes (18): home-ui Specification, Purpose, Requirement: Failures, Requirement: 
 Cohesion: 0.12
 Nodes (12): ErroresRegistroTests, override_settings, TestCase, A diferencia del perfil, el duplicado detectado en registro sigue siendo 400., Cada regla mantiene su identidad y la configuración que se aplicó., El código se asigna por la condición, sin interpretar texto traducido., La validación heredada de password1 conserva metadata de la regla propia., Un fallo que depende del usuario ocurre en save, después de is_valid. (+4 more)
 
-### Community 106 - "TitleView.tsx"
-Cohesion: 0.04
-Nodes (90): Loading(), Loading(), HomeHero(), TAMANIO_TITULO, Poster(), MediaCardSkeleton(), Poster(), MyReviewItem() (+82 more)
-
-### Community 107 - "TMDBClient"
+### Community 106 - "cn"
 Cohesion: 0.03
-Nodes (100): ¿El fallo es de TMDB y no de lo que se pidió? Un 404 o un 400 dicen algo cierto…, _tmdb_no_disponible(), _con_known_for_limpio(), crear_http_client(), Busca producciones por filtros. Todo es opcional menos el tipo. `anio` filtra…, Búsqueda por nombre. TMDB no filtra acá por género ni por nota. El año va con…, Un título marcado `adult` se trata como inexistente: 404 en la ficha y, como la…, Películas, series y personas en una sola búsqueda (sugerencias de la navbar).… (+92 more)
+Nodes (109): Loading(), Loading(), SegmentedPills(), SheetFooter(), SheetHeader(), TAMANIO_TITULO, Poster(), MediaCardSkeleton() (+101 more)
 
-### Community 108 - "CatalogoBaseView"
-Cohesion: 0.10
-Nodes (24): BrowseView, CatalogoBaseView, DiscoverView, _error_param(), _id_tmdb(), _int_param(), KeywordsView, _materializar_listado_sin_interrumpir() (+16 more)
+### Community 107 - "catalogo/tests.py"
+Cohesion: 0.05
+Nodes (70): ¿El fallo es de TMDB y no de lo que se pidió? Un 404 o un 400 dicen algo cierto…, _tmdb_no_disponible(), _con_known_for_limpio(), Saca de una respuesta de TMDB todo lo que ella misma marca como `adult`. TMDB…, _sin_adultos(), Exception, TMDB rejected the request because its rate limit was exceeded., TMDB could not find the requested resource. (+62 more)
+
+### Community 108 - "catalogo/views.py"
+Cohesion: 0.12
+Nodes (26): BrowseView, CatalogoBaseView, CreditsView, DiscoverView, _error_param(), _float_param(), GenresView, _int_param() (+18 more)
 
 ### Community 109 - "ResenaAdmin"
 Cohesion: 0.16
@@ -898,17 +898,13 @@ Nodes (18): admin-api-docs Specification, Current limitation (OT-02), Purpose, R
 Cohesion: 0.22
 Nodes (9): Core discipline (include in every agent prompt for this domain), Data Isolation and Lifecycle Hunting, Deletion, revocation, and lifecycle attack classes (subagent_type: `general`), Derived-data and disclosure attack classes (subagent_type: `general`), Export, backup, restore, and migration attack classes (subagent_type: `general`), Tenant and object-isolation attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
-### Community 143 - "ResenaAdminTests"
-Cohesion: 0.13
-Nodes (3): TestCase, ResenaAdminTests, UsuarioAdminTests
-
 ### Community 148 - "idioma_efectivo"
-Cohesion: 0.04
-Nodes (42): allauth_account_adapter, allauth_socialaccount_adapter, enviar_correo(), Envío único de los cuatro correos de cuenta, en el idioma del destinatario., La vigencia del enlace sale de la configuración, no de la plantilla., Renderiza una variante completa y delega en el backend de correo Django., vigencia_en_horas(), idioma_efectivo() (+34 more)
+Cohesion: 0.03
+Nodes (56): enviar_correo(), Envío único de los cuatro correos de cuenta, en el idioma del destinatario., La vigencia del enlace sale de la configuración, no de la plantilla., Renderiza una variante completa y delega en el backend de correo Django., vigencia_en_horas(), _buscar_usuario(), _clave_intentos(), con_limite_de_intentos() (+48 more)
 
 ### Community 149 - "chatbot/views.py"
 Cohesion: 0.05
-Nodes (47): asgiref_sync, en_hilo(), El único punto donde el código async llama a código síncrono. El ORM, TMDB,…, Corre `funcion` en el hilo de este pedido. Se usa con `await`.…, EntradaMensajeSerializer, MensajeSerializer, Meta, Cómo sale el chat por la API: el historial (PR 4). (+39 more)
+Nodes (51): asgiref_sync, Cuenta un mensaje en la hora actual. Devuelve `(dentro_del_tope,…, sumar_mensaje(), en_hilo(), El único punto donde el código async llama a código síncrono. El ORM, TMDB,…, Corre `funcion` en el hilo de este pedido. Se usa con `await`.…, EntradaMensajeSerializer, MensajeSerializer (+43 more)
 
 ### Community 153 - "Design: Search in the navbar, a person filter and hiding irrelevant titles"
 Cohesion: 0.11
@@ -928,8 +924,8 @@ Cohesion: 0.13
 Nodes (8): nombre_dice_algo(), `True` si el nombre cuenta de qué trata la lista (D-2). Se sacan los números y…, NombreDiceAlgoTests, override_settings, SimpleTestCase, D-2: una regla fija, que se puede probar sin Ollama., D-9: el nombre nunca hace esperar a quien mira su lista., VectorDelNombreTests
 
 ### Community 165 - "UsuarioPerfilSerializer"
-Cohesion: 0.04
-Nodes (30): Meta, Valida un ``avatar_id`` recibido por la API (perfil y registro). Un único…, Representación del usuario autenticado (endpoints `/api/auth/user/`). El…, CU-006: solo nombre, apellido, nombre de usuario y avatar editables., Valida que avatar_id sea uno de los avatares disponibles., Valida que la fecha de nacimiento no sea futura y el usuario tenga al menos 13…, UsuarioDetallesSerializer, UsuarioPerfilSerializer (+22 more)
+Cohesion: 0.03
+Nodes (36): CampoNombreUsuario, Conserva el mensaje de RegexField y asigna el código en su validador., Meta, Valida un ``avatar_id`` recibido por la API (perfil y registro). Un único…, Representación del usuario autenticado (endpoints `/api/auth/user/`). El…, CU-006: solo nombre, apellido, nombre de usuario y avatar editables., Valida que avatar_id sea uno de los avatares disponibles., Valida que la fecha de nacimiento no sea futura y el usuario tenga al menos 13… (+28 more)
 
 ### Community 166 - "CatalogoThrottleTests"
 Cohesion: 0.18
@@ -939,9 +935,9 @@ Nodes (4): CatalogoThrottleTests, PaginaMaximaTests, TestCase, Con NUM_PROXIES=1
 Cohesion: 0.16
 Nodes (3): FiltrosEnMemoriaTests, PersonaBase, RolTests
 
-### Community 169 - "TipoProduccion"
-Cohesion: 0.04
-Nodes (86): EstadoEmbedding, ProduccionEmbedding, Ciclo de vida del embedding (decisión 08/09/2026). `pending` → `processing` →…, Representación semántica de una producción para búsqueda por similitud. Se crea…, Tipo de producción audiovisual (doc 03: 'Pelicula' | 'Serie')., TipoProduccion, calcular_source_hash(), EmbeddingProviderError (+78 more)
+### Community 169 - "ProduccionAudiovisual"
+Cohesion: 0.03
+Nodes (135): Seed inicial del catálogo (C-04c): `python manage.py seed_catalogo`. La sync…, EstadoEmbedding, Meta, ProduccionAudiovisual, ProduccionEmbedding, ProduccionTraduccion, Modelos de la app `catalogo`. Implementa las entidades del dominio de…, Textos de una producción en un idioma distinto del canónico (inglés).… (+127 more)
 
 ### Community 171 - "chat-calidad.spec.ts"
 Cohesion: 0.14
@@ -972,8 +968,8 @@ Cohesion: 0.11
 Nodes (18): Anti-patterns, Core principles, Cost budget, Coverage and prior runs, Full audit planning, Full audit setup, Full audit workflow, Operating modes (+10 more)
 
 ### Community 191 - "reviews.py"
-Cohesion: 0.04
-Nodes (49): CalificacionDuplicada, APIException, Un usuario califica una misma producción una sola vez (CU-015). Existe el…, El texto de una reseña moderada no se edita ni se borra (F10, auditoría). Un…, ResenaModerada, Cursor de 20 para los dos scrolls infinitos: la ficha y «Mis reseñas». Cursor y…, ResenaCursorPagination, _calificacion_propia() (+41 more)
+Cohesion: 0.03
+Nodes (57): CalificacionDuplicada, APIException, Un usuario califica una misma producción una sola vez (CU-015). Existe el…, El texto de una reseña moderada no se edita ni se borra (F10, auditoría). Un…, ResenaModerada, Paginación de las reseñas (C-08)., Cursor de 20 para los dos scrolls infinitos: la ficha y «Mis reseñas». Cursor y…, ResenaCursorPagination (+49 more)
 
 ### Community 192 - "ATTACK-CLASSES.md"
 Cohesion: 0.14
@@ -995,9 +991,9 @@ Nodes (3): armar_sistema(), El mensaje `system` del turno. `idioma` es el de la 
 Cohesion: 0.09
 Nodes (21): compat, __dirname, eslintConfig, __filename, residues(), walk(), files(), flatten() (+13 more)
 
-### Community 199 - "ContratoErroresAPITests"
-Cohesion: 0.05
-Nodes (30): cambiar(), ContratoErroresAPITests, override_settings, TestCase, Congela HTTP y JSON; no depende de tokens, fechas ni servicios externos., OT-41 conserva el duplicado personalizado, separado del reservado., es_nombre_reservado(), ListaItemCursorPagination (+22 more)
+### Community 199 - "tmdb_a_dominio"
+Cohesion: 0.08
+Nodes (20): Command, BaseCommand, Completa `generos_ids` y las traducciones de las producciones ya guardadas., dominio_a_tmdb(), `"movie"` → `TipoProduccion.PELICULA`, `"tv"` → `TipoProduccion.SERIE`. Lanza…, Inversa de `tmdb_a_dominio`, para construir llamadas a la API de TMDB., tmdb_a_dominio(), _guardar_cursor() (+12 more)
 
 ### Community 200 - "mezclar_con_pesos"
 Cohesion: 0.17
@@ -1006,6 +1002,10 @@ Nodes (10): materializar_mostradas(), mezclar_con_pesos(), Mezcla al azar, pero 
 ### Community 203 - "BuscarSemanticoTests"
 Cohesion: 0.05
 Nodes (17): buscar_semantico(), pedir_carga_del_modelo(), Devuelve hasta 10 producciones parecidas a `consulta`, las mejores primero.…, Encola la carga del modelo. Nunca lanza: es una ayuda, no un requisito., BuscarSemanticoTests, GenerarVectorTests, KeepAliveTests, ModeloCargadoTests (+9 more)
+
+### Community 205 - "LoginDualTests"
+Cohesion: 0.10
+Nodes (11): LoginDualTests, Tests de integración para ambos mecanismos de autenticación. Verifica que tanto…, Login con correo electrónico y contraseña debe funcionar., Login con nombre de usuario y contraseña debe funcionar., El login por correo debe ser insensible a mayúsculas., El login por nombre de usuario debe ser insensible a mayúsculas., Login con correo incorrecto debe fallar., Login con nombre de usuario incorrecto debe fallar. (+3 more)
 
 ### Community 206 - "BaseOrquestador"
 Cohesion: 0.23
@@ -1040,8 +1040,8 @@ Cohesion: 0.22
 Nodes (8): 1. Dónde estamos, 2. Los chequeos del CI, 3. Revisión con agentes en paralelo, 4. Documentación, en el mismo commit que el código, 5. Commit, 6. PR y merge, 7. Qué decirle al usuario, Cerrar un tramo
 
 ### Community 214 - "AGENTS.md — Reglas para agentes en FilmAI"
-Cohesion: 0.15
-Nodes (17): Regla 3: ante ambigüedad, preguntar al usuario, Regla 1: registrar decisiones en docs/decisiones.md, AGENTS.md — Reglas para agentes en FilmAI, Regla 9: estructura docs/ · openspec/specs · openspec/changes · graphify-out, Regla 7: consultar y actualizar el grafo graphify, Regla 8: sin herramientas de review automático en PRs, Design brief (shape output), Structured question / user-input tool (+9 more)
+Cohesion: 0.18
+Nodes (13): Regla 3: ante ambigüedad, preguntar al usuario, Regla 1: registrar decisiones en docs/decisiones.md, AGENTS.md — Reglas para agentes en FilmAI, Regla 9: estructura docs/ · openspec/specs · openspec/changes · graphify-out, Regla 7: consultar y actualizar el grafo graphify, Regla 8: sin herramientas de review automático en PRs, Structured question / user-input tool, Contexto técnico (Django 5.1 + DRF, Postgres 16, Redis, Celery, Next.js + Tailwind + Shadcn) (+5 more)
 
 ### Community 215 - "PerfilPage"
 Cohesion: 0.20
@@ -1056,8 +1056,8 @@ Cohesion: 0.22
 Nodes (5): cuota_nocturna(), Solo el número de `detalle_cuota`: `min(techo, max(rotación, plazos))`., CuotaNocturnaTests, SimpleTestCase, `cuota_nocturna(total, por_dia, techo)`: `por_dia[k]` son las filas que llegan…
 
 ### Community 219 - "materializar_listado_en_segundo_plano"
-Cohesion: 0.15
-Nodes (8): materializar_listado_en_segundo_plano(), Encola la materialización de lo que muestra un listado (C-04a, 16/10/2026).…, MaterializarListadoTests, TestCase, Las vistas responden lo de TMDB y encolan; un fallo al encolar no se nota., VistasDeListadosMaterializanTests, _precalentar_tarjetas(), Encola la materialización de las tarjetas para que su ficha no abra en frío.…
+Cohesion: 0.27
+Nodes (5): materializar_listado_en_segundo_plano(), Encola la materialización de lo que muestra un listado (C-04a, 16/10/2026).…, MaterializarListadoTests, _precalentar_tarjetas(), Encola la materialización de las tarjetas para que su ficha no abra en frío.…
 
 ### Community 220 - "ContrasenaTests"
 Cohesion: 0.13
@@ -1072,7 +1072,7 @@ Cohesion: 0.16
 Nodes (5): CreditosEnRedisTests, SimpleTestCase, Una respuesta de créditos como la real: con cientos de campos de sobra., Simula que la copia lleva `segundos` guardada (el TTL baja con el tiempo)., respuesta_de_tmdb()
 
 ### Community 223 - "RespaldoCampoPorCampoTests"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (4): SimpleTestCase, De punta a punta con la caché real: claves por idioma y respaldo cacheado., RespaldoCampoPorCampoTests, RespaldoPorHTTPTests
 
 ### Community 224 - "Design: Similar titles for lists and title pages (pendiente 5)"
@@ -1087,9 +1087,9 @@ Nodes (6): BrowseBase, DecadasTests, GenerosTodoTests, SimpleTestCase, Antes de 
 Cohesion: 0.20
 Nodes (17): CU-008: Visualizar Catálogo, CU-010: Buscar Películas/Series por Nombre, CU-015: Gestionar Reseña y Calificación (ABM), CU-017: Moderar reseñas, Pantalla Home (Recomendado, Tendencias, Novedades), Home solo descubrimiento + Buscar como panel overlay, Panel Buscar (overlay con filtros y grid), Recomendado para ti: camino algorítmico vía TMDB /discover (+9 more)
 
-### Community 228 - "similares.py"
-Cohesion: 0.03
-Nodes (62): _cobrar_a_la_ip(), Contador, contar_llamadas(), Topes de llamadas a TMDB: por pedido HTTP y por IP (auditoría F6, 24/10/2026).…, `incr` atómico; si la clave no existe (primera llamada del minuto, o Redis la…, Llamadas de un pedido. Buscar las hace desde varios hilos: va con lock., Abre el contador del pedido; `ident` es la IP a la que se le cobra., Cuenta una llamada del pedido actual; pasado algún tope, la corta. (+54 more)
+### Community 228 - "contar_llamadas"
+Cohesion: 0.05
+Nodes (33): Contador, contar_llamadas(), Llamadas de un pedido. Buscar las hace desde varios hilos: va con lock., Abre el contador del pedido; `ident` es la IP a la que se le cobra., Cuenta una llamada del pedido actual; pasado algún tope, la corta., Dentro del bloque, el pedido puede hacer como mucho `maximo` llamadas más. Es…, registrar_llamada(), tope_de_llamadas() (+25 more)
 
 ### Community 230 - "CatalogoConRespaldo"
 Cohesion: 0.14
@@ -1128,8 +1128,8 @@ Cohesion: 0.22
 Nodes (16): CU-013: Interactuar con el chatbot, CU-014: Cancelar recomendación en curso, RNF #3: anonimizar datos sensibles antes de enviarlos al LLM, RNF #6: chatbot responde <5 s simples / <15 s con agregación, Chatbot como FAB flotante con panel drawer, B-01: Modelo de Chat y Mensaje, B-02: LLM Service (tool calling), B-03: Endpoints del chatbot (+8 more)
 
 ### Community 241 - ".contexto"
-Cohesion: 0.22
-Nodes (3): DescubrirTests, FallosTests, Crea el contexto de un turno y lee una sola vez qué ya vio el usuario.
+Cohesion: 0.15
+Nodes (9): DescubrirTests, FallosTests, FormaDeLosResultadosTests, LogsSinTextoDelUsuarioTests, Los logs se guardan: no pueden llevar lo que escribió el usuario ni el modelo.…, _campo_de(), ejecutar(), El nombre del campo con el problema («generos.0»), o «argumentos» si es el… (+1 more)
 
 ### Community 242 - "Job backend: Ruff + tests Django"
 Cohesion: 0.21
@@ -1159,9 +1159,9 @@ Nodes (5): CacheNavegadorCatalogoTests, patch, TestCase, Caché del navegador y 
 Cohesion: 0.08
 Nodes (24): ADDED Requirements, Purpose, Requirement: List suggestions endpoint, Requirement: Local candidates, Requirement: Ollama is never waited for, Requirement: Pool, shuffle and pages, Requirement: Seed vector, Requirement: The name only when it says something (+16 more)
 
-### Community 257 - "ejecutar"
-Cohesion: 0.16
-Nodes (10): FormaDeLosResultadosTests, pelicula(), serie(), VistasTests, _campo_de(), ejecutar(), _primer_error(), El error de `jsonschema` más útil de los argumentos, o `None` si están bien. (+2 more)
+### Community 257 - "tests_tools.py"
+Cohesion: 0.18
+Nodes (6): BaseTools, DetalleTests, EsquemasTests, TestCase, Las herramientas del chatbot: qué ve el modelo y qué se le impide. El catálogo…, VistasTests
 
 ### Community 258 - "ClaveDeConfirmacionEnLogsTests"
 Cohesion: 0.36
@@ -1172,8 +1172,8 @@ Cohesion: 0.28
 Nodes (4): Lo que costó una llamada, tal como lo informa el proveedor. `entrada` y…, Uso, MedicionDelTurnoTests, La línea `Turno:` suma tokens, caché, cortes por largo y segundos de cada…
 
 ### Community 261 - "usuarios/views.py"
-Cohesion: 0.02
-Nodes (101): allauth_account_internal_flows_email_verification, allauth_socialaccount_providers_oauth2_client, _buscar_usuario(), _clave_intentos(), con_limite_de_intentos(), _contar_intento(), _destino_seguro(), documentacion_para_staff() (+93 more)
+Cohesion: 0.03
+Nodes (90): allauth_account_internal_flows_email_verification, allauth_socialaccount_providers_google_views, allauth_socialaccount_providers_oauth2_client, Límite común de escrituras por usuario (decisión del 26/10/2026)., LenientJWTCookieAuthentication, Validación de sesiones JWT, incluida su renovación por cookie., Variante que no revienta si la cookie JWT es inválida o está vencida.…, RefreshSesionSerializer (+82 more)
 
 ### Community 262 - "QueriesNoCrecenConLasFilasTests"
 Cohesion: 0.29
@@ -1191,21 +1191,21 @@ Nodes (8): CI and automation attack classes (subagent_type: `general`), Core dis
 Cohesion: 0.18
 Nodes (10): Application-state and device-lifecycle attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Deep-link, callback, and navigation attack classes (subagent_type: `general`), Desktop, Mobile, and Local IPC Hunting, Local IPC and exported-component attack classes (subagent_type: `general`), Privileged-helper and local-file attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+2 more)
 
-### Community 266 - "ProduccionAudiovisual"
-Cohesion: 0.04
-Nodes (64): Meta, ProduccionAudiovisual, Catálogo unificado de películas y series sincronizado desde TMDB (CU-021). Los…, _buscar_produccion(), _obtener_o_crear(), Único lugar donde vive la consulta por la clave natural (id_tmdb, tipo)., `(fila, creada)`: la fila de la producción, creándola vacía si no existe. Dos…, _ids_cambiados() (+56 more)
+### Community 266 - "sync_catalogo_diaria"
+Cohesion: 0.06
+Nodes (44): Sync nocturna del catálogo (C-04b): refresco + descubrimiento. Dos pasadas con…, sync_catalogo_diaria(), _pagina_de_cambios(), Una página de `/{tipo}/changes` con la forma real (17/09/2026)., La pasada de descubrimiento de la sync nocturna (C-04b, fase 2). `materializar`…, Hace que TMDB reporte estos IDs como modificados hoy., La sync con `materializar` REAL y TMDB falso: lo que queda en la base. El mixin…, SyncCatalogoIntegracionTests (+36 more)
 
 ### Community 267 - "TitulosPorIdiomaTests"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (4): GenerosPorIdiomaTests, TestCase, Solo los campos sin traducción llevan marca; inglés nativo no es un respaldo., TitulosPorIdiomaTests
 
 ### Community 270 - "IdiomaDelDestinatarioTests"
 Cohesion: 0.17
 Nodes (5): IdiomaDelDestinatarioTests, MatrizDeCorreosTests, override_settings, SimpleTestCase, TestCase
 
-### Community 271 - "django_test"
+### Community 271 - "listas/views.py"
 Cohesion: 0.02
-Nodes (133): allauth_account_admin, allauth_account_forms, allauth_account_models, allauth_account_utils, allauth_socialaccount_admin, allauth_socialaccount_models, ProduccionAudiovisualFactory, Factories de factory_boy para la app `catalogo`. Se usan únicamente para… (+125 more)
+Nodes (154): ProduccionAudiovisualFactory, Factories de factory_boy para la app `catalogo`. Se usan únicamente para…, Crea una producción audiovisual simulando un registro de TMDB. Los campos de…, Calificacion, Calificación numérica (1-10) que un usuario asigna a una producción (CU-015)., Si su reseña fue desactivada por un administrador (AD-01'). Una calificación…, Texto opcional asociado a una calificación (composición 1:1, CU-015)., Resena (+146 more)
 
 ### Community 273 - "modern-screenshot.umd.js"
 Cohesion: 0.09
@@ -1219,13 +1219,13 @@ Nodes (6): cargar_golden(), Revisa el `historial` de una pregunta. Un error es u
 Cohesion: 0.20
 Nodes (17): beginEditPin(), buildAnnotationsForCapture(), buildPinElement(), cancelEditingPin(), clampPlaceholderSize(), finalizeEditingPin(), initAnnotOverlay(), localCoords() (+9 more)
 
-### Community 277 - "CorreoThrottleTests"
-Cohesion: 0.22
-Nodes (5): CorreoThrottleTests, override_settings, Vacía solo el contador del enfriamiento de 1 minuto., Una confirmación por minuto al mismo correo (enfriamiento)., ReenvioEnfriamientoThrottle
+### Community 277 - "PerfilView"
+Cohesion: 0.12
+Nodes (13): DesactivarCuentaView, Meta, PreferenciasLecturaSerializer, PreferenciasSerializer, PreferenciasView, extend_schema, GenericAPIView, Las cuentas anteriores pueden leerse con idioma nulo, sin permitir borrarlo. (+5 more)
 
-### Community 278 - "anonimizar.py"
-Cohesion: 0.23
-Nodes (11): _candidatos(), _frase(), _letra_plana(), _palabra(), _plano(), Saca los datos personales de lo que viaja al proveedor del chatbot (RNF #3).…, Minúsculas y sin tildes, con exactamente el mismo largo que `texto`. Se compara…, Un carácter, plegado a su letra base en minúscula (siempre uno solo). (+3 more)
+### Community 278 - "CalificarIdInexistenteTests"
+Cohesion: 0.14
+Nodes (8): CalificarIdInexistenteTests, _campos_con_error(), CatalogoIdFueraDeRangoTests, LecturasIdFueraDeRangoTests, TestCase, `POST /api/reviews/` con ids que no sirven., Las lecturas validan el mismo rango: 400 con el campo, no un 404 mudo., Las vistas de TMDB cortan antes de gastar una llamada que da 404 seguro.
 
 ### Community 280 - "django_apps"
 Cohesion: 0.20
@@ -1247,21 +1247,21 @@ Nodes (16): Backend de email de Django sobre la API HTTP de Resend. Motivación 
 Cohesion: 0.20
 Nodes (10): Core hunting method — include in every hunter prompt, Core validation rules — include in every hunter prompt, Coverage-critic waves, Local validation boundaries, Parent consolidation and ledger update, Phase 2: Run coverage-led hunting waves, Promotion procedure — copy this promotion procedure verbatim into every hunter prompt, Required hunter prompt (+2 more)
 
-### Community 285 - ".buscar"
-Cohesion: 0.23
-Nodes (3): BuscarSemanticoTests, Cada título lleva un `ref`: el número que el modelo escribe como `[[ref]]`., RefsTests
+### Community 285 - "pelicula"
+Cohesion: 0.18
+Nodes (5): BuscarSemanticoTests, pelicula(), Cada título lleva un `ref`: el número que el modelo escribe como `[[ref]]`., RefsTests, serie()
 
-### Community 286 - "tests_tools.py"
-Cohesion: 0.15
-Nodes (10): lapida(), LapidaEnElChatbotTests, El chatbot no ofrece ni nombra títulos que TMDB ya no tiene (#180)., BaseTools, DetalleTests, EsquemasTests, LogsSinTextoDelUsuarioTests, TestCase (+2 more)
+### Community 286 - "ErroresPerfilTests"
+Cohesion: 0.14
+Nodes (8): ErroresPerfilTests, override_settings, TestCase, La conversión Django→DRF conserva código, límite y cuerpo anterior., Un máximo del campo y el formato del username no pierden sus límites., Los IDs traducibles salen del registro activo y conservan el texto previo., El conflicto de unicidad mantiene 409 y no se convierte en validación 400., Idioma inválido enumera claves soportadas; null conserva su propio código.
 
 ### Community 287 - "Resource Exhaustion and Availability Hunting"
 Cohesion: 0.20
 Nodes (9): Computational amplification attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Failure and recovery attack classes (subagent_type: `general`), Quota and scheduling attack classes (subagent_type: `general`), Resource accumulation attack classes (subagent_type: `general`), Resource Exhaustion and Availability Hunting, Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
-### Community 288 - "usuarios/throttles.py"
-Cohesion: 0.24
-Nodes (10): GoogleIPThrottle, LoginIPThrottle, PorIPThrottle, Clases de throttling personalizadas para FilmAI. Proporcionan límites de…, Límite por IP del cliente (respeta `NUM_PROXIES`, ver settings.py)., La misma tasa que el login, con contador propio (sugerencia de PR-Agent en…, Tope por IP para pedir el reset: el límite por correo no frena a quien prueba…, ReenvioIPThrottle (+2 more)
+### Community 288 - "SugerenciasBase"
+Cohesion: 0.26
+Nodes (3): SugerenciasBase, ThrottleTests, ValidacionTests
 
 ### Community 289 - "AI, LLM, and Agent Hunting"
 Cohesion: 0.20
@@ -1287,13 +1287,13 @@ Nodes (9): initialProfile, prepararCuenta(), etiquetaMenu, viewports, INICIALES,
 Cohesion: 0.24
 Nodes (5): register, Regla por objeto, común a editar y borrar. Nadie sin ser superusuario toca a un…, Admin para el modelo personalizado de usuario. Adapta `UserAdmin` de Django a…, UsuarioAdmin, BaseUserAdmin
 
-### Community 296 - "tests_sse.py"
-Cohesion: 0.12
-Nodes (10): asyncio, `POST /api/chat/messages/`: el stream SSE, el candado, el tope por hora y el…, ASGI config for filmai project. It exposes the ASGI callable as a module-level…, pedir(), Llama a la aplicación ASGI de verdad (`get_asgi_application()`), sin servidor.…, Hace un pedido a la aplicación ASGI y devuelve lo que ella envió.…, RespuestaASGI, AplicacionASGITests (+2 more)
+### Community 296 - "pedir"
+Cohesion: 0.19
+Nodes (5): pedir(), Hace un pedido a la aplicación ASGI y devuelve lo que ella envió.…, RespuestaASGI, AplicacionASGITests, TransactionTestCase
 
-### Community 297 - "CursorConTotal"
-Cohesion: 0.16
-Nodes (9): Paginación de las reseñas (C-08)., CursorConTotal, CursorPagination, Paginación por cursor con el total de filas, compartida por los módulos., Cuenta el total acá, que es donde se ve el queryset completo. La alternativa…, Claves que la subclase agrega al final de la respuesta., `CursorPagination` que además responde `total`. `CursorPagination` no lo trae,…, Paginación de los ítems de una lista. (+1 more)
+### Community 297 - "LoginSerializer"
+Cohesion: 0.18
+Nodes (9): EstadoCuentaCaracterizacionTests, override_settings, TestCase, El diagnóstico queda interno; el HTTP público identifica el estado solo con…, La baja conserva los datos: la comunidad ve texto y nota, sin el autor. Hasta…, LoginSerializer, La activación por ``estado`` reemplaza el chequeo de allauth., Login por credenciales con errores específicos para cuentas inactivas. (+1 more)
 
 ### Community 299 - "EntrypointSuperusuarioTests"
 Cohesion: 0.22
@@ -1308,8 +1308,8 @@ Cohesion: 0.20
 Nodes (9): Broker and queue isolation attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Framing, schema, and interpretation attack classes (subagent_type: `general`), Protocols, RPC, and Messaging Hunting, Replay, ordering, and transaction attack classes (subagent_type: `general`), RPC identity and authorization attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
 ### Community 302 - "es_relevante"
-Cohesion: 0.11
-Nodes (17): es_relevante(), normalizar(), Minúsculas, sin tildes y con los espacios colapsados: «CHIHIRÓ » → «chihiro».…, Si un título se muestra en una búsqueda con texto (o con persona). Pasa con 5…, _combinar(), _persona(), Sugerencias de la navbar (13/11/2026): títulos y personas con una sola llamada.…, Hasta 5 sugerencias para el texto `q`, en el orden de TMDB. (+9 more)
+Cohesion: 0.27
+Nodes (4): es_relevante(), Si un título se muestra en una búsqueda con texto (o con persona). Pasa con 5…, EsRelevanteTests, `es_relevante` en los bordes: 4 y 5 votos, 4,9 y 5 de popularidad.
 
 ### Community 305 - "A-06: Google OAuth"
 Cohesion: 0.12
@@ -1323,13 +1323,13 @@ Nodes (3): SimpleTestCase, Simula que pasaron las 6 horas de la caché de tenden
 Cohesion: 0.20
 Nodes (10): API-key and mTLS attack classes (subagent_type: `general`), Browser-session attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Federated-identity attack classes (subagent_type: `general`), HTTP framing and cache attack classes (subagent_type: `general`), HTTP-Protocol and Authentication Hunting, MFA, passkey, and account-transition attack classes (subagent_type: `general`), Universal moves (apply across the above) (+2 more)
 
-### Community 308 - "test_nombres_reservados.py"
-Cohesion: 0.10
-Nodes (12): AltaConGoogleTests, DisponibilidadTests, PerfilTests, SimpleTestCase, TestCase, Nombres de usuario reservados (issue #137, 28/10/2026). Nadie puede registrarse…, RegistroTests, ReglaTests (+4 more)
+### Community 308 - "PerfilTests"
+Cohesion: 0.15
+Nodes (5): AltaConGoogleTests, DisponibilidadTests, PerfilTests, TestCase, RegistroTests
 
 ### Community 309 - "usuarios/serializers.py"
 Cohesion: 0.02
-Nodes (172): allauth_socialaccount_helpers, allauth_socialaccount_providers_google_views, _CalificacionEntradaBase, ComunidadQuerySerializer, MisResenasQuerySerializer, ProduccionQuerySerializer, Serializers de C-08: entrada y salida de calificaciones y reseñas. En su propio…, Valida `?id_tmdb=&tipo=` de las lecturas. Se validan como cualquier payload en… (+164 more)
+Nodes (159): allauth_account, allauth_socialaccount_helpers, _CalificacionEntradaBase, ComunidadQuerySerializer, MisResenasQuerySerializer, ProduccionQuerySerializer, Serializers de C-08: entrada y salida de calificaciones y reseñas. En su propio…, Valida `?id_tmdb=&tipo=` de las lecturas. Se validan como cualquier payload en… (+151 more)
 
 ### Community 310 - "Requirements"
 Cohesion: 0.10
@@ -1372,8 +1372,8 @@ Cohesion: 0.15
 Nodes (10): VIEWPORTS, conSesion(), simularListas(), abrirFicha(), boton(), cajas(), CELULAR, ESCRITORIO (+2 more)
 
 ### Community 323 - "MovieDetailView"
-Cohesion: 0.26
-Nodes (13): CreditsView, MovieDetailView, Directores (en series, los creadores) y reparto con personaje (C-07)., TVDetailView, 12/09/2026 — C-03: endpoints de catálogo públicos con AllowAny explícito, 14/09/2026 — Rutas de detalle sin conversor int: 400 en vez de 404 ante id_tmdb no entero, Failure isolation, Detail views materialize as a side effect (+5 more)
+Cohesion: 0.23
+Nodes (14): _id_tmdb(), _materializar_sin_interrumpir(), MovieDetailView, Encola la materialización sin que un fallo afecte ni demore la respuesta. El…, TVDetailView, 12/09/2026 — C-03: endpoints de catálogo públicos con AllowAny explícito, 14/09/2026 — Rutas de detalle sin conversor int: 400 en vez de 404 ante id_tmdb no entero, Failure isolation (+6 more)
 
 ### Community 324 - "sync_avatars.py"
 Cohesion: 0.25
@@ -1387,6 +1387,10 @@ Nodes (16): ADDED Requirements, navbar-search Specification, Purpose, Requiremen
 Cohesion: 0.18
 Nodes (10): Regla 4: Breve, pero sin perder claridad (apuntar a la versión corta y expandir donde el concepto lo pida), Regla 2: Diagrama de cajas y flechas al tocar arquitectura o comunicación entre servicios, Regla 3: Explicar cada test al escribirlo, Regla 1: No dar por sabido ningún concepto de framework, Regla 7: Ofrecer opciones solo cuando son reales, Ejemplo de diagrama: celery-beat → Redis DB 1 → celery-worker → TMDB (HTTP) / Postgres (SQL), Qué NO hace la skill: no es tutorial, no narra línea por línea, no reemplaza docs/decisiones.md, Regla 5: Avanzar en unidades chicas (paso, explicación, verificación) (+2 more)
 
+### Community 327 - "RecomendadoSinGustosTests"
+Cohesion: 0.18
+Nodes (5): patch, Hace de `get_catalog_service(idioma)`: responde con los recortes reales y anota…, Sin calificaciones de 7 o más no hay géneros de dónde partir., RecomendadoSinGustosTests, ServicioFalso
+
 ### Community 328 - "Command"
 Cohesion: 0.17
 Nodes (8): Command, _Espia, BaseCommand, Envuelve al proveedor para mostrar qué tools pide el modelo y con qué…, Corre un turno. Solo con `--guardar` lo guarda, como lo hace la vista. Por…, Recorre el set dorado y cierra con una tabla de tiempos contra RNF #6., Crea los mensajes previos de un caso, en orden, como si ya hubieran pasado., _segundos()
@@ -1395,9 +1399,9 @@ Nodes (8): Command, _Espia, BaseCommand, Envuelve al proveedor para mostrar qué
 Cohesion: 0.11
 Nodes (9): consultados(), PromptDeMarcadoresTests, SimpleTestCase, Un `get_catalog_service` de mentira: `get_movie_detail` según `colecciones`.…, Los ids de película cuyo detalle se pidió, sin importar el orden., `una_parte_por_saga`: dos películas de la misma colección no llevan dos…, servicio_de_tmdb(), titulo_de() (+1 more)
 
-### Community 331 - "ListaSugerenciasView"
-Cohesion: 0.28
-Nodes (6): ListaSugerenciasView, _numero_de_pagina(), El `?pagina=` como entero >= 1 (por defecto 1), o 400 `invalid`. Cero,…, «Sugeridas para esta lista»: títulos parecidos a los de una lista propia. `GET…, `similares:lista:{id}:{firma}` (design §7). La firma resume todo lo que cambia…, Arma el pool; solo corre cuando la caché no lo tiene.
+### Community 331 - "explorar"
+Cohesion: 0.22
+Nodes (10): _alternar(), anio_actual(), explorar(), hoy(), _lado(), En una función para que los tests fijen la fecha (zona de Argentina)., Sin texto: una página de `discover` de un tipo, con `media_type` puesto., Película, serie, película…; el resto de la más larga al final (como el Home). (+2 more)
 
 ### Community 333 - "listas.spec.ts"
 Cohesion: 0.20
@@ -1407,9 +1411,9 @@ Nodes (5): backend(), Item, Lista, resumen(), viewports
 Cohesion: 0.20
 Nodes (9): Phase 0: Decisions, Phase 1: Engine and title endpoint (PR 1), Phase 2: List endpoint (PR 2), Phase 3: List row (PR 3), Phase 4: Title page row (PR 4), Phase 5: e2e and documentation (PR 5), Review Workload Forecast, Tasks: Similar titles for lists and title pages (pendiente 5) (+1 more)
 
-### Community 335 - "django_db"
-Cohesion: 0.03
-Nodes (44): Migration, Migration, Migration, Migration, Migration, Migration, Migration, Migration (+36 more)
+### Community 335 - "0006_lista_restricciones_clave.py"
+Cohesion: 0.50
+Nodes (3): Migration, Falla con un mensaje claro en vez de con un error opaco de la base., verificar_datos()
 
 ### Community 337 - "Requirement: Suggestions row"
 Cohesion: 0.15
@@ -1436,8 +1440,8 @@ Cohesion: 0.32
 Nodes (4): CrearProveedorTests, FormatoDelPromptTests, override_settings, SimpleTestCase
 
 ### Community 343 - "recortar"
-Cohesion: 0.08
-Nodes (18): La corrida de la noche. Devuelve cuántos mensajes y chats reescribió., recortar(), shared_task, Tareas de Celery del chatbot (#180, PR 3)., Recorta lo que TMDB no deja guardar más de 180 días. Corre a las 04:30, después…, recortar_tarjetas(), BaseChat, CronogramaTests (+10 more)
+Cohesion: 0.07
+Nodes (21): La corrida de la noche. Devuelve cuántos mensajes y chats reescribió., recortar(), Los `{titulo, anio}` de `ya_recomendados` para el prompt. Las entradas…, titulos_recordados(), shared_task, Tareas de Celery del chatbot (#180, PR 3)., Recorta lo que TMDB no deja guardar más de 180 días. Corre a las 04:30, después…, recortar_tarjetas() (+13 more)
 
 ### Community 345 - "documentacion-admin.spec.ts"
 Cohesion: 0.29
@@ -1464,8 +1468,8 @@ Cohesion: 0.28
 Nodes (5): EsquemaContratoTests, EsquemaDelChatTests, SimpleTestCase, Detecta cambios semánticos, sin depender del formato del YAML., La ruta `messages/` tiene dos métodos; que el POST no haga perder al GET.
 
 ### Community 352 - "construir_texto_canonico"
-Cohesion: 0.06
-Nodes (20): construir_texto_canonico(), _lista_normalizada(), Ordena alfabéticamente y descarta vacíos. TMDB no garantiza un orden estable…, Arma el texto que representa a la producción para la búsqueda semántica. Recibe…, _necesita_enriquecimiento(), Decide si hay que traer el detalle de TMDB para esta fila. Reemplaza el…, CatalogoSettingsTest, GetCatalogServiceTest (+12 more)
+Cohesion: 0.04
+Nodes (66): construir_texto_canonico(), _lista_normalizada(), Ordena alfabéticamente y descarta vacíos. TMDB no garantiza un orden estable…, Arma el texto que representa a la producción para la búsqueda semántica. Recibe…, _directores(), _duracion_de_episodio(), _enriquecer(), _extraer_keywords() (+58 more)
 
 ### Community 353 - "_Medicion"
 Cohesion: 0.29
@@ -1475,9 +1479,9 @@ Nodes (4): _Medicion, Lo que costó el turno: una `Vuelta` por cada llamada al m
 Cohesion: 0.12
 Nodes (16): Definitive error contract, Errors and ownership, Items, List endpoints, List management, Purpose, Requirements, Runtime identity and provisioning (+8 more)
 
-### Community 356 - "personales.py"
-Cohesion: 0.32
-Nodes (7): _buscar_lista(), mis_listas(), _nombre_visible(), Tools que leen datos del usuario del turno. Las llama: `ejecutar()` de…, El nombre de una lista sin datos personales: lo escribió el usuario., Encuentra una lista del usuario por clave (`vistas`) o por id (`"69"`).…, Sin `lista`, las listas del usuario; con ella, lo que hay adentro.
+### Community 356 - "sugerir"
+Cohesion: 0.27
+Nodes (9): _combinar(), _persona(), Sugerencias de la navbar (13/11/2026): títulos y personas con una sola llamada.…, Hasta 5 sugerencias para el texto `q`, en el orden de TMDB., La persona como la usa el frontend, o `None` si no se sugiere., Títulos y personas elegidos, en el orden en que TMDB los devolvió., Solo los campos de TMDB que el frontend usa para dibujar la sugerencia., sugerir() (+1 more)
 
 ### Community 357 - "CacheTests"
 Cohesion: 0.25
@@ -1491,21 +1495,17 @@ Nodes (8): Phase 0: Confirm the open decisions, Phase 1: Providers and fallback 
 Cohesion: 0.67
 Nodes (4): DESIGN.md (project design system source), impeccable context (setup / capability report), Visualize: direction comps & asset production (impeccable reference), PRODUCT.md (captured product context)
 
-### Community 362 - "titulos_recordados"
-Cohesion: 0.39
-Nodes (3): Los `{titulo, anio}` de `ya_recomendados` para el prompt. Las entradas…, titulos_recordados(), TitulosRecordadosTests
-
 ### Community 363 - "test_seguridad_redis.py"
 Cohesion: 0.18
 Nodes (6): JSONRedisSerializer, CacheSinPickleTests, JSONRedisSerializerTests, SimpleTestCase, F1 de la auditoría: Redis sin contraseña y caché que deserializa pickle.…, django_core_cache_backends_redis
 
-### Community 364 - "conventional-commits/SKILL.md"
-Cohesion: 0.33
-Nodes (5): Commit Type Examples table (one example message per type), Commit subject format `type(scope): description`, Eleven allowed commit types (feat, fix, chore, docs, style, refactor, perf, test, build, ci, revert), Pick exactly one type; most specific wins, state the alternative, No AI attribution in commits (no Co-Authored-By)
+### Community 364 - "Regla 6: .agents/skills/ es la única fuente de skills"
+Cohesion: 0.19
+Nodes (11): Commit Type Examples table (one example message per type), Commit subject format `type(scope): description`, Eleven allowed commit types (feat, fix, chore, docs, style, refactor, perf, test, build, ci, revert), Pick exactly one type; most specific wins, state the alternative, No AI attribution in commits (no Co-Authored-By), Design brief (shape output), Regla 6: .agents/skills/ es la única fuente de skills, vercel-quality README (+3 more)
 
 ### Community 365 - "browse.py"
-Cohesion: 0.09
-Nodes (35): PersonaNoEncontrada, `browse/?persona=` con un id que TMDB no conoce (p. ej. una persona borrada).…, con_contexto(), `funcion` envuelta para correr en un hilo con el contexto del pedido. Los hilos…, _alternar(), anio_actual(), con_corte(), _con_persona() (+27 more)
+Cohesion: 0.11
+Nodes (26): PersonaNoEncontrada, `browse/?persona=` con un id que TMDB no conoce (p. ej. una persona borrada).…, con_contexto(), `funcion` envuelta para correr en un hilo con el contexto del pedido. Los hilos…, con_corte(), _con_persona(), _con_texto(), _contiene() (+18 more)
 
 ### Community 367 - "a11y-axe.spec.ts"
 Cohesion: 0.10
@@ -1523,21 +1523,21 @@ Nodes (7): NumProxiesTests, SimpleTestCase, F3 de la auditoría: `NUM_PROXIES` o
 Cohesion: 0.48
 Nodes (3): TestCase, Token emitido con el reloj `segundos` por delante del actual., RelojJWTTests
 
-### Community 371 - "Mensaje"
-Cohesion: 0.07
-Nodes (37): Cierre del turno: lo que la vista guarda. Siempre es el último elemento., Resultado, ChatFactory, MensajeFactory, Meta, Factories de factory_boy para la app `chatbot`. Se usan únicamente para sembrar…, Chat, Mensaje (+29 more)
+### Community 371 - "Resultado"
+Cohesion: 0.11
+Nodes (20): Cierre del turno: lo que la vista guarda. Siempre es el último elemento., Resultado, fecha_de_hoy(), guardar_turno(), La fecha (ISO) que se anota en cada entrada de `ya_recomendados`. Sirve para…, Guarda la pregunta, la respuesta y lo recomendado, todo o nada. Devuelve…, Las tarjetas nuevas al final, sin repetir, y solo las últimas 30. La lista va…, sumar_recomendados() (+12 more)
 
-### Community 373 - "EmailRateThrottle"
-Cohesion: 0.29
-Nodes (6): _correo(), EmailRateThrottle, Correo normalizado del cuerpo, o "" si falta o no es un texto. Un `{"email":…, Throttle basado en email para recuperación de contraseña. Limita las…, Usa el email del request como clave de throttle. Si el email no está presente o…, SimpleRateThrottle
+### Community 373 - "os"
+Cohesion: 0.25
+Nodes (5): App de Celery del proyecto (C-04a). Celery corre en un proceso aparte del…, Paquete del proyecto Django. Importar la app de Celery acá hace que quede…, WSGI config for filmai project. It exposes the WSGI callable as a module-level…, django_core_wsgi, os
 
 ### Community 375 - "Design: Brevo as a fallback for Resend (issue #181)"
 Cohesion: 0.13
 Nodes (14): Architecture decisions, Brevo payload, Capacity (free plans, November 2026; re-check before deploying), Configuration, Design: Brevo as a fallback for Resend (issue #181), Limits, Logs, Providers and backends (+6 more)
 
-### Community 376 - "PorCuentaThrottle"
+### Community 376 - "VistasDeListadosMaterializanTests"
 Cohesion: 0.29
-Nodes (5): _cuerpo(), PorCuentaThrottle, Límite por cuenta o correo, sin importar desde qué IP llegue el pedido.…, ReenvioCorreoThrottle, RegistroCorreoThrottle
+Nodes (3): TestCase, Las vistas responden lo de TMDB y encolan; un fallo al encolar no se nota., VistasDeListadosMaterializanTests
 
 ### Community 377 - "CountrySelect"
 Cohesion: 0.48
@@ -1559,9 +1559,9 @@ Nodes (8): Decisions that need the user (rule 3 of `AGENTS.md`), In Scope, Inten
 Cohesion: 0.18
 Nodes (10): ADDED Requirements, Delta for search-ui, MODIFIED Requirements, Requirement: Page and state, Requirement: Person filter (13/11/2026), Scenario: Combined with a type, Scenario: From a navbar suggestion, Scenario: Reload keeps the search (+2 more)
 
-### Community 384 - "Usuario"
-Cohesion: 0.04
-Nodes (44): AbstractBaseUser, allauth_account, App de Celery del proyecto (C-04a). Celery corre en un proceso aparte del…, Paquete del proyecto Django. Importar la app de Celery acá hace que quede…, WSGI config for filmai project. It exposes the WSGI callable as a module-level…, Meta, Cliente de la plataforma y, según sus flags, administrador del panel., Usuario (+36 more)
+### Community 384 - "pendiente"
+Cohesion: 0.07
+Nodes (20): liberar_pendientes_vencidas(), Borra las pendientes vencidas; con filtros, solo las que ocupan ese dato. Se…, limpiar_pendientes_vencidas(), shared_task, Borra las cuentas que nunca confirmaron su correo. Además de liberar el correo,…, AltaConGoogleSobrePendienteTests, cuerpo(), pendiente() (+12 more)
 
 ### Community 385 - "TopeDeCacheTests"
 Cohesion: 0.20
@@ -1579,9 +1579,9 @@ Nodes (3): _ConUsuario, OrdenDeListasTests, TestCase
 Cohesion: 0.17
 Nodes (7): ComposePostgresTests, HasheoDeContrasenasTests, SimpleTestCase, S3 y S4 de la auditoría: Postgres en todas las interfaces y `entrypoint.sh`.…, RNF #2. Corren en otro proceso: acá adentro aplica el hasher de los tests., DBeaver desde el host necesita el 5432 de Postgres en loopback., subprocess
 
-### Community 391 - "_recortar_recomendados"
-Cohesion: 0.33
-Nodes (7): _candidatos(), _es_vieja(), Una entrada sin fecha, o con una que no se entiende, se trata como vieja., Los pk de los chats con algo para recortar. Sin candado: solo detecta., Les quita `titulo` y `anio` a las entradas viejas de `ya_recomendados`., _recortar_recomendados(), _sin_titulo_las_viejas()
+### Community 391 - "Mensaje"
+Cohesion: 0.10
+Nodes (23): ChatFactory, MensajeFactory, Meta, Factories de factory_boy para la app `chatbot`. Se usan únicamente para sembrar…, Chat, Mensaje, Meta, Conversación entre un usuario y el chatbot de recomendaciones. (+15 more)
 
 ### Community 392 - "Requirement: The community's reviews of a production"
 Cohesion: 0.33
@@ -1599,9 +1599,9 @@ Nodes (3): CostoTests, SimpleTestCase, Con la caché real: 2 llamadas la primera
 Cohesion: 0.22
 Nodes (8): In Scope, Intent, Open questions for Gonza, Out of Scope, Proposal: Search in the navbar, a person filter and hiding irrelevant titles, Risks and rollback, Scope, What is already decided
 
-### Community 396 - "pruebas.py"
-Cohesion: 0.29
-Nodes (5): Ejecutor de pruebas que exige el sobre en toda respuesta de error de la API.…, Vacía la caché antes de cada test. Los límites de tasa (login, registro,…, ResultadoConCacheLimpia, django_test_runner, unittest
+### Community 396 - "test_contrato_codigos.py"
+Cohesion: 0.07
+Nodes (21): contrato_errores(), Contrato público de códigos: lo que el frontend necesita, sin textos internos., Derivado del catálogo; el mensaje interno en español nunca se publica., serializar_contrato(), Command, BaseCommand, Exporta `contracts/error-codes.json` desde el catálogo de códigos., Ejecutor de pruebas que exige el sobre en toda respuesta de error de la API.… (+13 more)
 
 ### Community 397 - "Requirement: A rated production is in `Vistas`"
 Cohesion: 0.40
@@ -1611,10 +1611,6 @@ Nodes (5): Requirement: A rated production is in `Vistas`, Scenario: Deleting on
 Cohesion: 0.40
 Nodes (5): Requirement: Writing goes through materialization, Scenario: An `id_tmdb` beyond the column range, Scenario: An `id_tmdb` that TMDB does not know, Scenario: An invalid payload reaches no external service, Scenario: Rating a production that is not stored yet
 
-### Community 399 - "armar_perfil"
-Cohesion: 0.21
-Nodes (11): armar_perfil(), _de_la_lista(), _disgustos(), _extracto(), _gustos(), El perfil del usuario que recibe el modelo, leído de la base en cada mensaje.…, Una reseña lista para el perfil: anonimizada, en una línea y recortada., Lo mejor calificado, con un extracto de la reseña si tiene. (+3 more)
-
 ### Community 401 - "generate.py"
 Cohesion: 0.40
 Nodes (5): argparse, csv, catalogs(), put(), Siembra reproducible de los CSV aprobados, sin textos de correos en el cliente.
@@ -1622,6 +1618,10 @@ Nodes (5): argparse, csv, catalogs(), put(), Siembra reproducible de los CSV apr
 ### Community 402 - "Requirement: More like this title"
 Cohesion: 0.33
 Nodes (5): ADDED Requirements, Delta for title-page-ui, Requirement: More like this title, Scenario: Deferred load, Scenario: Scrolling down
+
+### Community 403 - "test_pais.py"
+Cohesion: 0.06
+Nodes (21): contrato_enums(), es_nombre_reservado(), Valores públicos y nombres reservados de listas y género., ContratoEnumsTests, SimpleTestCase, codigos_pais(), es_pais_valido(), pais_por_indice() (+13 more)
 
 ### Community 404 - "Requirement: Removing from `Vistas` may delete the rating on request"
 Cohesion: 0.67
@@ -1667,28 +1667,32 @@ Nodes (7): cantidad_de_paginas(), pagina(), Cuántas páginas tiene el pool para
 Cohesion: 0.50
 Nodes (3): contraste(), css, luminancia()
 
-### Community 422 - "RegisterView"
-Cohesion: 0.50
-Nodes (3): Registro tradicional sin el `complete_signup` de dj-rest-auth.…, RegisterView, BaseRegisterView
+### Community 421 - "normalizar"
+Cohesion: 0.40
+Nodes (4): normalizar(), Minúsculas, sin tildes y con los espacios colapsados: «CHIHIRÓ » → «chihiro».…, NormalizarTests, SimpleTestCase
 
 ### Community 424 - "AD-01': Configurar Django Admin"
 Cohesion: 1.00
 Nodes (3): AD-01': Configurar Django Admin, Módulo 6 — Admin nativo de Django (Marcos), 22/08/2026 — Registro de Usuario en Django Admin
 
+### Community 426 - "esquemas.py"
+Cohesion: 0.50
+Nodes (3): _esquema(), Lo que el modelo sabe de cada tool: nombre, para qué sirve y qué recibe.…, Arma una tool en el formato que espera la API compatible con OpenAI.…
+
 ## Knowledge Gaps
 - **1147 isolated node(s):** `fs`, `path`, `{ TextDecoder }`, `REQUIRED_FIELDS`, `REF_FIELDS` (+1142 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 3223 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **101 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **105 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AppConfig` connect `vitest` to `django_apps`, `react`?**
-  _High betweenness centrality (0.218) - this node is a cross-community bridge._
+  _High betweenness centrality (0.223) - this node is a cross-community bridge._
 - **Why does `AppLocale` connect `react` to `@playwright/test`, `api.ts`, `AccountProvider.tsx`, `ListDetailView.tsx`, `listas.spec.ts`, `vitest`, `format.ts`?**
-  _High betweenness centrality (0.194) - this node is a cross-community bridge._
-- **Why does `UsuarioFactory` connect `UsuarioFactory` to `Usuario`, `ClaveDeConfirmacionEnLogsTests`, `OrdenDeListasTests`, `usuarios/views.py`, `tests_orquestador.py`, `QueriesNoCrecenConLasFilasTests`, `TitulosPorIdiomaTests`, `materializar`, `ResenaAdminTests`, `django_test`, `.turno`, `CatalogoFalso`, `IdiomaDelDestinatarioTests`, `ArmarPerfilTests`, `GoogleSocialLoginSerializer`, `GoogleOAuthTests`, `catalogo/tests.py`, `RecuperarContrasenaTests`, `tests_tools.py`, `ListaFactory`, `PerfilTests`, `UsuarioPerfilSerializer`, `tests_sse.py`, `TipoProduccion`, `LimiteLoginAdminTests`, `Command`, `ListasEndpointsTests`, `IngresoDocumentacionTests`, `_BaseRecomendado`, `test_nombres_reservados.py`, `usuarios/serializers.py`, `.rafaga`, `ErroresContrasenaTests`, `.poblar`, `MisResenasFiltrosTests`, `ResenaModeradaTests`, `reviews.py`, `ProveedorFalso`, `PreferenciasTests`, `ContratoErroresAPITests`, `listas/tests_sugerencias.py`, `CalificacionFactory`, `ComandoChatearTests`, `BaseOrquestador`, `._calificacion_existente`, `RecuperacionSesionTests`, `refrescar_vencidos`, `recortar`, `AdminStaffParcialTests`, `ProvidersViewTests`, `ContrasenaTests`, `CodigosValidacionListasTests`, `HistorialTests`, `CorreosContratoTests`, `MisListasTests`, `ErroresRegistroTests`, `TMDBClient`, `RelojJWTTests`, `Mensaje`?**
-  _High betweenness centrality (0.149) - this node is a cross-community bridge._
+  _High betweenness centrality (0.199) - this node is a cross-community bridge._
+- **Why does `UsuarioFactory` connect `UsuarioFactory` to `pendiente`, `tests_tools.py`, `ClaveDeConfirmacionEnLogsTests`, `OrdenDeListasTests`, `usuarios/views.py`, `django_db`, `Mensaje`, `QueriesNoCrecenConLasFilasTests`, `TitulosPorIdiomaTests`, `IdiomaDelDestinatarioTests`, `ResenaAdminTests`, `listas/views.py`, `OrquestadorFalso`, `tests_sse.py`, `GoogleSocialLoginSerializer`, `ArmarPerfilTests`, `idioma_efectivo`, `CalificarIdInexistenteTests`, `GoogleOAuthTests`, `test_pais.py`, `._resena`, `RecuperarContrasenaTests`, `ErroresPerfilTests`, `ListaFactory`, `PerfilTests`, `UsuarioPerfilSerializer`, `pedir`, `ProduccionAudiovisual`, `LimiteLoginAdminTests`, `LoginSerializer`, `Command`, `ListasEndpointsTests`, `IngresoDocumentacionTests`, `_BaseRecomendado`, `PerfilTests`, `usuarios/serializers.py`, `.rafaga`, `ErroresContrasenaTests`, `.poblar`, `MisResenasFiltrosTests`, `ResenaModeradaTests`, `reviews.py`, `ProveedorFalso`, `RecomendadoSinGustosTests`, `listas/tests_sugerencias.py`, `CalificacionFactory`, `ComandoChatearTests`, `LoginDualTests`, `BaseOrquestador`, `._calificacion_existente`, `RecuperacionSesionTests`, `refrescar_vencidos`, `recortar`, `AdminStaffParcialTests`, `ProvidersViewTests`, `ContrasenaTests`, `CodigosValidacionListasTests`, `HistorialTests`, `CorreosContratoTests`, `MisListasTests`, `RestriccionesClaveTests`, `catalogo/tests.py`, `ErroresRegistroTests`, `RelojJWTTests`, `Resultado`?**
+  _High betweenness centrality (0.147) - this node is a cross-community bridge._
 - **Are the 118 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 118 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 69 inferred relationships involving `ProduccionAudiovisual` (e.g. with `ProduccionAudiovisualFactory` and `ProduccionAudiovisual`) actually correct?**

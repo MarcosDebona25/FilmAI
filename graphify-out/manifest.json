@@ -414,9 +414,9 @@
     "semantic_hash": ""
   },
   "frontend/app/(public)/register/page.tsx": {
-    "mtime": 1794843609.075186,
-    "seen": 1794846253.4810202,
-    "ast_hash": "abf4de7df682907de35a660db713cf35",
+    "mtime": 1794847614.8382807,
+    "seen": 1794848411.237687,
+    "ast_hash": "e75619a9b33884d057e519db1fb196be",
     "semantic_hash": ""
   },
   "frontend/app/layout.tsx": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1794847022.9149346,
-    "seen": 1794847447.8276145,
+    "mtime": 1794848269.7097547,
+    "seen": 1794848411.246675,
     "ast_hash": "8c883eea80d54f45b9b4950aef79957d",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794847022.9191902,
-    "seen": 1794847447.8276186,
+    "mtime": 1794848269.7097547,
+    "seen": 1794848411.2467294,
     "ast_hash": "a6ca5f9976f409263302c277fa94bcfb",
     "semantic_hash": ""
   },
@@ -3042,9 +3042,9 @@
     "semantic_hash": ""
   },
   "frontend/tests/access-screens.test.tsx": {
-    "mtime": 1794843506.0830283,
-    "seen": 1794846253.4812636,
-    "ast_hash": "0e54e38f5660c5da8d9c62e61858f6a8",
+    "mtime": 1794847560.4827998,
+    "seen": 1794848411.2472694,
+    "ast_hash": "d3cef2ad10baadd7e22aad3d284cf3b7",
     "semantic_hash": ""
   },
   "frontend/content/legal/terms.en.md": {
@@ -5208,9 +5208,9 @@
     "semantic_hash": ""
   },
   "frontend/e2e/registro.spec.ts": {
-    "mtime": 1794846838.5834854,
-    "seen": 1794847447.8255603,
-    "ast_hash": "b1ef98143301f8ba8589af80d6967140",
+    "mtime": 1794848085.2701323,
+    "seen": 1794848411.2444937,
+    "ast_hash": "c3ba6b7548f9dc66b8da5f5e6d60aaee",
     "semantic_hash": ""
   },
   "frontend/lib/use-escritorio.ts": {

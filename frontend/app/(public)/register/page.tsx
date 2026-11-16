@@ -32,6 +32,7 @@ import { passwordRules } from "@/lib/password-rules";
 import { routes } from "@/lib/routes";
 import { useUsernameAvailability } from "@/lib/use-username-availability";
 import { useValidation } from "@/lib/use-validation";
+import { cn } from "@/lib/utils";
 
 type Campo =
   | "nombre"
@@ -317,6 +318,18 @@ export default function RegisterPage() {
       ? t("signUp.usernameAvailable")
       : null;
 
+  /**
+   * Celda de un paso. El que no está activo conserva su tamaño (`invisible` es
+   * `visibility: hidden`) pero queda fuera del teclado y de los lectores de
+   * pantalla: `inert` saca todo su contenido del foco y del árbol de accesibilidad.
+   */
+  const celda = (cual: Paso) => ({
+    "data-paso": cual,
+    inert: paso !== cual,
+    "aria-hidden": paso !== cual || undefined,
+    className: cn("[grid-area:1/1]", paso !== cual && "invisible"),
+  });
+
   const avatarElegido = avatares.find((avatar) => avatar.id === avatarId);
   const errorTerminos = mostrar("acepta_terminos");
 
@@ -350,10 +363,12 @@ export default function RegisterPage() {
           </h1>
           <p className="text-muted-foreground">{t("signUp.subtitle")}</p>
         </div>
-        {/* Alto mínimo igual en los tres pasos (canvas: 520 px en celular, 460 px
-            en escritorio): un paso corto no achica la página. */}
-        <div className="min-h-[32.5rem] lg:min-h-[28.75rem]">
-          {paso === 1 && (
+        {/* Los tres pasos están siempre montados y comparten la misma celda de la
+            grilla: la celda mide lo que el paso más alto, en cualquier idioma y
+            ancho, así el botón principal y «Back» no se mueven al cambiar de paso.
+            Sin `overflow`: el calendario y la lista de países se abren por fuera. */}
+        <div className="grid grid-cols-[minmax(0,1fr)]">
+          <div {...celda(1)}>
             <div className="flex flex-col gap-5">
               <button type="button" onClick={onGoogle} className={secondaryButtonClass}>
                 <GoogleMark />
@@ -423,8 +438,8 @@ export default function RegisterPage() {
                 reserveMessage
               />
             </div>
-          )}
-          {paso === 2 && (
+          </div>
+          <div {...celda(2)}>
             <div className="flex flex-col gap-5">
               <div className="grid grid-cols-2 items-start gap-4">
                 <TextField
@@ -505,8 +520,8 @@ export default function RegisterPage() {
                 reserveMessage
               />
             </div>
-          )}
-          {paso === 3 && (
+          </div>
+          <div {...celda(3)}>
             <div className="flex flex-col gap-[1.375rem]">
               {avatarId !== null && avatarElegido && (
                 <div className="flex flex-col gap-2">
@@ -579,13 +594,14 @@ export default function RegisterPage() {
                     })}
                   </span>
                 </label>
-                <div id="terminos-error">
+                {/* Renglón reservado: el error no empuja lo que sigue al aparecer. */}
+                <div id="terminos-error" className="min-h-[1lh] text-[0.8125rem]">
                   {errorTerminos && <FieldError>{errorTerminos}</FieldError>}
                 </div>
               </div>
               {error && <FieldError>{error}</FieldError>}
             </div>
-          )}
+          </div>
         </div>
         <div className="flex flex-col gap-2.5">
           {/* `type="submit"`: Enter en cualquier campo hace lo mismo que el botón. */}

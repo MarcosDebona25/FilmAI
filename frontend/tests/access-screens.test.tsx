@@ -140,11 +140,41 @@ describe("registro en pasos", () => {
     expect(barra()).toHaveAttribute("aria-valuetext", "Step 1 of 3");
     expect(barra().firstElementChild).toHaveStyle({ width: "33.33%" });
     expect(screen.getByLabelText(en.common.fields.email)).toBeInTheDocument();
-    expect(screen.queryByLabelText(en.common.fields.firstName)).toBeNull();
+    // Los otros pasos siguen montados (ocultos e inertes): se consulta por rol.
+    expect(screen.queryByRole("textbox", { name: en.common.fields.firstName })).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
     // «Back» guarda su lugar pero no se ve ni se puede usar.
     expect(screen.queryByRole("button", { name: /^Back/ })).toBeNull();
     expect(screen.getByText(signUp.back).closest("button")).toHaveStyle({ visibility: "hidden" });
+  });
+
+  it("los tres pasos están siempre montados; los no activos quedan inertes y ocultos", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<RegisterPage />, { locale: "en" });
+    const pasos = () => [...container.querySelectorAll<HTMLElement>("[data-paso]")];
+    /** Qué pasos están a la vista de teclado y lectores de pantalla. */
+    const activos = () =>
+      pasos()
+        .filter((p) => !p.hasAttribute("inert") && p.getAttribute("aria-hidden") !== "true")
+        .map((p) => p.dataset.paso);
+    // Los tres comparten una celda de la grilla: mide lo que el más alto.
+    expect(pasos()).toHaveLength(3);
+    expect(activos()).toEqual(["1"]);
+    for (const oculto of pasos().slice(1)) {
+      expect(oculto).toHaveAttribute("inert");
+      expect(oculto).toHaveAttribute("aria-hidden", "true");
+      expect(oculto).toHaveClass("invisible");
+    }
+    // Solo el paso activo se alcanza por rol.
+    expect(screen.getByRole("textbox", { name: en.common.fields.email })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: en.common.fields.firstName })).toBeNull();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+
+    await irAlPaso2(user);
+    expect(activos()).toEqual(["2"]);
+    expect(screen.queryByRole("textbox", { name: en.common.fields.email })).toBeNull();
+    expect(screen.getByRole("textbox", { name: en.common.fields.firstName })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).toBeNull();
   });
 
   it("un paso inválido no avanza y muestra los errores de sus campos", async () => {
@@ -164,7 +194,8 @@ describe("registro en pasos", () => {
     expect(barra()).toHaveAttribute("aria-valuetext", "Step 2 of 3");
     expect(barra().firstElementChild).toHaveStyle({ width: "66.67%" });
     expect(screen.getByLabelText(en.common.fields.firstName)).toHaveFocus();
-    expect(screen.queryByLabelText(en.common.fields.email)).toBeNull();
+    // Los otros pasos siguen montados (ocultos e inertes): se consulta por rol.
+    expect(screen.queryByRole("textbox", { name: en.common.fields.email })).toBeNull();
     // Entrar a un paso no muestra errores de campos que nadie tocó.
     expect(screen.queryAllByRole("alert")).toHaveLength(0);
 
