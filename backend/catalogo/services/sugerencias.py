@@ -2,7 +2,7 @@
 
 `GET /api/catalogo/suggest/?q=` usa `search/multi` de TMDB, que busca
 películas, series y personas a la vez. El diseño está en
-`openspec/changes/busqueda-navbar/design.md` (§1).
+`openspec/specs/navbar-search/spec.md` y `docs/decisiones.md` (13/11/2026).
 
 Se conserva el orden de TMDB (la relevancia por nombre ya pone a «Christopher
 Nolan» primero con «nolan» y a «Dune» primero con «dune»), pero se limpia:

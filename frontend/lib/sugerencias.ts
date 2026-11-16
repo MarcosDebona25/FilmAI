@@ -1,7 +1,7 @@
 /**
  * Sugerencias de la lupa de la navbar: pide `GET /api/catalogo/suggest/` y
  * deja la respuesta lista para pintar. El diseño está en
- * `openspec/changes/busqueda-navbar/design.md` (§1 y §2).
+ * `openspec/specs/navbar-search/spec.md` y `docs/decisiones.md` (13/11/2026).
  */
 
 import { apiFetch } from "@/lib/api";
