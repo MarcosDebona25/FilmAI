@@ -610,3 +610,6 @@ origen_id,clave,namespace,estado,es_original,en_original,es_curado,en_curado,pan
 648,auth.signUp.avatarLaterHelp,auth,ok,Podés cambiarlo después desde tu perfil.,You can change it later in your profile.,Podés cambiarlo después desde tu perfil.,You can change it later in your profile.,"[""Sign up"",""Sign up · mobile""]",,
 649,auth.signUp.avatarChoose,auth,ok,Elegir,Choose,Elegir,Choose,"[""Sign up"",""Sign up · mobile""]",,Abre el diálogo «Elegí tu avatar».
 650,auth.signUp.avatarUse,auth,ok,Usar este avatar,Use this avatar,Usar este avatar,Use this avatar,"[""Sign up"",""Sign up · mobile""]",,
+651,auth.signUp.avatarPrevious,auth,ok,Avatares anteriores,Previous avatars,Avatares anteriores,Previous avatars,"[""Sign up"",""Sign up · mobile""]",,Flecha ‹ del paginado del diálogo de avatar.
+652,auth.signUp.avatarMore,auth,ok,Más avatares,More avatars,Más avatares,More avatars,"[""Sign up"",""Sign up · mobile""]",,Flecha › del paginado del diálogo de avatar.
+653,auth.signUp.avatarPage,auth,ok,1 de 2,1 of 2,{page} de {pages},{page} of {pages},"[""Sign up"",""Sign up · mobile""]",,Página visible del diálogo de avatar; se anuncia con aria-live.

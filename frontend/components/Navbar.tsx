@@ -10,6 +10,7 @@ import { useAccount } from "@/components/AccountProvider";
 import { NavbarSearch } from "@/components/NavbarSearch";
 import { TicketMark } from "@/components/access/Logo";
 import { isAccessPath, routes } from "@/lib/routes";
+import { useEscritorio } from "@/lib/use-escritorio";
 import { cn } from "@/lib/utils";
 
 // «Search» ya no es un enlace de escritorio (14/11/2026): lo reemplaza la lupa de
@@ -30,24 +31,6 @@ const CLASES_FONDO: Record<Fondo, string | undefined> = {
   translucido: "md:bg-background/85 md:backdrop-blur-lg",
   solido: "md:bg-background md:shadow-[inset_0_-1px_0_var(--line)]",
 };
-
-// El mismo corte que `md:` de Tailwind: los fondos solo existen en escritorio.
-const ESCRITORIO = "(width >= 48rem)";
-
-/** Si la pantalla es de escritorio, y se actualiza si cambia el ancho. */
-function useEscritorio() {
-  const [escritorio, setEscritorio] = useState(false);
-  useEffect(() => {
-    // `?.`: en los tests (jsdom) `matchMedia` puede no existir.
-    const consulta = window.matchMedia?.(ESCRITORIO);
-    if (!consulta) return;
-    const leer = () => setEscritorio(consulta.matches);
-    leer();
-    consulta.addEventListener?.("change", leer);
-    return () => consulta.removeEventListener?.("change", leer);
-  }, []);
-  return escritorio;
-}
 
 /**
  * Fondo de la barra según el scroll: nada con la página arriba de todo,

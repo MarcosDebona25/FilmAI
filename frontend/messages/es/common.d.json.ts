@@ -529,9 +529,11 @@ declare const messages: {
       "avatarLaterHelp": "Podés cambiarlo después desde tu perfil.",
       "avatarChoose": "Elegir",
       "avatarUse": "Usar este avatar",
+      "avatarPrevious": "Avatares anteriores",
+      "avatarMore": "Más avatares",
+      "avatarPage": "{page} de {pages}",
       "submitPending": "Completá todos los campos y aceptá los Términos y Condiciones para continuar.",
-      "avatarLabel": "Elegí tu avatar",
-      "avatarHelp": "Podés cambiarlo cuando quieras desde tu perfil."
+      "avatarLabel": "Elegí tu avatar"
     },
     "confirmation": {
       "pageTitle": "Confirmación de cuenta",

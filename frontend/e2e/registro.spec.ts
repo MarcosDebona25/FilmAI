@@ -28,7 +28,7 @@ async function preparar(page: Page, baseURL: string, locale: "en" | "es") {
   // Catálogo público de avatares: el registro lo pide al abrirse.
   await page.route("**/api/avatars/", (route) =>
     route.fulfill({
-      json: Array.from({ length: 12 }, (_, i) => ({
+      json: Array.from({ length: 26 }, (_, i) => ({
         id: i + 1,
         src: `/avatars/recortados/avatar%20(${i + 1}).png`,
       })),
@@ -159,7 +159,15 @@ for (const viewport of viewports) {
       await elegir.click();
       const dialogo = page.getByRole("dialog", { name: en.auth.signUp.avatarLabel });
       await expect(dialogo).toBeVisible();
-      await expect(dialogo.getByRole("radio")).toHaveCount(12);
+      // Páginas de 3 filas: 18 avatares en escritorio y 12 en celular.
+      const porPagina = viewport.name === "escritorio" ? 18 : 12;
+      const paginas = Math.ceil(26 / porPagina);
+      const radios = dialogo.getByRole("radio");
+      const anteriores = dialogo.getByRole("button", { name: en.auth.signUp.avatarPrevious });
+      const mas = dialogo.getByRole("button", { name: en.auth.signUp.avatarMore });
+      await expect(radios).toHaveCount(porPagina);
+      await expect(dialogo.getByText(`1 of ${paginas}`)).toBeVisible();
+      await expect(anteriores).toHaveAttribute("aria-disabled", "true");
       const avatar = (n: number) =>
         dialogo.getByRole("radio", { name: `Avatar ${n}`, exact: true });
       await expect(avatar(1)).toBeChecked();
@@ -181,6 +189,26 @@ for (const viewport of viewports) {
       await expect(dialogo).toBeHidden();
       await elegir.click();
       await avatar(3).click();
+      // Pasar hasta la última página no cambia la elección ni el alto del diálogo.
+      const alto = (await dialogo.boundingBox())!.height;
+      for (let p = 2; p <= paginas; p++) {
+        await mas.click();
+        await expect(dialogo.getByText(`${p} of ${paginas}`)).toBeVisible();
+      }
+      await expect(radios).toHaveCount(26 - porPagina * (paginas - 1));
+      await expect(mas).toHaveAttribute("aria-disabled", "true");
+      await expect(mas).toBeFocused();
+      await expect(dialogo.getByRole("radio", { checked: true })).toHaveCount(0);
+      expect((await dialogo.boundingBox())!.height).toBe(alto);
+      await auditar(page);
+      await sinDesborde(page);
+      await anteriores.click();
+      if (paginas > 2) await anteriores.click();
+      await expect(avatar(3)).toBeChecked();
+      // Se elige uno de la última página.
+      for (let p = 2; p <= paginas; p++) await mas.click();
+      await avatar(26).click();
+      await expect(avatar(26)).toBeChecked();
       await dialogo.getByRole("button", { name: en.auth.signUp.avatarUse }).click();
       await expect(dialogo).toBeHidden();
       await expect(elegir).toBeFocused();
@@ -202,7 +230,7 @@ for (const viewport of viewports) {
         fecha_nacimiento: "1992-04-10",
         genero: "masculino",
         acepta_terminos: true,
-        avatar_id: 3,
+        avatar_id: 26,
       });
       await expect(page.getByText(/Request another in 1:0\d/)).toBeVisible();
       await expect(page.getByRole("button", { name: en.common.email.resendLink })).toHaveAttribute(
