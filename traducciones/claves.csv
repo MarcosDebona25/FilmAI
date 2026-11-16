@@ -598,3 +598,15 @@ origen_id,clave,namespace,estado,es_original,en_original,es_curado,en_curado,pan
 636,tmdb.credits.notice,tmdb,ok,"Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica.",This product uses the TMDB API but is not endorsed or certified by TMDB.,"Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica.",This product uses the TMDB API but is not endorsed or certified by TMDB.,"[""Terms and Conditions"",""Terms and Conditions · mobile""]",,Aviso exacto exigido por TMDB (#180); igual a footer.main.tmdbAttribution.
 637,tmdb.credits.logoAlt,tmdb,ok,Logo de TMDB,TMDB logo,Logo de TMDB,TMDB logo,"[""Terms and Conditions"",""Terms and Conditions · mobile""]",,Texto alternativo del logo (#180).
 638,footer.main.creditsLink,footer,ok,Créditos,Credits,Créditos,Credits,"[""Footer · desktop"",""Footer · mobile""]",,Enlace del pie a /terms#credits (#180).
+639,auth.signUp.title,auth,ok,Creá tu cuenta,Create your account,Creá tu cuenta,Create your account,"[""Sign up"",""Sign up · mobile""]",,"Título del registro en pasos (canvas, sección 16)."
+640,auth.signUp.subtitle,auth,ok,Te lleva menos de un minuto.,It takes less than a minute.,Te lleva menos de un minuto.,It takes less than a minute.,"[""Sign up"",""Sign up · mobile""]",,
+641,auth.signUp.progressLabel,auth,ok,Progreso del registro,Sign-up progress,Progreso del registro,Sign-up progress,"[""Sign up"",""Sign up · mobile""]",,Nombre accesible de la barra de progreso.
+642,auth.signUp.stepOf,auth,ok,Paso {step} de {total},Step {step} of {total},Paso {step} de {total},Step {step} of {total},"[""Sign up"",""Sign up · mobile""]",,Texto de la barra de progreso (aria-valuetext).
+643,auth.signUp.continue,auth,ok,Continuar,Continue,Continuar,Continue,"[""Sign up"",""Sign up · mobile""]",,Botón principal de los pasos 1 y 2.
+644,auth.signUp.createAccount,auth,ok,Crear cuenta,Create account,Crear cuenta,Create account,"[""Sign up"",""Sign up · mobile""]",,Botón principal del paso 3.
+645,auth.signUp.back,auth,ok,Atrás,Back,Atrás,Back,"[""Sign up"",""Sign up · mobile""]",,
+646,auth.signUp.backToStep,auth,ok,"Atrás, al paso {step}",Back to step {step},"Atrás, al paso {step}",Back to step {step},"[""Sign up"",""Sign up · mobile""]",,Nombre accesible de «Atrás»; empieza con el texto visible.
+647,auth.signUp.avatarOptional,auth,ok,Avatar <hint>· opcional</hint>,Avatar <hint>· optional</hint>,Avatar <hint>· opcional</hint>,Avatar <hint>· optional</hint>,"[""Sign up"",""Sign up · mobile""]",,Texto enriquecido t.rich: hint atenúa «opcional».
+648,auth.signUp.avatarLaterHelp,auth,ok,Podés cambiarlo después desde tu perfil.,You can change it later in your profile.,Podés cambiarlo después desde tu perfil.,You can change it later in your profile.,"[""Sign up"",""Sign up · mobile""]",,
+649,auth.signUp.avatarChoose,auth,ok,Elegir,Choose,Elegir,Choose,"[""Sign up"",""Sign up · mobile""]",,Abre el diálogo «Elegí tu avatar».
+650,auth.signUp.avatarUse,auth,ok,Usar este avatar,Use this avatar,Usar este avatar,Use this avatar,"[""Sign up"",""Sign up · mobile""]",,

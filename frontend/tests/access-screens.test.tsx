@@ -2,10 +2,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import en from "@/messages/en/common.json";
-import es from "@/messages/es/common.json";
 import { ApiError, apiFetch } from "@/lib/api";
 import { elegirPais } from "./elegir-pais";
-import { render, screen, waitFor, within } from "./render";
+import { fireEvent, render, screen, waitFor, within } from "./render";
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }));
 const params = vi.hoisted(() => ({ key: "clave%3Aabc" }));
@@ -72,15 +71,19 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-async function fillRegister(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText(en.common.fields.firstName), "Juan");
-  await user.type(screen.getByLabelText(en.common.fields.lastName), "Pérez");
-  await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
-  await elegirPais(user, screen.getByLabelText(en.common.fields.country), "Argentina");
+const signUp = en.auth.signUp;
+
+function barra() {
+  return screen.getByRole("progressbar", { name: signUp.progressLabel });
+}
+
+/** «Continue» a secas: «Continue with Google» también es un botón. */
+function continuar() {
+  return screen.getByRole("button", { name: signUp.continue });
+}
+
+async function llenarPaso1(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.email), "juan@example.com");
-  // En inglés el campo va en MM/DD/YYYY: 10 de abril de 1992.
-  await user.type(screen.getByLabelText(en.common.fields.birthDate), "04/10/1992");
-  await user.selectOptions(screen.getByLabelText(en.auth.signUp.genderLabel), "masculino");
   await user.type(
     screen.getByLabelText(en.auth.password.label, { selector: "input" }),
     "Popcorn24!"
@@ -88,56 +91,168 @@ async function fillRegister(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.passwordConfirm), "Popcorn24!");
 }
 
-describe("registro", () => {
-  it("recorrer el formulario con foco y blur no muestra errores", async () => {
-    const user = userEvent.setup();
+async function llenarPaso2(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(en.common.fields.firstName), "Juan");
+  await user.type(screen.getByLabelText(en.common.fields.lastName), "Pérez");
+  await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
+  // En inglés el campo va en MM/DD/YYYY: 10 de abril de 1992.
+  await user.type(screen.getByLabelText(en.common.fields.birthDate), "04/10/1992");
+  await user.selectOptions(screen.getByLabelText(signUp.genderLabel), "masculino");
+  await elegirPais(user, screen.getByLabelText(en.common.fields.country), "Argentina");
+  expect(await screen.findByText(signUp.usernameAvailable)).toBeInTheDocument();
+}
+
+async function irAlPaso2(user: ReturnType<typeof userEvent.setup>) {
+  await llenarPaso1(user);
+  await user.click(continuar());
+  await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "2"));
+}
+
+async function irAlPaso3(user: ReturnType<typeof userEvent.setup>) {
+  await irAlPaso2(user);
+  await llenarPaso2(user);
+  await user.click(continuar());
+  await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "3"));
+}
+
+function crearCuenta() {
+  return screen.getByRole("button", { name: signUp.createAccount });
+}
+
+/** Rechazo del alta con errores por campo, como los devuelve la API. */
+function rechazoPorCampos(...campos: [string, string][]) {
+  return async () => {
+    throw new ApiError(400, {
+      code: "validation_error",
+      errors: campos.map(([field, code]) => ({ field, code, params: {} })),
+    });
+  };
+}
+
+describe("registro en pasos", () => {
+  it("arranca en el paso 1: barra en 1 de 3, solo sus campos y sin «Back»", () => {
     render(<RegisterPage />, { locale: "en" });
-    await user.click(screen.getByLabelText(en.common.fields.firstName));
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    expect(screen.queryAllByRole("alert")).toHaveLength(0);
-    expect(screen.getByRole("button", { name: en.nav.account.signUp })).toBeDisabled();
+    expect(screen.getByRole("heading", { level: 1, name: signUp.title })).toBeInTheDocument();
+    expect(screen.getByText(signUp.subtitle)).toBeInTheDocument();
+    expect(barra()).toHaveAttribute("aria-valuemin", "0");
+    expect(barra()).toHaveAttribute("aria-valuemax", "3");
+    expect(barra()).toHaveAttribute("aria-valuenow", "1");
+    expect(barra()).toHaveAttribute("aria-valuetext", "Step 1 of 3");
+    expect(barra().firstElementChild).toHaveStyle({ width: "33.33%" });
+    expect(screen.getByLabelText(en.common.fields.email)).toBeInTheDocument();
+    expect(screen.queryByLabelText(en.common.fields.firstName)).toBeNull();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    // «Back» guarda su lugar pero no se ve ni se puede usar.
+    expect(screen.queryByRole("button", { name: /^Back/ })).toBeNull();
+    expect(screen.getByText(signUp.back).closest("button")).toHaveStyle({ visibility: "hidden" });
   });
 
-  it("marca todos los campos como obligatorios aunque el botón siga deshabilitado", () => {
+  it("un paso inválido no avanza y muestra los errores de sus campos", async () => {
+    const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
-    const campos = [
+    expect(screen.queryAllByRole("alert")).toHaveLength(0);
+    await user.click(continuar());
+    expect(barra()).toHaveAttribute("aria-valuenow", "1");
+    expect(screen.getAllByRole("alert").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByLabelText(en.common.fields.email)).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("«Continue» avanza, mueve la barra y deja el foco en el primer campo del paso", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await irAlPaso2(user);
+    expect(barra()).toHaveAttribute("aria-valuetext", "Step 2 of 3");
+    expect(barra().firstElementChild).toHaveStyle({ width: "66.67%" });
+    expect(screen.getByLabelText(en.common.fields.firstName)).toHaveFocus();
+    expect(screen.queryByLabelText(en.common.fields.email)).toBeNull();
+    // Entrar a un paso no muestra errores de campos que nadie tocó.
+    expect(screen.queryAllByRole("alert")).toHaveLength(0);
+
+    await llenarPaso2(user);
+    await user.click(continuar());
+    await waitFor(() => expect(barra()).toHaveAttribute("aria-valuetext", "Step 3 of 3"));
+    expect(barra().firstElementChild).toHaveStyle({ width: "100%" });
+    // En el paso 3 el botón principal pasa a ser «Create account».
+    expect(crearCuenta()).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: signUp.continue })).toBeNull();
+    expect(screen.getByRole("button", { name: signUp.avatarChoose })).toHaveFocus();
+  });
+
+  it("«Back» retrocede un paso, conserva lo escrito y enfoca el primer campo", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await irAlPaso2(user);
+    await user.type(screen.getByLabelText(en.common.fields.firstName), "Juan");
+    await user.click(screen.getByRole("button", { name: "Back to step 1" }));
+
+    expect(barra()).toHaveAttribute("aria-valuenow", "1");
+    const correo = screen.getByLabelText(en.common.fields.email);
+    expect(correo).toHaveFocus();
+    expect(correo).toHaveValue("juan@example.com");
+    expect(screen.getByLabelText(en.auth.password.label, { selector: "input" })).toHaveValue(
+      "Popcorn24!"
+    );
+    expect(screen.getByLabelText(en.common.fields.passwordConfirm)).toHaveValue("Popcorn24!");
+
+    await user.click(continuar());
+    expect(await screen.findByLabelText(en.common.fields.firstName)).toHaveValue("Juan");
+    expect(screen.getByRole("button", { name: "Back to step 1" })).toBeVisible();
+  });
+
+  it("Enter en un campo hace lo mismo que el botón principal", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await llenarPaso1(user);
+    await user.type(screen.getByLabelText(en.common.fields.passwordConfirm), "{Enter}");
+    await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "2"));
+  });
+
+  it("marca como obligatorios los campos de cada paso", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const obligatorios = (etiquetas: string[]) => {
+      for (const etiqueta of etiquetas)
+        expect(
+          screen.getByLabelText(etiqueta, { selector: "input, select, button" })
+        ).toBeRequired();
+    };
+    obligatorios([
+      en.common.fields.email,
+      en.auth.password.label,
+      en.common.fields.passwordConfirm,
+    ]);
+    await irAlPaso2(user);
+    obligatorios([
       en.common.fields.firstName,
       en.common.fields.lastName,
       en.common.fields.username,
-      en.common.fields.country,
-      en.common.fields.email,
       en.common.fields.birthDate,
-      en.auth.signUp.genderLabel,
-      en.auth.password.label,
-      en.common.fields.passwordConfirm,
-    ];
-    for (const etiqueta of campos)
-      expect(screen.getByLabelText(etiqueta, { selector: "input, select, button" })).toBeRequired();
-    expect(screen.getByRole("checkbox")).toBeRequired();
-    expect(screen.getByRole("button", { name: en.nav.account.signUp })).toBeDisabled();
+      signUp.genderLabel,
+      en.common.fields.country,
+    ]);
+    await llenarPaso2(user);
+    await user.click(continuar());
+    expect(await screen.findByRole("checkbox")).toBeRequired();
   });
 
   it("el país arranca vacío aunque el navegador tenga región, ordenado por nombre y con error si queda vacío", async () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("es-AR");
     const user = userEvent.setup();
-    render(<RegisterPage />, { locale: "es" });
-    const pais = screen.getByLabelText(es.common.fields.country);
-    expect(pais).toHaveTextContent(es.common.country.placeholder);
+    render(<RegisterPage />, { locale: "en" });
+    await irAlPaso2(user);
+    const pais = screen.getByLabelText(en.common.fields.country);
+    expect(pais).toHaveTextContent(en.common.country.placeholder);
     await user.click(pais);
     const nombres = within(screen.getByRole("listbox"))
       .getAllByRole("option")
       .map((option) => option.textContent!);
     expect(nombres).toHaveLength(249);
-    expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, "es-AR")));
+    expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, "en")));
     // Abrirlo y salir sin elegir muestra que es obligatorio.
     await user.tab();
-    expect(await screen.findByText(es.common.country.required)).toBeInTheDocument();
-    await elegirPais(user, pais, "Brasil");
-    expect(screen.queryByText(es.common.country.required)).not.toBeInTheDocument();
+    expect(await screen.findByText(en.common.country.required)).toBeInTheDocument();
+    await elegirPais(user, pais, "Brazil");
+    expect(screen.queryByText(en.common.country.required)).not.toBeInTheDocument();
   });
 
   it("el error de un campo aparece al escribir un valor inválido y se va al corregirlo", async () => {
@@ -153,9 +268,9 @@ describe("registro", () => {
   it("un campo que se escribió y se vació muestra que es obligatorio", async () => {
     const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
-    const name = screen.getByLabelText(en.common.fields.firstName);
-    await user.type(name, "J");
-    await user.clear(name);
+    const email = screen.getByLabelText(en.common.fields.email);
+    await user.type(email, "j");
+    await user.clear(email);
     expect(await screen.findByRole("alert")).toBeInTheDocument();
   });
 
@@ -190,132 +305,6 @@ describe("registro", () => {
     expect(screen.queryByText(en.errors.codes.passwords_do_not_match)).toBeNull();
   });
 
-  it("el botón se habilita solo con todo válido, disponible y con los términos aceptados", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />, { locale: "en" });
-    const submit = screen.getByRole("button", { name: en.nav.account.signUp });
-    await fillRegister(user);
-    await waitFor(() =>
-      expect(screen.getByText(en.auth.signUp.usernameAvailable)).toBeInTheDocument()
-    );
-    expect(submit).toBeDisabled();
-    expect(screen.getByText(en.auth.signUp.submitPending)).toBeInTheDocument();
-    await user.click(screen.getByRole("checkbox"));
-    expect(submit).toBeEnabled();
-    expect(screen.queryByText(en.auth.signUp.submitPending)).toBeNull();
-    await user.click(screen.getByRole("checkbox"));
-    expect(submit).toBeDisabled();
-  });
-
-  it("aceptando los términos envía acepta_terminos y muestra la bandeja de entrada", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />, { locale: "en" });
-    await fillRegister(user);
-    await user.click(screen.getByRole("checkbox"));
-    const submit = screen.getByRole("button", { name: en.nav.account.signUp });
-    await waitFor(() => expect(submit).toBeEnabled());
-    await user.click(submit);
-    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
-    expect(cuerpoDelAlta()).toMatchObject({
-      correo: "juan@example.com",
-      nombre_usuario: "juanperez",
-      pais: "AR",
-      acepta_terminos: true,
-    });
-    expect(
-      await screen.findByRole("heading", { name: en.auth.confirmation.inboxTitle })
-    ).toBeInTheDocument();
-    expect(sessionStorage.getItem("filmai_pending_email")).toBe("juan@example.com");
-    expect(screen.getByText(/Request another in 1:00/)).toBeInTheDocument();
-  });
-
-  it("ofrece el selector de avatares con el 1 preseleccionado y lo envía sin tocarlo", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />, { locale: "en" });
-    const grupo = await screen.findByRole("radiogroup", { name: en.common.avatar.optionsLabel });
-    expect(within(grupo).getAllByRole("radio")).toHaveLength(3);
-    expect(screen.getByRole("radio", { name: "Avatar 1" })).toHaveAttribute("aria-checked", "true");
-    await fillRegister(user);
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
-    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
-    expect(cuerpoDelAlta()).toMatchObject({ avatar_id: 1 });
-  });
-
-  it("el avatar elegido con el mouse viaja en el alta", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />, { locale: "en" });
-    await user.click(await screen.findByRole("radio", { name: "Avatar 3" }));
-    expect(screen.getByRole("radio", { name: "Avatar 3" })).toHaveAttribute("aria-checked", "true");
-    await fillRegister(user);
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
-    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
-    expect(cuerpoDelAlta()).toMatchObject({ avatar_id: 3 });
-  });
-
-  it("el selector se maneja con el teclado como en el perfil (flechas y un solo Tab)", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />, { locale: "es" });
-    const primero = await screen.findByRole("radio", { name: "Avatar 1" });
-    expect(primero).toHaveAttribute("tabindex", "0");
-    expect(screen.getByRole("radio", { name: "Avatar 2" })).toHaveAttribute("tabindex", "-1");
-    primero.focus();
-    await user.keyboard("{ArrowRight}");
-    expect(screen.getByRole("radio", { name: "Avatar 2" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByRole("radio", { name: "Avatar 2" })).toHaveFocus();
-    // El grupo tiene nombre visible y explica que se puede cambiar después.
-    expect(screen.getByRole("group", { name: es.auth.signUp.avatarLabel })).toBeInTheDocument();
-    expect(screen.getByText(es.auth.signUp.avatarHelp)).toBeInTheDocument();
-  });
-
-  it("si el catálogo no carga, el alta sigue funcionando sin avatar", async () => {
-    const user = userEvent.setup();
-    vi.mocked(apiFetch).mockImplementation(async (path) => {
-      if (path === "/api/avatars/") throw new ApiError(500, { code: "unknown" });
-      return {};
-    });
-    render(<RegisterPage />, { locale: "en" });
-    await fillRegister(user);
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(screen.getByRole("button", { name: en.nav.account.signUp }));
-    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
-    // El cambio de idioma también es un radiogroup: se busca el de avatares por nombre.
-    expect(
-      screen.queryByRole("radiogroup", { name: en.common.avatar.optionsLabel })
-    ).not.toBeInTheDocument();
-    expect(cuerpoDelAlta()).not.toHaveProperty("avatar_id");
-  });
-
-  it("muestra el error de términos que devuelve el backend", async () => {
-    const user = userEvent.setup();
-    simularApi(async () => {
-      throw new ApiError(400, {
-        code: "validation_error",
-        errors: [{ field: "acepta_terminos", code: "terms_not_accepted", params: {} }],
-      });
-    });
-    document.documentElement.lang = "es";
-    render(<RegisterPage />, { locale: "es" });
-    await user.type(screen.getByLabelText(es.common.fields.firstName), "Juan");
-    await user.type(screen.getByLabelText(es.common.fields.lastName), "Pérez");
-    await user.type(screen.getByLabelText(es.common.fields.username), "juanperez");
-    await elegirPais(user, screen.getByLabelText(es.common.fields.country), "Argentina");
-    await user.type(screen.getByLabelText(es.common.fields.email), "juan@example.com");
-    await user.type(screen.getByLabelText(es.common.fields.birthDate), "10/04/1992");
-    await user.selectOptions(screen.getByLabelText(es.auth.signUp.genderLabel), "masculino");
-    await user.type(
-      screen.getByLabelText(es.auth.password.label, { selector: "input" }),
-      "Popcorn24!"
-    );
-    await user.type(screen.getByLabelText(es.common.fields.passwordConfirm), "Popcorn24!");
-    await user.click(screen.getByRole("checkbox"));
-    const submit = screen.getByRole("button", { name: es.nav.account.signUp });
-    await waitFor(() => expect(submit).toBeEnabled());
-    await user.click(submit);
-    expect(await screen.findByText(es.errors.codes.terms_not_accepted)).toBeInTheDocument();
-  });
-
   it("marca como cumplida cada regla de contraseña a medida que se cumple", async () => {
     const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
@@ -333,40 +322,37 @@ describe("registro", () => {
     expect(rule(en.auth.password.symbolRule)).toHaveTextContent(en.auth.password.ruleMissingLabel);
   });
 
-  it("informa la disponibilidad del nombre de usuario", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />, { locale: "en" });
-    await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
-    expect(await screen.findByText(en.auth.signUp.usernameAvailable)).toBeInTheDocument();
-  });
-
   it("con el usuario disponible el ✓ va dentro del campo y la ayuda no se mueve (#175)", async () => {
     const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
+    await irAlPaso2(user);
     const input = screen.getByLabelText(en.common.fields.username);
     await user.type(input, "juanperez");
     // «Available» lo anuncia la región viva, sin un renglón visible propio.
-    expect(await screen.findByText(en.auth.signUp.usernameAvailable)).toHaveClass("sr-only");
+    expect(await screen.findByText(signUp.usernameAvailable)).toHaveClass("sr-only");
     expect(input.parentElement!.querySelector("svg")).not.toBeNull();
     expect(input).not.toHaveAttribute("aria-invalid");
-    const ayuda = screen.getByText(en.auth.signUp.usernameHelp);
+    const ayuda = screen.getByText(signUp.usernameHelp);
     expect(ayuda.parentElement).not.toHaveClass("invisible");
   });
 
-  it("un usuario en uso es un error del campo: lo marca y ocupa el renglón de la ayuda (#175)", async () => {
+  it("un usuario en uso es un error del campo y no deja avanzar (#175)", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({ ok: true, json: async () => ({ disponible: false }) }))
     );
     const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
+    await irAlPaso2(user);
     const input = screen.getByLabelText(en.common.fields.username);
     await user.type(input, "juanperez");
     expect(await screen.findByText(en.errors.codes.username_already_used)).toBeInTheDocument();
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(input.parentElement!.querySelector("svg")).toBeNull();
     // La ayuda sigue en la misma celda pero invisible: el campo no cambia de alto.
-    expect(screen.getByText(en.auth.signUp.usernameHelp).parentElement).toHaveClass("invisible");
+    expect(screen.getByText(signUp.usernameHelp).parentElement).toHaveClass("invisible");
+    await user.click(continuar());
+    expect(barra()).toHaveAttribute("aria-valuenow", "2");
   });
 
   it("los campos sin ayuda reservan el renglón del error desde el inicio (#175)", () => {
@@ -378,11 +364,203 @@ describe("registro", () => {
     }
   });
 
-  it("el enlace a los términos abre en pestaña nueva", () => {
+  it("sin aceptar los términos no crea la cuenta y lo avisa en la casilla", async () => {
+    const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
+    await irAlPaso3(user);
     const link = screen.getByRole("link", { name: /Terms and Conditions/ });
     expect(link).toHaveAttribute("href", "/terms");
     expect(link).toHaveAttribute("target", "_blank");
+
+    await user.click(crearCuenta());
+    expect(await screen.findByText(en.errors.codes.terms_not_accepted)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox")).toHaveAttribute("aria-invalid", "true");
+    expect(
+      vi.mocked(apiFetch).mock.calls.some(([ruta]) => ruta === "/api/auth/registration/")
+    ).toBe(false);
+    // Aceptarlos borra el aviso.
+    await user.click(screen.getByRole("checkbox"));
+    expect(screen.queryByText(en.errors.codes.terms_not_accepted)).toBeNull();
+  });
+
+  it("con los tres pasos completos envía el alta y muestra la bandeja de entrada", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await irAlPaso3(user);
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(crearCuenta());
+    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
+    expect(cuerpoDelAlta()).toMatchObject({
+      correo: "juan@example.com",
+      password1: "Popcorn24!",
+      password2: "Popcorn24!",
+      nombre: "Juan",
+      apellido: "Pérez",
+      nombre_usuario: "juanperez",
+      fecha_nacimiento: "1992-04-10",
+      genero: "masculino",
+      pais: "AR",
+      acepta_terminos: true,
+      // Sin abrir el diálogo viaja el primero del catálogo.
+      avatar_id: 1,
+    });
+    expect(
+      await screen.findByRole("heading", { name: en.auth.confirmation.inboxTitle })
+    ).toBeInTheDocument();
+    expect(sessionStorage.getItem("filmai_pending_email")).toBe("juan@example.com");
+    expect(screen.getByText(/Request another in 1:00/)).toBeInTheDocument();
+  });
+
+  it("si el catálogo no carga, el paso 3 no ofrece avatar y el alta sale sin ese campo", async () => {
+    const user = userEvent.setup();
+    vi.mocked(apiFetch).mockImplementation(async (path) => {
+      if (path === "/api/avatars/") throw new ApiError(500, { code: "unknown" });
+      return {};
+    });
+    render(<RegisterPage />, { locale: "en" });
+    await irAlPaso3(user);
+    expect(screen.queryByRole("button", { name: signUp.avatarChoose })).toBeNull();
+    // Sin avatar, el primer campo del paso es la casilla de los términos.
+    expect(screen.getByRole("checkbox")).toHaveFocus();
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(crearCuenta());
+    await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
+    expect(cuerpoDelAlta()).not.toHaveProperty("avatar_id");
+  });
+
+  describe("diálogo de avatar", () => {
+    async function abrir(user: ReturnType<typeof userEvent.setup>) {
+      await irAlPaso3(user);
+      await user.click(screen.getByRole("button", { name: signUp.avatarChoose }));
+      return screen.getByRole("dialog", { name: signUp.avatarLabel });
+    }
+    const radio = (n: number) => screen.getByRole("radio", { name: `Avatar ${n}` });
+
+    it("elegir solo marca; «Use this avatar» aplica, cierra y devuelve el foco a «Choose»", async () => {
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      const dialogo = await abrir(user);
+      expect(within(within(dialogo).getByRole("radiogroup")).getAllByRole("radio")).toHaveLength(3);
+      expect(radio(1)).toHaveAttribute("aria-checked", "true");
+      expect(radio(1)).toHaveFocus();
+
+      await user.click(radio(3));
+      expect(radio(3)).toHaveAttribute("aria-checked", "true");
+      // Elegir no cierra: el diálogo sigue abierto hasta confirmar.
+      expect(dialogo).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: signUp.avatarUse }));
+
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(screen.getByRole("button", { name: signUp.avatarChoose })).toHaveFocus();
+      await user.click(screen.getByRole("checkbox"));
+      await user.click(crearCuenta());
+      await waitFor(() => expect(cuerpoDelAlta).not.toThrow());
+      expect(cuerpoDelAlta()).toMatchObject({ avatar_id: 3 });
+    });
+
+    it.each([
+      [
+        "«Cancel»",
+        (user: ReturnType<typeof userEvent.setup>) =>
+          user.click(screen.getByRole("button", { name: en.common.actions.cancel })),
+      ],
+      [
+        "la ✕",
+        (user: ReturnType<typeof userEvent.setup>) =>
+          user.click(screen.getByRole("button", { name: en.common.actions.close })),
+      ],
+      [
+        "Esc",
+        async () => {
+          fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+        },
+      ],
+      [
+        "el fondo",
+        async () => {
+          // Un clic fuera de la caja del diálogo cae sobre el `<dialog>` mismo.
+          fireEvent.click(screen.getByRole("dialog"), { clientX: 900, clientY: 900 });
+        },
+      ],
+    ])("%s cierra sin cambiar el avatar", async (_nombre, cerrar) => {
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await abrir(user);
+      await user.click(radio(2));
+      await cerrar(user);
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      expect(screen.getByRole("button", { name: signUp.avatarChoose })).toHaveFocus();
+      // Al reabrir, sigue marcado el avatar que estaba aplicado.
+      await user.click(screen.getByRole("button", { name: signUp.avatarChoose }));
+      expect(radio(1)).toHaveAttribute("aria-checked", "true");
+    });
+  });
+
+  describe("rechazo del servidor", () => {
+    async function enviar(user: ReturnType<typeof userEvent.setup>) {
+      await irAlPaso3(user);
+      await user.click(screen.getByRole("checkbox"));
+      await user.click(crearCuenta());
+    }
+
+    it("un error en un campo del paso 2 vuelve a ese paso y lo muestra en el campo", async () => {
+      simularApi(rechazoPorCampos(["nombre_usuario", "username_already_used"]));
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await enviar(user);
+
+      await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "2"));
+      const usuario = screen.getByLabelText(en.common.fields.username);
+      expect(usuario).toHaveAttribute("aria-invalid", "true");
+      expect(usuario).toHaveFocus();
+      expect(screen.getByText(en.errors.codes.username_already_used)).toBeInTheDocument();
+      // Lo escrito en los otros pasos sigue ahí.
+      expect(usuario).toHaveValue("juanperez");
+    });
+
+    it("con errores en varios pasos vuelve al del primero en el orden de los pasos", async () => {
+      simularApi(
+        rechazoPorCampos(
+          ["nombre_usuario", "username_already_used"],
+          ["correo", "email_already_used"]
+        )
+      );
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await enviar(user);
+
+      await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "1"));
+      const correo = screen.getByLabelText(en.common.fields.email);
+      expect(correo).toHaveAttribute("aria-invalid", "true");
+      expect(correo).toHaveFocus();
+      // El error del paso 2 espera en su campo.
+      await user.click(continuar());
+      expect(await screen.findByLabelText(en.common.fields.username)).toHaveAttribute(
+        "aria-invalid",
+        "true"
+      );
+    });
+
+    it("el error de términos se queda en el paso 3", async () => {
+      simularApi(rechazoPorCampos(["acepta_terminos", "terms_not_accepted"]));
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await enviar(user);
+      expect(await screen.findByText(en.errors.codes.terms_not_accepted)).toBeInTheDocument();
+      expect(barra()).toHaveAttribute("aria-valuenow", "3");
+    });
+
+    it("un error que no es de un campo se muestra sin cambiar de paso", async () => {
+      simularApi(async () => {
+        throw new ApiError(500, { code: "unknown" });
+      });
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await enviar(user);
+      expect(await screen.findByRole("alert")).toBeInTheDocument();
+      expect(barra()).toHaveAttribute("aria-valuenow", "3");
+    });
   });
 });
 

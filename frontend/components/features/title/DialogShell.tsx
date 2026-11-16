@@ -18,6 +18,7 @@ export function DialogShell({
   busy = false,
   initialFocus,
   ancho = "md:w-[min(35rem,calc(100%-2rem))]",
+  cierraConFondo = false,
   children,
 }: {
   role?: "dialog" | "alertdialog";
@@ -27,6 +28,8 @@ export function DialogShell({
   busy?: boolean;
   initialFocus?: (dialog: HTMLDialogElement) => HTMLElement | null;
   ancho?: string;
+  /** Un clic en el fondo oscuro (fuera de la caja) cierra como Escape. */
+  cierraConFondo?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -57,6 +60,22 @@ export function DialogShell({
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
       onKeyDown={(event) => mantenerFocoEnDialogo(event.nativeEvent, ref.current)}
+      onClick={
+        cierraConFondo
+          ? (event) => {
+              // El fondo (`::backdrop`) es parte del `<dialog>`: el clic llega con
+              // el diálogo como destino y coordenadas fuera de su caja.
+              if (busy || event.target !== event.currentTarget) return;
+              const caja = event.currentTarget.getBoundingClientRect();
+              const adentro =
+                event.clientX >= caja.left &&
+                event.clientX <= caja.right &&
+                event.clientY >= caja.top &&
+                event.clientY <= caja.bottom;
+              if (!adentro) onClose();
+            }
+          : undefined
+      }
       onCancel={(event) => {
         event.preventDefault();
         if (!busy) onClose();
