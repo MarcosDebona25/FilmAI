@@ -18,7 +18,7 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 | 8   | Refactor y lista «Viendo»                                   | Baja                            | Media                        | Q-07, sección 15 del canvas                                          |
 | 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)      | Baja                         | Perfil, Settings                                                     |
 | 10  | ✅ Buscar en la navbar, filtro por persona y sin relevancia | Media                           | —                            | `openspec/specs/navbar-search/`, sección 13 del canvas               |
-| 11  | Registro en 3 pasos y «Dónde ver» en un diálogo             | Media                           | Alta (solo frontend)         | Secciones 16 y 17 del canvas                                         |
+| 11  | Registro en 3 pasos                                         | Media                           | Alta (solo frontend)         | Sección 16 del canvas; «Dónde ver» (17) cerrado el 15/11/2026        |
 
 ### 1. Términos de uso de TMDB (#180)
 
@@ -135,7 +135,7 @@ Seis PRs chicos más el diseño en el canvas, que hace Gonza antes del primer PR
 Decididos en el canvas el 15/11/2026 (secciones 16 y 17, detalle en `docs/decisiones.md`). Son solo de frontend:
 
 - **Registro en 3 pasos**: hoy `/register` es una sola página con la grilla de avatares adentro. Pasa a 3 pasos con una barra de progreso continua de 4 px debajo del logo, título único, alto fijo, «Continue» a todo el ancho y «‹ Back» como enlace debajo. El avatar se elige en un modal en el paso 3. La validación de cada paso es la de hoy.
-- **«Dónde ver»**: hoy `WatchProviders.tsx` despliega los proveedores debajo de la línea. Pasa a una línea de una fila que termina en un chevron dentro de un círculo y abre un diálogo (hoja inferior en el celular).
+- ✅ **«Dónde ver»** (cerrado el 15/11/2026): la línea de una fila termina en un chevron dentro de un círculo y abre un diálogo (hoja inferior en el celular).
 
 ### Población masiva de la base
 
@@ -177,7 +177,7 @@ Actualizado el **11/11/2026** y el **15/11/2026** (secciones 13 a 17, decididas 
 | 16 · Sign-up by steps    | Registro en 3 pasos y modal de avatar                                              | 🔁 Rehacer   | `/register`                                                                                             | Hoy es una sola página con la grilla de avatares (pendiente 11).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 17 · Stream or rent      | Línea de proveedores y diálogo                                                     | ✅ Completa  | `components/features/title/WatchProviders.tsx`                                                          | Nada. La línea abre un diálogo (hoja inferior en el celular) desde el 15/11/2026.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
-Resumen: las 11 secciones del canvas que van de la 2 a la 12 están completas; el chatbot se sumó el 06/11/2026. Las secciones 13 a 17 se decidieron el 15/11/2026 y son el trabajo de frontend que sigue. Toda la interfaz es multiidioma: `legacyFiles` quedó vacía (15/10/2026).
+Resumen: las 11 secciones del canvas que van de la 2 a la 12 están completas; el chatbot se sumó el 06/11/2026. Las secciones 13 a 17 se decidieron el 15/11/2026: la 13 y la 17 están cerradas desde ese día, y la 14, la 15 y la 16 son el trabajo de frontend que sigue. Toda la interfaz es multiidioma: `legacyFiles` quedó vacía (15/10/2026).
 
 ## Módulo 0 — Fundación · Actores: Marcos y Gonza
 
