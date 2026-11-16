@@ -69,9 +69,11 @@ describe("WatchProviders", () => {
       within(panel)
         .getAllByRole("heading", { level: 3 })
         .map((h) => h.textContent)
-    ).toEqual(["Stream", "Free", "Rent", "Buy"]);
+    ).toEqual(["Stream", "Free (with or without ads)", "Rent", "Buy"]);
     // Sin logo: la inicial, con el nombre como etiqueta accesible y tooltip.
-    const tubi = within(within(panel).getByRole("region", { name: "Free" })).getByRole("img", {
+    const tubi = within(
+      within(panel).getByRole("region", { name: "Free (with or without ads)" })
+    ).getByRole("img", {
       name: "Tubi TV",
     });
     expect(tubi).toHaveAttribute("title", "Tubi TV");

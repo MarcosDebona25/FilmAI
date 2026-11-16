@@ -110,8 +110,11 @@ test.describe("lupa de la navbar en escritorio", () => {
     await preparar(page);
     await page.goto("/home");
 
-    await page.keyboard.press("/");
-    await expect(page.getByRole("combobox")).toBeFocused();
+    // Una «/» pulsada antes de hidratar se pierde (todavía no hay listener): se reintenta hasta que abra la lupa.
+    await expect(async () => {
+      await page.keyboard.press("/");
+      await expect(page.getByRole("combobox")).toBeFocused({ timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
     await page.getByRole("combobox").fill("dune");
     await page.keyboard.press("Enter");
 
