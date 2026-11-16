@@ -532,7 +532,6 @@ declare const messages: {
       "avatarPrevious": "Previous avatars",
       "avatarMore": "More avatars",
       "avatarPage": "{page} of {pages}",
-      "submitPending": "Complete all fields and accept the Terms and Conditions to continue.",
       "avatarLabel": "Choose your avatar"
     },
     "confirmation": {
@@ -549,12 +548,11 @@ declare const messages: {
       "loading": "Confirming your account…"
     },
     "completeSignUp": {
-      "badge": "Signing up with Google",
-      "title": "Finish signing up",
-      "description": "We take your name and email from your Google account. Fill in the rest and confirm with Google to create your account.",
-      "fixHighlighted": "Fix the highlighted field and press the Google button again.",
-      "genderPlaceholder": "Choose an option",
-      "cancel": "Cancel and go back to log in"
+      "googleLine": "Your name and email come from your Google account.",
+      "termsPending": "Accept the Terms and Conditions to continue.",
+      "backToSignUp": "Back to sign-up",
+      "backToLogIn": "Back to log in",
+      "fixHighlighted": "Fix the highlighted field and press the Google button again."
     },
     "session": {
       "expired": "Your session expired. Log in again."

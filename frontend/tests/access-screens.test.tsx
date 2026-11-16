@@ -148,6 +148,16 @@ describe("registro en pasos", () => {
     expect(screen.getByText(signUp.back).closest("button")).toHaveStyle({ visibility: "hidden" });
   });
 
+  it("«Continue with Google» marca el alta pendiente con origen en Sign up y va al paso 2", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+
+    await user.click(screen.getByRole("button", { name: en.auth.google.continue }));
+
+    expect(sessionStorage.getItem("google_signup_pending")).toBe("register");
+    expect(router.push).toHaveBeenCalledWith("/complete-signup");
+  });
+
   it("los tres pasos están siempre montados; los no activos quedan inertes y ocultos", async () => {
     const user = userEvent.setup();
     const { container } = render(<RegisterPage />, { locale: "en" });

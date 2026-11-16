@@ -20,12 +20,26 @@ export function esFaltaDeCamposGoogle(details: unknown): boolean {
   );
 }
 
-export function marcarGooglePendiente(): void {
-  sessionStorage.setItem(MARKER_GOOGLE_PENDIENTE, "1");
+/** Pantalla desde la que se tocó «Continue with Google»: a ella vuelve «Back». */
+export type OrigenGoogle = "login" | "register";
+
+export function marcarGooglePendiente(origen: OrigenGoogle): void {
+  sessionStorage.setItem(MARKER_GOOGLE_PENDIENTE, origen);
+}
+
+/**
+ * Origen del alta pendiente, o `null` si no hay ninguna. Cualquier otro valor
+ * (el "1" de una pestaña abierta antes de guardar el origen) cuenta como Log in.
+ */
+export function origenGooglePendiente(): OrigenGoogle | null {
+  if (typeof window === "undefined") return null;
+  const valor = sessionStorage.getItem(MARKER_GOOGLE_PENDIENTE);
+  if (valor === null) return null;
+  return valor === "register" ? "register" : "login";
 }
 
 export function tieneGooglePendiente(): boolean {
-  return typeof window !== "undefined" && sessionStorage.getItem(MARKER_GOOGLE_PENDIENTE) === "1";
+  return origenGooglePendiente() !== null;
 }
 
 export function limpiarGooglePendiente(): void {
@@ -49,7 +63,7 @@ export async function handleGoogleLogin(idToken: string): Promise<GoogleLoginRes
     if (err instanceof ApiError && err.status === 400 && esFaltaDeCamposGoogle(err.errors)) {
       // Cuenta nueva que arrancó por el botón de "Iniciar sesión": se la lleva
       // al completado de registro (con un id_token fresco).
-      marcarGooglePendiente();
+      marcarGooglePendiente("login");
       return { ok: false, faltaCampos: true };
     }
     return {
@@ -78,6 +92,8 @@ export async function completarRegistroGoogle(
     fecha_nacimiento: string;
     genero: string;
     acepta_terminos: boolean;
+    /** Opcional: sin él, el backend asigna el avatar por defecto. */
+    avatar_id?: number;
   }
 ): Promise<CompletarGoogleResult> {
   try {

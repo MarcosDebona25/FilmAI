@@ -1,13 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
-import { Check, ChevronLeft, ChevronRight, Circle } from "lucide-react";
+import { Check, ChevronRight, Circle } from "lucide-react";
 
-import type { AvatarOption } from "@/components/AccountProvider";
 import { AccessShell } from "@/components/access/AccessShell";
 import { CountrySelect } from "@/components/CountrySelect";
 import { ConfirmationSent } from "@/components/access/ConfirmationSent";
@@ -22,6 +20,15 @@ import {
   TextField,
   fieldClass,
 } from "@/components/access/fields";
+import {
+  SignupAvatarField,
+  SignupBackButton,
+  SignupProgress,
+  SignupTerms,
+  TOTAL_PASOS,
+  celdaDePaso,
+  useSignupAvatars,
+} from "@/components/access/signup-steps";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/access/styles";
 import enums from "@/i18n/enums.json";
 import { ApiError, apiFetch, extraerErroresPorCampo } from "@/lib/api";
@@ -32,7 +39,6 @@ import { passwordRules } from "@/lib/password-rules";
 import { routes } from "@/lib/routes";
 import { useUsernameAvailability } from "@/lib/use-username-availability";
 import { useValidation } from "@/lib/use-validation";
-import { cn } from "@/lib/utils";
 
 type Campo =
   | "nombre"
@@ -52,7 +58,6 @@ type Errores = Partial<Record<Campo | "avatar_id", string>>;
 type Paso = 1 | 2 | 3;
 
 const ERROR_DELAY_MS = 600;
-const TOTAL_PASOS = 3;
 
 /** Campos de cada paso, en el orden en que se ven (canvas, sección 16). */
 const CAMPOS_POR_PASO: Record<Paso, (Campo | "avatar_id")[]> = {
@@ -110,11 +115,7 @@ export default function RegisterPage() {
     password2: "",
   });
   const [acepta, setAcepta] = useState(false);
-  // Catálogo público de avatares y el elegido. Arranca en el primero del catálogo
-  // (el mismo que el backend asigna si el alta no trae `avatar_id`). Si el
-  // catálogo no carga, el selector no aparece y el alta sigue sin ese campo.
-  const [avatares, setAvatares] = useState<AvatarOption[]>([]);
-  const [avatarId, setAvatarId] = useState<number | null>(null);
+  const { avatares, avatarId, setAvatarId } = useSignupAvatars();
   const [eligiendoAvatar, setEligiendoAvatar] = useState(false);
   const [paso, setPaso] = useState<Paso>(1);
   // Pasos en los que ya se apretó el botón principal con algo inválido: desde
@@ -163,20 +164,6 @@ export default function RegisterPage() {
     );
     return cual === 2 ? camposValidos && usernameEstado === "disponible" : camposValidos;
   }
-
-  useEffect(() => {
-    let activo = true;
-    apiFetch<AvatarOption[]>("/api/avatars/")
-      .then((lista) => {
-        if (!activo || lista.length === 0) return;
-        setAvatares(lista);
-        setAvatarId((actual) => actual ?? lista[0].id);
-      })
-      .catch(() => {});
-    return () => {
-      activo = false;
-    };
-  }, []);
 
   useEffect(() => {
     const id = setTimeout(() => setDiferido(form), ERROR_DELAY_MS);
@@ -282,7 +269,7 @@ export default function RegisterPage() {
   }
 
   function onGoogle() {
-    marcarGooglePendiente();
+    marcarGooglePendiente("register");
     router.push(routes.completeSignup);
   }
 
@@ -318,17 +305,7 @@ export default function RegisterPage() {
       ? t("signUp.usernameAvailable")
       : null;
 
-  /**
-   * Celda de un paso. El que no está activo conserva su tamaño (`invisible` es
-   * `visibility: hidden`) pero queda fuera del teclado y de los lectores de
-   * pantalla: `inert` saca todo su contenido del foco y del árbol de accesibilidad.
-   */
-  const celda = (cual: Paso) => ({
-    "data-paso": cual,
-    inert: paso !== cual,
-    "aria-hidden": paso !== cual || undefined,
-    className: cn("[grid-area:1/1]", paso !== cual && "invisible"),
-  });
+  const celda = (cual: Paso) => celdaDePaso(cual, paso);
 
   const avatarElegido = avatares.find((avatar) => avatar.id === avatarId);
   const errorTerminos = mostrar("acepta_terminos");
@@ -342,21 +319,7 @@ export default function RegisterPage() {
         className="flex w-full max-w-[30rem] flex-col gap-[1.375rem]"
       >
         <AccessLogo className="self-start" />
-        <div
-          role="progressbar"
-          aria-label={t("signUp.progressLabel")}
-          aria-valuemin={0}
-          aria-valuemax={TOTAL_PASOS}
-          aria-valuenow={paso}
-          aria-valuetext={t("signUp.stepOf", { step: String(paso), total: String(TOTAL_PASOS) })}
-          className="relative mt-0.5 h-1 overflow-hidden rounded-full bg-raised-2"
-        >
-          <span
-            aria-hidden="true"
-            style={{ width: paso === TOTAL_PASOS ? "100%" : `${((paso * 100) / 3).toFixed(2)}%` }}
-            className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-[400ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none"
-          />
-        </div>
+        <SignupProgress paso={paso} />
         <div>
           <h1 className="mb-3 font-display text-[2.75rem] leading-[0.95] sm:text-[3.75rem]">
             {t("signUp.title")}
@@ -525,80 +488,23 @@ export default function RegisterPage() {
             <div className="flex flex-col gap-[1.375rem]">
               {avatarId !== null && avatarElegido && (
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-4 rounded-[0.625rem] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--line)]">
-                    <span className="relative size-14 flex-none overflow-hidden rounded-full bg-raised-2">
-                      <Image
-                        src={avatarElegido.src}
-                        alt=""
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">
-                        {t.rich("signUp.avatarOptional", {
-                          hint: (chunks) => <span className="font-medium text-fg-3">{chunks}</span>,
-                        })}
-                      </p>
-                      <p className="text-[0.8125rem] text-fg-3">{t("signUp.avatarLaterHelp")}</p>
-                    </div>
-                    <button
-                      type="button"
-                      data-elegir-avatar
-                      aria-haspopup="dialog"
-                      onClick={() => setEligiendoAvatar(true)}
-                      className="h-11 flex-none cursor-pointer rounded-[0.625rem] bg-secondary px-[1.125rem] font-semibold text-foreground hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {t("signUp.avatarChoose")}
-                    </button>
-                  </div>
+                  <SignupAvatarField
+                    avatar={avatarElegido}
+                    onChoose={() => setEligiendoAvatar(true)}
+                  />
                   {erroresServidor.avatar_id && (
                     <FieldError>{erroresServidor.avatar_id}</FieldError>
                   )}
                 </div>
               )}
-              <div className="flex flex-col gap-2">
-                {/* Todo el recuadro es la etiqueta: sin zonas muertas alrededor de la casilla. */}
-                <label
-                  htmlFor="terminos"
-                  className={`flex cursor-pointer items-start gap-3 rounded-[0.625rem] px-3.5 py-3 ${errorTerminos ? "shadow-[inset_0_0_0_1px_var(--destructive)]" : "shadow-[inset_0_0_0_1px_var(--field-border)]"}`}
-                >
-                  <input
-                    id="terminos"
-                    name="acepta_terminos"
-                    required
-                    type="checkbox"
-                    checked={acepta}
-                    onChange={(e) => {
-                      setAcepta(e.target.checked);
-                      setErroresServidor((prev) => ({ ...prev, acepta_terminos: undefined }));
-                    }}
-                    aria-invalid={errorTerminos ? true : undefined}
-                    aria-describedby="terminos-error"
-                    className="mt-0.5 size-5 flex-none cursor-pointer accent-primary"
-                  />
-                  <span className="flex-1 text-[0.9375rem] leading-[1.45] text-muted-foreground">
-                    {t.rich("signUp.termsAcceptance", {
-                      terms: (chunks) => (
-                        <Link
-                          href={routes.terms}
-                          target="_blank"
-                          rel="noopener"
-                          className="font-semibold text-foreground underline underline-offset-[3px]"
-                        >
-                          {chunks}
-                          <span className="sr-only"> {t("signUp.termsNewTabHint")}</span>
-                        </Link>
-                      ),
-                    })}
-                  </span>
-                </label>
-                {/* Renglón reservado: el error no empuja lo que sigue al aparecer. */}
-                <div id="terminos-error" className="min-h-[1lh] text-[0.8125rem]">
-                  {errorTerminos && <FieldError>{errorTerminos}</FieldError>}
-                </div>
-              </div>
+              <SignupTerms
+                checked={acepta}
+                onChange={(marcado) => {
+                  setAcepta(marcado);
+                  setErroresServidor((prev) => ({ ...prev, acepta_terminos: undefined }));
+                }}
+                error={errorTerminos}
+              />
               {error && <FieldError>{error}</FieldError>}
             </div>
           </div>
@@ -621,16 +527,11 @@ export default function RegisterPage() {
           </button>
           <div className="flex min-h-11 items-center justify-between gap-3">
             {/* En el paso 1 no se ve ni se puede usar, pero guarda su lugar. */}
-            <button
-              type="button"
+            <SignupBackButton
+              label={t("signUp.backToStep", { step: String(Math.max(1, paso - 1)) })}
               onClick={() => irA(Math.max(1, paso - 1) as Paso)}
-              aria-label={t("signUp.backToStep", { step: String(Math.max(1, paso - 1)) })}
-              style={{ visibility: paso > 1 ? "visible" : "hidden" }}
-              className="-ml-1 inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-lg pr-2.5 pl-1 text-[0.9375rem] font-semibold text-fg-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              <ChevronLeft aria-hidden="true" className="size-[1.125rem]" />
-              {t("signUp.back")}
-            </button>
+              hidden={paso === 1}
+            />
             <p className="text-[0.9375rem] text-muted-foreground">
               {t("landing.loginPrompt")}{" "}
               <Link href={routes.login} className="font-semibold text-foreground">
