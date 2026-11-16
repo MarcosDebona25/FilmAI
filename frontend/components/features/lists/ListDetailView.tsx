@@ -212,6 +212,14 @@ export function ListDetailView({ id }: { id: number }) {
     );
     setRevision((anterior) => anterior + 1);
     // La tarjeta ya no existe: el foco va al título de la página.
+    enfocarTitulo();
+  }
+
+  /**
+   * Lo que tenía el foco dejó de dibujarse (una tarjeta quitada, la banda de
+   * sugerencias agotada): va al título de la lista, después de que React pinte.
+   */
+  function enfocarTitulo() {
     requestAnimationFrame(() => titulo.current?.focus());
   }
 
@@ -695,6 +703,7 @@ export function ListDetailView({ id }: { id: number }) {
               revision={revision}
               visible={datos !== null && datos.next === null && estado !== "error"}
               onAgregada={sumarALaGrilla}
+              onAgotada={enfocarTitulo}
             />
           )}
         </>

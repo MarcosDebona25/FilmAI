@@ -533,6 +533,23 @@ describe("Sugerencias en el detalle de una lista", () => {
     expect(toast.success).toHaveBeenCalledWith("You added Arrival to “Maratón”.");
   });
 
+  it("al agregar la última sugerencia la banda se va y el foco pasa al título de la lista", async () => {
+    const usuario = userEvent.setup();
+    estado.sugerencias = sugerencias(["Arrival"]);
+    render(<ListDetailView id={7} />, { locale: "en" });
+    const region = await banda();
+
+    await usuario.click(within(region).getByRole("button", { name: "Add Arrival to Maratón" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("region", { name: "Suggested for this list" })).toBeNull()
+    );
+    // El botón enfocado desapareció con la banda: sin esto el foco caería en <body>.
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { level: 1, name: "Maratón" })).toHaveFocus()
+    );
+  });
+
   it("con un filtro activo, lo agregado cuenta en la lista pero no entra en la grilla filtrada", async () => {
     const usuario = userEvent.setup();
     window.history.replaceState(null, "", "/lists/7?type=movie");

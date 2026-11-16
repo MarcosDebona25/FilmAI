@@ -42,6 +42,7 @@ export function ListSuggestions({
   revision,
   visible,
   onAgregada,
+  onAgotada,
 }: {
   listaId: number;
   /** Nombre visible de la lista (el de Favorites y Watched ya viene traducido). */
@@ -51,6 +52,11 @@ export function ListSuggestions({
   revision: number;
   visible: boolean;
   onAgregada: (item: ItemLista) => void;
+  /**
+   * Se agregó la última sugerencia y no hay más páginas: la banda deja de
+   * dibujarse. El foco estaba en su «+ Add», así que lo reubica la pantalla.
+   */
+  onAgotada: () => void;
 }) {
   const t = useTranslations();
   const formats = useFormats();
@@ -159,11 +165,11 @@ export function ListSuggestions({
       );
       onAgregada(item);
       const vecina = quedan[Math.min(indice, quedan.length - 1)];
-      enfocar(
-        vecina
-          ? `[data-sugerencia="${claveDeSugerencia(vecina)}"] [data-agregar]`
-          : "[data-ver-mas]"
-      );
+      if (vecina) enfocar(`[data-sugerencia="${claveDeSugerencia(vecina)}"] [data-agregar]`);
+      else if (datos.pagina < datos.paginas) enfocar("[data-ver-mas]");
+      // Sin sugerencias ni «Show more» la banda desaparece entera: adentro no
+      // queda dónde dejar el foco y, sin avisar, caería en <body>.
+      else onAgotada();
     } catch (motivo) {
       toast.error(mensajeDeError(motivo));
     } finally {

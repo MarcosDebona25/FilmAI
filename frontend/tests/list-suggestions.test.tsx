@@ -83,6 +83,7 @@ const verMas = () => screen.queryAllByRole("button", { name: "Show more suggesti
 
 function banda(extra: Partial<Parameters<typeof ListSuggestions>[0]> = {}) {
   const onAgregada = vi.fn();
+  const onAgotada = vi.fn();
   const props = {
     listaId: 7,
     nombre: "Sci Fi",
@@ -90,11 +91,13 @@ function banda(extra: Partial<Parameters<typeof ListSuggestions>[0]> = {}) {
     revision: 0,
     visible: true,
     onAgregada,
+    onAgotada,
     ...extra,
   };
   const vista = render(<ListSuggestions {...props} />, { locale: "en" });
   return {
     onAgregada,
+    onAgotada,
     cambiar: (cambios: Partial<typeof props>) =>
       vista.rerender(<ListSuggestions {...props} {...cambios} />),
   };
@@ -275,7 +278,7 @@ describe("«Show more suggestions»", () => {
 describe("«+ Add»", () => {
   it("agrega el título a la lista, lo saca de la banda y avisa a la pantalla", async () => {
     const usuario = userEvent.setup();
-    const { onAgregada } = banda();
+    const { onAgregada, onAgotada } = banda();
     await screen.findByRole("region");
 
     await usuario.click(screen.getByRole("button", { name: "Add Sugerida 2 to Sci Fi" }));
@@ -291,17 +294,35 @@ describe("«+ Add»", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Add Sugerida 3 to Sci Fi" })).toHaveFocus()
     );
+    // Quedan sugerencias: la banda sigue y el foco no sale de ella.
+    expect(onAgotada).not.toHaveBeenCalled();
   });
 
-  it("al agregar la última sugerencia, la banda desaparece", async () => {
+  it("al agregar la última sugerencia, la banda desaparece y avisa para que el foco no se pierda", async () => {
     const usuario = userEvent.setup();
     estado.paginas[1] = pagina([1]);
-    banda();
+    const { onAgregada, onAgotada } = banda();
     await screen.findByRole("region");
 
     await usuario.click(screen.getByRole("button", { name: "Add Sugerida 1 to Sci Fi" }));
 
     await waitFor(() => expect(screen.queryByRole("region")).not.toBeInTheDocument());
+    // Sin banda no queda nada adentro que pueda recibir el foco: lo ubica la pantalla.
+    expect(onAgotada).toHaveBeenCalledTimes(1);
+    expect(onAgregada).toHaveBeenCalledTimes(1);
+  });
+
+  it("al agregar la última de la página, si hay más páginas el foco va a «Show more»", async () => {
+    const usuario = userEvent.setup();
+    estado.paginas[1] = pagina([1], { paginas: 2 });
+    const { onAgotada } = banda();
+    await screen.findByRole("region");
+
+    await usuario.click(screen.getByRole("button", { name: "Add Sugerida 1 to Sci Fi" }));
+
+    // La banda sigue (queda «Show more»): no hay que sacar el foco de ella.
+    await waitFor(() => expect(verMas()[0]).toHaveFocus());
+    expect(onAgotada).not.toHaveBeenCalled();
   });
 
   it("si la API rechaza el alta, muestra el error por código y la sugerencia queda", async () => {

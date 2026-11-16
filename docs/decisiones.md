@@ -972,5 +972,10 @@ Marcos resolvió dos contradicciones entre el texto y el dibujo de los artboards
 - **Póster de la banda en el celular: 64 × 96.** El bloque «Behaviour» de `Prop-Sugerencias-Lista-Movil` dice 64 × 96 y el dibujo mide 56 × 84. Vale el texto, que es lo que ya estaba implementado: mantiene la escala de los pósters (48 × 72 en la lupa, 74 × 111 en la banda de escritorio).
 - **Flechas de «More like {title}»: las mismas que las filas del Inicio.** El artboard `Prop-Similares-Ficha` dibuja dos botones redondos de 44 px en el encabezado, con ‹ deshabilitada en la primera página. Se quedan las bandas laterales de `MediaRow` (aparecen con el mouse o el foco, desaparecen cuando no hay más hacia ese lado y en el celular se desliza con el dedo), para que todas las filas del sitio se comporten igual.
 
-No cambia código. El artboard de la ficha queda desactualizado en las flechas; se corrige en el canvas.
+No cambia código. El artboard de la ficha queda desactualizado en las flechas; se corrigió en el canvas el mismo día (banda › a la altura de los pósters, sin los botones del encabezado).
 Archivos: `docs/decisiones.md`.
+
+### 16/11/2026 — Foco al agregar la última sugerencia de la banda
+
+PR-Agent marcó en el PR #224 que, al agregar la última sugerencia de la última página, la banda desaparece junto con el botón «+ Add» que tenía el foco y el foco cae en `<body>`: quien navega con teclado o lector de pantalla pierde el lugar (WCAG 2.4.3). Ahora, en ese caso, el foco va al título de la lista (`h1`), igual que al quitar una tarjeta. Si quedan sugerencias, sigue yendo al «+ Add» vecino; si se agotó la página pero hay más, a «Show more».
+Archivos: `frontend/components/features/lists/ListSuggestions.tsx` (prop `onAgotada`), `frontend/components/features/lists/ListDetailView.tsx`, `frontend/tests/list-suggestions.test.tsx` y `frontend/tests/list-detail-view.test.tsx`.
