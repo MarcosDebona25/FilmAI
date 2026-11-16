@@ -957,10 +957,20 @@ Archivos: `frontend/components/features/lists/ListSuggestions.tsx`, `frontend/co
 ### 15/11/2026 — «More like {title}» en la ficha (canvas, sección 14)
 
 La ficha suma la fila «More like {title}» («Parecidos a {title}») después de «Director and cast» y antes de las reseñas. Reutiliza `MediaRow` del Inicio sin cambios (opción A del canvas: «igual a las filas del Inicio»), con sus esqueletos al cargar y el deslizamiento de borde a borde en el celular. Pide `GET /api/catalogo/{tipo}/{id}/similar/` cuando la fila está a 400 px del viewport, una vez que terminó el pedido de créditos, y no se dibuja si viene vacía o falla. Una respuesta sin `results` cuenta como vacía: antes rompía la ficha. No se guarda en la visita, porque con sesión la respuesta depende de Vistas. Las tarjetas conservan el `?from=` de la ficha.
-Queda por confirmar con el canvas: el artboard dibuja dos flechas redondas de 44 px en el encabezado (‹ deshabilitada en la primera página), mientras que la fila del Inicio usa bandas laterales que aparecen con el mouse o el foco; quedó la del Inicio. Tampoco hay artboard de celular para esta fila.
+Quedaba por confirmar con el canvas (resuelto el 16/11/2026, ver esa fecha): el artboard dibuja dos flechas redondas de 44 px en el encabezado (‹ deshabilitada en la primera página), mientras que la fila del Inicio usa bandas laterales que aparecen con el mouse o el foco; quedó la del Inicio. Tampoco hay artboard de celular para esta fila.
 Archivos: `frontend/components/features/title/SimilarTitles.tsx`, `frontend/components/features/title/TitleView.tsx`, `frontend/lib/lists.ts`, `traducciones/claves.csv`, `frontend/messages/{en,es}/common.json`, `frontend/tests/similar-titles.test.tsx`, `frontend/e2e/ficha-similares.spec.ts`.
 
 ### 15/11/2026 — Cierre del change `recomendaciones-similares`
 
 Con la banda de las listas y la fila de la ficha, el pendiente 5 queda cerrado y el change se archiva (se borra `openspec/changes/recomendaciones-similares/`). Sus specs pasan a canónicas, alineadas con lo que decidió el canvas: `similar-titles` (motor y endpoints; Vistas con sugerencias), `list-detail-ui` (spec nueva: la banda, «+ Add» y «Show more suggestions» en lugar de «Refresh», que ya no existe) y `title-page-ui` (requisito «More like this title»). Los comentarios que apuntaban al `design.md` del change ahora apuntan a `similar-titles` y a las entradas del 13/11/2026 de este archivo.
 Archivos: `openspec/changes/recomendaciones-similares/` (borrado), `openspec/specs/similar-titles/spec.md`, `openspec/specs/list-detail-ui/spec.md`, `openspec/specs/title-page-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md`, `backend/catalogo/services/similares.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `backend/catalogo/tests_similares_nombre.py`, `backend/listas/tests_sugerencias.py`.
+
+### 16/11/2026 — Dudas del canvas en la banda de sugerencias y en «More like» (sección 14)
+
+Marcos resolvió dos contradicciones entre el texto y el dibujo de los artboards:
+
+- **Póster de la banda en el celular: 64 × 96.** El bloque «Behaviour» de `Prop-Sugerencias-Lista-Movil` dice 64 × 96 y el dibujo mide 56 × 84. Vale el texto, que es lo que ya estaba implementado: mantiene la escala de los pósters (48 × 72 en la lupa, 74 × 111 en la banda de escritorio).
+- **Flechas de «More like {title}»: las mismas que las filas del Inicio.** El artboard `Prop-Similares-Ficha` dibuja dos botones redondos de 44 px en el encabezado, con ‹ deshabilitada en la primera página. Se quedan las bandas laterales de `MediaRow` (aparecen con el mouse o el foco, desaparecen cuando no hay más hacia ese lado y en el celular se desliza con el dedo), para que todas las filas del sitio se comporten igual.
+
+No cambia código. El artboard de la ficha queda desactualizado en las flechas; se corrige en el canvas.
+Archivos: `docs/decisiones.md`.
