@@ -1,7 +1,7 @@
 # Graph Report - feat-canvas-similares  (2026-11-16)
 
 ## Corpus Check
-- 796 files · ~773,492 words
+- 796 files · ~773,522 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6aa34fb5`
+- Built from commit: `058d7fd1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -570,7 +570,7 @@ Nodes (6): CsrfCookieTests, Recuperación de contraseña (CU-020 / A-07). Cubre:
 
 ### Community 30 - "vector_a"
 Cohesion: 0.14
-Nodes (11): candidatos(), Los `limite` títulos más cercanos a `vector`, del más cercano al más lejano.…, ArmarPoolTests, CandidatosTests, Los vecinos más cercanos al vector semilla, con las semillas afuera., `cantidad` producciones, cada una un poco más lejos que la anterior., La trampa de HNSW con `WHERE` (design §4). El índice mira `ef_search`…, De las semillas al pool: locales cercanos, relleno de TMDB y locales lejanos. (+3 more)
+Nodes (11): candidatos(), Los `limite` títulos más cercanos a `vector`, del más cercano al más lejano.…, ArmarPoolTests, CandidatosTests, Los vecinos más cercanos al vector semilla, con las semillas afuera., `cantidad` producciones, cada una un poco más lejos que la anterior., La trampa de HNSW con `WHERE`. El índice mira `ef_search` candidatos y recién…, De las semillas al pool: locales cercanos, relleno de TMDB y locales lejanos. (+3 more)
 
 ### Community 31 - "$impeccable doctor"
 Cohesion: 0.15
@@ -1670,7 +1670,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `AppLocale` connect `react` to `@playwright/test`, `ListDetailView.tsx`, `apiFetch`, `listas.spec.ts`, `vitest`, `format.ts`?**
   _High betweenness centrality (0.207) - this node is a cross-community bridge._
 - **Why does `UsuarioFactory` connect `UsuarioFactory` to `pendiente`, `ClaveDeConfirmacionEnLogsTests`, `OrdenDeListasTests`, `usuarios/views.py`, `QueriesNoCrecenConLasFilasTests`, `Resultado`, `ProduccionAudiovisualFactory`, `IdiomaDelDestinatarioTests`, `Tiene`, `._resena`, `tests_sse.py`, `ComunidadOrdenYFiltroTests`, `ArmarPerfilTests`, `django_test`, `ServicioFalso`, `AdminBorradoTests`, `TestCase`, `RecuperarContrasenaTests`, `ListaFactory`, `ErroresPerfilTests`, `.correr`, `LecturasIdFueraDeRangoTests`, `LoginSerializer`, `tests_plataformas.py`, `pedir`, `PaginadorCuentaSinAyudaDeLaVistaTests`, `LimiteLoginAdminTests`, `Command`, `PerfilTests`, `LoginDualTests`, `ListasEndpointsTests`, `IngresoDocumentacionTests`, `_BaseRecomendado`, `perfil.py`, `PreferenciasTests`, `.rafaga`, `ErroresContrasenaTests`, `.poblar`, `PreferenciasIdiomaTests`, `reviews.py`, `ResenaModeradaTests`, `PerfilPaisTests`, `ProveedorFalso`, `GoogleSocialLoginSerializer`, `BaseTools`, `listas/views.py`, `CalificacionFactory`, `CodigosParametrosCatalogoTests`, `PrepararChatTests`, `.url`, `._calificacion_existente`, `ProvidersViewTests`, `RecuperacionSesionTests`, `refrescar_vencidos`, `recortar`, `AdminStaffParcialTests`, `ContrasenaTests`, `UsuarioSocialAccountAdapter`, `GoogleOAuthTests`, `ProduccionAudiovisual`, `CodigosValidacionListasTests`, `HistorialTests`, `LoginDeLaAppTests`, `presupuesto.py`, `CorreosContratoTests`, `MisListasTests`, `ErroresRegistroTests`, `TMDBNotFound`, `RestriccionesClaveTests`, `RelojJWTTests`, `tests_orquestador.py`, `ResenaAdminTests`?**
-  _High betweenness centrality (0.135) - this node is a cross-community bridge._
+  _High betweenness centrality (0.134) - this node is a cross-community bridge._
 - **Are the 118 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**
   _`UsuarioFactory` has 118 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 69 inferred relationships involving `ProduccionAudiovisual` (e.g. with `ProduccionAudiovisualFactory` and `ProduccionAudiovisual`) actually correct?**

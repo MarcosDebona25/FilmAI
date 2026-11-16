@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "backend/listas/views.py": {
-    "mtime": 1794767036.9282956,
-    "seen": 1794788542.1681173,
-    "ast_hash": "d8a325db08af6b0d2ea77adff52cf498",
+    "mtime": 1794790272.4079306,
+    "seen": 1794790323.4830244,
+    "ast_hash": "0d719f979bcfa2580f3ffc5ae318f296",
     "semantic_hash": ""
   },
   "backend/manage.py": {
@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1794788514.3245342,
-    "seen": 1794788542.168666,
-    "ast_hash": "d0f9fe984e5bc7432929d0342cf2c3f5",
+    "mtime": 1794790272.4120297,
+    "seen": 1794790323.505269,
+    "ast_hash": "ec68162421632e6aad4f6a8e2717e950",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "contracts/openapi.yaml": {
-    "mtime": 1794789230.4590588,
-    "seen": 1794789489.644233,
-    "ast_hash": "f599ad981f42b2e9fa116da9f061105e",
+    "mtime": 1794790283.7365687,
+    "seen": 1794790323.504984,
+    "ast_hash": "f8a39d5520af6c6794c0d4f5329f7462",
     "semantic_hash": ""
   },
   "backend/filmai/tests_contrato.py": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1794789367.8204782,
-    "seen": 1794789489.634372,
+    "mtime": 1794789626.1045222,
+    "seen": 1794790323.495115,
     "ast_hash": "717cebfb87c07f2e4e4a8b92bf637339",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794789367.8244781,
-    "seen": 1794789489.634425,
+    "mtime": 1794789626.1045222,
+    "seen": 1794790323.495169,
     "ast_hash": "60addd41456141c6afaec9df1898d53c",
     "semantic_hash": ""
   },
@@ -4860,15 +4860,15 @@
     "semantic_hash": ""
   },
   "backend/catalogo/services/similares.py": {
-    "mtime": 1794788498.4063957,
-    "seen": 1794788542.1678135,
-    "ast_hash": "10858d5f701ce7b3ea3b815262c02fbc",
+    "mtime": 1794790293.200326,
+    "seen": 1794790323.4693363,
+    "ast_hash": "bd0ae066a1ffd4778f0a405555926d4a",
     "semantic_hash": ""
   },
   "backend/catalogo/tests_similares.py": {
-    "mtime": 1794788498.4047387,
-    "seen": 1794788542.1678638,
-    "ast_hash": "429a0beb7dfa12cfe14b827d334e5ced",
+    "mtime": 1794790293.20071,
+    "seen": 1794790323.4711394,
+    "ast_hash": "3676082062e48212a45601b60f41ad0a",
     "semantic_hash": ""
   },
   "backend/catalogo/tests_similares_api.py": {

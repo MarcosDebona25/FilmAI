@@ -1722,7 +1722,7 @@ paths:
         y Vistas. Pendientes da 404 (Not Found), como si el recurso no existiera:
         es lo que la persona ya eligió ver.
 
-        Cómo se arma (design §7), en tres pasos:
+        Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
         1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
         2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo

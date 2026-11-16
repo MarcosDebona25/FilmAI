@@ -239,7 +239,7 @@ class CandidatosTests(BaseSimilares):
         return producciones
 
     def test_excluir_mil_vecinos_igual_devuelve_cien(self):
-        """La trampa de HNSW con `WHERE` (design §4).
+        """La trampa de HNSW con `WHERE`.
 
         El índice mira `ef_search` candidatos y recién después aplica el filtro:
         si los 1 000 más cercanos están excluidos, sin `iterative_scan` devuelve

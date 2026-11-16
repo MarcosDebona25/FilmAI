@@ -584,7 +584,7 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
     y Vistas. Pendientes da 404 (Not Found), como si el recurso no existiera:
     es lo que la persona ya eligió ver.
 
-    Cómo se arma (design §7), en tres pasos:
+    Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
     1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
     2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo
@@ -666,7 +666,7 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
 
     @staticmethod
     def _clave(lista, idioma, nombre, ids):
-        """`similares:lista:{id}:{firma}` (design §7).
+        """`similares:lista:{id}:{firma}` (ver `openspec/specs/similar-titles/`).
 
         La firma resume todo lo que cambia el pool: el modelo, el idioma, el
         nombre normalizado y los títulos de la lista (ordenados, para que el

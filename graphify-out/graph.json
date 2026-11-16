@@ -73671,12 +73671,12 @@
     },
     {
       "id": "backend_listas_views_rationale_669",
-      "label": "`similares:lista:{id}:{firma}` (design \u00a77). La firma resume todo lo que cambia\u2026",
+      "label": "`similares:lista:{id}:{firma}` (ver `openspec/specs/similar-titles/`). La firma\u2026",
       "_origin": "ast",
       "community": 199,
       "community_name": "listas/views.py",
       "file_type": "rationale",
-      "norm_label": "`similares:lista:{id}:{firma}` (design \u00a77). la firma resume todo lo que cambia...",
+      "norm_label": "`similares:lista:{id}:{firma}` (ver `openspec/specs/similar-titles/`). la firma...",
       "source_file": "backend/listas/views.py",
       "source_location": "L669"
     },
@@ -76780,12 +76780,12 @@
     },
     {
       "id": "backend_catalogo_services_similares_rationale_351",
-      "label": "Recomendaciones de TMDB para hasta 3 semillas, intercaladas (design \u00a75).\u2026",
+      "label": "Recomendaciones de TMDB para hasta 3 semillas, intercaladas. `semillas_tmdb` y\u2026",
       "_origin": "ast",
       "community": 228,
       "community_name": "presupuesto.py",
       "file_type": "rationale",
-      "norm_label": "recomendaciones de tmdb para hasta 3 semillas, intercaladas (design \u00a75)....",
+      "norm_label": "recomendaciones de tmdb para hasta 3 semillas, intercaladas. `semillas_tmdb` y...",
       "source_file": "backend/catalogo/services/similares.py",
       "source_location": "L351"
     },
@@ -81485,12 +81485,12 @@
     },
     {
       "id": "backend_catalogo_tests_similares_rationale_242",
-      "label": "La trampa de HNSW con `WHERE` (design \u00a74). El \u00edndice mira `ef_search`\u2026",
+      "label": "La trampa de HNSW con `WHERE`. El \u00edndice mira `ef_search` candidatos y reci\u00e9n\u2026",
       "_origin": "ast",
       "community": 30,
       "community_name": "vector_a",
       "file_type": "rationale",
-      "norm_label": "la trampa de hnsw con `where` (design \u00a74). el indice mira `ef_search`...",
+      "norm_label": "la trampa de hnsw con `where`. el indice mira `ef_search` candidatos y recien...",
       "source_file": "backend/catalogo/tests_similares.py",
       "source_location": "L242"
     },
@@ -87444,12 +87444,12 @@
     },
     {
       "id": "backend_catalogo_services_similares_rationale_473",
-      "label": "Arma el pool de parecidos a las semillas (design \u00a72 a \u00a76). - `produccion_ids`:\u2026",
+      "label": "Arma el pool de parecidos a las semillas. - `produccion_ids`: pk de las\u2026",
       "_origin": "ast",
       "community": 352,
       "community_name": "ProduccionAudiovisual",
       "file_type": "rationale",
-      "norm_label": "arma el pool de parecidos a las semillas (design \u00a72 a \u00a76). - `produccion_ids`:...",
+      "norm_label": "arma el pool de parecidos a las semillas. - `produccion_ids`: pk de las...",
       "source_file": "backend/catalogo/services/similares.py",
       "source_location": "L473"
     },
@@ -364119,5 +364119,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "6aa34fb550023eb8342d588bcdce0c636a44d366"
+  "built_at_commit": "058d7fd1f0771a5d8409bdb48999b938ad57a2a1"
 }
