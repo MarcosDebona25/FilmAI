@@ -41,6 +41,86 @@ informa), `cortado_por_largo` (alguna llamada terminó por `length`) y
 `segundos_por_llamada` y `segundos_total`. Nunca lleva texto de la pregunta ni de la
 respuesta.
 
+## Los pasos de `responder()`
+
+`responder()` es corta a propósito: solo dice en qué orden van los pasos. Cada paso
+es una función de `orquestador.py`, y todos comparten un objeto `_Turno` (la
+conversación con el modelo, el texto que ya salió, lo que se anota para el log).
+
+```
+responder(chat, texto, idioma)
+  │
+  ├─ 1. _abrir_turno          lee la base (perfil, historial, tarjetas anteriores)
+  │                           y arma los mensajes para el modelo
+  │
+  ├─ 2. _conversar            hasta 5 vueltas (4 con tools y la respuesta)
+  │       │  por cada vuelta:
+  │       ├─ _escuchar                    una llamada al modelo; retiene el texto
+  │       │                               o lo transmite ──▶ Texto
+  │       ├─ _hay_que_forzar_la_busqueda  ¿recomendó sin buscar? se descarta y se
+  │       │                               repite una vez con tool_choice="required"
+  │       ├─ _cerrar_texto_de_la_vuelta   entrega lo retenido, salvo un «ya busco»
+  │       ├─ ¿no pidió tools? ── fin del paso 2
+  │       └─ _buscar                      ──▶ Estado("searching"); corre las tools
+  │                                       (en otro hilo) y suma los resultados
+  │       si se acaban las vueltas: _ultima_llamada (sin tools)
+  │
+  ├─ 3. _asegurar_respuesta   ¿ni una palabra? _ultima_llamada (sin tools)
+  ├─ 4. _armar_tarjetas       red sin marcadores y una parte por saga
+  ├─ 5. _registrar_turno      la línea `Turno:` del log
+  └─ ──▶ Resultado(texto, tarjetas)    lo único que la vista guarda
+```
+
+Cuando el plazo aprieta, el paso 2 termina antes (ver «El plazo del turno»).
+
+Los pasos que entregan eventos son generadores async (`async def` con `yield`):
+`responder()` los recorre con `async for` y reenvía cada evento. Se partió el
+15/11/2026 sin cambiar la conducta; `tests_responder_caracterizacion.py` tiene la
+foto de la secuencia de eventos de antes del cambio.
+
+## El plazo del turno
+
+Un turno tiene 25 s para responder (`LLM_TIMEOUT_SECONDS`), modelo y tools incluidos.
+Desde el 15/11/2026 ese tiempo lo administra el orquestador: sabe cuánto queda y, si
+no alcanza, **cierra con lo que tiene** en vez de dejar que la vista lo corte con un
+error. Las piezas están en `plazo.py`: `Plazo` (cuánto queda) y `Corte` (dejar de
+esperar algo a una hora dada).
+
+```
+0 s                                         17,5 s              25 s      30 s
+├────────────────── buscar ───────────────────┼───── cerrar ──────┤·········┤
+│  llamadas al modelo con tools y las tools   │ reserva: 7,5 s    │  red de │
+│                                             │ para la respuesta │ la vista│
+```
+
+| Momento | Regla | Con 25 s |
+|---|---|---|
+| Antes de otra vuelta con tools | Tiene que quedar el 40 % del plazo. Si no, última llamada sin tools | 10 s |
+| Llamada al modelo que todavía no escribió nada | Se corta cuando queda solo la reserva (30 %), y se pide la respuesta de cierre | a los 17,5 s |
+| Llamada al modelo que ya está escribiendo | Puede seguir hasta el final del plazo | a los 25 s |
+| Tools de una vuelta | Tienen lo que queda menos la reserva. Adentro, TMDB espera 3 s y reintenta 1 vez (`CHAT_TMDB_TIMEOUT`, `CHAT_TMDB_REINTENTOS`) en vez de 5 s y 3 veces, y ni TMDB ni Ollama esperan más de lo que queda | hasta los 17,5 s |
+| Sagas (`una_parte_por_saga`) | 2 s, o lo que quede si es menos | — |
+| Red de la vista (`views.tope_de_la_vista`) | Un 20 % más que el plazo. No debería cumplirse nunca | 30 s |
+
+**Qué ve el usuario si se acaba el tiempo:**
+
+- *Se acabó el tiempo para buscar* (vueltas lentas, TMDB caído, un modelo que no
+  contesta): recibe una respuesta normal, hecha con lo que se encontró hasta ahí.
+  Mismos eventos de siempre, hasta `fin`. Antes era un `error` y no se guardaba nada.
+- *Se acabó con la respuesta a medio escribir*: el texto queda hasta donde llegó y
+  termina en «…». El turno cierra normal (tarjetas, `fin`, se guarda).
+- *Se acabó sin una sola palabra*: `error` (`chat_unavailable`), como antes.
+
+En el log, la línea `Turno:` lo anota en `sin_tiempo=no|busqueda|respuesta`, y una
+tool que no llegó a correr o a terminar figura como `nombre(sin_tiempo)`.
+
+**Por qué las tools llevan su propio plazo.** Las tools son código común y corren en
+un hilo (`en_hilo`). Un hilo no se puede cancelar desde afuera: el `Corte` hace que
+el orquestador deje de esperarlo, pero el hilo sigue. Por eso el tiempo también viaja
+hacia adentro: `_correr_tools` abre un `plazo_de_red` (`catalogo/plazo.py`) y los
+clientes de TMDB y Ollama lo consultan antes de cada pedido, así la tool termina sola
+a la misma hora. Fuera del chat no hay plazo abierto y nada cambia.
+
 **Qué historial ve el modelo**: los últimos 10 mensajes **de la sesión actual**. Una
 sesión se corta con un silencio mayor a `CHAT_VENTANA_SESION_MINUTOS` (45 por defecto,
 medido hacia atrás desde el mensaje que llega), y a lo que dijo el asistente se le
@@ -52,13 +132,14 @@ mensaje de `historial` con `hace_min` simula una sesión anterior.
 | Archivo | Para qué sirve |
 |---|---|
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
-| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Al cerrar cada turno escribe una línea de log INFO (`Turno: tools=… vueltas=… ultima_sin_tools=… tarjetas=…`) con las tools pedidas y su cantidad de resultados, sin la pregunta ni la respuesta. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Las tarjetas salen de los marcadores `[[n]]` que escribe el modelo (ver `marcadores.py`); el log suma `marcadores_validos`, `marcadores_invalidos`, `negritas_propias`, `reintento_forzado` y `saga_descartadas` (tarjetas salteadas por ser otra parte de una saga que ya tenía la suya). Si el modelo recomienda sin haber buscado (un `[[n]]` sin candidato o una negrita), descarta ese primer intento y repite la llamada una vez con `tool_choice="required"`; por eso la primera vuelta del turno se retiene entera hasta saber si hubo tools. Las tarjetas del último mensaje del asistente entran como candidatos numerados («¿y las tarjetas?») |
+| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas, partido en pasos (ver «Los pasos de `responder()`»). Al cerrar cada turno escribe una línea de log INFO (`Turno: tools=… vueltas=… ultima_sin_tools=… tarjetas=…`) con las tools pedidas y su cantidad de resultados, sin la pregunta ni la respuesta. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Las tarjetas salen de los marcadores `[[n]]` que escribe el modelo (ver `marcadores.py`); el log suma `marcadores_validos`, `marcadores_invalidos`, `negritas_propias`, `reintento_forzado` y `saga_descartadas` (tarjetas salteadas por ser otra parte de una saga que ya tenía la suya). Si el modelo recomienda sin haber buscado (un `[[n]]` sin candidato o una negrita), descarta ese primer intento y repite la llamada una vez con `tool_choice="required"`; por eso la primera vuelta del turno se retiene entera hasta saber si hubo tools. Las tarjetas del último mensaje del asistente entran como candidatos numerados («¿y las tarjetas?») |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
 | `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
 | `views.py` | `POST /api/chat/preparar/`; `MensajesView`: el historial (`GET`) y la pregunta con su respuesta en streaming (`POST`) |
 | `sse.py` | El formato de cada evento del stream (`event:` y `data:`) |
 | `limites.py` | El candado «una respuesta a la vez» y el tope de mensajes por hora |
 | `serializers.py` | Cómo sale cada mensaje y cada tarjeta en el historial |
+| `plazo.py` | `Plazo` (cuánto le queda al turno) y `Corte` (dejar de esperar a una hora dada, con `asyncio.timeout_at`). Ver «El plazo del turno» |
 | `puente.py` | `en_hilo`: el único paso de código async a código común |
 | `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |
 | `prompts.py` | Las instrucciones del modelo. La fecha de hoy va en la parte variable (junto al perfil), para no perder el caché del texto fijo. El tope de 3 se le pide como tope de títulos recomendados (contando un extra en el cierre), no de marcadores: un cuarto marcador sale en el texto, sin tarjeta |
@@ -79,6 +160,7 @@ mensaje de `historial` con `hace_min` simula una sesión anterior.
 - `catalogo/services/semantica.py`: la búsqueda por significado.
 - `catalogo/services/embeddings.py`: habla con Ollama.
 - `catalogo/client.py` y `catalogo/cache.py`: hablan con TMDB.
+- `catalogo/plazo.py`: el plazo de red que las tools abren para TMDB y Ollama.
 
 ## Palabras que aparecen
 
