@@ -108,7 +108,8 @@ function aviso() {
   return document.querySelector<HTMLElement>("[data-aviso-servidor]")!;
 }
 
-async function llenarPaso2(user: Usuario, copy: Copia = en) {
+/** Los campos del paso 2, sin esperar el resultado de la consulta del usuario. */
+async function llenarCamposPaso2(user: Usuario, copy: Copia = en) {
   await user.type(screen.getByLabelText(copy.common.fields.username), "juanperez");
   // El orden sigue al idioma de la app: 10 de abril de 1992 en los dos casos.
   await user.type(
@@ -117,7 +118,27 @@ async function llenarPaso2(user: Usuario, copy: Copia = en) {
   );
   await user.selectOptions(screen.getByLabelText(copy.auth.signUp.genderLabel), "masculino");
   await elegirPais(user, screen.getByLabelText(copy.common.fields.country), "Argentina");
+}
+
+async function llenarPaso2(user: Usuario, copy: Copia = en) {
+  await llenarCamposPaso2(user, copy);
   await screen.findByText(copy.auth.signUp.usernameAvailable);
+}
+
+/**
+ * Deja la consulta de disponibilidad sin responder (el estado queda en
+ * «checking») y devuelve la función que la responde cuando el test lo decide.
+ */
+function consultaEnEspera() {
+  let responder!: (disponible: boolean) => void;
+  const respuesta = new Promise((resolve) => {
+    responder = (disponible) => resolve({ ok: true, json: async () => ({ disponible }) });
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => respuesta)
+  );
+  return responder;
 }
 
 async function irAlPaso3(user: Usuario, copy: Copia = en) {
@@ -226,6 +247,70 @@ describe("alta con Google en los pasos 2 y 3", () => {
     await user.click(continuar());
 
     expect(barra()).toHaveAttribute("aria-valuenow", "2");
+  });
+
+  describe("«Continue» mientras se verifica el usuario", () => {
+    /** Paso 2 completo, con la consulta ya enviada y todavía sin respuesta. */
+    async function tocarContinuarVerificando(user: Usuario) {
+      await llenarCamposPaso2(user);
+      await waitFor(() => expect(fetch).toHaveBeenCalled());
+      await user.click(continuar());
+    }
+
+    it("el clic queda pendiente y avanza cuando el usuario resulta disponible", async () => {
+      const responder = consultaEnEspera();
+      const user = userEvent.setup();
+      render(<CompletarGooglePage />, { locale: "en" });
+      await tocarContinuarVerificando(user);
+      // Sigue en el paso 2, con el botón en su estado de carga.
+      expect(barra()).toHaveAttribute("aria-valuenow", "2");
+      expect(continuar()).toHaveAttribute("aria-busy", "true");
+      expect(continuar()).toBeDisabled();
+
+      responder(true);
+      await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "3"));
+      expect(screen.getByRole("button", { name: en.auth.signUp.avatarChoose })).toHaveFocus();
+    });
+
+    it("si el usuario resulta en uso se queda en el paso con el error en el campo", async () => {
+      const responder = consultaEnEspera();
+      const user = userEvent.setup();
+      render(<CompletarGooglePage />, { locale: "en" });
+      await tocarContinuarVerificando(user);
+
+      responder(false);
+      expect(await screen.findByText(en.errors.codes.username_already_used)).toBeInTheDocument();
+      expect(barra()).toHaveAttribute("aria-valuenow", "2");
+      expect(continuar()).not.toHaveAttribute("aria-busy");
+      expect(continuar()).toBeEnabled();
+    });
+
+    it("editar el usuario cancela el clic pendiente", async () => {
+      const responder = consultaEnEspera();
+      const user = userEvent.setup();
+      render(<CompletarGooglePage />, { locale: "en" });
+      await tocarContinuarVerificando(user);
+
+      await user.type(screen.getByLabelText(en.common.fields.username), "2");
+      expect(continuar()).not.toHaveAttribute("aria-busy");
+      responder(true);
+      expect(await screen.findByText(en.auth.signUp.usernameAvailable)).toBeInTheDocument();
+      expect(barra()).toHaveAttribute("aria-valuenow", "2");
+    });
+
+    it("si la verificación falla con 429 (Too Many Requests) deja avanzar", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) }))
+      );
+      const user = userEvent.setup();
+      render(<CompletarGooglePage />, { locale: "en" });
+      await llenarCamposPaso2(user);
+      await waitFor(() => expect(fetch).toHaveBeenCalled());
+      await user.click(continuar());
+      // El usuario lo valida el backend al enviar el alta.
+      await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "3"));
+    });
   });
 
   it("el país arranca vacío, sin elegir por el navegador, y es obligatorio", async () => {

@@ -414,9 +414,9 @@
     "semantic_hash": ""
   },
   "frontend/app/(public)/register/page.tsx": {
-    "mtime": 1794862376.848603,
-    "seen": 1794862844.142015,
-    "ast_hash": "74fdad1f0d70c5015913da2c741a716e",
+    "mtime": 1794878386.5840228,
+    "seen": 1794878783.7841465,
+    "ast_hash": "105e75b00ed3d04a3ca5195b27329bb8",
     "semantic_hash": ""
   },
   "frontend/app/layout.tsx": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1794862806.2802079,
-    "seen": 1794862844.1599317,
-    "ast_hash": "f7f27e24403024b74684d9bfbae43589",
+    "mtime": 1794878744.460259,
+    "seen": 1794878783.8062506,
+    "ast_hash": "1f5ec6c5e132dd9b83acfcb7f4d70aaf",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2328,8 +2328,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1794862573.3177156,
-    "seen": 1794862844.1499102,
+    "mtime": 1794878593.9028945,
+    "seen": 1794878783.7939954,
     "ast_hash": "e8ad97ec21e157f7492e4e774b70778d",
     "semantic_hash": ""
   },
@@ -2358,8 +2358,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1794862573.3177156,
-    "seen": 1794862844.149913,
+    "mtime": 1794878593.9028945,
+    "seen": 1794878783.7940583,
     "ast_hash": "cecdb33ccd5c5637f025eb5b9655e204",
     "semantic_hash": ""
   },
@@ -2826,9 +2826,9 @@
     "semantic_hash": ""
   },
   "frontend/app/complete-signup/page.tsx": {
-    "mtime": 1794849401.3624763,
-    "seen": 1794862844.1420166,
-    "ast_hash": "a0fe7dbae6c99f79f2dc9d0ed244cbe3",
+    "mtime": 1794878386.5859883,
+    "seen": 1794878783.7841496,
+    "ast_hash": "9e0b2beb793cd09414fdf342b81ce18f",
     "semantic_hash": ""
   },
   "frontend/app/confirm-email/[key]/page.tsx": {
@@ -3042,9 +3042,9 @@
     "semantic_hash": ""
   },
   "frontend/tests/access-screens.test.tsx": {
-    "mtime": 1794861762.1259527,
-    "seen": 1794862844.1505213,
-    "ast_hash": "0604e991d891f7e9a59cb11a53dbede0",
+    "mtime": 1794878348.0049293,
+    "seen": 1794878783.7946253,
+    "ast_hash": "4f67b5fae895cc2144c3f8851fe1117e",
     "semantic_hash": ""
   },
   "frontend/content/legal/terms.en.md": {
@@ -3066,9 +3066,9 @@
     "semantic_hash": ""
   },
   "frontend/tests/complete-signup.test.tsx": {
-    "mtime": 1794861566.2784107,
-    "seen": 1794862844.1509588,
-    "ast_hash": "26b77c1b872cff291d027fb001312eb2",
+    "mtime": 1794878348.0053036,
+    "seen": 1794878783.7951448,
+    "ast_hash": "7ff475ce38d29530c2c5d2b0590c3c09",
     "semantic_hash": ""
   },
   "frontend/app/error.tsx": {

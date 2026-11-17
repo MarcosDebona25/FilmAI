@@ -139,11 +139,16 @@ export default function RegisterPage() {
   const [diferido, setDiferido] = useState(form);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // «Continue» del paso 2 apretado mientras se verificaba el usuario: el clic
+  // espera a que la consulta termine y ahí se decide si avanza.
+  const [continuarPendiente, setContinuarPendiente] = useState(false);
   const [enviadoA, setEnviadoA] = useState<string | null>(null);
   const { estado: usernameEstado, marcarOcupado } = useUsernameAvailability(
     form.nombre_usuario,
     !validarNombreUsuario(form.nombre_usuario)
   );
+
+  const usernameRechazado = usernameEstado === "ocupado" || usernameEstado === "reservado";
 
   const validadores: Record<CampoTexto, (valor: string, actual: typeof form) => string | null> = {
     nombre: (v) => validarNombre(v),
@@ -162,7 +167,10 @@ export default function RegisterPage() {
     const camposValidos = (CAMPOS_POR_PASO[cual] as CampoTexto[]).every(
       (campo) => !validadores[campo](form[campo], form)
     );
-    return cual === 2 ? camposValidos && usernameEstado === "disponible" : camposValidos;
+    // Solo «en uso» y «reservado» bloquean. Si la consulta falló (red o 429
+    // (Too Many Requests)) el estado es «idle» y se deja pasar: el backend
+    // valida el usuario al enviar y su error vuelve a este paso.
+    return cual === 2 ? camposValidos && !usernameRechazado : camposValidos;
   }
 
   useEffect(() => {
@@ -175,8 +183,23 @@ export default function RegisterPage() {
     formulario.current?.querySelector<HTMLElement>(foco.selector)?.focus();
   }, [foco]);
 
+  // La consulta del usuario terminó con un «Continue» esperándola: disponible
+  // (o sin respuesta) avanza; en uso o reservado se queda y muestra los errores.
+  useEffect(() => {
+    if (!continuarPendiente || usernameEstado === "checking") return;
+    setContinuarPendiente(false);
+    if (usernameRechazado) {
+      setIntentados((prev) => ({ ...prev, 2: true }));
+      return;
+    }
+    setPaso(3);
+    setError(null);
+    setFoco({ selector: primerCampoDe(3) });
+  }, [continuarPendiente, usernameEstado, usernameRechazado]);
+
   /** Cambia de paso y lleva el foco a su primer campo (o al que se pida). */
   function irA(destino: Paso, selector = primerCampoDe(destino)) {
+    setContinuarPendiente(false);
     setPaso(destino);
     setError(null);
     setFoco({ selector });
@@ -186,6 +209,8 @@ export default function RegisterPage() {
     setForm((prev) => ({ ...prev, [campo]: valor }));
     setSucios((prev) => ({ ...prev, [campo]: true }));
     setErroresServidor((prev) => ({ ...prev, [campo]: undefined }));
+    // Editar el paso cancela el «Continue» que esperaba la consulta del usuario.
+    setContinuarPendiente(false);
   }
 
   /**
@@ -209,11 +234,16 @@ export default function RegisterPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
-    if (loading) return;
+    if (loading || continuarPendiente) return;
 
     // Un paso inválido se queda donde está y muestra los errores de sus campos.
     if (!pasoValido(paso)) {
       setIntentados((prev) => ({ ...prev, [paso]: true }));
+      return;
+    }
+    // Todavía no se sabe si el usuario está libre: el clic queda pendiente.
+    if (paso === 2 && usernameEstado === "checking") {
+      setContinuarPendiente(true);
       return;
     }
     if (paso < TOTAL_PASOS) {
@@ -513,7 +543,8 @@ export default function RegisterPage() {
           {/* `type="submit"`: Enter en cualquier campo hace lo mismo que el botón. */}
           <button
             type="submit"
-            disabled={!hidratado || loading}
+            disabled={!hidratado || loading || continuarPendiente}
+            aria-busy={loading || continuarPendiente || undefined}
             className={`${primaryButtonClass} gap-2.5`}
           >
             {paso < TOTAL_PASOS ? (

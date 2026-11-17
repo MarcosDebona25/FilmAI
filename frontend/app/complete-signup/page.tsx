@@ -118,6 +118,9 @@ export default function CompletarGooglePage() {
   const [corregidos, setCorregidos] = useState<Partial<Record<string, boolean>>>({});
   const [diferido, setDiferido] = useState(form);
   const [loading, setLoading] = useState(false);
+  // «Continue» apretado mientras se verificaba el usuario: el clic espera a que
+  // la consulta termine y ahí se decide si avanza.
+  const [continuarPendiente, setContinuarPendiente] = useState(false);
   const { estado: usernameEstado, marcarOcupado } = useUsernameAvailability(
     form.nombre_usuario,
     !validarNombreUsuario(form.nombre_usuario)
@@ -133,6 +136,24 @@ export default function CompletarGooglePage() {
     const id = setTimeout(() => setDiferido(form), ERROR_DELAY_MS);
     return () => clearTimeout(id);
   }, [form]);
+
+  // Solo «en uso» y «reservado» bloquean. Si la consulta falló (red o 429
+  // (Too Many Requests)) el estado es «idle» y se deja pasar: el backend valida
+  // el usuario al confirmar y su error vuelve al paso 2.
+  const usernameRechazado = usernameEstado === "ocupado" || usernameEstado === "reservado";
+
+  // La consulta del usuario terminó con un «Continue» esperándola: disponible
+  // (o sin respuesta) avanza; en uso o reservado se queda y muestra los errores.
+  useEffect(() => {
+    if (!continuarPendiente || usernameEstado === "checking") return;
+    setContinuarPendiente(false);
+    if (usernameRechazado) {
+      setIntentado(true);
+      return;
+    }
+    setPaso(3);
+    setFoco({ selector: PRIMER_CAMPO[3] });
+  }, [continuarPendiente, usernameEstado, usernameRechazado]);
 
   useEffect(() => {
     if (!foco) return;
@@ -165,10 +186,11 @@ export default function CompletarGooglePage() {
   }
 
   const paso2Valido =
-    usernameEstado === "disponible" && CAMPOS.every((campo) => !validarCampo(campo, form[campo]));
+    !usernameRechazado && CAMPOS.every((campo) => !validarCampo(campo, form[campo]));
 
   /** Cambia de paso y lleva el foco a su primer campo (o al que se pida). */
   function irA(destino: Paso, selector = PRIMER_CAMPO[destino]) {
+    setContinuarPendiente(false);
     setPaso(destino);
     setFoco({ selector });
   }
@@ -177,6 +199,8 @@ export default function CompletarGooglePage() {
     setForm((prev) => ({ ...prev, [campo]: valor }));
     setSucios((prev) => ({ ...prev, [campo]: true }));
     setCorregidos((prev) => ({ ...prev, [campo]: true }));
+    // Editar el paso cancela el «Continue» que esperaba la consulta del usuario.
+    setContinuarPendiente(false);
   }
 
   /**
@@ -197,10 +221,15 @@ export default function CompletarGooglePage() {
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     // En el paso 3 la acción es el botón de Google; Enter no la reemplaza.
-    if (paso !== 2) return;
+    if (paso !== 2 || continuarPendiente) return;
     // Un paso inválido se queda donde está y muestra los errores de sus campos.
     if (!paso2Valido) {
       setIntentado(true);
+      return;
+    }
+    // Todavía no se sabe si el usuario está libre: el clic queda pendiente.
+    if (usernameEstado === "checking") {
+      setContinuarPendiente(true);
       return;
     }
     irA(3);
@@ -413,7 +442,8 @@ export default function CompletarGooglePage() {
             <button
               type="submit"
               data-accion
-              disabled={!hidratado}
+              disabled={!hidratado || continuarPendiente}
+              aria-busy={continuarPendiente || undefined}
               className={`${primaryButtonClass} gap-2.5`}
             >
               {signUp("continue")}

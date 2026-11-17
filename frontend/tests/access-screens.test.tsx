@@ -91,7 +91,8 @@ async function llenarPaso1(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.passwordConfirm), "Popcorn24!");
 }
 
-async function llenarPaso2(user: ReturnType<typeof userEvent.setup>) {
+/** Los campos del paso 2, sin esperar el resultado de la consulta del usuario. */
+async function llenarCamposPaso2(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.firstName), "Juan");
   await user.type(screen.getByLabelText(en.common.fields.lastName), "Pérez");
   await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
@@ -99,7 +100,27 @@ async function llenarPaso2(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(en.common.fields.birthDate), "04/10/1992");
   await user.selectOptions(screen.getByLabelText(signUp.genderLabel), "masculino");
   await elegirPais(user, screen.getByLabelText(en.common.fields.country), "Argentina");
+}
+
+async function llenarPaso2(user: ReturnType<typeof userEvent.setup>) {
+  await llenarCamposPaso2(user);
   expect(await screen.findByText(signUp.usernameAvailable)).toBeInTheDocument();
+}
+
+/**
+ * Deja la consulta de disponibilidad sin responder (el estado queda en
+ * «checking») y devuelve la función que la responde cuando el test lo decide.
+ */
+function consultaEnEspera() {
+  let responder!: (disponible: boolean) => void;
+  const respuesta = new Promise((resolve) => {
+    responder = (disponible) => resolve({ ok: true, json: async () => ({ disponible }) });
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => respuesta)
+  );
+  return responder;
 }
 
 async function irAlPaso2(user: ReturnType<typeof userEvent.setup>) {
@@ -394,6 +415,72 @@ describe("registro en pasos", () => {
     expect(screen.getByText(signUp.usernameHelp).parentElement).toHaveClass("invisible");
     await user.click(continuar());
     expect(barra()).toHaveAttribute("aria-valuenow", "2");
+  });
+
+  describe("«Continue» mientras se verifica el usuario", () => {
+    /** Paso 2 completo, con la consulta ya enviada y todavía sin respuesta. */
+    async function tocarContinuarVerificando(user: ReturnType<typeof userEvent.setup>) {
+      await irAlPaso2(user);
+      await llenarCamposPaso2(user);
+      await waitFor(() => expect(fetch).toHaveBeenCalled());
+      await user.click(continuar());
+    }
+
+    it("el clic queda pendiente y avanza cuando el usuario resulta disponible", async () => {
+      const responder = consultaEnEspera();
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await tocarContinuarVerificando(user);
+      // Sigue en el paso 2, con el botón en su estado de carga.
+      expect(barra()).toHaveAttribute("aria-valuenow", "2");
+      expect(continuar()).toHaveAttribute("aria-busy", "true");
+      expect(continuar()).toBeDisabled();
+
+      responder(true);
+      await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "3"));
+      expect(screen.getByRole("button", { name: signUp.avatarChoose })).toHaveFocus();
+    });
+
+    it("si el usuario resulta en uso se queda en el paso con el error en el campo", async () => {
+      const responder = consultaEnEspera();
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await tocarContinuarVerificando(user);
+
+      responder(false);
+      expect(await screen.findByText(en.errors.codes.username_already_used)).toBeInTheDocument();
+      expect(barra()).toHaveAttribute("aria-valuenow", "2");
+      expect(continuar()).not.toHaveAttribute("aria-busy");
+      expect(continuar()).toBeEnabled();
+    });
+
+    it("editar el usuario cancela el clic pendiente", async () => {
+      const responder = consultaEnEspera();
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await tocarContinuarVerificando(user);
+
+      await user.type(screen.getByLabelText(en.common.fields.username), "2");
+      expect(continuar()).not.toHaveAttribute("aria-busy");
+      responder(true);
+      expect(await screen.findByText(signUp.usernameAvailable)).toBeInTheDocument();
+      expect(barra()).toHaveAttribute("aria-valuenow", "2");
+    });
+
+    it("si la verificación falla con 429 (Too Many Requests) deja avanzar", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) }))
+      );
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await irAlPaso2(user);
+      await llenarCamposPaso2(user);
+      await waitFor(() => expect(fetch).toHaveBeenCalled());
+      await user.click(continuar());
+      // El usuario lo valida el backend al enviar el alta.
+      await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "3"));
+    });
   });
 
   it("los campos sin ayuda reservan el renglón del error desde el inicio (#175)", () => {
