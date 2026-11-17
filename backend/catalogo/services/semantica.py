@@ -18,6 +18,7 @@ from catalogo.models import (
     ProduccionAudiovisual,
     ProduccionEmbedding,
 )
+from catalogo.plazo import que_queda
 from catalogo.services.embeddings import (
     PRESUPUESTO_CARGA,
     PRESUPUESTO_CHAT,
@@ -60,14 +61,30 @@ def pedir_carga_del_modelo():
         logger.exception("No se pudo encolar la carga del modelo")
 
 
+def _presupuesto(cargado):
+    """Cuánto esperar a Ollama: el presupuesto de siempre, sin pasarse del plazo.
+
+    Con el modelo sin cargar la espera es de hasta 20 s (`PRESUPUESTO_CARGA`). Si el
+    chatbot abrió un plazo de red y queda menos que eso, se espera solo lo que queda:
+    pasado el final del turno ya no hay nadie a quien contestarle.
+    """
+    presupuesto = PRESUPUESTO_CHAT if cargado else PRESUPUESTO_CARGA
+    queda = que_queda()
+    if queda is None or queda >= presupuesto["timeout"]:
+        return presupuesto
+    # `{**a, "clave": valor}` copia el diccionario cambiando una clave.
+    return {**presupuesto, "timeout": queda}
+
+
 def _vector_de(consulta):
     """Embebe la consulta, esperando la carga del modelo si hace falta."""
+    if que_queda() == 0:
+        # El plazo del turno ya venció: ni se le pregunta a Ollama.
+        raise EmbeddingProviderError("Sin tiempo para embeber la consulta")
     cargado = modelo_cargado()
     inicio = time.perf_counter()
     try:
-        return generar_vector(
-            consulta, **(PRESUPUESTO_CHAT if cargado else PRESUPUESTO_CARGA)
-        )
+        return generar_vector(consulta, **_presupuesto(cargado))
     except EmbeddingProviderError:
         # Al cortar, Ollama abandona la carga: otra conexión tiene que seguirla.
         if not cargado:

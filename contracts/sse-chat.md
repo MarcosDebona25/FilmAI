@@ -96,5 +96,10 @@ lea (postcondición de falla de CU-014, aceptada el 08/10/2026).
 - Una respuesta a la vez por chat. El candado vence solo a los
   `LLM_TIMEOUT_SECONDS + 35` s (60 con el valor por defecto) si el proceso muere.
 - Un turno dura como máximo `LLM_TIMEOUT_SECONDS` (25 s), herramientas incluidas. El
-  guardado queda fuera de ese tope.
+  guardado queda fuera de ese tope. Si el tiempo no alcanza, el turno **no** termina
+  en `error`: el backend deja de buscar y responde con lo que encontró (los mismos
+  eventos de siempre, hasta `fin`). Si el plazo se cumple con la respuesta a medio
+  escribir, el texto termina en «…» y el turno cierra igual con `tarjetas` y `fin`.
+  Solo hay `error` si se acabó el tiempo sin una sola palabra de respuesta. La vista
+  conserva un corte propio un 20 % más tarde (30 s) como red de seguridad.
 - `CHAT_MENSAJES_POR_HORA` (20) por usuario, en ventana fija de reloj.

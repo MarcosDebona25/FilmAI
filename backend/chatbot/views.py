@@ -148,6 +148,20 @@ def _registrar_falla_del_guardado(tarea):
         logger.error("Falló el guardado del turno", exc_info=tarea.exception())
 
 
+# Cuánto más que el plazo del turno espera la vista antes de cortar por su cuenta.
+_MARGEN_DE_LA_RED = 1.2
+
+
+def tope_de_la_vista():
+    """Segundos tras los que la vista corta el turno: 30 con el plazo de 25.
+
+    El plazo (`LLM_TIMEOUT_SECONDS`) lo administra el orquestador, que cierra con lo
+    que tiene. Este tope es mayor a propósito: si fuera igual, la vista le ganaría de
+    mano al cierre ordenado y el usuario vería un error en vez de la respuesta.
+    """
+    return settings.LLM_TIMEOUT_SECONDS * _MARGEN_DE_LA_RED
+
+
 async def _stream(turno):
     """Los eventos de un turno, en el orden del contrato (`contracts/sse-chat.md`).
 
@@ -161,11 +175,13 @@ async def _stream(turno):
         # cerraría antes del primer evento y las tools quedarían sin presupuesto.
         with contar_llamadas(ident=turno.ident):
             resultado = None
-            limite = asyncio.timeout(settings.LLM_TIMEOUT_SECONDS)
+            limite = asyncio.timeout(tope_de_la_vista())
             try:
-                # El tope es de reloj, tools incluidas. Cubre el modelo y las tools;
-                # el guardado queda afuera, para que un turno que llegó justo no se
-                # corte a la mitad de escribir.
+                # Red de seguridad: el orquestador ya cierra el turno dentro de su
+                # plazo (`chatbot/plazo.py`), así que este tope no debería cumplirse
+                # nunca. Si se cumple, algo no respetó el plazo. Es de reloj y cubre
+                # el modelo y las tools; el guardado queda afuera, para que un turno
+                # que llegó justo no se corte a la mitad de escribir.
                 async with limite:
                     async for evento in responder(
                         turno.chat, turno.texto, turno.idioma
@@ -179,7 +195,9 @@ async def _stream(turno):
             except TimeoutError:
                 if limite.expired():
                     logger.error(
-                        "El turno superó los %s s", settings.LLM_TIMEOUT_SECONDS
+                        "El turno superó la red de la vista (%s s): el orquestador "
+                        "no cerró dentro de su plazo",
+                        tope_de_la_vista(),
                     )
                 else:
                     # Un timeout propio de una tool o del socket, dentro del tope.

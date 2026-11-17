@@ -71,10 +71,55 @@ responder(chat, texto, idioma)
   └─ ──▶ Resultado(texto, tarjetas)    lo único que la vista guarda
 ```
 
+Cuando el plazo aprieta, el paso 2 termina antes (ver «El plazo del turno»).
+
 Los pasos que entregan eventos son generadores async (`async def` con `yield`):
 `responder()` los recorre con `async for` y reenvía cada evento. Se partió el
 15/11/2026 sin cambiar la conducta; `tests_responder_caracterizacion.py` tiene la
 foto de la secuencia de eventos de antes del cambio.
+
+## El plazo del turno
+
+Un turno tiene 25 s para responder (`LLM_TIMEOUT_SECONDS`), modelo y tools incluidos.
+Desde el 15/11/2026 ese tiempo lo administra el orquestador: sabe cuánto queda y, si
+no alcanza, **cierra con lo que tiene** en vez de dejar que la vista lo corte con un
+error. Las piezas están en `plazo.py`: `Plazo` (cuánto queda) y `Corte` (dejar de
+esperar algo a una hora dada).
+
+```
+0 s                                         17,5 s              25 s      30 s
+├────────────────── buscar ───────────────────┼───── cerrar ──────┤·········┤
+│  llamadas al modelo con tools y las tools   │ reserva: 7,5 s    │  red de │
+│                                             │ para la respuesta │ la vista│
+```
+
+| Momento | Regla | Con 25 s |
+|---|---|---|
+| Antes de otra vuelta con tools | Tiene que quedar el 40 % del plazo. Si no, última llamada sin tools | 10 s |
+| Llamada al modelo que todavía no escribió nada | Se corta cuando queda solo la reserva (30 %), y se pide la respuesta de cierre | a los 17,5 s |
+| Llamada al modelo que ya está escribiendo | Puede seguir hasta el final del plazo | a los 25 s |
+| Tools de una vuelta | Tienen lo que queda menos la reserva. Adentro, TMDB espera 3 s y reintenta 1 vez (`CHAT_TMDB_TIMEOUT`, `CHAT_TMDB_REINTENTOS`) en vez de 5 s y 3 veces, y ni TMDB ni Ollama esperan más de lo que queda | hasta los 17,5 s |
+| Sagas (`una_parte_por_saga`) | 2 s, o lo que quede si es menos | — |
+| Red de la vista (`views.tope_de_la_vista`) | Un 20 % más que el plazo. No debería cumplirse nunca | 30 s |
+
+**Qué ve el usuario si se acaba el tiempo:**
+
+- *Se acabó el tiempo para buscar* (vueltas lentas, TMDB caído, un modelo que no
+  contesta): recibe una respuesta normal, hecha con lo que se encontró hasta ahí.
+  Mismos eventos de siempre, hasta `fin`. Antes era un `error` y no se guardaba nada.
+- *Se acabó con la respuesta a medio escribir*: el texto queda hasta donde llegó y
+  termina en «…». El turno cierra normal (tarjetas, `fin`, se guarda).
+- *Se acabó sin una sola palabra*: `error` (`chat_unavailable`), como antes.
+
+En el log, la línea `Turno:` lo anota en `sin_tiempo=no|busqueda|respuesta`, y una
+tool que no llegó a correr o a terminar figura como `nombre(sin_tiempo)`.
+
+**Por qué las tools llevan su propio plazo.** Las tools son código común y corren en
+un hilo (`en_hilo`). Un hilo no se puede cancelar desde afuera: el `Corte` hace que
+el orquestador deje de esperarlo, pero el hilo sigue. Por eso el tiempo también viaja
+hacia adentro: `_correr_tools` abre un `plazo_de_red` (`catalogo/plazo.py`) y los
+clientes de TMDB y Ollama lo consultan antes de cada pedido, así la tool termina sola
+a la misma hora. Fuera del chat no hay plazo abierto y nada cambia.
 
 **Qué historial ve el modelo**: los últimos 10 mensajes **de la sesión actual**. Una
 sesión se corta con un silencio mayor a `CHAT_VENTANA_SESION_MINUTOS` (45 por defecto,
@@ -94,6 +139,7 @@ mensaje de `historial` con `hace_min` simula una sesión anterior.
 | `sse.py` | El formato de cada evento del stream (`event:` y `data:`) |
 | `limites.py` | El candado «una respuesta a la vez» y el tope de mensajes por hora |
 | `serializers.py` | Cómo sale cada mensaje y cada tarjeta en el historial |
+| `plazo.py` | `Plazo` (cuánto le queda al turno) y `Corte` (dejar de esperar a una hora dada, con `asyncio.timeout_at`). Ver «El plazo del turno» |
 | `puente.py` | `en_hilo`: el único paso de código async a código común |
 | `llm.py` | El proveedor del modelo, y `ProveedorFalso` para los tests |
 | `prompts.py` | Las instrucciones del modelo. La fecha de hoy va en la parte variable (junto al perfil), para no perder el caché del texto fijo. El tope de 3 se le pide como tope de títulos recomendados (contando un extra en el cierre), no de marcadores: un cuarto marcador sale en el texto, sin tarjeta |
@@ -114,6 +160,7 @@ mensaje de `historial` con `hace_min` simula una sesión anterior.
 - `catalogo/services/semantica.py`: la búsqueda por significado.
 - `catalogo/services/embeddings.py`: habla con Ollama.
 - `catalogo/client.py` y `catalogo/cache.py`: hablan con TMDB.
+- `catalogo/plazo.py`: el plazo de red que las tools abren para TMDB y Ollama.
 
 ## Palabras que aparecen
 
