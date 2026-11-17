@@ -18,6 +18,20 @@ The client MUST read configuration from Django settings (populated by
 Requests MUST authenticate by appending `api_key` as a query parameter.
 `TMDB_TIMEOUT` MUST be added to `.env.example`.
 
+Inside a network deadline (`catalogo.plazo.plazo_de_red`, opened only by the chat
+tools; 15/11/2026) each request MUST use the deadline's own timeout and retry count
+(`CHAT_TMDB_TIMEOUT`, 3 s; `CHAT_TMDB_REINTENTOS`, 1) instead of `TMDB_TIMEOUT` and
+the 3 general retries, MUST NOT wait longer than the time the deadline has left
+(neither in a request nor in the pause before a retry), and MUST fail with
+`TMDBTransportError` without calling TMDB once that time is over. Outside a deadline
+nothing changes.
+
+#### Scenario: Short client inside the chat
+
+- GIVEN a network deadline with a 3 s TMDB timeout and 1 retry
+- WHEN TMDB does not answer
+- THEN the client makes 2 requests with a 3 s timeout and raises `TMDBTransportError`
+
 #### Scenario: Default timeout when unset
 
 - GIVEN `TMDB_TIMEOUT` is absent from the environment
