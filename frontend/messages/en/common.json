@@ -289,6 +289,25 @@
       "removeConfirmTitle": "Remove from Watched?",
       "remove": "Remove from Watched"
     },
+    "status": {
+      "label": "Status",
+      "current": "Status: {status}",
+      "menuLabel": "Status for {title}",
+      "hint": {
+        "pendientes": "Want to watch it",
+        "viendo": "Started, not finished",
+        "vistas": "Finished"
+      },
+      "remove": "Remove status",
+      "movedTo": "Moved to {status}",
+      "backTo": "Back to {status}",
+      "removed": "Status removed",
+      "undo": "Undo",
+      "undoAnnouncement": "{message}. Undo available for {seconds, plural, one {# second} other {# seconds}}.",
+      "error": "Couldn’t update the status. Try again.",
+      "rated": "Rated ★ {rating}",
+      "ratedAndMoved": "Rated ★ {rating} · Moved to Watched"
+    },
     "breadcrumb": {
       "backTo": "Back to {label}"
     },

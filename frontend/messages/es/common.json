@@ -289,6 +289,25 @@
       "removeConfirmTitle": "¿Quitar de Vistas?",
       "remove": "Quitar de Vistas"
     },
+    "status": {
+      "label": "Estado",
+      "current": "Estado: {status}",
+      "menuLabel": "Estado de {title}",
+      "hint": {
+        "pendientes": "Quiero verla",
+        "viendo": "La empecé y no la terminé",
+        "vistas": "Ya la terminé"
+      },
+      "remove": "Quitar estado",
+      "movedTo": "Pasó a {status}",
+      "backTo": "Volvió a {status}",
+      "removed": "Estado quitado",
+      "undo": "Deshacer",
+      "undoAnnouncement": "{message}. Podés deshacerlo durante {seconds, plural, one {# segundo} other {# segundos}}.",
+      "error": "No pudimos actualizar el estado. Intentá de nuevo.",
+      "rated": "Calificada con ★ {rating}",
+      "ratedAndMoved": "Calificada con ★ {rating} · Pasó a Vistas"
+    },
     "breadcrumb": {
       "backTo": "Volver a {label}"
     },

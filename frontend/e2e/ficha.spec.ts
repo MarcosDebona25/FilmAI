@@ -67,6 +67,15 @@ async function prepararFicha(page: Page) {
         contiene: false,
         item_id: null as number | null,
       },
+      {
+        id: 4,
+        nombre: "Watching",
+        clave: "viendo",
+        tipo: "predeterminada",
+        cantidad_items: 0,
+        contiene: false,
+        item_id: null as number | null,
+      },
     ] as ListaFicha[],
     consultas: [] as string[],
     /** Simula TMDB caído en `providers/`. */
@@ -156,27 +165,6 @@ async function prepararFicha(page: Page) {
     }
     if (url.pathname === "/api/lists/5/items/")
       return route.fulfill({ status: 201, json: { item_id: 91 } });
-    if (url.pathname === "/api/lists/3/items/" && method === "POST") {
-      estado.listas[2] = { ...estado.listas[2], contiene: true, item_id: 71, cantidad_items: 1 };
-      return route.fulfill({ status: 201, json: { item_id: 71 } });
-    }
-    if (url.pathname === "/api/lists/2/items/" && method === "POST") {
-      // Como el servidor: entrar a Vistas saca de Pendientes (14/10/2026).
-      estado.listas[1] = { ...estado.listas[1], contiene: true, item_id: 70, cantidad_items: 1 };
-      estado.listas[2] = { ...estado.listas[2], contiene: false, item_id: null, cantidad_items: 0 };
-      return route.fulfill({ status: 201, json: { item_id: 70 } });
-    }
-    if (url.pathname === "/api/lists/2/items/70/") {
-      if (url.searchParams.get("borrar_calificacion") !== "true") {
-        return route.fulfill({
-          status: 409,
-          json: { code: "rating_blocks_removal_from_watched", params: {}, errors: [] },
-        });
-      }
-      estado.mia = null;
-      estado.listas[1] = { ...estado.listas[1], contiene: false, item_id: null, cantidad_items: 0 };
-      return route.fulfill({ status: 204 });
-    }
     return route.fulfill({ status: 404, json: { code: "not_found", params: {}, errors: [] } });
   });
   return estado;
@@ -310,10 +298,8 @@ for (const viewport of viewports) {
 
       const tuya = page.getByRole("article", { name: en.title.reviews.yourReview });
       await expect(tuya).toContainText("A father who made a promise.");
-      await expect(page.getByRole("button", { name: en.common.media.watched })).toHaveAttribute(
-        "aria-pressed",
-        "true"
-      );
+      // Calificar mueve el título a Watched: el botón de estado lo muestra.
+      await expect(page.getByRole("button", { name: "Status: Watched" })).toBeVisible();
 
       await tuya.getByRole("button", { name: en.common.review.delete }).click();
       await page
@@ -334,45 +320,6 @@ test.describe("ficha en escritorio con sesión", () => {
     viewport: { width: 1440, height: 900 },
     locale: "en-US",
     extraHTTPHeaders: { "Accept-Language": "en-US,en;q=0.9" },
-  });
-
-  test("quitar de Vistas algo calificado pide confirmar y borra la nota", async ({ page }) => {
-    await prepararCuenta(page);
-    const estado = await prepararFicha(page);
-    estado.mia = { id: 9, valor: 9, texto: null, fecha: "2026-10-01" };
-    estado.listas[1] = { ...estado.listas[1], contiene: true, item_id: 70, cantidad_items: 1 };
-    await page.goto("/movie/157336");
-
-    await page.getByRole("button", { name: en.common.media.watched }).click();
-    await page
-      .getByRole("alertdialog", { name: en.title.watched.removeConfirmTitle })
-      .getByRole("button", { name: en.title.watched.remove })
-      .click();
-
-    await expect(page.getByRole("button", { name: en.common.rating.rate })).toBeVisible();
-    await expect(page.getByRole("button", { name: en.common.media.watched })).toHaveAttribute(
-      "aria-pressed",
-      "false"
-    );
-  });
-
-  test("marcar Watched algo que está en Watchlist lo saca de Watchlist", async ({ page }) => {
-    await prepararCuenta(page);
-    await prepararFicha(page);
-    await page.goto("/movie/157336");
-
-    const watchlist = page.getByRole("button", { name: en.common.media.watchlist });
-    await watchlist.click();
-    await expect(watchlist).toHaveAttribute("aria-pressed", "true");
-
-    await page.getByRole("button", { name: en.common.media.watched }).click();
-
-    await expect(page.getByText(en.title.feedback.watchedAddedFromWatchlist)).toBeVisible();
-    await expect(page.getByRole("button", { name: en.common.media.watched })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-    await expect(watchlist).toHaveAttribute("aria-pressed", "false");
   });
 
   test("ordenar y filtrar la comunidad, y crear una lista nueva", async ({ page }) => {

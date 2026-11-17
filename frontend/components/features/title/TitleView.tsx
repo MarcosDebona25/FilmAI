@@ -16,6 +16,8 @@ import { CreditsSection } from "@/components/features/title/CreditsSection";
 import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ReviewsSection } from "@/components/features/title/ReviewsSection";
 import { TitleActions } from "@/components/features/title/TitleActions";
+import { cerrarAvisoEstado } from "@/components/features/title/StatusToast";
+import { useEstadoFicha } from "@/components/features/title/use-estado-ficha";
 import {
   ESQUELETO,
   EsqueletoAcciones,
@@ -47,6 +49,7 @@ import {
   type TmdbDetalle,
 } from "@/lib/title";
 import type { ListaFicha } from "@/lib/title-lists";
+import { estadoDe } from "@/lib/title-status";
 import { useCatalog } from "@/lib/use-catalog";
 import { useDesborde } from "@/lib/use-desborde";
 import { cn } from "@/lib/utils";
@@ -91,6 +94,9 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     null
   );
   const [modal, setModal] = useState<Modal>(null);
+  // Un toast de estado con Undo no sobrevive a la ficha: el cambio queda, el
+  // Undo no (canvas, «Leave the page with the toast open»).
+  useEffect(() => cerrarAvisoEstado, []);
   const [sinopsisCompleta, setSinopsisCompleta] = useState(false);
   const [sinopsisRef, sinopsisDesborda] = useDesborde<HTMLParagraphElement>(
     sinopsisCompleta,
@@ -112,6 +118,13 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
       }
     );
   }, [id, tipo]);
+
+  const estado = useEstadoFicha({
+    idTmdb: id,
+    tipo,
+    listas: listas ?? [],
+    onListasChange: setListas,
+  });
 
   useEffect(() => {
     if (!conSesion) return;
@@ -218,9 +231,12 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
 
   async function guardar({ valor, texto }: { valor: number; texto: string }) {
     if (!mia) {
-      const { creada, aviso } = await crearCalificacion({ idTmdb: id, tipo, valor, texto });
+      // Calificar mueve a Watched en el servidor: el estado de antes se lee de
+      // las listas que tenía la ficha, y el Undo lo restaura.
+      const previo = estadoDe(listas ?? []);
+      const { creada } = await crearCalificacion({ idTmdb: id, tipo, valor, texto });
       setMia(creada);
-      toast.success(t(`title.feedback.${aviso}`));
+      estado.avisarCalificacion({ valor, previo, conResena: Boolean(texto) });
     } else {
       const { plan, respuesta, aviso } = await editarCalificacion(mia, valor, texto);
       const sinTexto: MiCalificacion = plan.borrarTexto ? { ...mia, texto: null } : mia;
@@ -420,7 +436,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                   onListasChange={setListas}
                   miCalificacion={mia ?? null}
                   onRate={() => setModal("calificar")}
-                  onCalificacionBorrada={() => setMia(null)}
+                  onCambiarEstado={estado.cambiar}
+                  cambiandoEstado={estado.pendiente}
                 />
                 {errorListas && (
                   <ErrorRetry

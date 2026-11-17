@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TitleActions } from "@/components/features/title/TitleActions";
 import type { ListaFicha } from "@/lib/title-lists";
 import { fireEvent, render, screen, waitFor, within } from "./render";
+import type { Estado } from "@/lib/title-status";
 
 const api = vi.hoisted(() => ({ fetch: vi.fn() }));
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -27,14 +28,7 @@ const lista = (campos: Partial<ListaFicha>): ListaFicha => ({
 });
 const LISTAS = [
   lista({ id: 1, nombre: "Favorites", clave: "favoritos", tipo: "predeterminada" }),
-  lista({
-    id: 2,
-    nombre: "Watched",
-    clave: "vistas",
-    tipo: "predeterminada",
-    contiene: true,
-    item_id: 70,
-  }),
+  lista({ id: 2, nombre: "Watched", clave: "vistas", tipo: "predeterminada" }),
   lista({
     id: 3,
     nombre: "Watchlist",
@@ -43,13 +37,14 @@ const LISTAS = [
     contiene: true,
     item_id: 71,
   }),
+  lista({ id: 5, nombre: "Watching", clave: "viendo", tipo: "predeterminada" }),
   lista({ id: 4, nombre: "Weekend marathon", cantidad_items: 3 }),
 ];
 
 function renderizar(props: Partial<Parameters<typeof TitleActions>[0]> = {}) {
   const onListasChange = vi.fn();
   const onRate = vi.fn();
-  const onCalificacionBorrada = vi.fn();
+  const onCambiarEstado = vi.fn();
   render(
     <TitleActions
       titulo="Interstellar"
@@ -59,30 +54,28 @@ function renderizar(props: Partial<Parameters<typeof TitleActions>[0]> = {}) {
       onListasChange={onListasChange}
       miCalificacion={null}
       onRate={onRate}
-      onCalificacionBorrada={onCalificacionBorrada}
+      onCambiarEstado={onCambiarEstado}
       {...props}
     />,
     { locale: "en" }
   );
-  return { onListasChange, onRate, onCalificacionBorrada };
+  return { onListasChange, onRate, onCambiarEstado };
 }
 
 beforeEach(() => api.fetch.mockReset());
 afterEach(() => vi.clearAllMocks());
 
 describe("acciones de la ficha", () => {
-  it("los botones reflejan en qué listas está la producción", () => {
+  it("ya no hay botones sueltos de Watched ni de Watchlist: el estado va en un solo botón", () => {
     renderizar();
 
     expect(screen.getByRole("button", { name: "Favorite" })).toHaveAttribute(
       "aria-pressed",
       "false"
     );
-    expect(screen.getByRole("button", { name: "Watched" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Watchlist" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
+    expect(screen.queryByRole("button", { name: "Watched" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Watchlist" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Status: Watchlist" })).toBeInTheDocument();
   });
 
   it("Rate abre el modal; con nota, el botón la muestra y dice que edita", () => {
@@ -114,33 +107,6 @@ describe("acciones de la ficha", () => {
     expect(favoritos).toMatchObject({ contiene: true, item_id: 80, cantidad_items: 1 });
   });
 
-  it("marcar como vista algo pendiente lo saca de Watchlist y lo avisa junto", async () => {
-    api.fetch.mockResolvedValue({ item_id: 90 });
-    const sinVer = LISTAS.map((l) => (l.id === 2 ? { ...l, contiene: false, item_id: null } : l));
-    const { onListasChange } = renderizar({ listas: sinVer });
-
-    fireEvent.click(screen.getByRole("button", { name: "Watched" }));
-
-    await waitFor(() =>
-      expect(toast.success).toHaveBeenCalledWith("Added to Watched and removed from Watchlist.")
-    );
-    const ultimas: ListaFicha[] = onListasChange.mock.calls.at(-1)![0];
-    expect(ultimas.find((l) => l.id === 2)).toMatchObject({ contiene: true, item_id: 90 });
-    expect(ultimas.find((l) => l.id === 3)).toMatchObject({ contiene: false, item_id: null });
-  });
-
-  it("marcar como vista algo que no está pendiente usa el aviso de siempre", async () => {
-    api.fetch.mockResolvedValue({ item_id: 90 });
-    const soloSinVer = LISTAS.map((l) =>
-      l.id === 2 || l.id === 3 ? { ...l, contiene: false, item_id: null } : l
-    );
-    renderizar({ listas: soloSinVer });
-
-    fireEvent.click(screen.getByRole("button", { name: "Watched" }));
-
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Added to Watched."));
-  });
-
   it("después de alternar, el foco sigue en el mismo botón", async () => {
     // Si el botón se volviera a montar, quien usa el teclado perdería su lugar.
     api.fetch.mockResolvedValue({ item_id: 80 });
@@ -155,7 +121,7 @@ describe("acciones de la ficha", () => {
           onListasChange={setListas}
           miCalificacion={null}
           onRate={vi.fn()}
-          onCalificacionBorrada={vi.fn()}
+          onCambiarEstado={vi.fn()}
         />
       );
     };
@@ -167,38 +133,6 @@ describe("acciones de la ficha", () => {
 
     await waitFor(() => expect(favorito).toHaveAttribute("aria-pressed", "true"));
     expect(favorito).toHaveFocus();
-  });
-
-  it("quitar de Pendientes borra el ítem por su id", async () => {
-    api.fetch.mockResolvedValue(undefined);
-    renderizar();
-
-    fireEvent.click(screen.getByRole("button", { name: "Watchlist" }));
-
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Removed from Watchlist."));
-    expect(api.fetch).toHaveBeenCalledWith("/api/lists/3/items/71/", { method: "DELETE" });
-  });
-
-  it("quitar de Vistas algo calificado pide confirmar y borra la calificación", async () => {
-    api.fetch
-      .mockRejectedValueOnce(
-        new ApiError(409, { code: "rating_blocks_removal_from_watched", params: {}, errors: [] })
-      )
-      .mockResolvedValueOnce(undefined);
-    const { onCalificacionBorrada } = renderizar({
-      miCalificacion: { id: 9, valor: 9, texto: "La vi tres veces." },
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Watched" }));
-    const dialogo = await screen.findByRole("alertdialog", { name: "Remove from Watched?" });
-    expect(within(dialogo).getByText("La vi tres veces.")).toBeInTheDocument();
-    fireEvent.click(within(dialogo).getByRole("button", { name: "Remove from Watched" }));
-
-    await waitFor(() => expect(onCalificacionBorrada).toHaveBeenCalled());
-    expect(api.fetch).toHaveBeenLastCalledWith("/api/lists/2/items/70/?borrar_calificacion=true", {
-      method: "DELETE",
-    });
-    expect(toast.success).toHaveBeenCalledWith("Rating and review removed.");
   });
 });
 
@@ -301,5 +235,116 @@ describe("menú «Add to list»", () => {
 
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByRole("button", { name: "Add Interstellar to a list" })).toHaveFocus();
+  });
+});
+
+describe("botón de estado", () => {
+  const boton = (nombre: string | RegExp = /^Status/) =>
+    screen.getByRole("button", { name: nombre });
+  const sinEstado = LISTAS.map((l) => (l.id === 3 ? { ...l, contiene: false, item_id: null } : l));
+  const conEstado = (clave: Estado) =>
+    LISTAS.map((l) => ({
+      ...l,
+      contiene: l.clave === clave ? true : l.clave === "pendientes" ? false : l.contiene,
+    }));
+
+  it("sin estado dice «Status»; con estado, nombra el estado actual", () => {
+    renderizar({ listas: sinEstado });
+    expect(boton("Status")).toHaveTextContent("Status");
+  });
+
+  it("muestra el estado de cada lista: Watching y Watched", () => {
+    renderizar({ listas: conEstado("viendo") });
+    expect(boton()).toHaveTextContent("Watching");
+  });
+
+  it("abre un menú con los tres estados como radios y marca el actual", () => {
+    renderizar();
+    fireEvent.click(boton());
+
+    const menu = screen.getByRole("menu", { name: "Status for Interstellar" });
+    const radios = within(menu).getAllByRole("menuitemradio");
+    expect(radios.map((r) => r.textContent)).toEqual([
+      "WatchlistWant to watch it",
+      "WatchingStarted, not finished",
+      "WatchedFinished",
+    ]);
+    expect(radios.map((r) => r.getAttribute("aria-checked"))).toEqual(["true", "false", "false"]);
+    expect(within(menu).getByRole("menuitem", { name: "Remove status" })).toBeInTheDocument();
+    expect(boton()).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("sin estado no ofrece «Remove status»", () => {
+    renderizar({ listas: sinEstado });
+    fireEvent.click(boton("Status"));
+
+    expect(screen.queryByRole("menuitem", { name: "Remove status" })).toBeNull();
+  });
+
+  it("elegir un estado avisa al padre y cierra el menú devolviendo el foco al botón", () => {
+    const { onCambiarEstado } = renderizar();
+    fireEvent.click(boton());
+
+    fireEvent.click(screen.getByRole("menuitemradio", { name: /Watching/ }));
+
+    expect(onCambiarEstado).toHaveBeenCalledWith("viendo");
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(boton()).toHaveFocus();
+  });
+
+  it("«Remove status» manda null", () => {
+    const { onCambiarEstado } = renderizar();
+    fireEvent.click(boton());
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Remove status" }));
+
+    expect(onCambiarEstado).toHaveBeenCalledWith(null);
+  });
+
+  it("elegir el estado actual solo cierra el menú", () => {
+    const { onCambiarEstado } = renderizar();
+    fireEvent.click(boton());
+
+    fireEvent.click(screen.getByRole("menuitemradio", { name: /Watchlist/ }));
+
+    expect(onCambiarEstado).not.toHaveBeenCalled();
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("al abrir, el foco cae en el estado marcado y ↑/↓ mueven el foco", () => {
+    renderizar();
+    fireEvent.click(boton());
+    const menu = screen.getByRole("menu");
+    const radios = within(menu).getAllByRole("menuitemradio");
+    expect(radios[0]).toHaveFocus();
+
+    fireEvent.keyDown(radios[0], { key: "ArrowDown" });
+    expect(radios[1]).toHaveFocus();
+    fireEvent.keyDown(radios[1], { key: "ArrowDown" });
+    expect(radios[2]).toHaveFocus();
+    fireEvent.keyDown(radios[2], { key: "ArrowDown" });
+    expect(within(menu).getByRole("menuitem", { name: "Remove status" })).toHaveFocus();
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
+    expect(radios[0]).toHaveFocus();
+    fireEvent.keyDown(radios[0], { key: "ArrowUp" });
+    expect(within(menu).getByRole("menuitem", { name: "Remove status" })).toHaveFocus();
+  });
+
+  it("Escape cierra el menú y el foco vuelve al botón", () => {
+    renderizar();
+    fireEvent.click(boton());
+
+    fireEvent(
+      screen.getByRole("dialog", { hidden: true }),
+      new Event("cancel", { cancelable: true })
+    );
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(boton()).toHaveFocus();
+  });
+
+  it("con un cambio en curso el botón no deja abrir otro", () => {
+    renderizar({ cambiandoEstado: true });
+    expect(boton()).toHaveAttribute("aria-disabled", "true");
   });
 });

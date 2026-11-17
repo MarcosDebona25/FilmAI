@@ -249,3 +249,36 @@
     opacity: 1;
   }
 }
+
+/* Barra de tiempo del aviso de estado con Undo (`StatusToast`): se vacía en lo
+   que dura el aviso (la duración llega en línea). Con «menos movimiento» queda
+   llena: el botón Undo y el texto dicen lo mismo. */
+@keyframes vaciar-aviso {
+  from {
+    width: calc(100% - 1.75rem);
+  }
+  to {
+    width: 0;
+  }
+}
+.aviso-barra {
+  width: calc(100% - 1.75rem);
+  animation: vaciar-aviso linear forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .aviso-barra {
+    animation: none;
+  }
+}
+
+/* Sonner, en celular (hasta 600 px), deja el contenedor de 100 % de ancho pegado
+   a la izquierda y el aviso corrido hacia ese lado. Con el mismo margen a cada
+   lado queda centrado, y el aviso ocupa todo el ancho que le queda. */
+@media (max-width: 600px) {
+  [data-sonner-toaster] {
+    width: auto !important;
+  }
+  [data-sonner-toaster] [data-sonner-toast] {
+    width: 100% !important;
+  }
+}

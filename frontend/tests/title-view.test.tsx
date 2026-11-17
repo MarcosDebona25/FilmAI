@@ -15,9 +15,16 @@ const estado = vi.hoisted(() => ({
   detalleColgado: false,
   /** Cuántos pedidos de las listas del usuario fallan antes de responder bien. */
   fallasListas: 0,
+  /** En cuál de Pendientes, Viendo y Vistas está el título (el servidor lo mueve al calificar). */
+  lista: null as null | "pendientes" | "viendo" | "vistas",
   llamadas: [] as { path: string; method: string; body?: unknown }[],
 }));
-const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+const toast = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  custom: vi.fn(),
+  dismiss: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
@@ -32,17 +39,16 @@ vi.mock("@/lib/api", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/lib/api")>();
   // `vi.mock` corre antes que los imports del archivo: los datos se cargan acá.
   const datos = await import("./title-fixtures");
-  const listas = () => [
-    {
-      id: 2,
-      nombre: "Watched",
-      clave: "vistas",
+  const listas = () =>
+    (["favoritos", "pendientes", "viendo", "vistas"] as const).map((clave, i) => ({
+      id: i + 1,
+      nombre: clave,
+      clave,
       tipo: "predeterminada",
       cantidad_items: 1,
-      contiene: Boolean(estado.mia),
-      item_id: estado.mia ? 70 : null,
-    },
-  ];
+      contiene: estado.lista === clave,
+      item_id: estado.lista === clave ? 70 + i : null,
+    }));
   return {
     ...real,
     apiFetch: vi.fn(async (path: string, opciones: { method?: string; body?: unknown } = {}) => {
@@ -85,6 +91,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
       if (path === "/api/lists/1/") return { id: 1, nombre: "Favoritos", clave: "favoritos" };
       if (path === "/api/reviews/" && method === "POST") {
         estado.mia = { id: 9, fecha: "2026-10-14", texto: null, ...(opciones.body as object) };
+        estado.lista = "vistas";
         return structuredClone(estado.mia);
       }
       if (path === "/api/reviews/9/texto/") {
@@ -113,6 +120,7 @@ beforeEach(() => {
   estado.plataformas = "AR";
   estado.detalleColgado = false;
   estado.fallasListas = 0;
+  estado.lista = null;
   estado.llamadas = [];
   limpiarCacheCatalogo();
 });
@@ -271,11 +279,11 @@ describe("ficha con sesión", () => {
       "role",
       "alert"
     );
-    expect(screen.queryByRole("button", { name: "Watched" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Favorite" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
 
     // Los datos de prueba solo traen Vistas (y una personalizada).
-    expect(await screen.findByRole("button", { name: "Watched" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Favorite" })).toBeInTheDocument();
     expect(screen.queryByText("We couldn’t load your lists. Try again.")).not.toBeInTheDocument();
   });
 
@@ -287,7 +295,7 @@ describe("ficha con sesión", () => {
 
     rerender(<TitleView tipo="tv" id={1396} />);
 
-    expect(await screen.findByRole("button", { name: "Watched" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Favorite" })).toBeInTheDocument();
     expect(screen.queryByText("We couldn’t load your lists. Try again.")).not.toBeInTheDocument();
   });
 
@@ -302,7 +310,13 @@ describe("ficha con sesión", () => {
     fireEvent.click(within(dialogo).getByRole("radio", { name: "8 out of 10" }));
     fireEvent.click(within(dialogo).getByRole("button", { name: "Post" }));
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Rating posted."));
+    // Sin estado previo no hay Undo: el aviso de la ficha dura 2 s (canvas).
+    await waitFor(() =>
+      expect(toast.custom).toHaveBeenCalledWith(expect.any(Function), {
+        id: "estado-ficha",
+        duration: 2000,
+      })
+    );
     expect(pedidas("/api/reviews/", "POST")[0].body).toEqual({
       id_tmdb: 157336,
       tipo: "movie",
@@ -312,6 +326,33 @@ describe("ficha con sesión", () => {
       await screen.findByRole("button", { name: "Your rating: 8 out of 10. Edit" })
     ).toBeInTheDocument();
     expect(pedidas("/api/lists/?").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("calificar algo de Watchlist avisa con Undo de 6 s, y el servidor ya lo movió a Watched", async () => {
+    estado.lista = "pendientes";
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    fireEvent.click(await screen.findByRole("button", { name: "Rate" }));
+    const dialogo = screen.getByRole("dialog", { name: "Rate Interstellar" });
+    fireEvent.click(within(dialogo).getByRole("radio", { name: "8 out of 10" }));
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Post" }));
+
+    await waitFor(() =>
+      expect(toast.custom).toHaveBeenCalledWith(expect.any(Function), {
+        id: "estado-ficha",
+        duration: 6000,
+      })
+    );
+    expect(await screen.findByRole("button", { name: "Status: Watched" })).toBeInTheDocument();
+  });
+
+  it("al salir de la ficha cierra el aviso de estado", async () => {
+    const { unmount } = render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+    await screen.findByRole("heading", { name: "Interstellar" });
+
+    unmount();
+
+    expect(toast.dismiss).toHaveBeenCalledWith("estado-ficha");
   });
 
   it("vaciar el texto al editar lo borra aparte y actualiza la nota", async () => {

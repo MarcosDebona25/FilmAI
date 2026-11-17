@@ -26,18 +26,25 @@ The page MUST show the backdrop band with the site navbar over it, the poster, t
 
 ### Requirement: Actions
 
-Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page; a signed-in user MUST NOT see it while the page loads. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite, Watched, Watchlist as `aria-pressed` toggles over the lists API, whose icons fill with the accent color when on; turning Watched on for a title in Watchlist MUST turn Watchlist off and say so in a single toast, and the rating dialog MUST warn that rating also removes it from Watchlist, and «Add to list» with the user's own lists and inline creation. Removing from Watched a rated title MUST ask for confirmation and then delete the rating with it.
+Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page; a signed-in user MUST NOT see it while the page loads. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite (an `aria-pressed` toggle over the lists API, whose heart fills with the accent color when on), the status button and «Add to list» with the user's own lists and inline creation (PR 4, 16/11/2026). The status button shows «Status» with a + when the title has none, and the name of the status (Watchlist, Watching or Watched) otherwise; it opens a menu (a bottom sheet on phones) with the three statuses as radios, the current one checked, and «Remove status». Picking one MUST be optimistic and call `PUT /api/lists/status/`; if it fails the button MUST go back and an error toast («Couldn't update the status. Try again.», no Undo) MUST show. A successful change MUST show a toast «Moved to Watching» with Undo for 6 s (a polite live region that also says «Undo available for 6 seconds»); Undo goes back one step with the same endpoint and shows «Back to Watchlist» for 2 s without Undo. A second change replaces the toast, and leaving the page closes it. Toasts are at the top center on desktop and at the bottom, 12 px over the tab bar, on phones. Rating a title in Watchlist or Watching moves it to Watched (the backend does it) and the toast says «Rated ★ 8 · Moved to Watched» with Undo, which restores the previous status and keeps the rating; rating one already in Watched (or with no status) says «Rated ★ 8» without Undo. Removing a status never touches the rating.
 
 #### Scenario: Signed in while the detail loads
 
 - GIVEN a signed-in user whose lists arrive before the title detail
 - THEN the page shows the skeleton and no «Log in to rate or save»
 
-#### Scenario: Watched with a rating
+#### Scenario: Status with Undo
 
-- GIVEN a rated title in Watched
-- WHEN the user turns Watched off and confirms
-- THEN the rating and review are deleted, Watched is off and the button reads «Rate» again
+- GIVEN a title in Watchlist
+- WHEN the user picks Watching in the status menu
+- THEN the button reads «Watching» at once and a toast says «Moved to Watching» with Undo
+- AND pressing Undo returns the title to Watchlist and shows «Back to Watchlist»
+
+#### Scenario: Rating moves the title to Watched
+
+- GIVEN a title in Watchlist
+- WHEN the user rates it 8
+- THEN the toast says «Rated ★ 8 · Moved to Watched» with Undo, the button reads «Watched» and Undo restores Watchlist keeping the rating
 
 ### Requirement: Where to watch
 
