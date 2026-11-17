@@ -450,7 +450,8 @@ describe("registro en pasos", () => {
       responder(false);
       expect(await screen.findByText(en.errors.codes.username_already_used)).toBeInTheDocument();
       expect(barra()).toHaveAttribute("aria-valuenow", "2");
-      expect(continuar()).not.toHaveAttribute("aria-busy");
+      // El error sale del estado del usuario; el pendiente se limpia en el render siguiente.
+      await waitFor(() => expect(continuar()).not.toHaveAttribute("aria-busy"));
       expect(continuar()).toBeEnabled();
     });
 
