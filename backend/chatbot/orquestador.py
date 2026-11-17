@@ -14,6 +14,7 @@ común, y se llama con `await en_hilo(...)`.
 import json
 import logging
 import time
+from dataclasses import dataclass, field
 from datetime import timedelta
 
 from django.conf import settings
@@ -53,9 +54,10 @@ _MENSAJES_DE_HISTORIAL = 10
 # look that up.») es corto: si la vuelta termina antes de este largo y pidió
 # buscar, se descarta. Una respuesta de verdad lo pasa enseguida y sigue en vivo.
 _LARGO_DE_PREAMBULO = 200
-# La búsqueda forzada (ver `responder`) solo se intenta si el turno lleva menos de
-# esta parte del tiempo máximo de la vista (`LLM_TIMEOUT_SECONDS`): otra llamada al
-# modelo más las tools tiene que entrar en lo que queda.
+# La búsqueda forzada (ver `_hay_que_forzar_la_busqueda`) solo se intenta si el
+# turno lleva menos de esta parte del tiempo máximo de la vista
+# (`LLM_TIMEOUT_SECONDS`): otra llamada al modelo más las tools tiene que entrar en
+# lo que queda.
 _FRACCION_PARA_REINTENTAR = 0.4
 _ROLES = {TipoAutor.USUARIO: "user", TipoAutor.CHATBOT: "assistant"}
 
@@ -313,7 +315,215 @@ def _soltar(filtro, partes):
     return Texto(resto)
 
 
-async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro, medicion):
+# --- El turno, partido en pasos ---------------------------------------------------
+#
+# `responder` (al final del archivo) es el índice: llama a estos pasos en orden.
+# Cada paso recibe el mismo `_Turno`, que es la memoria compartida entre todos.
+#
+#   _abrir_turno          lee la base y arma lo que recibe el modelo
+#   _conversar            el ciclo de vueltas; por cada vuelta:
+#     _escuchar             una llamada al modelo (retiene o transmite el texto)
+#     _hay_que_forzar_la_busqueda   ¿recomendó sin buscar?
+#     _cerrar_texto_de_la_vuelta    entrega lo retenido, salvo un preámbulo
+#     _buscar               corre las tools y le deja los resultados al modelo
+#   _asegurar_respuesta   si no hubo ni una palabra, una última llamada
+#   _armar_tarjetas       la red sin marcadores y una parte por saga
+#   _registrar_turno      la línea `Turno:` del log
+#
+# Varios pasos son generadores async (`async def` con `yield`): no devuelven un
+# valor, van entregando eventos. El que los llama los recorre con `async for` y
+# reenvía cada evento con su propio `yield`. En Java sería parecido a recibir un
+# `Consumer<Evento>` y llamarlo por cada evento. Como un generador no puede además
+# devolver un resultado con `return valor`, lo que cada paso averigua queda escrito
+# en `_Turno` o en `_Escucha`.
+
+
+@dataclass
+class _Turno:
+    """Todo lo que se va sabiendo de un turno mientras se responde.
+
+    Antes eran una docena de variables sueltas dentro de `responder`. Juntas en un
+    objeto, cada paso puede ser una función aparte que recibe el turno. Un
+    `@dataclass` es una clase a la que Python le escribe el constructor a partir de
+    los campos (como un `record` de Java, pero este se puede modificar).
+
+    `field(default_factory=list)` le da a cada turno su propia lista vacía: con
+    `= []` todos los turnos compartirían la misma.
+    """
+
+    proveedor: object
+    ctx: ContextoTurno
+    # La conversación que recibe el modelo. Crece con cada vuelta de tools.
+    mensajes: list
+    # Cambia los `[[n]]` del modelo por el título y suma las tarjetas (marcadores.py).
+    filtro: FiltroDeMarcadores
+    # `_ahora()` y `_reloj()` al empezar: uno para decidir, el otro para el log.
+    inicio: float
+    inicio_medido: float
+    # El texto que ya salió al usuario, en pedazos. Unidos son la respuesta final.
+    partes: list = field(default_factory=list)
+    medicion: _Medicion = field(default_factory=_Medicion)
+    # Para la línea de diagnóstico del final (ver `_registrar_turno`).
+    tools_pedidas: list = field(default_factory=list)
+    vueltas: int = 0
+    ultima_sin_tools: bool = False
+    # Búsqueda forzada: `reintento` dice que ya se decidió hacerla (es una sola por
+    # turno) y `descartado` guarda el texto del primer intento, por si la llamada
+    # forzada falla.
+    reintento: bool = False
+    descartado: list | None = None
+
+    def respuesta(self):
+        """El texto que el usuario recibió hasta ahora, de corrido."""
+        return "".join(self.partes)
+
+
+@dataclass
+class _Escucha:
+    """Una llamada al modelo dentro del ciclo: cómo se hace y qué dejó.
+
+    Los tres primeros campos se deciden antes de llamar; `retenido` y `vuelta` los
+    llena `_escuchar` mientras el modelo escribe.
+    """
+
+    # Mientras ninguna tool corrió, la vuelta se retiene entera: si resulta que el
+    # modelo recomendó sin buscar, hay que poder descartarla sin que el usuario haya
+    # leído nada. Después de una búsqueda se transmite en vivo.
+    retener: bool
+    # Sin esto, el texto de dos vueltas saldría pegado: «…despacio.¿Querés…».
+    separar: bool
+    # La llamada va con `tool_choice="required"` (la búsqueda forzada).
+    forzada: bool
+    # Lo que todavía no salió al front, por si resulta ser un preámbulo.
+    retenido: list = field(default_factory=list)
+    vuelta: Vuelta | None = None
+
+    def texto_retenido(self):
+        return "".join(self.retenido)
+
+
+async def _abrir_turno(chat, texto, idioma, proveedor):
+    """Paso 1: elige el proveedor y lee de la base todo lo que el turno necesita.
+
+    Es `async def` sin `yield`: una corrutina común, que se llama con `await` y sí
+    devuelve un valor (el `_Turno`).
+    """
+    try:
+        proveedor = proveedor or crear_proveedor()
+        ctx, mensajes = await en_hilo(_preparar, chat, texto, idioma)
+    except Exception as error:
+        # Un `LLM_PROVIDER` que no existe, la base caída o un `contexto` mal armado.
+        logger.exception("No se pudo preparar el turno")
+        raise ErrorDelTurno("No se pudo preparar el turno") from error
+    return _Turno(
+        proveedor=proveedor,
+        ctx=ctx,
+        mensajes=mensajes,
+        filtro=FiltroDeMarcadores(ctx),
+        # Se llaman acá y no como valor por defecto del campo: así los tests pueden
+        # reemplazar `_ahora` y `_reloj` con `patch`.
+        inicio=_ahora(),
+        inicio_medido=_reloj(),
+    )
+
+
+async def _sacar_retenido(turno, escucha):
+    """Manda al front lo que la vuelta tenía retenido, con su separador si hace falta."""
+    async for evento in _sacar(
+        turno.filtro,
+        turno.partes,
+        _con_separador(escucha.retenido, escucha.separar),
+    ):
+        yield evento
+    escucha.separar, escucha.retenido = False, []
+
+
+async def _escuchar(turno, escucha):
+    """Una llamada al modelo: junta su texto y deja la `Vuelta` en `escucha`.
+
+    El texto llega de a pedazos. Se acumula en `escucha.retenido` y sale al front
+    solo cuando ya se sabe que no es un preámbulo: si la vuelta no se retiene entera
+    (`escucha.retener`) y lo acumulado pasó `_LARGO_DE_PREAMBULO`. Desde ahí cada
+    pedazo sale en vivo.
+    """
+    # `**{...}` abre el diccionario como argumentos con nombre; vacío, no pasa
+    # ninguno (así un proveedor sin `tool_choice` sigue funcionando).
+    extra = {"tool_choice": "required"} if escucha.forzada else {}
+    en_vivo = False
+    try:
+        async for item in turno.proveedor.escribir(turno.mensajes, ESQUEMAS, **extra):
+            if isinstance(item, Vuelta):
+                escucha.vuelta = item
+                turno.medicion.sumar(item)
+                continue
+            escucha.retenido.append(item)
+            if escucha.retener or (
+                not en_vivo and len(escucha.texto_retenido()) <= _LARGO_DE_PREAMBULO
+            ):
+                continue
+            en_vivo = True
+            async for evento in _sacar_retenido(turno, escucha):
+                yield evento
+    except Exception as error:
+        # `Exception` no incluye `CancelledError`: si el usuario cancela, la
+        # cancelación tiene que llegar a la vista.
+        logger.exception("El proveedor falló")
+        if not (escucha.forzada and turno.descartado):
+            raise ErrorDelTurno("El proveedor falló") from error
+        # La llamada forzada falló: se muestra el primer intento (sin los
+        # marcadores inválidos), que es mejor que un error.
+        escucha.retenido = turno.descartado
+        escucha.vuelta = Vuelta(texto="".join(turno.descartado))
+
+
+def _hay_que_forzar_la_busqueda(turno, escucha):
+    """¿El modelo recomendó sin haber buscado, y todavía hay tiempo para repetir?
+
+    Solo puede pasar en una vuelta retenida (ninguna tool corrió), que no pidió
+    tools, una vez por turno y si el texto nombra un título que no salió de una
+    búsqueda (`recomienda_sin_buscar`). El reloj se mira al final y solo si todo lo
+    anterior se cumple: `and` deja de evaluar en el primer `False`, igual que `&&`.
+    """
+    return (
+        escucha.retener
+        and not escucha.vuelta.llamadas
+        and not turno.reintento
+        and recomienda_sin_buscar(escucha.texto_retenido(), turno.ctx.candidatos())
+        and _ahora() - turno.inicio
+        < settings.LLM_TIMEOUT_SECONDS * _FRACCION_PARA_REINTENTAR
+    )
+
+
+async def _cerrar_texto_de_la_vuelta(turno, escucha):
+    """Al terminar una vuelta, entrega el texto que seguía retenido.
+
+    Texto corto y una búsqueda: era un «ya busco», y la respuesta viene después. Se
+    descarta solo del front; el modelo lo sigue viendo en `mensajes`.
+    """
+    es_preambulo = (
+        escucha.vuelta.llamadas and len(escucha.texto_retenido()) <= _LARGO_DE_PREAMBULO
+    )
+    if escucha.retenido and not es_preambulo:
+        async for evento in _sacar_retenido(turno, escucha):
+            yield evento
+    # Lo que el filtro retenía por si era un marcador: la vuelta terminó.
+    if resto := _soltar(turno.filtro, turno.partes):
+        yield resto
+
+
+async def _buscar(turno, vuelta):
+    """Corre las tools que pidió el modelo y le deja los resultados en `mensajes`.
+
+    Las tools son código común (bloquean mientras esperan a TMDB o a la base): van
+    por `en_hilo`, y el `await` espera sin frenar a los demás pedidos.
+    """
+    resultados, resumen = await en_hilo(_correr_tools, turno.ctx, vuelta.llamadas)
+    turno.tools_pedidas.extend(resumen)
+    turno.mensajes.append(_mensaje_del_asistente(vuelta))
+    turno.mensajes.extend(resultados)
+
+
+async def _ultima_llamada(turno, motivo):
     """Una llamada más, sin tools, para que el modelo responda con lo que ya tiene.
 
     Antes, pasarse del tope de vueltas o terminar sin texto era un error para el
@@ -321,55 +531,123 @@ async def _ultima_llamada(proveedor, mensajes, partes, motivo, filtro, medicion)
     que cierre: como no recibe tools, solo puede escribir. Si esta llamada también
     falla o vuelve vacía, ahí sí es un `ErrorDelTurno`.
 
-    Entrega el texto en vivo y lo suma a `partes`. Si ya había texto de otras
+    Entrega el texto en vivo y lo suma a `turno.partes`. Si ya había texto de otras
     vueltas, lo nuevo va separado con un «\n\n» y lo anterior no se repite.
     """
     logger.warning("Última llamada sin tools: %s", motivo)
-    mensajes.append({"role": "system", "content": _AVISO_DE_ULTIMA_LLAMADA})
-    separar = bool("".join(partes).strip())
+    turno.ultima_sin_tools = True
+    turno.mensajes.append({"role": "system", "content": _AVISO_DE_ULTIMA_LLAMADA})
+    separar = bool(turno.respuesta().strip())
     escrito = False
     try:
-        async for item in proveedor.escribir(mensajes, []):
+        async for item in turno.proveedor.escribir(turno.mensajes, []):
             # Si el modelo pidiera tools igual, la `Vuelta` final se ignora: solo
             # importa el texto que salió.
             if isinstance(item, Vuelta):
-                medicion.sumar(item)
+                turno.medicion.sumar(item)
                 continue
             if not item:
                 continue
-            saliente = filtro.alimentar(item)
+            saliente = turno.filtro.alimentar(item)
             if not saliente:
                 continue
             if separar:
-                partes.append("\n\n")
+                turno.partes.append("\n\n")
                 yield Texto("\n\n")
                 separar = False
             escrito = escrito or bool(saliente.strip())
-            partes.append(saliente)
+            turno.partes.append(saliente)
             yield Texto(saliente)
     except Exception as error:
         logger.exception("La última llamada falló")
         raise ErrorDelTurno("La última llamada falló") from error
-    if resto := _soltar(filtro, partes):
+    if resto := _soltar(turno.filtro, turno.partes):
         escrito = escrito or bool(resto.delta.strip())
         yield resto
     if not escrito:
         raise ErrorDelTurno("La última llamada no escribió nada")
 
 
-def _registrar_turno(
-    tools_pedidas,
-    vueltas,
-    ultima_sin_tools,
-    ctx,
-    filtro,
-    reintento,
-    medicion,
-    total,
-    red=False,
-    saga_descartadas=0,
-):
-    """Una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
+async def _conversar(turno):
+    """Paso 2: el ida y vuelta con el modelo, hasta que responde sin pedir tools.
+
+    Cada pasada del ciclo es una vuelta: una llamada al modelo y, si pidió tools,
+    correrlas. Termina con `return` cuando el modelo contesta sin pedir nada. Si se
+    acaban las vueltas y todavía pedía tools, sigue después del `for`: una última
+    llamada sin tools para que responda con lo que encontró.
+    """
+    # La próxima llamada es la búsqueda forzada (ver `_hay_que_forzar_la_busqueda`).
+    forzar = False
+    for _ in range(_MAX_VUELTAS_CON_TOOLS + 1):
+        turno.vueltas += 1
+        escucha = _Escucha(
+            retener=not turno.tools_pedidas,
+            separar=bool(turno.partes),
+            forzada=forzar,
+        )
+        forzar = False
+        async for evento in _escuchar(turno, escucha):
+            yield evento
+
+        if _hay_que_forzar_la_busqueda(turno, escucha):
+            # Se descarta lo que escribió y la llamada se repite, una sola vez, con
+            # `tool_choice="required"`.
+            logger.warning("Recomendó sin buscar: se repite la llamada con tool_choice")
+            turno.reintento = forzar = True
+            turno.descartado = escucha.retenido
+            continue
+
+        async for evento in _cerrar_texto_de_la_vuelta(turno, escucha):
+            yield evento
+        if not escucha.vuelta.llamadas:
+            # Respondió sin pedir tools: la conversación con el modelo terminó.
+            return
+
+        yield Estado("searching")
+        await _buscar(turno, escucha.vuelta)
+
+    # Solo se llega acá si la última vuelta permitida todavía pedía tools.
+    async for evento in _ultima_llamada(turno, "se pasó del tope de vueltas con tools"):
+        yield evento
+
+
+async def _asegurar_respuesta(turno):
+    """Paso 3: si el turno terminó sin una sola palabra para el usuario, la pide."""
+    if turno.respuesta().strip():
+        return
+    async for evento in _ultima_llamada(turno, "el modelo no escribió nada"):
+        yield evento
+
+
+async def _armar_tarjetas(turno, respuesta, pedido):
+    """Paso 4: deja en `ctx.tarjetas` las tarjetas definitivas del turno.
+
+    Devuelve `(red, saga_descartadas)` para el log: si las tarjetas salieron de la
+    red de seguridad y cuántas se saltearon por repetir saga.
+    """
+    ctx, filtro = turno.ctx, turno.filtro
+    # Red de seguridad: hubo búsquedas, pero el modelo recomendó en texto plano (sin
+    # un solo `[[n]]` válido). El texto ya salió y no se toca: solo se arman las
+    # tarjetas de los candidatos que nombra (ver `tarjetas_sin_marcadores`).
+    red = False
+    mencionados = filtro.mencionados
+    if turno.tools_pedidas and filtro.validos == 0 and not ctx.tarjetas:
+        # Sin tope: `una_parte_por_saga` elige y puede necesitar uno más.
+        mencionados = tarjetas_sin_marcadores(respuesta, ctx, pedido, tope=None)
+        ctx.tarjetas.extend(mencionados[:TOPE_TARJETAS])
+        red = bool(ctx.tarjetas)
+    # Una sola parte de cada saga (14/11/2026): con dos o más títulos se mira en TMDB
+    # si alguna película repite colección. Es código bloqueante (hilos y red), así que
+    # va por `en_hilo` como las tools. No falla nunca: ante un error, queda lo de antes.
+    saga_descartadas = 0
+    if len(mencionados) > 1:
+        tarjetas, saga_descartadas = await en_hilo(una_parte_por_saga, mencionados)
+        ctx.tarjetas[:] = tarjetas
+    return red, saga_descartadas
+
+
+def _registrar_turno(turno, total, red=False, saga_descartadas=0):
+    """Paso 5: una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
     Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
     tools pidió y con cuántos resultados, si se quedó sin vueltas, cuántos marcadores
@@ -384,16 +662,20 @@ def _registrar_turno(
         "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s "
         "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d "
         "reintento_forzado=%s saga_descartadas=%d %s",
-        ",".join(tools_pedidas) or "ninguna",
-        vueltas,
-        "si" if ultima_sin_tools else "no",
-        "red_sin_marcadores" if red else "marcadores" if ctx.tarjetas else "ninguna",
-        filtro.validos,
-        filtro.invalidos,
-        filtro.negritas,
-        "si" if reintento else "no",
+        ",".join(turno.tools_pedidas) or "ninguna",
+        turno.vueltas,
+        "si" if turno.ultima_sin_tools else "no",
+        "red_sin_marcadores"
+        if red
+        else "marcadores"
+        if turno.ctx.tarjetas
+        else "ninguna",
+        turno.filtro.validos,
+        turno.filtro.invalidos,
+        turno.filtro.negritas,
+        "si" if turno.reintento else "no",
         saga_descartadas,
-        medicion.resumen(total),
+        turno.medicion.resumen(total),
     )
 
 
@@ -403,152 +685,15 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     Cumple las reglas de `eventos.py`. Es un generador async: cada `yield` le pasa
     un evento a la vista y sigue desde ahí cuando la vista pide el próximo.
     `proveedor` es para los tests; sin él, se usa el configurado.
+
+    Acá solo está el orden de los pasos; el detalle de cada uno, en su función.
     """
-    try:
-        proveedor = proveedor or crear_proveedor()
-        ctx, mensajes = await en_hilo(_preparar, chat, texto, idioma)
-    except Exception as error:
-        # Un `LLM_PROVIDER` que no existe, la base caída o un `contexto` mal armado.
-        logger.exception("No se pudo preparar el turno")
-        raise ErrorDelTurno("No se pudo preparar el turno") from error
-    partes = []
-    # Cambia los `[[n]]` del modelo por el título y suma las tarjetas (marcadores.py).
-    filtro = FiltroDeMarcadores(ctx)
-    # Para la línea de diagnóstico del final (ver `_registrar_turno`).
-    tools_pedidas, vueltas, ultima_sin_tools = [], 0, False
-    # Búsqueda forzada: si el modelo recomienda sin haber buscado, la llamada se repite
-    # una sola vez con `tool_choice="required"`. `reintento` dice que ya se decidió
-    # hacerlo; `forzar_ahora`, que la próxima llamada es esa; `descartado`, el texto
-    # del primer intento, por si la llamada forzada falla.
-    inicio = _ahora()
-    inicio_medido = _reloj()
-    medicion = _Medicion()
-    reintento = forzar_ahora = False
-    descartado = None
-
-    for _ in range(_MAX_VUELTAS_CON_TOOLS + 1):
-        vueltas += 1
-        vuelta = None
-        # Sin esto, el texto de dos vueltas saldría pegado: «…despacio.¿Querés…».
-        separar = bool(partes)
-        # Mientras ninguna tool corrió, la vuelta se retiene entera: si resulta que
-        # el modelo recomendó sin buscar, hay que poder descartarla sin que el
-        # usuario haya leído nada. Después de una búsqueda se transmite en vivo.
-        retener = not tools_pedidas
-        # Lo que todavía no salió al front, por si resulta ser un preámbulo.
-        retenido, en_vivo = [], False
-        # `**{...}` abre el diccionario como argumentos con nombre; vacío, no pasa
-        # ninguno (así un proveedor sin `tool_choice` sigue funcionando).
-        extra = {"tool_choice": "required"} if forzar_ahora else {}
-        forzar_ahora = False
-        try:
-            async for item in proveedor.escribir(mensajes, ESQUEMAS, **extra):
-                if isinstance(item, Vuelta):
-                    vuelta = item
-                    medicion.sumar(item)
-                    continue
-                retenido.append(item)
-                if retener or (
-                    not en_vivo and len("".join(retenido)) <= _LARGO_DE_PREAMBULO
-                ):
-                    continue
-                en_vivo = True
-                async for evento in _sacar(
-                    filtro, partes, _con_separador(retenido, separar)
-                ):
-                    yield evento
-                separar, retenido = False, []
-        except Exception as error:
-            # `Exception` no incluye `CancelledError`: si el usuario cancela, la
-            # cancelación tiene que llegar a la vista.
-            logger.exception("El proveedor falló")
-            if not (extra and descartado):
-                raise ErrorDelTurno("El proveedor falló") from error
-            # La llamada forzada falló: se muestra el primer intento (sin los
-            # marcadores inválidos), que es mejor que un error.
-            retenido, vuelta = descartado, Vuelta(texto="".join(descartado))
-
-        texto_retenido = "".join(retenido)
-        if (
-            retener
-            and not vuelta.llamadas
-            and not reintento
-            and recomienda_sin_buscar(texto_retenido, ctx.candidatos())
-            and _ahora() - inicio
-            < settings.LLM_TIMEOUT_SECONDS * _FRACCION_PARA_REINTENTAR
-        ):
-            logger.warning("Recomendó sin buscar: se repite la llamada con tool_choice")
-            reintento = forzar_ahora = True
-            descartado = retenido
-            continue
-
-        # Texto corto y una búsqueda: era un «ya busco», y la respuesta viene después.
-        # Se descarta solo del front; el modelo lo sigue viendo en `mensajes`.
-        es_preambulo = vuelta.llamadas and len(texto_retenido) <= _LARGO_DE_PREAMBULO
-        if retenido and not es_preambulo:
-            async for evento in _sacar(
-                filtro, partes, _con_separador(retenido, separar)
-            ):
-                yield evento
-        # Lo que el filtro retenía por si era un marcador: la vuelta terminó.
-        if resto := _soltar(filtro, partes):
-            yield resto
-
-        if not vuelta.llamadas:
-            break
-
-        yield Estado("searching")
-        resultados, resumen = await en_hilo(_correr_tools, ctx, vuelta.llamadas)
-        tools_pedidas.extend(resumen)
-        mensajes.append(_mensaje_del_asistente(vuelta))
-        mensajes.extend(resultados)
-    else:
-        # `for ... else`: el `else` corre solo si el ciclo terminó sin `break` (en
-        # Java no hay equivalente). Acá: la última vuelta permitida todavía pedía
-        # tools, así que el modelo no llegó a responder.
-        motivo = "se pasó del tope de vueltas con tools"
-        ultima_sin_tools = True
-        async for evento in _ultima_llamada(
-            proveedor, mensajes, partes, motivo, filtro, medicion
-        ):
-            yield evento
-
-    if not "".join(partes).strip():
-        # El turno terminó sin una sola palabra para el usuario.
-        ultima_sin_tools = True
-        async for evento in _ultima_llamada(
-            proveedor, mensajes, partes, "el modelo no escribió nada", filtro, medicion
-        ):
-            yield evento
-
-    respuesta = "".join(partes)
-    # Red de seguridad: hubo búsquedas, pero el modelo recomendó en texto plano (sin
-    # un solo `[[n]]` válido). El texto ya salió y no se toca: solo se arman las
-    # tarjetas de los candidatos que nombra (ver `tarjetas_sin_marcadores`).
-    red = False
-    mencionados = filtro.mencionados
-    if tools_pedidas and filtro.validos == 0 and not ctx.tarjetas:
-        # Sin tope: `una_parte_por_saga` elige y puede necesitar uno más.
-        mencionados = tarjetas_sin_marcadores(respuesta, ctx, texto, tope=None)
-        ctx.tarjetas.extend(mencionados[:TOPE_TARJETAS])
-        red = bool(ctx.tarjetas)
-    # Una sola parte de cada saga (14/11/2026): con dos o más títulos se mira en TMDB
-    # si alguna película repite colección. Es código bloqueante (hilos y red), así que
-    # va por `en_hilo` como las tools. No falla nunca: ante un error, queda lo de antes.
-    saga_descartadas = 0
-    if len(mencionados) > 1:
-        tarjetas, saga_descartadas = await en_hilo(una_parte_por_saga, mencionados)
-        ctx.tarjetas[:] = tarjetas
-    _registrar_turno(
-        tools_pedidas,
-        vueltas,
-        ultima_sin_tools,
-        ctx,
-        filtro,
-        reintento,
-        medicion,
-        _reloj() - inicio_medido,
-        red,
-        saga_descartadas,
-    )
-    yield Resultado(respuesta, ctx.tarjetas)
+    turno = await _abrir_turno(chat, texto, idioma, proveedor)
+    async for evento in _conversar(turno):
+        yield evento
+    async for evento in _asegurar_respuesta(turno):
+        yield evento
+    respuesta = turno.respuesta()
+    red, saga_descartadas = await _armar_tarjetas(turno, respuesta, texto)
+    _registrar_turno(turno, _reloj() - turno.inicio_medido, red, saga_descartadas)
+    yield Resultado(respuesta, turno.ctx.tarjetas)

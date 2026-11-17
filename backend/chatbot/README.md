@@ -41,6 +41,41 @@ informa), `cortado_por_largo` (alguna llamada terminó por `length`) y
 `segundos_por_llamada` y `segundos_total`. Nunca lleva texto de la pregunta ni de la
 respuesta.
 
+## Los pasos de `responder()`
+
+`responder()` es corta a propósito: solo dice en qué orden van los pasos. Cada paso
+es una función de `orquestador.py`, y todos comparten un objeto `_Turno` (la
+conversación con el modelo, el texto que ya salió, lo que se anota para el log).
+
+```
+responder(chat, texto, idioma)
+  │
+  ├─ 1. _abrir_turno          lee la base (perfil, historial, tarjetas anteriores)
+  │                           y arma los mensajes para el modelo
+  │
+  ├─ 2. _conversar            hasta 5 vueltas (4 con tools y la respuesta)
+  │       │  por cada vuelta:
+  │       ├─ _escuchar                    una llamada al modelo; retiene el texto
+  │       │                               o lo transmite ──▶ Texto
+  │       ├─ _hay_que_forzar_la_busqueda  ¿recomendó sin buscar? se descarta y se
+  │       │                               repite una vez con tool_choice="required"
+  │       ├─ _cerrar_texto_de_la_vuelta   entrega lo retenido, salvo un «ya busco»
+  │       ├─ ¿no pidió tools? ── fin del paso 2
+  │       └─ _buscar                      ──▶ Estado("searching"); corre las tools
+  │                                       (en otro hilo) y suma los resultados
+  │       si se acaban las vueltas: _ultima_llamada (sin tools)
+  │
+  ├─ 3. _asegurar_respuesta   ¿ni una palabra? _ultima_llamada (sin tools)
+  ├─ 4. _armar_tarjetas       red sin marcadores y una parte por saga
+  ├─ 5. _registrar_turno      la línea `Turno:` del log
+  └─ ──▶ Resultado(texto, tarjetas)    lo único que la vista guarda
+```
+
+Los pasos que entregan eventos son generadores async (`async def` con `yield`):
+`responder()` los recorre con `async for` y reenvía cada evento. Se partió el
+15/11/2026 sin cambiar la conducta; `tests_responder_caracterizacion.py` tiene la
+foto de la secuencia de eventos de antes del cambio.
+
 **Qué historial ve el modelo**: los últimos 10 mensajes **de la sesión actual**. Una
 sesión se corta con un silencio mayor a `CHAT_VENTANA_SESION_MINUTOS` (45 por defecto,
 medido hacia atrás desde el mensaje que llega), y a lo que dijo el asistente se le
@@ -52,7 +87,7 @@ mensaje de `historial` con `hace_min` simula una sesión anterior.
 | Archivo | Para qué sirve |
 |---|---|
 | `eventos.py` | El contrato entre el Motor y el Canal: qué eventos entrega `responder()` |
-| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas. Al cerrar cada turno escribe una línea de log INFO (`Turno: tools=… vueltas=… ultima_sin_tools=… tarjetas=…`) con las tools pedidas y su cantidad de resultados, sin la pregunta ni la respuesta. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Las tarjetas salen de los marcadores `[[n]]` que escribe el modelo (ver `marcadores.py`); el log suma `marcadores_validos`, `marcadores_invalidos`, `negritas_propias`, `reintento_forzado` y `saga_descartadas` (tarjetas salteadas por ser otra parte de una saga que ya tenía la suya). Si el modelo recomienda sin haber buscado (un `[[n]]` sin candidato o una negrita), descarta ese primer intento y repite la llamada una vez con `tool_choice="required"`; por eso la primera vuelta del turno se retiene entera hasta saber si hubo tools. Las tarjetas del último mensaje del asistente entran como candidatos numerados («¿y las tarjetas?») |
+| `orquestador.py` | `responder()`: el ida y vuelta entre el modelo y las herramientas, partido en pasos (ver «Los pasos de `responder()`»). Al cerrar cada turno escribe una línea de log INFO (`Turno: tools=… vueltas=… ultima_sin_tools=… tarjetas=…`) con las tools pedidas y su cantidad de resultados, sin la pregunta ni la respuesta. Si pasa el tope de 4 vueltas con tools o termina sin texto, hace una última llamada sin tools para que responda con lo que ya encontró. Las tarjetas salen de los marcadores `[[n]]` que escribe el modelo (ver `marcadores.py`); el log suma `marcadores_validos`, `marcadores_invalidos`, `negritas_propias`, `reintento_forzado` y `saga_descartadas` (tarjetas salteadas por ser otra parte de una saga que ya tenía la suya). Si el modelo recomienda sin haber buscado (un `[[n]]` sin candidato o una negrita), descarta ese primer intento y repite la llamada una vez con `tool_choice="required"`; por eso la primera vuelta del turno se retiene entera hasta saber si hubo tools. Las tarjetas del último mensaje del asistente entran como candidatos numerados («¿y las tarjetas?») |
 | `orquestador_falso.py` | Un `responder()` de mentira, para construir la vista sin el modelo |
 | `servicio.py` | `guardar_turno()` (pregunta, respuesta y `ya_recomendados`, todo o nada) y el historial |
 | `views.py` | `POST /api/chat/preparar/`; `MensajesView`: el historial (`GET`) y la pregunta con su respuesta en streaming (`POST`) |
