@@ -61,10 +61,9 @@
       "posterAlt": "Póster de {title}",
       "tmdbRatingLabel": "Calificación TMDB: {rating} de 10",
       "favorite": "Favorita",
-      "watched": "Vista",
-      "watchlist": "Pendiente",
       "noPoster": "Sin póster",
-      "addedOnLabel": "Agregada a esta lista el {date}"
+      "addedOnLabel": "Agregada a esta lista el {date}",
+      "startedOnLabel": "Empezada el {date}"
     },
     "rating": {
       "rate": "Calificar",
@@ -232,12 +231,7 @@
       "reviewUpdated": "Reseña actualizada.",
       "reviewDeleted": "Reseña eliminada.",
       "favoriteRemoved": "Quitada de Favoritos.",
-      "favoriteAdded": "Agregada a Favoritos.",
-      "watchlistRemoved": "Quitada de Pendientes.",
-      "watchlistAdded": "Agregada a Pendientes.",
-      "watchedRemoved": "Quitada de Vistas.",
-      "watchedAdded": "Agregada a Vistas.",
-      "watchedAddedFromWatchlist": "Agregada a Vistas y quitada de Pendientes."
+      "favoriteAdded": "Agregada a Favoritos."
     },
     "metadata": {
       "ratingVotesLabel": "Calificación TMDB: {rating} de 10, {count, plural, one {# voto} other {# votos}}",
@@ -284,10 +278,6 @@
       "placeholder": "¿Qué te pareció?",
       "deleteConfirmTitle": "¿Eliminar reseña?",
       "deleteConfirmDescription": "Se eliminará el texto de tu reseña. Tu calificación de {title} y la producción en Vistas se conservan. El texto no se puede recuperar."
-    },
-    "watched": {
-      "removeConfirmTitle": "¿Quitar de Vistas?",
-      "remove": "Quitar de Vistas"
     },
     "status": {
       "label": "Estado",
@@ -399,6 +389,18 @@
       "filtersTitle": "Filtros y orden",
       "removeChipLabel": "Quitar filtro {filterLabel}",
       "loading": "Cargando la lista…"
+    },
+    "watching": {
+      "moreLabel": "Más acciones para {title}",
+      "markFinished": "Marcar como terminada",
+      "rateIt": "Calificarla…",
+      "rateItToast": "Calificarla",
+      "remove": "Quitar de Viendo",
+      "movedToWatched": "{title} pasó a Vistas",
+      "removed": "{title} se quitó de Viendo",
+      "emptyTitle": "Nada en curso",
+      "emptyDescription": "Cuando empieces una película o una serie, elegí «Viendo» en su botón de estado y te va a esperar acá. Cuando la termines, calificala o cambiá su estado y pasa a Vistas.",
+      "openWatchlist": "Abrir Pendientes"
     },
     "reorder": {
       "instructions": "Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.",

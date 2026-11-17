@@ -20,8 +20,9 @@ const ICONOS = {
   vistas: Eye,
 } as const satisfies Record<ClaveLista, unknown>;
 
-/** Hasta cuántos pósters caben apilados (escritorio; en celular se ven 3). */
-const MAX_POSTERS = 5;
+/** Hasta cuántos pósters caben apilados (escritorio, con 4 columnas; en celular se ven 3). */
+const MAX_POSTERS = 4;
+const POSTERS_CELULAR = 3;
 
 /** El nombre a mostrar: las predeterminadas se nombran por su clave, no por el texto guardado. */
 export function useNombreLista() {
@@ -33,9 +34,11 @@ export function useNombreLista() {
 function Poster({ ruta, className }: { ruta: string; className: string }) {
   const [fallo, setFallo] = useState(false);
   const url = tmdbImage(ruta, "w185");
-  if (!url || fallo) return <span className={cn(className, "bg-raised-2")} aria-hidden="true" />;
+  // `block` va primero: si `className` trae `hidden`, tiene que ganarle.
+  if (!url || fallo)
+    return <span className={cn("block bg-raised-2", className)} aria-hidden="true" />;
   return (
-    <span className={cn(className, "relative block overflow-hidden bg-raised-2")}>
+    <span className={cn("relative block overflow-hidden bg-raised-2", className)}>
       <Image
         loader={tmdbLoader}
         src={url}
@@ -79,7 +82,9 @@ export function ListCard({
   const predeterminada = esPredeterminada(lista);
   const Icono = lista.clave ? ICONOS[lista.clave] : null;
   const posters = lista.preview_posters.slice(0, MAX_POSTERS);
+  // «N more» cuenta lo que no se ve: en celular hay un póster menos a la vista.
   const masAlla = lista.cantidad_items - posters.length;
+  const masAllaCelular = lista.cantidad_items - Math.min(posters.length, POSTERS_CELULAR);
 
   return (
     <li
@@ -170,12 +175,17 @@ export function ListCard({
                 className={cn(
                   "h-[4.125rem] w-11 flex-none rounded-md shadow-[0_0_0_2px_var(--raised)] md:h-24 md:w-16",
                   indice > 0 && "-ml-3 md:-ml-4",
-                  indice >= 3 && "hidden md:block"
+                  indice >= POSTERS_CELULAR && "hidden md:block"
                 )}
               />
             ))}
+            {masAllaCelular > 0 && (
+              <span className="ml-3 text-[0.8125rem] font-semibold text-fg-3 md:hidden">
+                {t("lists.card.overflowCount", { count: formats.number(masAllaCelular) })}
+              </span>
+            )}
             {masAlla > 0 && (
-              <span className="ml-3 text-[0.8125rem] font-semibold text-fg-3">
+              <span className="ml-3 hidden text-[0.8125rem] font-semibold text-fg-3 md:inline">
                 {t("lists.card.overflowCount", { count: formats.number(masAlla) })}
               </span>
             )}

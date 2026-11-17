@@ -15,6 +15,11 @@ export interface AvisoEstado {
   tono?: "ok" | "error";
   /** Milisegundos que se queda; por defecto, los del tipo de aviso. */
   ms?: number;
+  /**
+   * Una acción más, antes de Undo (en la lista Watching: «Rate it»). Quien la
+   * pasa decide si cierra el aviso. Solo se muestra junto con `deshacer`.
+   */
+  accion?: { etiqueta: string; onClick: () => void };
   /** Con esto el aviso lleva el botón Undo y dura 6 s. */
   deshacer?: {
     etiqueta: string;
@@ -42,6 +47,15 @@ function Aviso({ aviso, vuelta }: { aviso: AvisoEstado; vuelta: number }) {
             {texto}
           </strong>
           <span className="sr-only">{deshacer.anuncio}</span>
+          {aviso.accion && (
+            <button
+              type="button"
+              onClick={aviso.accion.onClick}
+              className="inline-flex h-9 cursor-pointer items-center rounded-lg px-3 text-sm font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {aviso.accion.etiqueta}
+            </button>
+          )}
           <button
             type="button"
             onClick={deshacer.onClick}
@@ -65,7 +79,7 @@ function Aviso({ aviso, vuelta }: { aviso: AvisoEstado; vuelta: number }) {
   );
 }
 
-/** Muestra (o reemplaza) el aviso de estado de la ficha. */
+/** Muestra (o reemplaza) el aviso de estado (ficha y lista Watching). */
 export function mostrarAvisoEstado(aviso: AvisoEstado) {
   const vuelta = ++secuencia;
   toast.custom(() => <Aviso aviso={aviso} vuelta={vuelta} />, {
@@ -74,7 +88,7 @@ export function mostrarAvisoEstado(aviso: AvisoEstado) {
   });
 }
 
-/** Cierra el aviso (al salir de la ficha el cambio queda, sin Undo). */
+/** Cierra el aviso (al salir de la página el cambio queda, sin Undo). */
 export function cerrarAvisoEstado() {
   toast.dismiss(ID_AVISO_ESTADO);
 }

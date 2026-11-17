@@ -16,7 +16,30 @@ export const ICONO_ESTADO: Record<Estado, LucideIcon> = {
   vistas: Eye,
 };
 
-const FILAS = '[role="menuitemradio"], [role="menuitem"]';
+export const FILAS = '[role="menuitemradio"], [role="menuitem"]';
+
+/** Flechas, Inicio y Fin mueven el foco entre las filas de un menú. */
+export function alTeclearMenu(event: KeyboardEvent<HTMLElement>) {
+  const filas = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(FILAS));
+  const actual = filas.indexOf(document.activeElement as HTMLElement);
+  const destino =
+    event.key === "ArrowDown"
+      ? (actual + 1) % filas.length
+      : event.key === "ArrowUp"
+        ? (actual - 1 + filas.length) % filas.length
+        : event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? filas.length - 1
+            : -1;
+  if (destino < 0) return;
+  event.preventDefault();
+  filas[destino].focus();
+}
+
+/** El panel (escritorio) o la hoja (celular) de los menús de `<dialog>`. */
+export const CLASE_DIALOGO_MENU =
+  "fixed inset-x-0 top-auto bottom-0 m-0 max-h-[80dvh] w-full max-w-none flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-t-[1.25rem] border-0 bg-raised px-3 pt-2.5 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-foreground shadow-[0_-10px_40px_rgb(0_0_0/0.4)] backdrop:bg-black/55 open:flex md:inset-x-auto md:top-[var(--menu-y)] md:bottom-auto md:left-[var(--menu-x)] md:max-h-[var(--menu-max)] md:w-[18.75rem] md:overscroll-auto md:rounded-[0.875rem] md:p-2 md:shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)] md:backdrop:bg-transparent";
 
 /**
  * Menú de estado de la ficha (canvas «Watching · title page»): Watchlist,
@@ -48,24 +71,6 @@ export function StatusMenu({
       dialogo.querySelector<HTMLElement>(FILAS)
   );
 
-  function alTeclear(event: KeyboardEvent<HTMLElement>) {
-    const filas = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(FILAS));
-    const actual = filas.indexOf(document.activeElement as HTMLElement);
-    const destino =
-      event.key === "ArrowDown"
-        ? (actual + 1) % filas.length
-        : event.key === "ArrowUp"
-          ? (actual - 1 + filas.length) % filas.length
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? filas.length - 1
-              : -1;
-    if (destino < 0) return;
-    event.preventDefault();
-    filas[destino].focus();
-  }
-
   const fila =
     "flex min-h-[3.75rem] w-full cursor-pointer items-center gap-3.5 rounded-xl px-3.5 py-1.5 text-left text-base hover:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring md:min-h-14 md:text-[0.9375rem]";
 
@@ -87,7 +92,7 @@ export function StatusMenu({
         const { clientX: x, clientY: y } = event;
         if (x < caja.left || x > caja.right || y < caja.top || y > caja.bottom) onClose();
       }}
-      className="fixed inset-x-0 top-auto bottom-0 m-0 max-h-[80dvh] w-full max-w-none flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-t-[1.25rem] border-0 bg-raised px-3 pt-2.5 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-foreground shadow-[0_-10px_40px_rgb(0_0_0/0.4)] backdrop:bg-black/55 open:flex md:inset-x-auto md:top-[var(--menu-y)] md:bottom-auto md:left-[var(--menu-x)] md:max-h-[var(--menu-max)] md:w-[18.75rem] md:overscroll-auto md:rounded-[0.875rem] md:p-2 md:shadow-[0_18px_46px_rgb(0_0_0/0.45),inset_0_0_0_1px_var(--line)] md:backdrop:bg-transparent"
+      className={CLASE_DIALOGO_MENU}
     >
       <span aria-hidden="true" className="mx-auto mb-2 h-1 w-10 rounded-full bg-line md:hidden" />
       <div className="flex items-center justify-between px-2 pb-2 md:hidden">
@@ -106,7 +111,7 @@ export function StatusMenu({
       <div
         role="menu"
         aria-label={t("title.status.menuLabel", { title: titulo })}
-        onKeyDown={alTeclear}
+        onKeyDown={alTeclearMenu}
         className="flex flex-col gap-0.5"
       >
         {ESTADOS.map((candidato) => {

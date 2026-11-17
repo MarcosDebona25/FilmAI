@@ -64,10 +64,9 @@ declare const messages: {
       "posterAlt": "{title} poster",
       "tmdbRatingLabel": "TMDB rating: {rating} out of 10",
       "favorite": "Favorite",
-      "watched": "Watched",
-      "watchlist": "Watchlist",
       "noPoster": "No poster",
-      "addedOnLabel": "Added to this list on {date}"
+      "addedOnLabel": "Added to this list on {date}",
+      "startedOnLabel": "Started {date}"
     },
     "rating": {
       "rate": "Rate",
@@ -235,12 +234,7 @@ declare const messages: {
       "reviewUpdated": "Review updated.",
       "reviewDeleted": "Review deleted.",
       "favoriteRemoved": "Removed from Favorites.",
-      "favoriteAdded": "Added to Favorites.",
-      "watchlistRemoved": "Removed from Watchlist.",
-      "watchlistAdded": "Added to Watchlist.",
-      "watchedRemoved": "Removed from Watched.",
-      "watchedAdded": "Added to Watched.",
-      "watchedAddedFromWatchlist": "Added to Watched and removed from Watchlist."
+      "favoriteAdded": "Added to Favorites."
     },
     "metadata": {
       "ratingVotesLabel": "TMDB rating: {rating} out of 10, {count, plural, one {# vote} other {# votes}}",
@@ -287,10 +281,6 @@ declare const messages: {
       "placeholder": "What did you think?",
       "deleteConfirmTitle": "Delete review?",
       "deleteConfirmDescription": "The text of your review will be deleted. Your rating of {title} and the title in Watched will be kept. The text can’t be recovered."
-    },
-    "watched": {
-      "removeConfirmTitle": "Remove from Watched?",
-      "remove": "Remove from Watched"
     },
     "status": {
       "label": "Status",
@@ -402,6 +392,18 @@ declare const messages: {
       "filtersTitle": "Filters and sort",
       "removeChipLabel": "Remove filter {filterLabel}",
       "loading": "Loading the list…"
+    },
+    "watching": {
+      "moreLabel": "More for {title}",
+      "markFinished": "Mark as finished",
+      "rateIt": "Rate it…",
+      "rateItToast": "Rate it",
+      "remove": "Remove from Watching",
+      "movedToWatched": "{title} moved to Watched",
+      "removed": "{title} removed from Watching",
+      "emptyTitle": "Nothing in progress",
+      "emptyDescription": "When you start a movie or a show, choose “Watching” in its status button and it will wait for you here. When you finish it, rate it or change its status and it moves to Watched.",
+      "openWatchlist": "Open Watchlist"
     },
     "reorder": {
       "instructions": "To reorder, press space or enter on the handle, move with the arrow keys, and press space or enter again to drop. Press escape to cancel.",

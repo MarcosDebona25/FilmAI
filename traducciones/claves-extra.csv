@@ -119,7 +119,6 @@ title.actions.signedOutPrompt,,label,,Ingresá para calificar o guardar,Log in t
 title.reviews.loadMore,,label,,Cargar más reseñas,Load more reviews,aprobado
 title.reviews.empty,,label,,Todavía no hay reseñas. Escribí la primera.,No reviews yet. Be the first to write one.,aprobado
 title.reviews.deletedAuthor,,label,,Usuario dado de baja,Deleted account,aprobado
-title.feedback.watchedAddedFromWatchlist,,feedback,,Agregada a Vistas y quitada de Pendientes.,Added to Watched and removed from Watchlist.,aprobado
 title.rating.watchedHelpFromWatchlist,,label,title,"Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",Rating {title} also adds it to Watched and removes it from Watchlist.,aprobado
 search.filters.anyYear,,label,,Cualquiera,Any,aprobado
 search.results.emptyFiltersTitle,,label,,Nada con estos filtros,Nothing with these filters,aprobado
@@ -209,6 +208,7 @@ title.providers.newTabHint,,label,,(se abre en otra pestaña),(opens in a new ta
 title.providers.attribution,,label,,Datos de <link>JustWatch</link>,Data by <link>JustWatch</link>,aprobado
 title.providers.signedOut,,label,,Iniciá sesión para ver dónde verla en tu país,Log in to see where to watch it in your country,aprobado
 common.media.addedOnLabel,,label,date,Agregada a esta lista el {date},Added to this list on {date},aprobado
+common.media.startedOnLabel,,label,date,Empezada el {date},Started {date},aprobado
 settings.loading,,status,,Cargando preferencias…,Loading settings…,aprobado
 settings.privacy.heading,,label,,Privacidad,Privacy,aprobado
 settings.privacy.futureNotice,,label,,"Estas preferencias se guardan, pero todavía no cambian la visibilidad de reseñas o listas ni activan correos.","These preferences are saved, but they do not yet change the visibility of reviews or lists or enable emails.",aprobado
