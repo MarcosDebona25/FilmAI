@@ -240,7 +240,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     } else {
       const { plan, respuesta, aviso } = await editarCalificacion(mia, valor, texto);
       const sinTexto: MiCalificacion = plan.borrarTexto ? { ...mia, texto: null } : mia;
-      setMia(respuesta ? (respuesta as MiCalificacion) : sinTexto);
+      setMia(respuesta ? { ...sinTexto, ...respuesta } : sinTexto);
       if (aviso) toast.success(t(`title.feedback.${aviso}`));
     }
     setModal(null);

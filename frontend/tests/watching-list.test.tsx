@@ -255,6 +255,31 @@ describe("Watching: Mark as finished y Remove con Undo", () => {
     expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
   });
 
+  it("Undo con la tarjeta ya en la grilla no suma el conteo", async () => {
+    // Con el `item_id` que devuelve el servidor al volver a anotarla (900).
+    estado.items = [
+      item(1),
+      item(900, { id_tmdb: 102, titulo: "Linterna 2" }),
+      item(3, { tipo: "tv" }),
+    ];
+    const { view } = await abrir();
+    elegir(2, "Mark as finished");
+    await screen.findByText("Linterna 2 moved to Watched");
+    expect(screen.getByText("2 items · 1 movie · 1 TV show")).toBeInTheDocument();
+
+    // Una búsqueda vuelve a pedir la primera página y esta trae la tarjeta otra vez.
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "Linterna" } });
+    // El mock de `useSearchParams` lee la URL al dibujar: tras la espera del texto, se redibuja.
+    await waitFor(() => expect(window.location.search).toContain("q=Linterna"));
+    view.rerender(<Pagina />);
+    await waitFor(() => expect(screen.getAllByRole("link", { name: /Linterna/ })).toHaveLength(3));
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Undo" })).toBeNull());
+    expect(screen.getAllByRole("link", { name: /Linterna/ })).toHaveLength(3);
+    expect(screen.getByText("2 items · 1 movie · 1 TV show")).toBeInTheDocument();
+  });
+
   it("Remove from Watching: queda sin estado, con su toast y su Undo (sin Rate it)", async () => {
     await abrir();
 

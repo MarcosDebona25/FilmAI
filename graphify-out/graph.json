@@ -12844,7 +12844,7 @@
       "file_type": "code",
       "norm_label": "cambiar()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L113"
+      "source_location": "L118"
     },
     {
       "id": "frontend_components_features_lists_listdetailview_listdetailview_elegirdelmenu",
@@ -12856,7 +12856,7 @@
       "file_type": "code",
       "norm_label": "elegirdelmenu()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L230"
+      "source_location": "L238"
     },
     {
       "id": "frontend_components_features_lists_listdetailview_listdetailview_limpiar",
@@ -12868,7 +12868,7 @@
       "file_type": "code",
       "norm_label": "limpiar()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L118"
+      "source_location": "L123"
     },
     {
       "id": "frontend_components_features_lists_listdetailview_listdetailview_meterenlagrilla",
@@ -12880,7 +12880,7 @@
       "file_type": "code",
       "norm_label": "meterenlagrilla()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L190"
+      "source_location": "L195"
     },
     {
       "id": "frontend_components_features_lists_listdetailview_listdetailview_pedircalificar",
@@ -12892,7 +12892,7 @@
       "file_type": "code",
       "norm_label": "pedircalificar()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L215"
+      "source_location": "L223"
     },
     {
       "id": "frontend_components_features_lists_listdetailview_listdetailview_quitar",
@@ -12904,7 +12904,7 @@
       "file_type": "code",
       "norm_label": "quitar()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L268"
+      "source_location": "L276"
     },
     {
       "id": "frontend_components_features_lists_listdetailview_listdetailview_renombrar",
@@ -12916,7 +12916,7 @@
       "file_type": "code",
       "norm_label": "renombrar()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L275"
+      "source_location": "L283"
     },
     {
       "id": "frontend_components_features_lists_listdetailview_listdetailview_sacardelagrilla",
@@ -12928,7 +12928,7 @@
       "file_type": "code",
       "norm_label": "sacardelagrilla()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L160"
+      "source_location": "L165"
     },
     {
       "id": "frontend_components_features_lists_listnamedialog_listnamedialog",
@@ -16708,7 +16708,7 @@
       "file_type": "code",
       "norm_label": "eliminar()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L285"
+      "source_location": "L293"
     },
     {
       "id": "frontend_components_features_profile_avatardialog_avatardialog",
@@ -21244,7 +21244,7 @@
       "file_type": "code",
       "norm_label": "guardarcalificacion()",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L236"
+      "source_location": "L244"
     },
     {
       "id": "frontend_components_features_lists_listfilterssheet_listfilterssheet",
@@ -51124,7 +51124,7 @@
       "file_type": "code",
       "norm_label": "pedidas()",
       "source_file": "frontend/tests/title-view.test.tsx",
-      "source_location": "L129"
+      "source_location": "L132"
     },
     {
       "id": "frontend_tests_watching_list_test_abrir",
@@ -51148,7 +51148,7 @@
       "file_type": "code",
       "norm_label": "calificar()",
       "source_file": "frontend/tests/watching-list.test.tsx",
-      "source_location": "L327"
+      "source_location": "L352"
     },
     {
       "id": "frontend_tests_watching_list_test_elegir",
@@ -95865,7 +95865,7 @@
       "file_type": "code",
       "norm_label": "toast",
       "source_file": "frontend/tests/title-view.test.tsx",
-      "source_location": "L22"
+      "source_location": "L24"
     },
     {
       "id": "frontend_tests_tmdb_credits_test",
@@ -180788,7 +180788,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L108",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -180800,7 +180800,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L109",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -180812,7 +180812,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L136",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -180824,7 +180824,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L153",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -180836,7 +180836,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L209",
+      "source_location": "L217",
       "weight": 1.0
     },
     {
@@ -180848,7 +180848,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L297",
+      "source_location": "L305",
       "weight": 1.0
     },
     {
@@ -180860,7 +180860,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L311",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -180872,7 +180872,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L379",
+      "source_location": "L387",
       "weight": 1.0
     },
     {
@@ -180884,7 +180884,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L650",
+      "source_location": "L658",
       "weight": 1.0
     },
     {
@@ -180992,7 +180992,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L114",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -181004,7 +181004,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L115",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -181016,7 +181016,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L232",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -181028,7 +181028,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L286",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -181040,7 +181040,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L241",
+      "source_location": "L249",
       "weight": 1.0
     },
     {
@@ -181052,7 +181052,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L246",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -181064,7 +181064,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L120",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -181076,7 +181076,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L223",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -181088,7 +181088,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L269",
+      "source_location": "L277",
       "weight": 1.0
     },
     {
@@ -181100,7 +181100,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L270",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -186032,7 +186032,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L113",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -186044,7 +186044,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L215",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -186056,7 +186056,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L230",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -186068,7 +186068,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L268",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -278370,7 +278370,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L118",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -278381,7 +278381,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L236",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -278392,7 +278392,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L275",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -278403,7 +278403,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L285",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -287995,7 +287995,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/tests/title-view.test.tsx",
-      "source_location": "L129",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -288006,7 +288006,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/tests/title-view.test.tsx",
-      "source_location": "L22",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -288281,7 +288281,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/tests/watching-list.test.tsx",
-      "source_location": "L327",
+      "source_location": "L352",
       "weight": 1.0
     },
     {
@@ -348460,7 +348460,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L210",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -348472,7 +348472,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "frontend/components/features/lists/ListDetailView.tsx",
-      "source_location": "L211",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -372283,5 +372283,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "bd51c827a2fbe571b589f095e8c468f1f892e850"
+  "built_at_commit": "e22314f42a88d37c13f741505378316384519b21"
 }

@@ -10,6 +10,8 @@ const estado = vi.hoisted(() => ({
   path: "/movie/157336",
   mia: null as null | Record<string, unknown>,
   fallaDetalle: false,
+  /** El PUT de una calificación responde solo lo que cambió (como el backend real). */
+  putParcial: false,
   /** Respuesta de `providers/`: `"error"` simula TMDB caído. */
   plataformas: "AR" as "AR" | "CN" | "error",
   detalleColgado: false,
@@ -100,7 +102,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
       }
       if (path === "/api/reviews/9/" && method === "PUT") {
         estado.mia = { ...estado.mia, ...(opciones.body as object) };
-        return structuredClone(estado.mia);
+        return estado.putParcial ? structuredClone(opciones.body) : structuredClone(estado.mia);
       }
       if (path === "/api/reviews/9/" && method === "DELETE") {
         estado.mia = null;
@@ -117,6 +119,7 @@ beforeEach(() => {
   estado.path = "/movie/157336";
   estado.mia = null;
   estado.fallaDetalle = false;
+  estado.putParcial = false;
   estado.plataformas = "AR";
   estado.detalleColgado = false;
   estado.fallasListas = 0;
@@ -370,6 +373,30 @@ describe("ficha con sesión", () => {
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Rating and review updated."));
     expect(pedidas("/api/reviews/9/texto/", "DELETE")).toHaveLength(1);
     expect(pedidas("/api/reviews/9/", "PUT")[0].body).toEqual({ valor: 7 });
+  });
+
+  it("editar con una respuesta parcial conserva el id y el texto borrado", async () => {
+    estado.putParcial = true;
+    estado.mia = { id: 9, valor: 9, texto: "La vi tres veces.", fecha: "2026-10-01" };
+    render(<TitleView tipo="movie" id={157336} />, { locale: "en" });
+
+    fireEvent.click(await screen.findByRole("button", { name: "Your rating: 9 out of 10. Edit" }));
+    let dialogo = screen.getByRole("dialog", { name: "Edit rating" });
+    fireEvent.change(within(dialogo).getByRole("textbox", { name: /Review/ }), {
+      target: { value: "" },
+    });
+    fireEvent.click(within(dialogo).getByRole("radio", { name: "7 out of 10" }));
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Update" }));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Rating and review updated."));
+
+    // La segunda edición usa el id de la primera y ya no ve el texto borrado.
+    fireEvent.click(await screen.findByRole("button", { name: "Your rating: 7 out of 10. Edit" }));
+    dialogo = screen.getByRole("dialog", { name: "Edit rating" });
+    expect(within(dialogo).getByRole("textbox", { name: /Review/ })).toHaveValue("");
+    fireEvent.click(within(dialogo).getByRole("radio", { name: "6 out of 10" }));
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Update" }));
+    await waitFor(() => expect(pedidas("/api/reviews/9/", "PUT")).toHaveLength(2));
+    expect(pedidas("/api/reviews/9/", "PUT")[1].body).toEqual({ valor: 6 });
   });
 
   it("quitar la calificación pide confirmar y vuelve a «Rate»", async () => {

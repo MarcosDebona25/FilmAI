@@ -102,6 +102,11 @@ export function ListDetailView({ id }: { id: number }) {
   const [calificando, setCalificando] = useState<Calificando | null>(null);
   const [idPendientes, setIdPendientes] = useState<number | null>(null);
   const centinela = useRef<HTMLDivElement>(null);
+  // Los datos de la grilla de ahora, para decidir fuera de un updater (ver `meterEnLaGrilla`).
+  const datosAhora = useRef(datos);
+  useEffect(() => {
+    datosAhora.current = datos;
+  }, [datos]);
   const titulo = useRef<HTMLHeadingElement>(null);
   const campo = useRef<HTMLInputElement>(null);
   const ids = useId();
@@ -188,21 +193,24 @@ export function ListDetailView({ id }: { id: number }) {
 
   /** Vuelve una tarjeta a su lugar (Undo, o un cambio que falló). */
   function meterEnLaGrilla(item: ItemLista, indice: number) {
-    setDatos((actual) => {
-      if (!actual || actual.items.some((otro) => otro.item_id === item.item_id)) return actual;
-      const items = [...actual.items];
-      items.splice(Math.min(indice, items.length), 0, item);
-      return { ...actual, items, total: actual.total + 1 };
-    });
-    setLista((actual) =>
-      actual
+    // El conteo solo sube si la tarjeta de verdad se inserta. Se decide aquí, con
+    // el estado de ahora, y no dentro del updater de `setDatos` (en StrictMode
+    // corre dos veces).
+    const actual = datosAhora.current;
+    if (!actual || actual.items.some((otro) => otro.item_id === item.item_id)) return;
+    const items = [...actual.items];
+    items.splice(Math.min(indice, items.length), 0, item);
+    datosAhora.current = { ...actual, items, total: actual.total + 1 };
+    setDatos(datosAhora.current);
+    setLista((anterior) =>
+      anterior
         ? {
-            ...actual,
-            cantidad_items: actual.cantidad_items + 1,
-            cantidad_peliculas: actual.cantidad_peliculas + (item.tipo === "movie" ? 1 : 0),
-            cantidad_series: actual.cantidad_series + (item.tipo === "tv" ? 1 : 0),
+            ...anterior,
+            cantidad_items: anterior.cantidad_items + 1,
+            cantidad_peliculas: anterior.cantidad_peliculas + (item.tipo === "movie" ? 1 : 0),
+            cantidad_series: anterior.cantidad_series + (item.tipo === "tv" ? 1 : 0),
           }
-        : actual
+        : anterior
     );
   }
 

@@ -1009,3 +1009,9 @@ Ajustes de diseño aprobados por Marcos y dos arreglos de pruebas inestables del
 - **Scroll infinito de `ListDetailView`**: el centinela solo se dibuja cuando llegó el nombre de la lista (otro pedido). Si la primera página llegaba antes, `useSentinel` no encontraba el nodo y nunca observaba; la página 2 no se pedía. Ahora `reiniciar` cambia cuando llega la lista y el observador se crea con el nodo ya presente.
 
 Archivos: `frontend/components/features/{MediaCard,UnavailableCard}.tsx`, `frontend/components/features/lists/ListDetailView.tsx`, `frontend/e2e/axe.ts`, `frontend/tests/{media-card,list-detail-view}.test.tsx`, `traducciones/claves-extra.csv`, catálogos de `frontend/messages/`.
+
+### 17/11/2026 — PR 4 (#226): comentarios de PR-Agent
+
+- **Conteo al deshacer en Watching (aplicado)**: `meterEnLaGrilla` sumaba 1 al conteo de la lista aunque la tarjeta no se insertara (datos todavía nulos o el ítem ya presente, por ejemplo tras volver a pedir la primera página). Ahora decide con los datos del último render (`datosAhora`) y solo suma cuando inserta. Test en `frontend/tests/watching-list.test.tsx`.
+- **Editar una calificación en la ficha (aplicado)**: `TitleView` reemplazaba `mia` por la respuesta del `PUT`, que es parcial; se perdían `id` o el texto borrado. Ahora la mezcla sobre el estado previo (`{ ...sinTexto, ...respuesta }`), como `MyReviewsView`. Test en `frontend/tests/title-view.test.tsx`.
+- **«Build roto» en `MyReviewsView` (no aplica)**: PR-Agent supuso que seguían las declaraciones viejas de `datos`, `estado` y `mas` porque el diff que vio no mostraba su borrado. El archivo no las tiene; `tsc`, ESLint y el build del CI pasan.
