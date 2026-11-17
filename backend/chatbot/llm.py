@@ -16,7 +16,8 @@ from django.conf import settings
 from openai import AsyncOpenAI
 
 _MAX_TOKENS = 800
-# Mayor que el turno a propósito: el tope real, `LLM_TIMEOUT_SECONDS`, es de la vista.
+# Mayor que el turno a propósito: el tope real, `LLM_TIMEOUT_SECONDS`, lo pone el
+# orquestador con un `Corte` alrededor de cada llamada (`chatbot/plazo.py`).
 _TIMEOUT_SEGUNDOS = 30
 _REINTENTOS = 1
 
@@ -193,8 +194,10 @@ class ProveedorOpenAICompatible:
 class ProveedorFalso:
     """Reproduce un guion, para probar el orquestador sin red ni costo.
 
-    Cada elemento de `guion` es una vuelta: una lista de `str`, `LlamadaTool` o una
-    excepción, que se lanza en ese punto. Guarda en `pedidos` los mensajes que recibió,
+    Cada elemento de `guion` es una vuelta: una lista de `str`, `LlamadaTool`, una
+    excepción (que se lanza en ese punto) o una función async sin argumentos, que se
+    espera en ese punto (los tests del plazo la usan para «hacer pasar el tiempo» a
+    mitad de una respuesta). Guarda en `pedidos` los mensajes que recibió,
     en `esquemas` las tools que se le ofrecieron en cada llamada y en `tool_choices`
     el `tool_choice` de cada una. `entregados` cuenta los trozos de texto entregados.
     """
@@ -222,6 +225,9 @@ class ProveedorFalso:
         for item in self.guion.pop(0):
             if isinstance(item, Exception):
                 raise item
+            if callable(item):
+                await item()
+                continue
             if isinstance(item, LlamadaTool):
                 llamadas.append(item)
             else:

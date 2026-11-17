@@ -12,6 +12,7 @@ from catalogo.exceptions import (
     TMDBServerError,
     TMDBTransportError,
 )
+from catalogo.plazo import para_tmdb, que_queda
 from catalogo.presupuesto import registrar_llamada
 
 # Keyword «softcore» de TMDB (verificada el 13/11/2026 con /search/keyword). Miles de
@@ -135,15 +136,26 @@ class TMDBClient:
 
     def _request(self, path, params):
         request_params = {**params, "api_key": self.api_key}
-        for attempt in range(MAX_RETRIES + 1):
+        # Dentro de un plazo de red (hoy, solo las tools del chatbot) hay menos
+        # reintentos; fuera de él, `para_tmdb()` es `None` y nada cambia.
+        limite = para_tmdb()
+        reintentos = MAX_RETRIES if limite is None else limite.reintentos
+        for attempt in range(reintentos + 1):
+            # Se vuelve a pedir en cada intento: el tiempo que queda va bajando.
+            limite = para_tmdb()
+            if limite is not None and limite.timeout <= 0:
+                # Se acabó el tiempo del turno: ni se sale a la red (ni se cuenta).
+                raise TMDBTransportError("Sin tiempo para llamar a TMDB")
+            # Con plazo, este pedido lleva su propio timeout (httpx deja pasarlo por
+            # pedido); sin plazo va el del cliente, `TMDB_TIMEOUT`.
+            corto = {} if limite is None else {"timeout": limite.timeout}
             # Cada intento cuenta para el tope del pedido, reintentos incluidos
             # (auditoría F6). Fuera de un pedido HTTP no hay tope.
             registrar_llamada()
             try:
-                response = self._client.get(path, params=request_params)
+                response = self._client.get(path, params=request_params, **corto)
             except httpx.TransportError as error:
-                if attempt < MAX_RETRIES:
-                    time.sleep(self._backoff(attempt))
+                if attempt < reintentos and self._esperar(self._backoff(attempt)):
                     continue
                 # `from None`: la causa original lleva la URL con la clave y
                 # saldría en el traceback de `logger.exception`.
@@ -160,9 +172,8 @@ class TMDBClient:
                     ) from error
 
             if response.status_code == 429 or response.status_code >= 500:
-                if attempt < MAX_RETRIES:
-                    delay = max(self._backoff(attempt), self._retry_after(response))
-                    time.sleep(delay)
+                delay = max(self._backoff(attempt), self._retry_after(response))
+                if attempt < reintentos and self._esperar(delay):
                     continue
                 if response.status_code == 429:
                     raise TMDBRateLimited(self._error_message(response))
@@ -171,6 +182,20 @@ class TMDBClient:
             self._raise_http_error(response)
 
         raise TMDBError("TMDB request exhausted retry budget")
+
+    @staticmethod
+    def _esperar(segundos):
+        """Duerme antes de un reintento. Devuelve `False` si no hay tiempo para eso.
+
+        Dentro de un plazo de red, si la espera no entra en lo que queda, no se
+        duerme ni se reintenta: quien llama falla ya, en vez de gastar el final del
+        turno esperando.
+        """
+        queda = que_queda()
+        if queda is not None and segundos >= queda:
+            return False
+        time.sleep(segundos)
+        return True
 
     @staticmethod
     def _backoff(attempt):

@@ -64,10 +64,10 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 
 #### Scenario: A slow turn does not outlive its budget
 
-- GIVEN tools and model calls that together keep the turn running (for example, a fake tool that sleeps past the budget)
-- WHEN the turn reaches `LLM_TIMEOUT_SECONDS`
+- GIVEN an orchestrator that does not close the turn within `LLM_TIMEOUT_SECONDS` (for example, a fake one that sleeps past the budget)
+- WHEN the view's safety net is reached (`LLM_TIMEOUT_SECONDS` × 1.2: 30 s with the default)
 - THEN the stream ends with `error` and the lock is released
-- AND a hung Ollama is not this case: it fails in at most 21 s (1 s of `/api/ps` plus the 20 s load wait) and returns to the model as `tool_failed` (see «Ollama down during a turn»)
+- AND this is a safety net, not the normal path: the real orchestrator closes the turn within `LLM_TIMEOUT_SECONDS` by itself (see «Bounded turn»)
 
 ### Requirement: The answer streams as server-sent events
 
@@ -187,7 +187,9 @@ The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming
 
 ### Requirement: Bounded turn
 
-A turn MUST stop after 4 tool rounds or `LLM_TIMEOUT_SECONDS` (25), ending with `error` and `code: "chat_unavailable"`. A tool failure (TMDB, Ollama, the TMDB budget) MUST be returned to the model as a tool result, not end the turn. The history sent to the model MUST be at most the last 10 messages.
+A turn MUST have at most 4 tool rounds and MUST close within `LLM_TIMEOUT_SECONDS` (25), tools included. The orchestrator owns that deadline (15/11/2026) and MUST hand every model call and every tool round the time that is left: while the model has written nothing, a call is cut when only the closing reserve (30 % of the deadline: 7.5 s) remains; once text is arriving, the call may use the rest of the deadline. A new tool round MUST start only if at least 40 % of the deadline (10 s) remains. Tools MUST receive the remaining time minus the reserve, and inside them TMDB MUST use `CHAT_TMDB_TIMEOUT` (3 s) and `CHAT_TMDB_REINTENTOS` (1) instead of the general `TMDB_TIMEOUT` (5 s) and 3 retries, never waiting past the remaining time; Ollama MUST wait at most the remaining time. The rest of the application MUST keep the general values.
+
+When the tool rounds or the time run out before the model answered, the turn MUST NOT end in `error`: one last call without tools asks the model to answer with what it found. If the deadline cuts an answer that is being written, the text MUST end with «…» and the turn MUST close normally (`tarjetas`, `fin`, stored). The turn MUST end with `error` and `code: "chat_unavailable"` only if the provider fails or the time runs out without a single word of answer. The view MUST keep its own cut at `LLM_TIMEOUT_SECONDS` × 1.2 as a safety net. A tool failure (TMDB, Ollama, the TMDB budget) MUST be returned to the model as a tool result, not end the turn. The history sent to the model MUST be at most the last 10 messages.
 
 #### Scenario: Ollama down during a turn
 
@@ -198,8 +200,40 @@ A turn MUST stop after 4 tool rounds or `LLM_TIMEOUT_SECONDS` (25), ending with 
 #### Scenario: Endless tool calls
 
 - GIVEN a model that asks for a tool on every round
-- WHEN the fifth round would start
+- WHEN the fifth round still asks for tools
+- THEN one last call without tools asks for the answer, and the turn ends with `fin`
+- AND the stream ends with `error` only if that last call fails or writes nothing
+
+#### Scenario: Not enough time for another tool round
+
+- GIVEN two tool rounds that took 16 s of a 25 s deadline
+- WHEN the model asks for a third round
+- THEN no more tools run: the next call goes without tools and the model answers with what it found
+- AND the stream ends with `fin`, not `error`
+
+#### Scenario: A model call that never answers
+
+- GIVEN a model call that has written nothing when only the closing reserve remains (17.5 s)
+- WHEN that moment arrives
+- THEN the call is cancelled and one last call without tools gets the remaining 7.5 s
+
+#### Scenario: The deadline cuts an answer in the middle
+
+- GIVEN an answer that is still being written when the deadline arrives
+- WHEN the call is cancelled
+- THEN the text delivered so far ends with «…», and `tarjetas` and `fin` follow as usual
+
+#### Scenario: Out of time without a word
+
+- GIVEN a turn that reached the deadline without any text for the user
 - THEN the stream ends with `error` and nothing is stored
+
+#### Scenario: TMDB down during a chat turn
+
+- GIVEN TMDB does not answer
+- WHEN a chat tool calls it
+- THEN each request waits at most 3 s and is retried once (7 s at most with the 1 s pause), never past the time the turn has left
+- AND the same call outside the chat still waits 5 s and retries 3 times
 
 ### Requirement: History
 
