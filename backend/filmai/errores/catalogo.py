@@ -145,10 +145,6 @@ CATALOGO = {
         "Las listas predeterminadas no se pueden modificar ni eliminar.",
         {"listas": 409},
     ),
-    "rating_blocks_removal_from_watched": DefinicionCodigo(
-        "Eliminá la calificación antes de quitar esta producción de Vistas.",
-        {"listas": 409},
-    ),
     "rating_duplicated": DefinicionCodigo(
         "Ya calificaste esta producción. Editá tu calificación.",
         {"calificaciones": 409},

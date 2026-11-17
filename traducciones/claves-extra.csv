@@ -28,7 +28,6 @@ errors.codes.list_item_duplicated,list_item_duplicated,error,,Esta película o s
 errors.codes.list_limit_reached,list_limit_reached,error,maxLists,"Llegaste al máximo de {maxLists, number} listas. Eliminá alguna para crear otra.","You reached the maximum of {maxLists, number} lists. Delete one to create another.",aprobado
 errors.codes.list_items_limit_reached,list_items_limit_reached,error,maxItems,"Esta lista llegó al máximo de {maxItems, number} títulos.","This list reached the maximum of {maxItems, number} titles.",aprobado
 errors.codes.default_list_protected,default_list_protected,error,,Las listas predeterminadas no se pueden renombrar ni eliminar.,Default lists can’t be renamed or deleted.,aprobado
-errors.codes.rating_blocks_removal_from_watched,rating_blocks_removal_from_watched,error,,"Para quitarla de Vistas, primero eliminá tu calificación.","To remove it from Watched, first delete your rating.",aprobado
 errors.codes.rating_duplicated,rating_duplicated,error,,Ya calificaste esta película o serie.,You’ve already rated this movie or TV show.,aprobado
 errors.codes.review_moderated,review_moderated,error,,"Esta reseña fue moderada, así que no podés editar ni borrar su texto.","This review was moderated, so you can’t edit or delete its text.",aprobado
 errors.codes.username_already_used,username_already_used,error,,Ese nombre de usuario ya está en uso.,That username is already in use.,aprobado

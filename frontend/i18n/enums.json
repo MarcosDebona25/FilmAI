@@ -1,9 +1,9 @@
 {
-  "defaultListKeys": ["favoritos", "pendientes", "vistas"],
+  "defaultListKeys": ["favoritos", "pendientes", "viendo", "vistas"],
   "genderValues": ["masculino", "femenino", "no_especifica"],
   "reservedListNames": {
-    "en": ["Favorites", "Watchlist", "Watched"],
-    "es": ["Favoritos", "Pendientes", "Vistas"]
+    "en": ["Favorites", "Watchlist", "Watching", "Watched"],
+    "es": ["Favoritos", "Pendientes", "Viendo", "Vistas"]
   },
   "paisCodes": [
     "AD",

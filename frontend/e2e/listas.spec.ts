@@ -15,7 +15,7 @@ const viewports = [
 type Lista = {
   id: number;
   nombre: string;
-  clave: "favoritos" | "pendientes" | "vistas" | null;
+  clave: "favoritos" | "pendientes" | "viendo" | "vistas" | null;
   tipo: "predeterminada" | "personalizada";
   orden: number;
   items: Item[];
@@ -57,6 +57,14 @@ function listasIniciales(personalizadas = ["Maratón", "Clásicos", "Terror"]): 
       id: 2,
       nombre: "Watchlist",
       clave: "pendientes",
+      tipo: "predeterminada",
+      orden: 0,
+      items: [],
+    },
+    {
+      id: 4,
+      nombre: "Watching",
+      clave: "viendo",
       tipo: "predeterminada",
       orden: 0,
       items: [],
@@ -280,16 +288,17 @@ for (const viewport of viewports) {
       await page.goto("/lists");
 
       await expect(page.getByRole("heading", { level: 1, name: en.nav.main.lists })).toBeVisible();
-      await expect(page.getByText("6 lists · 3 defaults")).toBeVisible();
+      await expect(page.getByText("7 lists · 4 defaults")).toBeVisible();
       expect(await nombres(page)).toEqual([
         "Favorites",
         "Watchlist",
+        "Watching",
         "Watched",
         "Maratón",
         "Clásicos",
         "Terror",
       ]);
-      await expect(page.getByText(en.common.lists.defaultBadge, { exact: true })).toHaveCount(3);
+      await expect(page.getByText(en.common.lists.defaultBadge, { exact: true })).toHaveCount(4);
       await expect(page.getByRole("button", { name: /^Actions for the list/ })).toHaveCount(3);
       await expect(page.getByText("2 items · 2 movies · 0 TV shows").first()).toBeVisible();
       await sinDesborde(page);

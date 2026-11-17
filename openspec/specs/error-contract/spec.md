@@ -122,7 +122,6 @@ exact existing messages and aliases; these tables define public semantics.
 | `list_name_reserved`                 | 409                                   | Reserved default-list label in ES or EN; no params. OT-41 approval.                                      |
 | `list_item_duplicated`               | 409                                   | Existing membership.                                                     |
 | `default_list_protected`             | 409                                   | Cannot rename/delete default list.                       |
-| `rating_blocks_removal_from_watched` | 409                                   | Remove rating first.                               |
 | `rating_duplicated`                  | 409                                   | Existing rating.                                                 |
 | `review_moderated`                   | 409                                   | The text of a moderated review cannot be edited or deleted.      |
 | `username_already_used`              | 400 validation / 409 profile conflict | Username already registered; profile conflict has empty errors.                                           |

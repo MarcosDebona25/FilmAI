@@ -333,6 +333,20 @@ class ArmarPerfilTests(TestCase):
         self.assertTrue(linea.startswith("Últimas vistas: T10, T09"))
         self.assertNotIn("T00", linea)
 
+    def test_viendo_con_lo_mas_nuevo_primero_y_tope_de_10(self):
+        for i in range(11):
+            self.agregar(ClaveLista.VIENDO, f"T{i:02}")
+
+        linea = self.linea("Viendo")
+
+        self.assertTrue(linea.startswith("Viendo: T10, T09"))
+        self.assertNotIn("T00", linea)
+
+    def test_sin_nada_en_viendo_no_hay_linea(self):
+        self.agregar(ClaveLista.VISTAS, "Moon")
+
+        self.assertEqual(self.linea("Viendo"), "")
+
     def test_favoritos_con_tope_de_10(self):
         for i in range(11):
             self.agregar(ClaveLista.FAVORITOS, f"T{i:02}")

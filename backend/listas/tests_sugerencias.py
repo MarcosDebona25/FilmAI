@@ -101,8 +101,8 @@ class AccesoTests(BaseSugerencias):
 
         self.assertEqual(self.api.get(self.url(lista)).status_code, 404)
 
-    def test_pendientes_y_vistas_son_404_not_found(self):
-        for clave in (ClaveLista.PENDIENTES, ClaveLista.VISTAS):
+    def test_pendientes_viendo_y_vistas_son_404_not_found(self):
+        for clave in (ClaveLista.PENDIENTES, ClaveLista.VIENDO, ClaveLista.VISTAS):
             with self.subTest(clave=clave):
                 lista = self.usuario.listas.get(clave=clave)
 
@@ -304,6 +304,19 @@ class VistasTests(BaseSugerencias):
             respuesta = self.api.get(self.url(lista))
 
         self.assertIn("cache=True", registro.output[0])
+        self.assertNotIn(("movie", vecinas[0].id_tmdb), self.ids(respuesta))
+        self.assertEqual(len(self.ids(respuesta)), 4)
+
+    def test_saca_lo_que_el_usuario_esta_viendo(self):
+        lista = self.lista_con(self.produccion("Semilla", vector_a(0)))
+        vecinas = self.vecinas(5)
+        Tiene.objects.create(
+            lista=self.usuario.listas.get(clave=ClaveLista.VIENDO),
+            produccion=vecinas[0],
+        )
+
+        respuesta = self.api.get(self.url(lista))
+
         self.assertNotIn(("movie", vecinas[0].id_tmdb), self.ids(respuesta))
         self.assertEqual(len(self.ids(respuesta)), 4)
 

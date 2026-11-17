@@ -55,7 +55,8 @@ export function TitleActions({
   const propias = listas.filter((lista) => lista.tipo === "personalizada");
 
   function aviso(lista: ListaFicha, agregada: boolean) {
-    if (lista.clave) return t(AVISOS[lista.clave][agregada ? 0 : 1]);
+    // «Watching» todavía no tiene botón en la ficha (llega con el estado único).
+    if (lista.clave && lista.clave !== "viendo") return t(AVISOS[lista.clave][agregada ? 0 : 1]);
     return t(agregada ? "title.lists.addedFeedback" : "title.lists.removedFeedback", {
       title: titulo,
       listName: lista.nombre,

@@ -9,7 +9,7 @@ in them through `/api/lists/`.
 
 ### Stable identity of existing predetermined lists
 
-`Lista.clave` MUST support `favoritos`, `pendientes`, and `vistas`, and MUST
+`Lista.clave` MUST support `favoritos`, `pendientes`, `viendo` (16/11/2026) and `vistas`, and MUST
 remain nullable during the migration of application code to these identities.
 The existing `nombre`, list IDs, and `Tiene` relations MUST be preserved.
 
@@ -104,22 +104,42 @@ the cursor stable across ties.
 `POST /api/lists/{id}/items/` MUST accept `(id_tmdb, tipo)`, call
 `materializar()` before creating `Tiene`, and reject an existing relation with
 409. `DELETE /api/lists/{id}/items/{item_id}/` MUST remove only an item owned
-by that list. Removing from the predetermined `Vistas` list while an active
-rating exists for that production MUST return 409.
+by that list, and always answers 204 (No Content): since 16/11/2026 a rating no
+longer blocks removal from `Vistas` and it is kept. A `?borrar_calificacion=`
+flag sent by an old client is ignored.
 
-`Vistas` also changes from outside this API: since 30/09/2026, rating a
-production adds it to its author's `Vistas` and deleting the rating removes it
-(`reviews-api`, "A rated production is in `Vistas`"). Those writes go through
-`listas/services.py` (`agregar_a_vistas`, `quitar_de_vistas`) so that the lists
-module keeps owning `Tiene`.
+### One status per production (16/11/2026)
 
-Entering `Vistas` MUST remove the production from the same user's
-predetermined `Pendientes` list, in the same transaction (decided 14/10/2026:
-what you watched is no longer pending). It applies to both ways in —
-`POST /api/lists/{vistas}/items/` and rating — and only when the production
-actually enters: if it was already in `Vistas`, `Pendientes` is not touched,
-so re-adding it there to watch it again stays allowed. Removing from `Vistas`
-MUST NOT put it back in `Pendientes`. Other users' lists are never touched.
+`Pendientes` (Watchlist), `Viendo` (Watching) and `Vistas` (Watched) are a
+single status: a production MUST be in at most one of them for the same user.
+`Favoritos` stays independent. Every write into those three lists goes through
+`listas/services.py::poner_estado(usuario, produccion, estado)`, which locks the
+three lists, puts the production in the requested one and removes it from the
+other two in one transaction. It is used by `POST /api/lists/{id}/items/` on
+those lists, by rating (`reviews-api`) and by the status endpoint.
+`quitar_de_vistas` remains only for deleting a rating.
+
+`PUT /api/lists/status/` sets the status atomically and is also the Undo:
+body `{id_tmdb, tipo, estado}` with `estado` in `pendientes`, `viendo`, `vistas`
+or `null` (required even when `null`, so a missing key never clears the status).
+It answers 200 (OK) with `{estado, estado_anterior, listas}`, where `listas` is
+the same array as `GET /api/lists/?id_tmdb=&tipo=`. Repeating the current status
+is idempotent and keeps the item's date. The production is materialized only
+when `estado` is not `null`. Errors: 400 (Bad Request) for an invalid body,
+401 (Unauthorized), 404 (Not Found) if TMDB does not know the title, and the
+write throttle. The client undoes a change by sending `estado_anterior`.
+
+Migration `listas.0009_lista_viendo` creates `Viendo` in every account, moves
+every active rating with no status to `Vistas`, and keeps only the most recent
+list (`fecha_agregado`, `Vistas` on a tie) for a production in both `Pendientes`
+and `Vistas`. A custom list already named «Viendo» is renamed to «Viendo 2» (or
+the first free number) and keeps its items. «Watching» and «Viendo» become
+reserved names. The reverse is a documented no-op.
+
+`Viendo` is treated as already seen by `vistos()`: it is excluded from the Home
+«Recommended» row, from list suggestions, from «More like» on the title page and
+from the chatbot's recommendations, and the chatbot context lists it in its own
+line. List suggestions answer 404 (Not Found) for `Pendientes` and `Viendo`.
 
 #### Scenario: Marking as watched something pending
 
@@ -127,11 +147,18 @@ MUST NOT put it back in `Pendientes`. Other users' lists are never touched.
 - WHEN they add it to `Vistas`, or rate it
 - THEN it is in `Vistas` and no longer in `Pendientes`
 
-#### Scenario: Watching it again
+#### Scenario: The status is free after rating
 
-- GIVEN a production already in `Vistas` that the user added again to `Pendientes`
-- WHEN they rate it
-- THEN it stays in `Pendientes`
+- GIVEN a rated production in `Vistas`
+- WHEN the user sets its status to `Viendo`
+- THEN it is only in `Viendo`
+- AND the rating is kept
+
+#### Scenario: Undo
+
+- GIVEN a production in `Pendientes`
+- WHEN the status is set to `Viendo` and then to the returned `estado_anterior`
+- THEN it is back in `Pendientes` only
 
 ### Write limits and quantity caps (26/10/2026)
 
@@ -156,4 +183,4 @@ user MUST appear as 404. Business conflicts MUST expose a stable `code` and the 
 
 ### Definitive error contract
 
-OT-83 removes public `codigo`, `detail` and root field keys. Use `list_name_duplicated`, `list_name_reserved`, `list_item_duplicated`, `list_limit_reached`, `list_items_limit_reached`, `default_list_protected` and `rating_blocks_removal_from_watched`, with the common error envelope. Request fields and enum values retain their spelling. Frontend labels for default lists use the exported stable keys.
+OT-83 removes public `codigo`, `detail` and root field keys. Use `list_name_duplicated`, `list_name_reserved`, `list_item_duplicated`, `list_limit_reached`, `list_items_limit_reached` and `default_list_protected`, with the common error envelope. Request fields and enum values retain their spelling. Frontend labels for default lists use the exported stable keys.

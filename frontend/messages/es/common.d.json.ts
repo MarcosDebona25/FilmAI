@@ -568,6 +568,7 @@ declare const messages: {
     "defaultList": {
       "favoritos": "Favoritos",
       "pendientes": "Pendientes",
+      "viendo": "Viendo",
       "vistas": "Vistas"
     },
     "theme": {
@@ -749,7 +750,6 @@ declare const messages: {
       "list_limit_reached": "Llegaste al máximo de {maxLists, number} listas. Eliminá alguna para crear otra.",
       "list_items_limit_reached": "Esta lista llegó al máximo de {maxItems, number} títulos.",
       "default_list_protected": "Las listas predeterminadas no se pueden renombrar ni eliminar.",
-      "rating_blocks_removal_from_watched": "Para quitarla de Vistas, primero eliminá tu calificación.",
       "rating_duplicated": "Ya calificaste esta película o serie.",
       "review_moderated": "Esta reseña fue moderada, así que no podés editar ni borrar su texto.",
       "username_already_used": "Ese nombre de usuario ya está en uso.",

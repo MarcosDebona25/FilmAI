@@ -3,7 +3,8 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-LISTAS_PREDETERMINADAS = ("Favoritos", "Pendientes", "Vistas")
+# En el orden de `ClaveLista`: `nombres_listas_predeterminadas()` las une de a pares.
+LISTAS_PREDETERMINADAS = ("Favoritos", "Pendientes", "Viendo", "Vistas")
 CONTEXTO_CHAT_INICIAL = {
     "resumen_historial": "",
     "generos_preferidos": [],

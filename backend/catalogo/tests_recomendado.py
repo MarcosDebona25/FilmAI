@@ -279,6 +279,16 @@ class RecomendadoResultadosTests(_BaseRecomendado):
 
         self.assertEqual(self._ids(respuesta), [("movie", 1339274)])
 
+    def test_saca_lo_que_esta_en_viendo(self):
+        # PR 4: lo que el usuario está mirando ya lo conoce, como lo visto.
+        self._calificar([53])
+        self._agregar_a(ClaveLista.VIENDO, 1291595, TipoProduccion.PELICULA)
+
+        respuesta = self.cliente.get(URL, {"tipo": "movie"})
+
+        self.assertNotIn(("movie", 1291595), self._ids(respuesta))
+        self.assertIn(("movie", 1101412), self._ids(respuesta))
+
     def test_lo_que_esta_en_favoritos_se_sigue_recomendando(self):
         self._calificar([53])
         self._agregar_a(ClaveLista.FAVORITOS, 1291595, TipoProduccion.PELICULA)

@@ -49,13 +49,19 @@ def generos_favoritos(usuario, tipo):
 
 
 def vistos(usuario):
-    """Pares `(id_tmdb, tipo de TMDB)` de la lista «Vistas».
+    """Pares `(id_tmdb, tipo de TMDB)` de lo que el usuario ya conoce: «Vistas» y «Viendo».
+
+    «Viendo» (PR 4, 15/11/2026) cuenta como conocido: lo que está mirando no se
+    le recomienda, igual que lo ya visto. Es el único helper que usan el Inicio,
+    las sugerencias de lista, «More like» de la ficha y el chatbot, así que
+    sumarlo acá lo excluye de todos.
 
     Va el par y no solo el id porque TMDB numera películas y series por
     separado: la película 108978 y la serie 108978 son dos cosas distintas.
     """
     filas = Tiene.objects.filter(
-        lista__usuario=usuario, lista__clave=ClaveLista.VISTAS
+        lista__usuario=usuario,
+        lista__clave__in=(ClaveLista.VISTAS, ClaveLista.VIENDO),
     ).values_list("produccion__id_tmdb", "produccion__tipo")
     return {(id_tmdb, TIPO_TMDB[tipo]) for id_tmdb, tipo in filas}
 

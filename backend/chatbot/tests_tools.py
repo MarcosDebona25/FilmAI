@@ -128,6 +128,12 @@ class BaseTools(TestCase):
             produccion=self.produccion(id_tmdb=id_tmdb, tipo=tipo),
         )
 
+    def marcar_viendo(self, id_tmdb, tipo=TipoProduccion.PELICULA):
+        Tiene.objects.create(
+            lista=self.lista(ClaveLista.VIENDO, "Viendo"),
+            produccion=self.produccion(id_tmdb=id_tmdb, tipo=tipo),
+        )
+
 
 class FormaDeLosResultadosTests(BaseTools):
     def test_una_pelicula_llega_con_los_campos_acordados(self):
@@ -282,6 +288,25 @@ class VistasTests(BaseTools):
                 resultado = ejecutar(self.contexto(), nombre, argumentos)
 
                 self.assertEqual([r["id_tmdb"] for r in resultado["resultados"]], [2])
+
+    def test_lo_que_esta_viendo_tampoco_se_recomienda(self):
+        # PR 4: «Watching» cuenta como conocido, igual que lo visto.
+        self.marcar_viendo(1)
+        self.catalogo.resultados["movie"] = [pelicula(1), pelicula(2, "Otra")]
+
+        resultado = ejecutar(self.contexto(), "descubrir", {"tipo": "movie"})
+
+        self.assertEqual([r["id_tmdb"] for r in resultado["resultados"]], [2])
+
+    def test_buscar_semantico_tambien_excluye_lo_que_esta_viendo(self):
+        self.marcar_viendo(1)
+
+        with patch(
+            "chatbot.tools.busqueda.buscar_semantico", return_value=[]
+        ) as buscar:
+            ejecutar(self.contexto(), "buscar_semantico", {"consulta": "algo"})
+
+        self.assertEqual(buscar.call_args.kwargs["excluir"], {(1, "movie")})
 
     def test_buscar_por_nombre_encuentra_lo_visto_y_lo_marca(self):
         # «Algo como Moon» necesita encontrar Moon aunque ya la haya visto.

@@ -32,7 +32,7 @@ class Command(BaseCommand):
                     clave__in=nombres_listas_predeterminadas()
                 ).count()
                 self.stdout.write(
-                    f"{usuario.pk}: listas {listas}/3, chats {usuario.chats.count()}/1"
+                    f"{usuario.pk}: listas {listas}/{len(nombres_listas_predeterminadas())}, chats {usuario.chats.count()}/1"
                 )
             return
 

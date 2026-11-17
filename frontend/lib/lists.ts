@@ -8,7 +8,7 @@ import { tmdbImage, type Title } from "@/lib/catalog";
 import { NOTAS, de, type Nota } from "@/lib/search";
 import { routes } from "@/lib/routes";
 
-export type ClaveLista = "favoritos" | "vistas" | "pendientes";
+export type ClaveLista = "favoritos" | "pendientes" | "viendo" | "vistas";
 
 /** Un resumen de `GET /api/lists/` (L-01). */
 export interface ResumenLista {

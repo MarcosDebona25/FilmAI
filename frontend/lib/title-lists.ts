@@ -4,7 +4,7 @@
 export interface ListaFicha {
   id: number;
   nombre: string;
-  clave: "favoritos" | "vistas" | "pendientes" | null;
+  clave: "favoritos" | "pendientes" | "viendo" | "vistas" | null;
   tipo: "predeterminada" | "personalizada";
   cantidad_items: number;
   contiene: boolean;

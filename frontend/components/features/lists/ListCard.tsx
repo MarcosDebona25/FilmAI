@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, type CSSProperties, type HTMLAttributes, type Ref } from "react";
-import { Clock, Eye, GripVertical, Heart } from "lucide-react";
+import { Clock, Eye, GripVertical, Heart, Play } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ListActionsMenu, type AccionLista } from "@/components/features/lists/ListActionsMenu";
@@ -13,10 +13,12 @@ import { esPredeterminada, type ClaveLista, type ResumenLista } from "@/lib/list
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
-const ICONOS = { favoritos: Heart, pendientes: Clock, vistas: Eye } as const satisfies Record<
-  ClaveLista,
-  unknown
->;
+const ICONOS = {
+  favoritos: Heart,
+  pendientes: Clock,
+  viendo: Play,
+  vistas: Eye,
+} as const satisfies Record<ClaveLista, unknown>;
 
 /** Hasta cuántos pósters caben apilados (escritorio; en celular se ven 3). */
 const MAX_POSTERS = 5;

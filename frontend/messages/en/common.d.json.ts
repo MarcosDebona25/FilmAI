@@ -568,6 +568,7 @@ declare const messages: {
     "defaultList": {
       "favoritos": "Favorites",
       "pendientes": "Watchlist",
+      "viendo": "Watching",
       "vistas": "Watched"
     },
     "theme": {
@@ -749,7 +750,6 @@ declare const messages: {
       "list_limit_reached": "You reached the maximum of {maxLists, number} lists. Delete one to create another.",
       "list_items_limit_reached": "This list reached the maximum of {maxItems, number} titles.",
       "default_list_protected": "Default lists can’t be renamed or deleted.",
-      "rating_blocks_removal_from_watched": "To remove it from Watched, first delete your rating.",
       "rating_duplicated": "You’ve already rated this movie or TV show.",
       "review_moderated": "This review was moderated, so you can’t edit or delete its text.",
       "username_already_used": "That username is already in use.",

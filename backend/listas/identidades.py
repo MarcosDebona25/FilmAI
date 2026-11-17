@@ -7,7 +7,7 @@ from usuarios.provisioning import LISTAS_PREDETERMINADAS
 from .models import ClaveLista
 
 NOMBRES_RESERVADOS = {
-    "en": ("Favorites", "Watchlist", "Watched"),
+    "en": ("Favorites", "Watchlist", "Watching", "Watched"),
     "es": LISTAS_PREDETERMINADAS,
 }
 
