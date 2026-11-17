@@ -31,12 +31,16 @@ import { tmdbLoader, type MediaType } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
 import { ultimasResenas } from "@/lib/my-reviews";
+import {
+  crearCalificacion,
+  editarCalificacion,
+  quitarCalificacion as quitarEnApi,
+} from "@/lib/review-actions";
 import { routes } from "@/lib/routes";
 import { ultimaBusqueda } from "@/lib/search";
 import {
   normalizarFicha,
   origenDesde,
-  planEdicion,
   type Creditos,
   type MiCalificacion,
   type Plataformas,
@@ -214,34 +218,14 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
 
   async function guardar({ valor, texto }: { valor: number; texto: string }) {
     if (!mia) {
-      const nueva = await apiFetch<MiCalificacion>("/api/reviews/", {
-        method: "POST",
-        body: { id_tmdb: id, tipo, valor, ...(texto ? { texto } : {}) },
-      });
-      setMia(nueva);
-      toast.success(
-        t(texto ? "title.feedback.ratingReviewPublished" : "title.feedback.ratingPublished")
-      );
+      const { creada, aviso } = await crearCalificacion({ idTmdb: id, tipo, valor, texto });
+      setMia(creada);
+      toast.success(t(`title.feedback.${aviso}`));
     } else {
-      const plan = planEdicion(mia, valor, texto);
-      let actual: MiCalificacion = mia;
-      if (plan.borrarTexto) {
-        await apiFetch(`/api/reviews/${mia.id}/texto/`, { method: "DELETE" });
-        actual = { ...actual, texto: null };
-      }
-      if (Object.keys(plan.cambios).length) {
-        actual = await apiFetch<MiCalificacion>(`/api/reviews/${mia.id}/`, {
-          method: "PUT",
-          body: plan.cambios,
-        });
-      }
-      setMia(actual);
-      const nota = "valor" in plan.cambios;
-      const textoCambio = "texto" in plan.cambios || plan.borrarTexto;
-      if (nota && textoCambio) toast.success(t("title.feedback.ratingReviewUpdated"));
-      else if (nota) toast.success(t("title.feedback.ratingUpdated"));
-      else if (plan.borrarTexto) toast.success(t("title.feedback.reviewDeleted"));
-      else if (textoCambio) toast.success(t("title.feedback.reviewUpdated"));
+      const { plan, respuesta, aviso } = await editarCalificacion(mia, valor, texto);
+      const sinTexto: MiCalificacion = plan.borrarTexto ? { ...mia, texto: null } : mia;
+      setMia(respuesta ? (respuesta as MiCalificacion) : sinTexto);
+      if (aviso) toast.success(t(`title.feedback.${aviso}`));
     }
     setModal(null);
     // Calificar suma a Vistas en el servidor: las listas traen el `item_id` nuevo.
@@ -250,10 +234,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
 
   async function quitarCalificacion() {
     if (!mia) return;
-    await apiFetch(`/api/reviews/${mia.id}/`, { method: "DELETE" });
-    toast.success(
-      t(mia.texto ? "title.feedback.ratingReviewDeleted" : "title.feedback.ratingDeleted")
-    );
+    const { aviso } = await quitarEnApi(mia);
+    toast.success(t(`title.feedback.${aviso}`));
     setMia(null);
     setModal(null);
     await recargarListas();

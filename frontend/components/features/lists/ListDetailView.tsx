@@ -42,12 +42,12 @@ import {
 import { routes } from "@/lib/routes";
 import { ETIQUETA_NOTA, NOTAS } from "@/lib/search";
 import type { MiCalificacion } from "@/lib/title";
+import { useCursorList } from "@/lib/use-cursor-list";
+import { useSentinel } from "@/lib/use-sentinel";
 import { cn } from "@/lib/utils";
 
 /** Espera después de la última tecla antes de filtrar, como Buscar. */
 const ESPERA_MS = 350;
-/** Distancia al final de la grilla a la que se pide la página siguiente. */
-const ANTICIPO = "600px";
 
 type Datos = { items: ItemLista[]; next: string | null; total: number };
 type Accion =
@@ -72,14 +72,22 @@ export function ListDetailView({ id }: { id: number }) {
   const [noExiste, setNoExiste] = useState(false);
   const [errorLista, setErrorLista] = useState(false);
   const [texto, setTexto] = useState(filtros.q);
-  const [datos, setDatos] = useState<Datos | null>(null);
-  const [estado, setEstado] = useState<"cargando" | "listo" | "error">("cargando");
-  const [mas, setMas] = useState<"quieto" | "cargando" | "error">("quieto");
-  const [intento, setIntento] = useState(0);
+  // Primera página de cada combinación de filtros, y las siguientes al bajar.
+  const { datos, setDatos, estado, mas, cargarMas, intento, reintentar, puedeSeguir } =
+    useCursorList<PaginaItems, Datos>({
+      cuenta: perfil?.pk,
+      primera: consulta,
+      rutaSiguiente: (next) => rutaPaginaItems(id, next),
+      inicial: (pagina) => ({ items: pagina.results, next: pagina.next, total: pagina.total }),
+      combinar: (actual, pagina) => ({
+        ...actual,
+        items: combinarItems(actual.items, pagina.results),
+        next: pagina.next,
+      }),
+    });
   const [hoja, setHoja] = useState(false);
   const [dialogo, setDialogo] = useState<"renombrar" | "eliminar" | null>(null);
   const [accion, setAccion] = useState<Accion | null>(null);
-  const pedido = useRef(0);
   const centinela = useRef<HTMLDivElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const campo = useRef<HTMLInputElement>(null);
@@ -125,57 +133,8 @@ export function ListDetailView({ id }: { id: number }) {
     };
   }, [id, perfil?.pk, intento]);
 
-  // Primera página de cada combinación de filtros. Mientras llega la nueva
-  // queda la anterior a la vista; una respuesta vieja se descarta.
-  useEffect(() => {
-    if (!perfil?.pk) return;
-    const pedidoId = ++pedido.current;
-    setEstado("cargando");
-    apiFetch<PaginaItems>(consulta).then(
-      (pagina) => {
-        if (pedidoId !== pedido.current) return;
-        setDatos({ items: pagina.results, next: pagina.next, total: pagina.total });
-        setEstado("listo");
-        setMas("quieto");
-      },
-      () => {
-        if (pedidoId === pedido.current) setEstado("error");
-      }
-    );
-  }, [consulta, perfil?.pk, intento]);
-
-  function cargarMas() {
-    if (!datos?.next || mas === "cargando" || estado !== "listo") return;
-    const pedidoId = pedido.current;
-    setMas("cargando");
-    apiFetch<PaginaItems>(rutaPaginaItems(id, datos.next)).then(
-      (pagina) => {
-        if (pedidoId !== pedido.current) return;
-        setDatos((actual) =>
-          actual
-            ? { ...actual, items: combinarItems(actual.items, pagina.results), next: pagina.next }
-            : actual
-        );
-        setMas("quieto");
-      },
-      () => {
-        if (pedidoId === pedido.current) setMas("error");
-      }
-    );
-  }
-
   // Carga al bajar; el botón «Cargar más» queda para teclado y como respaldo.
-  useEffect(() => {
-    if (!datos?.next || mas !== "quieto" || estado !== "listo" || !centinela.current) return;
-    const observador = new IntersectionObserver(
-      ([entrada]) => {
-        if (entrada.isIntersecting) cargarMas();
-      },
-      { rootMargin: ANTICIPO }
-    );
-    observador.observe(centinela.current);
-    return () => observador.disconnect();
-  });
+  useSentinel(centinela, { activo: puedeSeguir, alVer: cargarMas });
 
   function sacarDeLaGrilla(item: ItemLista) {
     setDatos((actual) =>
@@ -353,7 +312,7 @@ export function ListDetailView({ id }: { id: number }) {
       ) : errorLista ? (
         <ErrorRetry
           mensaje={t("lists.detail.loadError")}
-          onReintentar={() => setIntento((anterior) => anterior + 1)}
+          onReintentar={reintentar}
           boton="pildora"
         />
       ) : (
@@ -541,7 +500,7 @@ export function ListDetailView({ id }: { id: number }) {
           {estado === "error" && (
             <ErrorRetry
               mensaje={t("lists.detail.loadError")}
-              onReintentar={() => setIntento((anterior) => anterior + 1)}
+              onReintentar={reintentar}
               boton="pildora"
               className="border-t border-line py-10"
             />
@@ -611,10 +570,7 @@ export function ListDetailView({ id }: { id: number }) {
               {mas === "error" && (
                 <ErrorRetry
                   mensaje={t("lists.detail.loadError")}
-                  onReintentar={() => {
-                    setMas("quieto");
-                    cargarMas();
-                  }}
+                  onReintentar={cargarMas}
                   boton="pildora"
                   className="pt-6"
                 />
