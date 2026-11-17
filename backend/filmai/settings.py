@@ -59,11 +59,21 @@ LLM_PROVEEDORES = [
     }
 ]
 
-# --- Chatbot: Canal (transporte del stream) ---
-# La vista del chat es dueña del tiempo máximo del turno y del candado «una
-# respuesta a la vez»: `LLM_TIMEOUT_SECONDS` cubre el modelo y las tools, y el
-# candado vence 35 s después (el margen del guardado y la liberación).
+# --- Chatbot: el tiempo de un turno ---
+# `LLM_TIMEOUT_SECONDS` es el plazo del turno, modelo y tools incluidos. Desde el
+# 15/11/2026 lo administra el orquestador (`chatbot/plazo.py`): reparte ese tiempo
+# entre las llamadas al modelo y las tools y, si no alcanza, cierra con lo que tiene.
+# La vista conserva un tope un 20 % mayor (30 s) como red de seguridad, y el candado
+# «una respuesta a la vez» vence 35 s después del plazo (el margen del guardado).
 LLM_TIMEOUT_SECONDS = config("LLM_TIMEOUT_SECONDS", default=25, cast=int)
+# TMDB para las tools del chat: un timeout más corto que el general (`TMDB_TIMEOUT`,
+# 5 s) y un solo reintento en vez de tres. Una llamada a TMDB mide 180-540 ms en frío
+# (14/11/2026): 3 s es más de 5 veces el peor caso, y una que no contestó en 3 s rara
+# vez contesta en 5. Con los valores generales, una sola llamada a un TMDB caído
+# puede tardar 27 s (4 intentos de 5 s y 7 s de esperas): más que el turno entero.
+# Con estos, 7 s como mucho. Solo rige dentro del chat (`catalogo/plazo.py`).
+CHAT_TMDB_TIMEOUT = config("CHAT_TMDB_TIMEOUT", default=3, cast=float)
+CHAT_TMDB_REINTENTOS = config("CHAT_TMDB_REINTENTOS", default=1, cast=int)
 # Minutos de silencio que cortan una sesión de chat: al modelo solo le llega el
 # historial desde el último hueco mayor a esto (`orquestador._historial`).
 CHAT_VENTANA_SESION_MINUTOS = config(

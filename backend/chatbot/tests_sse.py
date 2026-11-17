@@ -617,6 +617,24 @@ class OrquestadorRealTests(BaseSSE):
         guardada = await Mensaje.objects.aget(autor=TipoAutor.CHATBOT)
         self.assertEqual(guardada.texto, "Te recomiendo **Moon** (2009)")
 
+    @override_settings(LLM_TIMEOUT_SECONDS=0.05)
+    async def test_un_modelo_colgado_termina_en_fin_y_no_en_error(self):
+        # De punta a punta, con el `Corte` de verdad: el modelo no contesta nunca
+        # (`Event().wait()` espera para siempre, sin dormir). El orquestador lo corta
+        # dentro de su plazo y pide la respuesta de cierre: la vista no llega a usar
+        # su red y el turno se guarda. Antes del 15/11/2026 esto era un `error`.
+        async def colgado():
+            await asyncio.Event().wait()
+
+        proveedor = ProveedorFalso([[colgado], ["Probá de nuevo en un rato."]])
+        with patch("chatbot.orquestador.crear_proveedor", return_value=proveedor):
+            respuesta = await self.enviar()
+            eventos = eventos_de(await self.leer(respuesta))
+
+        self.assertEqual([n for n, _ in eventos], ["texto", "tarjetas", "fin"])
+        self.assertEqual(eventos[0][1]["delta"], "Probá de nuevo en un rato.")
+        self.assertEqual(await Mensaje.objects.acount(), 2)
+
     async def test_un_proveedor_que_falla_es_chat_unavailable(self):
         proveedor = ProveedorFalso([[ConnectionError("503")]])
         with patch("chatbot.orquestador.crear_proveedor", return_value=proveedor):
