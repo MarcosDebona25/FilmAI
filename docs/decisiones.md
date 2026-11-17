@@ -1015,3 +1015,21 @@ Archivos: `frontend/components/features/{MediaCard,UnavailableCard}.tsx`, `front
 - **Conteo al deshacer en Watching (aplicado)**: `meterEnLaGrilla` sumaba 1 al conteo de la lista aunque la tarjeta no se insertara (datos todavía nulos o el ítem ya presente, por ejemplo tras volver a pedir la primera página). Ahora decide con los datos del último render (`datosAhora`) y solo suma cuando inserta. Test en `frontend/tests/watching-list.test.tsx`.
 - **Editar una calificación en la ficha (aplicado)**: `TitleView` reemplazaba `mia` por la respuesta del `PUT`, que es parcial; se perdían `id` o el texto borrado. Ahora la mezcla sobre el estado previo (`{ ...sinTexto, ...respuesta }`), como `MyReviewsView`. Test en `frontend/tests/title-view.test.tsx`.
 - **«Build roto» en `MyReviewsView` (no aplica)**: PR-Agent supuso que seguían las declaraciones viejas de `datos`, `estado` y `mas` porque el diff que vio no mostraba su borrado. El archivo no las tiene; `tsc`, ESLint y el build del CI pasan.
+
+### 17/11/2026 — Canvas reorganizado con los 4 PRs del canvas como mergeados (versión 488)
+
+Pedido de Marcos. El canvas «FilmAI — Sistema y catálogo» muestra la app con #223, #224, #225 y #226 ya mergeados, sin paneles «Behaviour» ni notas.
+
+- **Ficha** (sección 3), escritorio y celular:
+  - botón de estado con su menú en lugar de Watched y Watchlist;
+  - «Stream or rent» que abre el diálogo (hoja inferior en celular);
+  - fila «More like Interstellar»;
+  - nombres de dirección y reparto con enlace a Search.
+  - Se suman a la sección los artboards «status menu, toast and undo» y «where to watch dialog».
+- **Search** (sección 4): se suman «Navbar search · states» y «Navbar search · dropdown in Home».
+- **Access** (sección 6): Sign up pasa al registro en 3 pasos con el modal de avatar paginado. Se suma «Sign up with Google · steps 2 and 3».
+- **Lists** (sección 7):
+  - Lists con 4 predeterminadas en 4, 2 y 1 columnas;
+  - List detail con el conteo al lado del título y la banda de sugerencias;
+  - se suma «Watching · list page and empty state».
+- **Borrados**: los títulos de las secciones 13 a 17 y los artboards de propuesta ya absorbidos (`Prop-Similares-Ficha`, `Prop-Viendo-Listas*`, `Prop-Sugerencias-Lista*`, `Prop-Registro-L2*` y `Prop-Registro-Avatares*`). Las menciones a «sección 13 a 17 del canvas» en este archivo y en `docs/05` quedan como referencia histórica: hoy esos diseños viven en las secciones 3, 4, 6 y 7.
