@@ -1,13 +1,13 @@
 Content-Type: multipart/alternative;
- boundary="===============6497871577615747958=="
+ boundary="===============7456343405250332226=="
 MIME-Version: 1.0
 Subject: =?utf-8?q?=5BFilmAI=5D_Restablecimiento_de_contrase=C3=B1a?=
 From: FilmAI <onboarding@resend.dev>
 To: revision@example.com
-Date: Thu, 08 Oct 2026 23:22:46 -0000
-Message-ID: <179150176679.1.10396694232238002469@ba1ae826721f>
+Date: Wed, 18 Nov 2026 19:14:17 -0000
+Message-ID: <179502925794.125.1197147780664434302@b5fc7399ffa6>
 
---===============6497871577615747958==
+--===============7456343405250332226==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -16,7 +16,7 @@ Hola Ana Pérez,
 
 Recibimos una solicitud para restablecer la contraseña de tu cuenta de FilmAI. Para continuar, abrí este enlace:
 
-http://localhost:3000/confirm-email/revision/
+http://localhost:3000/reset-password/revision/token/
 
 Este enlace es válido durante 1 hora. Si se venció, podés pedir otro desde la pantalla de inicio de sesión con «¿Olvidaste tu contraseña?».
 
@@ -26,7 +26,7 @@ El equipo de FilmAI
 
 Recibís este correo porque se pidió recuperar el acceso a una cuenta de FilmAI.
 © 2026 FilmAI. Datos e imágenes de películas y series provistos por TMDB.
---===============6497871577615747958==
+--===============7456343405250332226==
 Content-Type: text/html; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -36,14 +36,20 @@ Content-Transfer-Encoding: 8bit
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
     <title>Restablecé tu contraseña</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&amp;family=Hanken+Grotesk:wght@400;600&amp;display=swap"
+    />
   </head>
   <body
     style="
       margin: 0;
       padding: 0;
       background-color: #0d0d14;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Hanken Grotesk', Arial, Helvetica, sans-serif;
     "
   >
     <table
@@ -51,7 +57,7 @@ Content-Transfer-Encoding: 8bit
       width="100%"
       cellpadding="0"
       cellspacing="0"
-      style="background-color: #0d0d14; padding: 32px 16px"
+      style="background-color: #0d0d14; padding: 24px 16px 40px"
     >
       <tr>
         <td align="center">
@@ -61,50 +67,87 @@ Content-Transfer-Encoding: 8bit
             cellpadding="0"
             cellspacing="0"
             style="
-              max-width: 480px;
-              background-color: #161625;
-              border: 1px solid #2a2a45;
+              max-width: 560px;
+              background-color: #15151f;
+              border: 1px solid #262636;
               border-radius: 16px;
+              overflow: hidden;
             "
           >
             <tr>
-              <td style="padding: 40px 40px 8px 40px">
-                <span style="font-size: 24px; font-weight: bold; color: #e0e0e0"
-                  >FilmAI</span
-                >
+              <td style="padding: 36px 40px 0 40px">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td
+                      align="center"
+                      width="32"
+                      height="24"
+                      style="
+                        width: 32px;
+                        height: 24px;
+                        background-color: #f5c518;
+                        border-radius: 6px;
+                        color: #14110a;
+                        font-size: 14px;
+                        line-height: 24px;
+                        font-family: Arial, Helvetica, sans-serif;
+                      "
+                      aria-hidden="true"
+                      >&#9733;</td
+                    >
+                    <td
+                      style="
+                        padding-left: 10px;
+                        font-family: 'Big Shoulders Display', 'Arial Narrow',
+                          Arial, sans-serif;
+                        font-size: 30px;
+                        font-weight: 800;
+                        line-height: 1;
+                        letter-spacing: 0.05em;
+                        color: #ededf2;
+                      "
+                      >FilmAI</td
+                    >
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
               <td
                 style="
-                  padding: 16px 40px 24px 40px;
-                  font-size: 15px;
-                  line-height: 1.6;
-                  color: #e0e0e0;
+                  padding: 24px 40px 0 40px;
+                  font-family: 'Big Shoulders Display', 'Arial Narrow', Arial,
+                    sans-serif;
+                  font-size: 40px;
+                  font-weight: 800;
+                  line-height: 1.05;
+                  color: #ededf2;
                 "
               >
-                <span style="display: block; font-size: 20px; font-weight: bold; padding-bottom: 16px"
-                  >Restablecé tu contraseña</span
-                >
+                <h1 style="margin: 0; font: inherit; color: inherit">
+                  Restablecé tu contraseña
+                </h1>
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 20px 40px 0 40px;
+                  font-size: 16px;
+                  line-height: 1.6;
+                  color: #a6a6b8;
+                "
+              >
                 Hola Ana Pérez,
                 <br /><br />
                 Recibimos una solicitud para restablecer la contraseña de tu cuenta de FilmAI. Para continuar, tocá el botón.
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding: 8px 40px 24px 40px">
+              <td align="left" style="padding: 24px 40px 0 40px">
                 <a
-                  href="http://localhost:3000/confirm-email/revision/"
-                  style="
-                    display: inline-block;
-                    background-color: #e67e22;
-                    color: #ffffff;
-                    text-decoration: none;
-                    font-weight: bold;
-                    font-size: 15px;
-                    padding: 12px 32px;
-                    border-radius: 10px;
-                  "
+                  href="http://localhost:3000/reset-password/revision/token/"
+                  style="display: inline-block; background-color: #f5c518; color: #14110a; border: 1px solid #f5c518; text-decoration: none; font-weight: 600; font-size: 16px; line-height: 24px; padding: 13px 32px; border-radius: 10px"
                   >Restablecer mi contraseña</a
                 >
               </td>
@@ -112,56 +155,73 @@ Content-Transfer-Encoding: 8bit
             
             <tr>
               <td
-                align="center"
                 style="
-                  padding: 0 40px 24px 40px;
+                  padding: 24px 40px 0 40px;
                   font-size: 13px;
                   line-height: 1.6;
-                  color: #a0a0a8;
+                  color: #84849a;
                 "
               >
                 Si el botón no funciona, copiá y pegá este enlace en tu navegador:<br />
                 <a
-                  href="http://localhost:3000/confirm-email/revision/"
+                  href="http://localhost:3000/reset-password/revision/token/"
                   style="color: #f5c518; word-break: break-all"
-                  >http://localhost:3000/confirm-email/revision/</a
+                  >http://localhost:3000/reset-password/revision/token/</a
                 >
               </td>
             </tr>
             
             <tr>
-              <td
-                style="
-                  padding: 16px 40px 8px 40px;
-                  border-top: 1px solid #2a2a45;
-                  font-size: 13px;
-                  line-height: 1.6;
-                  color: #a0a0a8;
-                "
-              >
-                Este enlace es válido durante 1 hora. Si se venció, podés pedir otro desde la pantalla de inicio de sesión con «¿Olvidaste tu contraseña?».
-                <br /><br />
-                Si no hiciste esta solicitud, ignorá este mensaje: tu contraseña no se modificará.
+              <td style="padding: 24px 40px 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding-top: 20px;
+                        border-top: 1px solid #262636;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        color: #a6a6b8;
+                      "
+                    >
+                      Este enlace es válido durante 1 hora. Si se venció, podés pedir otro desde la pantalla de inicio de sesión con «¿Olvidaste tu contraseña?». Si no hiciste esta solicitud, ignorá este mensaje: tu contraseña no se modificará.
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
               <td
                 style="
-                  padding: 16px 40px 16px 40px;
-                  font-size: 13px;
-                  color: #a0a0a8;
+                  padding: 24px 40px 36px 40px;
+                  font-size: 14px;
+                  color: #a6a6b8;
                 "
               >
                 El equipo de FilmAI
               </td>
             </tr>
+          </table>
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 560px"
+          >
             <tr>
               <td
+                align="center"
                 style="
-                  padding: 0 40px 32px 40px;
+                  padding: 20px 8px 0 8px;
                   font-size: 12px;
                   line-height: 1.6;
-                  color: #a0a0a8;
+                  color: #84849a;
                 "
               >
                 Recibís este correo porque se pidió recuperar el acceso a una cuenta de FilmAI.
@@ -175,4 +235,4 @@ Content-Transfer-Encoding: 8bit
     </table>
   </body>
 </html>
---===============6497871577615747958==--
+--===============7456343405250332226==--
