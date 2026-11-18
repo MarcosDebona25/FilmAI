@@ -979,3 +979,13 @@ Archivos: `backend/chatbot/plazo.py`, `orquestador.py`, `views.py`, `llm.py`, `b
 **`.eml` de revisión regenerados.** Los ocho `.eml` y el `index.html` de `traducciones/revision-correos/` eran del 24/08 al 08/10/2026 y no se habían regenerado después del diseño del canvas (12/10/2026, `47687dd`) ni de quitar la franja dorada (06/11/2026, #175). Se generaron de nuevo con `enviar_correo()` y el backend de correo en memoria, sin envío externo. El enlace de muestra de `restablecer_contrasena` ahora es `/reset-password/…` (antes salía `/confirm-email/…` porque el contexto de muestra traía los dos enlaces).
 
 Archivos: `docs/05_Plan_de_Desarrollo.md` (pendientes 3, 7 y 12, Q-08), `traducciones/revision-correos/`.
+
+### 18/11/2026 — Tiempo de los tests: diagnóstico y plan (pendiente 13)
+
+Se planteó reequilibrar la pirámide de pruebas o correr la suite por secciones, porque el CI tarda cada vez más. **Lo que hay**: Playwright con `--shard` en dos jobs y `fullyParallel`, y Vitest con sus workers por defecto. El backend corre en serie (sin `--parallel`) y no hay Test Impact Analysis: cada PR corre todo, incluso los que solo tocan docs.
+
+**Diagnóstico**: el paso «Correr tests (Django)» en `develop` tardó 1m31s en `829f890` y 7m29s en `18d0f5b` (13/11/2026, merge de #203, `perf/ficha-primer-clic`), y desde entonces se mantiene en ~8 min. En la corrida verde del 17/11/2026 (`Ran 1959 tests in 485 s`), 21 tests de `chatbot` tardan ~19,3 s cada uno (406 s en total): `_precalentar_tarjetas` encola una tarea de Celery al guardar un turno con tarjetas, el CI no tiene Redis y la llamada espera al broker hasta rendirse; el `except` la registra («No se pudo precalentar las tarjetas del chat») y el test pasa igual. Otros 7 tests de `catalogo` esperan el backoff real de los reintentos (7 s cada uno, 49 s en total). Los 1931 restantes corren en ~30 s.
+
+**Decisión (Marcos)**: no se reequilibra la pirámide ni se adopta TIA test por test; el problema son unos pocos tests lentos, no la forma de la suite. Se dejan como pendientes, sin implementar todavía, los puntos 1 a 5 del pendiente 13 del plan: aislar los tests del broker, mockear el backoff, `--durations` en el CI, filtros por ruta en los PR y correr solo lo afectado en local. `--parallel` en Django y el sharding del backend quedan como posibilidad, no por ahora.
+
+Archivos: `docs/05_Plan_de_Desarrollo.md` (pendiente 13).
