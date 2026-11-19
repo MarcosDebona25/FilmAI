@@ -152,7 +152,7 @@ reviews.results.loading,,status,,Cargando tus calificaciones…,Loading your rat
 reviews.results.loadError,,error,,No pudimos cargar tus calificaciones. Intentá de nuevo.,We couldn’t load your ratings. Try again.,aprobado
 reviews.results.loadMore,,label,,Cargar más calificaciones,Load more ratings,aprobado
 reviews.filters.ratingChip,,label,rating,Calificación {rating},Rating {rating},aprobado
-auth.completeSignUp.fixHighlighted,,error,,Corregí el campo marcado y tocá de nuevo el botón de Google.,Fix the highlighted field and press the Google button again.,aprobado
+auth.completeSignUp.fixHighlighted,,error,,Corregí el campo marcado y volvé a confirmar con Google en el paso 3.,Fix the highlighted field and confirm with Google again in step 3.,aprobado
 profile.leaveDialog.title,,label,,¿Salir sin guardar?,Leave without saving?,aprobado
 profile.leaveDialog.body,,label,,Los cambios que hiciste en tu perfil no se guardarán.,The changes you made to your profile won’t be saved.,aprobado
 profile.leaveDialog.keepEditing,,label,,Seguir editando,Keep editing,aprobado

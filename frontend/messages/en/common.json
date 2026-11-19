@@ -549,7 +549,7 @@
       "termsPending": "Accept the Terms and Conditions to continue.",
       "backToSignUp": "Back to sign-up",
       "backToLogIn": "Back to log in",
-      "fixHighlighted": "Fix the highlighted field and press the Google button again."
+      "fixHighlighted": "Fix the highlighted field and confirm with Google again in step 3."
     },
     "session": {
       "expired": "Your session expired. Log in again."
