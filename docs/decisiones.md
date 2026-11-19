@@ -1270,3 +1270,10 @@ Archivos: `frontend/components/features/title/{StatusToast,use-aviso-guardado,us
 - **Limpieza.** El comentario de `Tarjeta.poster` en `backend/chatbot/eventos.py` citaba la tool retirada `mostrar_tarjetas`; ahora dice dónde se arma el póster hoy.
 
 Archivos: `backend/chatbot/eventos.py`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 19/11/2026 — Canvas al día con el bloqueo al guardar
+
+- **Canvas.** En el artboard «Watching · tap while saving» se borró la opción A y quedó la B (bloqueo + toast «Saving…»). Se sumaron tres artboards con la misma simulación de servidor lento (2,5 s): «Title page · tap while saving» (escritorio, en la sección 3), «Title page · tap while saving · mobile» (sección 3) y «Watching · tap while saving · mobile» (sección 7). En el celular el menú de estado y el de cada tarjeta se abren como hoja inferior. Se renderizaron y probaron los tres estados (menú, guardando, toast con Undo), sin errores de consola.
+- **Plan 05.** Se quitó la nota «Canvas pendiente (Watching)».
+
+Archivos: `docs/05_Plan_de_Desarrollo.md` y este archivo.
