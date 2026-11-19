@@ -8,7 +8,8 @@ orden:
 1. Crea la lista «Viendo» en toda cuenta que no la tenga. Si la cuenta ya tenía
    una lista personalizada con ese nombre (`uq_lista_usuario_nombre` no distingue
    mayúsculas), la renombra a «Viendo 2» (o el primer número libre): conserva sus
-   ítems y evita que la migración choque.
+   ítems y evita que la migración choque. Lo mismo con «Watching», el nombre
+   reservado en inglés: una propia así quedaría duplicada con «Viendo».
 2. Toda calificación activa cuyo título no está en ningún estado pasa a «Vistas»
    (calificar mueve a Watched). Favoritos no cuenta como estado.
 3. Si un título está en «Pendientes» y en «Vistas» a la vez, queda solo en la
@@ -27,15 +28,17 @@ borra a mano.
 from django.db import migrations, models
 
 NOMBRE = "Viendo"
+# Los nombres que ninguna lista propia puede tener (reservados en ambos idiomas).
+NOMBRES_RESERVADOS = (NOMBRE, "Watching")
 ESTADOS = ("pendientes", "viendo", "vistas")
 
 
-def _nombre_libre(nombres_en_uso):
+def _nombre_libre(base, nombres_en_uso):
     """«Viendo 2», «Viendo 3»… el primero que el usuario no use (sin distinguir mayúsculas)."""
     numero = 2
-    while f"{NOMBRE} {numero}".lower() in nombres_en_uso:
+    while f"{base} {numero}".lower() in nombres_en_uso:
         numero += 1
-    return f"{NOMBRE} {numero}"
+    return f"{base} {numero}"
 
 
 def crear_listas_viendo(apps, schema_editor):
@@ -56,12 +59,18 @@ def crear_listas_viendo(apps, schema_editor):
                 "nombre", flat=True
             )
         }
-        if NOMBRE.lower() in nombres:
+        # «Viendo» choca con la restricción de nombre único; «Watching» es su
+        # nombre reservado en inglés y quedaría duplicado. En los dos casos la
+        # lista propia pasa a «<nombre> 2» (o el primer número libre).
+        for reservado in NOMBRES_RESERVADOS:
             chocan = Lista.objects.filter(
-                usuario_id=usuario_id, nombre__iexact=NOMBRE
+                usuario_id=usuario_id, nombre__iexact=reservado
             ).first()
-            chocan.nombre = _nombre_libre(nombres)
-            chocan.save(update_fields=["nombre"])
+            if chocan is not None:
+                nuevo = _nombre_libre(reservado, nombres)
+                chocan.nombre = nuevo
+                chocan.save(update_fields=["nombre"])
+                nombres.add(nuevo.lower())
         Lista.objects.create(
             usuario_id=usuario_id, nombre=NOMBRE, tipo="predeterminada", clave="viendo"
         )

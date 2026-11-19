@@ -94,6 +94,43 @@ class CrearListaViendoTests(_Base):
         self.assertTrue(propia.items.filter(produccion=self.produccion).exists())
         self.assertEqual(self.lista("viendo").nombre, "Viendo")
 
+    def test_una_personalizada_que_se_llama_watching_tambien_se_renombra(self):
+        # «Watching» es el nombre reservado en inglés: una propia que ya lo usaba
+        # quedaría duplicada con la predeterminada «Viendo» traducida.
+        Lista.objects.filter(clave="viendo").delete()
+        propia = ListaFactory(usuario=self.usuario, nombre="watching")
+        Tiene.objects.create(lista=propia, produccion=self.produccion)
+
+        _MIGRACION.crear_listas_viendo(apps, None)
+
+        propia.refresh_from_db()
+        self.assertEqual(propia.nombre, "Watching 2")
+        self.assertEqual(propia.tipo, "personalizada")
+        self.assertTrue(propia.items.filter(produccion=self.produccion).exists())
+        self.assertEqual(self.lista("viendo").nombre, "Viendo")
+
+    def test_con_viendo_y_watching_propias_renombra_las_dos(self):
+        Lista.objects.filter(clave="viendo").delete()
+        en_espanol = ListaFactory(usuario=self.usuario, nombre="Viendo")
+        en_ingles = ListaFactory(usuario=self.usuario, nombre="Watching")
+        ListaFactory(usuario=self.usuario, nombre="Watching 2")
+
+        _MIGRACION.crear_listas_viendo(apps, None)
+
+        en_espanol.refresh_from_db()
+        en_ingles.refresh_from_db()
+        self.assertEqual(en_espanol.nombre, "Viendo 2")
+        self.assertEqual(en_ingles.nombre, "Watching 3")
+
+    def test_no_toca_las_listas_con_otro_nombre(self):
+        Lista.objects.filter(clave="viendo").delete()
+        otra = ListaFactory(usuario=self.usuario, nombre="Watching later")
+
+        _MIGRACION.crear_listas_viendo(apps, None)
+
+        otra.refresh_from_db()
+        self.assertEqual(otra.nombre, "Watching later")
+
 
 class CalificadasEnVistasTests(_Base):
     def calificar(self, produccion=None, usuario=None, activa=True):
