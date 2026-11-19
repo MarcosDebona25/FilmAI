@@ -1240,3 +1240,14 @@ Dos fallas que aparecieron al unir `feat/viendo` con `develop` (que traía el #2
 - **Undo y conteo inestables.** `datosAhora` (la ref que usa `meterEnLaGrilla` para saber si la tarjeta ya está) se actualizaba en un `useEffect`, un instante después de pintar. Un Undo justo después veía datos viejos, volvía a insertar la tarjeta y sumaba uno de más. Con `useLayoutEffect` la ref se pone al día en el mismo commit del render.
 
 Archivos: `frontend/components/features/lists/ListDetailView.tsx`, `frontend/e2e/listas-sugerencias.spec.ts`
+
+### 19/11/2026 — Puesta a punto del plan 05
+
+Contraste del plan con `develop` y `main` (igualados tras el #227) y correcciones de documentación, sin tocar código.
+
+- **Collage de las pantallas de acceso (reemplaza la excepción aceptada el 07/11/2026).** Se decidió que el collage (`frontend/public/collage-posters/Opcion 1.jpg`) no sale de TMDB: es de uso libre y no tiene problemas de derechos de autor. Por eso desaparece la excepción aceptada y el plazo del 13/02/2027 que figuraban en la entrada «Cierre del #180» del 13/11/2026; la única excepción que queda de #180 son los fixtures de prueba. No se tocó `frontend/`: el collage y los e2e que lo usan quedan igual.
+- **Plan 05 al día.** Fechas de encabezado y pendientes actualizados. B-06: la corrida de Marcos (tarea 1.7 del SDD) se hizo el 07/11/2026 (Docker Desktop sin puente, arreglo del pin de redis-py 5 que rompía los `.delay()`, backfill de 402 de 402 en 223 s). B-02: el golden set está cerrado (`golden.yaml` tiene 24 casos, se corre a mano con `manage.py chatear --golden` y se midió el 12 y el 13/11/2026), y la fila pasa de 8 a 7 tools porque `mostrar_tarjetas` se retiró el 13/11/2026 a favor de los marcadores `[[n]]`.
+- **Pendientes.** El 13 suma la prueba `access-screens`, inestable por tiempo con los workers por defecto de Vitest (decisión del 18/11/2026). El 6 suma las migraciones que hay que aplicar al desplegar (`catalogo.0008_lapida_tmdb`, `listas.0008_lapida_tmdb` y `listas.0009_lista_viendo`), que aplica Marcos. Se agrega el 14 con los restos del #226: las acciones del usuario que se descartan sin aviso mientras hay un cambio de estado en curso (`frontend/hooks/use-estado-viendo.ts` y `use-estado-ficha.ts`) y el `requestBody` tipado de `PUT /api/lists/status/` en `contracts/openapi.yaml`; el diseño queda pendiente de decidir con Marcos.
+- **Tope de 4 vueltas del chatbot.** No queda abierto: lo cerró la «última llamada sin tools» del 12/11/2026. Lo único que no se vio es esa última llamada contra DeepSeek real, porque en la medición ningún turno llegó al tope; si aparece en uso real, se trata como un bug nuevo.
+
+Archivos: `docs/05_Plan_de_Desarrollo.md`, `docs/06_TMDB_API_Referencia.md`, `PRODUCT.md`, `openspec/specs/tmdb-compliance/spec.md` y este archivo.

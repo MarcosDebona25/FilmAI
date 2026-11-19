@@ -39,7 +39,7 @@ Proyecto académico (Seminario Integrador, UTN-FRSF) de dos personas, que se pre
 
 ## Evidence on Hand
 
-- Pósters, backdrops y metadatos reales vía TMDB; 26 avatares en `frontend/public/avatars/`; collage de la landing en `frontend/public/collage-posters/`.
+- Pósters, backdrops y metadatos reales vía TMDB; 26 avatares en `frontend/public/avatars/`; collage propio de la landing en `frontend/public/collage-posters/`, que no sale de TMDB.
 - No hay usuarios reales, testimonios ni métricas: no se inventan.
 
 ## Product Principles
