@@ -8,6 +8,7 @@ import {
   cerrarAvisoEstado,
   mostrarAvisoEstado,
 } from "@/components/features/title/StatusToast";
+import { useAvisoGuardado } from "@/components/features/title/use-aviso-guardado";
 import type { ItemLista } from "@/lib/lists";
 import { guardarEstado } from "@/lib/title-status";
 import { useEscritorio } from "@/lib/use-escritorio";
@@ -36,6 +37,9 @@ export function useEstadoViendo({
 }) {
   const t = useTranslations();
   const escritorio = useEscritorio();
+  const { guardando, empezar, terminar } = useAvisoGuardado();
+  // Red de seguridad además de `guardando`: dos toques en el mismo tick podrían
+  // ver el estado de React todavía sin actualizar.
   const enCurso = useRef(false);
 
   useEffect(() => cerrarAvisoEstado, []);
@@ -78,6 +82,7 @@ export function useEstadoViendo({
   async function deshacer(item: ItemLista, indice: number) {
     if (enCurso.current) return;
     enCurso.current = true;
+    empezar();
     try {
       const respuesta = await guardarEstado({
         idTmdb: item.id_tmdb,
@@ -89,8 +94,10 @@ export function useEstadoViendo({
       // Volver a anotarlo crea un ingreso nuevo: la tarjeta toma su `item_id`.
       const nuevo = respuesta.listas.find((lista) => lista.clave === "viendo")?.item_id;
       meter({ ...item, item_id: nuevo ?? item.item_id }, indice);
+      terminar();
       cerrarAvisoEstado();
     } catch {
+      terminar();
       avisarError();
     } finally {
       enCurso.current = false;
@@ -101,9 +108,11 @@ export function useEstadoViendo({
   async function mover(item: ItemLista, estado: "vistas" | null) {
     if (enCurso.current) return;
     enCurso.current = true;
+    empezar();
     const indice = sacar(item);
     try {
       await guardarEstado({ idTmdb: item.id_tmdb, tipo: item.tipo, estado });
+      terminar();
       mostrarConUndo(
         item,
         indice,
@@ -114,6 +123,7 @@ export function useEstadoViendo({
       );
     } catch {
       meter(item, indice);
+      terminar();
       avisarError();
     } finally {
       enCurso.current = false;
@@ -125,12 +135,16 @@ export function useEstadoViendo({
    * con el mismo aviso de la ficha («Rated ★ 8 · Moved to Watched») y su Undo.
    */
   function avisarCalificadaYMovida(item: ItemLista, valor: number) {
+    // Con un cambio de estado en camino, el aviso de la nota lo pisaría; las
+    // acciones ya están deshabilitadas mientras se guarda.
+    if (enCurso.current) return;
     const indice = sacar(item);
     mostrarConUndo(item, indice, t("title.status.ratedAndMoved", { rating: String(valor) }));
   }
 
   /** Calificar un título que ya estaba en Watched (o con reseña): solo avisa. */
   function avisarCalificada({ valor, conResena }: { valor: number; conResena: boolean }) {
+    if (enCurso.current) return;
     mostrarAvisoEstado({
       texto: conResena
         ? t("title.feedback.ratingReviewPublished")
@@ -139,5 +153,5 @@ export function useEstadoViendo({
     });
   }
 
-  return { mover, avisarCalificadaYMovida, avisarCalificada };
+  return { mover, guardando, avisarCalificadaYMovida, avisarCalificada };
 }

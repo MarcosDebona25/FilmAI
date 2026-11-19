@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { MS_SIMPLE, mostrarAvisoEstado } from "@/components/features/title/StatusToast";
+import { useAvisoGuardado } from "@/components/features/title/use-aviso-guardado";
 import type { MediaType } from "@/lib/catalog";
 import type { ListaFicha } from "@/lib/title-lists";
 import { conEstado, estadoDe, fechaDeEstado, guardarEstado, type Estado } from "@/lib/title-status";
@@ -27,11 +28,13 @@ export function useEstadoFicha({
   onListasChange: (listas: ListaFicha[]) => void;
 }) {
   const t = useTranslations();
-  const [pendiente, setPendiente] = useState(false);
+  const { guardando, empezar, terminar } = useAvisoGuardado();
   // El Undo se pulsa mucho después de crear el toast: tiene que ver las listas
   // de ahora, no las de ese momento.
   const actuales = useRef(listas);
   actuales.current = listas;
+  // Red de seguridad además de `guardando`: dos toques en el mismo tick podrían
+  // ver el estado de React todavía sin actualizar.
   const enCurso = useRef(false);
 
   const nombre = (estado: Estado) => t(`enums.defaultList.${estado}`);
@@ -48,11 +51,12 @@ export function useEstadoFicha({
     const previas = actuales.current;
     if (estadoDe(previas) === estado) return;
     enCurso.current = true;
-    setPendiente(true);
+    empezar();
     onListasChange(conEstado(previas, estado));
     try {
       const respuesta = await guardarEstado({ idTmdb, tipo, estado, fechaAgregado });
       onListasChange(respuesta.listas);
+      terminar();
       const anterior = respuesta.estado_anterior;
       mostrarAvisoEstado({
         texto: !estado
@@ -80,10 +84,10 @@ export function useEstadoFicha({
       });
     } catch {
       onListasChange(previas);
+      terminar();
       mostrarAvisoEstado({ texto: t("title.status.error"), tono: "error", ms: 6000 });
     } finally {
       enCurso.current = false;
-      setPendiente(false);
     }
   }
 
@@ -101,6 +105,10 @@ export function useEstadoFicha({
     previo: Estado | null;
     conResena: boolean;
   }) {
+    // Con un cambio de estado en camino, el aviso de la nota lo pisaría: el
+    // botón Rate está deshabilitado mientras se guarda, así que esto es la red
+    // de seguridad para un toque que igual llegue.
+    if (enCurso.current) return;
     // El servidor ya la movió a Watched; las listas de la ficha se recargan
     // después. Hasta entonces se muestran así, para que un Undo inmediato (o con
     // la recarga fallida) vea que hay algo que deshacer.
@@ -130,5 +138,5 @@ export function useEstadoFicha({
     }
   }
 
-  return { cambiar, pendiente, avisarCalificacion };
+  return { cambiar, guardando, avisarCalificacion };
 }

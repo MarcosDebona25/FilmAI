@@ -64,7 +64,7 @@ function Ficha({ inicial, recargar = true }: { inicial: Estado | null; recargar?
         miCalificacion={null}
         onRate={vi.fn()}
         onCambiarEstado={estado.cambiar}
-        cambiandoEstado={estado.pendiente}
+        cambiandoEstado={estado.guardando}
       />
       <button
         type="button"
@@ -296,5 +296,61 @@ describe("calificar desde la ficha", () => {
     calificar();
     expect(await aviso("Rated ★ 8")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+  });
+});
+
+describe("bloqueo mientras se guarda el estado", () => {
+  it("con un guardado en curso, favorita y Rate quedan deshabilitados y no mandan otro PUT", async () => {
+    let responder!: (valor: unknown) => void;
+    api.fetch.mockReturnValue(new Promise((resolver) => (responder = resolver)));
+    render(<Ficha inicial="pendientes" />, { locale: "en" });
+
+    elegir(/Watching/);
+
+    // Test: `guardando` llega a TitleActions y deshabilita el resto de las acciones.
+    expect(screen.getByRole("button", { name: "Favorite" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Rate/ })).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Favorite" }));
+    expect(api.fetch).toHaveBeenCalledTimes(1);
+    await act(async () => responder(respuesta("viendo", "pendientes")));
+    await aviso("Moved to Watching");
+    expect(screen.getByRole("button", { name: "Favorite" })).toBeEnabled();
+  });
+
+  it("«Saving…» sale pasados 200 ms, sin Undo, y lo reemplaza el toast de siempre", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let responder!: (valor: unknown) => void;
+    api.fetch.mockReturnValue(new Promise((resolver) => (responder = resolver)));
+    render(<Ficha inicial="pendientes" />, { locale: "en" });
+
+    elegir(/Watching/);
+
+    await act(async () => void vi.advanceTimersByTime(150));
+    expect(screen.queryByText("Saving…")).toBeNull();
+    await act(async () => void vi.advanceTimersByTime(100));
+    expect(await screen.findByText("Saving…")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+
+    await act(async () => responder(respuesta("viendo", "pendientes")));
+    await aviso("Moved to Watching");
+    expect(screen.queryByText("Saving…")).toBeNull();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeEnabled();
+  });
+
+  it("el Undo no se puede pulsar mientras el nuevo guardado está en curso", async () => {
+    api.fetch.mockResolvedValueOnce(respuesta("viendo", "pendientes"));
+    render(<Ficha inicial="pendientes" />, { locale: "en" });
+    elegir(/Watching/);
+    await aviso("Moved to Watching");
+    let responder!: (valor: unknown) => void;
+    api.fetch.mockReturnValueOnce(new Promise((resolver) => (responder = resolver)));
+
+    elegir(/Watched/);
+
+    const undo = screen.queryByRole("button", { name: "Undo" });
+    if (undo) expect(undo).toBeDisabled();
+    await act(async () => responder(respuesta("vistas", "viendo")));
+    await aviso("Moved to Watched");
+    expect(api.fetch).toHaveBeenCalledTimes(2);
   });
 });

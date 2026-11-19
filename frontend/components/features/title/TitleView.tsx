@@ -440,7 +440,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                   miCalificacion={mia ?? null}
                   onRate={() => setModal("calificar")}
                   onCambiarEstado={estado.cambiar}
-                  cambiandoEstado={estado.pendiente}
+                  cambiandoEstado={estado.guardando}
                 />
                 {errorListas && (
                   <ErrorRetry

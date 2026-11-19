@@ -13,7 +13,7 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 | 3   | Correos por Celery y Brevo como respaldo                    | Media-alta                         | Alta       | Q-08, #181, `brevo-respaldo/`, decisión 19/11/2026            |
 | 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                              | —          | Q-01, Q-03, Q-04, #198                                        |
 | 5   | ✅ Títulos parecidos en listas y en la ficha                | Media                              | —          | `openspec/specs/similar-titles/`, sección 14 del canvas       |
-| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna    | Media      | Seguridad, B-03, C-04b, CU-021; migraciones 0008 y 0009       |
+| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna    | Media      | Seguridad, B-03, C-04b, CU-021                                |
 | 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                               | Muy alta   | Q-01, Q-05, sección 12 del canvas                             |
 | 8   | ✅ Refactor y lista «Viendo»                                | Baja                               | Media      | Q-07, sección 15 del canvas                                   |
 | 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)         | Baja       | Perfil, Settings                                              |
@@ -21,7 +21,7 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 | 11  | ✅ Registro en 3 pasos                                      | Media                              | —          | Sección 16 del canvas; «Dónde ver» (17) cerrado el 15/11/2026 |
 | 12  | Revisión de arquitectura del chatbot (pendientes «H»)       | A definir                          | A definir  | Gonza: revisar; #221 (H5), #222 (H3)                          |
 | 13  | Tiempo de la suite y e2e `access-screens` inestable         | Media-alta (cada PR espera ~8 min) | Muy alta   | #203, `.github/workflows/ci.yml`, 18/11/2026                  |
-| 14  | ⬜ Restos del #226 (Watching)                               | Baja                               | Media      | `docs/decisiones.md` (19/11/2026)                             |
+| 14  | ✅ Restos del #226 (Watching)                               | Baja                               | Media      | `docs/decisiones.md` (19/11/2026)                             |
 
 ### 1. Términos de uso de TMDB (#180)
 
@@ -64,7 +64,7 @@ Resultado (13/11/2026): se eligió `logo5.svg`, con el logo chico también en el
 
 ### 2. El chatbot recomienda sin mostrar tarjetas
 
-✅ **Cerrado el 13/11/2026.** Con thinking apagado, solo 3 de 8 pedidos de recomendación terminaban con tarjetas. #187 sumó la «red de tarjetas» (si el modelo nombra títulos y no llama a `mostrar_tarjetas`, el orquestador las arma) y la validación de argumentos de cada tool contra su esquema. #189 sumó la última llamada sin tools, cuando el modelo se pasa del tope de 4 vueltas o termina sin texto. Esa llamada está cubierta por tests; en la medición posterior ningún turno llegó al tope, así que todavía no se vio contra DeepSeek. No queda nada por hacer: si aparece en uso real, se trata como un bug nuevo. Detalle en `docs/decisiones.md` (12/11/2026). El 13/11/2026 las tarjetas pasaron a marcadores `[[n]]` (ver `docs/decisiones.md`); la tool `mostrar_tarjetas` y la red se retiraron.
+✅ **Cerrado el 13/11/2026.** Con thinking apagado, solo 3 de 8 pedidos de recomendación terminaban con tarjetas. #187 sumó la «red de tarjetas» (si el modelo nombra títulos y no llama a `mostrar_tarjetas`, el orquestador las arma) y la validación de argumentos de cada tool contra su esquema. #189 sumó la última llamada sin tools, cuando el modelo se pasa del tope de 4 vueltas o termina sin texto. Esa llamada está cubierta por tests; en la medición posterior ningún turno llegó al tope. El 19/11/2026 se vio contra DeepSeek real, con el tope bajado a 1 vuelta solo en esa corrida: dos preguntas encadenadas terminaron con texto y tarjetas (`ultima_sin_tools=si`). No queda nada por hacer: si aparece en uso real, se trata como un bug nuevo. Detalle en `docs/decisiones.md` (12/11/2026). El 13/11/2026 las tarjetas pasaron a marcadores `[[n]]` (ver `docs/decisiones.md`); la tool `mostrar_tarjetas` y la red se retiraron.
 
 ### 3. Correos por Celery y Brevo como respaldo (Q-08, #181)
 
@@ -98,7 +98,7 @@ Todavía no hay un despliegue público. Antes de publicar una instancia:
 
   Con cualquier opción hay que definir qué cuenta como «falla entera» (por ejemplo, ninguna fuente devolvió IDs o la tarea lanzó una excepción), para que una fuente caída sola no dispare avisos.
 
-- **Migraciones a aplicar**: `catalogo.0008_lapida_tmdb`, `listas.0008_lapida_tmdb` y `listas.0009_lista_viendo` (esta crea la lista predeterminada Viendo y renombra las listas propias «Viendo» y «Watching» a «Viendo 2» o «Watching 2», o al primer número libre). No hay otras migraciones nuevas desde la 0008 en `catalogo` ni en `listas`. Las aplica Marcos al desplegar.
+- **Migraciones**: `catalogo.0008_lapida_tmdb`, `listas.0008_lapida_tmdb` y `listas.0009_lista_viendo` ya están aplicadas en la base local de desarrollo (19/11/2026). Al desplegar se aplican con el `migrate` normal.
 
 - **Seguridad**: cookies seguras, HSTS y cabecera de proxy de Django; `NUM_PROXIES`; restringir `/admin/`; CSP; cifrado en reposo de la base; seguimiento de errores (herramienta a definir); rotar la clave de TMDB si alguna vez llegó a logs reales; la mejora de F4 (contraseña al confirmar el correo).
 - **Riesgo aceptado de F10**: quitar la calificación y volver a calificar crea una reseña nueva sin la marca de moderación. Cerrarlo exige recordar la moderación por usuario y producción en un modelo aparte.
@@ -161,10 +161,10 @@ También entra en este pendiente la prueba `access-screens` (`frontend/tests/acc
 
 ### 14. Restos del #226 (Watching)
 
-Quedaron afuera del PR 4 dos cosas, anotadas en el comentario del PR y en `docs/decisiones.md` (19/11/2026). El diseño queda pendiente de decidir con Marcos.
+✅ Hecho en `feat/estado-guardando` (decisión del 19/11/2026 en `docs/decisiones.md`):
 
-- **Acciones descartadas sin aviso**: mientras hay un cambio de estado en curso, una acción del usuario se descarta sin decir nada (`frontend/hooks/use-estado-viendo.ts` y `use-estado-ficha.ts`). Falta definir qué hacer.
-- **`requestBody` tipado de `PUT /api/lists/status/`**: falta en `contracts/openapi.yaml` (pasa lo mismo en otros endpoints). No cambia el comportamiento.
+- **Bloqueo mientras se guarda**: las acciones se deshabilitan desde el primer toque y, si el guardado tarda más de 200 ms, sale un toast «Saving…» con spinner (sin Undo). Aplica a Watching, la ficha y el menú de listas.
+- **`requestBody` tipado de `PUT /api/lists/status/`**: declarado en `contracts/openapi.yaml` (`CambioEstado`). Otros endpoints con el mismo hueco no se tocaron.
 
 ### Población masiva de la base
 
@@ -180,6 +180,7 @@ Orden sugerido: primero que la rama `feat/tmdb-y-calidad-chat` llegue a `develop
 
 Actualizado el **11/11/2026**, el **15/11/2026** y el **19/11/2026**: el canvas se igualó al código, se borraron las mesas repetidas (Main y pantallas grandes) y se renumeraron las secciones. Las secciones 13 a 17, decididas el 15/11/2026, ya están implementadas y en `develop` (#223 a #226). Fuente de verdad visual: el canvas «FilmAI — Sistema y catálogo» (https://claude.ai/artifact/2QjarXk7NRcVStDYtxfY9y). Si el código difiere de un artboard, se rehace el código. La numeración de secciones es la del canvas.
 
+- **Canvas pendiente (Watching)**: falta borrar la opción A del artboard «Watching · tap while saving» y sumar la ficha y el celular (lo hace Marcos con Claude).
 - **✅ Completa**: el código coincide con el artboard (escritorio y celular, salvo que se indique).
 - **🔁 Rehacer**: la pantalla existe, pero se implementó antes del canvas y no coincide con el artboard.
 - **🟡 Parcial**: coincide en una variante y falta la otra.
