@@ -123,7 +123,7 @@ El de menor importancia: implementarlo amplía el alcance del proyecto, así que
 
 ### 10. Buscar en la navbar, filtro por persona y títulos sin relevancia
 
-Diseñado el 13/11/2026 en `openspec/changes/busqueda-navbar/` (detalle y mediciones en `docs/decisiones.md`). Reúne tres pendientes que estaban sin decidir:
+Diseñado el 13/11/2026; hoy vive en `openspec/specs/navbar-search/` y `docs/decisiones.md` (detalle y mediciones; el change `busqueda-navbar` se archivó el 15/11/2026). Reúne tres pendientes que estaban sin decidir:
 
 - **Rediseñar Buscar en la navbar**: un campo con sugerencias a la derecha de la navbar de escritorio; en celular no cambia nada. Gonza elige la variante final con un artifact.
 - **Filtrar Buscar por actor o director**: personas en las sugerencias y un campo «Person» en los filtros, sobre `combined_credits`.
