@@ -39,18 +39,18 @@ export const BREAKING_BAD = {
 // Créditos reales (`movie/157336/credits`, `tv/1396/credits` + `created_by`), ya
 // en la forma de `GET /api/catalogo/{tipo}/{id}/credits/`.
 export const CREDITOS_INTERSTELLAR = {
-  directores: ["Christopher Nolan"],
+  directores: [{ id: 525, nombre: "Christopher Nolan" }],
   reparto: [
-    { nombre: "Matthew McConaughey", personaje: "Cooper" },
-    { nombre: "Anne Hathaway", personaje: "Brand" },
-    { nombre: "Michael Caine", personaje: "Professor Brand" },
+    { id: 10297, nombre: "Matthew McConaughey", personaje: "Cooper" },
+    { id: 1813, nombre: "Anne Hathaway", personaje: "Brand" },
+    { id: 3895, nombre: "Michael Caine", personaje: "Professor Brand" },
   ],
 };
 export const CREDITOS_BREAKING_BAD = {
-  directores: ["Vince Gilligan"],
+  directores: [{ id: 66633, nombre: "Vince Gilligan" }],
   reparto: [
-    { nombre: "Bryan Cranston", personaje: "Walter White" },
-    { nombre: "Aaron Paul", personaje: "Jesse Pinkman" },
+    { id: 17419, nombre: "Bryan Cranston", personaje: "Walter White" },
+    { id: 84497, nombre: "Aaron Paul", personaje: "Jesse Pinkman" },
   ],
 };
 

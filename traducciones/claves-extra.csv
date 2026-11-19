@@ -200,7 +200,7 @@ title.providers.lead,,label,,Ver o alquilar,Stream or rent,aprobado
 title.providers.options,,label,"count,country","{count, plural, one {# opción} other {# opciones}} en {country}","{count, plural, one {# option} other {# options}} in {country}",aprobado
 title.providers.panelTitle,,label,,Dónde ver,Where to watch,aprobado
 title.providers.groups.stream,,label,,Streaming,Stream,aprobado
-title.providers.groups.free,,label,,Gratis,Free,aprobado
+title.providers.groups.free,,label,,Gratis (con o sin publicidad),Free (with or without ads),aprobado
 title.providers.groups.rent,,label,,Alquiler,Rent,aprobado
 title.providers.groups.buy,,label,,Compra,Buy,aprobado
 title.providers.unavailable,,status,country,"Todavía no está disponible para ver, alquilar ni comprar en {country}.","Not available to stream, rent or buy in {country} yet.",aprobado

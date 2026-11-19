@@ -86,13 +86,18 @@ class CreditosEnRedisTests(SimpleTestCase):
 
         self.assertEqual(len(resultado["cast"]), 50)  # lo que muestra la ficha
         self.assertEqual(
-            resultado["cast"][0], {"name": "Actor 0", "character": "Personaje 0"}
+            resultado["cast"][0],
+            {
+                "id": self.respuesta["cast"][0]["id"],
+                "name": "Actor 0",
+                "character": "Personaje 0",
+            },
         )
         self.assertEqual(
             resultado["crew"],
             [
-                {"name": "Equipo 0", "job": "Director"},
-                {"name": "Equipo 1", "job": "Director"},
+                {"id": 5000, "name": "Equipo 0", "job": "Director"},
+                {"id": 5001, "name": "Equipo 1", "job": "Director"},
             ],
         )
         # Lo que se guardó en Redis es exactamente lo que se devolvió.
