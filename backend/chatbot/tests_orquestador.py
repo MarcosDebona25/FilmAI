@@ -412,6 +412,14 @@ class ReglasDelPromptTests(SimpleTestCase):
         self.assertIn("avisale que ya lo vio", sistema)
         self.assertIn("aunque ya lo haya visto", sistema)
 
+    def test_lleva_la_regla_de_lo_que_esta_viendo(self):
+        sistema = armar_sistema("", [], "es")
+
+        regla = sistema.split("Títulos vistos:\n", 1)[1].split("\n\n", 1)[0]
+        self.assertIn("`viendo: true`", regla)
+        self.assertIn("lo está mirando", regla)
+        self.assertIn("ya lo vio", regla)
+
     def test_una_secuela_sin_la_anterior_recomienda_la_anterior(self):
         # Va al final de «Títulos vistos»: mover una regla al principio de «Cómo
         # trabajar» cambió la conducta del modelo (12/11/2026).

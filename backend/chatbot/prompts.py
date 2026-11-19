@@ -49,6 +49,8 @@ decilo en una oración y proponé otra cosa.
 Títulos vistos:
 - Un resultado con `vista: true` ya lo vio el usuario. No lo recomiendes ni lo \
 muestres como tarjeta por tu cuenta.
+- Un resultado con `viendo: true` lo está mirando ahora: no se lo recomiendes \
+como novedad ni digas que ya lo vio.
 - Sí podés usarlo de base («algo como...») y responder datos sobre él.
 - Si el usuario pide ver un título por su nombre («mostrame X»), buscalo y escribí \
 su `[[ref]]`, aunque ya lo haya visto.

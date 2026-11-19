@@ -9,7 +9,7 @@ Usa: `vistos()` para saber qué ya vio el usuario y `texto_localizado()` para el
 
 from dataclasses import dataclass, field
 
-from catalogo.services.recomendado import TIPO_TMDB, vistos
+from catalogo.services.recomendado import TIPO_TMDB, en_viendo, vistos
 from catalogo.services.traducciones import texto_localizado
 
 TOPE_RESULTADOS = 10
@@ -29,6 +29,9 @@ class ContextoTurno:
     usuario: object
     idioma: str
     vistas: set
+    # La parte de `vistas` que el usuario está mirando ahora (lista «Viendo»):
+    # no está «vista» todavía, pero tampoco se le recomienda como novedad.
+    viendo: set = field(default_factory=set)
     # Lo que devolvió alguna tool en este turno, lo único que puede ser tarjeta.
     # `field(default_factory=...)` crea un dict o una lista nuevos para cada objeto.
     # Con `= {}` todos los turnos compartirían el mismo, de todos los usuarios.
@@ -56,7 +59,12 @@ class ContextoTurno:
     @classmethod
     def para(cls, usuario, idioma):
         """Crea el contexto de un turno y lee una sola vez qué ya vio el usuario."""
-        return cls(usuario=usuario, idioma=idioma, vistas=vistos(usuario))
+        return cls(
+            usuario=usuario,
+            idioma=idioma,
+            vistas=vistos(usuario),
+            viendo=en_viendo(usuario),
+        )
 
 
 # El `*` obliga a pasar los argumentos por nombre: con tantos, evita confundirlos.
@@ -113,8 +121,8 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
     """Deja lo que el modelo puede ver y anota esos títulos en el turno.
 
     El póster queda solo en lo anotado: al modelo no le sirve y gasta tokens.
-    Con `sacar_vistas=False` lo visto queda, marcado con `vista` para que el modelo
-    no lo recomiende. Es para consultas directas, no para buscar qué recomendar.
+    Con `sacar_vistas=False` lo visto queda, marcado con `vista` (o `viendo`, si lo
+    está mirando) para que el modelo no lo recomiende. Es para consultas directas, no para buscar qué recomendar.
     """
     publicados, repetidos = [], set()
     for item in titulos:
@@ -138,7 +146,10 @@ def publicar(ctx, titulos, *, sacar_vistas=True, tope=TOPE_RESULTADOS):
             "ref": ref,
             **{k: v for k, v in item.items() if k not in _SOLO_INTERNOS},
         }
-        if clave in ctx.vistas:
+        # Lo que mira ahora no es «vista»: el modelo no puede decir «ya la viste».
+        if clave in ctx.viendo:
+            publicado["viendo"] = True
+        elif clave in ctx.vistas:
             publicado["vista"] = True
         publicados.append(publicado)
         if len(publicados) == tope:

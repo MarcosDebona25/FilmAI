@@ -321,6 +321,28 @@ class VistasTests(BaseTools):
         self.assertIs(vista["vista"], True)
         self.assertNotIn("vista", otra)
 
+    def test_lo_que_esta_viendo_se_marca_viendo_y_no_vista(self):
+        # El modelo no puede decir «ya la viste» de algo que el usuario mira ahora.
+        self.marcar_viendo(1)
+        self.marcar_vista(2)
+        self.catalogo.resultados["movie"] = [
+            pelicula(1),
+            pelicula(2, "Otra"),
+            pelicula(3, "Nueva"),
+        ]
+
+        resultado = ejecutar(
+            self.contexto(), "buscar_por_titulo", {"titulo": "Moon", "tipo": "movie"}
+        )
+
+        mirando, vista, nueva = resultado["resultados"]
+        self.assertIs(mirando["viendo"], True)
+        self.assertNotIn("vista", mirando)
+        self.assertIs(vista["vista"], True)
+        self.assertNotIn("viendo", vista)
+        self.assertNotIn("vista", nueva)
+        self.assertNotIn("viendo", nueva)
+
     def test_lo_que_una_busqueda_de_recomendacion_saco_no_es_un_candidato(self):
         # Sin `ref` no hay marcador `[[n]]` posible: no puede llegar a ser tarjeta.
         self.marcar_vista(1)
@@ -627,6 +649,17 @@ class MisListasTests(BaseTools):
 
         self.assertEqual(resultado["resultados"][0]["titulo"], "Moon")
 
+    def test_lee_viendo_por_clave_y_marca_sus_titulos_viendo(self):
+        lista = self.lista(ClaveLista.VIENDO, "Viendo")
+        Tiene.objects.create(lista=lista, produccion=self.produccion("Moon"))
+
+        resultado = ejecutar(self.contexto(), "mis_listas", {"lista": "viendo"})
+
+        moon = resultado["resultados"][0]
+        self.assertEqual(moon["titulo"], "Moon")
+        self.assertIs(moon["viendo"], True)
+        self.assertNotIn("vista", moon)
+
     def test_lee_una_personalizada_por_id(self):
         lista = self.lista(nombre="Cumple de Juan")
         Tiene.objects.create(lista=lista, produccion=self.produccion("Moon"))
@@ -915,6 +948,11 @@ class EsquemasTests(BaseTools):
         nombres = {esquema["function"]["name"] for esquema in ESQUEMAS}
 
         self.assertEqual(nombres, set(FUNCIONES))
+
+    def test_mis_listas_dice_que_se_puede_pedir_viendo(self):
+        esquema = next(e for e in ESQUEMAS if e["function"]["name"] == "mis_listas")
+
+        self.assertIn("`viendo`", esquema["function"]["description"])
 
     def test_ninguna_tool_recibe_un_usuario(self):
         # `mis_listas` lee del contexto: el modelo no puede pedir datos de otro.
