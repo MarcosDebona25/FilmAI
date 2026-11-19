@@ -972,6 +972,39 @@ Pendiente de la revisión de arquitectura del 13/11/2026 (H3). Hasta ahora el ú
 **Tests**: `chatbot/tests_plazo.py` (reloj y corte simulados, sin dormir), `catalogo/tests_plazo.py` y un caso de punta a punta en `tests_sse.py`. Ningún test existente cambió. Specs: `openspec/specs/chat-api/spec.md` («Bounded turn») y `contracts/sse-chat.md` («Límites»).
 Archivos: `backend/chatbot/plazo.py`, `orquestador.py`, `views.py`, `llm.py`, `backend/catalogo/plazo.py`, `client.py`, `services/semantica.py`, `backend/filmai/settings.py`, `.env.example`, `backend/chatbot/README.md`
 
+### 15/11/2026 — Lupa de la navbar: desplegable rico y campo en píldora (canvas, sección 13)
+
+Se aplicó la sección 13 del canvas a la lupa construida en #216. El campo mide `clamp(12rem, 24vw, 20rem)` (la animación de apertura ya no fija 20rem, llega al ancho real) y toma la forma del canvas: píldora, lupa redonda, foco con borde `--fg-3` más anillo de 2 px y ✕ de 40 px. El desplegable de la navbar pasa a la variante rica (prop `rica` de `SugerenciasLista`): lista de 26rem alineada al borde derecho del campo, filas de 84 px con póster de 48 × 72 y nota con ★ (el backend ya mandaba `vote_average`), fotos de persona de 48 px y, sin foto, dos iniciales (primera y última palabra; `inicialesDe`). El campo de Buscar sigue con la lista compacta, porque el canvas no la redibuja, pero comparte las dos iniciales.
+
+Se dejaron como estaban, porque el canvas no los dibuja: la pista «/» del campo vacío, los estados de hover, vacío y cargando, y el borde del campo abierto sin foco (`--field-border` en lugar de `--line`, que no se midió para el contraste de borde de campo). El helper de axe de los e2e quedó exportado en `frontend/e2e/axe.ts` para los specs nuevos.
+
+Archivos: `frontend/components/NavbarSearch.tsx`, `frontend/components/SugerenciasLista.tsx`, `frontend/lib/sugerencias.ts`, `frontend/app/globals.css`, `frontend/e2e/axe.ts`, `frontend/e2e/navbar-lupa.spec.ts`, `frontend/tests/navbar-search.test.tsx`.
+
+### 15/11/2026 — Créditos de la ficha enlazados a Buscar (fase 7 de la búsqueda)
+
+`credits/` suma el `id` de TMDB de cada persona: `directores` pasa de lista de nombres a `[{id, nombre}]` (el único consumidor es el frontend, que cambia en el mismo commit) y cada persona del reparto suma `id`. El recorte que se guarda en Redis conserva el `id`; las copias guardadas antes no lo tienen, así que esas fichas muestran los nombres como texto hasta que la copia se renueva (24 h). No se cambió la clave de caché porque la forma nueva se arma después de leerla y no hay mezcla de formatos. En «Director and cast», cada nombre con `id` lleva a Buscar con el chip de esa persona (`director` para directores y creadores, `actor` para el reparto); sin `id` queda como texto. El canvas no dibuja estos enlaces: conservan peso y color, con subrayado al pasar el mouse y anillo de foco.
+
+Archivos: `backend/catalogo/services/creditos.py`, `backend/catalogo/cache.py`, `backend/catalogo/tests_ficha.py`, `backend/catalogo/test_creditos_cache.py`, `frontend/components/features/title/CreditsSection.tsx`, `frontend/lib/title.ts`, `frontend/tests/credits-section.test.tsx`, `frontend/tests/title-fixtures.ts`, `frontend/e2e/ficha-creditos.spec.ts`, `openspec/specs/title-page-ui/spec.md`, `openspec/changes/busqueda-navbar/tasks.md`.
+
+### 15/11/2026 — «Dónde ver» en un diálogo (canvas, sección 17)
+
+La línea «Stream or rent · N options in Argentina» del hero de la ficha termina en un chevrón dentro de un círculo y es un único botón (`aria-expanded`, 44 px). Abre un diálogo modal en escritorio y una hoja inferior en el celular, con el mismo contenido: grupos separados por líneas finas, logos de 40 px sin nombre, «See all options on TMDB» y el crédito de JustWatch. Se cierra con Esc o con el botón de 44 px, y el foco vuelve a la línea. Reemplaza al panel desplegable anterior. Se monta sobre `DialogShell`, que suma una prop opcional `relleno`; los demás diálogos no cambian.
+El grupo «Free» que Marcos pidió el 15/11/2026 (después de Stream y solo con datos) ya existía: el backend arma `gratis` uniendo `free` y `ads` de TMDB, así que no se tocó (Marcos confirmó que se queda así el 16/11/2026, ver esa fecha). «N options» sigue contando plataformas únicas (una que está en Stream y en Buy cuenta una vez), como en el canvas: 5 opciones con 6 logos. El scrim y la sombra de la hoja quedan los del `DialogShell` compartido (negro al 60 %; el canvas dibuja 72 %) para no cambiar los otros diálogos.
+Archivos: `frontend/components/features/title/WatchProviders.tsx`, `frontend/components/features/title/DialogShell.tsx`, `frontend/tests/watch-providers.test.tsx`, `frontend/e2e/ficha.spec.ts`, `openspec/specs/title-page-ui/spec.md`.
+
+### 15/11/2026 — Cierre del change `busqueda-navbar`
+
+Con la lupa rica, los enlaces desde los créditos y el diálogo «Dónde ver», el pendiente 10 queda cerrado y el change se archiva (se borra `openspec/changes/busqueda-navbar/`). Lo vigente queda en las specs canónicas: `navbar-search` suma el campo en píldora de `clamp(12rem, 24vw, 20rem)` y la lista rica (filas de 84 px, póster de 48 × 72, ★), `search-ui` y `title-page-ui`. Los comentarios que apuntaban al `design.md` del change ahora apuntan a esas specs y a las entradas del 13/11/2026 de este archivo. La tarea 2.0 (canvas de Gonza) quedó hecha con la sección 13 del canvas.
+Checklist `vercel-quality` (tarea 5.7) sobre el diff de la rama: sin incumplimientos MUST/NEVER nuevos. Quedan anotados dos heredados de #216: la animación de ancho al desplegar la lupa (la pide el canvas; va con `motion-safe`) y el campo de 15 px, que no dispara el zoom de iOS porque la lupa no aparece por debajo de 768 px. Los nombres del reparto como enlaces en línea no llevan área de 44 px: es texto corrido, como cualquier enlace dentro de un párrafo.
+Archivos: `openspec/changes/busqueda-navbar/` (borrado), `openspec/specs/navbar-search/spec.md`, `docs/05_Plan_de_Desarrollo.md`, `backend/catalogo/services/sugerencias.py`, `backend/catalogo/tests_sugerencias.py`, `backend/catalogo/tests_browse_persona.py`, `backend/catalogo/tests_browse_relevancia.py`, `frontend/lib/sugerencias.ts`.
+
+### 16/11/2026 — «Free» de «Dónde ver» incluye las plataformas con publicidad
+
+TMDB separa lo que se ve sin pagar en `free` (gratis) y `ads` (gratis con publicidad). El backend los une en `gratis` desde el 18/10/2026 (`backend/catalogo/services/plataformas.py`); al implementar la sección 17 apareció la duda de si eso era intencional. Marcos decidió dejarlo así: para quien busca dónde ver un título, lo que importa es si tiene que pagar, y separar las plataformas con publicidad dejaría opciones reales afuera o sumaría un grupo más al diálogo.
+
+Para que no se lea como «sin publicidad», el encabezado del grupo pasa a decir «Free (with or without ads)» / «Gratis (con o sin publicidad)». Se eligió esa frase porque es cierta siempre, haya o no plataformas con publicidad en el grupo; «algunas con publicidad» fallaría cuando no hay ninguna. El conteo «N options» no cambia.
+Archivos: `docs/decisiones.md`, `traducciones/claves-extra.csv` (clave `title.providers.groups.free`), `frontend/messages/{en,es}/common.json` (regenerados), `frontend/tests/watch-providers.test.tsx` y `openspec/specs/title-page-ui/spec.md`.
+
 ### 16/11/2026 — Registro con correo en 3 pasos y diálogo de avatar (canvas, sección 16)
 
 El registro con correo pasa a 3 pasos, como en los artboards `Prop-Registro-L2*` y `Prop-Registro-Avatares*`. Paso 1: Google o correo, contraseña y confirmación. Paso 2: nombre y apellido, usuario, fecha de nacimiento, género y país. Paso 3: avatar (opcional) y Términos. La validación de cada paso es la de antes.
@@ -1024,6 +1057,14 @@ Se planteó reequilibrar la pirámide de pruebas o correr la suite por secciones
 **Decisión (Marcos)**: no se reequilibra la pirámide ni se adopta TIA test por test; el problema son unos pocos tests lentos, no la forma de la suite. Se dejan como pendientes, sin implementar todavía, los puntos 1 a 5 del pendiente 13 del plan: aislar los tests del broker, mockear el backoff, `--durations` en el CI, filtros por ruta en los PR y correr solo lo afectado en local. `--parallel` en Django y el sharding del backend quedan como posibilidad, no por ahora.
 
 Archivos: `docs/05_Plan_de_Desarrollo.md` (pendiente 13).
+
+### 19/11/2026 — Arreglos de la revisión del #223 (lupa de la navbar y diálogo de «Dónde ver»)
+
+Se aplicaron los puntos de baja severidad de la revisión del #223. **Lupa**: la ✕ del campo pasa de 40 a 44 px (`size-11`) y la píldora pierde relleno (`pl-3`, sin `pr`) para que a 768 px, con 12rem, el texto conserve unos 80 px. El desplegable rico se acota con `max-h-[calc(100dvh-5rem)] overflow-y-auto` y la opción activa se acerca con `scrollIntoView({ block: "nearest" })` (suave, o sin animación con `prefers-reduced-motion`). El póster rico se pide con tope `w154` y tamaño intrínseco de 96 × 144 (el doble de lo que se ve); con 48 × 72 el cargador de `next/image` nunca habría salido de `w92`. `inicialesDe` queda solo en el modo `rica`: la lista compacta de Buscar vuelve a la primera letra. **Créditos**: el nombre con enlace lleva un subrayado tenue fijo (`decoration-fg-3/40`), porque en celular no hay hover. **`DialogShell`**: cierra al tocar el fondo, con la misma comprobación de caja que `ListsMenu` (el relleno del propio `<dialog>` también es «el `<dialog>`»), salvo con `busy` o en un `alertdialog`; y suma `returnFocus` (ref) para devolver el foco al botón que abrió el diálogo, que en Safari no queda enfocado tras un clic. `WatchProviders` lo usa. Se corrigió además la cita al change borrado en `docs/05_Plan_de_Desarrollo.md`.
+
+**Cerrar al tocar el fondo es opcional** (`cerrarConFondo`, apagado por defecto) y por ahora solo lo usa «Dónde ver». En calificar, reseñar, renombrar listas o confirmar, un toque sin querer fuera de la caja borraría lo escrito, así que esos diálogos se siguen cerrando solo con Esc o ✕. Hay un test en `tests/dialog-shell.test.tsx`.
+
+Archivos: `frontend/components/NavbarSearch.tsx`, `SugerenciasLista.tsx`, `features/title/CreditsSection.tsx`, `DialogShell.tsx`, `WatchProviders.tsx`, `frontend/lib/catalog.ts` (`w154`), `frontend/tests/` (`sugerencias-lista`, `navbar-search`, `credits-section`, `watch-providers`, `setup`), `frontend/e2e/navbar-lupa.spec.ts`, `openspec/specs/navbar-search/spec.md`, `openspec/specs/title-page-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md`.
 
 ### 19/11/2026 — Arreglos de la revisión del #225 (registro en 3 pasos)
 

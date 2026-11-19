@@ -304,7 +304,7 @@ declare const messages: {
       "panelTitle": "Where to watch",
       "groups": {
         "stream": "Stream",
-        "free": "Free",
+        "free": "Free (with or without ads)",
         "rent": "Rent",
         "buy": "Buy"
       },

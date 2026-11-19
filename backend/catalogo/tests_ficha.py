@@ -73,11 +73,19 @@ class CreditosTests(SimpleTestCase):
         self.assertEqual(
             respuesta.json(),
             {
-                "directores": ["Christopher Nolan"],
+                "directores": [{"id": 525, "nombre": "Christopher Nolan"}],
                 "reparto": [
-                    {"nombre": "Matthew McConaughey", "personaje": "Cooper"},
-                    {"nombre": "Anne Hathaway", "personaje": "Brand"},
-                    {"nombre": "Michael Caine", "personaje": "Professor Brand"},
+                    {
+                        "id": 10297,
+                        "nombre": "Matthew McConaughey",
+                        "personaje": "Cooper",
+                    },
+                    {"id": 1813, "nombre": "Anne Hathaway", "personaje": "Brand"},
+                    {
+                        "id": 3895,
+                        "nombre": "Michael Caine",
+                        "personaje": "Professor Brand",
+                    },
                 ],
             },
         )
@@ -85,10 +93,34 @@ class CreditosTests(SimpleTestCase):
     def test_serie_usa_los_creadores_y_no_el_equipo(self):
         respuesta = self._get("/api/catalogo/tv/1396/credits/")
 
-        self.assertEqual(respuesta.json()["directores"], ["Vince Gilligan"])
+        self.assertEqual(
+            respuesta.json()["directores"], [{"id": 66633, "nombre": "Vince Gilligan"}]
+        )
         self.assertEqual(
             respuesta.json()["reparto"][0],
-            {"nombre": "Bryan Cranston", "personaje": "Walter White"},
+            {"id": 17419, "nombre": "Bryan Cranston", "personaje": "Walter White"},
+        )
+
+    def test_sin_id_de_tmdb_la_persona_sale_con_id_nulo(self):
+        # Pasa con las copias de Redis guardadas antes de sumar el `id` (viven
+        # 24 h): la ficha muestra el nombre como texto, sin enlace a Buscar.
+        sin_id = {
+            "cast": [{"name": "Anne Hathaway", "character": "Brand"}],
+            "crew": [{"name": "Christopher Nolan", "job": "Director"}],
+        }
+
+        respuesta = self._get(
+            "/api/catalogo/movie/157336/credits/", ServicioFalso(creditos=sin_id)
+        )
+
+        self.assertEqual(
+            respuesta.json(),
+            {
+                "directores": [{"id": None, "nombre": "Christopher Nolan"}],
+                "reparto": [
+                    {"id": None, "nombre": "Anne Hathaway", "personaje": "Brand"}
+                ],
+            },
         )
 
     def test_el_reparto_llega_hasta_50(self):

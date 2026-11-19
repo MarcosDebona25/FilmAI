@@ -1,13 +1,31 @@
 "use client";
 
-import { useId, useState } from "react";
+import { Fragment, useId, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import type { MediaType } from "@/lib/catalog";
-import type { Creditos } from "@/lib/title";
+import { urlDePersona, type RolPersona } from "@/lib/search";
+import type { Creditos, PersonaDeCreditos } from "@/lib/title";
 import { cn } from "@/lib/utils";
 
 const VISIBLES = 10;
+
+/**
+ * El nombre de una persona como enlace a Buscar con su chip (el mismo destino
+ * que su fila en la lupa de la navbar). Sin `id` de TMDB queda como texto.
+ */
+function Nombre({ persona, rol }: { persona: PersonaDeCreditos; rol: RolPersona }) {
+  if (persona.id === null) return <span className="font-semibold">{persona.nombre}</span>;
+  return (
+    <Link
+      href={urlDePersona(persona.id, rol)}
+      className="rounded-sm font-semibold text-foreground underline decoration-fg-3/40 underline-offset-[3px] hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      {persona.nombre}
+    </Link>
+  );
+}
 
 /**
  * «Director and cast» (canvas). En series no hay director a nivel serie y se
@@ -41,7 +59,16 @@ export function CreditsSection({ creditos, tipo }: { creditos: Creditos; tipo: M
             <span className="text-[0.8125rem] font-semibold text-fg-3">
               {tipo === "tv" ? t("creators") : t("directors")}
             </span>
-            <span className="font-semibold">{creditos.directores.join(", ")}</span>
+            {/* Los creadores de una serie también van como «director»: es el rol
+                con el que Buscar arma su filmografía. */}
+            <span>
+              {creditos.directores.map((persona, i) => (
+                <Fragment key={`${persona.id}-${persona.nombre}`}>
+                  {i > 0 && <span className="font-semibold">, </span>}
+                  <Nombre persona={persona} rol="director" />
+                </Fragment>
+              ))}
+            </span>
           </div>
         )}
         {creditos.reparto.length > 0 && (
@@ -57,8 +84,11 @@ export function CreditsSection({ creditos, tipo }: { creditos: Creditos; tipo: M
               )}
             >
               {reparto.map((persona) => (
-                <li key={`${persona.nombre}-${persona.personaje}`} className="flex flex-col">
-                  <span className="font-semibold">{persona.nombre}</span>
+                <li
+                  key={`${persona.nombre}-${persona.personaje}`}
+                  className="flex flex-col items-start"
+                >
+                  <Nombre persona={persona} rol="actor" />
                   {persona.personaje && (
                     <span className="text-sm text-fg-3">{persona.personaje}</span>
                   )}

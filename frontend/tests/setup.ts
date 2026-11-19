@@ -23,3 +23,12 @@ globalThis.ResizeObserver = class {
   disconnect() {}
   unobserve() {}
 } as unknown as typeof ResizeObserver;
+
+// jsdom no trae `scrollIntoView` (no hay layout): un stub para poder espiarlo.
+Element.prototype.scrollIntoView = function () {};
+
+// jsdom tampoco trae `matchMedia`: por defecto nada coincide («sin preferencia de movimiento»).
+window.matchMedia ??= ((query: string) => ({
+  matches: false,
+  media: query,
+})) as typeof window.matchMedia;

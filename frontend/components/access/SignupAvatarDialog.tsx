@@ -84,7 +84,7 @@ export function SignupAvatarDialog({
     <DialogShell
       labelledBy={titulo}
       onClose={onClose}
-      cierraConFondo
+      cerrarConFondo
       // El foco arranca en el avatar marcado: es un radiogroup.
       initialFocus={(dialogo) => dialogo.querySelector<HTMLElement>("[aria-checked='true']")}
     >
