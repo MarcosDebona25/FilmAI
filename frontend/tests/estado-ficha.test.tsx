@@ -20,6 +20,8 @@ vi.mock("@/lib/api", async (importOriginal) => {
 });
 const { ApiError } = await import("@/lib/api");
 
+/** Cuándo «entró» el título a su estado: el Undo la manda de vuelta. */
+const FECHA = "2026-10-01T12:00:00Z";
 const lista = (id: number, clave: ListaFicha["clave"], contiene = false): ListaFicha => ({
   id,
   nombre: String(clave),
@@ -28,6 +30,7 @@ const lista = (id: number, clave: ListaFicha["clave"], contiene = false): ListaF
   cantidad_items: 0,
   contiene,
   item_id: contiene ? id * 10 : null,
+  fecha_agregado: contiene ? FECHA : null,
 });
 const enEstado = (estado: Estado | null): ListaFicha[] => [
   lista(1, "favoritos"),
@@ -42,7 +45,7 @@ const respuesta = (estado: Estado | null, anterior: Estado | null) => ({
   listas: enEstado(estado),
 });
 
-function Ficha({ inicial }: { inicial: Estado | null }) {
+function Ficha({ inicial, recargar = true }: { inicial: Estado | null; recargar?: boolean }) {
   const [listas, setListas] = useState(enEstado(inicial));
   const estado = useEstadoFicha({
     idTmdb: 157336,
@@ -68,7 +71,7 @@ function Ficha({ inicial }: { inicial: Estado | null }) {
         onClick={() => {
           // Como la ficha: el servidor mueve a Watched y las listas se recargan.
           const previo = estadoDe(listas);
-          setListas(enEstado("vistas"));
+          if (recargar) setListas(enEstado("vistas"));
           estado.avisarCalificacion({ valor: 8, previo, conResena: false });
         }}
       >
@@ -140,7 +143,7 @@ describe("cambiar el estado desde la ficha", () => {
     expect(await aviso("Back to Watchlist")).toBeInTheDocument();
     expect(api.fetch).toHaveBeenLastCalledWith("/api/lists/status/", {
       method: "PUT",
-      body: { id_tmdb: 157336, tipo: "movie", estado: "pendientes" },
+      body: { id_tmdb: 157336, tipo: "movie", estado: "pendientes", fecha_agregado: FECHA },
     });
     expect(boton()).toHaveTextContent("Watchlist");
     expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
@@ -165,7 +168,7 @@ describe("cambiar el estado desde la ficha", () => {
     expect(await aviso("Back to Watching")).toBeInTheDocument();
     expect(api.fetch).toHaveBeenLastCalledWith("/api/lists/status/", {
       method: "PUT",
-      body: { id_tmdb: 157336, tipo: "movie", estado: "viendo" },
+      body: { id_tmdb: 157336, tipo: "movie", estado: "viendo", fecha_agregado: FECHA },
     });
   });
 
@@ -248,7 +251,7 @@ describe("calificar desde la ficha", () => {
     expect(await aviso("Back to Watchlist")).toBeInTheDocument();
     expect(api.fetch).toHaveBeenCalledWith("/api/lists/status/", {
       method: "PUT",
-      body: { id_tmdb: 157336, tipo: "movie", estado: "pendientes" },
+      body: { id_tmdb: 157336, tipo: "movie", estado: "pendientes", fecha_agregado: FECHA },
     });
   });
 
@@ -257,6 +260,26 @@ describe("calificar desde la ficha", () => {
     calificar();
     await aviso("Rated ★ 8 · Moved to Watched");
     expect(within(document.body).getByRole("button", { name: "Undo" })).toBeInTheDocument();
+  });
+
+  it("el Undo funciona aunque las listas del servidor no hayan llegado todavía", async () => {
+    // La ficha no actualiza las listas por su cuenta: `calificarSinRecargar`
+    // solo avisa, como `TitleView` antes de que responda `recargarListas()`.
+    api.fetch.mockResolvedValueOnce(respuesta("viendo", "vistas"));
+    render(<Ficha inicial="viendo" recargar={false} />, { locale: "en" });
+
+    calificar();
+
+    await aviso("Rated ★ 8 · Moved to Watched");
+    // Las listas ya muestran Watched (optimista), no el estado de antes.
+    expect(boton()).toHaveTextContent("Watched");
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    expect(await aviso("Back to Watching")).toBeInTheDocument();
+    expect(api.fetch).toHaveBeenCalledWith("/api/lists/status/", {
+      method: "PUT",
+      body: { id_tmdb: 157336, tipo: "movie", estado: "viendo", fecha_agregado: FECHA },
+    });
+    expect(boton()).toHaveTextContent("Watching");
   });
 
   it("si ya estaba en Watched dice solo «Rated ★ 8», sin Undo", async () => {

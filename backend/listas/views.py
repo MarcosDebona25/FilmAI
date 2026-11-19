@@ -128,7 +128,9 @@ def _listas_del_usuario(request, *, pertenencia=None):
             produccion__tipo=tipo,
         )
         listas = listas.annotate(
-            contiene=Exists(item), item_id=Subquery(item.values("pk")[:1])
+            contiene=Exists(item),
+            item_id=Subquery(item.values("pk")[:1]),
+            fecha_item=Subquery(item.values("fecha_agregado")[:1]),
         )
 
     return list(listas)
@@ -377,7 +379,12 @@ class EstadoView(TopesTMDBMixin, APIView):
 
         anterior = None
         if produccion is not None:
-            anterior, _ = poner_estado(request.user, produccion, estado)
+            anterior, _ = poner_estado(
+                request.user,
+                produccion,
+                estado,
+                fecha_agregado=serializer.validated_data.get("fecha_agregado"),
+            )
 
         listas = _listas_del_usuario(
             request, pertenencia=(id_tmdb, tmdb_a_dominio(tipo))

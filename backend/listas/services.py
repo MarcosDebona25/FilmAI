@@ -25,7 +25,7 @@ from listas.models import ClaveLista, Lista, Tiene, TipoLista
 CLAVES_DE_ESTADO = (ClaveLista.PENDIENTES, ClaveLista.VIENDO, ClaveLista.VISTAS)
 
 
-def poner_estado(usuario, produccion, estado):
+def poner_estado(usuario, produccion, estado, fecha_agregado=None):
     """Pone la producción en el estado pedido y la saca de las otras dos listas.
 
     `estado` es una clave de `CLAVES_DE_ESTADO`, o `None` para dejarla sin
@@ -34,7 +34,12 @@ def poner_estado(usuario, produccion, estado):
     volver a llamarla con el estado anterior deshace el cambio.
 
     Si ya estaba en ese estado no hace nada (el ítem conserva su fecha), así un
-    doble clic o un reintento son inocuos. Si por datos viejos estaba en más de
+    doble clic o un reintento son inocuos.
+
+    `fecha_agregado` es la fecha que lleva el ítem *nuevo*: el Undo la manda para
+    que «Empezada el 01/10» no pase a ser la de hoy (cambiar de estado borra la
+    fila y crea otra, y `auto_now_add` pone siempre «ahora»). No se aplica si el
+    título ya estaba en ese estado. Si por datos viejos estaba en más de
     un estado, el anterior es el de la fecha más reciente y todos se unifican.
 
     Bloquea las listas de estado del usuario (`select_for_update`): dos cambios
@@ -77,6 +82,10 @@ def poner_estado(usuario, produccion, estado):
                 actual.delete()
         if estado is not None and item is None:
             item = Tiene.objects.create(lista=listas[estado], produccion=produccion)
+            if fecha_agregado is not None:
+                # `auto_now_add` ignora el valor del `create`: se corrige aparte.
+                Tiene.objects.filter(pk=item.pk).update(fecha_agregado=fecha_agregado)
+                item.fecha_agregado = fecha_agregado
     return anterior, item
 
 

@@ -9,6 +9,8 @@ export interface ListaFicha {
   cantidad_items: number;
   contiene: boolean;
   item_id: number | null;
+  /** Cuándo entró el título a la lista (ISO); `null` si no la contiene. */
+  fecha_agregado?: string | null;
 }
 
 /** La lista con `id`, reemplazada por `cambios`; el resto queda igual. */

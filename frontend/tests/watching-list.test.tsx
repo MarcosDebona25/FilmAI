@@ -247,6 +247,13 @@ describe("Watching: Mark as finished y Remove con Undo", () => {
 
     await waitFor(() => expect(screen.getAllByRole("link", { name: /Linterna/ })).toHaveLength(3));
     expect(estados()).toEqual(["vistas", "viendo"]);
+    // Vuelve con su fecha: «Started» no pasa a ser la de hoy.
+    expect(escrituras()[1].body).toEqual({
+      id_tmdb: 102,
+      tipo: "movie",
+      estado: "viendo",
+      fecha_agregado: "2026-10-01T00:00:00Z",
+    });
     expect(
       screen.getAllByRole("link", { name: /Linterna/ }).map((enlace) => enlace.getAttribute("href"))
     ).toEqual(["/movie/101?from=list-4", "/movie/102?from=list-4", "/tv/103?from=list-4"]);

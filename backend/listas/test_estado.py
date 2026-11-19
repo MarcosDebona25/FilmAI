@@ -7,10 +7,13 @@ son independientes. Acá se prueba la regla en sus tres puertas: la función de
 (agregar un ítem a una predeterminada, calificar, borrar la nota).
 """
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework.test import APIClient
 
 from catalogo.exceptions import TMDBNotFound
@@ -93,6 +96,30 @@ class PonerEstadoTests(_Base):
         self.assertEqual(anterior, "viendo")
         # Es el mismo ítem: no se borra y se vuelve a crear (perdería la fecha).
         self.assertEqual(item.pk, original.pk)
+        self.assertEqual(item.fecha_agregado, original.fecha_agregado)
+
+    def test_con_fecha_el_item_nuevo_la_conserva(self):
+        # El Undo devuelve el título con la fecha que tenía (la «Empezada el»).
+        fecha = timezone.now() - timedelta(days=40)
+
+        _, item = poner_estado(
+            self.usuario, self.produccion, ClaveLista.VIENDO, fecha_agregado=fecha
+        )
+
+        item.refresh_from_db()
+        self.assertEqual(item.fecha_agregado, fecha)
+
+    def test_con_fecha_pero_ya_en_ese_estado_no_la_cambia(self):
+        _, original = poner_estado(self.usuario, self.produccion, ClaveLista.VIENDO)
+
+        _, item = poner_estado(
+            self.usuario,
+            self.produccion,
+            ClaveLista.VIENDO,
+            fecha_agregado=timezone.now() - timedelta(days=40),
+        )
+
+        item.refresh_from_db()
         self.assertEqual(item.fecha_agregado, original.fecha_agregado)
 
     def test_si_hay_dos_estados_por_datos_viejos_los_unifica(self):
@@ -299,6 +326,58 @@ class EndpointEstadoTests(_Base):
                 )
 
                 self.assertEqual(respuesta.status_code, 400)
+
+    def test_el_undo_con_fecha_agregado_conserva_la_fecha_original(self, materializar):
+        materializar.return_value = self.produccion
+        empezada = timezone.now() - timedelta(days=48)
+        self.poner("viendo")
+        Tiene.objects.update(fecha_agregado=empezada)
+        self.poner("vistas")
+
+        respuesta = self.poner("viendo", fecha_agregado=empezada.isoformat())
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(self.estados_de(), ["viendo"])
+        self.assertEqual(Tiene.objects.get().fecha_agregado, empezada)
+
+    def test_sin_fecha_agregado_el_item_nuevo_lleva_la_de_ahora(self, materializar):
+        materializar.return_value = self.produccion
+        antes = timezone.now()
+
+        self.poner("viendo")
+
+        self.assertGreaterEqual(Tiene.objects.get().fecha_agregado, antes)
+
+    def test_fecha_agregado_nula_se_trata_como_ausente(self, materializar):
+        materializar.return_value = self.produccion
+
+        respuesta = self.poner("viendo", fecha_agregado=None)
+
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_fecha_agregado_en_el_futuro_o_mal_formada_es_400(self, materializar):
+        manana = (timezone.now() + timedelta(days=1)).isoformat()
+        for fecha in (manana, "ayer", 12, "2026-13-45T00:00:00Z"):
+            with self.subTest(fecha=fecha):
+                respuesta = self.poner("viendo", fecha_agregado=fecha)
+
+                self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(self.estados_de(), [])
+        materializar.assert_not_called()
+
+    def test_la_pertenencia_trae_la_fecha_del_item_de_cada_lista(self, materializar):
+        materializar.return_value = self.produccion
+        empezada = timezone.now() - timedelta(days=3)
+        self.poner("viendo")
+        Tiene.objects.update(fecha_agregado=empezada)
+
+        respuesta = self.poner("viendo")
+
+        viendo = self.resumen(respuesta, "viendo")
+        self.assertEqual(parse_datetime(viendo["fecha_agregado"]), empezada)
+        self.assertIsNone(self.resumen(respuesta, "vistas")["fecha_agregado"])
+        esperado = self.cliente.get("/api/lists/", {"id_tmdb": 550, "tipo": "movie"})
+        self.assertEqual(respuesta.data["listas"], esperado.data)
 
     def test_el_get_no_existe_en_esta_ruta(self, materializar):
         self.assertEqual(self.cliente.get(URL).status_code, 405)

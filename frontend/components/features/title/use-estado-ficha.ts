@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { MS_SIMPLE, mostrarAvisoEstado } from "@/components/features/title/StatusToast";
 import type { MediaType } from "@/lib/catalog";
 import type { ListaFicha } from "@/lib/title-lists";
-import { conEstado, estadoDe, guardarEstado, type Estado } from "@/lib/title-status";
+import { conEstado, estadoDe, fechaDeEstado, guardarEstado, type Estado } from "@/lib/title-status";
 
 /**
  * El estado único del título en la ficha (Watchlist, Watching, Watched o
@@ -36,7 +36,13 @@ export function useEstadoFicha({
 
   const nombre = (estado: Estado) => t(`enums.defaultList.${estado}`);
 
-  async function cambiar(estado: Estado | null, { deshacer = true } = {}) {
+  async function cambiar(
+    estado: Estado | null,
+    {
+      deshacer = true,
+      fechaAgregado = null,
+    }: { deshacer?: boolean; fechaAgregado?: string | null } = {}
+  ) {
     // Un cambio a la vez: el Undo de uno no puede pisar al siguiente.
     if (enCurso.current) return;
     const previas = actuales.current;
@@ -45,7 +51,7 @@ export function useEstadoFicha({
     setPendiente(true);
     onListasChange(conEstado(previas, estado));
     try {
-      const respuesta = await guardarEstado({ idTmdb, tipo, estado });
+      const respuesta = await guardarEstado({ idTmdb, tipo, estado, fechaAgregado });
       onListasChange(respuesta.listas);
       const anterior = respuesta.estado_anterior;
       mostrarAvisoEstado({
@@ -64,7 +70,11 @@ export function useEstadoFicha({
                   : t("title.status.movedTo", { status: nombre(estado) }),
                 seconds: 6,
               }),
-              onClick: () => void cambiar(anterior, { deshacer: false }),
+              onClick: () =>
+                void cambiar(anterior, {
+                  deshacer: false,
+                  fechaAgregado: fechaDeEstado(previas, anterior),
+                }),
             }
           : undefined,
       });
@@ -91,6 +101,11 @@ export function useEstadoFicha({
     previo: Estado | null;
     conResena: boolean;
   }) {
+    // El servidor ya la movió a Watched; las listas de la ficha se recargan
+    // después. Hasta entonces se muestran así, para que un Undo inmediato (o con
+    // la recarga fallida) vea que hay algo que deshacer.
+    const previas = actuales.current;
+    onListasChange(conEstado(previas, "vistas"));
     if (previo === "pendientes" || previo === "viendo") {
       const texto = t("title.status.ratedAndMoved", { rating: String(valor) });
       mostrarAvisoEstado({
@@ -98,7 +113,11 @@ export function useEstadoFicha({
         deshacer: {
           etiqueta: t("title.status.undo"),
           anuncio: t("title.status.undoAnnouncement", { message: texto, seconds: 6 }),
-          onClick: () => void cambiar(previo, { deshacer: false }),
+          onClick: () =>
+            void cambiar(previo, {
+              deshacer: false,
+              fechaAgregado: fechaDeEstado(previas, previo),
+            }),
         },
       });
     } else {

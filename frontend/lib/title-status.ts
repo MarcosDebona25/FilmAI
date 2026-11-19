@@ -35,6 +35,7 @@ export function conEstado(listas: ListaFicha[], estado: Estado | null): ListaFic
       ...lista,
       contiene: debeContener,
       item_id: null,
+      fecha_agregado: null,
       cantidad_items: Math.max(0, lista.cantidad_items + (debeContener ? 1 : -1)),
     };
   });
@@ -52,11 +53,29 @@ export interface RespuestaEstado {
 /**
  * Pone el estado del título de una vez (quita el anterior en la misma
  * operación). `estado` es obligatorio aunque sea `null`: así un olvido no borra
- * el estado. El Undo es llamar de nuevo con `estado_anterior`.
+ * el estado. El Undo es llamar de nuevo con `estado_anterior` y la fecha que
+ * tenía (`fechaAgregado`), para que «Empezada el» no se reinicie.
  */
-export function guardarEstado(datos: { idTmdb: number; tipo: MediaType; estado: Estado | null }) {
+export function guardarEstado(datos: {
+  idTmdb: number;
+  tipo: MediaType;
+  estado: Estado | null;
+  /** Solo el Undo: la fecha que el título tenía en ese estado (ISO). */
+  fechaAgregado?: string | null;
+}) {
   return apiFetch<RespuestaEstado>("/api/lists/status/", {
     method: "PUT",
-    body: { id_tmdb: datos.idTmdb, tipo: datos.tipo, estado: datos.estado },
+    body: {
+      id_tmdb: datos.idTmdb,
+      tipo: datos.tipo,
+      estado: datos.estado,
+      ...(datos.fechaAgregado ? { fecha_agregado: datos.fechaAgregado } : {}),
+    },
   });
+}
+
+/** La fecha en que el título entró a la lista de ese estado, si la conocemos. */
+export function fechaDeEstado(listas: ListaFicha[], estado: Estado | null): string | null {
+  if (!estado) return null;
+  return listas.find((lista) => lista.clave === estado)?.fecha_agregado ?? null;
 }

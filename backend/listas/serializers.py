@@ -1,5 +1,6 @@
 """Serializers de entrada y salida para la API de listas."""
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from catalogo.models import ID_TMDB_MAXIMO
@@ -82,6 +83,16 @@ class EstadoSerializer(PertenenciaQuerySerializer):
     estado = serializers.ChoiceField(
         choices=("pendientes", "viendo", "vistas"), allow_null=True
     )
+    # Solo el Undo la manda: la fecha que tenía el título en el estado al que
+    # vuelve. Sin ella (o con `null`) el ingreso nuevo lleva la fecha de ahora.
+    fecha_agregado = serializers.DateTimeField(required=False, allow_null=True)
+
+    def validate_fecha_agregado(self, value):
+        if value is not None and value > timezone.now():
+            raise serializers.ValidationError(
+                "La fecha no puede ser futura.", code="invalid"
+            )
+        return value
 
 
 class OrdenListasSerializer(FronteraErroresMixin, serializers.Serializer):
@@ -146,6 +157,12 @@ class ListaResumenSerializer(serializers.Serializer):
         if self.context.get("incluir_pertenencia"):
             data["contiene"] = bool(instance.contiene)
             data["item_id"] = instance.item_id
+            # Para que el Undo de la ficha devuelva el título con su fecha.
+            data["fecha_agregado"] = (
+                serializers.DateTimeField().to_representation(instance.fecha_item)
+                if instance.fecha_item
+                else None
+            )
         return data
 
 

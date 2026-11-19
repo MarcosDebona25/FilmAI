@@ -83,6 +83,8 @@ export function useEstadoViendo({
         idTmdb: item.id_tmdb,
         tipo: item.tipo,
         estado: "viendo",
+        // Vuelve con la fecha que tenía: «Started on» no se reinicia.
+        fechaAgregado: item.fecha_agregado,
       });
       // Volver a anotarlo crea un ingreso nuevo: la tarjeta toma su `item_id`.
       const nuevo = respuesta.listas.find((lista) => lista.clave === "viendo")?.item_id;
