@@ -20,7 +20,7 @@ function Nombre({ persona, rol }: { persona: PersonaDeCreditos; rol: RolPersona 
   return (
     <Link
       href={urlDePersona(persona.id, rol)}
-      className="rounded-sm font-semibold text-foreground no-underline hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="rounded-sm font-semibold text-foreground underline decoration-fg-3/40 underline-offset-[3px] hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       {persona.nombre}
     </Link>

@@ -83,4 +83,19 @@ describe("Dirección y reparto", () => {
     expect(screen.getByText("Hayao Miyazaki")).toBeInTheDocument();
     expect(screen.getByText("Persona 1")).toBeInTheDocument();
   });
+
+  it("el nombre con enlace lleva un subrayado fijo; sin enlace, no", () => {
+    // En celular no hay hover: el subrayado es la señal de que se puede tocar.
+    render(
+      <CreditsSection
+        creditos={{
+          directores: [{ id: null, nombre: "Sin Enlace" }],
+          reparto: [{ id: 100, nombre: "Con Enlace", personaje: "X" }],
+        }}
+        tipo="movie"
+      />
+    );
+    expect(screen.getByRole("link", { name: "Con Enlace" })).toHaveClass("underline");
+    expect(screen.getByText("Sin Enlace")).not.toHaveClass("underline");
+  });
 });
