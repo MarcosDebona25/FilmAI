@@ -393,7 +393,8 @@ declare const messages: {
       "basis": "Based on its {count, plural, one {# title} other {# titles}}, without what you already watched.",
       "add": "Add",
       "addLabel": "Add {title} to {listName}",
-      "showMore": "Show more suggestions"
+      "showMore": "Show more suggestions",
+      "basisRecent": "Based on what you watched most recently."
     },
     "reorder": {
       "instructions": "To reorder, press space or enter on the handle, move with the arrow keys, and press space or enter again to drop. Press escape to cancel.",

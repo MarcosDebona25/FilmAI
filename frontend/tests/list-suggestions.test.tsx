@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 
 import { ListSuggestions } from "@/components/features/lists/ListSuggestions";
+import { apiFetch } from "@/lib/api";
 import type { ItemLista, PaginaSugerencias, Sugerencia } from "@/lib/lists";
 import { render, screen, waitFor, within } from "./render";
 
@@ -81,6 +82,17 @@ const titulos = () =>
 // el CSS muestra uno solo y jsdom no aplica CSS.
 const verMas = () => screen.queryAllByRole("button", { name: "Show more suggestions" });
 
+// Deja la alta «en vuelo» hasta llamar a `terminar()`: así se ve qué pasa mientras tanto.
+const implementacionReal = vi.mocked(apiFetch).getMockImplementation()!;
+function retrasarLaAlta() {
+  const espera = { terminar: () => {} };
+  vi.mocked(apiFetch).mockImplementation(async (path, opciones) => {
+    if (opciones?.method === "POST") await new Promise<void>((ok) => (espera.terminar = ok));
+    return implementacionReal(path, opciones);
+  });
+  return espera;
+}
+
 function banda(extra: Partial<Parameters<typeof ListSuggestions>[0]> = {}) {
   const onAgregada = vi.fn();
   const onAgotada = vi.fn();
@@ -104,6 +116,7 @@ function banda(extra: Partial<Parameters<typeof ListSuggestions>[0]> = {}) {
 }
 
 beforeEach(() => {
+  vi.mocked(apiFetch).mockImplementation(implementacionReal);
   estado.paginas = { 1: pagina([1, 2, 3]) };
   estado.fallar = null;
   estado.pedidos = [];
@@ -150,6 +163,17 @@ describe("Banda de sugerencias de una lista", () => {
     expect(
       await screen.findByText("Based on its 1 title, without what you already watched.")
     ).toBeInTheDocument();
+  });
+
+  it("en Vistas la frase no repite «sin lo que ya viste» ni cuenta títulos que no usó", async () => {
+    estado.paginas[1] = pagina([1], { nombre_usado: false });
+    banda({ cantidad: 150, basadaEnLoReciente: true });
+
+    const region = await screen.findByRole("region", { name: "Suggested for this list" });
+    expect(
+      within(region).getByText("Based on what you watched most recently.")
+    ).toBeInTheDocument();
+    expect(within(region).queryByText(/already watched/)).not.toBeInTheDocument();
   });
 
   it("no se dibuja si no hay nada para sugerir", async () => {
@@ -340,5 +364,52 @@ describe("«+ Add»", () => {
     expect(titulos()).toEqual(["Sugerida 1", "Sugerida 2", "Sugerida 3"]);
     expect(onAgregada).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Add Sugerida 1 to Sci Fi" })).toBeEnabled();
+  });
+
+  it("mientras se agrega un título, los otros «+ Add» avisan que están deshabilitados y no hacen nada", async () => {
+    const usuario = userEvent.setup();
+    const alta = retrasarLaAlta();
+    banda();
+    await screen.findByRole("region");
+
+    await usuario.click(screen.getByRole("button", { name: "Add Sugerida 1 to Sci Fi" }));
+
+    const otro = screen.getByRole("button", { name: "Add Sugerida 2 to Sci Fi" });
+    expect(otro).toHaveAttribute("aria-disabled", "true");
+    await usuario.click(otro);
+
+    alta.terminar();
+    await waitFor(() => expect(titulos()).toEqual(["Sugerida 2", "Sugerida 3"]));
+    // El clic en el otro botón no mandó una segunda alta.
+    expect(estado.pedidos.filter((p) => p.method === "POST")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Add Sugerida 2 to Sci Fi" })).toHaveAttribute(
+      "aria-disabled",
+      "false"
+    );
+  });
+
+  it("el foco va a la vecina según lo que hay al terminar, aunque un «Show more» haya llegado en el medio", async () => {
+    const usuario = userEvent.setup();
+    estado.paginas = {
+      1: pagina([1, 2], { paginas: 2 }),
+      2: pagina([3, 4], { pagina: 2, paginas: 2 }),
+    };
+    const alta = retrasarLaAlta();
+    banda();
+    await screen.findByRole("region");
+
+    // Se agrega la 2 (la última de la página 1) y, antes de que termine, llega la página 2.
+    await usuario.click(screen.getByRole("button", { name: "Add Sugerida 2 to Sci Fi" }));
+    await usuario.click(verMas()[0]);
+    await waitFor(() =>
+      expect(titulos()).toEqual(["Sugerida 1", "Sugerida 2", "Sugerida 3", "Sugerida 4"])
+    );
+    alta.terminar();
+
+    // Con los datos de antes del `await` no había vecina siguiente y el foco iba a
+    // la ya inexistente «Show more»; con los de ahora es la 3, que ocupa su lugar.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Add Sugerida 3 to Sci Fi" })).toHaveFocus()
+    );
   });
 });

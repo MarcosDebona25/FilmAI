@@ -41,6 +41,7 @@ export function ListSuggestions({
   cantidad,
   revision,
   visible,
+  basadaEnLoReciente = false,
   onAgregada,
   onAgotada,
 }: {
@@ -51,6 +52,11 @@ export function ListSuggestions({
   cantidad: number;
   revision: number;
   visible: boolean;
+  /**
+   * La lista no usa todos sus títulos sino los últimos que agregó (Vistas): la
+   * frase no cuenta títulos que no entraron y no repite lo que ya vio.
+   */
+  basadaEnLoReciente?: boolean;
   onAgregada: (item: ItemLista) => void;
   /**
    * Se agregó la última sugerencia y no hay más páginas: la banda deja de
@@ -64,6 +70,11 @@ export function ListSuggestions({
   const [cargandoMas, setCargandoMas] = useState(false);
   const [agregando, setAgregando] = useState<string | null>(null);
   const [fallidos, setFallidos] = useState<string[]>([]);
+  // Lo último que se dibujó: después de un `await`, `datos` del cierre ya es viejo.
+  const datosActuales = useRef<Datos | null>(null);
+  useEffect(() => {
+    datosActuales.current = datos;
+  });
   const pedida = useRef(false);
   const mostradas = useRef(new Set<string>());
   const revisionDelPool = useRef(revision);
@@ -144,6 +155,7 @@ export function ListSuggestions({
   }
 
   async function agregar(sugerencia: Sugerencia) {
+    // Los otros «+ Add» llevan `aria-disabled` mientras tanto: aquí se ignora el clic.
     if (!datos || agregando) return;
     const clave = claveDeSugerencia(sugerencia);
     setAgregando(clave);
@@ -152,8 +164,11 @@ export function ListSuggestions({
         method: "POST",
         body: { id_tmdb: sugerencia.id_tmdb, tipo: sugerencia.tipo },
       });
-      const indice = datos.entradas.findIndex((otra) => claveDeSugerencia(otra) === clave);
-      const quedan = datos.entradas.filter((otra) => claveDeSugerencia(otra) !== clave);
+      // El pedido tardó: un «Show more» pudo traer páginas o la lista pudo
+      // cambiar. El vecino se elige con lo que hay ahora, no con `datos` de antes.
+      const ahora = datosActuales.current ?? datos;
+      const indice = ahora.entradas.findIndex((otra) => claveDeSugerencia(otra) === clave);
+      const quedan = ahora.entradas.filter((otra) => claveDeSugerencia(otra) !== clave);
       // El título ya es de la lista: sale de las sugerencias (canvas).
       setDatos((actual) =>
         actual
@@ -164,9 +179,9 @@ export function ListSuggestions({
           : actual
       );
       onAgregada(item);
-      const vecina = quedan[Math.min(indice, quedan.length - 1)];
+      const vecina = quedan[Math.min(Math.max(indice, 0), quedan.length - 1)];
       if (vecina) enfocar(`[data-sugerencia="${claveDeSugerencia(vecina)}"] [data-agregar]`);
-      else if (datos.pagina < datos.paginas) enfocar("[data-ver-mas]");
+      else if (ahora.pagina < ahora.paginas) enfocar("[data-ver-mas]");
       // Sin sugerencias ni «Show more» la banda desaparece entera: adentro no
       // queda dónde dejar el foco y, sin avisar, caería en <body>.
       else onAgotada();
@@ -217,9 +232,14 @@ export function ListSuggestions({
             {t("lists.suggestions.title")}
           </h2>
           <p className="text-sm text-fg-2 md:text-[0.9375rem]">
-            {t(datos.nombreUsado ? "lists.suggestions.basisWithName" : "lists.suggestions.basis", {
-              count: cantidad,
-            })}
+            {basadaEnLoReciente
+              ? t("lists.suggestions.basisRecent")
+              : t(
+                  datos.nombreUsado ? "lists.suggestions.basisWithName" : "lists.suggestions.basis",
+                  {
+                    count: cantidad,
+                  }
+                )}
           </p>
         </div>
         {hayMas && botonVerMas("ml-auto hidden md:inline-flex")}
@@ -301,8 +321,10 @@ export function ListSuggestions({
                       listName: nombre,
                     })}
                     onClick={() => void agregar(sugerencia)}
-                    disabled={agregando === clave}
-                    className="relative mt-1 inline-flex h-[1.875rem] cursor-pointer items-center gap-[0.3125rem] self-start rounded-full bg-raised-2 pr-3 pl-2 text-xs font-semibold text-foreground after:absolute after:-inset-x-1 after:-inset-y-[0.4375rem] hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-wait md:mt-[0.3125rem] md:h-[2.125rem] md:gap-1.5 md:pr-3.5 md:pl-[0.5625rem] md:text-sm md:after:-inset-y-[0.3125rem]"
+                    // `aria-disabled` y no `disabled`: el botón que se está agregando
+                    // no pierde el foco y el resto se anuncia como no disponible.
+                    aria-disabled={agregando !== null}
+                    className="relative mt-1 inline-flex h-[1.875rem] cursor-pointer items-center gap-[0.3125rem] self-start rounded-full bg-raised-2 pr-3 pl-2 text-xs font-semibold text-foreground after:absolute after:-inset-x-1 after:-inset-y-[0.4375rem] hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:cursor-wait aria-disabled:opacity-60 md:mt-[0.3125rem] md:h-[2.125rem] md:gap-1.5 md:pr-3.5 md:pl-[0.5625rem] md:text-sm md:after:-inset-y-[0.3125rem]"
                   >
                     <Plus aria-hidden="true" strokeWidth={2.2} className="size-3.5 md:size-4" />
                     {t("lists.suggestions.add")}

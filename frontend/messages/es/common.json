@@ -390,7 +390,8 @@
       "basis": "Según {count, plural, one {su # título} other {sus # títulos}}, sin lo que ya viste.",
       "add": "Agregar",
       "addLabel": "Agregar {title} a {listName}",
-      "showMore": "Ver más sugerencias"
+      "showMore": "Ver más sugerencias",
+      "basisRecent": "Según lo que viste hace poco."
     },
     "reorder": {
       "instructions": "Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.",

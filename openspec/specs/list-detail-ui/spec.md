@@ -20,7 +20,8 @@ rows: 3 columns on desktop and one on mobile, with posters of 74 × 111 and
 when there is nothing to suggest. It MUST be requested only once the grid has
 no next page. Its line MUST say «Based on its N titles and its name, without
 what you already watched.» when `nombre_usado` is true, and the same without
-«and its name» otherwise. If the first load fails, the band MUST NOT be drawn
+«and its name» otherwise; in Vistas it MUST say «Based on what you watched
+most recently.» (19/11/2026). If the first load fails, the band MUST NOT be drawn
 and the list stays usable.
 
 #### Scenario: Pendientes
