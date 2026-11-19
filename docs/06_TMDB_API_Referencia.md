@@ -466,7 +466,7 @@ El reloj de 180 días corre sobre el **contenido** (textos, rutas de imagen, not
 
 `Calificacion`, `Resena` y los ítems de lista guardan datos del usuario y una clave a la producción, no contenido de TMDB.
 
-**Excepciones aceptadas** (07/11/2026): el collage de las pantallas de acceso (`frontend/public/collage-posters/Opcion 1.jpg`, desde el 13/08/2026, **revisar antes del 13/02/2027**) y los fixtures de prueba con copias de respuestas (`frontend/e2e/api-simulada.ts`, `backend/catalogo/test_datos/tmdb_buscar.json`), que nunca se sirven.
+**Excepciones aceptadas** (07/11/2026): los fixtures de prueba con copias de respuestas (`frontend/e2e/api-simulada.ts`, `backend/catalogo/test_datos/tmdb_buscar.json`), que nunca se sirven. El collage de las pantallas de acceso no es una excepción: no sale de TMDB y es de uso libre (19/11/2026).
 
 ### Regla de refresco
 

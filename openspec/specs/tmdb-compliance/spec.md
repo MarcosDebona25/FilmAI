@@ -165,4 +165,4 @@ All TMDB requests MUST go through `catalogo/client.py`, which retries 429 (Too M
 
 ### Requirement: Recorded basis for AI use
 
-`docs/decisiones.md` MUST record that TMDB content is used with the chatbot and embeddings on the basis that FilmAI is an academic, non-profit project (07/11/2026), that any revenue tied to TMDB content (ads, subscriptions, paid tiers) requires talking to TMDB first, and the exceptions accepted by issue #180 (access collage until 13/02/2027, test fixtures).
+`docs/decisiones.md` MUST record that TMDB content is used with the chatbot and embeddings on the basis that FilmAI is an academic, non-profit project (07/11/2026), that any revenue tied to TMDB content (ads, subscriptions, paid tiers) requires talking to TMDB first, and the exceptions accepted by issue #180 (test fixtures). The access collage is not TMDB content: it is free to use (19/11/2026).
