@@ -81,6 +81,24 @@ describe("MediaCard", () => {
     expect(screen.getByText("Added to this list on 10/18/2026")).toBeInTheDocument();
   });
 
+  it("con addedKind started dice «Empezada el» / «Started» con la misma fecha", () => {
+    const { unmount } = render(
+      <MediaCard title={pelicula} showType addedAt="2026-10-18T12:00:00Z" addedKind="started" />,
+      { locale: "es" }
+    );
+    expect(screen.getByText("18/10/2026")).toBeInTheDocument();
+    expect(screen.getByText("Empezada el 18/10/2026")).toBeInTheDocument();
+    unmount();
+
+    render(
+      <MediaCard title={pelicula} showType addedAt="2026-10-18T12:00:00Z" addedKind="started" />,
+      {
+        locale: "en",
+      }
+    );
+    expect(screen.getByText("Started 10/18/2026")).toBeInTheDocument();
+  });
+
   it("sin fecha de agregado no muestra ninguna", () => {
     render(<MediaCard title={pelicula} showType />, { locale: "en" });
     expect(document.querySelector("time")).toBeNull();

@@ -389,7 +389,7 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | Pendiente (🕐)    | Borde                          | Agrega a Pendientes                                                                                                                                                                                                                                                                                                                                                                                                                                            | Relleno sólido                                                                                         |
 | Pendiente (🕐)    | Relleno                        | Quita de Pendientes                                                                                                                                                                                                                                                                                                                                                                                                                                            | Borde                                                                                                  |
 | Calificar         | —                              | Abre modal de reseña (CU-015)                                                                                                                                                                                                                                                                                                                                                                                                                                  | Al publicar, la producción entra a Vistas: el 👁 queda relleno (regla "calificada ⇒ vista", 30/09/2026) |
-| Vista (👁, quitar) | Producción calificada          | **Pide confirmación antes de quitar**: la API responde 409 `calificacion_impide_quitar_de_vistas` (CU-011: si la calificaste, la viste). El modal dice "Se eliminarán tu calificación de X/10 y tu **reseña**. Esto no se puede deshacer.", con el texto de la reseña visible en un preview truncado a 2 líneas y "ver completa". Al confirmar, se reintenta con `?borrar_calificacion=true`, que borra las dos cosas y quita el ítem en una sola transacción. | Si cancela, la producción sigue en Vistas y la calificación intacta.                                   |
+| Vista (👁, quitar) | Producción calificada          | Quita de Vistas y **conserva la calificación** (16/11/2026: el estado es libre después de calificar; ya no hay 409 ni diálogo de confirmación). El botón de estado de la ficha (Watchlist, Watching, Watched) llega con la sección 15 del canvas. |
 | Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas. En escritorio el panel se abre hacia abajo si entra y, si no, hacia el lado con más lugar; la rueda sigue desplazando la página y el panel acompaña al botón (04/11/2026). En celular es una hoja desde abajo y la página queda quieta.                                                                                                                                                                          | Check/uncheck toggle                                                                                   |
 
 El relleno sólido de Favoritos, Vista y Pendiente usa el color de acento, como la estrella de la nota propia; en el ojo y el reloj, la pupila y las agujas toman el color del botón para seguir viéndose (14/10/2026).
@@ -538,7 +538,7 @@ de un componente «Modal»:
 
 - **Nombre**: texto, máx 80 chars visibles con truncado en 2 líneas.
 - **Conteo**: dato principal "N ítems"; debajo, desglose "X películas · Y series". La ListCard recibe ambos valores para informar la composición de la lista sin cargar sus ítems completos.
-- **Mini preview**: hasta 5 posters solapados en thumbnail (32×48px). Si la lista tiene menos de 5 items, se muestran los que haya. Si está vacía, se muestra un placeholder gris.
+- **Mini preview**: hasta 4 posters solapados en escritorio y 3 en celular (17/11/2026; antes 5), con «N más» por lo que queda y que cuenta lo que no se ve en cada medida. Si la lista tiene menos, se muestran los que haya. Si está vacía, se muestra un placeholder gris.
 - **Badge**: "Predeterminada" en listas del sistema. Color gris neutro, esquina superior izquierda.
 - **Manija de arrastre** (seis puntos, solo escritorio): solo en listas personalizadas; también se opera con teclado (Espacio levanta, flechas mueven, Espacio suelta, con anuncios traducidos).
 - **Menú contextual** (`⋯`, esquina superior derecha): solo en listas personalizadas. Escritorio → menú: Renombrar / Mover a la izquierda / Mover a la derecha / Eliminar. Celular → hoja inferior: Renombrar / Subir / Bajar / Eliminar. Visible siempre, no solo en hover.
@@ -546,7 +546,7 @@ de un componente «Modal»:
 
 #### Orden y reordenamiento
 
-1. **Predeterminadas fijas**: primera fila, orden inmutable: Favoritos → Pendientes → Vistas. No se arrastran ni se mueven. No tienen menú.
+1. **Predeterminadas fijas**: primera fila, orden inmutable: Favoritos → Pendientes → Viendo → Vistas. No se arrastran ni se mueven. No tienen menú.
 2. **Personalizadas**: ordenadas por fecha de creación (más reciente al final). El usuario puede reordenarlas con **drag & drop**: al arrastrar una card, las demás se desplazan para hacer lugar (animación de transición). El nuevo orden se persiste en BD (`PUT /api/lists/order/`); si falla, vuelve al orden anterior y avisa. En celular, mantener presionado no abre el menú ni la vista previa del sistema (`-webkit-touch-callout: none`, `user-select: none`, `contextmenu` anulado en pantallas táctiles).
 
 #### Card "Agregar" (esqueleto)
@@ -559,11 +559,13 @@ de un componente «Modal»:
 
 #### Layout y responsive
 
-| Breakpoint        | Columnas |
-| ----------------- | -------- |
-| Desktop (≥1440px) | 3        |
-| Tablet (≥768px)   | 2        |
-| Mobile (<768px)   | 1        |
+| Breakpoint           | Columnas |
+| -------------------- | -------- |
+| ≥1180 px (73,75 rem) | 4        |
+| ≥640 px (40 rem)     | 2        |
+| <640 px              | 1        |
+
+Desde el 17/11/2026 (canvas «Watching · Lists»): con 4 columnas las 4 predeterminadas llenan solas la primera fila. Antes eran 3, 2 y 1 por ancho (≥1440, ≥768, <768).
 
 #### Estados
 
@@ -571,7 +573,7 @@ de un componente «Modal»:
 | ------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Loading       | 3-6 skeletons de ListCard (rectángulo con placeholder de miniaturas).                                                 |
 | Normal        | Grid de ListCards (predeterminadas + personalizadas + card esqueleto "Agregar").                                      |
-| Empty parcial | Las 3 predeterminadas siempre existen. Si no hay personalizadas, la card esqueleto aparece en la primera celda libre. |
+| Empty parcial | Las 4 predeterminadas siempre existen. Si no hay personalizadas, la card esqueleto aparece en la primera celda libre. |
 | Error         | Ilustración + "No se pudieron cargar las listas." + botón Reintentar.                                                 |
 
 ---
@@ -609,14 +611,23 @@ de un componente «Modal»:
 
 - **Nombre de la lista**: título de sección (heading).
 - **Menú de acciones** (`⋯`): solo en listas personalizadas. Escritorio: menú; celular: hoja inferior. Renombrar / Eliminar lista.
+- **Conteo en la línea del título** (17/11/2026): el título y, a su lado, «N items · X movies · Y TV shows» (en celular solo «N items»), alineados por la línea base. Ya no va debajo.
 - **Listas predeterminadas**: no muestran menú de acciones sobre la lista en sí. Solo se pueden quitar ítems individuales.
+
+#### Lista Watching (17/11/2026)
+
+Usa esta misma página, sin ícono ni texto arriba del buscador. Cambia lo que hay en cada tarjeta y el estado vacío:
+
+- **`⋯` por tarjeta** (en lugar de `✕`): arriba a la derecha del póster, siempre visible, 36 px (44 px de área táctil en celular), `aria-haspopup="menu"`, `aria-expanded` y la etiqueta «More for {título}». Ítems: «Mark as finished» (pasa a Watched y sale de la grilla), «Rate it…» (el mismo diálogo de la ficha; calificar también pasa a Watched) y «Remove from Watching» (el título queda sin estado). Un solo menú abierto; Escape o el clic afuera lo cierran y el foco vuelve al `⋯`. Escritorio: panel pegado al botón; celular: hoja inferior con «Cancel». Es un `<dialog>` modal, como el menú de estado de la ficha.
+- **Toast con Undo** (el mismo `StatusToast` de la ficha, 6 s): «{título} moved to Watched» con «Rate it» (solo en escritorio) y Undo; «{título} removed from Watching» con Undo. Undo devuelve el título a Watching **en su posición anterior** de la grilla (el servidor lo anota de nuevo con fecha nueva, así que al recargar queda primero con el orden «reciente»). Una acción nueva reemplaza el toast y Undo solo revierte la última. Si el servidor falla, la tarjeta vuelve y el toast de error no trae Undo.
+- **Vacía**: «Nothing in progress» + texto + «Open Watchlist» (va a Pendientes), en el mismo bloque que cualquier lista vacía.
 
 #### Grid de items
 
 - **Escritorio**: grilla de `--cols` columnas, las mismas que las filas del Inicio (04/11/2026; antes `auto-fill` de al menos 220 px); **celular**: 2 columnas.
-- Cada **MediaCard** tiene un botón `✕` en la esquina superior derecha, visible al hover o al foco en escritorio y siempre en pantallas táctiles. Click → confirmación para quitar el ítem. En «Watched», si el título está calificado, el backend responde 409 (Conflict) y se pide confirmar el borrado de la calificación (y la reseña) antes de reintentar.
+- Cada **MediaCard** (salvo en Watching, que lleva el `⋯` de arriba) tiene un botón `✕` en la esquina superior derecha, visible al hover o al foco en escritorio y siempre en pantallas táctiles. Click → confirmación para quitar el ítem. En «Watched» quitar un título calificado es un quitar común: la calificación se conserva (16/11/2026; ya no hay 409 (Conflict) ni segundo diálogo).
 - Click en la card → navega a Ficha de detalle (misma pantalla de la sección 5c). El breadcrumb se extiende a: `Listas > {nombre lista} > {título}`.
-- **Fecha de agregado** (CU-009, 18/10/2026): cada MediaCard del detalle muestra, de forma discreta bajo los datos, el ícono de «agregar a lista» y la fecha (tooltip y lectores de pantalla: «Agregada a esta lista el {fecha}»; en inglés, «Added to this list on {fecha}») con un formato numérico compacto según el idioma (`18/10/2026` en español, `10/18/2026` en inglés). Las tarjetas de Home y Buscar no la llevan.
+- **Fecha de agregado** (CU-009, 18/10/2026): cada MediaCard del detalle muestra, de forma discreta bajo los datos, el ícono de «agregar a lista» y la fecha (tooltip y lectores de pantalla: «Agregada a esta lista el {fecha}»; en inglés, «Added to this list on {fecha}») con un formato numérico compacto según el idioma (`18/10/2026` en español, `10/18/2026` en inglés). Las tarjetas de Home y Buscar no la llevan. En la lista Watching el ícono es un reloj y el texto es «Empezada el {fecha}» / «Started {fecha}».
 - **Scroll vertical**: sin paginación. Se cargan más resultados a medida que el usuario hace scroll.
 
 #### Estados
@@ -625,7 +636,7 @@ de un componente «Modal»:
 | ------- | --------------------------------------------------------------------------------------- |
 | Loading | Skeleton grid de MediaCards (5×2 filas).                                                |
 | Normal  | Grid de items con scroll vertical.                                                      |
-| Empty   | Ilustración + "Esta lista no contiene elementos." + botón "Explorar" (navega a Buscar). |
+| Empty   | Ilustración + "Esta lista no contiene elementos." + botón "Explorar" (navega a Buscar). En Watching: «Nothing in progress» + «Open Watchlist». |
 | Error   | Mensaje + botón Reintentar.                                                             |
 
 ---

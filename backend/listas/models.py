@@ -37,6 +37,7 @@ class ClaveLista(models.TextChoices):
 
     FAVORITOS = "favoritos"
     PENDIENTES = "pendientes"
+    VIENDO = "viendo"
     VISTAS = "vistas"
 
 
@@ -44,7 +45,7 @@ class Lista(models.Model):
     """Lista de producciones de un usuario.
 
     Cada usuario tiene por defecto las listas predeterminadas (Favoritos,
-    Pendientes, Vistas), que no pueden eliminarse, y puede crear listas
+    Pendientes, Viendo, Vistas), que no pueden eliminarse, y puede crear listas
     personalizadas adicionales (doc 03, CU-009/CU-012).
     """
 

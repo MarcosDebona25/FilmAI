@@ -16,7 +16,8 @@ The detail of Favorites, Vistas («Watched») or a custom list with at least one
 item MUST show, after the grid, an open band (no box around it) «Suggested for
 this list» with the results of `GET /api/lists/{id}/suggestions/`, in compact
 rows: 3 columns on desktop and one on mobile, with posters of 74 × 111 and
-64 × 96. It MUST NOT appear in Pendientes («Watchlist»), in an empty list or
+64 × 96. It MUST NOT appear in Pendientes («Watchlist») or Viendo («Watching»)
+(19/11/2026), in an empty list or
 when there is nothing to suggest. It MUST be requested only once the grid has
 no next page. Its line MUST say «Based on its N titles and its name, without
 what you already watched.» when `nombre_usado` is true, and the same without
@@ -24,9 +25,9 @@ what you already watched.» when `nombre_usado` is true, and the same without
 most recently.» (19/11/2026). If the first load fails, the band MUST NOT be drawn
 and the list stays usable.
 
-#### Scenario: Pendientes
+#### Scenario: Pendientes and Viendo
 
-- GIVEN the user opens Pendientes
+- GIVEN the user opens Pendientes or Viendo
 - THEN there is no suggestions band and no request for it
 
 #### Scenario: Watched

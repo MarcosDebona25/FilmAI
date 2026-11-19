@@ -138,7 +138,7 @@ a 10-minute cache.
 
 `GET /api/lists/{id}/suggestions/?pagina=N` MUST require a session and MUST
 answer 404 (Not Found) `not_found` for a list of another user, an inactive
-list and Pendientes; Vistas has suggestions like Favorites, without its
+list, Pendientes and Viendo (19/11/2026); Vistas has suggestions like Favorites, without its
 name (15/11/2026), and only its 20 most recently added titles are seeds and
 part of the signature (19/11/2026). `pagina` MUST be an integer ≥ 1 (default 1);
 anything else MUST answer 400 (Bad Request). The answer MUST be `{results,

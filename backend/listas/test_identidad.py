@@ -23,7 +23,7 @@ class IdentidadListaTests(TestCase):
         self.cliente.force_authenticate(self.usuario)
 
     def _renombrar(self):
-        nombres = ("ZZ primera", "AA segunda", "Ya vi")
+        nombres = ("ZZ primera", "AA segunda", "Mirando", "Ya vi")
         for clave, nombre in zip(ClaveLista.values, nombres, strict=True):
             self.usuario.listas.filter(clave=clave).update(nombre=nombre)
         return dict(self.usuario.listas.values_list("clave", "nombre"))
@@ -52,7 +52,7 @@ class IdentidadListaTests(TestCase):
             {lista["clave"]: lista["nombre"] for lista in respuesta.data}, nombres
         )
 
-    def test_calificar_bloquea_quitar_y_borrar_nota_quita_de_vistas_renombrada(self):
+    def test_calificar_agrega_y_borrar_nota_quita_de_vistas_renombrada(self):
         self._renombrar()
         produccion = ProduccionAudiovisualFactory()
         vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
@@ -63,9 +63,7 @@ class IdentidadListaTests(TestCase):
                 format="json",
             )
         self.assertEqual(respuesta.status_code, 201)
-        item = vistas.items.get(produccion=produccion)
-        bloqueada = self.cliente.delete(f"/api/lists/{vistas.pk}/items/{item.pk}/")
-        self.assertEqual(bloqueada.status_code, 409)
+        self.assertTrue(vistas.items.filter(produccion=produccion).exists())
 
         borrada = self.cliente.delete(f"/api/reviews/{respuesta.data['id']}/")
 
@@ -79,7 +77,7 @@ class IdentidadListaTests(TestCase):
         salida = StringIO()
         call_command("reparar_recursos_usuarios", "--dry-run", stdout=salida)
 
-        self.assertIn("listas 3/3", salida.getvalue())
+        self.assertIn("listas 4/4", salida.getvalue())
         self.assertEqual(set(self.usuario.listas.values_list("pk", flat=True)), ids)
         self.assertEqual(
             dict(self.usuario.listas.values_list("clave", "nombre")), nombres
@@ -103,11 +101,11 @@ class IdentidadListaTests(TestCase):
         vistas.refresh_from_db()
         self.assertEqual(vistas.clave, ClaveLista.VISTAS)
         self.assertEqual(vistas.nombre, "VISTAS")
-        self.assertEqual(self.usuario.listas.count(), 3)
+        self.assertEqual(self.usuario.listas.count(), len(ClaveLista.values))
 
     def test_semilla_reutiliza_predeterminadas_renombradas_por_clave(self):
         nombres = self._renombrar()
-        producciones = ProduccionAudiovisualFactory.create_batch(5)
+        producciones = ProduccionAudiovisualFactory.create_batch(10)
 
         Command()._crear_listas([self.usuario], producciones)
 
@@ -118,7 +116,7 @@ class IdentidadListaTests(TestCase):
                 predeterminadas.get(clave=clave).items.count()
                 for clave in ClaveLista.values
             ],
-            [4, 5, 3],
+            [4, 5, 2, 3],
         )
 
     def test_respaldo_no_reasigna_otra_identidad_si_el_nombre_colisiona(self):
@@ -130,7 +128,7 @@ class IdentidadListaTests(TestCase):
         with self.assertRaisesRegex(ValidationError, "otra clave"):
             provisionar_recursos_por_defecto(self.usuario)
 
-        self.assertEqual(self.usuario.listas.count(), 2)
+        self.assertEqual(self.usuario.listas.count(), len(ClaveLista.values) - 1)
         self.assertEqual(
             self.usuario.listas.get(nombre="Pendientes").clave, ClaveLista.FAVORITOS
         )

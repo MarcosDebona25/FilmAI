@@ -857,7 +857,7 @@ class RecursosPredeterminadosTests(TestCase):
     def test_usuario_nuevo_recibe_listas_y_chat_del_mvp(self):
         usuario = self._crear_usuario()
 
-        self.assertEqual(usuario.listas.count(), 3)
+        self.assertEqual(usuario.listas.count(), 4)
         self.assertEqual(
             set(usuario.listas.values_list("nombre", flat=True)),
             set(LISTAS_PREDETERMINADAS),
@@ -872,7 +872,7 @@ class RecursosPredeterminadosTests(TestCase):
         call_command("reparar_recursos_usuarios", "--usuario-id", usuario.pk)
         call_command("reparar_recursos_usuarios", "--usuario-id", usuario.pk)
 
-        self.assertEqual(usuario.listas.count(), 3)
+        self.assertEqual(usuario.listas.count(), 4)
         self.assertEqual(usuario.chats.count(), 1)
 
 

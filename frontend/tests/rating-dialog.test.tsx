@@ -6,6 +6,26 @@ import { fireEvent, render, screen, waitFor } from "./render";
 const base = { titulo: "Interstellar", onClose: vi.fn() };
 
 describe("RatingDialog al calificar", () => {
+  it("desde Watching dice que sale de Watching y pasa a Watched", () => {
+    render(<RatingDialog {...base} enVistas={false} enViendo onSubmit={vi.fn()} />, {
+      locale: "en",
+    });
+
+    expect(
+      screen.getByText("Rating Interstellar moves it from Watching to Watched.")
+    ).toBeInTheDocument();
+  });
+
+  it("desde Viendo, en español, usa los nombres de las listas", () => {
+    render(<RatingDialog {...base} enVistas={false} enViendo onSubmit={vi.fn()} />, {
+      locale: "es",
+    });
+
+    expect(
+      screen.getByText("Al calificarla, Interstellar pasa de Viendo a Vistas.")
+    ).toBeInTheDocument();
+  });
+
   it("no deja publicar sin nota y avisa que la suma a Vistas", () => {
     render(<RatingDialog {...base} enVistas={false} onSubmit={vi.fn()} />, { locale: "en" });
 
@@ -63,6 +83,26 @@ describe("RatingDialog al calificar", () => {
 
 describe("RatingDialog al editar", () => {
   const inicial = { valor: 9, texto: "La vi tres veces." };
+
+  it("no muestra la ayuda de «se agrega a Vistas»: editar no mueve nada", () => {
+    // Un título calificado puede no estar en Vistas (la nota se conserva al
+    // cambiar de estado): sin esto el diálogo prometería un movimiento falso.
+    for (const estado of [{}, { enPendientes: true }, { enViendo: true }]) {
+      const { unmount } = render(
+        <RatingDialog
+          {...base}
+          enVistas={false}
+          {...estado}
+          inicial={inicial}
+          onSubmit={vi.fn()}
+        />,
+        { locale: "en" }
+      );
+
+      expect(screen.queryByText(/Rating Interstellar/)).toBeNull();
+      unmount();
+    }
+  });
 
   it("precarga nota y texto, muestra la nota anterior al cambiarla y ofrece quitarla", () => {
     const onRemoveRating = vi.fn();

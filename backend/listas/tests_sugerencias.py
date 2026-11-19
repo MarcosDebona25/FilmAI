@@ -104,16 +104,21 @@ class AccesoTests(BaseSugerencias):
 
         self.assertEqual(self.api.get(self.url(lista)).status_code, 404)
 
-    def test_pendientes_es_404_not_found(self):
-        # Pendientes es lo que la persona YA eligió ver: no se le sugiere más.
-        pendientes = self.usuario.listas.get(clave=ClaveLista.PENDIENTES)
-        Tiene.objects.create(lista=pendientes, produccion=self.produccion("A", eje(0)))
-        self.vecinas(3)
+    def test_pendientes_y_viendo_son_404_not_found(self):
+        # Pendientes es lo que la persona YA eligió ver y Viendo lo que está
+        # viendo: no se le sugiere más. Vistas sí tiene (ver más abajo).
+        for clave in (ClaveLista.PENDIENTES, ClaveLista.VIENDO):
+            with self.subTest(clave=clave):
+                lista = self.usuario.listas.get(clave=clave)
+                Tiene.objects.create(
+                    lista=lista, produccion=self.produccion("A" + clave, eje(0))
+                )
+                self.vecinas(3)
 
-        respuesta = self.api.get(self.url(pendientes))
+                respuesta = self.api.get(self.url(lista))
 
-        self.assertEqual(respuesta.status_code, 404)
-        self.assertEqual(respuesta.json()["code"], "not_found")
+                self.assertEqual(respuesta.status_code, 404)
+                self.assertEqual(respuesta.json()["code"], "not_found")
 
     def test_vistas_si_tiene_sugerencias(self):
         vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
@@ -342,6 +347,19 @@ class VistasTests(BaseSugerencias):
             respuesta = self.api.get(self.url(lista))
 
         self.assertIn("cache=True", registro.output[0])
+        self.assertNotIn(("movie", vecinas[0].id_tmdb), self.ids(respuesta))
+        self.assertEqual(len(self.ids(respuesta)), 4)
+
+    def test_saca_lo_que_el_usuario_esta_viendo(self):
+        lista = self.lista_con(self.produccion("Semilla", vector_a(0)))
+        vecinas = self.vecinas(5)
+        Tiene.objects.create(
+            lista=self.usuario.listas.get(clave=ClaveLista.VIENDO),
+            produccion=vecinas[0],
+        )
+
+        respuesta = self.api.get(self.url(lista))
+
         self.assertNotIn(("movie", vecinas[0].id_tmdb), self.ids(respuesta))
         self.assertEqual(len(self.ids(respuesta)), 4)
 

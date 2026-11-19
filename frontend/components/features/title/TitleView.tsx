@@ -17,6 +17,8 @@ import { RatingDialog, mensajeDeError } from "@/components/features/title/Rating
 import { ReviewsSection } from "@/components/features/title/ReviewsSection";
 import { SimilarTitles } from "@/components/features/title/SimilarTitles";
 import { TitleActions } from "@/components/features/title/TitleActions";
+import { cerrarAvisoEstado } from "@/components/features/title/StatusToast";
+import { useEstadoFicha } from "@/components/features/title/use-estado-ficha";
 import {
   ESQUELETO,
   EsqueletoAcciones,
@@ -32,18 +34,23 @@ import { tmdbLoader, type MediaType } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import { tamanioTitulo } from "@/lib/home";
 import { ultimasResenas } from "@/lib/my-reviews";
+import {
+  crearCalificacion,
+  editarCalificacion,
+  quitarCalificacion as quitarEnApi,
+} from "@/lib/review-actions";
 import { routes } from "@/lib/routes";
 import { ultimaBusqueda } from "@/lib/search";
 import {
   normalizarFicha,
   origenDesde,
-  planEdicion,
   type Creditos,
   type MiCalificacion,
   type Plataformas,
   type TmdbDetalle,
 } from "@/lib/title";
 import type { ListaFicha } from "@/lib/title-lists";
+import { estadoDe } from "@/lib/title-status";
 import { useCatalog } from "@/lib/use-catalog";
 import { useDesborde } from "@/lib/use-desborde";
 import { cn } from "@/lib/utils";
@@ -89,6 +96,9 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
     null
   );
   const [modal, setModal] = useState<Modal>(null);
+  // Un toast de estado con Undo no sobrevive a la ficha: el cambio queda, el
+  // Undo no (canvas, «Leave the page with the toast open»).
+  useEffect(() => cerrarAvisoEstado, []);
   const [sinopsisCompleta, setSinopsisCompleta] = useState(false);
   const [sinopsisRef, sinopsisDesborda] = useDesborde<HTMLParagraphElement>(
     sinopsisCompleta,
@@ -110,6 +120,13 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
       }
     );
   }, [id, tipo]);
+
+  const estado = useEstadoFicha({
+    idTmdb: id,
+    tipo,
+    listas: listas ?? [],
+    onListasChange: setListas,
+  });
 
   useEffect(() => {
     if (!conSesion) return;
@@ -213,37 +230,21 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const volver = miga[miga.length - 1];
   const enVistas = listas?.find((lista) => lista.clave === "vistas")?.contiene ?? false;
   const enPendientes = listas?.find((lista) => lista.clave === "pendientes")?.contiene ?? false;
+  const enViendo = listas?.find((lista) => lista.clave === "viendo")?.contiene ?? false;
 
   async function guardar({ valor, texto }: { valor: number; texto: string }) {
     if (!mia) {
-      const nueva = await apiFetch<MiCalificacion>("/api/reviews/", {
-        method: "POST",
-        body: { id_tmdb: id, tipo, valor, ...(texto ? { texto } : {}) },
-      });
-      setMia(nueva);
-      toast.success(
-        t(texto ? "title.feedback.ratingReviewPublished" : "title.feedback.ratingPublished")
-      );
+      // Calificar mueve a Watched en el servidor: el estado de antes se lee de
+      // las listas que tenía la ficha, y el Undo lo restaura.
+      const previo = estadoDe(listas ?? []);
+      const { creada } = await crearCalificacion({ idTmdb: id, tipo, valor, texto });
+      setMia(creada);
+      estado.avisarCalificacion({ valor, previo, conResena: Boolean(texto) });
     } else {
-      const plan = planEdicion(mia, valor, texto);
-      let actual: MiCalificacion = mia;
-      if (plan.borrarTexto) {
-        await apiFetch(`/api/reviews/${mia.id}/texto/`, { method: "DELETE" });
-        actual = { ...actual, texto: null };
-      }
-      if (Object.keys(plan.cambios).length) {
-        actual = await apiFetch<MiCalificacion>(`/api/reviews/${mia.id}/`, {
-          method: "PUT",
-          body: plan.cambios,
-        });
-      }
-      setMia(actual);
-      const nota = "valor" in plan.cambios;
-      const textoCambio = "texto" in plan.cambios || plan.borrarTexto;
-      if (nota && textoCambio) toast.success(t("title.feedback.ratingReviewUpdated"));
-      else if (nota) toast.success(t("title.feedback.ratingUpdated"));
-      else if (plan.borrarTexto) toast.success(t("title.feedback.reviewDeleted"));
-      else if (textoCambio) toast.success(t("title.feedback.reviewUpdated"));
+      const { plan, respuesta, aviso } = await editarCalificacion(mia, valor, texto);
+      const sinTexto: MiCalificacion = plan.borrarTexto ? { ...mia, texto: null } : mia;
+      setMia(respuesta ? { ...sinTexto, ...respuesta } : sinTexto);
+      if (aviso) toast.success(t(`title.feedback.${aviso}`));
     }
     setModal(null);
     // Calificar suma a Vistas en el servidor: las listas traen el `item_id` nuevo.
@@ -252,10 +253,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
 
   async function quitarCalificacion() {
     if (!mia) return;
-    await apiFetch(`/api/reviews/${mia.id}/`, { method: "DELETE" });
-    toast.success(
-      t(mia.texto ? "title.feedback.ratingReviewDeleted" : "title.feedback.ratingDeleted")
-    );
+    const { aviso } = await quitarEnApi(mia);
+    toast.success(t(`title.feedback.${aviso}`));
     setMia(null);
     setModal(null);
     await recargarListas();
@@ -440,7 +439,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
                   onListasChange={setListas}
                   miCalificacion={mia ?? null}
                   onRate={() => setModal("calificar")}
-                  onCalificacionBorrada={() => setMia(null)}
+                  onCambiarEstado={estado.cambiar}
+                  cambiandoEstado={estado.pendiente}
                 />
                 {errorListas && (
                   <ErrorRetry
@@ -545,6 +545,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
           titulo={ficha.titulo}
           enVistas={enVistas}
           enPendientes={enPendientes}
+          enViendo={enViendo}
           inicial={mia ? { valor: mia.valor, texto: mia.texto, moderada: mia.moderada } : undefined}
           onSubmit={guardar}
           onRemoveRating={() => setModal("quitar")}

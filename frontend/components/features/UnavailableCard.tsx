@@ -1,4 +1,4 @@
-import { ListPlus, ImageOff } from "lucide-react";
+import { Clock, ListPlus, ImageOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useFormats } from "@/lib/format";
@@ -10,9 +10,12 @@ import { useFormats } from "@/lib/format";
  */
 export function UnavailableCard({
   addedAt,
+  addedKind = "added",
   compact = false,
 }: {
   addedAt?: string;
+  /** «started»: en la lista Watching (reloj, «Empezada el»). */
+  addedKind?: "added" | "started";
   /** La fila del chat: la miniatura gris con el aviso al lado, en vez de la grilla. */
   compact?: boolean;
 }) {
@@ -43,9 +46,15 @@ export function UnavailableCard({
           dateTime={addedAt}
           className="inline-flex items-center gap-1 text-[0.6875rem] text-fg-3 tabular-nums"
         >
-          <ListPlus className="size-[0.6875rem]" aria-hidden="true" />
+          {addedKind === "started" ? (
+            <Clock className="size-[0.6875rem]" aria-hidden="true" />
+          ) : (
+            <ListPlus className="size-[0.6875rem]" aria-hidden="true" />
+          )}
           <span className="sr-only">
-            {t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
+            {t(addedKind === "started" ? "media.startedOnLabel" : "media.addedOnLabel", {
+              date: formats.dateShort(addedAt),
+            })}
           </span>
           <span aria-hidden="true">{formats.dateShort(addedAt)}</span>
         </time>

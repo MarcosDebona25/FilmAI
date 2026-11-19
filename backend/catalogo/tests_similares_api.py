@@ -276,6 +276,18 @@ class SimilaresConSesionTests(BaseSimilaresAPI):
         self.assertNotIn("public", respuesta["Cache-Control"])
         self.assertNotIn("max-age", respuesta["Cache-Control"])
 
+    def test_saca_lo_que_el_usuario_esta_viendo(self):
+        url = self.poblar()
+        usuario, cliente = self.con_sesion()
+        Tiene.objects.create(
+            lista=usuario.listas.get(clave=ClaveLista.VIENDO),
+            produccion=self.vecinas[0],
+        )
+
+        respuesta = cliente.get(url)
+
+        self.assertNotIn(("movie", self.vecinas[0].id_tmdb), self.ids(respuesta))
+
     def test_dos_usuarios_comparten_el_pool_y_cada_uno_pierde_solo_sus_vistas(self):
         url = self.poblar(vecinas=5)
         ana, cliente_ana = self.con_sesion()

@@ -251,7 +251,8 @@ for (const viewport of viewports) {
       await expect(
         page.getByRole("button", { name: "Remove The Odyssey from Sci Fi" })
       ).toBeAttached();
-      await expect(page.getByText("4 items · 4 movies · 0 TV shows")).toBeVisible();
+      // En celular el conteo dice solo «4 items»; el desglose es de escritorio.
+      await expect(page.getByText(/^4 items/).filter({ visible: true })).toBeVisible();
       await expect(
         banda(page).getByText(
           "Based on its 4 titles and its name, without what you already watched."

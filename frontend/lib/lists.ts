@@ -8,7 +8,7 @@ import { tmdbImage, type Title } from "@/lib/catalog";
 import { NOTAS, de, type Nota } from "@/lib/search";
 import { routes } from "@/lib/routes";
 
-export type ClaveLista = "favoritos" | "vistas" | "pendientes";
+export type ClaveLista = "favoritos" | "pendientes" | "viendo" | "vistas";
 
 /** Un resumen de `GET /api/lists/` (L-01). */
 export interface ResumenLista {
@@ -69,9 +69,12 @@ export interface PaginaSugerencias {
   nombre_usado: boolean;
 }
 
-/** Favoritos, Vistas y las personalizadas tienen sugerencias; Pendientes no (15/11/2026). */
+/**
+ * Favoritos, Vistas y las personalizadas tienen sugerencias. Pendientes (15/11/2026)
+ * y Viendo (19/11/2026) no: son lo que la persona ya eligió ver o está viendo.
+ */
 export const tieneSugerencias = (lista: Pick<ResumenLista, "clave">) =>
-  lista.clave !== "pendientes";
+  lista.clave !== "pendientes" && lista.clave !== "viendo";
 
 /** TMDB numera películas y series por separado: la identidad es el par. */
 export const claveDeSugerencia = (sugerencia: Pick<Sugerencia, "tipo" | "id_tmdb">) =>

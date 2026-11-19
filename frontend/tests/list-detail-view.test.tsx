@@ -13,8 +13,6 @@ const router = vi.hoisted(() => ({ push: vi.fn() }));
 const estado = vi.hoisted(() => ({
   lista: null as unknown,
   paginas: [] as Record<string, unknown>[],
-  propia: null as unknown,
-  bloquear: false,
   sugerencias: null as unknown,
   pedidos: [] as { path: string; method: string; body?: unknown }[],
 }));
@@ -30,7 +28,9 @@ vi.mock("next/image", () => ({
   // eslint-disable-next-line @next/next/no-img-element
   default: ({ alt }: { alt: string }) => <img alt={alt} />,
 }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn(), custom: vi.fn(), dismiss: vi.fn() },
+}));
 vi.mock("@/components/AccountProvider", () => ({
   useAccount: () => ({ perfil: { pk: 1 }, error: null, recargar: vi.fn() }),
 }));
@@ -65,10 +65,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
         const siguiente = path.includes("cursor=") ? estado.paginas[1] : estado.paginas[0];
         return structuredClone(siguiente);
       }
-      if (method === "GET" && path.startsWith("/api/reviews/mias/")) return estado.propia;
       if (method === "DELETE" && path.includes("/items/")) {
-        if (estado.bloquear && !path.includes("borrar_calificacion=true"))
-          throw new real.ApiError(409, { code: "rating_blocks_removal_from_watched" });
         return undefined;
       }
       if (method === "PUT") return { ...(estado.lista as object), ...(opciones.body as object) };
@@ -137,8 +134,6 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/lists/7");
   estado.lista = lista();
   estado.paginas = [pagina([item(1), item(2), item(3, { tipo: "tv", anio: null })])];
-  estado.propia = null;
-  estado.bloquear = false;
   estado.sugerencias = sugerencias();
   estado.pedidos = [];
   reemplazos = [];
@@ -260,6 +255,33 @@ describe("Detalle de una lista", () => {
     expect(screen.queryByRole("searchbox")).toBeNull();
   });
 
+  it("una lista vacía dice solo «0 ítems», sin el desglose por tipo", async () => {
+    estado.lista = lista({ cantidad_items: 0, cantidad_peliculas: 0, cantidad_series: 0 });
+    estado.paginas = [pagina([])];
+    render(<ListDetailView id={7} />, { locale: "es" });
+
+    await screen.findByText(es.lists.detail.emptyTitle);
+    // Un texto para celular y otro para escritorio: ambos sin desglose.
+    expect(screen.getAllByText("0 ítems")).toHaveLength(2);
+    expect(screen.queryByText(/ · /)).toBeNull();
+  });
+
+  it("una lista con ítems mantiene el desglose en escritorio", async () => {
+    estado.paginas = [pagina([item(1)])];
+    render(<ListDetailView id={7} />, { locale: "es" });
+
+    expect(await screen.findByText("3 ítems · 2 películas · 1 serie")).toBeInTheDocument();
+  });
+
+  it("en la lista Watching las tarjetas dicen «Empezada el» con la fecha de agregado", async () => {
+    estado.lista = lista({ clave: "viendo", tipo: "predeterminada" });
+    estado.paginas = [pagina([item(1)])];
+    render(<ListDetailView id={7} />, { locale: "es" });
+
+    expect(await screen.findByText("Empezada el 01/10/2026")).toBeInTheDocument();
+    expect(screen.queryByText(/Agregada a esta lista/)).toBeNull();
+  });
+
   it("carga la página siguiente por cursor con «Load more» y no repite ítems", async () => {
     estado.paginas = [
       pagina([item(1), item(2)], { next: "http://x/api/lists/7/items/?cursor=abc", total: 3 }),
@@ -292,62 +314,6 @@ describe("Detalle de una lista", () => {
     ]);
     expect(screen.getByText("2 items · 1 movie · 1 TV show")).toBeInTheDocument();
     expect(toast.success).toHaveBeenCalledWith(en.lists.feedback.itemRemoved);
-  });
-
-  it("Watched con título calificado: pide confirmar el borrado de la calificación y reintenta", async () => {
-    estado.lista = lista({ nombre: "Watched", clave: "vistas", tipo: "predeterminada" });
-    estado.bloquear = true;
-    estado.propia = { id: 5, valor: 9, texto: "Me encantó", fecha: "2026-10-02" };
-    const user = userEvent.setup();
-    render(<ListDetailView id={7} />, { locale: "en" });
-    await screen.findByRole("link", { name: /Título 1/ });
-
-    await user.click(screen.getByRole("button", { name: "Remove Título 1 from Watched" }));
-    await user.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", {
-        name: en.common.actions.remove,
-      })
-    );
-
-    const confirmar = await screen.findByRole("alertdialog", {
-      name: en.title.watched.removeConfirmTitle,
-    });
-    expect(within(confirmar).getByText(/and your review will be deleted/)).toBeInTheDocument();
-    expect(within(confirmar).getByText("Me encantó")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Título 1/ })).toBeInTheDocument();
-
-    await user.click(within(confirmar).getByRole("button", { name: en.title.watched.remove }));
-
-    await waitFor(() => expect(screen.queryByRole("link", { name: /Título 1/ })).toBeNull());
-    expect(escrituras().map((p) => p.path)).toEqual([
-      "/api/lists/7/items/1/",
-      "/api/lists/7/items/1/?borrar_calificacion=true",
-    ]);
-    expect(toast.success).toHaveBeenCalledWith(en.title.feedback.ratingReviewDeleted);
-  });
-
-  it("cancelar la confirmación de Watched deja el título en la lista", async () => {
-    estado.lista = lista({ nombre: "Watched", clave: "vistas", tipo: "predeterminada" });
-    estado.bloquear = true;
-    const user = userEvent.setup();
-    render(<ListDetailView id={7} />, { locale: "es" });
-    await screen.findByRole("link", { name: /Título 1/ });
-
-    await user.click(
-      screen.getByRole("button", { name: `Quitar Título 1 de ${es.enums.defaultList.vistas}` })
-    );
-    await user.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", {
-        name: es.common.actions.remove,
-      })
-    );
-    const confirmar = await screen.findByRole("alertdialog", {
-      name: es.title.watched.removeConfirmTitle,
-    });
-    await user.click(within(confirmar).getByRole("button", { name: es.common.actions.cancel }));
-
-    expect(screen.getByRole("link", { name: /Título 1/ })).toBeInTheDocument();
-    expect(escrituras()).toHaveLength(1);
   });
 
   it("las predeterminadas no tienen menú ⋯ y las personalizadas sí", async () => {
@@ -458,13 +424,17 @@ describe("Sugerencias en el detalle de una lista", () => {
     }
   });
 
-  it("Watchlist no tiene sugerencias ni las pide", async () => {
-    estado.lista = lista({ clave: "pendientes", tipo: "predeterminada", nombre: "Pendientes" });
-    render(<ListDetailView id={7} />, { locale: "en" });
+  it("Watchlist y Watching no tienen sugerencias ni las piden", async () => {
+    // El backend responde 404 (Not Found) en las dos: la fila ni se dibuja.
+    for (const clave of ["pendientes", "viendo"] as const) {
+      estado.lista = lista({ clave, tipo: "predeterminada", nombre: clave });
+      const { unmount } = render(<ListDetailView id={7} />, { locale: "en" });
 
-    await screen.findByRole("link", { name: /Título 1/ });
-    expect(screen.queryByRole("region")).not.toBeInTheDocument();
-    expect(pedidosDeSugerencias()).toEqual([]);
+      await screen.findByRole("link", { name: /Título 1/ });
+      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      expect(pedidosDeSugerencias()).toEqual([]);
+      unmount();
+    }
   });
 
   it("una lista vacía no las pide", async () => {

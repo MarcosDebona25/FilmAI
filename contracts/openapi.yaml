@@ -1663,22 +1663,13 @@ paths:
     delete:
       operationId: lists_items_destroy
       description: |-
-        Quita el ítem, y con `?borrar_calificacion=true` también la calificación.
+        Quita el ítem de la lista; la calificación, si la hay, no se toca.
 
-        CU-011 pide que no se pueda desmarcar como «vista» una producción
-        calificada sin eliminar antes esa calificación: si la calificaste, la
-        viste, y quitarla de «Vistas» afirmaría lo contrario.
-
-        Hasta la fase 3 de C-08 eso era un callejón sin salida —el 409 mandaba
-        al usuario a otra pantalla—. Con el flag, la UI puede advertir qué se
-        pierde («Se eliminarán tu calificación de 9/10 y tu reseña») y hacerlo
-        en el momento. El 409 sin flag no cambia: es lo que le avisa al frontend
-        que tiene que preguntar primero.
-
-        Las dos escrituras van en **una** transacción. Dos llamadas HTTP desde
-        el frontend no serían atómicas: si la segunda fallara, el usuario
-        perdería la calificación y la producción seguiría en «Vistas» —el costo
-        pagado y nada obtenido—.
+        Hasta el PR 4, quitar de «Vistas» algo calificado era un 409 (Conflict)
+        `rating_blocks_removal_from_watched` y había un flag
+        `?borrar_calificacion=true`. Se retiraron los dos: el estado cambia
+        libremente y la nota se conserva. Lo que sigue valiendo es lo inverso:
+        borrar la nota saca de «Vistas» (`DELETE /api/reviews/{id}/`).
       parameters:
       - in: path
         name: item_id
@@ -1719,8 +1710,8 @@ paths:
         `GET /api/lists/{id}/suggestions/?pagina=N` responde
         `{results, pagina, paginas, nombre_usado}`; queda una página más mientras
         `pagina < paginas`. Tienen sugerencias las listas personalizadas, Favoritos
-        y Vistas. Pendientes da 404 (Not Found), como si el recurso no existiera:
-        es lo que la persona ya eligió ver.
+        y Vistas. Pendientes y Viendo dan 404 (Not Found), como si el recurso no
+        existiera: son lo que la persona ya eligió ver o está viendo.
 
         Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
@@ -1769,6 +1760,45 @@ paths:
         ids que ya no existen (o que no son del usuario) se ignoran, y las
         personalizadas que no vinieron quedan al final en su orden anterior. Así una
         lista recién creada en otra pestaña no hace fallar el reordenamiento.
+      tags:
+      - lists
+      security:
+      - jwtHeaderAuth: []
+      - jwtCookieAuth: []
+      responses:
+        '200':
+          description: No response body
+        4XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        5XX:
+          description: Error con el sobre de códigos estables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/lists/status/:
+    put:
+      operationId: lists_status_update
+      description: |-
+        `PUT /api/lists/status/`: cambia el estado de un título de una sola vez.
+
+        Recibe `{id_tmdb, tipo, estado}` con `estado` en `pendientes`, `viendo`,
+        `vistas` o `null` (sin estado). Es atómico: saca el título de las otras dos
+        listas de estado y lo pone en la pedida en una transacción, así el cliente
+        no arma el cambio con un DELETE y un POST que pueden quedar a medias. Sirve
+        también de Undo: el toast manda el `estado_anterior` que recibió.
+
+        Responde `{estado, estado_anterior, listas}`. `listas` es lo mismo que
+        `GET /api/lists/?id_tmdb=&tipo=` (con `contiene` e `item_id` por lista), para
+        que la ficha actualice sus listas sin otro pedido. Un `estado` repetido es
+        inocuo: devuelve 200 (OK) con `estado_anterior` igual a `estado`.
+
+        Materializa el título si no está en el catálogo, como al agregarlo a una
+        lista; sacar el estado no llama a TMDB.
       tags:
       - lists
       security:
@@ -2056,9 +2086,9 @@ paths:
         (AD-01')—. Con dos sentidos, «¿por qué no se ve esta reseña?» no
         tendría respuesta.
 
-        Sacarla de «Vistas» es la regla del 30/09/2026: el modal lo avisa antes
-        de confirmar, y el usuario puede volver a marcarla. Termina en el mismo
-        estado que quitar de «Vistas» con `?borrar_calificacion=true` (L-01).
+        Sacarla de «Vistas» es la regla R4: el modal lo avisa antes de
+        confirmar, y el usuario puede volver a marcarla. Si después de calificar
+        cambió el estado a «Pendientes» o «Viendo», ese estado no se toca.
       parameters:
       - in: path
         name: calificacion_id
@@ -2976,7 +3006,6 @@ components:
           - permission_denied
           - person_name_invalid
           - person_not_found
-          - rating_blocks_removal_from_watched
           - rating_duplicated
           - required
           - review_moderated

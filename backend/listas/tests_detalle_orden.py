@@ -242,7 +242,7 @@ class OrdenDeListasTests(_ConUsuario):
         self.crear("Uno")
         self.crear("Dos")
 
-        self.assertEqual(self.nombres()[3:], ["Uno", "Dos"])
+        self.assertEqual(self.nombres()[4:], ["Uno", "Dos"])
 
     def test_reordena_las_personalizadas_y_las_predeterminadas_quedan_adelante(self):
         uno, dos, tres = self.crear("Uno"), self.crear("Dos"), self.crear("Tres")
@@ -251,13 +251,13 @@ class OrdenDeListasTests(_ConUsuario):
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(
-            [lista["nombre"] for lista in respuesta.data][3:], ["Tres", "Uno", "Dos"]
+            [lista["nombre"] for lista in respuesta.data][4:], ["Tres", "Uno", "Dos"]
         )
         self.assertEqual(
-            [lista["clave"] for lista in respuesta.data][:3],
-            ["favoritos", "pendientes", "vistas"],
+            [lista["clave"] for lista in respuesta.data][:4],
+            ["favoritos", "pendientes", "viendo", "vistas"],
         )
-        self.assertEqual(self.nombres()[3:], ["Tres", "Uno", "Dos"])
+        self.assertEqual(self.nombres()[4:], ["Tres", "Uno", "Dos"])
         # Una lista creada después sigue entrando al final.
         self.crear("Cuatro")
         self.assertEqual(self.nombres()[-1], "Cuatro")
@@ -277,7 +277,7 @@ class OrdenDeListasTests(_ConUsuario):
         )
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertEqual(self.nombres()[3:], ["Tres", "Uno", "Dos"])
+        self.assertEqual(self.nombres()[4:], ["Tres", "Uno", "Dos"])
         self.assertEqual(Lista.objects.get(pk=ajena.pk).orden, ajena.orden)
 
     def test_ids_repetidos_o_invalidos_son_400(self):

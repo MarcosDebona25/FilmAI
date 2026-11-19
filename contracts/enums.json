@@ -2,6 +2,7 @@
   "defaultListKeys": [
     "favoritos",
     "pendientes",
+    "viendo",
     "vistas"
   ],
   "genderValues": [
@@ -13,11 +14,13 @@
     "en": [
       "Favorites",
       "Watchlist",
+      "Watching",
       "Watched"
     ],
     "es": [
       "Favoritos",
       "Pendientes",
+      "Viendo",
       "Vistas"
     ]
   },

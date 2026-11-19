@@ -64,10 +64,9 @@ declare const messages: {
       "posterAlt": "Póster de {title}",
       "tmdbRatingLabel": "Calificación TMDB: {rating} de 10",
       "favorite": "Favorita",
-      "watched": "Vista",
-      "watchlist": "Pendiente",
       "noPoster": "Sin póster",
-      "addedOnLabel": "Agregada a esta lista el {date}"
+      "addedOnLabel": "Agregada a esta lista el {date}",
+      "startedOnLabel": "Empezada el {date}"
     },
     "rating": {
       "rate": "Calificar",
@@ -223,7 +222,8 @@ declare const messages: {
       "edit": "Editar calificación",
       "titleLabel": "Calificar {title}",
       "yourRating": "Tu calificación",
-      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes."
+      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",
+      "watchedHelpFromWatching": "Al calificarla, {title} pasa de Viendo a Vistas."
     },
     "feedback": {
       "ratingReviewPublished": "Calificación y reseña publicadas.",
@@ -236,11 +236,7 @@ declare const messages: {
       "reviewDeleted": "Reseña eliminada.",
       "favoriteRemoved": "Quitada de Favoritos.",
       "favoriteAdded": "Agregada a Favoritos.",
-      "watchlistRemoved": "Quitada de Pendientes.",
-      "watchlistAdded": "Agregada a Pendientes.",
-      "watchedRemoved": "Quitada de Vistas.",
-      "watchedAdded": "Agregada a Vistas.",
-      "watchedAddedFromWatchlist": "Agregada a Vistas y quitada de Pendientes."
+      "watchedAdded": "Agregada a Vistas."
     },
     "metadata": {
       "ratingVotesLabel": "Calificación TMDB: {rating} de 10, {count, plural, one {# voto} other {# votos}}",
@@ -288,12 +284,27 @@ declare const messages: {
       "deleteConfirmTitle": "¿Eliminar reseña?",
       "deleteConfirmDescription": "Se eliminará el texto de tu reseña. Tu calificación de {title} y la producción en Vistas se conservan. El texto no se puede recuperar."
     },
-    "watched": {
-      "removeConfirmTitle": "¿Quitar de Vistas?",
-      "remove": "Quitar de Vistas"
-    },
     "similar": {
       "title": "Parecidos a {title}"
+    },
+    "status": {
+      "label": "Estado",
+      "current": "Estado: {status}",
+      "menuLabel": "Estado de {title}",
+      "hint": {
+        "pendientes": "Quiero verla",
+        "viendo": "La empecé y no la terminé",
+        "vistas": "Ya la terminé"
+      },
+      "remove": "Quitar estado",
+      "movedTo": "Pasó a {status}",
+      "backTo": "Volvió a {status}",
+      "removed": "Estado quitado",
+      "undo": "Deshacer",
+      "undoAnnouncement": "{message}. Podés deshacerlo durante {seconds, plural, one {# segundo} other {# segundos}}.",
+      "error": "No pudimos actualizar el estado. Intentá de nuevo.",
+      "rated": "Calificada con ★ {rating}",
+      "ratedAndMoved": "Calificada con ★ {rating} · Pasó a Vistas"
     },
     "breadcrumb": {
       "backTo": "Volver a {label}"
@@ -395,6 +406,18 @@ declare const messages: {
       "addLabel": "Agregar {title} a {listName}",
       "showMore": "Ver más sugerencias",
       "basisRecent": "Según lo que viste hace poco."
+    },
+    "watching": {
+      "moreLabel": "Más acciones para {title}",
+      "markFinished": "Marcar como terminada",
+      "rateIt": "Calificarla…",
+      "rateItToast": "Calificarla",
+      "remove": "Quitar de Viendo",
+      "movedToWatched": "{title} pasó a Vistas",
+      "removed": "{title} se quitó de Viendo",
+      "emptyTitle": "Nada en curso",
+      "emptyDescription": "Cuando empieces una película o una serie, elegí «Viendo» en su botón de estado y te va a esperar acá. Cuando la termines, calificala o cambiá su estado y pasa a Vistas.",
+      "openWatchlist": "Abrir Pendientes"
     },
     "reorder": {
       "instructions": "Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.",
@@ -564,7 +587,7 @@ declare const messages: {
       "termsPending": "Aceptá los Términos y Condiciones para continuar.",
       "backToSignUp": "Atrás, al registro",
       "backToLogIn": "Atrás, a iniciar sesión",
-      "fixHighlighted": "Corregí el campo marcado y tocá de nuevo el botón de Google."
+      "fixHighlighted": "Corregí el campo marcado y volvé a confirmar con Google en el paso 3."
     },
     "session": {
       "expired": "Tu sesión venció. Iniciá sesión de nuevo."
@@ -592,6 +615,7 @@ declare const messages: {
     "defaultList": {
       "favoritos": "Favoritos",
       "pendientes": "Pendientes",
+      "viendo": "Viendo",
       "vistas": "Vistas"
     },
     "theme": {
@@ -773,7 +797,6 @@ declare const messages: {
       "list_limit_reached": "Llegaste al máximo de {maxLists, number} listas. Eliminá alguna para crear otra.",
       "list_items_limit_reached": "Esta lista llegó al máximo de {maxItems, number} títulos.",
       "default_list_protected": "Las listas predeterminadas no se pueden renombrar ni eliminar.",
-      "rating_blocks_removal_from_watched": "Para quitarla de Vistas, primero eliminá tu calificación.",
       "rating_duplicated": "Ya calificaste esta película o serie.",
       "review_moderated": "Esta reseña fue moderada, así que no podés editar ni borrar su texto.",
       "username_already_used": "Ese nombre de usuario ya está en uso.",

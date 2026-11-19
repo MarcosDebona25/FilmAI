@@ -53,7 +53,6 @@ _CODIGOS_HEREDADOS = {
     "nombre_lista_duplicado": "list_name_duplicated",
     "item_duplicado": "list_item_duplicated",
     "lista_predeterminada_protegida": "default_list_protected",
-    "calificacion_impide_quitar_de_vistas": "rating_blocks_removal_from_watched",
     "calificacion_duplicada": "rating_duplicated",
 }
 

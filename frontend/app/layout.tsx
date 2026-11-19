@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Big_Shoulders, Hanken_Grotesk } from "next/font/google";
 import { cookies } from "next/headers";
-import { Toaster } from "sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { Footer } from "@/components/Footer";
+import { AppToaster } from "@/components/AppToaster";
 import { MobileTabs } from "@/components/MobileTabs";
 import { Navbar } from "@/components/Navbar";
 import { AccountProvider } from "@/components/AccountProvider";
@@ -82,7 +82,7 @@ export default async function RootLayout({
               </NavigationGuard>
             </ChatProvider>
           </AccountProvider>
-          <Toaster position="top-center" />
+          <AppToaster />
         </NextIntlClientProvider>
       </body>
     </html>

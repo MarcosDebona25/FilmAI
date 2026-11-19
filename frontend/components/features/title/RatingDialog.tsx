@@ -40,6 +40,7 @@ export function RatingDialog({
   titulo,
   enVistas,
   enPendientes = false,
+  enViendo = false,
   inicial,
   onSubmit,
   onRemoveRating,
@@ -49,6 +50,8 @@ export function RatingDialog({
   enVistas: boolean;
   /** En Watchlist: calificar también la saca de ahí (regla del 14/10/2026). */
   enPendientes?: boolean;
+  /** En Watching: calificar la pasa a Watched (sale de Watching). */
+  enViendo?: boolean;
   inicial?: { valor: number; texto: string | null; moderada?: boolean };
   onSubmit: (datos: { valor: number; texto: string }) => Promise<void>;
   onRemoveRating?: () => void;
@@ -131,12 +134,18 @@ export function RatingDialog({
         />
       </div>
 
-      {!enVistas && (
+      {/* Editar una nota no mueve nada de lista: sin ayuda. */}
+      {!enVistas && !editando && (
         <p className="flex items-center gap-2.5 text-sm text-fg-2">
           <Eye aria-hidden="true" className="size-[1.125rem] shrink-0" />
-          {t(enPendientes ? "title.rating.watchedHelpFromWatchlist" : "title.rating.watchedHelp", {
-            title: titulo,
-          })}
+          {t(
+            enViendo
+              ? "title.rating.watchedHelpFromWatching"
+              : enPendientes
+                ? "title.rating.watchedHelpFromWatchlist"
+                : "title.rating.watchedHelp",
+            { title: titulo }
+          )}
         </p>
       )}
 

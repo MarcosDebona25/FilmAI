@@ -1125,3 +1125,118 @@ Archivos: `traducciones/claves.csv`, `traducciones/claves-extra.csv`, `frontend/
 **Queda afuera**: la exclusión de «Viendo» (la lista todavía no existe en `develop`; se resuelve en el #226).
 
 Archivos: `backend/listas/views.py`, `backend/listas/tests_sugerencias.py`, `frontend/components/features/lists/ListSuggestions.tsx`, `frontend/components/features/lists/ListDetailView.tsx`, `frontend/tests/list-suggestions.test.tsx`, `frontend/tests/list-detail-view.test.tsx`, `traducciones/claves-extra.csv`, `frontend/messages/`, `openspec/specs/similar-titles/spec.md`, `openspec/specs/list-detail-ui/spec.md`.
+
+### 16/11/2026 — Q-07: flujo de calificar y scroll infinito extraídos
+
+Primera unidad del PR 4 del canvas («Watching»), antes de tocar el flujo de calificar y de sumar la lista Watching. Es un refactor puro: ningún test existente cambió.
+
+- **`frontend/lib/review-actions.ts`:** `crearCalificacion`, `editarCalificacion` (usa `planEdicion`), `borrarTextoDeResena` y `quitarCalificacion`. Cada una devuelve el resultado y la clave del aviso (`title.feedback.*`). Cada pantalla arma su toast y su estado: la ficha reemplaza la calificación y Mis reseñas la mezcla con el ítem. Las usan `TitleView` y `MyReviewsView`.
+- **`frontend/lib/use-cursor-list.ts`:** cursor, «cargar más», reintento y descarte de respuestas viejas. Lo usan Mis reseñas y el detalle de lista; la página Watching lo va a reutilizar.
+- **`frontend/lib/use-sentinel.ts`:** `IntersectionObserver` con anticipo de 600 px, usado en Search, Mis reseñas y el detalle de lista. El centinela del chatbot y el de la barra no siguen ese patrón y quedaron como estaban.
+- En Search, el callback del centinela ahora lee el estado del último render en vez del que había cuando se creó el observador. No cambia nada visible.
+
+Archivos: `frontend/lib/review-actions.ts`, `frontend/lib/use-cursor-list.ts`, `frontend/lib/use-sentinel.ts`, `frontend/components/features/title/TitleView.tsx`, `frontend/components/features/reviews/MyReviewsView.tsx`, `frontend/components/features/lists/ListDetailView.tsx`, `frontend/components/features/SearchView.tsx`, tests nuevos en `frontend/tests/` y `docs/05_Plan_de_Desarrollo.md` (Q-07).
+
+### 16/11/2026 — Watching (canvas, sección 15): backend y estado único por título
+
+Segunda unidad del PR 4. Implementa las reglas que se decidieron el 15/11/2026.
+
+- **Estado único:** Watchlist (`pendientes`), Watching (`viendo`, nueva) o Watched (`vistas`), o ninguno; Favoritos sigue aparte. Solo `listas/services.py::poner_estado` escribe esas tres listas: las bloquea, pone el título en una y lo saca de las otras dos. La usan el alta de ítems en esas listas, calificar y el endpoint nuevo. Reemplaza a `agregar_a_vistas` y `quitar_de_pendientes`; `quitar_de_vistas` queda solo para borrar la nota (R4). Ya no se puede «volver a anotar en Pendientes algo visto» dejándolo en Vistas, como permitía la regla del 14/10/2026: cambiar a Pendientes lo saca de Vistas.
+- **Calificar mueve a Watched; después el estado es libre y la nota se conserva.** Se retiraron el 409 (Conflict) `rating_blocks_removal_from_watched` (catálogo de errores, contratos, golden y traducciones) y el flag `?borrar_calificacion`. Quitar un título de Vistas responde 204 (No Content) y la nota queda. Si un cliente viejo manda el flag, se ignora.
+- **`PUT /api/lists/status/`** con `{id_tmdb, tipo, estado}`. `estado` es obligatorio aunque sea `null`, así un olvido no borra el estado. Responde `{estado, estado_anterior, listas}`, donde `listas` es lo mismo que `GET /api/lists/?id_tmdb=&tipo=`, y el Undo es mandar `estado_anterior`. Repetir el estado actual no cambia nada. El título se materializa solo si `estado` no es `null`.
+- **Migración `listas.0009_lista_viendo`:** crea Viendo en todas las cuentas, pasa a Vistas las calificaciones activas sin estado y, si un título está en Pendientes y en Vistas, deja solo la lista donde se agregó último (en un empate gana Vistas). Dos decisiones de implementación: una lista propia que ya se llamaba «Viendo» pasa a «Viendo 2» (o al primer número libre) y conserva sus ítems, porque si no la restricción de nombre único rompía la migración; y «Watching» y «Viendo» quedan como nombres reservados. La reversa no hace nada (está documentado en la migración). Marcos confirmó estas decisiones el 16/11/2026, junto con que pasar un título a Pendientes lo saca de Vistas (antes podía estar en las dos).
+- **Viendo cuenta como visto** en `vistos()` (`catalogo/services/recomendado.py`). Así queda fuera de «Recomendado» del Inicio, de las sugerencias de lista, de «More like» y de las recomendaciones del chatbot. Su contexto suma la línea «Viendo», con las 10 más recientes. Las sugerencias de lista responden 404 (Not Found) en Pendientes y Viendo; Vistas sigue en 404 hasta que entre el PR 2.
+- **Orden de las predeterminadas:** Favoritos, Pendientes, Viendo, Vistas. El alta de usuario y `reparar_recursos_usuarios` crean las 4.
+- **Frontend mínimo:** `enums.defaultList.viendo` (Watching / Viendo), ícono `Play` en la tarjeta de la lista y mocks de e2e con 4 predeterminadas. La interfaz de Watching llega en las unidades siguientes, que también borran el diálogo del 409, hoy código muerto.
+
+Archivos: `backend/listas/` (models, services, views, serializers, urls, exceptions, identidades, migración 0009, tests nuevos `test_estado.py` y `test_migracion_viendo.py`), `backend/catalogo/reviews.py`, `backend/catalogo/services/recomendado.py`, `backend/chatbot/contexto.py`, `backend/usuarios/` (provisioning, seeds y `reparar_recursos_usuarios`), `backend/filmai/` (errores y contrato), `contracts/`, `traducciones/`, `frontend/` (tipos, catálogos y mocks), `openspec/specs/{list-endpoints,reviews-api,error-contract}/spec.md` y `docs/04_Lineamientos_UI.md`.
+
+### 17/11/2026 — Watching (canvas, sección 15): botón de estado, toast con Undo y calificar en la ficha
+
+Tercera unidad del PR 4. Sigue el canvas «Watching · title page» (escritorio y celular).
+
+- **Botón de estado** en `TitleActions`, después de Rate y Favorite: reemplaza a los botones Watched y Watchlist. Sin estado dice «Status» con +; con estado, el ícono y el nombre de Watchlist, Watching o Watched. Abre `StatusMenu` (menú pegado al botón en escritorio, hoja inferior con filas de 60 px en celular): los tres estados como `menuitemradio` y «Remove status». Es un `<dialog>` modal como «Add to list»; con ↑/↓/Home/End se mueve el foco, Escape cierra y el foco vuelve al botón.
+- **Cambio optimista** (`useEstadoFicha`): el botón cambia al elegir, se llama a `PUT /api/lists/status/` y la respuesta trae las listas definitivas. Si falla, vuelve atrás con el toast «Couldn’t update the status. Try again.» sin Undo. Mientras hay un cambio en camino el botón no abre otro, así un Undo nunca pisa al siguiente. El toast sale cuando responde el servidor (como la demo del canvas, que no muestra «Moved to…» antes de un error).
+- **Toast con Undo** (`StatusToast`): `toast.custom` de sonner con `id` fijo (el segundo cambio reemplaza al primero), `duration: 6000` solo para este toast y barra de tiempo. Undo vuelve un paso con el mismo endpoint y muestra «Back to X» 2 s sin Undo. «Remove status» tiene el mismo toast («Status removed»). Región en vivo cortés: un texto solo para lectores de pantalla dice «… Undo available for 6 seconds.»; Undo se alcanza con Tab y no roba el foco. Al salir de la ficha el toast se cierra y el cambio queda.
+- **Calificar**: `TitleView` lee el estado de las listas antes de crear la calificación (el backend la mueve a Vistas). Desde Watchlist o Watching, «Rated ★ 8 · Moved to Watched» con Undo, que restaura el estado y conserva la nota. Desde Watched o sin estado, «Rated ★ 8» sin Undo; con reseña se mantiene el aviso de siempre («Rating and review posted.»). Editar o borrar una calificación no cambia el estado y usa los avisos de antes.
+- **Ubicación de los toasts**: `AppToaster` reemplaza al `<Toaster>` del layout: arriba al centro en escritorio y, en celular, abajo y 12 px sobre la barra de pestañas (4,75 rem). El mismo `<Toaster>` cambia de posición con el ancho, así no se pierden avisos. Una regla en `globals.css` corrige que Sonner deje el aviso corrido a la izquierda hasta 600 px.
+- **Retirado**: el diálogo del 409 (Conflict) `rating_blocks_removal_from_watched` y el uso de `?borrar_calificacion` en `TitleActions` (el de `ListDetailView` queda para la unidad de listas), `onCalificacionBorrada` y los avisos de Watched/Watchlist de la ficha (`title.feedback.watchedAdded`, `watchlistAdded`, `…Removed` y `watchedAddedFromWatchlist` ya no se usan en la ficha).
+- **Refactor menor**: `useEscritorio` pasó de `Navbar` a `lib/use-escritorio.ts`; `ListsMenu` y `StatusMenu` comparten `lib/use-menu-dialogo.ts`, que además devuelve el foco al botón _después_ de cerrar el diálogo (antes se pedía mientras seguía modal, y el navegador lo ignoraba).
+- **Casos que el canvas no cubría, confirmados por Marcos (16/11/2026)**: con reseña desde Watched o sin estado se mantiene el aviso de siempre; el toast sale cuando responde el servidor (el botón cambia al instante); calificar un título sin estado no ofrece Undo, igual que desde Watched.
+- **Textos nuevos**: `title.status.*` (15 claves) en `traducciones/claves.csv`, catálogos regenerados. Los nombres de los estados salen de `enums.defaultList.*`.
+
+Archivos: `frontend/components/features/title/{TitleActions,TitleView,StatusMenu,StatusToast,use-estado-ficha,ListsMenu}`, `frontend/components/{AppToaster,Navbar}.tsx`, `frontend/app/{layout.tsx,globals.css}`, `frontend/lib/{title-status,use-escritorio,use-menu-dialogo}.ts`, `frontend/e2e/{viendo-ficha.spec,ficha.spec,axe,a11y-axe.spec}.ts`, tests de Vitest (`title-status`, `estado-ficha`, `title-actions`, `title-view`), `traducciones/claves.csv`, `frontend/messages/`, `openspec/specs/title-page-ui/spec.md`.
+
+### 17/11/2026 — Watching (canvas, sección 15): lista Watching, menú ⋯ por tarjeta y /lists en 4, 2 y 1 columnas
+
+Cuarta unidad del PR 4. Sigue los canvas «Watching · list page» y «Watching · Lists» (escritorio y celular).
+
+- **Watching es la página genérica de lista** (`ListDetailView`), sin ícono ni texto arriba del buscador. El conteo pasó a la línea del título (en todas las listas): «N items · X movies · Y TV shows» al lado del título, y en celular solo «N items».
+- **Menú «⋯» por tarjeta** (`WatchingCardMenu`, solo en Watching, en lugar del «✕»): 36 px visibles y 44 px de área en celular, `aria-haspopup="menu"`, `aria-expanded`, etiqueta «More for {title}». Ítems: «Mark as finished» (`PUT /api/lists/status/` con `vistas`), «Rate it…» y «Remove from Watching» (`null`). Es un `<dialog>` modal que reutiliza `useMenuDialogo`, `CLASE_DIALOGO_MENU` y `alTeclearMenu` (extraídos de `StatusMenu`): así Escape, el clic afuera y la devolución del foco al «⋯» salen del mismo código que el menú de estado. Un solo menú abierto: lo decide `ListDetailView` con un único `menuAbierto`.
+- **Toast con Undo** (`useEstadoViendo`): reutiliza `StatusToast` (id fijo, 6 s), al que se le sumó `accion` (el «Rate it», solo escritorio y solo en «moved to Watched»). La tarjeta sale al instante; si el servidor falla vuelve a su lugar con el toast de error sin Undo. Un cambio a la vez, como en la ficha. **Undo** llama al mismo endpoint con `estado_anterior`, cierra el toast sin otro aviso y pone la tarjeta en su índice anterior de la grilla. El servidor lo anota de nuevo con fecha nueva, así que al recargar queda primero con el orden «reciente»: la posición «anterior» es la de esa sesión. Al salir de la página el toast se cierra y el cambio queda.
+- **Calificar desde Watching**: pide antes `GET /api/reviews/mias/`. Sin nota, `POST /api/reviews/` (el servidor la pasa a Vistas) y el aviso es el de la ficha, «Rated ★ 8 · Moved to Watched» con Undo, que devuelve el título a Watching y conserva la nota. Con nota previa se edita (`editarCalificacion`) y no se mueve nada. El «Rate it» del toast abre el mismo diálogo para un título que ya está en Watched: avisa «Rated ★ 8» sin Undo.
+- **Estado vacío**: «Nothing in progress» + texto + «Open Watchlist», que va a la lista Pendientes (se busca su id con `GET /api/lists/` solo cuando Watching está vacía; mientras no llega, apunta a `/lists`). El resto de las listas vacías siguen con «Explore».
+- **`/lists`**: 4 columnas desde 73,75 rem, 2 desde 40 rem y 1 debajo (`CLASE_GRILLA_LISTAS`), así las cuatro predeterminadas llenan la primera fila. La tarjeta apila hasta 4 pósters (antes 5) y 3 en celular; «N more» cuenta lo que no se ve en cada medida. Se corrigió que `Poster` perdía el `hidden` de los pósters 4 y 5 en celular (`block` le ganaba por orden en `twMerge`).
+- **Retirado**: el flujo del 409 (Conflict) `rating_blocks_removal_from_watched` de `ListDetailView` y sus tests (quitar de Vistas conserva la nota desde el 16/11/2026), y las claves que quedaron sin uso: `title.feedback.{watchedAdded,watchlistAdded,watchedRemoved,watchlistRemoved,watchedAddedFromWatchlist}`, `common.media.{watched,watchlist}` y `title.watched.{removeConfirmTitle,remove}`.
+- **Textos nuevos**: `lists.watching.*` (10 claves) en `traducciones/claves.csv`, catálogos regenerados.
+- **Diferencias con el canvas, resueltas por Marcos (17/11/2026)**: la fecha de las tarjetas de Watching pasa a «Started {fecha}» con reloj (entrada siguiente). En cualquier lista vacía siguen ocultos el buscador y los filtros, como hace la industria con una colección vacía (los filtros solo se muestran cuando son la causa del vacío), y el conteo dice solo «0 items»; se corrigió el artboard del canvas (versión 486) en lugar del código. Textos aprobados: «Nada en curso» y «Abrir Pendientes».
+
+Archivos: `frontend/components/features/lists/{ListDetailView,ListCard,ListsGridSkeleton,WatchingCardMenu,use-estado-viendo}`, `frontend/components/features/title/{StatusMenu,StatusToast}`, `frontend/e2e/{viendo-listas.spec,listas.spec}.ts`, tests de Vitest (`watching-list`, `lists-view`, `list-detail-view`), `traducciones/` (claves y extra), `frontend/messages/`, `frontend/i18n/enums.json`, `docs/04_Lineamientos_UI.md`, `openspec/specs/lists-ui/spec.md`.
+
+### 17/11/2026 — Watching (canvas, sección 15): «Empezada el», conteo de lista vacía y estabilización de los e2e
+
+Ajustes de diseño aprobados por Marcos y dos arreglos de pruebas inestables del PR 4.
+
+- **Fecha en Watching**: en las tarjetas de la lista Watching (solo en esa) la fecha de `fecha_agregado` lleva el ícono de reloj y dice «Empezada el {fecha}» / «Started {fecha}» (tooltip y lectores de pantalla). `MediaCard` y `UnavailableCard` reciben `addedKind` (`"added"` por defecto, `"started"` en Watching). Clave nueva `common.media.startedOnLabel` en `traducciones/claves-extra.csv`.
+- **Lista vacía**: con 0 ítems el conteo de la línea del título dice solo «0 items» / «0 ítems», sin «· 0 movies · 0 TV shows», en escritorio y celular, para todas las listas. Los filtros y el buscador siguen ocultos en una lista vacía.
+- **e2e de la ficha (celular)**: `auditar` (`e2e/axe.ts`) fallaba a veces en `color-contrast` sobre el botón Undo porque axe corría mientras el toast de sonner todavía entraba, con opacidad parcial. Ahora espera a que terminen las transiciones y animaciones cortas (`document.getAnimations()`); la barra de tiempo del toast (6 s) no se espera para no perder el toast.
+- **Scroll infinito de `ListDetailView`**: el centinela solo se dibuja cuando llegó el nombre de la lista (otro pedido). Si la primera página llegaba antes, `useSentinel` no encontraba el nodo y nunca observaba; la página 2 no se pedía. Ahora `reiniciar` cambia cuando llega la lista y el observador se crea con el nodo ya presente.
+
+Archivos: `frontend/components/features/{MediaCard,UnavailableCard}.tsx`, `frontend/components/features/lists/ListDetailView.tsx`, `frontend/e2e/axe.ts`, `frontend/tests/{media-card,list-detail-view}.test.tsx`, `traducciones/claves-extra.csv`, catálogos de `frontend/messages/`.
+
+### 17/11/2026 — PR 4 (#226): comentarios de PR-Agent
+
+- **Conteo al deshacer en Watching (aplicado)**: `meterEnLaGrilla` sumaba 1 al conteo de la lista aunque la tarjeta no se insertara (datos todavía nulos o el ítem ya presente, por ejemplo tras volver a pedir la primera página). Ahora decide con los datos del último render (`datosAhora`) y solo suma cuando inserta. Test en `frontend/tests/watching-list.test.tsx`.
+- **Editar una calificación en la ficha (aplicado)**: `TitleView` reemplazaba `mia` por la respuesta del `PUT`, que es parcial; se perdían `id` o el texto borrado. Ahora la mezcla sobre el estado previo (`{ ...sinTexto, ...respuesta }`), como `MyReviewsView`. Test en `frontend/tests/title-view.test.tsx`.
+- **«Build roto» en `MyReviewsView` (no aplica)**: PR-Agent supuso que seguían las declaraciones viejas de `datos`, `estado` y `mas` porque el diff que vio no mostraba su borrado. El archivo no las tiene; `tsc`, ESLint y el build del CI pasan.
+
+### 17/11/2026 — Canvas reorganizado con los 4 PRs del canvas como mergeados (versión 488)
+
+Pedido de Marcos. El canvas «FilmAI — Sistema y catálogo» muestra la app con #223, #224, #225 y #226 ya mergeados, sin paneles «Behaviour» ni notas.
+
+- **Ficha** (sección 3), escritorio y celular:
+  - botón de estado con su menú en lugar de Watched y Watchlist;
+  - «Stream or rent» que abre el diálogo (hoja inferior en celular);
+  - fila «More like Interstellar»;
+  - nombres de dirección y reparto con enlace a Search.
+  - Se suman a la sección los artboards «status menu, toast and undo» y «where to watch dialog».
+- **Search** (sección 4): se suman «Navbar search · states» y «Navbar search · dropdown in Home».
+- **Access** (sección 6): Sign up pasa al registro en 3 pasos con el modal de avatar paginado. Se suma «Sign up with Google · steps 2 and 3».
+- **Lists** (sección 7):
+  - Lists con 4 predeterminadas en 4, 2 y 1 columnas;
+  - List detail con el conteo al lado del título y la banda de sugerencias;
+  - se suma «Watching · list page and empty state».
+- **Borrados**: los títulos de las secciones 13 a 17 y los artboards de propuesta ya absorbidos (`Prop-Similares-Ficha`, `Prop-Viendo-Listas*`, `Prop-Sugerencias-Lista*`, `Prop-Registro-L2*` y `Prop-Registro-Avatares*`). Las menciones a «sección 13 a 17 del canvas» en este archivo y en `docs/05` quedan como referencia histórica: hoy esos diseños viven en las secciones 3, 4, 6 y 7.
+
+### 19/11/2026 — Arreglos de la revisión del #226 (Watching) y sugerencias con Viendo
+
+Revisión de Gonza sobre el PR 4 del canvas, aplicada sobre `feat/viendo` antes de actualizarla con `develop` (que ya traía el #224).
+
+- **El Undo conserva la fecha.** Cambiar de estado borra la fila y crea otra, y `auto_now_add` pone «ahora»: «Empezada el 01/10» pasaba a ser la de hoy al deshacer. `poner_estado` acepta `fecha_agregado` (solo para el ítem nuevo; si el título ya estaba en ese estado no la toca) y `PUT /api/lists/status/` la recibe opcional (ISO, no futura: una futura o mal formada es 400 (Bad Request), `null` equivale a omitirla). Para que la ficha sepa qué mandar, `GET /api/lists/?id_tmdb=&tipo=` (y la respuesta del PUT) suma `fecha_agregado` por lista: la fecha del ítem si la contiene, `null` si no. La lista Watching usa la de la tarjeta. Se prefirió esto a una respuesta `fecha_anterior`, que no cubría el Undo de calificar desde la ficha (esa respuesta no pasa por el endpoint de estado).
+- **Diálogo de calificar.** Al editar una nota (`inicial`) ya no muestra «también se agrega a Vistas»: editar no mueve nada y, como la nota se conserva al cambiar de estado, un título calificado puede no estar en Vistas. Desde Viendo dice «Al calificarla, {title} pasa de Viendo a Vistas.» (`title.rating.watchedHelpFromWatching`, en `claves-extra.csv`). `RatingDialog` recibe `enViendo`; lo pasan `TitleView` (desde sus listas) y `ListDetailView` (tarjeta de Watching).
+- **Undo tras calificar en la ficha.** `avisarCalificacion` aplica `conEstado(listas, "vistas")` antes del toast: un Undo antes de que llegue `recargarListas()` (o con la recarga fallida) ya encuentra algo que deshacer.
+- **Chat.** `vistos()` sigue incluyendo Viendo (no se recomienda), pero `ContextoTurno.viendo` (de `en_viendo()`) marca esos títulos con `viendo: true` y sin `vista`; el prompt dice en una línea que lo está mirando (no recomendarlo como novedad ni decir que ya lo vio) y la descripción de `mis_listas` suma `viendo`.
+- **Migración 0009.** También renombra las listas propias llamadas «Watching» (nombre reservado en inglés), a «Watching 2» o el primer número libre, además de «Viendo». Se editó la migración y no se hizo una nueva porque la 0009 aún no se aplicó en ningún entorno compartido.
+- **Sugerencias de lista con Viendo (resultado de unir con el #224).** El #224 dejó todas las listas con sugerencias salvo Pendientes; este PR las quitaba también de Viendo y Vistas. Queda: **sin sugerencias en Pendientes y Viendo** (404 (Not Found) en el backend, sin fila en el front: `tieneSugerencias` excluye `pendientes` y `viendo`) y **Vistas sí tiene**, con el tope `MAXIMO_SEMILLAS_VISTAS` del #224. Viendo es lo que la persona está mirando, igual que Pendientes es lo que ya eligió ver. `useCursorList` (Q-07) suma `recargarPrimera` para el `recarga` que el #224 había puesto en el estado local de `ListDetailView`, y `title.feedback.watchedAdded` vuelve al catálogo (el aviso de agregar desde las sugerencias de Vistas).
+- **Quedó afuera** (anotado en el comentario del PR): las acciones descartadas sin aviso mientras hay un cambio en curso (`use-estado-viendo.ts`, `use-estado-ficha.ts`) y el `requestBody` tipado de `/api/lists/status/` en `contracts/openapi.yaml` (pasa lo mismo en otros endpoints).
+
+Archivos: `backend/listas/` (services, serializers, views, migración 0009 y sus tests), `backend/catalogo/services/recomendado.py`, `backend/chatbot/` (turno, prompts, esquemas y tests), `frontend/` (`use-estado-ficha`, `use-estado-viendo`, `RatingDialog`, `TitleView`, `ListDetailView`, `lib/{title-status,title-lists,lists,use-cursor-list}`, tests), `traducciones/claves-extra.csv`, `contracts/openapi.yaml`, `openspec/specs/{list-endpoints,list-detail-ui,similar-titles}/spec.md`.
+
+### 19/11/2026 — El CI del #226 tras unir con `develop`
+
+Dos fallas que aparecieron al unir `feat/viendo` con `develop` (que traía el #223, el #224 y el #225).
+
+- **e2e de sugerencias en celular.** El test del #224 buscaba «4 items · 4 movies · 0 TV shows», pero en este PR el conteo pasó a la línea del título y en celular solo dice «4 items» (el desglose es `hidden md:inline`). Se cambió el test por un texto que empieza con «4 items» y solo cuenta el visible, para que valga en ambos viewports. El componente sigue lo que dice el canvas.
+- **Undo y conteo inestables.** `datosAhora` (la ref que usa `meterEnLaGrilla` para saber si la tarjeta ya está) se actualizaba en un `useEffect`, un instante después de pintar. Un Undo justo después veía datos viejos, volvía a insertar la tarjeta y sumaba uno de más. Con `useLayoutEffect` la ref se pone al día en el mismo commit del render.
+
+Archivos: `frontend/components/features/lists/ListDetailView.tsx`, `frontend/e2e/listas-sugerencias.spec.ts`

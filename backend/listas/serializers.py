@@ -1,5 +1,6 @@
 """Serializers de entrada y salida para la API de listas."""
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from catalogo.models import ID_TMDB_MAXIMO
@@ -72,6 +73,28 @@ class AgregarItemSerializer(PertenenciaQuerySerializer):
     """Payload de alta de un ítem, en el vocabulario público de TMDB."""
 
 
+class EstadoSerializer(PertenenciaQuerySerializer):
+    """`PUT /api/lists/status/`: el título y su estado nuevo (o `null` para quitarlo).
+
+    `estado` es obligatorio aunque sea `null`: un cuerpo sin la clave es casi
+    seguro un error del cliente, y quitar el estado por omisión sería destructivo.
+    """
+
+    estado = serializers.ChoiceField(
+        choices=("pendientes", "viendo", "vistas"), allow_null=True
+    )
+    # Solo el Undo la manda: la fecha que tenía el título en el estado al que
+    # vuelve. Sin ella (o con `null`) el ingreso nuevo lleva la fecha de ahora.
+    fecha_agregado = serializers.DateTimeField(required=False, allow_null=True)
+
+    def validate_fecha_agregado(self, value):
+        if value is not None and value > timezone.now():
+            raise serializers.ValidationError(
+                "La fecha no puede ser futura.", code="invalid"
+            )
+        return value
+
+
 class OrdenListasSerializer(FronteraErroresMixin, serializers.Serializer):
     """`PUT /api/lists/order/`: las listas personalizadas en el orden nuevo (L-02).
 
@@ -134,6 +157,12 @@ class ListaResumenSerializer(serializers.Serializer):
         if self.context.get("incluir_pertenencia"):
             data["contiene"] = bool(instance.contiene)
             data["item_id"] = instance.item_id
+            # Para que el Undo de la ficha devuelva el título con su fecha.
+            data["fecha_agregado"] = (
+                serializers.DateTimeField().to_representation(instance.fecha_item)
+                if instance.fecha_item
+                else None
+            )
         return data
 
 
@@ -161,18 +190,3 @@ class ListaItemSerializer(ProduccionLocalizadaMixin, serializers.Serializer):
     def get_anio(self, item):
         fecha = item.produccion.fecha_lanzamiento
         return fecha.year if fecha else None
-
-
-class QuitarItemQuerySerializer(FronteraErroresMixin, serializers.Serializer):
-    """`?borrar_calificacion=` al quitar un ítem de «Vistas» (C-08, fase 3).
-
-    `BooleanField` acepta las formas usuales (`true`, `1`, `false`, `0`) y
-    rechaza cualquier otra con un 400. Eso es deliberado: si un typo como
-    `borrar_calificacion=tru` se interpretara como `false`, el usuario habría
-    confirmado el borrado en el modal y recibiría un 409 sin entender por qué.
-
-    El default es `False`, así que no mandarlo conserva exactamente el
-    comportamiento anterior: el flag es permiso explícito, no una orden.
-    """
-
-    borrar_calificacion = serializers.BooleanField(default=False)

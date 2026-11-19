@@ -15,7 +15,7 @@ const viewports = [
 type Lista = {
   id: number;
   nombre: string;
-  clave: "favoritos" | "pendientes" | "vistas" | null;
+  clave: "favoritos" | "pendientes" | "viendo" | "vistas" | null;
   tipo: "predeterminada" | "personalizada";
   orden: number;
   items: Item[];
@@ -62,6 +62,14 @@ function listasIniciales(personalizadas = ["Maratón", "Clásicos", "Terror"]): 
       items: [],
     },
     {
+      id: 4,
+      nombre: "Watching",
+      clave: "viendo",
+      tipo: "predeterminada",
+      orden: 0,
+      items: [],
+    },
+    {
       id: 3,
       nombre: "Watched",
       clave: "vistas",
@@ -94,24 +102,11 @@ const resumen = (lista: Lista) => ({
 /** Backend de `lists/` en memoria, con lo justo para las pantallas de Listas. */
 async function backend(
   page: Page,
-  {
-    listas = listasIniciales(),
-    porPagina = 20,
-    calificados = [] as number[],
-    idioma = "en" as AppLocale | null,
-  } = {}
+  { listas = listasIniciales(), porPagina = 20, idioma = "en" as AppLocale | null } = {}
 ) {
   await prepararCuenta(page, idioma);
   const estado = { listas: structuredClone(listas), escrituras: [] as string[] };
   await page.route("https://image.tmdb.org/**", (route) => route.fulfill({ status: 404 }));
-  await page.route("**/api/reviews/mias/**", (route) => {
-    const id = Number(new URL(route.request().url()).searchParams.get("id_tmdb"));
-    return route.fulfill({
-      json: calificados.includes(id)
-        ? { id: 9, valor: 9, texto: "Una gran reseña", fecha: "2026-10-01" }
-        : null,
-    });
-  });
   await page.route("**/api/lists/**", async (route) => {
     const pedido = route.request();
     const url = new URL(pedido.url());
@@ -199,12 +194,6 @@ async function backend(
     if (itemId !== null) {
       const encontrado = lista.items.find((i) => i.item_id === itemId);
       if (!encontrado) return error(404, "not_found");
-      if (
-        lista.clave === "vistas" &&
-        calificados.includes(encontrado.id_tmdb) &&
-        url.searchParams.get("borrar_calificacion") !== "true"
-      )
-        return error(409, "rating_blocks_removal_from_watched");
       lista.items = lista.items.filter((i) => i.item_id !== itemId);
       return route.fulfill({ status: 204 });
     }
@@ -280,16 +269,17 @@ for (const viewport of viewports) {
       await page.goto("/lists");
 
       await expect(page.getByRole("heading", { level: 1, name: en.nav.main.lists })).toBeVisible();
-      await expect(page.getByText("6 lists · 3 defaults")).toBeVisible();
+      await expect(page.getByText("7 lists · 4 defaults")).toBeVisible();
       expect(await nombres(page)).toEqual([
         "Favorites",
         "Watchlist",
+        "Watching",
         "Watched",
         "Maratón",
         "Clásicos",
         "Terror",
       ]);
-      await expect(page.getByText(en.common.lists.defaultBadge, { exact: true })).toHaveCount(3);
+      await expect(page.getByText(en.common.lists.defaultBadge, { exact: true })).toHaveCount(4);
       await expect(page.getByRole("button", { name: /^Actions for the list/ })).toHaveCount(3);
       await expect(page.getByText("2 items · 2 movies · 0 TV shows").first()).toBeVisible();
       await sinDesborde(page);
@@ -350,12 +340,12 @@ for (const viewport of viewports) {
       await page.getByText(subir, { exact: true }).click();
 
       await expect
-        .poll(async () => (await nombres(page)).slice(3))
+        .poll(async () => (await nombres(page)).slice(4))
         .toEqual(["Clásicos", "Maratón", "Terror"]);
       expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
       await page.reload();
       await expect(page.getByRole("heading", { level: 2, name: "Terror" })).toBeVisible();
-      expect((await nombres(page)).slice(3)).toEqual(["Clásicos", "Maratón", "Terror"]);
+      expect((await nombres(page)).slice(4)).toEqual(["Clásicos", "Maratón", "Terror"]);
     });
 
     test("cambia de idioma sin perder la lista y nombra las predeterminadas por su clave", async ({
@@ -376,13 +366,14 @@ for (const viewport of viewports) {
       await expect(page.getByRole("heading", { level: 1, name: es.nav.main.lists })).toBeVisible();
       // La grilla (con dnd-kit) llega en un chunk aparte: se espera a que aparezca.
       await expect
-        .poll(async () => (await nombres(page)).slice(0, 3))
+        .poll(async () => (await nombres(page)).slice(0, 4))
         .toEqual([
           es.enums.defaultList.favoritos,
           es.enums.defaultList.pendientes,
+          es.enums.defaultList.viendo,
           es.enums.defaultList.vistas,
         ]);
-      await expect(page.getByText("6 listas · 3 predeterminadas")).toBeVisible();
+      await expect(page.getByText("7 listas · 4 predeterminadas")).toBeVisible();
       await sinDesborde(page);
     });
   });
@@ -431,7 +422,7 @@ test.describe("Listas: arrastrar en escritorio", () => {
     await page.mouse.up();
 
     await expect
-      .poll(async () => (await nombres(page)).slice(3))
+      .poll(async () => (await nombres(page)).slice(4))
       .toEqual(["Clásicos", "Terror", "Maratón"]);
     expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
 
@@ -463,7 +454,7 @@ test.describe("Listas: arrastrar en escritorio", () => {
     await page.keyboard.press("Space");
 
     await expect
-      .poll(async () => (await nombres(page)).slice(3))
+      .poll(async () => (await nombres(page)).slice(4))
       .toEqual(["Clásicos", "Maratón", "Terror"]);
     expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
   });
@@ -499,7 +490,7 @@ test.describe("Listas: arrastrar en celular", () => {
 
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(antes + 50);
     expect(api.escrituras).toEqual([]);
-    expect((await nombres(page)).slice(3, 6)).toEqual(["Uno", "Dos", "Tres"]);
+    expect((await nombres(page)).slice(4, 7)).toEqual(["Uno", "Dos", "Tres"]);
     await expect(page).toHaveURL(/\/lists$/);
   });
 
@@ -523,7 +514,7 @@ test.describe("Listas: arrastrar en celular", () => {
     );
 
     await expect
-      .poll(async () => (await nombres(page)).slice(3, 6))
+      .poll(async () => (await nombres(page)).slice(4, 7))
       .toEqual(["Dos", "Tres", "Uno"]);
     expect(api.escrituras).toEqual(["PUT /api/lists/order/"]);
     await expect(page).toHaveURL(/\/lists$/);
@@ -559,8 +550,8 @@ for (const viewport of viewports) {
 
     const conItems = (n: number, extra: Partial<Lista> = {}) => {
       const listas = listasIniciales();
-      listas[3].items = Array.from({ length: n }, (_, i) => item(i + 1));
-      return listas.map((lista) => (lista.id === listas[3].id ? { ...lista, ...extra } : lista));
+      listas[4].items = Array.from({ length: n }, (_, i) => item(i + 1));
+      return listas.map((lista) => (lista.id === listas[4].id ? { ...lista, ...extra } : lista));
     };
 
     test("muestra la grilla, pagina al bajar y vuelve desde la ficha", async ({ page }) => {
@@ -568,7 +559,12 @@ for (const viewport of viewports) {
       await page.goto("/lists/10");
 
       await expect(page.getByRole("heading", { level: 1, name: "Maratón" })).toBeVisible();
-      await expect(page.getByText(/^30 items · /)).toBeVisible();
+      // En celular el conteo del título dice solo los ítems; en escritorio, el desglose.
+      await expect(
+        viewport.movil
+          ? page.getByText("30 items", { exact: true })
+          : page.getByText(/^30 items · /)
+      ).toBeVisible();
       await expect(page.getByRole("link", { name: /Título 30/ })).toBeVisible();
       await page.getByRole("button", { name: en.lists.detail.loadMore }).scrollIntoViewIfNeeded();
       await expect(page.getByRole("link", { name: /Título 18/ })).toBeVisible();
@@ -635,38 +631,29 @@ for (const viewport of viewports) {
 
       await expect(page.getByText(en.lists.feedback.itemRemoved)).toBeVisible();
       await expect(page.getByRole("link", { name: /Título 02/ })).toHaveCount(0);
-      await expect(page.getByText(/^2 items · /)).toBeVisible();
+      await expect(
+        viewport.movil ? page.getByText("2 items", { exact: true }) : page.getByText(/^2 items · /)
+      ).toBeVisible();
       expect(api.escrituras).toEqual(["DELETE /api/lists/10/items/2/"]);
     });
 
-    test("quitar de Watched un título calificado pide confirmar y borra la calificación", async ({
+    test("quitar de Watched un título calificado es un quitar común: la nota se conserva", async ({
       page,
     }) => {
-      const api = await backend(page, { calificados: [1005] });
+      const api = await backend(page);
       await page.goto("/lists/3");
       await expect(page.getByRole("heading", { level: 1, name: "Watched" })).toBeVisible();
       await expect(page.getByRole("button", { name: /^Actions for/ })).toHaveCount(0);
 
       await page.getByRole("button", { name: "Remove Título 05 from Watched" }).click();
       await page
-        .getByRole("alertdialog")
+        .getByRole("alertdialog", { name: "Remove “Título 05” from Watched?" })
         .getByRole("button", { name: en.common.actions.remove })
         .click();
 
-      const confirmar = page.getByRole("alertdialog", {
-        name: en.title.watched.removeConfirmTitle,
-      });
-      await expect(confirmar).toBeVisible();
-      await expect(confirmar.getByText("Una gran reseña")).toBeVisible();
-      await expect(page.getByRole("link", { name: /Título 05/ })).toBeVisible();
-      await confirmar.getByRole("button", { name: en.title.watched.remove }).click();
-
-      await expect(page.getByText(en.title.feedback.ratingReviewDeleted)).toBeVisible();
+      await expect(page.getByText(en.lists.feedback.itemRemoved)).toBeVisible();
       await expect(page.getByRole("link", { name: /Título 05/ })).toHaveCount(0);
-      expect(api.escrituras).toEqual([
-        "DELETE /api/lists/3/items/5/",
-        "DELETE /api/lists/3/items/5/?borrar_calificacion=true",
-      ]);
+      expect(api.escrituras).toEqual(["DELETE /api/lists/3/items/5/"]);
     });
 
     test("una lista vacía invita a explorar y puede renombrarse o eliminarse", async ({ page }) => {

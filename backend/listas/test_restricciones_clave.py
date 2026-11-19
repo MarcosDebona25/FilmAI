@@ -99,7 +99,10 @@ class MigracionRestriccionesTests(TransactionTestCase):
             {"uq_lista_usuario_clave", "ck_lista_tipo_clave"}, self._restricciones()
         )
         apps = self._migrar(self.anterior)
-        self.assertEqual(apps.get_model("listas", "Lista").objects.count(), 4)
+        self.assertEqual(
+            apps.get_model("listas", "Lista").objects.count(),
+            len(ClaveLista.values) + 1,
+        )
         self.assertFalse(
             {"uq_lista_usuario_clave", "ck_lista_tipo_clave"} & self._restricciones()
         )

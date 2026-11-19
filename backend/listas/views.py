@@ -42,7 +42,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from catalogo.models import Calificacion, ProduccionTraduccion, TipoProduccion
+from catalogo.models import ProduccionAudiovisual, ProduccionTraduccion, TipoProduccion
 from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services import similares
 from catalogo.services.adapter import tmdb_a_dominio
@@ -60,7 +60,6 @@ from filmai.idioma import idioma_efectivo
 from filmai.throttles import EscrituraThrottle
 
 from .exceptions import (
-    CalificacionImpideQuitarDeVistas,
     ItemDuplicado,
     ListaPredeterminadaProtegida,
     NombreListaDuplicado,
@@ -76,23 +75,24 @@ from .models import (
 from .pagination import ListaItemCursorPagination
 from .serializers import (
     AgregarItemSerializer,
+    EstadoSerializer,
     ListaItemSerializer,
     ListaItemsQuerySerializer,
     ListaResumenSerializer,
     NombreListaSerializer,
     OrdenListasSerializer,
     PertenenciaQuerySerializer,
-    QuitarItemQuerySerializer,
 )
-from .services import quitar_de_pendientes
+from .services import CLAVES_DE_ESTADO, poner_estado
 
 logger = logging.getLogger(__name__)
 
 _ORDEN_PREDETERMINADAS = Case(
     When(clave=ClaveLista.FAVORITOS, tipo=TipoLista.PREDETERMINADA, then=Value(0)),
     When(clave=ClaveLista.PENDIENTES, tipo=TipoLista.PREDETERMINADA, then=Value(1)),
-    When(clave=ClaveLista.VISTAS, tipo=TipoLista.PREDETERMINADA, then=Value(2)),
-    default=Value(3),
+    When(clave=ClaveLista.VIENDO, tipo=TipoLista.PREDETERMINADA, then=Value(2)),
+    When(clave=ClaveLista.VISTAS, tipo=TipoLista.PREDETERMINADA, then=Value(3)),
+    default=Value(4),
     output_field=IntegerField(),
 )
 
@@ -128,7 +128,9 @@ def _listas_del_usuario(request, *, pertenencia=None):
             produccion__tipo=tipo,
         )
         listas = listas.annotate(
-            contiene=Exists(item), item_id=Subquery(item.values("pk")[:1])
+            contiene=Exists(item),
+            item_id=Subquery(item.values("pk")[:1]),
+            fecha_item=Subquery(item.values("fecha_agregado")[:1]),
         )
 
     return list(listas)
@@ -338,6 +340,66 @@ class ListaDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class EstadoView(TopesTMDBMixin, APIView):
+    """`PUT /api/lists/status/`: cambia el estado de un título de una sola vez.
+
+    Recibe `{id_tmdb, tipo, estado}` con `estado` en `pendientes`, `viendo`,
+    `vistas` o `null` (sin estado). Es atómico: saca el título de las otras dos
+    listas de estado y lo pone en la pedida en una transacción, así el cliente
+    no arma el cambio con un DELETE y un POST que pueden quedar a medias. Sirve
+    también de Undo: el toast manda el `estado_anterior` que recibió.
+
+    Responde `{estado, estado_anterior, listas}`. `listas` es lo mismo que
+    `GET /api/lists/?id_tmdb=&tipo=` (con `contiene` e `item_id` por lista), para
+    que la ficha actualice sus listas sin otro pedido. Un `estado` repetido es
+    inocuo: devuelve 200 (OK) con `estado_anterior` igual a `estado`.
+
+    Materializa el título si no está en el catálogo, como al agregarlo a una
+    lista; sacar el estado no llama a TMDB.
+    """
+
+    # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
+    throttle_classes: ClassVar[list] = [EscrituraThrottle]
+
+    def put(self, request):
+        serializer = EstadoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        id_tmdb = serializer.validated_data["id_tmdb"]
+        tipo = serializer.validated_data["tipo"]
+        estado = serializer.validated_data["estado"]
+
+        if estado is None:
+            # Quitar el estado no necesita el título en el catálogo: si no está,
+            # no tiene estado y no hay nada que quitar.
+            produccion = ProduccionAudiovisual.objects.filter(
+                id_tmdb=id_tmdb, tipo=tmdb_a_dominio(tipo)
+            ).first()
+        else:
+            produccion = materializar(id_tmdb, tipo)
+
+        anterior = None
+        if produccion is not None:
+            anterior, _ = poner_estado(
+                request.user,
+                produccion,
+                estado,
+                fecha_agregado=serializer.validated_data.get("fecha_agregado"),
+            )
+
+        listas = _listas_del_usuario(
+            request, pertenencia=(id_tmdb, tmdb_a_dominio(tipo))
+        )
+        return Response(
+            {
+                "estado": estado,
+                "estado_anterior": anterior,
+                "listas": _resumen_response(
+                    listas, incluir_pertenencia=True, idioma=idioma_efectivo(request)
+                ),
+            }
+        )
+
+
 class _Unaccent(Func):
     """`unaccent()` de PostgreSQL (la extensión ya está instalada para `__unaccent`)."""
 
@@ -478,20 +540,23 @@ class ListaItemsView(TopesTMDBMixin, APIView):
         produccion = materializar(id_tmdb, tipo)
         try:
             with transaction.atomic():
-                if con_techo:
-                    # Se vuelve a contar con la lista bloqueada: dos altas en
-                    # paralelo con 999 ítems pasaban las dos el chequeo de arriba.
-                    Lista.objects.select_for_update().get(pk=lista.pk)
-                    if lista.items.count() >= MAX_ITEMS_POR_LISTA:
-                        raise _techo_de_items()
-                item = Tiene.objects.create(lista=lista, produccion=produccion)
-                # Lo que ya viste deja de estar pendiente (14/10/2026). En el
-                # mismo atomic: si el alta falla, «Pendientes» queda intacta.
-                if (
-                    lista.tipo == TipoLista.PREDETERMINADA
-                    and lista.clave == ClaveLista.VISTAS
+                if lista.tipo == TipoLista.PREDETERMINADA and (
+                    lista.clave in CLAVES_DE_ESTADO
                 ):
-                    quitar_de_pendientes(request.user, produccion)
+                    # Pendientes, Viendo y Vistas son estados de un título: entrar
+                    # a una lo saca de las otras dos (PR 4). Es la misma función
+                    # que usa el endpoint de estado.
+                    anterior, item = poner_estado(request.user, produccion, lista.clave)
+                    if anterior == lista.clave:
+                        raise ItemDuplicado
+                else:
+                    if con_techo:
+                        # Se vuelve a contar con la lista bloqueada: dos altas en
+                        # paralelo con 999 ítems pasaban las dos el chequeo de arriba.
+                        Lista.objects.select_for_update().get(pk=lista.pk)
+                        if lista.items.count() >= MAX_ITEMS_POR_LISTA:
+                            raise _techo_de_items()
+                    item = Tiene.objects.create(lista=lista, produccion=produccion)
         except IntegrityError:
             raise ItemDuplicado from None
         return Response(
@@ -509,48 +574,17 @@ class ListaItemDetailView(APIView):
     throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
     def delete(self, request, lista_id, item_id):
-        """Quita el ítem, y con `?borrar_calificacion=true` también la calificación.
+        """Quita el ítem de la lista; la calificación, si la hay, no se toca.
 
-        CU-011 pide que no se pueda desmarcar como «vista» una producción
-        calificada sin eliminar antes esa calificación: si la calificaste, la
-        viste, y quitarla de «Vistas» afirmaría lo contrario.
-
-        Hasta la fase 3 de C-08 eso era un callejón sin salida —el 409 mandaba
-        al usuario a otra pantalla—. Con el flag, la UI puede advertir qué se
-        pierde («Se eliminarán tu calificación de 9/10 y tu reseña») y hacerlo
-        en el momento. El 409 sin flag no cambia: es lo que le avisa al frontend
-        que tiene que preguntar primero.
-
-        Las dos escrituras van en **una** transacción. Dos llamadas HTTP desde
-        el frontend no serían atómicas: si la segunda fallara, el usuario
-        perdería la calificación y la producción seguiría en «Vistas» —el costo
-        pagado y nada obtenido—.
+        Hasta el PR 4, quitar de «Vistas» algo calificado era un 409 (Conflict)
+        `rating_blocks_removal_from_watched` y había un flag
+        `?borrar_calificacion=true`. Se retiraron los dos: el estado cambia
+        libremente y la nota se conserva. Lo que sigue valiendo es lo inverso:
+        borrar la nota saca de «Vistas» (`DELETE /api/reviews/{id}/`).
         """
         lista = _lista_propia(request, lista_id)
-        item = get_object_or_404(
-            Tiene.objects.select_related("produccion"), pk=item_id, lista=lista
-        )
-        query = QuitarItemQuerySerializer(data=request.query_params)
-        query.is_valid(raise_exception=True)
-
-        # La regla es solo de «Vistas»: quitar de Favoritos algo calificado
-        # nunca estuvo bloqueado, así que el flag tampoco borra nada ahí.
-        calificacion = None
-        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave == ClaveLista.VISTAS:
-            calificacion = Calificacion.objects.filter(
-                usuario=request.user, produccion=item.produccion, activa=True
-            ).first()
-            if (
-                calificacion is not None
-                and not query.validated_data["borrar_calificacion"]
-            ):
-                raise CalificacionImpideQuitarDeVistas
-
-        with transaction.atomic():
-            if calificacion is not None:
-                # La `Resena` cae por CASCADE; es lo que el modal advierte.
-                calificacion.delete()
-            item.delete()
+        item = get_object_or_404(Tiene, pk=item_id, lista=lista)
+        item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -586,8 +620,8 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
     `GET /api/lists/{id}/suggestions/?pagina=N` responde
     `{results, pagina, paginas, nombre_usado}`; queda una página más mientras
     `pagina < paginas`. Tienen sugerencias las listas personalizadas, Favoritos
-    y Vistas. Pendientes da 404 (Not Found), como si el recurso no existiera:
-    es lo que la persona ya eligió ver.
+    y Vistas. Pendientes y Viendo dan 404 (Not Found), como si el recurso no
+    existiera: son lo que la persona ya eligió ver o está viendo.
 
     Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
@@ -609,9 +643,9 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
     def get(self, request, lista_id):
         inicio = time.perf_counter()
         lista = _lista_propia(request, lista_id)
-        if (
-            lista.tipo == TipoLista.PREDETERMINADA
-            and lista.clave == ClaveLista.PENDIENTES
+        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave in (
+            ClaveLista.PENDIENTES,
+            ClaveLista.VIENDO,
         ):
             raise Http404
         pagina = _numero_de_pagina(request.query_params.get("pagina"))

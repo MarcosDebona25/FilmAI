@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { Check, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 import { ApiError, extraerErroresPorCampo } from "@/lib/api";
-import { posicionarMenu } from "@/lib/posicion-menu";
+import { ubicarMenu, useMenuDialogo } from "@/lib/use-menu-dialogo";
 import type { ListaFicha } from "@/lib/title-lists";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
 
@@ -17,23 +17,6 @@ import { mensajeDeError } from "@/components/features/title/RatingDialog";
  * hoja desde abajo con fondo oscuro y la página quieta. Es un `<dialog>` modal
  * nativo: el fondo queda inerte, Escape y el clic afuera lo cierran.
  */
-function ubicar(dialogo: HTMLDialogElement) {
-  // El diálogo modal vive en la capa superior, fuera del flujo: su posición se
-  // calcula a mano desde el contenedor del botón. `scrollHeight` da el alto
-  // completo del contenido aunque hoy esté recortado por el alto máximo.
-  const ancla = dialogo.parentElement?.getBoundingClientRect();
-  if (!ancla) return;
-  const { x, y, altoMaximo } = posicionarMenu({
-    ancla,
-    ancho: dialogo.offsetWidth,
-    alto: dialogo.scrollHeight,
-    ventana: { ancho: window.innerWidth, alto: window.innerHeight },
-  });
-  dialogo.style.setProperty("--menu-x", `${x}px`);
-  dialogo.style.setProperty("--menu-y", `${y}px`);
-  dialogo.style.setProperty("--menu-max", `${altoMaximo}px`);
-}
-
 export function ListsMenu({
   titulo,
   listas,
@@ -58,39 +41,11 @@ export function ListsMenu({
   const tituloId = useId();
   const campoId = useId();
 
-  useEffect(() => {
-    const dialogo = ref.current;
-    if (!dialogo) return;
-    dialogo.showModal();
-    ubicar(dialogo);
-    dialogo.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
-
-    const desborde = document.body.style.overflow;
-    // Girar el celular o angostar la ventana puede cambiar de panel a hoja con
-    // el menú abierto: la página solo queda quieta mientras se ve la hoja.
-    const ajustarBloqueo = () => {
-      const esPanel = window.matchMedia?.("(min-width: 48rem)").matches;
-      document.body.style.overflow = esPanel ? desborde : "hidden";
-    };
-    const seguirAlBoton = () => ubicar(dialogo);
-    const alRedimensionar = () => {
-      ubicar(dialogo);
-      ajustarBloqueo();
-    };
-    ajustarBloqueo();
-    window.addEventListener("scroll", seguirAlBoton, { passive: true });
-    window.addEventListener("resize", alRedimensionar);
-    return () => {
-      dialogo.close();
-      window.removeEventListener("scroll", seguirAlBoton);
-      window.removeEventListener("resize", alRedimensionar);
-      document.body.style.overflow = desborde;
-    };
-  }, []);
+  useMenuDialogo(ref, (dialogo) => dialogo.querySelector<HTMLElement>("button, input"));
 
   // El formulario de lista nueva y sus errores cambian el alto del panel.
   useLayoutEffect(() => {
-    if (ref.current?.open) ubicar(ref.current);
+    if (ref.current?.open) ubicarMenu(ref.current);
   }, [creando, error, listas.length]);
 
   async function crear(event: FormEvent) {
