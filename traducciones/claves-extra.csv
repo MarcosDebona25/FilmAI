@@ -120,6 +120,7 @@ title.reviews.loadMore,,label,,Cargar más reseñas,Load more reviews,aprobado
 title.reviews.empty,,label,,Todavía no hay reseñas. Escribí la primera.,No reviews yet. Be the first to write one.,aprobado
 title.reviews.deletedAuthor,,label,,Usuario dado de baja,Deleted account,aprobado
 title.rating.watchedHelpFromWatchlist,,label,title,"Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",Rating {title} also adds it to Watched and removes it from Watchlist.,aprobado
+title.rating.watchedHelpFromWatching,,label,title,"Al calificarla, {title} pasa de Viendo a Vistas.",Rating {title} moves it from Watching to Watched.,aprobado
 search.filters.anyYear,,label,,Cualquiera,Any,aprobado
 search.results.emptyFiltersTitle,,label,,Nada con estos filtros,Nothing with these filters,aprobado
 search.close.shortcut,,label,,Esc,Esc,aprobado

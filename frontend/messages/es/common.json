@@ -219,7 +219,8 @@
       "edit": "Editar calificación",
       "titleLabel": "Calificar {title}",
       "yourRating": "Tu calificación",
-      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes."
+      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",
+      "watchedHelpFromWatching": "Al calificarla, {title} pasa de Viendo a Vistas."
     },
     "feedback": {
       "ratingReviewPublished": "Calificación y reseña publicadas.",

@@ -228,6 +228,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const volver = miga[miga.length - 1];
   const enVistas = listas?.find((lista) => lista.clave === "vistas")?.contiene ?? false;
   const enPendientes = listas?.find((lista) => lista.clave === "pendientes")?.contiene ?? false;
+  const enViendo = listas?.find((lista) => lista.clave === "viendo")?.contiene ?? false;
 
   async function guardar({ valor, texto }: { valor: number; texto: string }) {
     if (!mia) {
@@ -531,6 +532,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
           titulo={ficha.titulo}
           enVistas={enVistas}
           enPendientes={enPendientes}
+          enViendo={enViendo}
           inicial={mia ? { valor: mia.valor, texto: mia.texto, moderada: mia.moderada } : undefined}
           onSubmit={guardar}
           onRemoveRating={() => setModal("quitar")}

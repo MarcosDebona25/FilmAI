@@ -219,7 +219,8 @@
       "edit": "Edit rating",
       "titleLabel": "Rate {title}",
       "yourRating": "Your rating",
-      "watchedHelpFromWatchlist": "Rating {title} also adds it to Watched and removes it from Watchlist."
+      "watchedHelpFromWatchlist": "Rating {title} also adds it to Watched and removes it from Watchlist.",
+      "watchedHelpFromWatching": "Rating {title} moves it from Watching to Watched."
     },
     "feedback": {
       "ratingReviewPublished": "Rating and review posted.",

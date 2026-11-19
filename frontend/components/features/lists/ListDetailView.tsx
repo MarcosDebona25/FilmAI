@@ -767,6 +767,7 @@ export function ListDetailView({ id }: { id: number }) {
         <RatingDialog
           titulo={tituloDe(calificando.item)}
           enVistas={!calificando.enGrilla}
+          enViendo={calificando.enGrilla}
           inicial={
             calificando.propia
               ? {
