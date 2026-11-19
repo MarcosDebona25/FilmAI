@@ -37,6 +37,7 @@ from django.db.models.functions import (
 )
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -361,6 +362,7 @@ class EstadoView(TopesTMDBMixin, APIView):
     # Límite común de escrituras (26/10/2026); las lecturas no cuentan.
     throttle_classes: ClassVar[list] = [EscrituraThrottle]
 
+    @extend_schema(request=EstadoSerializer)
     def put(self, request):
         serializer = EstadoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
