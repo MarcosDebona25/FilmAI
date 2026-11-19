@@ -9,9 +9,11 @@ firma tiene su caché y qué se le saca a cada usuario. TMDB se reemplaza por
 sale de la máquina.
 """
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from catalogo.models import EstadoEmbedding, TipoProduccion
@@ -25,6 +27,7 @@ from catalogo.tests_similares import (
 )
 from listas.factories import ListaFactory
 from listas.models import ClaveLista, Tiene
+from listas.views import MAXIMO_SEMILLAS_VISTAS
 from usuarios.factories import UsuarioFactory
 
 
@@ -415,6 +418,103 @@ class SugerenciasDeVistasTests(BaseSugerencias):
         self.assertEqual(primera.json()["paginas"], 3)
         self.assertEqual(len(primera.json()["results"]), 10)
         self.assertEqual(len(tercera.json()["results"]), 5)
+
+
+class TopeDeSemillasDeVistasTests(BaseSugerencias):
+    """«Vistas» crece sin techo: solo los últimos títulos son semillas y firma."""
+
+    def setUp(self):
+        super().setUp()
+        self.vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+        self.ahora = timezone.now()
+
+    def agregar(self, produccion, hace_dias):
+        """Agrega a Vistas con la fecha de agregado puesta hace `hace_dias` días."""
+        item = Tiene.objects.create(lista=self.vistas, produccion=produccion)
+        # `fecha_agregado` es `auto_now_add`: no se puede dar al crear.
+        Tiene.objects.filter(pk=item.pk).update(
+            fecha_agregado=self.ahora - timedelta(days=hace_dias)
+        )
+        return item
+
+    def llenar(self, cantidad):
+        """`cantidad` títulos vistos con vector, del más viejo al más reciente."""
+        for n in range(cantidad):
+            self.agregar(
+                self.produccion(f"Vista {n}", vector_a(0.001 * n)), cantidad - n
+            )
+
+    def pedir(self):
+        with self.assertLogs("listas.views", "INFO") as registro:
+            self.api.get(self.url(self.vistas))
+        return registro.output[0]
+
+    def test_solo_los_mas_recientes_son_semillas(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS + 5)
+        self.vecinas(3)
+
+        linea = self.pedir()
+
+        self.assertIn(f"semillas={MAXIMO_SEMILLAS_VISTAS} ", linea)
+
+    def test_con_menos_del_tope_entran_todos(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS - 1)
+        self.vecinas(3)
+
+        self.assertIn(f"semillas={MAXIMO_SEMILLAS_VISTAS - 1} ", self.pedir())
+
+    def test_agregar_uno_viejo_fuera_del_tope_no_cambia_la_firma(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS + 5)
+        self.vecinas(3)
+        self.assertIn("cache=False", self.pedir())
+
+        self.agregar(self.produccion("Muy vieja", vector_a(0.9)), 1000)
+
+        self.assertIn("cache=True", self.pedir())
+
+    def test_agregar_uno_reciente_cambia_la_firma(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS + 5)
+        self.vecinas(3)
+        self.pedir()
+
+        self.agregar(self.produccion("Reciente", vector_a(0.9)), 0)
+
+        self.assertIn("cache=False", self.pedir())
+
+    def test_un_titulo_sin_vector_fuera_del_tope_no_acorta_la_cache(self):
+        self.agregar(self.produccion("Sin vector", None, EstadoEmbedding.PENDING), 1000)
+        self.llenar(MAXIMO_SEMILLAS_VISTAS)
+        self.vecinas(25)
+
+        with patch.object(similares.cache, "set", wraps=similares.cache.set) as guardar:
+            self.api.get(self.url(self.vistas))
+
+        (_, _, ttl), _ = guardar.call_args
+        self.assertEqual(ttl, similares.TTL_POOL)
+
+    def test_lo_ya_visto_fuera_del_tope_tampoco_se_sugiere(self):
+        viejo = self.produccion("Vista hace mucho", vector_a(0.02))
+        self.agregar(viejo, 1000)
+        self.llenar(MAXIMO_SEMILLAS_VISTAS)
+        self.vecinas(3)
+
+        respuesta = self.api.get(self.url(self.vistas))
+
+        self.assertNotIn(("movie", viejo.id_tmdb), self.ids(respuesta))
+
+    def test_el_tope_es_solo_de_vistas(self):
+        lista = self.lista_con(
+            *(
+                self.produccion(f"Propia {n}", vector_a(0.001 * n))
+                for n in range(MAXIMO_SEMILLAS_VISTAS + 5)
+            )
+        )
+        self.vecinas(3)
+
+        with self.assertLogs("listas.views", "INFO") as registro:
+            self.api.get(self.url(lista))
+
+        self.assertIn(f"semillas={MAXIMO_SEMILLAS_VISTAS + 5} ", registro.output[0])
 
 
 class NombreTests(BaseSugerencias):

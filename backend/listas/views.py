@@ -575,6 +575,11 @@ def _numero_de_pagina(valor):
     return numero
 
 
+# Cuántos de los títulos agregados más recientemente a «Vistas» son semillas de
+# sus sugerencias (el vector y la firma de la caché). Ver `docs/decisiones.md`.
+MAXIMO_SEMILLAS_VISTAS = 20
+
+
 class ListaSugerenciasView(TopesTMDBMixin, APIView):
     """«Sugeridas para esta lista»: títulos parecidos a los de una lista propia.
 
@@ -586,7 +591,8 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
 
     Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
-    1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
+    1. Las semillas son los títulos de la lista (de «Vistas», solo los últimos
+       `MAXIMO_SEMILLAS_VISTAS`); el nombre se suma si «dice algo».
     2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo
        una *firma* de la lista: agregar, quitar o renombrar cambia la firma, y
        el pool viejo se vence solo. No hace falta código que invalide nada.
@@ -621,6 +627,12 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
             return Response(
                 {"results": [], "pagina": pagina, "paginas": 0, "nombre_usado": False}
             )
+        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave == ClaveLista.VISTAS:
+            # «Vistas» crece sin techo (se llena sola al calificar). Con todos
+            # sus títulos el centroide se diluye y la firma de la caché cambiaría
+            # con casi cada calificación. Lo ya visto igual no se sugiere:
+            # `vistos()` lo saca al armar cada página.
+            items = items[:MAXIMO_SEMILLAS_VISTAS]
 
         ids = [pk for pk, _, _ in items]
         # Una lista de una sola clase pide solo esa clase (D-3); una mixta, ambas.
