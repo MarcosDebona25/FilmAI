@@ -525,6 +525,66 @@ describe("alta con Google en los pasos 2 y 3", () => {
     expect(aviso()).toBeEmptyDOMElement();
   });
 
+  it("un error general del paso 3 no sigue a la vista al volver al paso 2 y avanzar de nuevo", async () => {
+    simularApi(rechazo([{ field: null, code: "email_already_used" }]));
+    const user = userEvent.setup();
+    render(<CompletarGooglePage />, { locale: "en" });
+
+    await confirmar(user);
+    expect(await screen.findByText(en.errors.codes.email_already_used)).toBeInTheDocument();
+
+    await user.click(atras());
+    expect(barra()).toHaveAttribute("aria-valuenow", "2");
+    await user.click(continuar());
+    expect(barra()).toHaveAttribute("aria-valuenow", "3");
+    expect(screen.queryByText(en.errors.codes.email_already_used)).toBeNull();
+  });
+
+  it("«Continue» con errores enfoca el primer campo inválido", async () => {
+    const user = userEvent.setup();
+    render(<CompletarGooglePage />, { locale: "en" });
+
+    await user.click(continuar());
+    expect(screen.getByLabelText(en.common.fields.username)).toHaveFocus();
+
+    await user.type(screen.getByLabelText(en.common.fields.username), "juanperez");
+    await user.click(continuar());
+    expect(barra()).toHaveAttribute("aria-valuenow", "2");
+    expect(screen.getByLabelText(en.common.fields.birthDate)).toHaveFocus();
+  });
+
+  it("el error del género queda vinculado al <select> con aria-describedby", async () => {
+    const user = userEvent.setup();
+    render(<CompletarGooglePage />, { locale: "en" });
+
+    await user.click(continuar());
+    const genero = screen.getByLabelText(en.auth.signUp.genderLabel);
+    expect(genero).toHaveAttribute("aria-invalid", "true");
+    expect(genero).toHaveAccessibleDescription(en.errors.codes.required);
+  });
+
+  it("anuncia «Step N of 3» en una región viva al cambiar de paso", async () => {
+    const user = userEvent.setup();
+    render(<CompletarGooglePage />, { locale: "en" });
+    const anuncio = screen.getByText("Step 2 of 3");
+    expect(anuncio).toHaveAttribute("aria-live", "polite");
+
+    await irAlPaso3(user);
+    expect(anuncio).toHaveTextContent("Step 3 of 3");
+  });
+
+  // El aviso aparece en el paso 2, donde el botón de Google no está.
+  it.each([
+    ["en", en, /step 3/],
+    ["es", es, /paso 3/],
+  ] as const)(
+    "el aviso de campos marcados manda al paso 3, no a un botón (%s)",
+    (_, copy, paso) => {
+      expect(copy.auth.completeSignUp.fixHighlighted).toMatch(paso);
+      expect(copy.auth.completeSignUp.fixHighlighted).not.toMatch(/button|botón/i);
+    }
+  );
+
   it("sin un alta con Google pendiente redirige al login", () => {
     sessionStorage.clear();
     render(<CompletarGooglePage />, { locale: "en" });

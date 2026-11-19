@@ -58,6 +58,8 @@ type Errores = Partial<Record<Campo | "avatar_id", string>>;
 type Paso = 1 | 2 | 3;
 
 const ERROR_DELAY_MS = 600;
+const ID_ERROR_GENERO = "genero-error";
+const ID_ERROR_AVATAR = "avatar-error";
 
 /** Campos de cada paso, en el orden en que se ven (canvas, sección 16). */
 const CAMPOS_POR_PASO: Record<Paso, (Campo | "avatar_id")[]> = {
@@ -162,6 +164,14 @@ export default function RegisterPage() {
     password2: (v, actual) => validarConfirmacion(actual.password1, v),
   };
 
+  /** El valor actual no pasa la validación del cliente (o el usuario está en uso). */
+  function campoInvalido(campo: Campo | "avatar_id") {
+    if (campo === "avatar_id") return false;
+    if (campo === "acepta_terminos") return !acepta;
+    if (campo === "nombre_usuario" && usernameRechazado) return true;
+    return Boolean(validadores[campo](form[campo], form));
+  }
+
   function pasoValido(cual: Paso) {
     if (cual === 3) return acepta;
     const camposValidos = (CAMPOS_POR_PASO[cual] as CampoTexto[]).every(
@@ -190,6 +200,7 @@ export default function RegisterPage() {
     setContinuarPendiente(false);
     if (usernameRechazado) {
       setIntentados((prev) => ({ ...prev, 2: true }));
+      setFoco({ selector: selectorDe("nombre_usuario") });
       return;
     }
     setPaso(3);
@@ -239,6 +250,10 @@ export default function RegisterPage() {
     // Un paso inválido se queda donde está y muestra los errores de sus campos.
     if (!pasoValido(paso)) {
       setIntentados((prev) => ({ ...prev, [paso]: true }));
+      // El foco va al primer campo inválido: así no queda en el botón con
+      // varios avisos a la vez.
+      const primero = CAMPOS_POR_PASO[paso].find((campo) => campoInvalido(campo));
+      if (primero) setFoco({ selector: selectorDe(primero) });
       return;
     }
     // Todavía no se sabe si el usuario está libre: el clic queda pendiente.
@@ -339,6 +354,7 @@ export default function RegisterPage() {
 
   const avatarElegido = avatares.find((avatar) => avatar.id === avatarId);
   const errorTerminos = mostrar("acepta_terminos");
+  const errorGenero = mostrar("genero", true);
 
   return (
     <AccessShell>
@@ -491,7 +507,8 @@ export default function RegisterPage() {
                     className={fieldClass}
                     value={form.genero}
                     onChange={(e) => setField("genero", e.target.value)}
-                    aria-invalid={mostrar("genero", true) ? true : undefined}
+                    aria-invalid={errorGenero ? true : undefined}
+                    aria-describedby={errorGenero ? ID_ERROR_GENERO : undefined}
                   >
                     <option value="" disabled />
                     {enums.genderValues.map((value) => (
@@ -500,7 +517,7 @@ export default function RegisterPage() {
                       </option>
                     ))}
                   </select>
-                  <FieldMessage error={mostrar("genero", true)} reserve />
+                  <FieldMessage id={ID_ERROR_GENERO} error={errorGenero} reserve />
                 </div>
               </div>
               <CountrySelect
@@ -521,9 +538,10 @@ export default function RegisterPage() {
                   <SignupAvatarField
                     avatar={avatarElegido}
                     onChoose={() => setEligiendoAvatar(true)}
+                    describedBy={erroresServidor.avatar_id ? ID_ERROR_AVATAR : undefined}
                   />
                   {erroresServidor.avatar_id && (
-                    <FieldError>{erroresServidor.avatar_id}</FieldError>
+                    <FieldError id={ID_ERROR_AVATAR}>{erroresServidor.avatar_id}</FieldError>
                   )}
                 </div>
               )}

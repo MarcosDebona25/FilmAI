@@ -218,6 +218,52 @@ describe("registro en pasos", () => {
     expect(screen.getByLabelText(en.common.fields.email)).toHaveAttribute("aria-invalid", "true");
   });
 
+  it("«Continue» con errores enfoca el primer campo inválido de cada paso", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await user.click(continuar());
+    expect(screen.getByLabelText(en.common.fields.email)).toHaveFocus();
+
+    // Con el correo bien y la contraseña mal, el foco va a la contraseña.
+    await user.type(screen.getByLabelText(en.common.fields.email), "juan@example.com");
+    await user.click(continuar());
+    expect(screen.getByLabelText(en.auth.password.label, { selector: "input" })).toHaveFocus();
+
+    await user.type(
+      screen.getByLabelText(en.auth.password.label, { selector: "input" }),
+      "Popcorn24!"
+    );
+    await user.type(screen.getByLabelText(en.common.fields.passwordConfirm), "Popcorn24!");
+    await user.click(continuar());
+    await waitFor(() => expect(barra()).toHaveAttribute("aria-valuenow", "2"));
+    await user.type(screen.getByLabelText(en.common.fields.firstName), "Juan");
+    await user.click(continuar());
+    expect(barra()).toHaveAttribute("aria-valuenow", "2");
+    expect(screen.getByLabelText(en.common.fields.lastName)).toHaveFocus();
+  });
+
+  it("el error del género queda vinculado al <select> con aria-describedby", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    await irAlPaso2(user);
+    await user.click(continuar());
+    const genero = screen.getByLabelText(signUp.genderLabel);
+    expect(genero).toHaveAttribute("aria-invalid", "true");
+    expect(genero).toHaveAccessibleDescription(en.errors.codes.required);
+  });
+
+  it("anuncia «Step N of 3» en una región viva al cambiar de paso", async () => {
+    const user = userEvent.setup();
+    render(<RegisterPage />, { locale: "en" });
+    const anuncio = screen.getByText("Step 1 of 3");
+    expect(anuncio).toHaveAttribute("aria-live", "polite");
+    expect(anuncio).toHaveClass("sr-only");
+
+    await irAlPaso2(user);
+    // Es la misma región (para que los lectores anuncien el cambio de texto).
+    expect(anuncio).toHaveTextContent("Step 2 of 3");
+  });
+
   it("«Continue» avanza, mueve la barra y deja el foco en el primer campo del paso", async () => {
     const user = userEvent.setup();
     render(<RegisterPage />, { locale: "en" });
@@ -450,6 +496,7 @@ describe("registro en pasos", () => {
       responder(false);
       expect(await screen.findByText(en.errors.codes.username_already_used)).toBeInTheDocument();
       expect(barra()).toHaveAttribute("aria-valuenow", "2");
+      await waitFor(() => expect(screen.getByLabelText(en.common.fields.username)).toHaveFocus());
       // El error sale del estado del usuario; el pendiente se limpia en el render siguiente.
       await waitFor(() => expect(continuar()).not.toHaveAttribute("aria-busy"));
       expect(continuar()).toBeEnabled();
@@ -668,6 +715,19 @@ describe("registro en pasos", () => {
       expect(await screen.findByLabelText(en.common.fields.username)).toHaveAttribute(
         "aria-invalid",
         "true"
+      );
+    });
+
+    it("el error del servidor sobre el avatar queda vinculado a «Choose»", async () => {
+      simularApi(rechazoPorCampos(["avatar_id", "avatar_invalid"]));
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await enviar(user);
+
+      expect(await screen.findByText(en.errors.codes.avatar_invalid)).toBeInTheDocument();
+      expect(barra()).toHaveAttribute("aria-valuenow", "3");
+      expect(screen.getByRole("button", { name: signUp.avatarChoose })).toHaveAccessibleDescription(
+        en.errors.codes.avatar_invalid
       );
     });
 

@@ -38,22 +38,33 @@ export function SignupProgress({ paso, desde }: { paso: number; desde?: number }
     return () => cancelAnimationFrame(id);
   }, [arrancada]);
 
+  const pasoTexto = t("stepOf", { step: String(paso), total: String(TOTAL_PASOS) });
+
   return (
-    <div
-      role="progressbar"
-      aria-label={t("progressLabel")}
-      aria-valuemin={0}
-      aria-valuemax={TOTAL_PASOS}
-      aria-valuenow={paso}
-      aria-valuetext={t("stepOf", { step: String(paso), total: String(TOTAL_PASOS) })}
-      className="relative mt-0.5 h-1 overflow-hidden rounded-full bg-raised-2"
-    >
-      <span
-        aria-hidden="true"
-        style={{ width: anchoDe(arrancada || desde === undefined ? paso : desde) }}
-        className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-[400ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none"
-      />
-    </div>
+    <>
+      <div
+        role="progressbar"
+        aria-label={t("progressLabel")}
+        aria-valuemin={0}
+        aria-valuemax={TOTAL_PASOS}
+        aria-valuenow={paso}
+        aria-valuetext={pasoTexto}
+        className="relative mt-0.5 h-1 overflow-hidden rounded-full bg-raised-2"
+      >
+        <span
+          aria-hidden="true"
+          style={{ width: anchoDe(arrancada || desde === undefined ? paso : desde) }}
+          className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-[400ms] ease-[cubic-bezier(.2,.7,.2,1)] motion-reduce:transition-none"
+        />
+      </div>
+      {/* El `h1` es el mismo en los tres pasos y el `progressbar` cambia sin
+          aviso: esta región viva dice «Paso N de 3» al cambiar. Existe desde el
+          primer render (una región que aparece con su texto no se anuncia) y,
+          al ser `sr-only`, no ocupa lugar en el layout. */}
+      <p aria-live="polite" className="sr-only">
+        {pasoTexto}
+      </p>
+    </>
   );
 }
 

@@ -43,6 +43,7 @@ type Paso = 2 | 3;
 const CAMPOS: Campo[] = ["nombre_usuario", "fecha_nacimiento", "genero", "pais"];
 const ERROR_DELAY_MS = 600;
 const ID_ERROR_PASO_3 = "alta-google-error";
+const ID_ERROR_GENERO = "genero-error";
 
 /** Selector del control que el usuario ve para un campo. */
 function selectorDe(campo: Campo) {
@@ -149,6 +150,7 @@ export default function CompletarGooglePage() {
     setContinuarPendiente(false);
     if (usernameRechazado) {
       setIntentado(true);
+      setFoco({ selector: selectorDe("nombre_usuario") });
       return;
     }
     setPaso(3);
@@ -183,6 +185,12 @@ export default function CompletarGooglePage() {
     if (campo === "fecha_nacimiento") return validarFechaNacimiento(valor);
     if (campo === "pais") return valor ? null : common("country.required");
     return valor ? null : errors("required");
+  }
+
+  /** El valor actual no pasa la validación (o el usuario está en uso). */
+  function campoInvalido(campo: Campo) {
+    if (campo === "nombre_usuario" && usernameRechazado) return true;
+    return Boolean(validarCampo(campo, form[campo]));
   }
 
   const paso2Valido =
@@ -225,6 +233,10 @@ export default function CompletarGooglePage() {
     // Un paso inválido se queda donde está y muestra los errores de sus campos.
     if (!paso2Valido) {
       setIntentado(true);
+      // El foco va al primer campo inválido: así no queda en el botón con
+      // varios avisos a la vez.
+      const primero = CAMPOS.find((campo) => campoInvalido(campo));
+      if (primero) setFoco({ selector: selectorDe(primero) });
       return;
     }
     // Todavía no se sabe si el usuario está libre: el clic queda pendiente.
@@ -237,6 +249,10 @@ export default function CompletarGooglePage() {
 
   function onBack() {
     if (paso === 3) {
+      // Un error general del paso 3 (p. ej. Google caído) es de ese intento: no
+      // se arrastra al volver. Los errores de campo del paso 2 sí se conservan
+      // hasta que el usuario los corrige, por eso no se borra todo `fallo`.
+      if (sinCampoVisible) setFallo(null);
       irA(2);
       return;
     }
@@ -299,6 +315,7 @@ export default function CompletarGooglePage() {
     usernameValido && !usernameError && usernameEstado === "disponible"
       ? signUp("usernameAvailable")
       : null;
+  const errorGenero = mostrar("genero", true);
   const avatarElegido = avatares.find((avatar) => avatar.id === avatarId);
   const googleActivo = acepta && !loading;
   const aviso = (
@@ -386,7 +403,8 @@ export default function CompletarGooglePage() {
                     className={fieldClass}
                     value={form.genero}
                     onChange={(e) => setField("genero", e.target.value)}
-                    aria-invalid={mostrar("genero", true) ? true : undefined}
+                    aria-invalid={errorGenero ? true : undefined}
+                    aria-describedby={errorGenero ? ID_ERROR_GENERO : undefined}
                   >
                     <option value="" disabled />
                     {enums.genderValues.map((value) => (
@@ -395,7 +413,7 @@ export default function CompletarGooglePage() {
                       </option>
                     ))}
                   </select>
-                  <FieldMessage error={mostrar("genero", true)} reserve />
+                  <FieldMessage id={ID_ERROR_GENERO} error={errorGenero} reserve />
                 </div>
               </div>
               <CountrySelect
