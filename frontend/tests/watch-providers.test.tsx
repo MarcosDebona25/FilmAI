@@ -1,6 +1,6 @@
 import { fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { WatchProviders } from "@/components/features/title/WatchProviders";
 import type { Plataformas } from "@/lib/title";
@@ -108,6 +108,35 @@ describe("WatchProviders", () => {
     // jsdom no traduce Escape en el evento `cancel` del <dialog>: se dispara a mano.
     fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(linea).toHaveFocus();
+  });
+
+  it("tocar el fondo cierra el diálogo; tocar dentro, no", () => {
+    render(<WatchProviders pedido={ok(PLATAFORMAS_AR)} pais="AR" />, { locale: "en" });
+    fireEvent.click(screen.getByRole("button", { name: /Stream or rent/ }));
+    const dialogo = screen.getByRole("dialog");
+    // jsdom no hace layout: se le da una caja al diálogo para distinguir «fuera» de «dentro».
+    vi.spyOn(dialogo, "getBoundingClientRect").mockReturnValue({
+      left: 100,
+      right: 500,
+      top: 100,
+      bottom: 400,
+    } as DOMRect);
+    // El relleno del propio <dialog> también apunta al <dialog>, pero cae dentro de su caja.
+    fireEvent.click(dialogo, { clientX: 110, clientY: 110 });
+    fireEvent.click(within(dialogo).getByRole("heading", { level: 2 }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(dialogo, { clientX: 20, clientY: 20 });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("el foco vuelve a la línea aunque el clic no la haya enfocado (Safari)", () => {
+    render(<WatchProviders pedido={ok(PLATAFORMAS_AR)} pais="AR" />, { locale: "en" });
+    const linea = screen.getByRole("button", { name: /Stream or rent/ });
+    // `fireEvent.click` no enfoca el botón, como un clic con el mouse en Safari.
+    fireEvent.click(linea);
+    expect(linea).not.toHaveFocus();
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
     expect(linea).toHaveFocus();
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronRight, ExternalLink, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -80,6 +80,7 @@ export function WatchProviders({
   const tc = useTranslations("common.actions");
   const tituloId = useId();
   const [abierto, setAbierto] = useState(false);
+  const linea = useRef<HTMLButtonElement>(null);
 
   if (!pais || pedido.status === "idle" || pedido.status === "error") return null;
 
@@ -115,6 +116,7 @@ export function WatchProviders({
   return (
     <div className={cn("flex flex-col", className)}>
       <button
+        ref={linea}
         type="button"
         aria-expanded={abierto}
         aria-haspopup="dialog"
@@ -140,10 +142,12 @@ export function WatchProviders({
         </span>
       </button>
       {abierto && (
-        // Al desmontarse, `DialogShell` devuelve el foco a la línea que lo abrió.
+        // Al desmontarse, `DialogShell` devuelve el foco a la línea (`returnFocus`:
+        // en Safari un clic no la enfoca y `activeElement` sería el `body`).
         <DialogShell
           labelledBy={tituloId}
           onClose={() => setAbierto(false)}
+          returnFocus={linea}
           ancho="md:w-[min(32.5rem,calc(100%-3rem))]"
           relleno="px-5 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:pb-5 md:shadow-[inset_0_0_0_1px_var(--line),0_24px_60px_rgb(0_0_0/0.5)]"
         >
