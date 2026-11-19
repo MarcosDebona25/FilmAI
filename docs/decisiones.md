@@ -1231,3 +1231,12 @@ Revisión de Gonza sobre el PR 4 del canvas, aplicada sobre `feat/viendo` antes 
 - **Quedó afuera** (anotado en el comentario del PR): las acciones descartadas sin aviso mientras hay un cambio en curso (`use-estado-viendo.ts`, `use-estado-ficha.ts`) y el `requestBody` tipado de `/api/lists/status/` en `contracts/openapi.yaml` (pasa lo mismo en otros endpoints).
 
 Archivos: `backend/listas/` (services, serializers, views, migración 0009 y sus tests), `backend/catalogo/services/recomendado.py`, `backend/chatbot/` (turno, prompts, esquemas y tests), `frontend/` (`use-estado-ficha`, `use-estado-viendo`, `RatingDialog`, `TitleView`, `ListDetailView`, `lib/{title-status,title-lists,lists,use-cursor-list}`, tests), `traducciones/claves-extra.csv`, `contracts/openapi.yaml`, `openspec/specs/{list-endpoints,list-detail-ui,similar-titles}/spec.md`.
+
+### 19/11/2026 — El CI del #226 tras unir con `develop`
+
+Dos fallas que aparecieron al unir `feat/viendo` con `develop` (que traía el #223, el #224 y el #225).
+
+- **e2e de sugerencias en celular.** El test del #224 buscaba «4 items · 4 movies · 0 TV shows», pero en este PR el conteo pasó a la línea del título y en celular solo dice «4 items» (el desglose es `hidden md:inline`). Se cambió el test por un texto que empieza con «4 items» y solo cuenta el visible, para que valga en ambos viewports. El componente sigue lo que dice el canvas.
+- **Undo y conteo inestables.** `datosAhora` (la ref que usa `meterEnLaGrilla` para saber si la tarjeta ya está) se actualizaba en un `useEffect`, un instante después de pintar. Un Undo justo después veía datos viejos, volvía a insertar la tarjeta y sumaba uno de más. Con `useLayoutEffect` la ref se pone al día en el mismo commit del render.
+
+Archivos: `frontend/components/features/lists/ListDetailView.tsx`, `frontend/e2e/listas-sugerencias.spec.ts`

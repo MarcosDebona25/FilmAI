@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, Clock, LoaderCircle, Search, SlidersHorizontal, X } from "lucide-react";
@@ -125,7 +125,9 @@ export function ListDetailView({ id }: { id: number }) {
   const centinela = useRef<HTMLDivElement>(null);
   // Los datos de la grilla de ahora, para decidir fuera de un updater (ver `meterEnLaGrilla`).
   const datosAhora = useRef(datos);
-  useEffect(() => {
+  // Con `useLayoutEffect` la ref se pone al día en el mismo commit que pinta la
+  // grilla: un Undo que llegue justo después ya ve la tarjeta que se está mostrando.
+  useLayoutEffect(() => {
     datosAhora.current = datos;
   }, [datos]);
   const titulo = useRef<HTMLHeadingElement>(null);
