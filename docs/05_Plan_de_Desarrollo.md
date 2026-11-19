@@ -180,7 +180,6 @@ Orden sugerido: primero que la rama `feat/tmdb-y-calidad-chat` llegue a `develop
 
 Actualizado el **11/11/2026**, el **15/11/2026** y el **19/11/2026**: el canvas se igualó al código, se borraron las mesas repetidas (Main y pantallas grandes) y se renumeraron las secciones. Las secciones 13 a 17, decididas el 15/11/2026, ya están implementadas y en `develop` (#223 a #226). Fuente de verdad visual: el canvas «FilmAI — Sistema y catálogo» (https://claude.ai/artifact/2QjarXk7NRcVStDYtxfY9y). Si el código difiere de un artboard, se rehace el código. La numeración de secciones es la del canvas.
 
-- **Canvas pendiente (Watching)**: falta borrar la opción A del artboard «Watching · tap while saving» y sumar la ficha y el celular (lo hace Marcos con Claude).
 - **✅ Completa**: el código coincide con el artboard (escritorio y celular, salvo que se indique).
 - **🔁 Rehacer**: la pantalla existe, pero se implementó antes del canvas y no coincide con el artboard.
 - **🟡 Parcial**: coincide en una variante y falta la otra.
