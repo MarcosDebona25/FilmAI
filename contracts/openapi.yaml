@@ -1724,7 +1724,8 @@ paths:
 
         Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
-        1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
+        1. Las semillas son los títulos de la lista (de «Vistas», solo los últimos
+           `MAXIMO_SEMILLAS_VISTAS`); el nombre se suma si «dice algo».
         2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo
            una *firma* de la lista: agregar, quitar o renombrar cambia la firma, y
            el pool viejo se vence solo. No hace falta código que invalide nada.
