@@ -164,8 +164,9 @@ describe("sugerencias", () => {
       screen.getByRole("group", { name: en.nav.search.groupTitles })
     ).getAllByRole("option");
     const poster = inception.querySelector("img");
-    expect(poster).toHaveAttribute("width", "48");
-    expect(poster).toHaveAttribute("height", "72");
+    // Intrínseco al doble de lo que se ve (48 × 72): así el navegador pide w154 en pantallas 2x.
+    expect(poster).toHaveAttribute("width", "96");
+    expect(poster).toHaveAttribute("height", "144");
     // La nota se lee completa una vez; el número suelto es solo para la vista.
     expect(inception).toHaveTextContent("TMDB rating: 8.4 out of 10");
     expect(within(inception).getByText("8.4")).toHaveAttribute("aria-hidden", "true");
@@ -255,6 +256,13 @@ describe("sugerencias", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     fireEvent.keyDown(campo(), { key: "Enter" });
     expect(router.push).toHaveBeenCalledWith("/search?q=nol");
+  });
+});
+
+describe("campo abierto", () => {
+  it("la ✕ del campo mide 44 px", () => {
+    abrir();
+    expect(screen.getByRole("button", { name: en.nav.search.closeLabel })).toHaveClass("size-11");
   });
 });
 

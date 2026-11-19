@@ -142,14 +142,14 @@ test.describe("el desplegable rico de la lupa (canvas, sección 13)", () => {
     // 8 px debajo del campo.
     expect(desplegable.y).toBeCloseTo(campo.y + campo.height + 8, 0);
 
-    // El campo es una píldora de 44 px con la ✕ de 40 px adentro.
+    // El campo es una píldora de 44 px con la ✕ de 44 px adentro.
     const pildora = page.getByRole("combobox").locator("xpath=..");
     expect(campo.height).toBe(44);
     expect(
       parseFloat(await pildora.evaluate((el) => getComputedStyle(el).borderRadius))
     ).toBeGreaterThanOrEqual(22);
     const cerrar = await caja(page.getByRole("button", { name: en.nav.search.closeLabel }));
-    expect([cerrar.width, cerrar.height]).toEqual([40, 40]);
+    expect([cerrar.width, cerrar.height]).toEqual([44, 44]);
   });
 
   test("filas de 84 px con póster de 48 × 72, nota con ★ y foto de persona de 48 px", async ({

@@ -1,12 +1,12 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, type ReactNode } from "react";
 import Image from "next/image";
 import { ArrowRight, CornerDownLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { StarIcon } from "@/components/ui/StarIcon";
-import { tmdbLoader } from "@/lib/catalog";
+import { tmdbConTope, tmdbLoader } from "@/lib/catalog";
 import { useFormats } from "@/lib/format";
 import {
   ID_VER_TODO,
@@ -32,7 +32,8 @@ interface Props {
   verTodo?: string;
   /**
    * El desplegable «rico» de la lupa de la navbar (canvas, sección 13): filas de
-   * 84 px, póster de 48 × 72, nota de TMDB y fotos de 48 px. Sin él queda la
+   * 84 px, póster de 48 × 72 (pedido al doble, en w154), nota de TMDB, fotos de
+   * 48 px, iniciales de dos letras y alto acotado a la ventana. Sin él queda la
    * lista compacta del campo de Buscar.
    */
   rica?: boolean;
@@ -64,6 +65,16 @@ export function SugerenciasLista({
   const encabezadoPersonas = `${base}-personas`;
   const encabezadoTitulos = `${base}-titulos`;
   const { personas, titulos } = agruparSugerencias(sugerencias);
+
+  // Con ↑/↓ la opción activa tiene que quedar a la vista aunque la lista se desplace.
+  // `nearest` solo mueve lo necesario; sin animación si el sistema pide menos movimiento.
+  useEffect(() => {
+    if (!activaId) return;
+    const reducir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document
+      .getElementById(activaId)
+      ?.scrollIntoView({ block: "nearest", behavior: reducir ? "auto" : "smooth" });
+  }, [activaId]);
 
   const etiquetaRol = (s: SugerenciaPersona) => persona("role", { role: s.rol, gender: s.genero });
   const etiquetaTitulo = (s: SugerenciaTitulo) =>
@@ -104,7 +115,8 @@ export function SugerenciasLista({
   const secundario = rica ? "text-[0.8125rem] text-fg-3" : "block text-xs text-fg-3";
   const foto = rica ? { lado: 48, clase: "size-12" } : { lado: 34, clase: "size-[2.125rem]" };
   const poster = rica
-    ? { ancho: 48, alto: 72, clase: "h-18 w-12 rounded-md" }
+    ? // Se pide al doble de lo que se ve: con `w154` una pantalla 2x no ve el póster borroso.
+      { ancho: 96, alto: 144, clase: "h-18 w-12 rounded-md" }
     : { ancho: 28, alto: 40, clase: "h-10 w-7 rounded" };
 
   return (
@@ -116,7 +128,7 @@ export function SugerenciasLista({
       className={cn(
         "bg-raised p-1.5",
         rica
-          ? "rounded-[0.875rem] shadow-[inset_0_0_0_1px_var(--line),0_16px_40px_rgb(0_0_0/0.5)]"
+          ? "max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain rounded-[0.875rem] shadow-[inset_0_0_0_1px_var(--line),0_16px_40px_rgb(0_0_0/0.5)]"
           : "rounded-xl shadow-[inset_0_0_0_1px_var(--line),0_16px_40px_rgb(0_0_0/0.45)]",
         className
       )}
@@ -148,7 +160,7 @@ export function SugerenciasLista({
                       rica ? "font-bold" : "font-semibold"
                     )}
                   >
-                    {inicialesDe(s.nombre)}
+                    {rica ? inicialesDe(s.nombre) : s.nombre.charAt(0)}
                   </span>
                 )}
                 <span className={textos}>
@@ -171,7 +183,7 @@ export function SugerenciasLista({
               <>
                 {s.poster ? (
                   <Image
-                    src={s.poster}
+                    src={rica ? tmdbConTope(s.poster, "w154") : s.poster}
                     alt=""
                     width={poster.ancho}
                     height={poster.alto}
