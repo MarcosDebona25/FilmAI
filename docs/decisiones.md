@@ -1024,3 +1024,15 @@ Se planteó reequilibrar la pirámide de pruebas o correr la suite por secciones
 **Decisión (Marcos)**: no se reequilibra la pirámide ni se adopta TIA test por test; el problema son unos pocos tests lentos, no la forma de la suite. Se dejan como pendientes, sin implementar todavía, los puntos 1 a 5 del pendiente 13 del plan: aislar los tests del broker, mockear el backoff, `--durations` en el CI, filtros por ruta en los PR y correr solo lo afectado en local. `--parallel` en Django y el sharding del backend quedan como posibilidad, no por ahora.
 
 Archivos: `docs/05_Plan_de_Desarrollo.md` (pendiente 13).
+
+### 19/11/2026 — Arreglos de la revisión del #225 (registro en 3 pasos)
+
+Revisión de Gonza sobre el #225, aplicada sobre la rama de Marcos (sin cambios suyos desde el 17/11):
+
+- **`traducciones/claves.csv` vuelve a CRLF**, como en `develop` (la rama lo había pasado a LF y el diff mostraba el archivo entero). El diff contra `develop` son solo las 19 líneas nuevas; las 9 líneas que en `develop` ya eran LF se dejaron tal cual. No se agrega `.gitattributes`: queda como decisión aparte.
+- **Copy de `auth.completeSignUp.fixHighlighted`** (fuente: `traducciones/claves-extra.csv`): el aviso sale en el paso 2, donde no está el botón de Google, así que ahora dice «volvé a confirmar con Google en el paso 3» (en inglés, «confirm with Google again in step 3»).
+- **Accesibilidad**: región `sr-only` con `aria-live="polite"` que dice «Paso N de 3» al cambiar de paso (reusa `auth.signUp.stepOf`, sin clave nueva) en `SignupProgress`; un «Continue» con errores enfoca el primer campo inválido (también cuando la verificación del usuario termina en «en uso»); el `<select>` de género apunta con `aria-describedby` a su mensaje de error; en `/register`, el error del servidor sobre el avatar queda vinculado a «Choose» con `describedBy`.
+- **`/complete-signup`**: un error general del paso 3 (p. ej. Google caído) se borra al volver al paso 2. Se limpia en «Back» y no en `irA(2)`, porque `irA(2)` también lo usa el rechazo del servidor para volver al campo con error y ahí `fallo` hay que conservarlo; los errores de campo del paso 2 se conservan hasta que el usuario los corrige.
+- **No se cambia** «Continue with Google» en `/register` con una cuenta ya existente (va directo a `/complete-signup` sin probar antes el login; ya pasaba antes de este PR): queda como hallazgo y decisión de diseño aparte.
+
+Archivos: `traducciones/claves.csv`, `traducciones/claves-extra.csv`, `frontend/messages/{en,es}/common.json`, `frontend/components/access/signup-steps.tsx`, `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `frontend/tests/access-screens.test.tsx`, `frontend/tests/complete-signup.test.tsx`.
