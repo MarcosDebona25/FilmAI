@@ -6,7 +6,7 @@ import redis
 from django.conf import settings
 
 from catalogo.exceptions import TMDBBadRequest, TMDBError, TMDBNotFound
-from catalogo.services.creditos import MAX_REPARTO
+from catalogo.services.creditos import MAX_REPARTO, id_de_persona
 
 logger = logging.getLogger(__name__)
 
@@ -104,16 +104,21 @@ def _recortar_creditos(datos):
     ids internos): hasta 260 KB por título. La ficha muestra los primeros
     `MAX_REPARTO` actores con su personaje y los directores del equipo, y la
     materialización toma los nombres de los primeros 10 actores y los
-    directores. Se conservan las mismas claves (`cast`, `crew`, `name`,
-    `character`, `job`) para que quien consume no cambie.
+    directores. Se conservan las mismas claves (`cast`, `crew`, `id`, `name`,
+    `character`, `job`) para que quien consume no cambie. El `id` es el de la
+    persona en TMDB: la ficha lo usa para enlazar el nombre a Buscar.
     """
     reparto = [
-        {"name": persona["name"], "character": persona.get("character") or ""}
+        {
+            "id": id_de_persona(persona),
+            "name": persona["name"],
+            "character": persona.get("character") or "",
+        }
         for persona in (datos.get("cast") or [])
         if persona.get("name")
     ][:MAX_REPARTO]
     directores = [
-        {"name": persona["name"], "job": "Director"}
+        {"id": id_de_persona(persona), "name": persona["name"], "job": "Director"}
         for persona in (datos.get("crew") or [])
         if persona.get("job") == "Director" and persona.get("name")
     ]

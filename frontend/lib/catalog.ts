@@ -42,7 +42,7 @@ export interface Title {
 /** URL de una imagen de TMDB; solo acepta rutas de TMDB o URLs https de su CDN. */
 export function tmdbImage(
   path: string | null | undefined,
-  size: "w92" | "w185" | "w342" | "w500" | "w1280"
+  size: "w92" | "w154" | "w185" | "w342" | "w500" | "w1280"
 ) {
   if (!path) return null;
   if (path.startsWith("/") && !path.startsWith("//"))
@@ -59,7 +59,10 @@ export function tmdbImage(
  * La misma imagen de TMDB con otro ancho tope (`…/t/p/w342/x.jpg` → `w500`).
  * Lo que no es del CDN de TMDB queda igual.
  */
-export function tmdbConTope(src: string, size: "w92" | "w185" | "w342" | "w500" | "w1280") {
+export function tmdbConTope(
+  src: string,
+  size: "w92" | "w154" | "w185" | "w342" | "w500" | "w1280"
+) {
   return src.replace(/^(https:\/\/image\.tmdb\.org\/t\/p\/)w\d+\//, `$1${size}/`);
 }
 

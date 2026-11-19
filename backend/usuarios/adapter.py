@@ -120,6 +120,8 @@ class UsuarioSocialAccountAdapter(DefaultSocialAccountAdapter):
 
         user.genero = extra.get("genero") or TipoGenero.NO_ESPECIFICA
         user.pais = extra.get("pais") or ""
+        # El avatar ya llegó validado por el serializer; sin él, el del modelo.
+        user.avatar_id = extra.get("avatar_id", user.avatar_id)
         user.fecha_aceptacion_terminos = timezone.now()
 
         return user
