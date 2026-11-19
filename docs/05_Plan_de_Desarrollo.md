@@ -6,21 +6,21 @@ Estado contrastado el **26/09/2026** con los documentos 01–04, el código y la
 
 Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son un issue abierto, cierres de calidad y mejoras. Los pendientes 1, 2 y 4 quedan en la tabla como cerrados y los tres están en `develop`: el 1 y el 4 entraron con #198 el 13/11/2026 (#180 cerrado). Quedan abiertos un issue (#181) y el resto de los PRs del pendiente 10. El 15/11/2026 se decidió en el canvas la interfaz de los pendientes 5, 8, 10 y 11 (secciones 13 a 17, ver «Estado de la interfaz frente al canvas»): el frontend ya no espera diseño.
 
-| #   | Pendiente                                                   | Importancia                        | Viabilidad                   | Referencia                                                           |
-| --- | ----------------------------------------------------------- | ---------------------------------- | ---------------------------- | -------------------------------------------------------------------- |
-| 1   | ✅ Términos de uso de TMDB                                  | Alta                               | —                            | #180, `openspec/specs/tmdb-compliance/`, #198                        |
-| 2   | ✅ Cerrado: el chatbot recomienda sin mostrar tarjetas      | —                                  | —                            | #187, #189                                                           |
-| 3   | Correos por Celery y Brevo como respaldo                    | Media-alta                         | Alta                         | Q-08, #181, `openspec/changes/brevo-respaldo/`                       |
-| 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                              | —                            | Q-01, Q-03, Q-04, #198                                               |
-| 5   | ✅ Títulos parecidos en listas y en la ficha                 | Media                              | —                            | `openspec/specs/similar-titles/`, sección 14 del canvas              |
-| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna    | Media                        | Seguridad, B-03, C-04b, CU-021                                       |
-| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                               | Muy alta                     | Q-01, Q-05, sección 12 del canvas                                    |
-| 8   | Refactor y lista «Viendo»                                   | Baja                               | Media                        | Q-07, sección 15 del canvas                                          |
-| 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)         | Baja                         | Perfil, Settings                                                     |
-| 10  | Buscar en la navbar, filtro por persona y sin relevancia    | Media                              | Alta (backend y lupa hechos) | `openspec/changes/busqueda-navbar/`, sección 13 del canvas           |
-| 11  | Registro en 3 pasos y «Dónde ver» en un diálogo             | Media                              | Alta (solo frontend)         | Secciones 16 y 17 del canvas                                         |
-| 12  | Revisión de arquitectura del chatbot (pendientes «H»)       | A definir                          | A definir                    | Gonza: revisar; #221 (H5), #222 (H3)                                 |
-| 13  | Tiempo de la suite de tests                                 | Media-alta (cada PR espera ~8 min) | Muy alta                     | #203 (regresión), `.github/workflows/ci.yml`                         |
+| #   | Pendiente                                                   | Importancia                        | Viabilidad                   | Referencia                                                 |
+| --- | ----------------------------------------------------------- | ---------------------------------- | ---------------------------- | ---------------------------------------------------------- |
+| 1   | ✅ Términos de uso de TMDB                                  | Alta                               | —                            | #180, `openspec/specs/tmdb-compliance/`, #198              |
+| 2   | ✅ Cerrado: el chatbot recomienda sin mostrar tarjetas      | —                                  | —                            | #187, #189                                                 |
+| 3   | Correos por Celery y Brevo como respaldo                    | Media-alta                         | Alta                         | Q-08, #181, `openspec/changes/brevo-respaldo/`             |
+| 4   | ✅ Calidad del chatbot (accesibilidad, estados, responsive) | Media                              | —                            | Q-01, Q-03, Q-04, #198                                     |
+| 5   | ✅ Títulos parecidos en listas y en la ficha                | Media                              | —                            | `openspec/specs/similar-titles/`, sección 14 del canvas    |
+| 6   | Lo que se resuelve al desplegar                             | Alta al desplegar; hoy, ninguna    | Media                        | Seguridad, B-03, C-04b, CU-021                             |
+| 7   | Instalación limpia, correos y lector de pantalla reales     | Baja                               | Muy alta                     | Q-01, Q-05, sección 12 del canvas                          |
+| 8   | Refactor y lista «Viendo»                                   | Baja                               | Media                        | Q-07, sección 15 del canvas                                |
+| 9   | Perfil público y notificaciones por correo                  | Mínima (amplía el alcance)         | Baja                         | Perfil, Settings                                           |
+| 10  | Buscar en la navbar, filtro por persona y sin relevancia    | Media                              | Alta (backend y lupa hechos) | `openspec/changes/busqueda-navbar/`, sección 13 del canvas |
+| 11  | Registro en 3 pasos y «Dónde ver» en un diálogo             | Media                              | Alta (solo frontend)         | Secciones 16 y 17 del canvas                               |
+| 12  | Revisión de arquitectura del chatbot (pendientes «H»)       | A definir                          | A definir                    | Gonza: revisar; #221 (H5), #222 (H3)                       |
+| 13  | Tiempo de la suite de tests                                 | Media-alta (cada PR espera ~8 min) | Muy alta                     | #203 (regresión), `.github/workflows/ci.yml`               |
 
 ### 1. Términos de uso de TMDB (#180)
 
