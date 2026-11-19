@@ -446,8 +446,13 @@ describe("Sugerencias en el detalle de una lista", () => {
       const { unmount } = render(<ListDetailView id={7} />, { locale: "en" });
 
       expect(await banda()).toBeInTheDocument();
+      // Vistas usa solo lo último que se agregó: ni cuenta los títulos ni repite lo ya visto.
       expect(
-        screen.getByText("Based on its 3 titles, without what you already watched.")
+        screen.getByText(
+          extra.clave === "vistas"
+            ? "Based on what you watched most recently."
+            : "Based on its 3 titles, without what you already watched."
+        )
       ).toBeInTheDocument();
       unmount();
     }
@@ -531,6 +536,35 @@ describe("Sugerencias en el detalle de una lista", () => {
     ).toBeInTheDocument();
     expect(within(await banda()).queryByRole("link", { name: "Arrival" })).not.toBeInTheDocument();
     expect(toast.success).toHaveBeenCalledWith("You added Arrival to “Maratón”.");
+  });
+
+  it("con otro orden que «Recently added» vuelve a pedir la primera página en vez de agregar al final", async () => {
+    const usuario = userEvent.setup();
+    window.history.replaceState(null, "", "/lists/7?sort=title");
+    render(<ListDetailView id={7} />, { locale: "en" });
+    const region = await banda();
+    expect(lecturas()).toEqual(["/api/lists/7/items/?orden=titulo-asc"]);
+    // Lo que responderá el backend, ya con «Arrival» en el lugar que le toca.
+    estado.paginas = [
+      pagina([item(50, { titulo: "Arrival" }), item(1), item(2), item(3, { tipo: "tv" })]),
+    ];
+
+    await usuario.click(within(region).getByRole("button", { name: "Add Arrival to Maratón" }));
+
+    await waitFor(() => expect(lecturas()).toHaveLength(2));
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole("button", { name: /^Remove .* from Maratón$/ })
+          .map((boton) => boton.getAttribute("aria-label"))
+      ).toEqual([
+        "Remove Arrival from Maratón",
+        "Remove Título 1 from Maratón",
+        "Remove Título 2 from Maratón",
+        "Remove Título 3 from Maratón",
+      ])
+    );
+    expect(screen.getByText("4 items · 3 movies · 1 TV show")).toBeInTheDocument();
   });
 
   it("al agregar la última sugerencia la banda se va y el foco pasa al título de la lista", async () => {

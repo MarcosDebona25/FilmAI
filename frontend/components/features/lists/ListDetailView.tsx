@@ -84,6 +84,8 @@ export function ListDetailView({ id }: { id: number }) {
   const [estado, setEstado] = useState<"cargando" | "listo" | "error">("cargando");
   const [mas, setMas] = useState<"quieto" | "cargando" | "error">("quieto");
   const [intento, setIntento] = useState(0);
+  // Sube para volver a pedir la primera página sin tocar la lista (ver `sumarALaGrilla`).
+  const [recarga, setRecarga] = useState(0);
   const [hoja, setHoja] = useState(false);
   const [dialogo, setDialogo] = useState<"renombrar" | "eliminar" | null>(null);
   const [accion, setAccion] = useState<Accion | null>(null);
@@ -152,7 +154,7 @@ export function ListDetailView({ id }: { id: number }) {
         if (pedidoId === pedido.current) setEstado("error");
       }
     );
-  }, [consulta, perfil?.pk, intento]);
+  }, [consulta, perfil?.pk, intento, recarga]);
 
   function cargarMas() {
     if (!datos?.next || mas === "cargando" || estado !== "listo") return;
@@ -237,17 +239,16 @@ export function ListDetailView({ id }: { id: number }) {
     );
     // Con un filtro activo no se sabe si el título lo cumple (eso lo decide el
     // backend): cuenta en la lista y aparece al quitar el filtro.
-    if (!filtrando)
-      setDatos((actual) =>
-        actual
-          ? {
-              ...actual,
-              // «Recently added» lo lleva primero; en los demás órdenes va al final.
-              items: filtros.orden === "recent" ? [item, ...actual.items] : [...actual.items, item],
-              total: actual.total + 1,
-            }
-          : actual
-      );
+    if (!filtrando) {
+      // «Recently added» lo lleva primero. En los demás órdenes el lugar lo decide
+      // el backend (por título, por nota, o al final con muchas páginas): se vuelve
+      // a pedir la primera página en vez de adivinarlo.
+      if (filtros.orden === "recent")
+        setDatos((actual) =>
+          actual ? { ...actual, items: [item, ...actual.items], total: actual.total + 1 } : actual
+        );
+      else setRecarga((anterior) => anterior + 1);
+    }
     setRevision((anterior) => anterior + 1);
     if (!lista) return;
     toast.success(
@@ -699,6 +700,7 @@ export function ListDetailView({ id }: { id: number }) {
             <ListSuggestions
               listaId={id}
               nombre={nombre}
+              basadaEnLoReciente={lista.clave === "vistas"}
               cantidad={lista.cantidad_items}
               revision={revision}
               visible={datos !== null && datos.next === null && estado !== "error"}
