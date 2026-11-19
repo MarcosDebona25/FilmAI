@@ -17,7 +17,13 @@ The title page of a movie or TV show (C-07), with the rating dialog (C-08's fron
 
 ### Requirement: Title data
 
-The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded only when it overflows). While the detail loads, the page MUST show a static skeleton (no pulse or shimmer animation, 18/10/2026) with the shape of the backdrop, poster, title, data, actions, genres, synopsis and three reviews. «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10.
+The page MUST show the backdrop band with the site navbar over it, the poster, the title (sized by length like the Home Hero), the tagline, the type, the year, the runtime (movies) or seasons and episodes (shows), the TMDB rating with its votes as «★ 8,5», the genres and the synopsis (folded only when it overflows). While the detail loads, the page MUST show a static skeleton (no pulse or shimmer animation, 18/10/2026) with the shape of the backdrop, poster, title, data, actions, genres, synopsis and three reviews. «Director and cast» MUST list the directors — for shows, the creators as «Created by» — and the cast with characters, folding over 10. Each name MUST link to Search filtered by that person (`/search?person={id}&role=director` for directors and creators, `role=actor` for the cast; 15/11/2026), the same destination as the person's row in the navbar search, with a faint always-on underline so it reads as a link on touch screens (19/11/2026); the character is not part of the link. A person without a TMDB `id` in `credits/` MUST stay as plain text.
+
+#### Scenario: From a name to the person's filmography
+
+- GIVEN `/movie/157336`, whose credits list Christopher Nolan (TMDB id 525) as director
+- WHEN the user follows his name in «Director and cast»
+- THEN Search opens at `/search?person=525&role=director` with the chip «Christopher Nolan · Director»
 
 #### Scenario: A show
 
@@ -26,24 +32,56 @@ The page MUST show the backdrop band with the site navbar over it, the poster, t
 
 ### Requirement: Actions
 
-Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page; a signed-in user MUST NOT see it while the page loads. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite, Watched, Watchlist as `aria-pressed` toggles over the lists API, whose icons fill with the accent color when on; turning Watched on for a title in Watchlist MUST turn Watchlist off and say so in a single toast, and the rating dialog MUST warn that rating also removes it from Watchlist, and «Add to list» with the user's own lists and inline creation. Removing from Watched a rated title MUST ask for confirmation and then delete the rating with it.
+Without a session the actions MUST be replaced by «Log in to rate or save», linking to the login with `?next=` back to the page; a signed-in user MUST NOT see it while the page loads. With a session: Rate (or «★ N» with «Your rating: N out of 10. Edit» as accessible name), Favorite (an `aria-pressed` toggle over the lists API, whose heart fills with the accent color when on), the status button and «Add to list» with the user's own lists and inline creation (PR 4, 16/11/2026). The status button shows «Status» with a + when the title has none, and the name of the status (Watchlist, Watching or Watched) otherwise; it opens a menu (a bottom sheet on phones) with the three statuses as radios, the current one checked, and «Remove status». Picking one MUST be optimistic and call `PUT /api/lists/status/`; if it fails the button MUST go back and an error toast («Couldn't update the status. Try again.», no Undo) MUST show. A successful change MUST show a toast «Moved to Watching» with Undo for 6 s (a polite live region that also says «Undo available for 6 seconds»); Undo goes back one step with the same endpoint and shows «Back to Watchlist» for 2 s without Undo. A second change replaces the toast, and leaving the page closes it. Toasts are at the top center on desktop and at the bottom, 12 px over the tab bar, on phones. Rating a title in Watchlist or Watching moves it to Watched (the backend does it) and the toast says «Rated ★ 8 · Moved to Watched» with Undo, which restores the previous status and keeps the rating; rating one already in Watched (or with no status) says «Rated ★ 8» without Undo. Removing a status never touches the rating.
 
 #### Scenario: Signed in while the detail loads
 
 - GIVEN a signed-in user whose lists arrive before the title detail
 - THEN the page shows the skeleton and no «Log in to rate or save»
 
-#### Scenario: Watched with a rating
+#### Scenario: Status with Undo
 
-- GIVEN a rated title in Watched
-- WHEN the user turns Watched off and confirms
-- THEN the rating and review are deleted, Watched is off and the button reads «Rate» again
+- GIVEN a title in Watchlist
+- WHEN the user picks Watching in the status menu
+- THEN the button reads «Watching» at once and a toast says «Moved to Watching» with Undo
+- AND pressing Undo returns the title to Watchlist and shows «Back to Watchlist»
+
+#### Scenario: Rating moves the title to Watched
+
+- GIVEN a title in Watchlist
+- WHEN the user rates it 8
+- THEN the toast says «Rated ★ 8 · Moved to Watched» with Undo, the button reads «Watched» and Undo restores Watchlist keeping the rating
+
+### Requirement: More like this title
+
+The title page MUST show, after «Director and cast» and before the reviews, a
+horizontal row «More like {title}» with the results of
+`GET /api/catalogo/{tipo}/{id}/similar/`, with and without a session. Each
+card MUST show its type. The request MUST start only when the row is about
+400 px from the viewport, never with the detail: the detail MUST NOT wait for
+it, and it MUST start after the credits request ends. Empty results, an answer
+without `results` or an error MUST hide the row without an error message. The
+row is the Home row (`MediaRow`) with its skeletons while loading, and is not
+kept for the visit, because with a session it depends on «Vistas» (canvas,
+section 14, 15/11/2026).
+
+#### Scenario: Deferred load
+
+- GIVEN a visitor opens `/movie/157336` and does not scroll
+- THEN no request to `/similar/` is made
+
+#### Scenario: Scrolling down
+
+- GIVEN the visitor scrolls toward the reviews
+- WHEN the row nears the viewport
+- THEN up to 20 cards appear, movies and shows, each marked with its type
+- AND their links keep the origin of the current page
 
 ### Requirement: Where to watch
 
 Below the genres the page MUST show, once the detail is loaded, the streaming availability in the viewer's country (added 18/10/2026; it consumes `GET /api/catalogo/{movie,tv}/{id}/providers/` from `tmdb-endpoints`). Only with a session, in the account's `pais` (27/10/2026, issue #124). Without a session it MUST NOT be requested; in its place the page MUST show the link «Log in to see where to watch it in your country» to `/login?next=<current path>`. A failed request MUST also hide it, because it is not critical content. While it loads it MUST show a static placeholder with `role="status"`.
 
-With providers, the page MUST show a button line «Stream or rent» + up to four logos + «N options in {country}» (plural-aware, country name in the active language) that opens a panel («Where to watch», `role="dialog"`, closed with Escape or an outside click, `aria-expanded` on the button) with the non-empty groups Stream, Free, Rent and Buy. Logos MUST NOT be links: TMDB gives no per-platform URLs, so the panel has a single «See all options on TMDB» link (new tab) when `enlace` is present. A logo missing from TMDB MUST be replaced by the platform's initial. The panel MUST carry the JustWatch attribution «Data by JustWatch», linking to justwatch.com; this attribution is a condition of TMDB's data and MUST NOT be removed. With no providers for the country it MUST say «Not available to stream, rent or buy in {country} yet.»
+With providers, the page MUST show a button line «Stream or rent» + up to four logos + «N options in {country}» (plural-aware, country name in the active language) that ends in a chevron inside a circle (filled with the light colour on hover). The whole line is one button with `aria-expanded` and a 44 px tap area (canvas, section 17, 15/11/2026). It opens a modal dialog on desktop and a bottom sheet on mobile, with the same content («Where to watch», `role="dialog"`, `aria-modal`, labelled by its title), closed with Escape, its 44 px close button or a tap on the backdrop outside the box (19/11/2026), after which focus returns to the line (through a ref to the button, not to whatever had the focus: in Safari a click does not focus it and the `body` would get it). The content is one surface with hairlines between the non-empty groups Stream, Free, Rent and Buy, in that order, and 40 px logos without names (the name goes in the accessible label and the tooltip). Free joins TMDB's `free` and `ads`, appears only when it has data, and its heading reads «Free (with or without ads)» / «Gratis (con o sin publicidad)» (16/11/2026). Logos MUST NOT be links: TMDB gives no per-platform URLs, so the panel has a single «See all options on TMDB» link (new tab) when `enlace` is present. A logo missing from TMDB MUST be replaced by the platform's initial. The panel MUST carry the JustWatch attribution «Data by JustWatch», linking to justwatch.com; this attribution is a condition of TMDB's data and MUST NOT be removed. With no providers for the country it MUST say «Not available to stream, rent or buy in {country} yet.»
 
 #### Scenario: Account country
 

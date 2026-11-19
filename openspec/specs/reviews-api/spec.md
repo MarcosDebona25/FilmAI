@@ -239,10 +239,10 @@ Supplying only one of the two parameters MUST answer 400, never fall back to the
 
 ### Requirement: A rated production is in `Vistas`
 
-Every rating's production MUST be in its author's predetermined `Vistas` list (decided 30/09/2026: "if you rated it, you watched it"). CU-011 already enforced one half — a rated production cannot leave `Vistas` without confirming the rating's deletion. This requirement adds the other:
+Every rating's production MUST be in its author's predetermined `Vistas` list (decided 30/09/2026: "if you rated it, you watched it"). Since 16/11/2026 the status is free after rating (`list-endpoints`, «One status per production»): rating moves the production to `Vistas`, but it can later move to `Pendientes`, `Viendo` or no status and the rating is kept.
 
-- `POST /api/reviews/` MUST add the production to `Vistas` when it is not there, **in the same transaction** as the rating. If it cannot be added, the rating MUST NOT be stored. Entering `Vistas` this way also removes it from the author's `Pendientes` (`list-endpoints`, 14/10/2026).
-- `DELETE /api/reviews/{id}/` MUST remove the production from the author's `Vistas`, in the same transaction as the deletion. It ends in the same state as removing from `Vistas` with `borrar_calificacion=true`.
+- `POST /api/reviews/` MUST add the production to `Vistas` when it is not there, **in the same transaction** as the rating. If it cannot be added, the rating MUST NOT be stored. Entering `Vistas` this way removes it from the author's `Pendientes` and `Viendo` (`poner_estado`).
+- `DELETE /api/reviews/{id}/` MUST remove the production from the author's `Vistas`, in the same transaction as the deletion. `Pendientes` and `Viendo` are not touched.
 - Editing the rating or the text, and deleting only the text, MUST NOT change `Vistas`.
 
 The converse does not hold: a production can be in `Vistas` without a rating (CU-011). The writes into `Tiene` go through `listas/services.py`, owned by the lists module. Ratings stored before this rule are repaired once by the data migration `listas.0004_calificadas_en_vistas`.
@@ -273,27 +273,16 @@ The converse does not hold: a production can be in `Vistas` without a rating (CU
 - WHEN only the text is deleted
 - THEN it is still in their `Vistas`
 
-### Requirement: Removing from `Vistas` may delete the rating on request
+### Requirement: Removing from `Vistas` keeps the rating
 
-`DELETE /api/lists/{id}/items/{item_id}/` accepts `?borrar_calificacion=`. Without it, or with a false value, the 409 required by CU-011 stands unchanged. With a true value, and only for the predetermined `Vistas` list, the rating and the item MUST be deleted **in a single transaction**.
+Retired on 16/11/2026 together with `?borrar_calificacion=` and the 409 `rating_blocks_removal_from_watched`: removing a production from `Vistas`, or moving it to another status, keeps its rating and answers 204 (No Content) or 200 (OK).
 
-The flag is permission, not instruction: with no rating present it is an ordinary removal, and on any other list it deletes nothing extra. A value that is neither true nor false MUST answer 400 rather than be guessed, because a typo read as false would answer 409 to a user who already confirmed the deletion.
-
-Two frontend calls MUST NOT be the mechanism: they are not atomic, and a failure between them would lose the rating while leaving the production in `Vistas`.
-
-#### Scenario: Confirmed removal
+#### Scenario: Removing a rated production from `Vistas`
 
 - GIVEN a production in `Vistas` rated by its owner
-- WHEN the item is deleted with `borrar_calificacion=true`
-- THEN the item and the rating are both gone
-- AND the review text is gone with the rating
-
-#### Scenario: The default is unchanged
-
-- GIVEN the same state
-- WHEN the item is deleted with no flag
-- THEN the response is 409 with `code: "rating_blocks_removal_from_watched"`
-- AND nothing is deleted
+- WHEN the item is deleted
+- THEN the response is 204 (No Content)
+- AND the rating and its text are still there
 
 ## What this capability does not touch
 
@@ -323,4 +312,4 @@ username to other users, as established by the current account lifecycle.
 
 ### Definitive error contract
 
-Errors expose only `code`, `params`, `errors` and conditional development `debug`. Previous `codigo`, `detail` and root field keys are removed. Rating duplication uses `rating_duplicated`; removal from the watched list uses `rating_blocks_removal_from_watched`; touching the text of a moderated review uses `review_moderated`. The frontend displays localized messages and marks fallback English titles with `lang="en"`.
+Errors expose only `code`, `params`, `errors` and conditional development `debug`. Previous `codigo`, `detail` and root field keys are removed. Rating duplication uses `rating_duplicated`; touching the text of a moderated review uses `review_moderated`. The frontend displays localized messages and marks fallback English titles with `lang="en"`.

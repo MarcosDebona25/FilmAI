@@ -1,6 +1,6 @@
 """Pruebas HTTP de «Parecidos a {título}»: `GET /api/catalogo/{movie|tv}/{id}/similar/`.
 
-Diseño en `openspec/changes/recomendaciones-similares/design.md` §7. El motor
+Diseño en `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026). El motor
 tiene sus propios tests (`tests_similares.py`); acá se prueba lo que agrega la
 vista: quién puede pedirla, qué se cachea, qué se le saca a cada usuario y qué
 cabeceras lleva la respuesta. TMDB se reemplaza por `ServicioFalso`.
@@ -275,6 +275,18 @@ class SimilaresConSesionTests(BaseSimilaresAPI):
         self.assertIn("private", respuesta["Cache-Control"])
         self.assertNotIn("public", respuesta["Cache-Control"])
         self.assertNotIn("max-age", respuesta["Cache-Control"])
+
+    def test_saca_lo_que_el_usuario_esta_viendo(self):
+        url = self.poblar()
+        usuario, cliente = self.con_sesion()
+        Tiene.objects.create(
+            lista=usuario.listas.get(clave=ClaveLista.VIENDO),
+            produccion=self.vecinas[0],
+        )
+
+        respuesta = cliente.get(url)
+
+        self.assertNotIn(("movie", self.vecinas[0].id_tmdb), self.ids(respuesta))
 
     def test_dos_usuarios_comparten_el_pool_y_cada_uno_pierde_solo_sus_vistas(self):
         url = self.poblar(vecinas=5)

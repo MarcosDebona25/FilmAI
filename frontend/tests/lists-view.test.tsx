@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 
+import { CLASE_GRILLA_LISTAS } from "@/components/features/lists/ListsGridSkeleton";
 import { ListsView } from "@/components/features/lists/ListsView";
 import { ApiError } from "@/lib/api";
 import en from "@/messages/en/common.json";
@@ -26,6 +27,7 @@ function lista(id: number, nombre: string, extra: Partial<ResumenLista> = {}): R
 const INICIALES: ResumenLista[] = [
   lista(1, "Favorites", { clave: "favoritos", tipo: "predeterminada", cantidad_items: 2 }),
   lista(2, "Watchlist", { clave: "pendientes", tipo: "predeterminada" }),
+  lista(4, "Watching", { clave: "viendo", tipo: "predeterminada", cantidad_items: 1 }),
   lista(3, "Watched", { clave: "vistas", tipo: "predeterminada" }),
   lista(10, "Maratón", {
     cantidad_items: 7,
@@ -77,7 +79,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
         ];
       }
       if (method === "PUT")
-        return { ...(estado.listas as ResumenLista[])[3], ...(opciones.body as object) };
+        return { ...(estado.listas as ResumenLista[])[4], ...(opciones.body as object) };
       return undefined;
     }),
   };
@@ -103,16 +105,17 @@ describe("Listas: vista general", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Lists" })).toBeInTheDocument();
     // La grilla (con dnd-kit) llega en un chunk aparte.
     await screen.findByText("Maratón");
-    expect(screen.getByText("6 lists · 3 defaults")).toBeInTheDocument();
+    expect(screen.getByText("7 lists · 4 defaults")).toBeInTheDocument();
     expect(nombres()).toEqual([
       "Favorites",
       "Watchlist",
+      "Watching",
       "Watched",
       "Maratón",
       "Clásicos",
       "Terror",
     ]);
-    expect(screen.getAllByText(en.common.lists.defaultBadge)).toHaveLength(3);
+    expect(screen.getAllByText(en.common.lists.defaultBadge)).toHaveLength(4);
     // Solo las personalizadas tienen ⋯ y manija.
     expect(screen.getAllByRole("button", { name: /^Actions for the list/ })).toHaveLength(3);
     expect(screen.getAllByRole("button", { name: en.common.lists.reorderLabel })).toHaveLength(3);
@@ -121,14 +124,43 @@ describe("Listas: vista general", () => {
     expect(screen.getByRole("link", { name: "Maratón" })).toHaveAttribute("href", "/lists/10");
   });
 
+  it("la grilla es de 4, 2 y 1 columnas, así las 4 predeterminadas llenan la primera fila", async () => {
+    render(<ListsView />, { locale: "en" });
+    await screen.findByText("Maratón");
+
+    const grilla = screen.getByRole("heading", { level: 2, name: "Favorites" }).closest("ul")!;
+    expect(grilla).toHaveClass(
+      "grid-cols-1",
+      "min-[40rem]:grid-cols-2",
+      "min-[73.75rem]:grid-cols-4"
+    );
+    expect(CLASE_GRILLA_LISTAS).toContain("min-[73.75rem]:grid-cols-4");
+    expect(CLASE_GRILLA_LISTAS).not.toContain("auto-fill");
+  });
+
+  it("la tarjeta apila hasta 4 posters en escritorio y 3 en celular; «N more» cuenta lo que queda", async () => {
+    render(<ListsView />, { locale: "en" });
+    await screen.findByText("Maratón");
+
+    const tarjeta = screen.getByRole("heading", { level: 2, name: "Maratón" }).closest("article")!;
+    const posters = Array.from(tarjeta.querySelectorAll("img"));
+    expect(posters).toHaveLength(4);
+    expect(posters[3].closest("span.relative")).toHaveClass("hidden", "md:block");
+    expect(posters[2].closest("span.relative")).not.toHaveClass("hidden");
+    // 7 ítems: escritorio ve 4 posters (quedan 3) y celular ve 3 (quedan 4).
+    expect(within(tarjeta).getByText("3 more")).toHaveClass("hidden", "md:inline");
+    expect(within(tarjeta).getByText("4 more")).toHaveClass("md:hidden");
+  });
+
   it("nombra las predeterminadas por su clave en cada idioma", async () => {
     render(<ListsView />, { locale: "es" });
 
     await screen.findByRole("heading", { level: 1, name: es.nav.main.lists });
     await screen.findByText("Maratón");
-    expect(nombres().slice(0, 3)).toEqual([
+    expect(nombres().slice(0, 4)).toEqual([
       es.enums.defaultList.favoritos,
       es.enums.defaultList.pendientes,
+      es.enums.defaultList.viendo,
       es.enums.defaultList.vistas,
     ]);
   });
@@ -236,7 +268,7 @@ describe("Listas: vista general", () => {
     expect(screen.getByRole("button", { name: en.common.lists.moveDown })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: en.common.lists.moveUp }));
 
-    await waitFor(() => expect(nombres().slice(3)).toEqual(["Clásicos", "Maratón", "Terror"]));
+    await waitFor(() => expect(nombres().slice(4)).toEqual(["Clásicos", "Maratón", "Terror"]));
     expect(escrituras()).toEqual([
       { path: "/api/lists/order/", method: "PUT", body: { ids: [11, 10, 12] } },
     ]);
@@ -273,7 +305,7 @@ describe("Listas: vista general", () => {
     expect(screen.queryByRole("menuitem", { name: en.common.lists.moveUp })).toBeNull();
     await user.click(screen.getByRole("menuitem", { name: en.common.lists.moveRight }));
 
-    await waitFor(() => expect(nombres().slice(3)).toEqual(["Maratón", "Terror", "Clásicos"]));
+    await waitFor(() => expect(nombres().slice(4)).toEqual(["Maratón", "Terror", "Clásicos"]));
     vi.unstubAllGlobals();
   });
 
@@ -290,7 +322,7 @@ describe("Listas: vista general", () => {
     await user.click(screen.getByRole("button", { name: en.common.lists.moveUp }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
-    expect(nombres().slice(3)).toEqual(["Maratón", "Clásicos", "Terror"]);
+    expect(nombres().slice(4)).toEqual(["Maratón", "Clásicos", "Terror"]);
     expect(screen.queryByText(en.lists.reorder.saved)).toBeNull();
   });
 });

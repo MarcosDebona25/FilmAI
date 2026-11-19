@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, LoaderCircle, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronLeft, Clock, LoaderCircle, Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -12,9 +12,13 @@ import { ListActionsMenu } from "@/components/features/lists/ListActionsMenu";
 import { useNombreLista } from "@/components/features/lists/ListCard";
 import { ListFiltersSheet } from "@/components/features/lists/ListFiltersSheet";
 import { ListNameDialog } from "@/components/features/lists/ListNameDialog";
+import { ListSuggestions } from "@/components/features/lists/ListSuggestions";
+import { useEstadoViendo } from "@/components/features/lists/use-estado-viendo";
+import { WatchingCardMenu, type AccionViendo } from "@/components/features/lists/WatchingCardMenu";
 import { MediaCard } from "@/components/features/MediaCard";
 import { UnavailableCard } from "@/components/features/UnavailableCard";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
+import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useFormats } from "@/lib/format";
@@ -33,32 +37,47 @@ import {
   hayFiltros,
   itemATitulo,
   rutaPaginaItems,
+  tieneSugerencias,
   urlDeFiltros,
   type FiltrosLista,
   type ItemLista,
   type PaginaItems,
   type ResumenLista,
 } from "@/lib/lists";
+import { crearCalificacion, editarCalificacion } from "@/lib/review-actions";
 import { routes } from "@/lib/routes";
 import { ETIQUETA_NOTA, NOTAS } from "@/lib/search";
 import type { MiCalificacion } from "@/lib/title";
+import { useCursorList } from "@/lib/use-cursor-list";
+import { useSentinel } from "@/lib/use-sentinel";
 import { cn } from "@/lib/utils";
 
 /** Espera después de la última tecla antes de filtrar, como Buscar. */
 const ESPERA_MS = 350;
-/** Distancia al final de la grilla a la que se pide la página siguiente. */
-const ANTICIPO = "600px";
+/**
+ * El aviso de la ficha al agregar a una predeterminada con sugerencias; acá se
+ * reutiliza. Pendientes y Viendo no tienen sugerencias, así que no están.
+ */
+const AVISO_AGREGADA = {
+  favoritos: "title.feedback.favoriteAdded",
+  vistas: "title.feedback.watchedAdded",
+} as const;
 
 type Datos = { items: ItemLista[]; next: string | null; total: number };
-type Accion =
-  { tipo: "quitar"; item: ItemLista } | { tipo: "vistas"; item: ItemLista; texto: string | null };
+type Accion = { tipo: "quitar"; item: ItemLista };
+/**
+ * El diálogo de calificar abierto desde una tarjeta de Watching. `enGrilla`:
+ * la tarjeta sigue ahí (menú ⋯); si no, ya pasó a Watched (el «Rate it» del
+ * toast). `propia`: la calificación que ya tenía, que se edita sin mover nada.
+ */
+type Calificando = { item: ItemLista; enGrilla: boolean; propia: MiCalificacion | null };
 
 /**
  * Detalle de una lista según el canvas «List detail» (L-03). Los filtros viven
  * en la URL; los ítems se piden por cursor a `GET /api/lists/{id}/items/`.
- * Quitar de «Watched» un título calificado responde 409 (Conflict): se pide
- * confirmar el borrado de la calificación y se reintenta con
- * `?borrar_calificacion=true`, igual que en la ficha.
+ * Watching (PR 4) usa esta misma página: suma el menú ⋯ por tarjeta, que pasa
+ * el título a Watched, lo califica o lo deja sin estado, con toast y Undo.
+ * Quitar de «Watched» conserva la calificación (backend, 16/11/2026).
  */
 export function ListDetailView({ id }: { id: number }) {
   const t = useTranslations();
@@ -72,15 +91,45 @@ export function ListDetailView({ id }: { id: number }) {
   const [noExiste, setNoExiste] = useState(false);
   const [errorLista, setErrorLista] = useState(false);
   const [texto, setTexto] = useState(filtros.q);
-  const [datos, setDatos] = useState<Datos | null>(null);
-  const [estado, setEstado] = useState<"cargando" | "listo" | "error">("cargando");
-  const [mas, setMas] = useState<"quieto" | "cargando" | "error">("quieto");
-  const [intento, setIntento] = useState(0);
+  // Primera página de cada combinación de filtros, y las siguientes al bajar.
+  const {
+    datos,
+    setDatos,
+    estado,
+    mas,
+    cargarMas,
+    intento,
+    reintentar,
+    recargarPrimera,
+    puedeSeguir,
+  } = useCursorList<PaginaItems, Datos>({
+    cuenta: perfil?.pk,
+    primera: consulta,
+    rutaSiguiente: (next) => rutaPaginaItems(id, next),
+    inicial: (pagina) => ({ items: pagina.results, next: pagina.next, total: pagina.total }),
+    combinar: (actual, pagina) => ({
+      ...actual,
+      items: combinarItems(actual.items, pagina.results),
+      next: pagina.next,
+    }),
+  });
   const [hoja, setHoja] = useState(false);
   const [dialogo, setDialogo] = useState<"renombrar" | "eliminar" | null>(null);
   const [accion, setAccion] = useState<Accion | null>(null);
-  const pedido = useRef(0);
+  // Sube con cada alta, baja o renombre: el backend arma otro pool de sugerencias.
+  const [revision, setRevision] = useState(0);
+  // Watching: qué tarjeta tiene el menú ⋯ abierto (uno solo) y qué se califica.
+  const [menuAbierto, setMenuAbierto] = useState<number | null>(null);
+  const [calificando, setCalificando] = useState<Calificando | null>(null);
+  const [idPendientes, setIdPendientes] = useState<number | null>(null);
   const centinela = useRef<HTMLDivElement>(null);
+  // Los datos de la grilla de ahora, para decidir fuera de un updater (ver `meterEnLaGrilla`).
+  const datosAhora = useRef(datos);
+  // Con `useLayoutEffect` la ref se pone al día en el mismo commit que pinta la
+  // grilla: un Undo que llegue justo después ya ve la tarjeta que se está mostrando.
+  useLayoutEffect(() => {
+    datosAhora.current = datos;
+  }, [datos]);
   const titulo = useRef<HTMLHeadingElement>(null);
   const campo = useRef<HTMLInputElement>(null);
   const ids = useId();
@@ -125,59 +174,19 @@ export function ListDetailView({ id }: { id: number }) {
     };
   }, [id, perfil?.pk, intento]);
 
-  // Primera página de cada combinación de filtros. Mientras llega la nueva
-  // queda la anterior a la vista; una respuesta vieja se descarta.
-  useEffect(() => {
-    if (!perfil?.pk) return;
-    const pedidoId = ++pedido.current;
-    setEstado("cargando");
-    apiFetch<PaginaItems>(consulta).then(
-      (pagina) => {
-        if (pedidoId !== pedido.current) return;
-        setDatos({ items: pagina.results, next: pagina.next, total: pagina.total });
-        setEstado("listo");
-        setMas("quieto");
-      },
-      () => {
-        if (pedidoId === pedido.current) setEstado("error");
-      }
-    );
-  }, [consulta, perfil?.pk, intento]);
-
-  function cargarMas() {
-    if (!datos?.next || mas === "cargando" || estado !== "listo") return;
-    const pedidoId = pedido.current;
-    setMas("cargando");
-    apiFetch<PaginaItems>(rutaPaginaItems(id, datos.next)).then(
-      (pagina) => {
-        if (pedidoId !== pedido.current) return;
-        setDatos((actual) =>
-          actual
-            ? { ...actual, items: combinarItems(actual.items, pagina.results), next: pagina.next }
-            : actual
-        );
-        setMas("quieto");
-      },
-      () => {
-        if (pedidoId === pedido.current) setMas("error");
-      }
-    );
-  }
-
   // Carga al bajar; el botón «Cargar más» queda para teclado y como respaldo.
-  useEffect(() => {
-    if (!datos?.next || mas !== "quieto" || estado !== "listo" || !centinela.current) return;
-    const observador = new IntersectionObserver(
-      ([entrada]) => {
-        if (entrada.isIntersecting) cargarMas();
-      },
-      { rootMargin: ANTICIPO }
-    );
-    observador.observe(centinela.current);
-    return () => observador.disconnect();
+  // El centinela solo se dibuja cuando ya llegó la lista (con su nombre) (otro pedido,
+  // que puede terminar después de la primera página): `reiniciar` hace que el
+  // observador se cree cuando el nodo ya existe, y no se quede sin observar nada.
+  useSentinel(centinela, {
+    activo: puedeSeguir,
+    alVer: cargarMas,
+    reiniciar: lista ? "con-lista" : "sin-lista",
   });
 
+  /** Saca la tarjeta y devuelve el lugar que tenía, para que Undo la ponga ahí. */
   function sacarDeLaGrilla(item: ItemLista) {
+    const indice = datos?.items.findIndex((otro) => otro.item_id === item.item_id) ?? -1;
     setDatos((actual) =>
       actual
         ? {
@@ -200,38 +209,140 @@ export function ListDetailView({ id }: { id: number }) {
           }
         : actual
     );
+    setRevision((anterior) => anterior + 1);
     // La tarjeta ya no existe: el foco va al título de la página.
+    enfocarTitulo();
+    return Math.max(0, indice);
+  }
+
+  /**
+   * Lo que tenía el foco dejó de dibujarse (una tarjeta quitada, la banda de
+   * sugerencias agotada): va al título de la lista, después de que React pinte.
+   */
+  function enfocarTitulo() {
     requestAnimationFrame(() => titulo.current?.focus());
   }
 
-  async function quitar(item: ItemLista) {
+  /** Un título agregado desde las sugerencias: ya está guardado, falta mostrarlo. */
+  function sumarALaGrilla(item: ItemLista) {
+    setLista((actual) =>
+      actual
+        ? {
+            ...actual,
+            cantidad_items: actual.cantidad_items + 1,
+            cantidad_peliculas: actual.cantidad_peliculas + (item.tipo === "movie" ? 1 : 0),
+            cantidad_series: actual.cantidad_series + (item.tipo === "tv" ? 1 : 0),
+          }
+        : actual
+    );
+    // Con un filtro activo no se sabe si el título lo cumple (eso lo decide el
+    // backend): cuenta en la lista y aparece al quitar el filtro.
+    if (!filtrando) {
+      // «Recently added» lo lleva primero. En los demás órdenes el lugar lo decide
+      // el backend (por título, por nota, o al final con muchas páginas): se vuelve
+      // a pedir la primera página en vez de adivinarlo.
+      if (filtros.orden === "recent")
+        setDatos((actual) =>
+          actual ? { ...actual, items: [item, ...actual.items], total: actual.total + 1 } : actual
+        );
+      else recargarPrimera();
+    }
+    setRevision((anterior) => anterior + 1);
+    if (!lista) return;
+    toast.success(
+      lista.clave === "favoritos" || lista.clave === "vistas"
+        ? t(AVISO_AGREGADA[lista.clave])
+        : t("title.lists.addedFeedback", { title: item.titulo, listName: lista.nombre })
+    );
+  }
+
+  /** Vuelve una tarjeta a su lugar (Undo, o un cambio que falló). */
+  function meterEnLaGrilla(item: ItemLista, indice: number) {
+    // El conteo solo sube si la tarjeta de verdad se inserta. Se decide aquí, con
+    // el estado de ahora, y no dentro del updater de `setDatos` (en StrictMode
+    // corre dos veces).
+    const actual = datosAhora.current;
+    if (!actual || actual.items.some((otro) => otro.item_id === item.item_id)) return;
+    const items = [...actual.items];
+    items.splice(Math.min(indice, items.length), 0, item);
+    datosAhora.current = { ...actual, items, total: actual.total + 1 };
+    setDatos(datosAhora.current);
+    setLista((anterior) =>
+      anterior
+        ? {
+            ...anterior,
+            cantidad_items: anterior.cantidad_items + 1,
+            cantidad_peliculas: anterior.cantidad_peliculas + (item.tipo === "movie" ? 1 : 0),
+            cantidad_series: anterior.cantidad_series + (item.tipo === "tv" ? 1 : 0),
+          }
+        : anterior
+    );
+  }
+
+  const viendo = useEstadoViendo({
+    sacar: sacarDeLaGrilla,
+    meter: meterEnLaGrilla,
+    onCalificar: (item) => void pedirCalificar(item, false),
+  });
+
+  async function pedirCalificar(item: ItemLista, enGrilla: boolean) {
+    let propia: MiCalificacion | null = null;
     try {
-      await apiFetch(`/api/lists/${id}/items/${item.item_id}/`, { method: "DELETE" });
-    } catch (motivo) {
-      if (!(motivo instanceof ApiError) || motivo.code !== "rating_blocks_removal_from_watched")
-        throw motivo;
-      // Calificado en «Watched»: se pide confirmar el borrado de la calificación.
-      // El texto de la reseña, si hay, se muestra en la confirmación.
-      const propia = await apiFetch<MiCalificacion | null>(
+      propia = await apiFetch<MiCalificacion>(
         `/api/reviews/mias/?id_tmdb=${item.id_tmdb}&tipo=${item.tipo}`
-      ).catch(() => null);
-      setAccion({ tipo: "vistas", item, texto: propia?.texto ?? null });
+      );
+    } catch (motivo) {
+      if (!(motivo instanceof ApiError && motivo.status === 404)) {
+        toast.error(mensajeDeError(motivo));
+        return;
+      }
+    }
+    setCalificando({ item, enGrilla, propia });
+  }
+
+  function elegirDelMenu(item: ItemLista, accion: AccionViendo) {
+    setMenuAbierto(null);
+    if (accion === "calificar") void pedirCalificar(item, true);
+    else void viendo.mover(item, accion === "terminar" ? "vistas" : null);
+  }
+
+  async function guardarCalificacion({ valor, texto }: { valor: number; texto: string }) {
+    if (!calificando) return;
+    const { item, enGrilla, propia } = calificando;
+    if (propia) {
+      // Ya tenía nota: se edita y el estado no cambia (como en la ficha).
+      const { aviso } = await editarCalificacion(propia, valor, texto);
+      if (aviso) toast.success(t(`title.feedback.${aviso}`));
+      setCalificando(null);
       return;
     }
+    await crearCalificacion({ idTmdb: item.id_tmdb, tipo: item.tipo, valor, texto });
+    setCalificando(null);
+    if (enGrilla) viendo.avisarCalificadaYMovida(item, valor);
+    else viendo.avisarCalificada({ valor, conResena: Boolean(texto) });
+  }
+
+  // «Open Watchlist» va a la lista Pendientes, que se busca por su clave.
+  const esViendo = lista?.clave === "viendo";
+  const vaciaViendo = esViendo && lista?.cantidad_items === 0;
+  useEffect(() => {
+    if (!vaciaViendo || idPendientes !== null) return;
+    let vigente = true;
+    apiFetch<ResumenLista[]>("/api/lists/").then(
+      (todas) =>
+        vigente && setIdPendientes(todas.find((otra) => otra.clave === "pendientes")?.id ?? null),
+      () => undefined
+    );
+    return () => {
+      vigente = false;
+    };
+  }, [vaciaViendo, idPendientes]);
+
+  async function quitar(item: ItemLista) {
+    await apiFetch(`/api/lists/${id}/items/${item.item_id}/`, { method: "DELETE" });
     sacarDeLaGrilla(item);
     setAccion(null);
     toast.success(t("lists.feedback.itemRemoved"));
-  }
-
-  async function quitarConCalificacion(item: ItemLista, conTexto: boolean) {
-    await apiFetch(`/api/lists/${id}/items/${item.item_id}/?borrar_calificacion=true`, {
-      method: "DELETE",
-    });
-    sacarDeLaGrilla(item);
-    setAccion(null);
-    toast.success(
-      t(conTexto ? "title.feedback.ratingReviewDeleted" : "title.feedback.ratingDeleted")
-    );
   }
 
   async function renombrar(nombre: string) {
@@ -240,6 +351,7 @@ export function ListDetailView({ id }: { id: number }) {
       body: { nombre },
     });
     setLista((actual) => (actual ? { ...actual, ...actualizada } : actual));
+    setRevision((anterior) => anterior + 1);
     setDialogo(null);
     toast.success(t("lists.feedback.renamed"));
   }
@@ -277,12 +389,16 @@ export function ListDetailView({ id }: { id: number }) {
 
   const vacia = lista !== null && lista.cantidad_items === 0;
   const sinCoincidencias = datos !== null && !vacia && datos.items.length === 0;
+  // Una lista sin ítems dice solo «0 ítems»: el desglose «· 0 películas · 0 series» sobra.
   const resumen = lista
-    ? [
-        t("lists.count.items", { count: lista.cantidad_items }),
-        t("lists.count.movies", { count: lista.cantidad_peliculas }),
-        t("lists.count.tvShows", { count: lista.cantidad_series }),
-      ].join(" · ")
+    ? (vacia
+        ? [t("lists.count.items", { count: 0 })]
+        : [
+            t("lists.count.items", { count: lista.cantidad_items }),
+            t("lists.count.movies", { count: lista.cantidad_peliculas }),
+            t("lists.count.tvShows", { count: lista.cantidad_series }),
+          ]
+      ).join(" · ")
     : null;
 
   return (
@@ -315,7 +431,9 @@ export function ListDetailView({ id }: { id: number }) {
           </ol>
         </nav>
         <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-2 md:gap-3">
+          {/* El conteo va en la línea del título (canvas «Watching · list page»);
+              en celular solo dice cuántos ítems, en escritorio el desglose. */}
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 md:gap-x-5">
             <h1
               ref={titulo}
               tabIndex={-1}
@@ -323,7 +441,14 @@ export function ListDetailView({ id }: { id: number }) {
             >
               {nombre ?? <span className="sr-only">{t("lists.detail.loading")}</span>}
             </h1>
-            {resumen && <p className="text-fg-2">{resumen}</p>}
+            {lista && (
+              <p className="text-sm text-fg-2 md:text-base">
+                <span className="md:hidden">
+                  {t("lists.count.items", { count: lista.cantidad_items })}
+                </span>
+                <span className="hidden md:inline">{resumen}</span>
+              </p>
+            )}
           </div>
           {lista && !esPredeterminada(lista) && nombre && (
             <ListActionsMenu
@@ -353,7 +478,7 @@ export function ListDetailView({ id }: { id: number }) {
       ) : errorLista ? (
         <ErrorRetry
           mensaje={t("lists.detail.loadError")}
-          onReintentar={() => setIntento((anterior) => anterior + 1)}
+          onReintentar={reintentar}
           boton="pildora"
         />
       ) : (
@@ -541,7 +666,7 @@ export function ListDetailView({ id }: { id: number }) {
           {estado === "error" && (
             <ErrorRetry
               mensaje={t("lists.detail.loadError")}
-              onReintentar={() => setIntento((anterior) => anterior + 1)}
+              onReintentar={reintentar}
               boton="pildora"
               className="border-t border-line py-10"
             />
@@ -550,15 +675,27 @@ export function ListDetailView({ id }: { id: number }) {
           {vacia && estado === "listo" && (
             <div className="flex flex-col items-start gap-3 border-t border-line py-10">
               <h2 className="font-display text-[1.875rem] leading-none md:text-[2.125rem]">
-                {t("lists.detail.emptyTitle")}
+                {t(esViendo ? "lists.watching.emptyTitle" : "lists.detail.emptyTitle")}
               </h2>
-              <p className="max-w-[52ch] text-fg-2">{t("lists.detail.emptyDescription")}</p>
-              <Link
-                href={routes.search}
-                className="inline-flex h-11 items-center rounded-full bg-raised-2 px-[1.125rem] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                {t("common.actions.explore")}
-              </Link>
+              <p className="max-w-[52ch] text-fg-2">
+                {t(esViendo ? "lists.watching.emptyDescription" : "lists.detail.emptyDescription")}
+              </p>
+              {esViendo ? (
+                <Link
+                  href={idPendientes !== null ? routes.list(idPendientes) : routes.lists}
+                  className="inline-flex h-12 items-center gap-2 rounded-full bg-raised-2 px-5 font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring md:h-11 md:px-[1.125rem]"
+                >
+                  <Clock aria-hidden="true" className="size-[1.125rem]" />
+                  {t("lists.watching.openWatchlist")}
+                </Link>
+              ) : (
+                <Link
+                  href={routes.search}
+                  className="inline-flex h-11 items-center rounded-full bg-raised-2 px-[1.125rem] font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  {t("common.actions.explore")}
+                </Link>
+              )}
             </div>
           )}
 
@@ -589,32 +726,45 @@ export function ListDetailView({ id }: { id: number }) {
                         showUnrated
                         fluid
                         addedAt={item.fecha_agregado}
+                        addedKind={esViendo ? "started" : "added"}
                         from={`list-${id}`}
                       />
                     ) : (
-                      <UnavailableCard addedAt={item.fecha_agregado} />
+                      <UnavailableCard
+                        addedAt={item.fecha_agregado}
+                        addedKind={esViendo ? "started" : "added"}
+                      />
                     )}
-                    <button
-                      type="button"
-                      aria-label={t("lists.detail.removeItemLabel", {
-                        title: tituloDe(item),
-                        listName: nombre,
-                      })}
-                      onClick={() => setAccion({ tipo: "quitar", item })}
-                      className="absolute top-2 right-2 grid size-11 cursor-pointer place-items-center rounded-full bg-black/70 text-white opacity-0 backdrop-blur-sm transition-opacity group-focus-within/item:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none [@media(hover:none)]:opacity-100"
-                    >
-                      <X aria-hidden="true" className="size-5" />
-                    </button>
+                    {esViendo ? (
+                      item.disponible && (
+                        <WatchingCardMenu
+                          titulo={item.titulo}
+                          abierto={menuAbierto === item.item_id}
+                          onAbrir={() => setMenuAbierto(item.item_id)}
+                          onCerrar={() => setMenuAbierto(null)}
+                          onElegir={(accion) => elegirDelMenu(item, accion)}
+                        />
+                      )
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label={t("lists.detail.removeItemLabel", {
+                          title: tituloDe(item),
+                          listName: nombre,
+                        })}
+                        onClick={() => setAccion({ tipo: "quitar", item })}
+                        className="absolute top-2 right-2 grid size-11 cursor-pointer place-items-center rounded-full bg-black/70 text-white opacity-0 backdrop-blur-sm transition-opacity group-focus-within/item:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none [@media(hover:none)]:opacity-100"
+                      >
+                        <X aria-hidden="true" className="size-5" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
               {mas === "error" && (
                 <ErrorRetry
                   mensaje={t("lists.detail.loadError")}
-                  onReintentar={() => {
-                    setMas("quieto");
-                    cargarMas();
-                  }}
+                  onReintentar={cargarMas}
                   boton="pildora"
                   className="pt-6"
                 />
@@ -638,6 +788,20 @@ export function ListDetailView({ id }: { id: number }) {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Al final y solo con la grilla completa, así no se corre mientras llegan páginas. */}
+          {lista && nombre && tieneSugerencias(lista) && !vacia && (
+            <ListSuggestions
+              listaId={id}
+              nombre={nombre}
+              basadaEnLoReciente={lista.clave === "vistas"}
+              cantidad={lista.cantidad_items}
+              revision={revision}
+              visible={datos !== null && datos.next === null && estado !== "error"}
+              onAgregada={sumarALaGrilla}
+              onAgotada={enfocarTitulo}
+            />
           )}
         </>
       )}
@@ -679,19 +843,22 @@ export function ListDetailView({ id }: { id: number }) {
           onCancel={() => setAccion(null)}
         />
       )}
-      {accion?.tipo === "vistas" && (
-        <ConfirmDialog
-          titulo={t("title.watched.removeConfirmTitle")}
-          descripcion={t(
-            accion.texto
-              ? "title.rating.removeBothDescription"
-              : "title.rating.removeOnlyDescription",
-            { title: tituloDe(accion.item) }
-          )}
-          preview={accion.texto}
-          confirmar={t("title.watched.remove")}
-          onConfirm={() => quitarConCalificacion(accion.item, Boolean(accion.texto))}
-          onCancel={() => setAccion(null)}
+      {calificando && (
+        <RatingDialog
+          titulo={tituloDe(calificando.item)}
+          enVistas={!calificando.enGrilla}
+          enViendo={calificando.enGrilla}
+          inicial={
+            calificando.propia
+              ? {
+                  valor: calificando.propia.valor,
+                  texto: calificando.propia.texto,
+                  moderada: calificando.propia.moderada,
+                }
+              : undefined
+          }
+          onSubmit={guardarCalificacion}
+          onClose={() => setCalificando(null)}
         />
       )}
     </main>

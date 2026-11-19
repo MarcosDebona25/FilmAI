@@ -50,6 +50,7 @@ import {
   personaQueCoincide,
   type Fila,
 } from "@/lib/sugerencias";
+import { useSentinel, ANTICIPO } from "@/lib/use-sentinel";
 import { useSugerencias } from "@/lib/use-sugerencias";
 import { useCatalog, useCatalogPaginas } from "@/lib/use-catalog";
 
@@ -75,8 +76,6 @@ type Generos = { genres: { id: number; name: string }[] };
  * acota lo que dispara una URL con `page` alto: cada página es un pedido.
  */
 const MAX_PAGINAS = 25;
-/** Distancia al final de la grilla a la que se pide la página siguiente. */
-const ANTICIPO = "600px";
 /** Espera después de la última tecla antes de buscar (doc 04 §5b). */
 const ESPERA_MS = 350;
 /** Géneros con el mismo id en películas y series: sobreviven a cambiar el tipo. */
@@ -311,26 +310,20 @@ export function SearchView() {
   }, [todasCargadas, url]);
 
   // Cuando el final de la grilla se acerca a la pantalla, se pide la página siguiente.
-  useEffect(() => {
-    const nodo = centinela.current;
-    if (!nodo || !puedeSeguir || typeof IntersectionObserver === "undefined") return;
-    const observador = new IntersectionObserver(
-      (entradas) => {
-        if (!entradas.some((entrada) => entrada.isIntersecting)) return;
-        // El aviso llega asincrónico y `cambiar` recuerda la búsqueda de cuando
-        // se creó el observador: si la URL ya cambió (un filtro elegido
-        // mientras tanto), avanzar con la vieja lo borraría. Se compara
-        // normalizada para que el orden de los parámetros no importe.
-        const actual = urlDeBusqueda(busquedaDesdeUrl(new URLSearchParams(window.location.search)));
-        if (actual === url) cambiar({ pagina: cargadas + 1 });
-      },
-      { rootMargin: `0px 0px ${ANTICIPO} 0px` }
-    );
-    observador.observe(nodo);
-    return () => observador.disconnect();
-    // `url` resume la búsqueda que usa `cambiar`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puedeSeguir, cargadas, url]);
+  useSentinel(centinela, {
+    activo: puedeSeguir,
+    margen: `0px 0px ${ANTICIPO} 0px`,
+    // Recrear el observador al cambiar la página o la URL: avisa una vez al
+    // empezar a observar, y si el final sigue a la vista pide la siguiente.
+    reiniciar: `${cargadas} ${url}`,
+    alVer: () => {
+      // El aviso llega asincrónico: si la URL ya cambió (un filtro elegido
+      // mientras tanto), avanzar con la vieja lo borraría. Se compara
+      // normalizada para que el orden de los parámetros no importe.
+      const actual = urlDeBusqueda(busquedaDesdeUrl(new URLSearchParams(window.location.search)));
+      if (actual === url) cambiar({ pagina: cargadas + 1 });
+    },
+  });
   const q = busqueda.q.trim();
   // «¿Buscabas a…?»: con texto y sin persona filtrada, si entre las sugerencias
   // de ese mismo texto hay una persona que lo contiene, se ofrece su filmografía.

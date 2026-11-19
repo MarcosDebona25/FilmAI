@@ -14,15 +14,18 @@ from django.core import mail
 from django.core.management import CommandError, call_command
 from django.http import HttpRequest
 from django.test import Client, TestCase, TransactionTestCase
+from rest_framework.exceptions import ValidationError as ErrorDeValidacionAPI
 from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 
 from catalogo.factories import CalificacionFactory, ResenaFactory
 from catalogo.models import Calificacion, ProduccionAudiovisual, Resena, TipoProduccion
+from filmai.exceptions import filmai_exception_handler
 from listas.models import Tiene
 
 from .adapter import UsuarioSocialAccountAdapter
+from .avatares import AVATAR_ID_DEFAULT, AVATAR_IDS_VALIDOS
 from .factories import UsuarioFactory
 from .management.commands.seed import (
     CALIFICACIONES_POR_USUARIO_SOLO_RESENAS,
@@ -597,6 +600,124 @@ class GoogleOAuthTests(TestCase):
         self.assertEqual(usuario.nombre, "Nombre elegido")
         self.assertEqual(usuario.apellido, "Apellido elegido")
 
+    def test_populate_user_guarda_el_avatar_elegido(self):
+        """El avatar del paso 3 del alta con Google queda en el usuario nuevo."""
+        request = HttpRequest()
+        request.google_extra = {"nombre_usuario": "usuariogoogle", "avatar_id": 7}
+        sociallogin = SimpleNamespace(
+            user=Usuario(correo="google@filmai.com"),
+            account=SimpleNamespace(provider="google", uid="google-sub-avatar"),
+        )
+
+        user = UsuarioSocialAccountAdapter().populate_user(
+            request, sociallogin, {"email": "google@filmai.com"}
+        )
+
+        self.assertEqual(user.avatar_id, 7)
+
+    def test_populate_user_sin_avatar_asigna_el_de_siempre(self):
+        """`avatar_id` es opcional: sin él queda el avatar por defecto."""
+        request = HttpRequest()
+        request.google_extra = {"nombre_usuario": "usuariogoogle"}
+        sociallogin = SimpleNamespace(
+            user=Usuario(correo="google@filmai.com"),
+            account=SimpleNamespace(provider="google", uid="google-sub-avatar"),
+        )
+
+        user = UsuarioSocialAccountAdapter().populate_user(
+            request, sociallogin, {"email": "google@filmai.com"}
+        )
+
+        self.assertEqual(user.avatar_id, AVATAR_ID_DEFAULT)
+
+    def test_validate_adjunta_el_avatar_elegido_al_request(self):
+        """El serializer acepta `avatar_id` y se lo pasa al adapter."""
+        serializer, django_request = self._serializer_google(
+            extra={
+                "nombre_usuario": "usuariogoogle",
+                "fecha_nacimiento": "1995-05-10",
+                "genero": "no_especifica",
+                "pais": "AR",
+                "acepta_terminos": True,
+                "avatar_id": 7,
+            }
+        )
+        login = self._login_mock()
+        with (
+            self._patch_existencia(False),
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch(
+                "usuarios.serializers.complete_social_login",
+                side_effect=lambda _request, social_login: setattr(
+                    social_login, "is_existing", True
+                ),
+            ),
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=self._app()),
+            ),
+        ):
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        self.assertEqual(django_request.google_extra["avatar_id"], 7)
+
+    def test_avatar_fuera_del_catalogo_se_rechaza_como_en_el_alta_con_correo(self):
+        """Mismo campo, código y parámetros que `RegisterSerializer`."""
+        for invalido in (999, 0, -1):
+            with self.subTest(avatar_id=invalido):
+                serializer, _ = self._serializer_google(extra={"avatar_id": invalido})
+                with self.assertRaises(ErrorDeValidacionAPI) as error:
+                    serializer.is_valid(raise_exception=True)
+                response = filmai_exception_handler(error.exception, {})
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(
+                    response.data["errors"],
+                    [
+                        {
+                            "field": "avatar_id",
+                            "code": "avatar_invalid",
+                            "params": {"allowedIds": sorted(AVATAR_IDS_VALIDOS)},
+                        }
+                    ],
+                )
+
+    def test_login_cuenta_existente_no_cambia_su_avatar(self):
+        """En el login de una cuenta ya vinculada, `avatar_id` se ignora."""
+        usuario = UsuarioFactory(avatar_id=3)
+        cuenta = SocialAccount.objects.create(
+            user=usuario, provider="google", uid="google-sub-123"
+        )
+        serializer, django_request = self._serializer_google(extra={"avatar_id": 7})
+        login = self._login_mock()
+        login.user = usuario
+        login.account.user = usuario
+
+        with (
+            patch.object(serializer, "get_social_login", return_value=login),
+            patch(
+                "usuarios.serializers.complete_social_login",
+                side_effect=lambda _request, social_login: setattr(
+                    social_login, "is_existing", True
+                ),
+            ),
+            patch.object(
+                GoogleOAuth2Adapter,
+                "get_provider",
+                return_value=SimpleNamespace(app=self._app()),
+            ),
+        ):
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+        # El adapter es quien arma el usuario: con el vínculo ya creado devuelve
+        # la cuenta tal cual, aunque el request traiga un avatar.
+        resultado = UsuarioSocialAccountAdapter().populate_user(
+            django_request, SimpleNamespace(account=cuenta), {}
+        )
+
+        self.assertEqual(resultado.avatar_id, 3)
+        usuario.refresh_from_db()
+        self.assertEqual(usuario.avatar_id, 3)
+
     def test_registro_cuenta_nueva_sin_campos_devuelve_error(self):
         """Una cuenta de Google NUEVA (sin SocialAccount) exige los campos que
         Google no provee: `nombre_usuario`, `fecha_nacimiento`, `genero`."""
@@ -736,7 +857,7 @@ class RecursosPredeterminadosTests(TestCase):
     def test_usuario_nuevo_recibe_listas_y_chat_del_mvp(self):
         usuario = self._crear_usuario()
 
-        self.assertEqual(usuario.listas.count(), 3)
+        self.assertEqual(usuario.listas.count(), 4)
         self.assertEqual(
             set(usuario.listas.values_list("nombre", flat=True)),
             set(LISTAS_PREDETERMINADAS),
@@ -751,7 +872,7 @@ class RecursosPredeterminadosTests(TestCase):
         call_command("reparar_recursos_usuarios", "--usuario-id", usuario.pk)
         call_command("reparar_recursos_usuarios", "--usuario-id", usuario.pk)
 
-        self.assertEqual(usuario.listas.count(), 3)
+        self.assertEqual(usuario.listas.count(), 4)
         self.assertEqual(usuario.chats.count(), 1)
 
 

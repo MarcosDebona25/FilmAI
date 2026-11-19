@@ -143,7 +143,8 @@ ESQUEMAS = [
     _esquema(
         "mis_listas",
         "Sin `lista`, devuelve las listas del usuario. Con `lista`, lo que hay "
-        "adentro: `vistas`, `pendientes`, `favoritos` o el `id` de una personalizada.",
+        "adentro: `vistas`, `viendo`, `pendientes`, `favoritos` o el `id` de una "
+        "personalizada.",
         {"lista": _LISTA},
     ),
 ]

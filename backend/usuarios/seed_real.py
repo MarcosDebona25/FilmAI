@@ -18,7 +18,7 @@ from catalogo.models import Calificacion, ProduccionAudiovisual, Resena, TipoPro
 from catalogo.services.materialization import materializar
 from catalogo.services.tmdb import get_catalog_service
 from listas.models import ClaveLista, Lista, Tiene, TipoLista
-from listas.services import agregar_a_vistas
+from listas.services import poner_estado
 
 # Géneros de TMDB por tipo; se toman los más votados de cada uno.
 PLAN_CATALOGO = {
@@ -175,7 +175,7 @@ def generar_actividad(usuarios):
             Calificacion.objects.filter(pk=calificacion.pk).update(
                 fecha=(ahora - dias).date()
             )
-            agregar_a_vistas(usuario, produccion)
+            poner_estado(usuario, produccion, ClaveLista.VISTAS)
             if azar.random() < 0.65:
                 resena = Resena.objects.create(
                     calificacion=calificacion,
@@ -188,7 +188,7 @@ def generar_actividad(usuarios):
 
         # Un par de vistas marcadas a mano, sin calificar.
         for produccion in resto[4:6]:
-            agregar_a_vistas(usuario, produccion)
+            poner_estado(usuario, produccion, ClaveLista.VISTAS)
 
         favoritos = Lista.objects.get(usuario=usuario, clave=ClaveLista.FAVORITOS)
         for calificacion in Calificacion.objects.filter(usuario=usuario, valor__gte=9):

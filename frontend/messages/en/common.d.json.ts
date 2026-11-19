@@ -64,10 +64,9 @@ declare const messages: {
       "posterAlt": "{title} poster",
       "tmdbRatingLabel": "TMDB rating: {rating} out of 10",
       "favorite": "Favorite",
-      "watched": "Watched",
-      "watchlist": "Watchlist",
       "noPoster": "No poster",
-      "addedOnLabel": "Added to this list on {date}"
+      "addedOnLabel": "Added to this list on {date}",
+      "startedOnLabel": "Started {date}"
     },
     "rating": {
       "rate": "Rate",
@@ -223,7 +222,8 @@ declare const messages: {
       "edit": "Edit rating",
       "titleLabel": "Rate {title}",
       "yourRating": "Your rating",
-      "watchedHelpFromWatchlist": "Rating {title} also adds it to Watched and removes it from Watchlist."
+      "watchedHelpFromWatchlist": "Rating {title} also adds it to Watched and removes it from Watchlist.",
+      "watchedHelpFromWatching": "Rating {title} moves it from Watching to Watched."
     },
     "feedback": {
       "ratingReviewPublished": "Rating and review posted.",
@@ -236,11 +236,7 @@ declare const messages: {
       "reviewDeleted": "Review deleted.",
       "favoriteRemoved": "Removed from Favorites.",
       "favoriteAdded": "Added to Favorites.",
-      "watchlistRemoved": "Removed from Watchlist.",
-      "watchlistAdded": "Added to Watchlist.",
-      "watchedRemoved": "Removed from Watched.",
-      "watchedAdded": "Added to Watched.",
-      "watchedAddedFromWatchlist": "Added to Watched and removed from Watchlist."
+      "watchedAdded": "Added to Watched."
     },
     "metadata": {
       "ratingVotesLabel": "TMDB rating: {rating} out of 10, {count, plural, one {# vote} other {# votes}}",
@@ -288,9 +284,27 @@ declare const messages: {
       "deleteConfirmTitle": "Delete review?",
       "deleteConfirmDescription": "The text of your review will be deleted. Your rating of {title} and the title in Watched will be kept. The text can’t be recovered."
     },
-    "watched": {
-      "removeConfirmTitle": "Remove from Watched?",
-      "remove": "Remove from Watched"
+    "similar": {
+      "title": "More like {title}"
+    },
+    "status": {
+      "label": "Status",
+      "current": "Status: {status}",
+      "menuLabel": "Status for {title}",
+      "hint": {
+        "pendientes": "Want to watch it",
+        "viendo": "Started, not finished",
+        "vistas": "Finished"
+      },
+      "remove": "Remove status",
+      "movedTo": "Moved to {status}",
+      "backTo": "Back to {status}",
+      "removed": "Status removed",
+      "undo": "Undo",
+      "undoAnnouncement": "{message}. Undo available for {seconds, plural, one {# second} other {# seconds}}.",
+      "error": "Couldn’t update the status. Try again.",
+      "rated": "Rated ★ {rating}",
+      "ratedAndMoved": "Rated ★ {rating} · Moved to Watched"
     },
     "breadcrumb": {
       "backTo": "Back to {label}"
@@ -304,7 +318,7 @@ declare const messages: {
       "panelTitle": "Where to watch",
       "groups": {
         "stream": "Stream",
-        "free": "Free",
+        "free": "Free (with or without ads)",
         "rent": "Rent",
         "buy": "Buy"
       },
@@ -383,6 +397,27 @@ declare const messages: {
       "filtersTitle": "Filters and sort",
       "removeChipLabel": "Remove filter {filterLabel}",
       "loading": "Loading the list…"
+    },
+    "suggestions": {
+      "title": "Suggested for this list",
+      "basisWithName": "Based on its {count, plural, one {# title} other {# titles}} and its name, without what you already watched.",
+      "basis": "Based on its {count, plural, one {# title} other {# titles}}, without what you already watched.",
+      "add": "Add",
+      "addLabel": "Add {title} to {listName}",
+      "showMore": "Show more suggestions",
+      "basisRecent": "Based on what you watched most recently."
+    },
+    "watching": {
+      "moreLabel": "More for {title}",
+      "markFinished": "Mark as finished",
+      "rateIt": "Rate it…",
+      "rateItToast": "Rate it",
+      "remove": "Remove from Watching",
+      "movedToWatched": "{title} moved to Watched",
+      "removed": "{title} removed from Watching",
+      "emptyTitle": "Nothing in progress",
+      "emptyDescription": "When you start a movie or a show, choose “Watching” in its status button and it will wait for you here. When you finish it, rate it or change its status and it moves to Watched.",
+      "openWatchlist": "Open Watchlist"
     },
     "reorder": {
       "instructions": "To reorder, press space or enter on the handle, move with the arrow keys, and press space or enter again to drop. Press escape to cancel.",
@@ -517,9 +552,22 @@ declare const messages: {
       "genderLabel": "Gender",
       "termsAcceptance": "I have read and accept FilmAI’s <terms>Terms and Conditions</terms>.",
       "termsNewTabHint": "(opens in a new tab)",
-      "submitPending": "Complete all fields and accept the Terms and Conditions to continue.",
-      "avatarLabel": "Choose your avatar",
-      "avatarHelp": "You can change it anytime from your profile."
+      "title": "Create your account",
+      "subtitle": "It takes less than a minute.",
+      "progressLabel": "Sign-up progress",
+      "stepOf": "Step {step} of {total}",
+      "continue": "Continue",
+      "createAccount": "Create account",
+      "back": "Back",
+      "backToStep": "Back to step {step}",
+      "avatarOptional": "Avatar <hint>· optional</hint>",
+      "avatarLaterHelp": "You can change it later in your profile.",
+      "avatarChoose": "Choose",
+      "avatarUse": "Use this avatar",
+      "avatarPrevious": "Previous avatars",
+      "avatarMore": "More avatars",
+      "avatarPage": "{page} of {pages}",
+      "avatarLabel": "Choose your avatar"
     },
     "confirmation": {
       "pageTitle": "Account confirmation",
@@ -535,12 +583,11 @@ declare const messages: {
       "loading": "Confirming your account…"
     },
     "completeSignUp": {
-      "badge": "Signing up with Google",
-      "title": "Finish signing up",
-      "description": "We take your name and email from your Google account. Fill in the rest and confirm with Google to create your account.",
-      "fixHighlighted": "Fix the highlighted field and press the Google button again.",
-      "genderPlaceholder": "Choose an option",
-      "cancel": "Cancel and go back to log in"
+      "googleLine": "Your name and email come from your Google account.",
+      "termsPending": "Accept the Terms and Conditions to continue.",
+      "backToSignUp": "Back to sign-up",
+      "backToLogIn": "Back to log in",
+      "fixHighlighted": "Fix the highlighted field and confirm with Google again in step 3."
     },
     "session": {
       "expired": "Your session expired. Log in again."
@@ -568,6 +615,7 @@ declare const messages: {
     "defaultList": {
       "favoritos": "Favorites",
       "pendientes": "Watchlist",
+      "viendo": "Watching",
       "vistas": "Watched"
     },
     "theme": {
@@ -749,7 +797,6 @@ declare const messages: {
       "list_limit_reached": "You reached the maximum of {maxLists, number} lists. Delete one to create another.",
       "list_items_limit_reached": "This list reached the maximum of {maxItems, number} titles.",
       "default_list_protected": "Default lists can’t be renamed or deleted.",
-      "rating_blocks_removal_from_watched": "To remove it from Watched, first delete your rating.",
       "rating_duplicated": "You’ve already rated this movie or TV show.",
       "review_moderated": "This review was moderated, so you can’t edit or delete its text.",
       "username_already_used": "That username is already in use.",

@@ -77,7 +77,7 @@ def _de_la_lista(usuario, clave):
 
 
 def armar_perfil(usuario):
-    """Texto plano con lo que le gustó, lo que no, lo último visto y sus favoritos.
+    """Texto plano con lo que le gustó, lo que no, lo que está viendo, lo último visto y sus favoritos.
 
     Sin identificadores: no lleva nombre ni correo, y las reseñas salen
     anonimizadas. Los títulos son catálogo y van tal cual.
@@ -85,6 +85,7 @@ def armar_perfil(usuario):
     secciones = (
         (f"Le gustó (nota ≥ {_NOTA_MINIMA_GUSTO})", _gustos(usuario)),
         (f"No le gustó (nota ≤ {_NOTA_MAXIMA_DISGUSTO})", _disgustos(usuario)),
+        ("Viendo", _de_la_lista(usuario, ClaveLista.VIENDO)),
         ("Últimas vistas", _de_la_lista(usuario, ClaveLista.VISTAS)),
         ("Favoritos", _de_la_lista(usuario, ClaveLista.FAVORITOS)),
     )

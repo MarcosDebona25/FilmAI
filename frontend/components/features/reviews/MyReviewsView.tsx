@@ -17,7 +17,6 @@ import {
 } from "@/components/features/reviews/ReviewFiltersSheet";
 import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { RatingDialog } from "@/components/features/title/RatingDialog";
-import { apiFetch } from "@/lib/api";
 import {
   CLASES,
   FILTROS_VACIOS,
@@ -33,15 +32,15 @@ import {
 } from "@/lib/my-reviews";
 import { ETIQUETA_ORDEN, ORDENES } from "@/lib/review-filters";
 import { combinarResenas, rutaPagina, type MiResena, type PaginaResenas } from "@/lib/reviews";
+import { borrarTextoDeResena, editarCalificacion, quitarCalificacion } from "@/lib/review-actions";
 import { routes } from "@/lib/routes";
 import { ETIQUETA_NOTA, NOTAS } from "@/lib/search";
-import { planEdicion } from "@/lib/title";
+import { useCursorList } from "@/lib/use-cursor-list";
+import { useSentinel } from "@/lib/use-sentinel";
 import { cn } from "@/lib/utils";
 
 /** Espera después de la última tecla antes de filtrar, como Buscar. */
 const ESPERA_MS = 350;
-/** Distancia al final de la lista a la que se pide la página siguiente. */
-const ANTICIPO = "600px";
 
 type Datos = {
   items: MiResena[];
@@ -63,13 +62,8 @@ export function MyReviewsView() {
   const filtros = filtrosDesdeUrl(useSearchParams());
   const consulta = consultaApi(filtros);
   const [texto, setTexto] = useState(filtros.q);
-  const [datos, setDatos] = useState<Datos | null>(null);
-  const [estado, setEstado] = useState<"cargando" | "listo" | "error">("cargando");
-  const [mas, setMas] = useState<"quieto" | "cargando" | "error">("quieto");
-  const [intento, setIntento] = useState(0);
   const [hoja, setHoja] = useState(false);
   const [accion, setAccion] = useState<{ item: MiResena; tipo: AccionResena } | null>(null);
-  const pedido = useRef(0);
   const centinela = useRef<HTMLDivElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const campo = useRef<HTMLInputElement>(null);
@@ -102,66 +96,29 @@ export function MyReviewsView() {
   const url = urlDeFiltros(filtros);
   useEffect(() => guardarUltimasResenas(url), [url]);
 
-  // Primera página de cada combinación de filtros. Mientras llega la nueva
-  // queda la anterior a la vista; una respuesta vieja se descarta.
-  useEffect(() => {
-    if (!perfil?.pk) return;
-    const id = ++pedido.current;
-    setEstado("cargando");
-    apiFetch<PaginaResenas>(consulta).then(
-      (pagina) => {
-        if (id !== pedido.current) return;
-        setDatos({
-          items: pagina.results,
-          next: pagina.next,
-          total: pagina.total,
-          totalPropias: pagina.total_propias ?? pagina.total,
-        });
-        setEstado("listo");
-        setMas("quieto");
-      },
-      () => {
-        if (id === pedido.current) setEstado("error");
-      }
-    );
-  }, [consulta, perfil?.pk, intento]);
-
-  function cargarMas() {
-    if (!datos?.next || mas === "cargando" || estado !== "listo") return;
-    const id = pedido.current;
-    setMas("cargando");
-    apiFetch<PaginaResenas>(rutaPagina(datos.next)).then(
-      (pagina) => {
-        if (id !== pedido.current) return;
-        setDatos((actual) =>
-          actual
-            ? {
-                ...actual,
-                items: combinarResenas(actual.items, pagina.results),
-                next: pagina.next,
-              }
-            : actual
-        );
-        setMas("quieto");
-      },
-      () => {
-        if (id === pedido.current) setMas("error");
-      }
-    );
-  }
+  // Primera página de cada combinación de filtros, y las siguientes al bajar.
+  const { datos, setDatos, estado, mas, cargarMas, reintentar, puedeSeguir } = useCursorList<
+    PaginaResenas,
+    Datos
+  >({
+    cuenta: perfil?.pk,
+    primera: consulta,
+    rutaSiguiente: rutaPagina,
+    inicial: (pagina) => ({
+      items: pagina.results,
+      next: pagina.next,
+      total: pagina.total,
+      totalPropias: pagina.total_propias ?? pagina.total,
+    }),
+    combinar: (actual, pagina) => ({
+      ...actual,
+      items: combinarResenas(actual.items, pagina.results),
+      next: pagina.next,
+    }),
+  });
 
   // Carga al bajar; el botón «Cargar más» queda para teclado y como respaldo.
-  useEffect(() => {
-    if (!datos?.next || mas !== "quieto" || estado !== "listo" || !centinela.current) return;
-    const observador = new IntersectionObserver(
-      ([entrada]) => {
-        if (entrada.isIntersecting) cargarMas();
-      },
-      { rootMargin: ANTICIPO }
-    );
-    observador.observe(centinela.current);
-    return () => observador.disconnect();
-  });
+  useSentinel(centinela, { activo: puedeSeguir, alVer: cargarMas });
 
   function reemplazar(actualizado: MiResena) {
     setDatos((actual) =>
@@ -177,38 +134,24 @@ export function MyReviewsView() {
   // Lo editado queda en su lugar aunque deje de coincidir con los filtros: que
   // la fila desaparezca bajo el foco desorienta. La próxima carga lo acomoda.
   async function guardar(item: MiResena, { valor, texto }: { valor: number; texto: string }) {
-    const plan = planEdicion(item, valor, texto);
+    const { plan, respuesta, aviso } = await editarCalificacion(item, valor, texto);
     let actual = item;
-    if (plan.borrarTexto) {
-      await apiFetch(`/api/reviews/${item.id}/texto/`, { method: "DELETE" });
-      actual = { ...actual, texto: null };
-    }
-    if (Object.keys(plan.cambios).length) {
-      const respuesta = await apiFetch<Partial<MiResena>>(`/api/reviews/${item.id}/`, {
-        method: "PUT",
-        body: plan.cambios,
-      });
-      actual = { ...actual, ...plan.cambios, ...respuesta, id: item.id };
-    }
+    if (plan.borrarTexto) actual = { ...actual, texto: null };
+    if (respuesta) actual = { ...actual, ...plan.cambios, ...respuesta, id: item.id };
     reemplazar(actual);
     setAccion(null);
-    const nota = "valor" in plan.cambios;
-    const textoCambio = "texto" in plan.cambios || plan.borrarTexto;
-    if (nota && textoCambio) toast.success(t("title.feedback.ratingReviewUpdated"));
-    else if (nota) toast.success(t("title.feedback.ratingUpdated"));
-    else if (plan.borrarTexto) toast.success(t("title.feedback.reviewDeleted"));
-    else if (textoCambio) toast.success(t("title.feedback.reviewUpdated"));
+    if (aviso) toast.success(t(`title.feedback.${aviso}`));
   }
 
   async function borrarTexto(item: MiResena) {
-    await apiFetch(`/api/reviews/${item.id}/texto/`, { method: "DELETE" });
+    const { aviso } = await borrarTextoDeResena(item.id);
     reemplazar({ ...item, texto: null });
     setAccion(null);
-    toast.success(t("title.feedback.reviewDeleted"));
+    toast.success(t(`title.feedback.${aviso}`));
   }
 
   async function quitar(item: MiResena) {
-    await apiFetch(`/api/reviews/${item.id}/`, { method: "DELETE" });
+    const { aviso } = await quitarCalificacion(item);
     setDatos((actual) =>
       actual
         ? {
@@ -220,9 +163,7 @@ export function MyReviewsView() {
         : actual
     );
     setAccion(null);
-    toast.success(
-      t(item.texto ? "title.feedback.ratingReviewDeleted" : "title.feedback.ratingDeleted")
-    );
+    toast.success(t(`title.feedback.${aviso}`));
     // La fila ya no existe: el foco va al título de la página.
     requestAnimationFrame(() => titulo.current?.focus());
   }
@@ -489,7 +430,7 @@ export function MyReviewsView() {
           {estado === "error" && (
             <ErrorRetry
               mensaje={t("reviews.results.loadError")}
-              onReintentar={() => setIntento((anterior) => anterior + 1)}
+              onReintentar={reintentar}
               boton="pildora"
               className="border-t border-line py-10"
             />
@@ -537,10 +478,7 @@ export function MyReviewsView() {
               {mas === "error" && (
                 <ErrorRetry
                   mensaje={t("reviews.results.loadError")}
-                  onReintentar={() => {
-                    setMas("quieto");
-                    cargarMas();
-                  }}
+                  onReintentar={cargarMas}
                   boton="pildora"
                   className="pt-6"
                 />

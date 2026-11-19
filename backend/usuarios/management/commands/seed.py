@@ -23,6 +23,7 @@ alternativa no destructiva: siembra calificaciones y reseñas sobre el
 catálogo y los usuarios de desarrollo existentes, sin borrar nada.
 """
 
+import itertools
 import random
 from math import ceil
 
@@ -45,7 +46,7 @@ from chatbot.factories import MensajeFactory
 from chatbot.models import Chat, Mensaje, TipoAutor
 from listas.factories import ListaFactory
 from listas.models import ClaveLista, Lista, Tiene, TipoLista
-from listas.services import agregar_a_vistas
+from listas.services import poner_estado
 from usuarios import seed_real
 from usuarios.factories import UsuarioFactory
 from usuarios.models import EstadoCuenta, Usuario
@@ -305,9 +306,9 @@ class Command(BaseCommand):
                 calificacion = CalificacionFactory.create(
                     usuario=usuario, produccion=produccion
                 )
-                # La factory no pasa por la API: la regla «calificada ⇒ en
-                # Vistas» (30/09/2026) se aplica a mano, como en C-08.
-                agregar_a_vistas(usuario, produccion)
+                # La factory no pasa por la API: «calificar mueve a Vistas» se
+                # aplica a mano, como en C-08.
+                poner_estado(usuario, produccion, ClaveLista.VISTAS)
                 # ~60% de las calificaciones llevan reseña escrita.
                 if random.random() < 0.6:
                     resena = ResenaFactory.create(calificacion=calificacion)
@@ -359,13 +360,41 @@ class Command(BaseCommand):
 
             # Puebla las predeterminadas a través de la tabla intermedia Tiene.
             self._poblar_lista(listas[ClaveLista.FAVORITOS], producciones, 4)
-            self._poblar_lista(listas[ClaveLista.PENDIENTES], producciones, 5)
-            self._poblar_lista(listas[ClaveLista.VISTAS], producciones, 3)
+            self._poblar_estados(
+                usuario,
+                producciones,
+                (
+                    (ClaveLista.PENDIENTES, 5),
+                    (ClaveLista.VIENDO, 2),
+                    (ClaveLista.VISTAS, 3),
+                ),
+            )
 
     @staticmethod
     def _poblar_lista(lista, producciones, cantidad):
         for produccion in random.sample(producciones, cantidad):
             Tiene.objects.get_or_create(lista=lista, produccion=produccion)
+
+    @staticmethod
+    def _poblar_estados(usuario, producciones, cantidades):
+        """Reparte títulos distintos entre las listas de estado.
+
+        Un título tiene un solo estado (PR 4): se sortea el total de una vez y
+        se lo reparte, en vez de sortear por lista y dejar que se pisen. Los ya
+        calificados se saltean: calificar los dejó en «Vistas» y moverlos
+        rompería lo sembrado.
+        """
+        calificadas = set(
+            Calificacion.objects.filter(usuario=usuario).values_list(
+                "produccion_id", flat=True
+            )
+        )
+        libres = [p for p in producciones if p.pk not in calificadas]
+        total = sum(cantidad for _, cantidad in cantidades)
+        elegidas = iter(random.sample(libres, min(total, len(libres))))
+        for clave, cantidad in cantidades:
+            for produccion in itertools.islice(elegidas, cantidad):
+                poner_estado(usuario, produccion, clave)
 
     def _crear_chats(self, usuarios):
         """Usa el chat por defecto (creado por la señal) y agrega mensajes."""

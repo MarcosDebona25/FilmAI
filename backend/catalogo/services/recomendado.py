@@ -48,16 +48,34 @@ def generos_favoritos(usuario, tipo):
     return cuenta.most_common(CANTIDAD_GENEROS)
 
 
+def _pares_de(usuario, claves):
+    """Pares `(id_tmdb, tipo de TMDB)` de lo que el usuario tiene en esas listas."""
+    filas = Tiene.objects.filter(
+        lista__usuario=usuario, lista__clave__in=claves
+    ).values_list("produccion__id_tmdb", "produccion__tipo")
+    return {(id_tmdb, TIPO_TMDB[tipo]) for id_tmdb, tipo in filas}
+
+
 def vistos(usuario):
-    """Pares `(id_tmdb, tipo de TMDB)` de la lista «Vistas».
+    """Pares `(id_tmdb, tipo de TMDB)` de lo que el usuario ya conoce: «Vistas» y «Viendo».
+
+    «Viendo» (PR 4, 15/11/2026) cuenta como conocido: lo que está mirando no se
+    le recomienda, igual que lo ya visto. Es el único helper que usan el Inicio,
+    las sugerencias de lista, «More like» de la ficha y el chatbot, así que
+    sumarlo acá lo excluye de todos.
 
     Va el par y no solo el id porque TMDB numera películas y series por
     separado: la película 108978 y la serie 108978 son dos cosas distintas.
     """
-    filas = Tiene.objects.filter(
-        lista__usuario=usuario, lista__clave=ClaveLista.VISTAS
-    ).values_list("produccion__id_tmdb", "produccion__tipo")
-    return {(id_tmdb, TIPO_TMDB[tipo]) for id_tmdb, tipo in filas}
+    return _pares_de(usuario, (ClaveLista.VISTAS, ClaveLista.VIENDO))
+
+
+def en_viendo(usuario):
+    """Pares de lo que el usuario está mirando ahora (la parte «Viendo» de `vistos`).
+
+    El chatbot los distingue de lo ya visto: «ya la viste» sería falso.
+    """
+    return _pares_de(usuario, (ClaveLista.VIENDO,))
 
 
 def pendientes(usuario):

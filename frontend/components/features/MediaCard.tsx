@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ListPlus } from "lucide-react";
+import { Clock, ListPlus } from "lucide-react";
 import { getImageProps } from "next/image";
 
 import Link from "next/link";
@@ -33,6 +33,7 @@ export function MediaCard({
   fluid = false,
   showUnrated = false,
   addedAt,
+  addedKind = "added",
 }: {
   title: Title;
   showType: boolean;
@@ -44,12 +45,20 @@ export function MediaCard({
   showUnrated?: boolean;
   /** Fecha (ISO) en que se agregó a una lista (CU-009); línea discreta bajo el título. */
   addedAt?: string;
+  /** «started»: en la lista Watching la fecha es de cuándo se empezó (reloj, «Empezada el»). */
+  addedKind?: "added" | "started";
 }) {
   const t = useTranslations("common");
   const ts = useTranslations("search.results");
   const formats = useFormats();
   const [failed, setFailed] = useState<string | null>(null);
   const poster = title.poster && failed !== title.poster ? title.poster : null;
+  const FechaIcono = addedKind === "started" ? Clock : ListPlus;
+  const etiquetaFecha = addedAt
+    ? t(addedKind === "started" ? "media.startedOnLabel" : "media.addedOnLabel", {
+        date: formats.dateShort(addedAt),
+      })
+    : "";
   const tipo = t(title.tipo === "movie" ? "content.movie" : "content.tvShow");
 
   // `relative`: la etiqueta `sr-only` de la nota es `absolute`. Sin un ancestro
@@ -108,13 +117,11 @@ export function MediaCard({
         {addedAt && (
           <time
             dateTime={addedAt}
-            title={t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
+            title={etiquetaFecha}
             className="inline-flex items-center gap-1 text-[0.6875rem] text-fg-3 tabular-nums"
           >
-            <ListPlus className="size-[0.6875rem]" aria-hidden="true" />
-            <span className="sr-only">
-              {t("media.addedOnLabel", { date: formats.dateShort(addedAt) })}
-            </span>
+            <FechaIcono className="size-[0.6875rem]" aria-hidden="true" />
+            <span className="sr-only">{etiquetaFecha}</span>
             <span aria-hidden="true">{formats.dateShort(addedAt)}</span>
           </time>
         )}

@@ -1,6 +1,6 @@
 """El nombre de la lista en las sugerencias: cuándo «dice algo» y cómo se embebe.
 
-Diseño en `openspec/changes/recomendaciones-similares/design.md` §3 (D-2 y
+Diseño en `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026, D-2 y
 D-9). Ollama nunca se llama de verdad: `httpx.MockTransport` reemplaza la red y
 deja ver qué pedidos salieron, como en `tests_semantica.py`.
 """

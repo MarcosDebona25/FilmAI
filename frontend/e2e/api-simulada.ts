@@ -98,11 +98,12 @@ export async function simularCatalogo(page: Page) {
 const LISTAS = [
   { id: 1, nombre: "Favorites", clave: "favoritos", tipo: "predeterminada", items: 24 },
   { id: 2, nombre: "Watchlist", clave: "pendientes", tipo: "predeterminada", items: 0 },
+  { id: 4, nombre: "Watching", clave: "viendo", tipo: "predeterminada", items: 0 },
   { id: 3, nombre: "Watched", clave: "vistas", tipo: "predeterminada", items: 3 },
   { id: 10, nombre: "Marathon", clave: null, tipo: "personalizada", items: 5 },
 ];
 
-/** `lists/` de solo lectura: cuatro listas y la primera con 24 títulos. */
+/** `lists/` de solo lectura: cinco listas y la primera con 24 títulos. */
 export async function simularListas(page: Page) {
   await page.route("**/api/lists/**", (route) => {
     const url = new URL(route.request().url());
@@ -123,6 +124,11 @@ export async function simularListas(page: Page) {
     if (!lista)
       return route.fulfill({ status: 404, json: { code: "not_found", params: {}, errors: [] } });
     if (!items) return route.fulfill({ json: resumen(lista) });
+    // Sin sugerencias la franja se oculta sola: la grilla queda como única lista de la página.
+    if (items === "suggestions")
+      return route.fulfill({
+        json: { results: [], pagina: 1, paginas: 1, nombre_usado: false },
+      });
     return route.fulfill({
       json: {
         total: lista.items,

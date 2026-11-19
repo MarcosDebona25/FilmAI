@@ -1,6 +1,6 @@
 """Pruebas del filtro por persona de Buscar (13/11/2026): `browse/?persona=&rol=`.
 
-El diseño está en `openspec/changes/busqueda-navbar/design.md` (§5). TMDB se
+El diseño está en `openspec/specs/search-ui/spec.md` y `docs/decisiones.md` (13/11/2026). TMDB se
 reemplaza por un servicio falso que responde las filmografías reales de tres
 personas capturadas el 14/11/2026 (`test_datos/tmdb_buscar_personas.json`,
 clave `personas`): Christopher Nolan (525), Vince Gilligan (66633) y Tom Hanks

@@ -128,6 +128,12 @@ class BaseTools(TestCase):
             produccion=self.produccion(id_tmdb=id_tmdb, tipo=tipo),
         )
 
+    def marcar_viendo(self, id_tmdb, tipo=TipoProduccion.PELICULA):
+        Tiene.objects.create(
+            lista=self.lista(ClaveLista.VIENDO, "Viendo"),
+            produccion=self.produccion(id_tmdb=id_tmdb, tipo=tipo),
+        )
+
 
 class FormaDeLosResultadosTests(BaseTools):
     def test_una_pelicula_llega_con_los_campos_acordados(self):
@@ -283,6 +289,25 @@ class VistasTests(BaseTools):
 
                 self.assertEqual([r["id_tmdb"] for r in resultado["resultados"]], [2])
 
+    def test_lo_que_esta_viendo_tampoco_se_recomienda(self):
+        # PR 4: «Watching» cuenta como conocido, igual que lo visto.
+        self.marcar_viendo(1)
+        self.catalogo.resultados["movie"] = [pelicula(1), pelicula(2, "Otra")]
+
+        resultado = ejecutar(self.contexto(), "descubrir", {"tipo": "movie"})
+
+        self.assertEqual([r["id_tmdb"] for r in resultado["resultados"]], [2])
+
+    def test_buscar_semantico_tambien_excluye_lo_que_esta_viendo(self):
+        self.marcar_viendo(1)
+
+        with patch(
+            "chatbot.tools.busqueda.buscar_semantico", return_value=[]
+        ) as buscar:
+            ejecutar(self.contexto(), "buscar_semantico", {"consulta": "algo"})
+
+        self.assertEqual(buscar.call_args.kwargs["excluir"], {(1, "movie")})
+
     def test_buscar_por_nombre_encuentra_lo_visto_y_lo_marca(self):
         # «Algo como Moon» necesita encontrar Moon aunque ya la haya visto.
         self.marcar_vista(1)
@@ -295,6 +320,28 @@ class VistasTests(BaseTools):
         vista, otra = resultado["resultados"]
         self.assertIs(vista["vista"], True)
         self.assertNotIn("vista", otra)
+
+    def test_lo_que_esta_viendo_se_marca_viendo_y_no_vista(self):
+        # El modelo no puede decir «ya la viste» de algo que el usuario mira ahora.
+        self.marcar_viendo(1)
+        self.marcar_vista(2)
+        self.catalogo.resultados["movie"] = [
+            pelicula(1),
+            pelicula(2, "Otra"),
+            pelicula(3, "Nueva"),
+        ]
+
+        resultado = ejecutar(
+            self.contexto(), "buscar_por_titulo", {"titulo": "Moon", "tipo": "movie"}
+        )
+
+        mirando, vista, nueva = resultado["resultados"]
+        self.assertIs(mirando["viendo"], True)
+        self.assertNotIn("vista", mirando)
+        self.assertIs(vista["vista"], True)
+        self.assertNotIn("viendo", vista)
+        self.assertNotIn("vista", nueva)
+        self.assertNotIn("viendo", nueva)
 
     def test_lo_que_una_busqueda_de_recomendacion_saco_no_es_un_candidato(self):
         # Sin `ref` no hay marcador `[[n]]` posible: no puede llegar a ser tarjeta.
@@ -602,6 +649,17 @@ class MisListasTests(BaseTools):
 
         self.assertEqual(resultado["resultados"][0]["titulo"], "Moon")
 
+    def test_lee_viendo_por_clave_y_marca_sus_titulos_viendo(self):
+        lista = self.lista(ClaveLista.VIENDO, "Viendo")
+        Tiene.objects.create(lista=lista, produccion=self.produccion("Moon"))
+
+        resultado = ejecutar(self.contexto(), "mis_listas", {"lista": "viendo"})
+
+        moon = resultado["resultados"][0]
+        self.assertEqual(moon["titulo"], "Moon")
+        self.assertIs(moon["viendo"], True)
+        self.assertNotIn("vista", moon)
+
     def test_lee_una_personalizada_por_id(self):
         lista = self.lista(nombre="Cumple de Juan")
         Tiene.objects.create(lista=lista, produccion=self.produccion("Moon"))
@@ -890,6 +948,11 @@ class EsquemasTests(BaseTools):
         nombres = {esquema["function"]["name"] for esquema in ESQUEMAS}
 
         self.assertEqual(nombres, set(FUNCIONES))
+
+    def test_mis_listas_dice_que_se_puede_pedir_viendo(self):
+        esquema = next(e for e in ESQUEMAS if e["function"]["name"] == "mis_listas")
+
+        self.assertIn("`viendo`", esquema["function"]["description"])
 
     def test_ninguna_tool_recibe_un_usuario(self):
         # `mis_listas` lee del contexto: el modelo no puede pedir datos de otro.

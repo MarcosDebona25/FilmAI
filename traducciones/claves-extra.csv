@@ -28,7 +28,6 @@ errors.codes.list_item_duplicated,list_item_duplicated,error,,Esta película o s
 errors.codes.list_limit_reached,list_limit_reached,error,maxLists,"Llegaste al máximo de {maxLists, number} listas. Eliminá alguna para crear otra.","You reached the maximum of {maxLists, number} lists. Delete one to create another.",aprobado
 errors.codes.list_items_limit_reached,list_items_limit_reached,error,maxItems,"Esta lista llegó al máximo de {maxItems, number} títulos.","This list reached the maximum of {maxItems, number} titles.",aprobado
 errors.codes.default_list_protected,default_list_protected,error,,Las listas predeterminadas no se pueden renombrar ni eliminar.,Default lists can’t be renamed or deleted.,aprobado
-errors.codes.rating_blocks_removal_from_watched,rating_blocks_removal_from_watched,error,,"Para quitarla de Vistas, primero eliminá tu calificación.","To remove it from Watched, first delete your rating.",aprobado
 errors.codes.rating_duplicated,rating_duplicated,error,,Ya calificaste esta película o serie.,You’ve already rated this movie or TV show.,aprobado
 errors.codes.review_moderated,review_moderated,error,,"Esta reseña fue moderada, así que no podés editar ni borrar su texto.","This review was moderated, so you can’t edit or delete its text.",aprobado
 errors.codes.username_already_used,username_already_used,error,,Ese nombre de usuario ya está en uso.,That username is already in use.,aprobado
@@ -103,9 +102,7 @@ common.fields.email,,field,,Correo electrónico,Email,aprobado
 nav.main.termsUpdated,,label,date,Última actualización: {date},Last updated: {date},aprobado
 nav.main.termsOnPage,,label,,En esta página,On this page,aprobado
 nav.main.termsQuestions,,label,email,¿Tenés dudas? Escribinos a {email}.,Questions? Write to us at {email}.,aprobado
-auth.signUp.submitPending,,label,,Completá todos los campos y aceptá los Términos y Condiciones para continuar.,Complete all fields and accept the Terms and Conditions to continue.,aprobado
 auth.signUp.avatarLabel,,label,,Elegí tu avatar,Choose your avatar,aprobado
-auth.signUp.avatarHelp,,label,,Podés cambiarlo cuando quieras desde tu perfil.,You can change it anytime from your profile.,aprobado
 errors.pages.notFoundCode,,label,,Error 404,Error 404,aprobado
 errors.pages.notFoundSignedOutTitle,,label,,No encontramos esa página,We can’t find that page,aprobado
 errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.,"The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",aprobado
@@ -120,8 +117,8 @@ title.actions.signedOutPrompt,,label,,Ingresá para calificar o guardar,Log in t
 title.reviews.loadMore,,label,,Cargar más reseñas,Load more reviews,aprobado
 title.reviews.empty,,label,,Todavía no hay reseñas. Escribí la primera.,No reviews yet. Be the first to write one.,aprobado
 title.reviews.deletedAuthor,,label,,Usuario dado de baja,Deleted account,aprobado
-title.feedback.watchedAddedFromWatchlist,,feedback,,Agregada a Vistas y quitada de Pendientes.,Added to Watched and removed from Watchlist.,aprobado
 title.rating.watchedHelpFromWatchlist,,label,title,"Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",Rating {title} also adds it to Watched and removes it from Watchlist.,aprobado
+title.rating.watchedHelpFromWatching,,label,title,"Al calificarla, {title} pasa de Viendo a Vistas.",Rating {title} moves it from Watching to Watched.,aprobado
 search.filters.anyYear,,label,,Cualquiera,Any,aprobado
 search.results.emptyFiltersTitle,,label,,Nada con estos filtros,Nothing with these filters,aprobado
 search.close.shortcut,,label,,Esc,Esc,aprobado
@@ -154,12 +151,7 @@ reviews.results.loading,,status,,Cargando tus calificaciones…,Loading your rat
 reviews.results.loadError,,error,,No pudimos cargar tus calificaciones. Intentá de nuevo.,We couldn’t load your ratings. Try again.,aprobado
 reviews.results.loadMore,,label,,Cargar más calificaciones,Load more ratings,aprobado
 reviews.filters.ratingChip,,label,rating,Calificación {rating},Rating {rating},aprobado
-auth.completeSignUp.badge,,label,,Registro con Google,Signing up with Google,aprobado
-auth.completeSignUp.title,,label,,Terminá tu registro,Finish signing up,aprobado
-auth.completeSignUp.description,,label,,Tomamos tu nombre y tu correo de tu cuenta de Google. Completá el resto y confirmá con Google para crear tu cuenta.,We take your name and email from your Google account. Fill in the rest and confirm with Google to create your account.,aprobado
-auth.completeSignUp.fixHighlighted,,error,,Corregí el campo marcado y tocá de nuevo el botón de Google.,Fix the highlighted field and press the Google button again.,aprobado
-auth.completeSignUp.genderPlaceholder,,label,,Elegí una opción,Choose an option,aprobado
-auth.completeSignUp.cancel,,label,,Cancelar y volver a iniciar sesión,Cancel and go back to log in,aprobado
+auth.completeSignUp.fixHighlighted,,error,,Corregí el campo marcado y volvé a confirmar con Google en el paso 3.,Fix the highlighted field and confirm with Google again in step 3.,aprobado
 profile.leaveDialog.title,,label,,¿Salir sin guardar?,Leave without saving?,aprobado
 profile.leaveDialog.body,,label,,Los cambios que hiciste en tu perfil no se guardarán.,The changes you made to your profile won’t be saved.,aprobado
 profile.leaveDialog.keepEditing,,label,,Seguir editando,Keep editing,aprobado
@@ -200,7 +192,7 @@ title.providers.lead,,label,,Ver o alquilar,Stream or rent,aprobado
 title.providers.options,,label,"count,country","{count, plural, one {# opción} other {# opciones}} en {country}","{count, plural, one {# option} other {# options}} in {country}",aprobado
 title.providers.panelTitle,,label,,Dónde ver,Where to watch,aprobado
 title.providers.groups.stream,,label,,Streaming,Stream,aprobado
-title.providers.groups.free,,label,,Gratis,Free,aprobado
+title.providers.groups.free,,label,,Gratis (con o sin publicidad),Free (with or without ads),aprobado
 title.providers.groups.rent,,label,,Alquiler,Rent,aprobado
 title.providers.groups.buy,,label,,Compra,Buy,aprobado
 title.providers.unavailable,,status,country,"Todavía no está disponible para ver, alquilar ni comprar en {country}.","Not available to stream, rent or buy in {country} yet.",aprobado
@@ -210,6 +202,7 @@ title.providers.newTabHint,,label,,(se abre en otra pestaña),(opens in a new ta
 title.providers.attribution,,label,,Datos de <link>JustWatch</link>,Data by <link>JustWatch</link>,aprobado
 title.providers.signedOut,,label,,Iniciá sesión para ver dónde verla en tu país,Log in to see where to watch it in your country,aprobado
 common.media.addedOnLabel,,label,date,Agregada a esta lista el {date},Added to this list on {date},aprobado
+common.media.startedOnLabel,,label,date,Empezada el {date},Started {date},aprobado
 settings.loading,,status,,Cargando preferencias…,Loading settings…,aprobado
 settings.privacy.heading,,label,,Privacidad,Privacy,aprobado
 settings.privacy.futureNotice,,label,,"Estas preferencias se guardan, pero todavía no cambian la visibilidad de reseñas o listas ni activan correos.","These preferences are saved, but they do not yet change the visibility of reviews or lists or enable emails.",aprobado
@@ -268,3 +261,4 @@ nav.search.titleMeta,,label,"type, year","{year, select, none {{type}} other {{t
 search.person.role,,label,"role, gender","{role, select, director {{gender, select, female {Directora} male {Director} other {Dirección}}} other {{gender, select, female {Actriz} male {Actor} other {Actuación}}}}","{role, select, director {{gender, select, female {Director} male {Director} other {Director}}} other {{gender, select, female {Actress} male {Actor} other {Actor}}}}",aprobado
 search.person.remove,,label,name,Quitar el filtro {name},Remove filter {name},aprobado
 search.person.lookingFor,,label,name,¿Buscabas a {name}? <link>Ver sus producciones</link>,Looking for {name}? <link>See their titles</link>,aprobado
+lists.suggestions.basisRecent,,label,,Según lo que viste hace poco.,Based on what you watched most recently.,aprobado

@@ -1,6 +1,6 @@
 """Pruebas del endpoint de sugerencias `GET /api/catalogo/suggest/` (13/11/2026).
 
-El diseño está en `openspec/changes/busqueda-navbar/design.md` (§1). TMDB se
+El diseño está en `openspec/specs/navbar-search/spec.md` y `docs/decisiones.md` (13/11/2026). TMDB se
 reemplaza por un servicio falso que responde páginas reales de `search/multi`
 capturadas el 14/11/2026 (`test_datos/tmdb_buscar_personas.json`, clave
 `multi`): «nolan», «dune», «tom» y «chihiro».

@@ -13,8 +13,7 @@ const router = vi.hoisted(() => ({ push: vi.fn() }));
 const estado = vi.hoisted(() => ({
   lista: null as unknown,
   paginas: [] as Record<string, unknown>[],
-  propia: null as unknown,
-  bloquear: false,
+  sugerencias: null as unknown,
   pedidos: [] as { path: string; method: string; body?: unknown }[],
 }));
 
@@ -29,7 +28,9 @@ vi.mock("next/image", () => ({
   // eslint-disable-next-line @next/next/no-img-element
   default: ({ alt }: { alt: string }) => <img alt={alt} />,
 }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn(), custom: vi.fn(), dismiss: vi.fn() },
+}));
 vi.mock("@/components/AccountProvider", () => ({
   useAccount: () => ({ perfil: { pk: 1 }, error: null, recargar: vi.fn() }),
 }));
@@ -44,14 +45,27 @@ vi.mock("@/lib/api", async (importOriginal) => {
         if (estado.lista === "404") throw new real.ApiError(404, { code: "not_found" });
         return structuredClone(estado.lista);
       }
+      if (method === "GET" && path.includes("/suggestions/"))
+        return structuredClone(estado.sugerencias);
+      if (method === "POST" && path.endsWith("/items/")) {
+        const cuerpo = opciones.body as { id_tmdb: number; tipo: string };
+        return {
+          item_id: 50,
+          fecha_agregado: "2026-11-15T00:00:00Z",
+          id_tmdb: cuerpo.id_tmdb,
+          tipo: cuerpo.tipo,
+          titulo: "Arrival",
+          poster: null,
+          anio: 2016,
+          calificacion_promedio: 7.6,
+          disponible: true,
+        };
+      }
       if (method === "GET" && path.includes("/items/")) {
         const siguiente = path.includes("cursor=") ? estado.paginas[1] : estado.paginas[0];
         return structuredClone(siguiente);
       }
-      if (method === "GET" && path.startsWith("/api/reviews/mias/")) return estado.propia;
       if (method === "DELETE" && path.includes("/items/")) {
-        if (estado.bloquear && !path.includes("borrar_calificacion=true"))
-          throw new real.ApiError(409, { code: "rating_blocks_removal_from_watched" });
         return undefined;
       }
       if (method === "PUT") return { ...(estado.lista as object), ...(opciones.body as object) };
@@ -91,6 +105,25 @@ function pagina(results: ItemLista[], extra: Record<string, unknown> = {}) {
   return { next: null, total: results.length, results, ...extra };
 }
 
+function sugerencias(titulos: string[] = []) {
+  return {
+    results: titulos.map((titulo, indice) => ({
+      id_tmdb: 900 + indice,
+      tipo: "movie",
+      titulo,
+      poster: null,
+      anio: 2016,
+      calificacion_promedio: 7.6,
+      origen: "catalogo",
+    })),
+    pagina: 1,
+    paginas: titulos.length ? 1 : 0,
+    nombre_usado: false,
+  };
+}
+const pedidosDeSugerencias = () =>
+  estado.pedidos.filter((p) => p.path.includes("/suggestions/")).map((p) => p.path);
+
 const lecturas = () =>
   estado.pedidos.filter((p) => p.method === "GET" && p.path.includes("/items/")).map((p) => p.path);
 const escrituras = () => estado.pedidos.filter((p) => p.method !== "GET");
@@ -101,8 +134,7 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/lists/7");
   estado.lista = lista();
   estado.paginas = [pagina([item(1), item(2), item(3, { tipo: "tv", anio: null })])];
-  estado.propia = null;
-  estado.bloquear = false;
+  estado.sugerencias = sugerencias();
   estado.pedidos = [];
   reemplazos = [];
   router.push.mockClear();
@@ -223,6 +255,33 @@ describe("Detalle de una lista", () => {
     expect(screen.queryByRole("searchbox")).toBeNull();
   });
 
+  it("una lista vacía dice solo «0 ítems», sin el desglose por tipo", async () => {
+    estado.lista = lista({ cantidad_items: 0, cantidad_peliculas: 0, cantidad_series: 0 });
+    estado.paginas = [pagina([])];
+    render(<ListDetailView id={7} />, { locale: "es" });
+
+    await screen.findByText(es.lists.detail.emptyTitle);
+    // Un texto para celular y otro para escritorio: ambos sin desglose.
+    expect(screen.getAllByText("0 ítems")).toHaveLength(2);
+    expect(screen.queryByText(/ · /)).toBeNull();
+  });
+
+  it("una lista con ítems mantiene el desglose en escritorio", async () => {
+    estado.paginas = [pagina([item(1)])];
+    render(<ListDetailView id={7} />, { locale: "es" });
+
+    expect(await screen.findByText("3 ítems · 2 películas · 1 serie")).toBeInTheDocument();
+  });
+
+  it("en la lista Watching las tarjetas dicen «Empezada el» con la fecha de agregado", async () => {
+    estado.lista = lista({ clave: "viendo", tipo: "predeterminada" });
+    estado.paginas = [pagina([item(1)])];
+    render(<ListDetailView id={7} />, { locale: "es" });
+
+    expect(await screen.findByText("Empezada el 01/10/2026")).toBeInTheDocument();
+    expect(screen.queryByText(/Agregada a esta lista/)).toBeNull();
+  });
+
   it("carga la página siguiente por cursor con «Load more» y no repite ítems", async () => {
     estado.paginas = [
       pagina([item(1), item(2)], { next: "http://x/api/lists/7/items/?cursor=abc", total: 3 }),
@@ -255,62 +314,6 @@ describe("Detalle de una lista", () => {
     ]);
     expect(screen.getByText("2 items · 1 movie · 1 TV show")).toBeInTheDocument();
     expect(toast.success).toHaveBeenCalledWith(en.lists.feedback.itemRemoved);
-  });
-
-  it("Watched con título calificado: pide confirmar el borrado de la calificación y reintenta", async () => {
-    estado.lista = lista({ nombre: "Watched", clave: "vistas", tipo: "predeterminada" });
-    estado.bloquear = true;
-    estado.propia = { id: 5, valor: 9, texto: "Me encantó", fecha: "2026-10-02" };
-    const user = userEvent.setup();
-    render(<ListDetailView id={7} />, { locale: "en" });
-    await screen.findByRole("link", { name: /Título 1/ });
-
-    await user.click(screen.getByRole("button", { name: "Remove Título 1 from Watched" }));
-    await user.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", {
-        name: en.common.actions.remove,
-      })
-    );
-
-    const confirmar = await screen.findByRole("alertdialog", {
-      name: en.title.watched.removeConfirmTitle,
-    });
-    expect(within(confirmar).getByText(/and your review will be deleted/)).toBeInTheDocument();
-    expect(within(confirmar).getByText("Me encantó")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Título 1/ })).toBeInTheDocument();
-
-    await user.click(within(confirmar).getByRole("button", { name: en.title.watched.remove }));
-
-    await waitFor(() => expect(screen.queryByRole("link", { name: /Título 1/ })).toBeNull());
-    expect(escrituras().map((p) => p.path)).toEqual([
-      "/api/lists/7/items/1/",
-      "/api/lists/7/items/1/?borrar_calificacion=true",
-    ]);
-    expect(toast.success).toHaveBeenCalledWith(en.title.feedback.ratingReviewDeleted);
-  });
-
-  it("cancelar la confirmación de Watched deja el título en la lista", async () => {
-    estado.lista = lista({ nombre: "Watched", clave: "vistas", tipo: "predeterminada" });
-    estado.bloquear = true;
-    const user = userEvent.setup();
-    render(<ListDetailView id={7} />, { locale: "es" });
-    await screen.findByRole("link", { name: /Título 1/ });
-
-    await user.click(
-      screen.getByRole("button", { name: `Quitar Título 1 de ${es.enums.defaultList.vistas}` })
-    );
-    await user.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", {
-        name: es.common.actions.remove,
-      })
-    );
-    const confirmar = await screen.findByRole("alertdialog", {
-      name: es.title.watched.removeConfirmTitle,
-    });
-    await user.click(within(confirmar).getByRole("button", { name: es.common.actions.cancel }));
-
-    expect(screen.getByRole("link", { name: /Título 1/ })).toBeInTheDocument();
-    expect(escrituras()).toHaveLength(1);
   });
 
   it("las predeterminadas no tienen menú ⋯ y las personalizadas sí", async () => {
@@ -389,5 +392,177 @@ describe("Detalle de una lista", () => {
     await user.click(within(hoja).getByRole("radio", { name: en.lists.detail.sortFirstAdded }));
     expect(reemplazos.at(-1)).toContain("sort=first");
     expect(within(hoja).getByRole("button", { name: "Show 3 results" })).toBeInTheDocument();
+  });
+});
+
+describe("Sugerencias en el detalle de una lista", () => {
+  const banda = () => screen.findByRole("region", { name: "Suggested for this list" });
+
+  beforeEach(() => {
+    estado.sugerencias = sugerencias(["Arrival", "Foundation"]);
+  });
+
+  it("aparecen al final de una lista personalizada, de Favorites y de Watched", async () => {
+    for (const extra of [
+      {},
+      { clave: "favoritos", tipo: "predeterminada", nombre: "Favoritos" },
+      { clave: "vistas", tipo: "predeterminada", nombre: "Vistas" },
+    ] as Partial<ResumenLista>[]) {
+      estado.lista = lista(extra);
+      const { unmount } = render(<ListDetailView id={7} />, { locale: "en" });
+
+      expect(await banda()).toBeInTheDocument();
+      // Vistas usa solo lo último que se agregó: ni cuenta los títulos ni repite lo ya visto.
+      expect(
+        screen.getByText(
+          extra.clave === "vistas"
+            ? "Based on what you watched most recently."
+            : "Based on its 3 titles, without what you already watched."
+        )
+      ).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("Watchlist y Watching no tienen sugerencias ni las piden", async () => {
+    // El backend responde 404 (Not Found) en las dos: la fila ni se dibuja.
+    for (const clave of ["pendientes", "viendo"] as const) {
+      estado.lista = lista({ clave, tipo: "predeterminada", nombre: clave });
+      const { unmount } = render(<ListDetailView id={7} />, { locale: "en" });
+
+      await screen.findByRole("link", { name: /Título 1/ });
+      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      expect(pedidosDeSugerencias()).toEqual([]);
+      unmount();
+    }
+  });
+
+  it("una lista vacía no las pide", async () => {
+    estado.lista = lista({ cantidad_items: 0, cantidad_peliculas: 0, cantidad_series: 0 });
+    estado.paginas = [pagina([])];
+    render(<ListDetailView id={7} />, { locale: "en" });
+
+    await screen.findByRole("link", { name: /Explore/ });
+    expect(pedidosDeSugerencias()).toEqual([]);
+  });
+
+  it("esperan a que la grilla no tenga más páginas", async () => {
+    const usuario = userEvent.setup();
+    estado.paginas = [
+      pagina([item(1), item(2)], {
+        next: "http://backend:8000/api/lists/7/items/?cursor=abc",
+        total: 3,
+      }),
+      pagina([item(3)], { total: 3 }),
+    ];
+    render(<ListDetailView id={7} />, { locale: "en" });
+
+    await screen.findByRole("link", { name: /Título 1/ });
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    expect(pedidosDeSugerencias()).toEqual([]);
+
+    await usuario.click(screen.getByRole("button", { name: "Load more titles" }));
+
+    expect(await banda()).toBeInTheDocument();
+  });
+
+  it("siguen bajo el aviso de «sin coincidencias» y un filtro no las vuelve a pedir", async () => {
+    const vista = render(<ListDetailView id={7} />, { locale: "en" });
+    await banda();
+
+    // El filtro vive en la URL: se cambia y se vuelve a renderizar, como hace Next.
+    estado.paginas = [pagina([])];
+    window.history.replaceState(null, "", "/lists/7?type=tv");
+    vista.rerender(<ListDetailView id={7} />);
+
+    expect(await screen.findByText(en.lists.detail.filteredEmpty)).toBeInTheDocument();
+    expect(await banda()).toBeInTheDocument();
+    expect(pedidosDeSugerencias()).toEqual(["/api/lists/7/suggestions/?pagina=1"]);
+  });
+
+  it("«+ Add» suma el título a la grilla y a los contadores, y avisa", async () => {
+    const usuario = userEvent.setup();
+    render(<ListDetailView id={7} />, { locale: "en" });
+    const region = await banda();
+
+    await usuario.click(within(region).getByRole("button", { name: "Add Arrival to Maratón" }));
+
+    // Con el orden «Recently added» lo nuevo va primero.
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole("button", { name: /^Remove .* from Maratón$/ })
+          .map((boton) => boton.getAttribute("aria-label"))
+      ).toEqual([
+        "Remove Arrival from Maratón",
+        "Remove Título 1 from Maratón",
+        "Remove Título 2 from Maratón",
+        "Remove Título 3 from Maratón",
+      ])
+    );
+    expect(screen.getByText("4 items · 3 movies · 1 TV show")).toBeInTheDocument();
+    expect(
+      screen.getByText("Based on its 4 titles, without what you already watched.")
+    ).toBeInTheDocument();
+    expect(within(await banda()).queryByRole("link", { name: "Arrival" })).not.toBeInTheDocument();
+    expect(toast.success).toHaveBeenCalledWith("You added Arrival to “Maratón”.");
+  });
+
+  it("con otro orden que «Recently added» vuelve a pedir la primera página en vez de agregar al final", async () => {
+    const usuario = userEvent.setup();
+    window.history.replaceState(null, "", "/lists/7?sort=title");
+    render(<ListDetailView id={7} />, { locale: "en" });
+    const region = await banda();
+    expect(lecturas()).toEqual(["/api/lists/7/items/?orden=titulo-asc"]);
+    // Lo que responderá el backend, ya con «Arrival» en el lugar que le toca.
+    estado.paginas = [
+      pagina([item(50, { titulo: "Arrival" }), item(1), item(2), item(3, { tipo: "tv" })]),
+    ];
+
+    await usuario.click(within(region).getByRole("button", { name: "Add Arrival to Maratón" }));
+
+    await waitFor(() => expect(lecturas()).toHaveLength(2));
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole("button", { name: /^Remove .* from Maratón$/ })
+          .map((boton) => boton.getAttribute("aria-label"))
+      ).toEqual([
+        "Remove Arrival from Maratón",
+        "Remove Título 1 from Maratón",
+        "Remove Título 2 from Maratón",
+        "Remove Título 3 from Maratón",
+      ])
+    );
+    expect(screen.getByText("4 items · 3 movies · 1 TV show")).toBeInTheDocument();
+  });
+
+  it("al agregar la última sugerencia la banda se va y el foco pasa al título de la lista", async () => {
+    const usuario = userEvent.setup();
+    estado.sugerencias = sugerencias(["Arrival"]);
+    render(<ListDetailView id={7} />, { locale: "en" });
+    const region = await banda();
+
+    await usuario.click(within(region).getByRole("button", { name: "Add Arrival to Maratón" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("region", { name: "Suggested for this list" })).toBeNull()
+    );
+    // El botón enfocado desapareció con la banda: sin esto el foco caería en <body>.
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { level: 1, name: "Maratón" })).toHaveFocus()
+    );
+  });
+
+  it("con un filtro activo, lo agregado cuenta en la lista pero no entra en la grilla filtrada", async () => {
+    const usuario = userEvent.setup();
+    window.history.replaceState(null, "", "/lists/7?type=movie");
+    render(<ListDetailView id={7} />, { locale: "en" });
+    const region = await banda();
+
+    await usuario.click(within(region).getByRole("button", { name: "Add Arrival to Maratón" }));
+
+    expect(await screen.findByText("4 items · 3 movies · 1 TV show")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove Arrival from Maratón" })).toBeNull();
   });
 });

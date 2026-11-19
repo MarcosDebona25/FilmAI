@@ -41,7 +41,6 @@ from filmai.errores.sobre import RESERVADOS
 from filmai.exceptions import filmai_exception_handler
 from filmai.views import custom_500
 from listas.exceptions import (
-    CalificacionImpideQuitarDeVistas,
     ItemDuplicado,
     ListaPredeterminadaProtegida,
     NombreListaDuplicado,
@@ -301,7 +300,6 @@ for nombre, exc in [
     ("lista_duplicada", NombreListaDuplicado()),
     ("item_duplicado", ItemDuplicado()),
     ("lista_protegida", ListaPredeterminadaProtegida()),
-    ("calificacion_bloquea_quitar", CalificacionImpideQuitarDeVistas()),
     ("calificacion_duplicada", CalificacionDuplicada()),
     ("resena_moderada", ResenaModerada()),
 ]:

@@ -8,7 +8,7 @@ import { tmdbImage, type Title } from "@/lib/catalog";
 import { NOTAS, de, type Nota } from "@/lib/search";
 import { routes } from "@/lib/routes";
 
-export type ClaveLista = "favoritos" | "vistas" | "pendientes";
+export type ClaveLista = "favoritos" | "pendientes" | "viendo" | "vistas";
 
 /** Un resumen de `GET /api/lists/` (L-01). */
 export interface ResumenLista {
@@ -43,6 +43,42 @@ export interface PaginaItems {
   total: number;
   results: ItemLista[];
 }
+
+/**
+ * Una sugerencia de `GET /api/lists/{id}/suggestions/` o un parecido de
+ * `GET /api/catalogo/{tipo}/{id}/similar/`: un ítem sin `item_id` ni fecha.
+ */
+export interface Sugerencia {
+  id_tmdb: number;
+  tipo: "movie" | "tv";
+  titulo: string;
+  poster: string | null;
+  anio: number | null;
+  calificacion_promedio: number | null;
+  /** No viaja en las respuestas en inglés. */
+  campos_en_ingles?: string[];
+  origen: "catalogo" | "tmdb";
+}
+
+export interface PaginaSugerencias {
+  results: Sugerencia[];
+  pagina: number;
+  /** Queda una página más mientras `pagina < paginas`. */
+  paginas: number;
+  /** El nombre de la lista entró en el cálculo. */
+  nombre_usado: boolean;
+}
+
+/**
+ * Favoritos, Vistas y las personalizadas tienen sugerencias. Pendientes (15/11/2026)
+ * y Viendo (19/11/2026) no: son lo que la persona ya eligió ver o está viendo.
+ */
+export const tieneSugerencias = (lista: Pick<ResumenLista, "clave">) =>
+  lista.clave !== "pendientes" && lista.clave !== "viendo";
+
+/** TMDB numera películas y series por separado: la identidad es el par. */
+export const claveDeSugerencia = (sugerencia: Pick<Sugerencia, "tipo" | "id_tmdb">) =>
+  `${sugerencia.tipo}-${sugerencia.id_tmdb}`;
 
 /** Mismo tope que valida el backend (`NombreListaSerializer`). */
 export const MAX_NOMBRE = 80;
@@ -93,6 +129,23 @@ export function itemATitulo(item: ItemLista): Title {
     backdrop: null,
     generoIds: [],
     tituloEnIngles: false,
+    sinopsisEnIngles: false,
+  };
+}
+
+/** Una sugerencia (de una lista o de «More like {title}») como tarjeta. */
+export function sugerenciaATitulo(sugerencia: Sugerencia): Title {
+  return {
+    tipo: sugerencia.tipo,
+    id: sugerencia.id_tmdb,
+    titulo: sugerencia.titulo,
+    sinopsis: "",
+    anio: sugerencia.anio,
+    nota: sugerencia.calificacion_promedio,
+    poster: tmdbImage(sugerencia.poster, "w342"),
+    backdrop: null,
+    generoIds: [],
+    tituloEnIngles: sugerencia.campos_en_ingles?.includes("titulo") ?? false,
     sinopsisEnIngles: false,
   };
 }

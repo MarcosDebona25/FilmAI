@@ -54,7 +54,8 @@ from catalogo.services.adapter import tmdb_a_dominio
 from catalogo.services.materialization import materializar
 from filmai.idioma import idioma_efectivo
 from filmai.throttles import EscrituraThrottle
-from listas.services import agregar_a_vistas, quitar_de_vistas
+from listas.models import ClaveLista
+from listas.services import poner_estado, quitar_de_vistas
 
 
 def _produccion_pedida(request):
@@ -189,9 +190,10 @@ class CalificacionesView(TopesTMDBMixin, APIView):
                 )
                 if texto:
                     Resena.objects.create(calificacion=calificacion, texto=texto)
-                # Si la calificaste, la viste (regla del 30/09/2026). Dentro
-                # del mismo atomic: sin «Vistas» no queda una nota a medias.
-                agregar_a_vistas(request.user, produccion)
+                # Calificar mueve a «Vistas» desde cualquier estado (PR 4,
+                # 15/11/2026). Dentro del mismo atomic: sin «Vistas» no queda
+                # una nota a medias.
+                poner_estado(request.user, produccion, ClaveLista.VISTAS)
         except IntegrityError:
             # `uq_calificacion_usuario_produccion`. El atomic() es el savepoint
             # que deja la transacción usable después del error (en PostgreSQL,
@@ -243,9 +245,9 @@ class CalificacionDetailView(APIView):
         (AD-01')—. Con dos sentidos, «¿por qué no se ve esta reseña?» no
         tendría respuesta.
 
-        Sacarla de «Vistas» es la regla del 30/09/2026: el modal lo avisa antes
-        de confirmar, y el usuario puede volver a marcarla. Termina en el mismo
-        estado que quitar de «Vistas» con `?borrar_calificacion=true` (L-01).
+        Sacarla de «Vistas» es la regla R4: el modal lo avisa antes de
+        confirmar, y el usuario puede volver a marcarla. Si después de calificar
+        cambió el estado a «Pendientes» o «Viendo», ese estado no se toca.
         """
         calificacion = _calificacion_propia(request, calificacion_id)
         with transaction.atomic():

@@ -682,20 +682,17 @@ class CalificarMaterializaTests(_ParchesDeMaterializacion, TestCase):
 
 
 class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
-    """La regla «calificada ⇒ en Vistas», de punta a punta por HTTP.
+    """«Calificar mueve a Watched», de punta a punta por HTTP (PR 4, 15/11/2026).
 
-    CU-011 ya pedía una mitad: no se puede sacar de «Vistas» algo calificado
-    (el 409 de L-01). La otra mitad es del 30/09/2026: calificar la agrega y
-    borrar la calificación la saca. Lo que la regla NO exige es la vuelta:
-    marcar como vista sin calificar sigue siendo válido.
+    Hasta el PR 4 regía «calificada ⇒ en Vistas» (30/09/2026) y quitar de
+    «Vistas» algo calificado era un 409 (Conflict). Ahora el estado es único por
+    título y cambia libremente; lo que queda de la regla es:
 
-    Los cuatro casos acordados con el usuario:
-
-    - **Entra 1**: califica → entra a «Vistas».
-    - **Entra 2**: la marca como vista, sin calificar.
+    - **Entra 1**: califica → entra a «Vistas» (desde cualquier estado).
+    - **Entra 2**: la marca como vista, sin calificar; calificarla después no
+      duplica el ítem.
     - **Sale 1**: borra la calificación → sale de «Vistas».
-    - **Sale 2**: la saca de «Vistas» → 409; confirmado con
-      `?borrar_calificacion=true`, se va también la calificación.
+    - **Sale 2**: la saca de «Vistas» → 204 (No Content) y la nota se conserva.
     """
 
     def setUp(self):
@@ -714,11 +711,8 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
         self.assertEqual(respuesta.status_code, 201)
         return respuesta.data["item_id"]
 
-    def _quitar_de_vistas(self, item_id, *, confirmado=False):
-        url = f"/api/lists/{self.vistas.pk}/items/{item_id}/"
-        if confirmado:
-            url = f"{url}?borrar_calificacion=true"
-        return self.cliente.delete(url)
+    def _quitar_de_vistas(self, item_id):
+        return self.cliente.delete(f"/api/lists/{self.vistas.pk}/items/{item_id}/")
 
     def _calificar(self):
         respuesta = self.cliente.post(
@@ -737,25 +731,16 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
             calificacion_id = self._calificar()
 
             # Entra 1: calificar la agregó a «Vistas», sin otra llamada.
-            item_id = self._item_en_vistas()
-            self.assertIsNotNone(item_id)
+            self.assertIsNotNone(self._item_en_vistas())
 
-            # La regla de CU-011 se dispara sobre ese ítem.
-            bloqueado = self._quitar_de_vistas(item_id)
-            self.assertEqual(bloqueado.status_code, 409)
-            self.assertEqual(
-                bloqueado.data["code"], "rating_blocks_removal_from_watched"
-            )
-
-            # Borrar SOLO el texto no alcanza: la regla mira la calificación.
-            # Es el caso donde alguien podría asumir lo contrario.
+            # Borrar SOLO el texto no la saca: la nota sigue y el estado también.
             self.assertEqual(
                 self.cliente.delete(
                     f"/api/reviews/{calificacion_id}/texto/"
                 ).status_code,
                 204,
             )
-            self.assertEqual(self._quitar_de_vistas(item_id).status_code, 409)
+            self.assertIsNotNone(self._item_en_vistas())
 
             # Sale 1: borrar la calificación la saca de «Vistas».
             self.assertEqual(
@@ -775,12 +760,10 @@ class CalificacionYReglaDeVistasTests(_ParchesDeMaterializacion, TestCase):
             self._calificar()
             self.assertEqual(self.vistas.items.count(), 1)
 
-            # Sale 2: sacarla pide confirmar, y confirmado se lleva la nota.
-            self.assertEqual(self._quitar_de_vistas(item_id).status_code, 409)
-            confirmado = self._quitar_de_vistas(item_id, confirmado=True)
-            self.assertEqual(confirmado.status_code, 204)
+            # Sale 2: sacarla ya no pide confirmar ni se lleva la nota.
+            self.assertEqual(self._quitar_de_vistas(item_id).status_code, 204)
 
-        self.assertFalse(Calificacion.objects.exists())
+        self.assertEqual(Calificacion.objects.count(), 1)
         self.assertFalse(self.vistas.items.exists())
 
 
@@ -839,15 +822,18 @@ class VistasSacaDePendientesTests(_ParchesDeMaterializacion, TestCase):
         self.assertTrue(self._en(self.vistas))
         self.assertFalse(self._en(self.pendientes))
 
-    def test_volver_a_agregarla_a_pendientes_sigue_permitido(self):
-        # Ya vista, la quiere volver a ver: la agrega a «Pendientes» y después
-        # la califica. Calificar no la saca, porque ya estaba en «Vistas».
+    def test_volver_a_agregarla_a_pendientes_la_saca_de_vistas(self):
+        # Estado único (PR 4): ya vista, la quiere volver a ver y la agrega a
+        # «Pendientes»; sale de «Vistas». Calificarla después la devuelve a
+        # «Vistas» y la saca de «Pendientes».
         self._agregar(self.vistas)
         self.assertEqual(self._agregar(self.pendientes).status_code, 201)
+        self.assertFalse(self._en(self.vistas))
 
         self._calificar()
 
-        self.assertTrue(self._en(self.pendientes))
+        self.assertTrue(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
 
     def test_otras_listas_no_tocan_pendientes(self):
         self._agregar(self.pendientes)
@@ -884,14 +870,14 @@ class VistasSacaDePendientesTests(_ParchesDeMaterializacion, TestCase):
         self.assertFalse(self._en(self.pendientes))
 
     def test_si_el_alta_en_vistas_falla_pendientes_queda_intacta(self):
-        # Ya está en «Vistas» y la volvió a poner en «Pendientes»: un segundo
-        # alta en «Vistas» responde 409 y no debe borrar nada.
+        # Ya está en «Vistas»: un segundo alta en «Vistas» responde 409 y no
+        # debe borrar nada (tampoco el ítem que ya estaba).
         self._agregar(self.vistas)
-        self._agregar(self.pendientes)
 
         self.assertEqual(self._agregar(self.vistas).status_code, 409)
 
-        self.assertTrue(self._en(self.pendientes))
+        self.assertTrue(self._en(self.vistas))
+        self.assertFalse(self._en(self.pendientes))
 
 
 class _BaseLectura(TestCase):

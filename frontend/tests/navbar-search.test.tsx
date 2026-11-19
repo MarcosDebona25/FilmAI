@@ -18,8 +18,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/home",
 }));
 vi.mock("next/image", () => ({
-  // eslint-disable-next-line @next/next/no-img-element
-  default: ({ alt }: { alt: string }) => <img alt={alt} />,
+  default: ({ alt, width, height }: { alt: string; width: number; height: number }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img alt={alt} width={width} height={height} />
+  ),
 }));
 vi.mock("@/lib/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api")>()),
@@ -154,6 +156,59 @@ describe("sugerencias", () => {
     expect(todas.at(-1)).toHaveTextContent("See all results for “nol”");
   });
 
+  it("cada título lleva su póster de 48 × 72 y la nota de TMDB con la ★", async () => {
+    abrir();
+    await escribir("nol");
+
+    const [inception, dark] = within(
+      screen.getByRole("group", { name: en.nav.search.groupTitles })
+    ).getAllByRole("option");
+    const poster = inception.querySelector("img");
+    // Intrínseco al doble de lo que se ve (48 × 72): así el navegador pide w154 en pantallas 2x.
+    expect(poster).toHaveAttribute("width", "96");
+    expect(poster).toHaveAttribute("height", "144");
+    // La nota se lee completa una vez; el número suelto es solo para la vista.
+    expect(inception).toHaveTextContent("TMDB rating: 8.4 out of 10");
+    expect(within(inception).getByText("8.4")).toHaveAttribute("aria-hidden", "true");
+    // Sin póster queda el hueco del mismo tamaño, sin imagen rota.
+    expect(dark.querySelector("img")).toBeNull();
+    expect(dark).toHaveTextContent("TMDB rating: 8.4 out of 10");
+  });
+
+  it("un título sin nota (TMDB manda 0) no muestra la ★", async () => {
+    const respuesta = structuredClone(RESPUESTA);
+    respuesta.results[1].vote_average = 0;
+    api.apiFetch.mockResolvedValue(respuesta);
+    abrir();
+    await escribir("nol");
+
+    const inception = screen.getByRole("option", { name: /Inception/ });
+    expect(inception).toHaveTextContent("Movie · 2010");
+    expect(inception).not.toHaveTextContent("TMDB rating");
+  });
+
+  it("la persona lleva su foto de 48 px, o sus iniciales si no tiene", async () => {
+    abrir();
+    await escribir("nol");
+    const foto = screen.getByRole("option", { name: /Christopher Nolan/ }).querySelector("img");
+    expect(foto).toHaveAttribute("width", "48");
+    expect(foto).toHaveAttribute("height", "48");
+
+    const respuesta = structuredClone(RESPUESTA);
+    (respuesta.results[0] as { profile_path: string | null }).profile_path = null;
+    api.apiFetch.mockResolvedValue(respuesta);
+    await escribir("nola");
+    const sinFoto = screen.getByRole("option", { name: /Christopher Nolan/ });
+    expect(sinFoto.querySelector("img")).toBeNull();
+    expect(sinFoto).toHaveTextContent("CNChristopher Nolan");
+
+    // Con una sola palabra, una sola letra.
+    (respuesta.results[0] as { name: string }).name = "Zendaya";
+    api.apiFetch.mockResolvedValue(structuredClone(respuesta));
+    await escribir("zen");
+    expect(screen.getByRole("option", { name: /Zendaya/ })).toHaveTextContent(/^ZZendaya/);
+  });
+
   it("anuncia cuántas hay en una región viva", async () => {
     abrir();
     await escribir("nol");
@@ -201,6 +256,13 @@ describe("sugerencias", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     fireEvent.keyDown(campo(), { key: "Enter" });
     expect(router.push).toHaveBeenCalledWith("/search?q=nol");
+  });
+});
+
+describe("campo abierto", () => {
+  it("la ✕ del campo mide 44 px", () => {
+    abrir();
+    expect(screen.getByRole("button", { name: en.nav.search.closeLabel })).toHaveClass("size-11");
   });
 });
 

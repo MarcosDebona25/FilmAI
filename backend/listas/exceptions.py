@@ -34,11 +34,3 @@ class ListaPredeterminadaProtegida(ListaConflict):
         "codigo": default_code,
         "detail": "Las listas predeterminadas no se pueden modificar ni eliminar.",
     }
-
-
-class CalificacionImpideQuitarDeVistas(ListaConflict):
-    default_code = "calificacion_impide_quitar_de_vistas"
-    default_detail: ClassVar[dict[str, str]] = {
-        "codigo": default_code,
-        "detail": "Eliminá la calificación antes de quitar esta producción de Vistas.",
-    }

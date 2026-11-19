@@ -1,31 +1,26 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
-import { ChevronDown, Clock, Eye, Heart, ListPlus } from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, CirclePlus, Heart, ListPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { ConfirmDialog } from "@/components/features/title/ConfirmDialog";
 import { ListsMenu } from "@/components/features/title/ListsMenu";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
+import { ICONO_ESTADO, StatusMenu } from "@/components/features/title/StatusMenu";
 import { StarIcon } from "@/components/ui/StarIcon";
-import { ApiError, apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
 import { actualizarLista, conItem, sinItem, type ListaFicha } from "@/lib/title-lists";
+import { estadoDe, type Estado } from "@/lib/title-status";
 import { cn } from "@/lib/utils";
 
-// Toast de cada lista predeterminada al agregar y al quitar.
-const AVISOS = {
-  favoritos: ["title.feedback.favoriteAdded", "title.feedback.favoriteRemoved"],
-  vistas: ["title.feedback.watchedAdded", "title.feedback.watchedRemoved"],
-  pendientes: ["title.feedback.watchlistAdded", "title.feedback.watchlistRemoved"],
-} as const;
-
 /**
- * Acciones de la ficha (canvas): calificar, Favorite, Watched, Watchlist y
- * «Add to list». Llama a la API de listas de L-01 y devuelve las listas
- * actualizadas con `onListasChange`. Quitar de Vistas algo calificado responde
- * 409: pide confirmar y reintenta con `?borrar_calificacion=true`.
+ * Acciones de la ficha (canvas): calificar, Favorite, el botón de estado
+ * (Watchlist, Watching o Watched) y «Add to list». Favorite y las listas
+ * propias llaman a la API de listas de L-01 y devuelven las listas actualizadas
+ * con `onListasChange`. El estado lo cambia quien llama (`onCambiarEstado`),
+ * porque su toast con Undo también lo usa la calificación.
  */
 export function TitleActions({
   titulo,
@@ -35,7 +30,8 @@ export function TitleActions({
   onListasChange,
   miCalificacion,
   onRate,
-  onCalificacionBorrada,
+  onCambiarEstado,
+  cambiandoEstado = false,
 }: {
   titulo: string;
   idTmdb: number;
@@ -44,18 +40,25 @@ export function TitleActions({
   onListasChange: (listas: ListaFicha[]) => void;
   miCalificacion: { id: number; valor: number; texto: string | null } | null;
   onRate: () => void;
-  onCalificacionBorrada: () => void;
+  /** Pone el estado elegido, o `null` para quitarlo. */
+  onCambiarEstado: (estado: Estado | null) => void;
+  /** Hay un cambio de estado en camino: no se abre otro hasta que responda. */
+  cambiandoEstado?: boolean;
 }) {
   const t = useTranslations();
   const [pendiente, setPendiente] = useState<number | null>(null);
   const [menu, setMenu] = useState(false);
-  const [confirmarVistas, setConfirmarVistas] = useState<ListaFicha | null>(null);
+  const [menuEstado, setMenuEstado] = useState(false);
   const disparador = useRef<HTMLButtonElement>(null);
+  const disparadorEstado = useRef<HTMLButtonElement>(null);
+  const estado = estadoDe(listas);
+  const IconoEstado = estado ? ICONO_ESTADO[estado] : CirclePlus;
   const porClave = (clave: ListaFicha["clave"]) => listas.find((lista) => lista.clave === clave);
   const propias = listas.filter((lista) => lista.tipo === "personalizada");
 
   function aviso(lista: ListaFicha, agregada: boolean) {
-    if (lista.clave) return t(AVISOS[lista.clave][agregada ? 0 : 1]);
+    if (lista.clave === "favoritos")
+      return t(agregada ? "title.feedback.favoriteAdded" : "title.feedback.favoriteRemoved");
     return t(agregada ? "title.lists.addedFeedback" : "title.lists.removedFeedback", {
       title: titulo,
       listName: lista.nombre,
@@ -81,42 +84,14 @@ export function TitleActions({
         onListasChange(actualizarLista(listas, lista.id, sinItem(lista)));
         toast.success(aviso(lista, false));
       } else {
-        const nuevas = await agregar(lista);
-        // Lo que ya viste deja de estar pendiente: el servidor la sacó de
-        // Watchlist en la misma operación (regla del 14/10/2026).
-        const pendientes = porClave("pendientes");
-        if (lista.clave === "vistas" && pendientes?.contiene) {
-          onListasChange(actualizarLista(nuevas, pendientes.id, sinItem(pendientes)));
-          toast.success(t("title.feedback.watchedAddedFromWatchlist"));
-        } else {
-          toast.success(aviso(lista, true));
-        }
+        await agregar(lista);
+        toast.success(aviso(lista, true));
       }
     } catch (motivo) {
-      if (motivo instanceof ApiError && motivo.code === "rating_blocks_removal_from_watched") {
-        setConfirmarVistas(lista);
-      } else {
-        toast.error(mensajeDeError(motivo));
-      }
+      toast.error(mensajeDeError(motivo));
     } finally {
       setPendiente(null);
     }
-  }
-
-  async function quitarDeVistasConCalificacion(lista: ListaFicha) {
-    await apiFetch(`/api/lists/${lista.id}/items/${lista.item_id}/?borrar_calificacion=true`, {
-      method: "DELETE",
-    });
-    onListasChange(actualizarLista(listas, lista.id, sinItem(lista)));
-    onCalificacionBorrada();
-    setConfirmarVistas(null);
-    toast.success(
-      t(
-        miCalificacion?.texto
-          ? "title.feedback.ratingReviewDeleted"
-          : "title.feedback.ratingDeleted"
-      )
-    );
   }
 
   async function crearYAgregar(nombre: string) {
@@ -131,6 +106,16 @@ export function TitleActions({
     disparador.current?.focus();
   }
 
+  function cerrarMenuEstado() {
+    setMenuEstado(false);
+    disparadorEstado.current?.focus();
+  }
+
+  function elegirEstado(elegido: Estado | null) {
+    cerrarMenuEstado();
+    if (elegido !== estado) onCambiarEstado(elegido);
+  }
+
   // Mismo botón en las dos medidas: en celular, ícono arriba y texto chico;
   // en escritorio, fila con ícono y texto.
   const accion = (activa: boolean) =>
@@ -141,37 +126,7 @@ export function TitleActions({
         : "font-medium text-fg-2 shadow-[inset_0_0_0_1px_var(--line)] hover:text-foreground"
     );
 
-  // Función que devuelve el botón, no un componente: un componente definido
-  // adentro de otro se vuelve a montar en cada redibujo y el botón pierde el foco.
-  function toggle(
-    clave: "favoritos" | "vistas" | "pendientes",
-    icono: ReactNode,
-    etiqueta: string
-  ) {
-    const lista = porClave(clave);
-    if (!lista) return null;
-    return (
-      <button
-        type="button"
-        aria-pressed={lista.contiene}
-        disabled={pendiente === lista.id}
-        onClick={() => alternar(lista)}
-        className={accion(lista.contiene)}
-      >
-        {icono}
-        {etiqueta}
-      </button>
-    );
-  }
-
-  // Ícono de una lista predeterminada: activo, se rellena con el color de acento
-  // (como la estrella de la nota propia). La pupila del ojo y las agujas del
-  // reloj toman el color del fondo del botón para seguir viéndose.
-  const icono = (clave: "favoritos" | "vistas" | "pendientes", recorte: string) =>
-    cn(
-      "size-5 md:size-[1.125rem]",
-      porClave(clave)?.contiene && cn("fill-current text-primary", recorte)
-    );
+  const favorita = porClave("favoritos");
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-2.5">
@@ -209,24 +164,61 @@ export function TitleActions({
         )}
       </button>
 
-      <div className="grid grid-cols-4 gap-2 md:contents">
-        {toggle(
-          "favoritos",
-          <Heart aria-hidden="true" className={icono("favoritos", "")} />,
-          t("common.media.favorite")
+      <div className="grid grid-cols-3 gap-2 md:contents">
+        {favorita && (
+          <button
+            type="button"
+            aria-pressed={favorita.contiene}
+            disabled={pendiente === favorita.id}
+            onClick={() => alternar(favorita)}
+            className={accion(favorita.contiene)}
+          >
+            {/* Activo, el corazón se rellena con el color de acento (como la estrella de la nota). */}
+            <Heart
+              aria-hidden="true"
+              className={cn(
+                "size-5 md:size-[1.125rem]",
+                favorita.contiene && "fill-current text-primary"
+              )}
+            />
+            {t("common.media.favorite")}
+          </button>
         )}
-        {toggle(
-          "vistas",
-          <Eye
-            aria-hidden="true"
-            className={icono("vistas", "[&>circle]:fill-raised-2 [&>circle]:stroke-raised-2")}
-          />,
-          t("common.media.watched")
-        )}
-        {toggle(
-          "pendientes",
-          <Clock aria-hidden="true" className={icono("pendientes", "[&>path]:stroke-raised-2")} />,
-          t("common.media.watchlist")
+        {listas.some((lista) => lista.clave === "viendo") && (
+          <div className="md:relative">
+            <button
+              ref={disparadorEstado}
+              type="button"
+              aria-label={
+                estado
+                  ? t("title.status.current", { status: t(`enums.defaultList.${estado}`) })
+                  : undefined
+              }
+              aria-haspopup="menu"
+              aria-expanded={menuEstado}
+              aria-disabled={cambiandoEstado || undefined}
+              onClick={() => !cambiandoEstado && setMenuEstado(!menuEstado)}
+              className={cn(accion(estado !== null), "w-full md:pr-3.5")}
+            >
+              <IconoEstado
+                aria-hidden="true"
+                className={cn(
+                  "size-5 md:size-[1.125rem]",
+                  estado && estado !== "vistas" && "text-primary"
+                )}
+              />
+              {estado ? t(`enums.defaultList.${estado}`) : t("title.status.label")}
+              <ChevronDown aria-hidden="true" className="hidden size-4 md:block" />
+            </button>
+            {menuEstado && (
+              <StatusMenu
+                titulo={titulo}
+                estado={estado}
+                onElegir={elegirEstado}
+                onClose={cerrarMenuEstado}
+              />
+            )}
+          </div>
         )}
         <div className="md:relative">
           <button
@@ -255,22 +247,6 @@ export function TitleActions({
           )}
         </div>
       </div>
-
-      {confirmarVistas && miCalificacion && (
-        <ConfirmDialog
-          titulo={t("title.watched.removeConfirmTitle")}
-          descripcion={t(
-            miCalificacion.texto
-              ? "title.rating.removeBothDescription"
-              : "title.rating.removeOnlyDescription",
-            { title: titulo }
-          )}
-          preview={miCalificacion.texto}
-          confirmar={t("title.watched.remove")}
-          onConfirm={() => quitarDeVistasConCalificacion(confirmarVistas)}
-          onCancel={() => setConfirmarVistas(null)}
-        />
-      )}
     </div>
   );
 }

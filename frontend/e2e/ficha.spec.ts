@@ -8,6 +8,7 @@ import {
   PLATAFORMAS_AR,
   PLATAFORMAS_CN,
 } from "../tests/title-fixtures";
+import { auditar } from "./axe";
 import { prepararCuenta } from "./cuenta";
 
 const viewports = [
@@ -62,6 +63,15 @@ async function prepararFicha(page: Page) {
         id: 3,
         nombre: "Watchlist",
         clave: "pendientes",
+        tipo: "predeterminada",
+        cantidad_items: 0,
+        contiene: false,
+        item_id: null as number | null,
+      },
+      {
+        id: 4,
+        nombre: "Watching",
+        clave: "viendo",
         tipo: "predeterminada",
         cantidad_items: 0,
         contiene: false,
@@ -156,27 +166,6 @@ async function prepararFicha(page: Page) {
     }
     if (url.pathname === "/api/lists/5/items/")
       return route.fulfill({ status: 201, json: { item_id: 91 } });
-    if (url.pathname === "/api/lists/3/items/" && method === "POST") {
-      estado.listas[2] = { ...estado.listas[2], contiene: true, item_id: 71, cantidad_items: 1 };
-      return route.fulfill({ status: 201, json: { item_id: 71 } });
-    }
-    if (url.pathname === "/api/lists/2/items/" && method === "POST") {
-      // Como el servidor: entrar a Vistas saca de Pendientes (14/10/2026).
-      estado.listas[1] = { ...estado.listas[1], contiene: true, item_id: 70, cantidad_items: 1 };
-      estado.listas[2] = { ...estado.listas[2], contiene: false, item_id: null, cantidad_items: 0 };
-      return route.fulfill({ status: 201, json: { item_id: 70 } });
-    }
-    if (url.pathname === "/api/lists/2/items/70/") {
-      if (url.searchParams.get("borrar_calificacion") !== "true") {
-        return route.fulfill({
-          status: 409,
-          json: { code: "rating_blocks_removal_from_watched", params: {}, errors: [] },
-        });
-      }
-      estado.mia = null;
-      estado.listas[1] = { ...estado.listas[1], contiene: false, item_id: null, cantidad_items: 0 };
-      return route.fulfill({ status: 204 });
-    }
     return route.fulfill({ status: 404, json: { code: "not_found", params: {}, errors: [] } });
   });
   return estado;
@@ -186,6 +175,77 @@ async function sinDesborde(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true
   );
+}
+
+/**
+ * Sección 15 del canvas: la línea del hero abre un diálogo centrado en
+ * escritorio y una hoja pegada al borde inferior en celular.
+ */
+async function dondeVerla(page: Page, celular: boolean) {
+  await prepararCuenta(page);
+  await prepararFicha(page);
+  await page.goto("/movie/157336");
+
+  const linea = page.getByRole("button", { name: /Stream or rent/ });
+  await expect(linea).toContainText("3 options in Argentina");
+  await expect(linea).toHaveAttribute("aria-expanded", "false");
+  const generos = await page.getByRole("list", { name: "Genres" }).boundingBox();
+  const lineaCaja = await linea.boundingBox();
+  expect(lineaCaja!.y).toBeGreaterThan(generos!.y + generos!.height - 1);
+  // Área de toque de 44 px.
+  expect(lineaCaja!.height).toBeGreaterThanOrEqual(44);
+  await sinDesborde(page);
+
+  await linea.click();
+  await expect(linea).toHaveAttribute("aria-expanded", "true");
+  const panel = page.getByRole("dialog", { name: "Where to watch" });
+  await expect(panel).toHaveAttribute("aria-modal", "true");
+  await expect(panel.getByRole("heading", { level: 3 })).toHaveText(["Stream", "Rent", "Buy"]);
+  await expect(panel.getByAltText("Netflix").first()).toHaveAttribute("title", "Netflix");
+  const logo = await panel.getByAltText("Netflix").first().boundingBox();
+  expect(Math.round(logo!.width)).toBe(40);
+  await expect(panel.getByRole("link", { name: /See all options on TMDB/ })).toHaveAttribute(
+    "href",
+    PLATAFORMAS_AR.enlace
+  );
+  await expect(panel.getByRole("link", { name: "JustWatch" })).toHaveAttribute(
+    "href",
+    "https://www.justwatch.com"
+  );
+  const cerrar = panel.getByRole("button", { name: "Close" });
+  const cerrarCaja = await cerrar.boundingBox();
+  expect(Math.round(cerrarCaja!.width)).toBe(44);
+  expect(Math.round(cerrarCaja!.height)).toBe(44);
+
+  const caja = await panel.boundingBox();
+  const ventana = page.viewportSize()!;
+  // `scrollbar-gutter: stable` reserva la barra (15 px en Chromium de escritorio;
+  // 0 en un celular real), y la capa del diálogo no la ocupa.
+  const BARRA = 16;
+  if (celular) {
+    // Hoja inferior: de borde a borde y apoyada abajo.
+    expect(Math.round(caja!.x)).toBe(0);
+    expect(caja!.width).toBeGreaterThanOrEqual(ventana.width - BARRA);
+    expect(Math.round(caja!.y + caja!.height)).toBe(ventana.height);
+  } else {
+    // Diálogo centrado de 520 px.
+    expect(Math.round(caja!.width)).toBe(520);
+    expect(Math.abs(caja!.x + caja!.width / 2 - ventana.width / 2)).toBeLessThanOrEqual(BARRA / 2);
+    expect(caja!.y).toBeGreaterThan(0);
+    expect(caja!.y + caja!.height).toBeLessThan(ventana.height);
+  }
+  await sinDesborde(page);
+  await auditar(page);
+
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+  await expect(linea).toBeFocused();
+
+  // El botón de cerrar también devuelve el foco a la línea.
+  await linea.click();
+  await cerrar.click();
+  await expect(panel).toHaveCount(0);
+  await expect(linea).toBeFocused();
 }
 
 for (const viewport of viewports) {
@@ -214,37 +274,10 @@ for (const viewport of viewports) {
       await sinDesborde(page);
     });
 
-    test("dónde verla: línea bajo los géneros y panel con grupos, TMDB y JustWatch", async ({
+    test("dónde verla: línea bajo los géneros y diálogo con grupos, TMDB y JustWatch", async ({
       page,
     }) => {
-      await prepararCuenta(page);
-      await prepararFicha(page);
-      await page.goto("/movie/157336");
-
-      const linea = page.getByRole("button", { name: /Stream or rent/ });
-      await expect(linea).toContainText("3 options in Argentina");
-      await expect(linea).toHaveAttribute("aria-expanded", "false");
-      const generos = await page.getByRole("list", { name: "Genres" }).boundingBox();
-      const lineaCaja = await linea.boundingBox();
-      expect(lineaCaja!.y).toBeGreaterThan(generos!.y + generos!.height - 1);
-      await sinDesborde(page);
-
-      await linea.click();
-      const panel = page.getByRole("dialog", { name: "Where to watch" });
-      await expect(panel.getByRole("heading", { name: "Stream" })).toBeVisible();
-      await expect(panel.getByRole("heading", { name: "Free" })).toHaveCount(0);
-      await expect(panel.getByAltText("Netflix").first()).toHaveAttribute("title", "Netflix");
-      await expect(panel.getByRole("link", { name: /See all options on TMDB/ })).toHaveAttribute(
-        "href",
-        PLATAFORMAS_AR.enlace
-      );
-      await expect(panel.getByRole("link", { name: "JustWatch" })).toHaveAttribute(
-        "href",
-        "https://www.justwatch.com"
-      );
-      await sinDesborde(page);
-      await page.keyboard.press("Escape");
-      await expect(panel).toHaveCount(0);
+      await dondeVerla(page, viewport.name === "celular");
     });
 
     test("dónde verla: país sin disponibilidad", async ({ page }) => {
@@ -310,10 +343,8 @@ for (const viewport of viewports) {
 
       const tuya = page.getByRole("article", { name: en.title.reviews.yourReview });
       await expect(tuya).toContainText("A father who made a promise.");
-      await expect(page.getByRole("button", { name: en.common.media.watched })).toHaveAttribute(
-        "aria-pressed",
-        "true"
-      );
+      // Calificar mueve el título a Watched: el botón de estado lo muestra.
+      await expect(page.getByRole("button", { name: "Status: Watched" })).toBeVisible();
 
       await tuya.getByRole("button", { name: en.common.review.delete }).click();
       await page
@@ -336,45 +367,6 @@ test.describe("ficha en escritorio con sesión", () => {
     extraHTTPHeaders: { "Accept-Language": "en-US,en;q=0.9" },
   });
 
-  test("quitar de Vistas algo calificado pide confirmar y borra la nota", async ({ page }) => {
-    await prepararCuenta(page);
-    const estado = await prepararFicha(page);
-    estado.mia = { id: 9, valor: 9, texto: null, fecha: "2026-10-01" };
-    estado.listas[1] = { ...estado.listas[1], contiene: true, item_id: 70, cantidad_items: 1 };
-    await page.goto("/movie/157336");
-
-    await page.getByRole("button", { name: en.common.media.watched }).click();
-    await page
-      .getByRole("alertdialog", { name: en.title.watched.removeConfirmTitle })
-      .getByRole("button", { name: en.title.watched.remove })
-      .click();
-
-    await expect(page.getByRole("button", { name: en.common.rating.rate })).toBeVisible();
-    await expect(page.getByRole("button", { name: en.common.media.watched })).toHaveAttribute(
-      "aria-pressed",
-      "false"
-    );
-  });
-
-  test("marcar Watched algo que está en Watchlist lo saca de Watchlist", async ({ page }) => {
-    await prepararCuenta(page);
-    await prepararFicha(page);
-    await page.goto("/movie/157336");
-
-    const watchlist = page.getByRole("button", { name: en.common.media.watchlist });
-    await watchlist.click();
-    await expect(watchlist).toHaveAttribute("aria-pressed", "true");
-
-    await page.getByRole("button", { name: en.common.media.watched }).click();
-
-    await expect(page.getByText(en.title.feedback.watchedAddedFromWatchlist)).toBeVisible();
-    await expect(page.getByRole("button", { name: en.common.media.watched })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-    await expect(watchlist).toHaveAttribute("aria-pressed", "false");
-  });
-
   test("ordenar y filtrar la comunidad, y crear una lista nueva", async ({ page }) => {
     await prepararCuenta(page);
     const estado = await prepararFicha(page);
@@ -391,5 +383,17 @@ test.describe("ficha en escritorio con sesión", () => {
     await page.getByRole("textbox", { name: en.title.lists.newNameLabel }).fill("Sci Fi");
     await page.getByRole("button", { name: en.title.lists.createAndAdd }).click();
     await expect(page.getByText("You created “Sci Fi” and added Interstellar.")).toBeVisible();
+  });
+});
+
+test.describe("dónde verla en 375 × 812", () => {
+  test.use({
+    viewport: { width: 375, height: 812 },
+    locale: "en-US",
+    extraHTTPHeaders: { "Accept-Language": "en-US,en;q=0.9" },
+  });
+
+  test("la línea abre una hoja inferior con el contenido del diálogo", async ({ page }) => {
+    await dondeVerla(page, true);
   });
 });
