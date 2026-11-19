@@ -36,6 +36,8 @@ export function useCursorList<Pagina extends ConCursor, Datos extends ConCursor>
   const [estado, setEstado] = useState<"cargando" | "listo" | "error">("cargando");
   const [mas, setMas] = useState<"quieto" | "cargando" | "error">("quieto");
   const [intento, setIntento] = useState(0);
+  // Sube para volver a pedir la primera página sin tocar el resto de la pantalla.
+  const [recarga, setRecarga] = useState(0);
   const pedido = useRef(0);
   // Las funciones de la pantalla se leen del último render sin ser dependencias.
   const armar = useRef({ rutaSiguiente, inicial, combinar });
@@ -58,7 +60,7 @@ export function useCursorList<Pagina extends ConCursor, Datos extends ConCursor>
         if (id === pedido.current) setEstado("error");
       }
     );
-  }, [primera, cuenta, intento]);
+  }, [primera, cuenta, intento, recarga]);
 
   const cargarMas = useCallback(() => {
     if (!datos?.next || mas === "cargando" || estado !== "listo") return;
@@ -87,6 +89,8 @@ export function useCursorList<Pagina extends ConCursor, Datos extends ConCursor>
     /** Cuenta los reintentos de la primera página (también la usan otras cargas de la pantalla). */
     intento,
     reintentar: () => setIntento((anterior) => anterior + 1),
+    /** Vuelve a pedir la primera página (ej. tras agregar un ítem desde afuera). */
+    recargarPrimera: () => setRecarga((anterior) => anterior + 1),
     /** Dice si conviene vigilar el centinela. */
     puedeSeguir: Boolean(datos?.next) && mas === "quieto" && estado === "listo",
   };

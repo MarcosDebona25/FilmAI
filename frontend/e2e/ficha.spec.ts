@@ -8,6 +8,7 @@ import {
   PLATAFORMAS_AR,
   PLATAFORMAS_CN,
 } from "../tests/title-fixtures";
+import { auditar } from "./axe";
 import { prepararCuenta } from "./cuenta";
 
 const viewports = [
@@ -176,6 +177,77 @@ async function sinDesborde(page: Page) {
   );
 }
 
+/**
+ * Sección 15 del canvas: la línea del hero abre un diálogo centrado en
+ * escritorio y una hoja pegada al borde inferior en celular.
+ */
+async function dondeVerla(page: Page, celular: boolean) {
+  await prepararCuenta(page);
+  await prepararFicha(page);
+  await page.goto("/movie/157336");
+
+  const linea = page.getByRole("button", { name: /Stream or rent/ });
+  await expect(linea).toContainText("3 options in Argentina");
+  await expect(linea).toHaveAttribute("aria-expanded", "false");
+  const generos = await page.getByRole("list", { name: "Genres" }).boundingBox();
+  const lineaCaja = await linea.boundingBox();
+  expect(lineaCaja!.y).toBeGreaterThan(generos!.y + generos!.height - 1);
+  // Área de toque de 44 px.
+  expect(lineaCaja!.height).toBeGreaterThanOrEqual(44);
+  await sinDesborde(page);
+
+  await linea.click();
+  await expect(linea).toHaveAttribute("aria-expanded", "true");
+  const panel = page.getByRole("dialog", { name: "Where to watch" });
+  await expect(panel).toHaveAttribute("aria-modal", "true");
+  await expect(panel.getByRole("heading", { level: 3 })).toHaveText(["Stream", "Rent", "Buy"]);
+  await expect(panel.getByAltText("Netflix").first()).toHaveAttribute("title", "Netflix");
+  const logo = await panel.getByAltText("Netflix").first().boundingBox();
+  expect(Math.round(logo!.width)).toBe(40);
+  await expect(panel.getByRole("link", { name: /See all options on TMDB/ })).toHaveAttribute(
+    "href",
+    PLATAFORMAS_AR.enlace
+  );
+  await expect(panel.getByRole("link", { name: "JustWatch" })).toHaveAttribute(
+    "href",
+    "https://www.justwatch.com"
+  );
+  const cerrar = panel.getByRole("button", { name: "Close" });
+  const cerrarCaja = await cerrar.boundingBox();
+  expect(Math.round(cerrarCaja!.width)).toBe(44);
+  expect(Math.round(cerrarCaja!.height)).toBe(44);
+
+  const caja = await panel.boundingBox();
+  const ventana = page.viewportSize()!;
+  // `scrollbar-gutter: stable` reserva la barra (15 px en Chromium de escritorio;
+  // 0 en un celular real), y la capa del diálogo no la ocupa.
+  const BARRA = 16;
+  if (celular) {
+    // Hoja inferior: de borde a borde y apoyada abajo.
+    expect(Math.round(caja!.x)).toBe(0);
+    expect(caja!.width).toBeGreaterThanOrEqual(ventana.width - BARRA);
+    expect(Math.round(caja!.y + caja!.height)).toBe(ventana.height);
+  } else {
+    // Diálogo centrado de 520 px.
+    expect(Math.round(caja!.width)).toBe(520);
+    expect(Math.abs(caja!.x + caja!.width / 2 - ventana.width / 2)).toBeLessThanOrEqual(BARRA / 2);
+    expect(caja!.y).toBeGreaterThan(0);
+    expect(caja!.y + caja!.height).toBeLessThan(ventana.height);
+  }
+  await sinDesborde(page);
+  await auditar(page);
+
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+  await expect(linea).toBeFocused();
+
+  // El botón de cerrar también devuelve el foco a la línea.
+  await linea.click();
+  await cerrar.click();
+  await expect(panel).toHaveCount(0);
+  await expect(linea).toBeFocused();
+}
+
 for (const viewport of viewports) {
   test.describe(`ficha en ${viewport.name}`, () => {
     test.use({
@@ -202,37 +274,10 @@ for (const viewport of viewports) {
       await sinDesborde(page);
     });
 
-    test("dónde verla: línea bajo los géneros y panel con grupos, TMDB y JustWatch", async ({
+    test("dónde verla: línea bajo los géneros y diálogo con grupos, TMDB y JustWatch", async ({
       page,
     }) => {
-      await prepararCuenta(page);
-      await prepararFicha(page);
-      await page.goto("/movie/157336");
-
-      const linea = page.getByRole("button", { name: /Stream or rent/ });
-      await expect(linea).toContainText("3 options in Argentina");
-      await expect(linea).toHaveAttribute("aria-expanded", "false");
-      const generos = await page.getByRole("list", { name: "Genres" }).boundingBox();
-      const lineaCaja = await linea.boundingBox();
-      expect(lineaCaja!.y).toBeGreaterThan(generos!.y + generos!.height - 1);
-      await sinDesborde(page);
-
-      await linea.click();
-      const panel = page.getByRole("dialog", { name: "Where to watch" });
-      await expect(panel.getByRole("heading", { name: "Stream" })).toBeVisible();
-      await expect(panel.getByRole("heading", { name: "Free" })).toHaveCount(0);
-      await expect(panel.getByAltText("Netflix").first()).toHaveAttribute("title", "Netflix");
-      await expect(panel.getByRole("link", { name: /See all options on TMDB/ })).toHaveAttribute(
-        "href",
-        PLATAFORMAS_AR.enlace
-      );
-      await expect(panel.getByRole("link", { name: "JustWatch" })).toHaveAttribute(
-        "href",
-        "https://www.justwatch.com"
-      );
-      await sinDesborde(page);
-      await page.keyboard.press("Escape");
-      await expect(panel).toHaveCount(0);
+      await dondeVerla(page, viewport.name === "celular");
     });
 
     test("dónde verla: país sin disponibilidad", async ({ page }) => {
@@ -338,5 +383,17 @@ test.describe("ficha en escritorio con sesión", () => {
     await page.getByRole("textbox", { name: en.title.lists.newNameLabel }).fill("Sci Fi");
     await page.getByRole("button", { name: en.title.lists.createAndAdd }).click();
     await expect(page.getByText("You created “Sci Fi” and added Interstellar.")).toBeVisible();
+  });
+});
+
+test.describe("dónde verla en 375 × 812", () => {
+  test.use({
+    viewport: { width: 375, height: 812 },
+    locale: "en-US",
+    extraHTTPHeaders: { "Accept-Language": "en-US,en;q=0.9" },
+  });
+
+  test("la línea abre una hoja inferior con el contenido del diálogo", async ({ page }) => {
+    await dondeVerla(page, true);
   });
 });

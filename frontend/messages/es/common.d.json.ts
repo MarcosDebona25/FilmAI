@@ -222,7 +222,8 @@ declare const messages: {
       "edit": "Editar calificación",
       "titleLabel": "Calificar {title}",
       "yourRating": "Tu calificación",
-      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes."
+      "watchedHelpFromWatchlist": "Al calificarla, {title} también se agrega a Vistas y sale de Pendientes.",
+      "watchedHelpFromWatching": "Al calificarla, {title} pasa de Viendo a Vistas."
     },
     "feedback": {
       "ratingReviewPublished": "Calificación y reseña publicadas.",
@@ -234,7 +235,8 @@ declare const messages: {
       "reviewUpdated": "Reseña actualizada.",
       "reviewDeleted": "Reseña eliminada.",
       "favoriteRemoved": "Quitada de Favoritos.",
-      "favoriteAdded": "Agregada a Favoritos."
+      "favoriteAdded": "Agregada a Favoritos.",
+      "watchedAdded": "Agregada a Vistas."
     },
     "metadata": {
       "ratingVotesLabel": "Calificación TMDB: {rating} de 10, {count, plural, one {# voto} other {# votos}}",
@@ -282,6 +284,9 @@ declare const messages: {
       "deleteConfirmTitle": "¿Eliminar reseña?",
       "deleteConfirmDescription": "Se eliminará el texto de tu reseña. Tu calificación de {title} y la producción en Vistas se conservan. El texto no se puede recuperar."
     },
+    "similar": {
+      "title": "Parecidos a {title}"
+    },
     "status": {
       "label": "Estado",
       "current": "Estado: {status}",
@@ -313,7 +318,7 @@ declare const messages: {
       "panelTitle": "Dónde ver",
       "groups": {
         "stream": "Streaming",
-        "free": "Gratis",
+        "free": "Gratis (con o sin publicidad)",
         "rent": "Alquiler",
         "buy": "Compra"
       },
@@ -392,6 +397,15 @@ declare const messages: {
       "filtersTitle": "Filtros y orden",
       "removeChipLabel": "Quitar filtro {filterLabel}",
       "loading": "Cargando la lista…"
+    },
+    "suggestions": {
+      "title": "Sugeridas para esta lista",
+      "basisWithName": "Según {count, plural, one {su # título} other {sus # títulos}} y su nombre, sin lo que ya viste.",
+      "basis": "Según {count, plural, one {su # título} other {sus # títulos}}, sin lo que ya viste.",
+      "add": "Agregar",
+      "addLabel": "Agregar {title} a {listName}",
+      "showMore": "Ver más sugerencias",
+      "basisRecent": "Según lo que viste hace poco."
     },
     "watching": {
       "moreLabel": "Más acciones para {title}",
@@ -538,9 +552,22 @@ declare const messages: {
       "genderLabel": "Género",
       "termsAcceptance": "Leí y acepto los <terms>Términos y condiciones</terms> de FilmAI.",
       "termsNewTabHint": "(se abre en otra pestaña)",
-      "submitPending": "Completá todos los campos y aceptá los Términos y Condiciones para continuar.",
-      "avatarLabel": "Elegí tu avatar",
-      "avatarHelp": "Podés cambiarlo cuando quieras desde tu perfil."
+      "title": "Creá tu cuenta",
+      "subtitle": "Te lleva menos de un minuto.",
+      "progressLabel": "Progreso del registro",
+      "stepOf": "Paso {step} de {total}",
+      "continue": "Continuar",
+      "createAccount": "Crear cuenta",
+      "back": "Atrás",
+      "backToStep": "Atrás, al paso {step}",
+      "avatarOptional": "Avatar <hint>· opcional</hint>",
+      "avatarLaterHelp": "Podés cambiarlo después desde tu perfil.",
+      "avatarChoose": "Elegir",
+      "avatarUse": "Usar este avatar",
+      "avatarPrevious": "Avatares anteriores",
+      "avatarMore": "Más avatares",
+      "avatarPage": "{page} de {pages}",
+      "avatarLabel": "Elegí tu avatar"
     },
     "confirmation": {
       "pageTitle": "Confirmación de cuenta",
@@ -556,12 +583,11 @@ declare const messages: {
       "loading": "Confirmando tu cuenta…"
     },
     "completeSignUp": {
-      "badge": "Registro con Google",
-      "title": "Terminá tu registro",
-      "description": "Tomamos tu nombre y tu correo de tu cuenta de Google. Completá el resto y confirmá con Google para crear tu cuenta.",
-      "fixHighlighted": "Corregí el campo marcado y tocá de nuevo el botón de Google.",
-      "genderPlaceholder": "Elegí una opción",
-      "cancel": "Cancelar y volver a iniciar sesión"
+      "googleLine": "Tu nombre y tu correo vienen de tu cuenta de Google.",
+      "termsPending": "Aceptá los Términos y Condiciones para continuar.",
+      "backToSignUp": "Atrás, al registro",
+      "backToLogIn": "Atrás, a iniciar sesión",
+      "fixHighlighted": "Corregí el campo marcado y volvé a confirmar con Google en el paso 3."
     },
     "session": {
       "expired": "Tu sesión venció. Iniciá sesión de nuevo."

@@ -2,7 +2,7 @@
 
 Con texto, Buscar deja afuera los títulos de la cola larga de TMDB: los que
 tienen menos de 5 votos y popularidad menor a 5, salvo que se llamen justo como
-el texto. El diseño está en `openspec/changes/busqueda-navbar/design.md` (§4).
+el texto. El diseño está en `openspec/specs/search-ui/spec.md` y `docs/decisiones.md` (13/11/2026).
 
 Los datos son una respuesta real de TMDB capturada el 14/11/2026
 (`test_datos/tmdb_buscar_personas.json`, clave `buscar`): «chihiro» en

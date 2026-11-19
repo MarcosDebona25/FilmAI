@@ -1,6 +1,6 @@
 """Sugerencias de una lista: `GET /api/lists/{id}/suggestions/?pagina=N`.
 
-Diseño en `openspec/changes/recomendaciones-similares/design.md` §7. El motor
+Diseño en `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026). El motor
 tiene sus propios tests (`catalogo/tests_similares.py`) y el nombre de la lista
 también (`catalogo/tests_similares_nombre.py`). Acá se prueba lo que agrega la
 vista: quién puede pedirla, qué semillas arma con los ítems de la lista, qué
@@ -9,9 +9,11 @@ firma tiene su caché y qué se le saca a cada usuario. TMDB se reemplaza por
 sale de la máquina.
 """
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from catalogo.models import EstadoEmbedding, TipoProduccion
@@ -25,6 +27,7 @@ from catalogo.tests_similares import (
 )
 from listas.factories import ListaFactory
 from listas.models import ClaveLista, Tiene
+from listas.views import MAXIMO_SEMILLAS_VISTAS
 from usuarios.factories import UsuarioFactory
 
 
@@ -101,15 +104,31 @@ class AccesoTests(BaseSugerencias):
 
         self.assertEqual(self.api.get(self.url(lista)).status_code, 404)
 
-    def test_pendientes_viendo_y_vistas_son_404_not_found(self):
-        for clave in (ClaveLista.PENDIENTES, ClaveLista.VIENDO, ClaveLista.VISTAS):
+    def test_pendientes_y_viendo_son_404_not_found(self):
+        # Pendientes es lo que la persona YA eligió ver y Viendo lo que está
+        # viendo: no se le sugiere más. Vistas sí tiene (ver más abajo).
+        for clave in (ClaveLista.PENDIENTES, ClaveLista.VIENDO):
             with self.subTest(clave=clave):
                 lista = self.usuario.listas.get(clave=clave)
+                Tiene.objects.create(
+                    lista=lista, produccion=self.produccion("A" + clave, eje(0))
+                )
+                self.vecinas(3)
 
                 respuesta = self.api.get(self.url(lista))
 
                 self.assertEqual(respuesta.status_code, 404)
                 self.assertEqual(respuesta.json()["code"], "not_found")
+
+    def test_vistas_si_tiene_sugerencias(self):
+        vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+        Tiene.objects.create(lista=vistas, produccion=self.produccion("A", eje(0)))
+        self.vecinas(3)
+
+        respuesta = self.api.get(self.url(vistas))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(len(respuesta.json()["results"]), 3)
 
     def test_favoritos_si_tiene_sugerencias(self):
         favoritos = self.usuario.listas.get(clave=ClaveLista.FAVORITOS)
@@ -164,6 +183,30 @@ class ParametroPaginaTests(BaseSugerencias):
         self.assertEqual(cuarta.status_code, 200)
         self.assertEqual(cuarta.json()["results"], [])
         self.assertEqual(cuarta.json()["pagina"], 4)
+
+    def test_pagina_y_paginas_dicen_si_queda_una_pagina_mas(self):
+        # El botón «Show more suggestions» se muestra mientras `pagina < paginas`.
+        lista = self.lista_con(self.produccion("Semilla", vector_a(0)))
+        self.vecinas(25)
+
+        for numero, queda_otra in ((1, True), (2, True), (3, False)):
+            with self.subTest(pagina=numero):
+                cuerpo = self.api.get(self.url(lista, numero)).json()
+
+                self.assertEqual(cuerpo["pagina"] < cuerpo["paginas"], queda_otra)
+
+    def test_paginas_no_cuenta_lo_que_se_le_saca_al_usuario(self):
+        # 12 candidatas menos 2 vistas son 10: una sola página, sin «ver más».
+        lista = self.lista_con(self.produccion("Semilla", vector_a(0)))
+        vecinas = self.vecinas(12)
+        vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+        for produccion in vecinas[:2]:
+            Tiene.objects.create(lista=vistas, produccion=produccion)
+
+        cuerpo = self.api.get(self.url(lista)).json()
+
+        self.assertEqual(len(cuerpo["results"]), 10)
+        self.assertEqual((cuerpo["pagina"], cuerpo["paginas"]), (1, 1))
 
 
 class ContenidoTests(BaseSugerencias):
@@ -343,6 +386,153 @@ class VistasTests(BaseSugerencias):
         cliente.force_authenticate(otra)
         ajena = cliente.get(self.url(favoritos_ajenos))
         self.assertIn(("movie", vecinas[1].id_tmdb), self.ids(ajena))
+
+
+class SugerenciasDeVistasTests(BaseSugerencias):
+    """«Vistas» como lista con sugerencias: sus títulos son las semillas."""
+
+    def setUp(self):
+        super().setUp()
+        self.vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+
+    def test_no_sugiere_lo_que_ya_esta_en_vistas(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        otra = self.produccion("Otra", vector_a(0.02))
+        for produccion in (semilla, otra):
+            Tiene.objects.create(lista=self.vistas, produccion=produccion)
+        self.vecinas(3)
+
+        ids = self.ids(self.api.get(self.url(self.vistas)))
+
+        self.assertNotIn(("movie", semilla.id_tmdb), ids)
+        self.assertNotIn(("movie", otra.id_tmdb), ids)
+        self.assertEqual(len(ids), 3)
+
+    def test_vacia_es_200_sin_resultados_y_sin_llamar_a_tmdb(self):
+        respuesta = self.api.get(self.url(self.vistas))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.json()["results"], [])
+        self.assertEqual(respuesta.json()["paginas"], 0)
+        self.assertEqual(self.servicio.pedidos, [])
+
+    def test_nunca_usa_su_nombre(self):
+        Tiene.objects.create(lista=self.vistas, produccion=self.produccion("A", eje(0)))
+
+        respuesta = self.api.get(self.url(self.vistas))
+
+        self.vector_nombre.assert_not_called()
+        self.assertFalse(respuesta.json()["nombre_usado"])
+
+    def test_pagina_como_cualquier_otra_lista(self):
+        Tiene.objects.create(
+            lista=self.vistas, produccion=self.produccion("Semilla", vector_a(0))
+        )
+        self.vecinas(25)
+
+        primera = self.api.get(self.url(self.vistas, 1))
+        tercera = self.api.get(self.url(self.vistas, 3))
+
+        self.assertEqual(primera.json()["paginas"], 3)
+        self.assertEqual(len(primera.json()["results"]), 10)
+        self.assertEqual(len(tercera.json()["results"]), 5)
+
+
+class TopeDeSemillasDeVistasTests(BaseSugerencias):
+    """«Vistas» crece sin techo: solo los últimos títulos son semillas y firma."""
+
+    def setUp(self):
+        super().setUp()
+        self.vistas = self.usuario.listas.get(clave=ClaveLista.VISTAS)
+        self.ahora = timezone.now()
+
+    def agregar(self, produccion, hace_dias):
+        """Agrega a Vistas con la fecha de agregado puesta hace `hace_dias` días."""
+        item = Tiene.objects.create(lista=self.vistas, produccion=produccion)
+        # `fecha_agregado` es `auto_now_add`: no se puede dar al crear.
+        Tiene.objects.filter(pk=item.pk).update(
+            fecha_agregado=self.ahora - timedelta(days=hace_dias)
+        )
+        return item
+
+    def llenar(self, cantidad):
+        """`cantidad` títulos vistos con vector, del más viejo al más reciente."""
+        for n in range(cantidad):
+            self.agregar(
+                self.produccion(f"Vista {n}", vector_a(0.001 * n)), cantidad - n
+            )
+
+    def pedir(self):
+        with self.assertLogs("listas.views", "INFO") as registro:
+            self.api.get(self.url(self.vistas))
+        return registro.output[0]
+
+    def test_solo_los_mas_recientes_son_semillas(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS + 5)
+        self.vecinas(3)
+
+        linea = self.pedir()
+
+        self.assertIn(f"semillas={MAXIMO_SEMILLAS_VISTAS} ", linea)
+
+    def test_con_menos_del_tope_entran_todos(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS - 1)
+        self.vecinas(3)
+
+        self.assertIn(f"semillas={MAXIMO_SEMILLAS_VISTAS - 1} ", self.pedir())
+
+    def test_agregar_uno_viejo_fuera_del_tope_no_cambia_la_firma(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS + 5)
+        self.vecinas(3)
+        self.assertIn("cache=False", self.pedir())
+
+        self.agregar(self.produccion("Muy vieja", vector_a(0.9)), 1000)
+
+        self.assertIn("cache=True", self.pedir())
+
+    def test_agregar_uno_reciente_cambia_la_firma(self):
+        self.llenar(MAXIMO_SEMILLAS_VISTAS + 5)
+        self.vecinas(3)
+        self.pedir()
+
+        self.agregar(self.produccion("Reciente", vector_a(0.9)), 0)
+
+        self.assertIn("cache=False", self.pedir())
+
+    def test_un_titulo_sin_vector_fuera_del_tope_no_acorta_la_cache(self):
+        self.agregar(self.produccion("Sin vector", None, EstadoEmbedding.PENDING), 1000)
+        self.llenar(MAXIMO_SEMILLAS_VISTAS)
+        self.vecinas(25)
+
+        with patch.object(similares.cache, "set", wraps=similares.cache.set) as guardar:
+            self.api.get(self.url(self.vistas))
+
+        (_, _, ttl), _ = guardar.call_args
+        self.assertEqual(ttl, similares.TTL_POOL)
+
+    def test_lo_ya_visto_fuera_del_tope_tampoco_se_sugiere(self):
+        viejo = self.produccion("Vista hace mucho", vector_a(0.02))
+        self.agregar(viejo, 1000)
+        self.llenar(MAXIMO_SEMILLAS_VISTAS)
+        self.vecinas(3)
+
+        respuesta = self.api.get(self.url(self.vistas))
+
+        self.assertNotIn(("movie", viejo.id_tmdb), self.ids(respuesta))
+
+    def test_el_tope_es_solo_de_vistas(self):
+        lista = self.lista_con(
+            *(
+                self.produccion(f"Propia {n}", vector_a(0.001 * n))
+                for n in range(MAXIMO_SEMILLAS_VISTAS + 5)
+            )
+        )
+        self.vecinas(3)
+
+        with self.assertLogs("listas.views", "INFO") as registro:
+            self.api.get(self.url(lista))
+
+        self.assertIn(f"semillas={MAXIMO_SEMILLAS_VISTAS + 5} ", registro.output[0])
 
 
 class NombreTests(BaseSugerencias):

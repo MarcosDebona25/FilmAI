@@ -44,7 +44,8 @@ predetermined or personalized (L-03 header and the title page breadcrumb
 `?from=list-{id}`).
 
 When `id_tmdb` and `tipo` (`movie` or `tv`) are supplied together, every list
-MUST also include `contiene` and, when true, `item_id`. Supplying only one of
+MUST also include `contiene` and, when true, `item_id` and `fecha_agregado`
+(19/11/2026, so an Undo can restore the date). Supplying only one of
 those parameters MUST return 400 and the lookup MUST NOT materialize data.
 
 ### List management
@@ -127,12 +128,16 @@ the same array as `GET /api/lists/?id_tmdb=&tipo=`. Repeating the current status
 is idempotent and keeps the item's date. The production is materialized only
 when `estado` is not `null`. Errors: 400 (Bad Request) for an invalid body,
 401 (Unauthorized), 404 (Not Found) if TMDB does not know the title, and the
-write throttle. The client undoes a change by sending `estado_anterior`.
+write throttle. The client undoes a change by sending `estado_anterior` and,
+optionally, `fecha_agregado` (ISO, not in the future, else 400): the new item
+carries that date instead of «now» (19/11/2026). Without it, or with `null`, the
+item gets the current time.
 
 Migration `listas.0009_lista_viendo` creates `Viendo` in every account, moves
 every active rating with no status to `Vistas`, and keeps only the most recent
 list (`fecha_agregado`, `Vistas` on a tie) for a production in both `Pendientes`
-and `Vistas`. A custom list already named «Viendo» is renamed to «Viendo 2» (or
+and `Vistas`. A custom list already named «Viendo» or «Watching» is renamed to «Viendo 2» /
+«Watching 2» (or
 the first free number) and keeps its items. «Watching» and «Viendo» become
 reserved names. The reverse is a documented no-op.
 

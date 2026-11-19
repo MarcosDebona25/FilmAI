@@ -1708,13 +1708,15 @@ paths:
         «Sugeridas para esta lista»: títulos parecidos a los de una lista propia.
 
         `GET /api/lists/{id}/suggestions/?pagina=N` responde
-        `{results, pagina, paginas, nombre_usado}`. Solo las listas personalizadas
-        y Favoritos tienen sugerencias: Pendientes, Viendo y Vistas dan 404 (Not Found),
-        como si el recurso no existiera.
+        `{results, pagina, paginas, nombre_usado}`; queda una página más mientras
+        `pagina < paginas`. Tienen sugerencias las listas personalizadas, Favoritos
+        y Vistas. Pendientes y Viendo dan 404 (Not Found), como si el recurso no
+        existiera: son lo que la persona ya eligió ver o está viendo.
 
-        Cómo se arma (design §7), en tres pasos:
+        Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
-        1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
+        1. Las semillas son los títulos de la lista (de «Vistas», solo los últimos
+           `MAXIMO_SEMILLAS_VISTAS`); el nombre se suma si «dice algo».
         2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo
            una *firma* de la lista: agregar, quitar o renombrar cambia la firma, y
            el pool viejo se vence solo. No hace falta código que invalide nada.
@@ -2418,6 +2420,8 @@ components:
           maxLength: 2
         acepta_terminos:
           type: boolean
+        avatar_id:
+          type: integer
     Idioma704Enum:
       enum:
       - en

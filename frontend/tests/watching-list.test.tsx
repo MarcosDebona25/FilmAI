@@ -44,6 +44,9 @@ vi.mock("@/lib/api", async (importOriginal) => {
       estado.pedidos.push({ path, method, body: opciones.body });
       if (method === "GET" && /^\/api\/lists\/\d+\/$/.test(path))
         return structuredClone(estado.lista);
+      // Vistas y las demás tienen la banda de sugerencias; Watching no la pide.
+      if (method === "GET" && path.includes("/suggestions/"))
+        return { results: [], pagina: 1, paginas: 0, nombre_usado: false };
       if (method === "GET" && path.includes("/items/"))
         return { next: null, total: estado.items.length, results: structuredClone(estado.items) };
       if (method === "GET" && path === "/api/lists/")
@@ -152,6 +155,13 @@ describe("Watching: el menú ⋯ de cada tarjeta", () => {
       expect(masDe(n)).toHaveAttribute("aria-expanded", "false");
     }
     expect(screen.getByText("3 items · 2 movies · 1 TV show")).toBeInTheDocument();
+  });
+
+  it("Watching no tiene la banda de sugerencias ni la pide (el backend respondería 404)", async () => {
+    await abrir();
+
+    expect(estado.pedidos.some((p) => p.path.includes("/suggestions/"))).toBe(false);
+    expect(screen.queryByRole("region", { name: /Suggested/ })).toBeNull();
   });
 
   it("las otras listas no lo tienen", async () => {

@@ -7,9 +7,11 @@ or the items of a list — with the B-06 vectors in pgvector and TMDB
 `/recommendations` as a fill. Two endpoints use it: the title page row and the
 list suggestions. Builds on `embedding-infrastructure`, `semantic-search`
 (`ef_search`, model preload), `tmdb-cache`, `catalog-materialization` and
-`list-endpoints`. Design in `openspec/changes/recomendaciones-similares/design.md`.
+`list-endpoints`. Decisions D-1 to D-9 and the measurements are in
+`docs/decisiones.md` (13/11/2026); the interface, in the canvas, section 14
+(15/11/2026).
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Seed vector
 
@@ -35,7 +37,7 @@ with `w = max(0.15, 1 / (n + 1))`, `n` being the seeds with a vector.
 
 A name MUST be used only for custom lists, and only when, after lowercasing,
 removing accents and digits and dropping the filler words listed in the
-design, a word of 3 or more letters remains. Favorites MUST NOT use its name.
+design (`nombre_dice_algo`), a word of 3 or more letters remains. Favorites MUST NOT use its name.
 
 #### Scenario: Generic name
 
@@ -101,7 +103,7 @@ favour the closest, using a seed derived from the cache key, so the same key
 always gives the same order. Pages MUST be slices of 10 of the pool after
 removing the per-user exclusions.
 
-#### Scenario: Refresh
+#### Scenario: Show more
 
 - GIVEN a pool of 60 and a user with none of them in «Vistas»
 - WHEN pages 1 and 2 are asked for
@@ -136,11 +138,13 @@ a 10-minute cache.
 
 `GET /api/lists/{id}/suggestions/?pagina=N` MUST require a session and MUST
 answer 404 (Not Found) `not_found` for a list of another user, an inactive
-list, Pendientes and Vistas. `pagina` MUST be an integer ≥ 1 (default 1);
+list, Pendientes and Viendo (19/11/2026); Vistas has suggestions like Favorites, without its
+name (15/11/2026), and only its 20 most recently added titles are seeds and
+part of the signature (19/11/2026). `pagina` MUST be an integer ≥ 1 (default 1);
 anything else MUST answer 400 (Bad Request). The answer MUST be `{results,
 pagina, paginas, nombre_usado}`, each result with `id_tmdb`, `tipo`, `titulo`,
-`poster`, `anio`, `calificacion_promedio`, `campos_en_ingles` and `origen`.
-The pool MUST be cached under a signature of the model, the language, the
+`poster`, `anio`, `calificacion_promedio`, `campos_en_ingles` and `origen`;
+there is a next page while `pagina < paginas`. The pool MUST be cached under a signature of the model, the language, the
 normalized name and the list's productions; «Vistas» MUST be removed after the
 cache. An empty list MUST answer 200 (OK) with no results and no TMDB call.
 

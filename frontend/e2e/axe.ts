@@ -8,7 +8,11 @@ type Axe = { run: (c: unknown, o: unknown) => Promise<{ violations: Infraccion[]
 // axe-core se inyecta en la página: no hace falta el paquete de Playwright.
 const axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
-/** Reglas WCAG 2.1 A y AA; falla con la lista de infracciones. */
+/**
+ * Reglas WCAG 2.1 A y AA sobre la página como está en ese momento (con lo que
+ * haya abierto); falla con la lista de infracciones. Es la misma auditoría de
+ * `a11y-axe.spec.ts`, para los specs que revisan un estado propio.
+ */
 export async function auditar(page: Page, { esperar = true } = {}) {
   // axe lee el color que se ve en ese instante: con un aviso (sonner) entrando,
   // su opacidad es parcial y el contraste da mal. Se espera a que terminen las

@@ -237,16 +237,13 @@
 }
 
 /* La lupa de la navbar se despliega hacia la izquierda desde el lugar del botón
-   (2,75 rem) hasta el ancho del campo (20 rem = `w-80`). Solo la usa
+   (2,75 rem) hasta el ancho del campo. No hay `to`: el destino es el ancho que
+   ya tiene el campo (`clamp(12rem, 24vw, 20rem)`), que cambia con la pantalla. Solo la usa
    `NavbarSearch`, con `motion-safe:`: sin animación si el sistema pide menos movimiento. */
 @keyframes desplegar-busqueda {
   from {
     width: 2.75rem;
     opacity: 0.4;
-  }
-  to {
-    width: 20rem;
-    opacity: 1;
   }
 }
 

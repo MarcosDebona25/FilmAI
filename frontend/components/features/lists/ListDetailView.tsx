@@ -12,6 +12,7 @@ import { ListActionsMenu } from "@/components/features/lists/ListActionsMenu";
 import { useNombreLista } from "@/components/features/lists/ListCard";
 import { ListFiltersSheet } from "@/components/features/lists/ListFiltersSheet";
 import { ListNameDialog } from "@/components/features/lists/ListNameDialog";
+import { ListSuggestions } from "@/components/features/lists/ListSuggestions";
 import { useEstadoViendo } from "@/components/features/lists/use-estado-viendo";
 import { WatchingCardMenu, type AccionViendo } from "@/components/features/lists/WatchingCardMenu";
 import { MediaCard } from "@/components/features/MediaCard";
@@ -36,6 +37,7 @@ import {
   hayFiltros,
   itemATitulo,
   rutaPaginaItems,
+  tieneSugerencias,
   urlDeFiltros,
   type FiltrosLista,
   type ItemLista,
@@ -52,6 +54,14 @@ import { cn } from "@/lib/utils";
 
 /** Espera después de la última tecla antes de filtrar, como Buscar. */
 const ESPERA_MS = 350;
+/**
+ * El aviso de la ficha al agregar a una predeterminada con sugerencias; acá se
+ * reutiliza. Pendientes y Viendo no tienen sugerencias, así que no están.
+ */
+const AVISO_AGREGADA = {
+  favoritos: "title.feedback.favoriteAdded",
+  vistas: "title.feedback.watchedAdded",
+} as const;
 
 type Datos = { items: ItemLista[]; next: string | null; total: number };
 type Accion = { tipo: "quitar"; item: ItemLista };
@@ -82,21 +92,32 @@ export function ListDetailView({ id }: { id: number }) {
   const [errorLista, setErrorLista] = useState(false);
   const [texto, setTexto] = useState(filtros.q);
   // Primera página de cada combinación de filtros, y las siguientes al bajar.
-  const { datos, setDatos, estado, mas, cargarMas, intento, reintentar, puedeSeguir } =
-    useCursorList<PaginaItems, Datos>({
-      cuenta: perfil?.pk,
-      primera: consulta,
-      rutaSiguiente: (next) => rutaPaginaItems(id, next),
-      inicial: (pagina) => ({ items: pagina.results, next: pagina.next, total: pagina.total }),
-      combinar: (actual, pagina) => ({
-        ...actual,
-        items: combinarItems(actual.items, pagina.results),
-        next: pagina.next,
-      }),
-    });
+  const {
+    datos,
+    setDatos,
+    estado,
+    mas,
+    cargarMas,
+    intento,
+    reintentar,
+    recargarPrimera,
+    puedeSeguir,
+  } = useCursorList<PaginaItems, Datos>({
+    cuenta: perfil?.pk,
+    primera: consulta,
+    rutaSiguiente: (next) => rutaPaginaItems(id, next),
+    inicial: (pagina) => ({ items: pagina.results, next: pagina.next, total: pagina.total }),
+    combinar: (actual, pagina) => ({
+      ...actual,
+      items: combinarItems(actual.items, pagina.results),
+      next: pagina.next,
+    }),
+  });
   const [hoja, setHoja] = useState(false);
   const [dialogo, setDialogo] = useState<"renombrar" | "eliminar" | null>(null);
   const [accion, setAccion] = useState<Accion | null>(null);
+  // Sube con cada alta, baja o renombre: el backend arma otro pool de sugerencias.
+  const [revision, setRevision] = useState(0);
   // Watching: qué tarjeta tiene el menú ⋯ abierto (uno solo) y qué se califica.
   const [menuAbierto, setMenuAbierto] = useState<number | null>(null);
   const [calificando, setCalificando] = useState<Calificando | null>(null);
@@ -186,9 +207,51 @@ export function ListDetailView({ id }: { id: number }) {
           }
         : actual
     );
+    setRevision((anterior) => anterior + 1);
     // La tarjeta ya no existe: el foco va al título de la página.
-    requestAnimationFrame(() => titulo.current?.focus());
+    enfocarTitulo();
     return Math.max(0, indice);
+  }
+
+  /**
+   * Lo que tenía el foco dejó de dibujarse (una tarjeta quitada, la banda de
+   * sugerencias agotada): va al título de la lista, después de que React pinte.
+   */
+  function enfocarTitulo() {
+    requestAnimationFrame(() => titulo.current?.focus());
+  }
+
+  /** Un título agregado desde las sugerencias: ya está guardado, falta mostrarlo. */
+  function sumarALaGrilla(item: ItemLista) {
+    setLista((actual) =>
+      actual
+        ? {
+            ...actual,
+            cantidad_items: actual.cantidad_items + 1,
+            cantidad_peliculas: actual.cantidad_peliculas + (item.tipo === "movie" ? 1 : 0),
+            cantidad_series: actual.cantidad_series + (item.tipo === "tv" ? 1 : 0),
+          }
+        : actual
+    );
+    // Con un filtro activo no se sabe si el título lo cumple (eso lo decide el
+    // backend): cuenta en la lista y aparece al quitar el filtro.
+    if (!filtrando) {
+      // «Recently added» lo lleva primero. En los demás órdenes el lugar lo decide
+      // el backend (por título, por nota, o al final con muchas páginas): se vuelve
+      // a pedir la primera página en vez de adivinarlo.
+      if (filtros.orden === "recent")
+        setDatos((actual) =>
+          actual ? { ...actual, items: [item, ...actual.items], total: actual.total + 1 } : actual
+        );
+      else recargarPrimera();
+    }
+    setRevision((anterior) => anterior + 1);
+    if (!lista) return;
+    toast.success(
+      lista.clave === "favoritos" || lista.clave === "vistas"
+        ? t(AVISO_AGREGADA[lista.clave])
+        : t("title.lists.addedFeedback", { title: item.titulo, listName: lista.nombre })
+    );
   }
 
   /** Vuelve una tarjeta a su lugar (Undo, o un cambio que falló). */
@@ -286,6 +349,7 @@ export function ListDetailView({ id }: { id: number }) {
       body: { nombre },
     });
     setLista((actual) => (actual ? { ...actual, ...actualizada } : actual));
+    setRevision((anterior) => anterior + 1);
     setDialogo(null);
     toast.success(t("lists.feedback.renamed"));
   }
@@ -722,6 +786,20 @@ export function ListDetailView({ id }: { id: number }) {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Al final y solo con la grilla completa, así no se corre mientras llegan páginas. */}
+          {lista && nombre && tieneSugerencias(lista) && !vacia && (
+            <ListSuggestions
+              listaId={id}
+              nombre={nombre}
+              basadaEnLoReciente={lista.clave === "vistas"}
+              cantidad={lista.cantidad_items}
+              revision={revision}
+              visible={datos !== null && datos.next === null && estado !== "error"}
+              onAgregada={sumarALaGrilla}
+              onAgotada={enfocarTitulo}
+            />
           )}
         </>
       )}

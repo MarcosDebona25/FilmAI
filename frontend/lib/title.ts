@@ -42,9 +42,15 @@ export interface Ficha {
   sinopsisEnIngles: boolean;
 }
 
+/** `id` es el de la persona en TMDB; `null` si el backend no lo tiene. */
+export interface PersonaDeCreditos {
+  id: number | null;
+  nombre: string;
+}
+
 export interface Creditos {
-  directores: string[];
-  reparto: { nombre: string; personaje: string }[];
+  directores: PersonaDeCreditos[];
+  reparto: (PersonaDeCreditos & { personaje: string })[];
 }
 
 export interface Plataforma {

@@ -232,7 +232,8 @@
       "reviewUpdated": "Review updated.",
       "reviewDeleted": "Review deleted.",
       "favoriteRemoved": "Removed from Favorites.",
-      "favoriteAdded": "Added to Favorites."
+      "favoriteAdded": "Added to Favorites.",
+      "watchedAdded": "Added to Watched."
     },
     "metadata": {
       "ratingVotesLabel": "TMDB rating: {rating} out of 10, {count, plural, one {# vote} other {# votes}}",
@@ -280,6 +281,9 @@
       "deleteConfirmTitle": "Delete review?",
       "deleteConfirmDescription": "The text of your review will be deleted. Your rating of {title} and the title in Watched will be kept. The text can’t be recovered."
     },
+    "similar": {
+      "title": "More like {title}"
+    },
     "status": {
       "label": "Status",
       "current": "Status: {status}",
@@ -311,7 +315,7 @@
       "panelTitle": "Where to watch",
       "groups": {
         "stream": "Stream",
-        "free": "Free",
+        "free": "Free (with or without ads)",
         "rent": "Rent",
         "buy": "Buy"
       },
@@ -390,6 +394,15 @@
       "filtersTitle": "Filters and sort",
       "removeChipLabel": "Remove filter {filterLabel}",
       "loading": "Loading the list…"
+    },
+    "suggestions": {
+      "title": "Suggested for this list",
+      "basisWithName": "Based on its {count, plural, one {# title} other {# titles}} and its name, without what you already watched.",
+      "basis": "Based on its {count, plural, one {# title} other {# titles}}, without what you already watched.",
+      "add": "Add",
+      "addLabel": "Add {title} to {listName}",
+      "showMore": "Show more suggestions",
+      "basisRecent": "Based on what you watched most recently."
     },
     "watching": {
       "moreLabel": "More for {title}",
@@ -536,9 +549,22 @@
       "genderLabel": "Gender",
       "termsAcceptance": "I have read and accept FilmAI’s <terms>Terms and Conditions</terms>.",
       "termsNewTabHint": "(opens in a new tab)",
-      "submitPending": "Complete all fields and accept the Terms and Conditions to continue.",
-      "avatarLabel": "Choose your avatar",
-      "avatarHelp": "You can change it anytime from your profile."
+      "title": "Create your account",
+      "subtitle": "It takes less than a minute.",
+      "progressLabel": "Sign-up progress",
+      "stepOf": "Step {step} of {total}",
+      "continue": "Continue",
+      "createAccount": "Create account",
+      "back": "Back",
+      "backToStep": "Back to step {step}",
+      "avatarOptional": "Avatar <hint>· optional</hint>",
+      "avatarLaterHelp": "You can change it later in your profile.",
+      "avatarChoose": "Choose",
+      "avatarUse": "Use this avatar",
+      "avatarPrevious": "Previous avatars",
+      "avatarMore": "More avatars",
+      "avatarPage": "{page} of {pages}",
+      "avatarLabel": "Choose your avatar"
     },
     "confirmation": {
       "pageTitle": "Account confirmation",
@@ -554,12 +580,11 @@
       "loading": "Confirming your account…"
     },
     "completeSignUp": {
-      "badge": "Signing up with Google",
-      "title": "Finish signing up",
-      "description": "We take your name and email from your Google account. Fill in the rest and confirm with Google to create your account.",
-      "fixHighlighted": "Fix the highlighted field and press the Google button again.",
-      "genderPlaceholder": "Choose an option",
-      "cancel": "Cancel and go back to log in"
+      "googleLine": "Your name and email come from your Google account.",
+      "termsPending": "Accept the Terms and Conditions to continue.",
+      "backToSignUp": "Back to sign-up",
+      "backToLogIn": "Back to log in",
+      "fixHighlighted": "Fix the highlighted field and confirm with Google again in step 3."
     },
     "session": {
       "expired": "Your session expired. Log in again."

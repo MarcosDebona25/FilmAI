@@ -124,6 +124,11 @@ export async function simularListas(page: Page) {
     if (!lista)
       return route.fulfill({ status: 404, json: { code: "not_found", params: {}, errors: [] } });
     if (!items) return route.fulfill({ json: resumen(lista) });
+    // Sin sugerencias la franja se oculta sola: la grilla queda como única lista de la página.
+    if (items === "suggestions")
+      return route.fulfill({
+        json: { results: [], pagina: 1, paginas: 1, nombre_usado: false },
+      });
     return route.fulfill({
       json: {
         total: lista.items,

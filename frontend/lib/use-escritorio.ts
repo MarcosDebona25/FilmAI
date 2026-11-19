@@ -1,19 +1,27 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
-/** El corte de escritorio de Tailwind (`md`). */
-export const ESCRITORIO = "(width >= 48rem)";
+// El mismo corte que `md:` de Tailwind: donde la barra gana su fondo y los
+// diálogos (`DialogShell`) pasan de hoja inferior a tarjeta centrada.
+const ESCRITORIO = "(width >= 48rem)";
 
-/** Si la pantalla es de escritorio, y se actualiza si cambia el ancho. */
+function suscribir(avisar: () => void) {
+  // `?.`: en los tests (jsdom) `matchMedia` puede no existir.
+  const consulta = window.matchMedia?.(ESCRITORIO);
+  consulta?.addEventListener?.("change", avisar);
+  return () => consulta?.removeEventListener?.("change", avisar);
+}
+
+const leer = () => window.matchMedia?.(ESCRITORIO).matches ?? false;
+// En el servidor no hay pantalla: se asume celular, igual que el CSS sin `md:`.
+const leerEnServidor = () => false;
+
+/**
+ * Si la pantalla es de escritorio, y se actualiza si cambia el ancho.
+ *
+ * `useSyncExternalStore` es el hook de React para leer un valor que vive fuera
+ * de React (acá, el ancho de la ventana): un componente que se monta ya en el
+ * navegador recibe el valor real desde el primer render, sin pasar por `false`.
+ */
 export function useEscritorio() {
-  const [escritorio, setEscritorio] = useState(false);
-  useEffect(() => {
-    // `?.`: en los tests (jsdom) `matchMedia` puede no existir.
-    const consulta = window.matchMedia?.(ESCRITORIO);
-    if (!consulta) return;
-    const leer = () => setEscritorio(consulta.matches);
-    leer();
-    consulta.addEventListener?.("change", leer);
-    return () => consulta.removeEventListener?.("change", leer);
-  }, []);
-  return escritorio;
+  return useSyncExternalStore(suscribir, leer, leerEnServidor);
 }
