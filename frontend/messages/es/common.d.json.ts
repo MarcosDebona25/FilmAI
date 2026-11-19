@@ -292,6 +292,9 @@ declare const messages: {
       "removeConfirmTitle": "¿Quitar de Vistas?",
       "remove": "Quitar de Vistas"
     },
+    "similar": {
+      "title": "Parecidos a {title}"
+    },
     "breadcrumb": {
       "backTo": "Volver a {label}"
     },
@@ -383,6 +386,15 @@ declare const messages: {
       "filtersTitle": "Filtros y orden",
       "removeChipLabel": "Quitar filtro {filterLabel}",
       "loading": "Cargando la lista…"
+    },
+    "suggestions": {
+      "title": "Sugeridas para esta lista",
+      "basisWithName": "Según {count, plural, one {su # título} other {sus # títulos}} y su nombre, sin lo que ya viste.",
+      "basis": "Según {count, plural, one {su # título} other {sus # títulos}}, sin lo que ya viste.",
+      "add": "Agregar",
+      "addLabel": "Agregar {title} a {listName}",
+      "showMore": "Ver más sugerencias",
+      "basisRecent": "Según lo que viste hace poco."
     },
     "reorder": {
       "instructions": "Para reordenar, apretá espacio o enter en la manija, movete con las flechas y volvé a apretar espacio o enter para soltar. Con escape cancelás.",

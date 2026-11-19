@@ -15,6 +15,7 @@ import { WatchProviders } from "@/components/features/title/WatchProviders";
 import { CreditsSection } from "@/components/features/title/CreditsSection";
 import { RatingDialog, mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ReviewsSection } from "@/components/features/title/ReviewsSection";
+import { SimilarTitles } from "@/components/features/title/SimilarTitles";
 import { TitleActions } from "@/components/features/title/TitleActions";
 import {
   ESQUELETO,
@@ -64,7 +65,8 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const t = useTranslations();
   const formats = useFormats();
   const pathname = usePathname();
-  const origen = origenDesde(useSearchParams().get("from"));
+  const from = useSearchParams().get("from");
+  const origen = origenDesde(from);
   const { perfil, cargando } = useAccount();
   const conSesion = !cargando && perfil !== null;
   const [intento, setIntento] = useState(0);
@@ -513,6 +515,17 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
         </div>
 
         {creditos.data && <CreditsSection creditos={creditos.data} tipo={tipo} />}
+        {/* Espera a los créditos: sin ellos la fila quedaría más arriba y se
+            pediría sin que nadie baje. `key`: otra ficha, otra fila. */}
+        {ficha && creditos.status !== "loading" && (
+          <SimilarTitles
+            key={`${tipo}-${id}`}
+            tipo={tipo}
+            id={id}
+            titulo={ficha.titulo}
+            from={from ?? undefined}
+          />
+        )}
         {ficha && (
           <ReviewsSection
             tipo={tipo}

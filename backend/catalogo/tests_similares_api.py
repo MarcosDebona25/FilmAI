@@ -1,6 +1,6 @@
 """Pruebas HTTP de «Parecidos a {título}»: `GET /api/catalogo/{movie|tv}/{id}/similar/`.
 
-Diseño en `openspec/changes/recomendaciones-similares/design.md` §7. El motor
+Diseño en `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026). El motor
 tiene sus propios tests (`tests_similares.py`); acá se prueba lo que agrega la
 vista: quién puede pedirla, qué se cachea, qué se le saca a cada usuario y qué
 cabeceras lleva la respuesta. TMDB se reemplaza por `ServicioFalso`.

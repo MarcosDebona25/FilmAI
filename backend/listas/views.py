@@ -575,17 +575,24 @@ def _numero_de_pagina(valor):
     return numero
 
 
+# Cuántos de los títulos agregados más recientemente a «Vistas» son semillas de
+# sus sugerencias (el vector y la firma de la caché). Ver `docs/decisiones.md`.
+MAXIMO_SEMILLAS_VISTAS = 20
+
+
 class ListaSugerenciasView(TopesTMDBMixin, APIView):
     """«Sugeridas para esta lista»: títulos parecidos a los de una lista propia.
 
     `GET /api/lists/{id}/suggestions/?pagina=N` responde
-    `{results, pagina, paginas, nombre_usado}`. Solo las listas personalizadas
-    y Favoritos tienen sugerencias: Pendientes y Vistas dan 404 (Not Found),
-    como si el recurso no existiera.
+    `{results, pagina, paginas, nombre_usado}`; queda una página más mientras
+    `pagina < paginas`. Tienen sugerencias las listas personalizadas, Favoritos
+    y Vistas. Pendientes da 404 (Not Found), como si el recurso no existiera:
+    es lo que la persona ya eligió ver.
 
-    Cómo se arma (design §7), en tres pasos:
+    Cómo se arma (`openspec/specs/similar-titles/`), en tres pasos:
 
-    1. Las semillas son los títulos de la lista; el nombre se suma si «dice algo».
+    1. Las semillas son los títulos de la lista (de «Vistas», solo los últimos
+       `MAXIMO_SEMILLAS_VISTAS`); el nombre se suma si «dice algo».
     2. El pool (hasta 60 títulos) sale de la caché, o se arma y se guarda bajo
        una *firma* de la lista: agregar, quitar o renombrar cambia la firma, y
        el pool viejo se vence solo. No hace falta código que invalide nada.
@@ -602,9 +609,9 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
     def get(self, request, lista_id):
         inicio = time.perf_counter()
         lista = _lista_propia(request, lista_id)
-        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave in (
-            ClaveLista.PENDIENTES,
-            ClaveLista.VISTAS,
+        if (
+            lista.tipo == TipoLista.PREDETERMINADA
+            and lista.clave == ClaveLista.PENDIENTES
         ):
             raise Http404
         pagina = _numero_de_pagina(request.query_params.get("pagina"))
@@ -620,11 +627,17 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
             return Response(
                 {"results": [], "pagina": pagina, "paginas": 0, "nombre_usado": False}
             )
+        if lista.tipo == TipoLista.PREDETERMINADA and lista.clave == ClaveLista.VISTAS:
+            # «Vistas» crece sin techo (se llena sola al calificar). Con todos
+            # sus títulos el centroide se diluye y la firma de la caché cambiaría
+            # con casi cada calificación. Lo ya visto igual no se sugiere:
+            # `vistos()` lo saca al armar cada página.
+            items = items[:MAXIMO_SEMILLAS_VISTAS]
 
         ids = [pk for pk, _, _ in items]
         # Una lista de una sola clase pide solo esa clase (D-3); una mixta, ambas.
         tipos = {tipo for _, _, tipo in items}
-        # Favoritos tiene un nombre de sistema que no dice nada de la lista.
+        # Favoritos y Vistas tienen un nombre de sistema que no dice nada de la lista.
         nombre = lista.nombre if lista.tipo == TipoLista.PERSONALIZADA else ""
         usa_nombre = bool(nombre) and similares.nombre_dice_algo(nombre)
         clave = self._clave(lista, idioma, nombre, ids)
@@ -665,7 +678,7 @@ class ListaSugerenciasView(TopesTMDBMixin, APIView):
 
     @staticmethod
     def _clave(lista, idioma, nombre, ids):
-        """`similares:lista:{id}:{firma}` (design §7).
+        """`similares:lista:{id}:{firma}` (ver `openspec/specs/similar-titles/`).
 
         La firma resume todo lo que cambia el pool: el modelo, el idioma, el
         nombre normalizado y los títulos de la lista (ordenados, para que el

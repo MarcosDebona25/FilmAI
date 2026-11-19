@@ -1,6 +1,6 @@
 """Motor de «títulos parecidos»: lo comparten la ficha y las sugerencias de una lista.
 
-Diseño: `openspec/changes/recomendaciones-similares/design.md`. Los dos usos
+Diseño: `openspec/specs/similar-titles/spec.md` y `docs/decisiones.md` (13/11/2026). Los dos usos
 hacen los mismos tres pasos:
 
 1. **Semillas → vector.** Cada título del catálogo tiene un *embedding*: 1 024
@@ -66,7 +66,7 @@ PESO_MINIMO_DEL_NOMBRE = 0.15
 _EF_SEARCH = 100
 _LIMITE_CANDIDATOS = 100
 
-# Relleno con TMDB `/recommendations` (design §5): de cuántas semillas se piden
+# Relleno con TMDB `/recommendations`: de cuántas semillas se piden
 # recomendaciones y el piso de calidad de lo que vuelve (D-5).
 SEMILLAS_TMDB = 3
 MIN_VOTOS_TMDB = 10
@@ -74,7 +74,7 @@ MIN_VOTOS_TMDB = 10
 # reintentos incluidos.
 MAX_LLAMADAS_TMDB = 6
 
-# Hasta qué distancia coseno un vecino cuenta como «cercano» (design §4). Un
+# Hasta qué distancia coseno un vecino cuenta como «cercano». Un
 # título típico tiene 50 o más vecinos por debajo; uno de nicho tiene pocos, y
 # ahí es justo cuando conviene que TMDB complete.
 DISTANCIA_MAXIMA = 0.40
@@ -90,7 +90,7 @@ TAMANO_PAGINA = 10
 TTL_POOL = 24 * 3600
 TTL_POOL_INCOMPLETO = 5 * 60
 
-# El nombre de la lista (design §3). Los nombres se repiten entre usuarios
+# El nombre de la lista. Los nombres se repiten entre usuarios
 # («Sci Fi», «Terror»): guardar su vector 30 días evita casi todos los viajes a
 # Ollama.
 TTL_VECTOR_NOMBRE = 30 * 24 * 3600
@@ -348,7 +348,7 @@ def _tarjeta_tmdb(item, tipo):
 
 
 def relleno_tmdb(semillas_tmdb, *, servicio, excluir_pares):
-    """Recomendaciones de TMDB para hasta 3 semillas, intercaladas (design §5).
+    """Recomendaciones de TMDB para hasta 3 semillas, intercaladas.
 
     `semillas_tmdb` y `excluir_pares` son pares `(id_tmdb, tipo de TMDB)`, como
     los de `vistos()`. `servicio` responde `get_recommendations` (el
@@ -470,7 +470,7 @@ def armar_pool(
     vector_nombre=None,
     nombre_omitido=False,
 ):
-    """Arma el pool de parecidos a las semillas (design §2 a §6).
+    """Arma el pool de parecidos a las semillas.
 
     - `produccion_ids`: pk de las semillas en el catálogo (vacío si el título
       de la ficha todavía no está).

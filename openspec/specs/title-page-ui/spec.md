@@ -45,6 +45,31 @@ Without a session the actions MUST be replaced by «Log in to rate or save», li
 - WHEN the user turns Watched off and confirms
 - THEN the rating and review are deleted, Watched is off and the button reads «Rate» again
 
+### Requirement: More like this title
+
+The title page MUST show, after «Director and cast» and before the reviews, a
+horizontal row «More like {title}» with the results of
+`GET /api/catalogo/{tipo}/{id}/similar/`, with and without a session. Each
+card MUST show its type. The request MUST start only when the row is about
+400 px from the viewport, never with the detail: the detail MUST NOT wait for
+it, and it MUST start after the credits request ends. Empty results, an answer
+without `results` or an error MUST hide the row without an error message. The
+row is the Home row (`MediaRow`) with its skeletons while loading, and is not
+kept for the visit, because with a session it depends on «Vistas» (canvas,
+section 14, 15/11/2026).
+
+#### Scenario: Deferred load
+
+- GIVEN a visitor opens `/movie/157336` and does not scroll
+- THEN no request to `/similar/` is made
+
+#### Scenario: Scrolling down
+
+- GIVEN the visitor scrolls toward the reviews
+- WHEN the row nears the viewport
+- THEN up to 20 cards appear, movies and shows, each marked with its type
+- AND their links keep the origin of the current page
+
 ### Requirement: Where to watch
 
 Below the genres the page MUST show, once the detail is loaded, the streaming availability in the viewer's country (added 18/10/2026; it consumes `GET /api/catalogo/{movie,tv}/{id}/providers/` from `tmdb-endpoints`). Only with a session, in the account's `pais` (27/10/2026, issue #124). Without a session it MUST NOT be requested; in its place the page MUST show the link «Log in to see where to watch it in your country» to `/login?next=<current path>`. A failed request MUST also hide it, because it is not critical content. While it loads it MUST show a static placeholder with `role="status"`.

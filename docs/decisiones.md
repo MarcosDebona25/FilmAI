@@ -445,7 +445,7 @@ Las fases 1, 3 y 4 de `busqueda-navbar/tasks.md` (todo el backend) van en un sol
 
 ### 13/11/2026 — Títulos parecidos: sugerencias de una lista (PR 2)
 
-`GET /api/lists/{id}/suggestions/?pagina=N` (`ListaSugerenciasView`, en `listas/views.py`) usa el mismo motor con los títulos de la lista como semillas. Vale para las listas personalizadas y Favoritos; Pendientes y Vistas dan 404 (Not Found) `not_found`, igual que la lista de otra persona o una inactiva. `pagina` debe ser un entero mayor o igual a 1 (si no, 400 (Bad Request) `invalid`); una lista vacía responde 200 (OK) sin resultados y sin llamar a TMDB. Las decisiones de Gonza (D-1 a D-9, 13/11/2026) se aplican tal cual: una lista de una sola clase trae solo esa clase, Vistas se saca también en Favoritos, y el nombre pesa `max(0.15, 1/(n+1))`.
+`GET /api/lists/{id}/suggestions/?pagina=N` (`ListaSugerenciasView`, en `listas/views.py`) usa el mismo motor con los títulos de la lista como semillas. Vale para las listas personalizadas y Favoritos; Pendientes y Vistas dan 404 (Not Found) `not_found` (Vistas tiene sugerencias desde el 15/11/2026, ver esa fecha), igual que la lista de otra persona o una inactiva. `pagina` debe ser un entero mayor o igual a 1 (si no, 400 (Bad Request) `invalid`); una lista vacía responde 200 (OK) sin resultados y sin llamar a TMDB. Las decisiones de Gonza (D-1 a D-9, 13/11/2026) se aplican tal cual: una lista de una sola clase trae solo esa clase, Vistas se saca también en Favoritos, y el nombre pesa `max(0.15, 1/(n+1))`.
 
 - **El nombre «dice algo»** (`nombre_dice_algo`): sin tildes ni números y sin las palabras de relleno del diseño, tiene que quedar una palabra de 3 letras o más. Favoritos nunca lo usa.
 - **El vector del nombre nunca hace esperar** (`vector_del_nombre`): se guarda 30 días por nombre normalizado y modelo; si no está y el modelo no está cargado, se saltea, se pide la carga y el pool dura 5 minutos; si Ollama no responde se recuerda 60 s (`similares:ollama_no`) para que un Ollama caído cueste a lo sumo una consulta por minuto.
@@ -1040,6 +1040,44 @@ PR-Agent marcó en #225 que, con la verificación del nombre de usuario en curso
 
 Archivos: `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `frontend/tests/access-screens.test.tsx`, `frontend/tests/complete-signup.test.tsx`.
 
+### 15/11/2026 — Sugerencias de lista también en Vistas (canvas, sección 14)
+
+Marcos decidió que la banda de sugerencias aparezca en Favoritos, en las listas personalizadas y en Vistas («Watched»); en Pendientes no. `ListaSugerenciasView` deja de responder 404 (Not Found) para Vistas y lo mantiene para Pendientes. En Vistas, el vector y la firma de la caché salen de los 20 títulos agregados más recientemente (ver la entrada del 19/11/2026) y el relleno de TMDB, de los 3 más recientes; no se usa el nombre de la lista, como en Favoritos; lo ya visto no se sugiere. Esto reemplaza lo dicho en la entrada del 13/11/2026 (Pendientes y Vistas sin banda). La paginación `?pagina=N` ya existía: la respuesta trae `pagina` y `paginas`, y hay otra página mientras `pagina < paginas`, que es lo que usa «Show more suggestions».
+
+Archivos: `backend/listas/views.py`, `backend/listas/tests_sugerencias.py`.
+
+### 15/11/2026 — Banda de sugerencias en las listas (canvas, sección 14)
+
+La banda «Suggested for this list» del canvas (`Prop-Sugerencias-Lista` y su versión de celular) va al final del detalle de Favoritos, Vistas y las listas personalizadas; no se dibuja en Pendientes, en una lista vacía ni cuando no hay nada que sugerir. «+ Add» agrega el título a la lista: se suma a la grilla y a los contadores, y se anuncia. «Show more suggestions» pide `?pagina=N+1`, agrega lo nuevo debajo y se oculta en la última página (`pagina >= paginas`). En el celular el póster mide 64 × 96, como dice el bloque «Behaviour» (el dibujo del artboard usa 56 × 84).
+Lo que el canvas no dibuja se resolvió así: si falla la primera carga la banda no aparece, y si falla «Show more» sale un toast y el botón queda para reintentar; si la lista cambió entre páginas, el siguiente «Show more» vuelve a la página 1 del pool nuevo y saltea lo ya mostrado; en listas largas la banda se pide recién cuando la grilla no tiene más páginas; y cuando el backend no usa el nombre de la lista (`nombre_usado` falso) la frase es «Based on its N titles, without what you already watched.».
+Archivos: `frontend/components/features/lists/ListSuggestions.tsx`, `frontend/components/features/lists/ListDetailView.tsx`, `frontend/lib/lists.ts`, `traducciones/claves.csv`, `frontend/messages/{en,es}/common.json`, `frontend/tests/list-suggestions.test.tsx`, `frontend/tests/list-detail-view.test.tsx`, `frontend/e2e/listas-sugerencias.spec.ts`, `frontend/e2e/axe.ts`.
+
+### 15/11/2026 — «More like {title}» en la ficha (canvas, sección 14)
+
+La ficha suma la fila «More like {title}» («Parecidos a {title}») después de «Director and cast» y antes de las reseñas. Reutiliza `MediaRow` del Inicio sin cambios (opción A del canvas: «igual a las filas del Inicio»), con sus esqueletos al cargar y el deslizamiento de borde a borde en el celular. Pide `GET /api/catalogo/{tipo}/{id}/similar/` cuando la fila está a 400 px del viewport, una vez que terminó el pedido de créditos, y no se dibuja si viene vacía o falla. Una respuesta sin `results` cuenta como vacía: antes rompía la ficha. No se guarda en la visita, porque con sesión la respuesta depende de Vistas. Las tarjetas conservan el `?from=` de la ficha.
+Quedaba por confirmar con el canvas (resuelto el 16/11/2026, ver esa fecha): el artboard dibuja dos flechas redondas de 44 px en el encabezado (‹ deshabilitada en la primera página), mientras que la fila del Inicio usa bandas laterales que aparecen con el mouse o el foco; quedó la del Inicio. Tampoco hay artboard de celular para esta fila.
+Archivos: `frontend/components/features/title/SimilarTitles.tsx`, `frontend/components/features/title/TitleView.tsx`, `frontend/lib/lists.ts`, `traducciones/claves.csv`, `frontend/messages/{en,es}/common.json`, `frontend/tests/similar-titles.test.tsx`, `frontend/e2e/ficha-similares.spec.ts`.
+
+### 15/11/2026 — Cierre del change `recomendaciones-similares`
+
+Con la banda de las listas y la fila de la ficha, el pendiente 5 queda cerrado y el change se archiva (se borra `openspec/changes/recomendaciones-similares/`). Sus specs pasan a canónicas, alineadas con lo que decidió el canvas: `similar-titles` (motor y endpoints; Vistas con sugerencias), `list-detail-ui` (spec nueva: la banda, «+ Add» y «Show more suggestions» en lugar de «Refresh», que ya no existe) y `title-page-ui` (requisito «More like this title»). Los comentarios que apuntaban al `design.md` del change ahora apuntan a `similar-titles` y a las entradas del 13/11/2026 de este archivo.
+Archivos: `openspec/changes/recomendaciones-similares/` (borrado), `openspec/specs/similar-titles/spec.md`, `openspec/specs/list-detail-ui/spec.md`, `openspec/specs/title-page-ui/spec.md`, `docs/05_Plan_de_Desarrollo.md`, `backend/catalogo/services/similares.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `backend/catalogo/tests_similares_nombre.py`, `backend/listas/tests_sugerencias.py`.
+
+### 16/11/2026 — Dudas del canvas en la banda de sugerencias y en «More like» (sección 14)
+
+Marcos resolvió dos contradicciones entre el texto y el dibujo de los artboards:
+
+- **Póster de la banda en el celular: 64 × 96.** El bloque «Behaviour» de `Prop-Sugerencias-Lista-Movil` dice 64 × 96 y el dibujo mide 56 × 84. Vale el texto, que es lo que ya estaba implementado: mantiene la escala de los pósters (48 × 72 en la lupa, 74 × 111 en la banda de escritorio).
+- **Flechas de «More like {title}»: las mismas que las filas del Inicio.** El artboard `Prop-Similares-Ficha` dibuja dos botones redondos de 44 px en el encabezado, con ‹ deshabilitada en la primera página. Se quedan las bandas laterales de `MediaRow` (aparecen con el mouse o el foco, desaparecen cuando no hay más hacia ese lado y en el celular se desliza con el dedo), para que todas las filas del sitio se comporten igual.
+
+No cambia código. El artboard de la ficha queda desactualizado en las flechas; se corrigió en el canvas el mismo día (banda › a la altura de los pósters, sin los botones del encabezado).
+Archivos: `docs/decisiones.md`.
+
+### 16/11/2026 — Foco al agregar la última sugerencia de la banda
+
+PR-Agent marcó en el PR #224 que, al agregar la última sugerencia de la última página, la banda desaparece junto con el botón «+ Add» que tenía el foco y el foco cae en `<body>`: quien navega con teclado o lector de pantalla pierde el lugar (WCAG 2.4.3). Ahora, en ese caso, el foco va al título de la lista (`h1`), igual que al quitar una tarjeta. Si quedan sugerencias, sigue yendo al «+ Add» vecino; si se agotó la página pero hay más, a «Show more».
+Archivos: `frontend/components/features/lists/ListSuggestions.tsx` (prop `onAgotada`), `frontend/components/features/lists/ListDetailView.tsx`, `frontend/tests/list-suggestions.test.tsx` y `frontend/tests/list-detail-view.test.tsx`.
+
 ### 18/11/2026 — Correos: Brevo primero y Celery (Q-08) después; `.eml` regenerados
 
 **Brevo y Q-08 no se contradicen.** El plan decía que convenía hacerlos juntos y la propuesta de Brevo (`openspec/changes/brevo-respaldo/`) deja Q-08 afuera. Se resolvió así: son dos cambios separados, uno después del otro. Brevo cambia lo que pasa dentro de `enviar_correo()` (Resend y, si falla, Brevo, un intento por proveedor porque hoy el pedido espera); Q-08 cambia quién la llama (una tarea de Celery con reintentos) y deja la cadena de proveedores adentro sin tocarla. El requisito de `openspec/specs/emails/` («Do not silently route these synchronous account emails through Celery») no impide Q-08: pide que el paso a Celery sea un cambio deliberado que actualice la spec, no un efecto secundario. Q-08 además tiene que revisar los llamadores que usan lo que devuelve `send_mail` (`usuarios/adapter.py`, `passwords.py`, `serializers.py`).
@@ -1077,3 +1115,13 @@ Revisión de Gonza sobre el #225, aplicada sobre la rama de Marcos (sin cambios 
 - **No se cambia** «Continue with Google» en `/register` con una cuenta ya existente (va directo a `/complete-signup` sin probar antes el login; ya pasaba antes de este PR): queda como hallazgo y decisión de diseño aparte.
 
 Archivos: `traducciones/claves.csv`, `traducciones/claves-extra.csv`, `frontend/messages/{en,es}/common.json`, `frontend/components/access/signup-steps.tsx`, `frontend/app/(public)/register/page.tsx`, `frontend/app/complete-signup/page.tsx`, `frontend/tests/access-screens.test.tsx`, `frontend/tests/complete-signup.test.tsx`.
+
+### 19/11/2026 — Arreglos de la revisión del #224 (sugerencias de lista)
+
+**Tope de semillas en Vistas: 20.** «Vistas» se llena sola al calificar y crece sin techo; con todos sus títulos el centroide se diluía hasta parecerse a «todo el catálogo» (pocos cercanos, y cada reconstrucción pedía relleno a TMDB, hasta 6 llamadas), la firma de la caché cambiaba con casi cada calificación y un solo título sin embedding mantenía el pool en 5 minutos. Ahora `ListaSugerenciasView` toma solo los últimos `MAXIMO_SEMILLAS_VISTAS = 20` por `fecha_agregado` descendente para el vector y la firma; los 3 más recientes de esos 20 siguen siendo las semillas del relleno de TMDB. **Por qué 20**: alcanza para que el gusto reciente se note (el título 21 ya no representa lo que la persona mira hoy), es lo bastante chico para que el promedio no se aplane, y deja la firma estable ante lo que queda fuera del tope (agregar o quitar un título viejo no la cambia). Favoritos y las listas personalizadas no tienen tope: las arma la persona a mano y no crecen sola. Lo ya visto fuera del tope igual no se sugiere (`vistos()` lo saca al armar cada página). La entrada del 15/11/2026 decía «los 3 más recientes» para todo; se corrigió para que diga lo que hace el código.
+
+**Frontend.** Mientras se agrega un título, los otros «+ Add» llevan `aria-disabled` (y el clic no hace nada) en vez de ignorarlo sin aviso; se usa `aria-disabled` y no `disabled` para que el botón enfocado no pierda el foco. El vecino que recibe el foco se calcula con lo último dibujado (una referencia que sigue a `datos`) y no con el `datos` de antes del `await`, por si un «Show more» terminó en el medio. Con un orden distinto de «Recently added», agregar desde las sugerencias vuelve a pedir la primera página en vez de dejar el título al final de la grilla (el lugar real lo decide el backend). La frase de la banda en Vistas pasa a «Based on what you watched most recently.» / «Según lo que viste hace poco.»: no repite «sin lo que ya viste» y no cuenta títulos que ya no entran en el cálculo (clave nueva `lists.suggestions.basisRecent` en `claves-extra.csv`).
+
+**Queda afuera**: la exclusión de «Viendo» (la lista todavía no existe en `develop`; se resuelve en el #226).
+
+Archivos: `backend/listas/views.py`, `backend/listas/tests_sugerencias.py`, `frontend/components/features/lists/ListSuggestions.tsx`, `frontend/components/features/lists/ListDetailView.tsx`, `frontend/tests/list-suggestions.test.tsx`, `frontend/tests/list-detail-view.test.tsx`, `traducciones/claves-extra.csv`, `frontend/messages/`, `openspec/specs/similar-titles/spec.md`, `openspec/specs/list-detail-ui/spec.md`.
