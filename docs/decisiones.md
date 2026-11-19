@@ -1251,3 +1251,22 @@ Contraste del plan con `develop` y `main` (igualados tras el #227) y correccione
 - **Tope de 4 vueltas del chatbot.** No queda abierto: lo cerró la «última llamada sin tools» del 12/11/2026. Lo único que no se vio es esa última llamada contra DeepSeek real, porque en la medición ningún turno llegó al tope; si aparece en uso real, se trata como un bug nuevo.
 
 Archivos: `docs/05_Plan_de_Desarrollo.md`, `docs/06_TMDB_API_Referencia.md`, `PRODUCT.md`, `openspec/specs/tmdb-compliance/spec.md` y este archivo.
+
+### 19/11/2026 — Toast «Saving…» y bloqueo mientras se guarda (restos del #226)
+
+Decidido por Marcos con la simulación del canvas (opción B).
+
+- **Bloqueo.** Mientras hay un guardado de estado en curso, las acciones quedan deshabilitadas desde el primer toque: los ⋯ de todas las tarjetas de Watching, las filas de favorita y de listas de la ficha, el botón Rate y el Undo del toast. Antes el toque se descartaba en silencio. `guardando` pasó a ser estado de React en `useEstadoViendo` y `useEstadoFicha`; la bandera `enCurso` queda como red de seguridad para dos toques en el mismo tick.
+- **Toast «Saving…».** Si el guardado tarda más de 200 ms (`MS_ANTES_DE_AVISAR`) sale un toast con spinner, sin Undo, que reemplaza al anterior (un solo aviso a la vez; el Undo viejo se pierde, aceptado). Si el servidor responde antes, no aparece. Una sola implementación compartida: `useAvisoGuardado`. El spinner respeta `prefers-reduced-motion`. Texto nuevo `title.status.saving` («Saving…» / «Guardando…»). Los diálogos, settings y chatbot no cambian.
+- **Contrato.** `PUT /api/lists/status/` declara su `requestBody` (`CambioEstado`) con `@extend_schema`. Se fijaron los nombres de los dos enums `estado` (`EstadoEnum` de la cuenta y `EstadoListaEnum`) con `ENUM_NAME_OVERRIDES`, para que el generador no renombre el de la cuenta a `Estado199Enum`. Otros endpoints tienen el mismo hueco y no se tocaron.
+- **Canvas.** Falta borrar la opción A del artboard «Watching · tap while saving» y sumar la ficha y el celular (lo hace Marcos con Claude).
+
+Archivos: `frontend/components/features/title/{StatusToast,use-aviso-guardado,use-estado-ficha,TitleActions,ListsMenu,TitleView}`, `frontend/components/features/lists/{use-estado-viendo,WatchingCardMenu,ListDetailView}`, `traducciones/claves.csv` y catálogos generados, `frontend/tests/{estado-ficha,watching-list}.test.tsx`, `backend/listas/{views,serializers}.py`, `backend/filmai/settings.py`, `contracts/openapi.yaml`
+
+### 19/11/2026 — Base local de desarrollo al día y última llamada del chatbot contra DeepSeek real
+
+- **Migraciones.** Se hizo un respaldo con `pg_dump` y se levantó el backend, que migra al arrancar. Antes estaban aplicadas `catalogo.0008` y `listas.0008`; faltaba `listas.0009_lista_viendo`, que se aplicó sin errores. Antes: 5 usuarios, 7 listas propias, 0 listas «Viendo»/«Watching», 119 ítems. Después: 5 listas Viendo (una por usuario), 7 listas propias intactas, 119 ítems, `showmigrations` sin pendientes y `makemigrations --check` sin cambios. Al desplegar se aplican con el `migrate` normal.
+- **Última llamada sin tools, vista por fin contra DeepSeek real.** Con el tope bajado a 1 vuelta solo en el proceso de la prueba (script fuera del repo, sin tocar el orquestador), dos preguntas encadenadas («la más reciente de Villeneuve y después parecidas» y «parecida a Breaking Bad y su precuela») llegaron al tope: `ultima_sin_tools=si`, terminaron con texto y salieron las tarjetas (5 y 2 marcadores válidos, 0 inválidos). Dos preguntas que se resolvían en una vuelta cerraron sin llegar al tope. 10 llamadas al proveedor en total. La línea de log no se vio en la terminal (Django la redirige); la métrica del turno lo confirma.
+- **Limpieza.** El comentario de `Tarjeta.poster` en `backend/chatbot/eventos.py` citaba la tool retirada `mostrar_tarjetas`; ahora dice dónde se arma el póster hoy.
+
+Archivos: `backend/chatbot/eventos.py`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
