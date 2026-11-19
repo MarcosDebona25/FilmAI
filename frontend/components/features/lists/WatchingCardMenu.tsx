@@ -24,12 +24,15 @@ export type AccionViendo = "terminar" | "calificar" | "quitar";
 export function WatchingCardMenu({
   titulo,
   abierto,
+  guardando = false,
   onAbrir,
   onCerrar,
   onElegir,
 }: {
   titulo: string;
   abierto: boolean;
+  /** Hay un cambio de estado en camino: no se abre ni se elige nada. */
+  guardando?: boolean;
   onAbrir: () => void;
   onCerrar: () => void;
   onElegir: (accion: AccionViendo) => void;
@@ -43,16 +46,24 @@ export function WatchingCardMenu({
         type="button"
         aria-haspopup="menu"
         aria-expanded={abierto}
+        aria-busy={guardando || undefined}
         aria-label={etiqueta}
+        disabled={guardando}
         onClick={abierto ? onCerrar : onAbrir}
-        className="group/mas grid size-full cursor-pointer place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-ring"
+        className="group/mas grid size-full cursor-pointer place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-60"
       >
         <span className="grid size-9 place-items-center rounded-full bg-[rgb(var(--scrim)/0.78)] text-foreground opacity-90 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.12)] transition-opacity group-hover/mas:opacity-100 motion-reduce:transition-none">
           <Ellipsis aria-hidden="true" className="size-[1.125rem]" />
         </span>
       </button>
       {abierto && (
-        <Hoja titulo={titulo} etiqueta={etiqueta} onCerrar={onCerrar} onElegir={onElegir} />
+        <Hoja
+          titulo={titulo}
+          etiqueta={etiqueta}
+          guardando={guardando}
+          onCerrar={onCerrar}
+          onElegir={onElegir}
+        />
       )}
     </div>
   );
@@ -61,11 +72,13 @@ export function WatchingCardMenu({
 function Hoja({
   titulo,
   etiqueta,
+  guardando,
   onCerrar,
   onElegir,
 }: {
   titulo: string;
   etiqueta: string;
+  guardando: boolean;
   onCerrar: () => void;
   onElegir: (accion: AccionViendo) => void;
 }) {
@@ -74,7 +87,7 @@ function Hoja({
   useMenuDialogo(ref, (dialogo) => dialogo.querySelector<HTMLElement>(FILAS));
 
   const fila =
-    "flex min-h-[3.25rem] w-full cursor-pointer items-center gap-3 rounded-[0.625rem] px-3.5 text-left text-base font-medium hover:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring md:min-h-11 md:text-[0.9375rem]";
+    "flex min-h-[3.25rem] w-full cursor-pointer items-center gap-3 rounded-[0.625rem] px-3.5 text-left text-base font-medium hover:bg-raised-2 focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-wait disabled:opacity-50 md:min-h-11 md:text-[0.9375rem]";
 
   return (
     <dialog
@@ -104,13 +117,20 @@ function Hoja({
         onKeyDown={alTeclearMenu}
         className="flex flex-col gap-0.5"
       >
-        <button type="button" role="menuitem" onClick={() => onElegir("terminar")} className={fila}>
+        <button
+          type="button"
+          role="menuitem"
+          disabled={guardando}
+          onClick={() => onElegir("terminar")}
+          className={fila}
+        >
           <Check aria-hidden="true" strokeWidth={2.5} className="size-[1.125rem] text-ok" />
           {t("lists.watching.markFinished")}
         </button>
         <button
           type="button"
           role="menuitem"
+          disabled={guardando}
           onClick={() => onElegir("calificar")}
           className={fila}
         >
@@ -121,6 +141,7 @@ function Hoja({
         <button
           type="button"
           role="menuitem"
+          disabled={guardando}
           onClick={() => onElegir("quitar")}
           className={cn(fila, "text-fg-2")}
         >

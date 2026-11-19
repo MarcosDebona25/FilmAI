@@ -28,6 +28,8 @@ On the Watching list each card MUST carry a «⋯» button instead of «✕»: t
 - «Rate it…» MUST open the same rating dialog as the title page. Rating a title without a rating moves it to Watched; one that already had a rating is edited and not moved.
 - The toast MUST be the title page's: «{title} moved to Watched» with «Rate it» (desktop only) and Undo, or «{title} removed from Watching» with Undo, for 6 s; a new action replaces it, and Undo only reverts the last one. Undo MUST call the same endpoint with `estado_anterior` and put the card back in its previous position in the grid. Leaving the page closes the toast.
 
+- While a status change is saving, the «⋯» button of every Watching card (and the toast's Undo) MUST be disabled and carry `aria-busy`; a tap MUST NOT be silently dropped. If the save takes longer than 200 ms a «Saving…» toast with a spinner (no Undo, no motion with `prefers-reduced-motion`) replaces the current toast, and the usual toast replaces it when the server answers. A save that answers within 200 ms MUST show no «Saving…» toast.
+
 #### Scenario: Mark as finished, then Undo
 
 - GIVEN Watching has «Lanterns», «Harbor Lights» and «Night Shift»

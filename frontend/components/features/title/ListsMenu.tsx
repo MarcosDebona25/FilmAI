@@ -21,6 +21,7 @@ export function ListsMenu({
   titulo,
   listas,
   pendiente,
+  bloqueado = false,
   onAlternar,
   onCrear,
   onClose,
@@ -28,6 +29,8 @@ export function ListsMenu({
   titulo: string;
   listas: ListaFicha[];
   pendiente: number | null;
+  /** Hay un guardado en curso: ninguna fila responde. */
+  bloqueado?: boolean;
   onAlternar: (lista: ListaFicha) => void;
   onCrear: (nombre: string) => Promise<void>;
   onClose: () => void;
@@ -119,9 +122,9 @@ export function ListsMenu({
           key={lista.id}
           type="button"
           aria-pressed={lista.contiene}
-          disabled={pendiente === lista.id}
+          disabled={bloqueado || pendiente !== null}
           onClick={() => onAlternar(lista)}
-          className={`${fila} font-medium`}
+          className={`${fila} font-medium disabled:cursor-wait disabled:opacity-50`}
         >
           <span
             aria-hidden="true"
@@ -168,7 +171,7 @@ export function ListsMenu({
             </button>
             <button
               type="submit"
-              disabled={enviando}
+              disabled={enviando || bloqueado || pendiente !== null}
               className="h-11 cursor-pointer rounded-lg bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-60 md:h-10"
             >
               {t("title.lists.createAndAdd")}
@@ -176,7 +179,12 @@ export function ListsMenu({
           </div>
         </form>
       ) : (
-        <button type="button" onClick={() => setCreando(true)} className={`${fila} font-semibold`}>
+        <button
+          type="button"
+          disabled={bloqueado || pendiente !== null}
+          onClick={() => setCreando(true)}
+          className={`${fila} font-semibold disabled:cursor-wait disabled:opacity-50`}
+        >
           <Plus aria-hidden="true" className="size-5 shrink-0 text-primary" />
           {t("title.lists.newAction")}
         </button>

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ListsMenu } from "@/components/features/title/ListsMenu";
 import { mensajeDeError } from "@/components/features/title/RatingDialog";
 import { ICONO_ESTADO, StatusMenu } from "@/components/features/title/StatusMenu";
+import { useAvisoGuardado } from "@/components/features/title/use-aviso-guardado";
 import { StarIcon } from "@/components/ui/StarIcon";
 import { apiFetch } from "@/lib/api";
 import type { MediaType } from "@/lib/catalog";
@@ -49,9 +50,14 @@ export function TitleActions({
   const [pendiente, setPendiente] = useState<number | null>(null);
   const [menu, setMenu] = useState(false);
   const [menuEstado, setMenuEstado] = useState(false);
+  const { empezar, terminar } = useAvisoGuardado();
   const disparador = useRef<HTMLButtonElement>(null);
   const disparadorEstado = useRef<HTMLButtonElement>(null);
   const estado = estadoDe(listas);
+  // Un guardado a la vez: el de listas y favorita (acá) o el de estado (ficha).
+  // Las acciones se deshabilitan desde el primer toque, no cuando llega la
+  // respuesta (decisión del 19/11/2026).
+  const ocupado = pendiente !== null || cambiandoEstado;
   const IconoEstado = estado ? ICONO_ESTADO[estado] : CirclePlus;
   const porClave = (clave: ListaFicha["clave"]) => listas.find((lista) => lista.clave === clave);
   const propias = listas.filter((lista) => lista.tipo === "personalizada");
@@ -76,18 +82,22 @@ export function TitleActions({
   }
 
   async function alternar(lista: ListaFicha) {
-    if (pendiente !== null) return;
+    if (ocupado) return;
     setPendiente(lista.id);
+    empezar();
     try {
       if (lista.contiene && lista.item_id !== null) {
         await apiFetch(`/api/lists/${lista.id}/items/${lista.item_id}/`, { method: "DELETE" });
         onListasChange(actualizarLista(listas, lista.id, sinItem(lista)));
+        terminar();
         toast.success(aviso(lista, false));
       } else {
         await agregar(lista);
+        terminar();
         toast.success(aviso(lista, true));
       }
     } catch (motivo) {
+      terminar();
       toast.error(mensajeDeError(motivo));
     } finally {
       setPendiente(null);
@@ -95,10 +105,20 @@ export function TitleActions({
   }
 
   async function crearYAgregar(nombre: string) {
-    const nueva = await apiFetch<ListaFicha>("/api/lists/", { method: "POST", body: { nombre } });
-    const lista = { ...nueva, contiene: false, item_id: null };
-    await agregar(lista, [...listas, lista]);
-    toast.success(t("title.lists.createdAddedFeedback", { listName: nueva.nombre, title: titulo }));
+    if (ocupado) return;
+    empezar();
+    try {
+      const nueva = await apiFetch<ListaFicha>("/api/lists/", { method: "POST", body: { nombre } });
+      const lista = { ...nueva, contiene: false, item_id: null };
+      await agregar(lista, [...listas, lista]);
+      terminar();
+      toast.success(
+        t("title.lists.createdAddedFeedback", { listName: nueva.nombre, title: titulo })
+      );
+    } catch (motivo) {
+      terminar();
+      throw motivo;
+    }
   }
 
   function cerrarMenu() {
@@ -132,7 +152,8 @@ export function TitleActions({
     <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-2.5">
       <button
         type="button"
-        onClick={onRate}
+        aria-disabled={ocupado || undefined}
+        onClick={() => !ocupado && onRate()}
         aria-label={
           miCalificacion
             ? t.markup("title.rating.editSummary", {
@@ -142,7 +163,7 @@ export function TitleActions({
             : undefined
         }
         className={cn(
-          "flex h-[3.25rem] cursor-pointer items-center justify-center gap-2 rounded-lg px-5 text-[1.0625rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-12 md:text-base",
+          "flex h-[3.25rem] cursor-pointer items-center justify-center gap-2 rounded-lg px-5 text-[1.0625rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:cursor-wait aria-disabled:opacity-60 md:h-12 md:text-base",
           miCalificacion
             ? "bg-raised-2 text-foreground"
             : "bg-primary text-primary-foreground md:px-[1.375rem]"
@@ -169,7 +190,7 @@ export function TitleActions({
           <button
             type="button"
             aria-pressed={favorita.contiene}
-            disabled={pendiente === favorita.id}
+            disabled={ocupado}
             onClick={() => alternar(favorita)}
             className={accion(favorita.contiene)}
           >
@@ -196,8 +217,8 @@ export function TitleActions({
               }
               aria-haspopup="menu"
               aria-expanded={menuEstado}
-              aria-disabled={cambiandoEstado || undefined}
-              onClick={() => !cambiandoEstado && setMenuEstado(!menuEstado)}
+              aria-disabled={ocupado || undefined}
+              onClick={() => !ocupado && setMenuEstado(!menuEstado)}
               className={cn(accion(estado !== null), "w-full md:pr-3.5")}
             >
               <IconoEstado
@@ -240,6 +261,7 @@ export function TitleActions({
               titulo={titulo}
               listas={propias}
               pendiente={pendiente}
+              bloqueado={ocupado}
               onAlternar={alternar}
               onCrear={crearYAgregar}
               onClose={cerrarMenu}

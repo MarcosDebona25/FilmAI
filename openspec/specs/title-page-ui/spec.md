@@ -39,6 +39,8 @@ Without a session the actions MUST be replaced by «Log in to rate or save», li
 - GIVEN a signed-in user whose lists arrive before the title detail
 - THEN the page shows the skeleton and no «Log in to rate or save»
 
+While a status, Favorite or list change is saving, every action (the status button, Rate, Favorite, the list rows and the toast's Undo) MUST be disabled; a tap MUST NOT be silently dropped. After 200 ms of saving a «Saving…» toast with a spinner (no Undo) replaces the current toast; the usual toast or the error toast replaces it when the server answers. A save that answers within 200 ms MUST show no «Saving…» toast.
+
 #### Scenario: Status with Undo
 
 - GIVEN a title in Watchlist
