@@ -517,9 +517,22 @@ declare const messages: {
       "genderLabel": "Género",
       "termsAcceptance": "Leí y acepto los <terms>Términos y condiciones</terms> de FilmAI.",
       "termsNewTabHint": "(se abre en otra pestaña)",
-      "submitPending": "Completá todos los campos y aceptá los Términos y Condiciones para continuar.",
-      "avatarLabel": "Elegí tu avatar",
-      "avatarHelp": "Podés cambiarlo cuando quieras desde tu perfil."
+      "title": "Creá tu cuenta",
+      "subtitle": "Te lleva menos de un minuto.",
+      "progressLabel": "Progreso del registro",
+      "stepOf": "Paso {step} de {total}",
+      "continue": "Continuar",
+      "createAccount": "Crear cuenta",
+      "back": "Atrás",
+      "backToStep": "Atrás, al paso {step}",
+      "avatarOptional": "Avatar <hint>· opcional</hint>",
+      "avatarLaterHelp": "Podés cambiarlo después desde tu perfil.",
+      "avatarChoose": "Elegir",
+      "avatarUse": "Usar este avatar",
+      "avatarPrevious": "Avatares anteriores",
+      "avatarMore": "Más avatares",
+      "avatarPage": "{page} de {pages}",
+      "avatarLabel": "Elegí tu avatar"
     },
     "confirmation": {
       "pageTitle": "Confirmación de cuenta",
@@ -535,12 +548,11 @@ declare const messages: {
       "loading": "Confirmando tu cuenta…"
     },
     "completeSignUp": {
-      "badge": "Registro con Google",
-      "title": "Terminá tu registro",
-      "description": "Tomamos tu nombre y tu correo de tu cuenta de Google. Completá el resto y confirmá con Google para crear tu cuenta.",
-      "fixHighlighted": "Corregí el campo marcado y tocá de nuevo el botón de Google.",
-      "genderPlaceholder": "Elegí una opción",
-      "cancel": "Cancelar y volver a iniciar sesión"
+      "googleLine": "Tu nombre y tu correo vienen de tu cuenta de Google.",
+      "termsPending": "Aceptá los Términos y Condiciones para continuar.",
+      "backToSignUp": "Atrás, al registro",
+      "backToLogIn": "Atrás, a iniciar sesión",
+      "fixHighlighted": "Corregí el campo marcado y tocá de nuevo el botón de Google."
     },
     "session": {
       "expired": "Tu sesión venció. Iniciá sesión de nuevo."

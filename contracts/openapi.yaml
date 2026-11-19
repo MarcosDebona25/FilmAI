@@ -2388,6 +2388,8 @@ components:
           maxLength: 2
         acepta_terminos:
           type: boolean
+        avatar_id:
+          type: integer
     Idioma704Enum:
       enum:
       - en

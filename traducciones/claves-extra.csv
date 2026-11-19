@@ -103,9 +103,7 @@ common.fields.email,,field,,Correo electrónico,Email,aprobado
 nav.main.termsUpdated,,label,date,Última actualización: {date},Last updated: {date},aprobado
 nav.main.termsOnPage,,label,,En esta página,On this page,aprobado
 nav.main.termsQuestions,,label,email,¿Tenés dudas? Escribinos a {email}.,Questions? Write to us at {email}.,aprobado
-auth.signUp.submitPending,,label,,Completá todos los campos y aceptá los Términos y Condiciones para continuar.,Complete all fields and accept the Terms and Conditions to continue.,aprobado
 auth.signUp.avatarLabel,,label,,Elegí tu avatar,Choose your avatar,aprobado
-auth.signUp.avatarHelp,,label,,Podés cambiarlo cuando quieras desde tu perfil.,You can change it anytime from your profile.,aprobado
 errors.pages.notFoundCode,,label,,Error 404,Error 404,aprobado
 errors.pages.notFoundSignedOutTitle,,label,,No encontramos esa página,We can’t find that page,aprobado
 errors.pages.notFoundSignedOutDescription,,label,,La página que buscás no existe o fue movida. Volvé al inicio o iniciá sesión para retomar donde dejaste.,"The page you’re looking for doesn’t exist or was moved. Go back to Home, or log in to pick up where you left off.",aprobado
@@ -154,12 +152,7 @@ reviews.results.loading,,status,,Cargando tus calificaciones…,Loading your rat
 reviews.results.loadError,,error,,No pudimos cargar tus calificaciones. Intentá de nuevo.,We couldn’t load your ratings. Try again.,aprobado
 reviews.results.loadMore,,label,,Cargar más calificaciones,Load more ratings,aprobado
 reviews.filters.ratingChip,,label,rating,Calificación {rating},Rating {rating},aprobado
-auth.completeSignUp.badge,,label,,Registro con Google,Signing up with Google,aprobado
-auth.completeSignUp.title,,label,,Terminá tu registro,Finish signing up,aprobado
-auth.completeSignUp.description,,label,,Tomamos tu nombre y tu correo de tu cuenta de Google. Completá el resto y confirmá con Google para crear tu cuenta.,We take your name and email from your Google account. Fill in the rest and confirm with Google to create your account.,aprobado
-auth.completeSignUp.fixHighlighted,,error,,Corregí el campo marcado y tocá de nuevo el botón de Google.,Fix the highlighted field and press the Google button again.,aprobado
-auth.completeSignUp.genderPlaceholder,,label,,Elegí una opción,Choose an option,aprobado
-auth.completeSignUp.cancel,,label,,Cancelar y volver a iniciar sesión,Cancel and go back to log in,aprobado
+auth.completeSignUp.fixHighlighted,,error,,Corregí el campo marcado y volvé a confirmar con Google en el paso 3.,Fix the highlighted field and confirm with Google again in step 3.,aprobado
 profile.leaveDialog.title,,label,,¿Salir sin guardar?,Leave without saving?,aprobado
 profile.leaveDialog.body,,label,,Los cambios que hiciste en tu perfil no se guardarán.,The changes you made to your profile won’t be saved.,aprobado
 profile.leaveDialog.keepEditing,,label,,Seguir editando,Keep editing,aprobado

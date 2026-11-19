@@ -25,40 +25,33 @@ for (const locale of ["en", "es"] as const) {
       await route.fulfill({ status: 201, json: { code: "registration_pending_confirmation" } });
     });
     await page.goto("/register");
-    await page.waitForLoadState("networkidle");
-    const campos = {
-      nombre: "Ana",
-      apellido: "Pérez",
-      nombre_usuario: "anaperez",
-      correo: "ana@example.com",
-      fecha_nacimiento: locale === "es" ? "15/01/1990" : "01/15/1990",
-      password1: "Password123*",
-      password2: "Password123*",
-    };
-    // Rellenar antes de hidratar pierde campos (dev server en frío), y
-    // `networkidle` no alcanza para evitarlo. «Disponible» solo aparece con la
-    // página hidratada: se reintenta hasta verlo, reponiendo lo que se perdió.
-    // Las aserciones de adentro llevan timeout corto: `timeout: 0` en Playwright
-    // es «sin límite», y una espera sin límite impide que `toPass` reintente.
-    await expect(async () => {
-      for (const [name, value] of Object.entries(campos)) {
-        const campo = page.locator(`[name="${name}"]`);
-        if ((await campo.inputValue()) !== value) await campo.fill(value);
-      }
-      await expect(
-        page.getByText(messages.auth.signUp.usernameAvailable, { exact: true })
-      ).toBeVisible({ timeout: 2_000 });
-      for (const [name, value] of Object.entries(campos))
-        await expect(page.locator(`[name="${name}"]`)).toHaveValue(value, { timeout: 1_000 });
-    }).toPass({ timeout: 20_000 });
+    // El registro va en tres pasos; el botón principal se habilita cuando React
+    // ya tomó la página, así que lo escrito después no se pierde.
+    const continuar = page.getByRole("button", {
+      name: messages.auth.signUp.continue,
+      exact: true,
+    });
+    await expect(continuar).toBeEnabled({ timeout: 30_000 });
+    await page.locator('[name="correo"]').fill("ana@example.com");
+    await page.locator('[name="password1"]').fill("Password123*");
+    await page.locator('[name="password2"]').fill("Password123*");
+    await continuar.click();
+    await page.locator('[name="nombre"]').fill("Ana");
+    await page.locator('[name="apellido"]').fill("Pérez");
+    await page.locator('[name="nombre_usuario"]').fill("anaperez");
+    await expect(
+      page.getByText(messages.auth.signUp.usernameAvailable, { exact: true })
+    ).toBeAttached();
+    // Lo tipeado sale en el orden del idioma; al backend llega siempre ISO.
+    await page
+      .locator('[name="fecha_nacimiento"]')
+      .fill(locale === "es" ? "15/01/1990" : "01/15/1990");
+    await page.locator('select[name="genero"]').selectOption("no_especifica");
     await page.getByRole("combobox", { name: messages.common.fields.country }).click();
     await page.getByRole("option", { name: /^(Brasil|Brazil)$/ }).click();
-    await page.locator('select[name="genero"]').selectOption("no_especifica");
+    await continuar.click();
     await page.locator('[name="acepta_terminos"]').check();
-    const submit = page.getByRole("button", { name: messages.nav.account.signUp, exact: true });
-    // Si algo quedó inválido, que falle acá y no por timeout en el clic.
-    await expect(submit).toBeEnabled();
-    await submit.click();
+    await page.getByRole("button", { name: messages.auth.signUp.createAccount }).click();
     await expect(
       page.getByRole("heading", { name: messages.auth.confirmation.inboxTitle })
     ).toBeVisible();

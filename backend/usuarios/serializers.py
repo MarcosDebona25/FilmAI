@@ -247,6 +247,8 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
     genero = serializers.ChoiceField(choices=TipoGenero.choices, required=False)
     pais = serializers.CharField(max_length=2, required=False)
     acepta_terminos = serializers.BooleanField(required=False)
+    # Opcional y solo para el alta: en el login de una cuenta existente se ignora.
+    avatar_id = serializers.IntegerField(required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -273,6 +275,9 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
 
     def validate_pais(self, value):
         return validar_pais(value)
+
+    def validate_avatar_id(self, value):
+        return validar_avatar_id_api(value)
 
     def validate_fecha_nacimiento(self, value):
         hoy = date.today()
@@ -310,6 +315,9 @@ class GoogleSocialLoginSerializer(FronteraUsuarioMixin, BaseSocialLoginSerialize
         request.google_extra = {
             campo: attrs.get(campo) for campo in CAMPOS_FALTANTES_GOOGLE
         }
+        # Sin `avatar_id` el adapter deja el avatar por defecto del modelo.
+        if "avatar_id" in attrs:
+            request.google_extra["avatar_id"] = attrs["avatar_id"]
         try:
             login = self.get_social_login(
                 adapter, app, token, response={"id_token": id_token}

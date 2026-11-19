@@ -11,7 +11,10 @@ import { cn } from "@/lib/utils";
  * del perfil y el formulario de registro, así los dos se comportan igual.
  *
  * - Solo el avatar elegido entra con Tab (`tabIndex=0`); las flechas mueven la
- *   elección y el foco dentro del grupo.
+ *   elección y el foco dentro del grupo. Si el elegido no está en la lista (el
+ *   registro pagina y puede estar en otra página), entra el primero.
+ * - `desde` es la posición del primer avatar dentro del catálogo completo, para
+ *   que «Avatar N» siga la numeración del catálogo cuando se pasa una página.
  * - `className` decide la grilla (cada pantalla tiene su ancho). El aro de
  *   selección deja un espacio del color del fondo: por defecto el de las
  *   tarjetas (`--raised`) y, si el grupo define `--anillo`, ese.
@@ -20,14 +23,17 @@ export function AvatarRadioGroup({
   avatares,
   elegido,
   onChange,
+  desde = 0,
   className,
 }: {
   avatares: AvatarOption[];
   elegido: number;
   onChange: (id: number) => void;
+  desde?: number;
   className?: string;
 }) {
   const t = useTranslations("common");
+  const conTab = avatares.some((avatar) => avatar.id === elegido) ? elegido : avatares[0]?.id;
 
   return (
     <div role="radiogroup" aria-label={t("avatar.optionsLabel")} className={cn("grid", className)}>
@@ -39,8 +45,8 @@ export function AvatarRadioGroup({
             type="button"
             role="radio"
             aria-checked={marcado}
-            aria-label={t("avatar.optionLabel", { number: String(i + 1) })}
-            tabIndex={marcado ? 0 : -1}
+            aria-label={t("avatar.optionLabel", { number: String(desde + i + 1) })}
+            tabIndex={avatar.id === conTab ? 0 : -1}
             onClick={() => onChange(avatar.id)}
             onKeyDown={(evento) => {
               const paso = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[evento.key];
