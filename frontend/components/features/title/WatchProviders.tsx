@@ -148,6 +148,7 @@ export function WatchProviders({
           labelledBy={tituloId}
           onClose={() => setAbierto(false)}
           returnFocus={linea}
+          cerrarConFondo
           ancho="md:w-[min(32.5rem,calc(100%-3rem))]"
           relleno="px-5 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:pb-5 md:shadow-[inset_0_0_0_1px_var(--line),0_24px_60px_rgb(0_0_0/0.5)]"
         >

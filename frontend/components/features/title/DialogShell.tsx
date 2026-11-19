@@ -7,8 +7,10 @@ import { mantenerFocoEnDialogo } from "@/lib/dialog-focus";
 /**
  * Caja de los diálogos de la ficha (canvas). Usa el `<dialog>` nativo, como
  * `components/Modal.tsx`: `showModal()` deja inerte el fondo, Escape cierra y,
- * al desmontarse, el foco vuelve a quien lo abrió. Un toque en el fondo, fuera de
- * la caja, también cierra (salvo en un `alertdialog` o con `busy`). En escritorio
+ * al desmontarse, el foco vuelve a quien lo abrió. Con `cerrarConFondo`, un toque
+ * en el fondo, fuera de la caja, también cierra (nunca en un `alertdialog` ni con
+ * `busy`). Es opcional a propósito: en calificar, reseñar o renombrar, un toque sin
+ * querer borraría lo escrito (19/11/2026). En escritorio
  * es una tarjeta centrada; en celular, una hoja que sube desde abajo.
  */
 export function DialogShell({
@@ -19,6 +21,7 @@ export function DialogShell({
   busy = false,
   initialFocus,
   returnFocus,
+  cerrarConFondo = false,
   ancho = "md:w-[min(35rem,calc(100%-2rem))]",
   relleno = "gap-5 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:p-7",
   children,
@@ -34,6 +37,8 @@ export function DialogShell({
    * en Safari un clic no enfoca el botón y ese sería el `body`.
    */
   returnFocus?: RefObject<HTMLElement | null>;
+  /** Cerrar al tocar fuera de la caja. Solo para diálogos sin nada que perder. */
+  cerrarConFondo?: boolean;
   ancho?: string;
   /** Separación y relleno de la caja, para los diálogos que traen el suyo. */
   relleno?: string;
@@ -78,7 +83,8 @@ export function DialogShell({
         // El fondo (`::backdrop`) cuenta como un clic en el `<dialog>`, igual que
         // su propio relleno: solo es «fuera» si cae fuera de su caja.
         const dialog = ref.current;
-        if (busy || role === "alertdialog" || !dialog || event.target !== dialog) return;
+        if (!cerrarConFondo || busy || role === "alertdialog") return;
+        if (!dialog || event.target !== dialog) return;
         const caja = dialog.getBoundingClientRect();
         const { clientX: x, clientY: y } = event;
         if (x < caja.left || x > caja.right || y < caja.top || y > caja.bottom) onClose();
