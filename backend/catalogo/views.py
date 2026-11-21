@@ -526,7 +526,10 @@ class SimilaresView(TopesTMDBMixin, APIView):
         id_tmdb = _id_tmdb(id_tmdb)
         idioma = idioma_efectivo(request)
         # La clave no lleva nada del usuario: el pool es el mismo para todos.
-        clave = f"similares:titulo:{self.tipo}:{id_tmdb}:{idioma}:{MODEL_VERSION}"
+        # `estricto` va en la clave: así nunca se sirve un pool mezclado viejo.
+        clave = (
+            f"similares:titulo:{self.tipo}:{id_tmdb}:{idioma}:{MODEL_VERSION}:estricto"
+        )
         pool, en_cache = similares.pool_en_cache(
             clave,
             # `lambda` es una función sin nombre: solo se ejecuta si el pool no
@@ -581,6 +584,8 @@ class SimilaresView(TopesTMDBMixin, APIView):
             semillas_tmdb=[(id_tmdb, self.tipo)],
             servicio=servicio_localizado(idioma_tmdb(request), get_catalog_service),
             semilla_azar=clave,
+            # La ficha muestra lo más parecido primero, sin azar.
+            estricto=True,
         )
 
     def _ttl(self, pool):

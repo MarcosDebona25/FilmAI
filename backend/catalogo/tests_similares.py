@@ -688,6 +688,59 @@ class ArmarPoolTests(BaseSimilares):
         self.assertEqual(una, igual)
         self.assertNotEqual(una, otra)
 
+    def test_estricto_no_mezcla_y_ordena_por_distancia_exacta(self):
+        # Se crean desordenadas a propósito: el orden tiene que salir de la
+        # distancia al vector de la semilla, no del orden de alta.
+        semilla = self.produccion("Semilla", vector_a(0))
+        tercera = self.produccion("Tercera", vector_a(0.20))
+        primera = self.produccion("Primera", vector_a(0.05))
+        segunda = self.produccion("Segunda", vector_a(0.10))
+        lejos_b = self.produccion("Lejos B", vector_a(LEJOS + 0.2))
+        lejos_a = self.produccion("Lejos A", vector_a(LEJOS))
+
+        # Sin parchear `mezclar_con_pesos`: se prueba que `estricto` la saltea.
+        pool = self.armar(
+            [semilla],
+            {(semilla.id_tmdb, "movie"): [item_tmdb(900)]},
+            estricto=True,
+        )
+
+        # Cercanos por distancia, relleno de TMDB, lejanos por distancia.
+        self.assertEqual(
+            [(e["origen"], e["id_tmdb"]) for e in pool.entradas],
+            [
+                ("catalogo", primera.id_tmdb),
+                ("catalogo", segunda.id_tmdb),
+                ("catalogo", tercera.id_tmdb),
+                ("tmdb", 900),
+                ("catalogo", lejos_a.id_tmdb),
+                ("catalogo", lejos_b.id_tmdb),
+            ],
+        )
+        self.assertEqual((pool.cercanos, pool.de_tmdb), (3, 1))
+
+    def test_estricto_da_el_mismo_orden_con_cualquier_semilla_de_azar(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        for numero in range(30):
+            self.produccion(f"C{numero}", vector_a(0.01 * numero))
+
+        una = self.armar([semilla], semilla_azar="a", estricto=True).entradas
+        otra = self.armar([semilla], semilla_azar="b", estricto=True).entradas
+
+        self.assertEqual(una, otra)
+
+    def test_sin_estricto_sigue_mezclando(self):
+        semilla = self.produccion("Semilla", vector_a(0))
+        for numero in range(30):
+            self.produccion(f"C{numero}", vector_a(0.01 * numero))
+
+        estricto = self.armar([semilla], estricto=True).entradas
+        mezclado = self.armar([semilla]).entradas
+
+        # Mismos títulos, distinto orden: la mezcla de las listas no se tocó.
+        self.assertCountEqual(estricto, mezclado)
+        self.assertNotEqual(estricto, mezclado)
+
     def test_una_semilla_sin_vector_deja_el_pool_incompleto(self):
         lista = self.produccion("Lista", vector_a(0))
         pendiente = self.produccion("Pendiente", None, EstadoEmbedding.PENDING)

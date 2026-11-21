@@ -1305,3 +1305,33 @@ Archivos: `backend/chatbot/{tests_sse,tests_servicio,tests_recorte}.py`, `backen
 - **Último test dormilón.** `TMDBClientTest.test_http_errors_map_to_domain_exceptions` anula `catalogo.client.time.sleep` y deja de esperar 7 s.
 
 Archivos: `.github/workflows/ci.yml`, `frontend/tests/access-screens.test.tsx`, `backend/catalogo/tests.py`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 21/11/2026 — Tarjeta de lista: nombre en una línea con la manija bajo el ⋯ (diseño 5E, #232)
+
+Elegido por Marcos entre las variantes 5A–5F del canvas, partiendo de 4F.
+
+- **Qué se eligió (5E).** El nombre pasa a 1,5 rem en celular y 1,75 rem desde `md`, en una sola línea con «…» y con `title` con el nombre completo. El menú `⋯` o la insignia «Default» quedan pegados a la esquina superior derecha. La manija de arrastre (solo escritorio, solo personalizadas, botón de 44 px con `aria-label`, sigue operándose con teclado) va apilada debajo del `⋯`, en la misma esquina, y no le quita ancho al nombre. El conteo no se parte (`whitespace-nowrap`; en escritorio deja libre el ancho de la manija).
+- **Por qué.** El nombre competía por el ancho con la manija, el ícono, la insignia y el menú. Con 5E la manija sale de la fila del nombre y se conserva el arrastre por manija sin cambiar lo que el usuario ya aprendió.
+- **Qué se descartó.** 5A (manija a la izquierda del nombre, como estaba), 5B (manija en la fila del conteo), 5C (manija en el pie, junto a los pósters), 5D (sin manija visible, aparece al pasar el mouse o enfocar) y 5F (sin manija, reordenar solo desde el menú).
+- **Pruebas.** Vitest (`tests/lists-view.test.tsx`): `title` y truncado, conteo sin partir, manija solo en personalizadas y de escritorio, predeterminada sin manija ni menú. E2E (`e2e/listas.spec.ts`): nombres de 34 y 60 caracteres a 375, 768 y 1440 px, con el nombre en una línea, el conteo sin partir y la manija bajo el ⋯.
+- **Canvas.** En «Lists» quedaron solo la tarjeta definitiva (5E) y se borraron 4F, 5A–5D y 5F con sus entradas del índice.
+
+Archivos: `frontend/components/features/lists/ListCard.tsx`, `frontend/tests/lists-view.test.tsx`, `frontend/e2e/listas.spec.ts`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+### 21/11/2026 — Separación entre la lupa y el avatar en la navbar
+
+- **Cambio.** El contenedor de la derecha de la navbar (lupa de búsqueda, avatar o «Log in»/«Sign up») pasa de `gap-2` (0,5 rem) a `gap-5` (1,25 rem, `calc(var(--spacing) * 5)`, 20 px). Lo probó Marcos en las herramientas del navegador y lo dejó como valor definitivo.
+- **Alcance.** El gap es del contenedor, así que en escritorio también separa más «Log in» de «Sign up» cuando no hay sesión. La lupa y el avatar no se ven por debajo de 768 px (en celular la lupa está oculta), por lo que ahí no cambia nada. La lupa desplegada crece hacia la izquierda sobre su propio lugar, así que el cambio no la afecta.
+
+Archivos: `frontend/components/Navbar.tsx`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+### 21/11/2026 — «More like» de la ficha: relevancia estricta, sin mezcla (issue #231)
+
+Decidido por Marcos. La ficha mostraba los 20 primeros de un pool mezclado con pesos (`mezclar_con_pesos`), así que un título muy parecido podía quedar fuera de los 20 mientras entraban otros más lejanos.
+
+- **Ficha.** `armar_pool` recibe `estricto` (por defecto `False`). La ficha lo pasa en `True` y el pool queda en el orden en que se arma: locales cercanos (distancia ≤ 0,40) por distancia, relleno de TMDB, locales lejanos por distancia, hasta 60; la vista muestra los 20 primeros. Sin piso de relevancia: si hay pocos cercanos se completa con TMDB y después con lejanos, como antes.
+- **Listas.** No cambian: siguen con la mezcla con pesos y «Show more suggestions».
+- **Caché.** La clave de la ficha pasó a `similares:titulo:{tipo}:{id}:{idioma}:{modelo}:estricto`. Con el sufijo no se sirve un pool mezclado guardado por la versión anterior (dura hasta 24 h); los viejos expiran solos.
+- **Diagnóstico con «The Avengers» (574) en la base de desarrollo** (739 títulos, 577 con vector `ready`): tiene vector `ready`; sus 20 vecinos están entre 0,161 y 0,326, todos por debajo de 0,40, así que son los 20 cercanos y TMDB no aportó. Los vecinos más cercanos son Infinity War y Endgame (0,16), pero después aparecen títulos poco relacionados (The Fifth Element, The Awakening, Matchbox the Movie) con distancias casi iguales. Dos causas: el catálogo local es chico (faltan Age of Ultron, Civil War, etc.) y, como hay 20 cercanos, el relleno de TMDB (que traería las películas del universo) nunca se pide. Con la mezcla se perdía además el orden. El umbral de 0,40 es holgado para este modelo, y el texto embebido (`construir_texto_canonico`: título, géneros, directores, reparto, keywords, sinopsis) no se tocó. Queda para otro issue decidir si bajar `DISTANCIA_MAXIMA` o dar prioridad a TMDB en la ficha.
+
+Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `openspec/specs/similar-titles/spec.md` y este archivo.

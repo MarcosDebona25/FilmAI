@@ -196,9 +196,46 @@ class SimilaresCacheTests(BaseSimilaresAPI):
         clave, ttl, _ = self.ttl_guardado(url)
 
         self.assertEqual(
-            clave, f"similares:titulo:movie:{self.semilla.id_tmdb}:en:{MODEL_VERSION}"
+            clave,
+            f"similares:titulo:movie:{self.semilla.id_tmdb}:en:{MODEL_VERSION}:estricto",
         )
         self.assertEqual(ttl, 24 * 3600)
+
+    def test_la_ficha_responde_por_distancia_exacta_y_no_mezcla(self):
+        url = self.poblar(vecinas=25)
+
+        respuesta = self.cliente.get(url)
+
+        # Las vecinas se crearon de la más cercana a la más lejana: sin mezcla,
+        # salen las 20 primeras en ese mismo orden.
+        self.assertEqual(
+            self.ids(respuesta), [("movie", v.id_tmdb) for v in self.vecinas[:20]]
+        )
+
+    def test_un_pool_mezclado_viejo_no_se_sirve_en_la_ficha(self):
+        url = self.poblar(vecinas=25)
+        # Un pool guardado por la versión anterior, bajo la clave sin sufijo:
+        # el orden está invertido a propósito.
+        vieja = f"similares:titulo:movie:{self.semilla.id_tmdb}:en:{MODEL_VERSION}"
+        entradas = [
+            similares._entrada_local(similares.Candidato(v.pk, v.id_tmdb, v.tipo, 0.1))
+            for v in reversed(self.vecinas)
+        ]
+        cache.set(
+            vieja,
+            {
+                "entradas": entradas,
+                "nombre_usado": False,
+                "completo": True,
+                "semillas_con_vector": 1,
+                "cercanos": 25,
+                "de_tmdb": 0,
+            },
+        )
+
+        respuesta = self.cliente.get(url)
+
+        self.assertEqual(self.ids(respuesta)[0], ("movie", self.vecinas[0].id_tmdb))
 
     def test_el_segundo_pedido_no_recalcula(self):
         url = self.poblar()

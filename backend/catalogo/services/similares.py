@@ -469,6 +469,7 @@ def armar_pool(
     tipos=None,
     vector_nombre=None,
     nombre_omitido=False,
+    estricto=False,
 ):
     """Arma el pool de parecidos a las semillas.
 
@@ -482,7 +483,11 @@ def armar_pool(
     - `vector_nombre`: el nombre de la lista ya embebido, si «dice algo».
     - `nombre_omitido`: había un nombre para usar y no se pudo embeber.
 
-    Orden antes de mezclar: locales cercanos, TMDB, locales lejanos.
+    - `estricto`: no mezcla. La ficha lo usa para mostrar siempre lo más parecido
+      primero; las listas no (ahí la mezcla con pesos da variedad en «Refresh»).
+
+    Orden antes de mezclar: locales cercanos, TMDB, locales lejanos. Cada grupo
+    local viene ya ordenado por distancia (`candidatos`), de menor a mayor.
     """
     produccion_ids = list(dict.fromkeys(produccion_ids))
     centroide, con_vector = _centroide(produccion_ids)
@@ -524,7 +529,7 @@ def armar_pool(
         *(_entrada_local(vecino) for vecino in lejanos),
     ][:TAMANO_POOL]
     return Pool(
-        entradas=mezclar_con_pesos(entradas, semilla_azar),
+        entradas=entradas if estricto else mezclar_con_pesos(entradas, semilla_azar),
         nombre_usado=nombre_usado,
         completo=completo,
         semillas_con_vector=con_vector,

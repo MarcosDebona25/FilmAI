@@ -254,6 +254,71 @@ async function centro(page: Page, nombre: string, { alinear = false } = {}) {
   return { x: caja.x + caja.width / 2, y: caja.y + caja.height - 12 };
 }
 
+// Diseño 5E (issue #232): el nombre largo no parte la tarjeta. Se prueba en los
+// tres anchos donde cambia la grilla (celular, tablet y escritorio de 4 columnas).
+const NOMBRE_34 = "Sunday night movies with my family"; // 34 caracteres
+const NOMBRE_60 = "Sunday night movies and series to watch with my whole family"; // 60
+
+for (const ancho of [375, 768, 1440]) {
+  test.describe(`Nombre largo de una lista a ${ancho} px`, () => {
+    test.use({
+      viewport: { width: ancho, height: 900 },
+      hasTouch: ancho < 768,
+      isMobile: ancho < 768,
+    });
+
+    test("el nombre ocupa una línea con title, el conteo no se parte y la manija no tapa el ⋯", async ({
+      page,
+    }) => {
+      const listas = listasIniciales([NOMBRE_34, NOMBRE_60]);
+      for (const lista of listas.filter((l) => l.tipo === "personalizada")) {
+        lista.items = [item(1), item(2), item(3), item(4), item(5), item(6), item(7)];
+      }
+      await backend(page, { listas });
+      await page.goto("/lists");
+      await expect(page.getByRole("link", { name: NOMBRE_60 })).toBeVisible();
+
+      for (const nombre of [NOMBRE_34, NOMBRE_60]) {
+        const enlace = page.getByRole("link", { name: nombre });
+        // El nombre completo queda en el title aunque el texto se corte con «…».
+        await expect(enlace).toHaveAttribute("title", nombre);
+        const alto = await enlace.evaluate((nodo) => ({
+          caja: nodo.getBoundingClientRect().height,
+          linea: Number.parseFloat(getComputedStyle(nodo).lineHeight),
+        }));
+        expect(alto.caja).toBeLessThanOrEqual(alto.linea + 1);
+
+        const tarjeta = page
+          .getByRole("heading", { level: 2, name: nombre })
+          .locator("xpath=ancestor::article[1]");
+        const conteo = tarjeta.getByText(/^7 items · /);
+        const medida = await conteo.evaluate((nodo) => ({
+          caja: nodo.getBoundingClientRect().height,
+          linea: Number.parseFloat(getComputedStyle(nodo).lineHeight),
+          cortado: nodo.scrollWidth > nodo.clientWidth,
+        }));
+        expect(medida.caja).toBeLessThanOrEqual(medida.linea + 1);
+        expect(medida.cortado).toBe(false);
+
+        // En escritorio la manija queda debajo del ⋯, sin superponerse.
+        if (ancho >= 768) {
+          const menu = await tarjeta
+            .getByRole("button", { name: /^Actions for the list/ })
+            .boundingBox();
+          const manija = await tarjeta
+            .getByRole("button", { name: en.common.lists.reorderLabel })
+            .boundingBox();
+          expect(menu && manija && manija.y >= menu.y + menu.height - 1).toBe(true);
+          expect(manija!.x + manija!.width).toBeLessThanOrEqual(ancho);
+        }
+      }
+      await sinDesborde(page);
+      if (process.env.CAPTURAS_5E)
+        await page.screenshot({ path: `${process.env.CAPTURAS_5E}/lists-${ancho}.png` });
+    });
+  });
+}
+
 for (const viewport of viewports) {
   test.describe(`Listas en ${viewport.name}`, () => {
     test.use({
