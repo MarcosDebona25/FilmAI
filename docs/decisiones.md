@@ -1277,3 +1277,10 @@ Archivos: `backend/chatbot/eventos.py`, `docs/05_Plan_de_Desarrollo.md` y este a
 - **Plan 05.** Se quitó la nota «Canvas pendiente (Watching)».
 
 Archivos: `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 21/11/2026 — Separación entre la lupa y el avatar en la navbar
+
+- **Cambio.** El contenedor de la derecha de la navbar (lupa de búsqueda, avatar o «Log in»/«Sign up») pasa de `gap-2` (0,5 rem) a `gap-5` (1,25 rem, `calc(var(--spacing) * 5)`, 20 px). Lo probó Marcos en las herramientas del navegador y lo dejó como valor definitivo.
+- **Alcance.** El gap es del contenedor, así que en escritorio también separa más «Log in» de «Sign up» cuando no hay sesión. La lupa y el avatar no se ven por debajo de 768 px (en celular la lupa está oculta), por lo que ahí no cambia nada. La lupa desplegada crece hacia la izquierda sobre su propio lugar, así que el cambio no la afecta.
+
+Archivos: `frontend/components/Navbar.tsx`, `docs/04_Lineamientos_UI.md` y este archivo.
