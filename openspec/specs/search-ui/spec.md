@@ -24,7 +24,7 @@ The Search page (C-06, CU-008 and CU-010): typing a title or browsing the catalo
 
 ### Requirement: Field and closing
 
-The field MUST accept any text up to 50 characters and search 350 ms after the last keystroke, or at once on Enter. On desktop it MUST take the focus; on mobile it MUST NOT. «Close» and Escape MUST go back when the user arrived from inside the app and to Home when `/search` was opened directly; with a dialog open, Escape belongs to the dialog.
+The field MUST look like the navbar magnifier field (same pill, colors, border, radius, 2.75 rem height, icon, focus ring, placeholder and clear button, from `components/campo-busqueda.ts`) on desktop and mobile (21/11/2026). The field MUST accept any text up to 50 characters and search 350 ms after the last keystroke, or at once on Enter. On desktop it MUST take the focus; on mobile it MUST NOT. «Close» and Escape MUST go back when the user arrived from inside the app and to Home when `/search` was opened directly; with a dialog open, Escape belongs to the dialog.
 
 #### Scenario: Typing waits
 

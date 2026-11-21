@@ -1336,6 +1336,19 @@ Decidido por Marcos. La ficha mostraba los 20 primeros de un pool mezclado con p
 
 Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `openspec/specs/similar-titles/spec.md` y este archivo.
 
+### 21/11/2026 — «Explorar» en la navbar y campo de Buscar con el estilo de la lupa
+
+Decidido por Marcos. Desde el 14/11/2026 en escritorio `/search` solo se alcanzaba escribiendo en la lupa, aunque sin texto ya muestra todo por popularidad con filtros.
+
+- **Enlace «Explorar».** La navbar de escritorio suma «Explorar» («Browse», clave `nav.main.browse`) entre Inicio y Listas. Lleva a `/search` sin texto, se ve con o sin sesión (Listas sigue solo con sesión) y marca `aria-current="page"` en `/search`. Convive con la lupa, que sigue oculta en `/search`.
+- **Celular.** La pestaña inferior que ya llevaba a `/search` pasa a usar la misma clave `nav.main.browse`, así el enlace y la pestaña dicen lo mismo. `nav.main.search` queda para el título de la página, el pie y las migas.
+- **Campo de Buscar.** Copia el estilo del campo de la lupa (píldora de 2,75 rem, `bg-raised`, borde `--field-border`, foco con `--fg-3` y anillo, lupa, placeholder y ✕) en escritorio y celular. Las clases se extrajeron a `frontend/components/campo-busqueda.ts`, usado por `NavbarSearch` y `SearchView`. No cambia la lógica: Escape y «/» siguen igual. Antes era un campo grande (3,25 a 3,625 rem, tipografía de pantalla en escritorio).
+- **Textos.** Clave nueva `nav.main.browse` en `traducciones/claves-extra.csv` (es «Explorar», en «Browse»); catálogos regenerados.
+
+Archivos: `frontend/components/Navbar.tsx`, `MobileTabs.tsx`, `NavbarSearch.tsx`, `campo-busqueda.ts`, `features/SearchView.tsx`, `frontend/messages/*/common.json` y `common.d.json.ts`, `traducciones/claves-extra.csv`, `frontend/tests/errors-and-account-menu.test.tsx`, `search-view.test.tsx`, `frontend/e2e/*`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+- **Título de la página (21/11/2026).** El h1, el título de la pestaña, la miga de la ficha, el enlace del pie y el de la pantalla 404 dicen «Browse» / «Explorar», igual que la navbar y la pestaña del celular. La clave `nav.main.search` queda sin uso en pantalla. Archivos: `frontend/app/search/page.tsx`, `SearchView.tsx`, `TitleView.tsx`, `Footer.tsx`, `ErrorScreens.tsx` y sus tests.
+
 ### 21/11/2026 — Los títulos sin póster quedan fuera del descubrimiento
 
 Decidido por Marcos (opción C). Medido ese día: 17 de 948 títulos de la base no tienen póster, y su tarjeta se veía rota.

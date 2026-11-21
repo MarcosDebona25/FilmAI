@@ -224,7 +224,7 @@ test.describe("lupa de la navbar en celular", () => {
     await expect(lupa(page)).toBeHidden();
     await expect(
       page.getByRole("navigation", { name: en.nav.main.mainLabel }).getByRole("link", {
-        name: en.nav.main.search,
+        name: en.nav.main.browse,
       })
     ).toBeVisible();
     // «/» tampoco la despliega: en celular no hay campo en la barra.

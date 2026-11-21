@@ -10,8 +10,8 @@ import { Avatar } from "@/components/Avatar";
 import { isAccessPath, routes } from "@/lib/routes";
 
 /**
- * Barra inferior de celular. Con sesión: Home, Search, Lists y Profile.
- * Sin sesión: Home, Search y Log in, así el buscador (público) también es
+ * Barra inferior de celular. Con sesión: Home, Browse, Lists y Profile.
+ * Sin sesión: Home, Browse y Log in, así el buscador (público) también es
  * alcanzable en celular, donde el encabezado oculta la navegación.
  */
 export function MobileTabs() {
@@ -30,7 +30,7 @@ export function MobileTabs() {
     },
     {
       href: routes.search,
-      label: t("search"),
+      label: t("browse"),
       icon: <Search aria-hidden="true" className="size-[1.375rem]" />,
     },
     {

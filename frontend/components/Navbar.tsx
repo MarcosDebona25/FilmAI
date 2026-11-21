@@ -13,10 +13,12 @@ import { isAccessPath, routes } from "@/lib/routes";
 import { useEscritorio } from "@/lib/use-escritorio";
 import { cn } from "@/lib/utils";
 
-// «Search» ya no es un enlace de escritorio (14/11/2026): lo reemplaza la lupa de
-// `NavbarSearch`. En celular sigue como pestaña en `MobileTabs`.
+// «Search» dejó de ser enlace de escritorio el 14/11/2026 (lo reemplazó la lupa de
+// `NavbarSearch`). El 21/11/2026 vuelve como «Browse»: lleva a /search sin texto
+// (todo el catálogo con filtros) y convive con la lupa, que busca por texto.
 const NAV_LINKS = [
   { key: "home", href: routes.explore },
+  { key: "browse", href: routes.search },
   { key: "lists", href: routes.lists },
 ] as const;
 

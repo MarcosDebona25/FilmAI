@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { CAMPO_BUSQUEDA } from "@/components/campo-busqueda";
 import { SugerenciasLista } from "@/components/SugerenciasLista";
 import { routes } from "@/lib/routes";
 import { MAX_TEXTO, urlDePersona, urlDeTexto } from "@/lib/search";
@@ -186,9 +187,9 @@ export function NavbarSearch() {
           // 44 px deja unos 80 px al texto: por eso la píldora casi no lleva relleno).
           className="absolute top-0 right-0 z-40 w-[clamp(12rem,24vw,20rem)] motion-safe:animate-[desplegar-busqueda_180ms_ease-out]"
         >
-          {/* Píldora del canvas (sección 13): con foco, borde `--fg-3` y un anillo de 2 px por fuera. */}
-          <div className="flex h-11 items-center rounded-full bg-raised pl-3 shadow-[inset_0_0_0_1px_var(--field-border)] focus-within:shadow-[inset_0_0_0_1px_var(--fg-3),0_0_0_2px_var(--ring)]">
-            <Search aria-hidden="true" className="mr-2 size-5 shrink-0 text-fg-3" />
+          {/* Mismo estilo que el campo de Buscar (`campo-busqueda.ts`). */}
+          <div className={CAMPO_BUSQUEDA.pildora}>
+            <Search aria-hidden="true" className={CAMPO_BUSQUEDA.icono} />
             <label htmlFor={`${base}-campo`} className="sr-only">
               {t("label")}
             </label>
@@ -211,7 +212,7 @@ export function NavbarSearch() {
               }}
               onFocus={() => setListaAbierta(true)}
               onKeyDown={alApretar}
-              className="h-full min-w-0 flex-1 border-0 bg-transparent pr-1 text-[0.9375rem] font-medium text-foreground outline-none placeholder:text-fg-3"
+              className={CAMPO_BUSQUEDA.input}
             />
             {!texto && (
               <kbd
@@ -225,9 +226,9 @@ export function NavbarSearch() {
               type="button"
               aria-label={t("closeLabel")}
               onClick={() => cerrarCampo(true)}
-              className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className={CAMPO_BUSQUEDA.limpiar}
             >
-              <X aria-hidden="true" className="size-[1.125rem]" />
+              <X aria-hidden="true" className={CAMPO_BUSQUEDA.iconoLimpiar} />
             </button>
           </div>
           {visible && (
