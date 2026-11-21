@@ -883,6 +883,13 @@ class EndpointIntegrationTest(SimpleTestCase):
         listado = patch("catalogo.views.materializar_listado_en_segundo_plano")
         listado.start()
         self.addCleanup(listado.stop)
+        # Los casos de 429 (Too Many Requests), 502 (Bad Gateway) y 503 (Service
+        # Unavailable) pasan por el backoff de los reintentos de TMDB, que duerme
+        # 1 + 2 + 4 s antes de rendirse. El reintento se sigue probando; solo se
+        # anula la espera, que no aporta nada al contrato HTTP.
+        espera = patch("catalogo.client.time.sleep")
+        espera.start()
+        self.addCleanup(espera.stop)
 
     def _make_service(self, body=None):
         body = body or {"results": [{"id": 550, "title": "Fight Club"}]}

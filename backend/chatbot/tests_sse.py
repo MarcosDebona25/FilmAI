@@ -61,6 +61,20 @@ def sesion(usuario):
     return str(RefreshToken.for_user(usuario).access_token), csrf
 
 
+def parar_precalentado(caso):
+    """Anula el encolado del precalentado de tarjetas en un `TestCase`.
+
+    `guardar_turno()` encola la materialización de cada tarjeta y, cuando el
+    broker no responde, `.delay()` espera ~19 s antes de fallar (medido el
+    21/11/2026 en el CI y en un compose sin Redis). El turno se guarda igual,
+    así que cada test con tarjetas pagaba esa espera. El encolado en sí está
+    cubierto en `tests_servicio.PrecalentarTarjetasTests`.
+    """
+    parche = patch("chatbot.servicio.materializar_listado_en_segundo_plano")
+    parche.start()
+    caso.addCleanup(parche.stop)
+
+
 class BaseSSE(TestCase):
     def setUp(self):
         self.usuario = UsuarioFactory(idioma="en")
@@ -69,6 +83,7 @@ class BaseSSE(TestCase):
         self.cliente = AsyncClient(enforce_csrf_checks=True)
         self.cliente.cookies["access"] = self.acceso
         self.cliente.cookies["csrftoken"] = self.csrf
+        parar_precalentado(self)
 
     async def enviar(self, texto="hola", *, csrf=True, cliente=None):
         # `Accept: text/event-stream` es lo que manda el panel.
@@ -483,6 +498,7 @@ class CorteDeConexionTests(TransactionTestCase):
             "cookie": f"access={acceso}; csrftoken={self.csrf}",
             "x-csrftoken": self.csrf,
         }
+        parar_precalentado(self)
 
     def candado_tomado(self):
         return cache.get(_clave_candado(self.chat.pk)) is not None

@@ -198,6 +198,12 @@ class RecorteDeRecomendadosTests(BaseChat, TestCase):
 class FechaDeRecomendadosTests(BaseChat, TestCase):
     def setUp(self):
         self.preparar()
+        # El turno guarda tarjetas y eso encola su materialización: sin broker,
+        # `.delay()` espera ~19 s (ver `tests_sse.parar_precalentado`). Acá se
+        # prueba la fecha que queda en el contexto, no el encolado.
+        precalentado = patch("chatbot.servicio.materializar_listado_en_segundo_plano")
+        precalentado.start()
+        self.addCleanup(precalentado.stop)
 
     def test_guardar_un_turno_escribe_la_fecha_de_hoy(self):
         guardar_turno(self.chat, "Algo", Resultado("Va.", [tarjeta(1)]))
