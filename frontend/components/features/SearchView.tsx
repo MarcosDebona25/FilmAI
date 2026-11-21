@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { CAMPO_BUSQUEDA } from "@/components/campo-busqueda";
 import { SugerenciasLista } from "@/components/SugerenciasLista";
 import { FiltersSheet } from "@/components/features/FiltersSheet";
 import { MediaCard, MediaCardSkeleton } from "@/components/features/MediaCard";
@@ -367,44 +368,44 @@ export function SearchView() {
             <label htmlFor="busqueda" className="sr-only">
               {t("common.search.placeholder")}
             </label>
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute top-4 left-4 size-5 text-fg-3 md:top-[1.125rem] md:left-[1.125rem] md:size-[1.3125rem]"
-            />
-            <input
-              ref={campo}
-              id="busqueda"
-              // Combobox ARIA 1.2 como el de la lupa: el foco queda siempre en
-              // el campo y la opción activa se señala con `aria-activedescendant`.
-              // Por eso es `text` y no `search`: el rol `combobox` lo reemplaza.
-              type="text"
-              role="combobox"
-              enterKeyHint="search"
-              autoComplete="off"
-              maxLength={MAX_TEXTO}
-              aria-autocomplete="list"
-              aria-expanded={visible}
-              aria-controls={listaId}
-              aria-activedescendant={activa?.id}
-              value={texto}
-              onChange={(evento) => {
-                setTexto(evento.target.value);
-                setListaAbierta(true);
-              }}
-              onKeyDown={alApretarEnElCampo}
-              placeholder={t("common.search.placeholder")}
-              className="h-[3.25rem] w-full rounded-xl border-0 bg-raised px-12 text-[1.0625rem] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--field-border)] placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-[3.625rem] md:rounded-xl md:px-14 md:font-display md:text-[1.6875rem] md:font-extrabold"
-            />
-            {texto && (
-              <button
-                type="button"
-                onClick={borrarTexto}
-                aria-label={t("search.input.clearLabel")}
-                className="absolute top-1 right-1 grid size-11 cursor-pointer place-items-center rounded-[0.625rem] text-fg-3 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:top-[0.4375rem] md:right-2.5"
-              >
-                <X aria-hidden="true" className="size-5" />
-              </button>
-            )}
+            {/* Mismo campo que la lupa de la navbar (`campo-busqueda.ts`). */}
+            <div className={CAMPO_BUSQUEDA.pildora}>
+              <Search aria-hidden="true" className={CAMPO_BUSQUEDA.icono} />
+              <input
+                ref={campo}
+                id="busqueda"
+                // Combobox ARIA 1.2 como el de la lupa: el foco queda siempre en
+                // el campo y la opción activa se señala con `aria-activedescendant`.
+                // Por eso es `text` y no `search`: el rol `combobox` lo reemplaza.
+                type="text"
+                role="combobox"
+                enterKeyHint="search"
+                autoComplete="off"
+                maxLength={MAX_TEXTO}
+                aria-autocomplete="list"
+                aria-expanded={visible}
+                aria-controls={listaId}
+                aria-activedescendant={activa?.id}
+                value={texto}
+                onChange={(evento) => {
+                  setTexto(evento.target.value);
+                  setListaAbierta(true);
+                }}
+                onKeyDown={alApretarEnElCampo}
+                placeholder={t("common.search.placeholder")}
+                className={CAMPO_BUSQUEDA.input}
+              />
+              {texto && (
+                <button
+                  type="button"
+                  onClick={borrarTexto}
+                  aria-label={t("search.input.clearLabel")}
+                  className={CAMPO_BUSQUEDA.limpiar}
+                >
+                  <X aria-hidden="true" className={CAMPO_BUSQUEDA.iconoLimpiar} />
+                </button>
+              )}
+            </div>
             {visible && (
               // Bajo el campo, sobre el chip y los filtros (no los empuja).
               <SugerenciasLista

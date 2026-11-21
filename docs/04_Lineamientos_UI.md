@@ -18,12 +18,12 @@ App Autenticada
 └── [Avatar]               ← dropdown: Mi perfil / Mis reseñas / Preferencias / Cerrar sesión
 ```
 
-**Navbar definitiva** (escritorio, 14/11/2026): `[Logo]  Inicio  Listas                    [🔍] [Avatar]`
+**Navbar definitiva** (escritorio, 14/11/2026): `[Logo]  Inicio  Explorar  Listas                    [🔍] [Avatar]`
 
 - 3 links de navegación + avatar a la derecha.
 - El avatar reemplaza el ítem "Perfil" y despliega un menú con "Mi perfil", "Mis reseñas", "Preferencias" y "Cerrar sesión".
 - «Mis reseñas» permite gestionar calificaciones y textos propios, con pósters y acciones de edición y eliminación.
-- En escritorio «Buscar» ya no es un enlace (14/11/2026): la lupa a la derecha se despliega en un campo con sugerencias de títulos y personas, y Enter abre `/search` con el texto. En celular sigue la pestaña «Search» de la barra inferior. La página `/search` con el catálogo completo (grid + filtros + toggle Todo/Películas/Series; 14/10/2026, antes un panel overlay).
+- En escritorio «Buscar» dejó de ser enlace el 14/11/2026, pero desde el 21/11/2026 vuelve como «Explorar» («Browse»), entre Inicio y Listas: lleva a `/search` sin texto (todo el catálogo por popularidad con filtros), se ve con o sin sesión y marca `aria-current` en `/search`. Convive con la lupa, que sigue siendo la búsqueda por texto: la lupa a la derecha se despliega en un campo con sugerencias de títulos y personas, y Enter abre `/search` con el texto. En celular sigue la pestaña «Search» de la barra inferior. La página `/search` con el catálogo completo (grid + filtros + toggle Todo/Películas/Series; 14/10/2026, antes un panel overlay).
 - El chatbot se accede desde un FAB flotante presente en todas las pantallas.
 
 ---
@@ -94,7 +94,7 @@ desde el link "Buscar" en la navbar, que abre la página de búsqueda con grid, 
 - El modelo IMDb/MUBI: feed principal + búsqueda como acción separada.
 - La entidad `ProduccionAudiovisual` unifica películas y series con atributo `tipo`; la UI
   refleja esto ofreciendo un catálogo unificado con toggle en lugar de dos secciones duplicadas.
-- 3 items en navbar (vs. 5 del diseño original) = menos carga cognitiva.
+- 3 items en navbar (Inicio, Explorar, Listas; vs. 5 del diseño original) = menos carga cognitiva.
 
 **Nota**: El RF de navegación y los CU-008/010 en el doc 02 fueron actualizados para reflejar
 este modelo (Inicio, Buscar, Listas + avatar).
@@ -139,7 +139,7 @@ Todas las pantallas autenticadas comparten:
 └──────────────────────────────────────────────────────────┘
 ```
 
-- **Navbar**: en escritorio, 2 links (Inicio, Listas), la lupa de búsqueda y el avatar a la derecha, separados por 1,25 rem desde el 21/11/2026 (14/11/2026; antes «Buscar» era el tercer link). La lupa no aparece en `/search` ni por debajo de 768 px. En escritorio queda siempre visible (04/11/2026): transparente con la página arriba de todo, translúcida con desenfoque mientras tiene debajo la imagen del Inicio o de la ficha, y sólida después. En las páginas sin imagen, sólida apenas se desplaza. En celular se va con la página, porque abajo está la barra inferior.
+- **Navbar**: en escritorio, 3 links (Inicio, Explorar, Listas; «Listas» solo con sesión, «Explorar» siempre, 21/11/2026), la lupa de búsqueda y el avatar a la derecha, separados por 1,25 rem desde el 21/11/2026 (14/11/2026; antes «Buscar» era el tercer link). La lupa no aparece en `/search` ni por debajo de 768 px. En escritorio queda siempre visible (04/11/2026): transparente con la página arriba de todo, translúcida con desenfoque mientras tiene debajo la imagen del Inicio o de la ficha, y sólida después. En las páginas sin imagen, sólida apenas se desplaza. En celular se va con la página, porque abajo está la barra inferior.
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - Lupa click (o `/`) → campo con hasta 5 sugerencias; una persona lleva a `/search?person=…&role=…` con su chip, y Enter a `/search?q=…`.
@@ -151,7 +151,7 @@ Todas las pantallas autenticadas comparten:
   - **Tema**: solo oscuro. El degradé verde-celeste del logo se lee bien sobre `--bg`; el tema claro está descartado (18/10/2026). Si volviera, se cambia el fondo del bloque, nunca el logo.
   - **Cláusula 7** («Third-party content»): usa el mismo aviso y conserva su frase de responsabilidad.
 - **FAB**: fixed, bottom-right 32px, z-index superior al contenido.
-- **Barra inferior del celular** (`MobileTabs`, por debajo de 768 px, 04/11/2026): con sesión, Home, Search, Lists y Profile; sin sesión, Home, Search y Log in. Así Buscar se puede usar en celular con o sin cuenta. Sin sesión, el encabezado móvil muestra solo «Sign up». No aparece en las pantallas de acceso ni mientras se carga la cuenta.
+- **Barra inferior del celular** (`MobileTabs`, por debajo de 768 px, 04/11/2026): con sesión, Home, Browse, Lists y Profile; sin sesión, Home, Browse y Log in (la pestaña lleva a `/search`; su etiqueta es la clave `nav.main.browse`, igual que el enlace de escritorio, desde el 21/11/2026). Así Buscar se puede usar en celular con o sin cuenta. Sin sesión, el encabezado móvil muestra solo «Sign up». No aparece en las pantallas de acceso ni mientras se carga la cuenta.
 - **Contenedor y escala** (04/11/2026): todas las pantallas usan la utilidad `page-container` (tope de 85rem por debajo de 1440 px y 90rem desde ahí; margen de 1,25rem en celular, 2,5rem desde 768 px y `clamp(2.5rem, 3vw, 4rem)` desde 1440 px). La navbar, el contenido y el footer comparten el borde izquierdo. Desde 1440 px el `font-size` raíz crece con la pantalla: 16 px a 1440, unos 18 px a 1920 y un tope de 20,8 px desde 2560. Términos y Mis reseñas conservan su ancho de lectura.
 - **Tamaños en rem** (04/11/2026): textos, espacios, íconos y anchos se escriben en rem (`text-[0.9375rem]`, no `text-[15px]`), para que escalen con la raíz y respeten el tamaño de letra del navegador. Quedan en px los bordes finos (1 a 3 px), las sombras, los offsets de foco, los `sizes` de imágenes y el `rootMargin` (no acepta rem). Los breakpoints y los `matchMedia` van en rem, como los de Tailwind (`md` = 48rem, 1440 px = 90rem), para que todos se corran juntos si el usuario cambia el tamaño de letra del navegador.
 - **Columnas de pósters** (04/11/2026): `--cols` vale 4 desde 768 px, 5 desde 1024, 6 desde 1280 y 7 desde 1440. Las filas del Inicio muestran siempre tarjetas enteras y las flechas avanzan una página. Buscar y el detalle de lista usan las mismas columnas. En celular las filas se deslizan y las grillas tienen 2 columnas.
@@ -260,7 +260,7 @@ la lupa de la navbar (Enter o «See all results») o la pestaña de la barra inf
 
 ### Comportamiento
 
-- **Campo**: grande, con lupa y botón para borrar; acepta cualquier texto hasta 50 caracteres. La
+- **Campo** (21/11/2026): copia el estilo del buscador de la lupa de la navbar, en escritorio y en celular (píldora de 2,75 rem de alto, fondo `bg-raised`, borde `--field-border`, foco con borde `--fg-3` y anillo de 2 px, lupa a la izquierda, texto de 0,9375 rem, botón ✕ para borrar); las clases viven en `frontend/components/campo-busqueda.ts` y las usan ambos. Con lupa y botón para borrar; acepta cualquier texto hasta 50 caracteres. La
   búsqueda arranca sola 350 ms después de dejar de escribir. En escritorio toma el foco al abrir;
   en celular no, para que el teclado no tape los resultados.
 - **Sugerencias del campo** (14/11/2026): al escribir (desde 2 caracteres, 250 ms) se despliega bajo el campo la misma lista que la lupa de la navbar, con Personas y Títulos, sin «Ver todos los resultados». Elegir una persona pone su chip y vacía el campo; elegir un título abre su ficha; Enter sin opción activa sigue buscando el texto en los títulos; Escape cierra primero la lista.

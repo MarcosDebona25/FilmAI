@@ -1335,3 +1335,14 @@ Decidido por Marcos. La ficha mostraba los 20 primeros de un pool mezclado con p
 - **Diagnóstico con «The Avengers» (574) en la base de desarrollo** (739 títulos, 577 con vector `ready`): tiene vector `ready`; sus 20 vecinos están entre 0,161 y 0,326, todos por debajo de 0,40, así que son los 20 cercanos y TMDB no aportó. Los vecinos más cercanos son Infinity War y Endgame (0,16), pero después aparecen títulos poco relacionados (The Fifth Element, The Awakening, Matchbox the Movie) con distancias casi iguales. Dos causas: el catálogo local es chico (faltan Age of Ultron, Civil War, etc.) y, como hay 20 cercanos, el relleno de TMDB (que traería las películas del universo) nunca se pide. Con la mezcla se perdía además el orden. El umbral de 0,40 es holgado para este modelo, y el texto embebido (`construir_texto_canonico`: título, géneros, directores, reparto, keywords, sinopsis) no se tocó. Queda para otro issue decidir si bajar `DISTANCIA_MAXIMA` o dar prioridad a TMDB en la ficha.
 
 Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `openspec/specs/similar-titles/spec.md` y este archivo.
+
+### 21/11/2026 — «Explorar» en la navbar y campo de Buscar con el estilo de la lupa
+
+Decidido por Marcos. Desde el 14/11/2026 en escritorio `/search` solo se alcanzaba escribiendo en la lupa, aunque sin texto ya muestra todo por popularidad con filtros.
+
+- **Enlace «Explorar».** La navbar de escritorio suma «Explorar» («Browse», clave `nav.main.browse`) entre Inicio y Listas. Lleva a `/search` sin texto, se ve con o sin sesión (Listas sigue solo con sesión) y marca `aria-current="page"` en `/search`. Convive con la lupa, que sigue oculta en `/search`.
+- **Celular.** La pestaña inferior que ya llevaba a `/search` pasa a usar la misma clave `nav.main.browse`, así el enlace y la pestaña dicen lo mismo. `nav.main.search` queda para el título de la página, el pie y las migas.
+- **Campo de Buscar.** Copia el estilo del campo de la lupa (píldora de 2,75 rem, `bg-raised`, borde `--field-border`, foco con `--fg-3` y anillo, lupa, placeholder y ✕) en escritorio y celular. Las clases se extrajeron a `frontend/components/campo-busqueda.ts`, usado por `NavbarSearch` y `SearchView`. No cambia la lógica: Escape y «/» siguen igual. Antes era un campo grande (3,25 a 3,625 rem, tipografía de pantalla en escritorio).
+- **Textos.** Clave nueva `nav.main.browse` en `traducciones/claves-extra.csv` (es «Explorar», en «Browse»); catálogos regenerados.
+
+Archivos: `frontend/components/Navbar.tsx`, `MobileTabs.tsx`, `NavbarSearch.tsx`, `campo-busqueda.ts`, `features/SearchView.tsx`, `frontend/messages/*/common.json` y `common.d.json.ts`, `traducciones/claves-extra.csv`, `frontend/tests/errors-and-account-menu.test.tsx`, `search-view.test.tsx`, `frontend/e2e/*`, `docs/04_Lineamientos_UI.md` y este archivo.
