@@ -893,7 +893,9 @@ class EndpointIntegrationTest(SimpleTestCase):
         self.addCleanup(espera.stop)
 
     def _make_service(self, body=None):
-        body = body or {"results": [{"id": 550, "title": "Fight Club"}]}
+        body = body or {
+            "results": [{"id": 550, "title": "Fight Club", "poster_path": "/fc.jpg"}]
+        }
 
         def handler(request):
             return httpx.Response(200, json=body)

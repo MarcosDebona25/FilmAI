@@ -12,8 +12,18 @@ from catalogo.services.materialization import materializar_listado_en_segundo_pl
 
 TENDENCIAS = {
     "results": [
-        {"id": 550, "media_type": "movie", "title": "Fight Club"},
-        {"id": 1396, "media_type": "tv", "name": "Breaking Bad"},
+        {
+            "id": 550,
+            "media_type": "movie",
+            "title": "Fight Club",
+            "poster_path": "/fc.jpg",
+        },
+        {
+            "id": 1396,
+            "media_type": "tv",
+            "name": "Breaking Bad",
+            "poster_path": "/bb.jpg",
+        },
         {"id": 287, "media_type": "person", "name": "Brad Pitt"},
     ]
 }

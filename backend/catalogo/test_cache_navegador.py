@@ -9,7 +9,12 @@ from django.test import TestCase
 from catalogo.views import CACHE_NAVEGADOR_SEGUNDOS
 
 # Suficiente texto para superar el mínimo de 200 bytes de `gzip_page`.
-LISTADO = {"results": [{"id": i, "title": f"Película {i}"} for i in range(30)]}
+LISTADO = {
+    "results": [
+        {"id": i, "title": f"Película {i}", "poster_path": f"/{i}.jpg"}
+        for i in range(30)
+    ]
+}
 
 
 @patch("catalogo.views.materializar_listado_en_segundo_plano")
