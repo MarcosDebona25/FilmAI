@@ -160,7 +160,7 @@ export function Navbar() {
             );
           })}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-5">
           {/* En Buscar no va: la página tiene su propio campo grande, y dos
               campos con el mismo texto se pelearían Escape y «/». */}
           {pathname !== routes.search && <NavbarSearch />}
