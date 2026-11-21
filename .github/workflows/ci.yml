@@ -48,10 +48,58 @@ concurrency:
 
 jobs:
   # --------------------------------------------------------------------------
+  # Qué correr: en un PR, mira qué archivos cambió y salta lo que no le toca.
+  # En un push a `main` o `develop` corre todo, porque el CI es la única puerta.
+  # Es una regla conservadora: un archivo que no es ni de documentación ni de
+  # una sola mitad (contratos, traducciones, scripts, el propio workflow) hace
+  # correr las dos. Un job saltado cuenta como aprobado para el merge.
+  # --------------------------------------------------------------------------
+  cambios:
+    name: Qué cambió
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filtro.outputs.frontend }}
+      backend: ${{ steps.filtro.outputs.backend }}
+    steps:
+      - name: Descargar el código del repo
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Decidir qué jobs corren
+        id: filtro
+        env:
+          EVENTO: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENTO" != "pull_request" ]; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          frontend=false
+          backend=false
+          while IFS= read -r archivo; do
+            case "$archivo" in
+              docs/*|openspec/*|graphify-out/*|*.md) ;;       # solo documentación
+              frontend/*) frontend=true ;;
+              backend/*) backend=true ;;
+              *) frontend=true; backend=true ;;               # ante la duda, todo
+            esac
+          done < <(git diff --name-only "$BASE...$HEAD")
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "Corre frontend=$frontend y backend=$backend"
+
+  # --------------------------------------------------------------------------
   # Frontend: ESLint + TypeScript + Prettier + catálogo + build
   # --------------------------------------------------------------------------
   frontend:
     name: Frontend (lint + types + format + build)
+    needs: cambios
+    if: needs.cambios.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -99,6 +147,8 @@ jobs:
   # tarda menos. `fail-fast: false` deja terminar la otra mitad si una falla.
   e2e:
     name: Perfil y reseñas (Playwright ${{ matrix.shard }}/2)
+    needs: cambios
+    if: needs.cambios.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -145,6 +195,8 @@ jobs:
   # --------------------------------------------------------------------------
   backend:
     name: Backend (ruff + tests)
+    needs: cambios
+    if: needs.cambios.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     services:
