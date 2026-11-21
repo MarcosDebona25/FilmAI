@@ -1278,6 +1278,26 @@ Archivos: `backend/chatbot/eventos.py`, `docs/05_Plan_de_Desarrollo.md` y este a
 
 Archivos: `docs/05_Plan_de_Desarrollo.md` y este archivo.
 
+### 21/11/2026 — Suite del backend: de ~9 min a ~2 min (tests aislados del broker y del backoff)
+
+Se implementaron los puntos 1, 2, 3 y 5 del pendiente 13 (diagnóstico del 18/11/2026, esta misma sección). No se tocó el código de producción: los tests dejan de llegar al broker y de dormir, nada más.
+
+- **Precalentado sin broker.** `guardar_turno()` llama a `_precalentar_tarjetas()`, que encola la materialización con `materializar_produccion.delay()`. Cuando el broker no responde, `.delay()` no falla rápido: medido en un compose sin Redis, tarda **19,6 s** en lanzar `OperationalError` (`Name or service not known`). El `except` de `_precalentar_tarjetas` lo registra y el turno se guarda igual, así que cada test con tarjetas pagaba esa espera. Se anula el encolado con `patch("chatbot.servicio.materializar_listado_en_segundo_plano")` en `BaseSSE` y `CorteDeConexionTests` (`chatbot/tests_sse.py`), `GuardarTurnoTests` (`chatbot/tests_servicio.py`) y `FechaDeRecomendadosTests` (`chatbot/tests_recorte.py`); el encolado en sí lo sigue probando `PrecalentarTarjetasTests`, que ya lo mockeaba. En local, con el Redis de Docker levantado, esos tests sí encolaban tareas reales (el broker de desarrollo responde en 0,16 s); ahora tampoco.
+- **Backoff sin dormir.** `catalogo.tests.EndpointIntegrationTest` anula `catalogo.client.time.sleep` en `setUp`: los casos de 429 (Too Many Requests), 502 (Bad Gateway) y 503 (Service Unavailable) ya no esperan el backoff real (1 + 2 + 4 s) y el reintento se sigue probando. Queda un test de otra clase (`TMDBClientTest.test_http_errors_map_to_domain_exceptions`) que todavía duerme 7 s; no estaba en el alcance de este cambio.
+- **`--durations 15` en el CI.** El paso «Correr tests (Django)» de `.github/workflows/ci.yml` lista los 15 tests más lentos en cada corrida. La regresión del #203 pasó 5 días sin que nadie la viera; con esto aparece en el PR que la trae.
+- **En local, solo lo que se toca.** El README documenta `python manage.py test <app>` y `npx vitest --changed` mientras se trabaja, y la suite completa antes del PR (sección 5 de `AGENTS.md`).
+
+**Medición** (`python manage.py test --durations 15` dentro de Docker, proyecto de compose propio y `RUN_MIGRATIONS=false`, sin Redis en la red, que es lo que hace lento al broker):
+
+| Corrida              | Tests | Total   | 15 más lentos |
+| -------------------- | ----- | ------- | ------------- |
+| Antes (21/11, 17:13) | 2039  | 549,7 s | 287,9 s       |
+| Después (21/11)      | 2039  | 126,1 s | 22,1 s        |
+
+La suma de los 15 más lentos pasa de 287,9 s a 22,1 s; el test más lento ya no es un turno con tarjetas (19,1 s) sino los 7 s del caso de `TMDBClientTest` que queda. Los 21 tests de `chatbot` que costaban ~19 s corren ahora en menos de 0,7 s. Queda pendiente el punto 4 (filtros por ruta en los PR) y el e2e `access-screens`, fuera de este cambio.
+
+Archivos: `backend/chatbot/{tests_sse,tests_servicio,tests_recorte}.py`, `backend/catalogo/tests.py`, `.github/workflows/ci.yml`, `README.md`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
 ### 21/11/2026 — Tarjeta de lista: nombre en una línea con la manija bajo el ⋯ (diseño 5E, #232)
 
 Elegido por Marcos entre las variantes 5A–5F del canvas, partiendo de 4F.

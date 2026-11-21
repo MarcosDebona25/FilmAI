@@ -260,6 +260,10 @@ cuenta. Por eso el servicio `celery-worker` corre envuelto en
 alguna vez el auto-reload no se dispara, reiniciá el worker a mano con
 `docker compose restart celery-worker`.
 
+### Tests
+
+Mientras se trabaja alcanza con correr solo lo que se toca: `docker compose exec backend python manage.py test <app>` para una app del backend y `npx vitest --changed` dentro de `frontend/` para los tests que dependen de los archivos modificados. Antes de abrir el PR se corre la suite completa —`docker compose exec backend python manage.py test` y `npm run test:unit`—, porque el CI no filtra por ruta y es la única puerta automática. En el backend, `--durations 15` lista los 15 tests más lentos de la corrida.
+
 ### Configuración inicial (solo la primera vez)
 
 1. **Crear el `.env`** desde la plantilla y completar las variables obligatorias:

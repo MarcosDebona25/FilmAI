@@ -39,6 +39,12 @@ class GuardarTurnoTests(TestCase):
         # El chat lo crea el signal al crear el usuario (doc 03): no hay que
         # crearlo, y crear otro chocaría con el único por usuario.
         self.chat = UsuarioFactory().chats.get()
+        # Sin broker, el `.delay()` del precalentado espera ~19 s por cada turno
+        # con tarjetas (ver `tests_sse.parar_precalentado`). Acá solo se prueba
+        # el guardado; el encolado tiene su clase, `PrecalentarTarjetasTests`.
+        precalentado = patch("chatbot.servicio.materializar_listado_en_segundo_plano")
+        precalentado.start()
+        self.addCleanup(precalentado.stop)
 
     def test_guarda_la_pregunta_y_la_respuesta(self):
         tarjetas = [tarjeta(17431), tarjeta(348, "Alien", anio=1979)]
