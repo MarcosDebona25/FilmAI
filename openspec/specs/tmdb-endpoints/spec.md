@@ -335,6 +335,24 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 - WHEN it is searched
 - THEN all matches are returned
 
+### Requirement: Titles without a poster stay out of discovery (21/11/2026)
+
+Discovery lists MUST leave out the titles whose `poster_path` is `null` or empty: `trending/` and `now-playing/` (people in `trending/` with `media_type` `person` are not titles and stay), `discover/`, `browse/` without `q`, and the «Recomendado» row. The rule lives in one place (`tiene_poster` and `con_poster` in `services/browse.py`). It MUST NOT apply to `search/` or to `browse/` with `q` (or with `persona`): a title without a poster is still found by name. It MUST NOT change what is materialized or stored: those titles stay in the database and their title page opens. The «More like» and list suggestions already required a poster (D-5).
+
+The filter MUST NOT refill the page and MUST NOT change `total_pages` or `total_results`: TMDB does not say how many of the rest lack a poster, so a page may have a few items fewer than 20 (17 of 948 titles in the catalog measured on 21/11/2026) and the next page is requested as usual.
+
+#### Scenario: Discovery without text
+
+- GIVEN TMDB returns a title with a poster and another without
+- WHEN `browse/?tipo=movie` is requested
+- THEN only the one with a poster is in `results`
+
+#### Scenario: Search by name
+
+- GIVEN the same two titles
+- WHEN `browse/?q=...` or `search/?query=...` is requested
+- THEN both are in `results`
+
 ### Requirement: Browser caching and compression (22/10/2026)
 
 Every `200 (OK)` response of a public catalog view (`CatalogoBaseView`) MUST carry `Cache-Control: public, max-age=300` and MUST vary on `Accept-Language` (the only input besides the URL). Error responses MUST NOT carry `Cache-Control`. These views MUST compress the body with gzip when the client accepts it; compression stays scoped to them (no global `GZipMiddleware`) because they hold no cookies or CSRF tokens. `recommended/` is per user and is not covered.
