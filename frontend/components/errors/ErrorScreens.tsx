@@ -123,7 +123,7 @@ export function NotFoundScreen() {
       </Link>
       <Link href={routes.search} className={`${secondaryButtonClass} ${actionClass} gap-2`}>
         <Search aria-hidden="true" className="size-[1.125rem]" />
-        {nav("search")}
+        {nav("browse")}
       </Link>
     </ErrorLayout>
   );

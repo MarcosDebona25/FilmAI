@@ -242,7 +242,7 @@ describe("ficha con sesión", () => {
 
     const miga = screen.getByRole("navigation", { name: "Breadcrumb" });
     await waitFor(() =>
-      expect(within(miga).getByRole("link", { name: "Search" })).toHaveAttribute(
+      expect(within(miga).getByRole("link", { name: "Browse" })).toHaveAttribute(
         "href",
         "/search?q=interstellar"
       )

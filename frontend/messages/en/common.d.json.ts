@@ -22,7 +22,8 @@ declare const messages: {
       "backLanding": "Back to the landing page",
       "termsUpdated": "Last updated: {date}",
       "termsOnPage": "On this page",
-      "termsQuestions": "Questions? Write to us at {email}."
+      "termsQuestions": "Questions? Write to us at {email}.",
+      "browse": "Browse"
     },
     "account": {
       "userMenuLabel": "{name}’s menu",

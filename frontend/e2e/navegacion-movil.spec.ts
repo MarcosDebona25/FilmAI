@@ -103,9 +103,9 @@ for (const viewport of celulares) {
       await expect(encabezado.getByRole("link", { name: en.nav.account.logIn })).toBeHidden();
       await sinDesborde(page);
 
-      await nav.getByRole("link", { name: en.nav.main.search }).click();
+      await nav.getByRole("link", { name: en.nav.main.browse }).click();
       await expect(page).toHaveURL(/\/search$/);
-      await expect(nav.getByRole("link", { name: en.nav.main.search })).toHaveAttribute(
+      await expect(nav.getByRole("link", { name: en.nav.main.browse })).toHaveAttribute(
         "aria-current",
         "page"
       );

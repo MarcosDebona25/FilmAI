@@ -1344,3 +1344,27 @@ Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`,
 - **Tests.** `test_logo_es_el_ticket_de_la_navbar_servido_por_el_frontend` en `backend/filmai/test_servicio_correos.py`.
 
 Archivos: `backend/templates/correos/base.html`, `backend/filmai/correos/servicio.py`, `backend/filmai/test_servicio_correos.py`, `frontend/public/correos/ticket.png`, `traducciones/revision-correos/` (ocho `.eml` e `index.html`), `openspec/specs/emails/spec.md`, `docs/05_Plan_de_Desarrollo.md`.
+
+### 21/11/2026 — «Explorar» en la navbar y campo de Buscar con el estilo de la lupa
+
+Decidido por Marcos. Desde el 14/11/2026 en escritorio `/search` solo se alcanzaba escribiendo en la lupa, aunque sin texto ya muestra todo por popularidad con filtros.
+
+- **Enlace «Explorar».** La navbar de escritorio suma «Explorar» («Browse», clave `nav.main.browse`) entre Inicio y Listas. Lleva a `/search` sin texto, se ve con o sin sesión (Listas sigue solo con sesión) y marca `aria-current="page"` en `/search`. Convive con la lupa, que sigue oculta en `/search`.
+- **Celular.** La pestaña inferior que ya llevaba a `/search` pasa a usar la misma clave `nav.main.browse`, así el enlace y la pestaña dicen lo mismo. `nav.main.search` queda para el título de la página, el pie y las migas.
+- **Campo de Buscar.** Copia el estilo del campo de la lupa (píldora de 2,75 rem, `bg-raised`, borde `--field-border`, foco con `--fg-3` y anillo, lupa, placeholder y ✕) en escritorio y celular. Las clases se extrajeron a `frontend/components/campo-busqueda.ts`, usado por `NavbarSearch` y `SearchView`. No cambia la lógica: Escape y «/» siguen igual. Antes era un campo grande (3,25 a 3,625 rem, tipografía de pantalla en escritorio).
+- **Textos.** Clave nueva `nav.main.browse` en `traducciones/claves-extra.csv` (es «Explorar», en «Browse»); catálogos regenerados.
+
+Archivos: `frontend/components/Navbar.tsx`, `MobileTabs.tsx`, `NavbarSearch.tsx`, `campo-busqueda.ts`, `features/SearchView.tsx`, `frontend/messages/*/common.json` y `common.d.json.ts`, `traducciones/claves-extra.csv`, `frontend/tests/errors-and-account-menu.test.tsx`, `search-view.test.tsx`, `frontend/e2e/*`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+- **Título de la página (21/11/2026).** El h1, el título de la pestaña, la miga de la ficha, el enlace del pie y el de la pantalla 404 dicen «Browse» / «Explorar», igual que la navbar y la pestaña del celular. La clave `nav.main.search` queda sin uso en pantalla. Archivos: `frontend/app/search/page.tsx`, `SearchView.tsx`, `TitleView.tsx`, `Footer.tsx`, `ErrorScreens.tsx` y sus tests.
+
+### 21/11/2026 — Los títulos sin póster quedan fuera del descubrimiento
+
+Decidido por Marcos (opción C). Medido ese día: 17 de 948 títulos de la base no tienen póster, y su tarjeta se veía rota.
+
+- **Qué se decidió.** Siguen en la base y se encuentran por nombre (búsqueda con texto, `search/`) y por su ficha. No aparecen donde nadie los pidió: Home (`trending/`, `now-playing/`, `discover/`, «Recomendado»), Buscar sin texto y, desde antes, «More like» y las sugerencias de lista (D-5). `seed_catalogo` y lo que se materializa no cambian.
+- **Dónde.** Una función, `tiene_poster`, y un helper, `con_poster`, en `services/browse.py`. Las vistas `Trending`, `NowPlaying` y `Discover` filtran la respuesta después de encolar la materialización (así lo materializado no cambia); `_lado` (Buscar sin texto) y `_de_un_tipo` («Recomendado») filtran al armar la lista. Las personas de `trending/` (`media_type` `person`) no son títulos y pasan. `search/`, Buscar con texto o con `persona` y las sugerencias de la navbar no filtran.
+- **Paginación.** Los listados son páginas de TMDB, así que no se rellena: una página puede traer 1 o 2 ítems menos de 20 y `total_pages` y `total_results` siguen siendo los de TMDB. Se descartó rellenar pidiendo la página siguiente (más llamadas a TMDB, páginas que se solapan y desorden con «Todo», que alterna dos tipos) por un 1,8 % de títulos. `con_poster` devuelve una copia para no tocar el listado que guarda la caché.
+- **Pruebas.** `catalogo/tests_sin_poster.py` (sin texto se descartan; con texto y en `search/` se encuentran; totales intactos; «Recomendado»). Los fixtures de `tests_browse.py`, `tests.py`, `test_cache_navegador.py` y `test_materializar_listados.py` ahora traen `poster_path`.
+
+Archivos: `backend/catalogo/services/browse.py`, `backend/catalogo/services/recomendado.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_sin_poster.py`, los tests con fixtures ajustados, `openspec/specs/tmdb-endpoints/spec.md` y este archivo.
