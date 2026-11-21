@@ -1284,3 +1284,14 @@ Archivos: `docs/05_Plan_de_Desarrollo.md` y este archivo.
 - **Alcance.** El gap es del contenedor, así que en escritorio también separa más «Log in» de «Sign up» cuando no hay sesión. La lupa y el avatar no se ven por debajo de 768 px (en celular la lupa está oculta), por lo que ahí no cambia nada. La lupa desplegada crece hacia la izquierda sobre su propio lugar, así que el cambio no la afecta.
 
 Archivos: `frontend/components/Navbar.tsx`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+### 21/11/2026 — «More like» de la ficha: relevancia estricta, sin mezcla (issue #231)
+
+Decidido por Marcos. La ficha mostraba los 20 primeros de un pool mezclado con pesos (`mezclar_con_pesos`), así que un título muy parecido podía quedar fuera de los 20 mientras entraban otros más lejanos.
+
+- **Ficha.** `armar_pool` recibe `estricto` (por defecto `False`). La ficha lo pasa en `True` y el pool queda en el orden en que se arma: locales cercanos (distancia ≤ 0,40) por distancia, relleno de TMDB, locales lejanos por distancia, hasta 60; la vista muestra los 20 primeros. Sin piso de relevancia: si hay pocos cercanos se completa con TMDB y después con lejanos, como antes.
+- **Listas.** No cambian: siguen con la mezcla con pesos y «Show more suggestions».
+- **Caché.** La clave de la ficha pasó a `similares:titulo:{tipo}:{id}:{idioma}:{modelo}:estricto`. Con el sufijo no se sirve un pool mezclado guardado por la versión anterior (dura hasta 24 h); los viejos expiran solos.
+- **Diagnóstico con «The Avengers» (574) en la base de desarrollo** (739 títulos, 577 con vector `ready`): tiene vector `ready`; sus 20 vecinos están entre 0,161 y 0,326, todos por debajo de 0,40, así que son los 20 cercanos y TMDB no aportó. Los vecinos más cercanos son Infinity War y Endgame (0,16), pero después aparecen títulos poco relacionados (The Fifth Element, The Awakening, Matchbox the Movie) con distancias casi iguales. Dos causas: el catálogo local es chico (faltan Age of Ultron, Civil War, etc.) y, como hay 20 cercanos, el relleno de TMDB (que traería las películas del universo) nunca se pide. Con la mezcla se perdía además el orden. El umbral de 0,40 es holgado para este modelo, y el texto embebido (`construir_texto_canonico`: título, géneros, directores, reparto, keywords, sinopsis) no se tocó. Queda para otro issue decidir si bajar `DISTANCIA_MAXIMA` o dar prioridad a TMDB en la ficha.
+
+Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `openspec/specs/similar-titles/spec.md` y este archivo.
