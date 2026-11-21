@@ -1290,6 +1290,13 @@ Elegido por Marcos entre las variantes 5A–5F del canvas, partiendo de 4F.
 
 Archivos: `frontend/components/features/lists/ListCard.tsx`, `frontend/tests/lists-view.test.tsx`, `frontend/e2e/listas.spec.ts`, `docs/04_Lineamientos_UI.md` y este archivo.
 
+### 21/11/2026 — Separación entre la lupa y el avatar en la navbar
+
+- **Cambio.** El contenedor de la derecha de la navbar (lupa de búsqueda, avatar o «Log in»/«Sign up») pasa de `gap-2` (0,5 rem) a `gap-5` (1,25 rem, `calc(var(--spacing) * 5)`, 20 px). Lo probó Marcos en las herramientas del navegador y lo dejó como valor definitivo.
+- **Alcance.** El gap es del contenedor, así que en escritorio también separa más «Log in» de «Sign up» cuando no hay sesión. La lupa y el avatar no se ven por debajo de 768 px (en celular la lupa está oculta), por lo que ahí no cambia nada. La lupa desplegada crece hacia la izquierda sobre su propio lugar, así que el cambio no la afecta.
+
+Archivos: `frontend/components/Navbar.tsx`, `docs/04_Lineamientos_UI.md` y este archivo.
+
 ### 21/11/2026 — «More like» de la ficha: relevancia estricta, sin mezcla (issue #231)
 
 Decidido por Marcos. La ficha mostraba los 20 primeros de un pool mezclado con pesos (`mezclar_con_pesos`), así que un título muy parecido podía quedar fuera de los 20 mientras entraban otros más lejanos.

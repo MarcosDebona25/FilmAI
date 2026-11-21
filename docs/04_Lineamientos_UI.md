@@ -139,7 +139,7 @@ Todas las pantallas autenticadas comparten:
 └──────────────────────────────────────────────────────────┘
 ```
 
-- **Navbar**: en escritorio, 2 links (Inicio, Listas), la lupa de búsqueda y el avatar a la derecha (14/11/2026; antes «Buscar» era el tercer link). La lupa no aparece en `/search` ni por debajo de 768 px. En escritorio queda siempre visible (04/11/2026): transparente con la página arriba de todo, translúcida con desenfoque mientras tiene debajo la imagen del Inicio o de la ficha, y sólida después. En las páginas sin imagen, sólida apenas se desplaza. En celular se va con la página, porque abajo está la barra inferior.
+- **Navbar**: en escritorio, 2 links (Inicio, Listas), la lupa de búsqueda y el avatar a la derecha, separados por 1,25 rem desde el 21/11/2026 (14/11/2026; antes «Buscar» era el tercer link). La lupa no aparece en `/search` ni por debajo de 768 px. En escritorio queda siempre visible (04/11/2026): transparente con la página arriba de todo, translúcida con desenfoque mientras tiene debajo la imagen del Inicio o de la ficha, y sólida después. En las páginas sin imagen, sólida apenas se desplaza. En celular se va con la página, porque abajo está la barra inferior.
   - Link activo resaltado con color de acento.
   - Avatar click → dropdown: "Mi perfil", "Mis reseñas", "Preferencias", "Cerrar sesión".
   - Lupa click (o `/`) → campo con hasta 5 sugerencias; una persona lleva a `/search?person=…&role=…` con su chip, y Enter a `/search?q=…`.
