@@ -138,6 +138,47 @@ describe("Listas: vista general", () => {
     expect(CLASE_GRILLA_LISTAS).not.toContain("auto-fill");
   });
 
+  it("el nombre va en una línea con «…» y el title trae el nombre completo; el conteo no se parte", async () => {
+    // jsdom no calcula estilos: se comprueba que las clases pedidas estén
+    // (la medida real se verifica con capturas y con el e2e).
+    render(<ListsView />, { locale: "en" });
+    await screen.findByText("Maratón");
+
+    const enlace = screen.getByRole("link", { name: "Maratón" });
+    expect(enlace).toHaveAttribute("title", "Maratón");
+    expect(enlace).toHaveClass("truncate", "min-w-0");
+    const conteo = screen.getByText("7 items · 5 movies · 2 TV shows");
+    expect(conteo).toHaveClass("whitespace-nowrap");
+    // El nombre de una predeterminada también lleva title (el traducido).
+    expect(screen.getByRole("link", { name: "Watchlist" })).toHaveAttribute("title", "Watchlist");
+  });
+
+  it("la manija es solo de las personalizadas y solo de escritorio; va apilada bajo el ⋯", async () => {
+    render(<ListsView />, { locale: "en" });
+    await screen.findByText("Maratón");
+
+    const personalizada = screen
+      .getByRole("heading", { level: 2, name: "Maratón" })
+      .closest("article")!;
+    const manija = within(personalizada).getByRole("button", {
+      name: en.common.lists.reorderLabel,
+    });
+    // `hidden md:grid`: oculta en celular, visible desde md; sigue en el DOM
+    // (y en el orden de tabulación) para el teclado.
+    expect(manija).toHaveClass("hidden", "md:grid", "size-11");
+    // Apilada bajo el ⋯: mismo borde derecho, arranca donde termina el menú.
+    const menu = within(personalizada).getByRole("button", { name: /^Actions for the list/ });
+    expect(menu.parentElement).toHaveClass("absolute", "md:-right-4");
+    expect(manija).toHaveClass("absolute", "-right-4");
+
+    // La predeterminada no tiene manija ni ⋯: solo la insignia «Default».
+    const predeterminada = screen
+      .getByRole("heading", { level: 2, name: "Watchlist" })
+      .closest("article")!;
+    expect(within(predeterminada).queryByRole("button")).toBeNull();
+    expect(within(predeterminada).getByText(en.common.lists.defaultBadge)).toBeInTheDocument();
+  });
+
   it("la tarjeta apila hasta 4 posters en escritorio y 3 en celular; «N more» cuenta lo que queda", async () => {
     render(<ListsView />, { locale: "en" });
     await screen.findByText("Maratón");
