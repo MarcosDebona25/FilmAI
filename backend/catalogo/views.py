@@ -14,7 +14,13 @@ from catalogo.models import ID_TMDB_MAXIMO, ProduccionAudiovisual
 from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services import similares
 from catalogo.services.adapter import tmdb_a_dominio
-from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_todo
+from catalogo.services.browse import (
+    NOTAS,
+    anio_actual,
+    con_poster,
+    explorar,
+    generos_de_todo,
+)
 from catalogo.services.creditos import creditos
 from catalogo.services.embeddings import MODEL_VERSION
 from catalogo.services.fallback import servicio_localizado
@@ -211,14 +217,14 @@ class TrendingView(CatalogoBaseView):
         _materializar_listado_sin_interrumpir(
             data, media_type if media_type in ("movie", "tv") else None
         )
-        return Response(data)
+        return Response(con_poster(data))
 
 
 class NowPlayingView(CatalogoBaseView):
     def get(self, request):
         data = self._service(request).get_now_playing(self._page(request))
         _materializar_listado_sin_interrumpir(data, "movie")
-        return Response(data)
+        return Response(con_poster(data))
 
 
 class DiscoverView(CatalogoBaseView):
@@ -237,7 +243,7 @@ class DiscoverView(CatalogoBaseView):
             tipo, genero, anio, min_rating, self._page(request), min_votos=min_votos
         )
         _materializar_listado_sin_interrumpir(data, tipo)
-        return Response(data)
+        return Response(con_poster(data))
 
 
 class SearchView(CatalogoBaseView):

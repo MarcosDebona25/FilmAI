@@ -57,7 +57,12 @@ class TMDBFalso:
                 {"genero": genero, "anio": anio, "min_rating": min_rating, **extra},
             )
         )
-        return copy.deepcopy(DATOS[f"discover_{tipo}_1"])
+        datos = copy.deepcopy(DATOS[f"discover_{tipo}_1"])
+        # Las capturas no traen `poster_path` y sin póster no entra al
+        # descubrimiento (21/11/2026): se les pone uno.
+        for item in datos["results"]:
+            item.setdefault("poster_path", f"/{item['id']}.jpg")
+        return datos
 
     def get_genres(self, tipo):
         return {"genres": copy.deepcopy(DATOS["genres"][tipo])}
