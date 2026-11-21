@@ -354,7 +354,7 @@ export function SearchView() {
       className="page-container flex flex-col gap-4 pt-5 pb-[7.5rem] md:gap-7 md:pt-6 md:pb-20"
     >
       <h1 className="mb-[0.9375rem] font-display text-[2.75rem] leading-none md:sr-only">
-        {t("nav.main.search")}
+        {t("nav.main.browse")}
       </h1>
 
       <search aria-label={t("search.input.label")} className="flex flex-col gap-4 md:gap-7">

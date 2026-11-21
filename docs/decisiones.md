@@ -1346,3 +1346,5 @@ Decidido por Marcos. Desde el 14/11/2026 en escritorio `/search` solo se alcanza
 - **Textos.** Clave nueva `nav.main.browse` en `traducciones/claves-extra.csv` (es «Explorar», en «Browse»); catálogos regenerados.
 
 Archivos: `frontend/components/Navbar.tsx`, `MobileTabs.tsx`, `NavbarSearch.tsx`, `campo-busqueda.ts`, `features/SearchView.tsx`, `frontend/messages/*/common.json` y `common.d.json.ts`, `traducciones/claves-extra.csv`, `frontend/tests/errors-and-account-menu.test.tsx`, `search-view.test.tsx`, `frontend/e2e/*`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+- **Título de la página (21/11/2026).** El h1, el título de la pestaña, la miga de la ficha, el enlace del pie y el de la pantalla 404 dicen «Browse» / «Explorar», igual que la navbar y la pestaña del celular. La clave `nav.main.search` queda sin uso en pantalla. Archivos: `frontend/app/search/page.tsx`, `SearchView.tsx`, `TitleView.tsx`, `Footer.tsx`, `ErrorScreens.tsx` y sus tests.

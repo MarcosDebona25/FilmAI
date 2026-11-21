@@ -74,7 +74,7 @@ describe("pantalla 404", () => {
       "href",
       routes.explore
     );
-    expect(screen.getByRole("link", { name: en.nav.main.search })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: en.nav.main.browse })).toHaveAttribute(
       "href",
       routes.search
     );

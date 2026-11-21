@@ -203,7 +203,7 @@ export function TitleView({ tipo, id }: { tipo: MediaType; id: number }) {
   const ficha = detalle.data ? normalizarFicha(detalle.data, tipo) : null;
   const miga = [
     ...(origen.tipo === "search"
-      ? [{ label: t("nav.main.search"), href: vueltaBusqueda }]
+      ? [{ label: t("nav.main.browse"), href: vueltaBusqueda }]
       : origen.tipo === "reviews"
         ? [
             { label: t("nav.main.profileShort"), href: routes.profile },

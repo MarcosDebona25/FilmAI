@@ -41,7 +41,7 @@ for (const viewport of viewports) {
         page.getByRole("main").getByRole("link", { name: es.nav.main.backHome })
       ).toHaveAttribute("href", "/home");
       await expect(
-        page.getByRole("main").getByRole("link", { name: es.nav.main.search })
+        page.getByRole("main").getByRole("link", { name: es.nav.main.browse })
       ).toHaveAttribute("href", "/search");
       await sinDesborde(page);
     });
