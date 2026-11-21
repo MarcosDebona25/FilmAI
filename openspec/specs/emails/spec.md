@@ -164,6 +164,8 @@ verification in Gmail/Outlook/another real email client.
 
 The shared `correos/base.html` follows the four email artboards of the design
 canvas: dark card (no top accent bar since 06/11/2026, issue #175), ticket mark
+(the navbar's `TicketMark`, served as `/correos/ticket.png` from `FRONTEND_URL`
+since 21/11/2026, because mail clients do not render inline SVG)
 and `FilmAI` wordmark, 40px
 display title, primary yellow button (secondary outlined button for
 password-updated), copyable link row and a divider before the warning and

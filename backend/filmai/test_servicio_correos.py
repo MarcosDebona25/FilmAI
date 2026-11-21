@@ -37,6 +37,20 @@ class ServicioCorreosTests(SimpleTestCase):
                 self.assertIn('lang="es"', html)
                 self.assertIn("Correo Servicio", html)
 
+    def test_logo_es_el_ticket_de_la_navbar_servido_por_el_frontend(self):
+        """El logo es la imagen `/correos/ticket.png` del frontend, no un glifo de texto.
+
+        Los clientes de correo (Gmail entre ellos) no dibujan SVG en línea: la
+        marca sale como PNG desde `FRONTEND_URL`, con el mismo trazado de `TicketMark`.
+        """
+        with self.settings(FRONTEND_URL="https://filmai.test/"):
+            for caso in sorted(CASOS):
+                with self.subTest(caso=caso):
+                    enviar_correo(caso, "correo@example.com", self.contexto, "es")
+                    html = mail.outbox[-1].alternatives[0][0]
+                    self.assertIn('src="https://filmai.test/correos/ticket.png"', html)
+                    self.assertNotIn("&#9733;", html)
+
     def test_vigencia_sale_de_la_configuracion(self):
         """Cambiar el ajuste cambia el texto, con singular y plural correctos."""
         casos = (
@@ -77,7 +91,8 @@ class ServicioCorreosTests(SimpleTestCase):
                     enviar_correo(caso, "correo@example.com", self.contexto, idioma)
                     html = mail.outbox[-1].alternatives[0][0]
                     self.assertIn("background-color: #15151f", html)
-                    self.assertIn("background-color: #f5c518", html)
+                    # El amarillo de la marca viene del PNG del ticket, no de un fondo CSS.
+                    self.assertIn("/correos/ticket.png", html)
                     self.assertIn("<h1", html)
                     self.assertIn("FilmAI", html)
                     self.assertNotIn("#e67e22", html)

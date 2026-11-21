@@ -1,6 +1,6 @@
 # Revisión de correos
 
-Ocho mensajes de ejemplo: cuatro casos en inglés y español. Se generaron con el servicio real y el transporte en memoria; no se enviaron al exterior. Los enlaces son muestras sin tokens válidos.
+Ocho mensajes de ejemplo: cuatro casos en inglés y español. Se generaron con el servicio real y el transporte en memoria; no se enviaron al exterior. Los enlaces son muestras sin tokens válidos. El logo (el ticket de la navbar) va incrustado como `data:` para verse sin servidor; en los correos reales sale de `FRONTEND_URL/correos/ticket.png`.
 
 Abrí `index.html` para comparar HTML y texto plano. Abrí los archivos `.eml` en un cliente de correo para revisar allí asunto, contenido, enlaces y ancho móvil/escritorio. Registrá cliente, versión y resultado antes de cerrar la aceptación manual de OT-90.
 
