@@ -103,6 +103,11 @@ favour the closest, using a seed derived from the cache key, so the same key
 always gives the same order. Pages MUST be slices of 10 of the pool after
 removing the per-user exclusions.
 
+The title page is the exception: it MUST NOT shuffle. Its pool keeps strict
+relevance order (21/11/2026): local candidates under the distance limit by
+distance, then the TMDB fill, then the farther local ones by distance. The
+list suggestions keep the weighted shuffle.
+
 #### Scenario: Show more
 
 - GIVEN a pool of 60 and a user with none of them in «Vistas»
@@ -113,7 +118,9 @@ removing the per-user exclusions.
 
 `GET /api/catalogo/{movie|tv}/{id_tmdb}/similar/` MUST answer with and without
 a session, with the `catalogo` throttle, and return up to 20 results. The pool
-MUST be cached per title, language and model, and MUST NOT depend on the user.
+MUST be cached per title, language and model, under a key that carries the
+strict mode (`similares:titulo:{tipo}:{id}:{idioma}:{modelo}:estricto`) so a
+shuffled pool cached before is never served, and MUST NOT depend on the user.
 With a session, the user's «Vistas» MUST be removed after the cache and the
 answer MUST be `Cache-Control: private`; without one, nothing is removed and
 the answer is `public, max-age=300` with `Vary: Accept-Language`. An expired
@@ -121,6 +128,12 @@ or invalid session cookie MUST be treated as no session, never as
 401 (Unauthorized). A title that
 is not in the local catalog or has no vector MUST get TMDB results only, with
 a 10-minute cache.
+
+#### Scenario: Strict order on the title page
+
+- GIVEN a title with 25 close local neighbours
+- WHEN the title page is asked for twice, or from another cache key seed
+- THEN the first 20 neighbours come by exact distance, always in that order
 
 #### Scenario: Anonymous visitor
 
