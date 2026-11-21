@@ -1,7 +1,7 @@
-# Graph Report - FilmAI  (2026-11-19)
+# Graph Report - feat-lista-nombre-canvas  (2026-11-21)
 
 ## Corpus Check
-- 827 files · ~818,527 words
+- 826 files · ~819,641 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bfe37ae2`
+- Built from commit: `98ce5f81`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1657,9 +1657,9 @@ Nodes (6): django(), RAIZ, sesionDe(), SUFIJO, viewports, ref_node_child_process
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AppConfig` connect `register/page.tsx` to `django_apps`, `signals.py`?**
-  _High betweenness centrality (0.227) - this node is a cross-community bridge._
+  _High betweenness centrality (0.220) - this node is a cross-community bridge._
 - **Why does `AppLocale` connect `register/page.tsx` to `api.ts`, `ListDetailView.tsx`, `format.ts`, `vitest`, `terms/page.tsx`, `@playwright/test`?**
-  _High betweenness centrality (0.199) - this node is a cross-community bridge._
+  _High betweenness centrality (0.192) - this node is a cross-community bridge._
 - **Why does `UsuarioFactory` connect `UsuarioFactory` to `test_seguridad_pendientes.py`, `ClaveDeConfirmacionEnLogsTests`, `IdiomaDelDestinatarioTests`, `TipoProduccion`, `tests_tools.py`, `listas/views.py`, `_Base`, `tests_sse.py`, `recortar`, `SeedSoloResenasTests`, `tests_reviews.py`, `CalificarIdInexistenteTests`, `.test_unicidad_en_bd_cubre_escrituras_concurrentes`, `.test_username_duplicado_409_y_mismo_usuario_permitido`, `TitulosPorIdiomaTests`, `RecuperarContrasenaTests`, `Resultado`, `ErroresPerfilTests`, `GoogleOAuthTests`, `RecuperacionSesionTests`, `LoginDualTests`, `pedir`, `ItemsDeListaTests`, `LimiteLoginAdminTests`, `._seed_sintetico`, `ListasEndpointsTests`, `ResenaModeradaTests`, `IngresoDocumentacionTests`, `BajaCuentaTests`, `tests_recomendado.py`, `filmai/urls.py`, `test_nombres_reservados.py`, `.rafaga`, `ErroresContrasenaTests`, `.poblar`, `ProduccionAudiovisualFactory`, `usuarios/serializers.py`, `tests_orquestador.py`, `PreferenciasTests`, `ProveedorFalso`, `ContratoErroresAPITests`, `ErroresGoogleTests`, `.url`, `PerfilTests`, `ArmarPerfilTests`, `tests_estado_cuenta.py`, `tool`, `test_pais.py`, `QueriesNoCrecenConLasFilasTests`, `._calificacion_existente`, `Usuario`, `refrescar_vencidos`, `AdminStaffParcialTests`, `catalogo/tests.py`, `CodigosDeExitoTests`, `PreferenciasIdiomaTests`, `CodigosValidacionListasTests`, `HistorialTests`, `EndpointEstadoTests`, `CorreosContratoTests`, `MisListasTests`, `ErroresRegistroTests`, `ContrasenaTests`, `IdentidadListaTests`, `ResenaAdminTests`, `RelojJWTTests`, `MisResenasFiltrosTests`, `catalogo/views.py`, `TopeDeSemillasDeVistasTests`?**
   _High betweenness centrality (0.130) - this node is a cross-community bridge._
 - **Are the 123 inferred relationships involving `UsuarioFactory` (e.g. with `CalificacionFactory` and `ResenaAdminTests`) actually correct?**

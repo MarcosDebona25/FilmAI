@@ -53295,7 +53295,7 @@
       "file_type": "code",
       "norm_label": "tarjeta()",
       "source_file": "frontend/tests/lists-view.test.tsx",
-      "source_location": "L331"
+      "source_location": "L372"
     },
     {
       "id": "frontend_tests_media_row_test_medidas",
@@ -300216,7 +300216,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/tests/lists-view.test.tsx",
-      "source_location": "L331",
+      "source_location": "L372",
       "weight": 1.0
     },
     {
@@ -387011,5 +387011,5 @@
       "source_file": "docs/decisiones.md"
     }
   ],
-  "built_at_commit": "bfe37ae20825e63faf27f43f9b42208c9d056db5"
+  "built_at_commit": "98ce5f814a28a07f8ee95b4270f73a41d1d4a416"
 }
