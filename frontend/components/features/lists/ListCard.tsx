@@ -104,67 +104,82 @@ export function ListCard({
     >
       <article
         className={cn(
-          "relative flex h-full flex-col gap-3.5 rounded-2xl bg-raised p-4 shadow-[inset_0_0_0_1px_var(--line)] transition-shadow md:gap-4 md:p-6",
+          "relative flex h-full flex-col gap-3 rounded-2xl bg-raised p-4 shadow-[inset_0_0_0_1px_var(--line)] transition-shadow md:gap-3.5 md:p-6",
           arrastre?.arrastrando &&
             "shadow-[0_20px_50px_rgb(0_0_0/0.55),inset_0_0_0_1px_var(--fg-3)]"
         )}
       >
-        <div className="flex items-start gap-2">
-          {!predeterminada && arrastre && (
-            <button
-              ref={arrastre.refManija}
-              type="button"
-              data-drag-handle=""
-              aria-label={t("common.lists.reorderLabel")}
-              {...arrastre.atributos}
-              className="relative z-10 -ml-2 hidden size-11 flex-none cursor-grab touch-none place-items-center rounded-full text-fg-3 hover:bg-raised-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring active:cursor-grabbing md:grid"
+        {/* Fila del nombre (diseño 5E). La fuente se fija acá y todo lo de adentro
+            usa `em`, así el ⋯ y la manija se centran contra la primera línea. */}
+        <div className="relative flex items-center gap-2 text-[1.5rem] leading-[1.05] md:text-[1.75rem]">
+          <h2
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-2.5 font-display text-[1em] leading-[inherit]",
+              // Reserva el ancho del ⋯ (que sobresale 8 px en celular, 16 en escritorio).
+              !predeterminada && acciones && "pr-9 md:pr-8"
+            )}
+          >
+            {Icono && <Icono aria-hidden="true" className="size-6 flex-none text-primary" />}
+            <Link
+              href={routes.list(lista.id)}
+              title={nombre}
+              draggable={false}
+              className="min-w-0 truncate text-foreground no-underline after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-ring"
             >
-              <GripVertical aria-hidden="true" className="size-5" />
-            </button>
-          )}
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <h2 className="flex items-center gap-2.5 font-display text-[1.875rem] leading-[1.05] md:text-[2.25rem]">
-              {Icono && <Icono aria-hidden="true" className="size-6 flex-none text-primary" />}
-              <Link
-                href={routes.list(lista.id)}
-                draggable={false}
-                className="min-w-0 truncate text-foreground no-underline after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-ring"
-              >
-                {nombre}
-              </Link>
-            </h2>
-            <p className="text-[0.9375rem] text-fg-2">
-              {t("lists.count.items", { count: lista.cantidad_items })}
-              {lista.cantidad_items > 0 && (
-                <>
-                  {" · "}
-                  {t("lists.count.movies", { count: lista.cantidad_peliculas })}
-                  {" · "}
-                  {t("lists.count.tvShows", { count: lista.cantidad_series })}
-                </>
-              )}
-            </p>
-          </div>
+              {nombre}
+            </Link>
+          </h2>
           {predeterminada ? (
-            <span className="mt-1 inline-flex h-7 flex-none items-center rounded-full bg-raised-2 px-3 text-[0.8125rem] font-semibold text-fg-2">
+            <span className="inline-flex h-7 flex-none items-center rounded-full bg-raised-2 px-3 text-[0.8125rem] leading-none font-semibold text-fg-2">
               {t("common.lists.defaultBadge")}
             </span>
           ) : (
             acciones && (
               // Sin `z-index` a propósito: con `z-10` esta caja encerraba la capa
               // que cierra el menú (z-40) y el menú (z-50), que hacia afuera
-              // valían 10 y quedaban debajo de la navbar fija (z-30). `relative`
-              // alcanza para quedar encima del enlace que cubre la tarjeta: los
-              // dos están posicionados y este viene después en el HTML.
+              // valían 10 y quedaban debajo de la navbar fija (z-30). `absolute`
+              // ya queda encima del enlace que cubre la tarjeta: los dos están
+              // posicionados y este viene después en el HTML.
               <ListActionsMenu
-                className="relative -mr-2 flex-none"
+                className="absolute -right-2 top-[calc(0.525em-1.375rem)] md:-right-4"
                 etiqueta={t("lists.card.actionsLabel", { listName: nombre })}
                 titulo={nombre}
                 acciones={acciones}
               />
             )
           )}
+          {!predeterminada && arrastre && (
+            // Manija apilada justo debajo del ⋯, en la esquina: no le quita ancho
+            // al nombre. Solo escritorio; en celular se arrastra con pulsación larga.
+            <button
+              ref={arrastre.refManija}
+              type="button"
+              data-drag-handle=""
+              aria-label={t("common.lists.reorderLabel")}
+              {...arrastre.atributos}
+              className="absolute top-[calc(0.525em+1.375rem)] -right-4 z-10 hidden size-11 cursor-grab touch-none place-items-center rounded-full text-fg-3 hover:bg-raised-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring active:cursor-grabbing md:grid"
+            >
+              <GripVertical aria-hidden="true" className="size-5" />
+            </button>
+          )}
         </div>
+        <p
+          className={cn(
+            "truncate text-[0.9375rem] whitespace-nowrap text-fg-2",
+            // En escritorio la manija ocupa la esquina a la altura del conteo.
+            !predeterminada && arrastre && "md:pr-8"
+          )}
+        >
+          {t("lists.count.items", { count: lista.cantidad_items })}
+          {lista.cantidad_items > 0 && (
+            <>
+              {" · "}
+              {t("lists.count.movies", { count: lista.cantidad_peliculas })}
+              {" · "}
+              {t("lists.count.tvShows", { count: lista.cantidad_series })}
+            </>
+          )}
+        </p>
 
         {posters.length > 0 ? (
           <div className="flex items-center" aria-hidden="true">

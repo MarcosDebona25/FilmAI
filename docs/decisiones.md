@@ -1278,6 +1278,18 @@ Archivos: `backend/chatbot/eventos.py`, `docs/05_Plan_de_Desarrollo.md` y este a
 
 Archivos: `docs/05_Plan_de_Desarrollo.md` y este archivo.
 
+### 21/11/2026 — Tarjeta de lista: nombre en una línea con la manija bajo el ⋯ (diseño 5E, #232)
+
+Elegido por Marcos entre las variantes 5A–5F del canvas, partiendo de 4F.
+
+- **Qué se eligió (5E).** El nombre pasa a 1,5 rem en celular y 1,75 rem desde `md`, en una sola línea con «…» y con `title` con el nombre completo. El menú `⋯` o la insignia «Default» quedan pegados a la esquina superior derecha. La manija de arrastre (solo escritorio, solo personalizadas, botón de 44 px con `aria-label`, sigue operándose con teclado) va apilada debajo del `⋯`, en la misma esquina, y no le quita ancho al nombre. El conteo no se parte (`whitespace-nowrap`; en escritorio deja libre el ancho de la manija).
+- **Por qué.** El nombre competía por el ancho con la manija, el ícono, la insignia y el menú. Con 5E la manija sale de la fila del nombre y se conserva el arrastre por manija sin cambiar lo que el usuario ya aprendió.
+- **Qué se descartó.** 5A (manija a la izquierda del nombre, como estaba), 5B (manija en la fila del conteo), 5C (manija en el pie, junto a los pósters), 5D (sin manija visible, aparece al pasar el mouse o enfocar) y 5F (sin manija, reordenar solo desde el menú).
+- **Pruebas.** Vitest (`tests/lists-view.test.tsx`): `title` y truncado, conteo sin partir, manija solo en personalizadas y de escritorio, predeterminada sin manija ni menú. E2E (`e2e/listas.spec.ts`): nombres de 34 y 60 caracteres a 375, 768 y 1440 px, con el nombre en una línea, el conteo sin partir y la manija bajo el ⋯.
+- **Canvas.** En «Lists» quedaron solo la tarjeta definitiva (5E) y se borraron 4F, 5A–5D y 5F con sus entradas del índice.
+
+Archivos: `frontend/components/features/lists/ListCard.tsx`, `frontend/tests/lists-view.test.tsx`, `frontend/e2e/listas.spec.ts`, `docs/04_Lineamientos_UI.md` y este archivo.
+
 ### 21/11/2026 — Separación entre la lupa y el avatar en la navbar
 
 - **Cambio.** El contenedor de la derecha de la navbar (lupa de búsqueda, avatar o «Log in»/«Sign up») pasa de `gap-2` (0,5 rem) a `gap-5` (1,25 rem, `calc(var(--spacing) * 5)`, 20 px). Lo probó Marcos en las herramientas del navegador y lo dejó como valor definitivo.

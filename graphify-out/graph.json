@@ -53823,7 +53823,7 @@
       "file_type": "code",
       "norm_label": "tarjeta()",
       "source_file": "frontend/tests/lists-view.test.tsx",
-      "source_location": "L331"
+      "source_location": "L372"
     },
     {
       "id": "frontend_tests_media_row_test_medidas",
@@ -300456,7 +300456,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/tests/lists-view.test.tsx",
-      "source_location": "L331",
+      "source_location": "L372",
       "weight": 1.0
     },
     {

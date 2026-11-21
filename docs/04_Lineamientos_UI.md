@@ -536,11 +536,11 @@ de un componente «Modal»:
 
 #### ListCard
 
-- **Nombre**: texto, máx 80 chars visibles con truncado en 2 líneas.
-- **Conteo**: dato principal "N ítems"; debajo, desglose "X películas · Y series". La ListCard recibe ambos valores para informar la composición de la lista sin cargar sus ítems completos.
+- **Nombre**: una sola línea, en 1,5 rem en celular y 1,75 rem desde `md`, con «…» si no cabe; el enlace lleva `title` con el nombre completo. El menú `⋯` o la insignia quedan pegados a la esquina superior derecha, así el nombre usa todo el ancho que dejan (21/11/2026, diseño 5E; antes 1,875/2,25 rem y la manija a la izquierda del nombre).
+- **Conteo**: dato principal "N ítems"; debajo, desglose "X películas · Y series", siempre en una línea (en escritorio deja libre el ancho de la manija). La ListCard recibe ambos valores para informar la composición de la lista sin cargar sus ítems completos.
 - **Mini preview**: hasta 4 posters solapados en escritorio y 3 en celular (17/11/2026; antes 5), con «N más» por lo que queda y que cuenta lo que no se ve en cada medida. Si la lista tiene menos, se muestran los que haya. Si está vacía, se muestra un placeholder gris.
 - **Badge**: "Predeterminada" en listas del sistema. Color gris neutro, esquina superior izquierda.
-- **Manija de arrastre** (seis puntos, solo escritorio): solo en listas personalizadas; también se opera con teclado (Espacio levanta, flechas mueven, Espacio suelta, con anuncios traducidos).
+- **Manija de arrastre** (seis puntos, solo escritorio, botón de 44 px): solo en listas personalizadas, apilada debajo del `⋯` en la esquina superior derecha, sin ocupar ancho del nombre; también se opera con teclado (Espacio levanta, flechas mueven, Espacio suelta, con anuncios traducidos).
 - **Menú contextual** (`⋯`, esquina superior derecha): solo en listas personalizadas. Escritorio → menú: Renombrar / Mover a la izquierda / Mover a la derecha / Eliminar. Celular → hoja inferior: Renombrar / Subir / Bajar / Eliminar. Visible siempre, no solo en hover.
 - **Comportamiento**: click en la card → navega al detalle de la lista.
 
