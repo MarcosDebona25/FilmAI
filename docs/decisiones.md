@@ -1336,6 +1336,15 @@ Decidido por Marcos. La ficha mostraba los 20 primeros de un pool mezclado con p
 
 Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `openspec/specs/similar-titles/spec.md` y este archivo.
 
+### 21/11/2026 — Correos: el logo es el ticket de la navbar
+
+- **Qué estaba mal.** `correos/base.html` dibujaba la marca como un rectángulo amarillo con una estrella de texto (`&#9733;`), distinto del `TicketMark` de la navbar (ticket con muescas laterales y estrella de cinco puntas).
+- **Qué se hizo.** La marca sale ahora como imagen `frontend/public/correos/ticket.png` (128×96 px, se muestra a 32×24 px), con el mismo trazado que `TicketMark` (`#f5c518` y estrella `#14110a`). Gmail y otros clientes no dibujan SVG en línea, por eso es PNG. La plantilla la pide a `{{ url_app }}/correos/ticket.png`; `enviar_correo()` pasa `url_app` desde `FRONTEND_URL` (sin barra final). El texto «FilmAI» no cambia.
+- **Límite conocido.** En local `FRONTEND_URL` es `http://localhost:3000`: un cliente de correo real solo ve el logo si ese servidor está accesible; en producción lo sirve el dominio público. Los `.eml` de revisión llevan la imagen incrustada (`data:`) para que se vean sin servidor; Gmail no muestra `data:`, así que ese caso se comprueba con el envío real.
+- **Tests.** `test_logo_es_el_ticket_de_la_navbar_servido_por_el_frontend` en `backend/filmai/test_servicio_correos.py`.
+
+Archivos: `backend/templates/correos/base.html`, `backend/filmai/correos/servicio.py`, `backend/filmai/test_servicio_correos.py`, `frontend/public/correos/ticket.png`, `traducciones/revision-correos/` (ocho `.eml` e `index.html`), `openspec/specs/emails/spec.md`, `docs/05_Plan_de_Desarrollo.md`.
+
 ### 21/11/2026 — «Explorar» en la navbar y campo de Buscar con el estilo de la lupa
 
 Decidido por Marcos. Desde el 14/11/2026 en escritorio `/search` solo se alcanzaba escribiendo en la lupa, aunque sin texto ya muestra todo por popularidad con filtros.

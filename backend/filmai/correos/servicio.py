@@ -32,6 +32,8 @@ def enviar_correo(caso, destinatario, contexto, idioma):
         **contexto,
         "idioma": idioma,
         "anio": timezone.now().year,
+        # Base de la imagen del logo (`/correos/ticket.png`, en `frontend/public/`).
+        "url_app": settings.FRONTEND_URL.rstrip("/"),
         # La notificación no lleva token: enlaza al inicio de sesión real.
         "enlace_correo": f"{settings.FRONTEND_URL}/login/"
         if caso == "contrasena_actualizada"

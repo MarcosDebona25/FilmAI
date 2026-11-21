@@ -80,23 +80,15 @@ Content-Transfer-Encoding: 8bit
               <td style="padding: 36px 40px 0 40px">
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td
-                      align="center"
-                      width="32"
-                      height="24"
-                      style="
-                        width: 32px;
-                        height: 24px;
-                        background-color: #f5c518;
-                        border-radius: 6px;
-                        color: #14110a;
-                        font-size: 14px;
-                        line-height: 24px;
-                        font-family: Arial, Helvetica, sans-serif;
-                      "
-                      aria-hidden="true"
-                      >&#9733;</td
-                    >
+                    <td width="32" height="24" style="width: 32px; height: 24px">
+                      <img
+                        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAABgCAYAAADVenpJAAADxUlEQVR42u2dPY/TQBCGXfNx+CB8FBQRFaUl+lNaJEoqKpdI9PcDEC1KQUNnIXrokVAqKorUVC4pU7kOnsiJfEnsxPE67M48lh4p59Oto53Xuzuzs3NRdORV/HoSl6QlWcmsZAleMatsIzaKI1dX2di4aphODgux2biP4eWNn9KRwTPtPCKUf5CUzOk8NYgtky7GX9Bp6lgcFAHGNyyCas5n2LcxHcT7BMCCz9DCcJ+rR8fYYlwXAH6+wThBfe6nQ2wSR1XokM6wScrwb30aYGPH9gZSRCfYBgEgADoBAQACAAQACAAQACAAQACAAAABAAIABKCWP98erUAARvnw7nIFAjBK8vzOCgRgkJ+fR8vR5a0V8hkBGOPt63sbAchnBGCIvz8eL589vb0RgHyWewjACF/eP9gYf43cQwBGeHV1sSMAuYcAjPj+28ZfYzEmUD8dNKkOiObaff8mARiICeSVjSdFW9WQ6rRQrtX3bxKA4phAvjoFdEKNoEyr79+EwphAVvSpGqZJBHXfvwllMYHMVam4TIPvf8j4a5TEBDKXtQJjX9YE3z+ONps4wpuXFysXrk7bPH8q0ub2c+TZ9e8i382jOd9dscjawjCYofzceDZ1pNEQl0+ewb5o3v/CsyhiHg11FZ4Vkvr99eGNmP65kWfLd/Bs7p8OKYCJj4u7qxd3z258eaani8XJkAKIQ3bxlM73u3V/hrxC2+VTPt/vj+1bFcCQ6wJP5/vzCqAIpKSc63WBx/P9eacAHxeBbUigpq/xpY3AIoATM27gIa7TuLcApI3ABDCoGxjUFrGLkHCAW8T5UMYPqqJoW+ZPVwLMFEqHWPwF9fa7dAkDTBh1uxkU4nawiwVgwAtBcgFcxgKkLXM5ASGnhEnA5pBRZT9/fTp4X5r4NiEEgZylhIWeFNqW+Stv86fr+zt/I/faRo3AM4bbk0K1pYU3RQHXb32b59A0GkibKtPCNZ77O/atb6JpNNB4flCdACQvr8tb32U08CjnDwEcygvo+tYfMxpoPEauTgASuhW/3eVwLW1JmxpPDkXa5v8hh2lpW9s6gDJxlImjExAAIABAAIAAAAEAAgAEAAgAEAAgAEAAgAAAAQACAAQACgUwoyPMMlNVCxhOODoW2rFvcHyMvAik7g8MQqyuJDyccHK4/GFMh5hjHHQBKOjFtOmE8JzOUc+8sV5A+YukZEEnqUVsmxwqDoEIrBp/SwRMB7qG/eSUGkEsDBUs+Iqe/zZuTJwgTD9/x9VzUCwyrRpmA8nDjZ3KNmmXN/4fkWIEoOzLqlgAAAAASUVORK5CYII="
+                        width="32"
+                        height="24"
+                        alt=""
+                        style="display: block; width: 32px; height: 24px; border: 0"
+                      />
+                    </td>
                     <td
                       style="
                         padding-left: 10px;
