@@ -33,6 +33,11 @@ import RegisterPage from "@/app/(public)/register/page";
 import LoginPage from "@/app/(public)/login/page";
 import ConfirmPage from "@/app/confirm-email/[key]/page";
 
+// Cada test renderiza la página de registro entera (3 pasos montados y la lista de
+// países): ~1 s solo, pero con los 83 archivos de Vitest en paralelo supera los 5 s
+// por defecto y falla por tiempo (también en local y en main).
+vi.setConfig({ testTimeout: 20_000 });
+
 // Catálogo público de avatares que el registro pide al montarse (GET /api/avatars/).
 const catalogoAvatares = [
   { id: 1, src: "/uno.png" },

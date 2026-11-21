@@ -118,7 +118,8 @@ class TMDBClientTest(SimpleTestCase):
 
         self.assertEqual(client.timeout, 5.0)
 
-    def test_http_errors_map_to_domain_exceptions(self):
+    @patch("catalogo.client.time.sleep")
+    def test_http_errors_map_to_domain_exceptions(self, _sleep):
         cases = (
             (404, TMDBNotFound),
             (400, TMDBBadRequest),

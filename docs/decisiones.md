@@ -1298,6 +1298,14 @@ La suma de los 15 más lentos pasa de 287,9 s a 22,1 s; el test más lento ya no
 
 Archivos: `backend/chatbot/{tests_sse,tests_servicio,tests_recorte}.py`, `backend/catalogo/tests.py`, `.github/workflows/ci.yml`, `README.md`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
 
+### 21/11/2026 — Cierre del pendiente 13: filtros por ruta en el CI y `access-screens` estable
+
+- **Filtros por ruta.** Un job `cambios` en `.github/workflows/ci.yml` compara el PR con su base (`git diff --name-only base...head`). Solo documentación no corre ningún job pesado; solo `frontend/` no corre el backend; solo `backend/` no corre el frontend ni Playwright. Cualquier otro archivo (contratos, traducciones, scripts, el propio workflow) corre los dos: ante la duda, todo. Los push a `main` y `develop` corren todo, porque el CI es la única puerta. Los jobs saltados cuentan como aprobados (la rama no tiene protección con checks obligatorios, y aunque la tuviera un job saltado no bloquea).
+- **`access-screens`.** La inestabilidad era de tiempo: cada test renderiza la página de registro con los 3 pasos montados y la lista de países (~1 s solo), y con todos los archivos de Vitest en paralelo superaba el plazo de 5 s (falló en la corrida completa de local, también en `main`). Se probó `userEvent.setup({ delay: null })` y casi no ayudó (35 s a 31 s), así que el archivo sube su plazo a 20 s con `vi.setConfig`. La suite completa de frontend pasa: 83 archivos, 861 tests.
+- **Último test dormilón.** `TMDBClientTest.test_http_errors_map_to_domain_exceptions` anula `catalogo.client.time.sleep` y deja de esperar 7 s.
+
+Archivos: `.github/workflows/ci.yml`, `frontend/tests/access-screens.test.tsx`, `backend/catalogo/tests.py`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
 ### 21/11/2026 — Tarjeta de lista: nombre en una línea con la manija bajo el ⋯ (diseño 5E, #232)
 
 Elegido por Marcos entre las variantes 5A–5F del canvas, partiendo de 4F.
