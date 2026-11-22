@@ -162,9 +162,9 @@
     "semantic_hash": "c7f6a36b9ea53dda6003c4cfed638d97"
   },
   "backend/filmai/email_backends.py": {
-    "mtime": 1795372519.738118,
-    "seen": 1795373928.8788848,
-    "ast_hash": "7182702b6672bfd5650d0c2d9fb1b4c2",
+    "mtime": 1795373949.267353,
+    "seen": 1795373983.2120748,
+    "ast_hash": "997ab74179137abe72b5dacd31392f31",
     "semantic_hash": ""
   },
   "backend/filmai/email_validation.py": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1795372484.938787,
-    "seen": 1795373928.8796947,
-    "ast_hash": "be67c295cbc5a0ac1769074dc9691626",
+    "mtime": 1795373949.267353,
+    "seen": 1795373983.2480838,
+    "ast_hash": "87d25eb06ced470d3a7428040e245cc8",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -2184,9 +2184,9 @@
     "semantic_hash": ""
   },
   "openspec/specs/emails/spec.md": {
-    "mtime": 1795372757.20376,
-    "seen": 1795373928.879712,
-    "ast_hash": "600240256c2d78b148d0244ac721725f",
+    "mtime": 1795373949.315494,
+    "seen": 1795373983.248887,
+    "ast_hash": "be3eddf9613eb58a1a92f4872a7a4b04",
     "semantic_hash": ""
   },
   "openspec/specs/i18n-core/spec.md": {
@@ -5442,9 +5442,9 @@
     "semantic_hash": ""
   },
   "backend/filmai/test_email_respaldo.py": {
-    "mtime": 1795372257.903839,
-    "seen": 1795373928.8789191,
-    "ast_hash": "a939eafa720863483947446ea0427f21",
+    "mtime": 1795373949.267353,
+    "seen": 1795373983.2134573,
+    "ast_hash": "5d0e50805e84a6ce0ae4ce53bb99c53d",
     "semantic_hash": ""
   },
   "backend/filmai/tasks.py": {

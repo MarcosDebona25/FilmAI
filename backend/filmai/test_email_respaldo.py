@@ -342,6 +342,37 @@ class ErroresDeResendTests(SimpleTestCase):
         self.assertTrue(error.transitorio)
         self.assertEqual(error.estado, 403)
 
+    def test_clave_invalida_con_400_es_transitoria(self):
+        # Resend real responde a una clave inválida con 400 (Bad Request)
+        # `validation_error` «API key is invalid» (prueba manual del 22/11/2026).
+        error = self._error(
+            _error_resend(
+                ValidationError, 400, "validation_error", "API key is invalid"
+            )
+        )
+
+        self.assertTrue(error.transitorio)
+        self.assertEqual(error.estado, 400)
+        self.assertEqual(error.codigo, "invalid_api_key")
+
+    def test_las_excepciones_sobreviven_a_pickle(self):
+        # Celery guarda con pickle la excepción de una tarea fallida.
+        import pickle
+
+        original = ErrorDeProveedor(
+            "Resend", transitorio=True, estado=400, codigo="invalid_api_key"
+        )
+        error = pickle.loads(pickle.dumps(original))
+        self.assertEqual(
+            (error.proveedor, error.transitorio, error.estado, error.codigo),
+            ("Resend", True, 400, "invalid_api_key"),
+        )
+        self.assertEqual(str(error), str(original))
+
+        fallido = pickle.loads(pickle.dumps(EnvioFallido([original])))
+        self.assertEqual(fallido.errores[0].codigo, "invalid_api_key")
+        self.assertEqual(str(fallido), str(EnvioFallido([original])))
+
     def test_error_de_transporte_del_sdk_es_transitorio(self):
         # Conexión, DNS, TLS y timeouts llegan como ResendError 500
         # "HttpClientError" (el SDK atrapa las excepciones de `requests`).
