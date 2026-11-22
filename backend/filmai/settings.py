@@ -347,18 +347,29 @@ if not EMAIL_BACKEND:
     else:
         raise ImproperlyConfigured(
             "EMAIL_BACKEND es obligatorio en producción (DEBUG=False). "
-            "Configurá filmai.email_backends.ResendBackend u otro backend real."
+            "Configurá filmai.email_backends.ResendBackend, BrevoBackend o "
+            "RespaldoBackend (Resend con Brevo de respaldo), u otro backend real."
         )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="") or "noreply@filmai.com"
 RESEND_API_KEY = config("RESEND_API_KEY", default="")
 # Solo desarrollo: redirige todos los emails a esta dirección.
 RESEND_TEST_RECIPIENT = config("RESEND_TEST_RECIPIENT", default="")
+# Brevo (respaldo de Resend, issue #181). Brevo no puede enviar como
+# onboarding@resend.dev: BREVO_FROM_EMAIL es su remitente único verificado.
+BREVO_API_KEY = config("BREVO_API_KEY", default="")
+BREVO_FROM_EMAIL = config("BREVO_FROM_EMAIL", default="")
+# Solo desarrollo: redirige todos los emails de Brevo a esta dirección.
+BREVO_TEST_RECIPIENT = config("BREVO_TEST_RECIPIENT", default="")
 
 validar_configuracion_email(
     debug=DEBUG,
     email_backend=EMAIL_BACKEND,
     resend_api_key=RESEND_API_KEY,
     resend_test_recipient=RESEND_TEST_RECIPIENT,
+    brevo_api_key=BREVO_API_KEY,
+    brevo_from_email=BREVO_FROM_EMAIL,
+    brevo_test_recipient=BREVO_TEST_RECIPIENT,
+    default_from_email=DEFAULT_FROM_EMAIL,
 )
 
 LOGGING = {

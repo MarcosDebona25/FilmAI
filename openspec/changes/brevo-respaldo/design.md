@@ -1,5 +1,19 @@
 # Design: Brevo as a fallback for Resend (issue #181)
 
+## Decisions confirmed (task 0.1)
+
+On 22/11/2026 the user accepted the six recommendations D-1 to D-6 of
+`proposal.md` exactly as written:
+
+| #   | Answer                                                                                                                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-1 | A 401 (Unauthorized) / 403 (Forbidden) from Resend falls back to Brevo                                                                              |
+| D-2 | A read timeout from Resend falls back (a duplicate is harmless, a missing email blocks the account)                                                 |
+| D-3 | Keep the per-email and per-IP throttles, no global cap; only the comment changes                                                                    |
+| D-4 | `email_unavailable`, 503 (Service Unavailable); registration atomic; reset keeps the generic 200 (OK)                                               |
+| D-5 | Own variables `BREVO_FROM_EMAIL` and `BREVO_TEST_RECIPIENT`                                                                                         |
+| D-6 | `httpx` as the Brevo client                                                                                                                         |
+
 ## Where this lives
 
 ```
@@ -48,6 +62,45 @@ Shared helpers, so the two providers cannot drift: `_destinatarios(message,
 test_recipient)` (redirect and promotion of `cc`/`bcc` to `to` when `to` is
 empty, same as Resend today) and `_extraer_html(message)`.
 
+### Resend SDK, as installed (task 1.2)
+
+Inspected on 22/11/2026 in `filmai-backend:latest` (`docker run --entrypoint
+python`, nothing installed, no network call): `resend` **2.53.2**.
+
+- **HTTP client:** `resend.default_http_client` is a `RequestsClient`, built on
+  `requests`. **Default timeout: 30 s** (a single value, so it applies to
+  connecting and to reading).
+- **Transport errors never reach us as `requests` exceptions.**
+  `RequestsClient.request` turns every `requests.RequestException` (connection
+  error, DNS, TLS, `ConnectTimeout`, `ReadTimeout`) into a `RuntimeError`, and
+  `Request.make_request` wraps any exception of the client into
+  `ResendError(code=500, error_type="HttpClientError")`. A timeout and a
+  connection error therefore look the same: a plain `ResendError` whose `code`
+  is 500. Both are transient.
+- **The HTTP status is the only reliable signal, not the class.** `ERRORS` maps
+  (status, `type` of the body) to a class, so the same class can carry
+  different statuses: `ValidationError` is raised for 400 but also for a 401
+  or a 403 whose body says `validation_error` (for example sending from
+  `onboarding@resend.dev` to anybody but the account owner). Any status or
+  type that is not in the table becomes a bare `ResendError`. So the provider
+  classifies by `code` first (401, 402, 403, 429, ≥ 500 are transient; 400, 422
+  and any other 4xx are not) and only uses the class names for the tests'
+  readability.
+- **Per-class mapping used by the tests:** `RateLimitError` (429, the three
+  types) → transient; `ApplicationError` (500) → transient;
+  `MissingApiKeyError` (401) and `InvalidApiKeyError` (403) → transient;
+  `ResendError("HttpClientError")` → transient; `ValidationError` (400/422)
+  and `MissingRequiredFieldsError` (422) → not transient. `NoContentError`
+  and any other exception are not wrapped: they are raised as bugs.
+- **Timeout set by us:** the provider replaces the default client with
+  `resend.RequestsClient(timeout=10)` (same 10 s as Brevo). With the default
+  30 s a slow Resend plus Brevo would hold the registration request for a
+  minute. Note that `requests` and `httpx` apply the timeout to each phase
+  (connect, read), not to the total.
+- **No address in logs:** the SDK's `message` can echo recipients (the 403
+  about testing emails names the owner's address), so `ErrorDeProveedor` keeps
+  only provider, status and error type and is raised `from None`.
+
 ### Brevo payload
 
 | Django `EmailMessage`                                                        | Brevo field                                                         |
@@ -73,8 +126,8 @@ an accepted email is never sent again.
 
 | Failure                                                                                     | Resend                                                                                     | Brevo                    | Falls back?                                           |
 | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------ | ----------------------------------------------------- |
-| Connection error, DNS, TLS                                                                  | transport exception of the SDK's HTTP client (`requests`; verify in task 1.2)              | `httpx.TransportError`   | Yes                                                   |
-| Read timeout (request sent, no answer)                                                      | same                                                                                       | `httpx.TimeoutException` | Yes — **D-2**                                         |
+| Connection error, DNS, TLS                                                                  | `ResendError(code=500, error_type="HttpClientError")` (see «Resend SDK, as installed»)      | `httpx.TransportError`   | Yes                                                   |
+| Read timeout (request sent, no answer)                                                      | same, indistinguishable from the above                                                                                      | `httpx.TimeoutException` | Yes — **D-2**                                         |
 | 5xx                                                                                         | `ApplicationError` / `ResendError` with `code >= 500`                                      | status ≥ 500             | Yes                                                   |
 | 429 (Too Many Requests): rate limit, daily or monthly quota                                 | `RateLimitError` (`rate_limit_exceeded`, `daily_quota_exceeded`, `monthly_quota_exceeded`) | 429                      | Yes                                                   |
 | 402 (Payment Required): out of credits                                                      | —                                                                                          | 402                      | Yes                                                   |
@@ -129,7 +182,16 @@ sequenceDiagram
 
 When both fail, `RespaldoBackend` raises `EnvioFallido`, chained (`from`) to
 the last provider error and carrying each provider's name and status for the
-log. Callers already catch `Exception`, so nothing else changes for reset and
+log.
+
+What each backend raises (implemented in PR 1): a transient failure of every
+active provider raises `EnvioFallido` (also with a single provider, so
+`ResendBackend` alone raises it too and the PR 2 view catches one type). A
+non-transient error (400 / 422) is raised at once as `ErrorDeProveedor` with
+`transitorio=False`, **not** as `EnvioFallido`, so invalid data is not
+reported as «email unavailable». Any other exception (a bug) is raised as is.
+`ErrorDeProveedor` is raised `from None` (the SDK's or Brevo's text can repeat
+addresses); `EnvioFallido` is chained to the last `ErrorDeProveedor`. Callers already catch `Exception`, so nothing else changes for reset and
 the password notice.
 
 ## Logs

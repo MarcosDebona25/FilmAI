@@ -10,7 +10,7 @@
 | Delivery strategy       | ask-on-risk                                                                                                                  |
 | Chain strategy          | Both PRs from `develop`, one worktree per PR in `~/FilmAI-worktrees/<branch>`; PR 2 stacks on PR 1 (merge commit, no rebase) |
 | Blocking                | D-1 to D-6 of `proposal.md` confirmed by the user before task 1.1                                                            |
-| CI                      | Disabled since 06/11/2026: the local run of `ci.yml`'s steps is the gate                                                     |
+| CI                      | Active: `.github/workflows/ci.yml` runs on PRs to `main`, `develop`, `develop/**` and `feat/**`; it is the merge gate        |
 
 ### Work Units
 
@@ -21,63 +21,63 @@
 
 ## Phase 0: Confirm the open decisions
 
-- [ ] 0.1 Ask the user D-1 to D-6 (`proposal.md`) and record the answers in
+- [x] 0.1 Ask the user D-1 to D-6 (`proposal.md`) and record the answers in
       `design.md` before writing code. If an answer differs from the
       recommendation, update `design.md`, the spec delta and these tasks first
-- [ ] 0.2 Explain: what a Django email backend is, why the fallback lives
+- [x] 0.2 Explain: what a Django email backend is, why the fallback lives
       there and not in `enviar_correo()`, what "transient" means for an error
 
 ## Phase 1: Providers and fallback (PR 1)
 
-- [ ] 1.1 Create the branch from `develop` and its worktree; `codegraph init`
+- [x] 1.1 Create the branch from `develop` and its worktree; `codegraph init`
       in the new worktree
-- [ ] 1.2 Inside the backend container (`docker compose exec backend python`,
+- [x] 1.2 Inside the backend container (`docker compose exec backend python`,
       no install): check which HTTP client the installed `resend` SDK uses,
       which exception a connection error and a timeout raise, and its default
       timeout. Write the result in `design.md` («Which errors fall back»)
-- [ ] 1.3 RED `filmai/tests.py` stays green as the regression net for
+- [x] 1.3 RED `filmai/tests.py` stays green as the regression net for
       `ResendBackend` (run it before touching the module)
-- [ ] 1.4 RED `filmai/test_email_respaldo.py` — `ProveedorBrevo` with
+- [x] 1.4 RED `filmai/test_email_respaldo.py` — `ProveedorBrevo` with
       `httpx.MockTransport`: URL, `api-key` header, `sender` parsed from
       `"FilmAI <x@y>"`, separate `to`/`cc`/`bcc`, `htmlContent` +
       `textContent`, text-only message wrapped in `<pre>`, `BREVO_TEST_RECIPIENT`
       redirect (only the count in the log), `cc`-only promoted to `to`,
       returns `messageId`
-- [ ] 1.5 RED: Brevo error mapping — 400 → not transient; 401, 402, 403, 429,
+- [x] 1.5 RED: Brevo error mapping — 400 → not transient; 401, 402, 403, 429,
       500, `ConnectTimeout`, `ReadTimeout`, `ConnectError` → transient; the
       status and Brevo's `code` travel in `ErrorDeProveedor`
-- [ ] 1.6 RED: Resend error mapping with the SDK's own classes —
+- [x] 1.6 RED: Resend error mapping with the SDK's own classes —
       `RateLimitError` (each of the three types), `ApplicationError`,
       `MissingApiKeyError`, `InvalidApiKeyError` and the transport error from
       1.2 → transient; `ValidationError`, `MissingRequiredFieldsError` → not
-- [ ] 1.7 GREEN: `ErrorDeProveedor`, `EnvioFallido`, the `Proveedor` protocol,
+- [x] 1.7 GREEN: `ErrorDeProveedor`, `EnvioFallido`, the `Proveedor` protocol,
       `ProveedorResend` (today's `_send_one` moved), `ProveedorBrevo` with
       `httpx.Client(timeout=10)`, shared `_destinatarios` and `_extraer_html`;
       `ResendBackend` and `BrevoBackend` over the shared loop
-- [ ] 1.8 RED `RespaldoBackend`: - Resend OK → Brevo never called; log says Resend - Resend 429 / 5xx / network / 401 → Brevo sends; WARNING with the
+- [x] 1.8 RED `RespaldoBackend`: - Resend OK → Brevo never called; log says Resend - Resend 429 / 5xx / network / 401 → Brevo sends; WARNING with the
       reason, INFO says Brevo - Resend 422 → Brevo not called; raises (or 0 with `fail_silently`) - both fail → `EnvioFallido` with both statuses; with `fail_silently`
       returns 0 and logs ERROR - two messages, Resend fails only on the second → first sent once by
       Resend, second by Brevo, return value 2 - no `BREVO_API_KEY` → behaves as Resend alone; no Resend key → Brevo
       alone; neither → error log, 0 (as today) - no log line contains an address (assert over `assertLogs` output)
-- [ ] 1.9 GREEN: `RespaldoBackend`
-- [ ] 1.10 Settings: `BREVO_API_KEY`, `BREVO_FROM_EMAIL`,
+- [x] 1.9 GREEN: `RespaldoBackend`
+- [x] 1.10 Settings: `BREVO_API_KEY`, `BREVO_FROM_EMAIL`,
       `BREVO_TEST_RECIPIENT` next to the `RESEND_*` block; update the
       `EMAIL_BACKEND` error message to list the three backends
-- [ ] 1.11 RED `validar_configuracion_email` (in `filmai/tests.py`): the
+- [x] 1.11 RED `validar_configuracion_email` (in `filmai/tests.py`): the
       matrix of «Configuration» in `design.md` — `BrevoBackend` without key,
       with test recipient; `RespaldoBackend` missing either key, with either
       test recipient, empty `BREVO_FROM_EMAIL` with a `@resend.dev` default
       sender; valid production config passes; `debug=True` never raises
-- [ ] 1.12 GREEN: extend `validar_configuracion_email` (keyword-only
+- [x] 1.12 GREEN: extend `validar_configuracion_email` (keyword-only
       arguments, so the call in `settings.py` names each one)
-- [ ] 1.13 `.env.example`: «Opción C — Resend con Brevo de respaldo», each
+- [x] 1.13 `.env.example`: «Opción C — Resend con Brevo de respaldo», each
       variable with its comment and how to verify the single sender in Brevo
-- [ ] 1.14 `send_test_email`: print the provider chain and both test
+- [x] 1.14 `send_test_email`: print the provider chain and both test
       recipients; mention `BREVO_API_KEY` in the failure hint
-- [ ] 1.15 Explain each test as it is written (skill
+- [x] 1.15 Explain each test as it is written (skill
       `explicar-al-implementar`): why `MockTransport`, why the SDK's own
       exception classes, what `assertLogs` checks
-- [ ] 1.16 `ruff format . && ruff check .`; full `python manage.py test`
+- [x] 1.16 `ruff format . && ruff check .`; full `python manage.py test`
       (never two runs at once on the machine)
 
 ## Phase 2: Limits and the `email_unavailable` code (PR 2)
