@@ -170,7 +170,7 @@ The personal context MUST be read by SQL for each message: liked (rating ≥ 7, 
 
 ### Requirement: Language of the turn and of the prose
 
-The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming, and every tool, card and status of the turn MUST use it. The backend MUST detect the language of the user's message and the system prompt MUST name it as the language to write in, falling back to the turn language when the message does not tell it (a title alone, «ok»). A language change during a request MUST apply from the next message.
+The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming, and every tool, card and status of the turn MUST use it. The backend MUST detect the language of the user's message and the system prompt MUST name it as the language to write in. Detection recognises only Spanish and English, positively: `detectar_idioma()` takes the most probable language of the fastText `lite` model and returns it only if it is `es` or `en` with confidence of at least 0.5. Anything else (another language, a title alone) is unknown and the prompt MUST name the turn language, that is, the account language. Detection MUST never fail a turn: empty text or a library error means unknown. A language change during a request MUST apply from the next message.
 
 #### Scenario: Interface in English, message in Spanish
 
@@ -184,6 +184,19 @@ The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming
 - GIVEN a user whose reviews and previous messages are in Spanish
 - WHEN they write «Something like Arrival, but lighter»
 - THEN the system prompt tells the model to reply in English
+
+#### Scenario: Message in Portuguese
+
+- GIVEN a user whose account language is `en` (or `es`)
+- WHEN they write «Na verdade, eu só gostei da aparência dos dragões»
+- THEN the detector returns unknown
+- AND the system prompt tells the model to reply in the account language, not in Portuguese or in the other of the two
+
+#### Scenario: A title alone
+
+- GIVEN a user whose account language is `en`
+- WHEN they write «Moon»
+- THEN the language is unknown and the system prompt tells the model to reply in English
 
 ### Requirement: Bounded turn
 

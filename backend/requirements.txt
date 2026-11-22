@@ -73,3 +73,7 @@ watchdog[watchmedo]>=4.0,<7.0
 
 # --- Linting ---
 ruff>=0.11,<1.0
+# Detecta si el mensaje del chat está en español o en inglés (`chatbot/idioma.py`).
+# Se usa con el modelo `lite` (lid.176.ftz de fastText, ~1 MB, ya viene dentro del
+# paquete: nunca descarga nada). Usa `fasttext-predict`, que no necesita numpy.
+fast-langdetect>=1.2,<2
