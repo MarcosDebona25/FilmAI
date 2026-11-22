@@ -320,6 +320,30 @@ docker compose exec backend python manage.py seed --solo-resenas
 
 El comando lleva cada cuenta de desarrollo activa y sin permisos de staff (`@filmai.com`) hasta **15 calificaciones**, o hasta cubrir el catálogo si tiene menos producciones. Conserva las calificaciones y reseñas existentes; completa las reseñas con texto hasta cubrir al menos el 60 % de esas notas, incluso si las calificaciones ya existían. Cada reseña depende de una calificación. Una de cada siete reseñas nuevas nace inactiva (`activa=False`) para probar la moderación (CU-017). Repetirlo con el mismo catálogo y cuentas no agrega filas.
 
+#### Poblar a gran escala (`seed_masivo`)
+
+Para probar con volumen (listas largas, moderación, búsqueda, chatbot) está `seed_masivo`: por defecto 500 cuentas (`masivo0001@filmai.com`…, más `usuario001..003`, todas con `Password123!`), unas 38 calificaciones por cuenta en promedio (cola larga, de 3 a 300), 80 % con reseña y 1 de cada 7 reseñas inactiva. Corre sobre el catálogo que ya exista (necesita al menos 20 producciones con póster) y tarda unos segundos.
+
+```bash
+docker compose exec backend python manage.py seed_masivo               # agrega las cuentas que falten, no borra nada
+docker compose exec backend python manage.py seed_masivo --reiniciar   # DESTRUCTIVO
+docker compose exec backend python manage.py seed_masivo --usuarios 50 --semilla 7 --calificaciones-medias 20 --porcentaje-resenas 60
+```
+
+> **Advertencia:** `--reiniciar` borra **todos** los usuarios que no son staff, con sus correos, cuentas de Google, calificaciones, reseñas, listas y chats. Conserva el staff y el catálogo. Sin `--reiniciar` el comando es idempotente por correo y solo crea las cuentas que faltan.
+
+Las reseñas salen del corpus versionado `backend/seed_data/resenas.jsonl.gz` (redactado con un modelo, ver `docs/decisiones.md`); sin entrada para un título usa las plantillas por género de `backend/seed_data/plantillas_genero.json` y, si faltan, las de `seed`. Flujo completo para armar el corpus (los lotes van a una carpeta de trabajo, nunca al repositorio):
+
+```bash
+docker compose exec backend python manage.py seed_catalogo
+docker compose exec backend python manage.py preparar_corpus_resenas --top 400 --lote 25 --por-votos 40 --salida /tmp/corpus
+# generar DIR/salida_*.jsonl (una línea {id_tmdb, tipo, idioma, banda, textos} por producción, idioma y banda)
+docker compose exec backend python manage.py compilar_corpus_resenas /tmp/corpus
+docker compose exec backend python manage.py seed_masivo --reiniciar
+```
+
+`preparar_corpus_resenas --por-votos N` ordena por los votos reales de TMDB (`vote_count.desc`, N páginas de películas y un tercio de series; sin la opción, por orden de inserción) y salta lo que ya está en el corpus; con `--omitir-existentes` también salta lo que ya tiene archivo en la carpeta. Especificación: `openspec/specs/seed-masivo/spec.md`.
+
 Para abrir Swagger UI o descargar el esquema OpenAPI, iniciá sesión primero en `/admin/` con una cuenta `is_staff`. Ambas rutas usan esa sesión de administración.
 
 #### Poblar el catálogo desde TMDB (`seed_catalogo`)
