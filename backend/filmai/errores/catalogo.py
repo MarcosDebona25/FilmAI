@@ -90,6 +90,13 @@ CATALOGO = {
     "chat_unavailable": DefinicionCodigo(
         "El chat no pudo procesar la solicitud.", {"chat": 503}
     ),
+    # Correos de cuenta (Brevo como respaldo de Resend, issue #181): ni Resend ni
+    # Brevo pudieron enviar. Solo registro y reenvío lo muestran; el reset y el
+    # aviso de cambio de contraseña lo registran en el log y siguen igual.
+    "email_unavailable": DefinicionCodigo(
+        "No se pudo enviar el correo. Intentá de nuevo en unos minutos.",
+        {"registro": 503, "reenvio": 503},
+    ),
     "server_error": DefinicionCodigo("Error interno del servidor.", {"api": 500}),
     "upstream_bad_request": DefinicionCodigo(
         "TMDB rechazó los parámetros de la solicitud.", {"tmdb": 400}

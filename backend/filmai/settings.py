@@ -238,7 +238,9 @@ REST_FRAMEWORK = {
         "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña (legacy)
         "recuperar_contrasena_email": "5/day",  # 5 solicitudes de recuperación por día por email (no por IP)
         # Tope por IP para el mismo pedido: el de arriba cuenta por correo y no
-        # frena a quien prueba muchos correos distintos (28/10/2026).
+        # frena a quien prueba muchos correos distintos (28/10/2026). Igual que
+        # los de registro y reenvío (más abajo), cuenta por destinatario e IP,
+        # no por cuota global: no cambia con Brevo.
         "recuperar_contrasena_ip": "10/hour",
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
@@ -255,8 +257,17 @@ REST_FRAMEWORK = {
         "login_ip": "30/min",
         # Google, con la misma tasa pero contador propio (26/10/2026).
         "google_ip": "30/min",
-        # Registro y reenvío disparan correos (cuota de Resend y reputación del
-        # dominio): tope por correo destino y por IP, más un enfriamiento.
+        # Registro y reenvío disparan correos. Estos topes cuentan por correo
+        # destino y por IP: protegen una bandeja (que nadie reciba cien correos
+        # no pedidos) y la reputación del remitente. NO protegen la cuota
+        # global, y por eso no cambian con Brevo: la capacidad gratuita
+        # combinada es de ~400 correos por día (Resend 100 + Brevo 300) y
+        # ~12 000 por mes (3 000 + ~9 000), y subir un tope solo daría más
+        # margen de abuso a cada persona. Un tope global lo agotaría cualquiera
+        # a propósito y bloquearía todos los registros del día; cuando ambos
+        # proveedores fallan, `email_unavailable` (503, Service Unavailable)
+        # hace visible el límite (D-3 de openspec/changes/brevo-respaldo).
+        # Las tasas están fijadas en usuarios/test_seguridad_throttles.py.
         "registro_correo": "5/hour",
         "registro_ip": "10/hour",
         "reenvio_correo": "3/hour",

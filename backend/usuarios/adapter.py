@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 
 from filmai.correos.servicio import enviar_correo
+from filmai.email_backends import EnvioFallido
+from filmai.errores.base import ExcepcionAPI
 from filmai.idioma import idioma_efectivo
 
 from .models import EstadoCuenta, TipoGenero, Usuario
@@ -69,7 +71,16 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
             context.get("request") or getattr(self, "request", None),
             context.get("user"),
         )
-        return enviar_correo(caso, email, context, idioma)
+        try:
+            return enviar_correo(caso, email, context, idioma)
+        except EnvioFallido as error:
+            # Ningún proveedor pudo enviar: el visitante recibe un 503 (Service
+            # Unavailable) con código propio en vez de un 500 (Internal Server
+            # Error). Solo `EnvioFallido`: un 400/422 del proveedor (datos
+            # inválidos) sigue siendo un error de verdad, no «correo no
+            # disponible». El contexto elige entre el alta y el reenvío.
+            contexto = "registro" if caso == "confirmacion_registro" else "reenvio"
+            raise ExcepcionAPI("email_unavailable", contexto=contexto) from error
 
     def get_email_confirmation_url(self, request, emailconfirmation):
         """Envía la confirmación a la pantalla correspondiente de la SPA."""

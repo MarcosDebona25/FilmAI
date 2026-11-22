@@ -3,11 +3,15 @@
 from datetime import date, timedelta
 from unittest.mock import patch
 
+from allauth.account.models import EmailAddress
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as ErrorDjango
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from filmai.email_backends import ErrorDeProveedor, ProveedorBrevo, ProveedorResend
 
 from .adapter import UsuarioAccountAdapter
 from .avatares import AVATAR_ID_DEFAULT, AVATAR_IDS_VALIDOS
@@ -213,3 +217,161 @@ class ErroresRegistroTests(TestCase):
             ],
         )
         self.assertFalse(Usuario.objects.filter(correo=self.payload["correo"]).exists())
+
+
+@override_settings(
+    DEBUG=False,
+    EMAIL_BACKEND="filmai.email_backends.RespaldoBackend",
+    RESEND_API_KEY="re_de_prueba",
+    BREVO_API_KEY="xkeysib-de-prueba",
+    RESEND_TEST_RECIPIENT="",
+    BREVO_TEST_RECIPIENT="",
+)
+class CorreoNoDisponibleTests(TestCase):
+    """Con Resend y Brevo caídos (D-4 de brevo-respaldo): `email_unavailable`.
+
+    Se usa el `RespaldoBackend` de verdad y se simula la caída en el borde, en
+    `enviar` de cada proveedor, así que el 503 (Service Unavailable) sale de la
+    cadena completa: proveedor, backend, `enviar_correo`, adaptador y vista.
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+        self.client = APIClient()
+        self.payload = {
+            "correo": "nueva@example.com",
+            "nombre_usuario": "nueva123",
+            "nombre": "María",
+            "apellido": "Pérez",
+            "fecha_nacimiento": "1990-01-01",
+            "genero": "no_especifica",
+            "pais": "AR",
+            "acepta_terminos": True,
+            "password1": "NuevaClave456!",
+            "password2": "NuevaClave456!",
+        }
+
+    @staticmethod
+    def _caida(proveedor, estado):
+        def enviar(self, message):
+            raise ErrorDeProveedor(proveedor, transitorio=True, estado=estado)
+
+        return enviar
+
+    def ambos_caidos(self):
+        """Resend 503 (Service Unavailable) y Brevo 402 (Payment Required)."""
+        return (
+            patch.object(ProveedorResend, "enviar", self._caida("Resend", 503)),
+            patch.object(ProveedorBrevo, "enviar", self._caida("Brevo", 402)),
+        )
+
+    def registrar(self):
+        return self.client.post("/api/auth/registration/", self.payload, format="json")
+
+    def test_registro_sin_proveedor_responde_503_y_no_deja_cuenta(self):
+        """`transaction.atomic()` deshace el INSERT del usuario y del EmailAddress."""
+        resend, brevo = self.ambos_caidos()
+        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+            response = self.registrar()
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data["code"], "email_unavailable")
+        self.assertFalse(Usuario.objects.filter(correo="nueva@example.com").exists())
+        self.assertFalse(
+            EmailAddress.objects.filter(email="nueva@example.com").exists()
+        )
+
+    def test_la_respuesta_503_no_lleva_texto_del_proveedor_ni_direcciones(self):
+        resend, brevo = self.ambos_caidos()
+        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+            response = self.registrar()
+        self.assertNotIn(b"nueva@example.com", response.content)
+        self.assertNotIn(b"Resend", response.content)
+        self.assertNotIn(b"Brevo", response.content)
+
+    def test_reintento_con_los_proveedores_recuperados_crea_la_cuenta(self):
+        resend, brevo = self.ambos_caidos()
+        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+            self.assertEqual(self.registrar().status_code, 503)
+        cache.clear()
+        with patch.object(ProveedorResend, "enviar", return_value="id-1"):
+            response = self.registrar()
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Usuario.objects.filter(correo="nueva@example.com").exists())
+
+    def test_datos_invalidos_del_mensaje_no_se_informan_como_correo_no_disponible(self):
+        """Un 422 (Unprocessable Entity) no es `EnvioFallido`: sigue siendo un error."""
+
+        def invalido(self, message):
+            raise ErrorDeProveedor("Resend", transitorio=False, estado=422)
+
+        with (
+            patch.object(ProveedorResend, "enviar", invalido),
+            patch.object(ProveedorBrevo, "enviar") as brevo,
+            self.assertLogs("filmai.email_backends", "ERROR"),
+        ):
+            response = self.registrar()
+        brevo.assert_not_called()
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.data["code"], "server_error")
+        self.assertFalse(Usuario.objects.filter(correo="nueva@example.com").exists())
+
+    def test_reenvio_sin_proveedor_responde_503(self):
+        with patch.object(ProveedorResend, "enviar", return_value="id-1"):
+            self.assertEqual(self.registrar().status_code, 201)
+        cache.clear()
+        resend, brevo = self.ambos_caidos()
+        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+            response = self.client.post(
+                "/api/auth/registration/resend-email/",
+                {"email": "nueva@example.com"},
+                format="json",
+            )
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data["code"], "email_unavailable")
+
+    def test_reset_sigue_respondiendo_el_200_generico(self):
+        """No revela nada: la respuesta es idéntica exista o no la cuenta."""
+        usuario = UsuarioFactory()
+        resend, brevo = self.ambos_caidos()
+        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+            con_cuenta = self.client.post(
+                "/api/auth/password/reset/", {"email": usuario.correo}, format="json"
+            )
+        cache.clear()
+        sin_cuenta = self.client.post(
+            "/api/auth/password/reset/", {"email": "nadie@example.com"}, format="json"
+        )
+        self.assertEqual(con_cuenta.status_code, 200)
+        self.assertEqual(sin_cuenta.status_code, 200)
+        # Mismo cuerpo salvo el contador de intentos, que es por correo.
+        cuerpos = [r.json() for r in (con_cuenta, sin_cuenta)]
+        for cuerpo in cuerpos:
+            cuerpo.pop("intentos_restantes", None)
+        self.assertEqual(cuerpos[0], cuerpos[1])
+
+    def test_cambio_de_contrasena_se_confirma_aunque_el_aviso_no_salga(self):
+        usuario = UsuarioFactory()
+        # La vista lee el JWT del pedido (`request.auth`): hace falta uno real.
+        self.client.force_authenticate(
+            usuario, token=RefreshToken.for_user(usuario).access_token
+        )
+        resend, brevo = self.ambos_caidos()
+        with (
+            resend,
+            brevo,
+            self.assertLogs("filmai.email_backends", "ERROR"),
+            self.captureOnCommitCallbacks(execute=True),
+        ):
+            response = self.client.post(
+                "/api/auth/password/change/",
+                {
+                    "old_password": "Password123!",
+                    "password1": "OtraClave789!",
+                    "password2": "OtraClave789!",
+                },
+                format="json",
+            )
+        self.assertEqual(response.status_code, 200)
+        usuario.refresh_from_db()
+        self.assertTrue(usuario.check_password("OtraClave789!"))

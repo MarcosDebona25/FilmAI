@@ -369,6 +369,8 @@ docker compose exec backend python manage.py send_test_email
 
 En desarrollo, `RESEND_TEST_RECIPIENT` puede redirigir el envío al destinatario de prueba configurado en `.env`.
 
+Con `EMAIL_BACKEND=filmai.email_backends.RespaldoBackend` el correo sale por Resend y, si Resend no puede tomarlo (caída, cuota agotada, clave inválida), por Brevo; un correo que Resend aceptó nunca se reenvía. Se configura con `BREVO_API_KEY`, `BREVO_FROM_EMAIL` (remitente único verificado en Brevo) y, solo en desarrollo, `BREVO_TEST_RECIPIENT`; la opción C de `.env.example` lo explica. Si fallan los dos, el registro y el reenvío de confirmación responden 503 (Service Unavailable) con el código `email_unavailable`.
+
 ---
 
 ## Accesibilidad

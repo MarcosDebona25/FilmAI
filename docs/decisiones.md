@@ -680,6 +680,55 @@ Archivos: `backend/filmai/correos/servicio.py`, `backend/templates/correos/base.
 `enviar_correo()` llama a Resend dentro del pedido HTTP; pasará a una tarea con reintentos con espera creciente, porque un correo fallido no tiene backfill que lo recupere. Resend gratis da 100 correos por día y los topes son por IP: una sola IP puede agotar el cupo y dejar sin confirmación ni reset a los usuarios legítimos. Se usará Brevo (300 por día) cuando Resend no pueda entregar, con un backend que recorra proveedores como `LLM_PROVEEDORES`: 429 (Too Many Requests), 5xx y timeout pasan al siguiente; un 400 (Bad Request) no. Descartados Amazon SES (dominio, DKIM y sandbox), Mailjet y Mailtrap (menos cupo). Plan en `openspec/changes/brevo-respaldo/`.
 Archivos: `backend/filmai/email_backends.py`, `docs/05_Plan_de_Desarrollo.md`
 
+### 22/11/2026 — Brevo como respaldo de Resend y `email_unavailable` (#181)
+
+Resend va primero; si no puede tomar un mensaje, ese mismo mensaje sale por Brevo (API transaccional v3, 300 correos por día gratis). Todo vive detrás de un único `EMAIL_BACKEND` (`filmai.email_backends.RespaldoBackend`): `enviar_correo()`, el adaptador de allauth y los flujos de contraseña no saben qué proveedor envió, igual que desde la decisión del 24/08/2026. Se hizo en dos PR apilados: el 1 (#243) trae los proveedores y el respaldo; el 2, los límites, el código `email_unavailable` y esta documentación.
+
+**Decisiones D-1 a D-6, aceptadas por el usuario el 22/11/2026 tal como se proponían:**
+
+| #   | Decisión                                                                                                                                                                                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D-1 | 401 (Unauthorized) y 403 (Forbidden) de Resend pasan a Brevo: una clave inválida o revocada es justo el caso «proveedor inutilizable». Cada paso al respaldo se loguea en `WARNING` con el motivo |
+| D-2 | Un timeout de lectura de Resend también pasa a Brevo: un duplicado es inofensivo (los dos enlaces valen) y un correo que falta bloquea la cuenta. La `Idempotency-Key` de Resend no ayuda       |
+| D-3 | Se mantienen los topes por correo y por IP, sin tope global; solo cambia el comentario de `settings.py`                                                                                          |
+| D-4 | `email_unavailable` con 503 (Service Unavailable) en registro y reenvío; registro atómico; el reset sigue con el 200 (OK) genérico                                                               |
+| D-5 | Variables propias `BREVO_FROM_EMAIL` y `BREVO_TEST_RECIPIENT` (Brevo no puede enviar como `onboarding@resend.dev`)                                                                               |
+| D-6 | `httpx` como cliente de Brevo (un solo endpoint, ya es dependencia y tiene transporte de prueba); descartado `django-anymail`, que reemplazaría también el SDK de Resend                         |
+
+**Qué errores pasan a Brevo.** Solo cuando el primer proveedor levantó error; un 2xx es definitivo y un mensaje aceptado nunca se reenvía. Un intento por proveedor, porque el pedido HTTP espera (los reintentos son de Q-08).
+
+| Falla                                                                  | ¿Pasa a Brevo?                                              |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Conexión, DNS, TLS o timeout                                           | Sí                                                          |
+| 5xx                                                                    | Sí                                                          |
+| 429 (Too Many Requests): límite, cuota diaria o mensual                | Sí                                                          |
+| 402 (Payment Required)                                                 | Sí                                                          |
+| 401 (Unauthorized) o 403 (Forbidden): clave, IP o remitente            | Sí (D-1)                                                    |
+| 400 (Bad Request) o 422 (Unprocessable Entity): datos del mensaje      | No: los mismos datos fallarían igual; se levanta de inmediato |
+| Falta la clave en la configuración                                     | El proveedor se saltea                                      |
+| Cualquier otra excepción                                               | No: se trata como un bug                                    |
+
+**Lo que se descubrió al inspeccionar el SDK de Resend (2.53.2).** Se clasifica por código HTTP y no por clase: el SDK levanta `ValidationError` también con 401 y 403 (por ejemplo, enviar desde `onboarding@resend.dev` a quien no es el dueño de la cuenta), y todo error de transporte (conexión, DNS, TLS, timeout) llega como un `ResendError` genérico con código 500, sin distinguir un timeout de una conexión caída. El timeout por defecto del SDK es de 30 s; se fijó en 10 s para ambos proveedores, porque dos proveedores lentos sostendrían el registro durante un minuto. `ErrorDeProveedor` guarda solo proveedor, estado y tipo de error y se levanta `from None`: el texto del proveedor puede repetir direcciones (el 403 de prueba nombra al dueño de la cuenta) y ningún log o traza debe llevarlas.
+
+**Cuando fallan los dos proveedores.** Si todos los activos fallan por algo transitorio, el backend levanta `EnvioFallido`; un error no transitorio (400 o 422) sale como `ErrorDeProveedor`, no como `EnvioFallido`, y no se informa como «correo no disponible».
+
+| Flujo                  | Antes                                    | Ahora                                                                                                                                              |
+| ---------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registro               | 500 (Internal Server Error), cuenta `PENDIENTE` | 503 (Service Unavailable) `email_unavailable`; `perform_create` corre en `transaction.atomic()`: no quedan `Usuario` ni `EmailAddress` y el visitante reintenta con el mismo correo |
+| Reenvío de confirmación | 500 (Internal Server Error)             | 503 (Service Unavailable) `email_unavailable`                                                                                                      |
+| Reset de contraseña    | 200 (OK) genérico, error en el log       | Igual (anti-enumeración)                                                                                                                           |
+| Aviso de cambio de contraseña | Error en el log, contraseña guardada | Igual (corre tras el commit)                                                                                                                  |
+
+`EnvioFallido` se convierte en `ExcepcionAPI("email_unavailable")` dentro de `UsuarioAccountAdapter.send_mail`, con contexto `registro` o `reenvio` según el caso: un solo punto cubre las dos vistas y no cambia la forma del esquema OpenAPI (solo suma el código al enum de `ErrorEnvelope`). El frontend ya traducía por código: `ApiError` toma el texto de `errors.codes.<código>`, nunca de `detail`, `debug` ni `codigo`. Textos aprobados por el usuario el 22/11/2026: «No pudimos enviar el correo. Intentá de nuevo en unos minutos.» y «We couldn’t send the email. Try again in a few minutes.».
+
+**Capacidad combinada (planes gratuitos, noviembre de 2026; volver a verificar antes de desplegar).** Resend 100 por día y 3 000 por mes; Brevo 300 por día (~9 000 por mes); combinados ~400 por día y ~12 000 por mes. En un mes corrido el tope mensual de Resend se agota primero y Brevo cubre hasta 300 por día. Los topes por correo e IP (registro 5 y 10 por hora, reenvío 1 por minuto, 3 y 10 por hora, reset 5 por día y 10 por hora) no protegen la cuota global sino una bandeja y la reputación del remitente, así que no se tocaron; las siete tasas quedaron fijadas en `usuarios/test_seguridad_throttles.py`. Un tope global lo agotaría cualquiera a propósito y bloquearía todos los registros del día.
+
+**Para desplegar.** Sin dominio propio solo se puede enviar desde un remitente único verificado en Brevo, y un remitente de Gmail puede fallar DMARC al salir por Brevo: el correo llega a spam o se rechaza. Configurar SPF y DKIM de un dominio propio es parte del despliegue. Además, en Brevo hay que revisar «Authorised IPs» (Settings → Security): con una IP no autorizada cada llamada responde 401 (Unauthorized) aunque la clave sea correcta.
+
+**Pendiente.** La prueba manual con cuentas reales (clave válida; `RESEND_API_KEY` inválida; ambas inválidas) la hace el usuario y su resultado se anotará acá. Q-08 (correos por Celery) tendrá que rever dónde se muestra `email_unavailable`: con la cola el pedido ya no sabe si el correo salió.
+
+Archivos: `backend/filmai/email_backends.py`, `backend/filmai/email_validation.py`, `backend/filmai/settings.py`, `backend/filmai/errores/catalogo.py`, `backend/usuarios/adapter.py`, `backend/usuarios/views.py`, `backend/filmai/management/commands/send_test_email.py`, `backend/filmai/test_email_respaldo.py`, `backend/filmai/tests.py`, `backend/usuarios/test_errores_registro.py`, `backend/usuarios/test_seguridad_throttles.py`, `contracts/error-codes.json`, `contracts/openapi.yaml`, `traducciones/claves-extra.csv`, `frontend/messages/{en,es}/common.json`, `frontend/tests/access-screens.test.tsx`, `frontend/tests/i18n-shared.test.ts`, `.env.example`, `docs/05_Plan_de_Desarrollo.md`, `README.md`, `openspec/specs/emails/spec.md`.
+
 ---
 
 ## Interfaz

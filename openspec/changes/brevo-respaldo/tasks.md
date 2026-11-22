@@ -82,44 +82,45 @@
 
 ## Phase 2: Limits and the `email_unavailable` code (PR 2)
 
-- [ ] 2.1 RED `usuarios/test_seguridad_throttles.py`: the seven email scopes
+- [x] 2.1 RED `usuarios/test_seguridad_throttles.py`: the seven email scopes
       keep their rates (D-3) and each view (registration, resend, reset)
       lists the expected throttle classes
-- [ ] 2.2 `settings.py`: rewrite the comment above the registration/resend
+- [x] 2.2 `settings.py`: rewrite the comment above the registration/resend
       scopes and the reset ones — what each protects (one inbox, one IP,
       reputation) and the combined free capacity (~400/day, ~12 000/month)
-- [ ] 2.3 RED `usuarios/test_errores_registro.py`: with both providers
+- [x] 2.3 RED `usuarios/test_errores_registro.py`: with both providers
       failing, `POST` registration → 503 (Service Unavailable),
       `code=email_unavailable`, no `Usuario`, no `EmailAddress`; a retry
       after the providers recover → 201 (Created)
-- [ ] 2.4 RED: resend confirmation with both providers failing → 503
+- [x] 2.4 RED: resend confirmation with both providers failing → 503
       (Service Unavailable) `email_unavailable`; reset still answers the
       generic 200 (OK); password change still commits
-- [ ] 2.5 GREEN: `email_unavailable` in `filmai/errores/catalogo.py`
+- [x] 2.5 GREEN: `email_unavailable` in `filmai/errores/catalogo.py`
       (`{"registro": 503, "reenvio": 503}`), the `APIException` subclass,
       `transaction.atomic()` in `RegisterView.perform_create`, the catch of
       `EnvioFallido` for resend (wrapper in `filmai/urls.py` or adapter;
       check `contracts/openapi.yaml` does not change shape)
-- [ ] 2.6 Contract tests: `test_cobertura_codigos`, `test_contrato_codigos`,
+- [x] 2.6 Contract tests: `test_cobertura_codigos`, `test_contrato_codigos`,
       `test_metadatos_errores`; regenerate `contracts/` only if a test asks
       for it
-- [ ] 2.7 Copy: `email_unavailable` in `traducciones/claves.csv` (en/es,
+- [x] 2.7 Copy: `email_unavailable` in `traducciones/claves.csv` (en/es,
       approved by the user), generated catalogs, `npm run i18n:check`
-- [ ] 2.8 Frontend: registration and resend show the translated message for
+- [x] 2.8 Frontend: registration and resend show the translated message for
       `email_unavailable` (by code, never `detail`); Vitest for both
-- [ ] 2.9 `ruff format . && ruff check .`; `npx prettier --check .`; full
+- [x] 2.9 `ruff format . && ruff check .`; `npx prettier --check .`; full
       backend suite; `npm run test:unit -- --maxWorkers=4`
 
 ## Phase 3: Documentation (last PR of the chain)
 
-- [ ] 3.1 `docs/decisiones.md`: entry «Brevo como respaldo de Resend» with
+- [x] 3.1 `docs/decisiones.md`: entry «Brevo como respaldo de Resend» with
       D-1 to D-6 as answered, the error table, capacity and affected files
-- [ ] 3.2 Canonical spec `openspec/specs/emails/spec.md`: merge the delta of
+- [x] 3.2 Canonical spec `openspec/specs/emails/spec.md`: merge the delta of
       `specs/emails/spec.md`
-- [ ] 3.3 `docs/05_Plan_de_Desarrollo.md` and `README.md`: where they say the
+- [x] 3.3 `docs/05_Plan_de_Desarrollo.md` and `README.md`: where they say the
       email goes through Resend, add the fallback and the new variables
-- [ ] 3.4 `graphify update .` and commit `graphify-out/` with the docs
-- [ ] 3.5 Remove `openspec/changes/brevo-respaldo/`
+- [x] 3.4 `graphify update .` and commit `graphify-out/` with the docs
+- [x] 3.5 Keep `openspec/changes/brevo-respaldo/` until phase 4 is done: the
+      coordinator archives (deletes) it at the end, after the manual check
 
 ## Phase 4: Brevo account and manual check
 
@@ -127,7 +128,7 @@
       `BREVO_FROM_EMAIL`; check «Authorised IPs» (Settings → Security) and
       either allow the development/production IP or disable the restriction,
       or every call answers 401 (Unauthorized)
-- [ ] 4.2 SPF/DKIM: without an own domain only the single sender applies.
+- [x] 4.2 SPF/DKIM: without an own domain only the single sender applies.
       Note in `docs/decisiones.md` that a Gmail sender may fail DMARC through
       Brevo, and that the domain setup is part of the deploy
 - [ ] 4.3 Manual end-to-end in Docker (`-p filmai`, `RUN_MIGRATIONS=false`

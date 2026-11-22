@@ -5,9 +5,13 @@ ninguna rafaga recibía 429 (Too Many Requests): se podían probar contraseñas 
 tope y disparar correos sin tope.
 """
 
+from typing import ClassVar
+
+from django.conf import settings
 from django.core import mail
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
+from django.urls import resolve
 from rest_framework.test import APIClient
 
 from .factories import UsuarioFactory
@@ -269,3 +273,54 @@ class ResetContrasenaThrottleTests(ThrottleBase):
         )
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(respuesta.json()["intentos_restantes"], 4)
+
+
+class TopesDeCorreoFijadosTests(SimpleTestCase):
+    """D-3 del cambio brevo-respaldo: con Brevo la capacidad combinada crece
+    (~400 correos por día), pero los topes siguen siendo por destinatario y por
+    IP. No protegen la cuota global, protegen una bandeja y la reputación del
+    remitente, así que subirlos solo daría más margen de abuso a cada persona.
+    Si alguien cambia una tasa, que sea a propósito y rompa este test."""
+
+    TASAS: ClassVar[dict] = {
+        "registro_correo": "5/hour",
+        "registro_ip": "10/hour",
+        "reenvio_correo": "3/hour",
+        "reenvio_enfriamiento": "1/min",
+        "reenvio_ip": "10/hour",
+        "recuperar_contrasena_email": "5/day",
+        "recuperar_contrasena_ip": "10/hour",
+    }
+
+    def test_las_siete_tasas_de_correo_se_mantienen(self):
+        tasas = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
+        for scope, tasa in self.TASAS.items():
+            with self.subTest(scope=scope):
+                self.assertEqual(tasas[scope], tasa)
+
+    def test_no_hay_tope_global_de_correos(self):
+        """Un contador global lo agotaría cualquiera a propósito (D-3)."""
+        tasas = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
+        self.assertFalse(
+            [s for s in tasas if "global" in s],
+            "D-3: sin tope global; la falla del proveedor es el límite honesto",
+        )
+
+    def test_cada_vista_lista_sus_clases_de_throttle(self):
+        esperadas = {
+            REGISTRO: ["RegistroCorreoThrottle", "RegistroIPThrottle"],
+            REENVIO: [
+                "ReenvioEnfriamientoThrottle",
+                "ReenvioCorreoThrottle",
+                "ReenvioIPThrottle",
+            ],
+            "/api/auth/password/reset/": ["EmailRateThrottle", "ResetIPThrottle"],
+        }
+        for ruta, nombres in esperadas.items():
+            with self.subTest(ruta=ruta):
+                func = resolve(ruta).func
+                clases = (
+                    getattr(func, "initkwargs", {}).get("throttle_classes")
+                    or func.cls.throttle_classes
+                )
+                self.assertEqual([c.__name__ for c in clases], nombres)
