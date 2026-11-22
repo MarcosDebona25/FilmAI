@@ -106,8 +106,10 @@ message Resend could not take because of a transient failure, MUST send that
 same message through Brevo's transactional API. Transient failures are
 connection and TLS errors, timeouts, 5xx, 429 (Too Many Requests), 402
 (Payment Required), 401 (Unauthorized) and 403 (Forbidden). A 400 (Bad
-Request) or 422 (Unprocessable Entity) for invalid message data MUST NOT fall
-back. A message Resend accepted (2xx) MUST NOT be sent through Brevo. Each
+Request) or 422 (Unprocessable Entity) for invalid message data from the first
+provider MUST NOT fall back. Once a transient failure has happened, any error
+from the fallback provider (for example a 400 (Bad Request) from Brevo for an
+unverified sender) MUST count as a failure of both providers (`EnvioFallido`). A message Resend accepted (2xx) MUST NOT be sent through Brevo. Each
 message MUST be tried once per provider. Callers (`enviar_correo()`, allauth's
 adapter, the password flows) MUST NOT know which provider sent.
 
@@ -138,6 +140,12 @@ adapter, the password flows) MUST NOT know which provider sent.
 - WHEN the message is sent
 - THEN Brevo is not called
 - AND the error is raised, or 0 is returned with `fail_silently=True`
+
+#### Scenario: Fallback rejects after a transient failure
+
+- GIVEN Resend answers 503 (Service Unavailable) and Brevo 400 (Bad Request)
+- WHEN a message is sent with `fail_silently=False`
+- THEN `EnvioFallido` is raised, not `ErrorDeProveedor`
 
 #### Scenario: Partial batch
 
@@ -175,9 +183,10 @@ rules.
 
 With `DEBUG=False` and `RespaldoBackend`, start-up MUST fail when
 `RESEND_API_KEY` or `BREVO_API_KEY` is missing, when `RESEND_TEST_RECIPIENT` or
-`BREVO_TEST_RECIPIENT` is set, or when `BREVO_FROM_EMAIL` is empty while
-`DEFAULT_FROM_EMAIL` is a `@resend.dev` address. With `BrevoBackend` it MUST
-fail without `BREVO_API_KEY` or with `BREVO_TEST_RECIPIENT`. The rules for
+`BREVO_TEST_RECIPIENT` is set, or when Brevo's effective sender (`BREVO_FROM_EMAIL`, or
+`DEFAULT_FROM_EMAIL` when it is empty) has no `@` address or is a `@resend.dev`
+address. With `BrevoBackend` it MUST fail without `BREVO_API_KEY`, with
+`BREVO_TEST_RECIPIENT` or with that same invalid sender. The rules for
 `ResendBackend` alone stay as they are.
 
 #### Scenario: Missing Brevo key in production
