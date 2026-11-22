@@ -342,6 +342,20 @@ class LoQueRecibeElModeloTests(BaseOrquestador):
         )
         self.assertEqual(para.call_args.args[1], "es")
 
+    async def test_un_mensaje_en_portugues_se_responde_en_el_idioma_de_la_cuenta(self):
+        # El bug del 22/11/2026: un mensaje en portugués se tomaba por español y el
+        # bot respondía en español aunque la cuenta fuera inglesa. Ahora el
+        # detector da `None` y el prompt nombra el idioma del turno.
+        texto = "Na verdade, eu só gostei da aparência dos dragões."
+        for idioma, esperado in (
+            ("es", "respondé en español"),
+            ("en", "reply in English"),
+        ):
+            with self.subTest(idioma=idioma):
+                await self.correr([["Ok"]], texto=texto, idioma=idioma)
+                sistema = self.mensajes_del_primer_pedido()[0]["content"]
+                self.assertIn(esperado, sistema)
+
     async def test_el_mensaje_actual_va_anonimizado_y_ultimo(self):
         await self.correr([["Hola"]], texto="soy Juan Perez, mail j@x.com")
 
