@@ -276,7 +276,7 @@ class ResetContrasenaThrottleTests(ThrottleBase):
 
 
 class TopesDeCorreoFijadosTests(SimpleTestCase):
-    """D-3 del cambio brevo-respaldo: con Brevo la capacidad combinada crece
+    """D-3 de Brevo como respaldo (docs/decisiones.md): con Brevo la capacidad combinada crece
     (~400 correos por día), pero los topes siguen siendo por destinatario y por
     IP. No protegen la cuota global, protegen una bandeja y la reputación del
     remitente, así que subirlos solo daría más margen de abuso a cada persona.

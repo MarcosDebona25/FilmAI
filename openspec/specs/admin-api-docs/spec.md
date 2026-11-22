@@ -17,7 +17,7 @@ a regular user MUST NOT expose either resource.
 
 - GIVEN a staff user signed in through Django Admin
 - WHEN they request `/api/docs/` and `/api/schema/`
-- THEN both return 200
+- THEN both return 200 (OK)
 
 #### Scenario: A regular user or visitor requests documentation
 
@@ -28,18 +28,18 @@ a regular user MUST NOT expose either resource.
 ### Requirement: Access denial explains the next step
 
 For browser requests, both documentation routes MUST respond with an HTML page
-and HTTP 403. The page MUST show an admin login form when there is no usable
+and HTTP 403 (Forbidden). The page MUST show an admin login form when there is no usable
 session, and an explanation naming the current account when the session lacks
 `is_staff`, with an action to switch account. The page MUST be served in the
 account's language, then the `Accept-Language` preference, then English.
-Clients requesting JSON MUST receive a 403 JSON response with a useful
+Clients requesting JSON MUST receive a 403 (Forbidden) JSON response with a useful
 `detail` message.
 
 #### Scenario: A visitor opens the schema in a browser
 
 - GIVEN no Django session and an `Accept: text/html` request
 - WHEN `/api/schema/` is opened
-- THEN the response is an HTML page with status 403 containing the login form
+- THEN the response is an HTML page with status 403 (Forbidden) containing the login form
 - AND the form returns to `/api/schema/` after a successful login
 
 #### Scenario: A signed-in user lacks staff permission
@@ -53,7 +53,7 @@ Clients requesting JSON MUST receive a 403 JSON response with a useful
 
 - GIVEN no Admin session and an `Accept: application/json` request
 - WHEN `/api/schema/` is requested
-- THEN the response is a 403 JSON object explaining how to get access
+- THEN the response is a 403 (Forbidden) JSON object explaining how to get access
 
 ### Requirement: The login form only admits active staff
 
@@ -61,7 +61,7 @@ Clients requesting JSON MUST receive a 403 JSON response with a useful
 username, and open the Django session only for active accounts with
 `is_staff=True`. Wrong credentials, unknown accounts and regular accounts MUST
 produce the same message. After ten failed attempts from one IP in sixty
-minutes the form MUST answer 429 until the window expires. The page MUST state
+minutes the form MUST answer 429 (Too Many Requests) until the window expires. The page MUST state
 this policy and the attempts left after a failure. The `next` value
 MUST be `/api/docs/` or `/api/schema/`; anything else returns to `/api/docs/`.
 
@@ -87,7 +87,7 @@ in the same browser.
 
 - GIVEN a staff user with a valid Django Admin session and an invalid `access` cookie
 - WHEN they request either documentation route
-- THEN the route returns 200
+- THEN the route returns 200 (OK)
 
 ### Requirement: The generated schema has a versioned baseline
 

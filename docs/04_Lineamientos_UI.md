@@ -14,7 +14,7 @@ Página Pública (sin sesión)
 App Autenticada
 ├── Inicio (Home)          ← descubrimiento: recomendaciones, tendencias, novedades
 ├── Buscar                 ← página /search con catálogo unificado + toggle Todo/Películas/Series + filtros
-├── Listas                 ← favoritos, pendientes, vistas + personalizadas
+├── Listas                 ← favoritos, pendientes, viendo, vistas + personalizadas
 └── [Avatar]               ← dropdown: Mi perfil / Mis reseñas / Preferencias / Cerrar sesión
 ```
 
@@ -46,8 +46,8 @@ App Autenticada
 | 12  | Perfil (con edición inline)            | CU-005, CU-006 | Autenticada         |
 | 13  | Mis reseñas                            | CU-015         | Autenticada         |
 | 14  | Preferencias                           | CU-005, CU-007 | Autenticada         |
-| 15  | 404 — Página no encontrada             | Varios         | Mixta               |
-| 16  | Error genérico (500 / timeout)         | Varios         | Mixta               |
+| 15  | 404 (Not Found) — Página no encontrada | Varios         | Mixta               |
+| 16  | Error genérico (500 (Internal Server Error) / timeout) | Varios         | Mixta               |
 
 > \* Mixta = visible sin login, pero acciones (calificar, agregar a listas) requieren autenticación.
 
@@ -114,7 +114,7 @@ este modelo (Inicio, Buscar, Listas + avatar).
 
 1. Por cada tipo, los **3 géneros más repetidos** entre las producciones de ese tipo calificadas con 7+ por el usuario. Un empate lo gana el género de la calificación más reciente.
 2. Llamada a `/discover/movie` o `/discover/tv` con esos géneros unidos con OR (`with_genres=a|b|c`), ordenado por `popularity.desc` y con `vote_count.gte=100`. El mínimo de votos saca títulos sin votos y contenido adulto que TMDB no marca como tal (verificado el 13/10/2026).
-3. Excluir los pares `(id_tmdb, tipo)` que el usuario ya tiene en «Vistas» (con la regla «calificada ⇒ vista», 30/09/2026, eso ya cubre lo calificado) o en «Pendientes» (desde el 13/11/2026: ya los tiene anotados). Favoritos no excluye.
+3. Excluir los pares `(id_tmdb, tipo)` que el usuario ya tiene en «Vistas» o en «Viendo» (desde el 15/11/2026: lo que está mirando no se le recomienda), y los de «Pendientes» (desde el 13/11/2026: ya los tiene anotados). Calificar los pasa a «Vistas», así que lo calificado queda excluido mientras siga ahí. Favoritos no excluye.
 4. Devolver hasta 15 resultados de la primera página de TMDB. En «Todo» se alternan película y serie hasta 15.
 
 **Endpoint**: `GET /api/catalogo/recommended/?tipo=all|movie|tv`, solo con sesión. Devuelve también los nombres de los géneros usados (como mucho 3), que la fila muestra como subtítulo («Based on your high ratings in Thriller, Drama, and Crime»). Sin calificaciones de 7 o más responde vacío y la fila se oculta.
@@ -201,7 +201,7 @@ Para buscar, el usuario abre la lupa de la navbar (en celular, la pestaña «Sea
 
 **Selector global (30/09/2026):** arriba de las filas, `Todo · Películas · Series`. «Todo» es el valor por defecto y mezcla los dos tipos; «Películas» y «Series» cambian la fuente de cada fila. En «Recomendado para ti», cada tipo usa los géneros de lo que el usuario calificó con 7+ de ese tipo, y «Todo» es la unión de ambos, sin traducir géneros entre películas y series.
 
-**Implementación (13/10/2026, SDD `openspec/changes/home-catalogo/`):**
+**Implementación (13/10/2026; hoy vive en `openspec/specs/home-ui/spec.md`):**
 
 - Ruta `/home`, pública. El selector vive en la URL (`/home?type=movie` o `?type=tv`; sin parámetro, «Todo»), así que al volver de una ficha se conserva. En escritorio va dentro del Hero, debajo de la barra; en celular, entre la barra y el Hero.
 - **Hero**: en «Todo», el primer título de tendencias con imagen de fondo, con la etiqueta «#N en tendencias» según su posición real. En «Películas» y «Series», el primero de ese tipo con imagen de fondo que no sea el Hero de «Todo», con la etiqueta «Destacada de la semana». Así cada opción del selector tiene un Hero distinto. Sinopsis recortada a 3 líneas y un único botón, «Ver detalle». El tamaño del título depende de su largo (14/10/2026): hasta 16 caracteres, el del canvas (152 px en escritorio, 72 px en celular); de 17 a 28, 112/56 px; más largos, 88/44 px.
@@ -300,7 +300,7 @@ la lupa de la navbar (Enter o «See all results») o la pestaña de la barra inf
 Se accede clickeando cualquier MediaCard desde Home, Buscar, o Listas. Reemplaza el content
 area dentro del shell (navbar + FAB se mantienen). La navegación hacia atrás es vía breadcrumb.
 
-**Implementación (14/10/2026, SDD `openspec/changes/title-page/`).** Manda el canvas («Title page · desktop/mobile»); donde esta sección dice otra cosa, vale esto:
+**Implementación (14/10/2026; hoy vive en `openspec/specs/title-page-ui/spec.md`).** Manda el canvas («Title page · desktop/mobile»); donde esta sección dice otra cosa, vale esto:
 
 - Rutas `/movie/[id]` y `/tv/[id]`. El origen viaja en la URL: `?from=home`, `search`, `reviews` o `list-{id}`; sin parámetro, la miga empieza en Home.
 - Calificaciones como «★ 9» o «★ 8,5», nunca «X/10» (decisión del 03/10/2026), en la ficha, el modal y las reseñas.
@@ -321,7 +321,7 @@ area dentro del shell (navbar + FAB se mantienen). La navegación hacia atrás e
 │ │  │          │   ⭐ 9.5/10 (TMDB)                               │ │
 │ │  │  96×144  │   [Drama] [Crimen] [Thriller]                    │ │
 │ │  │          │                                                  │ │
-│ │  │          │   [⭐ Calificar] [♥ Favoritos] [👁 Vista] [🕐 Pendiente]  │ │
+│ │  │          │   [⭐ Calificar] [♥ Favoritos] [＋ Status ▾]            │ │
 │ │  │          │   [+ Agregar a lista ▾]                          │ │
 │ │  └──────────┘                                                  │ │
 │ │                                                                │ │
@@ -373,7 +373,7 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | **Hero**              | Poster (2:3, ~300×450 px), título, badge de tipo (Película/Serie), año de lanzamiento, duración (`2h 49m` en inglés o `2 h 49 min` en español para pelis, o `N temporadas · M episodios` para series), calificación TMDB (formato `X/10`), géneros como chips                                                                                                                                                                       | `ProduccionAudiovisual` + TMDB                                       |
 | **Dónde verla**       | Línea con logos y cantidad de opciones en el país, más panel con los grupos Stream / Free / Rent / Buy, enlace a TMDB y atribución a JustWatch. Va entre los géneros y la sinopsis.                                                                                                                                                                                                                                                 | `GET /api/catalogo/{tipo}/{id}/providers/?pais=XX` (Redis, TTL 12 h) |
-| **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015; si ya calificaste muestra la nota —`⭐ 9/10`— y abre el modal en modo Editar, con la opción "Quitar calificación"), **Favoritos** (♥ toggle, CU-011), **Vista** (ícono ojo 👁 toggle, CU-011), **Pendiente** (ícono reloj 🕐 toggle, CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario)                                            | `Lista`                                                              |
+| **Acciones directas** | **Calificar** (btn primary, abre modal de reseña, CU-015; si ya calificaste muestra la nota —`⭐ 9/10`— y abre el modal en modo Editar, con la opción "Quitar calificación"), **Favoritos** (♥ toggle), **Estado** (botón único `StatusMenu`: «Status» con un + si no hay estado, y el nombre del estado —Watchlist, Watching o Watched— si lo hay; abre un menú con los tres estados y «Remove status», CU-011), **Agregar a lista** (dropdown con checklist de listas personalizadas del usuario)                                            | `Lista`                                                              |
 | **Sinopsis**          | Card dentro del info-col (columna derecha), debajo de los botones de acción. Texto completo colapsable con "[leer más ▾]" si excede 300 caracteres.                                                                                                                                                                                                                                                                                 | `ProduccionAudiovisual.sinopsis`                                     |
 | **CastCard**          | Card full-width debajo del Hero: Director (nombre) + Cast (lista de actores). Colapsable con "[mostrar más ▾]" si hay más de 10 actores. **Sin fotos**.                                                                                                                                                                                                                                                                             | `ProduccionAudiovisual.reparto` + `.directores`                      |
 | **Reseñas**           | Dos secciones con headers separados: "Tu reseña" (card destacada con borde acento, solo si el usuario ya publicó) y "Reseñas de la comunidad (N)". En tu reseña: acciones con iconos (✏️ editar, 🗑️ eliminar). En las de la comunidad: solo lectura. Cada ReviewCard: avatar, @usuario, rating en formato `X/10` (sin estrellas), fecha, texto. Se muestran únicamente reseñas que tengan texto. Botón "Cargar más reseñas" al pie. | `Calificacion` + `Reseña` + `Usuario`                                |
@@ -384,17 +384,15 @@ El breadcrumb es navegable, cada tramo es un link. Reemplaza al botón "Volver".
 | ----------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Favoritos (♥)     | Borde (no está en favoritos)   | Agrega a favoritos                                                                                                                                                                                                                                                                                                                                                                                                                                             | Relleno sólido                                                                                         |
 | Favoritos (♥)     | Relleno (ya está en favoritos) | Quita de favoritos                                                                                                                                                                                                                                                                                                                                                                                                                                             | Borde                                                                                                  |
-| Vista (👁)         | Borde                          | Agrega a Vistas                                                                                                                                                                                                                                                                                                                                                                                                                                                | Relleno sólido                                                                                         |
-| Vista (👁)         | Relleno (ya está en Vistas)    | Quita de Vistas                                                                                                                                                                                                                                                                                                                                                                                                                                                | Borde (verifica: si tiene calificación, pide eliminarla primero, CU-011)                               |
-| Pendiente (🕐)    | Borde                          | Agrega a Pendientes                                                                                                                                                                                                                                                                                                                                                                                                                                            | Relleno sólido                                                                                         |
-| Pendiente (🕐)    | Relleno                        | Quita de Pendientes                                                                                                                                                                                                                                                                                                                                                                                                                                            | Borde                                                                                                  |
-| Calificar         | —                              | Abre modal de reseña (CU-015)                                                                                                                                                                                                                                                                                                                                                                                                                                  | Al publicar, la producción entra a Vistas: el 👁 queda relleno (regla "calificada ⇒ vista", 30/09/2026) |
-| Vista (👁, quitar) | Producción calificada          | Quita de Vistas y **conserva la calificación** (16/11/2026: el estado es libre después de calificar; ya no hay 409 ni diálogo de confirmación). El botón de estado de la ficha (Watchlist, Watching, Watched) llega con la sección 15 del canvas. |
+| Estado (`StatusMenu`) | Sin estado (muestra «Status» con un +) | Abre el menú (hoja inferior en celular) con Watchlist, Watching y Watched como opciones de radio | Elegir una opción cambia el estado al instante (PUT `/api/lists/status/`) y el botón pasa a mostrar su nombre |
+| Estado (`StatusMenu`) | Con estado (la opción actual marcada) | Elegir otra opción cambia de lista; «Remove status» lo quita | La producción sale de la lista anterior (Pendientes, Viendo y Vistas son un solo estado) y entra en la nueva |
+| Calificar         | —                              | Abre modal de reseña (CU-015)                                                                                                                                                                                                                                                                                                                                                                                                                                  | Al publicar, la producción pasa a Vistas (si estaba en Pendientes o Viendo, sale de ahí): el botón de estado pasa a «Watched» y el aviso dice «Rated ★ 8 · Moved to Watched» con «Undo», que restaura el estado anterior y conserva la calificación |
+| Estado (cambiar o quitar) | Producción calificada, en Watched | Elegir otro estado o «Remove status» | Sale de Vistas y **conserva la calificación** (16/11/2026: el estado es libre después de calificar; ya no hay 409 (Conflict) ni diálogo de confirmación; #226, 19/11/2026) |
 | Agregar a lista ▾ | —                              | Despliega checklist de listas personalizadas. En escritorio el panel se abre hacia abajo si entra y, si no, hacia el lado con más lugar; la rueda sigue desplazando la página y el panel acompaña al botón (04/11/2026). En celular es una hoja desde abajo y la página queda quieta.                                                                                                                                                                          | Check/uncheck toggle                                                                                   |
 
-El relleno sólido de Favoritos, Vista y Pendiente usa el color de acento, como la estrella de la nota propia; en el ojo y el reloj, la pupila y las agujas toman el color del botón para seguir viéndose (14/10/2026).
+El relleno sólido de Favoritos usa el color de acento, como la estrella de la nota propia (14/10/2026).
 
-Marcar Vista algo que está en Pendientes lo saca de Pendientes en la misma operación, con un solo toast: «Agregada a Vistas y quitada de Pendientes». Calificar hace lo mismo (calificar ya la marca como vista), y el modal lo avisa: «Al calificarla, {título} también se agrega a Vistas y sale de Pendientes». Quitar de Vistas no la devuelve a Pendientes (14/10/2026).
+Pendientes (Watchlist), Viendo (Watching) y Vistas (Watched) son un solo estado: elegir uno saca a la producción de los otros dos en la misma operación. Todo cambio de estado muestra un aviso con «Undo» durante 6 segundos («Moved to Watching»); «Undo» vuelve un paso atrás y avisa «Back to Watchlist» durante 2 segundos, sin «Undo». Si el cambio falla, el botón vuelve a como estaba y un aviso de error, sin «Undo», lo explica. Mientras se guarda, todas las acciones de la ficha quedan deshabilitadas, y pasados 200 ms aparece un aviso «Saving…». Calificar una producción en Pendientes o Viendo la pasa a Vistas, y el modal lo avisa antes de publicar. Quitar de Vistas no la devuelve a otro estado ni toca la calificación (16/11/2026; texto vigente en `openspec/specs/title-page-ui/spec.md`).
 
 Los botones de acción directa son visibles solo para usuarios autenticados. Para no autenticados, se muestra "Inicia sesión para calificar o guardar" con link a Login.
 
@@ -467,10 +465,10 @@ una reseña. No reemplaza la página. Fondo con blur + opacidad.
 
 | Acción              | Efecto                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Publicar            | Cierra modal, toast "Calificación publicada." (sin texto) o "Calificación y reseña publicadas." (con texto). La producción entra a "Vistas" (el 👁 queda relleno) y la sección de reseñas en la ficha se actualiza al instante.                                                                                                                            |
+| Publicar            | Cierra modal, toast "Calificación publicada." (sin texto) o "Calificación y reseña publicadas." (con texto). La producción pasa a "Vistas" (el botón de estado muestra «Watched») y la sección de reseñas en la ficha se actualiza al instante.                                                                                                                            |
 | Actualizar          | Cierra modal, toast según lo que cambió: "Calificación actualizada.", "Reseña actualizada." o "Calificación y reseña actualizadas.". "Vistas" no cambia.                                                                                                                                                                                                  |
 | Eliminar            | Cierra modal, toast "Reseña eliminada.". La card "Tu reseña" desaparece de la ficha (solo se listan reseñas **con texto**), pero **la calificación sobrevive**: el botón de acción pasa a mostrar la nota vigente (ej. `⭐ 9/10`) y abre el modal en modo **Editar**. Para quitar también la nota hace falta la acción "Quitar calificación" (ver abajo). |
-| Quitar calificación | Cierra modal, toast "Calificación eliminada." o "Calificación y reseña eliminadas.". El botón vuelve a "Calificar", la card "Tu reseña" desaparece y el 👁 queda con borde: la producción salió de "Vistas".                                                                                                                                               |
+| Quitar calificación | Cierra modal, toast "Calificación eliminada." o "Calificación y reseña eliminadas.". El botón vuelve a "Calificar", la card "Tu reseña" desaparece y la producción sale de "Vistas" (el botón de estado queda sin estado).                                                                                                                                               |
 | Cancelar            | Cierra modal sin cambios.                                                                                                                                                                                                                                                                                                                                 |
 
 ### Estados del modal
@@ -493,37 +491,35 @@ de un componente «Modal»:
 
 ## 5e. Sección Listas (CU-009, CU-012)
 
-> Las listas son personales. Las predeterminadas (Favoritos, Pendientes, Vistas) se crean automáticamente al registrarse y no pueden renombrarse, eliminarse ni reordenarse. Se identifican por su clave y la interfaz muestra la etiqueta del idioma activo (Favorites, Watchlist, Watched en inglés); no se puede crear una lista personalizada con esos nombres en ningún idioma.
+> Las listas son personales. Las predeterminadas (Favoritos, Pendientes, Viendo, Vistas) se crean automáticamente al registrarse y no pueden renombrarse, eliminarse ni reordenarse. Se identifican por su clave y la interfaz muestra la etiqueta del idioma activo (Favorites, Watchlist, Watching, Watched en inglés); no se puede crear una lista personalizada con esos nombres en ningún idioma.
 > Las listas personalizadas se gestionan con modales dedicados (en celular, hojas desde abajo) y se reordenan con drag & drop (`@dnd-kit`): en escritorio desde la manija de la tarjeta, en celular con una pulsación larga de ~250 ms; si el dedo se mueve antes, es scroll y no arrastre. También se reordenan desde el menú ⋯ (16/10/2026).
 
 ### Vista General de Listas
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  [FilmAI]  Inicio  Buscar  [Listas]                [Avatar]     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Listas                                                          │
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐│
-│  │  Favoritos       │  │  Pendientes      │  │  Vistas          ││
-│  │  12 ítems         │  │  5 ítems          │  │  28 ítems        ││
-│  │  9 pel. · 3 ser.  │  │  5 pel. · 0 ser.  │  │  20 pel. · 8 ser.││
-│  │ ┌─┐┌─┐┌─┐┌─┐┌─┐ │  │ ┌─┐┌─┐┌─┐┌─┐┌─┐ │  │ ┌─┐┌─┐┌─┐┌─┐┌─┐││
-│  │ └─┘└─┘└─┘└─┘└─┘ │  │ └─┘└─┘└─┘└─┘└─┘ │  │ └─┘└─┘└─┘└─┘└─┘││
-│  │  [Predeterminada]│  │  [Predeterminada]│  │  [Predeterminada]││
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘│
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐│
-│  │  Sci Fi        ⋮  │  │  Maratón finde ⋮  │  │  ┌────────────┐ ││
-│  │  8 ítems          │  │  3 ítems         │  │  │     +      │ ││
-│  │  6 pel. · 2 ser.  │  │  2 pel. · 1 ser. │  │  │            │ ││
-│  │ ┌─┐┌─┐┌─┐┌─┐┌─┐ │  │  ┌─┐┌─┐┌─┐       │  │  │            │ ││
-│  │ └─┘└─┘└─┘└─┘└─┘ │  │  └─┘└─┘└─┘       │  │  │ Crear nueva│ ││
-│  │                  │  │                  │  │  │   lista    │ ││
-│  └──────────────────┘  └──────────────────┘  │  └────────────┘ ││
-│                                               └──────────────────┘│
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  [FilmAI]  Inicio  Buscar  [Listas]                                                  [Avatar]   │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  Listas                                                                                         │
+│                                                                                                 │
+│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐                        │
+│  │ Favoritos     │ │ Pendientes    │ │ Viendo        │ │ Vistas        │                        │
+│  │ 12 ítems      │ │ 5 ítems       │ │ 2 ítems       │ │ 28 ítems      │                        │
+│  │ 9 pel. 3 ser. │ │ 5 pel. 0 ser. │ │ 1 pel. 1 ser. │ │ 20 pel. 8 ser.│                        │
+│  │ ┌─┐┌─┐┌─┐┌─┐  │ │ ┌─┐┌─┐┌─┐┌─┐  │ │ ┌─┐┌─┐        │ │ ┌─┐┌─┐┌─┐┌─┐  │                        │
+│  │ └─┘└─┘└─┘└─┘  │ │ └─┘└─┘└─┘└─┘  │ │ └─┘└─┘        │ │ └─┘└─┘└─┘└─┘  │                        │
+│  │[Predeterminada]│ │[Predeterminada]│ │[Predeterminada]│ │[Predeterminada]│                       │
+│  └───────────────┘ └───────────────┘ └───────────────┘ └───────────────┘                        │
+│                                                                                                 │
+│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐                                          │
+│  │ Sci Fi      ⋮ │ │ Maratón finde⋮│ │  ┌─────────┐  │                                          │
+│  │ 8 ítems       │ │ 3 ítems       │ │  │    +    │  │                                          │
+│  │ 6 pel. 2 ser. │ │ 2 pel. 1 ser. │ │  │ Crear   │  │                                          │
+│  │ ┌─┐┌─┐┌─┐┌─┐  │ │ ┌─┐┌─┐┌─┐     │ │  │ nueva   │  │                                          │
+│  │ └─┘└─┘└─┘└─┘  │ │ └─┘└─┘└─┘     │ │  │ lista   │  │                                          │
+│  └───────────────┘ └───────────────┘ │  └─────────┘  │                                          │
+│                                      └───────────────┘                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### Breadcrumb
@@ -745,6 +741,8 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 
 ### Registro
 
+> **Actualización (16/11/2026, #225):** el boceto de abajo muestra el formulario único original. Desde #225 `/register` son tres pasos con una barra de progreso continua de 4 px debajo del logo, un título único, «Continue» a todo el ancho y «‹ Back» como enlace debajo, sin saltos ni scroll interno: (1) correo y contraseña, con «Continue with Google» como alternativa; (2) nombre, apellido, nombre de usuario, fecha de nacimiento, género y país; (3) avatar, elegido en un diálogo paginado, y Términos y Condiciones. Un error del servidor devuelve al paso del primer campo con error. El alta con Google (`/complete-signup`) son los pasos 2 y 3 del mismo flujo. Texto vigente: `openspec/specs/auth-ui/spec.md`.
+
 ```
 ┌──────────────────────────────────────────┐
 │               FilmAI                     │
@@ -872,7 +870,7 @@ Comparten la misma estructura base de modal (overlay + caja centrada de 480px).
 - Tipografía: Big Shoulders (títulos, `font-display`) y Hanken Grotesk (texto).
 - Términos: `/terms` es una versión mínima que renderiza `frontend/content/legal/terms.{en,es}.md`; se refina con el punto 9 (con/sin sesión, escritorio/celular).
 - **Sin saltos al validar (06/11/2026, issue #175)**: debajo de cada campo hay un solo renglón de mensajes. El error ocupa el lugar de la ayuda (la ayuda queda invisible en la misma celda, así el campo no cambia de alto), y los campos sin ayuda (correo, país, género, contraseñas) reservan ese renglón vacío desde el inicio. El error de la contraseña va debajo de las reglas. La disponibilidad del usuario se muestra como un ✓ verde dentro del campo, a la derecha, y la ayuda sigue a la vista; «en uso» y «reservado» son errores del campo (borde rojo, reemplazan la ayuda). Aplica a Registro y al alta con Google (`/complete-signup`).
-- **Avatar en el registro (13/11/2026)**: entre el género y la contraseña hay un grupo «Elegí tu avatar» con el mismo selector del perfil (radiogrupo: un solo Tab entra al elegido y las flechas cambian la elección y el foco). Viene marcado el primero del catálogo; la ayuda dice que se cambia después desde el perfil. Si el catálogo no carga, el grupo no aparece y la cuenta recibe el avatar por defecto. **Pendiente de Gonza:** ajustar el canvas «Access» de Claude Design a este código.
+- **Avatar en el registro (13/11/2026; desde el 16/11/2026 es el paso 3, en un diálogo)**: antes, entre el género y la contraseña, había un grupo «Elegí tu avatar» con el mismo selector del perfil (radiogrupo: un solo Tab entra al elegido y las flechas cambian la elección y el foco). Viene marcado el primero del catálogo; la ayuda dice que se cambia después desde el perfil. Si el catálogo no carga, el grupo no aparece y la cuenta recibe el avatar por defecto. **Pendiente de Gonza:** ajustar el canvas «Access» de Claude Design a este código.
 - **Selector de país propio (06/11/2026)**: `CountrySelect` dejó de ser un `<select>` nativo. Con unos 250 países, el navegador elegía dónde abrir la lista y la estiraba hasta el borde de la ventana. Ahora es un campo que abre, **debajo**, una lista de alto fijo (8 países a la vista, con scroll) y un buscador arriba («Buscar país»; ignora tildes y mayúsculas, y si no hay coincidencias dice «No hay países con ese nombre.»). Si abajo no entra, la página baja lo que falta; solo se abre hacia arriba cuando la página ya no puede bajar más. Teclado: flechas y Re Pág/Av Pág para moverse, Enter elige, Escape cierra y vuelve al campo, Tab o un clic afuera cierran sin elegir; escribir sobre el campo cerrado abre la lista y empieza a buscar. Lo usan Registro, el alta con Google y el Perfil.
 - **Collage fijo en escritorio (06/11/2026)**: desde 1024 px el collage es `sticky` y mide el alto de la ventana: no se estira ni se reescala cuando el formulario cambia de alto, y queda quieto al hacer scroll.
 
@@ -991,7 +989,7 @@ parte del flujo implementado.
 
 ## 5h. Pantallas de Error
 
-### 404 — Página no encontrada
+### 404 (Not Found) — Página no encontrada
 
 ```
 ┌──────────────────────────────────────────┐
@@ -1010,7 +1008,7 @@ parte del flujo implementado.
 - Breadcrumb vacío.
 - CTA primario al Home.
 
-### Error genérico (500 / timeout)
+### Error genérico (500 (Internal Server Error) / timeout)
 
 ```
 ┌──────────────────────────────────────────┐
@@ -1147,7 +1145,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 - **Secondary**: acción alternativa (cancelar, volver).
 - **Danger/Ghost**: acciones destructivas (eliminar, dar de baja).
 - **Icon button**: acciones compactas (editar, eliminar, toggle).
-- **Toggle**: listas predeterminadas (agregar/quitar de favoritos, vistas, pendientes).
+- **Toggle**: Favoritos (agregar/quitar). El estado (Pendientes, Viendo, Vistas) se elige en el `StatusMenu`.
 
 ### 6.2 Inputs
 
@@ -1198,7 +1196,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 
 - **Empty state**: ilustración + mensaje descriptivo.
 - **Error state**: ilustración + mensaje + botón "Reintentar".
-- **404**: ilustración + "Página no encontrada" + link a Home.
+- **404 (Not Found)**: ilustración + "Página no encontrada" + link a Home.
 
 ### 6.9 Indicadores
 
@@ -1272,7 +1270,7 @@ posteriores. Los controles muestran los valores reales devueltos por la API.
 - [x] Listas — Sección 5e
 - [x] Login / Registro / Confirmación de cuenta — Sección 5f
 - [x] Perfil (formulario «Edit details») — Sección 5g
-- [x] Pantallas de error (404, error genérico) — Sección 5h
+- [x] Pantallas de error (404 (Not Found), error genérico) — Sección 5h
 - [x] Mis reseñas — Sección 5i
 - [x] Preferencias — Sección 5j
 

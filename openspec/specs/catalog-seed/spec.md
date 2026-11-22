@@ -65,7 +65,7 @@ The combination order MUST be shuffled with a fixed seed: cutting mid-round in d
 
 ### Requirement: Pagination stops at the 500-page wall
 
-Pagination of `/discover` MUST stop at `min(total_pages, 500)`. TMDB reports `total_pages` above 500 and answers HTTP 400 for page 501 (verified 18/09/2026); `total_pages` is input, not truth.
+Pagination of `/discover` MUST stop at `min(total_pages, 500)`. TMDB reports `total_pages` above 500 and answers HTTP 400 (Bad Request) for page 501 (verified 18/09/2026); `total_pages` is input, not truth.
 
 #### Scenario: A combination that reports 1001 pages
 
@@ -165,7 +165,7 @@ The command MUST print and log a final summary with `materializadas`, `ya_estaba
 
 ## Known limitations
 
-- The seed does not pace itself: TMDB publishes no rate-limit headers and drew no `429` under rapid calls (verified 18/09/2026); the client retries `429` and `5xx` with backoff. `--pausa` is a manual brake for a long run that starts drawing them.
+- The seed does not pace itself: TMDB publishes no rate-limit headers and drew no `429` (Too Many Requests) under rapid calls (verified 18/09/2026); the client retries `429` (Too Many Requests) and `5xx` with backoff. `--pausa` is a manual brake for a long run that starts drawing them.
 - The first full round is 210 × 20 = 4 200 items, so `--limite 2000` does not finish round one; diversity comes from the shuffled order, not from depth. A `--limite 50` reaches only three combinations and says nothing about spread; the spread was verified with a dry run over 600 (37 combinations: 26 movie / 11 TV, all six decades).
 - TMDB's TV genre list includes `Talk`, `Soap`, `News` and `Reality`. They enter the corpus with everything else. If B-06 surfaces them where they do not belong, a genre exclusion option is the fix.
 - Embeddings enqueued by the seed end in `failed` until the real provider (B-06) exists; the backfill of `catalog-daily-sync` recovers them afterwards. That is by design.

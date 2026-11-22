@@ -2,7 +2,7 @@
 
 ## Purpose
 
-«Recommended for you», the row of the Home (C-05) built from what the user rated highly. Algorithmic, through TMDB `discover`, with no LLM involved (doc 04 §3.3). Reads `Calificacion` (from `reviews-api`) and the `Vistas` list (from `list-endpoints`), and calls TMDB through the cache of `tmdb-cache`. Design in `openspec/changes/home-catalogo/design.md` §2.
+«Recommended for you», the row of the Home (C-05) built from what the user rated highly. Algorithmic, through TMDB `discover`, with no LLM involved (doc 04 §3.3). Reads `Calificacion` (from `reviews-api`) and the `Vistas` list (from `list-endpoints`), and calls TMDB through the cache of `tmdb-cache`. The design lives in this spec and in `docs/decisiones.md`; the Home screen that shows it is in `home-ui`.
 
 ## Requirements
 
@@ -14,7 +14,7 @@
 
 - GIVEN a request without a session
 - WHEN it asks for `/api/catalogo/recommended/`
-- THEN the response is 401 with `code: "not_authenticated"`
+- THEN the response is 401 (Unauthorized) with `code: "not_authenticated"`
 
 ### Requirement: Genres come from ratings of 7 or more, per type
 
@@ -31,18 +31,18 @@ For each type, the endpoint MUST count the `generos_ids` of the productions of t
 
 - GIVEN a user whose only ratings are below 7, or inactive
 - WHEN they ask for recommendations
-- THEN the response is 200 with `{"generos": [], "results": []}`
+- THEN the response is 200 (OK) with `{"generos": [], "results": []}`
 - AND TMDB is not called
 
 ### Requirement: Titles already watched are left out
 
-Results MUST exclude the `(id_tmdb, tipo)` pairs of the user's `Vistas` list. With "a rated production is in `Vistas`" this also excludes everything rated. `Pendientes` MUST NOT be excluded. The comparison MUST use the pair, because TMDB numbers movies and shows separately.
+Results MUST exclude the `(id_tmdb, tipo)` pairs of the user's `Vistas` list (rating a production moves it there, so what was rated is excluded while it stays there), of `Viendo` (15/11/2026: what the user is watching is not recommended) and of `Pendientes` (13/11/2026: already noted). `Favoritos` MUST NOT be excluded. The comparison MUST use the pair, because TMDB numbers movies and shows separately.
 
-#### Scenario: Watched versus watchlist
+#### Scenario: Watched, watching and watchlist are left out
 
-- GIVEN a recommended movie in `Vistas` and another in `Pendientes`
+- GIVEN a recommended movie in `Vistas`, another in `Viendo`, another in `Pendientes` and another in `Favoritos` only
 - WHEN the user asks for recommendations
-- THEN the first is not returned and the second is
+- THEN the first three are not returned and the fourth is
 
 ### Requirement: Shape, size and mixing
 

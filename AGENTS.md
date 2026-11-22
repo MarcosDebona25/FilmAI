@@ -42,6 +42,11 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
   es un enlace simbólico versionado a `../.agents/skills` (así Claude Code ve las
   mismas skills en Linux, macOS y WSL); no se edita nada a través de él.
  - Skills disponibles:
+   - **cerrar-tramo**: cerrar un tramo antes de abrir su PR (chequeos del CI,
+     revisión en paralelo, `docs/decisiones.md` y graphify al día, commit; sin
+     push ni merge sin el OK del usuario).
+   - **comparar-opciones**: presentar una decisión del equipo como cuadro
+     comparativo con una recomendación y la pregunta para elegir.
    - **conventional-commits**: redactar mensajes de commit convencionales.
    - **explicar-al-implementar**: explicar conceptos, arquitectura y tests mientras se construye (siempre activa; el equipo está aprendiendo los frameworks del stack).
    - **humanizer**: eliminar señales de escritura generada por IA en textos.
@@ -63,7 +68,7 @@ Instrucciones obligatorias para cualquier agente (o asistente de IA) que trabaje
 
 ## 8. Revisión de pull requests
 
-- **Revisión automática (reinstaurada el 18/10/2026)**: `.github/workflows/pr-review.yml` corre PR-Agent con DeepSeek V4.1 Flash vía la API de DeepSeek y comenta en cada PR. Es informativa, no bloquea ni aprueba; configuración en `.pr_agent.toml`. Lo que sigue describe las herramientas anteriores, desactivadas el 18/09/2026:
+- **Revisión automática (reinstaurada el 18/10/2026)**: `.github/workflows/pr-review.yml` corre PR-Agent con DeepSeek V4.1 Flash vía la API de DeepSeek. Comenta cuando se abre, se reabre o sale de borrador el PR (no en cada push) y a pedido, con un comentario `/review` (revisión) o `/improve` (sugerencias) en el PR. Es informativa, no bloquea ni aprueba; configuración en `.pr_agent.toml`. Lo que sigue describe las herramientas que esta reemplazó (AI Review y CodeRabbit, desactivadas el 18/09/2026):
 - **Herramientas anteriores**: tanto AI Review como CodeRabbit fueron desactivados el 18/09/2026.
 - **AI Review**: Workflow eliminado (`.github/workflows/ai-review.yml`). Generaba un 93% de falsos positivos (comentarios que no detectaban bugs reales ni sugerían mejoras válidas). Los comentarios no tenían contexto del proyecto (convenciones de idioma, valores de configuración, arquitectura).
 - **CodeRabbit**: App de GitHub desinstalada. La prueba gratuita expiró y no se renovó.

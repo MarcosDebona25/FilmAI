@@ -5,7 +5,7 @@
 The user approved OT-13's 91 new bilingual messages and six curation decisions
 on 08/10/2026. OT-11 and OT-12 are integrated into `feat/i18n-multiidioma`.
 OT-71–83 implement the shared layers and the three approved pilot screens on
-`develop`. Other visible screens retain their documented Spanish exceptions.
+`develop`. The transition is closed: `legacyFiles` in `frontend/scripts/i18n/rules.mjs` has been empty since 15/10/2026, so no screen keeps a Spanish exception, and the chatbot is translated (06/11/2026).
 
 ```text
 Browser cookie + Accept-Language → Next.js request locale → en/es catalogs
@@ -171,13 +171,15 @@ come from `frontend/lib/routes.ts`. Backend links, frontend routes and the
 phase-authorized tests MUST change together. No redirect is required by the
 accepted development-only scope.
 
-#### Scenario: Mixed interface during the agreed transition
+#### Scenario: Mixed interface during the agreed transition (closed)
+
+Historical: this was the plan while the replacement designs were being built. The allowlist is now empty.
 
 - THEN fully migrate settings, email confirmation and password reset
 - AND migrate shared API errors, validation, labels, formats, metadata and routes
 - AND keep the other legacy screens in the explicit lint allowlist with Spanish tests
-- AND remove each allowlist entry when its replacement UI is implemented
-- AND do not translate chatbot copy or change account-deactivation copy/behavior
+- AND remove each allowlist entry when its replacement UI is implemented (done: the allowlist is empty since 15/10/2026)
+- AND leave chatbot copy for its own module (done: translated since 06/11/2026) and do not change account-deactivation copy/behavior
 
 ## Verification before final integration
 
@@ -234,7 +236,7 @@ The generator reads approved CSVs from scratch, excludes sample/design/chatbot
 rows and emails, and splits legal copy from the client catalog. It also copies
 the stable enum contract into the frontend for Docker/Turbopack builds. Tests
 verify reproducibility, key/argument/tag/plural/code/enum parity. ESLint rejects
-visible literals outside 13 named legacy exceptions, debug reads and formatting
+visible literals anywhere (the list of legacy exceptions, `legacyFiles`, is empty), debug reads and formatting
 outside the shared module. CI covers `develop`; runtime fallback titles carry
 `lang="en"` according to `campos_en_ingles`.
 

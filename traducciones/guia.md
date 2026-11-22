@@ -52,7 +52,7 @@ El botón de Google recibe `locale` y la carga inicial del SDK usa `hl`, según 
 
 ## Fuentes de la copia
 
-`claves.csv` tiene una fila por texto del diseño (595) y es la fuente de los catálogos. `claves-extra.csv` suma los textos que el diseño no traía: errores, selector de idioma, nombres reservados y las pantallas de Preferencias, confirmación de correo y nueva contraseña. Las dos se leen igual; la diferencia es el origen. Si un texto nuevo ya existe en cualquiera de las dos, reutilizá su clave en lugar de crear otra.
+`claves.csv` tiene una fila por texto del diseño (645) y es la fuente de los catálogos. `claves-extra.csv` suma los textos que el diseño no traía: errores, selector de idioma, nombres reservados y las pantallas de Preferencias, confirmación de correo y nueva contraseña. Las dos se leen igual; la diferencia es el origen. Si un texto nuevo ya existe en cualquiera de las dos, reutilizá su clave en lugar de crear otra.
 
 | Columna                       | Qué contiene                                                         |
 | ----------------------------- | -------------------------------------------------------------------- |
@@ -66,7 +66,7 @@ El botón de Google recibe `locale` y la carga inicial del SDK usa `hl`, según 
 
 `claves-extra.csv` usa otras columnas: `clave`, `codigo` (código de error de la API, si corresponde), `tipo` (label, error, success, status…), `parametros_icu`, `es`, `en` y `estado`. Todas sus filas se siembran.
 
-Se siembran las filas `ok` (376) y `fragmento` (35). Quedan fuera `muestra` (61, datos de ejemplo), `diseño` (101, mesas y documentación del canvas) y `chatbot` (22, módulo todavía sin implementar). Una clave repetida solo es válida si sus dos mensajes curados son idénticos. Las claves de pantallas todavía no construidas son propuestas: se confirman al implementar cada diseño.
+Se siembran las filas `ok` (435) y `fragmento` (35). Quedan fuera `muestra` (70, datos de ejemplo), `diseño` (101, mesas y documentación del canvas) y `chatbot` (4, textos del diseño del chatbot que no se siembran: el lanzador, una sugerencia compartida y las dos mesas del canvas, excluidos por la decisión D11; los textos del chatbot implementado están en filas `ok` y en `claves-extra.csv`). `claves-extra.csv` tiene 265 filas, todas aprobadas. Estos conteos son los del 22/11/2026: si cambian, recontalos con el estado de cada fila en vez de editar la cifra a mano. Una clave repetida solo es válida si sus dos mensajes curados son idénticos. Las claves de pantallas todavía no construidas son propuestas: se confirman al implementar cada diseño.
 
 ## Glosario
 
@@ -81,19 +81,18 @@ Se siembran las filas `ok` (376) y `fragmento` (35). Quedan fuera `muestra` (61,
 | Reseña               | Review            | Reseña                 | Texto asociado a una calificación      |
 | Favoritos            | Favorites         | Favoritos              | Lista con `clave=favoritos`            |
 | Pendientes           | Watchlist         | Pendientes             | Lista con `clave=pendientes`           |
+| Viendo               | Watching          | Viendo                 | Lista con `clave=viendo`               |
 | Vistas               | Watched           | Vistas                 | Lista con `clave=vistas`               |
 | Género de producción | Genre             | Género                 | Filtro del catálogo                    |
 | Género de persona    | Gender            | Género                 | Campo del perfil                       |
 | Género no declarado  | Prefer not to say | No especificar         | Valor `no_especifica`                  |
-| Tema oscuro          | Dark              | Oscuro                 | Valor `oscuro`                         |
-| Tema claro           | Light             | Claro                  | Valor `claro`                          |
 | Película             | Movie             | Película               | API `movie`, dominio `pelicula`        |
 | Serie                | TV show           | Serie                  | API `tv`, dominio `serie`              |
 | Confirmación         | Confirm account   | Confirmar cuenta       | Activación mediante enlace             |
 | Restablecimiento     | Reset password    | Restablecer contraseña | Recuperación mediante enlace           |
 | Reenvío de enlace    | Resend link       | Reenviar enlace        | Acción de las pantallas de correo      |
 
-Genre y Gender usan claves distintas aunque coincidan en español. Rating y Review nunca son intercambiables. El español usa voseo («elegí», «guardá», «podés»). No se traducen nombres de usuario, de personas, de listas personalizadas ni reseñas de la comunidad; los títulos de las producciones los da TMDB por idioma.
+Pendientes, Viendo y Vistas son un solo estado por producción (Watchlist, Watching, Watched). La app es solo oscura desde el 18/10/2026: no hay glosario de tema, aunque las claves `enums.theme.*` sigan en los catálogos. Genre y Gender usan claves distintas aunque coincidan en español. Rating y Review nunca son intercambiables. El español usa voseo («elegí», «guardá», «podés»). No se traducen nombres de usuario, de personas, de listas personalizadas ni reseñas de la comunidad; los títulos de las producciones los da TMDB por idioma.
 
 ## Al implementar una pantalla nueva
 

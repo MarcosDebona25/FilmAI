@@ -166,5 +166,5 @@ mensaje de `historial` con `hace_min` simula una sesión anterior.
 
 - **Turno**: una pregunta y su respuesta, no toda la conversación.
 - **Tool o herramienta**: una función que el modelo pide y el backend ejecuta.
-- **Motor y Canal**: lo que piensa la respuesta y lo que la transporta. Reparto en
-  `openspec/changes/chatbot/tasks.md`.
+- **Motor y Canal**: lo que piensa la respuesta y lo que la transporta. Su especificación está en
+  `openspec/specs/chat-api/` y las decisiones de diseño en `docs/decisiones.md`.

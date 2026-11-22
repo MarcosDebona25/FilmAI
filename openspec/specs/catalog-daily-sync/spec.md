@@ -179,6 +179,6 @@ Both backfill populations MUST be traversed by ascending `fecha_actualizacion`, 
 
 ## Known limitations
 
-- A row stranded in `processing` (worker killed mid-task) is recovered by nobody. A lease with an expiry is the fix, and is best added once the real provider (B-06) makes tasks long enough for this to occur in practice.
+- A row stranded in `processing` (worker killed mid-task) is recovered by the backfill after 5 minutes (Q-09, 04/11/2026; `embedding-infrastructure` states the requirement).
 - If the provider fails while regenerating a stale `ready` row, the row ends in `failed` holding its previous vector: it stops being used by search for one night and the next run retries it, since `failed` is claimable.
 - The discovery pass reads page 1 of each source, so it captures novelty rather than growing the corpus in volume. Bulk population is C-04c.

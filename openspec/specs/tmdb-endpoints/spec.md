@@ -71,7 +71,7 @@ The system MUST forward each query/path parameter to the matching cache-method a
 - WHEN the endpoint handles it
 - THEN `discover` is invoked with `min_votos=50`, sent to TMDB as `vote_count.gte=50`
 - AND the cache key includes it, so the same query without the minimum is a different entry
-- AND `min_votes=0` or a non-integer answers 400 without calling the service
+- AND `min_votes=0` or a non-integer answers 400 (Bad Request) without calling the service
 
 #### Scenario: Search params
 
@@ -102,7 +102,7 @@ The system MUST forward each query/path parameter to the matching cache-method a
 
 - GIVEN a non-integer `id_tmdb` or an unsupported `tipo`
 - WHEN the endpoint handles it
-- THEN HTTP 400 is returned without calling TMDB
+- THEN HTTP 400 (Bad Request) is returned without calling TMDB
 
 ### Requirement: Error mapping
 
@@ -110,36 +110,36 @@ The system MUST map `TMDBError` subclasses to HTTP statuses via a DRF exception 
 
 | Exception | HTTP |
 |---|---|
-| `TMDBNotFound` | 404 |
-| `TMDBBadRequest` | 400 |
-| `TMDBRateLimited` | 429 |
-| `TMDBServerError` | 502 or 503 |
-| `TMDBTransportError` | 502 or 503 |
-| `TMDBPresupuestoAgotado` | 503 (`upstream_unavailable`) |
+| `TMDBNotFound` | 404 (Not Found) |
+| `TMDBBadRequest` | 400 (Bad Request) |
+| `TMDBRateLimited` | 429 (Too Many Requests) |
+| `TMDBServerError` | 502 (Bad Gateway) or 503 (Service Unavailable) |
+| `TMDBTransportError` | 502 (Bad Gateway) or 503 (Service Unavailable) |
+| `TMDBPresupuestoAgotado` | 503 (Service Unavailable, `upstream_unavailable`) |
 
 #### Scenario: Not found
 
 - GIVEN the cache method raises `TMDBNotFound`
 - WHEN the endpoint handles it
-- THEN the status is 404
+- THEN the status is 404 (Not Found)
 
 #### Scenario: Rate limited
 
 - GIVEN the cache method raises `TMDBRateLimited`
 - WHEN the endpoint handles it
-- THEN the status is 429
+- THEN the status is 429 (Too Many Requests)
 
 #### Scenario: Bad request
 
 - GIVEN the cache method raises `TMDBBadRequest`
 - WHEN the endpoint handles it
-- THEN the status is 400
+- THEN the status is 400 (Bad Request)
 
 #### Scenario: Server or transport error
 
 - GIVEN the cache method raises `TMDBServerError` or `TMDBTransportError`
 - WHEN the endpoint handles it
-- THEN the status is 502 or 503 (exact split resolved in design)
+- THEN the status is 502 (Bad Gateway) or 503 (Service Unavailable) (exact split resolved in design)
 
 ### Requirement: TMDB call caps (security audit F6, 24/10/2026)
 
@@ -152,13 +152,13 @@ Every catalog view (and «Recomendado») MUST count the HTTP calls it makes to T
 
 - GIVEN a view whose calls to TMDB exceed 30 in one request
 - WHEN the 31st call is about to go out
-- THEN it is not sent and the answer is 503 with `upstream_unavailable`
+- THEN it is not sent and the answer is 503 (Service Unavailable) with `upstream_unavailable`
 
 #### Scenario: The per-IP limit counts calls, not requests
 
 - GIVEN a limit of 10 calls per minute and requests that make 4 calls each
 - WHEN the same IP sends four requests
-- THEN the first two are answered and the third stops at its 11th call with 429 and `Retry-After`
+- THEN the first two are answered and the third stops at its 11th call with 429 (Too Many Requests) and `Retry-After`
 
 #### Scenario: Parallel requests do not slip past the per-IP limit
 
@@ -211,7 +211,7 @@ This MUST NOT alter the response contract defined above: the body stays the raw 
 
 - GIVEN materialization raises
 - WHEN the detail endpoint handles the request
-- THEN the client still receives 200 with the unchanged TMDB body
+- THEN the client still receives 200 (OK) with the unchanged TMDB body
 
 ### Requirement: Idioma en vistas públicas (OT-60)
 
@@ -250,7 +250,7 @@ inglés los nombres vacíos.
 
 ### Requirement: Suggestions (13/11/2026)
 
-`GET /api/catalogo/suggest/` MUST be public, take `q` (trimmed, 2 to 50 characters; otherwise 400 (Bad Request) with `min_length` or `max_length`) and `tipo` (`all` by default, or `person`; otherwise 400 `invalid_choice`), and answer `{results}` with at most 5 items, each with `media_type`. It MUST make one TMDB call, `search/multi` page 1 without adult content, cached for 1 hour like `search`, and MUST keep TMDB's order:
+`GET /api/catalogo/suggest/` MUST be public, take `q` (trimmed, 2 to 50 characters; otherwise 400 (Bad Request) with `min_length` or `max_length`) and `tipo` (`all` by default, or `person`; otherwise 400 (Bad Request) `invalid_choice`), and answer `{results}` with at most 5 items, each with `media_type`. It MUST make one TMDB call, `search/multi` page 1 without adult content, cached for 1 hour like `search`, and MUST keep TMDB's order:
 
 - movies and shows that pass the relevance rule of Buscar (5 votes or more, popularity 5 or more, or a title equal to the text); if none of them passes, the titles as received;
 - at most 2 people whose `known_for_department` is `Acting` or `Directing` and whose popularity is 1 or more, each with `rol` (`actor` or `director`), `gender` and `profile_path`.
@@ -267,7 +267,7 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 #### Scenario: Too short
 
 - GIVEN `suggest/?q=a`
-- THEN the answer is 400 with `min_length`
+- THEN the answer is 400 (Bad Request) with `min_length`
 
 #### Scenario: Cached
 
@@ -277,7 +277,7 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 
 ### Requirement: Person filter in Buscar (13/11/2026)
 
-`GET /api/catalogo/browse/` MUST accept `persona` (a positive TMDB person id; otherwise 400 (Bad Request) with `invalid`, `min_value` or `max_value`) and `rol` (`director` or `actor`; absent means both; otherwise 400 `invalid_choice`). With `persona` it MUST read the person's `combined_credits` (cached 24 h) and keep, for `actor`, the cast without shows in News or Talk (10763, 10767), and for `director`, the crew with `job` «Director» in movies and «Creator» in shows. It MUST drop duplicates by type and id, apply type, genre, year, `a_estrenar`, `decada` and rating in memory as with text, keep only titles whose `title`, `name`, `original_title` or `original_name` contains `q` (normalized: lowercase, without accents, spaces collapsed) when there is text, and sort and paginate like a text search. The answer MUST add `persona: {id, name, rol, gender, profile_path}` read from TMDB's `person/{id}` (cached 24 h). An id TMDB does not know MUST answer 404 (Not Found) with `person_not_found`. TMDB's `discover` with `with_people` MUST NOT be used (TMDB ignores it for shows).
+`GET /api/catalogo/browse/` MUST accept `persona` (a positive TMDB person id; otherwise 400 (Bad Request) with `invalid`, `min_value` or `max_value`) and `rol` (`director` or `actor`; absent means both; otherwise 400 (Bad Request) `invalid_choice`). With `persona` it MUST read the person's `combined_credits` (cached 24 h) and keep, for `actor`, the cast without shows in News or Talk (10763, 10767), and for `director`, the crew with `job` «Director» in movies and «Creator» in shows. It MUST drop duplicates by type and id, apply type, genre, year, `a_estrenar`, `decada` and rating in memory as with text, keep only titles whose `title`, `name`, `original_title` or `original_name` contains `q` (normalized: lowercase, without accents, spaces collapsed) when there is text, and sort and paginate like a text search. The answer MUST add `persona: {id, name, rol, gender, profile_path}` read from TMDB's `person/{id}` (cached 24 h). An id TMDB does not know MUST answer 404 (Not Found) with `person_not_found`. TMDB's `discover` with `with_people` MUST NOT be used (TMDB ignores it for shows).
 
 #### Scenario: Directed by Vince Gilligan
 
@@ -293,7 +293,7 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 
 ### Requirement: Buscar combina discover y search (C-06)
 
-`GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 `invalid_choice`), `persona` and `rol` («Person filter in Buscar») and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
+`GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 (Bad Request) `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 (Bad Request) `invalid_choice`), `persona` and `rol` («Person filter in Buscar») and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
 
 - Without text it MUST use `discover` sorted by popularity, with at least 50 votes, except for a future year or `a_estrenar` without a rating filter (announced titles have no votes); `a_estrenar` sends `primary_release_date.gte` / `first_air_date.gte` with tomorrow's date; shows MUST exclude News and Talk unless a genre is chosen.
 - With text it MUST read up to the first 5 TMDB `search` pages per type (sending the year as `primary_release_year` or `first_air_date_year`), keep the items that pass the filters, and sort all of them — movies and shows together in `all` — by `max(vote_count, popularity × 100)`, descending, keeping TMDB's order on ties; pages hold 20 per type (40 in `all`). TMDB's relevance order puts titles with no votes first, and an upcoming title with high popularity must not sink (decided 14/10/2026).
@@ -355,15 +355,15 @@ The filter MUST NOT refill the page and MUST NOT change `total_pages` or `total_
 
 ### Requirement: Browser caching and compression (22/10/2026)
 
-Every `200 (OK)` response of a public catalog view (`CatalogoBaseView`) MUST carry `Cache-Control: public, max-age=300` and MUST vary on `Accept-Language` (the only input besides the URL). Error responses MUST NOT carry `Cache-Control`. These views MUST compress the body with gzip when the client accepts it; compression stays scoped to them (no global `GZipMiddleware`) because they hold no cookies or CSRF tokens. `recommended/` is per user and is not covered.
+Every `200` (OK) response of a public catalog view (`CatalogoBaseView`) MUST carry `Cache-Control: public, max-age=300` and MUST vary on `Accept-Language` (the only input besides the URL). Error responses MUST NOT carry `Cache-Control`. These views MUST compress the body with gzip when the client accepts it; compression stays scoped to them (no global `GZipMiddleware`) because they hold no cookies or CSRF tokens. `recommended/` is per user and is not covered.
 
 #### Scenario: A listing can be reused by the browser
 
-- GIVEN a `200 (OK)` from `discover/` requested with `Accept-Language: es` and `Accept-Encoding: gzip`
+- GIVEN a `200` (OK) from `discover/` requested with `Accept-Language: es` and `Accept-Encoding: gzip`
 - THEN the response has `Cache-Control: public, max-age=300`, `Vary` includes `Accept-Language`
 - AND the body is gzip-compressed
 
 #### Scenario: An error is not cached
 
 - GIVEN `discover/?tipo=book`
-- THEN the response is `400 (Bad Request)` without `Cache-Control`
+- THEN the response is `400` (Bad Request) without `Cache-Control`

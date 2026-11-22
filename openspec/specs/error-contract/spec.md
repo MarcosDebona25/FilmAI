@@ -43,7 +43,7 @@ Every API response with status 400–599 MUST contain these keys:
 
 `code` MUST be a registered English snake_case identifier. `params` MUST be an
 object containing only documented machine values. `errors` MUST be a list.
-Validation uses top-level `validation_error`, HTTP 400 and one entry per error.
+Validation uses top-level `validation_error`, HTTP 400 (Bad Request) and one entry per error.
 Each entry has exactly `field` (request field or null), `code` and `params`.
 Non-validation failures use their specific top-level code and `errors: []`.
 Existing request field names and enum values MUST retain their spelling.
@@ -81,7 +81,7 @@ normalized to the catalog's internal message, rather than shown by the UI.
 
 - GIVEN an unhandled exception with an internal diagnostic
 - WHEN `DEBUG=False`
-- THEN the response uses `server_error`, HTTP 500, empty params/errors and no debug
+- THEN the response uses `server_error`, HTTP 500 (Internal Server Error), empty params/errors and no debug
 
 ### Requirement: Catalog as the sole production source
 
@@ -94,37 +94,42 @@ exact existing messages and aliases; these tables define public semantics.
 
 | Code                                 | HTTP context                          | Meaning and parameters                                                                                    |
 | ------------------------------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `validation_error`                   | 400                                   | Top-level serializer/validator failure; leaves carry specific codes.                                      |
-| `not_authenticated`                  | 401                                   | Authentication absent; includes missing refresh cookie/token.                                             |
-| `invalid_credentials`                | 400 login / 401 authentication        | Incorrect credentials; Password/Google login preserves current 400; authentication failures retain 401.   |
-| `permission_denied`                  | 403                                   | Permission or CSRF denial.                                                                                |
-| `documentation_staff_required`       | 403                                   | API documentation requires a staff Admin session.                                                         |
-| `not_found`                          | 404                                   | Missing route/resource or invalid pagination cursor.                                                      |
-| `method_not_allowed`                 | 405                                   | Unsupported HTTP verb; `method: string` from the request.                                                 |
-| `not_acceptable`                     | 406                                   | No representation satisfies Accept.                                                                       |
-| `unsupported_media_type`             | 415                                   | Unsupported Content-Type; `mediaType: string`.                                                            |
-| `parse_error`                        | 400                                   | Malformed request body; no parser diagnostics in params.                                                  |
-| `throttled`                          | 429                                   | Too many requests; wait policy is specified below.                                                        |
-| `server_error`                       | 500                                   | Unexpected application failure.                                                                           |
-| `upstream_bad_request`               | 400                                   | TMDB rejected request parameters.                                                                         |
-| `upstream_not_found`                 | 404                                   | TMDB resource absent.                                                                                     |
-| `person_not_found`                   | 404                                   | `browse/?persona=` with a person id TMDB does not know (13/11/2026).                                      |
-| `upstream_error`                     | 502                                   | TMDB 5xx, unexpected HTTP response or exhausted retry budget.                                             |
-| `upstream_unavailable`               | 503                                   | TMDB transport/decoding failure.                                                                          |
-| `invalid_token`                      | 401                                   | JWT malformed, expired, blacklisted, wrong type or without required claims.                               |
-| `session_revoked`                    | 401                                   | Valid JWT no longer matches the user's current password hash.                                             |
-| `account_deactivated`                | 403                                   | Login to a deactivated account, only after credentials are verified.                                      |
-| `account_pending_confirmation`       | 403                                   | Login to a pending account, only after credentials are verified.                                          |
-| `link_expired`                       | 400                                   | Confirmation signature expired.                                                |
-| `link_invalid`                       | 400                                   | Bad/missing confirmation or reset token. Reset expiry stays indistinguishable. |
-| `already_confirmed`                  | 400                                   | Already consumed/cannot reactivate.                                       |
-| `list_name_duplicated`               | 409                                   | Existing name.                                                   |
-| `list_name_reserved`                 | 409                                   | Reserved default-list label in ES or EN; no params. OT-41 approval.                                      |
-| `list_item_duplicated`               | 409                                   | Existing membership.                                                     |
-| `default_list_protected`             | 409                                   | Cannot rename/delete default list.                       |
-| `rating_duplicated`                  | 409                                   | Existing rating.                                                 |
-| `review_moderated`                   | 409                                   | The text of a moderated review cannot be edited or deleted.      |
-| `username_already_used`              | 400 validation / 409 profile conflict | Username already registered; profile conflict has empty errors.                                           |
+| `validation_error`                   | 400 (Bad Request)                                   | Top-level serializer/validator failure; leaves carry specific codes.                                      |
+| `not_authenticated`                  | 401 (Unauthorized)                                   | Authentication absent; includes missing refresh cookie/token.                                             |
+| `invalid_credentials`                | 400 (Bad Request) login / 401 (Unauthorized) authentication        | Incorrect credentials; Password/Google login preserves current 400 (Bad Request); authentication failures retain 401 (Unauthorized).   |
+| `permission_denied`                  | 403 (Forbidden)                                   | Permission or CSRF denial.                                                                                |
+| `documentation_staff_required`       | 403 (Forbidden)                                   | API documentation requires a staff Admin session.                                                         |
+| `not_found`                          | 404 (Not Found)                                   | Missing route/resource or invalid pagination cursor.                                                      |
+| `method_not_allowed`                 | 405 (Method Not Allowed)                                   | Unsupported HTTP verb; `method: string` from the request.                                                 |
+| `not_acceptable`                     | 406 (Not Acceptable)                                   | No representation satisfies Accept.                                                                       |
+| `unsupported_media_type`             | 415 (Unsupported Media Type)                                   | Unsupported Content-Type; `mediaType: string`.                                                            |
+| `parse_error`                        | 400 (Bad Request)                                   | Malformed request body; no parser diagnostics in params.                                                  |
+| `throttled`                          | 429 (Too Many Requests)                                   | Too many requests; wait policy is specified below.                                                        |
+| `server_error`                       | 500 (Internal Server Error)                                   | Unexpected application failure.                                                                           |
+| `upstream_bad_request`               | 400 (Bad Request)                                   | TMDB rejected request parameters.                                                                         |
+| `upstream_not_found`                 | 404 (Not Found)                                   | TMDB resource absent.                                                                                     |
+| `person_not_found`                   | 404 (Not Found)                                   | `browse/?persona=` with a person id TMDB does not know (13/11/2026).                                      |
+| `upstream_error`                     | 502 (Bad Gateway)                                   | TMDB 5xx, unexpected HTTP response or exhausted retry budget.                                             |
+| `upstream_unavailable`               | 503 (Service Unavailable)                                   | TMDB transport/decoding failure.                                                                          |
+| `invalid_token`                      | 401 (Unauthorized)                                   | JWT malformed, expired, blacklisted, wrong type or without required claims.                               |
+| `session_revoked`                    | 401 (Unauthorized)                                   | Valid JWT no longer matches the user's current password hash.                                             |
+| `account_deactivated`                | 403 (Forbidden)                                   | Login to a deactivated account, only after credentials are verified.                                      |
+| `account_pending_confirmation`       | 403 (Forbidden)                                   | Login to a pending account, only after credentials are verified.                                          |
+| `link_expired`                       | 400 (Bad Request)                                   | Confirmation signature expired.                                                |
+| `link_invalid`                       | 400 (Bad Request)                                   | Bad/missing confirmation or reset token. Reset expiry stays indistinguishable. |
+| `already_confirmed`                  | 400 (Bad Request)                                   | Already consumed/cannot reactivate.                                       |
+| `list_name_duplicated`               | 409 (Conflict)                                   | Existing name.                                                   |
+| `list_name_reserved`                 | 409 (Conflict)                                   | Reserved default-list label in ES or EN; no params. OT-41 approval.                                      |
+| `list_item_duplicated`               | 409 (Conflict)                                   | Existing membership.                                                     |
+| `list_limit_reached`                 | 409 (Conflict)                        | The user reached the maximum of personalized lists (100); `maxLists: number`.                             |
+| `list_items_limit_reached`           | 409 (Conflict)                        | The list reached its maximum of titles (1000); `maxItems: number`.                                        |
+| `chat_request_in_progress`           | 409 (Conflict), context `chat`        | Another chat answer is already in progress for the user.                                                  |
+| `chat_unavailable`                   | 503 (Service Unavailable), context `chat` | The chat could not process the request. It travels in the SSE `error` event inside a 200 (OK) response that already started, so 503 is the envelope's status, not the HTTP one. |
+| `email_unavailable`                  | 503 (Service Unavailable), contexts `registro` and `reenvio` | The task queue (Redis) did not accept the account email; registration or resend failed and the attempt does not spend the rate limit (`emails`). |
+| `default_list_protected`             | 409 (Conflict)                                   | Cannot rename/delete default list.                       |
+| `rating_duplicated`                  | 409 (Conflict)                                   | Existing rating.                                                 |
+| `review_moderated`                   | 409 (Conflict)                                   | The text of a moderated review cannot be edited or deleted.      |
+| `username_already_used`              | 400 (Bad Request) validation / 409 (Conflict) profile conflict | Username already registered; profile conflict has empty errors.                                           |
 
 #### Validation leaf codes
 
@@ -184,7 +189,7 @@ were inspected in the running backend for OT-11.
 | DRF numeric `max_string_length`, `overflow`; DateField `datetime`                                                                             | `invalid`; preserve field, derive optional expectedType from the validator.                                                                         |
 | DRF exceptions `parse_error`, `not_acceptable`, `unsupported_media_type`, `not_found`, `method_not_allowed`, `throttled`, `permission_denied` | Same code; derive parameters from request/exception metadata.                                                                                       |
 | DRF `authentication_failed` / missing credentials                                                                                             | `invalid_credentials` / `not_authenticated`.                                                                                                        |
-| dj-rest-auth “Unable to log in with provided credentials.”                                                                                    | `invalid_credentials` as a top-level failure, preserving login HTTP 400.                                                                            |
+| dj-rest-auth “Unable to log in with provided credentials.”                                                                                    | `invalid_credentials` as a top-level failure, preserving login HTTP 400 (Bad Request).                                                                            |
 | dj-rest-auth missing username/email/password condition                                                                                        | `required` validation; field null for either identifier missing, password for missing password.                                                     |
 | dj-rest-auth “The two password fields didn't match.”                                                                                          | `passwords_do_not_match`; never depend on translated punctuation.                                                                                   |
 | dj-rest-auth “User is already registered with this e-mail address.”                                                                           | `email_already_used`; FilmAI overrides the inherited email field.                                                                                   |
@@ -195,7 +200,7 @@ were inspected in the running backend for OT-11.
 | allauth `rate_limited`, `too_many_login_attempts`                                                                                             | `throttled`; apply the same wait policy.                                                                                                            |
 | allauth `account_inactive`, `unverified_primary_email`; dj-rest-auth disabled/unverified user                                                 | Resolve account state only after verified credentials; otherwise `invalid_credentials`.                                                             |
 | SimpleJWT `token_not_valid`, TokenError for expired/blacklisted/wrong type/missing claims                                                     | `invalid_token`; remove the nested vendor diagnostic tree.                                                                                          |
-| dj-rest-auth LogoutView direct Response: missing refresh cookie/request token; TokenError; AttributeError/TypeError                           | `not_authenticated` 401; `invalid_token` 401; `server_error` 500. These responses bypass the exception handler and MUST use explicit normalization. |
+| dj-rest-auth LogoutView direct Response: missing refresh cookie/request token; TokenError; AttributeError/TypeError                           | `not_authenticated` 401 (Unauthorized); `invalid_token` 401 (Unauthorized); `server_error` 500 (Internal Server Error). These responses bypass the exception handler and MUST use explicit normalization. |
 | SimpleJWT missing refresh token/cookie                                                                                                        | `not_authenticated`; identified at token extraction, not by translated text.                                                                        |
 | SimpleJWT `password_changed`                                                                                                                  | `session_revoked`.                                                                                                                                  |
 | SimpleJWT `user_not_found`, `user_inactive`, `no_active_account` outside login                                                                | `invalid_token`; no account-state details for an API session failure.                                                                               |
@@ -211,8 +216,8 @@ explicitly; backend tests MUST reject unknown codes rather than silently emit th
 
 HTTP states MUST remain unchanged during multiidioma. A code identifies meaning,
 not a universal status: the catalog records allowed statuses by explicit context
-(for example invalid_credentials 400 for login and 401 for authentication,
-username_already_used 400 for validation and 409 for profile conflict).
+(for example invalid_credentials 400 (Bad Request) for login and 401 (Unauthorized) for authentication,
+username_already_used 400 (Bad Request) for validation and 409 (Conflict) for profile conflict).
 This contextual rule was approved by the user for OT-11.
 
 #### Scenario: Invalid credentials for every account state
@@ -228,7 +233,7 @@ This contextual rule was approved by the user for OT-11.
 
 - GIVEN a pending/deactivated account
 - WHEN its password or Google token has been verified
-- THEN return HTTP 403 with account_pending_confirmation/account_deactivated respectively
+- THEN return HTTP 403 (Forbidden) with account_pending_confirmation/account_deactivated respectively
 - AND Google account-state validation occurs only after token verification
 
 ### Requirement: Preserve throttling information
@@ -245,20 +250,20 @@ unknown waits was explicitly approved by the user for OT-11.
 #### Scenario: DRF rate limit
 
 - GIVEN Throttled(wait=41.2)
-- THEN HTTP is 429, retry_after_seconds is 42 and Retry-After is "42"
+- THEN HTTP is 429 (Too Many Requests), retry_after_seconds is 42 and Retry-After is "42"
 - AND params contains no translated “wait” sentence
 
 #### Scenario: Upstream rate limit with no known wait
 
-- GIVEN TMDB returns 429 without usable Retry-After metadata
-- THEN code is throttled and HTTP is 429
+- GIVEN TMDB returns 429 (Too Many Requests) without usable Retry-After metadata
+- THEN code is throttled and HTTP is 429 (Too Many Requests)
 - AND params is empty and Retry-After is absent
 
 ### Requirement: Code-bearing successful responses
 
 Successful responses that currently contain UI text MUST add these codes in F3
 without `detail` after OT-83. Payloads with data retain those data;
-204 responses remain empty. Do not inject error arrays into successful bodies.
+204 (No Content) responses remain empty. Do not inject error arrays into successful bodies.
 
 | Current response / origin                                              | New code                                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |

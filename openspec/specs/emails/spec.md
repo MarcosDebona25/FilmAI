@@ -129,7 +129,7 @@ adapter, the password flows) MUST NOT know which provider sent.
 - GIVEN Resend raises `RateLimitError` with `daily_quota_exceeded`
 - WHEN a password-reset email is sent
 - THEN the same subject, text, HTML and recipient are sent through Brevo
-- AND a WARNING names Resend, 429 and the error type
+- AND a WARNING names Resend, 429 (Too Many Requests) and the error type
 - AND an INFO line names Brevo and its `messageId`
 
 #### Scenario: Invalid Resend key
@@ -140,7 +140,7 @@ adapter, the password flows) MUST NOT know which provider sent.
 
 #### Scenario: Invalid message data
 
-- GIVEN Resend raises `ValidationError` (422)
+- GIVEN Resend raises `ValidationError` (422 (Unprocessable Entity))
 - WHEN the message is sent
 - THEN Brevo is not called
 - AND the error is raised, or 0 is returned with `fail_silently=True`
