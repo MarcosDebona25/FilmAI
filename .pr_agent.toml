@@ -24,7 +24,7 @@ require_security_review = true
 require_estimate_effort_to_review = false
 num_max_findings = 6
 extra_instructions = """\
-Stack real: backend Django 5.1 + DRF + PostgreSQL + Redis + Celery; frontend Next.js + Tailwind + Shadcn.
+Stack real: backend Django 5.2 + DRF + PostgreSQL + Redis + Celery; frontend Next.js + Tailwind + Shadcn.
 Reportá SOLO defectos con evidencia en el diff o en el contexto del repo; no inventes problemas ni pidas refactors innecesarios.
 Prioridad: (1) bugs funcionales, casos borde y regresiones; (2) autenticación, autorización y control de acceso; (3) inyección, secretos y manejo inseguro de datos; (4) consistencia de base de datos, transacciones, condiciones de carrera y consultas ineficientes; (5) contratos de API y manejo de errores; (6) rendimiento y fugas de recursos; (7) tests faltantes para cambios de comportamiento; (8) compatibilidad hacia atrás.
 Para cada hallazgo indicá: explicación, escenario concreto, impacto, severidad (crítica/alta/media/baja) y remedio accionable, con la línea exacta.

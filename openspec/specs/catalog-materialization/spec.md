@@ -54,7 +54,7 @@ An `IntegrityError` that does not come from this race — the row still not bein
 
 #### Scenario: The winner's row was discarded before the loser found it
 
-- GIVEN the insert collides with a row that another request then deletes (TMDB answered 404, security audit F7)
+- GIVEN the insert collides with a row that another request then deletes (TMDB answered 404 (Not Found), security audit F7)
 - WHEN the loser looks for the winner's row and finds none
 - THEN the insert is retried once instead of answering 500 (Internal Server Error)
 
@@ -162,7 +162,7 @@ Since 16/10/2026 (docs 02 and 03), `trending`, `now-playing`, `discover`, `searc
 
 - GIVEN enqueuing the materialization raises for any reason
 - WHEN `GET /api/catalogo/movie/{id}/` is handled
-- THEN the response is still 200 with the unchanged TMDB body
+- THEN the response is still 200 (OK) with the unchanged TMDB body
 - AND the failure is recorded in the logs
 
 #### Scenario: An id TMDB does not know leaves no row
@@ -222,7 +222,7 @@ This window is NOT the primary refresh mechanism. Actual change detection belong
 
 ### Requirement: Titles TMDB no longer has (#180)
 
-When `materializar(..., forzar=True)` receives 404 (Not Found) from TMDB for a row it already holds, it MUST NOT treat it as a failed refresh. The first 404 (Not Found) only records `fecha_404` (today) and leaves the row as it is; a second one on a later night either deletes the row (nobody references it) or turns it into a tombstone: `titulo`, `sinopsis`, `poster` and every other TMDB content field blanked, `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, translations and embedding deleted. Any other error (timeout, 500, 429, 401) MUST NOT count. A successful enrichment MUST set `disponible_en_tmdb = True` and clear `fecha_404`, in `_enriquecer`, so every write path restores a tombstone. Without `forzar`, a tombstone MUST raise `TMDBNotFound` (it is not a complete row, even though its date is recent). The delete MUST survive `ProtectedError` and `IntegrityError` by falling back to the tombstone, and `_descartar_cascaron` MUST keep a protected shell instead of failing. Details and scenarios: `tmdb-compliance`.
+When `materializar(..., forzar=True)` receives 404 (Not Found) from TMDB for a row it already holds, it MUST NOT treat it as a failed refresh. The first 404 (Not Found) only records `fecha_404` (today) and leaves the row as it is; a second one on a later night either deletes the row (nobody references it) or turns it into a tombstone: `titulo`, `sinopsis`, `poster` and every other TMDB content field blanked, `disponible_en_tmdb = False`, `fecha_enriquecimiento` set to now, translations and embedding deleted. Any other error (timeout, 500 (Internal Server Error), 429 (Too Many Requests), 401 (Unauthorized)) MUST NOT count. A successful enrichment MUST set `disponible_en_tmdb = True` and clear `fecha_404`, in `_enriquecer`, so every write path restores a tombstone. Without `forzar`, a tombstone MUST raise `TMDBNotFound` (it is not a complete row, even though its date is recent). The delete MUST survive `ProtectedError` and `IntegrityError` by falling back to the tombstone, and `_descartar_cascaron` MUST keep a protected shell instead of failing. Details and scenarios: `tmdb-compliance`.
 
 #### Scenario: A tombstone is not served as a complete row
 

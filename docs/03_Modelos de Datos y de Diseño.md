@@ -26,7 +26,7 @@
 
 #### 2.1 Modelo 1: Gráfico
 
-> **Nota:** El Diagrama de Clases se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases"). El JSON se actualizó el 18/10/2026 con `Usuario.pais`, `Lista.orden` y `ProduccionAudiovisual.fechaEnriquecimiento`, y sin `Usuario.tema`; el 28/10/2026 se sumó `Mensaje.tarjetas` (diagrama de tablas: `tarjetas JSONB`), migrada el 06/11/2026 (`chatbot/0005_mensaje_tarjetas`). El repositorio no incluye un script ni un renderizador: la imagen se vuelve a generar con la herramienta de diagramas que lee ese formato, y hasta entonces el JSON es la fuente de verdad.
+> **Nota:** El Diagrama de Clases se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Clases"). El JSON se actualizó el 18/10/2026 con `Usuario.pais`, `Lista.orden` y `ProduccionAudiovisual.fechaEnriquecimiento`, y sin `Usuario.tema`; el 28/10/2026 se sumó `Mensaje.tarjetas` (diagrama de tablas: `tarjetas JSONB`), migrada el 06/11/2026 (`chatbot/0005_mensaje_tarjetas`); el 22/11/2026 se sumaron `ProduccionAudiovisual.disponibleEnTmdb` y `fecha404` (lápida de TMDB, #180) y la cardinalidad Usuario - Lista pasó a `4..*`. El repositorio no incluye un script ni un renderizador: la imagen se vuelve a generar con la herramienta de diagramas que lee ese formato, y hasta entonces el JSON es la fuente de verdad.
 
 #### 2.2 Modelo 1: Descripción y justificación de elementos más importantes
 
@@ -40,7 +40,7 @@
 
 - **Usuario - Calificación:** La cardinalidad establecida permite que un usuario no tenga calificaciones asociadas (por ejemplo, al crear la cuenta) o tenga múltiples calificaciones (cuenta con trayectoria en el sistema).
 
-- **Usuario - Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las listas Favoritos, Pendientes y Vistas (identificadas por `Lista.clave`; la interfaz muestra Favorites, Watchlist y Watched según el idioma), las cuales no pueden ser eliminadas. Además, cada usuario tiene la posibilidad de crear otras listas personalizadas.
+- **Usuario - Lista:** La cardinalidad se justifica porque no existen listas compartidas entre usuarios y porque por defecto cada usuario cuenta con las cuatro listas Favoritos, Pendientes, Viendo y Vistas (identificadas por `Lista.clave`; la interfaz muestra Favorites, Watchlist, Watching y Watched según el idioma), las cuales no pueden ser eliminadas. Además, cada usuario tiene la posibilidad de crear otras listas personalizadas.
 
 - **Reseña - Calificación:** La cardinalidad establecida refleja que una calificación (numérica) opcionalmente puede tener una reseña (textual) asociada. Se modela como relación de composición dado que una reseña no puede existir sin su respectiva calificación.
 
@@ -48,7 +48,8 @@
 
 - **Lista - Producción Audiovisual:** La relación muchos a muchos se debe a que una película o serie puede estar en múltiples listas distintas simultáneamente. Del mismo modo, múltiples listas pueden contener una misma producción audiovisual.
 
-- **Invariante «calificada ⇒ en Vistas» (30/09/2026):** toda calificación de un usuario tiene su producción en la lista predeterminada «Vistas» de ese mismo usuario (a través de la tabla `Tiene`). Calificar agrega el ítem en la misma transacción que la nota, y borrar la calificación lo quita; modificar la nota o borrar solo el texto no cambian «Vistas». La inversa no rige: una producción puede estar en «Vistas» sin estar calificada (CU-011). Las calificaciones creadas antes de la regla se reparan con la migración de datos `listas.0004_calificadas_en_vistas`.
+- **Calificar lleva a «Vistas», sin invariante hacia atrás (30/09/2026, ajustada el 16/11/2026):** al calificar, la producción pasa a la lista predeterminada «Vistas» de ese mismo usuario (a través de la tabla `Tiene`) en la misma transacción que la nota, y borrar la calificación la quita; modificar la nota o borrar solo el texto no cambian «Vistas». La invariante original, «toda calificación tiene su producción en Vistas», dejó de valer el 16/11/2026: quitar la producción de «Vistas» o pasarla a Pendientes o Viendo conserva la calificación (CU-011). Tampoco rige la inversa: una producción puede estar en «Vistas» sin estar calificada. Las calificaciones creadas antes de la regla se repararon con la migración de datos `listas.0004_calificadas_en_vistas`.
+- **Un estado por producción (16/11/2026, `listas.0009_lista_viendo`):** `Pendientes`, `Viendo` y `Vistas` son un solo estado: una producción está, para un mismo usuario, en a lo sumo una de las tres. `Favoritos` es independiente. La regla no es una restricción de la base: la hace cumplir la capa de servicios (`listas/services.py::poner_estado`) en una transacción que bloquea las tres listas, y la usan `PUT /api/lists/status/`, `POST /api/lists/{id}/items/` sobre esas listas y la calificación. La migración creó la lista `Viendo` en todas las cuentas, pasó a `Vistas` las calificaciones sin estado y dejó solo la lista más reciente cuando una producción estaba en Pendientes y Vistas a la vez.
 
 **Observaciones:**
 
@@ -75,7 +76,7 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 
 #### 3.1 Modelo 2: Gráfico
 
-> **Nota:** El Diagrama de Tablas se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas"), actualizado el 18/10/2026 con `pais` y sin `tema` en `Usuario`, `orden` en `Lista` y `fechaEnriquecimiento` en `ProduccionAudiovisual`, y desde el 28/10/2026 `tarjetas` en `Mensaje` (migración `chatbot/0005_mensaje_tarjetas`, 06/11/2026). Ver la nota del Modelo 1 sobre la regeneración de la imagen.
+> **Nota:** El Diagrama de Tablas se genera desde el archivo `03_DiagramaClases_DiagramaTablas.json` (página "Diagrama de Tablas"), actualizado el 18/10/2026 con `pais` y sin `tema` en `Usuario`, `orden` en `Lista` y `fechaEnriquecimiento` en `ProduccionAudiovisual`, desde el 28/10/2026 `tarjetas` en `Mensaje` (migración `chatbot/0005_mensaje_tarjetas`, 06/11/2026) y, desde el 22/11/2026, `disponibleEnTmdb` y `fecha404` en `ProduccionAudiovisual` (migración `catalogo/0008_lapida_tmdb`). Ver la nota del Modelo 1 sobre la regeneración de la imagen.
 
 #### 3.2 Modelo 2: Descripción y justificación de elementos más importantes
 
@@ -90,7 +91,8 @@ En la entidad Mensaje, el atributo autor permite distinguir si el mensaje provie
 - **Orden de listas personalizadas (16/10/2026, `listas.0007_lista_orden`):** `Lista.orden` (INTEGER positivo, NOT NULL, DEFAULT 0) fija la posición de cada lista personalizada en «Lists». Las predeterminadas van siempre primero en un orden fijo y no lo usan; las nuevas entran al final y los empates de datos viejos se desempatan por id. La migración numeró las listas existentes por id. Lo escribe `PUT /api/lists/order/`.
 
 - **Identidad de listas predeterminadas (08/10/2026, OT-40 y OT-42):** `Lista.clave`
-  (VARCHAR(25), NULLABLE) admite `favoritos`, `pendientes` y `vistas`. La
+  (VARCHAR(25), NULLABLE) admite `favoritos`, `pendientes`, `viendo` (desde el
+  16/11/2026) y `vistas`. La
   migración asignó la clave a las predeterminadas existentes según el nombre
   sin distinguir mayúsculas; conserva nombres, IDs y relaciones `Tiene`, y se
   detiene si encuentra un nombre desconocido. Las personalizadas tienen
@@ -172,7 +174,7 @@ borrados en cascada al dar de baja una cuenta.
 **Cambio en Mensaje:**
 
 - `texto` cambia de VARCHAR(250) a TEXT para no truncar respuestas del chatbot (una respuesta del LLM puede superar 250 caracteres).
-- `tarjetas` (JSON, nuevo; decisiones del 08/10/2026 y 09/10/2026; migración `chatbot/0005_mensaje_tarjetas` del 06/11/2026, con valor por defecto lista vacía): lista de hasta 3 títulos que el chatbot mostró junto a su respuesta. Cada elemento guarda `id_tmdb`, `tipo`, `titulo`, `poster` y `anio` tal como se mostraron, en el idioma del turno; el historial los devuelve sin volver a traducir. No es una entidad ni tiene FK a ProduccionAudiovisual: mostrar una tarjeta no materializa la producción. Los mensajes del usuario la llevan vacía.
+- `tarjetas` (JSON, nuevo; decisiones del 08/10/2026 y 09/10/2026; migración `chatbot/0005_mensaje_tarjetas` del 06/11/2026, con valor por defecto lista vacía): lista de hasta 3 títulos que el chatbot mostró junto a su respuesta. Cada elemento guarda `id_tmdb`, `tipo`, `titulo`, `poster` y `anio` tal como se mostraron, en el idioma del turno, y, desde el 07/11/2026, `nota_tmdb` (el promedio de TMDB con un decimal; las tarjetas anteriores no lo traen). Pasados 180 días (`DIAS_DE_TARJETAS`) la tarea nocturna `chatbot.recortar_tarjetas` (04:30) deja de cada tarjeta solo `{id_tmdb, tipo}`, porque los términos de TMDB no permiten guardar su contenido más de 180 días sin refrescarlo; al leer el historial, esas tarjetas se reconstruyen desde el catálogo local, en el idioma de quien lee, sin llamar a TMDB (un título que falta o es lápida devuelve `titulo` nulo). Lo mismo rige para las entradas de `Chat.contexto.ya_recomendados` (llevan `fecha`). No es una entidad ni tiene FK a ProduccionAudiovisual: mostrar una tarjeta no materializa la producción. Los mensajes del usuario la llevan vacía.
 - El mensaje del usuario admite hasta 500 caracteres; el límite se valida en la API, no en la columna.
 
 **Cambio en Reseña:**
@@ -204,7 +206,7 @@ el login Google de una cuenta existente conserva su idioma.
 
 - `generos_ids` (INTEGER[]): IDs de TMDB de los géneros. La etiqueta se resuelve por idioma con la lista de géneros (`GET /api/catalogo/genres/`); `generos` (nombres en inglés) se conserva para los embeddings. `estatus` se trata como código y el frontend lo traduce.
 - `ProduccionTraduccion` (tabla `produccion_traduccion`): `id`, `produccion` (FK, cascada), `idioma` (VARCHAR(5)), `titulo` (VARCHAR(100)), `sinopsis` (VARCHAR(2000)) y `poster` (VARCHAR(250)), con `UNIQUE (produccion, idioma)`. Se completa al materializar la producción y en la sincronización nocturna (tercera pasada acotada) y con el comando `rellenar_traducciones`. Un error de TMDB al guardar la traducción se registra y no invalida el enriquecimiento canónico.
-- Los títulos y pósters de listas, previews y «Mis reseñas» se sirven según el idioma con respaldo al canónico. Limitación conocida: la sinopsis traducida se guarda, pero ningún serializador la expone todavía, y el orden por título usa el canónico.
+- Los títulos y pósters de listas, previews y «Mis reseñas» se sirven según el idioma con respaldo al canónico. Limitación conocida: la sinopsis traducida se guarda, pero ningún serializador de la API la expone (el chatbot sí la usa: se la entrega al modelo en el resultado de sus herramientas), y el orden por título usa el canónico.
 - El texto canónico de embeddings y su `source_hash` no cambian.
 
 ### Identidades exportadas y nombres reservados (OT-41B)
@@ -212,9 +214,18 @@ el login Google de una cuenta existente conserva su idioma.
 `contracts/enums.json` contiene las claves de listas predeterminadas, los
 valores de género y los nombres reservados por idioma. La API rechaza crear
 o renombrar una personalizada con cualquiera de esas etiquetas, sin
-distinguir mayúsculas, con `list_name_reserved` y HTTP 409. Los nombres
+distinguir mayúsculas, con `list_name_reserved` y 409 (Conflict). Los nombres
 personalizados ya almacenados se devuelven sin traducción ni cambios
 automáticos. Género conserva `masculino`, `femenino` y `no_especifica`.
+
+### Lápida de TMDB (#180, 22/11/2026)
+
+Los términos de TMDB no permiten conservar su contenido más de 180 días sin refrescarlo ni conservar títulos que ya no tiene. Dos columnas de `ProduccionAudiovisual` (migración `catalogo/0008_lapida_tmdb`) sostienen la regla:
+
+- `disponible_en_tmdb` (BOOLEAN, NOT NULL, DEFAULT true): falso cuando TMDB dejó de tener el título y alguien lo usa (lo calificó, lo reseñó o lo tiene en una lista). La fila queda como lápida: solo `id_tmdb` y `tipo`, sin contenido de TMDB.
+- `fecha_404` (DATE, NULL): noche en que TMDB respondió 404 (Not Found) por primera vez. La lápida pide un segundo 404 en una noche posterior; un refresco exitoso borra la fecha.
+
+Una producción sin ningún uso y con dos 404 (Not Found) se borra. Para que una calificación o un ítem de lista nunca se pierdan por una carrera, `Calificacion.produccion` (migración `catalogo/0008`) y `Tiene.produccion` (migración `listas/0008`) pasaron de CASCADE a PROTECT: si alguien las referencia, el borrado falla y la fila pasa a lápida. La migración también agregó el índice `idx_produccion_enriquecimiento` sobre `fecha_enriquecimiento`, que usa la tarea `catalogo.refrescar_vencidos` (03:30) para elegir qué renovar (más de 150 días, `DIAS_REFRESCO_TMDB`). Una lápida no se acepta de nuevo (calificar o agregar a una lista responde 404 (Not Found)); si TMDB vuelve a responderla, se restaura sola. Detalle en `openspec/specs/tmdb-compliance/spec.md`.
 
 ### Plataformas por país (18/10/2026)
 

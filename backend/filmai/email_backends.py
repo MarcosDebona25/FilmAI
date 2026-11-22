@@ -13,7 +13,7 @@ esa dirección — así cualquier registro es probable end-to-end con una sola
 bandeja. Al conseguir dominio propio, se borra esa variable del `.env` y el
 backend envía a los destinatarios reales sin cambios de código.
 
-Respaldo con Brevo (issue #181, openspec/changes/brevo-respaldo): cada
+Respaldo con Brevo (issue #181, docs/decisiones.md y openspec/specs/emails): cada
 proveedor sabe enviar UN mensaje y, si falla, levanta `ErrorDeProveedor`
 diciendo si el fallo es transitorio. Los tres backends son el mismo bucle
 sobre una lista de proveedores: `[Resend]`, `[Brevo]` o `[Resend, Brevo]`.

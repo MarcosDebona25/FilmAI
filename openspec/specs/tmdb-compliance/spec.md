@@ -157,9 +157,9 @@ Every TTL in `ENDPOINT_TTLS`, `RESPALDO_TTL` and `RESPALDO_TTLS`, and every `max
 
 All TMDB requests MUST go through `catalogo/client.py`, which retries 429 (Too Many Requests) honoring `Retry-After`. The measured peak rate of the seed, the nightly tasks and `rellenar_traducciones` MUST be recorded in doc 06 and stay under 40 requests per second. TMDB image URLs MUST only be used to show catalog content, never as decorative or promotional graphics.
 
-#### Scenario: The refresh task honors 429
+#### Scenario: The refresh task honors 429 (Too Many Requests)
 
-- GIVEN TMDB answers 429 with `Retry-After: 2` and then 200 (OK)
+- GIVEN TMDB answers 429 (Too Many Requests) with `Retry-After: 2` and then 200 (OK)
 - WHEN the refresh task materializes that row
 - THEN the client waits at least 2 seconds and the row is refreshed
 
