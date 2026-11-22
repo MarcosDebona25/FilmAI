@@ -227,6 +227,7 @@ common.review.moderatedNotice,,label,,"Esta reseña fue moderada, así que no po
 chat.status.cancelled,,status,,Solicitud cancelada,Request canceled,aprobado
 chat.input.counter,,label,"count,max","{count, number}/{max, number}","{count, number}/{max, number}",aprobado
 errors.codes.chat_unavailable,chat_unavailable,error,,No podemos procesar tu solicitud. Intentá más tarde.,We can’t process your request right now. Try again later.,aprobado
+errors.codes.email_unavailable,email_unavailable,error,,No pudimos enviar el correo. Intentá de nuevo en unos minutos.,We couldn’t send the email. Try again in a few minutes.,aprobado
 errors.codes.chat_request_in_progress,chat_request_in_progress,error,,Ya hay una respuesta en curso. Esperá a que termine para enviar otra pregunta.,An answer is already in progress. Wait for it to finish before sending another question.,aprobado
 chat.welcome.greeting,,label,name,"¡Hola, {name}! Contame qué tenés ganas de ver y te recomiendo según lo que calificaste.","Hi, {name}! Tell me what you feel like watching and I’ll recommend something based on what you’ve rated.",aprobado
 chat.welcome.suggestionsLabel,,label,,Sugerencias,Suggestions,aprobado

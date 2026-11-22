@@ -3014,6 +3014,7 @@ components:
           - documentation_staff_required
           - email_already_used
           - email_or_username_already_used
+          - email_unavailable
           - google_authentication_failed
           - invalid
           - invalid_choice

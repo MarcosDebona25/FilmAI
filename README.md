@@ -369,6 +369,8 @@ docker compose exec backend python manage.py send_test_email
 
 En desarrollo, `RESEND_TEST_RECIPIENT` puede redirigir el envío al destinatario de prueba configurado en `.env`.
 
+Con `EMAIL_BACKEND=filmai.email_backends.RespaldoBackend` el correo sale por Resend y, si Resend no puede tomarlo (caída, cuota agotada, clave inválida), por Brevo; un correo que Resend aceptó nunca se reenvía. Se configura con `BREVO_API_KEY`, `BREVO_FROM_EMAIL` (remitente único verificado en Brevo) y, solo en desarrollo, `BREVO_TEST_RECIPIENT`; la opción C de `.env.example` lo explica. Los correos de cuenta (confirmación, reenvío, reset y aviso de cambio de contraseña) no salen dentro del pedido: `enviar_correo()` los renderiza y encola la tarea `filmai.enviar_correo`, que el `celery-worker` envía con el backend configurado. Si fallan los dos proveedores, la tarea reintenta con espera creciente durante ~1 hora (el enlace vale 24 horas); con el worker detenido el registro responde igual 201 (Created) y el correo sale cuando vuelve. Si Redis está caído y el correo no se puede encolar, el registro y el reenvío responden 503 (Service Unavailable) con el código `email_unavailable` y ese intento no gasta el límite de pedidos. Para ver un envío: `docker compose logs -f celery-worker`. `send_test_email` no usa la cola: envía directo, para diagnosticar el proveedor.
+
 ---
 
 ## Accesibilidad

@@ -238,7 +238,9 @@ REST_FRAMEWORK = {
         "recuperar_contrasena": "1/min",  # 1 solicitud de email por minuto por IP para recuperar contraseña (legacy)
         "recuperar_contrasena_email": "5/day",  # 5 solicitudes de recuperación por día por email (no por IP)
         # Tope por IP para el mismo pedido: el de arriba cuenta por correo y no
-        # frena a quien prueba muchos correos distintos (28/10/2026).
+        # frena a quien prueba muchos correos distintos (28/10/2026). Igual que
+        # los de registro y reenvío (más abajo), cuenta por destinatario e IP,
+        # no por cuota global: no cambia con Brevo.
         "recuperar_contrasena_ip": "10/hour",
         "restablecer_contrasena": "5/min",  # 5 intentos de restablecer contraseña por minuto por IP
         "username_disponible": "30/min",
@@ -255,8 +257,17 @@ REST_FRAMEWORK = {
         "login_ip": "30/min",
         # Google, con la misma tasa pero contador propio (26/10/2026).
         "google_ip": "30/min",
-        # Registro y reenvío disparan correos (cuota de Resend y reputación del
-        # dominio): tope por correo destino y por IP, más un enfriamiento.
+        # Registro y reenvío disparan correos. Estos topes cuentan por correo
+        # destino y por IP: protegen una bandeja (que nadie reciba cien correos
+        # no pedidos) y la reputación del remitente. NO protegen la cuota
+        # global, y por eso no cambian con Brevo: la capacidad gratuita
+        # combinada es de ~400 correos por día (Resend 100 + Brevo 300) y
+        # ~12 000 por mes (3 000 + ~9 000), y subir un tope solo daría más
+        # margen de abuso a cada persona. Un tope global lo agotaría cualquiera
+        # a propósito y bloquearía todos los registros del día; cuando ambos
+        # proveedores fallan, el worker reintenta el correo durante ~1 hora
+        # (Q-08, docs/decisiones.md, 22/11/2026).
+        # Las tasas están fijadas en usuarios/test_seguridad_throttles.py.
         "registro_correo": "5/hour",
         "registro_ip": "10/hour",
         "reenvio_correo": "3/hour",
@@ -338,6 +349,9 @@ PASSWORD_HASHERS = [
 # guardaría contraseñas con MD5 en una base real. Lo verifica `test_seguridad_infra.py`.
 if sys.argv[1:2] == ["test"]:
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+    # Las tareas corren en el acto, en el mismo proceso: la suite no depende de
+    # un broker. Sin esto, cada registro por la API intentaría publicar en Redis.
+    CELERY_TASK_ALWAYS_EAGER = True
 
 # En desarrollo, sin backend configurado, los emails se imprimen; en producción se exige un backend real para evitar fallos silenciosos.
 EMAIL_BACKEND = config("EMAIL_BACKEND", default="")
@@ -473,6 +487,18 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # Explícito porque el default cambia en Celery 6: si el worker arranca antes
 # que Redis, reintenta en vez de morir.
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+# Cuánto espera un `.delay()` o `.apply_async()` a que Redis responda. Sin estas
+# dos claves, un Redis que no contesta (paquetes descartados) dejaba el pedido
+# HTTP esperando ~124 s, y con solo la primera ~4 s (medido en Celery 5.4 y
+# kombu 5.7, 22/11/2026; ~19 s con la política de publicación por defecto):
+# - socket_connect_timeout: tiempo de cada intento de conexión.
+# - connect_retries_timeout: tiempo total de reintentos al abrir la conexión
+#   (kombu lo usa en `default_channel`, que es lo que abre la publicación; el
+#   worker tiene sus propios reintentos y no lo usa).
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "socket_connect_timeout": 2,
+    "connect_retries_timeout": 2,
+}
 
 # --- Celery Beat (tareas programadas, C-04b) ---
 # La zona horaria va explícita y atada a la de Django: sin esto, un

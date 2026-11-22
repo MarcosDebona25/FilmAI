@@ -429,11 +429,11 @@ class ContrasenaTests(TestCase):
         self.assertEqual(self.client.get("/api/profile/").status_code, 200)
 
     def test_fallo_notificacion_no_revierte_password(self):
-        """Una caída del correo posterior al commit no devuelve falso fracaso."""
+        """Una caída de la cola posterior al commit no devuelve falso fracaso."""
         with (
             self.captureOnCommitCallbacks(execute=True),
             patch(
-                "filmai.correos.servicio.send_mail",
+                "filmai.correos.servicio.enviar_correo_tarea.apply_async",
                 side_effect=RuntimeError("correo no disponible"),
             ),
         ):

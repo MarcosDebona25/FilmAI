@@ -28,6 +28,7 @@ from catalogo.exceptions import (
     TMDBTransportError,
     tmdb_exception_handler,
 )
+from usuarios.throttles import devolver_cupo
 
 from .errores.catalogo import CATALOGO
 from .errores.sobre import construir_sobre, entradas_validacion
@@ -96,6 +97,10 @@ def _codigo_simplejwt(exc):
 def filmai_exception_handler(exc, context):
     """Emite el contrato definitivo sin alterar HTTP ni encabezados."""
     response = _respuesta_base(exc, context)
+    if getattr(exc, "codigo", None) == "email_unavailable" and context.get("view"):
+        # El correo no se pudo encolar por un fallo nuestro (Redis): ese intento
+        # no cuenta para los límites de la vista (registro y reenvío).
+        devolver_cupo(context["request"], context["view"])
     parametros = getattr(exc, "parametros", {})
     errores = []
     if isinstance(exc, TMDBError):
