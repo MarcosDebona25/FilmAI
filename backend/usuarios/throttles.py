@@ -213,3 +213,25 @@ class ResetIPThrottle(PorIPThrottle):
     pedido a una cuenta real dispara un correo."""
 
     scope = "recuperar_contrasena_ip"
+
+
+def devolver_cupo(request, view):
+    """Borra el último intento que cada throttle de la vista anotó para este pedido.
+
+    DRF anota el intento en `allow_request`, antes de ejecutar la vista: guarda la
+    hora en una lista en la caché (la más reciente primero) bajo la clave que
+    arma `get_cache_key`. Si el pedido después falla por algo que no es culpa de
+    quien lo hizo (la cola de correos caída, `email_unavailable`), ese intento no
+    debería gastar su cupo: se vuelve a calcular la clave de cada throttle y se
+    quita la marca más reciente. Las tasas no cambian.
+    """
+    for throttle in view.get_throttles():
+        if not isinstance(throttle, SimpleRateThrottle):
+            continue
+        clave = throttle.get_cache_key(request, view)
+        if clave is None:
+            continue
+        historial = throttle.cache.get(clave, [])
+        if historial:
+            # El orden es el de DRF: `history.insert(0, now)`.
+            throttle.cache.set(clave, historial[1:], throttle.duration)

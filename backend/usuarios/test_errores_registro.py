@@ -8,10 +8,12 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError as ErrorDjango
 from django.test import TestCase, override_settings
 from django.utils import timezone
+from kombu.exceptions import OperationalError
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from filmai.email_backends import ErrorDeProveedor, ProveedorBrevo, ProveedorResend
+from filmai.tasks import enviar_correo_tarea
 
 from .adapter import UsuarioAccountAdapter
 from .avatares import AVATAR_ID_DEFAULT, AVATAR_IDS_VALIDOS
@@ -227,12 +229,14 @@ class ErroresRegistroTests(TestCase):
     RESEND_TEST_RECIPIENT="",
     BREVO_TEST_RECIPIENT="",
 )
-class CorreoNoDisponibleTests(TestCase):
-    """Con Resend y Brevo caídos (D-4 de brevo-respaldo): `email_unavailable`.
+class CorreoNoEncoladoTests(TestCase):
+    """Q-08: `email_unavailable` significa «la cola (Redis) no aceptó el correo».
 
-    Se usa el `RespaldoBackend` de verdad y se simula la caída en el borde, en
-    `enviar` de cada proveedor, así que el 503 (Service Unavailable) sale de la
-    cadena completa: proveedor, backend, `enviar_correo`, adaptador y vista.
+    Se usa el `RespaldoBackend` de verdad. La cola caída se simula con la
+    excepción real que kombu levanta cuando Redis rechaza la conexión
+    (`kombu.exceptions.OperationalError`, verificada contra un puerto cerrado), en
+    `apply_async` de la tarea: así el 503 (Service Unavailable) sale de la cadena
+    completa: `enviar_correo`, adaptador, vista y manejador de excepciones.
     """
 
     def setUp(self):
@@ -253,26 +257,32 @@ class CorreoNoDisponibleTests(TestCase):
         }
 
     @staticmethod
-    def _caida(proveedor, estado):
-        def enviar(self, message):
-            raise ErrorDeProveedor(proveedor, transitorio=True, estado=estado)
-
-        return enviar
-
-    def ambos_caidos(self):
-        """Resend 503 (Service Unavailable) y Brevo 402 (Payment Required)."""
-        return (
-            patch.object(ProveedorResend, "enviar", self._caida("Resend", 503)),
-            patch.object(ProveedorBrevo, "enviar", self._caida("Brevo", 402)),
+    def cola_caida():
+        return patch.object(
+            enviar_correo_tarea,
+            "apply_async",
+            side_effect=OperationalError("Error 111 connecting to redis:6379."),
         )
 
-    def registrar(self):
-        return self.client.post("/api/auth/registration/", self.payload, format="json")
+    def registrar(self, **cambios):
+        payload = {**self.payload, **cambios}
+        return self.client.post("/api/auth/registration/", payload, format="json")
 
-    def test_registro_sin_proveedor_responde_503_y_no_deja_cuenta(self):
+    def reenviar(self):
+        return self.client.post(
+            "/api/auth/registration/resend-email/",
+            {"email": "nueva@example.com"},
+            format="json",
+        )
+
+    def crear_cuenta_pendiente(self):
+        with patch.object(ProveedorResend, "enviar", return_value="id-1"):
+            self.assertEqual(self.registrar().status_code, 201)
+        cache.clear()
+
+    def test_registro_con_cola_caida_responde_503_y_no_deja_cuenta(self):
         """`transaction.atomic()` deshace el INSERT del usuario y del EmailAddress."""
-        resend, brevo = self.ambos_caidos()
-        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+        with self.cola_caida():
             response = self.registrar()
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.data["code"], "email_unavailable")
@@ -281,67 +291,92 @@ class CorreoNoDisponibleTests(TestCase):
             EmailAddress.objects.filter(email="nueva@example.com").exists()
         )
 
-    def test_la_respuesta_503_no_lleva_texto_del_proveedor_ni_direcciones(self):
-        resend, brevo = self.ambos_caidos()
-        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+    def test_la_respuesta_503_no_lleva_texto_de_redis_ni_direcciones(self):
+        with self.cola_caida():
             response = self.registrar()
         self.assertNotIn(b"nueva@example.com", response.content)
-        self.assertNotIn(b"Resend", response.content)
-        self.assertNotIn(b"Brevo", response.content)
+        self.assertNotIn(b"redis", response.content)
 
-    def test_reintento_con_los_proveedores_recuperados_crea_la_cuenta(self):
-        resend, brevo = self.ambos_caidos()
-        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+    def test_reintento_con_la_cola_recuperada_crea_la_cuenta(self):
+        with self.cola_caida():
             self.assertEqual(self.registrar().status_code, 503)
-        cache.clear()
         with patch.object(ProveedorResend, "enviar", return_value="id-1"):
             response = self.registrar()
         self.assertEqual(response.status_code, 201)
         self.assertTrue(Usuario.objects.filter(correo="nueva@example.com").exists())
 
-    def test_datos_invalidos_del_mensaje_no_se_informan_como_correo_no_disponible(self):
-        """Un 422 (Unprocessable Entity) no es `EnvioFallido`: sigue siendo un error."""
-
-        def invalido(self, message):
-            raise ErrorDeProveedor("Resend", transitorio=False, estado=422)
-
+    def test_registro_responde_201_sin_esperar_al_proveedor(self):
+        """El pedido solo encola: ni Resend ni Brevo se llaman dentro de él."""
         with (
-            patch.object(ProveedorResend, "enviar", invalido),
+            patch.object(enviar_correo_tarea, "apply_async") as encolar,
+            patch.object(ProveedorResend, "enviar") as resend,
             patch.object(ProveedorBrevo, "enviar") as brevo,
-            self.assertLogs("filmai.email_backends", "ERROR"),
+        ):
+            response = self.registrar()
+        self.assertEqual(response.status_code, 201)
+        encolar.assert_called_once()
+        resend.assert_not_called()
+        brevo.assert_not_called()
+        self.assertTrue(Usuario.objects.filter(correo="nueva@example.com").exists())
+
+    def test_proveedores_caidos_no_cambian_la_respuesta_del_registro(self):
+        """Con Resend y Brevo caídos el correo se reintenta en el worker: 201."""
+        caida = ErrorDeProveedor("Resend", transitorio=True, estado=503)
+        with (
+            patch.object(ProveedorResend, "enviar", side_effect=caida),
+            patch.object(
+                ProveedorBrevo,
+                "enviar",
+                side_effect=ErrorDeProveedor("Brevo", transitorio=True, estado=402),
+            ),
+            self.assertLogs("filmai.tasks", "ERROR"),
+        ):
+            response = self.registrar()
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Usuario.objects.filter(correo="nueva@example.com").exists())
+
+    def test_datos_invalidos_del_mensaje_no_afectan_al_pedido(self):
+        """Un 422 (Unprocessable Entity) falla en la tarea (log ERROR, sin reintento)."""
+        with (
+            patch.object(
+                ProveedorResend,
+                "enviar",
+                side_effect=ErrorDeProveedor("Resend", transitorio=False, estado=422),
+            ),
+            patch.object(ProveedorBrevo, "enviar") as brevo,
+            self.assertLogs("filmai.tasks", "ERROR"),
         ):
             response = self.registrar()
         brevo.assert_not_called()
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.data["code"], "server_error")
-        self.assertFalse(Usuario.objects.filter(correo="nueva@example.com").exists())
+        self.assertEqual(response.status_code, 201)
 
-    def test_reenvio_sin_proveedor_responde_503(self):
-        with patch.object(ProveedorResend, "enviar", return_value="id-1"):
-            self.assertEqual(self.registrar().status_code, 201)
-        cache.clear()
-        resend, brevo = self.ambos_caidos()
-        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
-            response = self.client.post(
-                "/api/auth/registration/resend-email/",
-                {"email": "nueva@example.com"},
-                format="json",
-            )
+    def test_reenvio_con_cola_caida_responde_503(self):
+        self.crear_cuenta_pendiente()
+        with self.cola_caida():
+            response = self.reenviar()
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.data["code"], "email_unavailable")
 
-    def test_reset_sigue_respondiendo_el_200_generico(self):
+    def test_reset_con_cola_caida_sigue_respondiendo_el_200_generico(self):
         """No revela nada: la respuesta es idéntica exista o no la cuenta."""
         usuario = UsuarioFactory()
-        resend, brevo = self.ambos_caidos()
-        with resend, brevo, self.assertLogs("filmai.email_backends", "ERROR"):
+        with (
+            self.cola_caida(),
+            self.assertLogs("usuarios.serializers", "ERROR") as logs,
+        ):
             con_cuenta = self.client.post(
                 "/api/auth/password/reset/", {"email": usuario.correo}, format="json"
             )
+        # El pk identifica la cuenta en el log; el correo no aparece.
+        self.assertIn(str(usuario.pk), logs.output[0])
+        self.assertNotIn(usuario.correo, "\n".join(logs.output))
         cache.clear()
-        sin_cuenta = self.client.post(
-            "/api/auth/password/reset/", {"email": "nadie@example.com"}, format="json"
-        )
+        with self.cola_caida():
+            sin_cuenta = self.client.post(
+                "/api/auth/password/reset/",
+                {"email": "nadie@example.com"},
+                format="json",
+            )
         self.assertEqual(con_cuenta.status_code, 200)
         self.assertEqual(sin_cuenta.status_code, 200)
         # Mismo cuerpo salvo el contador de intentos, que es por correo.
@@ -350,17 +385,15 @@ class CorreoNoDisponibleTests(TestCase):
             cuerpo.pop("intentos_restantes", None)
         self.assertEqual(cuerpos[0], cuerpos[1])
 
-    def test_cambio_de_contrasena_se_confirma_aunque_el_aviso_no_salga(self):
+    def test_cambio_de_contrasena_se_confirma_aunque_el_aviso_no_se_encole(self):
         usuario = UsuarioFactory()
         # La vista lee el JWT del pedido (`request.auth`): hace falta uno real.
         self.client.force_authenticate(
             usuario, token=RefreshToken.for_user(usuario).access_token
         )
-        resend, brevo = self.ambos_caidos()
         with (
-            resend,
-            brevo,
-            self.assertLogs("filmai.email_backends", "ERROR"),
+            self.cola_caida(),
+            self.assertLogs("usuarios.passwords", "ERROR") as logs,
             self.captureOnCommitCallbacks(execute=True),
         ):
             response = self.client.post(
@@ -373,5 +406,46 @@ class CorreoNoDisponibleTests(TestCase):
                 format="json",
             )
         self.assertEqual(response.status_code, 200)
+        self.assertIn(str(usuario.pk), logs.output[0])
         usuario.refresh_from_db()
         self.assertTrue(usuario.check_password("OtraClave789!"))
+
+    # --- Cupo de los límites (D-3 sigue en pie: las tasas no cambian) ---
+
+    def test_registro_con_cola_caida_no_gasta_el_cupo_por_correo(self):
+        """Seis intentos con el mismo correo (tope 5 por hora): todos 503, ninguno 429."""
+        with self.cola_caida():
+            estados = [self.registrar().status_code for _ in range(6)]
+        self.assertEqual(estados, [503] * 6)
+        # Y con la cola de vuelta el cupo está intacto: el registro sale.
+        with patch.object(ProveedorResend, "enviar", return_value="id-1"):
+            self.assertEqual(self.registrar().status_code, 201)
+
+    def test_registro_con_cola_caida_no_gasta_el_cupo_por_ip(self):
+        """Doce correos distintos desde la misma IP (tope 10 por hora): sin 429."""
+        with self.cola_caida():
+            estados = [
+                self.registrar(correo=f"nueva{n}@example.com").status_code
+                for n in range(12)
+            ]
+        self.assertEqual(estados, [503] * 12)
+
+    def test_los_intentos_que_si_llegan_a_la_cola_gastan_cupo(self):
+        """Contraprueba: la devolución es solo para `email_unavailable`."""
+        with patch.object(enviar_correo_tarea, "apply_async"):
+            estados = [self.registrar().status_code for _ in range(6)]
+        # El primero crea la cuenta (201); los demás chocan con el correo repetido
+        # (400) pero igual cuentan; el sexto ya pasó el tope de 5 por hora.
+        self.assertEqual(estados[0], 201)
+        self.assertEqual(estados[-1], 429)
+
+    def test_reenvio_con_cola_caida_no_gasta_el_enfriamiento(self):
+        """El reenvío tiene 1 por minuto por correo: un 503 no lo consume."""
+        self.crear_cuenta_pendiente()
+        with self.cola_caida():
+            estados = [self.reenviar().status_code for _ in range(4)]
+        self.assertEqual(estados, [503] * 4)
+        with patch.object(enviar_correo_tarea, "apply_async"):
+            self.assertEqual(self.reenviar().status_code, 200)
+            # Ahora sí: el envío exitoso activa el enfriamiento.
+            self.assertEqual(self.reenviar().status_code, 429)

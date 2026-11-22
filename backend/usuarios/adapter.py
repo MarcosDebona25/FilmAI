@@ -8,8 +8,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
-from filmai.correos.servicio import enviar_correo
-from filmai.email_backends import EnvioFallido
+from filmai.correos.servicio import CorreoNoEncolado, enviar_correo
 from filmai.errores.base import ExcepcionAPI
 from filmai.idioma import idioma_efectivo
 
@@ -73,12 +72,11 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
         )
         try:
             return enviar_correo(caso, email, context, idioma)
-        except EnvioFallido as error:
-            # Ningún proveedor pudo enviar: el visitante recibe un 503 (Service
+        except CorreoNoEncolado as error:
+            # La cola (Redis) no respondió: el visitante recibe un 503 (Service
             # Unavailable) con código propio en vez de un 500 (Internal Server
-            # Error). Solo `EnvioFallido`: un 400/422 del proveedor (datos
-            # inválidos) sigue siendo un error de verdad, no «correo no
-            # disponible». El contexto elige entre el alta y el reenvío.
+            # Error). Los proveedores caídos ya no llegan hasta acá: se reintentan
+            # en el worker. El contexto elige entre el alta y el reenvío.
             contexto = "registro" if caso == "confirmacion_registro" else "reenvio"
             raise ExcepcionAPI("email_unavailable", contexto=contexto) from error
 

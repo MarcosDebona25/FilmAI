@@ -12,6 +12,10 @@ Registration / allauth resend / password reset / committed password change
                               ▼
            enviar_correo(case, recipient, context, language)
                               │ Django templates + shared HTML layout
+                              │ renders in the request, then enqueues
+                              ▼
+            Celery task `filmai.enviar_correo` (Redis broker)
+                              │ worker, retries with backoff
                               ▼
                     configured Django email backend
                     (RespaldoBackend: Resend first, Brevo for
@@ -200,17 +204,19 @@ address. With `BrevoBackend` it MUST fail without `BREVO_API_KEY`, with
 OT-50 extracts sending/layout structure before text changes. OT-51 supplies
 expiry context and notification HTML, OT-52 adds English and recipient language,
 and OT-53 switches Spanish to the reviewed table's voseo.
-Do not silently route these synchronous account emails through Celery.
 Unknown/inactive reset recipients MUST keep the generic success response
-without mail, avoiding disclosure, also when no provider could send. Password-update notification MUST run only
-after the password transaction commits; delivery failure MUST not roll back
+without mail, avoiding disclosure, also when the email could not be queued.
+Password-update notification MUST be queued only
+after the password transaction commits; a queueing failure MUST not roll back
 that committed change. Existing reset-token consumption and session revocation
 remain unchanged. Resend does not create a new email-change account flow.
-When every provider fails, registration MUST answer 503 (Service Unavailable)
-with code `email_unavailable` and MUST NOT leave the new account or its email
-address stored; resending the confirmation MUST answer 503 (Service
-Unavailable) with the same code. The frontend MUST show the translated message
-for that code.
+When the email cannot be queued (the broker does not answer), registration MUST
+answer 503 (Service Unavailable) with code `email_unavailable` and MUST NOT
+leave the new account or its email address stored; resending the confirmation
+MUST answer 503 (Service Unavailable) with the same code. The frontend MUST
+show the translated message for that code. A provider that is down or out of
+quota MUST NOT change the answer of any request: it is retried by the worker
+(see «Account emails are sent by a Celery task»).
 
 #### Scenario: Password transaction rolls back
 
@@ -219,19 +225,76 @@ for that code.
 - WHEN the password commits and sending fails
 - THEN the password stays changed and the existing failure is logged
 
-#### Scenario: No provider can send a registration email
+#### Scenario: The queue is down during registration
 
-- GIVEN Resend and Brevo both fail
+- GIVEN the broker does not answer
 - WHEN a visitor registers
 - THEN the answer is 503 (Service Unavailable) with `code=email_unavailable`
 - AND no account and no email address exist for that email
-- AND a later registration with the same email succeeds once a provider recovers
+- AND a later registration with the same email succeeds once the queue recovers
 
-#### Scenario: No provider can send a reset email
+#### Scenario: The queue is down during a password reset
 
-- GIVEN Resend and Brevo both fail
+- GIVEN the broker does not answer
 - WHEN a password reset is requested for an active account
 - THEN the answer is the same generic 200 (OK) as for an unknown email
+- AND an ERROR log names the user's primary key, not the email address
+
+#### Scenario: Both providers are down during registration
+
+- GIVEN Resend and Brevo both fail and the queue works
+- WHEN a visitor registers
+- THEN the answer is 201 (Created) and the account exists
+- AND the worker retries the email (see below)
+
+### Requirement: Account emails are sent by a Celery task
+
+`enviar_correo()` MUST render subject, text and HTML inside the request and MUST
+NOT call any provider: it MUST enqueue the task `filmai.enviar_correo` with
+only serializable strings (case, subject, text, HTML, recipient). The task MUST
+NOT read the database, so it can be enqueued inside the registration
+transaction without racing its commit. Enqueueing MUST fail in a few seconds
+when the broker does not answer, raising `CorreoNoEncolado`. The worker MUST
+send through the configured `EMAIL_BACKEND` and MUST retry only
+`EnvioFallido` (every provider failed transiently), with exponential backoff
+(60 s base, 1800 s cap) and jitter, at most 8 retries (about 1 hour on average,
+2 hours at most; always far below the 24-hour link validity). A non-transient
+`ErrorDeProveedor` (400 (Bad Request) or 422 (Unprocessable Entity)) MUST NOT be
+retried and MUST log an ERROR; so MUST exhausting the retries. No log, no task
+`argsrepr` and no stored task result MAY contain recipient addresses or links.
+`send_test_email` MUST keep sending synchronously, without the queue.
+
+#### Scenario: Registration does not wait for the provider
+
+- GIVEN the queue works and the providers are slow or failing
+- WHEN a visitor registers
+- THEN the answer is 201 (Created) and no provider was called inside the request
+
+#### Scenario: Transient failure is retried
+
+- GIVEN every provider fails transiently
+- WHEN the task runs
+- THEN it schedules a retry with a jittered backoff, up to 8 times
+- AND after the last one an ERROR log names the case and the task id, not the address
+
+#### Scenario: Invalid message data
+
+- GIVEN Resend answers 422 (Unprocessable Entity)
+- WHEN the task runs
+- THEN it is not retried and an ERROR is logged
+
+### Requirement: A failed enqueue does not spend the throttle quota
+
+When registration or resend end in `email_unavailable`, that attempt MUST NOT
+count toward the throttles of the view (`RegistroCorreoThrottle`,
+`RegistroIPThrottle`, and the three resend throttles). The rates MUST NOT change.
+An attempt that reaches the queue MUST count as before.
+
+#### Scenario: Six registrations with the queue down
+
+- GIVEN the broker does not answer and a limit of 5 per hour per email
+- WHEN the same email registers six times in a row
+- THEN every answer is 503 (Service Unavailable), none is 429 (Too Many Requests)
 
 ## Verification before closure
 
@@ -243,7 +306,7 @@ and OT-90 as required by the plan. OT-13 adds no sending code or tests.
 
 ## Implementation progress
 
-OT-50 centralizes the four sends in `filmai.correos.servicio.enviar_correo`.
+Since Q-08 (22/11/2026) the sends are queued, see «Account emails are sent by a Celery task». OT-50 centralizes the four sends in `filmai.correos.servicio.enviar_correo`.
 Spanish templates retain their previous copy and rendered whitespace. Three
 HTML variants share `correos/base.html`; reset retains its separate title,
 action, warning and secondary color. Password notification remains text-only

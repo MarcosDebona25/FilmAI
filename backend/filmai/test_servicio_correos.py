@@ -23,10 +23,9 @@ class ServicioCorreosTests(SimpleTestCase):
         """Los cuatro casos salen con texto y HTML (OT-51 suma el de la notificación)."""
         for caso in sorted(CASOS):
             with self.subTest(caso=caso):
-                self.assertEqual(
-                    enviar_correo(caso, "correo@example.com", self.contexto, "es"), 1
-                )
-                correo = mail.outbox[-1]
+                enviar_correo(caso, "correo@example.com", self.contexto, "es")
+                self.assertEqual(len(mail.outbox), 1)
+                correo = mail.outbox.pop()
                 self.assertEqual(correo.to, ["correo@example.com"])
                 self.assertTrue(correo.subject.startswith("[FilmAI]"))
                 self.assertNotIn("\n", correo.subject)
@@ -110,21 +109,12 @@ class ServicioCorreosTests(SimpleTestCase):
                         self.assertEqual(html.count(enlace), 3)  # botón, href y texto
 
     def test_caso_o_idioma_desconocido_no_envia(self):
-        """Entradas internas inválidas se rechazan antes de usar el transporte."""
-        with patch("filmai.correos.servicio.send_mail") as envio:
+        """Entradas internas inválidas se rechazan antes de encolar nada."""
+        with patch("filmai.correos.servicio.enviar_correo_tarea") as tarea:
             for caso, idioma in (("otro", "es"), ("confirmacion_correo", "../")):
                 with (
                     self.subTest(caso=caso, idioma=idioma),
                     self.assertRaises(ValueError),
                 ):
                     enviar_correo(caso, "correo@example.com", self.contexto, idioma)
-            envio.assert_not_called()
-
-    def test_error_de_transporte_se_propaga_al_flujo_que_decide(self):
-        """El caller conserva su política: registro falla o cambio confirmado registra."""
-        with patch(
-            "filmai.correos.servicio.send_mail",
-            side_effect=RuntimeError("correo no disponible"),
-        ):
-            with self.assertRaisesRegex(RuntimeError, "correo no disponible"):
-                enviar_correo("contrasena_actualizada", "correo@example.com", {}, "es")
+            tarea.apply_async.assert_not_called()

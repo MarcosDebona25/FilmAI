@@ -139,3 +139,27 @@
       account; reset answers the generic 200 (OK) 4. Check the received email: HTML renders, plain text present, «Sent
       with Brevo» footer present or not, spam folder or inbox
 - [ ] 4.4 Record the result of 4.3 in `docs/decisiones.md`
+
+## Phase 5: Q-08, account emails by Celery (same PR #244)
+
+- [x] 5.1 `filmai/tasks.py`: task `filmai.enviar_correo` (strings only, no DB
+      reads), retries `EnvioFallido` with backoff 60 s, cap 1800 s, jitter and
+      8 retries; no retry for non-transient `ErrorDeProveedor`; ERROR log when
+      it fails for good; `acks_late` and `ignore_result`
+- [x] 5.2 `enviar_correo()` renders and enqueues with redacted `argsrepr` and
+      `retry=False`; `CorreoNoEncolado` when the broker does not answer;
+      `CELERY_BROKER_TRANSPORT_OPTIONS` so enqueueing fails in ~2 s
+- [x] 5.3 `email_unavailable` now means «could not enqueue»; adapter translates
+      `CorreoNoEncolado`; reset keeps the generic 200 (OK) and logs the pk; the
+      password notice logs the pk
+- [x] 5.4 `devolver_cupo` in `usuarios/throttles.py`, called by the exception
+      handler on `email_unavailable`; rates unchanged
+- [x] 5.5 Tests: enqueue and redaction, task success/retry/no retry/logs,
+      real publish against a closed port, queue down in the four flows,
+      registration without waiting for the provider, quota refund
+- [x] 5.6 `send_test_email` stays synchronous (it calls `send_mail` directly)
+- [x] 5.7 Docs: `docs/decisiones.md`, `docs/05_Plan_de_Desarrollo.md`,
+      `README.md` and the canonical spec `openspec/specs/emails/spec.md`
+- [ ] 5.8 Manual check with real accounts (the user): with the worker stopped
+      the registration answers 201 (Created) and the email arrives when the
+      worker starts again

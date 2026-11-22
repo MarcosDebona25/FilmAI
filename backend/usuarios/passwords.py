@@ -17,7 +17,11 @@ def notificar_cambio_contrasena(usuario, idioma):
         )
     except Exception:
         # La contraseña ya está confirmada: un fallo de correo no revierte el cambio.
-        logger.exception("No se pudo enviar la notificación de cambio de contraseña")
+        # El pk y no el correo: los logs no llevan datos personales.
+        logger.exception(
+            "No se pudo encolar la notificación de cambio de contraseña (usuario %s)",
+            usuario.pk,
+        )
 
 
 def guardar_contrasena(usuario, password, request=None):
