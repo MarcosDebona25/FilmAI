@@ -63,6 +63,21 @@ class ErrorDeProveedor(Exception):
             f"{proveedor} no pudo enviar (estado={estado} codigo={codigo})"
         )
 
+    def __reduce__(self):
+        # Celery serializa con pickle la excepción de una tarea fallida; sin esto
+        # `pickle` la rearma con `args` (solo el texto) y el log muestra un
+        # `UnpickleableExceptionWrapper` en lugar del error.
+        return (
+            _rearmar_error_de_proveedor,
+            (self.proveedor, self.transitorio, self.estado, self.codigo),
+        )
+
+
+def _rearmar_error_de_proveedor(proveedor, transitorio, estado, codigo):
+    return ErrorDeProveedor(
+        proveedor, transitorio=transitorio, estado=estado, codigo=codigo
+    )
+
 
 class EnvioFallido(Exception):
     """Ningún proveedor activo pudo enviar el mensaje (todos fallaron)."""
@@ -71,6 +86,10 @@ class EnvioFallido(Exception):
         self.errores = list(errores)
         detalle = ", ".join(f"{e.proveedor}: {e.estado}" for e in self.errores)
         super().__init__(f"Ningún proveedor pudo enviar el email ({detalle})")
+
+    def __reduce__(self):
+        # Ver `ErrorDeProveedor.__reduce__`.
+        return (EnvioFallido, (self.errores,))
 
 
 def _es_transitorio(estado: int | None) -> bool:
@@ -173,11 +192,18 @@ class ProveedorResend:
             estado = int(exc.code)
         except (TypeError, ValueError):
             estado = None
+        codigo = exc.error_type or None
+        transitorio = _es_transitorio(estado)
+        # Resend responde a una clave inválida con 400 (Bad Request) y
+        # `validation_error` («API key is invalid»), no con 401 ni 403 como dice
+        # su documentación (comprobado el 22/11/2026). Es una clave caída, no un
+        # dato malo: se reconoce por el mensaje y pasa a Brevo. Del mensaje se
+        # guarda solo el código, nunca el texto.
+        if estado == 400 and "api key" in (getattr(exc, "message", "") or "").lower():
+            transitorio = True
+            codigo = "invalid_api_key"
         return ErrorDeProveedor(
-            self.nombre,
-            transitorio=_es_transitorio(estado),
-            estado=estado,
-            codigo=exc.error_type or None,
+            self.nombre, transitorio=transitorio, estado=estado, codigo=codigo
         )
 
 
