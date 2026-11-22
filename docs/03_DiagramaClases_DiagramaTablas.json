@@ -16,7 +16,7 @@
           "id": "cls-produccion",
           "type": "node",
           "parent": "1",
-          "label": "ProduccionAudiovisual\n+ idProduccion: Integer\n+ idTMDB: Integer\n+ tipo: TipoProduccion\n+ titulo: String\n+ poster: String\n+ sinopsis: String\n+ fechaLanzamiento: Date\n+ reparto: List<String>\n+ directores: List<String>\n+ estatus: String\n+ generos: List<String>\n+ generosIds: List<Integer>\n+ keywords: List<String>\n+ calificacionPromedio: Float\n+ cantidadTemporadas: Integer\n+ cantidadEpisodios: Integer\n+ duracion: Integer\n+ fechaEnriquecimiento: DateTime [0..1]\n+ actualizarDatosDesdeTMDB(): Void\n+ tieneGenero(): Bool\n+ calcularCalificacionPromedioLocal(): Float\n+ obtenerCantidadCalificaciones(): Integer\n+ obtenerDuracionFormateada(): String\n+ obtenerTotalCapitulos(): Integer"
+          "label": "ProduccionAudiovisual\n+ idProduccion: Integer\n+ idTMDB: Integer\n+ tipo: TipoProduccion\n+ titulo: String\n+ poster: String\n+ sinopsis: String\n+ fechaLanzamiento: Date\n+ reparto: List<String>\n+ directores: List<String>\n+ estatus: String\n+ generos: List<String>\n+ generosIds: List<Integer>\n+ keywords: List<String>\n+ calificacionPromedio: Float\n+ cantidadTemporadas: Integer\n+ cantidadEpisodios: Integer\n+ duracion: Integer\n+ fechaEnriquecimiento: DateTime [0..1]\n+ disponibleEnTmdb: Bool\n+ fecha404: Date [0..1]\n+ actualizarDatosDesdeTMDB(): Void\n+ tieneGenero(): Bool\n+ calcularCalificacionPromedioLocal(): Float\n+ obtenerCantidadCalificaciones(): Integer\n+ obtenerDuracionFormateada(): String\n+ obtenerTotalCapitulos(): Integer"
         },
         {
           "id": "cls-calificacion",
@@ -128,7 +128,7 @@
           "parent": "1",
           "source": "cls-usuario",
           "target": "cls-lista",
-          "label": "1..1 ─ 3..*"
+          "label": "1..1 ─ 4..*"
         },
         {
           "id": "e-usuario-chat",
@@ -251,7 +251,7 @@
           "id": "tbl-produccion",
           "type": "node",
           "parent": "1",
-          "label": "ProduccionAudiovisual\nPK  idProduccion INTEGER\n    idTMDB INTEGER\n    tipo VARCHAR(25)\n    titulo VARCHAR(100)\n    poster VARCHAR(250)\n    sinopsis VARCHAR(2000)\n    fechaLanzamiento DATE\n    reparto VARCHAR[]\n    directores VARCHAR[]\n    estatus VARCHAR(25)\n    generos VARCHAR[]\n    generosIds INTEGER[]\n    keywords VARCHAR[]\n    calificacionPromedio REAL\n    cantidadTemporadas INTEGER\n    cantidadEpisodios INTEGER\n    duracion INTEGER\n    fechaEnriquecimiento TIMESTAMP [null]\nUNIQUE (idTMDB, tipo)"
+          "label": "ProduccionAudiovisual\nPK  idProduccion INTEGER\n    idTMDB INTEGER\n    tipo VARCHAR(25)\n    titulo VARCHAR(100)\n    poster VARCHAR(250)\n    sinopsis VARCHAR(2000)\n    fechaLanzamiento DATE\n    reparto VARCHAR[]\n    directores VARCHAR[]\n    estatus VARCHAR(25)\n    generos VARCHAR[]\n    generosIds INTEGER[]\n    keywords VARCHAR[]\n    calificacionPromedio REAL\n    cantidadTemporadas INTEGER\n    cantidadEpisodios INTEGER\n    duracion INTEGER\n    fechaEnriquecimiento TIMESTAMP [null]\n    disponibleEnTmdb BOOLEAN (default true)\n    fecha404 DATE [null]\nUNIQUE (idTMDB, tipo)"
         },
         {
           "id": "tbl-calificacion",

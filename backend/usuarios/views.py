@@ -28,6 +28,7 @@ from dj_rest_auth.registration.views import (
 from dj_rest_auth.views import LoginView as BaseLoginView
 from django.conf import settings
 from django.core import signing
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
@@ -133,17 +134,20 @@ class RegisterView(BaseRegisterView):
     throttle_classes: ClassVar[list] = [RegistroCorreoThrottle, RegistroIPThrottle]
 
     def perform_create(self, serializer):
-        user = serializer.save(self.request)
-        # `setup_user_email` (dentro de serializer.save) creó el EmailAddress
-        # pero NO envía el correo. Enviamos la confirmación manualmente:
-        # `complete_signup` de dj-rest-auth lo haría vía `perform_login`, que con
-        # nuestro modelo (`is_active=False` mientras `estado=PENDIENTE`) rompe
-        # con NoReverseMatch de `account_inactive`.
-        from allauth.account.models import EmailAddress
-
-        email_address = EmailAddress.objects.filter(user=user, primary=True).first()
-        if email_address:
-            email_address.send_confirmation(self.request._request, signup=True)
+        # Todo el alta va en una transacción: si ningún proveedor puede enviar
+        # el correo, la excepción deshace también el `Usuario` y el
+        # `EmailAddress` ya insertados, y el visitante puede reintentar con el
+        # mismo correo sin quedar con una cuenta pendiente huérfana.
+        with transaction.atomic():
+            user = serializer.save(self.request)
+            # `setup_user_email` (dentro de serializer.save) creó el EmailAddress
+            # pero NO envía el correo. Enviamos la confirmación manualmente:
+            # `complete_signup` de dj-rest-auth lo haría vía `perform_login`, que
+            # con nuestro modelo (`is_active=False` mientras `estado=PENDIENTE`)
+            # rompe con NoReverseMatch de `account_inactive`.
+            email_address = EmailAddress.objects.filter(user=user, primary=True).first()
+            if email_address:
+                email_address.send_confirmation(self.request._request, signup=True)
         return user
 
 

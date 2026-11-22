@@ -54,8 +54,8 @@ Every successful response (except `changes`, used by the nightly sync) MUST also
 #### Scenario: Not found is not hidden
 
 - GIVEN a stored copy of a movie detail
-- WHEN TMDB answers 404 for it
-- THEN the 404 propagates
+- WHEN TMDB answers 404 (Not Found) for it
+- THEN the 404 (Not Found) propagates
 
 ### Requirement: Per-endpoint TTL
 

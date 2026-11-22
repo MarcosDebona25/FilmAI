@@ -854,6 +854,7 @@
       "terms_not_accepted": "Para crear tu cuenta tenés que aceptar los Términos y Condiciones.",
       "network_error": "No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.",
       "chat_unavailable": "No podemos procesar tu solicitud. Intentá más tarde.",
+      "email_unavailable": "No pudimos enviar el correo. Intentá de nuevo en unos minutos.",
       "chat_request_in_progress": "Ya hay una respuesta en curso. Esperá a que termine para enviar otra pregunta."
     },
     "fields": {

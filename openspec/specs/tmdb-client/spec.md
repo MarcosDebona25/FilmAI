@@ -57,40 +57,40 @@ All exceptions MUST inherit from `TMDBError` (base). The mapping MUST be:
 
 | Status | Exception |
 |--------|-----------|
-| 429 | `TMDBRateLimited` |
-| 404 | `TMDBNotFound` |
+| 429 (Too Many Requests) | `TMDBRateLimited` |
+| 404 (Not Found) | `TMDBNotFound` |
 | other 4xx | `TMDBBadRequest` |
 | 5xx | `TMDBServerError` |
 | network/transport | `TMDBTransportError` |
 
 #### Scenario: Not found
 
-- GIVEN TMDB returns a 404 response
+- GIVEN TMDB returns a 404 (Not Found) response
 - WHEN a detail method is called
 - THEN `TMDBNotFound` is raised
 
 #### Scenario: Server error
 
-- GIVEN TMDB returns a 503 response
+- GIVEN TMDB returns a 503 (Service Unavailable) response
 - WHEN any method is called
 - THEN `TMDBServerError` is raised
 
 ### Requirement: Retry Policy
 
-The client MUST retry only transitory errors — `429`, `5xx`, and
+The client MUST retry only transitory errors — `429` (Too Many Requests), `5xx`, and
 network/transport failures — with backoff honoring the `Retry-After` header. It
 MUST NOT retry on other `4xx` responses. The number of retries MUST be bounded to
 avoid infinite loops.
 
 #### Scenario: Retry then success
 
-- GIVEN the first request returns 429 with `Retry-After: 1`
+- GIVEN the first request returns 429 (Too Many Requests) with `Retry-After: 1`
 - WHEN a method is called
 - THEN it retries after the backoff delay and returns the parsed response
 
 #### Scenario: No retry on 4xx
 
-- GIVEN the request returns 400
+- GIVEN the request returns 400 (Bad Request)
 - WHEN a method is called
 - THEN `TMDBBadRequest` is raised without retrying
 

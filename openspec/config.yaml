@@ -4,7 +4,7 @@ context: |
   FilmAI — movie/series review platform with AI recommendations (UTN-FRSF project).
   Backend: Django 5.2 LTS + DRF 3.16 (Python 3.12); apps: catalogo, chatbot, listas, usuarios.
   Frontend: Next.js 15 (App Router, turbopack), React 19, Tailwind v4, Shadcn/ui.
-  Infra: PostgreSQL 16 + Redis 7 + Celery via docker-compose (4 services).
+  Infra: PostgreSQL 16 (pgvector) + Redis 7 + Celery via docker-compose (6 services by default: db, redis, backend, frontend, celery-worker, celery-beat; plus optional profiles `ollama-windows` and `ollama` for the embeddings provider).
   Tests: Django test runner (backend); Vitest (unit) and Playwright (e2e) in the frontend.
   Style: ruff (lint + format, line-length 88) backend; ESLint + Prettier frontend.
   Conventions: docs/01-06 + docs/decisiones.md are source of truth (Spanish); record every

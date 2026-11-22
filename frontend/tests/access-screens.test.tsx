@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "@/messages/en/common.json";
 import { ApiError, apiFetch } from "@/lib/api";
 import { elegirPais } from "./elegir-pais";
-import { fireEvent, render, screen, waitFor, within } from "./render";
+import { act, fireEvent, render, screen, waitFor, within } from "./render";
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }));
 const params = vi.hoisted(() => ({ key: "clave%3Aabc" }));
@@ -32,6 +32,7 @@ vi.mock("@/components/GoogleButton", () => ({ GoogleButton: () => null }));
 import RegisterPage from "@/app/(public)/register/page";
 import LoginPage from "@/app/(public)/login/page";
 import ConfirmPage from "@/app/confirm-email/[key]/page";
+import { ConfirmationSent } from "@/components/access/ConfirmationSent";
 
 // Cada test renderiza la página de registro entera (3 pasos montados y la lista de
 // países): ~1 s solo, pero con los 83 archivos de Vitest en paralelo supera los 5 s
@@ -755,6 +756,25 @@ describe("registro en pasos", () => {
       expect(await screen.findByRole("alert")).toBeInTheDocument();
       expect(barra()).toHaveAttribute("aria-valuenow", "3");
     });
+
+    it("email_unavailable (503) muestra el texto del catálogo y no el del servidor", async () => {
+      // El cuerpo trae `detail` y `debug` con otros textos: nada de eso se lee.
+      simularApi(async () => {
+        throw new ApiError(503, {
+          code: "email_unavailable",
+          detail: "TEXTO DEL SERVIDOR",
+          debug: { error: "Resend: 503, Brevo: 402" },
+        });
+      });
+      const user = userEvent.setup();
+      render(<RegisterPage />, { locale: "en" });
+      await enviar(user);
+      expect(await screen.findByRole("alert")).toHaveTextContent(en.errors.codes.email_unavailable);
+      expect(screen.queryByText(/TEXTO DEL SERVIDOR|Brevo/)).toBeNull();
+      // Sin cuenta creada: el visitante sigue en el último paso y puede reintentar.
+      expect(barra()).toHaveAttribute("aria-valuenow", "3");
+      expect(crearCuenta()).toBeEnabled();
+    });
   });
 });
 
@@ -833,6 +853,37 @@ describe("confirmación", () => {
       method: "POST",
       body: { email: "juan@example.com" },
     });
+  });
+
+  it("el reenvío con email_unavailable (503) muestra el texto del catálogo", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("filmai_pending_email", "juan@example.com");
+    vi.mocked(apiFetch).mockRejectedValueOnce(new ApiError(400, { code: "link_expired" }));
+    vi.mocked(apiFetch).mockRejectedValueOnce(
+      new ApiError(503, { code: "email_unavailable", detail: "TEXTO DEL SERVIDOR" })
+    );
+    render(<ConfirmPage />, { locale: "en" });
+    await user.click(await screen.findByRole("button", { name: en.common.email.resendLink }));
+    expect(await screen.findByText(en.errors.codes.email_unavailable)).toBeInTheDocument();
+    expect(screen.queryByText("TEXTO DEL SERVIDOR")).toBeNull();
+  });
+
+  it("«Revisá tu correo» muestra email_unavailable al reenviar tras la espera", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    vi.mocked(apiFetch).mockRejectedValue(
+      new ApiError(503, { code: "email_unavailable", detail: "TEXTO DEL SERVIDOR" })
+    );
+    render(<ConfirmationSent email="juan@example.com" />, { locale: "en" });
+    // Un segundo por vez: cada tic programa el siguiente cuando React vuelve a pintar.
+    for (let segundo = 0; segundo < 61; segundo++) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+    }
+    await user.click(screen.getByRole("button", { name: en.common.email.resendLink }));
+    expect(await screen.findByText(en.errors.codes.email_unavailable)).toBeInTheDocument();
+    expect(screen.queryByText("TEXTO DEL SERVIDOR")).toBeNull();
   });
 
   it("enlace vencido sin correo guardado lo pide antes de reenviar", async () => {

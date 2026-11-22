@@ -129,6 +129,14 @@
       },
       "params": {}
     },
+    "email_unavailable": {
+      "category": "error",
+      "contexts": {
+        "reenvio": 503,
+        "registro": 503
+      },
+      "params": {}
+    },
     "google_authentication_failed": {
       "category": "error",
       "contexts": {

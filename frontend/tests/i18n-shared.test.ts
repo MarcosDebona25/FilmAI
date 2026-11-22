@@ -51,6 +51,12 @@ describe.each(["en", "es"] as const)("capas compartidas %s", (locale) => {
     );
     expect(translateError({ code: "invalid" }, locale, "otro")).toBe(t("errors.codes.invalid"));
     expect(translateError({ code: "interno" }, locale)).toBe(t("errors.codes.unknown"));
+    // `email_unavailable` (503): los textos los aprobó el usuario el 22/11/2026.
+    expect(translateError({ code: "email_unavailable" }, locale)).toBe(
+      locale === "es"
+        ? "No pudimos enviar el correo. Intentá de nuevo en unos minutos."
+        : "We couldn’t send the email. Try again in a few minutes."
+    );
     expect(
       fieldErrors(
         {

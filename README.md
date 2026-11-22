@@ -24,7 +24,7 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 
 - Implementar un sistema completo de registro, autenticación y gestión de perfiles de usuario.
 - Integrar el sistema con The Movie Database (TMDB) para mantener un catálogo actualizado con información detallada de cada producción.
-- Desarrollar un sistema de calificación por estrellas (escala 1 a 10), reseñas textuales y listas personalizadas (favoritos, pendientes, vistas y listas definidas por el usuario).
+- Desarrollar un sistema de calificación por estrellas (escala 1 a 10), reseñas textuales y listas personalizadas (favoritos, pendientes, viendo, vistas y listas definidas por el usuario).
 - Implementar un chatbot basado en modelos de lenguaje (LLM) que analice preferencias, historial y perfil del usuario para generar recomendaciones contextuales.
 
 ---
@@ -46,9 +46,9 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 
 ### Listas personalizadas
 
-- Tres listas predeterminadas por usuario: Favoritos, Pendientes y Vistas.
+- Cuatro listas predeterminadas por usuario: Favoritos, Pendientes, Viendo y Vistas.
 - Listas personalizadas con nombres definidos por el usuario, reordenables y gestionables mediante modales dedicados.
-- Acciones directas desde la ficha de detalle: agregar o quitar una producción de cualquier lista.
+- Acciones directas desde la ficha de detalle: Favoritos como interruptor y un botón de estado único (Pendientes, Viendo, Vistas) que mueve la producción de una lista a otra; agregar o quitar de las listas personalizadas.
 
 ### Chatbot inteligente
 
@@ -61,7 +61,7 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 
 - Edición inline del perfil: nombre, apellido, nombre de usuario, avatar y contraseña.
 - Selección de avatar desde una galería ampliable de opciones predefinidas, sin subida de fotos propias.
-- Configuración de tema (oscuro por defecto, con opción clara), privacidad del perfil y preferencias de notificaciones.
+- Preferencias: idioma, privacidad del perfil y notificaciones (la app es solo oscura).
 - Baja de cuenta con eliminación lógica (soft delete).
 
 ---
@@ -70,23 +70,25 @@ Desarrollar una aplicación web integral que permita gestionar, calificar y expl
 
 ### Stack tecnológico
 
-| Capa                      | Tecnología                                                                                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Backend**               | Python 3.12, Django 5.x, Django REST Framework                                                                                                    |
-| **Frontend**              | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                                                                                               |
-| **Base de datos**         | PostgreSQL 16 con pgvector (imagen `pgvector/pgvector:pg16`)                                                                                      |
-| **Caché y colas**         | Redis (DB 0: caché de TMDB · DB 1: broker de Celery · DB 2: resultados)                                                                           |
-| **Tareas asíncronas**     | Celery (worker + Beat: la sync del catálogo corre a las 3 AM y el backfill de embeddings a las 4 AM, hora de Argentina)                           |
-| **Embeddings (en curso)** | pgvector sobre PostgreSQL + Ollama (BGE-M3), generación asíncrona vía Celery. El proveedor real de embeddings todavía es un stub (llega en B-06). |
-| **Infraestructura**       | Docker, docker-compose (6 servicios: backend, frontend, PostgreSQL, Redis, celery-worker, celery-beat)                                            |
-| **Autenticación**         | JWT en cookies (access: 8 h desde emisión; refresh: 7 días), Google OAuth 2.0, bcrypt                                                             |
+| Capa                  | Tecnología                                                                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend**           | Python 3.12, Django 5.x, Django REST Framework                                                                                                       |
+| **Frontend**          | Next.js 15 (App Router), Tailwind CSS v4, Shadcn/ui                                                                                                  |
+| **Base de datos**     | PostgreSQL 16 con pgvector (imagen `pgvector/pgvector:pg16`)                                                                                         |
+| **Caché y colas**     | Redis (DB 0: caché de TMDB · DB 1: broker de Celery · DB 2: resultados)                                                                              |
+| **Tareas asíncronas** | Celery (worker + Beat, cinco tareas nocturnas en hora de Argentina; ver abajo). El worker también envía los correos de cuenta                        |
+| **Embeddings**        | pgvector sobre PostgreSQL + Ollama (bge-m3), generación asíncrona vía Celery, con backfill nocturno                                                  |
+| **Infraestructura**   | Docker, docker-compose (6 servicios por defecto: backend, frontend, PostgreSQL, Redis, celery-worker, celery-beat; Ollama va en perfiles opcionales) |
+| **Autenticación**     | JWT en cookies (access: 8 h desde emisión; refresh: 7 días), Google OAuth 2.0, bcrypt                                                                |
 
 ### APIs externas
 
-| Proveedor    | Propósito                                                            |
-| ------------ | -------------------------------------------------------------------- |
-| **TMDB API** | Catálogo de películas y series, búsqueda, tendencias, metadatos      |
-| **LLM API**  | Procesamiento de lenguaje natural para el chatbot de recomendaciones |
+| Proveedor          | Propósito                                                            |
+| ------------------ | -------------------------------------------------------------------- |
+| **TMDB API**       | Catálogo de películas y series, búsqueda, tendencias, metadatos      |
+| **LLM API**        | Procesamiento de lenguaje natural para el chatbot de recomendaciones |
+| **Ollama**         | Vectores de la búsqueda semántica (modelo bge-m3), local             |
+| **Resend / Brevo** | Envío de correos de cuenta (Brevo como respaldo)                     |
 
 ### Modelo de datos
 
@@ -95,13 +97,14 @@ El dominio se compone de las siguientes entidades principales y sus relaciones:
 ```mermaid
 erDiagram
     Usuario ||--o{ Calificacion : "califica"
-    Usuario ||--|{ Lista : "posee (3+)"
+    Usuario ||--|{ Lista : "posee (4+)"
     Usuario ||--|{ Chat : "tiene"
     Calificacion }o--|| ProduccionAudiovisual : "sobre"
     Calificacion ||--o| Resena : "tiene"
     Lista }o--|{ ProduccionAudiovisual : "contiene (vía Tiene)"
     Chat ||--|{ Mensaje : "contiene"
     ProduccionAudiovisual ||--o| ProduccionEmbedding : "embedding 1:1"
+    ProduccionAudiovisual ||--o{ ProduccionTraduccion : "traducciones"
 
     Usuario {
         int id PK
@@ -113,10 +116,12 @@ erDiagram
         string apellido
         date fecha_nacimiento
         enum genero "masculino | femenino | no_especifica"
+        string pais "ISO 3166-1 alfa-2"
         enum estado "pendiente | activa | baja"
         date fecha_registro
+        datetime fecha_aceptacion_terminos "null en cuentas anteriores"
         int avatar_id
-        string tema
+        string idioma "en | es | null"
         bool perfil_publico
         bool notif_recomendaciones
         bool notif_resenas
@@ -135,12 +140,24 @@ erDiagram
         array directores
         string estatus
         array generos
+        array generos_ids "ids de género de TMDB"
         array keywords
         float calificacion_promedio
         int cantidad_temporadas
         int cantidad_episodios
         int duracion
         datetime fecha_enriquecimiento "null = nunca enriquecida"
+        bool disponible_en_tmdb "false = lápida (#180)"
+        date fecha_404 "primer 404 (Not Found) de TMDB"
+    }
+
+    ProduccionTraduccion {
+        int id PK
+        string idioma
+        string titulo
+        string sinopsis
+        string poster
+        int id_produccion FK "UK con idioma"
     }
 
     Calificacion {
@@ -163,8 +180,10 @@ erDiagram
     Lista {
         int id PK
         string nombre
+        enum clave "favoritos | pendientes | viendo | vistas | null"
         enum tipo "predeterminada | personalizada"
         bool activa
+        int orden "posición de las personalizadas"
         int id_usuario FK
     }
 
@@ -181,6 +200,7 @@ erDiagram
         int id PK
         string texto
         enum autor "usuario | chatbot"
+        jsonb tarjetas "hasta 3 tarjetas del bot"
         datetime fecha_hora
         int id_chat FK
     }
@@ -199,13 +219,14 @@ erDiagram
 **Descripción de las entidades:**
 
 - **Usuario**: entidad única de identidad y preferencias. Rol administrador gestionado vía flags `is_staff`/`is_superuser` del Django Admin nativo.
-- **ProducciónAudiovisual**: entidad unificada para películas y series, diferenciadas por un atributo `tipo`. Catálogo global materializado progresivamente desde TMDB.
+- **ProducciónAudiovisual**: entidad unificada para películas y series, diferenciadas por un atributo `tipo`. Catálogo global materializado progresivamente desde TMDB. Si TMDB deja de tener un título que alguien usa (lo calificó, reseñó o listó), la fila queda como lápida (`disponible_en_tmdb = false`, solo `id_tmdb` y `tipo`).
+- **ProducciónTraducción**: título, sinopsis y póster de una producción en un idioma distinto del canónico (inglés); una fila por producción e idioma.
 - **Calificación**: valor numérico (1-10) emitido por un usuario sobre una producción. Restricción de unicidad por par (usuario, producción).
 - **Reseña**: texto opcional vinculado uno a uno con una calificación.
-- **Lista**: colecciones de producciones (predeterminadas o personalizadas) asociadas a un usuario. La tabla intermedia **Tiene** registra la fecha de agregado.
+- **Lista**: colecciones de producciones asociadas a un usuario. Las cuatro predeterminadas (Favoritos, Pendientes, Viendo y Vistas) llevan una `clave` fija y no se eliminan; las personalizadas no tienen clave y se reordenan con `orden`. La tabla intermedia **Tiene** registra la fecha de agregado.
 - **Chat**: conversación asociada a un usuario, con contexto persistente en formato JSONB.
-- **Mensaje**: unidad de diálogo dentro de un chat, con indicación de autor (usuario o chatbot).
-- **ProducciónEmbedding**: relación 1:1 con `ProducciónAudiovisual` + vector pgvector(1024) + índice HNSW. Generación asíncrona vía Celery. Alimenta la búsqueda semántica del chatbot. Implementada en C-04a (15/09/2026); el proveedor de vectores sigue siendo un stub hasta B-06, así que hoy los embeddings quedan en estado `failed` sin afectar la visibilidad del catálogo.
+- **Mensaje**: unidad de diálogo dentro de un chat, con indicación de autor (usuario o chatbot). En las respuestas del bot, `tarjetas` guarda las producciones mostradas; pasados 180 días un job nocturno las recorta a `{id_tmdb, tipo}` y el historial las reconstruye desde el catálogo.
+- **ProducciónEmbedding**: relación 1:1 con `ProducciónAudiovisual` + vector pgvector(1024) + índice HNSW. Los vectores reales los genera Ollama (bge-m3) de forma asíncrona vía Celery; el backfill nocturno recupera los que fallaron. Alimenta la búsqueda semántica del chatbot.
 
 ---
 
@@ -221,25 +242,25 @@ docker compose down         # detener (conserva la base de datos y Redis)
 
 ### URLs
 
-| Servicio                | URL                                |
-| ----------------------- | ---------------------------------- |
-| Frontend (Next.js)      | http://localhost:3000              |
-| Backend (Django)        | http://localhost:8000              |
-| Admin de Django         | http://localhost:8000/admin/       |
-| Swagger UI (staff)      | http://localhost:8000/api/docs/    |
-| Esquema OpenAPI (staff) | http://localhost:8000/api/schema/  |
-| PostgreSQL              | `localhost:5432` (db `filmai_dev`) |
-| Redis                   | `localhost:6379`                   |
+| Servicio                | URL                                       |
+| ----------------------- | ----------------------------------------- |
+| Frontend (Next.js)      | http://localhost:3000                     |
+| Backend (Django)        | http://localhost:8000                     |
+| Admin de Django         | http://localhost:8000/admin/              |
+| Swagger UI (staff)      | http://localhost:8000/api/docs/           |
+| Esquema OpenAPI (staff) | http://localhost:8000/api/schema/         |
+| PostgreSQL              | `localhost:5432` (db `filmai_dev`)        |
+| Redis                   | `localhost:6379` (exige `REDIS_PASSWORD`) |
 
-PostgreSQL y Redis solo escuchan en `127.0.0.1`: se conectan desde tu propia máquina (DBeaver, `psql`), pero no desde otra máquina ni desde una VM de la red.
+PostgreSQL y Redis solo escuchan en `127.0.0.1`: se conectan desde tu propia máquina (DBeaver, `psql`), pero no desde otra máquina ni desde una VM de la red. Redis pide la contraseña de `REDIS_PASSWORD` (por ejemplo, `redis-cli -a "$REDIS_PASSWORD"`).
 
 ### Comandos útiles
 
 ```bash
-docker compose ps                     # estado de los 6 servicios
+docker compose ps                     # estado de los 6 servicios por defecto
 docker compose logs -f celery-worker  # seguir los logs del worker de Celery
 docker compose restart celery-worker  # solo si el auto-reload falla (ver nota abajo)
-docker compose logs -f celery-beat    # ver cuándo dispara la sync y el backfill
+docker compose logs -f celery-beat    # ver cuándo dispara cada tarea programada
 docker compose restart celery-beat    # tras cambiar CELERY_BEAT_SCHEDULE en settings.py
 docker compose logs -f backend  # seguir los logs de Django
 docker compose logs -f frontend # seguir los logs de Next.js
@@ -260,9 +281,35 @@ cuenta. Por eso el servicio `celery-worker` corre envuelto en
 alguna vez el auto-reload no se dispara, reiniciá el worker a mano con
 `docker compose restart celery-worker`.
 
+### Tareas programadas (Celery Beat)
+
+Beat dispara cinco tareas por noche, en hora de Argentina (`CELERY_BEAT_SCHEDULE` en `backend/filmai/settings.py`):
+
+| Hora  | Tarea                                  | Qué hace                                                                                                      |
+| ----- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 03:00 | `catalogo.sync_catalogo_diaria`        | Sincroniza el catálogo con TMDB (listados y lo que TMDB reporta como cambiado)                                |
+| 03:30 | `catalogo.refrescar_vencidos`          | Refresca lo que lleva más de 150 días sin actualizarse (TMDB no permite guardarlo más de 180) y marca lápidas |
+| 04:00 | `catalogo.backfill_embeddings`         | Reencola los embeddings pendientes o fallidos (tope de 100 por corrida)                                       |
+| 04:30 | `chatbot.recortar_tarjetas`            | Recorta a `{id_tmdb, tipo}` las tarjetas de mensajes con más de 180 días                                      |
+| 05:00 | `usuarios.limpiar_pendientes_vencidas` | Borra las cuentas que nunca confirmaron el correo, pasado el plazo del enlace (24 h)                          |
+
+Además de estas, el `celery-worker` ejecuta bajo demanda la generación de embeddings, la materialización de producciones y el envío de los correos de cuenta (`filmai.enviar_correo`).
+
+### Ollama (embeddings)
+
+La búsqueda semántica y el chatbot necesitan un Ollama con el modelo `bge-m3`. Sin él los embeddings quedan en `failed` (el catálogo sigue visible) y el backfill nocturno los recupera cuando Ollama vuelve. Hay tres formas de tenerlo, según la máquina:
+
+| Escenario                                             | Cómo                                                                                              | `OLLAMA_URL`                        |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| WSL con Ollama instalado en Windows (por defecto)     | `docker compose --profile ollama-windows up -d ollama-puente` (puente `socat` en el puerto 11435) | `http://host.docker.internal:11435` |
+| Docker Desktop con Ollama en Windows                  | Sin puente: llega directo                                                                         | `http://host.docker.internal:11434` |
+| Ollama en un contenedor (producción u otras máquinas) | `docker compose --profile ollama up -d ollama`                                                    | `http://ollama:11434`               |
+
+El modelo se baja una sola vez. Con el contenedor: `docker compose exec ollama ollama pull bge-m3`; con Ollama en Windows, `ollama pull bge-m3` desde Windows. `OLLAMA_KEEP_ALIVE` controla cuánto queda el modelo en memoria (en un servidor, `-1m`). Los dos perfiles son opcionales y no cuentan entre los 6 servicios por defecto.
+
 ### Tests
 
-Mientras se trabaja alcanza con correr solo lo que se toca: `docker compose exec backend python manage.py test <app>` para una app del backend y `npx vitest --changed` dentro de `frontend/` para los tests que dependen de los archivos modificados. Antes de abrir el PR se corre la suite completa —`docker compose exec backend python manage.py test` y `npm run test:unit`—, porque el CI no filtra por ruta y es la única puerta automática. En el backend, `--durations 15` lista los 15 tests más lentos de la corrida.
+Mientras se trabaja alcanza con correr solo lo que se toca: `docker compose exec backend python manage.py test <app>` para una app del backend y `npx vitest --changed` dentro de `frontend/` para los tests que dependen de los archivos modificados. Antes de abrir el PR se corre la suite completa —`docker compose exec backend python manage.py test` y `npm run test:unit`—, porque el CI es la única puerta automática. En los PR el CI filtra por ruta (job «Qué cambió»): si solo cambió documentación, o solo `frontend/` o solo `backend/`, salta lo que no corresponde; en un push a `develop` o `main` corre todo. En el backend, `--durations 15` lista los 15 tests más lentos de la corrida.
 
 ### Configuración inicial (solo la primera vez)
 
@@ -274,7 +321,8 @@ Mientras se trabaja alcanza con correr solo lo que se toca: `docker compose exec
 
    - `SECRET_KEY`: generar con `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`.
    - `POSTGRES_PASSWORD` y `DJANGO_SUPERUSER_PASSWORD`: contraseñas de desarrollo.
-   - Las claves externas (`TMDB_API_KEY`, `GOOGLE_CLIENT_ID`, `LLM_API_KEY`) pueden quedar vacías hasta que se implementen esos módulos.
+   - `REDIS_PASSWORD`: sin ella `docker compose up` aborta a propósito. Generarla con `python -c "import secrets; print(secrets.token_urlsafe(32))"`. Con ella definida, las URLs de Redis y Celery se arman solas.
+   - Las claves externas (`TMDB_API_KEY`, `GOOGLE_CLIENT_ID`, `LLM_API_KEY`) se necesitan para las funciones que las usan (catálogo, acceso con Google y chatbot); sin ellas esas funciones no andan. Ver los comentarios de `.env.example`.
 
 ### Credenciales de desarrollo
 
@@ -357,9 +405,22 @@ docker compose exec backend python manage.py seed_catalogo --dry-run       # rec
 ```
 
 - **Se puede cortar con Ctrl-C y volver a correr**: lo que ya está en la base y fresco se saltea sin pedirle nada a TMDB, y el orden es siempre el mismo, así que retoma donde quedó. `--limite` cuenta lo que materializa _esa_ corrida.
-- Cada producción son 3 llamadas a TMDB (detalle, créditos, keywords), ~0,7 s medidos. Si una corrida larga empieza a recibir `429`, `--pausa 0.5` espera medio segundo entre producciones.
+- Cada producción son 3 llamadas a TMDB (detalle, créditos, keywords), ~0,7 s medidos. Si una corrida larga empieza a recibir 429 (Too Many Requests), `--pausa 0.5` espera medio segundo entre producciones.
 - Otras opciones: `--desde-anio 1950` (default 1970), `--tipos movie` (default ambos).
-- Los embeddings de lo sembrado quedan en `failed` hasta que exista el proveedor real (B-06); el backfill nocturno los recupera después.
+- Los embeddings de lo sembrado los genera Ollama en segundo plano; si Ollama no estaba disponible quedan en `failed` y el backfill nocturno los recupera.
+
+#### Otros comandos de `manage.py`
+
+```bash
+docker compose exec backend python manage.py chatear --usuario usuario001 --mensaje "algo de ciencia ficción"   # habla con el chatbot desde la terminal
+docker compose exec backend python manage.py chatear --usuario usuario001 --golden                                # corre el set dorado (chatbot/golden.yaml), no guarda nada
+docker compose exec backend python manage.py rellenar_traducciones --limite 500 --lote 200   # completa generos_ids y ProduccionTraduccion; idempotente
+docker compose exec backend python manage.py reparar_recursos_usuarios --dry-run             # asegura las listas predeterminadas y el chat de cada usuario
+docker compose exec backend python manage.py exportar_contrato   # regenera contracts/error-codes.json
+docker compose exec backend python manage.py exportar_enums      # regenera contracts/enums.json
+```
+
+`chatear` usa la `LLM_API_KEY` del `.env`, así que cada mensaje tiene costo; con `--guardar` guarda el turno en el chat del usuario, y `--idioma es|en` elige el idioma. `reparar_recursos_usuarios` acepta `--usuario-id` para tocar a un solo usuario. Los dos `exportar_*` aceptan `--salida` para escribir en otra ruta.
 
 Para verificar el envío de emails usando el backend configurado:
 
@@ -368,6 +429,8 @@ docker compose exec backend python manage.py send_test_email
 ```
 
 En desarrollo, `RESEND_TEST_RECIPIENT` puede redirigir el envío al destinatario de prueba configurado en `.env`.
+
+Con `EMAIL_BACKEND=filmai.email_backends.RespaldoBackend` el correo sale por Resend y, si Resend no puede tomarlo (caída, cuota agotada, clave inválida), por Brevo; un correo que Resend aceptó nunca se reenvía. Se configura con `BREVO_API_KEY`, `BREVO_FROM_EMAIL` (remitente único verificado en Brevo) y, solo en desarrollo, `BREVO_TEST_RECIPIENT`; la opción C de `.env.example` lo explica. Los correos de cuenta (confirmación, reenvío, reset y aviso de cambio de contraseña) no salen dentro del pedido: `enviar_correo()` los renderiza y encola la tarea `filmai.enviar_correo`, que el `celery-worker` envía con el backend configurado. Si fallan los dos proveedores, la tarea reintenta con espera creciente durante ~1 hora (el enlace vale 24 horas); con el worker detenido el registro responde igual 201 (Created) y el correo sale cuando vuelve. Si Redis está caído y el correo no se puede encolar, el registro y el reenvío responden 503 (Service Unavailable) con el código `email_unavailable` y ese intento no gasta el límite de pedidos. Para ver un envío: `docker compose logs -f celery-worker`. `send_test_email` no usa la cola: envía directo, para diagnosticar el proveedor.
 
 ---
 
@@ -397,4 +460,8 @@ Referencia de verificación: [WebAIM WCAG 2 Checklist](https://webaim.org/standa
 
 ### Multiidioma
 
-Toda la interfaz funciona en inglés y español (el chatbot, que todavía no existe, queda pendiente). Los textos viven en [traducciones/](traducciones/); consultá [la guía](traducciones/guia.md) para textos, errores, formatos, selectores y verificaciones.
+Toda la interfaz, incluido el chatbot, funciona en inglés y español. Los textos viven en [traducciones/](traducciones/); consultá [la guía](traducciones/guia.md) para textos, errores, formatos, selectores y verificaciones.
+
+## Créditos y licencias de terceros
+
+- **Detección de idioma del chatbot**: usa [fast-langdetect](https://github.com/LlmKira/fast-langdetect) con el modelo de identificación de idioma `lid.176` de fastText (Facebook/Meta), distribuido bajo la licencia [Creative Commons Attribution-ShareAlike 3.0](https://creativecommons.org/licenses/by-sa/3.0/) (CC BY-SA 3.0). Referencia: A. Joulin, E. Grave, P. Bojanowski, T. Mikolov, «Bag of Tricks for Efficient Text Classification», 2016. El modelo no se modificó.

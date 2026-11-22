@@ -1,9 +1,12 @@
 """Envío único de los cuatro correos de cuenta, en el idioma del destinatario."""
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
+from kombu.exceptions import OperationalError
+from redis.exceptions import RedisError
+
+from filmai.tasks import enviar_correo_tarea
 
 CASOS = frozenset(
     {
@@ -13,6 +16,14 @@ CASOS = frozenset(
         "contrasena_actualizada",
     }
 )
+
+
+class CorreoNoEncolado(Exception):
+    """El broker (Redis) no aceptó la tarea: el correo no va a salir.
+
+    Es lo único que `enviar_correo` levanta por un fallo de infraestructura. Un
+    proveedor caído ya no llega hasta acá: se reintenta dentro de la tarea.
+    """
 
 
 def vigencia_en_horas(caso):
@@ -25,7 +36,10 @@ def vigencia_en_horas(caso):
 
 
 def enviar_correo(caso, destinatario, contexto, idioma):
-    """Renderiza una variante completa y delega en el backend de correo Django."""
+    """Renderiza una variante completa y la encola para que la envíe el worker.
+
+    Levanta `CorreoNoEncolado` si el broker no responde.
+    """
     if caso not in CASOS or idioma not in settings.IDIOMAS_SOPORTADOS:
         raise ValueError("Caso o idioma de correo no soportado.")
     contexto = {
@@ -48,6 +62,16 @@ def enviar_correo(caso, destinatario, contexto, idioma):
     html = render_to_string(f"{prefijo}/message.html", contexto)
     texto = texto.strip()
     html = html.strip()
-    return send_mail(
-        asunto, texto, settings.DEFAULT_FROM_EMAIL, [destinatario], html_message=html
-    )
+    # Se encola ya renderizado: el worker no lee la base ni las plantillas. Los
+    # `argsrepr` redactan lo que el worker imprime al recibir la tarea (el
+    # destinatario y el enlace del correo no deben quedar en sus logs).
+    try:
+        enviar_correo_tarea.apply_async(
+            args=(caso, asunto, texto, html, destinatario),
+            argsrepr=f"({caso!r}, <asunto y cuerpo redactados>, <correo redactado>)",
+            # Sin reintentos de publicación: con el broker caído el pedido HTTP
+            # falla en segundos y no se queda esperando.
+            retry=False,
+        )
+    except (OperationalError, RedisError) as error:
+        raise CorreoNoEncolado(type(error).__name__) from error

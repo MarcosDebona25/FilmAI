@@ -8,7 +8,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
-from filmai.correos.servicio import enviar_correo
+from filmai.correos.servicio import CorreoNoEncolado, enviar_correo
+from filmai.errores.base import ExcepcionAPI
 from filmai.idioma import idioma_efectivo
 
 from .models import EstadoCuenta, TipoGenero, Usuario
@@ -69,7 +70,15 @@ class UsuarioAccountAdapter(DefaultAccountAdapter):
             context.get("request") or getattr(self, "request", None),
             context.get("user"),
         )
-        return enviar_correo(caso, email, context, idioma)
+        try:
+            return enviar_correo(caso, email, context, idioma)
+        except CorreoNoEncolado as error:
+            # La cola (Redis) no respondió: el visitante recibe un 503 (Service
+            # Unavailable) con código propio en vez de un 500 (Internal Server
+            # Error). Los proveedores caídos ya no llegan hasta acá: se reintentan
+            # en el worker. El contexto elige entre el alta y el reenvío.
+            contexto = "registro" if caso == "confirmacion_registro" else "reenvio"
+            raise ExcepcionAPI("email_unavailable", contexto=contexto) from error
 
     def get_email_confirmation_url(self, request, emailconfirmation):
         """Envía la confirmación a la pantalla correspondiente de la SPA."""

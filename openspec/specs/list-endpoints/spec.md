@@ -36,7 +36,7 @@ Each list MUST include its ID, name, type, nullable `clave`, `cantidad_items`,
 `cantidad_peliculas`, `cantidad_series`, and up to five recent non-empty poster
 paths in `preview_posters`.
 Personalized lists MUST expose `clave = null`. Predetermined summaries MUST
-be ordered by `favoritos`, `pendientes`, `vistas`, even after a stored rename.
+be ordered by `favoritos`, `pendientes`, `viendo`, `vistas`, even after a stored rename.
 Personalized summaries MUST follow them, ordered by `Lista.orden` and then by ID.
 
 `GET /api/lists/{id}/` MUST return the same summary for a single owned list,
@@ -46,7 +46,7 @@ predetermined or personalized (L-03 header and the title page breadcrumb
 When `id_tmdb` and `tipo` (`movie` or `tv`) are supplied together, every list
 MUST also include `contiene` and, when true, `item_id` and `fecha_agregado`
 (19/11/2026, so an Undo can restore the date). Supplying only one of
-those parameters MUST return 400 and the lookup MUST NOT materialize data.
+those parameters MUST return 400 (Bad Request) and the lookup MUST NOT materialize data.
 
 ### List management
 
@@ -62,7 +62,7 @@ their new order (L-02, decided 15/10/2026), and return all summaries as
 `GET /api/lists/`. IDs that are not one of the user's personalized lists MUST be
 ignored, and personalized lists left out MUST keep their previous relative
 order after the listed ones, so a stale tab cannot fail the request. Repeated
-or non-positive IDs MUST return 400 on field `ids`.
+or non-positive IDs MUST return 400 (Bad Request) on field `ids`.
 
 #### Scenario: Reordering with a stale tab
 
@@ -72,10 +72,10 @@ or non-positive IDs MUST return 400 on field `ids`.
 
 Names MUST be unique per user without case sensitivity, be at most 80
 characters, and allow Unicode letters, numbers, and spaces.
-Predetermined lists MUST reject rename and deletion with a 409 conflict.
+Predetermined lists MUST reject rename and deletion with a 409 (Conflict).
 Creating or renaming a personalized list MUST reject a reserved label from
 any supported language, after whitespace normalization and without case
-sensitivity, with `list_name_reserved`, HTTP 409 and empty params.
+sensitivity, with `list_name_reserved`, HTTP 409 (Conflict) and empty params.
 The reserved labels MUST match the approved default-list catalog labels.
 Existing personalized names MUST be returned unchanged, without translation.
 
@@ -92,7 +92,7 @@ TMDB average as `calificacion_promedio` (`null` when TMDB has no rating, which
 it reports as 0). The response MUST include `total`, the count of items that
 pass the filters.
 
-The endpoint MUST accept the L-03 filters, validated with 400 on the offending
+The endpoint MUST accept the L-03 filters, validated with 400 (Bad Request) on the offending
 field: `q` (up to 100 characters; matches the canonical or a translated title
 without case or accents), `clase` (`movie` or `tv`), `nota` (the Search
 buckets `9+`…`5+` and `m5`, over the TMDB average) and `orden`
@@ -104,7 +104,7 @@ the cursor stable across ties.
 
 `POST /api/lists/{id}/items/` MUST accept `(id_tmdb, tipo)`, call
 `materializar()` before creating `Tiene`, and reject an existing relation with
-409. `DELETE /api/lists/{id}/items/{item_id}/` MUST remove only an item owned
+409 (Conflict). `DELETE /api/lists/{id}/items/{item_id}/` MUST remove only an item owned
 by that list, and always answers 204 (No Content): since 16/11/2026 a rating no
 longer blocks removal from `Vistas` and it is kept. A `?borrar_calificacion=`
 flag sent by an old client is ignored.
@@ -129,7 +129,7 @@ is idempotent and keeps the item's date. The production is materialized only
 when `estado` is not `null`. Errors: 400 (Bad Request) for an invalid body,
 401 (Unauthorized), 404 (Not Found) if TMDB does not know the title, and the
 write throttle. The client undoes a change by sending `estado_anterior` and,
-optionally, `fecha_agregado` (ISO, not in the future, else 400): the new item
+optionally, `fecha_agregado` (ISO, not in the future, else 400 (Bad Request)): the new item
 carries that date instead of «now» (19/11/2026). Without it, or with `null`, the
 item gets the current time.
 
@@ -167,13 +167,13 @@ line. List suggestions answer 404 (Not Found) for `Pendientes` and `Viendo`.
 
 ### Write limits and quantity caps (26/10/2026)
 
-Every write of reviews, lists and profile MUST share one per-user rate limit (`EscrituraThrottle`, scope `escritura`, 60 per minute); reads (`GET`, `HEAD`, `OPTIONS`) do not count. Past it the answer is 429 (Too Many Requests) with `throttled`. A user MUST NOT own more than 100 custom lists (`MAX_LISTAS_PERSONALIZADAS`): the next creation answers 409 with `list_limit_reached` and `maxLists`. A custom list MUST NOT hold more than 1000 items (`MAX_ITEMS_POR_LISTA`): the next addition answers 409 with `list_items_limit_reached` and `maxItems`, before materializing anything. Default lists have no item cap, because `Vistas` grows when the user rates. `PUT /api/lists/order/` rejects more than 100 ids with 400 `max_length`.
+Every write of reviews, lists and profile MUST share one per-user rate limit (`EscrituraThrottle`, scope `escritura`, 60 per minute); reads (`GET`, `HEAD`, `OPTIONS`) do not count. Past it the answer is 429 (Too Many Requests) with `throttled`. A user MUST NOT own more than 100 custom lists (`MAX_LISTAS_PERSONALIZADAS`): the next creation answers 409 (Conflict) with `list_limit_reached` and `maxLists`. A custom list MUST NOT hold more than 1000 items (`MAX_ITEMS_POR_LISTA`): the next addition answers 409 (Conflict) with `list_items_limit_reached` and `maxItems`, before materializing anything. Default lists have no item cap, because `Vistas` grows when the user rates. `PUT /api/lists/order/` rejects more than 100 ids with 400 (Bad Request) `max_length`.
 
 #### Scenario: Creating one list too many
 
 - GIVEN a user with 100 custom lists
 - WHEN they create another
-- THEN the answer is 409 with `list_limit_reached` and `maxLists` = 100
+- THEN the answer is 409 (Conflict) with `list_limit_reached` and `maxLists` = 100
 
 #### Scenario: Rating keeps working with a large «Vistas»
 
@@ -184,7 +184,7 @@ Every write of reviews, lists and profile MUST share one per-user rate limit (`E
 ### Errors and ownership
 
 All endpoints MUST require authentication. A list or item belonging to another
-user MUST appear as 404. Business conflicts MUST expose a stable `code` and the common error envelope, without interface text.
+user MUST appear as 404 (Not Found). Business conflicts MUST expose a stable `code` and the common error envelope, without interface text.
 
 ### Definitive error contract
 

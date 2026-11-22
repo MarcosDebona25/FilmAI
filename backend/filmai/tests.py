@@ -166,6 +166,103 @@ class ConfiguracionEmailTests(SimpleTestCase):
         )
 
 
+class ConfiguracionRespaldoTests(SimpleTestCase):
+    """Matriz de `design.md` («Configuration») para Brevo y el respaldo."""
+
+    BREVO = "filmai.email_backends.BrevoBackend"
+    RESPALDO = "filmai.email_backends.RespaldoBackend"
+
+    def _validar(self, **cambios):
+        datos = {
+            "debug": False,
+            "email_backend": self.RESPALDO,
+            "resend_api_key": "re_key",
+            "resend_test_recipient": "",
+            "brevo_api_key": "xkeysib-key",
+            "brevo_from_email": "FilmAI <cuenta@filmai-ejemplo.com>",
+            "brevo_test_recipient": "",
+            "default_from_email": "FilmAI <onboarding@resend.dev>",
+        }
+        datos.update(cambios)
+        validar_configuracion_email(**datos)
+
+    def test_configuracion_valida_de_produccion_pasa(self):
+        self._validar()
+
+    def test_brevo_solo_sin_clave_se_rechaza(self):
+        with self.assertRaises(ImproperlyConfigured):
+            self._validar(email_backend=self.BREVO, brevo_api_key="")
+
+    def test_brevo_solo_con_destinatario_de_prueba_se_rechaza(self):
+        with self.assertRaises(ImproperlyConfigured):
+            self._validar(email_backend=self.BREVO, brevo_test_recipient="a@b.com")
+
+    def test_brevo_solo_no_exige_clave_de_resend_ni_remitente_propio(self):
+        # Sin BREVO_FROM_EMAIL, Brevo envía como DEFAULT_FROM_EMAIL: alcanza
+        # con que esa dirección sirva.
+        self._validar(
+            email_backend=self.BREVO,
+            resend_api_key="",
+            brevo_from_email="",
+            default_from_email="FilmAI <hola@filmai-ejemplo.com>",
+        )
+
+    def test_brevo_solo_con_remitente_de_resend_se_rechaza(self):
+        with self.assertRaises(ImproperlyConfigured):
+            self._validar(email_backend=self.BREVO, brevo_from_email="")
+
+    def test_remitente_de_brevo_sin_direccion_o_de_resend_se_rechaza(self):
+        # Brevo respondería 400 (Bad Request) en cada correo: el arranque lo frena.
+        for remitente in ("FilmAI", "FilmAI <>", "FilmAI <onboarding@resend.dev>"):
+            for backend in (self.BREVO, self.RESPALDO):
+                with (
+                    self.subTest(remitente=remitente, backend=backend),
+                    self.assertRaises(ImproperlyConfigured),
+                ):
+                    self._validar(email_backend=backend, brevo_from_email=remitente)
+
+    def test_respaldo_sin_clave_de_resend_se_rechaza(self):
+        with self.assertRaises(ImproperlyConfigured):
+            self._validar(resend_api_key="")
+
+    def test_respaldo_sin_clave_de_brevo_se_rechaza(self):
+        with self.assertRaises(ImproperlyConfigured):
+            self._validar(brevo_api_key="")
+
+    def test_respaldo_con_cualquier_destinatario_de_prueba_se_rechaza(self):
+        for campo in ("resend_test_recipient", "brevo_test_recipient"):
+            with self.subTest(campo=campo), self.assertRaises(ImproperlyConfigured):
+                self._validar(**{campo: "dueno@example.com"})
+
+    def test_respaldo_sin_remitente_de_brevo_y_remitente_de_resend_se_rechaza(self):
+        with self.assertRaises(ImproperlyConfigured):
+            self._validar(brevo_from_email="")
+
+    def test_respaldo_sin_remitente_de_brevo_pasa_si_el_remitente_no_es_de_resend(self):
+        self._validar(
+            brevo_from_email="", default_from_email="FilmAI <hola@filmai-ejemplo.com>"
+        )
+
+    def test_en_desarrollo_nunca_levanta(self):
+        self._validar(
+            debug=True,
+            resend_api_key="",
+            brevo_api_key="",
+            resend_test_recipient="a@b.com",
+            brevo_test_recipient="a@b.com",
+            brevo_from_email="",
+        )
+
+    def test_resend_solo_sigue_igual(self):
+        # Con ResendBackend las variables de Brevo no cuentan.
+        self._validar(
+            email_backend="filmai.email_backends.ResendBackend",
+            brevo_api_key="",
+            brevo_from_email="",
+            brevo_test_recipient="a@b.com",
+        )
+
+
 class ExceptionHandlerTests(SimpleTestCase):
     def test_handler_global_conserva_el_mapeo_de_tmdb(self):
         response = filmai_exception_handler(TMDBNotFound("No encontrada"), {})

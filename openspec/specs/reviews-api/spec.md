@@ -10,7 +10,7 @@ The user's own ratings and reviews (CU-015): publishing, editing and deleting a 
 
 A rating (1-10) is required; its text is optional and at most 1000 characters. The API MUST expose the pair as one resource under `/api/reviews/`, and the `{id}` in every path MUST be the `Calificacion` primary key, because the rating is what always exists.
 
-A user MUST NOT rate the same production twice. A second attempt MUST answer 409 with a stable `code`, not a 500 from the database constraint.
+A user MUST NOT rate the same production twice. A second attempt MUST answer 409 (Conflict) with a stable `code`, not a 500 (Internal Server Error) from the database constraint.
 
 #### Scenario: Rating without text
 
@@ -24,7 +24,7 @@ A user MUST NOT rate the same production twice. A second attempt MUST answer 409
 
 - GIVEN a user who already rated a production
 - WHEN they POST another rating for it
-- THEN the response is 409 with `code: "rating_duplicated"`
+- THEN the response is 409 (Conflict) with `code: "rating_duplicated"`
 - AND the stored rating keeps its original value
 
 ### Requirement: Writing goes through materialization
@@ -44,7 +44,7 @@ Validation MUST happen before materialization: an out-of-range rating must not c
 
 - GIVEN a payload with `valor` outside 1-10
 - WHEN it is posted
-- THEN the response is 400 naming the field
+- THEN the response is 400 (Bad Request) naming the field
 - AND no TMDB request is issued
 
 #### Scenario: An `id_tmdb` beyond the column range
@@ -65,7 +65,7 @@ Validation MUST happen before materialization: an out-of-range rating must not c
 
 `DELETE /api/reviews/{id}/texto/` MUST delete the text and **keep** the rating. `DELETE /api/reviews/{id}/` MUST delete the rating, and its text with it.
 
-The text-only delete MUST be idempotent: applied to a rating with no text it MUST answer 204, not an error, since nothing about that state is a problem.
+The text-only delete MUST be idempotent: applied to a rating with no text it MUST answer 204 (No Content), not an error, since nothing about that state is a problem.
 
 Deletion by the user MUST be physical. `activa` means one thing only — moderated by an administrator — and giving one column two meanings would make "why is this review hidden?" unanswerable.
 
@@ -139,13 +139,13 @@ The residual risk is accepted: removing the rating and rating again creates new 
 
 ### Requirement: Ownership is invisible
 
-Every endpoint MUST require authentication. A rating belonging to another user MUST answer 404 on update and on both deletes — never 403, which would confirm that the row exists. The same policy as `list-endpoints`.
+Every endpoint MUST require authentication. A rating belonging to another user MUST answer 404 (Not Found) on update and on both deletes — never 403 (Forbidden), which would confirm that the row exists. The same policy as `list-endpoints`.
 
 #### Scenario: Touching someone else's rating
 
 - GIVEN a rating owned by another user
 - WHEN a user tries to update or delete it
-- THEN the response is 404
+- THEN the response is 404 (Not Found)
 - AND that rating is unchanged
 
 ### Requirement: The community's reviews of a production
@@ -154,11 +154,11 @@ Every endpoint MUST require authentication. A rating belonging to another user M
 
 It MUST exclude three populations: ratings without text (there is nothing to read), moderated reviews, and — when there is a session — the requester's own, which the detail screen renders separately, above the list.
 
-`orden` MUST accept `fecha-desc` (default), `fecha-asc`, `nota-desc` and `nota-asc`; `nota_min` and `nota_max` MUST filter by rating, inclusively, with integers from 1 to 10. Anything else MUST answer 400 naming the field. Following `next` MUST never repeat or skip a review, even when many share the same rating.
+`orden` MUST accept `fecha-desc` (default), `fecha-asc`, `nota-desc` and `nota-asc`; `nota_min` and `nota_max` MUST filter by rating, inclusively, with integers from 1 to 10. Anything else MUST answer 400 (Bad Request) naming the field. Following `next` MUST never repeat or skip a review, even when many share the same rating.
 
 The response MUST carry a `total` with the filtered count, which cursor pagination does not provide on its own, and a `total_comunidad` with the unfiltered count, for «From the community (N)» and «Showing X of N».
 
-Both query parameters are required; either one missing or malformed MUST answer 400. A production with no reviews MUST answer 200 with an empty list, not 404.
+Both query parameters are required; either one missing or malformed MUST answer 400 (Bad Request). A production with no reviews MUST answer 200 (OK) with an empty list, not 404 (Not Found).
 
 #### Scenario: The requester's own review is not in the list
 
@@ -198,7 +198,7 @@ Both query parameters are required; either one missing or malformed MUST answer 
 
 `GET /api/reviews/mias/` MUST return every rating of the authenticated user, newest first, cursor-paginated at 20, each with the production's title, type and poster so the row can navigate to its detail screen.
 
-Since 15/10/2026 (profile per the canvas) the list MUST accept, all optional and combinable: `q` (up to 100 characters, trimmed, matching the canonical title or any translation, case- and accent-insensitive through Postgres `unaccent`), `texto` (`con` | `sin`: with or without review), `clase` (`movie` | `tv`; not `tipo`, which selects the single-rating response), `nota_min` / `nota_max` (1–10, inclusive) and `orden` (`fecha-desc` by default, `fecha-asc`, `nota-desc`, `nota-asc`; the rating sorts use the unique key `valor × 10⁹ + id` so the cursor never repeats or skips ties). Invalid values MUST answer 400 naming the field. The page MUST carry `total` (with the filters) and `total_propias` (without them).
+Since 15/10/2026 (profile per the canvas) the list MUST accept, all optional and combinable: `q` (up to 100 characters, trimmed, matching the canonical title or any translation, case- and accent-insensitive through Postgres `unaccent`), `texto` (`con` | `sin`: with or without review), `clase` (`movie` | `tv`; not `tipo`, which selects the single-rating response), `nota_min` / `nota_max` (1–10, inclusive) and `orden` (`fecha-desc` by default, `fecha-asc`, `nota-desc`, `nota-asc`; the rating sorts use the unique key `valor × 10⁹ + id` so the cursor never repeats or skips ties). Invalid values MUST answer 400 (Bad Request) naming the field. The page MUST carry `total` (with the filters) and `total_propias` (without them).
 
 #### Scenario: Accent-insensitive search
 
@@ -216,19 +216,19 @@ Unlike the community list it MUST include ratings without text — they can be e
 
 ### Requirement: The user's rating for one production
 
-`GET /api/reviews/mias/?id_tmdb=&tipo=` MUST return that single rating as an object, not as a paginated list: the uniqueness of `(usuario, produccion)` guarantees there is at most one. When the user has not rated that production it MUST answer 404, which the detail screen reads as "show the empty rate button".
+`GET /api/reviews/mias/?id_tmdb=&tipo=` MUST return that single rating as an object, not as a paginated list: the uniqueness of `(usuario, produccion)` guarantees there is at most one. When the user has not rated that production it MUST answer 404 (Not Found), which the detail screen reads as "show the empty rate button".
 
-Supplying only one of the two parameters MUST answer 400, never fall back to the full list: a frontend bug that drops `tipo` would otherwise show another film's rating on this film's page.
+Supplying only one of the two parameters MUST answer 400 (Bad Request), never fall back to the full list: a frontend bug that drops `tipo` would otherwise show another film's rating on this film's page.
 
 #### Scenario: Not rated yet
 
 - GIVEN a user who has not rated a production
 - WHEN they request their rating for it
-- THEN the response is 404
+- THEN the response is 404 (Not Found)
 
 ### Requirement: Only production filters select the single-rating response
 
-`GET /api/reviews/mias/` answers a paginated list unless the request carries `id_tmdb` or `tipo`. Any other query parameter, the pagination `cursor` included, MUST NOT switch it to the single-rating response: following a `next` link must keep returning list pages. (Found by P-06 on 03/10/2026: the second page answered 400 because every parameter was read as a production filter.)
+`GET /api/reviews/mias/` answers a paginated list unless the request carries `id_tmdb` or `tipo`. Any other query parameter, the pagination `cursor` included, MUST NOT switch it to the single-rating response: following a `next` link must keep returning list pages. (Found by P-06 on 03/10/2026: the second page answered 400 (Bad Request) because every parameter was read as a production filter.)
 
 #### Scenario: Loading the next own-review page
 
@@ -275,7 +275,7 @@ The converse does not hold: a production can be in `Vistas` without a rating (CU
 
 ### Requirement: Removing from `Vistas` keeps the rating
 
-Retired on 16/11/2026 together with `?borrar_calificacion=` and the 409 `rating_blocks_removal_from_watched`: removing a production from `Vistas`, or moving it to another status, keeps its rating and answers 204 (No Content) or 200 (OK).
+Retired on 16/11/2026 together with `?borrar_calificacion=` and the 409 (Conflict) `rating_blocks_removal_from_watched`: removing a production from `Vistas`, or moving it to another status, keeps its rating and answers 204 (No Content) or 200 (OK).
 
 #### Scenario: Removing a rated production from `Vistas`
 

@@ -1,10 +1,9 @@
 # Contrato del stream del chat (`POST /api/chat/messages/`)
 
 drf-spectacular no puede describir un stream SSE, así que este archivo es la
-referencia. `contracts/openapi.yaml` declara el `POST` con su cuerpo, el `200` como
+referencia. `contracts/openapi.yaml` declara el `POST` con su cuerpo, el `200` (OK) como
 `text/event-stream` y los rechazos previos al stream. La especificación canónica
-es `openspec/specs/chat-api/` (mientras el cambio siga abierto:
-`openspec/changes/chatbot/specs/chat-api/spec.md`).
+es `openspec/specs/chat-api/`.
 
 ## Pedido
 
@@ -37,7 +36,7 @@ Si el pedido se rechaza, la respuesta es JSON común con el sobre de errores
 | 415 (Unsupported Media Type) | `unsupported_media_type` | El cuerpo no es JSON |
 | 429 (Too Many Requests) | `throttled` | Más de `CHAT_MENSAJES_POR_HORA` (20) mensajes en la hora; trae `retry_after_seconds` y el encabezado `Retry-After` |
 
-Un 400 y un 409 no gastan cupo de la hora. Un 429 devuelve el candado.
+Un 400 (Bad Request) y un 409 (Conflict) no gastan cupo de la hora. Un 429 (Too Many Requests) devuelve el candado.
 
 ## El stream
 

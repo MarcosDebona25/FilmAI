@@ -14,7 +14,7 @@ Both `POST` and `GET /api/chat/messages/` MUST require a session. Without one th
 
 - GIVEN no session cookies
 - WHEN the client POSTs a message
-- THEN the response is 401 with `code: "not_authenticated"`
+- THEN the response is 401 (Unauthorized) with `code: "not_authenticated"`
 - AND nothing is streamed or stored
 
 #### Scenario: Deactivated account with a live cookie
@@ -28,7 +28,7 @@ Both `POST` and `GET /api/chat/messages/` MUST require a session. Without one th
 
 - GIVEN a valid session cookie and no `X-CSRFToken`
 - WHEN the client POSTs a message
-- THEN the response is 403 with `code: "permission_denied"` as JSON
+- THEN the response is 403 (Forbidden) with `code: "permission_denied"` as JSON
 
 ### Requirement: The message is validated before the stream opens
 
@@ -38,14 +38,14 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 
 - GIVEN a text of 501 characters
 - WHEN it is POSTed
-- THEN the response is 400 with `errors.texto`
+- THEN the response is 400 (Bad Request) with `errors.texto`
 - AND the hourly counter does not move
 
 #### Scenario: Second message while the first streams
 
 - GIVEN an answer is still streaming for the user's chat
 - WHEN the user POSTs another message
-- THEN the response is 409 with `code: "chat_request_in_progress"`
+- THEN the response is 409 (Conflict) with `code: "chat_request_in_progress"`
 - AND the first answer continues unaffected
 - AND the hourly counter does not move
 
@@ -60,7 +60,7 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 - GIVEN request A's lock expired and request B now holds it
 - (and, symmetrically, a disconnect during A's save does not free A's lock until that save finished)
 - WHEN request A finally ends and runs its release
-- THEN B's lock is still in place and a third message gets 409
+- THEN B's lock is still in place and a third message gets 409 (Conflict)
 
 #### Scenario: A slow turn does not outlive its budget
 
@@ -71,7 +71,7 @@ The text MUST be 1 to 500 characters after trimming. Otherwise the response MUST
 
 ### Requirement: The answer streams as server-sent events
 
-A valid `POST` MUST answer 200 with `Content-Type: text/event-stream` and a sequence of events named `estado`, `texto`, `tarjetas`, `fin` or `error`, each with one line of JSON as `data`. The stream MUST end with exactly one of `fin` or `error`. `estado` and `error` MUST carry codes, never text. `fin` MUST carry `{"id": <answer pk>, "id_pregunta": <user message pk>}`; `error` MUST carry the error envelope `{code, params, errors}`. The full contract is in `contracts/sse-chat.md`.
+A valid `POST` MUST answer 200 (OK) with `Content-Type: text/event-stream` and a sequence of events named `estado`, `texto`, `tarjetas`, `fin` or `error`, each with one line of JSON as `data`. The stream MUST end with exactly one of `fin` or `error`. `estado` and `error` MUST carry codes, never text. `fin` MUST carry `{"id": <answer pk>, "id_pregunta": <user message pk>}`; `error` MUST carry the error envelope `{code, params, errors}`. The full contract is in `contracts/sse-chat.md`.
 
 #### Scenario: A turn that uses a tool
 
@@ -82,7 +82,7 @@ A valid `POST` MUST answer 200 with `Content-Type: text/event-stream` and a sequ
 
 #### Scenario: Provider down
 
-- GIVEN DeepSeek answers 503
+- GIVEN DeepSeek answers 503 (Service Unavailable)
 - WHEN the message is POSTed
 - THEN the stream ends with `error` carrying `code: "chat_unavailable"`
 - AND no message is stored
@@ -170,7 +170,7 @@ The personal context MUST be read by SQL for each message: liked (rating ≥ 7, 
 
 ### Requirement: Language of the turn and of the prose
 
-The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming, and every tool, card and status of the turn MUST use it. The backend MUST detect the language of the user's message and the system prompt MUST name it as the language to write in, falling back to the turn language when the message does not tell it (a title alone, «ok»). A language change during a request MUST apply from the next message.
+The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming, and every tool, card and status of the turn MUST use it. The backend MUST detect the language of the user's message and the system prompt MUST name it as the language to write in. Detection recognises only Spanish and English, positively: `detectar_idioma()` takes the most probable language of the fastText `lite` model and returns it only if it is `es` or `en` with confidence of at least 0.5. Anything else (another language, a title alone) is unknown and the prompt MUST name the turn language, that is, the account language. Detection MUST never fail a turn: empty text or a library error means unknown. A language change during a request MUST apply from the next message.
 
 #### Scenario: Interface in English, message in Spanish
 
@@ -184,6 +184,19 @@ The view MUST resolve `idioma_efectivo(request, usuario)` once, before streaming
 - GIVEN a user whose reviews and previous messages are in Spanish
 - WHEN they write «Something like Arrival, but lighter»
 - THEN the system prompt tells the model to reply in English
+
+#### Scenario: Message in Portuguese
+
+- GIVEN a user whose account language is `en` (or `es`)
+- WHEN they write «Na verdade, eu só gostei da aparência dos dragões»
+- THEN the detector returns unknown
+- AND the system prompt tells the model to reply in the account language, not in Portuguese or in the other of the two
+
+#### Scenario: A title alone
+
+- GIVEN a user whose account language is `en`
+- WHEN they write «Moon»
+- THEN the language is unknown and the system prompt tells the model to reply in English
 
 ### Requirement: Bounded turn
 
