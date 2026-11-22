@@ -400,3 +400,7 @@ Referencia de verificación: [WebAIM WCAG 2 Checklist](https://webaim.org/standa
 ### Multiidioma
 
 Toda la interfaz funciona en inglés y español (el chatbot, que todavía no existe, queda pendiente). Los textos viven en [traducciones/](traducciones/); consultá [la guía](traducciones/guia.md) para textos, errores, formatos, selectores y verificaciones.
+
+## Créditos y licencias de terceros
+
+- **Detección de idioma del chatbot**: usa [fast-langdetect](https://github.com/LlmKira/fast-langdetect) con el modelo de identificación de idioma `lid.176` de fastText (Facebook/Meta), distribuido bajo la licencia [Creative Commons Attribution-ShareAlike 3.0](https://creativecommons.org/licenses/by-sa/3.0/) (CC BY-SA 3.0). Referencia: A. Joulin, E. Grave, P. Bojanowski, T. Mikolov, «Bag of Tricks for Efficient Text Classification», 2016. El modelo no se modificó.

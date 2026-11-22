@@ -658,8 +658,36 @@ Archivos: `traducciones/`, `frontend/scripts/i18n/generate.py`
 
 ### 06/11/2026 — El chatbot detecta el idioma del mensaje
 
-DeepSeek respondía en español a mensajes en inglés aunque el prompt pidiera «el idioma del mensaje»: pesaba el perfil, con reseñas en español. Solo funcionó nombrar el idioma. `chatbot/idioma.py` detecta `es` o `en` contando palabras comunes, `ñ`, `¿`, `¡` y tildes, y el prompt cierra con «reply in English» o «respondé en español»; sin señal usa el idioma del turno. Heurística y no librería: determinista, testeable y sin dependencias.
+DeepSeek respondía en español a mensajes en inglés aunque el prompt pidiera «el idioma del mensaje»: pesaba el perfil, con reseñas en español. Solo funcionó nombrar el idioma. `chatbot/idioma.py` detecta `es` o `en` contando palabras comunes, `ñ`, `¿`, `¡` y tildes, y el prompt cierra con «reply in English» o «respondé en español»; sin señal usa el idioma del turno. Heurística y no librería: determinista, testeable y sin dependencias. **El método de detección lo reemplazó la entrada del 22/11/2026**, más abajo: el criterio (el prompt nombra el idioma, sin señal vale el del turno) sigue igual.
 Archivos: `backend/chatbot/idioma.py`
+
+### 22/11/2026 — El detector de idioma del chatbot pasa a fast-langdetect (modelo lite)
+
+Decidido por Marcos. Un mensaje en portugués («Na verdade, eu só gostei da aparência dos dragões…») se detectó como `es` y el bot respondió en español: la heurística de palabras comunes solo conoce dos idiomas y cuenta como español cualquier texto con `ñ`, tildes o palabras parecidas. Agregar listas por idioma queda descartado: inviable con alcance global.
+
+- **Regla nueva.** `detectar_idioma()` identifica de forma positiva `es` o `en`: toma el idioma más probable (`k=1`) y lo devuelve solo si es `es` o `en` y su confianza es de 0,5 o más. Todo lo demás (portugués, italiano, francés, alemán, ruso, japonés, un título suelto) es `None`, y el chatbot responde en el idioma de la cuenta (el `or idioma` que ya tenía `orquestador._preparar()`). Las tools y las tarjetas siguen en el idioma del turno.
+- **Librería.** `fast-langdetect>=1.2,<1.3` con el modelo `lite` (el `lid.176.ftz` de fastText, que viene dentro del paquete y nunca descarga nada). Se pasa `model="lite"` siempre: el valor por defecto (`auto`) bajaría el modelo completo de 126 MB. Se usa `max_input_length=None` (sin el recorte a 80 caracteres ni su log INFO por mensaje largo): dio los mismos aciertos y el mensaje ya tiene tope de 500 caracteres (`LARGO_MAXIMO_DEL_MENSAJE`). No se usa `fasttext-wheel` porque el backend tiene numpy 2.5.4 (por pgvector); `fast-langdetect` usa `fasttext-predict`, que no lo necesita.
+- **Que no rompa un turno.** Texto vacío o solo espacios da `None` sin llamar a la librería. Si la librería lanza una excepción se loguea un WARNING (solo el tipo de error, nunca el texto del usuario) y da `None`. El detector es único por proceso y se crea en el primer uso (`functools.cache`).
+- **Benchmark.** 80 mensajes etiquetados (78 evaluables): español rioplatense, inglés, mezclas con títulos, portugués, italiano, francés, alemán, ruso, japonés, ambiguos, mayúsculas, largos y el set dorado del chatbot. Regla común: top-1 `es` o `en` con confianza de 0,5 o más; si no, `None`. «Grave» es devolver `es` o `en` equivocado; «conservador» es esperar `es`/`en` y dar `None` (cae al idioma de la cuenta).
+
+| Configuración                                    | Aciertos      | Graves                                                                | Conservadores                                                          | Carga  | RAM extra | Mediana      |
+| ------------------------------------------------ | ------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------ | --------- | ------------ |
+| Heurística anterior (palabras comunes)           | 62/78         | 13 (todo el portugués, italiano, francés y alemán dado por `es`/`en`) | 3                                                                      | 0 s    | 0 MB      | 0,003 ms     |
+| **fast-langdetect `lite` (elegida)**             | **75/78**     | 1 («ok» → `en`)                                                       | 2 («Mostrame The Matrix» y un pedido largo lleno de títulos en inglés) | 0,18 s | 26 MB     | 0,014 ms     |
+| fast-langdetect `full` (lid.176.bin, 126 MB)     | 70/78         | 1                                                                     | 7                                                                      | 0,36 s | 156 MB    | 0,012 ms     |
+| fasttext-predict con el `.ftz`                   | 73/78         | 1                                                                     | 4                                                                      | 0,04 s | 5 MB      | 0,008 ms     |
+| fasttext-predict con el `.bin`                   | 68/78         | 2                                                                     | 8                                                                      | 0,25 s | 135 MB    | 0,006 ms     |
+| lingua (alta / baja precisión; set previo de 44) | 26/44 y 30/44 | 0                                                                     | 18 y 14                                                                | n/d    | ~48 MB    | 0,9 / 0,5 ms |
+
+- **Por qué `lite`.** Gana en aciertos y es el más liviano de los que aciertan: el modelo completo no mejora y cuesta seis veces más memoria. Le gana a `fasttext-predict` con el mismo `.ftz` por el preprocesamiento de `fast-langdetect` (pasa a minúsculas el texto mayormente en mayúsculas y lo limpia). Lingua es demasiado conservador: manda a la cuenta casi la mitad de los mensajes.
+- **Error aceptado.** «ok» se detecta como `en` (0,63). Es un error leve: una sola palabra, sin consecuencias prácticas. Subir el umbral para evitarlo costaría aciertos en mensajes cortos reales.
+- **Costo.** Carga única de ~0,18 s en el primer mensaje de cada proceso, +26 MB de RAM y ~0,014 ms por detección (despreciable frente a la llamada al modelo).
+- **Licencia.** El modelo lid.176 de fastText es de Facebook/Meta con licencia CC BY-SA 3.0; la atribución está en el README (sección «Créditos y licencias de terceros»).
+- **Tests.** `chatbot/tests_idioma.py` (casos del benchmark con el modelo real, la excepción, el vacío, el umbral y `model="lite"` con mocks) y un test en `chatbot/tests_orquestador.py` que muestra que un mensaje en portugués arma el prompt en el idioma de la cuenta, `es` o `en`.
+
+- **Revisión de PR-Agent (#242).** Aceptado: la versión se acota a `<1.3` (no `<2`), porque los tests usan el modelo real y una versión menor podría cambiar el preprocesamiento y poner el CI en rojo sin que cambie nuestro código. Descartado: «si el modelo no carga, se reintenta en cada mensaje y reaparece el bug del portugués». Con el detector caído el bot responde en el idioma de la cuenta (no en un idioma equivocado), y una firma incompatible de la librería la detectan antes del merge los tests que usan el modelo real.
+
+Archivos: `backend/chatbot/idioma.py`, `backend/chatbot/tests_idioma.py`, `backend/chatbot/tests_orquestador.py`, `backend/requirements.txt`, `openspec/specs/chat-api/spec.md`, `README.md`
 
 ---
 
