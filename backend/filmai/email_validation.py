@@ -61,12 +61,14 @@ def validar_configuracion_email(
                 "BREVO_TEST_RECIPIENT no está permitido en producción: "
                 "redirigiría todos los emails a una única dirección."
             )
-    if email_backend == RESPALDO_BACKEND and not brevo_from_email:
-        # Brevo no puede enviar como la dirección de pruebas de Resend.
-        direccion = parseaddr(default_from_email)[1].lower()
-        if direccion.endswith("@resend.dev"):
+        # Brevo envía como `BREVO_FROM_EMAIL` o, sin ella, como el remitente del
+        # mensaje (`DEFAULT_FROM_EMAIL`). Si esa dirección falta, está mal
+        # escrita o es la de pruebas de Resend, Brevo rechaza cada correo con
+        # 400 (Bad Request): mejor que el arranque lo diga.
+        remitente = parseaddr(brevo_from_email or default_from_email)[1].lower()
+        if "@" not in remitente or remitente.endswith("@resend.dev"):
             raise ImproperlyConfigured(
-                "BREVO_FROM_EMAIL es obligatorio con RespaldoBackend mientras "
-                "DEFAULT_FROM_EMAIL sea una dirección @resend.dev: Brevo no "
-                "puede enviar con ese remitente."
+                f"Con {nombre}, Brevo necesita un remitente propio verificado en "
+                "Brevo: definí BREVO_FROM_EMAIL como «Nombre <direccion@dominio>». "
+                "No sirve una dirección @resend.dev."
             )

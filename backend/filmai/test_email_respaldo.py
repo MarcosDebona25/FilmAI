@@ -531,6 +531,25 @@ class RespaldoBackendTests(SimpleTestCase):
 
     @patch(
         "resend.Emails.send",
+        side_effect=_error_resend(InvalidApiKeyError, 403, "invalid_api_key"),
+    )
+    def test_un_400_de_brevo_tras_caer_resend_tambien_es_envio_fallido(self, _mock):
+        # Resend cae y Brevo rechaza por configuración (remitente no verificado):
+        # no fue un dato del usuario, así que termina en `EnvioFallido` y el PR 2
+        # lo convierte en `email_unavailable` en vez de un 500.
+        brevo = _Brevo(400, {"code": "invalid_parameter", "message": "m"})
+
+        with self.assertLogs(LOGGER, level="ERROR"):
+            with self.assertRaises(EnvioFallido) as ctx:
+                self._backend(brevo).send_messages([_mensaje()])
+
+        self.assertEqual(
+            [(e.proveedor, e.estado) for e in ctx.exception.errores],
+            [("Resend", 403), ("Brevo", 400)],
+        )
+
+    @patch(
+        "resend.Emails.send",
         side_effect=_error_resend(ApplicationError, 503, "application_error"),
     )
     def test_si_fallan_los_dos_con_fail_silently_devuelve_cero_y_loguea_error(

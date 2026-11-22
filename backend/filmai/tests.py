@@ -197,12 +197,29 @@ class ConfiguracionRespaldoTests(SimpleTestCase):
         with self.assertRaises(ImproperlyConfigured):
             self._validar(email_backend=self.BREVO, brevo_test_recipient="a@b.com")
 
-    def test_brevo_solo_no_exige_clave_de_resend_ni_remitente(self):
+    def test_brevo_solo_no_exige_clave_de_resend_ni_remitente_propio(self):
+        # Sin BREVO_FROM_EMAIL, Brevo envía como DEFAULT_FROM_EMAIL: alcanza
+        # con que esa dirección sirva.
         self._validar(
             email_backend=self.BREVO,
             resend_api_key="",
             brevo_from_email="",
+            default_from_email="FilmAI <hola@filmai-ejemplo.com>",
         )
+
+    def test_brevo_solo_con_remitente_de_resend_se_rechaza(self):
+        with self.assertRaises(ImproperlyConfigured):
+            self._validar(email_backend=self.BREVO, brevo_from_email="")
+
+    def test_remitente_de_brevo_sin_direccion_o_de_resend_se_rechaza(self):
+        # Brevo respondería 400 (Bad Request) en cada correo: el arranque lo frena.
+        for remitente in ("FilmAI", "FilmAI <>", "FilmAI <onboarding@resend.dev>"):
+            for backend in (self.BREVO, self.RESPALDO):
+                with (
+                    self.subTest(remitente=remitente, backend=backend),
+                    self.assertRaises(ImproperlyConfigured),
+                ):
+                    self._validar(email_backend=backend, brevo_from_email=remitente)
 
     def test_respaldo_sin_clave_de_resend_se_rechaza(self):
         with self.assertRaises(ImproperlyConfigured):

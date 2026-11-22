@@ -265,7 +265,8 @@ class _BackendPorProveedores(BaseEmailBackend):
       un error y se devuelve 0 (no romper flujos donde el email no es crítico).
     - Un 2xx es definitivo: el mensaje no se reenvía.
     - Un error transitorio pasa al siguiente proveedor (WARNING con el motivo);
-      uno no transitorio (datos inválidos) se levanta de inmediato.
+      uno no transitorio (datos inválidos) en el primer proveedor se levanta de
+      inmediato. En el respaldo, cualquier error cuenta como «falló también».
     - Si fallan todos se levanta `EnvioFallido`, o se devuelve 0 con
       `fail_silently`.
     """
@@ -315,7 +316,11 @@ class _BackendPorProveedores(BaseEmailBackend):
             try:
                 id_mensaje = proveedor.enviar(message)
             except ErrorDeProveedor as error:
-                if not error.transitorio:
+                # Un dato inválido en el primer proveedor no se reintenta: fallaría
+                # igual en el otro. Pero si ya hubo un fallo transitorio, el error
+                # del respaldo (aunque sea un 400 (Bad Request), p. ej. remitente
+                # no verificado en Brevo) significa que no hay con quién enviar.
+                if not error.transitorio and not errores:
                     raise
                 errores.append(error)
                 if i + 1 < len(activos):
