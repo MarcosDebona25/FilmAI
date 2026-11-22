@@ -2322,8 +2322,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/en/common.d.json.ts": {
-    "mtime": 1795369309.5565007,
-    "seen": 1795369662.5708094,
+    "mtime": 1795369664.550592,
+    "seen": 1795369867.8279989,
     "ast_hash": "0069927de963f2a073b36e9098a1394d",
     "semantic_hash": ""
   },
@@ -2352,8 +2352,8 @@
     "semantic_hash": ""
   },
   "frontend/messages/es/common.d.json.ts": {
-    "mtime": 1795369309.557227,
-    "seen": 1795369662.570812,
+    "mtime": 1795369664.550592,
+    "seen": 1795369867.8280602,
     "ast_hash": "4fe8d0a66b21f03b9aba5c4fd4e198dc",
     "semantic_hash": ""
   },
