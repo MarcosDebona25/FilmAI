@@ -109,7 +109,10 @@ flow; no new recovery endpoint or reusable reset token is invented.
 message Resend could not take because of a transient failure, MUST send that
 same message through Brevo's transactional API. Transient failures are
 connection and TLS errors, timeouts, 5xx, 429 (Too Many Requests), 402
-(Payment Required), 401 (Unauthorized) and 403 (Forbidden). A 400 (Bad
+(Payment Required), 401 (Unauthorized) and 403 (Forbidden). Resend answers an
+invalid API key with 400 (Bad Request) `validation_error` and the message «API
+key is invalid»; that response MUST count as transient too (code
+`invalid_api_key`). Any other 400 (Bad
 Request) or 422 (Unprocessable Entity) for invalid message data from the first
 provider MUST NOT fall back. Once a transient failure has happened, any error
 from the fallback provider (for example a 400 (Bad Request) from Brevo for an

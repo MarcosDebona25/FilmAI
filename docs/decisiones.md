@@ -788,6 +788,15 @@ Archivos: `backend/filmai/email_backends.py`, `backend/filmai/email_validation.p
 
 Archivos: `backend/filmai/tasks.py`, `backend/filmai/correos/servicio.py`, `backend/filmai/settings.py`, `backend/filmai/exceptions.py`, `backend/usuarios/adapter.py`, `backend/usuarios/passwords.py`, `backend/usuarios/throttles.py`, `backend/filmai/errores/catalogo.py`, `backend/filmai/test_correos_cola.py`, `backend/usuarios/test_devolver_cupo.py`, `backend/usuarios/test_errores_registro.py`, `backend/filmai/test_servicio_correos.py`, `openspec/specs/emails/spec.md`
 
+### 22/11/2026 — Resend responde 400 a una clave inválida
+
+- **Qué pasó.** En la prueba manual del respaldo, con `RESEND_API_KEY` rota, el correo no salió por ningún lado. Resend respondió 400 (Bad Request) `validation_error` con el mensaje «API key is invalid», no 401 (Unauthorized) ni 403 (Forbidden) como dice su documentación. Como el respaldo trataba cualquier 400 como dato inválido, no pasó a Brevo ni reintentó.
+- **Qué se hizo.** `ProveedorResend._traducir` reconoce ese 400 por el mensaje (contiene «api key») y lo marca como transitorio con código `invalid_api_key`. Del mensaje se guarda solo el código, no el texto. Cualquier otro 400 sigue sin pasar a Brevo.
+- **De paso.** `ErrorDeProveedor` y `EnvioFallido` definen `__reduce__`. Celery guarda con `pickle` la excepción de una tarea fallida, y sin esto el log del worker mostraba un `UnpickleableExceptionWrapper` en lugar del error.
+- **Tests.** `test_clave_invalida_con_400_es_transitoria` y `test_las_excepciones_sobreviven_a_pickle` en `backend/filmai/test_email_respaldo.py`.
+
+Archivos: `backend/filmai/email_backends.py`, `backend/filmai/test_email_respaldo.py`, `openspec/specs/emails/spec.md`
+
 ---
 
 ## Interfaz
