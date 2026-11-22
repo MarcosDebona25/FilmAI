@@ -74,7 +74,7 @@ describe("pantalla 404", () => {
       "href",
       routes.explore
     );
-    expect(screen.getByRole("link", { name: en.nav.main.search })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: en.nav.main.browse })).toHaveAttribute(
       "href",
       routes.search
     );
@@ -257,9 +257,18 @@ describe("encabezado y barra inferior", () => {
       "href",
       routes.explore
     );
-    // «Search» ya no es un enlace de la barra de escritorio (14/11/2026): lo
-    // reemplaza la lupa, que despliega un campo con sugerencias.
+    // «Search» ya no es enlace (14/11/2026): lo reemplaza la lupa. «Browse»
+    // (21/11/2026) lleva a /search sin texto y convive con ella.
     expect(within(nav).queryByRole("link", { name: en.nav.main.search })).not.toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: en.nav.main.browse })).toHaveAttribute(
+      "href",
+      routes.search
+    );
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((link) => link.textContent)
+    ).toEqual([en.nav.main.home, en.nav.main.browse, en.nav.main.lists]);
     expect(screen.getByRole("button", { name: en.nav.search.openLabel })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: en.nav.main.lists })).toHaveAttribute(
       "href",
@@ -277,6 +286,21 @@ describe("encabezado y barra inferior", () => {
       "page"
     );
     expect(screen.getByRole("link", { name: en.nav.main.lists })).not.toHaveAttribute(
+      "aria-current"
+    );
+  });
+
+  it("Browse se ve sin sesión y marca aria-current en Buscar", () => {
+    account.perfil = null;
+    path.current = routes.search;
+    render(<Navbar />, { locale: "es" });
+    const nav = screen.getByRole("navigation", { name: es.nav.main.mainLabel });
+    expect(within(nav).getByRole("link", { name: es.nav.main.browse })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    expect(within(nav).queryByRole("link", { name: es.nav.main.lists })).not.toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: es.nav.main.home })).not.toHaveAttribute(
       "aria-current"
     );
   });
@@ -312,7 +336,7 @@ describe("encabezado y barra inferior", () => {
     expect(view.container).toBeEmptyDOMElement();
   });
 
-  it("la barra inferior móvil enlaza Home, Search, Lists y Profile", () => {
+  it("la barra inferior móvil enlaza Home, Browse, Lists y Profile", () => {
     path.current = routes.lists;
     render(<MobileTabs />, { locale: "en" });
     const nav = screen.getByRole("navigation", { name: en.nav.main.mainLabel });
@@ -332,7 +356,7 @@ describe("encabezado y barra inferior", () => {
     expect(within(nav).queryByRole("link", { name: en.nav.account.logIn })).toBeNull();
   });
 
-  it("sin sesión la barra inferior enlaza Home, Search y Log in", () => {
+  it("sin sesión la barra inferior enlaza Home, Browse y Log in", () => {
     account.perfil = null;
     path.current = routes.search;
     render(<MobileTabs />, { locale: "en" });
@@ -346,10 +370,10 @@ describe("encabezado y barra inferior", () => {
     ]);
     expect(links.map((link) => link.textContent)).toEqual([
       en.nav.main.home,
-      en.nav.main.search,
+      en.nav.main.browse,
       en.nav.account.logIn,
     ]);
-    expect(within(nav).getByRole("link", { name: en.nav.main.search })).toHaveAttribute(
+    expect(within(nav).getByRole("link", { name: en.nav.main.browse })).toHaveAttribute(
       "aria-current",
       "page"
     );

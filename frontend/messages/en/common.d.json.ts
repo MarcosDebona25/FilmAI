@@ -22,7 +22,8 @@ declare const messages: {
       "backLanding": "Back to the landing page",
       "termsUpdated": "Last updated: {date}",
       "termsOnPage": "On this page",
-      "termsQuestions": "Questions? Write to us at {email}."
+      "termsQuestions": "Questions? Write to us at {email}.",
+      "browse": "Browse"
     },
     "account": {
       "userMenuLabel": "{name}’s menu",
@@ -304,7 +305,8 @@ declare const messages: {
       "undoAnnouncement": "{message}. Undo available for {seconds, plural, one {# second} other {# seconds}}.",
       "error": "Couldn’t update the status. Try again.",
       "rated": "Rated ★ {rating}",
-      "ratedAndMoved": "Rated ★ {rating} · Moved to Watched"
+      "ratedAndMoved": "Rated ★ {rating} · Moved to Watched",
+      "saving": "Saving…"
     },
     "breadcrumb": {
       "backTo": "Back to {label}"

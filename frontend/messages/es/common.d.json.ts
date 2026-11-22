@@ -22,7 +22,8 @@ declare const messages: {
       "backLanding": "Volver a la portada",
       "termsUpdated": "Última actualización: {date}",
       "termsOnPage": "En esta página",
-      "termsQuestions": "¿Tenés dudas? Escribinos a {email}."
+      "termsQuestions": "¿Tenés dudas? Escribinos a {email}.",
+      "browse": "Explorar"
     },
     "account": {
       "userMenuLabel": "Menú de {name}",
@@ -304,7 +305,8 @@ declare const messages: {
       "undoAnnouncement": "{message}. Podés deshacerlo durante {seconds, plural, one {# segundo} other {# segundos}}.",
       "error": "No pudimos actualizar el estado. Intentá de nuevo.",
       "rated": "Calificada con ★ {rating}",
-      "ratedAndMoved": "Calificada con ★ {rating} · Pasó a Vistas"
+      "ratedAndMoved": "Calificada con ★ {rating} · Pasó a Vistas",
+      "saving": "Guardando…"
     },
     "breadcrumb": {
       "backTo": "Volver a {label}"

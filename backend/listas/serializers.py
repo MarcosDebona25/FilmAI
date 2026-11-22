@@ -1,6 +1,7 @@
 """Serializers de entrada y salida para la API de listas."""
 
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from catalogo.models import ID_TMDB_MAXIMO
@@ -73,6 +74,13 @@ class AgregarItemSerializer(PertenenciaQuerySerializer):
     """Payload de alta de un ítem, en el vocabulario público de TMDB."""
 
 
+# Las tres claves que acepta `estado`. Es constante para que el contrato OpenAPI
+# la nombre `EstadoListaEnum` (ver `ENUM_NAME_OVERRIDES` en settings) en vez de
+# chocar con el `EstadoEnum` del estado de cuenta.
+ESTADOS_DE_LISTA = ("pendientes", "viendo", "vistas")
+
+
+@extend_schema_serializer(component_name="CambioEstado")
 class EstadoSerializer(PertenenciaQuerySerializer):
     """`PUT /api/lists/status/`: el título y su estado nuevo (o `null` para quitarlo).
 
@@ -80,9 +88,7 @@ class EstadoSerializer(PertenenciaQuerySerializer):
     seguro un error del cliente, y quitar el estado por omisión sería destructivo.
     """
 
-    estado = serializers.ChoiceField(
-        choices=("pendientes", "viendo", "vistas"), allow_null=True
-    )
+    estado = serializers.ChoiceField(choices=ESTADOS_DE_LISTA, allow_null=True)
     # Solo el Undo la manda: la fecha que tenía el título en el estado al que
     # vuelve. Sin ella (o con `null`) el ingreso nuevo lleva la fecha de ahora.
     fecha_agregado = serializers.DateTimeField(required=False, allow_null=True)

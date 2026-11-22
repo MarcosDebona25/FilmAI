@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { CAMPO_BUSQUEDA } from "@/components/campo-busqueda";
 import { SearchView } from "@/components/features/SearchView";
 import type { TmdbItem } from "@/lib/catalog";
 import en from "@/messages/en/common.json";
@@ -191,6 +192,19 @@ describe("Buscar", () => {
     act(() => vi.advanceTimersByTime(60));
 
     expect(reemplazos).toEqual(["/search?q=dune"]);
+  });
+
+  it("el campo copia el estilo del buscador de la lupa de la navbar", () => {
+    render(<SearchView />, { locale: "en" });
+
+    // Las mismas clases que usa `NavbarSearch` (colores, borde, radio, altura, foco).
+    expect(campo().className).toBe(CAMPO_BUSQUEDA.input);
+    expect(campo().parentElement?.className).toBe(CAMPO_BUSQUEDA.pildora);
+    expect(campo()).toHaveAttribute("placeholder", en.common.search.placeholder);
+
+    fireEvent.change(campo(), { target: { value: "dune" } });
+    const limpiar = screen.getByRole("button", { name: en.search.input.clearLabel });
+    expect(limpiar.className).toBe(CAMPO_BUSQUEDA.limpiar);
   });
 
   it("Enter busca enseguida", () => {

@@ -740,6 +740,7 @@ export function ListDetailView({ id }: { id: number }) {
                         <WatchingCardMenu
                           titulo={item.titulo}
                           abierto={menuAbierto === item.item_id}
+                          guardando={viendo.guardando}
                           onAbrir={() => setMenuAbierto(item.item_id)}
                           onCerrar={() => setMenuAbierto(null)}
                           onElegir={(accion) => elegirDelMenu(item, accion)}

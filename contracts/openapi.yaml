@@ -1801,6 +1801,18 @@ paths:
         lista; sacar el estado no llama a TMDB.
       tags:
       - lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioEstado'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambioEstado'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambioEstado'
+        required: true
       security:
       - jwtHeaderAuth: []
       - jwtCookieAuth: []
@@ -2369,6 +2381,33 @@ components:
       - old_password
       - password1
       - password2
+    CambioEstado:
+      type: object
+      description: |-
+        `PUT /api/lists/status/`: el título y su estado nuevo (o `null` para quitarlo).
+
+        `estado` es obligatorio aunque sea `null`: un cuerpo sin la clave es casi
+        seguro un error del cliente, y quitar el estado por omisión sería destructivo.
+      properties:
+        id_tmdb:
+          type: integer
+          maximum: 2147483647
+          minimum: 1
+        tipo:
+          $ref: '#/components/schemas/TipoEnum'
+        estado:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/EstadoListaEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        fecha_agregado:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - estado
+      - id_tmdb
+      - tipo
     EntradaMensaje:
       type: object
       description: 'Lo que el panel manda: el texto de la pregunta (CU-013).'
@@ -2389,6 +2428,16 @@ components:
         * `pendiente` - Pendiente de confirmación
         * `activa` - Activa
         * `baja` - Baja
+    EstadoListaEnum:
+      enum:
+      - pendientes
+      - viendo
+      - vistas
+      type: string
+      description: |-
+        * `pendientes` - pendientes
+        * `viendo` - viendo
+        * `vistas` - vistas
     GeneroEnum:
       enum:
       - masculino

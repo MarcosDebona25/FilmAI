@@ -13,6 +13,7 @@ from collections import Counter
 from itertools import zip_longest
 
 from catalogo.models import Calificacion, TipoProduccion
+from catalogo.services.browse import tiene_poster
 from listas.models import ClaveLista, Tiene
 
 NOTA_MINIMA = 7
@@ -96,7 +97,7 @@ def _de_un_tipo(servicio, tipo, generos, excluir):
     resultados = [
         {**item, "media_type": tipo}
         for item in datos.get("results") or []
-        if (item.get("id"), tipo) not in excluir
+        if (item.get("id"), tipo) not in excluir and tiene_poster(item)
     ]
     return resultados[:MAXIMO]
 

@@ -14,7 +14,13 @@ from catalogo.models import ID_TMDB_MAXIMO, ProduccionAudiovisual
 from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services import similares
 from catalogo.services.adapter import tmdb_a_dominio
-from catalogo.services.browse import NOTAS, anio_actual, explorar, generos_de_todo
+from catalogo.services.browse import (
+    NOTAS,
+    anio_actual,
+    con_poster,
+    explorar,
+    generos_de_todo,
+)
 from catalogo.services.creditos import creditos
 from catalogo.services.embeddings import MODEL_VERSION
 from catalogo.services.fallback import servicio_localizado
@@ -211,14 +217,14 @@ class TrendingView(CatalogoBaseView):
         _materializar_listado_sin_interrumpir(
             data, media_type if media_type in ("movie", "tv") else None
         )
-        return Response(data)
+        return Response(con_poster(data))
 
 
 class NowPlayingView(CatalogoBaseView):
     def get(self, request):
         data = self._service(request).get_now_playing(self._page(request))
         _materializar_listado_sin_interrumpir(data, "movie")
-        return Response(data)
+        return Response(con_poster(data))
 
 
 class DiscoverView(CatalogoBaseView):
@@ -237,7 +243,7 @@ class DiscoverView(CatalogoBaseView):
             tipo, genero, anio, min_rating, self._page(request), min_votos=min_votos
         )
         _materializar_listado_sin_interrumpir(data, tipo)
-        return Response(data)
+        return Response(con_poster(data))
 
 
 class SearchView(CatalogoBaseView):
@@ -526,7 +532,10 @@ class SimilaresView(TopesTMDBMixin, APIView):
         id_tmdb = _id_tmdb(id_tmdb)
         idioma = idioma_efectivo(request)
         # La clave no lleva nada del usuario: el pool es el mismo para todos.
-        clave = f"similares:titulo:{self.tipo}:{id_tmdb}:{idioma}:{MODEL_VERSION}"
+        # `estricto` va en la clave: así nunca se sirve un pool mezclado viejo.
+        clave = (
+            f"similares:titulo:{self.tipo}:{id_tmdb}:{idioma}:{MODEL_VERSION}:estricto"
+        )
         pool, en_cache = similares.pool_en_cache(
             clave,
             # `lambda` es una función sin nombre: solo se ejecuta si el pool no
@@ -581,6 +590,8 @@ class SimilaresView(TopesTMDBMixin, APIView):
             semillas_tmdb=[(id_tmdb, self.tipo)],
             servicio=servicio_localizado(idioma_tmdb(request), get_catalog_service),
             semilla_azar=clave,
+            # La ficha muestra lo más parecido primero, sin azar.
+            estricto=True,
         )
 
     def _ttl(self, pool):

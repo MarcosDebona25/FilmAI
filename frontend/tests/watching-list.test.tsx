@@ -18,6 +18,8 @@ const estado = vi.hoisted(() => ({
   pedidos: [] as { path: string; method: string; body?: unknown }[],
   escritorio: true,
   falla: false,
+  /** Si hay una promesa acá, el `PUT` espera a que se resuelva (guardado lento). */
+  retener: null as null | Promise<void>,
   propia: null as unknown,
 }));
 
@@ -59,6 +61,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
         throw new real.ApiError(404, { code: "not_found", params: {}, errors: [] });
       }
       if (method === "PUT" && path === "/api/lists/status/") {
+        if (estado.retener) await estado.retener;
         if (estado.falla) throw new real.ApiError(500, { code: "server_error" });
         const { estado: nuevo } = opciones.body as { estado: string | null };
         return {
@@ -136,6 +139,7 @@ beforeEach(() => {
   estado.pedidos = [];
   estado.escritorio = true;
   estado.falla = false;
+  estado.retener = null;
   estado.propia = null;
   window.matchMedia = ((consulta: string) => ({
     matches: estado.escritorio,
@@ -480,5 +484,92 @@ describe("Watching: título con el conteo en la misma línea", () => {
     const linea = titulo.parentElement!;
     expect(linea).toHaveTextContent("3 items · 2 movies · 1 TV show");
     expect(within(linea).getByText("3 items", { exact: true })).toHaveClass("md:hidden");
+  });
+});
+
+describe("Watching: bloqueo mientras se guarda", () => {
+  /** Un `PUT` que queda esperando hasta que el test llame a `liberar()`. */
+  function guardadoLento() {
+    let liberar!: () => void;
+    estado.retener = new Promise<void>((resolver) => (liberar = resolver));
+    return liberar;
+  }
+
+  it("con un guardado en curso, los ⋯ de todas las tarjetas quedan deshabilitados", async () => {
+    const liberar = guardadoLento();
+    await abrir();
+
+    elegir(2, "Mark as finished");
+
+    // Test: el estado de React «guardando» llega a las tarjetas que siguen en la grilla.
+    await waitFor(() => expect(masDe(1)).toBeDisabled());
+    expect(masDe(1)).toHaveAttribute("aria-busy", "true");
+    expect(masDe(3)).toBeDisabled();
+    await act(async () => liberar());
+    await screen.findByText("Linterna 2 moved to Watched");
+    expect(masDe(1)).not.toBeDisabled();
+    expect(masDe(1)).not.toHaveAttribute("aria-busy");
+  });
+
+  it("un segundo toque no dispara otro PUT: el ⋯ ni siquiera abre el menú", async () => {
+    const liberar = guardadoLento();
+    await abrir();
+    elegir(2, "Mark as finished");
+    await waitFor(() => expect(masDe(1)).toBeDisabled());
+
+    fireEvent.click(masDe(1));
+
+    expect(screen.queryByRole("menuitem", { name: "Remove from Watching" })).toBeNull();
+    await act(async () => liberar());
+    await screen.findByText("Linterna 2 moved to Watched");
+    expect(estados()).toEqual(["vistas"]);
+  });
+
+  it("el toast «Saving…» aparece solo pasados 200 ms y lo reemplaza el de Undo", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const liberar = guardadoLento();
+    await abrir();
+
+    elegir(2, "Mark as finished");
+
+    // Antes del umbral no hay aviso: un guardado rápido no parpadea.
+    await act(async () => void vi.advanceTimersByTime(150));
+    expect(screen.queryByText("Saving…")).toBeNull();
+    await act(async () => void vi.advanceTimersByTime(100));
+    expect(await screen.findByText("Saving…")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+
+    await act(async () => liberar());
+    await screen.findByText("Linterna 2 moved to Watched");
+    expect(screen.queryByText("Saving…")).toBeNull();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeEnabled();
+  });
+
+  it("si el servidor responde antes de 200 ms, «Saving…» no aparece", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    await abrir();
+
+    elegir(2, "Mark as finished");
+    await screen.findByText("Linterna 2 moved to Watched");
+
+    await act(async () => void vi.advanceTimersByTime(500));
+    expect(screen.queryByText("Saving…")).toBeNull();
+  });
+
+  it("el Undo del aviso anterior no se puede pulsar mientras guarda", async () => {
+    await abrir();
+    elegir(1, "Mark as finished");
+    await screen.findByText("Linterna 1 moved to Watched");
+    const liberar = guardadoLento();
+
+    elegir(3, "Remove from Watching");
+
+    // El aviso viejo sigue en pantalla hasta que llega el nuevo; su Undo está bloqueado.
+    await waitFor(() => expect(masDe(2)).toBeDisabled());
+    const undo = screen.queryByRole("button", { name: "Undo" });
+    if (undo) expect(undo).toBeDisabled();
+    await act(async () => liberar());
+    await screen.findByText("Linterna 3 removed from Watching");
+    expect(estados()).toEqual(["vistas", null]);
   });
 });

@@ -289,6 +289,12 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "FilmAI API",
     "DESCRIPTION": "API del backend de FilmAI.",
     "VERSION": "1.0.0",
+    "ENUM_NAME_OVERRIDES": {
+        # Los dos campos se llaman `estado`: sin nombres fijos, el contrato
+        # renombraría el de la cuenta a `Estado199Enum` (un hash).
+        "EstadoEnum": "usuarios.models.EstadoCuenta",
+        "EstadoListaEnum": "listas.serializers.ESTADOS_DE_LISTA",
+    },
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.hooks.postprocess_schema_enums",
         "filmai.errores.openapi.agregar_sobre_de_errores",

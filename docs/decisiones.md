@@ -1240,3 +1240,146 @@ Dos fallas que aparecieron al unir `feat/viendo` con `develop` (que traía el #2
 - **Undo y conteo inestables.** `datosAhora` (la ref que usa `meterEnLaGrilla` para saber si la tarjeta ya está) se actualizaba en un `useEffect`, un instante después de pintar. Un Undo justo después veía datos viejos, volvía a insertar la tarjeta y sumaba uno de más. Con `useLayoutEffect` la ref se pone al día en el mismo commit del render.
 
 Archivos: `frontend/components/features/lists/ListDetailView.tsx`, `frontend/e2e/listas-sugerencias.spec.ts`
+
+### 19/11/2026 — Puesta a punto del plan 05
+
+Contraste del plan con `develop` y `main` (igualados tras el #227) y correcciones de documentación, sin tocar código.
+
+- **Collage de las pantallas de acceso (reemplaza la excepción aceptada el 07/11/2026).** Se decidió que el collage (`frontend/public/collage-posters/Opcion 1.jpg`) no sale de TMDB: es de uso libre y no tiene problemas de derechos de autor. Por eso desaparece la excepción aceptada y el plazo del 13/02/2027 que figuraban en la entrada «Cierre del #180» del 13/11/2026; la única excepción que queda de #180 son los fixtures de prueba. No se tocó `frontend/`: el collage y los e2e que lo usan quedan igual.
+- **Plan 05 al día.** Fechas de encabezado y pendientes actualizados. B-06: la corrida de Marcos (tarea 1.7 del SDD) se hizo el 07/11/2026 (Docker Desktop sin puente, arreglo del pin de redis-py 5 que rompía los `.delay()`, backfill de 402 de 402 en 223 s). B-02: el golden set está cerrado (`golden.yaml` tiene 24 casos, se corre a mano con `manage.py chatear --golden` y se midió el 12 y el 13/11/2026), y la fila pasa de 8 a 7 tools porque `mostrar_tarjetas` se retiró el 13/11/2026 a favor de los marcadores `[[n]]`.
+- **Pendientes.** El 13 suma la prueba `access-screens`, inestable por tiempo con los workers por defecto de Vitest (decisión del 18/11/2026). El 6 suma las migraciones que hay que aplicar al desplegar (`catalogo.0008_lapida_tmdb`, `listas.0008_lapida_tmdb` y `listas.0009_lista_viendo`), que aplica Marcos. Se agrega el 14 con los restos del #226: las acciones del usuario que se descartan sin aviso mientras hay un cambio de estado en curso (`frontend/hooks/use-estado-viendo.ts` y `use-estado-ficha.ts`) y el `requestBody` tipado de `PUT /api/lists/status/` en `contracts/openapi.yaml`; el diseño queda pendiente de decidir con Marcos.
+- **Tope de 4 vueltas del chatbot.** No queda abierto: lo cerró la «última llamada sin tools» del 12/11/2026. Lo único que no se vio es esa última llamada contra DeepSeek real, porque en la medición ningún turno llegó al tope; si aparece en uso real, se trata como un bug nuevo.
+
+Archivos: `docs/05_Plan_de_Desarrollo.md`, `docs/06_TMDB_API_Referencia.md`, `PRODUCT.md`, `openspec/specs/tmdb-compliance/spec.md` y este archivo.
+
+### 19/11/2026 — Toast «Saving…» y bloqueo mientras se guarda (restos del #226)
+
+Decidido por Marcos con la simulación del canvas (opción B).
+
+- **Bloqueo.** Mientras hay un guardado de estado en curso, las acciones quedan deshabilitadas desde el primer toque: los ⋯ de todas las tarjetas de Watching, las filas de favorita y de listas de la ficha, el botón Rate y el Undo del toast. Antes el toque se descartaba en silencio. `guardando` pasó a ser estado de React en `useEstadoViendo` y `useEstadoFicha`; la bandera `enCurso` queda como red de seguridad para dos toques en el mismo tick.
+- **Toast «Saving…».** Si el guardado tarda más de 200 ms (`MS_ANTES_DE_AVISAR`) sale un toast con spinner, sin Undo, que reemplaza al anterior (un solo aviso a la vez; el Undo viejo se pierde, aceptado). Si el servidor responde antes, no aparece. Una sola implementación compartida: `useAvisoGuardado`. El spinner respeta `prefers-reduced-motion`. Texto nuevo `title.status.saving` («Saving…» / «Guardando…»). Los diálogos, settings y chatbot no cambian.
+- **Contrato.** `PUT /api/lists/status/` declara su `requestBody` (`CambioEstado`) con `@extend_schema`. Se fijaron los nombres de los dos enums `estado` (`EstadoEnum` de la cuenta y `EstadoListaEnum`) con `ENUM_NAME_OVERRIDES`, para que el generador no renombre el de la cuenta a `Estado199Enum`. Otros endpoints tienen el mismo hueco y no se tocaron.
+- **Canvas.** Falta borrar la opción A del artboard «Watching · tap while saving» y sumar la ficha y el celular (lo hace Marcos con Claude).
+
+Archivos: `frontend/components/features/title/{StatusToast,use-aviso-guardado,use-estado-ficha,TitleActions,ListsMenu,TitleView}`, `frontend/components/features/lists/{use-estado-viendo,WatchingCardMenu,ListDetailView}`, `traducciones/claves.csv` y catálogos generados, `frontend/tests/{estado-ficha,watching-list}.test.tsx`, `backend/listas/{views,serializers}.py`, `backend/filmai/settings.py`, `contracts/openapi.yaml`
+
+### 19/11/2026 — Base local de desarrollo al día y última llamada del chatbot contra DeepSeek real
+
+- **Migraciones.** Se hizo un respaldo con `pg_dump` y se levantó el backend, que migra al arrancar. Antes estaban aplicadas `catalogo.0008` y `listas.0008`; faltaba `listas.0009_lista_viendo`, que se aplicó sin errores. Antes: 5 usuarios, 7 listas propias, 0 listas «Viendo»/«Watching», 119 ítems. Después: 5 listas Viendo (una por usuario), 7 listas propias intactas, 119 ítems, `showmigrations` sin pendientes y `makemigrations --check` sin cambios. Al desplegar se aplican con el `migrate` normal.
+- **Última llamada sin tools, vista por fin contra DeepSeek real.** Con el tope bajado a 1 vuelta solo en el proceso de la prueba (script fuera del repo, sin tocar el orquestador), dos preguntas encadenadas («la más reciente de Villeneuve y después parecidas» y «parecida a Breaking Bad y su precuela») llegaron al tope: `ultima_sin_tools=si`, terminaron con texto y salieron las tarjetas (5 y 2 marcadores válidos, 0 inválidos). Dos preguntas que se resolvían en una vuelta cerraron sin llegar al tope. 10 llamadas al proveedor en total. La línea de log no se vio en la terminal (Django la redirige); la métrica del turno lo confirma.
+- **Limpieza.** El comentario de `Tarjeta.poster` en `backend/chatbot/eventos.py` citaba la tool retirada `mostrar_tarjetas`; ahora dice dónde se arma el póster hoy.
+
+Archivos: `backend/chatbot/eventos.py`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 19/11/2026 — Canvas al día con el bloqueo al guardar
+
+- **Canvas.** En el artboard «Watching · tap while saving» se borró la opción A y quedó la B (bloqueo + toast «Saving…»). Se sumaron tres artboards con la misma simulación de servidor lento (2,5 s): «Title page · tap while saving» (escritorio, en la sección 3), «Title page · tap while saving · mobile» (sección 3) y «Watching · tap while saving · mobile» (sección 7). En el celular el menú de estado y el de cada tarjeta se abren como hoja inferior. Se renderizaron y probaron los tres estados (menú, guardando, toast con Undo), sin errores de consola.
+- **Plan 05.** Se quitó la nota «Canvas pendiente (Watching)».
+
+Archivos: `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 21/11/2026 — Suite del backend: de ~9 min a ~2 min (tests aislados del broker y del backoff)
+
+Se implementaron los puntos 1, 2, 3 y 5 del pendiente 13 (diagnóstico del 18/11/2026, esta misma sección). No se tocó el código de producción: los tests dejan de llegar al broker y de dormir, nada más.
+
+- **Precalentado sin broker.** `guardar_turno()` llama a `_precalentar_tarjetas()`, que encola la materialización con `materializar_produccion.delay()`. Cuando el broker no responde, `.delay()` no falla rápido: medido en un compose sin Redis, tarda **19,6 s** en lanzar `OperationalError` (`Name or service not known`). El `except` de `_precalentar_tarjetas` lo registra y el turno se guarda igual, así que cada test con tarjetas pagaba esa espera. Se anula el encolado con `patch("chatbot.servicio.materializar_listado_en_segundo_plano")` en `BaseSSE` y `CorteDeConexionTests` (`chatbot/tests_sse.py`), `GuardarTurnoTests` (`chatbot/tests_servicio.py`) y `FechaDeRecomendadosTests` (`chatbot/tests_recorte.py`); el encolado en sí lo sigue probando `PrecalentarTarjetasTests`, que ya lo mockeaba. En local, con el Redis de Docker levantado, esos tests sí encolaban tareas reales (el broker de desarrollo responde en 0,16 s); ahora tampoco.
+- **Backoff sin dormir.** `catalogo.tests.EndpointIntegrationTest` anula `catalogo.client.time.sleep` en `setUp`: los casos de 429 (Too Many Requests), 502 (Bad Gateway) y 503 (Service Unavailable) ya no esperan el backoff real (1 + 2 + 4 s) y el reintento se sigue probando. Queda un test de otra clase (`TMDBClientTest.test_http_errors_map_to_domain_exceptions`) que todavía duerme 7 s; no estaba en el alcance de este cambio.
+- **`--durations 15` en el CI.** El paso «Correr tests (Django)» de `.github/workflows/ci.yml` lista los 15 tests más lentos en cada corrida. La regresión del #203 pasó 5 días sin que nadie la viera; con esto aparece en el PR que la trae.
+- **En local, solo lo que se toca.** El README documenta `python manage.py test <app>` y `npx vitest --changed` mientras se trabaja, y la suite completa antes del PR (sección 5 de `AGENTS.md`).
+
+**Medición** (`python manage.py test --durations 15` dentro de Docker, proyecto de compose propio y `RUN_MIGRATIONS=false`, sin Redis en la red, que es lo que hace lento al broker):
+
+| Corrida              | Tests | Total   | 15 más lentos |
+| -------------------- | ----- | ------- | ------------- |
+| Antes (21/11, 17:13) | 2039  | 549,7 s | 287,9 s       |
+| Después (21/11)      | 2039  | 126,1 s | 22,1 s        |
+
+La suma de los 15 más lentos pasa de 287,9 s a 22,1 s; el test más lento ya no es un turno con tarjetas (19,1 s) sino los 7 s del caso de `TMDBClientTest` que queda. Los 21 tests de `chatbot` que costaban ~19 s corren ahora en menos de 0,7 s. Queda pendiente el punto 4 (filtros por ruta en los PR) y el e2e `access-screens`, fuera de este cambio.
+
+Archivos: `backend/chatbot/{tests_sse,tests_servicio,tests_recorte}.py`, `backend/catalogo/tests.py`, `.github/workflows/ci.yml`, `README.md`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 21/11/2026 — Cierre del pendiente 13: filtros por ruta en el CI y `access-screens` estable
+
+- **Filtros por ruta.** Un job `cambios` en `.github/workflows/ci.yml` compara el PR con su base (`git diff --name-only base...head`). Solo documentación no corre ningún job pesado; solo `frontend/` no corre el backend; solo `backend/` no corre el frontend ni Playwright. Cualquier otro archivo (contratos, traducciones, scripts, el propio workflow) corre los dos: ante la duda, todo. Los push a `main` y `develop` corren todo, porque el CI es la única puerta. Los jobs saltados cuentan como aprobados (la rama no tiene protección con checks obligatorios, y aunque la tuviera un job saltado no bloquea).
+- **`access-screens`.** La inestabilidad era de tiempo: cada test renderiza la página de registro con los 3 pasos montados y la lista de países (~1 s solo), y con todos los archivos de Vitest en paralelo superaba el plazo de 5 s (falló en la corrida completa de local, también en `main`). Se probó `userEvent.setup({ delay: null })` y casi no ayudó (35 s a 31 s), así que el archivo sube su plazo a 20 s con `vi.setConfig`. La suite completa de frontend pasa: 83 archivos, 861 tests.
+- **Último test dormilón.** `TMDBClientTest.test_http_errors_map_to_domain_exceptions` anula `catalogo.client.time.sleep` y deja de esperar 7 s.
+
+Archivos: `.github/workflows/ci.yml`, `frontend/tests/access-screens.test.tsx`, `backend/catalogo/tests.py`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 21/11/2026 — Tarjeta de lista: nombre en una línea con la manija bajo el ⋯ (diseño 5E, #232)
+
+Elegido por Marcos entre las variantes 5A–5F del canvas, partiendo de 4F.
+
+- **Qué se eligió (5E).** El nombre pasa a 1,5 rem en celular y 1,75 rem desde `md`, en una sola línea con «…» y con `title` con el nombre completo. El menú `⋯` o la insignia «Default» quedan pegados a la esquina superior derecha. La manija de arrastre (solo escritorio, solo personalizadas, botón de 44 px con `aria-label`, sigue operándose con teclado) va apilada debajo del `⋯`, en la misma esquina, y no le quita ancho al nombre. El conteo no se parte (`whitespace-nowrap`; en escritorio deja libre el ancho de la manija).
+- **Por qué.** El nombre competía por el ancho con la manija, el ícono, la insignia y el menú. Con 5E la manija sale de la fila del nombre y se conserva el arrastre por manija sin cambiar lo que el usuario ya aprendió.
+- **Qué se descartó.** 5A (manija a la izquierda del nombre, como estaba), 5B (manija en la fila del conteo), 5C (manija en el pie, junto a los pósters), 5D (sin manija visible, aparece al pasar el mouse o enfocar) y 5F (sin manija, reordenar solo desde el menú).
+- **Pruebas.** Vitest (`tests/lists-view.test.tsx`): `title` y truncado, conteo sin partir, manija solo en personalizadas y de escritorio, predeterminada sin manija ni menú. E2E (`e2e/listas.spec.ts`): nombres de 34 y 60 caracteres a 375, 768 y 1440 px, con el nombre en una línea, el conteo sin partir y la manija bajo el ⋯.
+- **Canvas.** En «Lists» quedaron solo la tarjeta definitiva (5E) y se borraron 4F, 5A–5D y 5F con sus entradas del índice.
+
+Archivos: `frontend/components/features/lists/ListCard.tsx`, `frontend/tests/lists-view.test.tsx`, `frontend/e2e/listas.spec.ts`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+### 21/11/2026 — Separación entre la lupa y el avatar en la navbar
+
+- **Cambio.** El contenedor de la derecha de la navbar (lupa de búsqueda, avatar o «Log in»/«Sign up») pasa de `gap-2` (0,5 rem) a `gap-5` (1,25 rem, `calc(var(--spacing) * 5)`, 20 px). Lo probó Marcos en las herramientas del navegador y lo dejó como valor definitivo.
+- **Alcance.** El gap es del contenedor, así que en escritorio también separa más «Log in» de «Sign up» cuando no hay sesión. La lupa y el avatar no se ven por debajo de 768 px (en celular la lupa está oculta), por lo que ahí no cambia nada. La lupa desplegada crece hacia la izquierda sobre su propio lugar, así que el cambio no la afecta.
+
+Archivos: `frontend/components/Navbar.tsx`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+### 21/11/2026 — «More like» de la ficha: relevancia estricta, sin mezcla (issue #231)
+
+Decidido por Marcos. La ficha mostraba los 20 primeros de un pool mezclado con pesos (`mezclar_con_pesos`), así que un título muy parecido podía quedar fuera de los 20 mientras entraban otros más lejanos.
+
+- **Ficha.** `armar_pool` recibe `estricto` (por defecto `False`). La ficha lo pasa en `True` y el pool queda en el orden en que se arma: locales cercanos (distancia ≤ 0,40) por distancia, relleno de TMDB, locales lejanos por distancia, hasta 60; la vista muestra los 20 primeros. Sin piso de relevancia: si hay pocos cercanos se completa con TMDB y después con lejanos, como antes.
+- **Listas.** No cambian: siguen con la mezcla con pesos y «Show more suggestions».
+- **Caché.** La clave de la ficha pasó a `similares:titulo:{tipo}:{id}:{idioma}:{modelo}:estricto`. Con el sufijo no se sirve un pool mezclado guardado por la versión anterior (dura hasta 24 h); los viejos expiran solos.
+- **Diagnóstico con «The Avengers» (574) en la base de desarrollo** (739 títulos, 577 con vector `ready`): tiene vector `ready`; sus 20 vecinos están entre 0,161 y 0,326, todos por debajo de 0,40, así que son los 20 cercanos y TMDB no aportó. Los vecinos más cercanos son Infinity War y Endgame (0,16), pero después aparecen títulos poco relacionados (The Fifth Element, The Awakening, Matchbox the Movie) con distancias casi iguales. Dos causas: el catálogo local es chico (faltan Age of Ultron, Civil War, etc.) y, como hay 20 cercanos, el relleno de TMDB (que traería las películas del universo) nunca se pide. Con la mezcla se perdía además el orden. El umbral de 0,40 es holgado para este modelo, y el texto embebido (`construir_texto_canonico`: título, géneros, directores, reparto, keywords, sinopsis) no se tocó. Queda para otro issue decidir si bajar `DISTANCIA_MAXIMA` o dar prioridad a TMDB en la ficha.
+
+Archivos: `backend/catalogo/services/similares.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_similares.py`, `backend/catalogo/tests_similares_api.py`, `openspec/specs/similar-titles/spec.md` y este archivo.
+
+### 21/11/2026 — Correos: el logo es el ticket de la navbar
+
+- **Qué estaba mal.** `correos/base.html` dibujaba la marca como un rectángulo amarillo con una estrella de texto (`&#9733;`), distinto del `TicketMark` de la navbar (ticket con muescas laterales y estrella de cinco puntas).
+- **Qué se hizo.** La marca sale ahora como imagen `frontend/public/correos/ticket.png` (128×96 px, se muestra a 32×24 px), con el mismo trazado que `TicketMark` (`#f5c518` y estrella `#14110a`). Gmail y otros clientes no dibujan SVG en línea, por eso es PNG. La plantilla la pide a `{{ url_app }}/correos/ticket.png`; `enviar_correo()` pasa `url_app` desde `FRONTEND_URL` (sin barra final). El texto «FilmAI» no cambia.
+- **Límite conocido.** En local `FRONTEND_URL` es `http://localhost:3000`: un cliente de correo real solo ve el logo si ese servidor está accesible; en producción lo sirve el dominio público. Los `.eml` de revisión llevan la imagen incrustada (`data:`) para que se vean sin servidor; Gmail no muestra `data:`, así que ese caso se comprueba con el envío real.
+- **Tests.** `test_logo_es_el_ticket_de_la_navbar_servido_por_el_frontend` en `backend/filmai/test_servicio_correos.py`.
+
+Archivos: `backend/templates/correos/base.html`, `backend/filmai/correos/servicio.py`, `backend/filmai/test_servicio_correos.py`, `frontend/public/correos/ticket.png`, `traducciones/revision-correos/` (ocho `.eml` e `index.html`), `openspec/specs/emails/spec.md`, `docs/05_Plan_de_Desarrollo.md`.
+
+### 21/11/2026 — «Explorar» en la navbar y campo de Buscar con el estilo de la lupa
+
+Decidido por Marcos. Desde el 14/11/2026 en escritorio `/search` solo se alcanzaba escribiendo en la lupa, aunque sin texto ya muestra todo por popularidad con filtros.
+
+- **Enlace «Explorar».** La navbar de escritorio suma «Explorar» («Browse», clave `nav.main.browse`) entre Inicio y Listas. Lleva a `/search` sin texto, se ve con o sin sesión (Listas sigue solo con sesión) y marca `aria-current="page"` en `/search`. Convive con la lupa, que sigue oculta en `/search`.
+- **Celular.** La pestaña inferior que ya llevaba a `/search` pasa a usar la misma clave `nav.main.browse`, así el enlace y la pestaña dicen lo mismo. `nav.main.search` queda para el título de la página, el pie y las migas.
+- **Campo de Buscar.** Copia el estilo del campo de la lupa (píldora de 2,75 rem, `bg-raised`, borde `--field-border`, foco con `--fg-3` y anillo, lupa, placeholder y ✕) en escritorio y celular. Las clases se extrajeron a `frontend/components/campo-busqueda.ts`, usado por `NavbarSearch` y `SearchView`. No cambia la lógica: Escape y «/» siguen igual. Antes era un campo grande (3,25 a 3,625 rem, tipografía de pantalla en escritorio).
+- **Textos.** Clave nueva `nav.main.browse` en `traducciones/claves-extra.csv` (es «Explorar», en «Browse»); catálogos regenerados.
+
+Archivos: `frontend/components/Navbar.tsx`, `MobileTabs.tsx`, `NavbarSearch.tsx`, `campo-busqueda.ts`, `features/SearchView.tsx`, `frontend/messages/*/common.json` y `common.d.json.ts`, `traducciones/claves-extra.csv`, `frontend/tests/errors-and-account-menu.test.tsx`, `search-view.test.tsx`, `frontend/e2e/*`, `docs/04_Lineamientos_UI.md` y este archivo.
+
+- **Título de la página (21/11/2026).** El h1, el título de la pestaña, la miga de la ficha, el enlace del pie y el de la pantalla 404 dicen «Browse» / «Explorar», igual que la navbar y la pestaña del celular. La clave `nav.main.search` queda sin uso en pantalla. Archivos: `frontend/app/search/page.tsx`, `SearchView.tsx`, `TitleView.tsx`, `Footer.tsx`, `ErrorScreens.tsx` y sus tests.
+
+### 21/11/2026 — Los títulos sin póster quedan fuera del descubrimiento
+
+Decidido por Marcos (opción C). Medido ese día: 17 de 948 títulos de la base no tienen póster, y su tarjeta se veía rota.
+
+- **Qué se decidió.** Siguen en la base y se encuentran por nombre (búsqueda con texto, `search/`) y por su ficha. No aparecen donde nadie los pidió: Home (`trending/`, `now-playing/`, `discover/`, «Recomendado»), Buscar sin texto y, desde antes, «More like» y las sugerencias de lista (D-5). `seed_catalogo` y lo que se materializa no cambian.
+- **Dónde.** Una función, `tiene_poster`, y un helper, `con_poster`, en `services/browse.py`. Las vistas `Trending`, `NowPlaying` y `Discover` filtran la respuesta después de encolar la materialización (así lo materializado no cambia); `_lado` (Buscar sin texto) y `_de_un_tipo` («Recomendado») filtran al armar la lista. Las personas de `trending/` (`media_type` `person`) no son títulos y pasan. `search/`, Buscar con texto o con `persona` y las sugerencias de la navbar no filtran.
+- **Paginación.** Los listados son páginas de TMDB, así que no se rellena: una página puede traer 1 o 2 ítems menos de 20 y `total_pages` y `total_results` siguen siendo los de TMDB. Se descartó rellenar pidiendo la página siguiente (más llamadas a TMDB, páginas que se solapan y desorden con «Todo», que alterna dos tipos) por un 1,8 % de títulos. `con_poster` devuelve una copia para no tocar el listado que guarda la caché.
+- **Pruebas.** `catalogo/tests_sin_poster.py` (sin texto se descartan; con texto y en `search/` se encuentran; totales intactos; «Recomendado»). Los fixtures de `tests_browse.py`, `tests.py`, `test_cache_navegador.py` y `test_materializar_listados.py` ahora traen `poster_path`.
+
+Archivos: `backend/catalogo/services/browse.py`, `backend/catalogo/services/recomendado.py`, `backend/catalogo/views.py`, `backend/catalogo/tests_sin_poster.py`, los tests con fixtures ajustados, `openspec/specs/tmdb-endpoints/spec.md` y este archivo.
+
+### 21/11/2026 — Seed masivo: 500 cuentas, 80 % de reseñas y corpus versionado
+
+Decidido por Marcos: poblar la base a lo grande para probar con volumen y que se parezca a producción.
+
+- **Qué se decidió.** Comando nuevo `seed_masivo` (lógica en `backend/usuarios/seed_masivo.py`): 500 cuentas `masivo0001..` más `usuario001..003`, unas 38 calificaciones por cuenta (log-normal, de 3 a 300), 80 % con reseña (exacto, repartido al azar) y 1 de cada 7 reseñas inactiva. Mantiene los invariantes de `development-seed` y `reviews-api` (calificada ⇒ Vistas, Favoritos solo con 9 o más, un estado por título). Todo con `bulk_create`, un solo hash de contraseña y las listas y el chat por defecto creados a mano (el `bulk_create` no dispara la señal). Es determinista con `--semilla` y, sin `--reiniciar`, idempotente por correo. Las cuentas pendientes o de baja (3 %) no tienen actividad.
+- **Reseñas solo en `seed_masivo`.** El 60 % de `seed --solo-resenas` y su texto de plantillas quedan intactos; `seed.py` no se tocó.
+- **Corpus versionado.** Los textos viven en `backend/seed_data/resenas.jsonl.gz` (una línea por producción, idioma y banda; 2 textos por entrada; unos 430 títulos, 2 574 entradas y unos 300 KB comprimidos). Se versiona porque redactarlo cuesta tiempo y dinero del modelo y así cualquiera reproduce la misma base sin volver a generarlo. Va ordenado y con gzip de `mtime=0` para que los diffs sean chicos. No lleva datos de TMDB: solo id, tipo y las reseñas inventadas.
+- **Redactado con Haiku.** Las reseñas las escribe un modelo (subagentes Haiku de Claude Code, con la cuota del plan Pro y no con API key), a partir de lotes de 25 títulos que genera `preparar_corpus_resenas` (título, año, géneros y sinopsis recortada, en una carpeta de trabajo fuera del repo) y se validan con `compilar_corpus_resenas`. Medido: unos 4 000 tokens por título (103 000 para un lote de 25, 300 reseñas, 3,5 minutos).
+- **Banda de nota.** 1 a 4 baja, 5 a 7 media, 8 a 10 alta: el tono de la reseña debe ser coherente con la nota. El texto se elige por (título, idioma de la cuenta, banda).
+- **Corpus híbrido y respaldo.** El corpus por título cubre unos 400 títulos, los más conocidos del catálogo; redactar los 10 000 costaría millones de tokens. Para el resto: (1) plantillas por género en `backend/seed_data/plantillas_genero.json` (24 géneros de TMDB × es/en × baja/media/alta × 4 frases, escritas con Haiku, válidas para cualquier título del género; se elige al azar uno de los géneros del título), y (2) si el archivo falta o el título no tiene género conocido, `seed_real.TEXTOS`. Faker se descartó para los textos: genera lorem ipsum, sin relación con la producción. El 80 % de reseñas no depende del origen del texto.
+- **«Más conocidos».** `ProduccionAudiovisual` no guarda la cantidad de votos de TMDB. Ordenar por `calificacion_promedio` traía títulos desconocidos con 10 de nota y pocos votos, y por `pk` tampoco sirve (la base mezcla corridas de `seed` y `seed_catalogo`). Por eso `preparar_corpus_resenas --por-votos PAGINAS` lee `discover` ordenado por `vote_count.desc` de TMDB (3 películas por cada serie) y toma, en ese orden, los que están en la base. La popularidad con la que `seed_masivo` elige qué calificar sigue siendo una aproximación: promedio al cuadrado por un factor log-normal sembrado.
+- **Tests.** `backend/usuarios/tests_seed_masivo.py` y `tests_corpus_resenas.py`.
+
+Archivos: `backend/usuarios/seed_masivo.py`, `corpus_resenas.py`, `management/commands/seed_masivo.py`, `preparar_corpus_resenas.py`, `compilar_corpus_resenas.py`, los dos archivos de tests, `README.md`, `openspec/specs/seed-masivo/spec.md`, `docs/05_Plan_de_Desarrollo.md` y este archivo.

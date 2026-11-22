@@ -77,6 +77,34 @@ NEWS_Y_TALK = "10763,10767"
 # Los de series sin par en películas: se suman a la lista de «Todo».
 SERIES_SIN_PAR = [10762, 10763, 10764, 10766, 10767]
 
+
+def tiene_poster(item):
+    """Si el título tiene póster: lo único que lo deja salir en el descubrimiento.
+
+    Decisión del 21/11/2026: sin póster, la tarjeta se ve rota. Esos títulos
+    siguen en la base y se encuentran por nombre (búsqueda con texto) y por su
+    ficha; solo quedan fuera de las listas que no pidió nadie (Home, Buscar sin
+    texto, recomendados). `None` y `""` cuentan como sin póster.
+    """
+    # Una persona (Tendencias en «all») no tiene póster, tiene foto: no es un
+    # título y no se toca.
+    return item.get("media_type") == "person" or bool(item.get("poster_path"))
+
+
+def con_poster(datos):
+    """Una copia del listado de TMDB sin los títulos sin póster.
+
+    No toca `total_pages` ni `total_results` (TMDB no dice cuántos de los demás
+    tampoco tienen) y no rellena: una página puede traer 1 o 2 ítems menos de
+    los 20 y se pide la siguiente igual. Es una copia porque el listado puede
+    ser el mismo objeto que guarda la caché.
+    """
+    return {
+        **datos,
+        "results": [i for i in datos.get("results") or [] if tiene_poster(i)],
+    }
+
+
 _VACIO = {"page": 1, "total_pages": 0, "total_results": 0, "results": []}
 
 
@@ -402,7 +430,7 @@ def _lado(servicio, tipo, *, genero, anio, nota, page, desde, hasta, sin_minimo)
     return {
         "total_pages": datos.get("total_pages") or 0,
         "total_results": datos.get("total_results") or 0,
-        "results": datos.get("results") or [],
+        "results": con_poster(datos)["results"],
     }
 
 

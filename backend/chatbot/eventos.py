@@ -37,7 +37,8 @@ class Tarjeta(TypedDict):
     id_tmdb: int
     tipo: Literal["movie", "tv"]
     titulo: str
-    # El formato exacto del póster lo fija `mostrar_tarjetas` (PR2); None si no tiene.
+    # La ruta del póster que da TMDB (`poster_path`), sin la URL base: la arma el
+    # turno en `tools/turno.py` y `recorte.py` la rehidrata; None si no tiene.
     poster: str | None
     anio: int | None
     # Promedio de TMDB con un decimal; None si no tiene. `NotRequired` porque las
