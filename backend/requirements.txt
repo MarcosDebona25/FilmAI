@@ -64,6 +64,12 @@ jsonschema>=4.18,<5
 # Nota: el paquete es `pgvector`, no `django-pgvector` (ver docs/decisiones.md).
 pgvector>=0.3,<0.5
 
+# --- Idioma del chat ---
+# Detecta si el mensaje del chat está en español o en inglés (`chatbot/idioma.py`).
+# Se usa con el modelo `lite` (lid.176.ftz de fastText, ~1 MB, ya viene dentro del
+# paquete: nunca descarga nada). Usa `fasttext-predict`, que no necesita numpy.
+fast-langdetect>=1.2,<2
+
 # --- Desarrollo ---
 factory-boy>=3.3,<4.0
 # Auto-reload del worker de Celery en desarrollo: a diferencia del runserver
@@ -73,7 +79,3 @@ watchdog[watchmedo]>=4.0,<7.0
 
 # --- Linting ---
 ruff>=0.11,<1.0
-# Detecta si el mensaje del chat está en español o en inglés (`chatbot/idioma.py`).
-# Se usa con el modelo `lite` (lid.176.ftz de fastText, ~1 MB, ya viene dentro del
-# paquete: nunca descarga nada). Usa `fasttext-predict`, que no necesita numpy.
-fast-langdetect>=1.2,<2
