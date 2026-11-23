@@ -1022,6 +1022,18 @@ Pendiente de la revisión de arquitectura del 13/11/2026 (H3). Hasta ahora el ú
 **Tests**: `chatbot/tests_plazo.py` (reloj y corte simulados, sin dormir), `catalogo/tests_plazo.py` y un caso de punta a punta en `tests_sse.py`. Ningún test existente cambió. Specs: `openspec/specs/chat-api/spec.md` («Bounded turn») y `contracts/sse-chat.md` («Límites»).
 Archivos: `backend/chatbot/plazo.py`, `orquestador.py`, `views.py`, `llm.py`, `backend/catalogo/plazo.py`, `client.py`, `services/semantica.py`, `backend/filmai/settings.py`, `.env.example`, `backend/chatbot/README.md`
 
+### 23/11/2026 — Chatbot: qué queda de la revisión de arquitectura (pendiente 12)
+
+La revisión de arquitectura del 13/11/2026 dejó pendientes numerados («H») que no estaban versionados. Ya estaban hechos H5 (#221) y H3 (#222). Gonza revisó el resto contra el código de `develop` y decidió:
+
+- **H11, hecho**: las variables del system (perfil, «Ya recomendados», tarjetas del último mensaje, fecha e idioma) van después de las instrucciones fijas (`armar_sistema` en `chatbot/prompts.py`), así que el prefijo que cachea el proveedor no cambia entre pedidos.
+- **H10, abierto, importancia media**: si la conexión se corta a mitad de la respuesta, `enviarMensaje` (`frontend/lib/chat.ts`) lanza `network_error` y `ChatProvider` muestra el error, aunque el servidor haya terminado y guardado el turno. El usuario recién ve la respuesta al volver a cargar el historial. Propuesta: después de un `network_error`, volver a pedir la página más reciente del historial. Es el único de la lista que el usuario nota.
+- **Campos verificables en el set dorado, abierto, importancia media**: cada caso de `golden.yaml` tiene solo un texto `espera` que se revisa a mano. Se suman campos que el comando `chatear --golden` chequea solo (por ejemplo tools esperadas, si tiene que haber tarjetas, tiempo máximo según `rnf6`). Facilita medir los cambios del prompt, entre ellos H8.
+- **H8, abierto, importancia baja**: el prompt ya dice que los resultados de tools y los extractos de reseñas son datos y no instrucciones, pero las reseñas van mezcladas en el perfil entre «…», sin un bloque delimitado. Delimitarlas es una defensa extra contra la inyección de prompt; se mide con el set dorado antes de cambiar el formato.
+- **H13, descartado**: que las tools acepten el `ref` de una tarjeta en vez de `id_tmdb` y `tipo`. El prompt ya hace que el modelo reuse los `[[ref]]` de «Tarjetas de tu último mensaje» sin buscar de nuevo, y cambiar los esquemas no trae una mejora medible. Si en uso real el modelo se equivoca de `id_tmdb`, se trata como un bug nuevo.
+
+Archivos: `docs/05_Plan_de_Desarrollo.md` (pendiente 12), `docs/decisiones.md`
+
 ---
 
 ## Multiidioma
@@ -1126,28 +1138,28 @@ Resend va primero; si no puede tomar un mensaje, ese mismo mensaje sale por Brev
 
 **Decisiones D-1 a D-6, aceptadas por el usuario el 22/11/2026 tal como se proponían:**
 
-| #   | Decisión                                                                                                                                                                                         |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| #   | Decisión                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | D-1 | 401 (Unauthorized) y 403 (Forbidden) de Resend pasan a Brevo: una clave inválida o revocada es justo el caso «proveedor inutilizable». Cada paso al respaldo se loguea en `WARNING` con el motivo |
-| D-2 | Un timeout de lectura de Resend también pasa a Brevo: un duplicado es inofensivo (los dos enlaces valen) y un correo que falta bloquea la cuenta. La `Idempotency-Key` de Resend no ayuda       |
-| D-3 | Se mantienen los topes por correo y por IP, sin tope global; solo cambia el comentario de `settings.py`                                                                                          |
-| D-4 | `email_unavailable` con 503 (Service Unavailable) en registro y reenvío; registro atómico; el reset sigue con el 200 (OK) genérico                                                               |
-| D-5 | Variables propias `BREVO_FROM_EMAIL` y `BREVO_TEST_RECIPIENT` (Brevo no puede enviar como `onboarding@resend.dev`)                                                                               |
-| D-6 | `httpx` como cliente de Brevo (un solo endpoint, ya es dependencia y tiene transporte de prueba); descartado `django-anymail`, que reemplazaría también el SDK de Resend                         |
+| D-2 | Un timeout de lectura de Resend también pasa a Brevo: un duplicado es inofensivo (los dos enlaces valen) y un correo que falta bloquea la cuenta. La `Idempotency-Key` de Resend no ayuda         |
+| D-3 | Se mantienen los topes por correo y por IP, sin tope global; solo cambia el comentario de `settings.py`                                                                                           |
+| D-4 | `email_unavailable` con 503 (Service Unavailable) en registro y reenvío; registro atómico; el reset sigue con el 200 (OK) genérico                                                                |
+| D-5 | Variables propias `BREVO_FROM_EMAIL` y `BREVO_TEST_RECIPIENT` (Brevo no puede enviar como `onboarding@resend.dev`)                                                                                |
+| D-6 | `httpx` como cliente de Brevo (un solo endpoint, ya es dependencia y tiene transporte de prueba); descartado `django-anymail`, que reemplazaría también el SDK de Resend                          |
 
 **Qué errores pasan a Brevo.** Solo cuando el primer proveedor levantó error; un 2xx es definitivo y un mensaje aceptado nunca se reenvía. Un intento por proveedor, porque el pedido HTTP espera (los reintentos son de Q-08).
 
-| Falla                                                                  | ¿Pasa a Brevo?                                              |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Conexión, DNS, TLS o timeout                                           | Sí                                                          |
-| 5xx                                                                    | Sí                                                          |
-| 429 (Too Many Requests): límite, cuota diaria o mensual                | Sí                                                          |
-| 402 (Payment Required)                                                 | Sí                                                          |
-| 401 (Unauthorized) o 403 (Forbidden): clave, IP o remitente            | Sí (D-1)                                                    |
-| 400 (Bad Request) o 422 (Unprocessable Entity): datos del mensaje, en el primer proveedor | No: los mismos datos fallarían igual; se levanta de inmediato |
+| Falla                                                                                                                                    | ¿Pasa a Brevo?                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Conexión, DNS, TLS o timeout                                                                                                             | Sí                                                                           |
+| 5xx                                                                                                                                      | Sí                                                                           |
+| 429 (Too Many Requests): límite, cuota diaria o mensual                                                                                  | Sí                                                                           |
+| 402 (Payment Required)                                                                                                                   | Sí                                                                           |
+| 401 (Unauthorized) o 403 (Forbidden): clave, IP o remitente                                                                              | Sí (D-1)                                                                     |
+| 400 (Bad Request) o 422 (Unprocessable Entity): datos del mensaje, en el primer proveedor                                                | No: los mismos datos fallarían igual; se levanta de inmediato                |
 | Cualquier error del respaldo después de un fallo transitorio del primero (p. ej. 400 (Bad Request) de Brevo por remitente no verificado) | Ya no hay a quién probar: `EnvioFallido`, que termina en `email_unavailable` |
-| Falta la clave en la configuración                                     | El proveedor se saltea                                      |
-| Cualquier otra excepción                                               | No: se trata como un bug                                    |
+| Falta la clave en la configuración                                                                                                       | El proveedor se saltea                                                       |
+| Cualquier otra excepción                                                                                                                 | No: se trata como un bug                                                     |
 
 **Lo que se descubrió al inspeccionar el SDK de Resend (2.53.2).** Se clasifica por código HTTP y no por clase: el SDK levanta `ValidationError` también con 401 (Unauthorized) y 403 (Forbidden) (por ejemplo, enviar desde `onboarding@resend.dev` a quien no es el dueño de la cuenta), y todo error de transporte (conexión, DNS, TLS, timeout) llega como un `ResendError` genérico con código 500 (Internal Server Error), sin distinguir un timeout de una conexión caída. El timeout por defecto del SDK es de 30 s; se fijó en 10 s para ambos proveedores, porque dos proveedores lentos sostendrían el registro durante un minuto. `ErrorDeProveedor` guarda solo proveedor, estado y tipo de error y se levanta `from None`: el texto del proveedor puede repetir direcciones (el 403 (Forbidden) de prueba nombra al dueño de la cuenta) y ningún log o traza debe llevarlas.
 
@@ -1155,12 +1167,12 @@ Resend va primero; si no puede tomar un mensaje, ese mismo mensaje sale por Brev
 
 > Q-08 lo cambió el mismo día (ver abajo): `email_unavailable` ya no significa «ningún proveedor pudo enviar» sino «la cola no aceptó el correo», y los proveedores caídos se reintentan en el worker. La tabla y el párrafo de `EnvioFallido` describen el estado del PR 2 antes de Q-08.
 
-| Flujo                  | Antes                                    | Ahora                                                                                                                                              |
-| ---------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Registro               | 500 (Internal Server Error), cuenta `PENDIENTE` | 503 (Service Unavailable) `email_unavailable`; `perform_create` corre en `transaction.atomic()`: no quedan `Usuario` ni `EmailAddress` y el visitante reintenta con el mismo correo |
-| Reenvío de confirmación | 500 (Internal Server Error)             | 503 (Service Unavailable) `email_unavailable`                                                                                                      |
-| Reset de contraseña    | 200 (OK) genérico, error en el log       | Igual (anti-enumeración)                                                                                                                           |
-| Aviso de cambio de contraseña | Error en el log, contraseña guardada | Igual (corre tras el commit)                                                                                                                  |
+| Flujo                         | Antes                                           | Ahora                                                                                                                                                                               |
+| ----------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registro                      | 500 (Internal Server Error), cuenta `PENDIENTE` | 503 (Service Unavailable) `email_unavailable`; `perform_create` corre en `transaction.atomic()`: no quedan `Usuario` ni `EmailAddress` y el visitante reintenta con el mismo correo |
+| Reenvío de confirmación       | 500 (Internal Server Error)                     | 503 (Service Unavailable) `email_unavailable`                                                                                                                                       |
+| Reset de contraseña           | 200 (OK) genérico, error en el log              | Igual (anti-enumeración)                                                                                                                                                            |
+| Aviso de cambio de contraseña | Error en el log, contraseña guardada            | Igual (corre tras el commit)                                                                                                                                                        |
 
 `EnvioFallido` se convierte en `ExcepcionAPI("email_unavailable")` dentro de `UsuarioAccountAdapter.send_mail`, con contexto `registro` o `reenvio` según el caso: un solo punto cubre las dos vistas y no cambia la forma del esquema OpenAPI (solo suma el código al enum de `ErrorEnvelope`). El frontend ya traducía por código: `ApiError` toma el texto de `errors.codes.<código>`, nunca de `detail`, `debug` ni `codigo`. Textos aprobados por el usuario el 22/11/2026: «No pudimos enviar el correo. Intentá de nuevo en unos minutos.» y «We couldn’t send the email. Try again in a few minutes.».
 
@@ -1194,14 +1206,14 @@ Archivos: `backend/filmai/email_backends.py`, `backend/filmai/email_validation.p
 
 **Pruebas y desarrollo.** La suite corre las tareas en el acto (`CELERY_TASK_ALWAYS_EAGER=True` cuando el subcomando es `test`): no depende de un broker. `send_test_email` no pasa por la cola: llama a `send_mail` directo y sigue enviando de forma sincrónica, porque es una herramienta de diagnóstico del proveedor. En desarrollo el worker de docker-compose ya corre; si se detiene, el registro responde 201 (Created) y el correo sale cuando vuelve.
 
-**Revisión de PR-Agent (#244, segunda pasada).** Dos observaciones de severidad baja, aceptadas como compromiso y sin cambio de código. (1) *Correo encolado antes del commit*: si el COMMIT del registro fallara después de encolar, el worker enviaría un enlace de una cuenta deshecha. No hay `ATOMIC_REQUESTS`, así que después del encolado solo queda el COMMIT; es un caso rarísimo y su costo es un correo con un enlace que no funciona (el visitante se vuelve a registrar). Pasar a `on_commit` cambiaría ese riesgo por el de la cuenta guardada sin correo, que es peor. (2) *Devolución del cupo no atómica*: `devolver_cupo` lee y escribe la lista sin bloqueo, así que dos fallos simultáneos pueden devolver una sola marca. El `allow_request` de DRF tiene la misma carrera (también lee y escribe sin bloqueo), así que los throttles nunca fueron exactos con pedidos simultáneos; la devolución no empeora esa precisión.
+**Revisión de PR-Agent (#244, segunda pasada).** Dos observaciones de severidad baja, aceptadas como compromiso y sin cambio de código. (1) _Correo encolado antes del commit_: si el COMMIT del registro fallara después de encolar, el worker enviaría un enlace de una cuenta deshecha. No hay `ATOMIC_REQUESTS`, así que después del encolado solo queda el COMMIT; es un caso rarísimo y su costo es un correo con un enlace que no funciona (el visitante se vuelve a registrar). Pasar a `on_commit` cambiaría ese riesgo por el de la cuenta guardada sin correo, que es peor. (2) _Devolución del cupo no atómica_: `devolver_cupo` lee y escribe la lista sin bloqueo, así que dos fallos simultáneos pueden devolver una sola marca. El `allow_request` de DRF tiene la misma carrera (también lee y escribe sin bloqueo), así que los throttles nunca fueron exactos con pedidos simultáneos; la devolución no empeora esa precisión.
 
 **Pendiente: prueba manual con cuentas reales (la hace el usuario; anotar el resultado acá).** El change `brevo-respaldo` se archivó el 22/11/2026 (se borró la carpeta) con estas pruebas sin hacer; lo que sigue las deja descritas por completo.
 
-1. *Cuenta de Brevo.* Crear una clave de API v3, verificar el remitente único de `BREVO_FROM_EMAIL` y revisar «Authorised IPs» (Settings → Security): permitir la IP de desarrollo o de producción, o quitar la restricción, porque con una IP no autorizada cada llamada responde 401 (Unauthorized).
-2. *Prueba de punta a punta en Docker* (`-p filmai` y `RUN_MIGRATIONS=false` si se corre desde un worktree), con `EMAIL_BACKEND=filmai.email_backends.RespaldoBackend` y el worker de Celery levantado: (a) con clave válida de Resend llegan el registro, el reenvío y el reset, el log del worker dice «vía Resend» y Brevo no se llama; (b) con `RESEND_API_KEY=re_invalida` (reiniciando el backend y el worker) llegan los mismos tres correos, y el log muestra el `WARNING` con 401 (Unauthorized) o 403 (Forbidden) y «vía Brevo»; (c) con las dos claves inválidas, desde Q-08 el registro responde 201 (Created) y el worker reintenta y termina en un `ERROR` en su log (ya no hay 503 (Service Unavailable) por proveedores caídos); el reset responde el 200 (OK) genérico; (d) con Redis caído, el registro responde 503 (Service Unavailable) con el mensaje traducido y no deja cuenta.
-3. *Q-08.* Con el worker detenido el registro responde 201 (Created) y el correo llega cuando el worker vuelve a arrancar.
-4. *Revisar el correo recibido:* que el HTML se vea bien, que esté el texto plano, si Brevo agrega el pie «Sent with Brevo» y si cae en la bandeja o en spam.
+1. _Cuenta de Brevo._ Crear una clave de API v3, verificar el remitente único de `BREVO_FROM_EMAIL` y revisar «Authorised IPs» (Settings → Security): permitir la IP de desarrollo o de producción, o quitar la restricción, porque con una IP no autorizada cada llamada responde 401 (Unauthorized).
+2. _Prueba de punta a punta en Docker_ (`-p filmai` y `RUN_MIGRATIONS=false` si se corre desde un worktree), con `EMAIL_BACKEND=filmai.email_backends.RespaldoBackend` y el worker de Celery levantado: (a) con clave válida de Resend llegan el registro, el reenvío y el reset, el log del worker dice «vía Resend» y Brevo no se llama; (b) con `RESEND_API_KEY=re_invalida` (reiniciando el backend y el worker) llegan los mismos tres correos, y el log muestra el `WARNING` con 401 (Unauthorized) o 403 (Forbidden) y «vía Brevo»; (c) con las dos claves inválidas, desde Q-08 el registro responde 201 (Created) y el worker reintenta y termina en un `ERROR` en su log (ya no hay 503 (Service Unavailable) por proveedores caídos); el reset responde el 200 (OK) genérico; (d) con Redis caído, el registro responde 503 (Service Unavailable) con el mensaje traducido y no deja cuenta.
+3. _Q-08._ Con el worker detenido el registro responde 201 (Created) y el correo llega cuando el worker vuelve a arrancar.
+4. _Revisar el correo recibido:_ que el HTML se vea bien, que esté el texto plano, si Brevo agrega el pie «Sent with Brevo» y si cae en la bandeja o en spam.
 
 **Resultado (22/11/2026, prueba manual de Marcos con el registro).**
 
