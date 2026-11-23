@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Search page (C-06, CU-008 and CU-010): typing a title or browsing the catalog with filters, following the canvas artboards «Search · desktop» and «Search · mobile». It builds on `GET /api/catalogo/browse/` (`tmdb-endpoints`, «Buscar combina discover y search») and links every card to the title page (`title-page-ui`).
+The Search page (C-06, CU-008 and CU-010): typing a title or browsing the catalog with filters, following the canvas artboards «Search · desktop» and «Search · mobile». It builds on `GET /api/catalogo/explore/` (`tmdb-endpoints`, «Buscar combina discover y search») and links every card to the title page (`title-page-ui`).
 
 ## Requirements
 
@@ -14,13 +14,13 @@ The Search page (C-06, CU-008 and CU-010): typing a title or browsing the catalo
 
 - GIVEN `/search?q=dune&genre=878&page=2`
 - WHEN the page loads
-- THEN it asks `browse/?q=dune&tipo=all&genero=878&page=2`
+- THEN it asks `explore/?q=dune&tipo=all&genero=878&page=2`
 
 #### Scenario: Reload with a person
 
 - GIVEN `/search?person=66633&role=director&type=tv`
 - WHEN the page loads
-- THEN it asks `browse/?tipo=tv&persona=66633&rol=director&page=1`
+- THEN it asks `explore/?tipo=tv&persona=66633&rol=director&page=1`
 
 ### Requirement: Field and closing
 
@@ -90,7 +90,7 @@ A person reaches Search from a navbar suggestion (`navbar-search`), which sets `
 - GIVEN the user picks «Christopher Nolan · Director» in the navbar
 - THEN the page is `/search?person=525&role=director`
 - AND the chip above the results reads «Christopher Nolan · Director»
-- AND it asks `browse/?tipo=all&persona=525&rol=director&page=1`
+- AND it asks `explore/?tipo=all&persona=525&rol=director&page=1`
 
 #### Scenario: Removing the person
 

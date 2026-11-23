@@ -64,7 +64,7 @@ export async function simularCatalogo(page: Page) {
       });
     // Las sugerencias del campo de Buscar y de la lupa: sin ninguna.
     if (recurso === "suggest") return route.fulfill({ json: { results: [] } });
-    if (recurso === "browse") {
+    if (recurso === "explore") {
       const pag = Number(url.searchParams.get("page") ?? 1);
       return route.fulfill({
         json: {

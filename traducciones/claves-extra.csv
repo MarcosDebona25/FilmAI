@@ -263,4 +263,4 @@ search.person.role,,label,"role, gender","{role, select, director {{gender, sele
 search.person.remove,,label,name,Quitar el filtro {name},Remove filter {name},aprobado
 search.person.lookingFor,,label,name,¿Buscabas a {name}? <link>Ver sus producciones</link>,Looking for {name}? <link>See their titles</link>,aprobado
 lists.suggestions.basisRecent,,label,,Según lo que viste hace poco.,Based on what you watched most recently.,aprobado
-nav.main.browse,,label,,Explorar,Browse,aprobado
+nav.main.explore,,label,,Explorar,Explore,aprobado

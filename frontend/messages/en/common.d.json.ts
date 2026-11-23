@@ -23,7 +23,7 @@ declare const messages: {
       "termsUpdated": "Last updated: {date}",
       "termsOnPage": "On this page",
       "termsQuestions": "Questions? Write to us at {email}.",
-      "browse": "Browse"
+      "explore": "Explore"
     },
     "account": {
       "userMenuLabel": "{name}’s menu",

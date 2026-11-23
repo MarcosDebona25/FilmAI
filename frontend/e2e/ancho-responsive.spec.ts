@@ -138,11 +138,11 @@ for (const viewport of VIEWPORTS) {
         expect(Math.abs(logo - contenido)).toBeLessThanOrEqual(1);
         expect(Math.abs(pie - contenido)).toBeLessThanOrEqual(1);
       } else {
-        // Celular (opción B): el encabezado solo tiene Sign up; Home, Browse y
+        // Celular (opción B): el encabezado solo tiene Sign up; Home, Explore y
         // Log in están en la barra inferior. Todos se tocan cómodos.
         const objetivos = [
           page.getByRole("banner").getByRole("link", { name: "Sign up", exact: true }),
-          ...["Home", "Browse", "Log in"].map((nombre) =>
+          ...["Home", "Explore", "Log in"].map((nombre) =>
             page
               .getByRole("navigation", { name: "Main" })
               .getByRole("link", { name: nombre, exact: true })

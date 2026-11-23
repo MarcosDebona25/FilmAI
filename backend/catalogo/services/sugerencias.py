@@ -15,7 +15,7 @@ Nolan» primero con «nolan» y a «Dune» primero con «dune»), pero se limpia
   filtros), solo personas y hasta 5.
 """
 
-from catalogo.services.browse import es_relevante
+from catalogo.services.explore import es_relevante
 
 MAX_SUGERENCIAS = 5
 MAX_PERSONAS = 2

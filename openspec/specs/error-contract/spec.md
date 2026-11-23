@@ -108,7 +108,7 @@ exact existing messages and aliases; these tables define public semantics.
 | `server_error`                       | 500 (Internal Server Error)                                   | Unexpected application failure.                                                                           |
 | `upstream_bad_request`               | 400 (Bad Request)                                   | TMDB rejected request parameters.                                                                         |
 | `upstream_not_found`                 | 404 (Not Found)                                   | TMDB resource absent.                                                                                     |
-| `person_not_found`                   | 404 (Not Found)                                   | `browse/?persona=` with a person id TMDB does not know (13/11/2026).                                      |
+| `person_not_found`                   | 404 (Not Found)                                   | `explore/?persona=` with a person id TMDB does not know (13/11/2026).                                      |
 | `upstream_error`                     | 502 (Bad Gateway)                                   | TMDB 5xx, unexpected HTTP response or exhausted retry budget.                                             |
 | `upstream_unavailable`               | 503 (Service Unavailable)                                   | TMDB transport/decoding failure.                                                                          |
 | `invalid_token`                      | 401 (Unauthorized)                                   | JWT malformed, expired, blacklisted, wrong type or without required claims.                               |

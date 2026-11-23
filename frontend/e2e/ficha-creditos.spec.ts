@@ -18,7 +18,7 @@ async function preparar(page: Page) {
   await sinSesion(page);
   await simularCatalogo(page);
   // Se registra después que las de `simularCatalogo`: Playwright prueba primero la última.
-  await page.route("**/api/catalogo/browse/**", (route) => {
+  await page.route("**/api/catalogo/explore/**", (route) => {
     const persona = new URL(route.request().url()).searchParams.get("persona") ?? "";
     return route.fulfill({
       json: {

@@ -50,7 +50,7 @@ describe("footer del canvas", () => {
 
     expect(found[en.nav.main.brandHomeLabel]).toHaveAttribute("href", routes.explore);
     expect(found[en.nav.main.home]).toHaveAttribute("href", routes.explore);
-    expect(found[en.nav.main.browse]).toHaveAttribute("href", routes.search);
+    expect(found[en.nav.main.explore]).toHaveAttribute("href", routes.search);
     expect(found[en.footer.main.myLists]).toHaveAttribute("href", routes.lists);
     expect(found[en.nav.main.ratingsReviews]).toHaveAttribute("href", routes.myReviews);
     expect(found[en.nav.main.profile]).toHaveAttribute("href", routes.profile);

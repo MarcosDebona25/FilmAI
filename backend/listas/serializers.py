@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from catalogo.models import ID_TMDB_MAXIMO
 from catalogo.services.adapter import dominio_a_tmdb
-from catalogo.services.browse import NOTAS
+from catalogo.services.explore import NOTAS
 from catalogo.services.traducciones import ProduccionLocalizadaMixin
 from filmai.errores.base import ExcepcionAPI
 from filmai.errores.serializadores import FronteraErroresMixin

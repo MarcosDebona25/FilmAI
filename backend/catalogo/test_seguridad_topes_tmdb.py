@@ -34,7 +34,7 @@ from catalogo.presupuesto import (
     contar_llamadas,
     registrar_llamada,
 )
-from catalogo.services.browse import explorar
+from catalogo.services.explore import explorar
 
 _PAGINA_VACIA = {"page": 1, "total_pages": 0, "total_results": 0, "results": []}
 

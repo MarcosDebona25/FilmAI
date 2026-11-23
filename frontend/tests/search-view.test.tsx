@@ -58,7 +58,7 @@ const estado = vi.hoisted(() => ({
   /** Si está, la página N responde `porPagina[N - 1]`. */
   porPagina: null as null | Record<string, unknown>[],
   fallaPagina: null as null | number,
-  /** Código con el que `browse/` responde 404 (Not Found), p. ej. `person_not_found`. */
+  /** Código con el que `explore/` responde 404 (Not Found), p. ej. `person_not_found`. */
   noEncontrado: null as null | string,
   pedidos: [] as string[],
   /** Lo que contesta `suggest/` (el mismo pedido que usa la lupa de la navbar). */
@@ -153,14 +153,15 @@ afterEach(() => {
 
 /** El campo de texto: Género, Año y Nota (`<select>`) también son «combobox». */
 const campo = () => screen.getByRole("combobox", { name: en.common.search.placeholder });
-const pedidosDeBusqueda = () => estado.pedidos.filter((p) => p.startsWith("/api/catalogo/browse/"));
+const pedidosDeBusqueda = () =>
+  estado.pedidos.filter((p) => p.startsWith("/api/catalogo/explore/"));
 
 describe("Buscar", () => {
   it("sin nada elegido pide los populares de todo y no muestra contador", async () => {
     render(<SearchView />, { locale: "en" });
 
     expect(await screen.findByText("Dune: Part Two")).toBeInTheDocument();
-    expect(pedidosDeBusqueda()).toEqual(["/api/catalogo/browse/?tipo=all&page=1"]);
+    expect(pedidosDeBusqueda()).toEqual(["/api/catalogo/explore/?tipo=all&page=1"]);
     // La región viva existe, pero vacía: no hay contador.
     expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
@@ -441,7 +442,7 @@ describe("Buscar", () => {
 });
 
 describe("Buscar con una persona", () => {
-  /** Recorte de `browse/?persona=525&rol=director` (el backend manda `persona`). */
+  /** Recorte de `explore/?persona=525&rol=director` (el backend manda `persona`). */
   const NOLAN = {
     id: 525,
     name: "Christopher Nolan",
@@ -459,7 +460,7 @@ describe("Buscar con una persona", () => {
     const chip = await screen.findByText("Christopher Nolan · Director");
     expect(chip).toBeInTheDocument();
     expect(pedidosDeBusqueda()[0]).toBe(
-      "/api/catalogo/browse/?tipo=all&persona=525&rol=director&page=1"
+      "/api/catalogo/explore/?tipo=all&persona=525&rol=director&page=1"
     );
     // Sin texto, el contador nombra a la persona.
     expect(screen.getByRole("status")).toHaveTextContent("12 results for “Christopher Nolan”");

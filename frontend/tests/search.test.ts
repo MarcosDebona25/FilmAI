@@ -87,7 +87,7 @@ describe("«A estrenar»", () => {
     expect(busqueda.anio).toBe("proximos");
     expect(urlDeBusqueda(busqueda)).toBe("/search?q=avatar&year=upcoming");
     expect(consultaApi(busqueda)).toBe(
-      "/api/catalogo/browse/?q=avatar&tipo=all&a_estrenar=true&page=1"
+      "/api/catalogo/explore/?q=avatar&tipo=all&a_estrenar=true&page=1"
     );
     expect(filtrosActivos(busqueda)).toBe(1);
   });
@@ -103,7 +103,7 @@ describe("«A estrenar»", () => {
 });
 
 describe("consultaApi", () => {
-  it("traduce al contrato de browse/ (nota con +, «Menos de 5» como m5)", () => {
+  it("traduce al contrato de explore/ (nota con +, «Menos de 5» como m5)", () => {
     expect(
       consultaApi({
         ...BUSQUEDA_VACIA,
@@ -113,9 +113,9 @@ describe("consultaApi", () => {
         nota: "8",
         pagina: 3,
       })
-    ).toBe("/api/catalogo/browse/?q=dune&tipo=all&genero=878&anio=2021&nota=8%2B&page=3");
+    ).toBe("/api/catalogo/explore/?q=dune&tipo=all&genero=878&anio=2021&nota=8%2B&page=3");
     expect(consultaApi({ ...BUSQUEDA_VACIA, nota: "lt5" })).toBe(
-      "/api/catalogo/browse/?tipo=all&nota=m5&page=1"
+      "/api/catalogo/explore/?tipo=all&nota=m5&page=1"
     );
   });
 });
@@ -201,7 +201,7 @@ describe("opcionesDeAnio", () => {
 
     expect(busqueda.anio).toBe("1980s");
     expect(urlDeBusqueda(busqueda)).toBe("/search?year=1980s");
-    expect(consultaApi(busqueda)).toBe("/api/catalogo/browse/?tipo=all&decada=1980&page=1");
+    expect(consultaApi(busqueda)).toBe("/api/catalogo/explore/?tipo=all&decada=1980&page=1");
     // Lo que no es una década válida se ignora.
     expect(busquedaDesdeUrl(new URLSearchParams("year=1985s")).anio).toBeNull();
     expect(busquedaDesdeUrl(new URLSearchParams("year=1890s")).anio).toBeNull();
@@ -220,7 +220,7 @@ describe("persona en la búsqueda", () => {
       tipo: "movie",
     });
     expect(consultaApi(nolan)).toBe(
-      "/api/catalogo/browse/?tipo=all&persona=525&rol=director&page=1"
+      "/api/catalogo/explore/?tipo=all&persona=525&rol=director&page=1"
     );
   });
 

@@ -1,7 +1,7 @@
 /**
  * Estado de Buscar (C-06): vive en la URL para que recargar, compartir y
  * volver atrás conserven la búsqueda. Acá se traduce entre la URL (`/search?…`,
- * nombres en inglés como el `?type=` del Home) y la API (`browse/`).
+ * nombres en inglés como el `?type=` del Home) y la API (`explore/`).
  */
 
 import type { ContentType } from "@/components/features/TypeSelector";
@@ -34,7 +34,7 @@ export interface Busqueda {
   pagina: number;
 }
 
-/** Mismo tope que valida el backend (`BrowseView.MAX_TEXTO`). */
+/** Mismo tope que valida el backend (`ExploreView.MAX_TEXTO`). */
 export const MAX_TEXTO = 50;
 export const NOTAS: Nota[] = ["9", "8", "7", "6", "5", "lt5"];
 const TIPOS: ContentType[] = ["all", "movie", "tv"];
@@ -112,7 +112,7 @@ export function consultaApi(busqueda: Busqueda) {
     if (busqueda.rol !== null) params.set("rol", busqueda.rol);
   }
   params.set("page", String(busqueda.pagina));
-  return `/api/catalogo/browse/?${params}`;
+  return `/api/catalogo/explore/?${params}`;
 }
 
 /** Género, año, nota y persona: lo que cuenta el badge de «Filters» en celular. */

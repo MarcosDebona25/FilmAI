@@ -13,7 +13,7 @@ from collections import Counter
 from itertools import zip_longest
 
 from catalogo.models import Calificacion, TipoProduccion
-from catalogo.services.browse import tiene_poster
+from catalogo.services.explore import tiene_poster
 from listas.models import ClaveLista, Tiene
 
 NOTA_MINIMA = 7

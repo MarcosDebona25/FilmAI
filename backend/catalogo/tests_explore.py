@@ -1,4 +1,4 @@
-"""Pruebas de Buscar (C-06): `GET /api/catalogo/browse/` y `genres/?tipo=all`.
+"""Pruebas de Buscar (C-06): `GET /api/catalogo/explore/` y `genres/?tipo=all`.
 
 El diseño está en `openspec/changes/search-catalogo/design.md`. TMDB se
 reemplaza por un servicio falso que responde páginas reales capturadas el
@@ -75,7 +75,7 @@ class TMDBFalso:
         ]
 
 
-class BrowseBase(SimpleTestCase):
+class ExploreBase(SimpleTestCase):
     # Qué servicio falso usa cada clase de tests; una subclase puede cambiarlo.
     Falso = TMDBFalso
 
@@ -94,7 +94,7 @@ class BrowseBase(SimpleTestCase):
         self.api = APIClient()
 
     def buscar(self, **params):
-        return self.api.get("/api/catalogo/browse/", params, HTTP_ACCEPT_LANGUAGE="en")
+        return self.api.get("/api/catalogo/explore/", params, HTTP_ACCEPT_LANGUAGE="en")
 
     def ok(self, **params):
         respuesta = self.buscar(**params)
@@ -102,7 +102,7 @@ class BrowseBase(SimpleTestCase):
         return respuesta.data
 
 
-class SinTextoTests(BrowseBase):
+class SinTextoTests(ExploreBase):
     """Sin texto: `discover`, que admite todos los filtros."""
 
     def test_un_tipo_usa_discover_por_popularidad_con_los_filtros(self):
@@ -142,14 +142,14 @@ class SinTextoTests(BrowseBase):
     def test_un_anio_futuro_no_pide_minimo_de_votos(self):
         # Lo anunciado no tiene votos: 2027 tiene 946 películas en TMDB y
         # ninguna con 50 (verificado el 14/10/2026).
-        with patch("catalogo.services.browse.anio_actual", return_value=2026):
+        with patch("catalogo.services.explore.anio_actual", return_value=2026):
             self.ok(tipo="movie", anio=2027)
 
         [(*_, params)] = self.tmdb.de("discover")
         self.assertIsNone(params["min_votos"])
 
     def test_el_anio_actual_sigue_pidiendo_el_minimo(self):
-        with patch("catalogo.services.browse.anio_actual", return_value=2026):
+        with patch("catalogo.services.explore.anio_actual", return_value=2026):
             self.ok(tipo="movie", anio=2026)
 
         [(*_, params)] = self.tmdb.de("discover")
@@ -157,7 +157,7 @@ class SinTextoTests(BrowseBase):
 
     def test_un_anio_futuro_con_nota_conserva_el_minimo(self):
         # Una nota sin votos no dice nada: filtrar por nota exige el mínimo.
-        with patch("catalogo.services.browse.anio_actual", return_value=2026):
+        with patch("catalogo.services.explore.anio_actual", return_value=2026):
             self.ok(tipo="movie", anio=2027, nota="7+")
 
         [(*_, params)] = self.tmdb.de("discover")
@@ -211,12 +211,12 @@ class SinTextoTests(BrowseBase):
         self.assertEqual(self.tmdb.de("search"), [])
 
 
-class AEstrenarTests(BrowseBase):
+class AEstrenarTests(ExploreBase):
     """«A estrenar»: lo que estrena después de hoy (pedido del usuario, 14/10/2026)."""
 
     def setUp(self):
         super().setUp()
-        parche = patch("catalogo.services.browse.hoy", return_value=date(2026, 10, 14))
+        parche = patch("catalogo.services.explore.hoy", return_value=date(2026, 10, 14))
         parche.start()
         self.addCleanup(parche.stop)
 
@@ -253,7 +253,7 @@ class AEstrenarTests(BrowseBase):
         self.assertEqual(respuesta.data["errors"][0]["field"], "a_estrenar")
 
 
-class DecadasTests(BrowseBase):
+class DecadasTests(ExploreBase):
     """Antes de 1990, el año se elige por década (pedido del usuario, 14/10/2026)."""
 
     def test_sin_texto_pide_la_decada_entera_con_minimo_de_votos(self):
@@ -289,7 +289,7 @@ def _puntaje(item):
     return max(item["vote_count"], item.get("popularity", 0) * 100)
 
 
-class TextoTests(BrowseBase):
+class TextoTests(ExploreBase):
     """Con texto: los primeros 100 por tipo, ordenados por votos y popularidad.
 
     El orden de TMDB es de relevancia y deja arriba títulos con 0 votos
@@ -339,7 +339,7 @@ class TextoTests(BrowseBase):
         )
 
 
-class VentanaTests(BrowseBase):
+class VentanaTests(ExploreBase):
     """Texto con género o nota: los primeros 100 de cada tipo, filtrados acá."""
 
     def test_pide_hasta_5_paginas_y_filtra_por_genero(self):
@@ -423,7 +423,7 @@ class VentanaTests(BrowseBase):
         self.assertEqual(respuesta.status_code, 502)
 
 
-class ValidacionTests(BrowseBase):
+class ValidacionTests(ExploreBase):
     def test_texto_de_mas_de_50(self):
         respuesta = self.buscar(q="x" * 51)
 
@@ -459,7 +459,7 @@ class ValidacionTests(BrowseBase):
         )
 
 
-class GenerosTodoTests(BrowseBase):
+class GenerosTodoTests(ExploreBase):
     def test_suma_a_los_de_peliculas_los_cinco_solo_de_series(self):
         respuesta = self.api.get(
             "/api/catalogo/genres/", {"tipo": "all"}, HTTP_ACCEPT_LANGUAGE="en"

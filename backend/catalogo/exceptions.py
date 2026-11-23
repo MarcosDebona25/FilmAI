@@ -74,7 +74,7 @@ class CalificacionDuplicada(APIException):
 
 
 class PersonaNoEncontrada(APIException):
-    """`browse/?persona=` con un id que TMDB no conoce (p. ej. una persona borrada).
+    """`explore/?persona=` con un id que TMDB no conoce (p. ej. una persona borrada).
 
     No se reutiliza `TMDBNotFound`: ese cae en `upstream_not_found`, que dice
     «el recurso no existe en TMDB» sin decir cuál. Acá el frontend necesita

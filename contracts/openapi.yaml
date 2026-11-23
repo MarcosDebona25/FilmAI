@@ -834,15 +834,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-  /api/catalogo/browse/:
+  /api/catalogo/explore/:
     get:
-      operationId: catalogo_browse_retrieve
+      operationId: catalogo_explore_retrieve
       description: |-
         Buscar (C-06): texto opcional, tipo y filtros, en una sola respuesta.
 
         `q` admite cualquier texto: se recorta y se mide después (decisión del
         14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
-        TMDB para cada combinación lo decide `services/browse.py`.
+        TMDB para cada combinación lo decide `services/explore.py`.
 
         `persona` (id de TMDB) y `rol` (`director` o `actor`) filtran por lo que
         hizo esa persona (13/11/2026); una persona que TMDB no conoce es un 404
@@ -1143,7 +1143,7 @@ paths:
       description: |-
         Sugerencias de la navbar: títulos y personas con una sola llamada a TMDB.
 
-        No encola la materialización (a diferencia de `browse/` y los listados):
+        No encola la materialización (a diferencia de `explore/` y los listados):
         cada tecla pedida dejaría hasta 5 tareas por títulos que nadie abrió; la
         ficha materializa cuando se abre. Tiene su propio límite (`sugerencias`,
         120 por minuto) para que escribir no gaste el cupo de la página que el

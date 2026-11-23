@@ -11,7 +11,7 @@ from django.core.cache import cache as dj_cache
 from django.test import SimpleTestCase
 from rest_framework.test import APIClient
 
-from catalogo.services.browse import con_poster, tiene_poster
+from catalogo.services.explore import con_poster, tiene_poster
 
 CON = {
     "id": 1,
@@ -92,12 +92,12 @@ class DescubrimientoTests(Base):
     def test_buscar_sin_texto_descarta_los_sin_poster(self):
         for tipo in ("movie", "tv", "all"):
             with self.subTest(tipo=tipo):
-                ids, _ = self.ids("/api/catalogo/browse/", tipo=tipo)
+                ids, _ = self.ids("/api/catalogo/explore/", tipo=tipo)
                 self.assertTrue(ids)
                 self.assertEqual(set(ids), {1})
 
     def test_buscar_con_texto_los_encuentra(self):
-        ids, _ = self.ids("/api/catalogo/browse/", q="poster", tipo="movie")
+        ids, _ = self.ids("/api/catalogo/explore/", q="poster", tipo="movie")
 
         # La ventana pide 5 páginas iguales: se comparan los ids distintos.
         self.assertEqual(set(ids), {1, 2, 3})

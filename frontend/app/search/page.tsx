@@ -6,7 +6,7 @@ import { SearchView } from "@/components/features/SearchView";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("nav.main");
-  return { title: `${t("browse")} | FilmAI` };
+  return { title: `${t("explore")} | FilmAI` };
 }
 
 /** Buscar (C-06). Pública, como el Home y la ficha. */

@@ -1,4 +1,4 @@
-"""Pruebas del filtro por persona de Buscar (13/11/2026): `browse/?persona=&rol=`.
+"""Pruebas del filtro por persona de Buscar (13/11/2026): `explore/?persona=&rol=`.
 
 El diseño está en `openspec/specs/search-ui/spec.md` y `docs/decisiones.md` (13/11/2026). TMDB se
 reemplaza por un servicio falso que responde las filmografías reales de tres
@@ -21,8 +21,8 @@ from django.test import SimpleTestCase
 from catalogo.cache import TMDBClientCache
 from catalogo.client import TMDBClient
 from catalogo.exceptions import TMDBNotFound, TMDBServerError
-from catalogo.services.browse import explorar
-from catalogo.tests_browse import BrowseBase, TMDBFalso
+from catalogo.services.explore import explorar
+from catalogo.tests_explore import ExploreBase, TMDBFalso
 
 DATOS = json.loads(
     (Path(__file__).parent / "test_datos" / "tmdb_buscar_personas.json").read_text()
@@ -32,7 +32,7 @@ NOLAN, GILLIGAN, HANKS = 525, 66633, 31
 
 
 class TMDBFalsoPersonas(TMDBFalso):
-    """El de `tests_browse`, más el detalle y los créditos de las 3 personas."""
+    """El de `tests_explore`, más el detalle y los créditos de las 3 personas."""
 
     def get_person_detail(self, id_persona):
         self.llamadas.append(("person_detail", id_persona))
@@ -48,7 +48,7 @@ class TMDBFalsoPersonas(TMDBFalso):
         return copy.deepcopy(PERSONAS[str(id_persona)])
 
 
-class PersonaBase(BrowseBase):
+class PersonaBase(ExploreBase):
     Falso = TMDBFalsoPersonas
 
     def titulos(self, datos):
@@ -219,7 +219,7 @@ class FiltrosEnMemoriaTests(PersonaBase):
         )
 
     def test_a_estrenar(self):
-        with patch("catalogo.services.browse.hoy", return_value=date(2026, 6, 1)):
+        with patch("catalogo.services.explore.hoy", return_value=date(2026, 6, 1)):
             datos = self.ok(persona=NOLAN, rol="director", a_estrenar="true")
 
         self.assertEqual(self.titulos(datos), ["The Odyssey"])

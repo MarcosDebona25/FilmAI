@@ -8,12 +8,12 @@ The search of the desktop navbar (13/11/2026; variant changed on 14/11/2026 to a
 
 ### Requirement: Placement
 
-On desktop (from 768 px) the navbar MUST show, on the right and before the account menu or the «Log in · Sign up» links, a magnifier button, and MUST NOT show «Search» among the left links. Between «Home» and «Lists» it MUST show «Browse» («Explorar», key `nav.main.browse`, 21/11/2026), with or without a session, linking to `/search` with no text and marked `aria-current="page"` on `/search`; it coexists with the magnifier. The button MUST have an accessible name, `aria-expanded` (true while the field is unfolded) and `aria-controls` pointing to the field's container. Pressing it MUST unfold a search field in the same place and move the focus into it. The field is a pill `clamp(12rem, 24vw, 20rem)` wide (15.4 rem at 1024 px and 12 rem at 768 px; canvas, section 13, 15/11/2026). The field MUST fold with Escape (when the list is closed), with its ✕ button, or when it loses the focus with no text; with Escape or ✕ the focus MUST return to the magnifier, and a field that loses the focus with text MUST stay unfolded. Below 768 px the navbar MUST NOT show the magnifier nor the field. On `/search` the navbar MUST NOT render them.
+On desktop (from 768 px) the navbar MUST show, on the right and before the account menu or the «Log in · Sign up» links, a magnifier button, and MUST NOT show «Search» among the left links. Between «Home» and «Lists» it MUST show «Explore» («Explorar», key `nav.main.explore`, 21/11/2026), with or without a session, linking to `/search` with no text and marked `aria-current="page"` on `/search`; it coexists with the magnifier. The button MUST have an accessible name, `aria-expanded` (true while the field is unfolded) and `aria-controls` pointing to the field's container. Pressing it MUST unfold a search field in the same place and move the focus into it. The field is a pill `clamp(12rem, 24vw, 20rem)` wide (15.4 rem at 1024 px and 12 rem at 768 px; canvas, section 13, 15/11/2026). The field MUST fold with Escape (when the list is closed), with its ✕ button, or when it loses the focus with no text; with Escape or ✕ the focus MUST return to the magnifier, and a field that loses the focus with text MUST stay unfolded. Below 768 px the navbar MUST NOT show the magnifier nor the field. On `/search` the navbar MUST NOT render them.
 
 #### Scenario: Desktop home
 
 - GIVEN a 1440 px viewport on `/home`
-- THEN the navbar's left links are «Home», «Browse» and «Lists» (with a session; without one, «Home» and «Browse»)
+- THEN the navbar's left links are «Home», «Explore» and «Lists» (with a session; without one, «Home» and «Explore»)
 - AND the magnifier sits before the account menu, with `aria-expanded="false"`
 
 #### Scenario: Unfolding and folding

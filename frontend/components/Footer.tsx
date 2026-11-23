@@ -91,7 +91,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link href={routes.search} className={linkClass}>
-                    {nav("browse")}
+                    {nav("explore")}
                   </Link>
                 </li>
                 <li>

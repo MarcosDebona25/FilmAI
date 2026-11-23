@@ -41,7 +41,7 @@ for (const viewport of viewports) {
         page.getByRole("main").getByRole("link", { name: es.nav.main.backHome })
       ).toHaveAttribute("href", "/home");
       await expect(
-        page.getByRole("main").getByRole("link", { name: es.nav.main.browse })
+        page.getByRole("main").getByRole("link", { name: es.nav.main.explore })
       ).toHaveAttribute("href", "/search");
       await sinDesborde(page);
     });
@@ -117,8 +117,8 @@ for (const viewport of viewports) {
       await expect(principal).toHaveCount(1);
       await expect(principal.getByRole("link")).toHaveText(
         viewport.movil
-          ? [es.nav.main.home, es.nav.main.browse, es.nav.main.lists, es.nav.main.profileShort]
-          : [es.nav.main.home, es.nav.main.browse, es.nav.main.lists]
+          ? [es.nav.main.home, es.nav.main.explore, es.nav.main.lists, es.nav.main.profileShort]
+          : [es.nav.main.home, es.nav.main.explore, es.nav.main.lists]
       );
       if (viewport.movil) {
         const caja = await principal.boundingBox();

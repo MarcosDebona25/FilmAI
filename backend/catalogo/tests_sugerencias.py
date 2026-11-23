@@ -19,7 +19,7 @@ from rest_framework.test import APIClient
 
 from catalogo.cache import ENDPOINT_TTLS, TMDBClientCache
 from catalogo.client import TMDBClient
-from catalogo.services.browse import es_relevante
+from catalogo.services.explore import es_relevante
 
 DATOS = json.loads(
     (Path(__file__).parent / "test_datos" / "tmdb_buscar_personas.json").read_text()

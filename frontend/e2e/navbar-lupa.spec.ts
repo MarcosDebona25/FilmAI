@@ -31,7 +31,7 @@ async function preparar(page: Page) {
       },
     })
   );
-  await page.route("**/api/catalogo/browse/**", (route) =>
+  await page.route("**/api/catalogo/explore/**", (route) =>
     route.fulfill({
       json: {
         page: 1,
@@ -224,7 +224,7 @@ test.describe("lupa de la navbar en celular", () => {
     await expect(lupa(page)).toBeHidden();
     await expect(
       page.getByRole("navigation", { name: en.nav.main.mainLabel }).getByRole("link", {
-        name: en.nav.main.browse,
+        name: en.nav.main.explore,
       })
     ).toBeVisible();
     // «/» tampoco la despliega: en celular no hay campo en la barra.

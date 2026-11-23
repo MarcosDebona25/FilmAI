@@ -23,7 +23,7 @@ async function preparar(page: Page) {
   await page.route("**/api/catalogo/suggest/**", (route) =>
     route.fulfill({ json: { results: [RYAN, { ...reacher, media_type: "tv" }] } })
   );
-  await page.route("**/api/catalogo/browse/**", (route) =>
+  await page.route("**/api/catalogo/explore/**", (route) =>
     route.fulfill({
       json: {
         page: 1,

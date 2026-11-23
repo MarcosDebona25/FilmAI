@@ -1545,3 +1545,14 @@ Archivos: `backend/chatbot/{tests_sse,tests_servicio,tests_recorte}.py`, `backen
 - **Último test dormilón.** `TMDBClientTest.test_http_errors_map_to_domain_exceptions` anula `catalogo.client.time.sleep` y deja de esperar 7 s.
 
 Archivos: `.github/workflows/ci.yml`, `frontend/tests/access-screens.test.tsx`, `backend/catalogo/tests.py`, `docs/05_Plan_de_Desarrollo.md` y este archivo.
+
+### 23/11/2026 — «Browse» pasa a llamarse «Explore» en todo el proyecto
+
+La sección que lleva a `/search` sin texto se llama «Explore» en inglés (en español ya decía «Explorar»). El cambio no se limita al texto: el nombre se reemplaza en todo el código para que la etiqueta, la clave, el endpoint y el módulo digan lo mismo.
+
+- **Texto y clave.** `nav.main.browse` pasa a `nav.main.explore` («Explorar» / «Explore») en `traducciones/claves-extra.csv`; catálogos regenerados. La usan la navbar, la barra inferior del celular, el título de `/search`, la miga de la ficha, el pie y la pantalla 404 (Not Found).
+- **API.** `GET /api/catalogo/browse/` pasa a `GET /api/catalogo/explore/` (`ExploreView`, `name="explore"`); contrato regenerado (`operationId: catalogo_explore_retrieve`). No queda alias de la ruta vieja: el único cliente es este frontend, que se actualiza en el mismo commit.
+- **Backend.** `catalogo/services/browse.py` pasa a `services/explore.py`, y los tests a `tests_explore.py`, `tests_explore_persona.py` y `tests_explore_relevancia.py` (`ExploreBase`).
+- **Sin tocar.** «browser» (navegador) no cambia. Las entradas anteriores de este archivo mantienen «Browse», porque registran lo que se decidió en su momento.
+
+Archivos: `backend/catalogo/{urls,views,exceptions}.py`, `backend/catalogo/services/{explore,recomendado,sugerencias}.py`, `backend/listas/{views,serializers}.py`, `backend/filmai/errores/catalogo.py`, tests de `catalogo`, `contracts/openapi.yaml`, `traducciones/claves-extra.csv`, `frontend/messages/`, `frontend/lib/search.ts`, componentes de navegación y búsqueda, tests y e2e del frontend, `docs/04_Lineamientos_UI.md`, `docs/05_Plan_de_Desarrollo.md` y las specs de `openspec/specs/` (`navbar-search`, `search-ui`, `tmdb-endpoints`, `error-contract`, `catalog-materialization`).

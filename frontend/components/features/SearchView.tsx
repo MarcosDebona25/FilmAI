@@ -55,7 +55,7 @@ import { useSentinel, ANTICIPO } from "@/lib/use-sentinel";
 import { useSugerencias } from "@/lib/use-sugerencias";
 import { useCatalog, useCatalogPaginas } from "@/lib/use-catalog";
 
-/** La persona del filtro, como la devuelve `browse/` (el nombre sale de TMDB, no de la URL). */
+/** La persona del filtro, como la devuelve `explore/` (el nombre sale de TMDB, no de la URL). */
 type PersonaFiltrada = {
   id: number;
   name: string;
@@ -97,7 +97,7 @@ function mensaje(error: unknown) {
 /**
  * Buscar (C-06), según el canvas. La búsqueda vive en la URL; cambiarla usa la
  * History API como el selector del Home, así no se vuelve a pedir la página al
- * servidor y «Atrás» sale de Buscar. Los datos los arma `GET /api/catalogo/browse/`.
+ * servidor y «Atrás» sale de Buscar. Los datos los arma `GET /api/catalogo/explore/`.
  */
 export function SearchView() {
   const t = useTranslations();
@@ -354,7 +354,7 @@ export function SearchView() {
       className="page-container flex flex-col gap-4 pt-5 pb-[7.5rem] md:gap-7 md:pt-6 md:pb-20"
     >
       <h1 className="mb-[0.9375rem] font-display text-[2.75rem] leading-none md:sr-only">
-        {t("nav.main.browse")}
+        {t("nav.main.explore")}
       </h1>
 
       <search aria-label={t("search.input.label")} className="flex flex-col gap-4 md:gap-7">

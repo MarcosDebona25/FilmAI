@@ -277,23 +277,23 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 
 ### Requirement: Person filter in Buscar (13/11/2026)
 
-`GET /api/catalogo/browse/` MUST accept `persona` (a positive TMDB person id; otherwise 400 (Bad Request) with `invalid`, `min_value` or `max_value`) and `rol` (`director` or `actor`; absent means both; otherwise 400 (Bad Request) `invalid_choice`). With `persona` it MUST read the person's `combined_credits` (cached 24 h) and keep, for `actor`, the cast without shows in News or Talk (10763, 10767), and for `director`, the crew with `job` «Director» in movies and «Creator» in shows. It MUST drop duplicates by type and id, apply type, genre, year, `a_estrenar`, `decada` and rating in memory as with text, keep only titles whose `title`, `name`, `original_title` or `original_name` contains `q` (normalized: lowercase, without accents, spaces collapsed) when there is text, and sort and paginate like a text search. The answer MUST add `persona: {id, name, rol, gender, profile_path}` read from TMDB's `person/{id}` (cached 24 h). An id TMDB does not know MUST answer 404 (Not Found) with `person_not_found`. TMDB's `discover` with `with_people` MUST NOT be used (TMDB ignores it for shows).
+`GET /api/catalogo/explore/` MUST accept `persona` (a positive TMDB person id; otherwise 400 (Bad Request) with `invalid`, `min_value` or `max_value`) and `rol` (`director` or `actor`; absent means both; otherwise 400 (Bad Request) `invalid_choice`). With `persona` it MUST read the person's `combined_credits` (cached 24 h) and keep, for `actor`, the cast without shows in News or Talk (10763, 10767), and for `director`, the crew with `job` «Director» in movies and «Creator» in shows. It MUST drop duplicates by type and id, apply type, genre, year, `a_estrenar`, `decada` and rating in memory as with text, keep only titles whose `title`, `name`, `original_title` or `original_name` contains `q` (normalized: lowercase, without accents, spaces collapsed) when there is text, and sort and paginate like a text search. The answer MUST add `persona: {id, name, rol, gender, profile_path}` read from TMDB's `person/{id}` (cached 24 h). An id TMDB does not know MUST answer 404 (Not Found) with `person_not_found`. TMDB's `discover` with `with_people` MUST NOT be used (TMDB ignores it for shows).
 
 #### Scenario: Directed by Vince Gilligan
 
 - GIVEN Gilligan's credits list Breaking Bad as `Creator` and «The X-Files» only as an episode `Director`
-- WHEN `browse/?persona=66633&rol=director&tipo=tv` is requested
+- WHEN `explore/?persona=66633&rol=director&tipo=tv` is requested
 - THEN Breaking Bad is in the results and «The X-Files» is not
 
 #### Scenario: Cheap after the first time
 
-- GIVEN `browse/?persona=525` was requested once
-- WHEN `browse/?persona=525&genero=878&page=2` is requested
+- GIVEN `explore/?persona=525` was requested once
+- WHEN `explore/?persona=525&genero=878&page=2` is requested
 - THEN no call reaches TMDB
 
 ### Requirement: Buscar combina discover y search (C-06)
 
-`GET /api/catalogo/browse/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 (Bad Request) `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 (Bad Request) `invalid_choice`), `persona` and `rol` («Person filter in Buscar») and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
+`GET /api/catalogo/explore/` MUST accept `q` (any text, trimmed; empty means no text; longer than 50 → 400 (Bad Request) `max_length`), `tipo` (`all` by default, `movie`, `tv`), `genero`, `anio`, `nota` (`9+`, `8+`, `7+`, `6+`, `5+`, `m5`), `a_estrenar` (`true`: only what premieres after today, replacing `anio`), `decada` (1900, 1910… up to the current decade: from January 1st of its first year to December 31st of its last, replacing `anio`; anything else → 400 (Bad Request) `invalid_choice`), `persona` and `rol` («Person filter in Buscar») and `page` (1–500). It MUST answer `{page, total_pages, total_results, results}` with `media_type` on every item, and `total_pages` capped at 500.
 
 - Without text it MUST use `discover` sorted by popularity, with at least 50 votes, except for a future year or `a_estrenar` without a rating filter (announced titles have no votes); `a_estrenar` sends `primary_release_date.gte` / `first_air_date.gte` with tomorrow's date; shows MUST exclude News and Talk unless a genre is chosen.
 - With text it MUST read up to the first 5 TMDB `search` pages per type (sending the year as `primary_release_year` or `first_air_date_year`), keep the items that pass the filters, and sort all of them — movies and shows together in `all` — by `max(vote_count, popularity × 100)`, descending, keeping TMDB's order on ties; pages hold 20 per type (40 in `all`). TMDB's relevance order puts titles with no votes first, and an upcoming title with high popularity must not sink (decided 14/10/2026).
@@ -306,27 +306,27 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 #### Scenario: Text and genre on «All»
 
 - GIVEN «dune» with genre 878
-- WHEN `browse/?q=dune&genero=878` is requested
+- WHEN `explore/?q=dune&genero=878` is requested
 - THEN movies are filtered by 878 and shows by 10765 within the first 5 pages of each
 - AND the results alternate movie and show
 
 #### Scenario: Default grid
 
 - GIVEN no text and no filters
-- WHEN `browse/?tipo=tv` is requested
+- WHEN `explore/?tipo=tv` is requested
 - THEN `discover/tv` is called with `vote_count.gte=50` and `without_genres=10763,10767`
 
 #### Scenario: Irrelevant titles are left out
 
 - GIVEN «chihiro» matches 13 titles and only 3 have 5 votes or popularity 5
-- WHEN `browse/?q=chihiro` is requested
+- WHEN `explore/?q=chihiro` is requested
 - THEN `total_results` is 3
 - AND «La arquitectura de El Viaje de Chihiro» (1 vote, popularity 0.2) is not in any page
 
 #### Scenario: The exact title is kept
 
 - GIVEN a film titled «Sato no Chihiro» with 1 vote and popularity 0.1
-- WHEN `browse/?q=sato no chihiro` is requested
+- WHEN `explore/?q=sato no chihiro` is requested
 - THEN it is in the results
 
 #### Scenario: Nothing passes the cut
@@ -337,20 +337,20 @@ With `tipo=person` it MUST return only people, up to 5. In Spanish it MUST fill 
 
 ### Requirement: Titles without a poster stay out of discovery (21/11/2026)
 
-Discovery lists MUST leave out the titles whose `poster_path` is `null` or empty: `trending/` and `now-playing/` (people in `trending/` with `media_type` `person` are not titles and stay), `discover/`, `browse/` without `q`, and the «Recomendado» row. The rule lives in one place (`tiene_poster` and `con_poster` in `services/browse.py`). It MUST NOT apply to `search/` or to `browse/` with `q` (or with `persona`): a title without a poster is still found by name. It MUST NOT change what is materialized or stored: those titles stay in the database and their title page opens. The «More like» and list suggestions already required a poster (D-5).
+Discovery lists MUST leave out the titles whose `poster_path` is `null` or empty: `trending/` and `now-playing/` (people in `trending/` with `media_type` `person` are not titles and stay), `discover/`, `explore/` without `q`, and the «Recomendado» row. The rule lives in one place (`tiene_poster` and `con_poster` in `services/explore.py`). It MUST NOT apply to `search/` or to `explore/` with `q` (or with `persona`): a title without a poster is still found by name. It MUST NOT change what is materialized or stored: those titles stay in the database and their title page opens. The «More like» and list suggestions already required a poster (D-5).
 
 The filter MUST NOT refill the page and MUST NOT change `total_pages` or `total_results`: TMDB does not say how many of the rest lack a poster, so a page may have a few items fewer than 20 (17 of 948 titles in the catalog measured on 21/11/2026) and the next page is requested as usual.
 
 #### Scenario: Discovery without text
 
 - GIVEN TMDB returns a title with a poster and another without
-- WHEN `browse/?tipo=movie` is requested
+- WHEN `explore/?tipo=movie` is requested
 - THEN only the one with a poster is in `results`
 
 #### Scenario: Search by name
 
 - GIVEN the same two titles
-- WHEN `browse/?q=...` or `search/?query=...` is requested
+- WHEN `explore/?q=...` or `search/?query=...` is requested
 - THEN both are in `results`
 
 ### Requirement: Browser caching and compression (22/10/2026)

@@ -47,8 +47,8 @@ from catalogo.models import ProduccionAudiovisual, ProduccionTraduccion, TipoPro
 from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services import similares
 from catalogo.services.adapter import tmdb_a_dominio
-from catalogo.services.browse import NOTAS
 from catalogo.services.embeddings import MODEL_VERSION
+from catalogo.services.explore import NOTAS
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import materializar

@@ -8,7 +8,7 @@ const viewports = [
   { name: "celular", width: 390, height: 844 },
 ] as const;
 
-/** `browse/` simulado: responde datos reales de TMDB y anota cada consulta. */
+/** `explore/` simulado: responde datos reales de TMDB y anota cada consulta. */
 async function prepararBuscar(page: Page) {
   const consultas: URLSearchParams[] = [];
   await page.route("**/api/profile/", (route) =>
@@ -27,7 +27,7 @@ async function prepararBuscar(page: Page) {
   await page.route("**/api/catalogo/suggest/**", (route) =>
     route.fulfill({ json: { results: [] } })
   );
-  await page.route("**/api/catalogo/browse/**", (route) => {
+  await page.route("**/api/catalogo/explore/**", (route) => {
     const params = new URL(route.request().url()).searchParams;
     consultas.push(params);
     const results = params.get("q")

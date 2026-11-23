@@ -14,15 +14,15 @@ from catalogo.models import ID_TMDB_MAXIMO, ProduccionAudiovisual
 from catalogo.presupuesto import TopesTMDBMixin
 from catalogo.services import similares
 from catalogo.services.adapter import tmdb_a_dominio
-from catalogo.services.browse import (
+from catalogo.services.creditos import creditos
+from catalogo.services.embeddings import MODEL_VERSION
+from catalogo.services.explore import (
     NOTAS,
     anio_actual,
     con_poster,
     explorar,
     generos_de_todo,
 )
-from catalogo.services.creditos import creditos
-from catalogo.services.embeddings import MODEL_VERSION
 from catalogo.services.fallback import servicio_localizado
 from catalogo.services.idioma_tmdb import idioma_tmdb
 from catalogo.services.materialization import (
@@ -260,7 +260,7 @@ class SearchView(CatalogoBaseView):
 class SuggestView(CatalogoBaseView):
     """Sugerencias de la navbar: títulos y personas con una sola llamada a TMDB.
 
-    No encola la materialización (a diferencia de `browse/` y los listados):
+    No encola la materialización (a diferencia de `explore/` y los listados):
     cada tecla pedida dejaría hasta 5 tareas por títulos que nadie abrió; la
     ficha materializa cuando se abre. Tiene su propio límite (`sugerencias`,
     120 por minuto) para que escribir no gaste el cupo de la página que el
@@ -293,12 +293,12 @@ class SuggestView(CatalogoBaseView):
         return Response(sugerir(self._service(request), q, tipo))
 
 
-class BrowseView(CatalogoBaseView):
+class ExploreView(CatalogoBaseView):
     """Buscar (C-06): texto opcional, tipo y filtros, en una sola respuesta.
 
     `q` admite cualquier texto: se recorta y se mide después (decisión del
     14/10/2026; títulos como «WALL·E» necesitan signos). Qué llamadas hace a
-    TMDB para cada combinación lo decide `services/browse.py`.
+    TMDB para cada combinación lo decide `services/explore.py`.
 
     `persona` (id de TMDB) y `rol` (`director` o `actor`) filtran por lo que
     hizo esa persona (13/11/2026); una persona que TMDB no conoce es un 404

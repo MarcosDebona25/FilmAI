@@ -15,8 +15,8 @@ from pathlib import Path
 
 from django.test import SimpleTestCase
 
-from catalogo.services.browse import es_relevante, normalizar
-from catalogo.tests_browse import BrowseBase, TMDBFalso
+from catalogo.services.explore import es_relevante, normalizar
+from catalogo.tests_explore import ExploreBase, TMDBFalso
 
 DATOS = json.loads(
     (Path(__file__).parent / "test_datos" / "tmdb_buscar_personas.json").read_text()
@@ -24,7 +24,7 @@ DATOS = json.loads(
 
 
 class TMDBFalsoChihiro(TMDBFalso):
-    """El de `tests_browse`, pero «chihiro» sale de la captura nueva."""
+    """El de `tests_explore`, pero «chihiro» sale de la captura nueva."""
 
     def _paginas(self, tipo, query):
         captura = DATOS["buscar"].get(f"chihiro_{tipo}") if "chihiro" in query else None
@@ -81,8 +81,8 @@ class NormalizarTests(SimpleTestCase):
         self.assertEqual(normalizar(None), "")
 
 
-class CorteEnBuscarTests(BrowseBase):
-    """`browse/` con texto saca lo irrelevante antes de contar y paginar."""
+class CorteEnBuscarTests(ExploreBase):
+    """`explore/` con texto saca lo irrelevante antes de contar y paginar."""
 
     # El mismo reemplazo de TMDB, con la captura de «chihiro».
     Falso = TMDBFalsoChihiro
