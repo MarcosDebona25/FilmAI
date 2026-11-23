@@ -726,10 +726,9 @@ for (const viewport of viewports) {
       await page.goto("/lists/11");
 
       await expect(page.getByText(en.lists.detail.emptyTitle)).toBeVisible();
-      await expect(page.getByRole("link", { name: en.common.actions.explore })).toHaveAttribute(
-        "href",
-        "/search"
-      );
+      await expect(
+        page.getByRole("main").getByRole("link", { name: en.common.actions.explore })
+      ).toHaveAttribute("href", "/search");
       await page.getByRole("button", { name: "Actions for Clásicos" }).click();
       await page
         .getByRole("menuitem", { name: en.common.lists.delete })
