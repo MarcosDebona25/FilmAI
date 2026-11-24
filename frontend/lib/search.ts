@@ -21,6 +21,28 @@ export type Decada = `${number}s`;
 export type RolPersona = "director" | "actor";
 const ROLES: RolPersona[] = ["director", "actor"];
 
+/** Orden de los resultados (24/11/2026); `popular` es el de siempre y no viaja en la URL. */
+export type Orden = "popular" | "newest" | "oldest" | "highest" | "lowest" | "most-voted";
+export const ORDENES: Orden[] = ["popular", "newest", "oldest", "highest", "lowest", "most-voted"];
+/** Valor de `orden=` en la API de `explore/` para cada orden. */
+const ORDEN_API: Record<Orden, string> = {
+  popular: "popular",
+  newest: "fecha-desc",
+  oldest: "fecha-asc",
+  highest: "nota-desc",
+  lowest: "nota-asc",
+  "most-voted": "votos-desc",
+};
+/** Clave de `common.sort.*` con el nombre de cada orden. */
+export const ETIQUETA_ORDEN = {
+  popular: "popular",
+  newest: "newest",
+  oldest: "oldest",
+  highest: "highestRating",
+  lowest: "lowestRating",
+  "most-voted": "mostVoted",
+} as const;
+
 export interface Busqueda {
   q: string;
   tipo: ContentType;
@@ -31,6 +53,7 @@ export interface Busqueda {
   persona: number | null;
   /** Qué hizo esa persona; `null` es cualquier cosa. Sin `persona` siempre es `null`. */
   rol: RolPersona | null;
+  orden: Orden;
   pagina: number;
 }
 
@@ -52,6 +75,7 @@ export const BUSQUEDA_VACIA: Busqueda = {
   nota: null,
   persona: null,
   rol: null,
+  orden: "popular",
   pagina: 1,
 };
 
@@ -76,6 +100,7 @@ export function busquedaDesdeUrl(params: URLSearchParams): Busqueda {
     persona,
     // El rol solo tiene sentido con persona: un `role=` suelto se ignora.
     rol: persona === null ? null : de(ROLES, params.get("role")),
+    orden: de(ORDENES, params.get("sort")) ?? "popular",
     pagina: entero(params.get("page")) ?? 1,
   };
 }
@@ -91,6 +116,7 @@ export function urlDeBusqueda(busqueda: Busqueda) {
     params.set("person", String(busqueda.persona));
     if (busqueda.rol !== null) params.set("role", busqueda.rol);
   }
+  if (busqueda.orden !== "popular") params.set("sort", busqueda.orden);
   if (busqueda.pagina > 1) params.set("page", String(busqueda.pagina));
   const consulta = params.toString();
   return consulta ? `${routes.search}?${consulta}` : routes.search;
@@ -111,11 +137,12 @@ export function consultaApi(busqueda: Busqueda) {
     params.set("persona", String(busqueda.persona));
     if (busqueda.rol !== null) params.set("rol", busqueda.rol);
   }
+  if (busqueda.orden !== "popular") params.set("orden", ORDEN_API[busqueda.orden]);
   params.set("page", String(busqueda.pagina));
   return `/api/catalogo/explore/?${params}`;
 }
 
-/** Género, año, nota y persona: lo que cuenta el badge de «Filters» en celular. */
+/** Género, año, nota y persona: lo que cuenta el badge de «Filters» en celular (el orden no cuenta). */
 export function filtrosActivos(busqueda: Busqueda) {
   return [busqueda.genero, busqueda.anio, busqueda.nota, busqueda.persona].filter(
     (valor) => valor !== null

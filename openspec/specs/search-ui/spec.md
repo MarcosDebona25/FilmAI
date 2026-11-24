@@ -81,6 +81,23 @@ The page MUST offer the type selector (All · Movies · TV shows), Genre (from `
 - AND choosing «Below 5» in the sheet adds `rating=lt5` to the URL
 
 
+### Requirement: Sort order (24/11/2026)
+
+The page MUST offer six orders: Popular (default), Newest, Oldest, Highest rated, Lowest rated and Most voted. The choice MUST live in the URL as `sort=` (`newest`, `oldest`, `highest`, `lowest`, `most-voted`), omitted when it is Popular, and go to the API as `orden=` (`fecha-desc`, `fecha-asc`, `nota-desc`, `nota-asc`, `votos-desc`). Changing it MUST go back to page 1. On desktop it MUST be a button at the right edge of the filter row (icon, «Sort», current value, chevron) that opens a «Sort by» menu of six `menuitemradio`, with arrow keys, Escape (focus back to the button) and click outside; below 1366 px the button MUST be the icon alone, with a dot when the order is not Popular, and the row MUST fit on one line at 1024 px when no filter is active (with filters active it MAY wrap below 1152 px). On mobile the order MUST be the first section of the «Filters and sort» sheet (two columns of `aria-pressed` buttons), and a line «Sorted by {order}» under the row MUST show when it is not Popular. The order MUST NOT count toward the «Filters» badge and «Clear filters» MUST keep it.
+
+#### Scenario: Desktop menu
+
+- GIVEN a desktop viewport
+- WHEN the user opens «Sort: Popular» and picks «Highest rated»
+- THEN the URL gets `sort=highest`
+- AND `explore/` is asked with `orden=nota-desc`
+
+#### Scenario: Mobile sort in the sheet
+
+- GIVEN a mobile viewport
+- WHEN the user picks «Newest» in the «Filters and sort» sheet
+- THEN the line «Sorted by Newest» shows under the row and the «Filters» button still shows no count
+
 ### Requirement: Person filter (13/11/2026)
 
 A person reaches Search from a navbar suggestion (`navbar-search`), which sets `person` and `role` in the URL; a person is also reachable from the field's own suggestions and the «Looking for…?» notice (see «Field suggestions»); the separate «Person» field of the filters was dropped (`busqueda-navbar`, task 6.3). With a person, the page MUST show, above the results, a chip with the photo, «Name · Role» (role by TMDB gender: «Director» / «Directora», «Actor» / «Actriz», or «Dirección» / «Actuación» when unknown) and a ✕ button labelled «Remove filter {name}» that removes `person` and `role`. The name MUST come from the API's `persona`, never from the URL. A person MUST count as one active filter, MUST survive a change of type, and «Clear filters» MUST remove it. Without text, the count MUST read «N results for “{name}”». A `person_not_found` error MUST show the empty state with «Clear filters».

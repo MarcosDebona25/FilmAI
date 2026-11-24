@@ -18,6 +18,8 @@ from catalogo.services.creditos import creditos
 from catalogo.services.embeddings import MODEL_VERSION
 from catalogo.services.explore import (
     NOTAS,
+    ORDEN_POR_DEFECTO,
+    ORDENES,
     anio_actual,
     con_poster,
     explorar,
@@ -308,6 +310,8 @@ class ExploreView(CatalogoBaseView):
     MAX_TEXTO = 50
     tipos: ClassVar = ["all", "movie", "tv"]
     roles: ClassVar = ["director", "actor"]
+    # Orden de los resultados (24/11/2026): `popular` es el de siempre.
+    ordenes: ClassVar = list(ORDENES)
 
     def get(self, request):
         params = request.query_params
@@ -330,6 +334,7 @@ class ExploreView(CatalogoBaseView):
         rol = params.get("rol") or None
         if rol is not None:
             _opcion(rol, "rol", self.roles)
+        orden = _opcion(params.get("orden") or ORDEN_POR_DEFECTO, "orden", self.ordenes)
         page = self._page(request)
         datos = explorar(
             self._service(request),
@@ -343,6 +348,7 @@ class ExploreView(CatalogoBaseView):
             decada=self._decada(params.get("decada")),
             persona=persona,
             rol=rol,
+            orden=orden,
         )
         # Cada ítem de Buscar trae su `media_type`.
         _materializar_listado_sin_interrumpir(datos)

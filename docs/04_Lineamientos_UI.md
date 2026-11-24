@@ -275,13 +275,14 @@ la lupa de la navbar (Enter o «See all results») o la pestaña de la barra inf
   sobre los primeros 100 resultados por tipo (decisión del 14/10/2026). El año sí lo filtra TMDB.
 - **Orden con texto** (14/10/2026, pedido del usuario): los primeros 100 por tipo, ordenados por el mayor entre los votos y la popularidad de TMDB × 100. Lo consagrado o lo muy esperado (un estreno sin votos todavía) queda arriba y lo desconocido al fondo. En «Todo» se mezclan películas y series por ese puntaje.
 - **«Todo» sin texto**: alterna películas y series, como las filas del Inicio.
+- **Orden** (24/11/2026): Popular (predeterminado), Newest, Oldest, Highest rated, Lowest rated y Most voted. Va en la URL como `sort=` (se omite si es Popular) y a la API como `orden=`. Sin texto y con un solo tipo lo ordena TMDB; con texto o persona se ordena en memoria sobre la ventana de 100. «Todo» sin texto con un orden distinto de Popular lee los primeros 100 de cada tipo y los ordena juntos (hasta 200 resultados, 5 páginas); ordenar por nota exige 200 votos y «Newest» no muestra lo que estrena después de hoy. En escritorio es un botón al borde derecho de la fila (ícono, «Sort», valor y chevron) que abre un menú «Sort by»; por debajo de 1366 px queda solo el ícono, con un punto si el orden no es Popular. «Clear filters» conserva el orden.
 - **Resultados**: MediaCards en grilla (2 columnas en celular) con tipo, año y nota de TMDB, o «Sin
   calificaciones». Cada tarjeta lleva a la ficha con `?from=search`.
 - **Carga al bajar** (14/10/2026, pedido del usuario; reemplaza la paginación clásica del canvas): cuando el final de la grilla está a 600 px, se agrega la página siguiente, con un esqueleto mientras llega, hasta 25 páginas. Al terminar los resultados aparece el footer. Si falla una página, lo cargado queda y se ofrece Reintentar. Volver desde la ficha (Atrás o la miga) recupera las páginas cargadas y la posición del scroll.
 - **URL**: texto, tipo, filtros y página viven en la URL; recargar, compartir y volver atrás
   conservan la búsqueda. La miga «Buscar» de la ficha vuelve a la última búsqueda.
 - **Celular**: título «Buscar», campo, selector de tipo y un botón «Filtros» con la cantidad de
-  filtros activos, que abre una hoja con Género, Año, Nota de TMDB, «Limpiar» y «Ver resultados».
+  filtros activos, que abre una hoja «Filtros y orden» con el orden (grilla de 2 columnas), Género, Año, Nota de TMDB, «Limpiar» y «Ver resultados». El orden no cuenta en el contador; si no es Popular, una línea bajo la fila dice «Ordenado por …».
 
 ### Estados
 

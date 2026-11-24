@@ -382,3 +382,48 @@ class CostoTests(SimpleTestCase):
         self.pedir(page=2)
         self.pedir(tipo="movie")
         self.assertEqual(self.pedidos, [])
+
+
+class OrdenTests(PersonaBase):
+    """El orden (24/11/2026) también ordena la filmografía, en memoria."""
+
+    def todos(self, **params):
+        datos = self.ok(persona=NOLAN, **params)
+        items = list(datos["results"])
+        for n in range(2, datos["total_pages"] + 1):
+            items += self.ok(persona=NOLAN, page=n, **params)["results"]
+        return items
+
+    def test_por_fecha_de_la_mas_nueva_a_la_mas_vieja_y_sin_fecha_al_final(self):
+        items = self.todos(orden="fecha-desc")
+
+        fechas = [i.get("release_date") or i.get("first_air_date") or "" for i in items]
+        con_fecha = [f for f in fechas if f]
+        self.assertEqual(con_fecha, sorted(con_fecha, reverse=True))
+        self.assertEqual(fechas, con_fecha + [""] * (len(fechas) - len(con_fecha)))
+
+    def test_mas_viejos(self):
+        items = self.todos(orden="fecha-asc")
+
+        fechas = [i.get("release_date") or i.get("first_air_date") or "" for i in items]
+        con_fecha = [f for f in fechas if f]
+        self.assertEqual(con_fecha, sorted(con_fecha))
+
+    def test_por_nota_los_de_pocos_votos_van_al_final(self):
+        items = self.todos(orden="nota-desc")
+
+        votos = [i.get("vote_count") or 0 for i in items]
+        firmes = sum(1 for v in votos if v >= 200)
+        self.assertTrue(0 < firmes < len(items))
+        self.assertTrue(all(v >= 200 for v in votos[:firmes]))
+        notas = [i["vote_average"] for i in items[:firmes]]
+        self.assertEqual(notas, sorted(notas, reverse=True))
+
+    def test_mas_votados(self):
+        items = self.todos(orden="votos-desc")
+
+        votos = [i.get("vote_count") or 0 for i in items]
+        self.assertEqual(votos, sorted(votos, reverse=True))
+
+    def test_popular_es_el_orden_de_siempre(self):
+        self.assertEqual(self.todos(orden="popular"), self.todos())

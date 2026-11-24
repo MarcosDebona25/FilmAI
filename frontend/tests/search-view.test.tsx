@@ -412,7 +412,7 @@ describe("Buscar", () => {
     render(<SearchView />, { locale: "en" });
 
     fireEvent.click(screen.getByRole("button", { name: "Filters, 2 active" }));
-    const hoja = screen.getByRole("dialog", { name: "Filters" });
+    const hoja = screen.getByRole("dialog", { name: "Filters and sort" });
     expect(await within(hoja).findByRole("option", { name: "Kids" })).toBeInTheDocument();
     expect(within(hoja).getByRole("combobox", { name: "Year" })).toHaveValue("2020");
 
@@ -422,6 +422,88 @@ describe("Buscar", () => {
 
     expect(reemplazos).toEqual(["/search?genre=18&year=2020&rating=lt5", "/search"]);
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("el botón de orden abre el menú, marca el actual y elegir uno vuelve a la página 1", async () => {
+    estado.params = new URLSearchParams("q=dune&page=2");
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+
+    const boton = screen.getByRole("button", { name: "Sort: Popular" });
+    fireEvent.click(boton);
+    const menu = screen.getByRole("menu");
+    expect(within(menu).getAllByRole("menuitemradio")).toHaveLength(6);
+    expect(within(menu).getByRole("menuitemradio", { name: "Popular" })).toBeChecked();
+    fireEvent.click(within(menu).getByRole("menuitemradio", { name: "Highest rated" }));
+
+    expect(reemplazos).toEqual(["/search?q=dune&sort=highest"]);
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(boton).toHaveFocus();
+  });
+
+  it("el orden elegido va en el pedido a explore/", async () => {
+    estado.params = new URLSearchParams("sort=oldest");
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+
+    expect(pedidosDeBusqueda()[0]).toContain("orden=fecha-asc");
+    expect(screen.getByRole("button", { name: "Sort: Oldest" })).toBeInTheDocument();
+  });
+
+  it("el menú de orden se cierra con Escape sin salir de Buscar y se mueve con las flechas", async () => {
+    estado.params = new URLSearchParams("sort=newest");
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+    const boton = screen.getByRole("button", { name: "Sort: Newest" });
+
+    fireEvent.click(boton);
+    const menu = screen.getByRole("menu");
+    expect(within(menu).getByRole("menuitemradio", { name: "Newest" })).toHaveFocus();
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
+    expect(within(menu).getByRole("menuitemradio", { name: "Oldest" })).toHaveFocus();
+    fireEvent.keyDown(menu, { key: "End" });
+    expect(within(menu).getByRole("menuitemradio", { name: "Most voted" })).toHaveFocus();
+    fireEvent.keyDown(menu, { key: "Escape" });
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(boton).toHaveFocus();
+    expect(router.back).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("«Clear filters» conserva el orden", async () => {
+    estado.params = new URLSearchParams("q=dune&genre=18&sort=newest");
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(reemplazos).toEqual(["/search?q=dune&sort=newest"]);
+  });
+
+  it("en celular el orden va en la hoja, con el activo marcado, y no cuenta en «Filters»", async () => {
+    estado.params = new URLSearchParams("sort=newest");
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+    // Una línea bajo la fila avisa que el orden no es Popular.
+    expect(screen.getByText("Newest", { selector: "span.font-semibold" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+    const hoja = screen.getByRole("dialog", { name: "Filters and sort" });
+    const orden = (nombre: string) => within(hoja).getByRole("button", { name: nombre });
+    expect(orden("Newest")).toHaveAttribute("aria-pressed", "true");
+    expect(orden("Popular")).toHaveAttribute("aria-pressed", "false");
+    expect(within(hoja).getAllByRole("button", { pressed: false }).length).toBeGreaterThan(5);
+
+    fireEvent.click(orden("Most voted"));
+    expect(reemplazos).toEqual(["/search?sort=most-voted"]);
+  });
+
+  it("sin orden elegido no aparece la línea «Sorted by»", async () => {
+    render(<SearchView />, { locale: "en" });
+    await screen.findByText("Dune: Part Two");
+
+    expect(screen.queryByText(/Sorted by/)).toBeNull();
   });
 
   it("con la hoja abierta, Escape la cierra a ella y no sale de Buscar", () => {

@@ -18,6 +18,7 @@ import { CAMPO_BUSQUEDA } from "@/components/campo-busqueda";
 import { SugerenciasLista } from "@/components/SugerenciasLista";
 import { FiltersSheet } from "@/components/features/FiltersSheet";
 import { MediaCard, MediaCardSkeleton } from "@/components/features/MediaCard";
+import { SortMenu } from "@/components/features/SortMenu";
 import { TypeSelector, type ContentType } from "@/components/features/TypeSelector";
 import { ErrorRetry } from "@/components/ui/ErrorRetry";
 import { ApiError } from "@/lib/api";
@@ -26,6 +27,7 @@ import { translateError } from "@/lib/errors";
 import { routes } from "@/lib/routes";
 import {
   ETIQUETA_NOTA,
+  ETIQUETA_ORDEN,
   MAX_TEXTO,
   NOTAS,
   opcionesDeAnio,
@@ -276,6 +278,7 @@ export function SearchView() {
 
   function limpiar() {
     if (activos > 0) {
+      // El orden no es un filtro: «Clear filters» lo conserva (como el detalle de lista).
       cambiar({ genero: null, anio: null, nota: null, persona: null, rol: null });
     } else {
       borrarTexto();
@@ -345,8 +348,10 @@ export function SearchView() {
 
   const pildora =
     "inline-flex h-12 items-center gap-2.5 rounded-[0.625rem] pr-1.5 pl-3.5 text-sm whitespace-nowrap text-fg-3 shadow-[inset_0_0_0_1px_var(--line)]";
+  // Por debajo de 1280 px el select se angosta para que la fila (con el botón
+  // de orden) entre en una sola línea a 1024 px.
   const selector =
-    "h-10 min-w-32 cursor-pointer rounded-lg border-0 bg-raised-2 px-2 text-center text-[0.9375rem] font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+    "h-10 min-w-28 xl:min-w-32 cursor-pointer rounded-lg border-0 bg-raised-2 px-2 text-center text-[0.9375rem] font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
   return (
     <main
@@ -433,9 +438,15 @@ export function SearchView() {
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 xl:gap-x-6">
           <div className="flex w-full gap-2 md:w-auto">
-            <TypeSelector value={busqueda.tipo} onChange={elegirTipo} className="flex-1" compact />
+            <TypeSelector
+              value={busqueda.tipo}
+              onChange={elegirTipo}
+              className="flex-1"
+              compact
+              apretado
+            />
             {/* En celular los filtros van en una hoja (canvas «Search · mobile»). */}
             <button
               type="button"
@@ -519,7 +530,19 @@ export function SearchView() {
               </button>
             )}
           </div>
+          {/* Escritorio: el orden va al borde derecho de la fila (en celular, en la hoja). */}
+          <div className="ml-auto hidden md:block">
+            <SortMenu valor={busqueda.orden} onChange={(orden) => cambiar({ orden })} />
+          </div>
         </div>
+        {busqueda.orden !== "popular" && (
+          <p className="-mt-1 text-sm text-fg-2 md:hidden">
+            {t.rich("search.sort.sortedBy", {
+              sortLabel: t(`common.sort.${ETIQUETA_ORDEN[busqueda.orden]}`),
+              valor: (texto) => <span className="font-semibold text-foreground">{texto}</span>,
+            })}
+          </p>
+        )}
         {persona && (
           <div className="flex">
             <span className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-full bg-raised py-1 pr-1 pl-1.5 shadow-[inset_0_0_0_1px_var(--line)]">

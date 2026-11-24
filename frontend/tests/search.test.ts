@@ -14,6 +14,7 @@ import {
   ultimaBusqueda,
   urlDeBusqueda,
   urlDePersona,
+  type Orden,
 } from "@/lib/search";
 
 describe("busquedaDesdeUrl", () => {
@@ -33,6 +34,7 @@ describe("busquedaDesdeUrl", () => {
       pagina: 2,
       persona: null,
       rol: null,
+      orden: "popular",
     });
   });
 
@@ -117,6 +119,35 @@ describe("consultaApi", () => {
     expect(consultaApi({ ...BUSQUEDA_VACIA, nota: "lt5" })).toBe(
       "/api/catalogo/explore/?tipo=all&nota=m5&page=1"
     );
+  });
+});
+
+describe("orden", () => {
+  it("va a la URL como sort= y vuelve igual; popular se omite", () => {
+    const busqueda = { ...BUSQUEDA_VACIA, orden: "highest" as const };
+
+    expect(urlDeBusqueda(busqueda)).toBe("/search?sort=highest");
+    expect(busquedaDesdeUrl(new URLSearchParams("sort=highest"))).toEqual(busqueda);
+    expect(urlDeBusqueda({ ...BUSQUEDA_VACIA, orden: "popular" })).toBe("/search");
+  });
+
+  it("un valor desconocido en la URL es popular", () => {
+    expect(busquedaDesdeUrl(new URLSearchParams("sort=title"))).toEqual(BUSQUEDA_VACIA);
+  });
+
+  it("la API recibe el orden de explore/, y nada si es popular", () => {
+    const api = (orden: Orden) => consultaApi({ ...BUSQUEDA_VACIA, orden });
+
+    expect(api("popular")).toBe("/api/catalogo/explore/?tipo=all&page=1");
+    expect(api("newest")).toContain("&orden=fecha-desc&");
+    expect(api("oldest")).toContain("&orden=fecha-asc&");
+    expect(api("highest")).toContain("&orden=nota-desc&");
+    expect(api("lowest")).toContain("&orden=nota-asc&");
+    expect(api("most-voted")).toContain("&orden=votos-desc&");
+  });
+
+  it("no cuenta como filtro activo", () => {
+    expect(filtrosActivos({ ...BUSQUEDA_VACIA, orden: "newest" })).toBe(0);
   });
 });
 

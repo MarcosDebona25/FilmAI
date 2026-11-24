@@ -470,3 +470,298 @@ class GenerosTodoTests(ExploreBase):
         peliculas = [genero["id"] for genero in DATOS["genres"]["movie"]]
         self.assertEqual(ids[: len(peliculas)], peliculas)
         self.assertEqual(ids[len(peliculas) :], [10762, 10763, 10764, 10766, 10767])
+
+
+class TMDBFalsoPaginado(TMDBFalso):
+    """`discover` con páginas distintas: 20 títulos por página y 8 páginas.
+
+    Las capturas devuelven siempre la misma página; para probar la ventana de
+    «Todo» con un orden hacen falta títulos distintos en cada una. Fechas, notas
+    y votos salen de una fórmula fija, mezclados a propósito.
+    """
+
+    def discover(self, tipo, genero=None, anio=None, min_rating=None, page=1, **extra):
+        self.llamadas.append(("discover", tipo, page, {"genero": genero, **extra}))
+        base = (0 if tipo == "movie" else 10_000) + (page - 1) * 20
+        results = []
+        for i in range(20):
+            n = base + i
+            results.append(
+                {
+                    "id": n,
+                    "title": f"T{n}",
+                    "poster_path": f"/{n}.jpg",
+                    "release_date": f"{2000 + (n * 7) % 25}-{1 + n % 12:02d}-15",
+                    "vote_average": (n * 13 % 50) / 5,
+                    "vote_count": 300 + (n * 31) % 1000,
+                    "popularity": 1,
+                }
+            )
+        return {
+            "page": page,
+            "total_pages": 8,
+            "total_results": 160,
+            "results": results,
+        }
+
+
+class OrdenTests(ExploreBase):
+    """El orden de los resultados (24/11/2026): `orden=` en `explore/`."""
+
+    def setUp(self):
+        super().setUp()
+        parche = patch("catalogo.services.explore.hoy", return_value=date(2026, 11, 24))
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def test_un_orden_invalido_es_400_con_los_valores_permitidos(self):
+        respuesta = self.buscar(orden="titulo")
+
+        self.assertEqual(respuesta.status_code, 400)
+        [error] = respuesta.data["errors"]
+        self.assertEqual((error["field"], error["code"]), ("orden", "invalid_choice"))
+        self.assertEqual(
+            error["params"]["allowedValues"],
+            [
+                "popular",
+                "fecha-desc",
+                "fecha-asc",
+                "nota-desc",
+                "nota-asc",
+                "votos-desc",
+            ],
+        )
+        self.assertEqual(self.tmdb.llamadas, [])
+
+    def test_sin_orden_es_popular(self):
+        self.ok(tipo="movie")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["sort_by"], "popularity.desc")
+
+    def test_un_tipo_manda_a_tmdb_el_sort_by_de_cada_tipo(self):
+        esperado = {
+            "popular": ("popularity.desc", "popularity.desc"),
+            "fecha-desc": ("primary_release_date.desc", "first_air_date.desc"),
+            "fecha-asc": ("primary_release_date.asc", "first_air_date.asc"),
+            "nota-desc": ("vote_average.desc", "vote_average.desc"),
+            "nota-asc": ("vote_average.asc", "vote_average.asc"),
+            "votos-desc": ("vote_count.desc", "vote_count.desc"),
+        }
+        for orden, (pelicula, serie) in esperado.items():
+            for tipo, sort_by in (("movie", pelicula), ("tv", serie)):
+                with self.subTest(orden=orden, tipo=tipo):
+                    self.tmdb.llamadas.clear()
+                    datos = self.ok(tipo=tipo, orden=orden)
+
+                    [(*_, params)] = self.tmdb.de("discover")
+                    self.assertEqual(params["sort_by"], sort_by)
+                    # Con un solo tipo lo ordena TMDB: no hay tope de 200.
+                    self.assertEqual(len(datos["results"]), 20)
+
+    def test_ordenar_por_nota_exige_200_votos(self):
+        for orden in ("nota-desc", "nota-asc"):
+            with self.subTest(orden=orden):
+                self.tmdb.llamadas.clear()
+                self.ok(tipo="movie", orden=orden)
+
+                [(*_, params)] = self.tmdb.de("discover")
+                self.assertEqual(params["min_votos"], 200)
+
+    def test_los_otros_ordenes_conservan_el_minimo_de_50(self):
+        for orden in ("fecha-desc", "fecha-asc", "votos-desc"):
+            with self.subTest(orden=orden):
+                self.tmdb.llamadas.clear()
+                self.ok(tipo="movie", orden=orden)
+
+                [(*_, params)] = self.tmdb.de("discover")
+                self.assertEqual(params["min_votos"], 50)
+
+    def test_ordenar_por_nota_sin_minimo_si_es_lo_que_aun_no_estreno(self):
+        self.ok(tipo="movie", orden="nota-desc", a_estrenar="true")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertIsNone(params["min_votos"])
+
+    def test_mas_nuevos_no_pide_lo_que_estrena_despues_de_hoy(self):
+        self.ok(tipo="movie", orden="fecha-desc")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["hasta_fecha"], "2026-11-24")
+
+    def test_mas_nuevos_con_a_estrenar_no_pone_tope(self):
+        self.ok(tipo="movie", orden="fecha-desc", a_estrenar="true")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["desde_fecha"], "2026-11-25")
+        self.assertIsNone(params["hasta_fecha"])
+
+    def test_mas_nuevos_con_un_anio_futuro_no_pone_tope(self):
+        self.ok(tipo="movie", orden="fecha-desc", anio=2027)
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertIsNone(params["hasta_fecha"])
+
+    def test_mas_nuevos_con_una_decada_conserva_el_fin_de_la_decada(self):
+        self.ok(tipo="movie", orden="fecha-desc", decada=1980)
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertEqual(params["hasta_fecha"], "1989-12-31")
+
+    def test_popular_no_pone_tope_de_fecha(self):
+        self.ok(tipo="movie")
+
+        [(*_, params)] = self.tmdb.de("discover")
+        self.assertIsNone(params["hasta_fecha"])
+
+
+class OrdenTodoTests(ExploreBase):
+    """«Todo» sin texto con un orden: los primeros 100 de cada tipo, juntos."""
+
+    Falso = TMDBFalsoPaginado
+
+    def setUp(self):
+        super().setUp()
+        parche = patch("catalogo.services.explore.hoy", return_value=date(2026, 11, 24))
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def todas(self, **params):
+        """Las páginas 1 a `total_pages`, una detrás de otra."""
+        primera = self.ok(**params)
+        paginas = [primera]
+        for n in range(2, primera["total_pages"] + 1):
+            paginas.append(self.ok(page=n, **params))
+        return primera, [item for pagina in paginas for item in pagina["results"]]
+
+    def test_pide_5_paginas_por_tipo_y_nada_mas(self):
+        self.ok(orden="nota-desc")
+
+        for tipo in ("movie", "tv"):
+            paginas = sorted(llamada[2] for llamada in self.tmdb.de("discover", tipo))
+            self.assertEqual(paginas, [1, 2, 3, 4, 5])
+
+    def test_mezcla_peliculas_y_series_en_orden_y_pagina_de_a_40(self):
+        primera, todos = self.todas(orden="nota-desc")
+
+        self.assertEqual((primera["total_results"], primera["total_pages"]), (200, 5))
+        self.assertEqual(len(primera["results"]), 40)
+        self.assertEqual(len(todos), 200)
+        notas = [item["vote_average"] for item in todos]
+        self.assertEqual(notas, sorted(notas, reverse=True))
+        self.assertEqual({item["media_type"] for item in todos}, {"movie", "tv"})
+
+    def test_mas_nuevos_baja_las_fechas_sin_saltos_hasta_el_final(self):
+        _, todos = self.todas(orden="fecha-desc")
+
+        fechas = [item["release_date"] for item in todos]
+        self.assertEqual(fechas, sorted(fechas, reverse=True))
+
+    def test_mas_viejos_sube_las_fechas(self):
+        _, todos = self.todas(orden="fecha-asc")
+
+        fechas = [item["release_date"] for item in todos]
+        self.assertEqual(fechas, sorted(fechas))
+
+    def test_mas_votados(self):
+        _, todos = self.todas(orden="votos-desc")
+
+        votos = [item["vote_count"] for item in todos]
+        self.assertEqual(votos, sorted(votos, reverse=True))
+
+    def test_la_pagina_2_sigue_el_orden_de_la_1(self):
+        primera = self.ok(orden="nota-desc")
+        segunda = self.ok(orden="nota-desc", page=2)
+
+        self.assertLessEqual(
+            segunda["results"][0]["vote_average"],
+            primera["results"][-1]["vote_average"],
+        )
+
+    def test_cada_tipo_pide_el_sort_by_que_le_toca(self):
+        self.ok(orden="fecha-desc")
+
+        [(*_, pelis)] = self.tmdb.de("discover", "movie")[:1]
+        [(*_, series)] = self.tmdb.de("discover", "tv")[:1]
+        self.assertEqual(pelis["sort_by"], "primary_release_date.desc")
+        self.assertEqual(series["sort_by"], "first_air_date.desc")
+
+    def test_popular_sigue_alternando_por_pagina(self):
+        self.ok()
+
+        # Sin orden no hay ventana: una página por tipo, como siempre.
+        self.assertEqual(len(self.tmdb.de("discover")), 2)
+
+    def test_un_genero_solo_de_peliculas_no_pide_series(self):
+        self.ok(orden="nota-desc", genero=27)
+
+        self.assertEqual(self.tmdb.de("discover", "tv"), [])
+        self.assertEqual(len(self.tmdb.de("discover", "movie")), 5)
+
+    def test_no_pide_paginas_que_tmdb_no_tiene(self):
+        class DosPaginas(TMDBFalsoPaginado):
+            def discover(self, *args, **kwargs):
+                datos = super().discover(*args, **kwargs)
+                datos["total_pages"] = 2
+                return datos
+
+        self.tmdb.__class__ = DosPaginas
+        self.ok(orden="nota-desc")
+
+        self.assertEqual(len(self.tmdb.de("discover", "movie")), 2)
+
+
+class OrdenEnMemoriaTests(ExploreBase):
+    """Con texto, el orden se aplica en memoria sobre la ventana de 100."""
+
+    def setUp(self):
+        super().setUp()
+        parche = patch("catalogo.services.explore.hoy", return_value=date(2026, 11, 24))
+        parche.start()
+        self.addCleanup(parche.stop)
+
+    def fechas(self, datos):
+        return [
+            item.get("release_date") or item.get("first_air_date") or ""
+            for item in datos["results"]
+        ]
+
+    def test_por_fecha_lo_que_no_tiene_fecha_va_al_final(self):
+        for orden, inverso in (("fecha-desc", True), ("fecha-asc", False)):
+            with self.subTest(orden=orden):
+                datos = self.ok(q="dune", tipo="movie", orden=orden)
+
+                fechas = self.fechas(datos)
+                con_fecha = [f for f in fechas if f]
+                self.assertEqual(con_fecha, sorted(con_fecha, reverse=inverso))
+                self.assertEqual(
+                    fechas, con_fecha + [""] * (len(fechas) - len(con_fecha))
+                )
+
+    def test_mas_nuevos_deja_al_final_lo_que_estrena_despues_de_hoy(self):
+        datos = self.ok(q="dune", tipo="movie", orden="fecha-desc")
+
+        fechas = [f for f in self.fechas(datos) if f]
+        hasta_hoy = [f for f in fechas if f <= "2026-11-24"]
+        self.assertEqual(fechas[: len(hasta_hoy)], hasta_hoy)
+
+    def test_por_nota_lo_que_tiene_pocos_votos_va_al_final(self):
+        datos = self.ok(q="dune", orden="nota-desc")
+
+        resultados = datos["results"]
+        for n in range(2, datos["total_pages"] + 1):
+            resultados += self.ok(q="dune", orden="nota-desc", page=n)["results"]
+        votos = [i.get("vote_count") or 0 for i in resultados]
+        firmes = sum(1 for v in votos if v >= 200)
+        self.assertTrue(0 < firmes < len(votos))
+        # Primero los de 200 votos o más, de mayor a menor nota; después el resto.
+        self.assertTrue(all(v >= 200 for v in votos[:firmes]))
+        self.assertTrue(all(v < 200 for v in votos[firmes:]))
+        notas = [i["vote_average"] for i in resultados[:firmes]]
+        self.assertEqual(notas, sorted(notas, reverse=True))
+
+    def test_mas_votados(self):
+        datos = self.ok(q="dune", tipo="movie", orden="votos-desc")
+
+        votos = [item["vote_count"] for item in datos["results"]]
+        self.assertEqual(votos, sorted(votos, reverse=True))

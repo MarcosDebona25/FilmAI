@@ -131,7 +131,9 @@ declare const messages: {
       "newest": "Más recientes",
       "oldest": "Más antiguas",
       "highestRating": "Mayor calificación",
-      "lowestRating": "Menor calificación"
+      "lowestRating": "Menor calificación",
+      "popular": "Populares",
+      "mostVoted": "Más votados"
     },
     "fields": {
       "optionalHint": "(opcional)",
@@ -474,6 +476,9 @@ declare const messages: {
       "role": "{role, select, director {{gender, select, female {Directora} male {Director} other {Dirección}}} other {{gender, select, female {Actriz} male {Actor} other {Actuación}}}}",
       "remove": "Quitar el filtro {name}",
       "lookingFor": "¿Buscabas a {name}? <link>Ver sus producciones</link>"
+    },
+    "sort": {
+      "sortedBy": "Ordenado por <valor>{sortLabel}</valor>"
     }
   },
   "reviews": {

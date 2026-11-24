@@ -264,3 +264,6 @@ search.person.remove,,label,name,Quitar el filtro {name},Remove filter {name},ap
 search.person.lookingFor,,label,name,¿Buscabas a {name}? <link>Ver sus producciones</link>,Looking for {name}? <link>See their titles</link>,aprobado
 lists.suggestions.basisRecent,,label,,Según lo que viste hace poco.,Based on what you watched most recently.,aprobado
 nav.main.explore,,label,,Explorar,Explore,aprobado
+common.sort.popular,,label,,Populares,Popular,aprobado
+common.sort.mostVoted,,label,,Más votados,Most voted,aprobado
+search.sort.sortedBy,,label,sortLabel,Ordenado por <valor>{sortLabel}</valor>,Sorted by <valor>{sortLabel}</valor>,aprobado

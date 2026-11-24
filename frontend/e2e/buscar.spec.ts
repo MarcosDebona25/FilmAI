@@ -107,6 +107,49 @@ test.describe("buscar en escritorio", () => {
       page: "2",
     });
   });
+
+  test("el menú de orden manda «Highest rated» a la API y «Clear filters» lo conserva", async ({
+    page,
+  }) => {
+    const consultas = await prepararBuscar(page);
+    await page.goto("/search?genre=18");
+
+    await page.getByRole("button", { name: "Sort: Popular" }).click();
+    await page.getByRole("menuitemradio", { name: en.common.sort.highestRating }).click();
+
+    await expect(page).toHaveURL(/sort=highest/);
+    await expect.poll(() => consultas.at(-1)?.get("orden")).toBe("nota-desc");
+    // El botón nombra el orden elegido y el menú se cerró.
+    await expect(page.getByRole("button", { name: "Sort: Highest rated" })).toBeVisible();
+    await expect(page.getByRole("menu")).toBeHidden();
+
+    await page.getByRole("button", { name: en.common.filters.clear }).click();
+    // La grilla del mock es corta: el scroll infinito puede pedir ya la página 2.
+    await expect(page).toHaveURL(/\/search\?sort=highest(&page=\d+)?$/);
+    await expect.poll(() => consultas.at(-1)?.get("orden")).toBe("nota-desc");
+    expect(consultas.at(-1)?.get("genero")).toBeNull();
+    await sinDesborde(page);
+  });
+
+  test("a 1024 px el botón de orden es solo el ícono y la fila entra en una línea", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await prepararBuscar(page);
+    await page.goto("/search?sort=newest");
+
+    const boton = page.getByRole("button", { name: "Sort: Newest" });
+    await expect(boton).toBeVisible();
+    await expect(boton.getByText("Newest")).toBeHidden();
+    // El selector de tipo, las tres píldoras y el botón de orden, a la misma altura.
+    const tops = await page
+      .locator("main search")
+      .locator("[role=group], label:has(select), button[aria-haspopup=menu]")
+      .evaluateAll((nodos) => nodos.map((nodo) => Math.round(nodo.getBoundingClientRect().top)));
+    expect(tops).toHaveLength(5);
+    expect(new Set(tops).size).toBe(1);
+    await sinDesborde(page);
+  });
 });
 
 test.describe("buscar en celular", () => {
@@ -121,13 +164,34 @@ test.describe("buscar en celular", () => {
     await page.goto("/search");
 
     await page.getByRole("button", { name: "Filters" }).click();
-    const hoja = page.getByRole("dialog", { name: en.common.filters.title });
+    const hoja = page.getByRole("dialog", { name: en.reviews.filters.dialogTitle });
     await hoja.getByRole("button", { name: en.common.filters.ratingAtLeastSeven }).click();
     await hoja.getByRole("button", { name: en.search.filters.apply }).click();
 
     await expect(hoja).toBeHidden();
     await expect(page.getByRole("button", { name: "Filters, 1 active" })).toBeVisible();
     expect(consultas.at(-1)?.get("nota")).toBe("7+");
+    await sinDesborde(page);
+  });
+
+  test("el orden se elige en la hoja, avisa bajo la fila y viaja a la API", async ({ page }) => {
+    const consultas = await prepararBuscar(page);
+    await page.goto("/search");
+
+    await page.getByRole("button", { name: "Filters" }).click();
+    const hoja = page.getByRole("dialog", { name: en.reviews.filters.dialogTitle });
+    await hoja.getByRole("button", { name: en.common.sort.newest }).click();
+    await expect(hoja.getByRole("button", { name: en.common.sort.newest })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await hoja.getByRole("button", { name: en.search.filters.apply }).click();
+
+    await expect(hoja).toBeHidden();
+    await expect(page.getByText("Sorted by Newest")).toBeVisible();
+    // El orden no suma al contador de «Filters».
+    await expect(page.getByRole("button", { name: "Filters", exact: true })).toBeVisible();
+    await expect.poll(() => consultas.at(-1)?.get("orden")).toBe("fecha-desc");
     await sinDesborde(page);
   });
 });

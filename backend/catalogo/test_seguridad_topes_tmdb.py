@@ -152,6 +152,25 @@ class PresupuestoPorPedidoTests(SimpleTestCase):
 
         self.assertEqual(contador.total, 10)
 
+    def test_todo_con_orden_no_pasa_de_10_llamadas(self):
+        # «Todo» sin texto con un orden lee 5 páginas de `discover` por tipo
+        # (24/11/2026): el mismo máximo que la búsqueda con texto.
+        def discover(tipo, genero, anio, min_rating, page, **extra):
+            registrar_llamada()
+            return {
+                "total_pages": 50,
+                "total_results": 1000,
+                "results": [{"id": page, "poster_path": "/a.jpg"}],
+            }
+
+        with contar_llamadas() as contador:
+            explorar(
+                Mock(discover=Mock(side_effect=discover)), tipo="all", orden="nota-desc"
+            )
+
+        self.assertEqual(contador.total, 10)
+        self.assertLessEqual(contador.total, MAX_LLAMADAS_POR_PEDIDO)
+
 
 class PresupuestoEnLaVistaTests(TestCase):
     def test_un_pedido_que_pasa_el_tope_responde_503(self):

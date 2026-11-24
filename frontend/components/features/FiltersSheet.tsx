@@ -6,7 +6,9 @@ import { useTranslations } from "next-intl";
 import { SegmentedPills, SheetFooter, SheetHeader } from "@/components/features/filters/SheetParts";
 import { DialogShell } from "@/components/features/title/DialogShell";
 import {
+  ETIQUETA_ORDEN,
   NOTAS,
+  ORDENES,
   etiquetaNota,
   opcionesDeAnio,
   anioDesdeOpcion,
@@ -16,8 +18,9 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * Hoja «Filters» de Buscar en celular (canvas «Search · mobile»): Género, Año y
- * la nota de TMDB como botones. Cada cambio se aplica al momento (los
+ * Hoja «Filters and sort» de Buscar en celular (canvas «Search · mobile» y
+ * «Explore · sort», M1): el orden arriba, después Género, Año y la nota de TMDB
+ * como botones. Cada cambio se aplica al momento (los
  * resultados se actualizan detrás); «Show results» solo cierra.
  */
 export function FiltersSheet({
@@ -41,7 +44,18 @@ export function FiltersSheet({
 
   return (
     <DialogShell labelledBy={titulo} onClose={onClose}>
-      <SheetHeader id={titulo} titulo={t("common.filters.title")} onClose={onClose} />
+      <SheetHeader id={titulo} titulo={t("reviews.filters.dialogTitle")} onClose={onClose} />
+
+      <fieldset className="m-0 flex flex-col border-0 p-0">
+        <legend className={cn(etiqueta, "mb-2.5 p-0")}>{t("common.filters.sortByLabel")}</legend>
+        <SegmentedPills
+          opciones={ORDENES}
+          valor={busqueda.orden}
+          onCambiar={(orden) => orden && onCambiar({ orden })}
+          etiqueta={(orden) => t(`common.sort.${ETIQUETA_ORDEN[orden ?? "popular"]}`)}
+          className="grid-cols-2 rounded-3xl"
+        />
+      </fieldset>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
