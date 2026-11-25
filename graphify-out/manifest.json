@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1795568960.4711664,
-    "seen": 1795569144.1802225,
-    "ast_hash": "94736d256462bf75ddf350ebf841da81",
+    "mtime": 1795570906.4215796,
+    "seen": 1795571363.2865534,
+    "ast_hash": "b7605677f236a4a9f53a6ad525762f8b",
     "semantic_hash": ""
   },
   "docs/06_TMDB_API_Referencia.md": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1795569341.3852668,
-    "seen": 1795569360.026274,
-    "ast_hash": "89cfb91cc4b936549e353f3eae514f96",
+    "mtime": 1795570906.4234273,
+    "seen": 1795571363.2865853,
+    "ast_hash": "6d4deaa8d153974ced6a4e0bc5290c23",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4446,14 +4446,14 @@
     "semantic_hash": ""
   },
   "backend/chatbot/management/commands/chatear.py": {
-    "mtime": 1794615032.7167697,
-    "seen": 1795569144.1794698,
-    "ast_hash": "24aa206a0002490f42d98c906ff868db",
+    "mtime": 1795570906.4199917,
+    "seen": 1795571363.2597654,
+    "ast_hash": "3710cdbcf2a28defe638ff0ee5712f78",
     "semantic_hash": ""
   },
   "backend/chatbot/orquestador.py": {
-    "mtime": 1795043282.5665636,
-    "seen": 1795569144.1794791,
+    "mtime": 1795570906.4203396,
+    "seen": 1795571363.2600584,
     "ast_hash": "efe156695fbe53e004db4578d98789bf",
     "semantic_hash": ""
   },
@@ -4488,9 +4488,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/README.md": {
-    "mtime": 1795402199.9503314,
-    "seen": 1795569144.1801841,
-    "ast_hash": "8718e5e2abb6a35bb003025517c2f3fe",
+    "mtime": 1795570906.4196267,
+    "seen": 1795571363.2850657,
+    "ast_hash": "370af28dd64f7a0d3d205bf6d026e56e",
     "semantic_hash": ""
   },
   "backend/catalogo/test_encolado_celery.py": {
@@ -4542,8 +4542,8 @@
     "semantic_hash": ""
   },
   "frontend/components/ChatProvider.tsx": {
-    "mtime": 1795569253.1050096,
-    "seen": 1795569360.0077336,
+    "mtime": 1795569944.8655822,
+    "seen": 1795571363.2725377,
     "ast_hash": "0d59b18a70fa831a81778dbab7951e95",
     "semantic_hash": ""
   },
@@ -4590,8 +4590,8 @@
     "semantic_hash": ""
   },
   "frontend/lib/chat.ts": {
-    "mtime": 1795569253.1052227,
-    "seen": 1795569360.0147784,
+    "mtime": 1795569944.8659163,
+    "seen": 1795571363.2770672,
     "ast_hash": "3c4d60cdbc94fcf2f8509703ab0ba50a",
     "semantic_hash": ""
   },
@@ -4602,8 +4602,8 @@
     "semantic_hash": ""
   },
   "frontend/tests/chat-provider.test.tsx": {
-    "mtime": 1795569253.105561,
-    "seen": 1795569360.0179665,
+    "mtime": 1795569944.866118,
+    "seen": 1795571363.2789967,
     "ast_hash": "497811795e5d55d77328d292cccaf364",
     "semantic_hash": ""
   },
@@ -4650,8 +4650,8 @@
     "semantic_hash": ""
   },
   "contracts/sse-chat.md": {
-    "mtime": 1795569341.3850656,
-    "seen": 1795569360.0259738,
+    "mtime": 1795569944.862208,
+    "seen": 1795571363.2863102,
     "ast_hash": "0e88d45530229bf01ef817145e144ff7",
     "semantic_hash": ""
   },
@@ -4674,8 +4674,8 @@
     "semantic_hash": ""
   },
   "openspec/specs/chat-ui/spec.md": {
-    "mtime": 1795569253.1060052,
-    "seen": 1795569360.0267057,
+    "mtime": 1795569944.9059136,
+    "seen": 1795571363.287006,
     "ast_hash": "eb420a44bd3601957a0008a713699478",
     "semantic_hash": ""
   },
@@ -4686,9 +4686,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_chatear_golden.py": {
-    "mtime": 1794615032.7174058,
-    "seen": 1795569144.179494,
-    "ast_hash": "aad1921b1010b4753c667fbbf940c982",
+    "mtime": 1795570906.4205475,
+    "seen": 1795571363.2604122,
+    "ast_hash": "38995c7d70abf8486400a310463f5f5b",
     "semantic_hash": ""
   },
   "frontend/components/access/DateField.tsx": {
@@ -4710,9 +4710,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/golden.yaml": {
-    "mtime": 1794716680.0050287,
-    "seen": 1795569144.1801853,
-    "ast_hash": "df5ab23a22b7fa7fad627e2b0c2f392b",
+    "mtime": 1795570906.4198112,
+    "seen": 1795571363.2850678,
+    "ast_hash": "1b50b441e2c1941b1a911cc72827bde8",
     "semantic_hash": ""
   },
   "docs/tmdb-legales/Consideraciones Legales TMDB.txt": {
@@ -4842,8 +4842,8 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_marcadores.py": {
-    "mtime": 1794691761.0270677,
-    "seen": 1795569144.1794999,
+    "mtime": 1795570906.4208937,
+    "seen": 1795571363.2605824,
     "ast_hash": "aeca3f76b62961d099890aa94b94254e",
     "semantic_hash": ""
   },
@@ -4926,8 +4926,8 @@
     "semantic_hash": ""
   },
   "frontend/e2e/chat-calidad.spec.ts": {
-    "mtime": 1795569253.1058164,
-    "seen": 1795569360.0129097,
+    "mtime": 1795569944.8657908,
+    "seen": 1795571363.27576,
     "ast_hash": "43933774da435e3a16411fa2af5b65cf",
     "semantic_hash": ""
   },
@@ -5484,8 +5484,8 @@
     "semantic_hash": ""
   },
   "frontend/tests/chat-recuperar.test.ts": {
-    "mtime": 1795569253.6926587,
-    "seen": 1795569360.017969,
+    "mtime": 1795569944.8662405,
+    "seen": 1795571363.278998,
     "ast_hash": "fbe7696c8d3baa441261e0be6e63c8a7",
     "semantic_hash": ""
   }
