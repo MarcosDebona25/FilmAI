@@ -90,6 +90,9 @@ llega durante el guardado, el guardado termina (la transacción decide) y el can
 se suelta al terminar; la respuesta aparecerá en el historial la próxima vez que se
 lea (postcondición de falla de CU-014, aceptada el 08/10/2026).
 
+En un corte de red (no un cancel), el panel busca esa respuesta en el historial antes
+de mostrar el error (H10, 25/11/2026; spec `chat-ui`, «Stream ends without `fin`»).
+
 ## Límites
 
 - Una respuesta a la vez por chat. El candado vence solo a los

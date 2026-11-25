@@ -2,9 +2,9 @@
 
 Estado contrastado el **22/11/2026** con los documentos 01–04, el código y las pruebas, sobre `develop` tras el #244 (`main` va unos commits atrás). Las filas de la interfaz, de Listas y de Calidad se revisaron de nuevo el **15/10/2026** y el **19/11/2026**. ✅ Implementado; 🟡 parcial; ⬜ pendiente. Un check verde indica que el alcance de la fila existe en el repositorio; las integraciones externas requieren sus credenciales y servicios para funcionar.
 
-## Pendientes (23/11/2026)
+## Pendientes (25/11/2026)
 
-Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son un issue abierto, cierres de calidad y mejoras. Los pendientes 1, 2, 4, 5, 8, 10 y 11 quedan en la tabla como cerrados y están en `develop`: el 1 y el 4 entraron con #198 el 13/11/2026 (#180 cerrado); el 5 (#224), el 8 (#226), el 10 (#223) y el 11 (#225) entraron el 19/11/2026. Los pendientes 3 (Q-08 y #181, salvo la prueba manual con cuentas reales), 13 (21/11/2026) y 14 también están cerrados. Quedan abiertos los pendientes 6, 7, 9 y 12. El 12 se ordenó el 23/11/2026: quedan H10, los campos verificables del set dorado y H8. El 15/11/2026 se decidió en el canvas la interfaz de los pendientes 5, 8, 10 y 11 (secciones 13 a 17, ver «Estado de la interfaz frente al canvas»): el frontend ya no espera diseño.
+Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina dos criterios: cuánto importa para la aplicación y qué tan viable es encararlo ahora. Los módulos 0 a 6 están implementados; lo que sigue son un issue abierto, cierres de calidad y mejoras. Los pendientes 1, 2, 4, 5, 8, 10 y 11 quedan en la tabla como cerrados y están en `develop`: el 1 y el 4 entraron con #198 el 13/11/2026 (#180 cerrado); el 5 (#224), el 8 (#226), el 10 (#223) y el 11 (#225) entraron el 19/11/2026. Los pendientes 3 (Q-08 y #181, salvo la prueba manual con cuentas reales), 13 (21/11/2026) y 14 también están cerrados. Quedan abiertos los pendientes 6, 7, 9 y 12. El 12 se ordenó el 23/11/2026: quedan los campos verificables del set dorado y H8 (H10 se hizo el 25/11/2026). El 15/11/2026 se decidió en el canvas la interfaz de los pendientes 5, 8, 10 y 11 (secciones 13 a 17, ver «Estado de la interfaz frente al canvas»): el frontend ya no espera diseño.
 
 | #   | Pendiente                                                             | Importancia                     | Viabilidad | Referencia                                                    |
 | --- | --------------------------------------------------------------------- | ------------------------------- | ---------- | ------------------------------------------------------------- |
@@ -19,7 +19,7 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 | 9   | Perfil público y notificaciones por correo                            | Mínima (amplía el alcance)      | Baja       | Perfil, Settings                                              |
 | 10  | ✅ Buscar en la navbar, filtro por persona y sin relevancia           | Media                           | —          | `openspec/specs/navbar-search/`, sección 13 del canvas        |
 | 11  | ✅ Registro en 3 pasos                                                | Media                           | —          | Sección 16 del canvas; «Dónde ver» (17) cerrado el 15/11/2026 |
-| 12  | Revisión de arquitectura del chatbot (pendientes «H»)                 | Media (H10, golden); baja (H8)  | Alta       | #221 (H5), #222 (H3), decisiones 23/11/2026                   |
+| 12  | Revisión de arquitectura del chatbot (pendientes «H»)                 | Media (golden); baja (H8)       | Alta       | #221 (H5), #222 (H3), decisiones 23/11/2026                   |
 | 13  | ✅ Suite del backend resuelta y `access-screens` estable (21/11/2026) | Media                           | —          | #203, `.github/workflows/ci.yml`, 21/11/2026                  |
 | 14  | ✅ Restos del #226 (Watching)                                         | Baja                            | Media      | `docs/decisiones.md` (19/11/2026)                             |
 
@@ -151,13 +151,13 @@ La revisión de arquitectura del chatbot del 13/11/2026 dejó pendientes numerad
 
 | H      | Qué es                                                                 | Importancia | Viabilidad | Estado     |
 | ------ | ---------------------------------------------------------------------- | ----------- | ---------- | ---------- |
-| H10    | Volver a pedir el historial después de un `network_error` en el chat   | Media       | Alta       | Abierto    |
+| H10    | Volver a pedir el historial después de un `network_error` en el chat   | —           | —          | ✅ Hecho   |
 | Golden | Campos que `chatear --golden` verifica solo (tools, tarjetas, tiempo)  | Media       | Alta       | Abierto    |
 | H8     | Delimitar las reseñas y los datos de TMDB en el prompt, midiendo antes | Baja        | Media      | Abierto    |
 | H11    | Variables del system fuera del prefijo cacheado                        | —           | —          | ✅ Hecho   |
 | H13    | Tools que acepten el `ref` de una tarjeta                              | —           | —          | Descartado |
 
-Orden sugerido: H10 (PR chico de frontend), después los campos del set dorado y con ellos la medición de H8.
+**Estado (25/11/2026):** H10 hecho (`feat/chat-recuperar-respuesta`). Orden sugerido: los campos del set dorado y con ellos la medición de H8.
 
 ### 13. Tiempo de la suite de tests
 

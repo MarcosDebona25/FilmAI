@@ -12,6 +12,7 @@ const chat = vi.hoisted(() => ({
   enviarMensaje: vi.fn(),
   prepararChat: vi.fn(),
   cargarHistorial: vi.fn(),
+  buscarTurnoGuardado: vi.fn(),
 }));
 vi.mock("@/lib/chat", async (original) => ({ ...(await original()), ...chat }));
 
@@ -429,6 +430,146 @@ describe("ChatProvider: historial", () => {
       expect.any(AbortSignal)
     );
     expect(result.current.borrador).toBe("a medio escribir");
+  });
+});
+
+describe("ChatProvider: el stream se corta a mitad (H10)", () => {
+  const CORTE = new ApiError(0, { code: "network_error" });
+  const PAREJA = [pregunta(7, "hola"), respuesta(8, "Hola **completa**")];
+
+  beforeEach(() => {
+    cuenta.perfil = { pk: 1 };
+    chat.prepararChat.mockResolvedValue(undefined);
+    chat.buscarTurnoGuardado.mockReset();
+    chat.cargarHistorial.mockReset();
+    chat.cargarHistorial.mockResolvedValue({
+      mensajes: [pregunta(3, "hola"), respuesta(4, "Vieja")],
+      next: null,
+    });
+  });
+
+  /** Panel abierto, historial listo, «hola» enviado y la respuesta a medias. */
+  async function aMedias(abrir = true) {
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    const hook = renderHook(useChat, { wrapper });
+    if (abrir) {
+      act(() => hook.result.current.abrir());
+      await waitFor(() => expect(hook.result.current.historial.estado).toBe("listo"));
+    }
+    act(() => hook.result.current.setBorrador("hola"));
+    act(() => hook.result.current.enviar());
+    act(() => stream.empujar({ tipo: "texto", delta: "Hola" }));
+    await waitFor(() => expect(hook.result.current.enCurso?.respuesta).toBe("Hola"));
+    return { ...hook, stream };
+  }
+
+  it("si estaba guardada la muestra entera, la anuncia y no avisa ningún error", async () => {
+    chat.buscarTurnoGuardado.mockResolvedValue(PAREJA);
+    const { result, stream } = await aMedias();
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(result.current.enCurso).toBeNull());
+    // 4 era el último id al enviar: el «hola» viejo (3) no cuenta.
+    expect(chat.buscarTurnoGuardado).toHaveBeenCalledWith("hola", 4, expect.any(Function));
+    expect(result.current.mensajes.map((m) => m.id)).toEqual([3, 4, 7, 8]);
+    expect(result.current.aviso).toBeNull();
+    expect(result.current.borrador).toBe("");
+    expect(result.current.anuncio).toBe("Hola completa");
+  });
+
+  it("con el panel cerrado, recuperarla enciende el badge", async () => {
+    chat.buscarTurnoGuardado.mockResolvedValue(PAREJA);
+    const { result, stream } = await aMedias();
+    act(() => result.current.cerrar());
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(result.current.noLeido).toBe(true));
+  });
+
+  it("si no estaba, muestra el error, devuelve la pregunta y refresca al reabrir", async () => {
+    chat.buscarTurnoGuardado.mockResolvedValue(null);
+    const { result, stream } = await aMedias();
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(result.current.aviso).toMatchObject({ code: "network_error" }));
+    expect(result.current.enCurso).toBeNull();
+    expect(result.current.borrador).toBe("hola");
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    await waitFor(() => expect(chat.cargarHistorial).toHaveBeenCalledTimes(2));
+  });
+
+  it("cancelar mientras se busca gana sobre la respuesta recuperada", async () => {
+    let encontrar: (pareja: MensajeChat[]) => void = () => {};
+    chat.buscarTurnoGuardado.mockReturnValue(new Promise((listo) => (encontrar = listo)));
+    const { result, stream } = await aMedias();
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(chat.buscarTurnoGuardado).toHaveBeenCalled());
+    expect(result.current.enCurso?.respuesta).toBe("Hola");
+    act(() => result.current.cancelar());
+    await act(async () => encontrar(PAREJA));
+    expect(result.current.aviso).toEqual({ tipo: "cancelado" });
+    expect(result.current.mensajes.map((m) => m.id)).toEqual([3, 4]);
+  });
+
+  it("al cerrar sesión mientras se busca, la respuesta no aparece", async () => {
+    let encontrar: (pareja: MensajeChat[]) => void = () => {};
+    chat.buscarTurnoGuardado.mockReturnValue(new Promise((listo) => (encontrar = listo)));
+    const { result, stream, rerender } = await aMedias();
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(chat.buscarTurnoGuardado).toHaveBeenCalled());
+    cuenta.perfil = null;
+    rerender();
+    await act(async () => encontrar(PAREJA));
+    expect(result.current.mensajes).toEqual([]);
+    expect(result.current.noLeido).toBe(false);
+  });
+
+  it("sin historial cargado no busca: una pregunta repetida se confundiría", async () => {
+    const { result, stream } = await aMedias(false);
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(result.current.aviso).toMatchObject({ code: "network_error" }));
+    expect(chat.buscarTurnoGuardado).not.toHaveBeenCalled();
+  });
+
+  /** Cancela «hola» y lo vuelve a enviar con el stream por cortarse. */
+  async function reenviarTrasCancelar(reabrir: boolean) {
+    const { result } = await aMedias();
+    act(() => result.current.cancelar());
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    if (reabrir) {
+      chat.cargarHistorial.mockReturnValue(new Promise(() => {}));
+      act(() => result.current.cerrar());
+      act(() => result.current.abrir());
+    }
+    act(() => result.current.enviar("hola"));
+    act(() => stream.empujar({ tipo: "texto", delta: "Hola" }));
+    await waitFor(() => expect(result.current.enCurso?.respuesta).toBe("Hola"));
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(result.current.aviso).toMatchObject({ code: "network_error" }));
+    expect(chat.buscarTurnoGuardado).not.toHaveBeenCalled();
+  }
+
+  it("tras un cancel sin refrescar no busca: la cancelada pudo quedar guardada", () =>
+    reenviarTrasCancelar(false));
+
+  it("con el refresco tras un cancel todavía en vuelo, tampoco busca", () =>
+    reenviarTrasCancelar(true));
+
+  it("un corte antes del primer evento muestra el error sin buscar", async () => {
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    const { result } = renderHook(useChat, { wrapper });
+    act(() => result.current.abrir());
+    await waitFor(() => expect(result.current.historial.estado).toBe("listo"));
+    act(() => result.current.setBorrador("hola"));
+    act(() => result.current.enviar());
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(result.current.aviso).toMatchObject({ code: "network_error" }));
+    expect(chat.buscarTurnoGuardado).not.toHaveBeenCalled();
+    // El pedido pudo llegar igual: al reabrir se refresca.
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    await waitFor(() => expect(chat.cargarHistorial).toHaveBeenCalledTimes(2));
   });
 });
 
