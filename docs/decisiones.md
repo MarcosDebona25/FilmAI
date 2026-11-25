@@ -1045,6 +1045,15 @@ Archivos: `docs/05_Plan_de_Desarrollo.md` (pendiente 12), `docs/decisiones.md`
 
 Archivos: `frontend/lib/chat.ts`, `frontend/components/ChatProvider.tsx`, `frontend/tests/chat-provider.test.tsx`, `frontend/tests/chat-recuperar.test.ts`, `frontend/e2e/chat-calidad.spec.ts`, `openspec/specs/chat-ui/spec.md`, `contracts/sse-chat.md`
 
+### 25/11/2026 — Descartado `cortada` en `fin`, y pendiente 9 fuera del alcance
+
+Decisiones de Gonza:
+
+- **`"cortada": true` en el evento `fin` (propuesta del #222): descartado.** El «…» con que termina una respuesta cortada por tiempo ya lo indica, y el contrato SSE no cambia.
+- **Perfil público y notificaciones por correo (pendiente 9): fuera del alcance por ahora**, como posible implementación futura. Qué hacer con los controles de Settings que hoy no tienen efecto queda sin decidir.
+
+Archivos: `docs/decisiones.md`, `docs/05_Plan_de_Desarrollo.md`
+
 ---
 
 ## Multiidioma
