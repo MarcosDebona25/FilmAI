@@ -32,7 +32,8 @@ Por defecto no guarda nada, así que se puede probar con un usuario real sin ens
 su chat; con `--guardar` cada turno se guarda como lo hace la app (`guardar_turno()`:
 tarjetas y `ya_recomendados` incluidos).
 Con `--golden` recorre el set dorado (`golden.yaml`) y mide los tiempos contra
-RNF #6.
+RNF #6. Los casos con `verifica` se chequean solos (tools, argumentos y cantidad de
+tarjetas); la calidad de la respuesta sigue en `espera`, a mano.
 Para ver cómo fue un turno, buscá en el log del backend la línea `Turno:` del logger
 `chatbot.orquestador`. Además de cómo fue (tools, vueltas, marcadores), trae lo que
 costó: `llamadas`, `tokens_entrada`, `tokens_salida`, `cache_acierto` y `cache_fallo`

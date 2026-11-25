@@ -18,7 +18,7 @@ from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase
 
 from chatbot.llm import LlamadaTool, ProveedorFalso
-from chatbot.management.commands.chatear import GOLDEN, cargar_golden
+from chatbot.management.commands.chatear import GOLDEN, cargar_golden, verificar
 from chatbot.models import Mensaje
 from chatbot.tools import FUNCIONES
 from usuarios.factories import UsuarioFactory
@@ -123,6 +123,26 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
             "tools: []}",
             "id repetido": "- {id: a, mensaje: hola, rnf6: simple, espera: x}\n"
             "- {id: a, mensaje: chau, rnf6: simple, espera: y}",
+            **{
+                f"verifica {malo}": "- {id: a, mensaje: hola, rnf6: simple, "
+                f"espera: x, verifica: {malo}}}"
+                for malo in (
+                    "{}",
+                    "[]",
+                    "{otro: 1}",
+                    "{tools: []}",
+                    "{tools: descubrir}",
+                    "{tools: [no_existe]}",
+                    "{alguna_tool: [no_existe]}",
+                    "{sin_tools: false}",
+                    "{sin_tools: true, tools: [descubrir]}",
+                    "{sin_argumentos: tipo}",
+                    "{tarjetas: 3}",
+                    "{tarjetas: [2, 1]}",
+                    "{tarjetas: [0, 4]}",
+                    "{tarjetas: [true, 1]}",
+                )
+            },
             "YAML roto": "- [sin cerrar",
             "historial vacío": CON_HISTORIAL.replace(HISTORIAL_BUENO, "historial: []"),
             "historial que no es lista": CON_HISTORIAL.replace(
@@ -157,6 +177,56 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
     def test_un_archivo_que_no_existe_es_un_error_claro(self):
         with self.assertRaises(CommandError):
             cargar_golden(self.archivo("x").with_name("no-existe.yaml"))
+
+
+class VerificarTests(SimpleTestCase):
+    """`verificar()` es pura: recibe lo que pasó y devuelve lo que falló."""
+
+    def llamada(self, nombre="descubrir", argumentos="{}"):
+        return LlamadaTool("1", nombre, argumentos)
+
+    def test_tools_pide_todas(self):
+        verifica = {"tools": ["descubrir", "detalle"]}
+
+        self.assertEqual(
+            verificar(verifica, [self.llamada("detalle"), self.llamada()], []), []
+        )
+        self.assertEqual(
+            verificar(verifica, [self.llamada()], []), ["faltó usar detalle"]
+        )
+
+    def test_alguna_tool_se_conforma_con_una(self):
+        verifica = {"alguna_tool": ["descubrir", "detalle"]}
+
+        self.assertEqual(verificar(verifica, [self.llamada()], []), [])
+        self.assertEqual(len(verificar(verifica, [], [])), 1)
+
+    def test_sin_tools(self):
+        self.assertEqual(verificar({"sin_tools": True}, [], []), [])
+        self.assertEqual(len(verificar({"sin_tools": True}, [self.llamada()], [])), 1)
+
+    def test_sin_argumentos_ignora_los_nulos_y_marca_los_demas(self):
+        verifica = {"sin_argumentos": ["nota_minima"]}
+
+        for argumentos, fallas in (
+            ("{}", 0),
+            ('{"nota_minima": null}', 0),
+            ('{"nota_minima": 0}', 1),
+            ("{roto", 1),
+            ("[]", 1),
+        ):
+            with self.subTest(argumentos):
+                resultado = verificar(
+                    verifica, [self.llamada(argumentos=argumentos)], []
+                )
+                self.assertEqual(len(resultado), fallas)
+
+    def test_tarjetas_es_un_rango_con_los_bordes_incluidos(self):
+        for cantidad, fallas in ((0, 1), (1, 0), (3, 0)):
+            with self.subTest(cantidad):
+                resultado = verificar({"tarjetas": [1, 3]}, [], [{}] * cantidad)
+                self.assertEqual(len(resultado), fallas)
+        self.assertEqual(len(verificar({"tarjetas": [0, 1]}, [], [{}] * 2)), 1)
 
 
 class ComandoGoldenTests(ConArchivos, TestCase):
@@ -239,6 +309,41 @@ class ComandoGoldenTests(ConArchivos, TestCase):
         resumen = salida.split("Resumen")[1]
         self.assertRegex(resumen, r"saludo\s+—\s+—\s+error")
         self.assertRegex(resumen, r"terror\s+.*cumple")
+
+    def con_verifica(self, primera, segunda):
+        return DOS_PREGUNTAS.replace(
+            "espera: Saluda sin tools.",
+            f"espera: Saluda sin tools.\n  verifica: {primera}",
+        ).replace("sin nota_minima.", f"sin nota_minima.\n  verifica: {segunda}")
+
+    def test_verifica_se_chequea_y_se_resume(self):
+        salida, _ = self.golden(
+            [["Hola"], ["No encontré nada"]],
+            self.con_verifica("{sin_tools: true}", "{tools: [descubrir]}"),
+        )
+
+        self.assertIn("[verifica: ok]", salida)
+        self.assertIn("[verifica: falla: faltó usar descubrir]", salida)
+        resumen = salida.split("Resumen")[1]
+        self.assertRegex(resumen, r"saludo\s+.*cumple\s+ok")
+        self.assertRegex(resumen, r"terror\s+.*cumple\s+falla")
+        self.assertIn("Verifica: 1 de 2 casos en ok.", resumen)
+
+    def test_las_tools_de_una_pregunta_no_cuentan_en_la_siguiente(self):
+        salida, _ = self.golden(
+            [[LlamadaTool("1", "descubrir", "{}")], ["Nada"], ["Hola"]],
+            self.con_verifica("{tools: [descubrir]}", "{sin_tools: true}"),
+        )
+
+        self.assertIn("Verifica: 2 de 2 casos en ok.", salida)
+
+    def test_un_turno_con_error_no_cuenta_como_ok(self):
+        salida, _ = self.golden(
+            [[RuntimeError("503")], ["Hola"]],
+            self.con_verifica("{sin_tools: true}", "{sin_tools: true}"),
+        )
+
+        self.assertIn("Verifica: 1 de 2 casos en ok.", salida)
 
     def test_no_guarda_ningun_turno(self):
         self.golden([["Hola"], ["Algo"]])

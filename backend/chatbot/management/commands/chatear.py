@@ -8,13 +8,15 @@ su chat. Con `--guardar` cada turno se guarda como lo hace la app (`guardar_turn
 
 Con `--golden` recorre `chatbot/golden.yaml` (el set dorado): por cada pregunta
 muestra la expectativa, los eventos, las tools que pidió el modelo con sus
-argumentos, y cuánto tardó el primer texto y el turno completo. No guarda nada.
+argumentos, y cuánto tardó el primer texto y el turno completo. Si la pregunta trae
+`verifica`, además chequea sola las tools y las tarjetas. No guarda nada.
 Para comparar con thinking, se corre de nuevo con `LLM_THINKING=true`.
 
 Es síncrono, como todo comando de Django: `async_to_sync` corre `responder()`, que
 es async, y espera a que termine.
 """
 
+import json
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -29,14 +31,16 @@ from django.utils import timezone
 from catalogo.presupuesto import contar_llamadas
 from chatbot.eventos import ErrorDelTurno, Estado, Resultado, Texto
 from chatbot.llm import Vuelta, crear_proveedor
+from chatbot.marcadores import TOPE_TARJETAS
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.orquestador import responder
 from chatbot.servicio import guardar_turno
+from chatbot.tools import FUNCIONES
 
 GOLDEN = Path(__file__).resolve().parents[2] / "golden.yaml"
 # RNF #6: segundos máximos para el turno completo.
 LIMITES_RNF6 = {"simple": 5, "agregacion": 15}
-_CAMPOS = {"id", "mensaje", "idioma", "rnf6", "espera", "historial"}
+_CAMPOS = {"id", "mensaje", "idioma", "rnf6", "espera", "historial", "verifica"}
 _OBLIGATORIOS = ("id", "mensaje", "rnf6", "espera")
 # Un mensaje previo de un caso con `historial`: quién lo escribió y qué dijo. Solo el
 # asistente lleva `tarjetas`, como las que quedan guardadas en `Mensaje.tarjetas`.
@@ -86,6 +90,93 @@ def _validar_historial(numero, historial):
             )
 
 
+# Lo que puede traer `verifica` (todo opcional, al menos uno).
+_LISTAS_DE_TOOLS = ("tools", "alguna_tool")
+_VERIFICA = {*_LISTAS_DE_TOOLS, "sin_tools", "sin_argumentos", "tarjetas"}
+
+
+def _es_lista_de_textos(valor):
+    return (
+        isinstance(valor, list)
+        and bool(valor)
+        and all(isinstance(v, str) and v for v in valor)
+    )
+
+
+def _validar_verifica(numero, verifica):
+    """Revisa `verifica`: un chequeo mal escrito pasaría siempre sin avisar."""
+    donde = f"La pregunta {numero}, `verifica`"
+    if not isinstance(verifica, dict) or not verifica:
+        raise CommandError(f"{donde}: tiene que ser un objeto no vacío.")
+    if sobran := set(verifica) - _VERIFICA:
+        raise CommandError(f"{donde}: campos de más {sobran}.")
+    for campo in _LISTAS_DE_TOOLS:
+        if campo not in verifica:
+            continue
+        nombres = verifica[campo]
+        if not _es_lista_de_textos(nombres) or set(nombres) - set(FUNCIONES):
+            raise CommandError(f"{donde}: `{campo}` es una lista de tools que existen.")
+    if "sin_argumentos" in verifica and not _es_lista_de_textos(
+        verifica["sin_argumentos"]
+    ):
+        raise CommandError(f"{donde}: `sin_argumentos` es una lista de nombres.")
+    if "sin_tools" in verifica:
+        if verifica["sin_tools"] is not True:
+            raise CommandError(f"{donde}: `sin_tools` solo admite true.")
+        if set(verifica) & {*_LISTAS_DE_TOOLS, "sin_argumentos"}:
+            raise CommandError(f"{donde}: `sin_tools` no va con otros de tools.")
+    if "tarjetas" in verifica:
+        rango = verifica["tarjetas"]
+        # `type(...) is int` y no `isinstance`: `True` también es un `int`.
+        if (
+            not isinstance(rango, list)
+            or len(rango) != 2
+            or any(type(n) is not int for n in rango)
+            or not 0 <= rango[0] <= rango[1] <= TOPE_TARJETAS
+        ):
+            raise CommandError(
+                f"{donde}: `tarjetas` es [mínimo, máximo], de 0 a {TOPE_TARJETAS}."
+            )
+
+
+def verificar(verifica, llamadas, tarjetas):
+    """Los chequeos que fallaron, como textos (lista vacía: pasaron todos).
+
+    `llamadas` son las que pidió el modelo, incluidas las que después fallaron: se
+    mira qué decidió el modelo. `tarjetas` son las del `Resultado`.
+    """
+    fallas = []
+    pedidas = [llamada.nombre for llamada in llamadas]
+    if faltan := [t for t in verifica.get("tools", []) if t not in pedidas]:
+        fallas.append(f"faltó usar {', '.join(faltan)}")
+    alguna = verifica.get("alguna_tool")
+    if alguna and not set(alguna) & set(pedidas):
+        fallas.append(f"no usó ninguna de {', '.join(alguna)}")
+    if verifica.get("sin_tools") and pedidas:
+        fallas.append(f"usó tools: {', '.join(pedidas)}")
+    for llamada in llamadas:
+        if "sin_argumentos" not in verifica:
+            break
+        try:
+            argumentos = json.loads(llamada.argumentos or "{}")
+        except ValueError:
+            argumentos = None
+        if not isinstance(argumentos, dict):
+            fallas.append(f"argumentos ilegibles en {llamada.nombre}")
+            continue
+        for nombre in verifica["sin_argumentos"]:
+            # `None` es como no mandarlo.
+            if argumentos.get(nombre) is not None:
+                fallas.append(f"mandó `{nombre}` a {llamada.nombre}")
+    if "tarjetas" in verifica:
+        minimo, maximo = verifica["tarjetas"]
+        if not minimo <= len(tarjetas) <= maximo:
+            fallas.append(
+                f"{len(tarjetas)} tarjetas, se esperaban de {minimo} a {maximo}"
+            )
+    return fallas
+
+
 def cargar_golden(ruta):
     """Las preguntas del archivo, validadas. Un archivo mal armado es un `CommandError`.
 
@@ -114,6 +205,8 @@ def cargar_golden(ruta):
             raise CommandError(f"La pregunta {numero}: `rnf6` es simple o agregacion.")
         if "historial" in pregunta:
             _validar_historial(numero, pregunta["historial"])
+        if "verifica" in pregunta:
+            _validar_verifica(numero, pregunta["verifica"])
         if pregunta["id"] in vistos:
             raise CommandError(f"El id `{pregunta['id']}` está repetido.")
         vistos.add(pregunta["id"])
@@ -131,6 +224,8 @@ class _Espia:
     def __init__(self, proveedor, escribir):
         self.proveedor = proveedor
         self.escribir_linea = escribir
+        # Las llamadas de la pregunta en curso; `_golden` la vacía entre preguntas.
+        self.llamadas = []
 
     async def escribir(self, mensajes, esquemas, tool_choice=None):
         if not esquemas:
@@ -140,6 +235,7 @@ class _Espia:
             self.escribir_linea(f"\n[reintento forzado: tool_choice={tool_choice}]")
         async for item in self.proveedor.escribir(mensajes, esquemas, tool_choice):
             if isinstance(item, Vuelta):
+                self.llamadas.extend(item.llamadas)
                 for llamada in item.llamadas:
                     self.escribir_linea(
                         f"\n[tool: {llamada.nombre} {llamada.argumentos}]"
@@ -214,7 +310,7 @@ class Command(BaseCommand):
             guardar_turno(chat, texto, resultado)
 
     def _golden(self, chat, ruta):
-        """Recorre el set dorado y cierra con una tabla de tiempos contra RNF #6."""
+        """Recorre el set dorado y cierra con una tabla: RNF #6 y `verifica`."""
         preguntas = cargar_golden(ruta)
         configuracion = settings.LLM_PROVEEDORES[0]
         thinking = "on" if configuracion.get("thinking") else "off"
@@ -233,13 +329,14 @@ class Command(BaseCommand):
             )
             inicio = time.perf_counter()
             error, primer_texto = None, None
+            proveedor.llamadas.clear()
             # Los mensajes previos del caso se crean y se deshacen con la pregunta:
             # `set_rollback(True)` hace que `atomic` revierta todo al salir, haya
             # salido bien o mal el turno. Es como un `@Transactional` con rollback.
             with transaction.atomic():
                 self._sembrar(chat, pregunta.get("historial", []))
                 try:
-                    _, primer_texto = async_to_sync(self._recorrer)(
+                    resultado, primer_texto = async_to_sync(self._recorrer)(
                         chat, pregunta["mensaje"], pregunta["idioma"], proveedor
                     )
                 except ErrorDelTurno as falla:
@@ -247,14 +344,24 @@ class Command(BaseCommand):
                 transaction.set_rollback(True)
             if error:
                 self.stderr.write(f"\n[error del turno: {error}]")
-                filas.append((pregunta, None, None))
+                filas.append((pregunta, None, None, None))
                 continue
             total = time.perf_counter() - inicio
             primero = primer_texto - inicio if primer_texto else None
             self.stdout.write(
                 f"\n[primer texto {_segundos(primero)}, total {total:.1f} s]"
             )
-            filas.append((pregunta, primero, total))
+            fallas = None
+            if "verifica" in pregunta:
+                fallas = verificar(
+                    pregunta["verifica"], proveedor.llamadas, resultado.tarjetas
+                )
+                self.stdout.write(
+                    "[verifica: "
+                    + ("falla: " + "; ".join(fallas) if fallas else "ok")
+                    + "]"
+                )
+            filas.append((pregunta, primero, total, fallas))
         self._resumen(filas)
 
     def _sembrar(self, chat, historial):
@@ -279,17 +386,27 @@ class Command(BaseCommand):
 
     def _resumen(self, filas):
         self.stdout.write("\n\nResumen (RNF #6: simple < 5 s, agregacion < 15 s)")
-        self.stdout.write(f"{'id':<26}{'primer texto':>14}{'total':>9}  RNF #6")
-        for pregunta, primero, total in filas:
+        self.stdout.write(
+            f"{'id':<26}{'primer texto':>14}{'total':>9}  {'RNF #6':<14}verifica"
+        )
+        correctos, con_verifica = 0, 0
+        for pregunta, primero, total, fallas in filas:
             limite = LIMITES_RNF6[pregunta["rnf6"]]
             if total is None:
                 veredicto = "error"
             else:
                 veredicto = "cumple" if total < limite else f"excede {limite} s"
+            estado = "—"
+            if "verifica" in pregunta:
+                # Un turno con error cuenta como que no pasó.
+                con_verifica += 1
+                estado = "falla" if fallas else "error" if fallas is None else "ok"
+                correctos += estado == "ok"
             self.stdout.write(
                 f"{pregunta['id']:<26}{_segundos(primero):>14}"
-                f"{_segundos(total):>9}  {veredicto}"
+                f"{_segundos(total):>9}  {veredicto:<14}{estado}"
             )
+        self.stdout.write(f"Verifica: {correctos} de {con_verifica} casos en ok.")
 
     async def _recorrer(self, chat, texto, idioma, proveedor=None):
         """Imprime cada evento apenas llega.

@@ -1054,6 +1054,12 @@ Decisiones de Gonza:
 
 Archivos: `docs/decisiones.md`, `docs/05_Plan_de_Desarrollo.md`
 
+### 25/11/2026 — Chatbot: campos verificables en el set dorado (pendiente 12)
+
+Cada caso de `golden.yaml` puede llevar `verifica`, que `chatear --golden` chequea solo: `tools`, `alguna_tool`, `sin_tools`, `sin_argumentos` y `tarjetas: [mín, máx]`. El tiempo ya se medía con `rnf6`. Un campo mal escrito es un error al cargar, porque un chequeo que no existe pasaría siempre. Una falla no corta la corrida: el modelo varía entre corridas y el total sirve para comparar antes y después de un cambio. Descartado: chequear títulos (cambian con el idioma) y el texto (lo revisa una persona con `espera`). Los chequeos de los 24 casos salen de su `espera`; falta correrlos contra DeepSeek.
+
+Archivos: `backend/chatbot/management/commands/chatear.py`, `backend/chatbot/golden.yaml`, `backend/chatbot/tests_chatear_golden.py`, `backend/chatbot/README.md`, `docs/05_Plan_de_Desarrollo.md`
+
 ---
 
 ## Multiidioma
