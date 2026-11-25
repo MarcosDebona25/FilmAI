@@ -16,7 +16,7 @@ Lo que falta para cerrar FilmAI, de más a menos prioritario. El orden combina d
 | 6   | Lo que se resuelve al desplegar                                       | Alta al desplegar; hoy, ninguna | Media      | Seguridad, B-03, C-04b, CU-021                                |
 | 7   | Instalación limpia, correos y lector de pantalla reales               | Baja                            | Muy alta   | Q-01, Q-05, sección 12 del canvas                             |
 | 8   | ✅ Refactor y lista «Viendo»                                          | Baja                            | Media      | Q-07, sección 15 del canvas                                   |
-| 9   | Perfil público y notificaciones por correo                            | Mínima (amplía el alcance)      | Baja       | Perfil, Settings                                              |
+| 9   | Perfil público y notificaciones por correo                            | Fuera de alcance por ahora      | Baja       | Perfil, Settings                                              |
 | 10  | ✅ Buscar en la navbar, filtro por persona y sin relevancia           | Media                           | —          | `openspec/specs/navbar-search/`, sección 13 del canvas        |
 | 11  | ✅ Registro en 3 pasos                                                | Media                           | —          | Sección 16 del canvas; «Dónde ver» (17) cerrado el 15/11/2026 |
 | 12  | Revisión de arquitectura del chatbot (pendientes «H»)                 | Media (golden); baja (H8)       | Alta       | #221 (H5), #222 (H3), decisiones 23/11/2026                   |
@@ -126,7 +126,8 @@ El de menor importancia: implementarlo amplía el alcance del proyecto, así que
 
 - **Perfil público**: una versión mínima no cambia el modelo (la URL puede usar `nombre_usuario`, que es único, y las reseñas ya son públicas). Si cada lista tiene su propia visibilidad, `Lista` necesita un campo nuevo.
 - **Notificaciones**: tres correos programados en Celery y en los dos idiomas. Sí cambian el modelo: cada correo tiene que registrar qué se mandó para no repetirlo (un campo de último envío por tipo o una tabla de envíos común), y las novedades necesitan dónde cargar su contenido. La baja puede ir con un token firmado, sin tabla. Conviene hacerlo después del pendiente 3.
-- **Si no entra en el alcance**: sacar esos controles de Settings para no mostrar opciones que no hacen nada.
+- **Estado (25/11/2026)**: fuera del alcance por ahora, como posible implementación futura (Gonza).
+- **Controles de Settings** (sin decidir): sacar esos controles de Settings para no mostrar opciones que no hacen nada.
 
 ### 10. Buscar en la navbar, filtro por persona y títulos sin relevancia
 
