@@ -1054,6 +1054,12 @@ Decisiones de Gonza:
 
 Archivos: `docs/decisiones.md`, `docs/05_Plan_de_Desarrollo.md`
 
+### 25/11/2026 — Chatbot: `titulos_sin_tarjeta` en la línea «Turno:»
+
+Mide cuántos títulos recomendados quedan sin tarjeta por el tope de 3 (propuesto el 15/11/2026). Es `mencionados - tarjetas - saga_descartadas`: una parte de saga salteada ya tiene su contador. No cambia lo que ve el usuario. Una parte de saga que viene después de llenar el tope no se llega a mirar y cuenta acá. En la red sin marcadores cuenta los candidatos que el texto nombra, recomendados o no: al medir conviene filtrar `tarjetas=red_sin_marcadores`.
+
+Archivos: `backend/chatbot/orquestador.py`, `backend/chatbot/tests_marcadores.py`, `backend/chatbot/README.md`
+
 ---
 
 ## Multiidioma

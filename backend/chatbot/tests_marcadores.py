@@ -1109,6 +1109,47 @@ class SagasEnElTurnoTests(BaseMarcadores):
             "saga_descartadas=0", next(m for m in log.output if "Turno:" in m)
         )
 
+    async def linea_del_turno(self, respuesta):
+        with self.assertLogs("chatbot.orquestador", level="INFO") as log:
+            await self.correr([[tool("descubrir")], [respuesta]])
+        return next(m for m in log.output if "Turno:" in m)
+
+    async def test_el_cuarto_titulo_cuenta_como_sin_tarjeta(self):
+        self.tmdb.get_movie_detail.side_effect = None
+        self.tmdb.get_movie_detail.return_value = {}
+
+        linea = await self.linea_del_turno("Mirá [[1]], [[2]], [[3]] y [[4]].")
+
+        self.assertIn("saga_descartadas=0 titulos_sin_tarjeta=1 ", linea)
+
+    async def test_una_parte_de_saga_no_cuenta_como_sin_tarjeta(self):
+        linea = await self.linea_del_turno("Mirá [[1]], [[2]], [[3]] y [[4]].")
+
+        self.assertIn("saga_descartadas=1 titulos_sin_tarjeta=0 ", linea)
+
+    async def test_repetir_un_titulo_no_cuenta_dos_veces(self):
+        linea = await self.linea_del_turno("Mirá [[3]], [[4]] y de nuevo [[3]].")
+
+        self.assertIn("titulos_sin_tarjeta=0 ", linea)
+
+    async def test_la_red_sin_marcadores_tambien_cuenta(self):
+        self.tmdb.get_movie_detail.side_effect = None
+        self.tmdb.get_movie_detail.return_value = {}
+        self.peliculas = [
+            pelicula_de_mentira(n, titulo, 2000 + n)
+            for n, titulo in enumerate(("Moon", "Arrival", "Contact", "Sunshine"), 1)
+        ]
+
+        linea = await self.linea_del_turno("Moon, Arrival, Contact y Sunshine.")
+
+        self.assertIn("tarjetas=red_sin_marcadores", linea)
+        self.assertIn("titulos_sin_tarjeta=1 ", linea)
+
+    async def test_sin_recomendaciones_el_log_dice_cero(self):
+        linea = await self.linea_del_turno("No encontré nada.")
+
+        self.assertIn("titulos_sin_tarjeta=0 ", linea)
+
     async def test_una_sola_pelicula_no_consulta_a_tmdb(self):
         await self.correr([[tool("descubrir")], ["Mirá [[1]]."]])
 
