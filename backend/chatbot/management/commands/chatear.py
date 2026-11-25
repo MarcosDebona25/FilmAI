@@ -35,7 +35,7 @@ from chatbot.marcadores import TOPE_TARJETAS
 from chatbot.models import Chat, Mensaje, TipoAutor
 from chatbot.orquestador import responder
 from chatbot.servicio import guardar_turno
-from chatbot.tools import FUNCIONES
+from chatbot.tools import ESQUEMAS, FUNCIONES
 
 GOLDEN = Path(__file__).resolve().parents[2] / "golden.yaml"
 # RNF #6: segundos máximos para el turno completo.
@@ -92,6 +92,11 @@ def _validar_historial(numero, historial):
 
 # Lo que puede traer `verifica` (todo opcional, al menos uno).
 _LISTAS_DE_TOOLS = ("tools", "alguna_tool")
+# Los parámetros de cada tool, según el esquema que recibe el modelo.
+_PARAMETROS = {
+    e["function"]["name"]: e["function"].get("parameters", {}) for e in ESQUEMAS
+}
+_ARGUMENTOS = {n for p in _PARAMETROS.values() for n in p.get("properties", {})}
 _VERIFICA = {*_LISTAS_DE_TOOLS, "sin_tools", "sin_argumentos", "tarjetas"}
 
 
@@ -116,10 +121,12 @@ def _validar_verifica(numero, verifica):
         nombres = verifica[campo]
         if not _es_lista_de_textos(nombres) or set(nombres) - set(FUNCIONES):
             raise CommandError(f"{donde}: `{campo}` es una lista de tools que existen.")
-    if "sin_argumentos" in verifica and not _es_lista_de_textos(
-        verifica["sin_argumentos"]
-    ):
-        raise CommandError(f"{donde}: `sin_argumentos` es una lista de nombres.")
+    if "sin_argumentos" in verifica:
+        nombres = verifica["sin_argumentos"]
+        if not _es_lista_de_textos(nombres) or set(nombres) - _ARGUMENTOS:
+            raise CommandError(
+                f"{donde}: `sin_argumentos` es una lista de argumentos que existen."
+            )
     if "sin_tools" in verifica:
         if verifica["sin_tools"] is not True:
             raise CommandError(f"{donde}: `sin_tools` solo admite true.")
@@ -164,7 +171,9 @@ def verificar(verifica, llamadas, tarjetas):
         if not isinstance(argumentos, dict):
             fallas.append(f"argumentos ilegibles en {llamada.nombre}")
             continue
-        for nombre in verifica["sin_argumentos"]:
+        # Los que la tool exige no son un filtro de más (`tipo` en `detalle`).
+        exige = _PARAMETROS.get(llamada.nombre, {}).get("required", [])
+        for nombre in set(verifica["sin_argumentos"]) - set(exige):
             # `None` es como no mandarlo.
             if argumentos.get(nombre) is not None:
                 fallas.append(f"mandó `{nombre}` a {llamada.nombre}")
@@ -235,7 +244,9 @@ class _Espia:
             self.escribir_linea(f"\n[reintento forzado: tool_choice={tool_choice}]")
         async for item in self.proveedor.escribir(mensajes, esquemas, tool_choice):
             if isinstance(item, Vuelta):
-                self.llamadas.extend(item.llamadas)
+                if esquemas:
+                    # Sin tools el orquestador ignora las llamadas que vengan.
+                    self.llamadas.extend(item.llamadas)
                 for llamada in item.llamadas:
                     self.escribir_linea(
                         f"\n[tool: {llamada.nombre} {llamada.argumentos}]"
@@ -406,7 +417,8 @@ class Command(BaseCommand):
                 f"{pregunta['id']:<26}{_segundos(primero):>14}"
                 f"{_segundos(total):>9}  {veredicto:<14}{estado}"
             )
-        self.stdout.write(f"Verifica: {correctos} de {con_verifica} casos en ok.")
+        if con_verifica:
+            self.stdout.write(f"Verifica: {correctos} de {con_verifica} casos en ok.")
 
     async def _recorrer(self, chat, texto, idioma, proveedor=None):
         """Imprime cada evento apenas llega.

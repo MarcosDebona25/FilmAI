@@ -137,6 +137,7 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
                     "{sin_tools: false}",
                     "{sin_tools: true, tools: [descubrir]}",
                     "{sin_argumentos: tipo}",
+                    "{sin_argumentos: [nota_min]}",
                     "{tarjetas: 3}",
                     "{tarjetas: [2, 1]}",
                     "{tarjetas: [0, 4]}",
@@ -220,6 +221,15 @@ class VerificarTests(SimpleTestCase):
                     verifica, [self.llamada(argumentos=argumentos)], []
                 )
                 self.assertEqual(len(resultado), fallas)
+
+    def test_sin_argumentos_no_mira_los_que_la_tool_exige(self):
+        verifica = {"sin_argumentos": ["tipo"]}
+        argumentos = '{"id_tmdb": 1, "tipo": "movie"}'
+
+        detalle = self.llamada("detalle", argumentos)
+        self.assertEqual(verificar(verifica, [detalle], []), [])
+        descubrir = self.llamada("descubrir", '{"tipo": "movie"}')
+        self.assertEqual(len(verificar(verifica, [descubrir], [])), 1)
 
     def test_tarjetas_es_un_rango_con_los_bordes_incluidos(self):
         for cantidad, fallas in ((0, 1), (1, 0), (3, 0)):
@@ -328,6 +338,11 @@ class ComandoGoldenTests(ConArchivos, TestCase):
         self.assertRegex(resumen, r"saludo\s+.*cumple\s+ok")
         self.assertRegex(resumen, r"terror\s+.*cumple\s+falla")
         self.assertIn("Verifica: 1 de 2 casos en ok.", resumen)
+
+    def test_sin_casos_con_verifica_no_hay_total(self):
+        salida, _ = self.golden([["Hola"], ["Algo"]])
+
+        self.assertNotIn("Verifica:", salida)
 
     def test_las_tools_de_una_pregunta_no_cuentan_en_la_siguiente(self):
         salida, _ = self.golden(

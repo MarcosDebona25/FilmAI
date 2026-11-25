@@ -13,7 +13,8 @@
 #              tools: [a, b]          las pidió todas (en cualquier orden)
 #              alguna_tool: [a, b]    pidió al menos una
 #              sin_tools: true        no pidió ninguna
-#              sin_argumentos: [x]    ninguna llamada llevó ese argumento
+#              sin_argumentos: [x]    ninguna llamada llevó ese argumento, salvo las
+#                                     tools que lo exigen (`tipo` en `detalle`)
 #              tarjetas: [mín, máx]   cuántas tarjetas salieron
 #   historial  (opcional) mensajes previos de la charla, de más viejo a más nuevo:
 #              una lista de {autor: usuario|asistente, texto, tarjetas}. `tarjetas`
