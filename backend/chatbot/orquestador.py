@@ -791,8 +791,9 @@ async def _asegurar_respuesta(turno):
 async def _armar_tarjetas(turno, respuesta, pedido):
     """Paso 4: deja en `ctx.tarjetas` las tarjetas definitivas del turno.
 
-    Devuelve `(red, saga_descartadas)` para el log: si las tarjetas salieron de la
-    red de seguridad y cuántas se saltearon por repetir saga.
+    Devuelve `(red, saga_descartadas, sin_tarjeta)` para el log: si las tarjetas
+    salieron de la red de seguridad, cuántas se saltearon por repetir saga y cuántos
+    títulos recomendados quedaron sin tarjeta por el tope (incluye las partes de saga que no se llegó a mirar).
     """
     ctx, filtro = turno.ctx, turno.filtro
     # Red de seguridad: hubo búsquedas, pero el modelo recomendó en texto plano (sin
@@ -817,17 +818,19 @@ async def _armar_tarjetas(turno, respuesta, pedido):
             presupuesto=min(PRESUPUESTO_SAGAS, turno.plazo.queda()),
         )
         ctx.tarjetas[:] = tarjetas
-    return red, saga_descartadas
+    sin_tarjeta = len(mencionados) - len(ctx.tarjetas) - saga_descartadas
+    return red, saga_descartadas, sin_tarjeta
 
 
-def _registrar_turno(turno, total, red=False, saga_descartadas=0):
+def _registrar_turno(turno, total, red=False, saga_descartadas=0, sin_tarjeta=0):
     """Paso 5: una línea de INFO al cerrar el turno: cómo fue, no de qué se habló.
 
     Sirve para entender, mirando el log, por qué el modelo hizo lo que hizo (qué
     tools pidió y con cuántos resultados, si se quedó sin vueltas, cuántos marcadores
     `[[n]]` usó y cuántos no correspondían a ningún título, cuántas negritas escribió
     por su cuenta, si hubo búsqueda forzada, cuántas tarjetas se saltearon por ser otra
-    parte de una saga que ya tenía la suya, si el plazo obligó a cerrar antes:
+    parte de una saga que ya tenía la suya, cuántos títulos recomendados quedaron sin
+    tarjeta por el tope: `titulos_sin_tarjeta`, si el plazo obligó a cerrar antes:
     `sin_tiempo`) y cuánto costó: tokens de entrada y salida,
     los que salieron de la caché del proveedor, si alguna llamada se cortó por largo y
     los segundos de cada llamada y del turno (ver `_Medicion`). A propósito no lleva la
@@ -836,7 +839,8 @@ def _registrar_turno(turno, total, red=False, saga_descartadas=0):
     logger.info(
         "Turno: tools=%s vueltas=%d ultima_sin_tools=%s tarjetas=%s "
         "marcadores_validos=%d marcadores_invalidos=%d negritas_propias=%d "
-        "reintento_forzado=%s saga_descartadas=%d sin_tiempo=%s %s",
+        "reintento_forzado=%s saga_descartadas=%d titulos_sin_tarjeta=%d "
+        "sin_tiempo=%s %s",
         ",".join(turno.tools_pedidas) or "ninguna",
         turno.vueltas,
         "si" if turno.ultima_sin_tools else "no",
@@ -850,6 +854,7 @@ def _registrar_turno(turno, total, red=False, saga_descartadas=0):
         turno.filtro.negritas,
         "si" if turno.reintento else "no",
         saga_descartadas,
+        sin_tarjeta,
         turno.sin_tiempo,
         turno.medicion.resumen(total),
     )
@@ -872,6 +877,8 @@ async def responder(chat, texto, idioma, *, proveedor=None):
     async for evento in _asegurar_respuesta(turno):
         yield evento
     respuesta = turno.respuesta()
-    red, saga_descartadas = await _armar_tarjetas(turno, respuesta, texto)
-    _registrar_turno(turno, _reloj() - turno.inicio_medido, red, saga_descartadas)
+    red, saga_descartadas, sin_tarjeta = await _armar_tarjetas(turno, respuesta, texto)
+    _registrar_turno(
+        turno, _reloj() - turno.inicio_medido, red, saga_descartadas, sin_tarjeta
+    )
     yield Resultado(respuesta, turno.ctx.tarjetas)

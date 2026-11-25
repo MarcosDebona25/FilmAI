@@ -35,7 +35,9 @@ Con `--golden` recorre el set dorado (`golden.yaml`) y mide los tiempos contra
 RNF #6. Los casos con `verifica` se chequean solos (tools, argumentos y cantidad de
 tarjetas); la calidad de la respuesta sigue en `espera`, a mano.
 Para ver cómo fue un turno, buscá en el log del backend la línea `Turno:` del logger
-`chatbot.orquestador`. Además de cómo fue (tools, vueltas, marcadores), trae lo que
+`chatbot.orquestador`. Además de cómo fue (tools, vueltas, marcadores y
+`titulos_sin_tarjeta`: los que superaron el tope de 3; con
+`tarjetas=red_sin_marcadores` son nombrados y no siempre recomendados), trae lo que
 costó: `llamadas`, `tokens_entrada`, `tokens_salida`, `cache_acierto` y `cache_fallo`
 (tokens de la entrada que DeepSeek ya tenía en caché o no; `?` si el proveedor no los
 informa), `cortado_por_largo` (alguna llamada terminó por `length`) y

@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "docs/05_Plan_de_Desarrollo.md": {
-    "mtime": 1795570906.4215796,
-    "seen": 1795571363.2865534,
+    "mtime": 1795571681.8903322,
+    "seen": 1795571950.3619454,
     "ast_hash": "b7605677f236a4a9f53a6ad525762f8b",
     "semantic_hash": ""
   },
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "docs/decisiones.md": {
-    "mtime": 1795570906.4234273,
-    "seen": 1795571363.2865853,
-    "ast_hash": "6d4deaa8d153974ced6a4e0bc5290c23",
+    "mtime": 1795571930.9950619,
+    "seen": 1795571950.3619747,
+    "ast_hash": "c6df8df7a1334fd5373db43d8e5af58f",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -4446,15 +4446,15 @@
     "semantic_hash": ""
   },
   "backend/chatbot/management/commands/chatear.py": {
-    "mtime": 1795570906.4199917,
-    "seen": 1795571363.2597654,
+    "mtime": 1795571681.8893511,
+    "seen": 1795571950.3357313,
     "ast_hash": "3710cdbcf2a28defe638ff0ee5712f78",
     "semantic_hash": ""
   },
   "backend/chatbot/orquestador.py": {
-    "mtime": 1795570906.4203396,
-    "seen": 1795571363.2600584,
-    "ast_hash": "efe156695fbe53e004db4578d98789bf",
+    "mtime": 1795571898.7121115,
+    "seen": 1795571950.3360264,
+    "ast_hash": "f1ea5b146c3eb7e62b627a9fecd0ec56",
     "semantic_hash": ""
   },
   "backend/chatbot/prompts.py": {
@@ -4488,9 +4488,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/README.md": {
-    "mtime": 1795570906.4196267,
-    "seen": 1795571363.2850657,
-    "ast_hash": "370af28dd64f7a0d3d205bf6d026e56e",
+    "mtime": 1795571898.7117767,
+    "seen": 1795571950.360542,
+    "ast_hash": "7c7d670ae74dd5bd5e26d65b312a68ee",
     "semantic_hash": ""
   },
   "backend/catalogo/test_encolado_celery.py": {
@@ -4686,8 +4686,8 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_chatear_golden.py": {
-    "mtime": 1795570906.4205475,
-    "seen": 1795571363.2604122,
+    "mtime": 1795571681.8895764,
+    "seen": 1795571950.336392,
     "ast_hash": "38995c7d70abf8486400a310463f5f5b",
     "semantic_hash": ""
   },
@@ -4710,8 +4710,8 @@
     "semantic_hash": ""
   },
   "backend/chatbot/golden.yaml": {
-    "mtime": 1795570906.4198112,
-    "seen": 1795571363.2850678,
+    "mtime": 1795571681.889176,
+    "seen": 1795571950.3605435,
     "ast_hash": "1b50b441e2c1941b1a911cc72827bde8",
     "semantic_hash": ""
   },
@@ -4842,9 +4842,9 @@
     "semantic_hash": ""
   },
   "backend/chatbot/tests_marcadores.py": {
-    "mtime": 1795570906.4208937,
-    "seen": 1795571363.2605824,
-    "ast_hash": "aeca3f76b62961d099890aa94b94254e",
+    "mtime": 1795571898.7126179,
+    "seen": 1795571950.33656,
+    "ast_hash": "cf106d201f23706035024c0739eef422",
     "semantic_hash": ""
   },
   "backend/catalogo/migrations/0008_lapida_tmdb.py": {
