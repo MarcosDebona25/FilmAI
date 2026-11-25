@@ -14,6 +14,7 @@ import {
 import { useAccount } from "@/components/AccountProvider";
 import { ApiError } from "@/lib/api";
 import {
+  buscarTurnoGuardado,
   cargarHistorial,
   combinarMensajes,
   enviarMensaje,
@@ -123,8 +124,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const historialRef = useRef(HISTORIAL_INICIAL);
   /** Hubo una página reciente cargada alguna vez (con éxito). */
   const cargadoRef = useRef(false);
-  /** Un cancel pudo dejar un mensaje guardado: la próxima apertura vuelve a pedir lo reciente. */
+  /** Un cancel o un corte de red pudo dejar un mensaje guardado: la próxima apertura vuelve a pedir lo reciente. */
   const recargarTrasCancelarRef = useRef(false);
+  /** El id más alto a la vista (0 sin mensajes): separa un turno nuevo de los anteriores. */
+  const ultimoIdRef = useRef(0);
   /** Cuenta las sesiones: una carga que vuelve después de cerrar sesión se descarta. */
   const sesionRef = useRef(0);
   const cargandoRef = useRef(false);
@@ -185,14 +188,29 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       if (!directo) setBorrador("");
       setAviso(null);
       setEnCurso({ pregunta, respuesta: "", estado: null });
+      // Desde qué id buscar el turno si se corta la red. `null`: no se sabe qué
+      // había guardado (falta cargar o refrescar), y una pregunta repetida se
+      // podría confundir con una vieja; en ese caso no se busca.
+      const desdeId =
+        cargadoRef.current && !recargarTrasCancelarRef.current ? ultimoIdRef.current : null;
 
       void (async () => {
         let respuesta = "";
         let tarjetas: Tarjeta[] = [];
+        let empezo = false;
         const vigente = () => turnoRef.current === turno;
+        /** Cierra el turno con la pareja ya guardada en el servidor. */
+        const terminarConRespuesta = (pareja: MensajeChat[], texto: string) => {
+          activoRef.current = null;
+          setEnCurso(null);
+          setMensajes((anteriores) => combinarMensajes(anteriores, pareja));
+          setAnuncio(textoPlano(texto));
+          if (!abiertoRef.current) setNoLeido(true);
+        };
         try {
           for await (const evento of enviarMensaje(pregunta, control.signal)) {
             if (!vigente()) return;
+            empezo = true;
             if (evento.tipo === "estado") {
               setEnCurso((actual) => actual && { ...actual, estado: evento.code });
             } else if (evento.tipo === "texto") {
@@ -202,17 +220,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             } else if (evento.tipo === "tarjetas") {
               tarjetas = evento.tarjetas;
             } else if (evento.tipo === "fin") {
-              activoRef.current = null;
-              setEnCurso(null);
               // Ids de la base: así el historial que se pida después no repite estos mensajes.
-              setMensajes((anteriores) =>
-                combinarMensajes(anteriores, [
+              terminarConRespuesta(
+                [
                   { id: evento.id_pregunta, rol: "usuario", texto: pregunta },
                   { id: evento.id, rol: "asistente", texto: respuesta, tarjetas },
-                ])
+                ],
+                respuesta
               );
-              setAnuncio(textoPlano(respuesta));
-              if (!abiertoRef.current) setNoLeido(true);
               return;
             } else {
               terminarSinRespuesta({ tipo: "error", code: evento.code, params: evento.params });
@@ -221,6 +236,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           }
         } catch (error) {
           if (!vigente() || control.signal.aborted) return;
+          // El stream se cortó a mitad: el servidor pudo guardar la respuesta. Si
+          // está, se muestra y el corte no se nota (H10). Mientras se busca, el
+          // turno sigue en curso y se puede cancelar.
+          if (empezo && error instanceof ApiError && error.code === "network_error") {
+            if (desdeId !== null) {
+              const pareja = await buscarTurnoGuardado(pregunta, desdeId, vigente);
+              if (!vigente()) return;
+              if (pareja) {
+                terminarConRespuesta(pareja, pareja[1].texto);
+                return;
+              }
+            }
+            // Pudo guardarse más tarde: la próxima apertura vuelve a pedir lo reciente.
+            recargarTrasCancelarRef.current = true;
+          }
           terminarSinRespuesta(
             error instanceof ApiError
               ? { tipo: "error", code: error.code, params: error.params }
@@ -284,6 +314,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     },
     [actualizarHistorial]
   );
+
+  useEffect(() => {
+    ultimoIdRef.current = mensajes.at(-1)?.id ?? 0;
+  }, [mensajes]);
 
   useEffect(() => {
     cargarRef.current = cargar;

@@ -66,7 +66,10 @@ While an answer streams the panel MUST show the status from `estado` codes, appe
 
 - GIVEN the connection drops mid-answer
 - WHEN the stream closes without `fin` or `error`
-- THEN the panel shows the network error and keeps the question to retry
+- THEN the panel looks for the saved turn in the newest history page, up to twice and 2 s apart, keeping the partial answer and «Cancelar» on screen (H10, 25/11/2026)
+- AND if the pair is there (same question, id above the last one known when sending) it replaces the partial answer and no error is shown
+- AND otherwise the panel shows the network error, keeps the question to retry and requests the newest page again on the next opening
+- AND it does not look when no event had arrived or when the known history is not up to date, because a repeated question could match an old one
 
 ### Requirement: Model output is never trusted as HTML
 
@@ -107,7 +110,7 @@ On every opening the panel MUST call `POST /api/chat/preparar/`, without waiting
 
 ### Requirement: Welcome, history and unread badge
 
-The panel MUST load the history the first time it opens in a session (newest page first) and MUST NOT request it again on later openings, except the opening that follows a cancel, which requests the newest page again because the server may have saved the discarded answer (CU-014). Older pages MUST load when the user scrolls to the top, using only the query of the `next` cursor (never an origin received from the network), without moving what the user was reading. A failed load MUST show the translated error with a retry button. Messages from the stream and from the history MUST be merged by id so none repeats. When the chat is empty the panel MUST show the local welcome with the user's first name and three suggestions (see «Rotating welcome suggestions»), without calling the model; choosing a suggestion MUST send it right away and MUST NOT touch the draft. An answer that finishes while the panel is closed MUST light the FAB badge (a dot plus text for screen readers) until the panel opens. Signing out MUST clear the conversation, the history and the badge (06/11/2026).
+The panel MUST load the history the first time it opens in a session (newest page first) and MUST NOT request it again on later openings, except the opening that follows a cancel or an unrecovered mid-answer cut, which requests the newest page again because the server may have saved the discarded answer (CU-014). Older pages MUST load when the user scrolls to the top, using only the query of the `next` cursor (never an origin received from the network), without moving what the user was reading. A failed load MUST show the translated error with a retry button. Messages from the stream and from the history MUST be merged by id so none repeats. When the chat is empty the panel MUST show the local welcome with the user's first name and three suggestions (see «Rotating welcome suggestions»), without calling the model; choosing a suggestion MUST send it right away and MUST NOT touch the draft. An answer that finishes while the panel is closed MUST light the FAB badge (a dot plus text for screen readers) until the panel opens. Signing out MUST clear the conversation, the history and the badge (06/11/2026).
 
 #### Scenario: First time
 

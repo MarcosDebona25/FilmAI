@@ -1034,6 +1034,17 @@ La revisión de arquitectura del 13/11/2026 dejó pendientes numerados («H») q
 
 Archivos: `docs/05_Plan_de_Desarrollo.md` (pendiente 12), `docs/decisiones.md`
 
+### 25/11/2026 — Chatbot: recuperar la respuesta tras un corte de red (H10)
+
+**Decisión (Gonza, 23/11/2026)**: si el stream se corta y el servidor había guardado la respuesta, se muestra y el corte pasa desapercibido; el error aparece solo si la respuesta no está.
+
+- **Alcance real**: si el servidor detecta el corte antes de guardar, cancela el turno y no hay nada que recuperar (contrato de B-03, no cambia). Se recupera cuando el corte cae durante o después del guardado, o cuando el servidor no se entera y termina igual.
+- **Cómo**: `buscarTurnoGuardado` (`lib/chat.ts`) pide la página más reciente hasta dos veces, con 2 s de espera y un tope de 5 s por pedido. Acepta la pareja solo si la pregunta coincide y su id es mayor que el último conocido al enviar. Si el pedido falla, no insiste.
+- **Mientras busca**, queda a la vista lo parcial y se puede cancelar; cancelar o cerrar sesión gana.
+- **No busca** si no llegó ningún evento (el pedido probablemente no llegó) ni si el historial conocido no está al día (primera carga pendiente o fallida, o un cancel o corte sin refrescar): una pregunta repetida se confundiría con una vieja. Sin recuperación, la próxima apertura vuelve a pedir lo reciente.
+
+Archivos: `frontend/lib/chat.ts`, `frontend/components/ChatProvider.tsx`, `frontend/tests/chat-provider.test.tsx`, `frontend/tests/chat-recuperar.test.ts`, `frontend/e2e/chat-calidad.spec.ts`, `openspec/specs/chat-ui/spec.md`
+
 ---
 
 ## Multiidioma

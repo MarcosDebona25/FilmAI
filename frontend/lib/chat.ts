@@ -236,6 +236,43 @@ export async function cargarHistorial(next?: string | null): Promise<PaginaHisto
   return { mensajes, next: pagina.next };
 }
 
+/** Espera antes del segundo intento: el servidor puede estar terminando de guardar. */
+export const ESPERA_RECUPERACION_MS = 2000;
+/** Tope de cada intento: con la red a medias, un pedido puede quedar colgado. */
+export const TOPE_RECUPERACION_MS = 5000;
+
+const esperar = (ms: number) => new Promise<null>((listo) => setTimeout(() => listo(null), ms));
+
+/**
+ * Tras un corte del stream, busca en el historial si el servidor llegó a
+ * guardar el turno (H10). Devuelve la pareja, o `null` si no está.
+ *
+ * Solo mira mensajes con id mayor que `desdeId` (el último que había al
+ * enviar): así una pregunta repetida no se confunde con la de antes. Prueba
+ * dos veces; un pedido que falla corta la búsqueda, porque sigue sin haber red.
+ */
+export async function buscarTurnoGuardado(
+  pregunta: string,
+  desdeId: number,
+  vigente: () => boolean
+): Promise<[MensajeChat, MensajeChat] | null> {
+  for (let intento = 0; intento < 2; intento++) {
+    if (intento > 0) await esperar(ESPERA_RECUPERACION_MS);
+    if (!vigente()) return null;
+    const pagina = await Promise.race([
+      cargarHistorial().catch(() => null),
+      esperar(TOPE_RECUPERACION_MS),
+    ]);
+    if (!pagina) return null;
+    const i = pagina.mensajes.findIndex(
+      (m) => m.id > desdeId && m.rol === "usuario" && m.texto === pregunta
+    );
+    const respuesta = i === -1 ? undefined : pagina.mensajes[i + 1];
+    if (respuesta?.rol === "asistente") return [pagina.mensajes[i], respuesta];
+  }
+  return null;
+}
+
 /** Une mensajes por id (los de `nuevos` pisan a los repetidos) y deja el orden por id. */
 export function combinarMensajes(actuales: MensajeChat[], nuevos: MensajeChat[]) {
   const porId = new Map(actuales.map((m) => [m.id, m]));
