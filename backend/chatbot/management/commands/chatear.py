@@ -96,7 +96,13 @@ _LISTAS_DE_TOOLS = ("tools", "alguna_tool")
 _PARAMETROS = {
     e["function"]["name"]: e["function"].get("parameters", {}) for e in ESQUEMAS
 }
-_ARGUMENTOS = {n for p in _PARAMETROS.values() for n in p.get("properties", {})}
+# Los opcionales en alguna tool: uno obligatorio en todas nunca podría fallar.
+_OPCIONALES = {
+    n
+    for p in _PARAMETROS.values()
+    for n in p.get("properties", {})
+    if n not in p.get("required", [])
+}
 _VERIFICA = {*_LISTAS_DE_TOOLS, "sin_tools", "sin_argumentos", "tarjetas"}
 
 
@@ -123,9 +129,9 @@ def _validar_verifica(numero, verifica):
             raise CommandError(f"{donde}: `{campo}` es una lista de tools que existen.")
     if "sin_argumentos" in verifica:
         nombres = verifica["sin_argumentos"]
-        if not _es_lista_de_textos(nombres) or set(nombres) - _ARGUMENTOS:
+        if not _es_lista_de_textos(nombres) or set(nombres) - _OPCIONALES:
             raise CommandError(
-                f"{donde}: `sin_argumentos` es una lista de argumentos que existen."
+                f"{donde}: `sin_argumentos` es una lista de argumentos opcionales."
             )
     if "sin_tools" in verifica:
         if verifica["sin_tools"] is not True:

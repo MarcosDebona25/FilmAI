@@ -138,6 +138,7 @@ class CargarGoldenTests(ConArchivos, SimpleTestCase):
                     "{sin_tools: true, tools: [descubrir]}",
                     "{sin_argumentos: tipo}",
                     "{sin_argumentos: [nota_min]}",
+                    "{sin_argumentos: [id_tmdb]}",
                     "{tarjetas: 3}",
                     "{tarjetas: [2, 1]}",
                     "{tarjetas: [0, 4]}",
