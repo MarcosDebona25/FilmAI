@@ -249,7 +249,8 @@ const esperar = (ms: number) => new Promise<null>((listo) => setTimeout(() => li
  *
  * Solo mira mensajes con id mayor que `desdeId` (el último que había al
  * enviar): así una pregunta repetida no se confunde con la de antes. Prueba
- * dos veces; un pedido que falla corta la búsqueda, porque sigue sin haber red.
+ * dos veces, también si el primer pedido falla: tras un corte la red puede volver
+ * enseguida.
  */
 export async function buscarTurnoGuardado(
   pregunta: string,
@@ -263,8 +264,8 @@ export async function buscarTurnoGuardado(
       cargarHistorial().catch(() => null),
       esperar(TOPE_RECUPERACION_MS),
     ]);
-    if (!pagina) return null;
-    const i = pagina.mensajes.findIndex(
+    if (!pagina) continue;
+    const i = pagina.mensajes.findLastIndex(
       (m) => m.id > desdeId && m.rol === "usuario" && m.texto === pregunta
     );
     const respuesta = i === -1 ? undefined : pagina.mensajes[i + 1];

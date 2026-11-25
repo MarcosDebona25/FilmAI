@@ -530,6 +530,31 @@ describe("ChatProvider: el stream se corta a mitad (H10)", () => {
     expect(chat.buscarTurnoGuardado).not.toHaveBeenCalled();
   });
 
+  /** Cancela «hola» y lo vuelve a enviar con el stream por cortarse. */
+  async function reenviarTrasCancelar(reabrir: boolean) {
+    const { result } = await aMedias();
+    act(() => result.current.cancelar());
+    const stream = streamControlado();
+    chat.enviarMensaje.mockImplementation(stream.generar);
+    if (reabrir) {
+      chat.cargarHistorial.mockReturnValue(new Promise(() => {}));
+      act(() => result.current.cerrar());
+      act(() => result.current.abrir());
+    }
+    act(() => result.current.enviar("hola"));
+    act(() => stream.empujar({ tipo: "texto", delta: "Hola" }));
+    await waitFor(() => expect(result.current.enCurso?.respuesta).toBe("Hola"));
+    act(() => stream.empujar(CORTE));
+    await waitFor(() => expect(result.current.aviso).toMatchObject({ code: "network_error" }));
+    expect(chat.buscarTurnoGuardado).not.toHaveBeenCalled();
+  }
+
+  it("tras un cancel sin refrescar no busca: la cancelada pudo quedar guardada", () =>
+    reenviarTrasCancelar(false));
+
+  it("con el refresco tras un cancel todavía en vuelo, tampoco busca", () =>
+    reenviarTrasCancelar(true));
+
   it("un corte antes del primer evento muestra el error sin buscar", async () => {
     const stream = streamControlado();
     chat.enviarMensaje.mockImplementation(stream.generar);
@@ -541,6 +566,10 @@ describe("ChatProvider: el stream se corta a mitad (H10)", () => {
     act(() => stream.empujar(CORTE));
     await waitFor(() => expect(result.current.aviso).toMatchObject({ code: "network_error" }));
     expect(chat.buscarTurnoGuardado).not.toHaveBeenCalled();
+    // El pedido pudo llegar igual: al reabrir se refresca.
+    act(() => result.current.cerrar());
+    act(() => result.current.abrir());
+    await waitFor(() => expect(chat.cargarHistorial).toHaveBeenCalledTimes(2));
   });
 });
 

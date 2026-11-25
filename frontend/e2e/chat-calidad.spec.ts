@@ -293,12 +293,18 @@ test.describe("Q-03 · fallas forzadas", () => {
   test("corte a mitad sin respuesta guardada: avisa y conserva la pregunta (H10)", async ({
     page,
   }) => {
-    await prepararChat(page, cortado);
-    await abrirYPreguntar(page, "Space movies");
+    const { pedidosHistorial } = await prepararChat(page, cortado);
+    await page.goto("/home");
+    await botonFlotante(page).click();
+    await expect(panelDe(page).getByRole("list", { name: "Suggestions" })).toBeVisible();
+    const alAbrir = pedidosHistorial.length;
+    await campoDe(page).fill("Space movies");
+    await page.keyboard.press("Enter");
     await expect(panelDe(page).getByRole("alert")).toHaveText(
       "We couldn’t connect. Check your connection and try again.",
       { timeout: 10_000 }
     );
+    expect(pedidosHistorial.length - alAbrir).toBe(2);
     await expect(campoDe(page)).toHaveValue("Space movies");
   });
 

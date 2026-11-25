@@ -126,6 +126,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const cargadoRef = useRef(false);
   /** Un cancel o un corte de red pudo dejar un mensaje guardado: la próxima apertura vuelve a pedir lo reciente. */
   const recargarTrasCancelarRef = useRef(false);
+  /** El refresco de lo reciente está en vuelo: todavía no se sabe qué había guardado. */
+  const refrescandoRef = useRef(false);
   /** El id más alto a la vista (0 sin mensajes): separa un turno nuevo de los anteriores. */
   const ultimoIdRef = useRef(0);
   /** Cuenta las sesiones: una carga que vuelve después de cerrar sesión se descarta. */
@@ -192,7 +194,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       // había guardado (falta cargar o refrescar), y una pregunta repetida se
       // podría confundir con una vieja; en ese caso no se busca.
       const desdeId =
-        cargadoRef.current && !recargarTrasCancelarRef.current ? ultimoIdRef.current : null;
+        cargadoRef.current && !recargarTrasCancelarRef.current && !refrescandoRef.current
+          ? ultimoIdRef.current
+          : null;
 
       void (async () => {
         let respuesta = "";
@@ -239,8 +243,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           // El stream se cortó a mitad: el servidor pudo guardar la respuesta. Si
           // está, se muestra y el corte no se nota (H10). Mientras se busca, el
           // turno sigue en curso y se puede cancelar.
-          if (empezo && error instanceof ApiError && error.code === "network_error") {
-            if (desdeId !== null) {
+          if (error instanceof ApiError && error.code === "network_error") {
+            if (empezo && desdeId !== null) {
               const pareja = await buscarTurnoGuardado(pregunta, desdeId, vigente);
               if (!vigente()) return;
               if (pareja) {
@@ -273,7 +277,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       cargandoRef.current = true;
       const primera = !cargadoRef.current;
       // El refresco tras un cancel se da por hecho recién cuando arranca.
-      if (!anteriores) recargarTrasCancelarRef.current = false;
+      if (!anteriores) {
+        recargarTrasCancelarRef.current = false;
+        refrescandoRef.current = true;
+      }
       actualizarHistorial(
         anteriores
           ? { cargandoAnteriores: true, error: null }
@@ -306,6 +313,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (sesion === sesionRef.current) {
           cargandoRef.current = false;
+          refrescandoRef.current = false;
           const pendiente = refrescoPendienteRef.current;
           refrescoPendienteRef.current = false;
           if (pendiente && anteriores) void cargarRef.current(false);
@@ -368,6 +376,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     cargadoRef.current = false;
     cargandoRef.current = false;
     recargarTrasCancelarRef.current = false;
+    refrescandoRef.current = false;
     refrescoPendienteRef.current = false;
     fallaronAnterioresRef.current = false;
     historialRef.current = HISTORIAL_INICIAL;

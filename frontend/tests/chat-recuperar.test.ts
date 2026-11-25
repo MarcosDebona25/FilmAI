@@ -41,16 +41,40 @@ describe("buscarTurnoGuardado", () => {
     expect((await busqueda)?.map((m) => m.id)).toEqual([7, 8]);
   });
 
-  it("sin red no insiste", async () => {
+  it("si la red vuelve entre los dos intentos, la encuentra", async () => {
+    api.apiFetch
+      .mockRejectedValueOnce(new Error("sin red"))
+      .mockResolvedValueOnce(pagina(R(8), P(7)));
+    const busqueda = buscarTurnoGuardado("hola", 4, () => true);
+    await vi.advanceTimersByTimeAsync(ESPERA_RECUPERACION_MS);
+    expect((await busqueda)?.map((m) => m.id)).toEqual([7, 8]);
+  });
+
+  it("sin red prueba dos veces y se rinde", async () => {
     api.apiFetch.mockRejectedValue(new Error("sin red"));
-    expect(await buscarTurnoGuardado("hola", 4, () => true)).toBeNull();
-    expect(api.apiFetch).toHaveBeenCalledTimes(1);
+    const busqueda = buscarTurnoGuardado("hola", 4, () => true);
+    await vi.advanceTimersByTimeAsync(ESPERA_RECUPERACION_MS);
+    expect(await busqueda).toBeNull();
+    expect(api.apiFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("una pregunta sin respuesta no alcanza", async () => {
+    api.apiFetch.mockResolvedValue(pagina(P(7)));
+    const busqueda = buscarTurnoGuardado("hola", 4, () => true);
+    await vi.advanceTimersByTimeAsync(ESPERA_RECUPERACION_MS);
+    expect(await busqueda).toBeNull();
+  });
+
+  it("si la misma pregunta está dos veces, toma la más nueva", async () => {
+    api.apiFetch.mockResolvedValue(pagina(R(10), P(9), R(8), P(7)));
+    const pareja = await buscarTurnoGuardado("hola", 4, () => true);
+    expect(pareja?.map((m) => m.id)).toEqual([9, 10]);
   });
 
   it("un pedido colgado se abandona al llegar al tope", async () => {
     api.apiFetch.mockReturnValue(new Promise(() => {}));
     const busqueda = buscarTurnoGuardado("hola", 4, () => true);
-    await vi.advanceTimersByTimeAsync(TOPE_RECUPERACION_MS);
+    await vi.advanceTimersByTimeAsync(2 * TOPE_RECUPERACION_MS + ESPERA_RECUPERACION_MS);
     expect(await busqueda).toBeNull();
   });
 
