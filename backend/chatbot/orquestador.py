@@ -793,7 +793,7 @@ async def _armar_tarjetas(turno, respuesta, pedido):
 
     Devuelve `(red, saga_descartadas, sin_tarjeta)` para el log: si las tarjetas
     salieron de la red de seguridad, cuántas se saltearon por repetir saga y cuántos
-    títulos recomendados quedaron sin tarjeta por el tope (sin contar esas sagas).
+    títulos recomendados quedaron sin tarjeta por el tope (incluye las partes de saga que no se llegó a mirar).
     """
     ctx, filtro = turno.ctx, turno.filtro
     # Red de seguridad: hubo búsquedas, pero el modelo recomendó en texto plano (sin
